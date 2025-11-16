@@ -151,8 +151,7 @@ struct ApplicationEntry {
     u64 app_id{};
     u32 version{};
     u8 key_gen{};
-    std::unique_ptr<NsApplicationControlData> control{};
-    u64 control_size{};
+    std::vector<u8> icon;
     NacpLanguageEntry lang_entry{};
 
     std::vector<GcCollections> application{};

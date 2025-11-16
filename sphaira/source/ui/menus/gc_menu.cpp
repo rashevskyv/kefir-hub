@@ -14,6 +14,7 @@
 #include "download.hpp"
 #include "dumper.hpp"
 #include "image.hpp"
+#include "title_info.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -62,46 +63,6 @@ auto GetXciSizeFromRomSize(u8 rom_size) -> s64 {
     return 0;
 }
 
-// taken from nxdumptool.
-void utilsReplaceIllegalCharacters(char *str, bool ascii_only)
-{
-    static const char g_illegalFileSystemChars[] = "\\/:*?\"<>|";
-
-    size_t str_size = 0, cur_pos = 0;
-
-    if (!str || !(str_size = strlen(str))) return;
-
-    u8 *ptr1 = (u8*)str, *ptr2 = ptr1;
-    ssize_t units = 0;
-    u32 code = 0;
-    bool repl = false;
-
-    while(cur_pos < str_size)
-    {
-        units = decode_utf8(&code, ptr1);
-        if (units < 0) break;
-
-        if (code < 0x20 || (!ascii_only && code == 0x7F) || (ascii_only && code >= 0x7F) || \
-            (units == 1 && memchr(g_illegalFileSystemChars, (int)code, std::size(g_illegalFileSystemChars))))
-        {
-            if (!repl)
-            {
-                *ptr2++ = '_';
-                repl = true;
-            }
-        } else {
-            if (ptr2 != ptr1) memmove(ptr2, ptr1, (size_t)units);
-            ptr2 += units;
-            repl = false;
-        }
-
-        ptr1 += units;
-        cur_pos += (size_t)units;
-    }
-
-    *ptr2 = '\0';
-}
-
 struct DebugEventInfo {
     u32 event_type;
     u32 flags;
@@ -132,7 +93,7 @@ auto GetDumpTypeStr(u8 type) -> const char* {
 
 auto BuildXciName(const ApplicationEntry& e) -> fs::FsPath {
     fs::FsPath name_buf = e.lang_entry.name;
-    utilsReplaceIllegalCharacters(name_buf, true);
+    title::utilsReplaceIllegalCharacters(name_buf, true);
 
     fs::FsPath path;
     std::snprintf(path, sizeof(path), "%s [%016lX][v%u]", name_buf.s, e.app_id, e.version);
@@ -415,33 +376,29 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
 
                 if (m_option_index == 0) {
                     if (!App::GetInstallEnable()) {
-                        App::Push(std::make_shared<ui::OptionBox>(
-                            "Install disabled...\n"
-                            "Please enable installing via the install options."_i18n,
-                            "OK"_i18n
-                        ));
+                        App::ShowEnableInstallPrompt();
                     } else {
                         log_write("[GC] doing install A\n");
-                        App::Push(std::make_shared<ui::ProgressBox>(m_icon, "Installing "_i18n, m_entries[m_entry_index].lang_entry.name, [this](auto pbox) -> Result {
-                            auto source = std::make_shared<GcSource>(m_entries[m_entry_index], m_fs.get());
-                            return yati::InstallFromCollections(pbox, source, source->m_collections, source->m_config);
+                        App::Push<ui::ProgressBox>(m_icon, "Installing "_i18n, m_entries[m_entry_index].lang_entry.name, [this](auto pbox) -> Result {
+                            auto source = std::make_unique<GcSource>(m_entries[m_entry_index], m_fs.get());
+                            return yati::InstallFromCollections(pbox, source.get(), source->m_collections, source->m_config);
                         }, [this](Result rc){
                             App::PushErrorBox(rc, "Gc install failed!"_i18n);
 
                             if (R_SUCCEEDED(rc)) {
                                 App::Notify("Gc install success!"_i18n);
                             }
-                        }));
+                        });
                     }
                 } else {
-                    auto options = std::make_shared<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
-                    ON_SCOPE_EXIT(App::Push(options));
+                    auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
+                    ON_SCOPE_EXIT(App::Push(std::move(options)));
 
                     const auto add = [&](const std::string& name, u32 flags){
-                        options->Add(std::make_shared<SidebarEntryCallback>(name, [this, flags](){
+                        options->Add<SidebarEntryCallback>(name, [this, flags](){
                             DumpGames(flags);
                             m_dirty = true;
-                        }, true));
+                        }, true);
                     };
 
                     add("Dump All"_i18n, DumpFileFlag_All);
@@ -458,16 +415,16 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
             SetPop();
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
+            auto options = std::make_unique<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Install options"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("Install options"_i18n, [this](){
                 App::DisplayInstallOptions(false);
-            }));
+            });
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Dump options"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
                 App::DisplayDumpOptions(false);
-            }));
+            });
         }})
     );
 
@@ -475,18 +432,18 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
     const Vec2 pad{0, 125 - v.h};
     m_list = std::make_unique<List>(1, 3, m_pos, v, pad);
 
-    nsInitialize();
     fsOpenDeviceOperator(std::addressof(m_dev_op));
     fsOpenGameCardDetectionEventNotifier(std::addressof(m_event_notifier));
     fsEventNotifierGetEventHandle(std::addressof(m_event_notifier), std::addressof(m_event), true);
+    title::Init();
 }
 
 Menu::~Menu() {
+    title::Exit();
     GcUnmount();
     eventClose(std::addressof(m_event));
     fsEventNotifierClose(std::addressof(m_event_notifier));
     fsDeviceOperatorClose(std::addressof(m_dev_op));
-    nsExit();
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -683,13 +640,6 @@ Result Menu::GcMount() {
     // load all control data, icons are loaded when displayed.
     for (auto& e : m_entries) {
         R_TRY(LoadControlData(e));
-
-        NacpLanguageEntry* lang_entry{};
-        R_TRY(nacpGetLanguageEntry(&e.control->nacp, &lang_entry));
-
-        if (lang_entry) {
-            e.lang_entry = *lang_entry;
-        }
     }
 
     if (m_entries.size() > 1) {
@@ -909,47 +859,12 @@ void Menu::FreeImage() {
 }
 
 Result Menu::LoadControlData(ApplicationEntry& e) {
-    const auto id = e.app_id;
-    e.control = std::make_unique<NsApplicationControlData>();
+    const auto data = title::Get(e.app_id);
+    R_UNLESS(data->status == title::NacpLoadStatus::Loaded, 0x1);
 
-    if (hosversionBefore(20,0,0)) {
-        TimeStamp ts;
-        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_CacheOnly, id, e.control.get(), sizeof(NsApplicationControlData), &e.control_size))) {
-            log_write("\t\t[ns control cache] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-            R_SUCCEED();
-        }
-    }
-
-    // nsGetApplicationControlData() will fail if it's the first time
-    // mounting a gamecard if the image is not already cached.
-    // waiting 1-2s after mount, then calling seems to work.
-    // however, we can just manually parse the nca to get the data we need,
-    // which always works and *is* faster too ;)
-    for (const auto& app : e.application) {
-        for (const auto& collection : app) {
-            if (collection.type == NcmContentType_Control) {
-                const auto path = BuildGcPath(collection.name.c_str(), &m_handle);
-
-                u64 program_id = id | collection.id_offset;
-                if (hosversionAtLeast(17, 0, 0)) {
-                    fsGetProgramId(&program_id, path, FsContentAttributes_All);
-                }
-
-                TimeStamp ts;
-                std::vector<u8> icon;
-                if (R_SUCCEEDED(nca::ParseControl(path, program_id, &e.control->nacp, sizeof(e.control->nacp), &icon))) {
-                    std::memcpy(e.control->icon, icon.data(), icon.size());
-                    e.control_size = sizeof(e.control->nacp) + icon.size();
-                    log_write("\t\tnca::ParseControl(): %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-                    R_SUCCEED();
-                } else {
-                    log_write("\tFAILED to parse control nca %s\n", path.s);
-                }
-            }
-        }
-    }
-
-    return 0x1;
+    e.icon = data->icon;
+    e.lang_entry = data->lang;
+    R_SUCCEED();
 }
 
 void Menu::OnChangeIndex(s64 new_index) {
@@ -963,10 +878,9 @@ void Menu::OnChangeIndex(s64 new_index) {
         this->SetSubHeading(std::to_string(index) + " / " + std::to_string(m_entries.size()));
 
         const auto& e = m_entries[m_entry_index];
-        const auto jpeg_size = e.control_size - sizeof(NacpStruct);
 
         TimeStamp ts;
-        const auto image = ImageLoadFromMemory({e.control->icon, jpeg_size}, ImageFlag_JPEG);
+        const auto image = ImageLoadFromMemory(e.icon, ImageFlag_JPEG);
         if (!image.data.empty()) {
             m_icon = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
             log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
@@ -1064,14 +978,14 @@ Result Menu::DumpGames(u32 flags) {
 
     // if trimmed and the user wants to dump the full xci, error.
     if ((flags & DumpFileFlag_XCI) && is_trimmed && App::GetApp()->m_dump_trim_xci.Get()) {
-        App::Push(std::make_shared<ui::OptionBox>(
+        App::Push<ui::OptionBox>(
             "WARNING: GameCard is already trimmed!"_i18n,
             "Back"_i18n, "Continue"_i18n, 0, [&](auto op_index){
                 if (op_index && *op_index) {
                     do_dump(flags);
                 }
             }, m_icon
-        ));
+        );
     } else if ((flags & DumpFileFlag_XCI) && is_trimmed) {
         App::PushErrorBox(trim_rc, "GameCard is trimmed, full dump is not possible!"_i18n);
     } else {

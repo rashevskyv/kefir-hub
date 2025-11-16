@@ -16,19 +16,19 @@
             "name": "Release",
             "displayName": "Release",
             "inherits":["core"],
-            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_NETWORK_INSTALL": false
+            }
         },
         {
-            "name": "RelWithDebInfo",
-            "displayName": "RelWithDebInfo",
+            "name": "ReleaseWithInstall",
+            "displayName": "ReleaseWithInstall",
             "inherits":["core"],
-            "cacheVariables": { "CMAKE_BUILD_TYPE":"RelWithDebInfo" }
-        },
-        {
-            "name": "MinSizeRel",
-            "displayName": "MinSizeRel",
-            "inherits":["core"],
-            "cacheVariables": { "CMAKE_BUILD_TYPE":"MinSizeRel" }
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_NETWORK_INSTALL": true
+            }
         },
         {
             "name": "Debug",
@@ -44,13 +44,8 @@
             "jobs": 16
         },
         {
-            "name": "RelWithDebInfo",
-            "configurePreset": "RelWithDebInfo",
-            "jobs": 16
-        },
-        {
-            "name": "MinSizeRel",
-            "configurePreset": "MinSizeRel",
+            "name": "ReleaseWithInstall",
+            "configurePreset": "ReleaseWithInstall",
             "jobs": 16
         },
         {

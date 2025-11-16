@@ -105,9 +105,9 @@ private:
     LazyImage m_banner{};
     std::unique_ptr<List> m_list{};
 
-    std::shared_ptr<ScrollableText> m_details{};
-    std::shared_ptr<ScrollableText> m_changelog{};
-    std::shared_ptr<ScrollableText> m_detail_changelog{};
+    std::unique_ptr<ScrollableText> m_details{};
+    std::unique_ptr<ScrollableText> m_changelog{};
+    ScrollableText* m_detail_changelog{};
     std::unique_ptr<ScrollableText> m_manifest_list{};
 
     bool m_show_changlog{};

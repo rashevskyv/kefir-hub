@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.2)
+set(sphaira_VERSION 0.13.3)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -36,6 +36,7 @@ add_executable(sphaira
     source/ui/menus/appstore.cpp
     source/ui/menus/file_viewer.cpp
     source/ui/menus/filebrowser.cpp
+    source/ui/menus/file_picker.cpp
     source/ui/menus/homebrew.cpp
     source/ui/menus/irs_menu.cpp
     source/ui/menus/main_menu.cpp
@@ -83,6 +84,7 @@ add_executable(sphaira
     source/ftpsrv_helper.cpp
     source/haze_helper.cpp
     source/threaded_file_transfer.cpp
+    source/title_info.cpp
     source/minizip_helper.cpp
 
     source/usb/base.cpp
@@ -110,6 +112,7 @@ target_compile_definitions(sphaira PRIVATE
     -DAPP_VERSION="${sphaira_VERSION}"
     -DAPP_VERSION_HASH="${sphaira_VERSION_HASH}"
     -DCURL_NO_OLDIES=1
+    -DENABLE_NETWORK_INSTALL=$<BOOL:${ENABLE_NETWORK_INSTALL}>
 )
 
 target_compile_options(sphaira PRIVATE
@@ -149,6 +152,7 @@ target_compile_options(sphaira PRIVATE
     -Wimplicit-fallthrough=5
     -Wsuggest-final-types
     -Wuninitialized
+    -fdiagnostics-all-candidates
 )
 
 include(FetchContent)
@@ -156,14 +160,13 @@ set(FETCHCONTENT_QUIET FALSE)
 
 FetchContent_Declare(ftpsrv
     GIT_REPOSITORY https://github.com/ITotalJustice/ftpsrv.git
-    # GIT_TAG 1.2.2
-    GIT_TAG 8782f6b
+    GIT_TAG 85b3cf0
     SOURCE_SUBDIR NONE
 )
 
 FetchContent_Declare(libhaze
     GIT_REPOSITORY https://github.com/ITotalJustice/libhaze.git
-    GIT_TAG af69c0a
+    GIT_TAG 0be1523
 )
 
 FetchContent_Declare(libpulsar
@@ -188,7 +191,7 @@ FetchContent_Declare(yyjson
 
 FetchContent_Declare(minIni
     GIT_REPOSITORY https://github.com/ITotalJustice/minIni-nx.git
-    GIT_TAG 11cac8b
+    GIT_TAG 6e952b6
 )
 
 FetchContent_Declare(zstd

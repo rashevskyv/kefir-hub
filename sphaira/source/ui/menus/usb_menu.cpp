@@ -1,3 +1,5 @@
+#if ENABLE_NETWORK_INSTALL
+
 #include "ui/menus/usb_menu.hpp"
 #include "yati/yati.hpp"
 #include "app.hpp"
@@ -16,37 +18,7 @@ constexpr u64 FINISHED_TIMEOUT = 1e+9 * 3; // 3 seconds.
 
 void thread_func(void* user) {
     auto app = static_cast<Menu*>(user);
-
-    for (;;) {
-        if (app->GetToken().stop_requested()) {
-            break;
-        }
-
-        const auto rc = app->m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
-        if (rc == Result_UsbCancelled) {
-            break;
-        }
-
-        // set connected status
-        mutexLock(&app->m_mutex);
-            if (R_SUCCEEDED(rc)) {
-                app->m_state = State::Connected_WaitForFileList;
-            } else {
-                app->m_state = State::None;
-            }
-        mutexUnlock(&app->m_mutex);
-
-        if (R_SUCCEEDED(rc)) {
-            std::vector<std::string> names;
-            if (R_SUCCEEDED(app->m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names))) {
-                mutexLock(&app->m_mutex);
-                ON_SCOPE_EXIT(mutexUnlock(&app->m_mutex));
-                app->m_state = State::Connected_StartingTransfer;
-                app->m_names = names;
-                break;
-            }
-        }
-    }
+    app->ThreadFunction();
 }
 
 } // namespace
@@ -68,13 +40,11 @@ Menu::Menu(u32 flags) : MenuBase{"USB"_i18n, flags} {
     }
 
     // 3 second timeout for transfers.
-    m_usb_source = std::make_shared<yati::source::Usb>(TRANSFER_TIMEOUT);
+    m_usb_source = std::make_unique<yati::source::Usb>(TRANSFER_TIMEOUT);
     if (R_FAILED(m_usb_source->GetOpenResult())) {
         log_write("usb init open\n");
         m_state = State::Failed;
     }
-
-    mutexInit(&m_mutex);
 
     if (m_state != State::Failed) {
         threadCreate(&m_thread, thread_func, this, nullptr, 1024*32, PRIO_PREEMPTIVE, 1);
@@ -102,20 +72,41 @@ Menu::~Menu() {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
-    mutexLock(&m_mutex);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
+    static TimeStamp poll_ts;
+    if (poll_ts.GetSeconds() >= 1) {
+        poll_ts.Update();
+
+        UsbState state{UsbState_Detached};
+        usbDsGetState(&state);
+
+        UsbDeviceSpeed speed{(UsbDeviceSpeed)UsbDeviceSpeed_None};
+        usbDsGetSpeed(&speed);
+
+        char buf[128];
+        std::snprintf(buf, sizeof(buf), "State: %s | Speed: %s", i18n::get(GetUsbDsStateStr(state)).c_str(), i18n::get(GetUsbDsSpeedStr(speed)).c_str());
+        SetSubHeading(buf);
+    }
 
     if (m_state == State::Connected_StartingTransfer) {
         log_write("set to progress\n");
         m_state = State::Progress;
         log_write("got connection\n");
-        App::Push(std::make_shared<ui::ProgressBox>(0, "Installing "_i18n, "", [this](auto pbox) -> Result {
+        App::Push<ui::ProgressBox>(0, "Installing "_i18n, "", [this](auto pbox) -> Result {
             ON_SCOPE_EXIT(m_usb_source->Finished(FINISHED_TIMEOUT));
+
+            // if we are doing s2s install, skip verifying the nca contents.
+            yati::ConfigOverride config_override{};
+            if (m_usb_source->IsStream()) {
+                config_override.skip_nca_hash_verify = true;
+                config_override.skip_rsa_header_fixed_key_verify = true;
+                config_override.skip_rsa_npdm_fixed_key_verify = true;
+            }
 
             log_write("inside progress box\n");
             for (const auto& file_name : m_names) {
+                pbox->SetTitle(file_name);
                 m_usb_source->SetFileNameForTranfser(file_name);
-                const auto rc = yati::InstallFromSource(pbox, m_usb_source, file_name);
+                const auto rc = yati::InstallFromSource(pbox, m_usb_source.get(), file_name, config_override);
                 if (R_FAILED(rc)) {
                     m_usb_source->SignalCancel();
                     log_write("exiting usb install\n");
@@ -136,15 +127,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             } else {
                 m_state = State::Failed;
             }
-        }));
+        });
     }
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
-
-    mutexLock(&m_mutex);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 
     switch (m_state) {
         case State::None:
@@ -173,8 +161,35 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 }
 
-void Menu::OnFocusGained() {
-    MenuBase::OnFocusGained();
+void Menu::ThreadFunction() {
+    for (;;) {
+        if (GetToken().stop_requested()) {
+            break;
+        }
+
+        const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
+        if (rc == Result_UsbCancelled) {
+            break;
+        }
+
+        // set connected status
+        if (R_SUCCEEDED(rc)) {
+            m_state = State::Connected_WaitForFileList;
+        } else {
+            m_state = State::None;
+        }
+
+        if (R_SUCCEEDED(rc)) {
+            std::vector<std::string> names;
+            if (R_SUCCEEDED(m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names))) {
+                m_names = names;
+                m_state = State::Connected_StartingTransfer;
+                break;
+            }
+        }
+    }
 }
 
 } // namespace sphaira::ui::menu::usb
+
+#endif

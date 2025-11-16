@@ -44,10 +44,6 @@ struct FsPath {
         return s;
     }
 
-    constexpr auto starts_with(std::string_view str) const -> bool {
-        return !strncasecmp(s, str.data(), str.length());
-    }
-
     constexpr auto empty() const {
         return s[0] == '\0';
     }
@@ -62,6 +58,19 @@ struct FsPath {
 
     constexpr void clear() {
         s[0] = '\0';
+    }
+
+    constexpr auto starts_with(std::string_view str) const -> bool {
+        return !strncasecmp(s, str.data(), str.length());
+    }
+
+    constexpr auto ends_with(std::string_view str) const -> bool {
+        const auto len = length();
+        if (len < str.length()) {
+            return false;
+        }
+
+        return !strncasecmp(s + len - str.length(), str.data(), str.length());
     }
 
     constexpr operator const char*() const { return s; }
@@ -530,6 +539,12 @@ struct FsNativeSave final : FsNative {
                 m_open_result = fsOpenSaveDataFileSystem(&m_fs, save_data_space_id, attr);
             }
         }
+    }
+};
+
+struct FsNativeId final : FsNative {
+    FsNativeId(u64 program_id, FsFileSystemType type, const FsPath& path, FsContentAttributes attr = FsContentAttributes_All) {
+        m_open_result = fsOpenFileSystemWithId(&m_fs, program_id, type, path, attr);
     }
 };
 

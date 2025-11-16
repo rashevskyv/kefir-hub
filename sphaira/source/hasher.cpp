@@ -156,7 +156,7 @@ private:
     Sha256Context m_ctx{};
 };
 
-Result Hash(ui::ProgressBox* pbox, std::unique_ptr<HashSource> hash, std::shared_ptr<BaseSource> source, std::string& out) {
+Result Hash(ui::ProgressBox* pbox, std::unique_ptr<HashSource> hash, BaseSource* source, std::string& out) {
     s64 file_size;
     R_TRY(source->Size(&file_size));
 
@@ -186,7 +186,7 @@ auto GetTypeStr(Type type) -> const char* {
     return "";
 }
 
-Result Hash(ui::ProgressBox* pbox, Type type, std::shared_ptr<BaseSource> source, std::string& out) {
+Result Hash(ui::ProgressBox* pbox, Type type, BaseSource* source, std::string& out) {
     switch (type) {
         case Type::Crc32: return Hash(pbox, std::make_unique<HashCrc32>(), source, out);
         case Type::Md5: return Hash(pbox, std::make_unique<HashMd5>(), source, out);
@@ -197,13 +197,13 @@ Result Hash(ui::ProgressBox* pbox, Type type, std::shared_ptr<BaseSource> source
 }
 
 Result Hash(ui::ProgressBox* pbox, Type type, fs::Fs* fs, const fs::FsPath& path, std::string& out) {
-    auto source = std::make_shared<FileSource>(fs, path);
-    return Hash(pbox, type, source, out);
+    auto source = std::make_unique<FileSource>(fs, path);
+    return Hash(pbox, type, source.get(), out);
 }
 
 Result Hash(ui::ProgressBox* pbox, Type type, std::span<const u8> data, std::string& out) {
-    auto source = std::make_shared<MemSource>(data);
-    return Hash(pbox, type, source, out);
+    auto source = std::make_unique<MemSource>(data);
+    return Hash(pbox, type, source.get(), out);
 }
 
 } // namespace sphaira::has

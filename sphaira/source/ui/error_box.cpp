@@ -6,11 +6,35 @@
 namespace sphaira::ui {
 namespace {
 
+auto GetModule(Result rc) -> const char* {
+    switch (R_MODULE(rc)) {
+        case Module_Svc: return "Svc";
+        case Module_Fs: return "Fs";
+        case Module_Os: return "Os";
+        case Module_Ncm: return "Ncm";
+        case Module_Ns: return "Ns";
+        case Module_Spl: return "Spl";
+        case Module_Applet: return "Applet";
+        case Module_Usb: return "Usb";
+        case Module_Irsensor: return "Irsensor";
+        case Module_Libnx: return "Libnx";
+        case Module_Sphaira: return "Sphaira";
+    }
+
+    return nullptr;
+}
 auto GetCodeMessage(Result rc) -> const char* {
     switch (rc) {
+        case SvcError_TimedOut: return "SvcError_TimedOut";
+        case SvcError_Cancelled: return "SvcError_Cancelled";
+
         case FsError_PathNotFound: return "FsError_PathNotFound";
         case FsError_PathAlreadyExists: return "FsError_PathAlreadyExists";
         case FsError_TargetLocked: return "FsError_TargetLocked";
+        case FsError_TooLongPath: return "FsError_TooLongPath";
+        case FsError_InvalidCharacter: return "FsError_InvalidCharacter";
+        case FsError_InvalidOffset: return "FsError_InvalidOffset";
+        case FsError_InvalidSize: return "FsError_InvalidSize";
 
         case Result_TransferCancelled: return "SphairaError_TransferCancelled";
         case Result_StreamBadSeek: return "SphairaError_StreamBadSeek";
@@ -47,6 +71,8 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_ZipOpen2_64: return "SphairaError_ZipOpen2_64";
         case Result_ZipOpenNewFileInZip: return "SphairaError_ZipOpenNewFileInZip";
         case Result_ZipWriteInFileInZip: return "SphairaError_ZipWriteInFileInZip";
+        case Result_MmzBadLocalHeaderSig: return "SphairaError_MmzBadLocalHeaderSig";
+        case Result_MmzBadLocalHeaderRead: return "SphairaError_MmzBadLocalHeaderRead";
         case Result_FileBrowserFailedUpload: return "SphairaError_FileBrowserFailedUpload";
         case Result_FileBrowserDirNotDaybreak: return "SphairaError_FileBrowserDirNotDaybreak";
         case Result_AppstoreFailedZipDownload: return "SphairaError_AppstoreFailedZipDownload";
@@ -76,6 +102,7 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_UsbDsBadDeviceSpeed: return "SphairaError_UsbDsBadDeviceSpeed";
         case Result_NspBadMagic: return "SphairaError_NspBadMagic";
         case Result_XciBadMagic: return "SphairaError_XciBadMagic";
+        case Result_XciSecurePartitionNotFound: return "SphairaError_XciSecurePartitionNotFound";
         case Result_EsBadTitleKeyType: return "SphairaError_EsBadTitleKeyType";
         case Result_EsPersonalisedTicketDeviceIdMissmatch: return "SphairaError_EsPersonalisedTicketDeviceIdMissmatch";
         case Result_EsFailedDecryptPersonalisedTicket: return "SphairaError_EsFailedDecryptPersonalisedTicket";
@@ -89,8 +116,10 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_UsbBadMagic: return "SphairaError_UsbBadMagic";
         case Result_UsbBadVersion: return "SphairaError_UsbBadVersion";
         case Result_UsbBadCount: return "SphairaError_UsbBadCount";
+        case Result_UsbBadBufferAlign: return "SphairaError_UsbBadBufferAlign";
         case Result_UsbBadTransferSize: return "SphairaError_UsbBadTransferSize";
-        case Result_UsbBadTotalSize: return "SphairaError_UsbBadTotalSize";
+        case Result_UsbEmptyTransferSize: return "SphairaError_UsbEmptyTransferSize";
+        case Result_UsbOverflowTransferSize: return "SphairaError_UsbOverflowTransferSize";
         case Result_UsbUploadBadMagic: return "SphairaError_UsbUploadBadMagic";
         case Result_UsbUploadExit: return "SphairaError_UsbUploadExit";
         case Result_UsbUploadBadCount: return "SphairaError_UsbUploadBadCount";
@@ -143,7 +172,11 @@ ErrorBox::ErrorBox(const std::string& message) : m_message{message} {
 ErrorBox::ErrorBox(Result code, const std::string& message) : ErrorBox{message} {
     m_code = code;
     m_code_message = GetCodeMessage(code);
-    log_write("[ERROR] Code: 0x%X Module: %u Description: %u\n", R_VALUE(code), R_MODULE(code), R_DESCRIPTION(code));
+    m_code_module = std::to_string(R_MODULE(code));
+    if (auto str = GetModule(code)) {
+        m_code_module += " (" + std::string(str) + ")";
+    }
+    log_write("[ERROR] Code: 0x%X Module: %s Description: %u\n", R_VALUE(code), m_code_module.c_str(), R_DESCRIPTION(code));
 }
 
 auto ErrorBox::Update(Controller* controller, TouchInfo* touch) -> void {
@@ -161,7 +194,7 @@ auto ErrorBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     if (m_code.has_value()) {
         const auto code = m_code.value();
         if (m_code_message.empty()) {
-            gfx::drawTextArgs(vg, center_x, 270, 25, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "Code: 0x%X Module: %u Description: 0x%X", R_VALUE(code), R_MODULE(code), R_DESCRIPTION(code));
+            gfx::drawTextArgs(vg, center_x, 270, 25, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "Code: 0x%X Module: %s", R_VALUE(code), m_code_module.c_str());
         } else {
             gfx::drawTextArgs(vg, center_x, 270, 25, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", m_code_message.c_str());
         }

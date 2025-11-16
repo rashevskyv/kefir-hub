@@ -31,6 +31,7 @@ private:
 
 private:
     std::unique_ptr<usb::UsbHs> m_usb;
+    std::vector<u8> m_buf;
 };
 
 } // namespace sphaira::usb::upload

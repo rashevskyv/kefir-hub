@@ -142,3 +142,18 @@ constexpr auto cexprHash(const char *str, std::size_t v = 0) noexcept -> std::si
             __VA_ARGS__ \
         } \
     }
+
+#define JSON_ARR_ITR(member) \
+    if (!yyjson_is_arr(json)) { \
+        return; \
+    } \
+    const auto arr_size = yyjson_arr_size(json); \
+    if (!arr_size) { \
+        return; \
+    } \
+    member.resize(arr_size); \
+    size_t idx, max; \
+    yyjson_val *hit; \
+    yyjson_arr_foreach(json, idx, max, hit) { \
+        from_json(hit, member[idx]); \
+    }

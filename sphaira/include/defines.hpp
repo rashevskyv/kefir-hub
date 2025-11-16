@@ -537,6 +537,9 @@ enum class SphairaResult : Result {
     ZipOpenNewFileInZip,
     ZipWriteInFileInZip,
 
+    MmzBadLocalHeaderSig,
+    MmzBadLocalHeaderRead,
+
     FileBrowserFailedUpload,
     FileBrowserDirNotDaybreak,
 
@@ -576,6 +579,7 @@ enum class SphairaResult : Result {
 
     NspBadMagic,
     XciBadMagic,
+    XciSecurePartitionNotFound,
 
     EsBadTitleKeyType,
     EsPersonalisedTicketDeviceIdMissmatch,
@@ -594,7 +598,10 @@ enum class SphairaResult : Result {
     UsbBadMagic,
     UsbBadVersion,
     UsbBadCount,
+    UsbBadBufferAlign,
     UsbBadTransferSize,
+    UsbEmptyTransferSize,
+    UsbOverflowTransferSize,
     UsbBadTotalSize,
 
     UsbUploadBadMagic,
@@ -681,6 +688,8 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(ZipOpen2_64),
     MAKE_SPHAIRA_RESULT_ENUM(ZipOpenNewFileInZip),
     MAKE_SPHAIRA_RESULT_ENUM(ZipWriteInFileInZip),
+    MAKE_SPHAIRA_RESULT_ENUM(MmzBadLocalHeaderSig),
+    MAKE_SPHAIRA_RESULT_ENUM(MmzBadLocalHeaderRead),
     MAKE_SPHAIRA_RESULT_ENUM(FileBrowserFailedUpload),
     MAKE_SPHAIRA_RESULT_ENUM(FileBrowserDirNotDaybreak),
     MAKE_SPHAIRA_RESULT_ENUM(AppstoreFailedZipDownload),
@@ -710,6 +719,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(UsbDsBadDeviceSpeed),
     MAKE_SPHAIRA_RESULT_ENUM(NspBadMagic),
     MAKE_SPHAIRA_RESULT_ENUM(XciBadMagic),
+    MAKE_SPHAIRA_RESULT_ENUM(XciSecurePartitionNotFound),
     MAKE_SPHAIRA_RESULT_ENUM(EsBadTitleKeyType),
     MAKE_SPHAIRA_RESULT_ENUM(EsPersonalisedTicketDeviceIdMissmatch),
     MAKE_SPHAIRA_RESULT_ENUM(EsFailedDecryptPersonalisedTicket),
@@ -724,8 +734,10 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(UsbBadMagic),
     MAKE_SPHAIRA_RESULT_ENUM(UsbBadVersion),
     MAKE_SPHAIRA_RESULT_ENUM(UsbBadCount),
+    MAKE_SPHAIRA_RESULT_ENUM(UsbBadBufferAlign),
     MAKE_SPHAIRA_RESULT_ENUM(UsbBadTransferSize),
-    MAKE_SPHAIRA_RESULT_ENUM(UsbBadTotalSize),
+    MAKE_SPHAIRA_RESULT_ENUM(UsbEmptyTransferSize),
+    MAKE_SPHAIRA_RESULT_ENUM(UsbOverflowTransferSize),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadBadMagic),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadExit),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadBadCount),

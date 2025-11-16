@@ -152,68 +152,110 @@ Result VerifyFixedKey(const Header& header) {
 }
 
 Result ParseCnmt(const fs::FsPath& path, u64 program_id, ncm::PackagedContentMeta& header, std::vector<u8>& extended_header, std::vector<NcmPackagedContentInfo>& infos) {
-    FsFileSystem fs;
-    R_TRY(fsOpenFileSystemWithId(std::addressof(fs), program_id, FsFileSystemType_ContentMeta, path, FsContentAttributes_All));
-    ON_SCOPE_EXIT(fsFsClose(std::addressof(fs)));
+    fs::FsNativeId fs{program_id, FsFileSystemType_ContentMeta, path, FsContentAttributes_All};
+    R_TRY(fs.GetFsOpenResult());
 
-    FsDir dir;
-    R_TRY(fsFsOpenDirectory(std::addressof(fs), fs::FsPath{"/"}, FsDirOpenMode_ReadFiles, std::addressof(dir)));
-    ON_SCOPE_EXIT(fsDirClose(std::addressof(dir)));
+    fs::Dir dir;
+    R_TRY(fs.OpenDirectory("/", FsDirOpenMode_ReadFiles, &dir));
 
     s64 total_entries;
     FsDirectoryEntry buf;
-    R_TRY(fsDirRead(std::addressof(dir), std::addressof(total_entries), 1, std::addressof(buf)));
+    R_TRY(dir.Read(std::addressof(total_entries), 1, std::addressof(buf)));
 
-    FsFile file;
-    R_TRY(fsFsOpenFile(std::addressof(fs), fs::AppendPath("/", buf.name), FsOpenMode_Read, std::addressof(file)));
-    ON_SCOPE_EXIT(fsFileClose(std::addressof(file)));
+    fs::File file;
+    R_TRY(fs.OpenFile(fs::AppendPath("/", buf.name), FsOpenMode_Read, &file));
 
     s64 offset{};
     u64 bytes_read;
-    R_TRY(fsFileRead(std::addressof(file), offset, std::addressof(header), sizeof(header), 0, std::addressof(bytes_read)));
+    R_TRY(file.Read(offset, std::addressof(header), sizeof(header), 0, std::addressof(bytes_read)));
     offset += bytes_read;
 
     // read extended header
     extended_header.resize(header.meta_header.extended_header_size);
-    R_TRY(fsFileRead(std::addressof(file), offset, extended_header.data(), extended_header.size(), 0, std::addressof(bytes_read)));
+    R_TRY(file.Read(offset, extended_header.data(), extended_header.size(), 0, std::addressof(bytes_read)));
     offset += bytes_read;
 
     // read infos.
     infos.resize(header.meta_header.content_count);
-    R_TRY(fsFileRead(std::addressof(file), offset, infos.data(), infos.size() * sizeof(NcmPackagedContentInfo), 0, std::addressof(bytes_read)));
+    R_TRY(file.Read(offset, infos.data(), infos.size() * sizeof(NcmPackagedContentInfo), 0, std::addressof(bytes_read)));
     offset += bytes_read;
 
     R_SUCCEED();
 }
 
 Result ParseControl(const fs::FsPath& path, u64 program_id, void* nacp_out, s64 nacp_size, std::vector<u8>* icon_out, s64 nacp_off) {
-    FsFileSystem fs;
-    R_TRY(fsOpenFileSystemWithId(std::addressof(fs), program_id, FsFileSystemType_ContentControl, path, FsContentAttributes_All));
-    ON_SCOPE_EXIT(fsFsClose(std::addressof(fs)));
+    fs::FsNativeId fs{program_id, FsFileSystemType_ContentControl, path, FsContentAttributes_All};
+    R_TRY(fs.GetFsOpenResult());
 
     // read nacp.
     if (nacp_out) {
-        FsFile file;
-        R_TRY(fsFsOpenFile(std::addressof(fs), fs::FsPath{"/control.nacp"}, FsOpenMode_Read, std::addressof(file)));
-        ON_SCOPE_EXIT(fsFileClose(std::addressof(file)));
+        fs::File file;
+        R_TRY(fs.OpenFile("/control.nacp", FsOpenMode_Read, &file));
 
         u64 bytes_read;
-        R_TRY(fsFileRead(&file, nacp_off, nacp_out, nacp_size, 0, &bytes_read));
+        R_TRY(file.Read(nacp_off, nacp_out, nacp_size, 0, &bytes_read));
     }
 
     // read icon.
     if (icon_out) {
-        // todo: use matching icon based on the language version.
-        FsFile file;
-        R_TRY(fsFsOpenFile(std::addressof(fs), fs::FsPath{"/icon_AmericanEnglish.dat"}, FsOpenMode_Read, std::addressof(file)));
-        ON_SCOPE_EXIT(fsFileClose(std::addressof(file)));
+        static bool checked_lang = false;
+        static SetLanguage setLanguage = SetLanguage_ENUS;
+
+        if (!checked_lang) {
+            checked_lang = true;
+            u64 languageCode;
+            if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
+                setMakeLanguage(languageCode, &setLanguage);
+            }
+        }
+
+        static const char* icon_names[] = {
+            [SetLanguage_JA] = "icon_Japanese.dat",
+            [SetLanguage_ENUS] = "icon_AmericanEnglish.dat",
+            [SetLanguage_FR] = "icon_French.dat",
+            [SetLanguage_DE] = "icon_German.dat",
+            [SetLanguage_IT] = "icon_Italian.dat",
+            [SetLanguage_ES] = "icon_Spanish.dat",
+            [SetLanguage_ZHCN] = "icon_Chinese.dat",
+            [SetLanguage_KO] = "icon_Korean.dat",
+            [SetLanguage_NL] = "icon_Dutch.dat",
+            [SetLanguage_PT] = "icon_Portuguese.dat",
+            [SetLanguage_RU] = "icon_Russian.dat",
+            [SetLanguage_ZHTW] = "icon_Taiwanese.dat",
+            [SetLanguage_ENGB] = "icon_BritishEnglish.dat",
+            [SetLanguage_FRCA] = "icon_CanadianFrench.dat",
+            [SetLanguage_ES419] = "icon_LatinAmericanSpanish.dat",
+        };
+
+        // load all icon entries and try and find the one that we want.
+        fs::Dir dir;
+        R_TRY(fs.OpenDirectory("/", FsDirOpenMode_ReadFiles, &dir));
+
+        std::vector<FsDirectoryEntry> entries;
+        R_TRY(dir.ReadAll(entries));
+
+        for (const auto& e : entries) {
+            if (!std::strcmp(e.name, icon_names[setLanguage])) {
+                fs::File file;
+                R_TRY(fs.OpenFile(fs::AppendPath("/", e.name), FsOpenMode_Read, &file));
+                icon_out->resize(e.file_size);
+
+                u64 bytes_read;
+                R_TRY(file.Read(0, icon_out->data(), icon_out->size(), 0, &bytes_read));
+                R_SUCCEED();
+            }
+        }
+
+        // otherwise, fallback to US icon.
+        fs::File file;
+        R_TRY(fs.OpenFile(fs::AppendPath("/", icon_names[SetLanguage_ENUS]), FsOpenMode_Read, &file));
 
         s64 size;
-        R_TRY(fsFileGetSize(std::addressof(file), std::addressof(size)));
+        R_TRY(file.GetSize(&size));
         icon_out->resize(size);
 
         u64 bytes_read;
-        R_TRY(fsFileRead(&file, 0, icon_out->data(), icon_out->size(), 0, &bytes_read));
+        R_TRY(file.Read(0, icon_out->data(), icon_out->size(), 0, &bytes_read));
     }
 
     R_SUCCEED();

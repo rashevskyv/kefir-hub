@@ -23,14 +23,16 @@ auto OptionBoxEntry::Selected(bool enable) -> void {
     m_selected = enable;
 }
 
-OptionBox::OptionBox(const std::string& message, const Option& a, Callback cb, int image)
+OptionBox::OptionBox(const std::string& message, const Option& a, const Callback& cb, int image, bool own_image)
 : m_message{message}
-, m_callback{cb} {
+, m_callback{cb}
+, m_image{image}
+, m_own_image{own_image} {
 
     m_pos.w = 770.f;
     m_pos.h = 295.f;
-    m_pos.x = (1280.f / 2.f) - (m_pos.w / 2.f);
-    m_pos.y = (720.f / 2.f) - (m_pos.h / 2.f);
+    m_pos.x = (SCREEN_WIDTH / 2.f) - (m_pos.w / 2.f);
+    m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
 
     auto box = m_pos;
     box.y += 220.f;
@@ -40,15 +42,16 @@ OptionBox::OptionBox(const std::string& message, const Option& a, Callback cb, i
     Setup(0);
 }
 
-OptionBox::OptionBox(const std::string& message, const Option& a, const Option& b, Callback cb, int image)
-: OptionBox{message, a, b, 0, cb, image} {
+OptionBox::OptionBox(const std::string& message, const Option& a, const Option& b, const Callback& cb, int image, bool own_image)
+: OptionBox{message, a, b, 0, cb, image, own_image} {
 
 }
 
-OptionBox::OptionBox(const std::string& message, const Option& a, const Option& b, s64 index, Callback cb, int image)
+OptionBox::OptionBox(const std::string& message, const Option& a, const Option& b, s64 index, const Callback& cb, int image, bool own_image)
 : m_message{message}
 , m_callback{cb}
-, m_image{image} {
+, m_image{image}
+, m_own_image{own_image} {
 
     m_pos.w = 770.f;
     m_pos.h = 295.f;
@@ -64,6 +67,12 @@ OptionBox::OptionBox(const std::string& message, const Option& a, const Option& 
     m_entries.emplace_back(b, box);
 
     Setup(index);
+}
+
+OptionBox::~OptionBox() {
+    if (m_image && m_own_image) {
+        nvgDeleteImage(App::GetVg(), m_image);
+    }
 }
 
 auto OptionBox::Update(Controller* controller, TouchInfo* touch) -> void {

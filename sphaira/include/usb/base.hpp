@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-#include <new>
+#include <memory>
 #include <switch.h>
 
 namespace sphaira::usb {
@@ -39,42 +39,9 @@ struct Base {
         ueventSignal(GetCancelEvent());
     }
 
-    auto& GetTransferBuffer() {
-        return m_aligned;
-    }
-
     auto GetTransferTimeout() const {
         return m_transfer_timeout;
     }
-
-public:
-    // custom allocator for std::vector that respects alignment.
-    // https://en.cppreference.com/w/cpp/named_req/Allocator
-    template <typename T, std::size_t Align>
-    struct CustomVectorAllocator {
-    public:
-        // https://en.cppreference.com/w/cpp/memory/new/operator_new
-        auto allocate(std::size_t n) -> T* {
-            n = (n + (Align - 1)) &~ (Align - 1);
-            return new(align) T[n];
-        }
-
-        // https://en.cppreference.com/w/cpp/memory/new/operator_delete
-        auto deallocate(T* p, std::size_t n) noexcept -> void {
-            // ::operator delete[] (p, n, align);
-            ::operator delete[] (p, align);
-        }
-
-    private:
-        static constexpr inline std::align_val_t align{Align};
-    };
-
-    template <typename T>
-    struct PageAllocator : CustomVectorAllocator<T, 0x1000> {
-        using value_type = T; // used by std::vector
-    };
-
-    using PageAlignedVector = std::vector<u8, PageAllocator<u8>>;
 
 protected:
     enum UsbSessionEndpoint {
@@ -90,7 +57,7 @@ protected:
 private:
     u64 m_transfer_timeout{};
     UEvent m_uevent{};
-    PageAlignedVector m_aligned{};
+    std::unique_ptr<u8*> m_aligned{};
 };
 
 } // namespace sphaira::usb

@@ -20,6 +20,7 @@
 #include <zstd.h>
 #include <minIni.h>
 #include <algorithm>
+#include <atomic>
 
 namespace sphaira::yati {
 namespace {
@@ -140,6 +141,9 @@ struct ThreadData {
         condvarInit(std::addressof(can_decompress_write));
         condvarInit(std::addressof(can_write));
 
+        ueventCreate(&m_uevent_done, false);
+        ueventCreate(&m_uevent_progres, true);
+
         sha256ContextCreate(&sha256);
         // this will be updated with the actual size from nca header.
         write_size = nca->size;
@@ -154,8 +158,47 @@ struct ThreadData {
         max_buffer_size = std::max(read_buffer_size, INFLATE_BUFFER_MAX);
     }
 
-    auto GetResults() -> Result;
+    auto GetResults() volatile -> Result;
     void WakeAllThreads();
+
+    auto IsAnyRunning() volatile const -> bool {
+        return read_running || decompress_result || write_running;
+    }
+
+    auto GetWriteOffset() volatile const -> s64 {
+        return write_offset;
+    }
+
+    auto GetWriteSize() volatile const -> s64 {
+        return write_size;
+    }
+
+    auto GetDoneEvent() {
+        return &m_uevent_done;
+    }
+
+    auto GetProgressEvent() {
+        return &m_uevent_progres;
+    }
+
+    void SetReadResult(Result result) {
+        read_result = result;
+        if (R_FAILED(result)) {
+            ueventSignal(GetDoneEvent());
+        }
+    }
+
+    void SetDecompressResult(Result result) {
+        decompress_result = result;
+        if (R_FAILED(result)) {
+            ueventSignal(GetDoneEvent());
+        }
+    }
+
+    void SetWriteResult(Result result) {
+        write_result = result;
+        ueventSignal(GetDoneEvent());
+    }
 
     Result Read(void* buf, s64 size, u64* bytes_read);
 
@@ -164,6 +207,9 @@ struct ThreadData {
 
         mutexLock(std::addressof(read_mutex));
         if (!read_buffers.ringbuf_free()) {
+            if (!write_running) {
+                R_SUCCEED();
+            }
             R_TRY(condvarWait(std::addressof(can_read), std::addressof(read_mutex)));
         }
 
@@ -176,6 +222,10 @@ struct ThreadData {
     Result GetDecompressBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(read_mutex));
         if (!read_buffers.ringbuf_size()) {
+            if (!read_running) {
+                buf_out.resize(0);
+                R_SUCCEED();
+            }
             R_TRY(condvarWait(std::addressof(can_decompress), std::addressof(read_mutex)));
         }
 
@@ -193,6 +243,9 @@ struct ThreadData {
 
         mutexLock(std::addressof(write_mutex));
         if (!write_buffers.ringbuf_free()) {
+            if (!decompress_running) {
+                R_SUCCEED();
+            }
             R_TRY(condvarWait(std::addressof(can_decompress_write), std::addressof(write_mutex)));
         }
 
@@ -205,6 +258,10 @@ struct ThreadData {
     Result GetWriteBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(write_mutex));
         if (!write_buffers.ringbuf_size()) {
+            if (!decompress_running) {
+                buf_out.resize(0);
+                R_SUCCEED();
+            }
             R_TRY(condvarWait(std::addressof(can_write), std::addressof(write_mutex)));
         }
 
@@ -228,6 +285,9 @@ struct ThreadData {
     CondVar can_decompress_write{};
     CondVar can_write{};
 
+    UEvent m_uevent_done{};
+    UEvent m_uevent_progres{};
+
     RingBuf<4> read_buffers{};
     RingBuf<4> write_buffers{};
 
@@ -241,18 +301,22 @@ struct ThreadData {
     u64 max_buffer_size{};
 
     // these are shared between threads
-    volatile s64 read_offset{};
-    volatile s64 decompress_offset{};
-    volatile s64 write_offset{};
-    volatile s64 write_size{};
+    std::atomic<s64> read_offset{};
+    std::atomic<s64> decompress_offset{};
+    std::atomic<s64> write_offset{};
+    std::atomic<s64> write_size{};
 
-    volatile Result read_result{};
-    volatile Result decompress_result{};
-    volatile Result write_result{};
+    std::atomic<Result> read_result{};
+    std::atomic<Result> decompress_result{};
+    std::atomic<Result> write_result{};
+
+    std::atomic_bool read_running{true};
+    std::atomic_bool decompress_running{true};
+    std::atomic_bool write_running{true};
 };
 
 struct Yati {
-    Yati(ui::ProgressBox*, std::shared_ptr<source::Base>);
+    Yati(ui::ProgressBox*, source::Base*);
     ~Yati();
 
     Result Setup(const ConfigOverride& override);
@@ -274,7 +338,7 @@ struct Yati {
 
 // private:
     ui::ProgressBox* pbox{};
-    std::shared_ptr<source::Base> source{};
+    source::Base* source{};
 
     // for all content storages
     NcmContentStorage ncm_cs[2]{};
@@ -290,11 +354,11 @@ struct Yati {
     keys::Keys keys{};
 };
 
-auto ThreadData::GetResults() -> Result {
+auto ThreadData::GetResults() volatile -> Result {
     R_TRY(yati->pbox->ShouldExitResult());
-    R_TRY(read_result);
-    R_TRY(decompress_result);
-    R_TRY(write_result);
+    R_TRY(read_result.load());
+    R_TRY(decompress_result.load());
+    R_TRY(write_result.load());
     R_SUCCEED();
 }
 
@@ -370,6 +434,8 @@ Result HasRequiredTicket(const nca::Header& header, std::span<TikCollection> tik
 // read thread reads all data from the source, it also handles
 // parsing ncz headers, sections and reading ncz blocks
 Result Yati::readFuncInternal(ThreadData* t) {
+    ON_SCOPE_EXIT( t->read_running = false; );
+
     // the main buffer which data is read into.
     std::vector<u8> buf;
     // workaround ncz block reading ahead. if block isn't found, we usually
@@ -380,7 +446,7 @@ Result Yati::readFuncInternal(ThreadData* t) {
     temp_buf.reserve(t->max_buffer_size);
 
     while (t->read_offset < t->nca->size && R_SUCCEEDED(t->GetResults())) {
-        const auto buffer_offset = t->read_offset;
+        const auto buffer_offset = t->read_offset.load();
 
         // read more data
         s64 read_size = t->read_buffer_size;
@@ -400,6 +466,9 @@ Result Yati::readFuncInternal(ThreadData* t) {
         buf.resize(buf_offset + read_size);
         R_TRY(t->Read(buf.data() + buf_offset, read_size, std::addressof(bytes_read)));
         auto buf_size = buf_offset + bytes_read;
+        if (!bytes_read) {
+            break;
+        }
 
         // read enough bytes for ncz, check magic
         if (t->read_offset == NCZ_SECTION_OFFSET) {
@@ -434,7 +503,7 @@ Result Yati::readFuncInternal(ThreadData* t) {
                     R_TRY(t->Read(blocks.data(), blocks.size() * sizeof(ncz::Block), std::addressof(bytes_read)));
 
                     // calculate offsets for each block.
-                    auto block_offset = t->read_offset;
+                    auto block_offset = t->read_offset.load();
                     for (const auto& block : blocks) {
                         t->ncz_blocks.emplace_back(block_offset, block.size);
                         block_offset += block.size;
@@ -453,6 +522,8 @@ Result Yati::readFuncInternal(ThreadData* t) {
 // decompress thread handles decrypting / modifying the nca header, decompressing ncz
 // and calculating the running sha256.
 Result Yati::decompressFuncInternal(ThreadData* t) {
+    ON_SCOPE_EXIT( t->decompress_running = false; );
+
     // only used for ncz files.
     auto dctx = ZSTD_createDCtx();
     ON_SCOPE_EXIT(ZSTD_freeDCtx(dctx));
@@ -533,6 +604,9 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
     while (t->decompress_offset < t->write_size && R_SUCCEEDED(t->GetResults())) {
         s64 decompress_buf_off{};
         R_TRY(t->GetDecompressBuf(buf, decompress_buf_off));
+        if (buf.empty()) {
+            break;
+        }
 
         // do we have an nsz? if so, setup buffers.
         if (!is_ncz && !t->ncz_sections.empty()) {
@@ -564,7 +638,7 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                 }
 
                 t->write_size = header.size;
-                log_write("setting placeholder size: %zu\n", t->write_size);
+                log_write("setting placeholder size: %zu\n", t->write_size.load());
                 R_TRY(ncmContentStorageSetPlaceHolderSize(std::addressof(cs), std::addressof(t->nca->placeholder_id), t->write_size));
 
                 if (!config.ignore_distribution_bit && header.distribution_type == nca::DistributionType_GameCard) {
@@ -713,6 +787,8 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
 
 // write thread writes data to the nca placeholder.
 Result Yati::writeFuncInternal(ThreadData* t) {
+    ON_SCOPE_EXIT( t->write_running = false; );
+
     std::vector<u8> buf;
     buf.reserve(t->max_buffer_size);
     const auto is_file_based_emummc = App::IsFileBaseEmummc();
@@ -720,6 +796,9 @@ Result Yati::writeFuncInternal(ThreadData* t) {
     while (t->write_offset < t->write_size && R_SUCCEEDED(t->GetResults())) {
         s64 dummy_off;
         R_TRY(t->GetWriteBuf(buf, dummy_off));
+        if (buf.empty()) {
+            break;
+        }
 
         s64 off{};
         while (off < buf.size() && t->write_offset < t->write_size && R_SUCCEEDED(t->GetResults())) {
@@ -728,6 +807,7 @@ Result Yati::writeFuncInternal(ThreadData* t) {
 
             off += wsize;
             t->write_offset += wsize;
+            ueventSignal(t->GetProgressEvent());
 
             // todo: check how much time elapsed and sleep the diff
             // rather than always sleeping a fixed amount.
@@ -744,20 +824,20 @@ Result Yati::writeFuncInternal(ThreadData* t) {
 
 void readFunc(void* d) {
     auto t = static_cast<ThreadData*>(d);
-    t->read_result = t->yati->readFuncInternal(t);
+    t->SetReadResult(t->yati->readFuncInternal(t));
     log_write("read thread returned now\n");
 }
 
 void decompressFunc(void* d) {
     log_write("hello decomp thread func\n");
     auto t = static_cast<ThreadData*>(d);
-    t->decompress_result = t->yati->decompressFuncInternal(t);
+    t->SetDecompressResult(t->yati->decompressFuncInternal(t));
     log_write("decompress thread returned now\n");
 }
 
 void writeFunc(void* d) {
     auto t = static_cast<ThreadData*>(d);
-    t->write_result = t->yati->writeFuncInternal(t);
+    t->SetWriteResult(t->yati->writeFuncInternal(t));
     log_write("write thread returned now\n");
 }
 
@@ -793,7 +873,7 @@ struct BufHelper {
     u64 offset{};
 };
 
-Yati::Yati(ui::ProgressBox* _pbox, std::shared_ptr<source::Base> _source) : pbox{_pbox}, source{_source} {
+Yati::Yati(ui::ProgressBox* _pbox, source::Base* _source) : pbox{_pbox}, source{_source} {
     App::SetAutoSleepDisabled(true);
 }
 
@@ -899,14 +979,26 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
     R_TRY(threadStart(std::addressof(t_write)));
     ON_SCOPE_EXIT(threadWaitForExit(std::addressof(t_write)));
 
-    while (t_data.write_offset != t_data.write_size && R_SUCCEEDED(t_data.GetResults())) {
-        pbox->UpdateTransfer(t_data.write_offset, t_data.write_size);
-        svcSleepThread(1e+6);
+    const auto waiter_progress = waiterForUEvent(t_data.GetProgressEvent());
+    const auto waiter_cancel = waiterForUEvent(pbox->GetCancelEvent());
+    const auto waiter_done = waiterForUEvent(t_data.GetDoneEvent());
+
+    for (;;) {
+        s32 idx;
+        if (R_FAILED(waitMulti(&idx, UINT64_MAX, waiter_progress, waiter_cancel, waiter_done))) {
+            break;
+        }
+
+        if (!idx) {
+            pbox->UpdateTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
+        } else {
+            break;
+        }
     }
 
     // wait for all threads to close.
     log_write("waiting for threads to close\n");
-    for (;;) {
+    while (t_data.IsAnyRunning()) {
         t_data.WakeAllThreads();
         pbox->Yield();
 
@@ -1293,7 +1385,7 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
     R_SUCCEED();
 }
 
-Result InstallInternal(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, const container::Collections& collections, const ConfigOverride& override) {
+Result InstallInternal(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
     auto yati = std::make_unique<Yati>(pbox, source);
     R_TRY(yati->Setup(override));
 
@@ -1343,7 +1435,7 @@ Result InstallInternal(ui::ProgressBox* pbox, std::shared_ptr<source::Base> sour
     R_SUCCEED();
 }
 
-Result InstallInternalStream(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, container::Collections collections, const ConfigOverride& override) {
+Result InstallInternalStream(ui::ProgressBox* pbox, source::Base* source, container::Collections collections, const ConfigOverride& override) {
     auto yati = std::make_unique<Yati>(pbox, source);
     R_TRY(yati->Setup(override));
 
@@ -1442,30 +1534,33 @@ Result InstallInternalStream(ui::ProgressBox* pbox, std::shared_ptr<source::Base
 } // namespace
 
 Result InstallFromFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override) {
-    return InstallFromSource(pbox, std::make_shared<source::File>(fs, path), path, override);
-    // return InstallFromSource(pbox, std::make_shared<source::StreamFile>(fs, path), path, override);
+    auto source = std::make_unique<source::File>(fs, path);
+    // auto source = std::make_unique<source::StreamFile>(fs, path, override); // enable for testing.
+    return InstallFromSource(pbox, source.get(), path, override);
 }
 
-Result InstallFromSource(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, const fs::FsPath& path, const ConfigOverride& override) {
+Result InstallFromSource(ui::ProgressBox* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override) {
     const auto ext = std::strrchr(path.s, '.');
     R_UNLESS(ext, Result_YatiContainerNotFound);
 
+    std::unique_ptr<container::Base> container;
     if (!strcasecmp(ext, ".nsp") || !strcasecmp(ext, ".nsz")) {
-        return InstallFromContainer(pbox, std::make_unique<container::Nsp>(source), override);
+        container = std::make_unique<container::Nsp>(source);
     } else if (!strcasecmp(ext, ".xci") || !strcasecmp(ext, ".xcz")) {
-        return InstallFromContainer(pbox, std::make_unique<container::Xci>(source), override);
+        container = std::make_unique<container::Xci>(source);
     }
 
-    R_THROW(Result_YatiContainerNotFound);
+    R_UNLESS(container, Result_YatiContainerNotFound);
+    return InstallFromContainer(pbox, container.get(), override);
 }
 
-Result InstallFromContainer(ui::ProgressBox* pbox, std::shared_ptr<container::Base> container, const ConfigOverride& override) {
+Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, const ConfigOverride& override) {
     container::Collections collections;
     R_TRY(container->GetCollections(collections));
-    return InstallFromCollections(pbox, container->GetSource(), collections);
+    return InstallFromCollections(pbox, container->GetSource(), collections, override);
 }
 
-Result InstallFromCollections(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, const container::Collections& collections, const ConfigOverride& override) {
+Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
     if (source->IsStream()) {
         return InstallInternalStream(pbox, source, collections, override);
     } else {

@@ -29,7 +29,7 @@ private:
 
 private:
     static constexpr Vec2 m_title_pos{70.f, 28.f};
-    static constexpr Vec4 m_block{280.f, 110.f, 720.f, 60.f};
+    static constexpr Vec4 m_block{280.f, 110.f, SCREEN_HEIGHT, 60.f};
     static constexpr float m_text_xoffset{15.f};
     static constexpr float m_line_width{1220.f};
 

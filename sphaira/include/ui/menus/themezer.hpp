@@ -138,6 +138,7 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+private:
     void SetIndex(s64 index) {
         m_index = index;
         if (!m_index) {
@@ -147,7 +148,7 @@ struct Menu final : MenuBase {
 
     void InvalidateAllPages();
     void PackListDownload();
-    void OnPackListDownload();
+    void DisplayOptions();
 
 private:
     static constexpr inline const char* INI_SECTION = "themezer";
@@ -169,6 +170,8 @@ private:
     option::OptionLong m_sort{INI_SECTION, "sort", 0};
     option::OptionLong m_order{INI_SECTION, "order", 0};
     option::OptionBool m_nsfw{INI_SECTION, "nsfw", false};
+
+    bool m_checked_for_nro{};
 };
 
 } // namespace sphaira::ui::menu::themezer

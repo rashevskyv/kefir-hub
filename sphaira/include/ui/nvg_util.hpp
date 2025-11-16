@@ -6,8 +6,8 @@
 
 namespace sphaira::ui::gfx {
 
-void drawImage(NVGcontext*, float x, float y, float w, float h, int texture, float rounded = 0.F);
-void drawImage(NVGcontext*, const Vec4& v, int texture, float rounded = 0.F);
+void drawImage(NVGcontext*, float x, float y, float w, float h, int texture, float rounded = 0.F, float alpha = 1.0F);
+void drawImage(NVGcontext*, const Vec4& v, int texture, float rounded = 0.F, float alpha = 1.0F);
 
 void dimBackground(NVGcontext*);
 

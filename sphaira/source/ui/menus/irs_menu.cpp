@@ -81,8 +81,8 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
     }});
 
     SetAction(Button::X, Action{"Options"_i18n, [this](){
-        auto options = std::make_shared<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(options));
+        auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
 
         SidebarEntryArray::Items controller_str;
         for (u32 i = 0; i < IRS_MAX_CAMERAS; i++) {
@@ -126,44 +126,44 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
             format_str.emplace_back("20\u00D715");
         }
 
-        options->Add(std::make_shared<SidebarEntryArray>("Controller"_i18n, controller_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Controller"_i18n, controller_str, [this](s64& index){
             irsStopImageProcessor(m_entries[m_index].m_handle);
             m_index = index;
             UpdateConfig(&m_config);
-        }, m_index));
+        }, m_index);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Rotation"_i18n, rotation_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Rotation"_i18n, rotation_str, [this](s64& index){
             m_rotation = (Rotation)index;
-        }, m_rotation));
+        }, m_rotation);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Colour"_i18n, colour_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Colour"_i18n, colour_str, [this](s64& index){
             m_colour = (Colour)index;
             updateColourArray();
-        }, m_colour));
+        }, m_colour);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Light Target"_i18n, light_target_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Light Target"_i18n, light_target_str, [this](s64& index){
             m_config.light_target = index;
             UpdateConfig(&m_config);
-        }, m_config.light_target));
+        }, m_config.light_target);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Gain"_i18n, gain_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Gain"_i18n, gain_str, [this](s64& index){
             m_config.gain = GAIN_MIN + index;
             UpdateConfig(&m_config);
-        }, m_config.gain - GAIN_MIN));
+        }, m_config.gain - GAIN_MIN);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Negative Image"_i18n, is_negative_image_used_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Negative Image"_i18n, is_negative_image_used_str, [this](s64& index){
             m_config.is_negative_image_used = index;
             UpdateConfig(&m_config);
-        }, m_config.is_negative_image_used));
+        }, m_config.is_negative_image_used);
 
-        options->Add(std::make_shared<SidebarEntryArray>("Format"_i18n, format_str, [this](s64& index){
+        options->Add<SidebarEntryArray>("Format"_i18n, format_str, [this](s64& index){
             m_config.orig_format = index;
             m_config.trimming_format = index;
             UpdateConfig(&m_config);
-        }, m_config.orig_format));
+        }, m_config.orig_format);
 
         if (hosversionAtLeast(4,0,0)) {
-            options->Add(std::make_shared<SidebarEntryArray>("Trimming Format"_i18n, format_str, [this](s64& index){
+            options->Add<SidebarEntryArray>("Trimming Format"_i18n, format_str, [this](s64& index){
             // you cannot set trim a larger region than the source
             if (index < m_config.orig_format) {
                 index = m_config.orig_format;
@@ -171,17 +171,17 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
                 m_config.trimming_format = index;
                 UpdateConfig(&m_config);
             }
-        }, m_config.orig_format));
+        }, m_config.orig_format);
 
-            options->Add(std::make_shared<SidebarEntryBool>("External Light Filter"_i18n, m_config.is_external_light_filter_enabled, [this](bool& enable){
+            options->Add<SidebarEntryBool>("External Light Filter"_i18n, m_config.is_external_light_filter_enabled, [this](bool& enable){
                 m_config.is_external_light_filter_enabled = enable;
                 UpdateConfig(&m_config);
-            }));
+            });
         }
 
-        options->Add(std::make_shared<SidebarEntryCallback>("Load Default"_i18n, [this](){
+        options->Add<SidebarEntryCallback>("Load Default"_i18n, [this](){
             LoadDefaultConfig();
-        }, true));
+        }, true);
     }});
 
     if (R_FAILED(m_init_rc = irsInitialize())) {

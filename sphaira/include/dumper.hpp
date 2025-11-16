@@ -55,10 +55,10 @@ using OnExit = std::function<void(Result rc)>;
 using OnLocation = std::function<void(const DumpLocation& loc)>;
 
 // prompts the user to select dump location, calls on_loc on success with the selected location.
-void DumpGetLocation(const std::string& title, u32 location_flags, OnLocation on_loc);
+void DumpGetLocation(const std::string& title, u32 location_flags, const OnLocation& on_loc);
 // dumps to a fetched location using DumpGetLocation().
-void Dump(std::shared_ptr<BaseSource> source, const DumpLocation& location, const std::vector<fs::FsPath>& paths, OnExit on_exit);
+void Dump(const std::shared_ptr<BaseSource>& source, const DumpLocation& location, const std::vector<fs::FsPath>& paths, const OnExit& on_exit);
 // DumpGetLocation() + Dump() all in one.
-void Dump(std::shared_ptr<BaseSource> source, const std::vector<fs::FsPath>& paths, OnExit on_exit = [](Result){}, u32 location_flags = DumpLocationFlag_All);
+void Dump(const std::shared_ptr<BaseSource>& source, const std::vector<fs::FsPath>& paths, const OnExit& on_exit = [](Result){}, u32 location_flags = DumpLocationFlag_All);
 
 } // namespace sphaira::dump

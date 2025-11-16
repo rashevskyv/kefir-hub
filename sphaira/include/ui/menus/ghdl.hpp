@@ -32,12 +32,15 @@ struct GhApiAsset {
     std::string content_type{};
     u64 size{};
     u64 download_count{};
+    std::string updated_at{};
     std::string browser_download_url{};
 };
 
 struct GhApiEntry {
     std::string tag_name{};
     std::string name{};
+    std::string published_at{};
+    bool prerelease{};
     std::vector<GhApiAsset> assets{};
 };
 
@@ -71,5 +74,19 @@ private:
     s64 m_index{};
     std::unique_ptr<List> m_list{};
 };
+
+// creates a popup box on another thread.
+void DownloadEntries(const Entry& entry);
+
+// parses the params into entry struct and calls DonwloadEntries
+bool Download(const std::string& url, const std::vector<AssetEntry>& assets = {}, const std::string& pre_install_message = {}, const std::string& post_install_message = {});
+
+// calls the above function by pushing the asset to an array.
+inline bool Download(const std::string& url, const AssetEntry& asset, const std::string& pre_install_message = {}, const std::string& post_install_message = {}) {
+    std::vector<AssetEntry> assets;
+    assets.emplace_back(asset);
+
+    return Download(url, assets, pre_install_message, post_install_message);
+}
 
 } // namespace sphaira::ui::menu::gh

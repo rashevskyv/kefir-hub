@@ -16,6 +16,8 @@
 
 // The USB transfer code was taken from Haze (part of Atmosphere).
 
+#if ENABLE_NETWORK_INSTALL
+
 #include "usb/base.hpp"
 #include "log.hpp"
 #include "defines.hpp"
@@ -24,14 +26,20 @@
 #include <cstring>
 
 namespace sphaira::usb {
+namespace {
+
+constexpr u64 TRANSFER_ALIGN = 0x1000;
+constexpr u64 TRANSFER_MAX = 1024*1024*16;
+static_assert(!(TRANSFER_MAX % TRANSFER_ALIGN));
+
+} // namespace
 
 Base::Base(u64 transfer_timeout) {
     App::SetAutoSleepDisabled(true);
 
     m_transfer_timeout = transfer_timeout;
     ueventCreate(GetCancelEvent(), true);
-    // this avoids allocations during transfers.
-    m_aligned.reserve(1024 * 1024 * 16);
+    m_aligned = std::make_unique<u8*>(new(std::align_val_t{TRANSFER_ALIGN}) u8[TRANSFER_MAX]);
 }
 
 Base::~Base() {
@@ -63,39 +71,28 @@ Result Base::TransferPacketImpl(bool read, void *page, u32 remaining, u32 size, 
 // an changes are made.
 // yati already goes to great lengths to be zero-copy during installing
 // by swapping buffers and inflating in-place.
-
-// NOTE: it is now possible to request the transfer buffer using GetTransferBuffer(),
-// which will always be aligned and have the size aligned.
-// this allows for zero-copy transferrs to take place.
-// this is used in usb_upload.cpp.
-// do note that this relies of the host sending / receiving buffers of an aligned size.
 Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout) {
     auto buf = static_cast<u8*>(data);
-    auto transfer_buf = m_aligned.data();
-    const auto alias = buf == transfer_buf;
+    auto transfer_buf = *m_aligned;
 
-    if (!alias) {
-        m_aligned.resize(size);
-    }
+    R_UNLESS(!((u64)transfer_buf & 0xFFF), Result_UsbBadBufferAlign);
+    R_UNLESS(size <= TRANSFER_MAX, Result_UsbBadTransferSize);
 
     while (size) {
-        if (!alias && !read) {
+        if (!read) {
             std::memcpy(transfer_buf, buf, size);
         }
 
         u32 out_size_transferred;
         R_TRY(TransferPacketImpl(read, transfer_buf, size, size, &out_size_transferred, timeout));
+        R_UNLESS(out_size_transferred > 0, Result_UsbEmptyTransferSize);
+        R_UNLESS(out_size_transferred <= size, Result_UsbOverflowTransferSize);
 
-        if (!alias && read) {
+        if (read) {
             std::memcpy(buf, transfer_buf, out_size_transferred);
         }
 
-        if (alias) {
-            transfer_buf += out_size_transferred;
-        } else {
-            buf += out_size_transferred;
-        }
-
+        buf += out_size_transferred;
         size -= out_size_transferred;
     }
 
@@ -103,3 +100,5 @@ Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout) {
 }
 
 } // namespace sphaira::usb
+
+#endif

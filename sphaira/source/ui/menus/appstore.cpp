@@ -587,15 +587,15 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
             }
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
+            auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-            options->Add(std::make_shared<SidebarEntryCallback>("More by Author"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("More by Author"_i18n, [this](){
                 m_menu.SetAuthor();
                 SetPop();
-            }, true));
+            }, true);
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Leave Feedback"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("Leave Feedback"_i18n, [this](){
                 std::string out;
                 if (R_SUCCEEDED(swkbd::ShowText(out)) && !out.empty()) {
                     const auto post = "name=" "switch_user" "&package=" + m_entry.name + "&message=" + out;
@@ -615,12 +615,12 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
                         }
                     });
                 }
-            }, true));
+            }, true);
 
             if (App::IsApplication() && !m_entry.url.empty()) {
-                options->Add(std::make_shared<SidebarEntryCallback>("Visit Website"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Visit Website"_i18n, [this](){
                     WebShow(m_entry.url);
-                }));
+                });
             }
         }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
@@ -659,8 +659,8 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
 
     SetTitleSubHeading("by " + m_entry.author);
 
-    m_details = std::make_shared<ScrollableText>(m_entry.details, 0, 374, 250, 768, 18);
-    m_changelog = std::make_shared<ScrollableText>(m_entry.changelog, 0, 374, 250, 768, 18);
+    m_details = std::make_unique<ScrollableText>(m_entry.details, 0, 374, 250, 768, 18);
+    m_changelog = std::make_unique<ScrollableText>(m_entry.changelog, 0, 374, 250, 768, 18);
 
     m_show_changlog ^= 1;
     ShowChangelogAction();
@@ -781,13 +781,12 @@ void EntryMenu::ShowChangelogAction() {
     m_show_changlog ^= 1;
     m_show_file_list = false;
 
-
     if (m_show_changlog) {
         SetAction(Button::L, Action{"Details"_i18n, func});
-        m_detail_changelog = m_changelog;
+        m_detail_changelog = m_changelog.get();
     } else {
         SetAction(Button::L, Action{"Changelog"_i18n, func});
-        m_detail_changelog = m_details;
+        m_detail_changelog = m_details.get();
     }
 }
 
@@ -797,7 +796,7 @@ void EntryMenu::UpdateOptions() {
     };
 
     const auto install = [this](){
-        App::Push(std::make_shared<ProgressBox>(m_entry.image.image, "Downloading "_i18n, m_entry.title, [this](auto pbox){
+        App::Push<ProgressBox>(m_entry.image.image, "Downloading "_i18n, m_entry.title, [this](auto pbox){
             return InstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
@@ -809,11 +808,11 @@ void EntryMenu::UpdateOptions() {
                 m_menu.SetDirty();
                 UpdateOptions();
             }
-        }));
+        });
     };
 
     const auto uninstall = [this](){
-        App::Push(std::make_shared<ProgressBox>(m_entry.image.image, "Uninstalling "_i18n, m_entry.title, [this](auto pbox){
+        App::Push<ProgressBox>(m_entry.image.image, "Uninstalling "_i18n, m_entry.title, [this](auto pbox){
             return UninstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
@@ -825,7 +824,7 @@ void EntryMenu::UpdateOptions() {
                 m_menu.SetDirty();
                 UpdateOptions();
             }
-        }));
+        });
     };
 
     const Option install_option{"Install"_i18n, install};
@@ -866,11 +865,11 @@ void EntryMenu::SetIndex(s64 index) {
         SetAction(Button::A, Action{option.display_text, option.func});
     } else {
         SetAction(Button::A, Action{option.display_text, [this, option](){
-            App::Push(std::make_shared<OptionBox>(option.confirm_text, "No"_i18n, "Yes"_i18n, 1, [this, option](auto op_index){
+            App::Push<OptionBox>(option.confirm_text, "No"_i18n, "Yes"_i18n, 1, [this, option](auto op_index){
                 if (op_index && *op_index) {
                     option.func();
                 }
-            }));
+            });
         }});
     }
 }
@@ -916,11 +915,11 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
                 // log_write("pushing A when empty: size: %zu count: %zu\n", repo_json.size(), m_entries_current.size());
                 return;
             }
-            App::Push(std::make_shared<EntryMenu>(m_entries[m_entries_current[m_index]], m_default_image, *this));
+            App::Push<EntryMenu>(m_entries[m_entries_current[m_index]], m_default_image, *this);
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("AppStore Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
+            auto options = std::make_unique<Sidebar>("AppStore Options"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
 
             SidebarEntryArray::Items filter_items;
             filter_items.push_back("All"_i18n);
@@ -947,33 +946,33 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             layout_items.push_back("Icon"_i18n);
             layout_items.push_back("Grid"_i18n);
 
-            options->Add(std::make_shared<SidebarEntryArray>("Filter"_i18n, filter_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Filter"_i18n, filter_items, [this](s64& index_out){
                 m_filter.Set(index_out);
                 SetFilter();
-            }, m_filter.Get()));
+            }, m_filter.Get());
 
-            options->Add(std::make_shared<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                 m_sort.Set(index_out);
                 SortAndFindLastFile();
-            }, m_sort.Get()));
+            }, m_sort.Get());
 
-            options->Add(std::make_shared<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
                 m_order.Set(index_out);
                 SortAndFindLastFile();
-            }, m_order.Get()));
+            }, m_order.Get());
 
-            options->Add(std::make_shared<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
                 m_layout.Set(index_out);
                 OnLayoutChange();
-            }, m_layout.Get()));
+            }, m_layout.Get());
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Search"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
                 std::string out;
                 if (R_SUCCEEDED(swkbd::ShowText(out)) && !out.empty()) {
                     SetSearch(out);
                     log_write("got %s\n", out.c_str());
                 }
-            }));
+            });
         }})
     );
 
@@ -1226,7 +1225,28 @@ void Menu::ScanHomebrew() {
                 // if we get here, this means that we have the file, but not the .info file
                 // report the file as locally installed to match hb-appstore.
                 if (e.status == EntryStatus::Get) {
-                    e.status = EntryStatus::Local;
+                    // filter out some apps.
+                    bool filtered{};
+
+                    // ignore hbmenu if it was replaced with sphaira.
+                    if (e.name == "hbmenu") {
+                        NacpStruct nacp;
+                        if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
+                            filtered = std::strcmp(nacp.lang[0].name, "nx-hbmenu");
+                        }
+                    }
+                    // ignore single retroarch core.
+                    else if (e.name == "snes9x_2010") {
+                        filtered = true;
+                    }
+                    // todo: filter
+                    // - sys-clk
+
+                    if (!filtered) {
+                        e.status = EntryStatus::Local;
+                    } else {
+                        log_write("filtered: %s path: %s\n", e.name.c_str(), e.binary.c_str());
+                    }
                 }
             }
         }

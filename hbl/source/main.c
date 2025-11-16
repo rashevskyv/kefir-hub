@@ -1,10 +1,9 @@
 #include <switch.h>
 #include <string.h>
-#include <stdlib.h>
 
 #define EXIT_DETECTION_STR "if this isn't replaced i will exit :)"
 
-// this uses 3-4KiB more than nx-hbloader.
+// this uses 16KiB less than nx-hbloader.
 static char g_argv[2048] = {0};
 // this can and will be modified by libnx if launched nro calls envSetNextLoad().
 static char g_nextArgv[2048] = {0};
@@ -47,7 +46,7 @@ static void fix_nro_path(char* path) {
 
 // Credit to behemoth
 // SOURCE: https://github.com/HookedBehemoth/nx-hbloader/commit/7f8000a41bc5e8a6ad96a097ef56634cfd2fabcb
-static NX_NORETURN void selfExit(void) {
+static void NX_NORETURN selfExit(void) {
     Result rc = smInitialize();
     if (R_FAILED(rc))
         goto fail0;
@@ -162,7 +161,8 @@ static void getOwnProcessHandle(void) {
         diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 12));
 
     Thread t;
-    rc = threadCreate(&t, &procHandleReceiveThread, (void*)(uintptr_t)server_handle, NULL, 0x1000, 0x20, 0);
+    u8* stack = g_heapAddr;
+    rc = threadCreate(&t, &procHandleReceiveThread, (void*)(uintptr_t)server_handle, stack, 0x1000, 0x20, 0);
     if (R_FAILED(rc))
         diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 10));
 
@@ -290,10 +290,10 @@ void NX_NORETURN loadNro(void) {
             diagAbortWithResult(rc);
         }
 
-        u8* romfs_dirs = malloc(romfs_header.dirTableSize); // should be 1 entry ("/")
-        u8* romfs_files = malloc(romfs_header.fileTableSize); // should be 2 entries (argv and nro)
+        u8 romfs_dirs[1024 * 2]; // should be 1 entry ("/")
+        u8 romfs_files[1024 * 4]; // should be 2 entries (argv and nro)
 
-        if (!romfs_dirs || !romfs_files) {
+        if (romfs_header.dirTableSize > sizeof(romfs_dirs) || romfs_header.fileTableSize > sizeof(romfs_files)) {
             diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, LibnxError_OutOfMemory));
         }
 
@@ -317,8 +317,6 @@ void NX_NORETURN loadNro(void) {
             diagAbortWithResult(rc);
         }
 
-        free(romfs_dirs);
-        free(romfs_files);
         fsStorageClose(&s);
 
         strcpy(g_defaultNroPath, g_nextNroPath);
@@ -337,40 +335,24 @@ void NX_NORETURN loadNro(void) {
         }
 
         uint8_t *nrobuf = (uint8_t*) g_heapAddr;
-
         NroStart*  start  = (NroStart*)  (nrobuf + 0);
         header = (NroHeader*) (nrobuf + sizeof(NroStart));
-        uint8_t*   rest   = (uint8_t*)   (nrobuf + sizeof(NroStart) + sizeof(NroHeader));
 
         FsFileSystem fs;
-        FsFile f;
-        u64 bytes_read = 0;
-        s64 offset = 0;
-
         if (R_FAILED(rc = fsOpenSdCardFileSystem(&fs))) {
             diagAbortWithResult(rc);
         }
 
         // don't fatal if we don't find the nro, exit to menu
+        FsFile f;
         if (R_FAILED(rc = fsFsOpenFile(&fs, fixedNextNroPath, FsOpenMode_Read, &f))) {
             diagAbortWithResult(rc);
         }
 
-        if (R_FAILED(rc = fsFileRead(&f, offset, start, sizeof(*start), FsReadOption_None, &bytes_read)) ||
-            bytes_read != sizeof(*start)) {
-            diagAbortWithResult(rc);
-        }
-        offset += sizeof(*start);
-
-        if (R_FAILED(rc = fsFileRead(&f, offset, header, sizeof(*header), FsReadOption_None, &bytes_read)) ||
-            bytes_read != sizeof(*header) || header->magic != NROHEADER_MAGIC) {
-            diagAbortWithResult(rc);
-        }
-        offset += sizeof(*header);
-
-        const size_t rest_size = header->size - (sizeof(NroStart) + sizeof(NroHeader));
-        if (R_FAILED(rc = fsFileRead(&f, offset, rest, rest_size, FsReadOption_None, &bytes_read)) ||
-            bytes_read != rest_size) {
+        u64 bytes_read;
+        if (R_FAILED(rc = fsFileRead(&f, 0, start, g_heapSize, FsReadOption_None, &bytes_read)) ||
+            header->magic != NROHEADER_MAGIC ||
+            bytes_read < sizeof(*start) + sizeof(*header) + header->size) {
             diagAbortWithResult(rc);
         }
 
@@ -513,13 +495,11 @@ bool __nx_fsdev_support_cwd = false;
 // u32 __nx_applet_exit_mode = 0;
 
 void __libnx_initheap(void) {
-    static char g_innerheap[0x4000];
-
     extern char* fake_heap_start;
     extern char* fake_heap_end;
 
-    fake_heap_start = &g_innerheap[0];
-    fake_heap_end   = &g_innerheap[sizeof(g_innerheap)];
+    fake_heap_start = NULL;
+    fake_heap_end   = NULL;
 }
 
 void __appInit(void) {
@@ -557,7 +537,20 @@ void __appExit(void) {
 
 }
 
+// exit() effectively never gets called, so let's stub it out.
 void __wrap_exit(void) {
-    // exit() effectively never gets called, so let's stub it out.
     diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 39));
+}
+
+// stub alloc calls as they're not used (saves 4KiB).
+void* __libnx_alloc(size_t size) {
+    diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 40));
+}
+
+void* __libnx_aligned_alloc(size_t alignment, size_t size) {
+    diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 41));
+}
+
+void __libnx_free(void* p) {
+    diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 43));
 }

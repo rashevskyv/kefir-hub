@@ -7,7 +7,6 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include "hasher.hpp"
-// #include <optional>
 #include <span>
 
 namespace sphaira::ui::menu::filebrowser {
@@ -97,6 +96,11 @@ struct FileEntry : FsDirectoryEntry {
     }
 
     auto GetExtension() const -> std::string {
+        if (!checked_extension) {
+            if (auto ext = std::strrchr(name, '.')) {
+                return ext+1;
+            }
+        }
         return extension;
     }
 
@@ -300,7 +304,7 @@ private:
 
 // contains all selected files for a command, such as copy, delete, cut etc.
 struct SelectedStash {
-    void Add(std::shared_ptr<FsView> view, SelectedType type, const std::vector<FileEntry>& files, const fs::FsPath& path) {
+    void Add(FsView* view, SelectedType type, const std::vector<FileEntry>& files, const fs::FsPath& path) {
         if (files.empty()) {
             Reset();
         } else {
@@ -335,7 +339,7 @@ struct SelectedStash {
     }
 
 // private:
-    std::shared_ptr<FsView> m_view{};
+    FsView* m_view{};
     std::vector<FileEntry> m_files{};
     fs::FsPath m_path{};
     SelectedType m_type{SelectedType::None};
@@ -389,20 +393,12 @@ private:
 private:
     static constexpr inline const char* INI_SECTION = "filebrowser";
 
-    std::shared_ptr<FsView> view{};
-    std::shared_ptr<FsView> view_left{};
-    std::shared_ptr<FsView> view_right{};
+    FsView* view{};
+    std::unique_ptr<FsView> view_left{};
+    std::unique_ptr<FsView> view_right{};
 
     std::vector<FileAssocEntry> m_assoc_entries{};
     SelectedStash m_selected{};
-
-    // this keeps track of the highlighted file before opening a folder
-    // if the user presses B to go back to the previous dir
-    // this vector is popped, then, that entry is checked if it still exists
-    // if it does, the index becomes that file.
-    std::vector<LastFile> m_previous_highlighted_file{};
-    s64 m_index{};
-    s64 m_selected_count{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Alphabetical};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};
@@ -412,7 +408,6 @@ private:
     option::OptionBool m_ignore_read_only{INI_SECTION, "ignore_read_only", false};
 
     bool m_loaded_assoc_entries{};
-    bool m_is_update_folder{};
     bool m_split_screen{};
 };
 

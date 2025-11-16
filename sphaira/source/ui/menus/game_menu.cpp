@@ -8,6 +8,7 @@
 #include "swkbd.hpp"
 
 #include "ui/menus/game_menu.hpp"
+#include "ui/menus/save_menu.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -25,116 +26,9 @@
 #include <cstring>
 #include <algorithm>
 #include <minIni.h>
-#include <nxtc.h>
 
 namespace sphaira::ui::menu::game {
 namespace {
-
-constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
-constexpr int THREAD_CORE = 1;
-
-// taken from nxtc
-constexpr u8 g_nacpLangTable[SetLanguage_Total] = {
-    [SetLanguage_JA]     =  2,
-    [SetLanguage_ENUS]   =  0,
-    [SetLanguage_FR]     =  3,
-    [SetLanguage_DE]     =  4,
-    [SetLanguage_IT]     =  7,
-    [SetLanguage_ES]     =  6,
-    [SetLanguage_ZHCN]   = 14,
-    [SetLanguage_KO]     = 12,
-    [SetLanguage_NL]     =  8,
-    [SetLanguage_PT]     = 10,
-    [SetLanguage_RU]     = 11,
-    [SetLanguage_ZHTW]   = 13,
-    [SetLanguage_ENGB]   =  1,
-    [SetLanguage_FRCA]   =  9,
-    [SetLanguage_ES419]  =  5,
-    [SetLanguage_ZHHANS] = 14,
-    [SetLanguage_ZHHANT] = 13,
-    [SetLanguage_PTBR]   = 15
-};
-
-auto GetNacpLangEntryIndex() -> u8 {
-    SetLanguage lang{SetLanguage_ENUS};
-    nxtcGetCacheLanguage(&lang);
-    return g_nacpLangTable[lang];
-}
-
-constexpr u32 ContentMetaTypeToContentFlag(u8 meta_type) {
-    if (meta_type & 0x80) {
-        return 1 << (meta_type - 0x80);
-    }
-
-    return 0;
-}
-
-enum ContentFlag {
-    ContentFlag_Application = ContentMetaTypeToContentFlag(NcmContentMetaType_Application),
-    ContentFlag_Patch = ContentMetaTypeToContentFlag(NcmContentMetaType_Patch),
-    ContentFlag_AddOnContent = ContentMetaTypeToContentFlag(NcmContentMetaType_AddOnContent),
-    ContentFlag_DataPatch = ContentMetaTypeToContentFlag(NcmContentMetaType_DataPatch),
-    ContentFlag_All = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent | ContentFlag_DataPatch,
-};
-
-struct NcmEntry {
-    const NcmStorageId storage_id;
-    NcmContentStorage cs{};
-    NcmContentMetaDatabase db{};
-
-    void Open() {
-        if (R_FAILED(ncmOpenContentMetaDatabase(std::addressof(db), storage_id))) {
-            log_write("\tncmOpenContentMetaDatabase() failed. storage_id: %u\n", storage_id);
-        } else {
-            log_write("\tncmOpenContentMetaDatabase() success. storage_id: %u\n", storage_id);
-        }
-
-        if (R_FAILED(ncmOpenContentStorage(std::addressof(cs), storage_id))) {
-            log_write("\tncmOpenContentStorage() failed. storage_id: %u\n", storage_id);
-        } else {
-            log_write("\tncmOpenContentStorage() success. storage_id: %u\n", storage_id);
-        }
-    }
-
-    void Close() {
-        ncmContentMetaDatabaseClose(std::addressof(db));
-        ncmContentStorageClose(std::addressof(cs));
-
-        db = {};
-        cs = {};
-    }
-};
-
-constinit NcmEntry ncm_entries[] = {
-    // on memory, will become invalid on the gamecard being inserted / removed.
-    { NcmStorageId_GameCard },
-    // normal (save), will remain valid.
-    { NcmStorageId_BuiltInUser },
-    { NcmStorageId_SdCard },
-};
-
-auto& GetNcmEntry(u8 storage_id) {
-    auto it = std::ranges::find_if(ncm_entries, [storage_id](auto& e){
-        return storage_id == e.storage_id;
-    });
-
-    if (it == std::end(ncm_entries)) {
-        log_write("unable to find valid ncm entry: %u\n", storage_id);
-        return ncm_entries[0];
-    }
-
-    return *it;
-}
-
-auto& GetNcmCs(u8 storage_id) {
-    return GetNcmEntry(storage_id).cs;
-}
-
-auto& GetNcmDb(u8 storage_id) {
-    return GetNcmEntry(storage_id).db;
-}
-
-using MetaEntries = std::vector<NsApplicationContentMetaStatus>;
 
 struct ContentInfoEntry {
     NsApplicationContentMetaStatus status{};
@@ -278,53 +172,23 @@ private:
 
 Result Notify(Result rc, const std::string& error_message) {
     if (R_FAILED(rc)) {
-        App::Push(std::make_shared<ui::ErrorBox>(rc,
+        App::Push<ui::ErrorBox>(rc,
             i18n::get(error_message)
-        ));
+        );
     } else {
         App::Notify("Success"_i18n);
     }
 
     return rc;
 }
-
-Result GetMetaEntries(u64 id, MetaEntries& out, u32 flags = ContentFlag_All) {
-    for (s32 i = 0; ; i++) {
-        s32 count;
-        NsApplicationContentMetaStatus status;
-        R_TRY(nsListApplicationContentMetaStatus(id, i, &status, 1, &count));
-
-        if (!count) {
-            break;
-        }
-
-        if (flags & ContentMetaTypeToContentFlag(status.meta_type)) {
-            out.emplace_back(status);
-        }
-    }
-
-    R_SUCCEED();
+Result GetMetaEntries(const Entry& e, title::MetaEntries& out, u32 flags = title::ContentFlag_All) {
+    return title::GetMetaEntries(e.app_id, out, flags);
 }
 
-Result GetMetaEntries(const Entry& e, MetaEntries& out, u32 flags = ContentFlag_All) {
-    return GetMetaEntries(e.app_id, out, flags);
-}
-
-// also sets the status to error.
-void FakeNacpEntry(ThreadResultData& e) {
-    e.status = NacpLoadStatus::Error;
-    // fake the nacp entry
-    std::strcpy(e.lang.name, "Corrupted");
-    std::strcpy(e.lang.author, "Corrupted");
-    e.control.reset();
-}
-
-bool LoadControlImage(Entry& e) {
-    if (!e.image && e.control) {
-        ON_SCOPE_EXIT(e.control.reset());
-
+bool LoadControlImage(Entry& e, title::ThreadResultData* result) {
+    if (!e.image && result && !result->icon.empty()) {
         TimeStamp ts;
-        const auto image = ImageLoadFromMemory({e.control->icon, e.jpeg_size}, ImageFlag_JPEG);
+        const auto image = ImageLoadFromMemory(result->icon, ImageFlag_JPEG);
         if (!image.data.empty()) {
             e.image = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
             log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
@@ -335,148 +199,22 @@ bool LoadControlImage(Entry& e) {
     return false;
 }
 
-Result GetControlPathFromStatus(const NsApplicationContentMetaStatus& status, u64* out_program_id, fs::FsPath* out_path) {
-    const auto& ee = status;
-    if (ee.storageID != NcmStorageId_SdCard && ee.storageID != NcmStorageId_BuiltInUser && ee.storageID != NcmStorageId_GameCard) {
-        return 0x1;
+void LoadResultIntoEntry(Entry& e, title::ThreadResultData* result) {
+    if (result) {
+        e.status = result->status;
+        e.lang = result->lang;
+        e.status = result->status;
     }
-
-    auto& db = GetNcmDb(ee.storageID);
-    auto& cs = GetNcmCs(ee.storageID);
-
-    NcmContentMetaKey key;
-    R_TRY(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, ee.application_id));
-
-    NcmContentId content_id;
-    R_TRY(ncmContentMetaDatabaseGetContentIdByType(&db, &content_id, &key, NcmContentType_Control));
-
-    R_TRY(ncmContentStorageGetProgramId(&cs, out_program_id, &content_id, FsContentAttributes_All));
-
-    R_TRY(ncmContentStorageGetPath(&cs, out_path->s, sizeof(*out_path), &content_id));
-    R_SUCCEED();
-}
-
-Result LoadControlManual(u64 id, ThreadResultData& data) {
-    TimeStamp ts;
-
-    MetaEntries entries;
-    R_TRY(GetMetaEntries(id, entries));
-    R_UNLESS(!entries.empty(), Result_GameEmptyMetaEntries);
-
-    u64 program_id;
-    fs::FsPath path;
-    R_TRY(GetControlPathFromStatus(entries.back(), &program_id, &path));
-
-    std::vector<u8> icon;
-    R_TRY(nca::ParseControl(path, program_id, &data.control->nacp.lang[GetNacpLangEntryIndex()], sizeof(NacpLanguageEntry), &icon));
-    std::memcpy(data.control->icon, icon.data(), icon.size());
-
-    data.jpeg_size = icon.size();
-    log_write("\t\t[manual control] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-
-    R_SUCCEED();
-}
-
-auto LoadControlEntry(u64 id) -> ThreadResultData {
-    ThreadResultData data{};
-    data.id = id;
-    data.control = std::make_shared<NsApplicationControlData>();
-    data.status = NacpLoadStatus::Error;
-
-    bool manual_load = true;
-    if (hosversionBefore(20,0,0)) {
-        TimeStamp ts;
-        u64 actual_size;
-        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_CacheOnly, id, data.control.get(), sizeof(NsApplicationControlData), &actual_size))) {
-            manual_load = false;
-            data.jpeg_size = actual_size - sizeof(NacpStruct);
-            log_write("\t\t[ns control cache] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-        }
-    }
-
-    if (manual_load) {
-        manual_load = R_SUCCEEDED(LoadControlManual(id, data));
-    }
-
-    Result rc{};
-    if (!manual_load) {
-        TimeStamp ts;
-        u64 actual_size;
-        if (R_SUCCEEDED(rc = nsGetApplicationControlData(NsApplicationControlSource_Storage, id, data.control.get(), sizeof(NsApplicationControlData), &actual_size))) {
-            data.jpeg_size = actual_size - sizeof(NacpStruct);
-            log_write("\t\t[ns control storage] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-        }
-    }
-
-    if (R_SUCCEEDED(rc)) {
-        data.lang = data.control->nacp.lang[GetNacpLangEntryIndex()];
-        data.status = NacpLoadStatus::Loaded;
-    }
-
-    if (R_FAILED(rc)) {
-        FakeNacpEntry(data);
-    }
-
-    return data;
-}
-
-void LoadResultIntoEntry(Entry& e, const ThreadResultData& result) {
-    e.status = result.status;
-    e.control = result.control;
-    e.jpeg_size= result.jpeg_size;
-    e.lang = result.lang;
-    e.status = result.status;
 }
 
 void LoadControlEntry(Entry& e, bool force_image_load = false) {
-    if (e.status == NacpLoadStatus::None) {
-        const auto result = LoadControlEntry(e.app_id);
-        LoadResultIntoEntry(e, result);
+    if (e.status != title::NacpLoadStatus::Loaded) {
+        LoadResultIntoEntry(e, title::Get(e.app_id));
     }
 
-    if (force_image_load && e.status == NacpLoadStatus::Loaded) {
-        LoadControlImage(e);
+    if (force_image_load && e.status == title::NacpLoadStatus::Loaded) {
+        LoadControlImage(e, title::Get(e.app_id));
     }
-}
-
-// taken from nxdumptool.
-void utilsReplaceIllegalCharacters(char *str, bool ascii_only)
-{
-    static const char g_illegalFileSystemChars[] = "\\/:*?\"<>|";
-
-    size_t str_size = 0, cur_pos = 0;
-
-    if (!str || !(str_size = strlen(str))) return;
-
-    u8 *ptr1 = (u8*)str, *ptr2 = ptr1;
-    ssize_t units = 0;
-    u32 code = 0;
-    bool repl = false;
-
-    while(cur_pos < str_size)
-    {
-        units = decode_utf8(&code, ptr1);
-        if (units < 0) break;
-
-        if (code < 0x20 || (!ascii_only && code == 0x7F) || (ascii_only && code >= 0x7F) || \
-            (units == 1 && memchr(g_illegalFileSystemChars, (int)code, std::size(g_illegalFileSystemChars))))
-        {
-            if (!repl)
-            {
-                *ptr2++ = '_';
-                repl = true;
-            }
-        } else {
-            if (ptr2 != ptr1) memmove(ptr2, ptr1, (size_t)units);
-            ptr2 += units;
-            repl = false;
-        }
-
-        ptr1 += units;
-        cur_pos += (size_t)units;
-    }
-
-    *ptr2 = '\0';
 }
 
 auto isRightsIdValid(FsRightsId id) -> bool {
@@ -498,13 +236,13 @@ HashStr hexIdToStr(auto id) {
 
 auto BuildNspPath(const Entry& e, const NsApplicationContentMetaStatus& status) -> fs::FsPath {
     fs::FsPath name_buf = e.GetName();
-    utilsReplaceIllegalCharacters(name_buf, true);
+    title::utilsReplaceIllegalCharacters(name_buf, true);
 
     char version[sizeof(NacpStruct::display_version) + 1]{};
     if (status.meta_type == NcmContentMetaType_Patch) {
         u64 program_id;
         fs::FsPath path;
-        if (R_SUCCEEDED(GetControlPathFromStatus(status, &program_id, &path))) {
+        if (R_SUCCEEDED(title::GetControlPathFromStatus(status, &program_id, &path))) {
             char display_version[0x10];
             if (R_SUCCEEDED(nca::ParseControl(path, program_id, display_version, sizeof(display_version), nullptr, offsetof(NacpStruct, display_version)))) {
                 std::snprintf(version, sizeof(version), "%s ", display_version);
@@ -523,8 +261,8 @@ auto BuildNspPath(const Entry& e, const NsApplicationContentMetaStatus& status) 
 }
 
 Result BuildContentEntry(const NsApplicationContentMetaStatus& status, ContentInfoEntry& out) {
-    auto& cs = GetNcmCs(status.storageID);
-    auto& db = GetNcmDb(status.storageID);
+    auto& cs = title::GetNcmCs(status.storageID);
+    auto& db = title::GetNcmDb(status.storageID);
     const auto app_id = ncm::GetAppId(status.meta_type, status.application_id);
 
     auto id_min = status.application_id;
@@ -633,7 +371,7 @@ Result BuildNspEntry(const Entry& e, const ContentInfoEntry& info, const keys::K
     }
 
     out.nsp_data = yati::container::Nsp::Build(out.collections, out.nsp_size);
-    out.cs = GetNcmCs(info.status.storageID);
+    out.cs = title::GetNcmCs(info.status.storageID);
 
     R_SUCCEED();
 }
@@ -641,7 +379,7 @@ Result BuildNspEntry(const Entry& e, const ContentInfoEntry& info, const keys::K
 Result BuildNspEntries(Entry& e, u32 flags, std::vector<NspEntry>& out) {
     LoadControlEntry(e);
 
-    MetaEntries meta_entries;
+    title::MetaEntries meta_entries;
     R_TRY(GetMetaEntries(e, meta_entries, flags));
 
     keys::Keys keys;
@@ -670,113 +408,34 @@ void LaunchEntry(const Entry& e) {
     Notify(rc, "Failed to launch application");
 }
 
-void ThreadFunc(void* user) {
-    auto data = static_cast<ThreadData*>(user);
+Result CreateSave(u64 app_id, AccountUid uid) {
+    u64 actual_size;
+    auto data = std::make_unique<NsApplicationControlData>();
+    R_TRY(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, data.get(), sizeof(NsApplicationControlData), &actual_size));
 
-    if (data->IsTitleCacheEnabled() && !nxtcInitialize()) {
-        log_write("[NXTC] failed to init cache\n");
-    }
-    ON_SCOPE_EXIT(nxtcExit());
+    FsSaveDataAttribute attr{};
+    attr.application_id = app_id;
+    attr.uid = uid;
+    attr.save_data_type = FsSaveDataType_Account;
 
-    while (data->IsRunning()) {
-        data->Run();
-    }
+    FsSaveDataCreationInfo info{};
+    info.save_data_size = data->nacp.user_account_save_data_size;
+    info.journal_size = data->nacp.user_account_save_data_journal_size;
+    info.available_size = data->nacp.user_account_save_data_size; // todo: check what this should be.
+    info.owner_id = data->nacp.save_data_owner_id;
+    info.save_data_space_id = FsSaveDataSpaceId_User;
+
+    // https://switchbrew.org/wiki/Filesystem_services#CreateSaveDataFileSystem
+    FsSaveDataMetaInfo meta{};
+    meta.size = 0x40060;
+    meta.type = FsSaveDataMetaType_Thumbnail;
+
+    R_TRY(fsCreateSaveDataFileSystem(&attr, &info, &meta));
+
+    R_SUCCEED();
 }
 
 } // namespace
-
-ThreadData::ThreadData(bool title_cache) : m_title_cache{title_cache} {
-    ueventCreate(&m_uevent, true);
-    mutexInit(&m_mutex_id);
-    mutexInit(&m_mutex_result);
-    m_running = true;
-}
-
-void ThreadData::Run() {
-    const auto waiter = waiterForUEvent(&m_uevent);
-    while (IsRunning()) {
-        const auto rc = waitSingle(waiter, 3e+9);
-
-        // if we timed out, flush the cache and poll again.
-        if (R_FAILED(rc)) {
-            nxtcFlushCacheFile();
-            continue;
-        }
-
-        if (!IsRunning()) {
-            return;
-        }
-
-        std::vector<u64> ids;
-        {
-            mutexLock(&m_mutex_id);
-            ON_SCOPE_EXIT(mutexUnlock(&m_mutex_id));
-            std::swap(ids, m_ids);
-        }
-
-        for (u64 i = 0; i < std::size(ids); i++) {
-            if (!IsRunning()) {
-                return;
-            }
-
-            ThreadResultData result{ids[i]};
-            TimeStamp ts;
-            if (auto data = nxtcGetApplicationMetadataEntryById(ids[i])) {
-                log_write("[NXTC] loaded from cache time taken: %.2fs %zums %zuns\n", ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
-                ON_SCOPE_EXIT(nxtcFreeApplicationMetadata(&data));
-
-                result.control = std::make_unique<NsApplicationControlData>();
-                result.status = NacpLoadStatus::Loaded;
-                std::strcpy(result.lang.name, data->name);
-                std::strcpy(result.lang.author, data->publisher);
-                std::memcpy(result.control->icon, data->icon_data, data->icon_size);
-                result.jpeg_size = data->icon_size;
-            } else {
-                // sleep after every other entry loaded.
-                svcSleepThread(2e+6); // 2ms
-
-                result = LoadControlEntry(ids[i]);
-                if (result.status == NacpLoadStatus::Loaded) {
-                    nxtcAddEntry(ids[i], &result.control->nacp, result.jpeg_size, result.control->icon, true);
-                }
-            }
-
-            mutexLock(&m_mutex_result);
-            ON_SCOPE_EXIT(mutexUnlock(&m_mutex_result));
-            m_result.emplace_back(result);
-        }
-    }
-}
-
-void ThreadData::Close() {
-    m_running = false;
-    ueventSignal(&m_uevent);
-}
-
-void ThreadData::Push(u64 id) {
-    mutexLock(&m_mutex_id);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex_id));
-
-    const auto it = std::ranges::find(m_ids, id);
-    if (it == m_ids.end()) {
-        m_ids.emplace_back(id);
-        ueventSignal(&m_uevent);
-    }
-}
-
-void ThreadData::Push(std::span<const Entry> entries) {
-    for (auto& e : entries) {
-        Push(e.app_id);
-    }
-}
-
-void ThreadData::Pop(std::vector<ThreadResultData>& out) {
-    mutexLock(&m_mutex_result);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex_result));
-
-    std::swap(out, m_result);
-    m_result.clear();
-}
 
 Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
     this->SetActions(
@@ -817,13 +476,13 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
             LaunchEntry(m_entries[m_index]);
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
+            auto options = std::make_unique<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
 
             if (m_entries.size()) {
-                options->Add(std::make_shared<SidebarEntryCallback>("Sort By"_i18n, [this](){
-                    auto options = std::make_shared<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-                    ON_SCOPE_EXIT(App::Push(options));
+                options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
+                    auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+                    ON_SCOPE_EXIT(App::Push(std::move(options)));
 
                     SidebarEntryArray::Items sort_items;
                     sort_items.push_back("Updated"_i18n);
@@ -837,55 +496,55 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     layout_items.push_back("Icon"_i18n);
                     layout_items.push_back("Grid"_i18n);
 
-                    options->Add(std::make_shared<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+                    options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                         m_sort.Set(index_out);
                         SortAndFindLastFile(false);
-                    }, m_sort.Get()));
+                    }, m_sort.Get());
 
-                    options->Add(std::make_shared<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+                    options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
                         m_order.Set(index_out);
                         SortAndFindLastFile(false);
-                    }, m_order.Get()));
+                    }, m_order.Get());
 
-                    options->Add(std::make_shared<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+                    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
                         m_layout.Set(index_out);
                         OnLayoutChange();
-                    }, m_layout.Get()));
+                    }, m_layout.Get());
 
-                    options->Add(std::make_shared<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
+                    options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
                         m_hide_forwarders.Set(v_out);
                         m_dirty = true;
-                    }));
-                }));
+                    });
+                });
 
                 #if 0
-                options->Add(std::make_shared<SidebarEntryCallback>("Info"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
 
-                }));
+                });
                 #endif
 
-                options->Add(std::make_shared<SidebarEntryCallback>("Launch random game"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Launch random game"_i18n, [this](){
                     const auto random_index = randomGet64() % std::size(m_entries);
                     auto& e = m_entries[random_index];
                     LoadControlEntry(e, true);
 
-                    App::Push(std::make_shared<OptionBox>(
+                    App::Push<OptionBox>(
                         "Launch "_i18n + e.GetName(),
                         "Back"_i18n, "Launch"_i18n, 1, [this, &e](auto op_index){
                             if (op_index && *op_index) {
                                 LaunchEntry(e);
                             }
                         }, e.image
-                    ));
-                }));
+                    );
+                });
 
-                options->Add(std::make_shared<SidebarEntryCallback>("List meta records"_i18n, [this](){
-                    MetaEntries meta_entries;
+                options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
+                    title::MetaEntries meta_entries;
                     const auto rc = GetMetaEntries(m_entries[m_index], meta_entries);
                     if (R_FAILED(rc)) {
-                        App::Push(std::make_shared<ui::ErrorBox>(rc,
+                        App::Push<ui::ErrorBox>(rc,
                             i18n::get("Failed to list application meta entries")
-                        ));
+                        );
                         return;
                     }
 
@@ -901,7 +560,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                         items.emplace_back(buf);
                     }
 
-                    App::Push(std::make_shared<PopupList>(
+                    App::Push<PopupList>(
                         "Entries"_i18n, items, [this, meta_entries](auto op_index){
                             #if 0
                             if (op_index) {
@@ -909,78 +568,99 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                             #endif
                         }
-                    ));
-                }));
+                    );
+                });
 
-                options->Add(std::make_shared<SidebarEntryCallback>("Dump"_i18n, [this](){
-                    auto options = std::make_shared<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
-                    ON_SCOPE_EXIT(App::Push(options));
+                options->Add<SidebarEntryCallback>("Dump"_i18n, [this](){
+                    auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
+                    ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-                    options->Add(std::make_shared<SidebarEntryCallback>("Dump All"_i18n, [this](){
-                        DumpGames(ContentFlag_All);
-                    }, true));
-                    options->Add(std::make_shared<SidebarEntryCallback>("Dump Application"_i18n, [this](){
-                        DumpGames(ContentFlag_Application);
-                    }, true));
-                    options->Add(std::make_shared<SidebarEntryCallback>("Dump Patch"_i18n, [this](){
-                        DumpGames(ContentFlag_Patch);
-                    }, true));
-                    options->Add(std::make_shared<SidebarEntryCallback>("Dump AddOnContent"_i18n, [this](){
-                        DumpGames(ContentFlag_AddOnContent);
-                    }, true));
-                    options->Add(std::make_shared<SidebarEntryCallback>("Dump DataPatch"_i18n, [this](){
-                        DumpGames(ContentFlag_DataPatch);
-                    }, true));
-                }, true));
+                    options->Add<SidebarEntryCallback>("Dump All"_i18n, [this](){
+                        DumpGames(title::ContentFlag_All);
+                    }, true);
+                    options->Add<SidebarEntryCallback>("Dump Application"_i18n, [this](){
+                        DumpGames(title::ContentFlag_Application);
+                    }, true);
+                    options->Add<SidebarEntryCallback>("Dump Patch"_i18n, [this](){
+                        DumpGames(title::ContentFlag_Patch);
+                    }, true);
+                    options->Add<SidebarEntryCallback>("Dump AddOnContent"_i18n, [this](){
+                        DumpGames(title::ContentFlag_AddOnContent);
+                    }, true);
+                    options->Add<SidebarEntryCallback>("Dump DataPatch"_i18n, [this](){
+                        DumpGames(title::ContentFlag_DataPatch);
+                    }, true);
+                }, true);
 
-                options->Add(std::make_shared<SidebarEntryCallback>("Dump options"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
                     App::DisplayDumpOptions(false);
-                }));
+                });
 
                 // completely deletes the application record and all data.
-                options->Add(std::make_shared<SidebarEntryCallback>("Delete"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
                     const auto buf = "Are you sure you want to delete "_i18n + m_entries[m_index].GetName() + "?";
-                    App::Push(std::make_shared<OptionBox>(
+                    App::Push<OptionBox>(
                         buf,
                         "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
                             if (op_index && *op_index) {
                                 DeleteGames();
                             }
                         }, m_entries[m_index].image
-                    ));
-                }, true));
+                    );
+                }, true);
             }
 
-            options->Add(std::make_shared<SidebarEntryBool>("Title cache"_i18n, m_title_cache.Get(), [this](bool& v_out){
-                m_title_cache.Set(v_out);
-            }));
+            options->Add<SidebarEntryCallback>("Advanced options"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-            // todo: impl this.
-            #if 0
-            options->Add(std::make_shared<SidebarEntryCallback>("Create save"_i18n, [this](){
-                ui::PopupList::Items items{};
-                const auto accounts = App::GetAccountList();
-                for (auto& p : accounts) {
-                    items.emplace_back(p.nickname);
-                }
+                options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
+                    m_dirty = true;
+                    App::PopToMenu();
+                });
 
-                fsCreateSaveDataFileSystem;
+                options->Add<SidebarEntryCallback>("Create contents folder"_i18n, [this](){
+                    const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(m_entries[m_index].app_id));
+                    App::PushErrorBox(rc, "Folder create failed!"_i18n);
 
-                App::Push(std::make_shared<ui::PopupList>(
-                    "Select user to create save for"_i18n, items, [accounts](auto op_index){
-                        if (op_index) {
-                            s64 out;
-                            if (R_SUCCEEDED(swkbd::ShowNumPad(out, "Enter the save size"_i18n.c_str()))) {
+                    if (R_SUCCEEDED(rc)) {
+                        App::Notify("Folder created!"_i18n);
+                    }
+                });
+
+                options->Add<SidebarEntryCallback>("Create save"_i18n, [this](){
+                    ui::PopupList::Items items{};
+                    const auto accounts = App::GetAccountList();
+                    for (auto& p : accounts) {
+                        items.emplace_back(p.nickname);
+                    }
+
+                    App::Push<ui::PopupList>(
+                        "Select user to create save for"_i18n, items, [this, accounts](auto op_index){
+                            if (op_index) {
+                                CreateSaves(accounts[*op_index].uid);
                             }
                         }
-                    }
-                ));
+                    );
+                });
 
-                // 1. Select user to create save for.
-                // 2. Enter the save size.
-                // 3. Enter the journal size (0 for default).
-            }));
-            #endif
+                options->Add<SidebarEntryBool>("Title cache"_i18n, m_title_cache.Get(), [this](bool& v_out){
+                    m_title_cache.Set(v_out);
+                });
+
+                options->Add<SidebarEntryCallback>("Delete title cache"_i18n, [this](){
+                    App::Push<OptionBox>(
+                        "Are you sure you want to delete the title cache?"_i18n,
+                        "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
+                            if (op_index && *op_index) {
+                                m_dirty = true;
+                                title::Clear();
+                                App::PopToMenu();
+                            }
+                        }
+                    );
+                });
+            });
         }})
     );
 
@@ -988,30 +668,15 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
 
     nsInitialize();
     es::Initialize();
-
-    for (auto& e : ncm_entries) {
-        e.Open();
-    }
-
-    m_thread_data = std::make_unique<ThreadData>(m_title_cache.Get());
-    threadCreate(&m_thread, ThreadFunc, m_thread_data.get(), nullptr, 1024*32, THREAD_PRIO, THREAD_CORE);
-    svcSetThreadCoreMask(m_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE));
-    threadStart(&m_thread);
+    title::Init();
 }
 
 Menu::~Menu() {
-    m_thread_data->Close();
-
-    for (auto& e : ncm_entries) {
-        e.Close();
-    }
+    title::Exit();
 
     FreeEntries();
     nsExit();
     es::Exit();
-
-    threadWaitForExit(&m_thread);
-    threadClose(&m_thread);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -1043,31 +708,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
-    std::vector<ThreadResultData> data;
-    m_thread_data->Pop(data);
-
-    for (const auto& d : data) {
-        const auto it = std::ranges::find_if(m_entries, [&d](auto& e) {
-            return e.app_id == d.id;
-        });
-
-        if (it != m_entries.end()) {
-            LoadResultIntoEntry(*it, d);
-        }
-    }
-
     m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[pos];
 
-        if (e.status == NacpLoadStatus::None) {
-            m_thread_data->Push(e.app_id);
-            e.status = NacpLoadStatus::Progress;
+        if (e.status == title::NacpLoadStatus::None) {
+            title::PushAsync(e.app_id);
+            e.status = title::NacpLoadStatus::Progress;
+        } else if (e.status == title::NacpLoadStatus::Progress) {
+            LoadResultIntoEntry(e, title::GetAsync(e.app_id));
         }
 
         // lazy load image
         if (image_load_count < image_load_max) {
-            if (LoadControlImage(e)) {
+            if (LoadControlImage(e, title::GetAsync(e.app_id))) {
                 image_load_count++;
             }
         }
@@ -1130,25 +784,12 @@ void Menu::ScanHomebrew() {
 
         for (s32 i = 0; i < record_count; i++) {
             const auto& e = record_list[i];
-            #if 0
-            u8 unk_x09 = e.unk_x09;
-            u64 unk_x0a;// = e.unk_x0a;
-            u8 unk_x10 = e.unk_x10;
-            u64 unk_x11;// = e.unk_x11;
-            memcpy(&unk_x0a, e.unk_x0a, sizeof(e.unk_x0a));
-            memcpy(&unk_x11, e.unk_x11, sizeof(e.unk_x11));
-            log_write("ID: %016lx got type: %u unk_x09: %u unk_x0a: %zu unk_x10: %u unk_x11: %zu\n", e.app_id, e.type,
-                unk_x09,
-                unk_x0a,
-                unk_x10,
-                unk_x11
-            );
-            #endif
+
             if (hide_forwarders && (e.application_id & 0x0500000000000000) == 0x0500000000000000) {
                 continue;
             }
 
-            m_entries.emplace_back(e.application_id);
+            m_entries.emplace_back(e.application_id, e.type);
         }
 
         offset += record_count;
@@ -1225,7 +866,7 @@ void Menu::OnLayoutChange() {
 }
 
 void Menu::DeleteGames() {
-    App::Push(std::make_shared<ProgressBox>(0, "Deleting"_i18n, "", [this](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [this](auto pbox) -> Result {
         auto targets = GetSelectedEntries();
 
         for (s64 i = 0; i < std::size(targets); i++) {
@@ -1247,7 +888,7 @@ void Menu::DeleteGames() {
         if (R_SUCCEEDED(rc)) {
             App::Notify("Delete successfull!"_i18n);
         }
-    }));
+    });
 }
 
 void Menu::DumpGames(u32 flags) {
@@ -1266,6 +907,37 @@ void Menu::DumpGames(u32 flags) {
     auto source = std::make_shared<NspSource>(nsp_entries);
     dump::Dump(source, paths, [this](Result rc){
         ClearSelection();
+    });
+}
+
+void Menu::CreateSaves(AccountUid uid) {
+    App::Push<ProgressBox>(0, "Creating"_i18n, "", [this, uid](auto pbox) -> Result {
+        auto targets = GetSelectedEntries();
+
+        for (s64 i = 0; i < std::size(targets); i++) {
+            auto& e = targets[i];
+
+            LoadControlEntry(e);
+            pbox->SetTitle(e.GetName());
+            pbox->UpdateTransfer(i + 1, std::size(targets));
+            const auto rc = CreateSave(e.app_id, uid);
+
+            // don't error if the save already exists.
+            if (R_FAILED(rc) && rc != FsError_PathAlreadyExists) {
+                R_THROW(rc);
+            }
+        }
+
+        R_SUCCEED();
+    }, [this](Result rc){
+        App::PushErrorBox(rc, "Save create failed!"_i18n);
+
+        ClearSelection();
+        save::SignalChange();
+
+        if (R_SUCCEEDED(rc)) {
+            App::Notify("Save create successfull!"_i18n);
+        }
     });
 }
 

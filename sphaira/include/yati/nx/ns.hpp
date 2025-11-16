@@ -6,11 +6,13 @@
 namespace sphaira::ns {
 
 enum ApplicationRecordType {
-    // installed
+    ApplicationRecordType_Running         = 0x0,
     ApplicationRecordType_Installed       = 0x3,
+    ApplicationRecordType_Downloading     = 0x4,
     // application is gamecard, but gamecard isn't insterted
     ApplicationRecordType_GamecardMissing = 0x5,
-    // archived
+    ApplicationRecordType_Downloaded      = 0x6,
+    ApplicationRecordType_Updated         = 0xA,
     ApplicationRecordType_Archived        = 0xB,
 };
 

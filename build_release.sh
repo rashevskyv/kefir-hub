@@ -8,13 +8,13 @@ build_preset() {
     cmake --build --preset $1
 }
 
-build_preset MinSizeRel
+build_preset Release
 
 rm -rf out
 
 # --- SWITCH --- #
 mkdir -p out/switch/sphaira/
-cp -r build/MinSizeRel/*.nro out/switch/sphaira/sphaira.nro
+cp -r build/Release/*.nro out/switch/sphaira/sphaira.nro
 pushd out
 zip -r9 sphaira.zip switch
 popd

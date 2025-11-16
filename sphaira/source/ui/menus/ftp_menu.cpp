@@ -1,3 +1,5 @@
+#if ENABLE_NETWORK_INSTALL
+
 #include "ui/menus/ftp_menu.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -101,3 +103,5 @@ void Menu::OnDisableInstallMode() {
 }
 
 } // namespace sphaira::ui::menu::ftp
+
+#endif

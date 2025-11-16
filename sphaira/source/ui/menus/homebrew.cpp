@@ -53,93 +53,10 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Launch"_i18n, [this](){
-            nro_launch(m_entries[m_index].path);
+            nro_launch(GetEntry().path);
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("Homebrew Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
-
-            if (m_entries.size()) {
-                options->Add(std::make_shared<SidebarEntryCallback>("Sort By"_i18n, [this](){
-                    auto options = std::make_shared<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-                    ON_SCOPE_EXIT(App::Push(options));
-
-                    SidebarEntryArray::Items sort_items;
-                    sort_items.push_back("Updated"_i18n);
-                    sort_items.push_back("Alphabetical"_i18n);
-                    sort_items.push_back("Size"_i18n);
-                    sort_items.push_back("Updated (Star)"_i18n);
-                    sort_items.push_back("Alphabetical (Star)"_i18n);
-                    sort_items.push_back("Size (Star)"_i18n);
-
-                    SidebarEntryArray::Items order_items;
-                    order_items.push_back("Descending"_i18n);
-                    order_items.push_back("Ascending"_i18n);
-
-                    SidebarEntryArray::Items layout_items;
-                    layout_items.push_back("List"_i18n);
-                    layout_items.push_back("Icon"_i18n);
-                    layout_items.push_back("Grid"_i18n);
-
-                    options->Add(std::make_shared<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
-                        m_sort.Set(index_out);
-                        SortAndFindLastFile();
-                    }, m_sort.Get()));
-
-                    options->Add(std::make_shared<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
-                        m_order.Set(index_out);
-                        SortAndFindLastFile();
-                    }, m_order.Get()));
-
-                    options->Add(std::make_shared<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                        m_layout.Set(index_out);
-                        OnLayoutChange();
-                    }, m_layout.Get()));
-
-                    options->Add(std::make_shared<SidebarEntryBool>("Hide Sphaira"_i18n, m_hide_sphaira.Get(), [this](bool& enable){
-                        m_hide_sphaira.Set(enable);
-                    }));
-                }));
-
-                #if 0
-                options->Add(std::make_shared<SidebarEntryCallback>("Info"_i18n, [this](){
-
-                }));
-                #endif
-
-                options->Add(std::make_shared<SidebarEntryCallback>("Delete"_i18n, [this](){
-                    const auto buf = "Are you sure you want to delete "_i18n + m_entries[m_index].path.toString() + "?";
-                    App::Push(std::make_shared<OptionBox>(
-                        buf,
-                        "Back"_i18n, "Delete"_i18n, 1, [this](auto op_index){
-                            if (op_index && *op_index) {
-                                if (R_SUCCEEDED(fs::FsNativeSd().DeleteFile(m_entries[m_index].path))) {
-                                    FreeEntry(App::GetVg(), m_entries[m_index]);
-                                    m_entries.erase(m_entries.begin() + m_index);
-                                    SetIndex(m_index ? m_index - 1 : 0);
-                                }
-                            }
-                        }, m_entries[m_index].image
-                    ));
-                }, true));
-
-                if (App::GetInstallEnable()) {
-                    options->Add(std::make_shared<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
-                        if (App::GetInstallPrompt()) {
-                            App::Push(std::make_shared<OptionBox>(
-                                "WARNING: Installing forwarders will lead to a ban!"_i18n,
-                                "Back"_i18n, "Install"_i18n, 0, [this](auto op_index){
-                                    if (op_index && *op_index) {
-                                        InstallHomebrew();
-                                    }
-                                }, m_entries[m_index].image
-                            ));
-                        } else {
-                            InstallHomebrew();
-                        }
-                    }, true));
-                }
-            }
+            DisplayOptions();
         }})
     );
 
@@ -179,8 +96,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
-        auto& e = m_entries[pos];
+    m_list->Draw(vg, theme, m_entries_current.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
+        const auto index = m_entries_current[pos];
+        auto& e = m_entries[index];
 
         // lazy load image
         if (image_load_count < image_load_max) {
@@ -240,17 +158,17 @@ void Menu::SetIndex(s64 index) {
     }
 
     if (IsStarEnabled()) {
-        const auto star_path = GenerateStarPath(m_entries[m_index].path);
+        const auto star_path = GenerateStarPath(GetEntry().path);
         if (fs::FsNativeSd().FileExists(star_path)) {
             SetAction(Button::R3, Action{"Unstar"_i18n, [this](){
-                fs::FsNativeSd().DeleteFile(GenerateStarPath(m_entries[m_index].path));
-                App::Notify("Unstarred "_i18n + m_entries[m_index].GetName());
+                fs::FsNativeSd().DeleteFile(GenerateStarPath(GetEntry().path));
+                App::Notify("Unstarred "_i18n + GetEntry().GetName());
                 SortAndFindLastFile();
             }});
         } else {
             SetAction(Button::R3, Action{"Star"_i18n, [this](){
-                fs::FsNativeSd().CreateFile(GenerateStarPath(m_entries[m_index].path));
-                App::Notify("Starred "_i18n + m_entries[m_index].GetName());
+                fs::FsNativeSd().CreateFile(GenerateStarPath(GetEntry().path));
+                App::Notify("Starred "_i18n + GetEntry().GetName());
                 SortAndFindLastFile();
             }});
         }
@@ -263,19 +181,19 @@ void Menu::SetIndex(s64 index) {
     // todo: fix GetFileTimeStampRaw being different to timeGetCurrentTime
     // log_write("name: %s hbini.ts: %lu file.ts: %lu smaller: %s\n", e.GetName(), e.hbini.timestamp, e.timestamp.modified, e.hbini.timestamp < e.timestamp.modified ? "true" : "false");
 
-    SetTitleSubHeading(m_entries[m_index].path);
-    this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
+    SetTitleSubHeading(GetEntry().path);
+    this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries_current.size()));
 }
 
 void Menu::InstallHomebrew() {
-    const auto& nro = m_entries[m_index];
+    const auto& nro = GetEntry();
     InstallHomebrew(nro.path, nro_get_icon(nro.path, nro.icon_size, nro.icon_offset));
 }
 
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
-    nro_scan("/switch", m_entries, m_hide_sphaira.Get());
+    nro_scan("/switch", m_entries);
     log_write("nros found: %zu time_taken: %.2f\n", m_entries.size(), ts.GetSecondsD());
 
     struct IniUser {
@@ -301,13 +219,30 @@ void Menu::ScanHomebrew() {
 
         if (user->ini) {
             if (!strcmp(Key, "timestamp")) {
-                user->ini->timestamp = atoi(Value);
+                user->ini->timestamp = ini_parse_getl(Value, 0);
+            } else if (!strcmp(Key, "hidden")) {
+                user->ini->hidden = ini_parse_getbool(Value, false);
             }
         }
 
         // log_write("found: %s %s %s\n", Section, Key, Value);
         return 1;
     }, &ini_user, App::PLAYLOG_PATH);
+
+    // pre-allocate the max size.
+    for (auto& index : m_entries_index) {
+        index.reserve(m_entries.size());
+    }
+
+    for (u32 i = 0; i < m_entries.size(); i++) {
+        auto& e = m_entries[i];
+
+        m_entries_index[Filter_All].emplace_back(i);
+
+        if (!e.hbini.hidden) {
+            m_entries_index[Filter_HideHidden].emplace_back(i);
+        }
+    }
 
     this->Sort();
     SetIndex(0);
@@ -327,7 +262,10 @@ void Menu::Sort() {
     const auto sort = m_sort.Get();
     const auto order = m_order.Get();
 
-    const auto sorter = [this, sort, order](const NroEntry& lhs, const NroEntry& rhs) -> bool {
+    const auto sorter = [this, sort, order](u32 _lhs, u32 _rhs) -> bool {
+        const auto& lhs = m_entries[_lhs];
+        const auto& rhs = m_entries[_rhs];
+
         const auto name_cmp = [order](const NroEntry& lhs, const NroEntry& rhs) -> bool {
             auto r = strcasecmp(lhs.GetName(), rhs.GetName());
             if (!r) {
@@ -403,11 +341,18 @@ void Menu::Sort() {
         std::unreachable();
     };
 
-    std::sort(m_entries.begin(), m_entries.end(), sorter);
+    if (m_show_hidden.Get()) {
+        m_entries_current = m_entries_index[Filter_All];
+    } else {
+        m_entries_current = m_entries_index[Filter_HideHidden];
+    }
+
+    std::sort(m_entries_current.begin(), m_entries_current.end(), sorter);
 }
 
 void Menu::SortAndFindLastFile(bool scan) {
-    const auto path = m_entries[m_index].path;
+    const auto path = GetEntry().path;
+
     if (scan) {
         ScanHomebrew();
     } else {
@@ -416,8 +361,8 @@ void Menu::SortAndFindLastFile(bool scan) {
     SetIndex(0);
 
     s64 index = -1;
-    for (u64 i = 0; i < m_entries.size(); i++) {
-        if (path == m_entries[i].path) {
+    for (u64 i = 0; i < m_entries_current.size(); i++) {
+        if (path == GetEntry(i).path) {
             index = i;
             break;
         }
@@ -444,6 +389,9 @@ void Menu::FreeEntries() {
     }
 
     m_entries.clear();
+    for (auto& e : m_entries_index) {
+        e.clear();
+    }
 }
 
 void Menu::OnLayoutChange() {
@@ -461,6 +409,95 @@ Result Menu::InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon
 
 Result Menu::InstallHomebrewFromPath(const fs::FsPath& path) {
     return InstallHomebrew(path, nro_get_icon(path));
+}
+
+void Menu::DisplayOptions() {
+    auto options = std::make_unique<Sidebar>("Homebrew Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
+        auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        SidebarEntryArray::Items sort_items;
+        sort_items.push_back("Updated"_i18n);
+        sort_items.push_back("Alphabetical"_i18n);
+        sort_items.push_back("Size"_i18n);
+        sort_items.push_back("Updated (Star)"_i18n);
+        sort_items.push_back("Alphabetical (Star)"_i18n);
+        sort_items.push_back("Size (Star)"_i18n);
+
+        SidebarEntryArray::Items order_items;
+        order_items.push_back("Descending"_i18n);
+        order_items.push_back("Ascending"_i18n);
+
+        SidebarEntryArray::Items layout_items;
+        layout_items.push_back("List"_i18n);
+        layout_items.push_back("Icon"_i18n);
+        layout_items.push_back("Grid"_i18n);
+
+        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
+            m_sort.Set(index_out);
+            SortAndFindLastFile();
+        }, m_sort.Get());
+
+        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
+            m_order.Set(index_out);
+            SortAndFindLastFile();
+        }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
+
+        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+            m_layout.Set(index_out);
+            OnLayoutChange();
+        }, m_layout.Get(), "Change the layout to List, Icon and Grid."_i18n);
+
+        options->Add<SidebarEntryBool>("Show hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
+            m_show_hidden.Set(enable);
+            SortAndFindLastFile();
+        }, "Shows all hidden homebrew."_i18n);
+    });
+
+    if (!m_entries_current.empty()) {
+        #if 0
+        options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
+
+        });
+        #endif
+
+        options->Add<SidebarEntryBool>("Hide"_i18n, GetEntry().hbini.hidden, [this](bool& v_out){
+            ini_putl(GetEntry().path, "hidden", v_out, App::PLAYLOG_PATH);
+            ScanHomebrew();
+            App::PopToMenu();
+        },  "Hides the selected homebrew.\n\n"
+            "To Unhide homebrew, enable \"Show hidden\" in the sort options."_i18n);
+
+        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            const auto buf = "Are you sure you want to delete "_i18n + GetEntry().path.toString() + "?";
+            App::Push<OptionBox>(
+                buf,
+                "Back"_i18n, "Delete"_i18n, 1, [this](auto op_index){
+                    if (op_index && *op_index) {
+                        if (R_SUCCEEDED(fs::FsNativeSd().DeleteFile(GetEntry().path))) {
+                            // todo: remove from list using real index here.
+                            FreeEntry(App::GetVg(), GetEntry());
+                            ScanHomebrew();
+                            // m_entries.erase(m_entries.begin() + m_index);
+                            // SetIndex(m_index ? m_index - 1 : 0);
+                            App::PopToMenu();
+                        }
+                    }
+                }, GetEntry().image
+            );
+        },  "Perminately delete the selected homebrew.\n\n"
+            "Files and folders created by the homebrew will still remain. "
+            "Use the FileBrowser to delete them."_i18n);
+
+        auto forwarder_entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+            InstallHomebrew();
+        }, true);
+
+        forwarder_entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+    }
 }
 
 } // namespace sphaira::ui::menu::homebrew

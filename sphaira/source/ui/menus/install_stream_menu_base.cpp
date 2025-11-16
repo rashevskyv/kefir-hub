@@ -1,3 +1,5 @@
+#if ENABLE_NETWORK_INSTALL
+
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "yati/yati.hpp"
 #include "app.hpp"
@@ -18,7 +20,17 @@ enum class InstallState {
 
 constexpr u64 MAX_BUFFER_SIZE = 1024ULL*1024ULL*8ULL;
 constexpr u64 MAX_BUFFER_RESERVE_SIZE = 1024ULL*1024ULL*32ULL;
-volatile InstallState INSTALL_STATE{InstallState::None};
+std::atomic<InstallState> INSTALL_STATE{InstallState::None};
+
+// don't use condivar here as windows mtp is very broken.
+// stalling for too longer (3s+) and having too varied transfer speeds
+// results in windows stalling the transfer for 1m until it kills it via timeout.
+// the workaround is to always accept new data, but stall for 1s.
+// UPDATE: it seems possible to trigger this bug during normal file transfer
+// including using stock haze.
+// it seems random, and ive been unable to trigger it personally.
+// for this reason, use condivar rather than trying to work around the issue.
+#define USE_CONDI_VAR 1
 
 } // namespace
 
@@ -30,6 +42,7 @@ Stream::Stream(const fs::FsPath& path, std::stop_token token) {
 
     mutexInit(&m_mutex);
     condvarInit(&m_can_read);
+    condvarInit(&m_can_write);
 }
 
 Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
@@ -41,7 +54,7 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
     while (!m_token.stop_requested()) {
         SCOPED_MUTEX(&m_mutex);
         if (m_active && m_buffer.empty()) {
-            condvarWait(&m_can_read, &m_mutex);
+            R_TRY(condvarWait(std::addressof(m_can_read), std::addressof(m_mutex)));
         }
 
         if ((!m_active && m_buffer.empty()) || m_token.stop_requested()) {
@@ -52,7 +65,7 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
         std::memcpy(buf, m_buffer.data(), size);
         m_buffer.erase(m_buffer.begin(), m_buffer.begin() + size);
         *bytes_read = size;
-        R_SUCCEED();
+        return condvarWakeOne(&m_can_write);
     }
 
     log_write("[Stream::ReadChunk] failed to read\n");
@@ -71,11 +84,12 @@ bool Stream::Push(const void* buf, s64 size) {
             return true;
         }
 
-        // don't use condivar here as windows mtp is very broken.
-        // stalling for too longer (3s+) and having too varied transfer speeds
-        // results in windows stalling the transfer for 1m until it kills it via timeout.
-        // the workaround is to always accept new data, but stall for 1s.
         SCOPED_MUTEX(&m_mutex);
+        #if USE_CONDI_VAR
+        if (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
+            R_TRY(condvarWait(std::addressof(m_can_write), std::addressof(m_mutex)));
+        }
+        #else
         if (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
             // unlock the mutex and wait for 1s to bring transfer speed down to 1MiB/s.
             log_write("[Stream::Push] buffer is full, delaying\n");
@@ -84,6 +98,7 @@ bool Stream::Push(const void* buf, s64 size) {
 
             svcSleepThread(1e+9);
         }
+        #endif
 
         if (!m_active) {
             log_write("[Stream::Push] file not active\n");
@@ -107,6 +122,7 @@ void Stream::Disable() {
     SCOPED_MUTEX(&m_mutex);
     m_active = false;
     condvarWakeOne(&m_can_read);
+    condvarWakeOne(&m_can_write);
 }
 
 Menu::Menu(const std::string& title, u32 flags) : MenuBase{title, flags} {
@@ -142,9 +158,9 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
     if (m_state == State::Connected) {
         m_state = State::Progress;
-        App::Push(std::make_shared<ui::ProgressBox>(0, "Installing "_i18n, m_source->GetPath(), [this](auto pbox) -> Result {
+        App::Push<ui::ProgressBox>(0, "Installing "_i18n, m_source->GetPath(), [this](auto pbox) -> Result {
             INSTALL_STATE = InstallState::Progress;
-            const auto rc = yati::InstallFromSource(pbox, m_source, m_source->GetPath());
+            const auto rc = yati::InstallFromSource(pbox, m_source.get(), m_source->GetPath());
             INSTALL_STATE = InstallState::Finished;
 
             if (R_FAILED(rc)) {
@@ -165,7 +181,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 m_state = State::Failed;
                 OnDisableInstallMode();
             }
-        }));
+        });
     }
 }
 
@@ -234,7 +250,7 @@ bool Menu::OnInstallStart(const char* path) {
 
     SCOPED_MUTEX(&m_mutex);
 
-    m_source = std::make_shared<Stream>(path, GetToken());
+    m_source = std::make_unique<Stream>(path, GetToken());
     INSTALL_STATE = InstallState::None;
     m_state = State::Connected;
     log_write("[Menu::OnInstallStart] exiting\n");
@@ -259,3 +275,5 @@ void Menu::OnInstallClose() {
 }
 
 } // namespace sphaira::ui::menu::stream
+
+#endif

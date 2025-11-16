@@ -30,10 +30,13 @@ struct DumpLocationEntry {
 
 constexpr DumpLocationEntry DUMP_LOCATIONS[]{
     { DumpLocationType_SdCard, "microSD card (/dumps/)" },
+#if ENABLE_NETWORK_INSTALL
     { DumpLocationType_UsbS2S, "USB transfer (Switch 2 Switch)" },
+#endif
     { DumpLocationType_DevNull, "/dev/null (Speed Test)" },
 };
 
+#if ENABLE_NETWORK_INSTALL
 struct UsbTest final : usb::upload::Usb, yati::source::Stream {
     UsbTest(ui::ProgressBox* pbox, BaseSource* source) : Usb{UINT64_MAX} {
         m_pbox = pbox;
@@ -97,9 +100,9 @@ private:
     s64 m_progress{};
     s64 m_pull_offset{};
 };
+#endif
 
 Result DumpToFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& root, BaseSource* source, std::span<const fs::FsPath> paths) {
-    constexpr s64 BIG_FILE_SIZE = 1024ULL*1024ULL*1024ULL*4ULL;
     const auto is_file_based_emummc = App::IsFileBaseEmummc();
 
     for (const auto& path : paths) {
@@ -113,8 +116,7 @@ Result DumpToFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& root, Bas
         fs->CreateDirectoryRecursivelyWithPath(temp_path);
         fs->DeleteFile(temp_path);
 
-        const auto flags = file_size >= BIG_FILE_SIZE ? FsCreateOption_BigFile : 0;
-        R_TRY(fs->CreateFile(temp_path, file_size, flags));
+        R_TRY(fs->CreateFile(temp_path, file_size));
         ON_SCOPE_EXIT(fs->DeleteFile(temp_path));
 
         {
@@ -152,6 +154,7 @@ Result DumpToStdio(ui::ProgressBox* pbox, const location::StdioEntry& loc, BaseS
     return DumpToFile(pbox, &fs, loc.mount, source, paths);
 }
 
+#if ENABLE_NETWORK_INSTALL
 Result DumpToUsbS2SStream(ui::ProgressBox* pbox, UsbTest* usb, std::span<const fs::FsPath> paths) {
     auto source = usb->GetSource();
 
@@ -241,6 +244,7 @@ Result DumpToUsbS2S(ui::ProgressBox* pbox, BaseSource* source, std::span<const f
 
     R_THROW(0xFFFF);
 }
+#endif
 
 Result DumpToDevNull(ui::ProgressBox* pbox, BaseSource* source, std::span<const fs::FsPath> paths) {
     for (auto path : paths) {
@@ -314,7 +318,7 @@ Result DumpToNetwork(ui::ProgressBox* pbox, const location::Entry& loc, BaseSour
 
 } // namespace
 
-void DumpGetLocation(const std::string& title, u32 location_flags, OnLocation on_loc) {
+void DumpGetLocation(const std::string& title, u32 location_flags, const OnLocation& on_loc) {
     DumpLocation out;
     ui::PopupList::Items items;
     std::vector<DumpEntry> dump_entries;
@@ -342,16 +346,16 @@ void DumpGetLocation(const std::string& title, u32 location_flags, OnLocation on
         }
     }
 
-    App::Push(std::make_shared<ui::PopupList>(
+    App::Push<ui::PopupList>(
         title, items, [dump_entries, out, on_loc](auto op_index) mutable {
             out.entry = dump_entries[*op_index];
             on_loc(out);
         }
-    ));
+    );
 }
 
-void Dump(std::shared_ptr<BaseSource> source, const DumpLocation& location, const std::vector<fs::FsPath>& paths, OnExit on_exit) {
-    App::Push(std::make_shared<ui::ProgressBox>(0, "Dumping"_i18n, "", [source, paths, location](auto pbox) -> Result {
+void Dump(const std::shared_ptr<BaseSource>& source, const DumpLocation& location, const std::vector<fs::FsPath>& paths, const OnExit& on_exit) {
+    App::Push<ui::ProgressBox>(0, "Dumping"_i18n, "", [source, paths, location](auto pbox) -> Result {
         if (location.entry.type == DumpLocationType_Network) {
             R_TRY(DumpToNetwork(pbox, location.network[location.entry.index], source.get(), paths));
         } else if (location.entry.type == DumpLocationType_Stdio) {
@@ -359,7 +363,9 @@ void Dump(std::shared_ptr<BaseSource> source, const DumpLocation& location, cons
         } else if (location.entry.type == DumpLocationType_SdCard) {
             R_TRY(DumpToFileNative(pbox, source.get(), paths));
         } else if (location.entry.type == DumpLocationType_UsbS2S) {
+            #if ENABLE_NETWORK_INSTALL
             R_TRY(DumpToUsbS2S(pbox, source.get(), paths));
+            #endif
         } else if (location.entry.type == DumpLocationType_DevNull) {
             R_TRY(DumpToDevNull(pbox, source.get(), paths));
         }
@@ -374,11 +380,11 @@ void Dump(std::shared_ptr<BaseSource> source, const DumpLocation& location, cons
         }
 
         on_exit(rc);
-    }));
+    });
 }
 
-void Dump(std::shared_ptr<BaseSource> source, const std::vector<fs::FsPath>& paths, OnExit on_exit, u32 location_flags) {
-    DumpGetLocation("Select dump location"_i18n, location_flags, [source, paths, on_exit](const DumpLocation& loc){
+void Dump(const std::shared_ptr<BaseSource>& source, const std::vector<fs::FsPath>& paths, const OnExit& on_exit, u32 location_flags) {
+    DumpGetLocation("Select dump location"_i18n, location_flags, [source, paths, on_exit](const DumpLocation& loc) {
         Dump(source, loc, paths, on_exit);
     });
 }

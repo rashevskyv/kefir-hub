@@ -24,7 +24,7 @@ void DrawClipped(NVGcontext* vg, const Vec4& clip, float x, float y, float size,
 } // namespace
 
 void ScrollingText::Draw(NVGcontext* vg, bool focus, float x, float y, float w, float size, int align, const NVGcolor& colour, const std::string& text_entry) {
-    const Vec4 clip{x, 0, w, 720};
+    const Vec4 clip{x, 0, w, SCREEN_HEIGHT};
 
     if (!focus) {
         DrawClipped(vg, clip, x, y, size, align, colour, text_entry);

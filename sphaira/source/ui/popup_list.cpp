@@ -76,16 +76,16 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
 
     m_starting_index = m_index;
 
-    m_pos.w = 1280.f;
+    m_pos.w = SCREEN_WIDTH;
     const float a = std::min(370.f, (60.f * static_cast<float>(m_items.size())));
     m_pos.h = 80.f + 140.f + a;
-    m_pos.y = 720.f - m_pos.h;
+    m_pos.y = SCREEN_HEIGHT - m_pos.h;
     m_line_top = m_pos.y + 70.f;
-    m_line_bottom = 720.f - 73.f;
+    m_line_bottom = SCREEN_HEIGHT - 73.f;
 
     Vec4 v{m_block};
     v.y = m_line_top + 1.f + 42.f;
-    const Vec4 pos{0, m_line_top, 1280.f, m_line_bottom - m_line_top};
+    const Vec4 pos{0, m_line_top, SCREEN_WIDTH, m_line_bottom - m_line_top};
     m_list = std::make_unique<List>(1, 6, pos, v);
     m_list->SetScrollBarPos(1250, m_line_top + 20, m_line_bottom - m_line_top - 40);
 

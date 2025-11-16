@@ -35,10 +35,11 @@ private:
     std::stop_token m_token{};
     std::vector<u8> m_buffer{};
     CondVar m_can_read{};
+    CondVar m_can_write{};
 
 public:
     Mutex m_mutex{};
-    bool m_active{};
+    std::atomic_bool m_active{};
 };
 
 struct Menu : MenuBase {
@@ -55,7 +56,7 @@ protected:
     void OnInstallClose();
 
 private:
-    std::shared_ptr<Stream> m_source{};
+    std::unique_ptr<Stream> m_source{};
     Thread m_thread{};
     Mutex m_mutex{};
     State m_state{State::None};

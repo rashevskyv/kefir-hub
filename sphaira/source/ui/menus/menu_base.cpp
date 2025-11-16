@@ -77,12 +77,12 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
             start_x -= spacing + (bounds[2] - bounds[0]); \
         }
 
-    draw(ThemeEntryID_TEXT, 83, "%u\uFE6A", pdata.battery_percetange);
+    draw(ThemeEntryID_TEXT, 90, "%u\uFE6A", pdata.battery_percetange);
 
     if (App::Get12HourTimeEnable()) {
-        draw(ThemeEntryID_TEXT, 175, "%02u:%02u:%02u %s", (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, pdata.tm.tm_sec, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
+        draw(ThemeEntryID_TEXT, 132, "%02u:%02u %s", (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
     } else {
-        draw(ThemeEntryID_TEXT, 133, "%02u:%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min, pdata.tm.tm_sec);
+        draw(ThemeEntryID_TEXT, 90, "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
     }
 
     if (pdata.ip) {

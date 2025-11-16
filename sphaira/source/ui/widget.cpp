@@ -5,6 +5,18 @@
 
 namespace sphaira::ui {
 
+uiButton::uiButton(Button button, const std::string& button_str, const std::string& action_str)
+: m_button{button}
+, m_button_str{button_str}
+, m_action_str{action_str} {
+
+}
+
+uiButton::uiButton(Button button, const std::string& action_str)
+: uiButton{button, gfx::getButton(button), action_str} {
+
+}
+
 auto uiButton::Draw(NVGcontext* vg, Theme* theme) -> void {
     // enable to see button region
     // gfx::drawRect(vg, m_pos, gfx::Colour::RED);
@@ -12,9 +24,9 @@ auto uiButton::Draw(NVGcontext* vg, Theme* theme) -> void {
     nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
     nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT));
     nvgFontSize(vg, 20);
-    nvgText(vg, m_hint_pos.x, m_hint_pos.y, m_action.m_hint.c_str(), nullptr);
+    nvgText(vg, m_hint_pos.x, m_hint_pos.y, m_action_str.c_str(), nullptr);
     nvgFontSize(vg, 26);
-    nvgText(vg, m_button_pos.x, m_button_pos.y, gfx::getButton(m_button), nullptr);
+    nvgText(vg, m_button_pos.x, m_button_pos.y, m_button_str.c_str(), nullptr);
 }
 
 void Widget::Update(Controller* controller, TouchInfo* touch) {
@@ -39,7 +51,7 @@ void Widget::Update(Controller* controller, TouchInfo* touch) {
     auto draw_actions = GetUiButtons();
     for (auto& e : draw_actions) {
         if (touch->is_clicked && touch->in_range(e.GetPos())) {
-            log_write("got click: %s\n", e.m_action.m_hint.c_str());
+            log_write("got click: %s\n", e.m_action_str.c_str());
             FireAction(e.m_button);
             break;
         }
@@ -79,12 +91,37 @@ auto Widget::FireAction(Button b, u8 type) -> bool {
     return false;
 }
 
-auto Widget::GetUiButtons() const -> uiButtons {
+void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
     auto vg = App::GetVg();
-    auto [x, y] = m_button_pos;
+    auto [x, y] = button_pos;
 
+    float bounds[4]{};
+    for (auto& e : buttons) {
+        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+
+        nvgFontSize(vg, 20.f);
+        nvgTextBounds(vg, x, y, e.m_action_str.c_str(), nullptr, bounds);
+        auto len = bounds[2] - bounds[0];
+        e.m_hint_pos = {x, y, len, 20};
+
+        x -= len + 8.f;
+        nvgFontSize(vg, 26.f);
+        nvgTextBounds(vg, x, y - 7.f, e.m_button_str.c_str(), nullptr, bounds);
+        len = bounds[2] - bounds[0];
+        e.m_button_pos = {x, y - 4.f, len, 26};
+        x -= len + 34.f;
+
+        e.SetPos(e.m_button_pos);
+        e.SetX(e.GetX() - 40);
+        e.SetW(e.m_hint_pos.x - e.m_button_pos.x + len + 25);
+        e.SetY(e.GetY() - 18);
+        e.SetH(26 + 18 * 2);
+    }
+}
+
+auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos) -> uiButtons {
     uiButtons draw_actions;
-    draw_actions.reserve(m_actions.size());
+    draw_actions.reserve(actions.size());
 
     const std::pair<Button, Button> swap_buttons[] = {
         {Button::L, Button::R},
@@ -92,19 +129,20 @@ auto Widget::GetUiButtons() const -> uiButtons {
     };
 
     // build array
-    for (const auto& [button, action] : m_actions) {
+    for (const auto& [button, action] : actions) {
         if (action.IsHidden() || action.m_hint.empty()) {
             continue;
         }
 
-        uiButton ui_button{button, action};
+        uiButton ui_button{button, action.m_hint};
 
         bool should_swap = false;
         for (auto [left, right] : swap_buttons) {
             if (button == right && draw_actions.size() && draw_actions.back().m_button == left) {
                 const auto s = draw_actions.back();
                 draw_actions.back().m_button = button;
-                draw_actions.back().m_action = action;
+                draw_actions.back().m_button_str = gfx::getButton(button);
+                draw_actions.back().m_action_str = action.m_hint;
                 draw_actions.emplace_back(s);
                 should_swap = true;
                 break;
@@ -116,30 +154,14 @@ auto Widget::GetUiButtons() const -> uiButtons {
         }
     }
 
-    float bounds[4]{};
-    for (auto& e : draw_actions) {
-        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
-
-        nvgFontSize(vg, 20.f);
-        nvgTextBounds(vg, x, y, e.m_action.m_hint.c_str(), nullptr, bounds);
-        auto len = bounds[2] - bounds[0];
-        e.m_hint_pos = {x, 675, len, 20};
-
-        x -= len + 8.f;
-        nvgFontSize(vg, 26.f);
-        nvgTextBounds(vg, x, y - 7.f, gfx::getButton(e.m_button), nullptr, bounds);
-        len = bounds[2] - bounds[0];
-        e.m_button_pos = {x, 675 - 4.f, len, 26};
-        x -= len + 34.f;
-
-        e.SetPos(e.m_button_pos);
-        e.SetX(e.GetX() - 40);
-        e.SetW(e.m_hint_pos.x - e.m_button_pos.x + len + 25);
-        e.SetY(e.GetY() - 18);
-        e.SetH(26 + 18 * 2);
-    }
+    // setup positions.
+    SetupUiButtons(draw_actions, button_pos);
 
     return draw_actions;
+}
+
+auto Widget::GetUiButtons() const -> uiButtons {
+    return GetUiButtons(m_actions, m_button_pos);
 }
 
 } // namespace sphaira::ui

@@ -18,6 +18,7 @@
 #include <string>
 #include <span>
 #include <optional>
+#include <utility>
 
 namespace sphaira {
 
@@ -58,7 +59,14 @@ public:
     static void Exit();
     static void ExitRestart();
     static auto GetVg() -> NVGcontext*;
-    static void Push(std::shared_ptr<ui::Widget>);
+
+    static void Push(std::unique_ptr<ui::Widget>&&);
+
+    template<ui::DerivedFromWidget T, typename... Args>
+    static void Push(Args&&... args) {
+        Push(std::make_unique<T>(std::forward<Args>(args)...));
+    }
+
     // pops all widgets above a menu
     static void PopToMenu();
 
@@ -95,7 +103,6 @@ public:
     static auto GetInstallSysmmcEnable() -> bool;
     static auto GetInstallEmummcEnable() -> bool;
     static auto GetInstallSdEnable() -> bool;
-    static auto GetInstallPrompt() -> bool;
     static auto GetThemeMusicEnable() -> bool;
     static auto Get12HourTimeEnable() -> bool;
     static auto GetLanguage() -> long;
@@ -129,6 +136,11 @@ public:
     static void DisplayAdvancedOptions(bool left_side = true);
     static void DisplayInstallOptions(bool left_side = true);
     static void DisplayDumpOptions(bool left_side = true);
+
+    // helper for sidebar options to toggle install on/off
+    static void ShowEnableInstallPromptOption(option::OptionBool& option, bool& enable);
+    // displays an option box to enable installing, shows warning.
+    static void ShowEnableInstallPrompt();
 
     void Draw();
     void Update();
@@ -227,6 +239,10 @@ public:
 
                     AccountProfileBase base;
                     if (R_SUCCEEDED(accountProfileGet(&profile, nullptr, &base))) {
+                        // sometimes the uid for the acc can differ to the base.
+                        base.uid = uids[i];
+                        log_write("[ACC] found uid: 0x%016lX%016lX\n", uids[i].uid[0], uids[i].uid[1]);
+                        log_write("[ACC] base  uid: 0x%016lX%016lX\n", base.uid.uid[0], base.uid.uid[1]);
                         out.emplace_back(base);
                     }
                 }
@@ -256,7 +272,7 @@ public:
 
     Vec2 m_scale{1, 1};
 
-    std::vector<std::shared_ptr<ui::Widget>> m_widgets;
+    std::vector<std::unique_ptr<ui::Widget>> m_widgets;
     u32 m_pop_count{};
     ui::NotifMananger m_notif_manager{};
 
@@ -290,7 +306,6 @@ public:
     option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};
     option::OptionBool m_install_emummc{INI_SECTION, "install_emummc", false};
     option::OptionBool m_install_sd{INI_SECTION, "install_sd", true};
-    option::OptionLong m_install_prompt{INI_SECTION, "install_prompt", true};
     option::OptionBool m_allow_downgrade{INI_SECTION, "allow_downgrade", false};
     option::OptionBool m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", true};
     option::OptionBool m_ticket_only{INI_SECTION, "ticket_only", false};
@@ -299,21 +314,21 @@ public:
     option::OptionBool m_skip_addon{INI_SECTION, "skip_addon", false};
     option::OptionBool m_skip_data_patch{INI_SECTION, "skip_data_patch", false};
     option::OptionBool m_skip_ticket{INI_SECTION, "skip_ticket", false};
-    option::OptionBool m_skip_nca_hash_verify{INI_SECTION, "skip_nca_hash_verify", false};
-    option::OptionBool m_skip_rsa_header_fixed_key_verify{INI_SECTION, "skip_rsa_header_fixed_key_verify", false};
-    option::OptionBool m_skip_rsa_npdm_fixed_key_verify{INI_SECTION, "skip_rsa_npdm_fixed_key_verify", false};
+    option::OptionBool m_skip_nca_hash_verify{INI_SECTION, "skip_nca_hash_verify", true};
+    option::OptionBool m_skip_rsa_header_fixed_key_verify{INI_SECTION, "skip_rsa_header_fixed_key_verify", true};
+    option::OptionBool m_skip_rsa_npdm_fixed_key_verify{INI_SECTION, "skip_rsa_npdm_fixed_key_verify", true};
     option::OptionBool m_ignore_distribution_bit{INI_SECTION, "ignore_distribution_bit", false};
     option::OptionBool m_convert_to_common_ticket{INI_SECTION, "convert_to_common_ticket", true};
     option::OptionBool m_convert_to_standard_crypto{INI_SECTION, "convert_to_standard_crypto", false};
     option::OptionBool m_lower_master_key{INI_SECTION, "lower_master_key", false};
-    option::OptionBool m_lower_system_version{INI_SECTION, "lower_system_version", false};
+    option::OptionBool m_lower_system_version{INI_SECTION, "lower_system_version", true};
 
     // dump options
     option::OptionBool m_dump_app_folder{"dump", "app_folder", true};
     option::OptionBool m_dump_append_folder_with_xci{"dump", "append_folder_with_xci", true};
     option::OptionBool m_dump_trim_xci{"dump", "trim_xci", false};
     option::OptionBool m_dump_label_trim_xci{"dump", "label_trim_xci", false};
-    option::OptionBool m_dump_usb_transfer_stream{"dump", "usb_transfer_stream", true};
+    option::OptionBool m_dump_usb_transfer_stream{"dump", "usb_transfer_stream", true, false};
     option::OptionBool m_dump_convert_to_common_ticket{"dump", "convert_to_common_ticket", true};
 
     // todo: move this into it's own menu
@@ -324,6 +339,12 @@ public:
 #ifdef USE_NVJPG
     nj::Decoder m_decoder;
 #endif
+
+    double m_delta_time{};
+
+    static constexpr const char* INSTALL_DEPENDS_STR =
+        "Installing is disabled.\n\n"
+        "Enable in the options by selecting Menu (Y) -> Advanced -> Install options -> Enable.";
 
 private: // from nanovg decko3d example by adubbz
     static constexpr unsigned NumFramebuffers = 2;

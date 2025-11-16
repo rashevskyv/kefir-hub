@@ -2,6 +2,7 @@
 
 #include "ui/menus/grid_menu_base.hpp"
 #include "ui/list.hpp"
+#include "title_info.hpp"
 #include "fs.hpp"
 #include "option.hpp"
 #include <memory>
@@ -10,26 +11,13 @@
 
 namespace sphaira::ui::menu::game {
 
-enum class NacpLoadStatus {
-    // not yet attempted to be loaded.
-    None,
-    // started loading.
-    Progress,
-    // loaded, ready to parse.
-    Loaded,
-    // failed to load, do not attempt to load again!
-    Error,
-};
-
 struct Entry {
     u64 app_id{};
+    u8 type{};
     NacpLanguageEntry lang{};
     int image{};
     bool selected{};
-
-    std::shared_ptr<NsApplicationControlData> control{};
-    u64 jpeg_size{};
-    NacpLoadStatus status{NacpLoadStatus::None};
+    title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -38,45 +26,6 @@ struct Entry {
     auto GetAuthor() const -> const char* {
         return lang.author;
     }
-};
-
-struct ThreadResultData {
-    u64 id{};
-    std::shared_ptr<NsApplicationControlData> control{};
-    u64 jpeg_size{};
-    NacpLanguageEntry lang{};
-    NacpLoadStatus status{NacpLoadStatus::None};
-};
-
-struct ThreadData {
-    ThreadData(bool title_cache);
-
-    void Run();
-    void Close();
-    void Push(u64 id);
-    void Push(std::span<const Entry> entries);
-    void Pop(std::vector<ThreadResultData>& out);
-
-    auto IsRunning() const -> bool {
-        return m_running;
-    }
-
-    auto IsTitleCacheEnabled() const {
-        return m_title_cache;
-    }
-
-private:
-    UEvent m_uevent{};
-    Mutex m_mutex_id{};
-    Mutex m_mutex_result{};
-    bool m_title_cache{};
-
-    // app_ids pushed to the queue, signal uevent when pushed.
-    std::vector<u64> m_ids{};
-    // control data pushed to the queue.
-    std::vector<ThreadResultData> m_result{};
-
-    std::atomic_bool m_running{};
 };
 
 enum SortType {
@@ -132,6 +81,7 @@ private:
 
     void DeleteGames();
     void DumpGames(u32 flags);
+    void CreateSaves(AccountUid uid);
 
 private:
     static constexpr inline const char* INI_SECTION = "games";
@@ -143,9 +93,6 @@ private:
     std::unique_ptr<List> m_list{};
     bool m_is_reversed{};
     bool m_dirty{};
-
-    std::unique_ptr<ThreadData> m_thread_data{};
-    Thread m_thread{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

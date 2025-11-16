@@ -79,8 +79,8 @@ struct ConfigOverride {
 };
 
 Result InstallFromFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override = {});
-Result InstallFromSource(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, const fs::FsPath& path, const ConfigOverride& override = {});
-Result InstallFromContainer(ui::ProgressBox* pbox, std::shared_ptr<container::Base> container, const ConfigOverride& override = {});
-Result InstallFromCollections(ui::ProgressBox* pbox, std::shared_ptr<source::Base> source, const container::Collections& collections, const ConfigOverride& override = {});
+Result InstallFromSource(ui::ProgressBox* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override = {});
+Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, const ConfigOverride& override = {});
+Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override = {});
 
 } // namespace sphaira::yati

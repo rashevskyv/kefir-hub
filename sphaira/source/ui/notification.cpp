@@ -5,6 +5,11 @@
 #include <optional>
 
 namespace sphaira::ui {
+namespace {
+
+constexpr u64 MAX_ENTRIES = 9;
+
+} // namespace
 
 NotifEntry::NotifEntry(std::string text, Side side)
 : m_text{std::move(text)}
@@ -77,13 +82,12 @@ auto NotifMananger::Push(const NotifEntry& entry) -> void {
     mutexLock(&m_mutex);
     ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 
-    switch (entry.GetSide()) {
-        case NotifEntry::Side::LEFT:
-            m_entries_left.emplace_front(entry);
-            break;
-        case NotifEntry::Side::RIGHT:
-            m_entries_right.emplace_front(entry);
-            break;
+    auto& entries = GetEntries(entry.GetSide());
+    entries.emplace_front(entry);
+
+    // check if we have too many entries, start removing old ones.
+    if (entries.size() >= MAX_ENTRIES) {
+        entries.erase(entries.begin() + MAX_ENTRIES, entries.end());
     }
 }
 
@@ -91,32 +95,14 @@ auto NotifMananger::Pop(NotifEntry::Side side) -> void {
     mutexLock(&m_mutex);
     ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 
-    switch (side) {
-        case NotifEntry::Side::LEFT:
-            if (!m_entries_left.empty()) {
-                m_entries_left.clear();
-            }
-            break;
-        case NotifEntry::Side::RIGHT:
-            if (!m_entries_right.empty()) {
-                m_entries_right.clear();
-            }
-            break;
-    }
+    GetEntries(side).pop_back();
 }
 
 auto NotifMananger::Clear(NotifEntry::Side side) -> void {
     mutexLock(&m_mutex);
     ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 
-    switch (side) {
-        case NotifEntry::Side::LEFT:
-            m_entries_left.clear();
-            break;
-        case NotifEntry::Side::RIGHT:
-            m_entries_right.clear();
-            break;
-    }
+    GetEntries(side).clear();
 }
 
 auto NotifMananger::Clear() -> void {
@@ -125,6 +111,14 @@ auto NotifMananger::Clear() -> void {
 
     m_entries_left.clear();
     m_entries_right.clear();
+}
+
+auto NotifMananger::GetEntries(NotifEntry::Side side) -> Entries& {
+    if (side == NotifEntry::Side::LEFT) {
+        return m_entries_left;
+    } else {
+        return m_entries_right;
+    }
 }
 
 } // namespace sphaira::ui

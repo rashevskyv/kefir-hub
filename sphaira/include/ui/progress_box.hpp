@@ -64,6 +64,11 @@ struct ProgressBox final : Widget {
         };
     }
 
+    // auto-clear = false
+    auto GetCancelEvent() {
+        return &m_uevent;
+    }
+
 private:
     void FreeImage();
 
@@ -75,6 +80,7 @@ public:
     };
 
 private:
+    UEvent m_uevent{};
     Mutex m_mutex{};
     Thread m_thread{};
     ThreadData m_thread_data{};

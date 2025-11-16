@@ -79,7 +79,8 @@ void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, con
     float gradientX, gradientY, color;
     getHighlightAnimation(&gradientX, &gradientY, &color);
 
-    const auto strokeWidth = 5.F;
+    const auto strokeWidth = size;
+    // const auto strokeWidth = 5.F;
     auto v2 = v;
     v2.x -= strokeWidth / 2.F;
     v2.y -= strokeWidth / 2.F;
@@ -209,13 +210,13 @@ void drawTextArgs(NVGcontext* vg, float x, float y, float size, int align, const
     drawText(vg, x, y, size, buffer, nullptr, align, c);
 }
 
-void drawImage(NVGcontext* vg, const Vec4& v, int texture, float rounded) {
-    const auto paint = nvgImagePattern(vg, v.x, v.y, v.w, v.h, 0, texture, 1.f);
+void drawImage(NVGcontext* vg, const Vec4& v, int texture, float rounded, float alpha) {
+    const auto paint = nvgImagePattern(vg, v.x, v.y, v.w, v.h, 0, texture, alpha);
     drawRect(vg, v, paint, rounded);
 }
 
-void drawImage(NVGcontext* vg, float x, float y, float w, float h, int texture, float rounded) {
-    drawImage(vg, Vec4(x, y, w, h), texture, rounded);
+void drawImage(NVGcontext* vg, float x, float y, float w, float h, int texture, float rounded, float alpha) {
+    drawImage(vg, Vec4(x, y, w, h), texture, rounded, alpha);
 }
 
 void drawTextBox(NVGcontext* vg, float x, float y, float size, float bound, const NVGcolor& c, const char* str, int align, const char* end) {

@@ -2,6 +2,7 @@
 
 #include "ui/menus/grid_menu_base.hpp"
 #include "ui/list.hpp"
+#include "title_info.hpp"
 #include "fs.hpp"
 #include "option.hpp"
 #include "dumper.hpp"
@@ -11,25 +12,11 @@
 
 namespace sphaira::ui::menu::save {
 
-enum class NacpLoadStatus {
-    // not yet attempted to be loaded.
-    None,
-    // started loading.
-    Progress,
-    // loaded, ready to parse.
-    Loaded,
-    // failed to load, do not attempt to load again!
-    Error,
-};
-
 struct Entry final : FsSaveDataInfo {
     NacpLanguageEntry lang{};
     int image{};
     bool selected{};
-
-    std::shared_ptr<NsApplicationControlData> control{};
-    u64 jpeg_size{};
-    NacpLoadStatus status{NacpLoadStatus::None};
+    title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -38,37 +25,6 @@ struct Entry final : FsSaveDataInfo {
     auto GetAuthor() const -> const char* {
         return lang.author;
     }
-};
-
-struct ThreadResultData {
-    u64 id{};
-    std::shared_ptr<NsApplicationControlData> control{};
-    u64 jpeg_size{};
-    NacpLanguageEntry lang{};
-    NacpLoadStatus status{NacpLoadStatus::None};
-};
-
-struct ThreadData {
-    ThreadData();
-
-    auto IsRunning() const -> bool;
-    void Run();
-    void Close();
-    void Push(u64 id);
-    void Push(std::span<const Entry> entries);
-    void Pop(std::vector<ThreadResultData>& out);
-
-private:
-    UEvent m_uevent{};
-    Mutex m_mutex_id{};
-    Mutex m_mutex_result{};
-
-    // app_ids pushed to the queue, signal uevent when pushed.
-    std::vector<u64> m_ids{};
-    // control data pushed to the queue.
-    std::vector<ThreadResultData> m_result{};
-
-    std::atomic_bool m_running{};
 };
 
 enum SortType {
@@ -144,9 +100,6 @@ private:
     std::vector<AccountProfileBase> m_accounts{};
     s64 m_account_index{};
     u8 m_data_type{FsSaveDataType_Account};
-
-    ThreadData m_thread_data{};
-    Thread m_thread{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

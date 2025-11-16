@@ -29,13 +29,9 @@
 #include <minIni.h>
 #include <minizip/unzip.h>
 #include <minizip/zip.h>
-#include <nxtc.h>
 
 namespace sphaira::ui::menu::save {
 namespace {
-
-constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
-constexpr int THREAD_CORE = 1;
 
 constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
 constexpr u32 NX_SAVE_META_VERSION = 1;
@@ -58,34 +54,6 @@ struct NXSaveMeta {
     u64 raw_size{}; // FsSaveDataInfo::size
 };
 static_assert(sizeof(NXSaveMeta) == 128);
-
-// taken from nxtc
-constexpr u8 g_nacpLangTable[SetLanguage_Total] = {
-    [SetLanguage_JA]     =  2,
-    [SetLanguage_ENUS]   =  0,
-    [SetLanguage_FR]     =  3,
-    [SetLanguage_DE]     =  4,
-    [SetLanguage_IT]     =  7,
-    [SetLanguage_ES]     =  6,
-    [SetLanguage_ZHCN]   = 14,
-    [SetLanguage_KO]     = 12,
-    [SetLanguage_NL]     =  8,
-    [SetLanguage_PT]     = 10,
-    [SetLanguage_RU]     = 11,
-    [SetLanguage_ZHTW]   = 13,
-    [SetLanguage_ENGB]   =  1,
-    [SetLanguage_FRCA]   =  9,
-    [SetLanguage_ES419]  =  5,
-    [SetLanguage_ZHHANS] = 14,
-    [SetLanguage_ZHHANT] = 13,
-    [SetLanguage_PTBR]   = 15
-};
-
-auto GetNacpLangEntryIndex() -> u8 {
-    SetLanguage lang{SetLanguage_ENUS};
-    nxtcGetCacheLanguage(&lang);
-    return g_nacpLangTable[lang];
-}
 
 void GetFsSaveAttr(const AccountProfileBase& acc, u8 data_type, FsSaveDataSpaceId& space_id, FsSaveDataFilter& filter) {
     std::memset(&filter, 0, sizeof(filter));
@@ -115,108 +83,6 @@ void GetFsSaveAttr(const AccountProfileBase& acc, u8 data_type, FsSaveDataSpaceI
             space_id = FsSaveDataSpaceId_SdUser;
             break;
     }
-}
-
-constexpr u32 ContentMetaTypeToContentFlag(u8 meta_type) {
-    if (meta_type & 0x80) {
-        return 1 << (meta_type - 0x80);
-    }
-
-    return 0;
-}
-
-enum ContentFlag {
-    ContentFlag_Application = ContentMetaTypeToContentFlag(NcmContentMetaType_Application),
-    ContentFlag_Patch = ContentMetaTypeToContentFlag(NcmContentMetaType_Patch),
-    ContentFlag_AddOnContent = ContentMetaTypeToContentFlag(NcmContentMetaType_AddOnContent),
-    ContentFlag_DataPatch = ContentMetaTypeToContentFlag(NcmContentMetaType_DataPatch),
-    ContentFlag_All = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent | ContentFlag_DataPatch,
-};
-
-struct NcmEntry {
-    const NcmStorageId storage_id;
-    NcmContentStorage cs{};
-    NcmContentMetaDatabase db{};
-
-    void Open() {
-        if (R_FAILED(ncmOpenContentMetaDatabase(std::addressof(db), storage_id))) {
-            log_write("\tncmOpenContentMetaDatabase() failed. storage_id: %u\n", storage_id);
-        } else {
-            log_write("\tncmOpenContentMetaDatabase() success. storage_id: %u\n", storage_id);
-        }
-
-        if (R_FAILED(ncmOpenContentStorage(std::addressof(cs), storage_id))) {
-            log_write("\tncmOpenContentStorage() failed. storage_id: %u\n", storage_id);
-        } else {
-            log_write("\tncmOpenContentStorage() success. storage_id: %u\n", storage_id);
-        }
-    }
-
-    void Close() {
-        ncmContentMetaDatabaseClose(std::addressof(db));
-        ncmContentStorageClose(std::addressof(cs));
-
-        db = {};
-        cs = {};
-    }
-};
-
-constinit NcmEntry ncm_entries[] = {
-    // on memory, will become invalid on the gamecard being inserted / removed.
-    { NcmStorageId_GameCard },
-    // normal (save), will remain valid.
-    { NcmStorageId_BuiltInUser },
-    { NcmStorageId_SdCard },
-};
-
-auto& GetNcmEntry(u8 storage_id) {
-    auto it = std::ranges::find_if(ncm_entries, [storage_id](auto& e){
-        return storage_id == e.storage_id;
-    });
-
-    if (it == std::end(ncm_entries)) {
-        log_write("unable to find valid ncm entry: %u\n", storage_id);
-        return ncm_entries[0];
-    }
-
-    return *it;
-}
-
-auto& GetNcmCs(u8 storage_id) {
-    return GetNcmEntry(storage_id).cs;
-}
-
-auto& GetNcmDb(u8 storage_id) {
-    return GetNcmEntry(storage_id).db;
-}
-
-using MetaEntries = std::vector<NsApplicationContentMetaStatus>;
-
-Result GetMetaEntries(u64 id, MetaEntries& out, u32 flags = ContentFlag_All) {
-    for (s32 i = 0; ; i++) {
-        s32 count;
-        NsApplicationContentMetaStatus status;
-        R_TRY(nsListApplicationContentMetaStatus(id, i, &status, 1, &count));
-
-        if (!count) {
-            break;
-        }
-
-        if (flags & ContentMetaTypeToContentFlag(status.meta_type)) {
-            out.emplace_back(status);
-        }
-    }
-
-    R_SUCCEED();
-}
-
-// also sets the status to error.
-void FakeNacpEntry(ThreadResultData& e) {
-    e.status = NacpLoadStatus::Error;
-    // fake the nacp entry
-    std::strcpy(e.lang.name, "Corrupted");
-    std::strcpy(e.lang.author, "Corrupted");
-    e.control.reset();
 }
 
 auto GetSaveFolder(u8 data_type) -> fs::FsPath {
@@ -344,20 +210,17 @@ auto GetSystemSaveName(u64 system_save_data_id) -> const char* {
 }
 
 void FakeNacpEntryForSystem(Entry& e) {
-    e.status = NacpLoadStatus::Loaded;
+    e.status = title::NacpLoadStatus::Loaded;
 
     // fake the nacp entry
     std::snprintf(e.lang.name, sizeof(e.lang.name), "%s | %016lX", GetSystemSaveName(e.system_save_data_id), e.system_save_data_id);
     std::strcpy(e.lang.author, "Nintendo");
-    e.control.reset();
 }
 
-bool LoadControlImage(Entry& e) {
-    if (!e.image && e.control) {
-        ON_SCOPE_EXIT(e.control.reset());
-
+bool LoadControlImage(Entry& e, title::ThreadResultData* result) {
+    if (!e.image && result && !result->icon.empty()) {
         TimeStamp ts;
-        const auto image = ImageLoadFromMemory({e.control->icon, e.jpeg_size}, ImageFlag_JPEG);
+        const auto image = ImageLoadFromMemory(result->icon, ImageFlag_JPEG);
         if (!image.data.empty()) {
             e.image = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
             log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
@@ -368,152 +231,26 @@ bool LoadControlImage(Entry& e) {
     return false;
 }
 
-Result GetControlPathFromStatus(const NsApplicationContentMetaStatus& status, u64* out_program_id, fs::FsPath* out_path) {
-    const auto& ee = status;
-    if (ee.storageID != NcmStorageId_SdCard && ee.storageID != NcmStorageId_BuiltInUser && ee.storageID != NcmStorageId_GameCard) {
-        return 0x1;
+void LoadResultIntoEntry(Entry& e, title::ThreadResultData* result) {
+    if (result) {
+        e.status = result->status;
+        e.lang = result->lang;
+        e.status = result->status;
     }
-
-    auto& db = GetNcmDb(ee.storageID);
-    auto& cs = GetNcmCs(ee.storageID);
-
-    NcmContentMetaKey key;
-    R_TRY(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, ee.application_id));
-
-    NcmContentId content_id;
-    R_TRY(ncmContentMetaDatabaseGetContentIdByType(&db, &content_id, &key, NcmContentType_Control));
-
-    R_TRY(ncmContentStorageGetProgramId(&cs, out_program_id, &content_id, FsContentAttributes_All));
-
-    R_TRY(ncmContentStorageGetPath(&cs, out_path->s, sizeof(*out_path), &content_id));
-    R_SUCCEED();
-}
-
-Result LoadControlManual(u64 id, ThreadResultData& data) {
-    TimeStamp ts;
-
-    MetaEntries entries;
-    R_TRY(GetMetaEntries(id, entries));
-    R_UNLESS(!entries.empty(), Result_GameEmptyMetaEntries);
-
-    u64 program_id;
-    fs::FsPath path;
-    R_TRY(GetControlPathFromStatus(entries.back(), &program_id, &path));
-
-    std::vector<u8> icon;
-    R_TRY(nca::ParseControl(path, program_id, &data.control->nacp.lang[GetNacpLangEntryIndex()], sizeof(NacpLanguageEntry), &icon));
-    std::memcpy(data.control->icon, icon.data(), icon.size());
-
-    data.jpeg_size = icon.size();
-    log_write("\t\t[manual control] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-
-    R_SUCCEED();
-}
-
-auto LoadControlEntry(u64 id) -> ThreadResultData {
-    ThreadResultData data{};
-    data.id = id;
-    data.control = std::make_shared<NsApplicationControlData>();
-    data.status = NacpLoadStatus::Error;
-
-    bool manual_load = true;
-    if (hosversionBefore(20,0,0)) {
-        TimeStamp ts;
-        u64 actual_size;
-        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_CacheOnly, id, data.control.get(), sizeof(NsApplicationControlData), &actual_size))) {
-            manual_load = false;
-            data.jpeg_size = actual_size - sizeof(NacpStruct);
-            log_write("\t\t[ns control cache] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-        }
-    }
-
-    if (manual_load) {
-        manual_load = R_SUCCEEDED(LoadControlManual(id, data));
-    }
-
-    Result rc{};
-    if (!manual_load) {
-        TimeStamp ts;
-        u64 actual_size;
-        if (R_SUCCEEDED(rc = nsGetApplicationControlData(NsApplicationControlSource_Storage, id, data.control.get(), sizeof(NsApplicationControlData), &actual_size))) {
-            data.jpeg_size = actual_size - sizeof(NacpStruct);
-            log_write("\t\t[ns control storage] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-        }
-    }
-
-    if (R_SUCCEEDED(rc)) {
-        data.lang = data.control->nacp.lang[GetNacpLangEntryIndex()];
-        data.status = NacpLoadStatus::Loaded;
-    }
-
-    if (R_FAILED(rc)) {
-        FakeNacpEntry(data);
-    }
-
-    return data;
-}
-
-void LoadResultIntoEntry(Entry& e, const ThreadResultData& result) {
-    e.status = result.status;
-    e.control = result.control;
-    e.jpeg_size= result.jpeg_size;
-    e.lang = result.lang;
-    e.status = result.status;
 }
 
 void LoadControlEntry(Entry& e, bool force_image_load = false) {
-    if (e.status == NacpLoadStatus::None) {
+    if (e.status != title::NacpLoadStatus::Loaded) {
         if (e.save_data_type == FsSaveDataType_System || e.save_data_type == FsSaveDataType_SystemBcat) {
             FakeNacpEntryForSystem(e);
         } else {
-            const auto result = LoadControlEntry(e.application_id);
-            LoadResultIntoEntry(e, result);
+            LoadResultIntoEntry(e, title::Get(e.application_id));
         }
     }
 
-    if (force_image_load && e.status == NacpLoadStatus::Loaded) {
-        LoadControlImage(e);
+    if (force_image_load && e.status == title::NacpLoadStatus::Loaded) {
+        LoadControlImage(e, title::Get(e.application_id));
     }
-}
-
-// taken from nxdumptool.
-void utilsReplaceIllegalCharacters(char *str, bool ascii_only)
-{
-    static const char g_illegalFileSystemChars[] = "\\/:*?\"<>|";
-
-    size_t str_size = 0, cur_pos = 0;
-
-    if (!str || !(str_size = strlen(str))) return;
-
-    u8 *ptr1 = (u8*)str, *ptr2 = ptr1;
-    ssize_t units = 0;
-    u32 code = 0;
-    bool repl = false;
-
-    while(cur_pos < str_size)
-    {
-        units = decode_utf8(&code, ptr1);
-        if (units < 0) break;
-
-        if (code < 0x20 || (!ascii_only && code == 0x7F) || (ascii_only && code >= 0x7F) || \
-            (units == 1 && memchr(g_illegalFileSystemChars, (int)code, std::size(g_illegalFileSystemChars))))
-        {
-            if (!repl)
-            {
-                *ptr2++ = '_';
-                repl = true;
-            }
-        } else {
-            if (ptr2 != ptr1) memmove(ptr2, ptr1, (size_t)units);
-            ptr2 += units;
-            repl = false;
-        }
-
-        ptr1 += units;
-        cur_pos += (size_t)units;
-    }
-
-    *ptr2 = '\0';
 }
 
 struct HashStr {
@@ -530,14 +267,16 @@ HashStr hexIdToStr(auto id) {
 
 auto BuildSaveName(const Entry& e) -> fs::FsPath {
     fs::FsPath name_buf = e.GetName();
-    utilsReplaceIllegalCharacters(name_buf, true);
+    title::utilsReplaceIllegalCharacters(name_buf, true);
     return name_buf;
 }
 
-auto BuildSaveBasePath(const Entry& e) -> fs::FsPath {
+auto BuildSaveBasePath(const Entry& e, bool force_id_path = false) -> fs::FsPath {
     fs::FsPath name;
     if (e.save_data_type == FsSaveDataType_System || e.save_data_type == FsSaveDataType_SystemBcat) {
         std::snprintf(name, sizeof(name), "%016lX", e.system_save_data_id);
+    } else if (force_id_path || !strcasecmp(e.GetName(), "corrupted")) {
+        std::snprintf(name, sizeof(name), "%016lX", e.application_id);
     } else {
         name = BuildSaveName(e);
     }
@@ -550,120 +289,10 @@ void FreeEntry(NVGcontext* vg, Entry& e) {
     e.image = 0;
 }
 
-void ThreadFunc(void* user) {
-    auto data = static_cast<ThreadData*>(user);
-
-    if (!nxtcInitialize()) {
-        log_write("[NXTC] failed to init cache\n");
-    }
-    ON_SCOPE_EXIT(nxtcExit());
-
-    while (data->IsRunning()) {
-        data->Run();
-    }
-}
-
 } // namespace
 
 void SignalChange() {
     ueventSignal(&g_change_uevent);
-}
-
-ThreadData::ThreadData() {
-    ueventCreate(&m_uevent, true);
-    mutexInit(&m_mutex_id);
-    mutexInit(&m_mutex_result);
-    m_running = true;
-}
-
-auto ThreadData::IsRunning() const -> bool {
-    return m_running;
-}
-
-void ThreadData::Run() {
-    const auto waiter = waiterForUEvent(&m_uevent);
-    while (IsRunning()) {
-        const auto rc = waitSingle(waiter, 3e+9);
-
-        // if we timed out, flush the cache and poll again.
-        if (R_FAILED(rc)) {
-            nxtcFlushCacheFile();
-            continue;
-        }
-
-        if (!IsRunning()) {
-            return;
-        }
-
-        std::vector<u64> ids;
-        {
-            mutexLock(&m_mutex_id);
-            ON_SCOPE_EXIT(mutexUnlock(&m_mutex_id));
-            std::swap(ids, m_ids);
-        }
-
-        for (u64 i = 0; i < std::size(ids); i++) {
-            if (!IsRunning()) {
-                return;
-            }
-
-            ThreadResultData result{ids[i]};
-            TimeStamp ts;
-            if (auto data = nxtcGetApplicationMetadataEntryById(ids[i])) {
-                log_write("[NXTC] loaded from cache time taken: %.2fs %zums %zuns\n", ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
-                ON_SCOPE_EXIT(nxtcFreeApplicationMetadata(&data));
-
-                result.control = std::make_unique<NsApplicationControlData>();
-                result.status = NacpLoadStatus::Loaded;
-                std::strcpy(result.lang.name, data->name);
-                std::strcpy(result.lang.author, data->publisher);
-                std::memcpy(result.control->icon, data->icon_data, data->icon_size);
-                result.jpeg_size = data->icon_size;
-            } else {
-                // sleep after every other entry loaded.
-                svcSleepThread(2e+6); // 2ms
-
-                result = LoadControlEntry(ids[i]);
-                if (result.status == NacpLoadStatus::Loaded) {
-                    nxtcAddEntry(ids[i], &result.control->nacp, result.jpeg_size, result.control->icon, true);
-                }
-            }
-
-            mutexLock(&m_mutex_result);
-            ON_SCOPE_EXIT(mutexUnlock(&m_mutex_result));
-            m_result.emplace_back(result);
-        }
-    }
-}
-
-void ThreadData::Close() {
-    m_running = false;
-    ueventSignal(&m_uevent);
-}
-
-void ThreadData::Push(u64 id) {
-    mutexLock(&m_mutex_id);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex_id));
-
-    const auto it = std::ranges::find(m_ids, id);
-    if (it == m_ids.end()) {
-        m_ids.emplace_back(id);
-        ueventSignal(&m_uevent);
-    }
-}
-
-void ThreadData::Push(std::span<const Entry> entries) {
-    for (auto& e : entries) {
-        Push(e.application_id);
-    }
-}
-
-void ThreadData::Pop(std::vector<ThreadResultData>& out) {
-    mutexLock(&m_mutex_result);
-    ON_SCOPE_EXIT(mutexUnlock(&m_mutex_result));
-
-    std::swap(out, m_result);
-    m_result.clear();
 }
 
 Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
@@ -699,8 +328,8 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
             SetPop();
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_shared<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(options));
+            auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
 
             SidebarEntryArray::Items account_items;
             for (const auto& e : m_accounts) {
@@ -716,9 +345,9 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
             data_type_items.emplace_back("Cache"_i18n);
             data_type_items.emplace_back("System BCAT"_i18n);
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Sort By"_i18n, [this](){
-                auto options = std::make_shared<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(options));
+            options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
 
                 SidebarEntryArray::Items sort_items;
                 sort_items.push_back("Updated"_i18n);
@@ -732,36 +361,36 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
                 layout_items.push_back("Icon"_i18n);
                 layout_items.push_back("Grid"_i18n);
 
-                options->Add(std::make_shared<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+                options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                     m_sort.Set(index_out);
                     SortAndFindLastFile(false);
-                }, m_sort.Get()));
+                }, m_sort.Get());
 
-                options->Add(std::make_shared<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+                options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
                     m_order.Set(index_out);
                     SortAndFindLastFile(false);
-                }, m_order.Get()));
+                }, m_order.Get());
 
-                options->Add(std::make_shared<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+                options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
                     m_layout.Set(index_out);
                     OnLayoutChange();
-                }, m_layout.Get()));
-            }));
+                }, m_layout.Get());
+            });
 
-            options->Add(std::make_shared<SidebarEntryArray>("Account"_i18n, account_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Account"_i18n, account_items, [this](s64& index_out){
                 m_account_index = index_out;
                 m_dirty = true;
                 App::PopToMenu();
-            }, m_account_index));
+            }, m_account_index);
 
-            options->Add(std::make_shared<SidebarEntryArray>("Data Type"_i18n, data_type_items, [this](s64& index_out){
+            options->Add<SidebarEntryArray>("Data Type"_i18n, data_type_items, [this](s64& index_out){
                 m_data_type = index_out;
                 m_dirty = true;
                 App::PopToMenu();
-            }, m_data_type));
+            }, m_data_type);
 
             if (m_entries.size()) {
-                options->Add(std::make_shared<SidebarEntryCallback>("Backup"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
                     std::vector<std::reference_wrapper<Entry>> entries;
                     if (m_selected_count) {
                         for (auto& e : m_entries) {
@@ -774,27 +403,27 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
                     }
 
                     BackupSaves(entries);
-                }, true));
+                }, true);
 
                 if (m_entries[m_index].save_data_type == FsSaveDataType_Account || m_entries[m_index].save_data_type == FsSaveDataType_Bcat) {
-                    options->Add(std::make_shared<SidebarEntryCallback>("Restore"_i18n, [this](){
+                    options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
                         RestoreSave();
-                    }, true));
+                    }, true);
                 }
             }
 
-            options->Add(std::make_shared<SidebarEntryCallback>("Advanced"_i18n, [this](){
-                auto options = std::make_shared<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(options));
+            options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-                options->Add(std::make_shared<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
+                options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
                     m_auto_backup_on_restore.Set(v_out);
-                }));
+                });
 
-                options->Add(std::make_shared<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
+                options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
                     m_compress_save_backup.Set(v_out);
-                }));
-            }));
+                });
+            });
         }})
     );
 
@@ -815,30 +444,20 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
 
     if (it != m_accounts.end()) {
         m_account_index = std::distance(m_accounts.begin(), it);
+        log_write("[SAVE] found account uid at: %zu\n", m_account_index);
+    } else {
+        log_write("[SAVE] account uid is not found: 0x%016lX%016lX\n", uid.uid[0], uid.uid[1]);
     }
 
-    for (auto& e : ncm_entries) {
-        e.Open();
-    }
-
-    threadCreate(&m_thread, ThreadFunc, &m_thread_data, nullptr, 1024*32, THREAD_PRIO, THREAD_CORE);
-    svcSetThreadCoreMask(m_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE));
-    threadStart(&m_thread);
+    title::Init();
     ueventCreate(&g_change_uevent, true);
 }
 
 Menu::~Menu() {
-    m_thread_data.Close();
-
-    for (auto& e : ncm_entries) {
-        e.Close();
-    }
+    title::Exit();
 
     FreeEntries();
     nsExit();
-
-    threadWaitForExit(&m_thread);
-    threadClose(&m_thread);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -874,35 +493,24 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
-    std::vector<ThreadResultData> data;
-    m_thread_data.Pop(data);
-
-    for (const auto& d : data) {
-        for (auto& e : m_entries) {
-            if (e.application_id == d.id) {
-                // don't break out of loop as multiple entries may use
-                // the same tid, such as cached saves.
-                LoadResultIntoEntry(e, d);
-            }
-        }
-    }
-
     m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[pos];
 
-        if (e.status == NacpLoadStatus::None) {
+        if (e.status == title::NacpLoadStatus::None) {
             if (m_data_type != FsSaveDataType_System && m_data_type != FsSaveDataType_SystemBcat) {
-                m_thread_data.Push(e.application_id);
-                e.status = NacpLoadStatus::Progress;
+                title::PushAsync(e.application_id);
+                e.status = title::NacpLoadStatus::Progress;
             } else {
                 FakeNacpEntryForSystem(e);
             }
+        } else if (e.status == title::NacpLoadStatus::Progress) {
+            LoadResultIntoEntry(e, title::GetAsync(e.application_id));
         }
 
         // lazy load image
         if (image_load_count < image_load_max) {
-            if (LoadControlImage(e)) {
+            if (LoadControlImage(e, title::GetAsync(e.application_id))) {
                 image_load_count++;
             }
         }
@@ -936,10 +544,26 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
 
+    if (m_accounts.empty()) {
+        return;
+    }
+
+    u64 id{};
+    if (!m_entries.empty()) {
+        if (m_data_type == FsSaveDataType_System || m_data_type == FsSaveDataType_SystemBcat) {
+            id = m_entries[m_index].system_save_data_id;
+        } else {
+            id = m_entries[m_index].application_id;
+        }
+
+        this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
+    } else {
+        this->SetSubHeading("0 / 0");
+    }
+
     char title[0x40];
-    std::snprintf(title, sizeof(title), "%s | %016lX", m_accounts[m_account_index].nickname, m_entries[m_index].application_id);
+    std::snprintf(title, sizeof(title), "%s | %016lX", m_accounts[m_account_index].nickname, id);
     SetTitleSubHeading(title);
-    this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
 }
 
 void Menu::ScanHomebrew() {
@@ -947,7 +571,11 @@ void Menu::ScanHomebrew() {
     TimeStamp ts;
 
     FreeEntries();
+    ClearSelection();
+    ueventClear(&g_change_uevent);
     m_entries.reserve(ENTRY_CHUNK_COUNT);
+    m_is_reversed = false;
+    m_dirty = false;
 
     if (m_accounts.empty()) {
         return;
@@ -958,7 +586,9 @@ void Menu::ScanHomebrew() {
     GetFsSaveAttr(m_accounts[m_account_index], m_data_type, space_id, filter);
 
     FsSaveDataInfoReader reader;
-    fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter);
+    if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
+        log_write("[SAVE] failed to open reader\n");
+    }
     ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
 
     std::vector<FsSaveDataInfo> info_list(ENTRY_CHUNK_COUNT);
@@ -979,8 +609,6 @@ void Menu::ScanHomebrew() {
         }
     }
 
-    m_is_reversed = false;
-    m_dirty = false;
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
     SetIndex(0);
@@ -1051,7 +679,7 @@ void Menu::OnLayoutChange() {
 
 void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
     dump::DumpGetLocation("Select backup location"_i18n, dump::DumpLocationFlag_SdCard|dump::DumpLocationFlag_Stdio, [this, entries](const dump::DumpLocation& location){
-        App::Push(std::make_shared<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location](auto pbox) -> Result {
+        App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location](auto pbox) -> Result {
             for (auto& e : entries) {
                 // the entry may not have loaded yet.
                 LoadControlEntry(e);
@@ -1064,7 +692,7 @@ void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Backup successfull!"_i18n);
             }
-        }));
+        });
     });
 }
 
@@ -1077,35 +705,40 @@ void Menu::RestoreSave() {
             fs = std::make_unique<fs::FsNativeSd>();
         }
 
-        const auto save_path = fs::AppendPath(fs->Root(), BuildSaveBasePath(m_entries[m_index]));
-        filebrowser::FsDirCollection collection;
-        filebrowser::FsView::get_collection(fs.get(), save_path, "", collection, true, false, false);
-
-        // reverse as they will be sorted in oldest -> newest.
-        std::ranges::reverse(collection.files);
+        // get saves in /Saves/Name and /Saves/app_id
+        filebrowser::FsDirCollection collections[2]{};
+        for (auto i = 0; i < std::size(collections); i++) {
+            const auto save_path = fs::AppendPath(fs->Root(), BuildSaveBasePath(m_entries[m_index], i != 0));
+            filebrowser::FsView::get_collection(fs.get(), save_path, "", collections[i], true, false, false);
+            // reverse as they will be sorted in oldest -> newest.
+            // todo: better impl when both id and normal app folders are used.
+            std::ranges::reverse(collections[i].files);
+        }
 
         std::vector<fs::FsPath> paths;
         PopupList::Items items;
-        for (const auto&p : collection.files) {
-            const auto view = std::string_view{p.name};
-            if (view.starts_with("BCAT") || !view.ends_with(".zip")) {
-                continue;
-            }
+        for (const auto& collection : collections) {
+            for (const auto&p : collection.files) {
+                const auto view = std::string_view{p.name};
+                if (view.starts_with("BCAT") || !view.ends_with(".zip")) {
+                    continue;
+                }
 
-            items.emplace_back(p.name);
-            paths.emplace_back(fs::AppendPath(collection.path, p.name));
+                items.emplace_back(p.name);
+                paths.emplace_back(fs::AppendPath(collection.path, p.name));
+            }
         }
 
         if (paths.empty()) {
-            App::Push(std::make_shared<ui::OptionBox>(
-                "No saves found in "_i18n + save_path.toString(),
+            App::Push<ui::OptionBox>(
+                "No saves found in "_i18n + fs::AppendPath(fs->Root(), BuildSaveBasePath(m_entries[m_index])).toString(),
                 "OK"_i18n
-            ));
+            );
             return;
         }
 
         const auto title = "Restore save for: "_i18n + m_entries[m_index].GetName();
-        App::Push(std::make_shared<PopupList>(
+        App::Push<PopupList>(
             title, items, [this, paths, items, location](auto op_index){
                 if (!op_index) {
                     return;
@@ -1114,11 +747,11 @@ void Menu::RestoreSave() {
                 const auto file_name = items[*op_index];
                 const auto file_path = paths[*op_index];
 
-                App::Push(std::make_shared<OptionBox>(
+                App::Push<OptionBox>(
                     "Are you sure you want to restore "_i18n + file_name + "?",
                     "Back"_i18n, "Restore"_i18n, 0, [this, file_path, location](auto op_index){
                         if (op_index && *op_index) {
-                            App::Push(std::make_shared<ProgressBox>(0, "Restore"_i18n, "", [this, file_path, location](auto pbox) -> Result {
+                            App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, file_path, location](auto pbox) -> Result {
                                 // the entry may not have loaded yet.
                                 LoadControlEntry(m_entries[m_index]);
 
@@ -1135,12 +768,12 @@ void Menu::RestoreSave() {
                                 if (R_SUCCEEDED(rc)) {
                                     App::Notify("Restore successfull!"_i18n);
                                 }
-                            }));
+                            });
                         }
                     }, m_entries[m_index].image
-                ));
+                );
             }
-        ));
+        );
     });
 }
 
@@ -1163,7 +796,7 @@ auto Menu::BuildSavePath(const Entry& e, bool is_auto) const -> fs::FsPath {
             std::snprintf(name_buf, sizeof(name_buf), "%s", acc.nickname);
         }
 
-        utilsReplaceIllegalCharacters(name_buf, true);
+        title::utilsReplaceIllegalCharacters(name_buf, true);
         std::snprintf(path, sizeof(path), "%s/%s - %s.zip", base.s, name_buf.s, time);
     } else {
         std::snprintf(path, sizeof(path), "%s/%s.zip", base.s, time);
@@ -1176,8 +809,8 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     pbox->SetTitle(e.GetName());
     if (e.image) {
         pbox->SetImage(e.image);
-    } else if (e.control && e.jpeg_size) {
-        pbox->SetImageDataConst({e.control->icon, e.jpeg_size});
+    } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+        pbox->SetImageDataConst(data->icon);
     } else {
         pbox->SetImage(0);
     }
@@ -1303,8 +936,8 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     pbox->SetTitle(e.GetName());
     if (e.image) {
         pbox->SetImage(e.image);
-    } else if (e.control && e.jpeg_size) {
-        pbox->SetImageDataConst({e.control->icon, e.jpeg_size});
+    } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+        pbox->SetImageDataConst(data->icon);
     } else {
         pbox->SetImage(0);
     }

@@ -1,3 +1,5 @@
+#if ENABLE_NETWORK_INSTALL
+
 #include "usb/usbds.hpp"
 #include "log.hpp"
 #include "defines.hpp"
@@ -11,6 +13,33 @@ Result usbDsGetSpeed(UsbDeviceSpeed *out) {
 
     serviceAssumeDomain(usbDsGetServiceSession());
     return serviceDispatchOut(usbDsGetServiceSession(), hosversionAtLeast(11,0,0) ? 11 : 12, *out);
+}
+
+auto GetUsbDsStateStr(UsbState state) -> const char* {
+    switch (state) {
+        case UsbState_Detached: return "Detached";
+        case UsbState_Attached: return "Attached";
+        case UsbState_Powered: return "Powered";
+        case UsbState_Default: return "Default";
+        case UsbState_Address: return "Address";
+        case UsbState_Configured: return "Configured";
+        case UsbState_Suspended: return "Suspended";
+    }
+
+    return "Unknown";
+}
+
+auto GetUsbDsSpeedStr(UsbDeviceSpeed speed) -> const char* {
+    // todo: remove this cast when libnx pr is merged.
+    switch ((u32)speed) {
+        case UsbDeviceSpeed_None: return "None";
+        case UsbDeviceSpeed_Low: return "USB 1.0 Low Speed";
+        case UsbDeviceSpeed_Full: return "USB 1.1 Full Speed";
+        case UsbDeviceSpeed_High: return "USB 2.0 High Speed";
+        case UsbDeviceSpeed_Super: return "USB 3.0 Super Speed";
+    }
+
+    return "Unknown";
 }
 
 namespace sphaira::usb {
@@ -210,9 +239,12 @@ Result UsbDs::WaitUntilConfigured(u64 timeout) {
         eventClear(usbDsGetStateChangeEvent());
 
         // check if we got one of the cancel events.
-        if (R_SUCCEEDED(rc) && idx == waiters.size() - 1) {
-            rc = Result_UsbCancelled;
-            break;
+        if (R_SUCCEEDED(rc)) {
+            if (waiters[idx].handle == waiterForUEvent(GetCancelEvent()).handle) {
+                log_write("got usb cancel event\n");
+                rc = Result_UsbCancelled;
+                break;
+            }
         }
 
         rc = usbDsGetState(&state);
@@ -268,18 +300,19 @@ Result UsbDs::WaitTransferCompletion(UsbSessionEndpoint ep, u64 timeout) {
     auto rc = waitObjects(&idx, waiters.data(), waiters.size(), timeout);
 
     // check if we got one of the cancel events.
-    if (R_SUCCEEDED(rc) && idx == waiters.size() - 1) {
-        log_write("got usb cancel event\n");
-        rc = Result_UsbCancelled;
-    } else if (R_SUCCEEDED(rc) && idx == waiters.size() - 2) {
-        log_write("got usbDsGetStateChangeEvent() event\n");
-        m_max_packet_size = 0;
-        rc = KERNELRESULT(TimedOut);
+    if (R_SUCCEEDED(rc)) {
+        if (waiters[idx].handle == waiterForEvent(usbDsGetStateChangeEvent()).handle) {
+            log_write("got usbDsGetStateChangeEvent() event\n");
+            m_max_packet_size = 0;
+            rc = KERNELRESULT(TimedOut);
+        } else if (waiters[idx].handle == waiterForUEvent(GetCancelEvent()).handle) {
+            log_write("got usb cancel event\n");
+            rc = Result_UsbCancelled;
+        }
     }
 
-
     if (R_FAILED(rc)) {
-        R_TRY(usbDsEndpoint_Cancel(m_endpoints[ep]));
+        usbDsEndpoint_Cancel(m_endpoints[ep]);
         eventClear(GetCompletionEvent(ep));
         eventClear(usbDsGetStateChangeEvent());
     }
@@ -289,7 +322,7 @@ Result UsbDs::WaitTransferCompletion(UsbSessionEndpoint ep, u64 timeout) {
 
 Result UsbDs::TransferAsync(UsbSessionEndpoint ep, void *buffer, u32 remaining, u32 size, u32 *out_urb_id) {
     if (ep == UsbSessionEndpoint_In) {
-        if (remaining == size && !(size % (u32)m_max_packet_size)) {
+        if (size && remaining == size && !(size % (u32)m_max_packet_size)) {
             log_write("[USBDS] SetZlt(true)\n");
             R_TRY(usbDsEndpoint_SetZlt(m_endpoints[ep], true));
         } else {
@@ -311,3 +344,5 @@ Result UsbDs::GetTransferResult(UsbSessionEndpoint ep, u32 urb_id, u32 *out_requ
 }
 
 } // namespace sphaira::usb
+
+#endif

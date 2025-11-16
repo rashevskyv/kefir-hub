@@ -45,6 +45,7 @@ private:
 
 private:
     void Draw(NVGcontext* vg, Theme* theme, Entries& entries);
+    auto GetEntries(NotifEntry::Side side) -> Entries&;
 
 private:
     Entries m_entries_left{};

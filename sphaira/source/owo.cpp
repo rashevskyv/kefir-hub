@@ -843,7 +843,7 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
     pbox->SetImageDataConst(config.icon);
 
     R_UNLESS(!config.nro_path.empty(), Result_OwoBadArgs);
-    // R_UNLESS(!config.icon.empty(), OwoError_BadArgs);
+    R_UNLESS(!config.icon.empty(), Result_OwoBadArgs);
 
     R_TRY(splCryptoInitialize());
     ON_SCOPE_EXIT(splCryptoExit());
@@ -1020,9 +1020,9 @@ auto install_forwarder(ui::ProgressBox* pbox, OwoConfig& config, NcmStorageId st
 }
 
 auto install_forwarder(OwoConfig& config, NcmStorageId storage_id) -> Result {
-    App::Push(std::make_shared<ui::ProgressBox>(0, "Installing Forwarder"_i18n, config.name, [config, storage_id](auto pbox) mutable -> Result {
+    App::Push<ui::ProgressBox>(0, "Installing Forwarder"_i18n, config.name, [config, storage_id](auto pbox) mutable -> Result {
         return install_forwarder(pbox, config, storage_id);
-    }));
+    });
     R_SUCCEED();
 }
 

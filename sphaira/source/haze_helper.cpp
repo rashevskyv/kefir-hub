@@ -12,6 +12,7 @@
 namespace sphaira::haze {
 namespace {
 
+#if ENABLE_NETWORK_INSTALL
 struct InstallSharedData {
     Mutex mutex;
     std::string current_file;
@@ -24,12 +25,15 @@ struct InstallSharedData {
     bool in_progress;
     bool enabled;
 };
+#endif
 
-constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
+constexpr int THREAD_PRIO = 0x20;
 constexpr int THREAD_CORE = 2;
-volatile bool g_should_exit = false;
+std::atomic_bool g_should_exit = false;
 bool g_is_running{false};
 Mutex g_mutex{};
+
+#if ENABLE_NETWORK_INSTALL
 InstallSharedData g_shared_data{};
 
 const char* SUPPORTED_EXT[] = {
@@ -54,6 +58,7 @@ void on_thing() {
         }
     }
 }
+#endif
 
 struct FsProxyBase : ::haze::FileSystemProxyImpl {
     FsProxyBase(const char* name, const char* display_name) : m_name{name}, m_display_name{display_name} {
@@ -87,8 +92,9 @@ protected:
 };
 
 struct FsProxy final : FsProxyBase {
-    FsProxy(std::shared_ptr<fs::Fs> fs, const char* name, const char* display_name) : FsProxyBase{name, display_name} {
-        m_fs = fs;
+    FsProxy(std::unique_ptr<fs::Fs>&& fs, const char* name, const char* display_name)
+    : FsProxyBase{name, display_name}
+    , m_fs{std::forward<decltype(fs)>(fs)} {
     }
 
     ~FsProxy() {
@@ -152,19 +158,19 @@ struct FsProxy final : FsProxyBase {
         return f->GetSize(out_size);
     }
     Result SetFileSize(FsFile *file, s64 size) override {
-        log_write("[HAZE] SetFileSize()\n");
+        log_write("[HAZE] SetFileSize(%zd)\n", size);
         fs::File* f;
         std::memcpy(&f, &file->s, sizeof(f));
         return f->SetSize(size);
     }
     Result ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u32 option, u64 *out_bytes_read) override {
-        log_write("[HAZE] ReadFile()\n");
+        log_write("[HAZE] ReadFile(%zd, %zu)\n", off, read_size);
         fs::File* f;
         std::memcpy(&f, &file->s, sizeof(f));
         return f->Read(off, buf, read_size, option, out_bytes_read);
     }
     Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
-        log_write("[HAZE] WriteFile()\n");
+        log_write("[HAZE] WriteFile(%zd, %zu)\n", off, write_size);
         fs::File* f;
         std::memcpy(&f, &file->s, sizeof(f));
         return f->Write(off, buf, write_size, option);
@@ -227,9 +233,12 @@ struct FsProxy final : FsProxyBase {
         }
         std::memset(d, 0, sizeof(*d));
     }
+    virtual bool MultiThreadTransfer(s64 size, bool read) override {
+        return !App::IsFileBaseEmummc();
+    }
 
 private:
-    std::shared_ptr<fs::Fs> m_fs{};
+    std::unique_ptr<fs::Fs> m_fs{};
 };
 
 // fake fs that allows for files to create r/w on the root.
@@ -397,8 +406,12 @@ struct FsDevNullProxy final : FsProxyVfs {
         *out = 1024ULL * 1024ULL * 1024ULL * 256ULL;
         R_SUCCEED();
     }
+    bool MultiThreadTransfer(s64 size, bool read) override {
+        return true;
+    }
 };
 
+#if ENABLE_NETWORK_INSTALL
 struct FsInstallProxy final : FsProxyVfs {
     using FsProxyVfs::FsProxyVfs;
 
@@ -517,7 +530,14 @@ struct FsInstallProxy final : FsProxyVfs {
 
         FsProxyVfs::CloseFile(file);
     }
+
+    // installs are already multi-threaded via yati.
+    bool MultiThreadTransfer(s64 size, bool read) override {
+        App::IsFileBaseEmummc();
+        return false;
+    }
 };
+#endif
 
 ::haze::FsEntries g_fs_entries{};
 
@@ -558,11 +578,13 @@ bool Init() {
         return false;
     }
 
-    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_shared<fs::FsNativeSd>(), "", "microSD card"));
-    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_shared<fs::FsNativeImage>(FsImageDirectoryId_Nand), "image_nand", "Image nand"));
-    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_shared<fs::FsNativeImage>(FsImageDirectoryId_Sd), "image_sd", "Image sd"));
+    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_unique<fs::FsNativeSd>(), "", "microSD card"));
+    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_unique<fs::FsNativeImage>(FsImageDirectoryId_Nand), "image_nand", "Image nand"));
+    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_unique<fs::FsNativeImage>(FsImageDirectoryId_Sd), "image_sd", "Image sd"));
     g_fs_entries.emplace_back(std::make_shared<FsDevNullProxy>("DevNull", "DevNull (Speed Test)"));
+#if ENABLE_NETWORK_INSTALL
     g_fs_entries.emplace_back(std::make_shared<FsInstallProxy>("install", "Install (NSP, XCI, NSZ, XCZ)"));
+#endif
 
     g_should_exit = false;
     if (!::haze::Initialize(haze_callback, THREAD_PRIO, THREAD_CORE, g_fs_entries)) {
@@ -587,6 +609,7 @@ void Exit() {
     log_write("[MTP] exitied\n");
 }
 
+#if ENABLE_NETWORK_INSTALL
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close) {
     SCOPED_MUTEX(&g_shared_data.mutex);
     g_shared_data.on_start = on_start;
@@ -599,5 +622,6 @@ void DisableInstallMode() {
     SCOPED_MUTEX(&g_shared_data.mutex);
     g_shared_data.enabled = false;
 }
+#endif
 
 } // namespace sphaira::haze

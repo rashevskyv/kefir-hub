@@ -29,7 +29,7 @@ using Collections = std::vector<CollectionEntry>;
 struct Base {
     using Source = source::Base;
 
-    Base(std::shared_ptr<Source> source) : m_source{source} { }
+    Base(Source* source) : m_source{source} { }
     virtual ~Base() = default;
     virtual Result GetCollections(Collections& out) = 0;
     auto GetSource() const {
@@ -37,7 +37,7 @@ struct Base {
     }
 
 protected:
-    std::shared_ptr<Source> m_source;
+    Source* m_source;
 };
 
 } // namespace sphaira::yati::container

@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <atomic>
 #include <minizip/unzip.h>
 #include <minizip/zip.h>
 
@@ -73,27 +74,46 @@ public:
 struct ThreadData {
     ThreadData(ui::ProgressBox* _pbox, s64 size, ReadCallback _rfunc, WriteCallback _wfunc, u64 buffer_size);
 
-    auto GetResults() -> Result;
+    auto GetResults() volatile -> Result;
     void WakeAllThreads();
 
-    void SetReadResult(Result result) {
-        read_result = result;
+    auto IsAnyRunning() volatile const -> bool {
+        return read_running || write_running;
     }
 
-    void SetWriteResult(Result result) {
-        write_result = result;
-    }
-
-    void SetPullResult(Result result) {
-        pull_result = result;
-    }
-
-    auto GetWriteOffset() const {
+    auto GetWriteOffset() volatile const -> s64 {
         return write_offset;
     }
 
     auto GetWriteSize() const {
         return write_size;
+    }
+
+    auto GetDoneEvent() {
+        return &m_uevent_done;
+    }
+
+    auto GetProgressEvent() {
+        return &m_uevent_progres;
+    }
+
+    void SetReadResult(Result result) {
+        read_result = result;
+        if (R_FAILED(result)) {
+            ueventSignal(GetDoneEvent());
+        }
+    }
+
+    void SetWriteResult(Result result) {
+        write_result = result;
+        ueventSignal(GetDoneEvent());
+    }
+
+    void SetPullResult(Result result) {
+        pull_result = result;
+        if (R_FAILED(result)) {
+            ueventSignal(GetDoneEvent());
+        }
     }
 
     Result Pull(void* data, s64 size, u64* bytes_read);
@@ -123,6 +143,9 @@ private:
     CondVar can_pull{};
     CondVar can_pull_write{};
 
+    UEvent m_uevent_done{};
+    UEvent m_uevent_progres{};
+
     RingBuf<2> write_buffers{};
     std::vector<u8> pull_buffer{};
     s64 pull_buffer_offset{};
@@ -131,12 +154,15 @@ private:
     const s64 write_size;
 
     // these are shared between threads
-    volatile s64 read_offset{};
-    volatile s64 write_offset{};
+    std::atomic<s64> read_offset{};
+    std::atomic<s64> write_offset{};
 
-    volatile Result read_result{};
-    volatile Result write_result{};
-    volatile Result pull_result{};
+    std::atomic<Result> read_result{};
+    std::atomic<Result> write_result{};
+    std::atomic<Result> pull_result{};
+
+    std::atomic_bool read_running{true};
+    std::atomic_bool write_running{true};
 };
 
 ThreadData::ThreadData(ui::ProgressBox* _pbox, s64 size, ReadCallback _rfunc, WriteCallback _wfunc, u64 buffer_size)
@@ -152,13 +178,16 @@ ThreadData::ThreadData(ui::ProgressBox* _pbox, s64 size, ReadCallback _rfunc, Wr
     condvarInit(std::addressof(can_write));
     condvarInit(std::addressof(can_pull));
     condvarInit(std::addressof(can_pull_write));
+
+    ueventCreate(&m_uevent_done, false);
+    ueventCreate(&m_uevent_progres, true);
 }
 
-auto ThreadData::GetResults() -> Result {
-    R_UNLESS(!pbox->ShouldExit(), Result_TransferCancelled);
-    R_TRY(read_result);
-    R_TRY(write_result);
-    R_TRY(pull_result);
+auto ThreadData::GetResults() volatile -> Result {
+    R_TRY(pbox->ShouldExitResult());
+    R_TRY(read_result.load());
+    R_TRY(write_result.load());
+    R_TRY(pull_result.load());
     R_SUCCEED();
 }
 
@@ -177,6 +206,9 @@ Result ThreadData::SetWriteBuf(std::vector<u8>& buf, s64 size) {
 
     mutexLock(std::addressof(mutex));
     if (!write_buffers.ringbuf_free()) {
+        if (!write_running) {
+            R_SUCCEED();
+        }
         R_TRY(condvarWait(std::addressof(can_read), std::addressof(mutex)));
     }
 
@@ -189,6 +221,10 @@ Result ThreadData::SetWriteBuf(std::vector<u8>& buf, s64 size) {
 Result ThreadData::GetWriteBuf(std::vector<u8>& buf_out, s64& off_out) {
     mutexLock(std::addressof(mutex));
     if (!write_buffers.ringbuf_size()) {
+        if (!read_running) {
+            buf_out.resize(0);
+            R_SUCCEED();
+        }
         R_TRY(condvarWait(std::addressof(can_write), std::addressof(mutex)));
     }
 
@@ -248,6 +284,8 @@ Result ThreadData::Pull(void* data, s64 size, u64* bytes_read) {
 
 // read thread reads all data from the source
 Result ThreadData::readFuncInternal() {
+    ON_SCOPE_EXIT( read_running = false; );
+
     // the main buffer which data is read into.
     std::vector<u8> buf;
     buf.reserve(this->read_buffer_size);
@@ -259,8 +297,11 @@ Result ThreadData::readFuncInternal() {
         u64 bytes_read{};
         buf.resize(read_size);
         R_TRY(this->Read(buf.data(), read_size, std::addressof(bytes_read)));
-        auto buf_size = bytes_read;
+        if (!bytes_read) {
+            break;
+        }
 
+        auto buf_size = bytes_read;
         R_TRY(this->SetWriteBuf(buf, buf_size));
     }
 
@@ -268,8 +309,10 @@ Result ThreadData::readFuncInternal() {
     R_SUCCEED();
 }
 
-// write thread writes data to the nca placeholder.
+// write thread writes data to wfunc.
 Result ThreadData::writeFuncInternal() {
+    ON_SCOPE_EXIT( write_running = false; );
+
     std::vector<u8> buf;
     buf.reserve(this->read_buffer_size);
 
@@ -277,6 +320,10 @@ Result ThreadData::writeFuncInternal() {
         s64 dummy_off;
         R_TRY(this->GetWriteBuf(buf, dummy_off));
         const auto size = buf.size();
+        if (!size) {
+            log_write("exiting write func early because no data was received\n");
+            break;
+        }
 
         if (!this->wfunc) {
             R_TRY(this->SetPullBuf(buf, buf.size()));
@@ -285,6 +332,7 @@ Result ThreadData::writeFuncInternal() {
         }
 
         this->write_offset += size;
+        ueventSignal(GetProgressEvent());
     }
 
     log_write("finished write thread success!\n");
@@ -323,7 +371,9 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
     }
 
     // single threaded pull buffer is not supported.
-    R_UNLESS(mode != Mode::MultiThreaded || !sfunc, 0x1);
+    log_write("checking invalid transfer mode: %u %u\n", mode == Mode::MultiThreaded, !sfunc);
+    R_UNLESS(mode == Mode::MultiThreaded || !sfunc, 0x1);
+    log_write("valid transfer mode\n");
 
     // todo: support single threaded pull buffer.
     if (mode == Mode::SingleThreaded) {
@@ -336,6 +386,10 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
             u64 bytes_read;
             const auto rsize = std::min<s64>(buf.size(), size - offset);
             R_TRY(rfunc(buf.data(), offset, rsize, &bytes_read));
+            if (!bytes_read) {
+                break;
+            }
+
             R_TRY(wfunc(buf.data(), offset, bytes_read));
 
             offset += bytes_read;
@@ -374,21 +428,32 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
                 R_TRY(t_data.GetResults());
                 return t_data.Pull(data, size, bytes_read);
             }));
-        }
-        else {
+        } else {
             log_write("[THREAD] doing normal\n");
             R_TRY(start_threads());
             log_write("[THREAD] started threads\n");
 
-            while (t_data.GetWriteOffset() != t_data.GetWriteSize() && R_SUCCEEDED(t_data.GetResults())) {
-                pbox->UpdateTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
-                svcSleepThread(1e+6);
+            const auto waiter_progress = waiterForUEvent(t_data.GetProgressEvent());
+            const auto waiter_cancel = waiterForUEvent(pbox->GetCancelEvent());
+            const auto waiter_done = waiterForUEvent(t_data.GetDoneEvent());
+
+            for (;;) {
+                s32 idx;
+                if (R_FAILED(waitMulti(&idx, UINT64_MAX, waiter_progress, waiter_cancel, waiter_done))) {
+                    break;
+                }
+
+                if (!idx) {
+                    pbox->UpdateTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
+                } else {
+                    break;
+                }
             }
         }
 
         // wait for all threads to close.
         log_write("waiting for threads to close\n");
-        for (;;) {
+        while (t_data.IsAnyRunning()) {
             t_data.WakeAllThreads();
             pbox->Yield();
 

@@ -14,6 +14,7 @@
 namespace sphaira::ftpsrv {
 namespace {
 
+#if ENABLE_NETWORK_INSTALL
 struct InstallSharedData {
     Mutex mutex;
     std::deque<std::string> queued_files;
@@ -26,16 +27,16 @@ struct InstallSharedData {
     bool in_progress;
     bool enabled;
 };
+#endif
 
 const char* INI_PATH = "/config/ftpsrv/config.ini";
 constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
 constexpr int THREAD_CORE = 2;
 FtpSrvConfig g_ftpsrv_config = {0};
-volatile bool g_should_exit = false;
+std::atomic_bool g_should_exit = false;
 bool g_is_running{false};
 Thread g_thread;
 Mutex g_mutex{};
-InstallSharedData g_shared_data{};
 
 void ftp_log_callback(enum FTP_API_LOG_TYPE type, const char* msg) {
     sphaira::App::NotifyFlashLed();
@@ -44,6 +45,9 @@ void ftp_log_callback(enum FTP_API_LOG_TYPE type, const char* msg) {
 void ftp_progress_callback(void) {
     sphaira::App::NotifyFlashLed();
 }
+
+#if ENABLE_NETWORK_INSTALL
+InstallSharedData g_shared_data{};
 
 const char* SUPPORTED_EXT[] = {
     ".nsp", ".xci", ".nsz", ".xcz",
@@ -273,6 +277,7 @@ FtpVfs g_vfs_install = {
     .rmdir = vfs_install_rmdir,
     .rename = vfs_install_rename,
 };
+#endif
 
 void loop(void* arg) {
     log_write("[FTP] loop entered\n");
@@ -348,13 +353,17 @@ bool Init() {
         g_ftpsrv_config.anon = true;
     }
 
+#if ENABLE_NETWORK_INSTALL
     const VfsNxCustomPath custom = {
         .name = "install",
         .user = NULL,
         .func = &g_vfs_install,
     };
 
-    vfs_nx_init(&custom, mount_devices, save_writable, mount_bis);
+    vfs_nx_init(&custom, mount_devices, save_writable, mount_bis, false);
+#else
+    vfs_nx_init(NULL, mount_devices, save_writable, mount_bis, false);
+#endif
 
     Result rc;
     if (R_FAILED(rc = threadCreate(&g_thread, loop, nullptr, nullptr, 1024*16, THREAD_PRIO, THREAD_CORE))) {
@@ -396,6 +405,7 @@ void Exit() {
     log_write("[FTP] exitied\n");
 }
 
+#if ENABLE_NETWORK_INSTALL
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close) {
     SCOPED_MUTEX(&g_shared_data.mutex);
     g_shared_data.on_start = on_start;
@@ -408,6 +418,7 @@ void DisableInstallMode() {
     SCOPED_MUTEX(&g_shared_data.mutex);
     g_shared_data.enabled = false;
 }
+#endif
 
 unsigned GetPort() {
     SCOPED_MUTEX(&g_mutex);

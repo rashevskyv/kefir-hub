@@ -62,12 +62,16 @@ Result Hfs0GetPartition(source::Base* source, s64 off, Hfs0& out) {
 
 Result Xci::GetCollections(Collections& out) {
     Hfs0 root{};
-    R_TRY(Hfs0GetPartition(m_source.get(), HFS0_HEADER_OFFSET, root));
+    R_TRY(Hfs0GetPartition(m_source, HFS0_HEADER_OFFSET, root));
+    log_write("[XCI] got root partition\n");
 
     for (u32 i = 0; i < root.header.total_files; i++) {
         if (root.string_table[i] == "secure") {
+            log_write("[XCI] found secure partition\n");
+
             Hfs0 secure{};
-            R_TRY(Hfs0GetPartition(m_source.get(), root.data_offset + root.file_table[i].data_offset, secure));
+            R_TRY(Hfs0GetPartition(m_source, root.data_offset + root.file_table[i].data_offset, secure));
+            log_write("[XCI] got secure partition\n");
 
             for (u32 i = 0; i < secure.header.total_files; i++) {
                 CollectionEntry entry;
@@ -78,10 +82,12 @@ Result Xci::GetCollections(Collections& out) {
             }
 
             R_SUCCEED();
+        } else {
+            log_write("[XCI] skipping partition %u | %s\n", i, root.string_table[i].c_str());
         }
     }
 
-    return 0x1;
+    return Result_XciSecurePartitionNotFound;
 }
 
 } // namespace sphaira::yati::container
