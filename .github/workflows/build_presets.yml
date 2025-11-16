@@ -10,13 +10,20 @@ jobs:
         os: [ubuntu-latest]
         preset: [Release]
     runs-on: ${{ matrix.os }}
-    container: devkitpro/devkita64:latest
+    container: devkitpro/devkita64:20250728
 
     steps:
     - uses: actions/checkout@v3
 
     # fetch latest cmake
     - uses: lukka/get-cmake@v3.31.6
+
+    - name: Build libnx
+      run: |
+        wget -qO- https://github.com/switchbrew/libnx/archive/v4.10.0.tar.gz | tar zxf - -C /tmp
+        cd /tmp/libnx-4.10.0
+        make -j$(nproc)
+        make install
 
     - name: Configure CMake
       run: cmake --preset ${{ matrix.preset }}

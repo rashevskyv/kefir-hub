@@ -789,7 +789,7 @@ void Menu::ScanHomebrew() {
                 continue;
             }
 
-            m_entries.emplace_back(e.application_id, e.type);
+            m_entries.emplace_back(e.application_id, e.last_event);
         }
 
         offset += record_count;

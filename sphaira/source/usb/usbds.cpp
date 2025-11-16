@@ -6,15 +6,6 @@
 #include <ranges>
 #include <cstring>
 
-Result usbDsGetSpeed(UsbDeviceSpeed *out) {
-    if (hosversionBefore(8,0,0)) {
-        return MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer);
-    }
-
-    serviceAssumeDomain(usbDsGetServiceSession());
-    return serviceDispatchOut(usbDsGetServiceSession(), hosversionAtLeast(11,0,0) ? 11 : 12, *out);
-}
-
 auto GetUsbDsStateStr(UsbState state) -> const char* {
     switch (state) {
         case UsbState_Detached: return "Detached";
