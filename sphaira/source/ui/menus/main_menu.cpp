@@ -1,14 +1,10 @@
 #include "ui/menus/main_menu.hpp"
 
-#include "ui/sidebar.hpp"
-#include "ui/popup_list.hpp"
-#include "ui/option_box.hpp"
-#include "ui/progress_box.hpp"
-#include "ui/error_box.hpp"
-
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/irs_menu.hpp"
+#include "ui/menus/tools_menu.hpp"
+#include "ui/menus/settings_menu.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/ghdl.hpp"
 #include "ui/menus/usb_menu.hpp"
@@ -24,9 +20,7 @@
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
-#include "threaded_file_transfer.hpp"
 
-#include <cstring>
 #include <yyjson.h>
 #include <iomanip>
 
@@ -35,13 +29,6 @@ namespace {
 
 constexpr const char* GITHUB_URL{"https://api.github.com/repos/ITotalJustice/sphaira/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
-
-// paths where sphaira can be installed, used when updating
-constexpr const fs::FsPath SPHAIRA_PATHS[]{
-    "/hbmenu.nro",
-    "/switch/sphaira.nro",
-    "/switch/sphaira/sphaira.nro",
-};
 
 template<typename T>
 auto MiscMenuFuncGenerator(u32 flags) {
@@ -103,104 +90,6 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
     { .name = "IRS", .title = "IRS (Infrared Joycon Camera)", .func = MiscMenuFuncGenerator<ui::menu::irs::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
         "InfraRed Sensor (IRS) is the small camera found on right JoyCon." },
 };
-
-auto InstallUpdate(ProgressBox* pbox, const std::string url, const std::string version) -> Result {
-    static fs::FsPath zip_out{"/switch/sphaira/cache/update.zip"};
-
-    fs::FsNativeSd fs;
-    R_TRY(fs.GetFsOpenResult());
-
-    // 1. download the zip
-    if (!pbox->ShouldExit()) {
-        pbox->NewTransfer("Downloading "_i18n + version);
-        log_write("starting download: %s\n", url.c_str());
-
-        const auto result = curl::Api().ToFile(
-            curl::Url{url},
-            curl::Path{zip_out},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()}
-        );
-
-        R_UNLESS(result.success, Result_MainFailedToDownloadUpdate);
-    }
-
-    ON_SCOPE_EXIT(fs.DeleteFile(zip_out));
-
-    // 2. extract the zip
-    if (!pbox->ShouldExit()) {
-        const auto exe_path = App::GetExePath();
-        bool found_exe{};
-
-        R_TRY(thread::TransferUnzipAll(pbox, zip_out, &fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
-            if (std::strstr(path, "sphaira.nro")) {
-                path = exe_path;
-                found_exe = true;
-            }
-            return true;
-        }));
-
-        // check if we have sphaira installed in other locations and update them.
-        if (found_exe) {
-            for (auto& path : SPHAIRA_PATHS) {
-                log_write("[UPD] checking path: %s\n", path.s);
-                // skip if we already updated this path.
-                if (exe_path == path) {
-                    log_write("[UPD] skipped as already updated\n");
-                    continue;
-                }
-
-                // check that this is really sphaira.
-                log_write("[UPD] checking nacp\n");
-                NacpStruct nacp;
-                if (R_SUCCEEDED(nro_get_nacp(path, nacp)) && !std::strcmp(nacp.lang[0].name, "sphaira")) {
-                    log_write("[UPD] found, updating\n");
-                    pbox->NewTransfer(path);
-                    R_TRY(pbox->CopyFile(&fs, exe_path, path));
-                }
-            }
-        }
-    }
-
-    log_write("finished update :)\n");
-    R_SUCCEED();
-}
-
-auto CreateLeftSideMenu(std::string& name_out) -> std::unique_ptr<MenuBase> {
-    const auto name = App::GetApp()->m_left_menu.Get();
-
-    for (auto& e : GetMiscMenuEntries()) {
-        if (e.name == name) {
-            name_out = name;
-            return e.func(MenuFlag_Tab);
-        }
-    }
-
-    name_out = "FileBrowser";
-    return std::make_unique<ui::menu::filebrowser::Menu>(MenuFlag_Tab);
-}
-
-auto CreateRightSideMenu(std::string_view left_name) -> std::unique_ptr<MenuBase> {
-    const auto name = App::GetApp()->m_right_menu.Get();
-
-    // handle if the user tries to mount the same menu twice.
-    if (name == left_name) {
-        // check if we can mount the default.
-        if (left_name != "AppStore") {
-            return std::make_unique<ui::menu::appstore::Menu>(MenuFlag_Tab);
-        } else {
-            // otherwise, fallback to left side default.
-            return std::make_unique<ui::menu::filebrowser::Menu>(MenuFlag_Tab);
-        }
-    }
-
-    for (auto& e : GetMiscMenuEntries()) {
-        if (e.name == name) {
-            return e.func(MenuFlag_Tab);
-        }
-    }
-
-    return std::make_unique<ui::menu::appstore::Menu>(MenuFlag_Tab);
-}
 
 } // namespace
 
@@ -275,108 +164,17 @@ MainMenu::MainMenu() {
     });
 
     this->SetActions(
-        std::make_pair(Button::START, Action{App::Exit}),
-        std::make_pair(Button::SELECT, Action{App::DisplayMiscOptions}),
-        std::make_pair(Button::Y, Action{"Menu"_i18n, [this](){
-            auto options = std::make_unique<Sidebar>("Menu Options"_i18n, "v" APP_VERSION_HASH, Sidebar::Side::LEFT);
-            ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-            SidebarEntryArray::Items language_items;
-            language_items.push_back("Auto"_i18n);
-            language_items.push_back("English"_i18n);
-            language_items.push_back("Japanese"_i18n);
-            language_items.push_back("French"_i18n);
-            language_items.push_back("German"_i18n);
-            language_items.push_back("Italian"_i18n);
-            language_items.push_back("Spanish"_i18n);
-            language_items.push_back("Chinese"_i18n);
-            language_items.push_back("Korean"_i18n);
-            language_items.push_back("Dutch"_i18n);
-            language_items.push_back("Portuguese"_i18n);
-            language_items.push_back("Russian"_i18n);
-            language_items.push_back("Swedish"_i18n);
-            language_items.push_back("Vietnamese"_i18n);
-            language_items.push_back("Ukrainian"_i18n);
-
-            options->Add<SidebarEntryCallback>("Theme"_i18n, [](){
-                App::DisplayThemeOptions();
-            }, "Customise the look of Sphaira by changing the theme"_i18n);
-
-            options->Add<SidebarEntryCallback>("Network"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Network Options"_i18n, Sidebar::Side::LEFT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                if (m_update_state == UpdateState::Update) {
-                    options->Add<SidebarEntryCallback>("Download update: "_i18n + m_update_version, [this](){
-                        App::Push<ProgressBox>(0, "Downloading "_i18n, "Sphaira v" + m_update_version, [this](auto pbox) -> Result {
-                            return InstallUpdate(pbox, m_update_url, m_update_version);
-                        }, [this](Result rc){
-                            App::PushErrorBox(rc, "Failed to download update"_i18n);
-
-                            if (R_SUCCEEDED(rc)) {
-                                m_update_state = UpdateState::None;
-                                App::Notify("Updated to "_i18n + m_update_version);
-                                App::Push<OptionBox>(
-                                    "Press OK to restart Sphaira"_i18n, "OK"_i18n, [](auto){
-                                        App::ExitRestart();
-                                    }
-                                );
-                            }
-                        });
-                    });
-                }
-
-                options->Add<SidebarEntryBool>("Ftp"_i18n, App::GetFtpEnable(), [](bool& enable){
-                    App::SetFtpEnable(enable);
-                },  "Enable FTP server to run in the background.\n\n"\
-                    "The default port is 5000 with no user/pass set. "\
-                    "You can change this behaviour in /config/ftpsrv/config.ini"_i18n);
-
-                options->Add<SidebarEntryBool>("Mtp"_i18n, App::GetMtpEnable(), [](bool& enable){
-                    App::SetMtpEnable(enable);
-                },  "Enable MTP server to run in the background."_i18n);
-
-                options->Add<SidebarEntryBool>("Nxlink"_i18n, App::GetNxlinkEnable(), [](bool& enable){
-                    App::SetNxlinkEnable(enable);
-                },  "Enable NXlink server to run in the background. "\
-                    "NXlink is used to send .nro's from PC to the switch\n\n"\
-                    "If you are not a developer, you can disable this option."_i18n);
-
-                options->Add<SidebarEntryBool>("Hdd"_i18n, App::GetHddEnable(), [](bool& enable){
-                    App::SetHddEnable(enable);
-                },  "Enable mounting of connected USB/HDD devices. "\
-                    "Connected devices can be used in the FileBrowser, as well as a backup location when dumping games and saves."_i18n);
-
-                options->Add<SidebarEntryBool>("Hdd write protect"_i18n, App::GetWriteProtect(), [](bool& enable){
-                    App::SetWriteProtect(enable);
-                },  "Makes the connected HDD read-only."_i18n);
-            }, "Toggle FTP, MTP, HDD and NXlink\n\n" \
-               "If Sphaira has a update available, you can download it from this menu"_i18n);
-
-            options->Add<SidebarEntryArray>("Language"_i18n, language_items, [](s64& index_out){
-                App::SetLanguage(index_out);
-            }, (s64)App::GetLanguage(),
-                "Change the language.\n\n"
-                "If your language isn't found, or translations are missing, please consider opening a PR at "\
-                "github.com/ITotalJustice/sphaira"_i18n);
-
-            options->Add<SidebarEntryCallback>("Misc"_i18n, [](){
-                App::DisplayMiscOptions();
-            }, "View and launch one of Sphaira's menus"_i18n);
-
-            options->Add<SidebarEntryCallback>("Advanced"_i18n, [](){
-                App::DisplayAdvancedOptions();
-            },  "Change the advanced options. "\
-                "Please view the info boxes to better understand each option."_i18n);
-        }}
-    ));
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+            if (m_current_menu) {
+                m_current_menu->FireAction(Button::X);
+            }
+        }}),
+        std::make_pair(Button::SELECT, Action{App::Exit})
+    );
 
     m_centre_menu = std::make_unique<homebrew::Menu>();
+    m_tools_menu = std::make_unique<tools::Menu>();
     m_current_menu = m_centre_menu.get();
-
-    std::string left_side_name;
-    m_left_menu = CreateLeftSideMenu(left_side_name);
-    m_right_menu = CreateRightSideMenu(left_side_name);
 
     AddOnLRPress();
 
@@ -407,15 +205,13 @@ void MainMenu::OnFocusLost() {
     m_current_menu->OnFocusLost();
 }
 
-void MainMenu::OnLRPress(MenuBase* menu, Button b) {
-    m_current_menu->OnFocusLost();
-    if (m_current_menu == m_centre_menu.get()) {
-        m_current_menu = menu;
-        RemoveAction(b);
-    } else {
-        m_current_menu = m_centre_menu.get();
+void MainMenu::SwitchTo(MenuBase* menu) {
+    if (m_current_menu == menu) {
+        return;
     }
 
+    m_current_menu->OnFocusLost();
+    m_current_menu = menu;
     AddOnLRPress();
     m_current_menu->OnFocusGained();
 
@@ -425,17 +221,16 @@ void MainMenu::OnLRPress(MenuBase* menu, Button b) {
 }
 
 void MainMenu::AddOnLRPress() {
-    if (m_current_menu != m_left_menu.get()) {
-        const auto label = m_current_menu == m_centre_menu.get() ? m_left_menu->GetShortTitle() : m_centre_menu->GetShortTitle();
-        SetAction(Button::L, Action{i18n::get(label), [this]{
-            OnLRPress(m_left_menu.get(), Button::L);
-        }});
-    }
+    RemoveAction(Button::L);
+    RemoveAction(Button::R);
 
-    if (m_current_menu != m_right_menu.get()) {
-        const auto label = m_current_menu == m_centre_menu.get() ? m_right_menu->GetShortTitle() : m_centre_menu->GetShortTitle();
-        SetAction(Button::R, Action{i18n::get(label), [this]{
-            OnLRPress(m_right_menu.get(), Button::R);
+    if (m_current_menu == m_centre_menu.get()) {
+        SetAction(Button::R, Action{m_tools_menu->GetShortTitle(), [this]{
+            SwitchTo(m_tools_menu.get());
+        }});
+    } else {
+        SetAction(Button::L, Action{m_centre_menu->GetShortTitle(), [this]{
+            SwitchTo(m_centre_menu.get());
         }});
     }
 }

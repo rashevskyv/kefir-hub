@@ -2,6 +2,7 @@
 #include "ui/menus/homebrew.hpp"
 
 #include "ui/sidebar.hpp"
+#include "swkbd.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
@@ -21,6 +22,7 @@
 #include <minIni.h>
 #include <dirent.h>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 
 namespace sphaira::ui::menu::gh {
@@ -63,6 +65,7 @@ void from_json(const fs::FsPath& path, Entry& e) {
         JSON_SET_STR(pre_install_message);
         JSON_SET_STR(post_install_message);
         JSON_SET_ARR_OBJ(assets);
+        JSON_SET_STR(direct_url);
     );
 }
 
@@ -165,6 +168,91 @@ auto DownloadReleaseJsonJson(ProgressBox* pbox, const std::string& url, std::vec
     R_SUCCEED();
 }
 
+constexpr s64 MAX_DIRECT_LINK_SIZE = 20 * 1024 * 1024; // 20MB soft limit
+constexpr fs::FsPath DIRECT_LINK_TEMP{"/switch/sphaira/cache/github/direct_link.zip"};
+
+void DoDirectLinkDownload(const std::string& url) {
+    App::Push<ProgressBox>(0, "Downloading..."_i18n, "", [url](auto pbox) -> Result {
+        fs::FsNativeSd fs;
+        R_TRY(fs.GetFsOpenResult());
+
+        // Download the file
+        pbox->NewTransfer("Downloading..."_i18n);
+        const auto result = curl::Api().ToFile(
+            curl::Url{url},
+            curl::Path{DIRECT_LINK_TEMP},
+            curl::OnProgress{pbox->OnDownloadProgressCallback()}
+        );
+        R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
+
+        // Extract the ZIP
+        pbox->NewTransfer("Extracting..."_i18n);
+        R_TRY(thread::TransferUnzipAll(pbox, DIRECT_LINK_TEMP, &fs, "/"));
+
+        R_SUCCEED();
+    }, [](Result rc){
+        App::PushErrorBox(rc, "Download failed!"_i18n);
+
+        if (R_SUCCEEDED(rc)) {
+            homebrew::SignalChange();
+
+            // Ask whether to delete the ZIP
+            App::Push<OptionBox>(
+                "Download and extract completed!\nDelete ZIP file?"_i18n,
+                "Keep"_i18n, "Delete"_i18n, 1, [](auto op_index){
+                    if (op_index && *op_index) {
+                        fs::FsNativeSd fs;
+                        fs.DeleteFile(DIRECT_LINK_TEMP);
+                    }
+                }
+            );
+        }
+    });
+}
+
+void OpenDirectLinkPrompt() {
+    std::string url;
+    if (R_FAILED(swkbd::ShowText(url, "Enter ZIP URL", "https://")) || url.empty()) {
+        return;
+    }
+
+    // Validate URL ends with .zip
+    if (url.size() < 4 || strcasecmp(url.c_str() + url.size() - 4, ".zip") != 0) {
+        App::Push<OptionBox>("URL must end with .zip"_i18n, "OK"_i18n);
+        return;
+    }
+
+    // Check file size via HEAD request
+    const auto head_result = curl::Api().ToMemory(
+        curl::Url{url},
+        curl::Flags{curl::Flag_NoBody}
+    );
+
+    if (head_result.success) {
+        auto it = head_result.header.Find("content-length");
+        if (it != head_result.header.m_map.end()) {
+            s64 size = std::atoll(it->second.c_str());
+            if (size > MAX_DIRECT_LINK_SIZE) {
+                // File is larger than 20MB - warn user
+                char msg[256];
+                std::snprintf(msg, sizeof(msg),
+                    "File is %.1f MB (limit: 20 MB)\nLarge files may cause issues.\nForce download?",
+                    (double)size / (1024.0 * 1024.0));
+
+                App::Push<OptionBox>(msg, "Cancel"_i18n, "Force"_i18n, 0, [url](auto op_index){
+                    if (op_index && *op_index) {
+                        DoDirectLinkDownload(url);
+                    }
+                });
+                return;
+            }
+        }
+    }
+
+    // Size OK or unknown - proceed with download
+    DoDirectLinkDownload(url);
+}
+
 } // namespace
 
 Menu::Menu(u32 flags) : MenuBase{"GitHub"_i18n, flags} {
@@ -248,6 +336,13 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::SetIndex(s64 index) {
+    if (m_entries.empty()) {
+        m_index = 0;
+        SetTitleSubHeading("");
+        UpdateSubheading();
+        return;
+    }
+
     m_index = index;
     if (!m_index) {
         m_list->SetYoff(0);
@@ -268,7 +363,9 @@ void Menu::Scan() {
 
     // then load custom entries
     LoadEntriesFromPath("/config/sphaira/github/");
+
     Sort();
+
     SetIndex(0);
 }
 
@@ -307,9 +404,28 @@ void Menu::LoadEntriesFromPath(const fs::FsPath& path) {
             }
         }
 
-        // check that we have a owner and repo
-        if (entry.owner.empty() || entry.repo.empty()) {
+        // check that we have a owner and repo, OR a direct_url
+        if ((entry.owner.empty() || entry.repo.empty()) && entry.direct_url.empty()) {
             continue;
+        }
+
+        // For direct_url entries without owner/repo, use filename as display name
+        if (!entry.direct_url.empty() && entry.repo.empty()) {
+            // Extract filename from URL for display
+            auto pos = entry.direct_url.rfind('/');
+            if (pos != std::string::npos && pos + 1 < entry.direct_url.size()) {
+                entry.repo = entry.direct_url.substr(pos + 1);
+                // Remove .zip extension for cleaner display
+                if (entry.repo.size() > 4) {
+                    auto ext_pos = entry.repo.rfind(".zip");
+                    if (ext_pos != std::string::npos && ext_pos == entry.repo.size() - 4) {
+                        entry.repo = entry.repo.substr(0, ext_pos);
+                    }
+                }
+            } else {
+                entry.repo = "Direct Link";
+            }
+            entry.owner = "Direct";
         }
 
         entry.json_path = full_path;
@@ -342,6 +458,12 @@ void Menu::UpdateSubheading() {
 }
 
 void DownloadEntries(const Entry& entry) {
+    // Handle direct URL entries differently - skip GitHub API
+    if (!entry.direct_url.empty()) {
+        DoDirectLinkDownload(entry.direct_url);
+        return;
+    }
+
     // hack
     static std::vector<GhApiEntry> gh_entries;
     gh_entries = {};
@@ -484,6 +606,10 @@ bool Download(const std::string& url, const std::vector<AssetEntry>& assets, con
 
     DownloadEntries(entry);
     return true;
+}
+
+void DownloadDirectLink() {
+    OpenDirectLinkPrompt();
 }
 
 } // namespace sphaira::ui::menu::gh

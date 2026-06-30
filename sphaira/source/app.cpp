@@ -10,6 +10,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "ui/nvg_util.hpp"
+#include "nacp_util.hpp"
 #include "nro.hpp"
 #include "evman.hpp"
 #include "owo.hpp"
@@ -681,6 +682,10 @@ auto App::GetTextScrollSpeed() -> long {
     return g_app->m_text_scroll_speed.Get();
 }
 
+auto App::GetGodModeEnabled() -> bool {
+    return g_app->m_god_mode.Get();
+}
+
 auto App::Get12HourTimeEnable() -> bool {
     return g_app->m_12hour_time.Get();
 }
@@ -740,7 +745,7 @@ void App::SetReplaceHbmenuEnable(bool enable) {
             // check we have already replaced hbmenu with sphaira
             NacpStruct hbmenu_nacp{};
             if (R_SUCCEEDED(nro_get_nacp("/hbmenu.nro", hbmenu_nacp))) {
-                if (std::strcmp(hbmenu_nacp.lang[0].name, "sphaira")) {
+                if (std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
                     return;
                 }
             }
@@ -776,12 +781,12 @@ void App::SetReplaceHbmenuEnable(bool enable) {
 
                     // first, try and backup sphaira, its not super important if this fails.
                     rc = nro_get_nacp(sphaira_path, sphaira_nacp);
-                    if (R_FAILED(rc) || std::strcmp(sphaira_nacp.lang[0].name, "sphaira")) {
+                    if (R_FAILED(rc) || std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
                         sphaira_path = "/switch/sphaira.nro";
                         rc = nro_get_nacp(sphaira_path, sphaira_nacp);
                     }
 
-                    if (R_SUCCEEDED(rc) && !std::strcmp(sphaira_nacp.lang[0].name, "sphaira")) {
+                    if (R_SUCCEEDED(rc) && !std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
                         if (IsVersionNewer(sphaira_nacp.display_version, hbmenu_nacp.display_version)) {
                             if (R_FAILED(rc = fs.copy_entire_file(sphaira_path, "/hbmenu.nro"))) {
                                 log_write("failed to copy entire file: %s 0x%X module: %u desc: %u\n", sphaira_path.s, rc, R_MODULE(rc), R_DESCRIPTION(rc));
@@ -894,6 +899,10 @@ void App::SetLanguage(long index) {
 
 void App::SetTextScrollSpeed(long index) {
     g_app->m_text_scroll_speed.Set(index);
+}
+
+void App::SetGodModeEnable(bool enable) {
+    g_app->m_god_mode.Set(enable);
 }
 
 auto App::Install(OwoConfig& config) -> Result {
@@ -1325,6 +1334,7 @@ App::App(const char* argv0) {
             else if (app->m_language.LoadFrom(Key, Value)) {}
             else if (app->m_left_menu.LoadFrom(Key, Value)) {}
             else if (app->m_right_menu.LoadFrom(Key, Value)) {}
+            else if (app->m_god_mode.LoadFrom(Key, Value)) {}
             else if (app->m_install_sysmmc.LoadFrom(Key, Value)) {}
             else if (app->m_install_emummc.LoadFrom(Key, Value)) {}
             else if (app->m_install_sd.LoadFrom(Key, Value)) {}
@@ -1997,7 +2007,7 @@ App::~App() {
         fs::FsNativeSd fs;
         Result rc;
 
-        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && std::strcmp(hbmenu_nacp.lang[0].name, "sphaira")) {
+        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
             log_write("backing up hbmenu.nro\n");
             if (R_FAILED(rc = fs.copy_entire_file("/switch/hbmenu.nro", "/hbmenu.nro"))) {
                 log_write("failed to backup  hbmenu.nro\n");
@@ -2018,18 +2028,18 @@ App::~App() {
         Result rc;
 
         // ensure that are still sphaira
-        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && !std::strcmp(hbmenu_nacp.lang[0].name, "sphaira")) {
+        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && !std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
             NacpStruct sphaira_nacp;
             fs::FsPath sphaira_path = "/switch/sphaira/sphaira.nro";
 
             rc = nro_get_nacp(sphaira_path, sphaira_nacp);
-            if (R_FAILED(rc) || std::strcmp(sphaira_nacp.lang[0].name, "sphaira")) {
+            if (R_FAILED(rc) || std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
                 sphaira_path = "/switch/sphaira.nro";
                 rc = nro_get_nacp(sphaira_path, sphaira_nacp);
             }
 
             // found sphaira, now lets get compare version
-            if (R_SUCCEEDED(rc) && !std::strcmp(sphaira_nacp.lang[0].name, "sphaira")) {
+            if (R_SUCCEEDED(rc) && !std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
                 if (IsVersionNewer(hbmenu_nacp.display_version, sphaira_nacp.display_version)) {
                     if (R_FAILED(rc = fs.copy_entire_file(GetExePath(), sphaira_path))) {
                         log_write("failed to copy entire file: %s 0x%X module: %u desc: %u\n", sphaira_path.s, rc, R_MODULE(rc), R_DESCRIPTION(rc));

@@ -16,6 +16,7 @@
 #include "i18n.hpp"
 #include "hasher.hpp"
 #include "threaded_file_transfer.hpp"
+#include "nacp_util.hpp"
 #include "nro.hpp"
 #include "web.hpp"
 #include "minizip_helper.hpp"
@@ -1232,7 +1233,7 @@ void Menu::ScanHomebrew() {
                     if (e.name == "hbmenu") {
                         NacpStruct nacp;
                         if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
-                            filtered = std::strcmp(nacp.lang[0].name, "nx-hbmenu");
+                            filtered = std::strcmp(nacp_util::GetName(nacp), "nx-hbmenu");
                         }
                     }
                     // ignore single retroarch core.

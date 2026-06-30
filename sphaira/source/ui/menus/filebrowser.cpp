@@ -11,6 +11,7 @@
 #include "app.hpp"
 #include "ui/nvg_util.hpp"
 #include "fs.hpp"
+#include "nacp_util.hpp"
 #include "nro.hpp"
 #include "defines.hpp"
 #include "image.hpp"
@@ -306,7 +307,7 @@ ForwarderForm::ForwarderForm(const FileAssocEntry& assoc, const RomDatabaseIndex
     }
 
     const auto name = m_nro.nacp.lang.name + std::string{" | "} + file_name;
-    const auto author = m_nacp.lang[0].author;
+    const auto author = nacp_util::GetAuthor(m_nacp);
     const auto version = m_nacp.display_version;
     const auto icon = m_assoc.path;
 
@@ -1805,7 +1806,7 @@ void FsView::DisplayAdvancedOptions() {
     const auto stdio_locations = location::GetStdio(false);
     for (const auto& e: stdio_locations) {
         u32 flags{};
-        if (e.write_protect) {
+        if (e.flags & FsEntryFlag_ReadOnly) {
             flags |= FsEntryFlag_ReadOnly;
         }
 

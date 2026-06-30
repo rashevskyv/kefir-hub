@@ -55,7 +55,7 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
         std::make_pair(Button::A, Action{"Launch"_i18n, [this](){
             nro_launch(GetEntry().path);
         }}),
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
+        std::make_pair(Button::X, Action{"Sort"_i18n, [this](){
             DisplayOptions();
         }})
     );
@@ -412,92 +412,45 @@ Result Menu::InstallHomebrewFromPath(const fs::FsPath& path) {
 }
 
 void Menu::DisplayOptions() {
-    auto options = std::make_unique<Sidebar>("Homebrew Options"_i18n, Sidebar::Side::RIGHT);
+    auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
-        auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
+    SidebarEntryArray::Items sort_items;
+    sort_items.push_back("Updated"_i18n);
+    sort_items.push_back("Alphabetical"_i18n);
+    sort_items.push_back("Size"_i18n);
+    sort_items.push_back("Updated (Star)"_i18n);
+    sort_items.push_back("Alphabetical (Star)"_i18n);
+    sort_items.push_back("Size (Star)"_i18n);
 
-        SidebarEntryArray::Items sort_items;
-        sort_items.push_back("Updated"_i18n);
-        sort_items.push_back("Alphabetical"_i18n);
-        sort_items.push_back("Size"_i18n);
-        sort_items.push_back("Updated (Star)"_i18n);
-        sort_items.push_back("Alphabetical (Star)"_i18n);
-        sort_items.push_back("Size (Star)"_i18n);
+    SidebarEntryArray::Items order_items;
+    order_items.push_back("Descending"_i18n);
+    order_items.push_back("Ascending"_i18n);
 
-        SidebarEntryArray::Items order_items;
-        order_items.push_back("Descending"_i18n);
-        order_items.push_back("Ascending"_i18n);
+    SidebarEntryArray::Items layout_items;
+    layout_items.push_back("List"_i18n);
+    layout_items.push_back("Icon"_i18n);
+    layout_items.push_back("Grid"_i18n);
 
-        SidebarEntryArray::Items layout_items;
-        layout_items.push_back("List"_i18n);
-        layout_items.push_back("Icon"_i18n);
-        layout_items.push_back("Grid"_i18n);
+    options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
+        m_sort.Set(index_out);
+        SortAndFindLastFile();
+    }, m_sort.Get());
 
-        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
-            m_sort.Set(index_out);
-            SortAndFindLastFile();
-        }, m_sort.Get());
+    options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
+        m_order.Set(index_out);
+        SortAndFindLastFile();
+    }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
 
-        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
-            m_order.Set(index_out);
-            SortAndFindLastFile();
-        }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
+    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+        m_layout.Set(index_out);
+        OnLayoutChange();
+    }, m_layout.Get(), "Change the layout to List, Icon and Grid."_i18n);
 
-        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-            m_layout.Set(index_out);
-            OnLayoutChange();
-        }, m_layout.Get(), "Change the layout to List, Icon and Grid."_i18n);
-
-        options->Add<SidebarEntryBool>("Show hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
-            m_show_hidden.Set(enable);
-            SortAndFindLastFile();
-        }, "Shows all hidden homebrew."_i18n);
-    });
-
-    if (!m_entries_current.empty()) {
-        #if 0
-        options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
-
-        });
-        #endif
-
-        options->Add<SidebarEntryBool>("Hide"_i18n, GetEntry().hbini.hidden, [this](bool& v_out){
-            ini_putl(GetEntry().path, "hidden", v_out, App::PLAYLOG_PATH);
-            ScanHomebrew();
-            App::PopToMenu();
-        },  "Hides the selected homebrew.\n\n"
-            "To Unhide homebrew, enable \"Show hidden\" in the sort options."_i18n);
-
-        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-            const auto buf = "Are you sure you want to delete "_i18n + GetEntry().path.toString() + "?";
-            App::Push<OptionBox>(
-                buf,
-                "Back"_i18n, "Delete"_i18n, 1, [this](auto op_index){
-                    if (op_index && *op_index) {
-                        if (R_SUCCEEDED(fs::FsNativeSd().DeleteFile(GetEntry().path))) {
-                            // todo: remove from list using real index here.
-                            FreeEntry(App::GetVg(), GetEntry());
-                            ScanHomebrew();
-                            // m_entries.erase(m_entries.begin() + m_index);
-                            // SetIndex(m_index ? m_index - 1 : 0);
-                            App::PopToMenu();
-                        }
-                    }
-                }, GetEntry().image
-            );
-        },  "Perminately delete the selected homebrew.\n\n"
-            "Files and folders created by the homebrew will still remain. "
-            "Use the FileBrowser to delete them."_i18n);
-
-        auto forwarder_entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
-            InstallHomebrew();
-        }, true);
-
-        forwarder_entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
-    }
+    options->Add<SidebarEntryBool>("Show hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
+        m_show_hidden.Set(enable);
+        SortAndFindLastFile();
+    }, "Shows all hidden homebrew."_i18n);
 }
 
 } // namespace sphaira::ui::menu::homebrew

@@ -25,6 +25,7 @@ struct Entry {
     std::string pre_install_message{};
     std::string post_install_message{};
     std::vector<AssetEntry> assets{};
+    std::string direct_url{}; // Direct ZIP URL (bypasses GitHub API)
 };
 
 struct GhApiAsset {
@@ -80,6 +81,9 @@ void DownloadEntries(const Entry& entry);
 
 // parses the params into entry struct and calls DonwloadEntries
 bool Download(const std::string& url, const std::vector<AssetEntry>& assets = {}, const std::string& pre_install_message = {}, const std::string& post_install_message = {});
+
+// Opens the same direct ZIP URL flow used by the Network Downloads menu.
+void DownloadDirectLink();
 
 // calls the above function by pushing the asset to an array.
 inline bool Download(const std::string& url, const AssetEntry& asset, const std::string& pre_install_message = {}, const std::string& post_install_message = {}) {

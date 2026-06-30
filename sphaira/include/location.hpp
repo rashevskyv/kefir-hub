@@ -3,8 +3,11 @@
 #include <string>
 #include <vector>
 #include <switch.h>
+#include "ui/menus/filebrowser.hpp"
 
 namespace sphaira::location {
+
+using FsEntryFlag = ui::menu::filebrowser::FsEntryFlag;
 
 struct Entry {
     std::string name{};
@@ -29,8 +32,18 @@ struct StdioEntry {
     std::string mount{};
     // ums0: (USB Flash Disk)
     std::string name{};
-    // set if read-only.
-    bool write_protect;
+    // FsEntryFlag
+    u32 flags{};
+    // optional dump path inside the mount point.
+    std::string dump_path{};
+    // set to hide for filebrowser.
+    bool fs_hidden{};
+    // set to hide in dump list.
+    bool dump_hidden{};
+
+    bool write_protect() const {
+        return flags & ui::menu::filebrowser::FsEntryFlag_ReadOnly;
+    }
 };
 
 using StdioEntries = std::vector<StdioEntry>;

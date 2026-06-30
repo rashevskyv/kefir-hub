@@ -16,6 +16,10 @@ enum FsEntryFlag {
     FsEntryFlag_ReadOnly = 1 << 0,
     // supports file assoc.
     FsEntryFlag_Assoc = 1 << 1,
+    // doesn't support file stat.
+    FsEntryFlag_NoStatFile = 1 << 2,
+    // doesn't support dir stat.
+    FsEntryFlag_NoStatDir = 1 << 3,
 };
 
 enum SortType {
@@ -34,9 +38,11 @@ using FileEntry = filebrowser::FileEntry;
 using LastFile = filebrowser::LastFile;
 
 using Callback = std::function<bool(const fs::FsPath& path)>;
+using LocationCallback = std::function<bool(const fs::FsPath& path, const FsEntry& fs_entry)>;
 
 struct Menu final : MenuBase {
     explicit Menu(const Callback& cb, const std::vector<std::string>& filter = {}, const fs::FsPath& path = {});
+    explicit Menu(const LocationCallback& cb, const std::vector<std::string>& filter = {}, const fs::FsPath& path = {}, bool pick_directory = false);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Picker"; };
@@ -111,8 +117,9 @@ private:
 private:
     static constexpr inline const char* INI_SECTION = "filepicker";
 
-    Callback m_callback;
+    LocationCallback m_callback;
     std::vector<std::string> m_filter;
+    bool m_pick_directory{};
 
     std::unique_ptr<fs::Fs> m_fs{};
     FsEntry m_fs_entry{};

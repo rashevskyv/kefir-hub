@@ -12,6 +12,7 @@
 
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/file_picker.hpp"
 
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
@@ -26,6 +27,7 @@
 #include <utility>
 #include <cstring>
 #include <algorithm>
+#include <set>
 #include <minIni.h>
 #include <minizip/unzip.h>
 #include <minizip/zip.h>
@@ -36,8 +38,18 @@ namespace {
 constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
 constexpr u32 NX_SAVE_META_VERSION = 1;
 constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
+constexpr auto ENTRY_CHUNK_COUNT = 1000;
 
 constinit UEvent g_change_uevent;
+constexpr std::array<u8, 7> SAVE_TYPE_VALUES{
+    FsSaveDataType_System,
+    FsSaveDataType_Account,
+    FsSaveDataType_Bcat,
+    FsSaveDataType_Device,
+    FsSaveDataType_Temporary,
+    FsSaveDataType_Cache,
+    FsSaveDataType_SystemBcat,
+};
 
 // https://github.com/J-D-K/JKSV/issues/264#issuecomment-2618962807
 struct NXSaveMeta {
@@ -96,6 +108,51 @@ auto GetSaveFolder(u8 data_type) -> fs::FsPath {
         case FsSaveDataType_Cache:      return "Save Cache";
     }
     std::unreachable();
+}
+
+auto GetSaveTypeLabel(u8 data_type) -> const char* {
+    switch (data_type) {
+        case FsSaveDataType_System:     return "System";
+        case FsSaveDataType_Account:    return "Account";
+        case FsSaveDataType_Bcat:       return "BCAT";
+        case FsSaveDataType_Device:     return "Device";
+        case FsSaveDataType_Temporary:  return "Temporary";
+        case FsSaveDataType_Cache:      return "Cache";
+        case FsSaveDataType_SystemBcat: return "System BCAT";
+    }
+    return "Unknown";
+}
+
+auto SaveTypeIndex(u8 data_type) -> size_t {
+    for (size_t i = 0; i < SAVE_TYPE_VALUES.size(); i++) {
+        if (SAVE_TYPE_VALUES[i] == data_type) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+auto SaveEntryKey(const FsSaveDataInfo& e) -> std::string {
+    char key[0x80];
+    std::snprintf(key, sizeof(key), "%u:%u:%016lX:%016lX:%016lX:%016lX:%u:%u",
+        e.save_data_space_id, e.save_data_type, e.application_id,
+        e.system_save_data_id, e.uid.uid[0], e.uid.uid[1],
+        e.save_data_rank, e.save_data_index);
+    return key;
+}
+
+auto IsSystemLikeSave(u8 data_type) -> bool {
+    return data_type == FsSaveDataType_System || data_type == FsSaveDataType_SystemBcat;
+}
+
+auto DisplayEntryKey(const Entry& e) -> std::string {
+    char key[0x40];
+    if (IsSystemLikeSave(e.save_data_type)) {
+        std::snprintf(key, sizeof(key), "system:%u:%016lX", e.save_data_type, e.system_save_data_id);
+    } else {
+        std::snprintf(key, sizeof(key), "app:%016lX", e.application_id);
+    }
+    return key;
 }
 
 auto GetSaveFolder(const Entry& e) {
@@ -241,7 +298,7 @@ void LoadResultIntoEntry(Entry& e, title::ThreadResultData* result) {
 
 void LoadControlEntry(Entry& e, bool force_image_load = false) {
     if (e.status != title::NacpLoadStatus::Loaded) {
-        if (e.save_data_type == FsSaveDataType_System || e.save_data_type == FsSaveDataType_SystemBcat) {
+        if (IsSystemLikeSave(e.save_data_type)) {
             FakeNacpEntryForSystem(e);
         } else {
             LoadResultIntoEntry(e, title::Get(e.application_id));
@@ -271,7 +328,7 @@ auto BuildSaveName(const Entry& e) -> fs::FsPath {
     return name_buf;
 }
 
-auto BuildSaveBasePath(const Entry& e, bool force_id_path = false) -> fs::FsPath {
+auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath {
     fs::FsPath name;
     if (e.save_data_type == FsSaveDataType_System || e.save_data_type == FsSaveDataType_SystemBcat) {
         std::snprintf(name, sizeof(name), "%016lX", e.system_save_data_id);
@@ -281,7 +338,50 @@ auto BuildSaveBasePath(const Entry& e, bool force_id_path = false) -> fs::FsPath
         name = BuildSaveName(e);
     }
 
-    return fs::AppendPath("/dumps/" + GetSaveFolder(e), name);
+    return fs::AppendPath(fs::AppendPath(backup_root, GetSaveFolder(e)), name);
+}
+
+auto MakeSdCardDumpLocation() -> dump::DumpLocation {
+    dump::DumpLocation location{};
+    location.entry = {dump::DumpLocationType_SdCard, 0};
+    return location;
+}
+
+auto MakeDumpLocationFromFsEntry(const filebrowser::FsEntry& fs_entry) -> dump::DumpLocation {
+    dump::DumpLocation location{};
+    if (fs_entry.type == filebrowser::FsType::Stdio) {
+        location.entry = {dump::DumpLocationType_Stdio, 0};
+
+        location::StdioEntry stdio{};
+        stdio.mount = fs_entry.root.s;
+        stdio.name = fs_entry.name.s;
+        location.stdio.emplace_back(std::move(stdio));
+    } else {
+        location.entry = {dump::DumpLocationType_SdCard, 0};
+    }
+
+    return location;
+}
+
+auto NormalizeBackupRoot(const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> fs::FsPath {
+    auto out = path.toString();
+    const auto root = fs_entry.root.toString();
+
+    if (fs_entry.type == filebrowser::FsType::Stdio && out.starts_with(root)) {
+        out.erase(0, root.size());
+    }
+
+    if (out.empty()) {
+        out = "/";
+    } else if (out.front() != '/') {
+        out.insert(out.begin(), '/');
+    }
+
+    return out;
+}
+
+auto MakeLocationLabel(const std::string& name, const fs::FsPath& backup_root) -> std::string {
+    return name + ": " + backup_root.toString();
 }
 
 void FreeEntry(NVGcontext* vg, Entry& e) {
@@ -297,133 +397,24 @@ void SignalChange() {
 
 Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
     this->SetActions(
-        std::make_pair(Button::L3, Action{[this](){
-            if (m_entries.empty()) {
-                return;
-            }
-
-            m_entries[m_index].selected ^= 1;
-
-            if (m_entries[m_index].selected) {
-                m_selected_count++;
-            } else {
-                m_selected_count--;
-            }
-        }}),
-        std::make_pair(Button::R3, Action{[this](){
-            if (m_entries.empty()) {
-                return;
-            }
-
-            if (m_selected_count == m_entries.size()) {
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            if (m_selected_count) {
                 ClearSelection();
             } else {
-                m_selected_count = m_entries.size();
-                for (auto& e : m_entries) {
-                    e.selected = true;
-                }
+                SetPop();
             }
         }}),
-        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
-            SetPop();
+        std::make_pair(Button::A, Action{"Actions"_i18n, [this](){
+            PromptSaveAction();
         }}),
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
-            ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-            SidebarEntryArray::Items account_items;
-            for (const auto& e : m_accounts) {
-                account_items.emplace_back(e.nickname);
-            }
-
-            PopupList::Items data_type_items;
-            data_type_items.emplace_back("System"_i18n);
-            data_type_items.emplace_back("Account"_i18n);
-            data_type_items.emplace_back("BCAT"_i18n);
-            data_type_items.emplace_back("Device"_i18n);
-            data_type_items.emplace_back("Temporary"_i18n);
-            data_type_items.emplace_back("Cache"_i18n);
-            data_type_items.emplace_back("System BCAT"_i18n);
-
-            options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                SidebarEntryArray::Items sort_items;
-                sort_items.push_back("Updated"_i18n);
-
-                SidebarEntryArray::Items order_items;
-                order_items.push_back("Descending"_i18n);
-                order_items.push_back("Ascending"_i18n);
-
-                SidebarEntryArray::Items layout_items;
-                layout_items.push_back("List"_i18n);
-                layout_items.push_back("Icon"_i18n);
-                layout_items.push_back("Grid"_i18n);
-
-                options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
-                    m_sort.Set(index_out);
-                    SortAndFindLastFile(false);
-                }, m_sort.Get());
-
-                options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
-                    m_order.Set(index_out);
-                    SortAndFindLastFile(false);
-                }, m_order.Get());
-
-                options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                    m_layout.Set(index_out);
-                    OnLayoutChange();
-                }, m_layout.Get());
-            });
-
-            options->Add<SidebarEntryArray>("Account"_i18n, account_items, [this](s64& index_out){
-                m_account_index = index_out;
-                m_dirty = true;
-                App::PopToMenu();
-            }, m_account_index);
-
-            options->Add<SidebarEntryArray>("Data Type"_i18n, data_type_items, [this](s64& index_out){
-                m_data_type = index_out;
-                m_dirty = true;
-                App::PopToMenu();
-            }, m_data_type);
-
-            if (m_entries.size()) {
-                options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
-                    std::vector<std::reference_wrapper<Entry>> entries;
-                    if (m_selected_count) {
-                        for (auto& e : m_entries) {
-                            if (e.selected) {
-                                entries.emplace_back(e);
-                            }
-                        }
-                    } else {
-                        entries.emplace_back(m_entries[m_index]);
-                    }
-
-                    BackupSaves(entries);
-                }, true);
-
-                if (m_entries[m_index].save_data_type == FsSaveDataType_Account || m_entries[m_index].save_data_type == FsSaveDataType_Bcat) {
-                    options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
-                        RestoreSave();
-                    }, true);
-                }
-            }
-
-            options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
-                    m_auto_backup_on_restore.Set(v_out);
-                });
-
-                options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
-                    m_compress_save_backup.Set(v_out);
-                });
-            });
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+            ToggleCurrentSelection();
+        }}),
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+            InvertSelection();
+        }}),
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+            DisplaySaveOptions();
         }})
     );
 
@@ -449,6 +440,13 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
         log_write("[SAVE] account uid is not found: 0x%016lX%016lX\n", uid.uid[0], uid.uid[1]);
     }
 
+    m_account_enabled.assign(m_accounts.size(), false);
+    if (!m_account_enabled.empty()) {
+        m_account_enabled[m_account_index] = true;
+    }
+    m_save_type_enabled.fill(false);
+    m_save_type_enabled[SaveTypeIndex(FsSaveDataType_Account)] = true;
+
     title::Init();
     ueventCreate(&g_change_uevent, true);
 }
@@ -458,6 +456,266 @@ Menu::~Menu() {
 
     FreeEntries();
     nsExit();
+}
+
+void Menu::MarkFiltersChanged() {
+    m_dirty = true;
+}
+
+void Menu::ToggleCurrentSelection() {
+    if (m_entries.empty()) {
+        return;
+    }
+
+    m_entries[m_index].selected ^= 1;
+    if (m_entries[m_index].selected) {
+        m_selected_count++;
+    } else {
+        m_selected_count--;
+    }
+}
+
+void Menu::InvertSelection() {
+    if (m_entries.empty()) {
+        return;
+    }
+
+    m_selected_count = 0;
+    for (auto& e : m_entries) {
+        e.selected ^= 1;
+        if (e.selected) {
+            m_selected_count++;
+        }
+    }
+}
+
+auto Menu::GetAccountSummary() const -> std::string {
+    if (m_all_accounts) {
+        return "All Accounts"_i18n;
+    }
+
+    size_t count{};
+    std::string first;
+    for (size_t i = 0; i < m_account_enabled.size() && i < m_accounts.size(); i++) {
+        if (!m_account_enabled[i]) {
+            continue;
+        }
+
+        if (first.empty()) {
+            first = m_accounts[i].nickname;
+        }
+        count++;
+    }
+
+    if (!count) {
+        return "None"_i18n;
+    }
+    if (count == 1) {
+        return first;
+    }
+
+    return std::to_string(count) + " accounts";
+}
+
+auto Menu::GetAccountName(const AccountUid& uid) const -> std::string {
+    for (const auto& account : m_accounts) {
+        if (!std::memcmp(&uid, &account.uid, sizeof(uid))) {
+            return account.nickname;
+        }
+    }
+
+    char out[0x40];
+    std::snprintf(out, sizeof(out), "%016lX%016lX", uid.uid[0], uid.uid[1]);
+    return out;
+}
+
+auto Menu::GetDataTypeSummary() const -> std::string {
+    if (m_save_type_enabled[SaveTypeIndex(FsSaveDataType_System)]) {
+        return "System"_i18n;
+    }
+
+    size_t count{};
+    std::string first;
+    for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+        const auto type = SAVE_TYPES[i];
+        if (type == FsSaveDataType_System || !m_save_type_enabled[i]) {
+            continue;
+        }
+
+        if (first.empty()) {
+            first = i18n::get(GetSaveTypeLabel(type));
+        }
+        count++;
+    }
+
+    if (!count) {
+        return "None"_i18n;
+    }
+    if (count == 1) {
+        return first;
+    }
+
+    return std::to_string(count) + " types";
+}
+
+void Menu::DisplayAccountOptions() {
+    auto options = std::make_unique<Sidebar>("Accounts"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCheckbox>(
+        "All Accounts"_i18n,
+        [this](){ return m_all_accounts; },
+        [this](bool enabled) {
+            m_all_accounts = enabled;
+            if (!m_all_accounts && std::ranges::none_of(m_account_enabled, [](auto v){ return v; }) && !m_account_enabled.empty()) {
+                m_account_enabled[m_account_index] = true;
+            }
+            MarkFiltersChanged();
+        });
+
+    for (size_t i = 0; i < m_accounts.size(); i++) {
+        auto* entry = options->Add<SidebarEntryCheckbox>(
+            m_accounts[i].nickname,
+            [this, i](){ return i < m_account_enabled.size() && m_account_enabled[i]; },
+            [this, i](bool enabled) {
+                if (i >= m_account_enabled.size()) {
+                    return;
+                }
+
+                m_all_accounts = false;
+                m_account_enabled[i] = enabled;
+                if (std::ranges::none_of(m_account_enabled, [](auto v){ return v; })) {
+                    m_account_enabled[i] = true;
+                }
+                MarkFiltersChanged();
+            });
+
+        entry->Depends(
+            [this](){ return !m_all_accounts; },
+            "All Accounts is enabled."_i18n,
+            [this, i]() {
+                if (i < m_account_enabled.size()) {
+                    m_all_accounts = false;
+                    m_account_enabled[i] = true;
+                    MarkFiltersChanged();
+                }
+            });
+    }
+}
+
+void Menu::DisplayDataTypeOptions() {
+    auto options = std::make_unique<Sidebar>("Data Types"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    const auto system_index = SaveTypeIndex(FsSaveDataType_System);
+    for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+        const auto type = SAVE_TYPES[i];
+        auto* entry = options->Add<SidebarEntryCheckbox>(
+            i18n::get(GetSaveTypeLabel(type)),
+            [this, i](){ return m_save_type_enabled[i]; },
+            [this, i, type, system_index](bool enabled) {
+                if (type == FsSaveDataType_System) {
+                    m_save_type_enabled[i] = enabled;
+                    if (!enabled) {
+                        const auto account_index = SaveTypeIndex(FsSaveDataType_Account);
+                        bool any{};
+                        for (size_t n = 0; n < SAVE_TYPES.size(); n++) {
+                            if (n != system_index && m_save_type_enabled[n]) {
+                                any = true;
+                                break;
+                            }
+                        }
+                        if (!any) {
+                            m_save_type_enabled[account_index] = true;
+                        }
+                    }
+                } else {
+                    m_save_type_enabled[system_index] = false;
+                    m_save_type_enabled[i] = enabled;
+                    bool any{};
+                    for (size_t n = 0; n < SAVE_TYPES.size(); n++) {
+                        if (n != system_index && m_save_type_enabled[n]) {
+                            any = true;
+                            break;
+                        }
+                    }
+                    if (!any) {
+                        m_save_type_enabled[i] = true;
+                    }
+                }
+
+                MarkFiltersChanged();
+            });
+
+        if (type != FsSaveDataType_System) {
+            entry->Depends(
+                [this, system_index](){ return !m_save_type_enabled[system_index]; },
+                "System is enabled."_i18n,
+                [this, i, system_index]() {
+                    m_save_type_enabled[system_index] = false;
+                    m_save_type_enabled[i] = true;
+                    MarkFiltersChanged();
+                });
+        }
+    }
+}
+
+void Menu::DisplaySaveOptions() {
+    auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
+        auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        SidebarEntryArray::Items sort_items;
+        sort_items.push_back("Updated"_i18n);
+
+        SidebarEntryArray::Items order_items;
+        order_items.push_back("Descending"_i18n);
+        order_items.push_back("Ascending"_i18n);
+
+        SidebarEntryArray::Items layout_items;
+        layout_items.push_back("List"_i18n);
+        layout_items.push_back("Icon"_i18n);
+        layout_items.push_back("Grid"_i18n);
+
+        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+            m_sort.Set(index_out);
+            SortAndFindLastFile(false);
+        }, m_sort.Get());
+
+        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+            m_order.Set(index_out);
+            SortAndFindLastFile(false);
+        }, m_order.Get());
+
+        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+            m_layout.Set(index_out);
+            OnLayoutChange();
+        }, m_layout.Get());
+    });
+
+    options->Add<SidebarEntryCallback>("Accounts"_i18n, [this](){
+        DisplayAccountOptions();
+    }, GetAccountSummary());
+
+    options->Add<SidebarEntryCallback>("Data Types"_i18n, [this](){
+        DisplayDataTypeOptions();
+    }, GetDataTypeSummary());
+
+    options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
+        auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
+            m_auto_backup_on_restore.Set(v_out);
+        });
+
+        options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
+            m_compress_save_backup.Set(v_out);
+        });
+    });
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -498,7 +756,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         auto& e = m_entries[pos];
 
         if (e.status == title::NacpLoadStatus::None) {
-            if (m_data_type != FsSaveDataType_System && m_data_type != FsSaveDataType_SystemBcat) {
+            if (!IsSystemLikeSave(e.save_data_type)) {
                 title::PushAsync(e.application_id);
                 e.status = title::NacpLoadStatus::Progress;
             } else {
@@ -516,7 +774,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const auto selected = pos == m_index;
-        if (m_data_type != FsSaveDataType_System && m_data_type != FsSaveDataType_SystemBcat) {
+        if (!IsSystemLikeSave(e.save_data_type)) {
             DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), "");
         } else {
             const auto image_vec = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), "");
@@ -539,6 +797,19 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::SetIndex(s64 index) {
+    if (m_entries.empty()) {
+        m_index = 0;
+        this->SetSubHeading("0 / 0");
+        SetTitleSubHeading(GetAccountSummary() + " | " + GetDataTypeSummary());
+        return;
+    }
+
+    if (index < 0) {
+        index = 0;
+    } else if (index >= static_cast<s64>(m_entries.size())) {
+        index = m_entries.size() - 1;
+    }
+
     m_index = index;
     if (!m_index) {
         m_list->SetYoff(0);
@@ -550,7 +821,7 @@ void Menu::SetIndex(s64 index) {
 
     u64 id{};
     if (!m_entries.empty()) {
-        if (m_data_type == FsSaveDataType_System || m_data_type == FsSaveDataType_SystemBcat) {
+        if (IsSystemLikeSave(m_entries[m_index].save_data_type)) {
             id = m_entries[m_index].system_save_data_id;
         } else {
             id = m_entries[m_index].application_id;
@@ -561,33 +832,32 @@ void Menu::SetIndex(s64 index) {
         this->SetSubHeading("0 / 0");
     }
 
-    char title[0x40];
-    std::snprintf(title, sizeof(title), "%s | %016lX", m_accounts[m_account_index].nickname, id);
+    const auto account = (m_entries[m_index].save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
+        GetAccountName(m_entries[m_index].uid) : GetAccountSummary();
+
+    char title[0x80];
+    std::snprintf(title, sizeof(title), "%s | %s | %016lX", account.c_str(), GetSaveTypeLabel(m_entries[m_index].save_data_type), id);
     SetTitleSubHeading(title);
 }
 
-void Menu::ScanHomebrew() {
-    constexpr auto ENTRY_CHUNK_COUNT = 1000;
-    TimeStamp ts;
-
-    FreeEntries();
-    ClearSelection();
-    ueventClear(&g_change_uevent);
-    m_entries.reserve(ENTRY_CHUNK_COUNT);
-    m_is_reversed = false;
-    m_dirty = false;
-
+void Menu::ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const {
     if (m_accounts.empty()) {
         return;
     }
 
     FsSaveDataSpaceId space_id;
     FsSaveDataFilter filter;
-    GetFsSaveAttr(m_accounts[m_account_index], m_data_type, space_id, filter);
+    const auto index = account_index >= 0 ? account_index : 0;
+    if (index >= static_cast<s64>(m_accounts.size())) {
+        return;
+    }
+
+    GetFsSaveAttr(m_accounts[index], data_type, space_id, filter);
 
     FsSaveDataInfoReader reader;
     if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
         log_write("[SAVE] failed to open reader\n");
+        return;
     }
     ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
 
@@ -605,9 +875,101 @@ void Menu::ScanHomebrew() {
         }
 
         for (s32 i = 0; i < record_count; i++) {
-            m_entries.emplace_back(info_list[i]);
+            out.emplace_back(info_list[i]);
         }
     }
+}
+
+auto Menu::GetSelectedAccountIndexes() const -> std::vector<s64> {
+    std::vector<s64> out;
+    if (m_all_accounts) {
+        for (s64 i = 0; i < static_cast<s64>(m_accounts.size()); i++) {
+            out.emplace_back(i);
+        }
+        return out;
+    }
+
+    for (s64 i = 0; i < static_cast<s64>(m_account_enabled.size()); i++) {
+        if (m_account_enabled[i]) {
+            out.emplace_back(i);
+        }
+    }
+
+    if (out.empty() && !m_accounts.empty()) {
+        out.emplace_back(m_account_index);
+    }
+    return out;
+}
+
+auto Menu::GetSelectedSaveTypes() const -> std::vector<u8> {
+    std::vector<u8> out;
+    if (m_save_type_enabled[SaveTypeIndex(FsSaveDataType_System)]) {
+        out.emplace_back(FsSaveDataType_System);
+        return out;
+    }
+
+    for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+        if (SAVE_TYPES[i] != FsSaveDataType_System && m_save_type_enabled[i]) {
+            out.emplace_back(SAVE_TYPES[i]);
+        }
+    }
+
+    if (out.empty()) {
+        out.emplace_back(FsSaveDataType_Account);
+    }
+    return out;
+}
+
+void Menu::ScanHomebrew() {
+    TimeStamp ts;
+
+    FreeEntries();
+    ClearSelection();
+    ueventClear(&g_change_uevent);
+    m_entries.reserve(ENTRY_CHUNK_COUNT);
+    m_is_reversed = false;
+    m_dirty = false;
+
+    if (m_accounts.empty()) {
+        SetIndex(0);
+        return;
+    }
+
+    if (m_account_enabled.size() != m_accounts.size()) {
+        m_account_enabled.assign(m_accounts.size(), false);
+        m_account_enabled[m_account_index] = true;
+    }
+
+    const auto account_indexes = GetSelectedAccountIndexes();
+    for (const auto type : GetSelectedSaveTypes()) {
+        if (type == FsSaveDataType_Account) {
+            for (const auto account_index : account_indexes) {
+                ReadSaveEntries(type, account_index, m_entries);
+            }
+        } else {
+            ReadSaveEntries(type, -1, m_entries);
+        }
+    }
+
+    std::vector<Entry> grouped;
+    std::vector<std::string> keys;
+    grouped.reserve(m_entries.size());
+    keys.reserve(m_entries.size());
+    for (auto& e : m_entries) {
+        const auto key = DisplayEntryKey(e);
+        const auto it = std::ranges::find(keys, key);
+        if (it == keys.end()) {
+            keys.emplace_back(key);
+            grouped.emplace_back(e);
+            continue;
+        }
+
+        const auto index = std::distance(keys.begin(), it);
+        if (grouped[index].save_data_type != FsSaveDataType_Account && e.save_data_type == FsSaveDataType_Account) {
+            grouped[index] = e;
+        }
+    }
+    m_entries = std::move(grouped);
 
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
@@ -633,7 +995,17 @@ void Menu::Sort() {
 }
 
 void Menu::SortAndFindLastFile(bool scan) {
-    const auto app_id = m_entries[m_index].application_id;
+    if (m_entries.empty()) {
+        if (scan) {
+            ScanHomebrew();
+        } else {
+            Sort();
+            SetIndex(0);
+        }
+        return;
+    }
+
+    const auto last_key = DisplayEntryKey(m_entries[m_index]);
     if (scan) {
         ScanHomebrew();
     } else {
@@ -643,7 +1015,7 @@ void Menu::SortAndFindLastFile(bool scan) {
 
     s64 index = -1;
     for (u64 i = 0; i < m_entries.size(); i++) {
-        if (app_id == m_entries[i].application_id) {
+        if (last_key == DisplayEntryKey(m_entries[i])) {
             index = i;
             break;
         }
@@ -677,123 +1049,436 @@ void Menu::OnLayoutChange() {
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
 }
 
-void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
-    dump::DumpGetLocation("Select backup location"_i18n, dump::DumpLocationFlag_SdCard|dump::DumpLocationFlag_Stdio, [this, entries](const dump::DumpLocation& location){
-        App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location](auto pbox) -> Result {
-            for (auto& e : entries) {
-                // the entry may not have loaded yet.
-                LoadControlEntry(e);
-                R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get()));
-            }
-            R_SUCCEED();
-        }, [](Result rc){
-            App::PushErrorBox(rc, "Backup failed!"_i18n);
+void Menu::PromptSaveAction() {
+    if (m_entries.empty()) {
+        return;
+    }
 
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Backup successfull!"_i18n);
-            }
-        });
+    PopupList::Items items;
+    items.emplace_back("Backup"_i18n);
+    items.emplace_back("Restore"_i18n);
+
+    App::Push<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
+        if (!op_index) {
+            return;
+        }
+
+        PromptSaveTypeOptions(*op_index == 1);
     });
 }
 
-void Menu::RestoreSave() {
-    dump::DumpGetLocation("Select restore location"_i18n, dump::DumpLocationFlag_SdCard|dump::DumpLocationFlag_Stdio, [this](const dump::DumpLocation& location){
+auto Menu::CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry> {
+    std::set<u64> app_ids;
+    std::set<u64> system_ids;
+    for (const auto& e : seeds) {
+        if (IsSystemLikeSave(e.save_data_type)) {
+            system_ids.emplace(e.system_save_data_id);
+        } else {
+            app_ids.emplace(e.application_id);
+        }
+    }
+
+    std::set<std::string> seen;
+    std::vector<Entry> out;
+    for (const auto type : types) {
+        std::vector<Entry> scanned;
+        if (type == FsSaveDataType_Account) {
+            for (const auto account_index : account_indexes) {
+                ReadSaveEntries(type, account_index, scanned);
+            }
+        } else {
+            ReadSaveEntries(type, -1, scanned);
+        }
+
+        for (auto& e : scanned) {
+            const auto matches = IsSystemLikeSave(e.save_data_type) ?
+                system_ids.contains(e.system_save_data_id) :
+                app_ids.contains(e.application_id);
+            if (!matches) {
+                continue;
+            }
+
+            const auto key = SaveEntryKey(e);
+            if (seen.insert(key).second) {
+                out.emplace_back(e);
+            }
+        }
+    }
+
+    return out;
+}
+
+void Menu::PromptSaveTypeOptions(bool restore) {
+    const auto seeds = GetSelectedEntries();
+    std::vector<s64> all_account_indexes;
+    for (s64 i = 0; i < static_cast<s64>(m_accounts.size()); i++) {
+        all_account_indexes.emplace_back(i);
+    }
+
+    const std::vector<u8> all_types{SAVE_TYPES.begin(), SAVE_TYPES.end()};
+    const auto available_entries = CollectActionEntries(seeds, all_types, all_account_indexes);
+    if (available_entries.empty()) {
+        App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
+        return;
+    }
+
+    struct ActionState {
+        bool all_accounts{true};
+        std::vector<u8> account_enabled{};
+        std::array<u8, SAVE_TYPE_VALUES.size()> type_available{};
+        std::array<u8, SAVE_TYPE_VALUES.size()> type_enabled{};
+        std::vector<dump::DumpLocation> locations{};
+        std::vector<fs::FsPath> location_base_paths{};
+        SidebarEntryArray::Items location_items{};
+        s64 location_index{};
+    };
+
+    auto state = std::make_shared<ActionState>();
+    state->account_enabled = m_account_enabled;
+    if (state->account_enabled.size() != m_accounts.size()) {
+        state->account_enabled.assign(m_accounts.size(), false);
+        if (!state->account_enabled.empty()) {
+            state->account_enabled[m_account_index] = true;
+        }
+    }
+
+    for (const auto& e : available_entries) {
+        state->type_available[SaveTypeIndex(e.save_data_type)] = true;
+    }
+
+    const auto system_index = SaveTypeIndex(FsSaveDataType_System);
+    bool has_non_system{};
+    for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+        if (i != system_index && state->type_available[i]) {
+            has_non_system = true;
+            state->type_enabled[i] = true;
+        }
+    }
+    if (!has_non_system && state->type_available[system_index]) {
+        state->type_enabled[system_index] = true;
+    }
+
+    const fs::FsPath default_backup_root{"/dumps"};
+    state->locations.emplace_back(MakeSdCardDumpLocation());
+    state->location_base_paths.emplace_back(default_backup_root);
+    state->location_items.emplace_back(MakeLocationLabel("microSD card"_i18n, default_backup_root));
+
+    const auto stdio_locations = location::GetStdio(true);
+    for (s32 i = 0; i < static_cast<s32>(stdio_locations.size()); i++) {
+        dump::DumpLocation location{};
+        location.entry = {dump::DumpLocationType_Stdio, i};
+        location.stdio = stdio_locations;
+
+        fs::FsPath backup_root = default_backup_root;
+        if (!stdio_locations[i].dump_path.empty()) {
+            backup_root = stdio_locations[i].dump_path;
+        }
+        state->locations.emplace_back(std::move(location));
+        state->location_base_paths.emplace_back(backup_root);
+        state->location_items.emplace_back(MakeLocationLabel(stdio_locations[i].name, backup_root));
+    }
+
+    auto options = std::make_unique<Sidebar>(restore ? "Restore Options"_i18n : "Backup Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>(restore ? "Start Restore"_i18n : "Start Backup"_i18n, [this, state, seeds, restore]() {
+        std::vector<u8> selected_types;
+        const auto system_index = SaveTypeIndex(FsSaveDataType_System);
+        if (state->type_enabled[system_index]) {
+            selected_types.emplace_back(FsSaveDataType_System);
+        } else {
+            for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+                if (i != system_index && state->type_enabled[i]) {
+                    selected_types.emplace_back(SAVE_TYPES[i]);
+                }
+            }
+        }
+
+        std::vector<s64> selected_accounts;
+        if (state->all_accounts) {
+            for (s64 i = 0; i < static_cast<s64>(m_accounts.size()); i++) {
+                selected_accounts.emplace_back(i);
+            }
+        } else {
+            for (s64 i = 0; i < static_cast<s64>(state->account_enabled.size()); i++) {
+                if (state->account_enabled[i]) {
+                    selected_accounts.emplace_back(i);
+                }
+            }
+        }
+
+        const auto entries = CollectActionEntries(seeds, selected_types, selected_accounts);
+        if (entries.empty()) {
+            App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
+            return;
+        }
+
+        const auto location_index = std::min<s64>(state->location_index, static_cast<s64>(state->locations.size() - 1));
+        const auto location = state->locations[location_index];
+        const auto backup_root = state->location_base_paths[location_index];
+
+        App::PopToMenu();
+        if (restore) {
+            RestoreSaves(entries, location, backup_root);
+        } else {
+            BackupSaves(entries, location, backup_root);
+        }
+    });
+
+    options->Add<SidebarEntryHeader>("LOCATION"_i18n);
+    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){});
+    location_entry->SetCallback([state, location_entry]() {
+        auto items = state->location_items;
+        const auto picker_index = static_cast<s64>(items.size());
+        items.emplace_back("Choose Folder..."_i18n);
+
+        App::Push<PopupList>("Location"_i18n, items, [state, location_entry, picker_index](auto op_index) {
+            if (!op_index) {
+                return;
+            }
+
+            if (*op_index != picker_index) {
+                state->location_index = *op_index;
+                location_entry->SetValue(state->location_items[state->location_index]);
+                return;
+            }
+
+            App::Push<filepicker::Menu>(
+                filepicker::LocationCallback{[state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
+                    const auto backup_root = NormalizeBackupRoot(path, fs_entry);
+                    const auto label = MakeLocationLabel(fs_entry.name.toString(), backup_root);
+
+                    state->locations.emplace_back(MakeDumpLocationFromFsEntry(fs_entry));
+                    state->location_base_paths.emplace_back(backup_root);
+                    state->location_items.emplace_back(label);
+                    state->location_index = static_cast<s64>(state->location_items.size() - 1);
+                    location_entry->SetValue(label);
+                    return true;
+                }},
+                std::vector<std::string>{},
+                fs::FsPath{},
+                true
+            );
+        }, state->location_index);
+    });
+
+    const auto account_available = state->type_available[SaveTypeIndex(FsSaveDataType_Account)];
+    if (account_available && m_accounts.size() > 1) {
+        options->Add<SidebarEntryHeader>("ACCOUNTS"_i18n);
+        options->Add<SidebarEntryCheckbox>(
+            "All Accounts"_i18n,
+            [state](){ return state->all_accounts; },
+            [state](bool enabled) {
+                state->all_accounts = enabled;
+                if (!enabled && std::ranges::none_of(state->account_enabled, [](auto v){ return v; }) && !state->account_enabled.empty()) {
+                    state->account_enabled[0] = true;
+                }
+            });
+
+        for (size_t i = 0; i < m_accounts.size(); i++) {
+            auto* entry = options->Add<SidebarEntryCheckbox>(
+                std::string{"    "} + m_accounts[i].nickname,
+                [state, i](){ return i < state->account_enabled.size() && state->account_enabled[i]; },
+                [state, i](bool enabled) {
+                    if (i >= state->account_enabled.size()) {
+                        return;
+                    }
+
+                    state->all_accounts = false;
+                    state->account_enabled[i] = enabled;
+                    if (std::ranges::none_of(state->account_enabled, [](auto v){ return v; })) {
+                        state->account_enabled[i] = true;
+                    }
+                });
+
+            entry->Depends(
+                [state](){ return !state->all_accounts; },
+                "All Accounts is enabled."_i18n,
+                [state, i]() {
+                    if (i < state->account_enabled.size()) {
+                        state->all_accounts = false;
+                        state->account_enabled[i] = true;
+                    }
+            });
+        }
+    }
+
+    const auto available_type_count = std::ranges::count_if(state->type_available, [](auto v){ return v; });
+    const auto system_available = state->type_available[system_index];
+    if (available_type_count <= 1) {
+        return;
+    }
+
+    options->Add<SidebarEntryHeader>("SAVE TYPES"_i18n);
+    for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
+        if (!state->type_available[i]) {
+            continue;
+        }
+
+        const auto type = SAVE_TYPES[i];
+        const auto label = (system_available && type != FsSaveDataType_System) ?
+            "    " + i18n::get(GetSaveTypeLabel(type)) :
+            i18n::get(GetSaveTypeLabel(type));
+
+        auto* entry = options->Add<SidebarEntryCheckbox>(
+            label,
+            [state, i](){ return state->type_enabled[i]; },
+            [state, i, type, system_index](bool enabled) {
+                if (type == FsSaveDataType_System) {
+                    state->type_enabled[i] = enabled;
+                } else {
+                    state->type_enabled[system_index] = false;
+                    state->type_enabled[i] = enabled;
+                }
+
+                bool any{};
+                for (size_t n = 0; n < state->type_enabled.size(); n++) {
+                    if (state->type_enabled[n]) {
+                        any = true;
+                        break;
+                    }
+                }
+                if (!any) {
+                    state->type_enabled[i] = true;
+                }
+            });
+
+        if (type != FsSaveDataType_System) {
+            entry->Depends(
+                [state, system_index](){ return !state->type_enabled[system_index]; },
+                "System is enabled."_i18n,
+                [state, i, system_index]() {
+                    state->type_enabled[system_index] = false;
+                    state->type_enabled[i] = true;
+                });
+        }
+    }
+}
+
+void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
+    std::vector<Entry> copy;
+    for (const auto& e : entries) {
+        copy.emplace_back(e.get());
+    }
+    BackupSaves(std::move(copy));
+}
+
+void Menu::BackupSaves(std::vector<Entry> entries) {
+    BackupSaves(std::move(entries), MakeSdCardDumpLocation(), "/dumps");
+}
+
+void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root](auto pbox) mutable -> Result {
+        for (auto& e : entries) {
+            // the entry may not have loaded yet.
+            LoadControlEntry(e);
+            R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), false, backup_root));
+        }
+        R_SUCCEED();
+    }, [](Result rc){
+        App::PushErrorBox(rc, "Backup failed!"_i18n);
+
+        if (R_SUCCEEDED(rc)) {
+            App::Notify("Backup successfull!"_i18n);
+        }
+    });
+}
+
+bool Menu::FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const {
+    filebrowser::FsDirCollection collections[2]{};
+    for (auto i = 0; i < std::size(collections); i++) {
+        const auto save_path = fs::AppendPath(fs->Root(), BuildSaveBasePath(e, i != 0, backup_root));
+        filebrowser::FsView::get_collection(fs, save_path, "", collections[i], true, false, false);
+        std::ranges::reverse(collections[i].files);
+    }
+
+    for (const auto& collection : collections) {
+        for (const auto& p : collection.files) {
+            const auto view = std::string_view{p.name};
+            if (!view.ends_with(".zip")) {
+                continue;
+            }
+
+            path_out = fs::AppendPath(collection.path, p.name);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Menu::RestoreSaves(std::vector<Entry> entries) {
+    RestoreSaves(std::move(entries), MakeSdCardDumpLocation(), "/dumps");
+}
+
+void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    auto restored = std::make_shared<size_t>(0);
+    auto skipped = std::make_shared<size_t>(0);
+
+    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, entries, location, backup_root, restored, skipped](auto pbox) mutable -> Result {
         std::unique_ptr<fs::Fs> fs;
         if (location.entry.type == dump::DumpLocationType_Stdio) {
             fs = std::make_unique<fs::FsStdio>(true, location.stdio[location.entry.index].mount);
         } else if (location.entry.type == dump::DumpLocationType_SdCard) {
             fs = std::make_unique<fs::FsNativeSd>();
+        } else {
+            std::unreachable();
         }
 
-        // get saves in /Saves/Name and /Saves/app_id
-        filebrowser::FsDirCollection collections[2]{};
-        for (auto i = 0; i < std::size(collections); i++) {
-            const auto save_path = fs::AppendPath(fs->Root(), BuildSaveBasePath(m_entries[m_index], i != 0));
-            filebrowser::FsView::get_collection(fs.get(), save_path, "", collections[i], true, false, false);
-            // reverse as they will be sorted in oldest -> newest.
-            // todo: better impl when both id and normal app folders are used.
-            std::ranges::reverse(collections[i].files);
+        for (auto& e : entries) {
+            LoadControlEntry(e);
+
+            fs::FsPath file_path;
+            if (!FindLatestBackupPath(fs.get(), e, backup_root, file_path)) {
+                (*skipped)++;
+                continue;
+            }
+
+            if (m_auto_backup_on_restore.Get()) {
+                pbox->SetActionName("Auto backup"_i18n);
+                R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), true, backup_root));
+            }
+
+            pbox->SetActionName("Restore"_i18n);
+            R_TRY(RestoreSaveInternal(pbox, e, file_path));
+            (*restored)++;
         }
 
-        std::vector<fs::FsPath> paths;
-        PopupList::Items items;
-        for (const auto& collection : collections) {
-            for (const auto&p : collection.files) {
-                const auto view = std::string_view{p.name};
-                if (view.starts_with("BCAT") || !view.ends_with(".zip")) {
-                    continue;
-                }
+        R_SUCCEED();
+    }, [restored, skipped](Result rc){
+        App::PushErrorBox(rc, "Restore failed!"_i18n);
 
-                items.emplace_back(p.name);
-                paths.emplace_back(fs::AppendPath(collection.path, p.name));
+        if (R_SUCCEEDED(rc)) {
+            if (*restored) {
+                App::Notify("Restore successfull!"_i18n);
+            } else {
+                App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+            }
+
+            if (*skipped) {
+                App::Notify(std::to_string(*skipped) + " saves skipped");
             }
         }
-
-        if (paths.empty()) {
-            App::Push<ui::OptionBox>(
-                "No saves found in "_i18n + fs::AppendPath(fs->Root(), BuildSaveBasePath(m_entries[m_index])).toString(),
-                "OK"_i18n
-            );
-            return;
-        }
-
-        const auto title = "Restore save for: "_i18n + m_entries[m_index].GetName();
-        App::Push<PopupList>(
-            title, items, [this, paths, items, location](auto op_index){
-                if (!op_index) {
-                    return;
-                }
-
-                const auto file_name = items[*op_index];
-                const auto file_path = paths[*op_index];
-
-                App::Push<OptionBox>(
-                    "Are you sure you want to restore "_i18n + file_name + "?",
-                    "Back"_i18n, "Restore"_i18n, 0, [this, file_path, location](auto op_index){
-                        if (op_index && *op_index) {
-                            App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, file_path, location](auto pbox) -> Result {
-                                // the entry may not have loaded yet.
-                                LoadControlEntry(m_entries[m_index]);
-
-                                if (m_auto_backup_on_restore.Get()) {
-                                    pbox->SetActionName("Auto backup"_i18n);
-                                    R_TRY(BackupSaveInternal(pbox, location, m_entries[m_index], m_compress_save_backup.Get(), true));
-                                }
-
-                                pbox->SetActionName("Restore"_i18n);
-                                return RestoreSaveInternal(pbox, m_entries[m_index], file_path);
-                            }, [this](Result rc){
-                                App::PushErrorBox(rc, "Restore failed!"_i18n);
-
-                                if (R_SUCCEEDED(rc)) {
-                                    App::Notify("Restore successfull!"_i18n);
-                                }
-                            });
-                        }
-                    }, m_entries[m_index].image
-                );
-            }
-        );
     });
 }
 
-auto Menu::BuildSavePath(const Entry& e, bool is_auto) const -> fs::FsPath {
+auto Menu::BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath {
     const auto t = std::time(NULL);
     const auto tm = std::localtime(&t);
-    const auto base = BuildSaveBasePath(e);
+    const auto base = BuildSaveBasePath(e, false, backup_root);
 
     char time[64];
     std::snprintf(time, sizeof(time), "%u.%02u.%02u @ %02u.%02u.%02u", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     fs::FsPath path;
     if (e.save_data_type == FsSaveDataType_Account) {
-        const auto acc = m_accounts[m_account_index];
+        const auto account = GetAccountName(e.uid);
 
         fs::FsPath name_buf;
         if (is_auto) {
-            std::snprintf(name_buf, sizeof(name_buf), "AUTO - %s", acc.nickname);
+            std::snprintf(name_buf, sizeof(name_buf), "AUTO - %s", account.c_str());
         } else {
-            std::snprintf(name_buf, sizeof(name_buf), "%s", acc.nickname);
+            std::snprintf(name_buf, sizeof(name_buf), "%s", account.c_str());
         }
 
         title::utilsReplaceIllegalCharacters(name_buf, true);
@@ -923,7 +1608,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     R_SUCCEED();
 }
 
-Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto) const {
+Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {
     std::unique_ptr<fs::Fs> fs;
     if (location.entry.type == dump::DumpLocationType_Stdio) {
         fs = std::make_unique<fs::FsStdio>(true, location.stdio[location.entry.index].mount);
@@ -979,7 +1664,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     zip_info_default.tmz_date.tm_mon = tm->tm_mon;
     zip_info_default.tmz_date.tm_year = tm->tm_year;
 
-    const auto path = fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto));
+    const auto path = fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
     const auto temp_path = path + ".temp";
 
     fs->CreateDirectoryRecursivelyWithPath(temp_path);

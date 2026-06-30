@@ -6,6 +6,7 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include "dumper.hpp"
+#include <array>
 #include <memory>
 #include <vector>
 #include <span>
@@ -56,6 +57,11 @@ private:
     void SortAndFindLastFile(bool scan);
     void FreeEntries();
     void OnLayoutChange();
+    void DisplaySaveOptions();
+    void DisplayAccountOptions();
+    void DisplayDataTypeOptions();
+    void ToggleCurrentSelection();
+    void InvertSelection();
 
     auto GetSelectedEntries() const {
         std::vector<Entry> out;
@@ -81,14 +87,37 @@ private:
     }
 
     void BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries);
-    void RestoreSave();
+    void BackupSaves(std::vector<Entry> entries);
+    void BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void RestoreSaves(std::vector<Entry> entries);
+    void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void PromptSaveAction();
+    void PromptSaveTypeOptions(bool restore);
 
-    auto BuildSavePath(const Entry& e, bool is_auto) const -> fs::FsPath;
+    auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const;
-    Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false) const;
+    Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps") const;
+    bool FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const;
+    auto GetAccountName(const AccountUid& uid) const -> std::string;
+    auto GetAccountSummary() const -> std::string;
+    auto GetDataTypeSummary() const -> std::string;
+    auto GetSelectedAccountIndexes() const -> std::vector<s64>;
+    auto GetSelectedSaveTypes() const -> std::vector<u8>;
+    auto CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry>;
+    void ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const;
+    void MarkFiltersChanged();
 
 private:
     static constexpr inline const char* INI_SECTION = "saves";
+    static constexpr inline std::array<u8, 7> SAVE_TYPES{
+        FsSaveDataType_System,
+        FsSaveDataType_Account,
+        FsSaveDataType_Bcat,
+        FsSaveDataType_Device,
+        FsSaveDataType_Temporary,
+        FsSaveDataType_Cache,
+        FsSaveDataType_SystemBcat,
+    };
 
     std::vector<Entry> m_entries{};
     s64 m_index{}; // where i am in the array
@@ -99,7 +128,9 @@ private:
 
     std::vector<AccountProfileBase> m_accounts{};
     s64 m_account_index{};
-    u8 m_data_type{FsSaveDataType_Account};
+    bool m_all_accounts{true};
+    std::vector<u8> m_account_enabled{};
+    std::array<u8, SAVE_TYPES.size()> m_save_type_enabled{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

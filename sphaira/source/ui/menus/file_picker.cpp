@@ -318,7 +318,7 @@ void Menu::DisplayOptions() {
     const auto stdio_locations = location::GetStdio(false);
     for (const auto& e: stdio_locations) {
         u32 flags{};
-        if (e.write_protect) {
+        if (e.flags & FsEntryFlag_ReadOnly) {
             flags |= FsEntryFlag_ReadOnly;
         }
 
@@ -338,9 +338,16 @@ void Menu::DisplayOptions() {
 }
 
 Menu::Menu(const Callback& cb, const std::vector<std::string>& filter, const fs::FsPath& path)
+: Menu{[cb](const fs::FsPath& selected_path, const FsEntry&) {
+    return cb(selected_path);
+}, filter, path, false} {
+}
+
+Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, const fs::FsPath& path, bool pick_directory)
 : MenuBase{"FilePicker"_i18n, MenuFlag_None}
 , m_callback{cb}
-, m_filter{filter} {
+, m_filter{filter}
+, m_pick_directory{pick_directory} {
     FsEntry entry = FS_ENTRY_DEFAULT;
 
     if (!IsTab()) {
@@ -358,10 +365,9 @@ Menu::Menu(const Callback& cb, const std::vector<std::string>& filter, const fs:
             const auto& entry = GetEntry();
 
             if (entry.type == FsDirEntryType_Dir) {
-                // todo: add support for folder picker.
                 Scan(GetNewPathCurrent());
-            } else {
-                if (m_callback(GetNewPathCurrent())) {
+            } else if (!m_pick_directory) {
+                if (m_callback(GetNewPathCurrent(), m_fs_entry)) {
                     SetPop();
                 }
             }
@@ -394,6 +400,14 @@ Menu::Menu(const Callback& cb, const std::vector<std::string>& filter, const fs:
             DisplayOptions();
         }})
     );
+
+    if (m_pick_directory) {
+        SetAction(Button::Y, Action{"Use Folder"_i18n, [this](){
+            if (m_callback(m_path, m_fs_entry)) {
+                SetPop();
+            }
+        }});
+    }
 
     const Vec4 v{75, GetY() + 1.f + 42.f, 1220.f-45.f*2, 60};
     m_list = std::make_unique<List>(1, 8, m_pos, v);

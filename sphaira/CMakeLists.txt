@@ -39,10 +39,16 @@ add_executable(sphaira
     source/ui/menus/file_picker.cpp
     source/ui/menus/homebrew.cpp
     source/ui/menus/irs_menu.cpp
+    source/ui/menus/kefir_menu.cpp
     source/ui/menus/main_menu.cpp
     source/ui/menus/menu_base.cpp
+    source/ui/menus/firmware_menu.cpp
+    source/ui/menus/settings_menu.cpp
     source/ui/menus/save_menu.cpp
     source/ui/menus/themezer.cpp
+    source/ui/menus/tools_menu.cpp
+    source/ui/menus/uninstaller_menu.cpp
+    source/ui/menus/cheats_menu.cpp
     source/ui/menus/ghdl.cpp
     source/ui/menus/usb_menu.cpp
     source/ui/menus/ftp_menu.cpp
@@ -74,6 +80,9 @@ add_executable(sphaira
     source/location.cpp
     source/log.cpp
     source/main.cpp
+    source/ams_su.c
+    source/hats_version.cpp
+    source/manifest.cpp
     source/nro.cpp
     source/nxlink.cpp
     source/owo.cpp
@@ -86,6 +95,10 @@ add_executable(sphaira
     source/threaded_file_transfer.cpp
     source/title_info.cpp
     source/minizip_helper.cpp
+    source/utils/utils.cpp
+    source/utils/devoptab_common.cpp
+    source/utils/devoptab_romfs.cpp
+    source/utils/devoptab_nca.cpp
 
     source/usb/base.cpp
     source/usb/usbds.cpp
@@ -103,6 +116,7 @@ add_executable(sphaira
     source/yati/nx/es.cpp
     source/yati/nx/keys.cpp
     source/yati/nx/nca.cpp
+    source/yati/nx/ncz.cpp
     source/yati/nx/ncm.cpp
     source/yati/nx/ns.cpp
     source/yati/nx/nxdumptool_rsa.c
@@ -272,6 +286,16 @@ FetchContent_MakeAvailable(
     libnxtc
     nvjpg
 )
+
+if (EXISTS "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h")
+    file(READ "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h" LIBNX_NACP_HEADER)
+    if (LIBNX_NACP_HEADER MATCHES "NacpLanguageEntryData[ \t\r\n]+lang_data")
+        file(READ "${libnxtc_SOURCE_DIR}/source/nxtc.c" LIBNXTC_SOURCE)
+        string(REPLACE "nacp->lang_data.lang_data.lang" "nacp->lang_data.lang" LIBNXTC_SOURCE "${LIBNXTC_SOURCE}")
+        string(REPLACE "nacp->lang[" "nacp->lang_data.lang[" LIBNXTC_SOURCE "${LIBNXTC_SOURCE}")
+        file(WRITE "${libnxtc_SOURCE_DIR}/source/nxtc.c" "${LIBNXTC_SOURCE}")
+    endif()
+endif()
 
 set(FTPSRV_LIB_BUILD TRUE)
 set(FTPSRV_LIB_VFS_CUSTOM ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs_nx.h)

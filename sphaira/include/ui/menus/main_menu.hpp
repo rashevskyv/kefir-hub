@@ -44,7 +44,7 @@ struct MiscMenuEntry {
 
 auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry>;
 
-// this holds 2 menus and allows for switching between them
+// this holds the Homebrew and Tools pages and allows switching between them.
 struct MainMenu final : Widget {
     MainMenu();
     ~MainMenu();
@@ -59,13 +59,12 @@ struct MainMenu final : Widget {
     }
 
 private:
-    void OnLRPress(MenuBase* menu, Button b);
+    void SwitchTo(MenuBase* menu);
     void AddOnLRPress();
 
 private:
     std::unique_ptr<MenuBase> m_centre_menu{};
-    std::unique_ptr<MenuBase> m_left_menu{};
-    std::unique_ptr<MenuBase> m_right_menu{};
+    std::unique_ptr<MenuBase> m_tools_menu{};
     MenuBase* m_current_menu{};
 
     std::string m_update_url{};

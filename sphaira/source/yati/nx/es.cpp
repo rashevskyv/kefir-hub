@@ -4,6 +4,7 @@
 #include "yati/nx/service_guard.h"
 #include "defines.hpp"
 #include "log.hpp"
+#include <array>
 #include <memory>
 #include <cstring>
 
@@ -325,6 +326,30 @@ Result PatchTicket(std::vector<u8>& ticket, std::span<const u8> cert_chain, u8 k
     // overwrite old ticket with new fake ticket data.
     ticket.resize(sizeof(out));
     std::memcpy(ticket.data(), &out, sizeof(out));
+
+    R_SUCCEED();
+}
+
+bool IsRightsIdValid(const FsRightsId& id) {
+    const FsRightsId empty_id{};
+    return std::memcmp(std::addressof(id), std::addressof(empty_id), sizeof(id)) != 0;
+}
+
+Result GetTitleKeyDecrypted(const FsRightsId& rights_id, u8 key_gen, const keys::Keys& keys, keys::KeyEntry& out) {
+    u64 out_size{};
+    std::array<u8, 0x400> ticket{};
+    R_TRY(es::GetCommonTicketData(&out_size, ticket.data(), ticket.size(), &rights_id));
+    return GetTitleKeyDecrypted(std::span<const u8>{ticket.data(), static_cast<size_t>(out_size)}, rights_id, key_gen, keys, out);
+}
+
+Result GetTitleKeyDecrypted(std::span<const u8> ticket, const FsRightsId& rights_id, u8 key_gen, const keys::Keys& keys, keys::KeyEntry& out) {
+    es::TicketData ticket_data;
+    R_TRY(es::GetTicketData(ticket, &ticket_data));
+
+    R_UNLESS(std::memcmp(std::addressof(rights_id), std::addressof(ticket_data.rights_id), sizeof(rights_id)) == 0, Result_YatiInvalidTicketBadRightsId);
+
+    R_TRY(es::GetTitleKey(out, ticket_data, keys));
+    R_TRY(es::DecryptTitleKey(out, key_gen, keys));
 
     R_SUCCEED();
 }

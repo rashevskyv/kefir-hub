@@ -1,0 +1,5282 @@
+#include "ui/menus/cheats_menu.hpp"
+
+#include "ui/nvg_util.hpp"
+#include "ui/option_box.hpp"
+#include "ui/progress_box.hpp"
+#include "ui/error_box.hpp"
+#include "ui/scrollable_text.hpp"
+#include "ui/menus/file_picker.hpp"
+
+#include "app.hpp"
+#include "log.hpp"
+#include "download.hpp"
+#include "fs.hpp"
+#include "i18n.hpp"
+#include "nacp_util.hpp"
+#include "yyjson_helper.hpp"
+#include "swkbd.hpp"
+#include "title_info.hpp"
+#include "utils/devoptab.hpp"
+#include "utils/utils.hpp"
+#include "yati/nx/ns.hpp"
+#include "yati/nx/es.hpp"
+#include "yati/nx/ncm.hpp"
+#include "yati/nx/nca.hpp"
+
+#include <yyjson.h>
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+#include <format>
+#include <optional>
+#include <ranges>
+#include <sstream>
+#include <switch.h>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <set>
+#include <map>
+
+namespace sphaira::ui::menu::hats {
+
+namespace {
+
+// Constants for CheatSlips API
+constexpr const char* CHEATSLIPS_API_URL = "https://www.cheatslips.com/api/v1/cheats";
+constexpr const char* CHEATSLIPS_TOKEN_URL = "https://www.cheatslips.com/api/v1/token";
+// Online versions database for build ID lookup (from switch-cheats-db)
+constexpr const char* VERSIONS_DB_URL = "https://raw.githubusercontent.com/HamletDuFromage/switch-cheats-db/master/versions";
+
+// Paths for storing cheats and tokens
+constexpr const char* ATMOSPHERE_CONTENTS_PATH = "/atmosphere/contents";
+constexpr const char* CHEATS_SUBDIR = "cheats";
+constexpr const char* TOKEN_PATH = "/config/hats-tools/cheatslips_token.json";
+constexpr const char* PAYLOAD_LAUNCH_CONFIG_PATH = "/config/hats-tools/payload-launch.ini";
+
+// nx-cheats-db local database paths (optional cache)
+constexpr const char* NX_DB_PATH = "/config/hats-tools/cheats-db";
+constexpr const char* NX_DB_VERSIONS_FILE = "versions.json";
+// nx-cheats-db GitHub raw URLs
+constexpr const char* NX_DB_GITHUB_BASE = "https://raw.githubusercontent.com/sthetix/nx-cheats-db/main";
+constexpr const char* NX_DB_VERSIONS_URL = "https://raw.githubusercontent.com/sthetix/nx-cheats-db/main/versions.json";
+// AIO-Switch-Updater token path (for compatibility)
+constexpr const char* AIO_TOKEN_PATH = "/config/aio-switch-updater/token.json";
+constexpr const char* CHEAT_METADATA_CACHE_PATH = "/config/hats-tools/cheat-metadata.json";
+constexpr u32 CHEAT_METADATA_CACHE_VERSION = 1;
+constexpr size_t ATMOSPHERE_MAX_CHEATS_PER_FILE = 128;
+
+// Number of titles to fetch per chunk (like original sphaira)
+constexpr s32 ENTRY_CHUNK_COUNT = 1000;
+
+Mutex g_cheat_metadata_cache_mutex{};
+
+// DmntCheatProcessMetadata structure for getting build ID from dmnt:cht
+// Must match Atmosphere's actual IPC response layout exactly
+struct DmntMemoryRegionExtents {
+    u64 base;
+    u64 size;
+};
+
+struct DmntCheatProcessMetadata {
+    u64 process_id;                              // offset 0x00
+    u64 title_id;                                // offset 0x08
+    DmntMemoryRegionExtents main_nso_extents;    // offset 0x10
+    DmntMemoryRegionExtents heap_extents;        // offset 0x20
+    DmntMemoryRegionExtents alias_extents;       // offset 0x30
+    DmntMemoryRegionExtents address_space_extents; // offset 0x40
+    u8 main_nso_build_id[0x20];                 // offset 0x50
+};
+
+// Format title ID as 16-character hex string (lowercase for atmosphere paths)
+auto FormatTitleId(u64 title_id) -> std::string {
+    return std::format("{:016X}", title_id);
+}
+
+// Format title ID as lowercase for file paths
+auto FormatTitleIdLower(u64 title_id) -> std::string {
+    return std::format("{:016x}", title_id);
+}
+
+auto GetBaseApplicationTitleId(u64 title_id) -> u64 {
+    constexpr u64 update_title_id_suffix = 0x800;
+    constexpr u64 title_id_content_suffix_mask = 0xFFF;
+
+    if ((title_id & title_id_content_suffix_mask) == update_title_id_suffix) {
+        return title_id & ~title_id_content_suffix_mask;
+    }
+
+    return title_id;
+}
+
+// Convert bytes to hex string (uppercase)
+auto BytesToHex(const u8* data, size_t len) -> std::string {
+    std::string hex;
+    hex.reserve(len * 2);
+    for (size_t i = 0; i < len; i++) {
+        char buf[3];
+        std::snprintf(buf, sizeof(buf), "%02X", data[i]);
+        hex += buf;
+    }
+    return hex;
+}
+
+auto BytesToBuildId(const u8* data, size_t len) -> std::string {
+    std::string hex;
+    hex.reserve(len * 2);
+    for (size_t i = 0; i < len; i++) {
+        const auto value = data[len - 1 - i];
+        char buf[3];
+        std::snprintf(buf, sizeof(buf), "%02X", value);
+        hex += buf;
+    }
+    return hex;
+}
+
+auto NormalizeBuildId(std::string build_id) -> std::string {
+    std::transform(build_id.begin(), build_id.end(), build_id.begin(), [](unsigned char c) {
+        return static_cast<char>(std::toupper(c));
+    });
+    return build_id;
+}
+
+auto ReverseBuildIdBytes(std::string build_id) -> std::string {
+    build_id = NormalizeBuildId(std::move(build_id));
+    if ((build_id.size() % 2) != 0) {
+        return build_id;
+    }
+
+    std::string reversed;
+    reversed.reserve(build_id.size());
+    for (size_t i = build_id.size(); i > 0; i -= 2) {
+        reversed.push_back(build_id[i - 2]);
+        reversed.push_back(build_id[i - 1]);
+    }
+    return reversed;
+}
+
+auto IsValidBuildId(const std::string& build_id) -> bool {
+    if (build_id.size() != 16) {
+        return false;
+    }
+
+    bool all_zero = true;
+    for (const auto c : build_id) {
+        if (!std::isxdigit(static_cast<unsigned char>(c))) {
+            return false;
+        }
+        if (c != '0') {
+            all_zero = false;
+        }
+    }
+
+    return !all_zero;
+}
+
+void LogMountedDirectoryEntries(fs::FsStdio& mounted_fs, const char* path) {
+    fs::Dir dir;
+    auto rc = mounted_fs.OpenDirectory(path,
+        FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles | FsDirOpenMode_NoFileSize,
+        &dir);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Mounted NCA directory open failed for %s: %x\n", path, rc);
+        return;
+    }
+
+    std::vector<FsDirectoryEntry> entries(32);
+    s64 read_count = 0;
+    rc = dir.Read(&read_count, entries.size(), entries.data());
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Mounted NCA directory read failed for %s: %x\n", path, rc);
+        return;
+    }
+
+    log_write("[Cheats] Mounted NCA directory %s has %lld entr%s\n",
+              path, static_cast<long long>(read_count), read_count == 1 ? "y" : "ies");
+    for (s64 i = 0; i < read_count; i++) {
+        log_write("[Cheats]   %s/%s\n", path, entries[i].name);
+    }
+}
+
+// Case-insensitive string comparison
+auto StringsEqualIgnoreCase(const std::string& a, const std::string& b) -> bool {
+    if (a.size() != b.size()) return false;
+    return std::equal(a.begin(), a.end(), b.begin(), [](char c1, char c2) {
+        return std::tolower(c1) == std::tolower(c2);
+    });
+}
+
+enum class InstalledNcaFailureReason {
+    None,
+    NotInstalled,
+    ContentMissing,
+    Unavailable,
+};
+
+struct InstalledNcaLookupResult {
+    std::string build_id;
+    InstalledNcaFailureReason failure_reason{InstalledNcaFailureReason::None};
+};
+
+auto GetBuildIdFromInstalledNcaDetailed(u64 title_id) -> InstalledNcaLookupResult {
+    InstalledNcaLookupResult result;
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: nsInitialize failed for %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::Unavailable;
+        return result;
+    }
+    ON_SCOPE_EXIT(nsExit());
+
+    s32 count = 0;
+    if (R_FAILED(nsCountApplicationContentMeta(title_id, &count)) || count <= 0) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: no meta entries for title %016lx\n", title_id);
+        result.failure_reason = InstalledNcaFailureReason::NotInstalled;
+        return result;
+    }
+
+    std::vector<NsApplicationContentMetaStatus> entries(count);
+    s32 entries_read = 0;
+    if (R_FAILED(nsListApplicationContentMetaStatus(title_id, 0, entries.data(), entries.size(), &entries_read)) || entries_read <= 0) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to list meta entries for title %016lx\n", title_id);
+        result.failure_reason = InstalledNcaFailureReason::Unavailable;
+        return result;
+    }
+    entries.resize(entries_read);
+
+    const auto is_supported_storage = [](u8 storage_id) {
+        return storage_id == NcmStorageId_SdCard ||
+               storage_id == NcmStorageId_BuiltInUser ||
+               storage_id == NcmStorageId_GameCard;
+    };
+
+    const NsApplicationContentMetaStatus* best_status = nullptr;
+    for (const auto& entry : entries) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: candidate meta app=%016lx version=%u storage=%u type=%u\n",
+                  entry.application_id, entry.version, entry.storageID, entry.meta_type);
+        if (!is_supported_storage(entry.storageID)) {
+            continue;
+        }
+
+        if (!best_status || entry.version > best_status->version) {
+            best_status = &entry;
+        }
+    }
+
+    if (!best_status) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: no supported storage entries for title %016lx\n",
+                  title_id);
+        // Metadata can still linger even when the actual title content/NCA is gone.
+        // If we found entries but none point to a readable user/SD/gamecard storage,
+        // treat this like missing content instead of a clean "not installed" state.
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+
+    log_write("[Cheats] GetBuildIdFromInstalledNca: selected meta app=%016lx version=%u storage=%u type=%u\n",
+              best_status->application_id, best_status->version, best_status->storageID, best_status->meta_type);
+
+    NcmContentMetaDatabase db{};
+    rc = ncmOpenContentMetaDatabase(&db, static_cast<NcmStorageId>(best_status->storageID));
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to open metadata DB for title %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+    ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
+
+    NcmContentStorage cs{};
+    rc = ncmOpenContentStorage(&cs, static_cast<NcmStorageId>(best_status->storageID));
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to open content storage for title %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+    ON_SCOPE_EXIT(ncmContentStorageClose(&cs));
+
+    NcmContentMetaKey key{};
+    rc = ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, best_status->application_id);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to resolve latest content meta key for %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+
+    NcmContentId content_id{};
+    rc = ncmContentMetaDatabaseGetContentIdByType(&db, &content_id, &key, NcmContentType_Program);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to resolve Program content ID for %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+
+    fs::FsPath mount_path;
+    rc = devoptab::MountNcaNcm(&cs, &content_id, mount_path);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to mount Program NCA for %016lx: %x\n", title_id, rc);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+    ON_SCOPE_EXIT(devoptab::UmountNeworkDevice(mount_path));
+
+    fs::FsStdio mounted_fs{true, mount_path};
+    fs::File file;
+    const char* opened_path = nullptr;
+    for (const auto* candidate_path : {"/main", "/exeFS/main"}) {
+        rc = mounted_fs.OpenFile(candidate_path, FsOpenMode_Read, &file);
+        if (R_SUCCEEDED(rc)) {
+            opened_path = candidate_path;
+            break;
+        }
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to open %s for %016lx: %x\n",
+                  candidate_path, title_id, rc);
+    }
+    if (!opened_path) {
+        LogMountedDirectoryEntries(mounted_fs, "/");
+        LogMountedDirectoryEntries(mounted_fs, "/exeFS");
+        LogMountedDirectoryEntries(mounted_fs, "/RomFS");
+        LogMountedDirectoryEntries(mounted_fs, "/Logo");
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+
+    u8 module_id[0x20]{};
+    u64 bytes_read{};
+    rc = file.Read(0x40, module_id, sizeof(module_id), FsReadOption_None, &bytes_read);
+    if (R_FAILED(rc) || bytes_read < 8) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to read ModuleId from %s for %016lx: %x (read=%llu)\n",
+                  opened_path, title_id, rc, bytes_read);
+        result.failure_reason = InstalledNcaFailureReason::ContentMissing;
+        return result;
+    }
+
+    const auto build_id = NormalizeBuildId(BytesToHex(module_id, 8));
+    if (!IsValidBuildId(build_id)) {
+        log_write("[Cheats] GetBuildIdFromInstalledNca: invalid Build ID for %016lx: %s\n", title_id, build_id.c_str());
+        result.failure_reason = InstalledNcaFailureReason::Unavailable;
+        return result;
+    }
+
+    log_write("[Cheats] GetBuildIdFromInstalledNca: build ID = %s for title %016lx via %s\n",
+              build_id.c_str(), title_id, opened_path);
+    result.build_id = build_id;
+    return result;
+}
+
+auto GetBuildIdFromInstalledNca(u64 title_id) -> std::string {
+    return GetBuildIdFromInstalledNcaDetailed(title_id).build_id;
+}
+
+auto ReadBuildIdFromProgramContent(NcmContentStorage& cs, const NcmContentId& content_id, u64 title_id, const char* source) -> std::string {
+    fs::FsPath mount_path;
+    Result rc = devoptab::MountNcaNcm(&cs, &content_id, mount_path);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] %s: failed to mount Program NCA for %016lx: %x\n", source, title_id, rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(devoptab::UmountNeworkDevice(mount_path));
+
+    fs::FsStdio mounted_fs{true, mount_path};
+    fs::File file;
+    const char* opened_path = nullptr;
+    for (const auto* candidate_path : {"/main", "/exeFS/main"}) {
+        rc = mounted_fs.OpenFile(candidate_path, FsOpenMode_Read, &file);
+        if (R_SUCCEEDED(rc)) {
+            opened_path = candidate_path;
+            break;
+        }
+        log_write("[Cheats] %s: failed to open %s for %016lx: %x\n",
+                  source, candidate_path, title_id, rc);
+    }
+    if (!opened_path) {
+        LogMountedDirectoryEntries(mounted_fs, "/");
+        LogMountedDirectoryEntries(mounted_fs, "/exeFS");
+        return "";
+    }
+
+    u8 module_id[0x20]{};
+    u64 bytes_read{};
+    rc = file.Read(0x40, module_id, sizeof(module_id), FsReadOption_None, &bytes_read);
+    if (R_FAILED(rc) || bytes_read < 8) {
+        log_write("[Cheats] %s: failed to read ModuleId from %s for %016lx: %x (read=%llu)\n",
+                  source, opened_path, title_id, rc, bytes_read);
+        return "";
+    }
+
+    const auto build_id = NormalizeBuildId(BytesToHex(module_id, 8));
+    if (!IsValidBuildId(build_id)) {
+        log_write("[Cheats] %s: invalid Build ID for %016lx: %s\n", source, title_id, build_id.c_str());
+        return "";
+    }
+
+    log_write("[Cheats] %s: build ID = %s for title %016lx via %s\n",
+              source, build_id.c_str(), title_id, opened_path);
+    return build_id;
+}
+
+auto GetBuildIdFromGameCardNca(u64 title_id) -> std::string {
+    NcmContentMetaDatabase db{};
+    Result rc = ncmOpenContentMetaDatabase(&db, NcmStorageId_GameCard);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromGameCardNca: failed to open game card metadata DB for %016lx: %x\n", title_id, rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
+
+    NcmContentStorage cs{};
+    rc = ncmOpenContentStorage(&cs, NcmStorageId_GameCard);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromGameCardNca: failed to open game card content storage for %016lx: %x\n", title_id, rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(ncmContentStorageClose(&cs));
+
+    std::vector<NcmContentMetaKey> keys(16);
+    s32 total = 0;
+    s32 written = 0;
+    rc = ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+        NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromGameCardNca: failed to list game card metadata for %016lx: %x\n", title_id, rc);
+        return "";
+    }
+
+    if (total > written && total > static_cast<s32>(keys.size())) {
+        keys.resize(total);
+        rc = ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+            NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] GetBuildIdFromGameCardNca: failed to list all game card metadata for %016lx: %x\n", title_id, rc);
+            return "";
+        }
+    }
+    keys.resize(written);
+
+    std::sort(keys.begin(), keys.end(), [](const auto& lhs, const auto& rhs) {
+        if (lhs.type != rhs.type) {
+            return lhs.type == NcmContentMetaType_Patch;
+        }
+        return lhs.version > rhs.version;
+    });
+
+    for (const auto& key : keys) {
+        if (key.type != NcmContentMetaType_Application && key.type != NcmContentMetaType_Patch) {
+            continue;
+        }
+        if (GetBaseApplicationTitleId(ncm::GetAppId(key)) != title_id) {
+            continue;
+        }
+
+        log_write("[Cheats] GetBuildIdFromGameCardNca: candidate key id=%016lx type=%u version=%u\n",
+                  key.id, key.type, key.version);
+
+        NcmContentId content_id{};
+        rc = ncmContentMetaDatabaseGetContentIdByType(&db, &content_id, &key, NcmContentType_Program);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] GetBuildIdFromGameCardNca: failed to resolve Program content ID for %016lx key=%016lx: %x\n",
+                      title_id, key.id, rc);
+            continue;
+        }
+
+        if (auto build_id = ReadBuildIdFromProgramContent(cs, content_id, title_id, "GetBuildIdFromGameCardNca");
+            !build_id.empty()) {
+            return build_id;
+        }
+    }
+
+    log_write("[Cheats] GetBuildIdFromGameCardNca: no readable Program NCA for %016lx\n", title_id);
+    return "";
+}
+
+// Get Build ID from dmnt:cht service (when game is running/suspended)
+auto GetBuildIdFromDmnt(u64 title_id) -> std::string {
+    Result rc = pmdmntInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Failed to initialize pmdmnt: %x\n", rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(pmdmntExit());
+
+    u64 application_pid = 0;
+    bool found_application = false;
+
+    // Mirror EdiZon's attach flow as closely as possible: wait for the
+    // suspended application PID, then let dmnt attach and trust the metadata.
+    for (int i = 0; i < 10; i++) {
+        if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&application_pid)) && application_pid != 0) {
+            found_application = true;
+            break;
+        }
+        svcSleepThread(100'000'000ULL);
+    }
+
+    if (!found_application) {
+        log_write("[Cheats] No application PID available from pmdmnt\n");
+        return "";
+    }
+
+    u64 application_title_id = 0;
+    rc = pmdmntGetProgramId(&application_title_id, application_pid);
+    if (R_SUCCEEDED(rc)) {
+        log_write("[Cheats] Active application PID %016lx reports title %016lx\n",
+                  application_pid, application_title_id);
+    } else {
+        log_write("[Cheats] Failed to get program ID for active application PID %016lx: %x\n",
+                  application_pid, rc);
+    }
+
+    Service dmntchtSrv;
+    rc = smGetService(&dmntchtSrv, "dmnt:cht");
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Failed to get dmnt:cht service: %x\n", rc);
+        return "";
+    }
+
+    ON_SCOPE_EXIT(serviceClose(&dmntchtSrv));
+
+    u8 has_cheat_process = 0;
+    bool attached = false;
+    for (int attempt = 0; attempt < 10; attempt++) {
+        rc = serviceDispatch(&dmntchtSrv, 65003);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Force-open cheat process failed on attempt %d: %x\n", attempt + 1, rc);
+            svcSleepThread(100'000'000ULL);
+            continue;
+        }
+
+        rc = serviceDispatchOut(&dmntchtSrv, 65000, has_cheat_process);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to query cheat-process state on attempt %d: %x\n", attempt + 1, rc);
+            svcSleepThread(100'000'000ULL);
+            continue;
+        }
+
+        if ((has_cheat_process & 1) != 0) {
+            attached = true;
+            break;
+        }
+
+        svcSleepThread(100'000'000ULL);
+    }
+
+    if (!attached) {
+        log_write("[Cheats] dmnt:cht never reported an attached cheat process\n");
+        return "";
+    }
+
+    // Get process metadata (command 65002)
+    DmntCheatProcessMetadata metadata{};
+    rc = serviceDispatchOut(&dmntchtSrv, 65002, metadata);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Failed to get cheat metadata: %x\n", rc);
+        return "";
+    }
+
+    log_write("[Cheats] dmnt:cht metadata - title_id: %016lx, process_id: %016lx, app_pid: %016lx\n",
+              metadata.title_id, metadata.process_id, application_pid);
+
+    if (metadata.process_id == 0) {
+        log_write("[Cheats] dmnt:cht returned metadata with no process ID\n");
+        return "";
+    }
+
+    if (metadata.title_id != title_id) {
+        log_write("[Cheats] Running title %016lx doesn't match target %016lx\n",
+                  metadata.title_id, title_id);
+        return "";
+    }
+
+    if (metadata.process_id != application_pid) {
+        log_write("[Cheats] dmnt:cht process %016lx differs from pmdmnt PID %016lx, using metadata title match\n",
+                  metadata.process_id, application_pid);
+    }
+
+    std::string build_id = NormalizeBuildId(BytesToBuildId(metadata.main_nso_build_id, 8));
+    if (!IsValidBuildId(build_id)) {
+        log_write("[Cheats] dmnt:cht returned an invalid Build ID: %s\n", build_id.c_str());
+        return "";
+    }
+
+    log_write("[Cheats] Got Build ID from dmnt:cht: %s\n", build_id.c_str());
+
+    return build_id;
+}
+
+auto TryGetBuildIdFromNsoWithStorage(u64 title_id, NcmStorageId storage_id, const char* path) -> std::string {
+    FsCodeInfo code_info{};
+    FsFileSystem fs{};
+    Result rc = fsldrOpenCodeFileSystem(&code_info, title_id, storage_id, path, FsContentAttributes_None, &fs);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromNso: fsldrOpenCodeFileSystem failed for storage=%d path=%s: %x\n",
+                  static_cast<int>(storage_id), path ? path : "(null)", rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(fsFsClose(&fs));
+
+    FsFile file{};
+    rc = fsFsOpenFile(&fs, "/main", FsOpenMode_Read, &file);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromNso: failed to open /main for storage=%d path=%s: %x\n",
+                  static_cast<int>(storage_id), path ? path : "(null)", rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(fsFileClose(&file));
+
+    u8 build_id_bytes[8]{};
+    u64 bytes_read = 0;
+    rc = fsFileRead(&file, 0x40, build_id_bytes, sizeof(build_id_bytes), FsReadOption_None, &bytes_read);
+    if (R_FAILED(rc) || bytes_read != sizeof(build_id_bytes)) {
+        log_write("[Cheats] GetBuildIdFromNso: failed to read /main build ID for storage=%d path=%s: %x (read=%llu)\n",
+                  static_cast<int>(storage_id), path ? path : "(null)", rc, bytes_read);
+        return "";
+    }
+
+    const auto build_id = NormalizeBuildId(BytesToBuildId(build_id_bytes, sizeof(build_id_bytes)));
+    if (!IsValidBuildId(build_id)) {
+        log_write("[Cheats] GetBuildIdFromNso: invalid Build ID read from /main for storage=%d path=%s: %s\n",
+                  static_cast<int>(storage_id), path ? path : "(null)", build_id.c_str());
+        return "";
+    }
+
+    log_write("[Cheats] GetBuildIdFromNso: build ID = %s (storage=%d path=%s)\n",
+              build_id.c_str(), static_cast<int>(storage_id), path ? path : "(null)");
+    return build_id;
+}
+
+// Get Build ID directly from installed game's main NSO via fsp-ldr
+// Works in both applet and non-applet mode under Atmosphere (ams.mitm lifts the firmware restriction)
+// Mounts the ExeFS of the installed title and reads the build ID from the NSO header at offset 0x40
+auto GetBuildIdFromNso(u64 title_id) -> std::string {
+    std::vector<NcmStorageId> storage_ids;
+    auto add_storage_id = [&storage_ids](NcmStorageId storage_id) {
+        if (std::find(storage_ids.begin(), storage_ids.end(), storage_id) == storage_ids.end()) {
+            storage_ids.push_back(storage_id);
+        }
+    };
+
+    s32 count = 0;
+    if (R_SUCCEEDED(nsCountApplicationContentMeta(title_id, &count)) && count > 0) {
+        std::vector<NsApplicationContentMetaStatus> statuses(count);
+        s32 out = 0;
+        if (R_SUCCEEDED(nsListApplicationContentMetaStatus(title_id, 0, statuses.data(), statuses.size(), &out)) && out > 0) {
+            statuses.resize(out);
+            for (const auto& status : statuses) {
+                add_storage_id(static_cast<NcmStorageId>(status.storageID));
+                log_write("[Cheats] GetBuildIdFromNso: discovered storage_id=%d for title %016lx\n",
+                          static_cast<int>(status.storageID), title_id);
+            }
+        }
+    }
+
+    add_storage_id(NcmStorageId_BuiltInUser);
+    add_storage_id(NcmStorageId_SdCard);
+    add_storage_id(NcmStorageId_GameCard);
+    add_storage_id(NcmStorageId_Any);
+    add_storage_id(NcmStorageId_None);
+
+    // Initialize fsp-ldr service
+    Result rc = fsldrInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] GetBuildIdFromNso: fsldrInitialize failed: %x\n", rc);
+        return "";
+    }
+    ON_SCOPE_EXIT(fsldrExit());
+
+    for (const auto storage_id : storage_ids) {
+        if (auto build_id = TryGetBuildIdFromNsoWithStorage(title_id, storage_id, nullptr); !build_id.empty()) {
+            return build_id;
+        }
+        if (auto build_id = TryGetBuildIdFromNsoWithStorage(title_id, storage_id, ""); !build_id.empty()) {
+            return build_id;
+        }
+    }
+
+    log_write("[Cheats] GetBuildIdFromNso: exhausted all storage/path combinations for title %016lx\n", title_id);
+    return "";
+}
+
+enum class BuildIdFailureReason {
+    None,
+    ProdKeysMissing,
+    GameNotFound,
+    ExactBuildIdUnavailable,
+};
+
+struct BuildIdLookupResult {
+    std::string build_id;
+    std::string source;
+    BuildIdFailureReason failure_reason{BuildIdFailureReason::None};
+};
+
+auto HasProdKeys() -> bool {
+    fs::FsNativeSd fs;
+    return fs.FileExists("/switch/prod.keys");
+}
+
+auto HasApplicationContentMeta(u64 title_id) -> bool {
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] HasApplicationContentMeta: nsInitialize failed for %016lx: %x\n", title_id, rc);
+        return false;
+    }
+    ON_SCOPE_EXIT(nsExit());
+
+    s32 count = 0;
+    rc = nsCountApplicationContentMeta(title_id, &count);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] HasApplicationContentMeta: nsCountApplicationContentMeta failed for %016lx: %x\n", title_id, rc);
+        return false;
+    }
+
+    return count > 0;
+}
+
+auto LookupBuildIdForCheats(u64 title_id, bool allow_nso_fallback = true) -> BuildIdLookupResult {
+    BuildIdLookupResult result;
+
+    result.build_id = GetBuildIdFromDmnt(title_id);
+    if (!result.build_id.empty()) {
+        result.build_id = NormalizeBuildId(result.build_id);
+        result.source = "dmnt";
+        return result;
+    }
+
+    const bool has_prod_keys = HasProdKeys();
+    bool installed_content_missing = false;
+    if (!has_prod_keys) {
+        log_write("[Cheats] LookupBuildIdForCheats: /switch/prod.keys not found\n");
+    } else {
+        result.build_id = GetBuildIdFromGameCardNca(title_id);
+        if (!result.build_id.empty()) {
+            result.source = "gamecard-nca";
+            return result;
+        }
+
+        const auto installed_nca = GetBuildIdFromInstalledNcaDetailed(title_id);
+        result.build_id = installed_nca.build_id;
+        if (!result.build_id.empty()) {
+            result.source = "installed-nca";
+            return result;
+        }
+
+        if (installed_nca.failure_reason == InstalledNcaFailureReason::ContentMissing) {
+            log_write("[Cheats] LookupBuildIdForCheats: installed Program NCA content missing for %016lx\n", title_id);
+            installed_content_missing = true;
+        }
+    }
+
+    if (allow_nso_fallback) {
+        result.build_id = GetBuildIdFromNso(title_id);
+        if (!result.build_id.empty()) {
+            result.build_id = NormalizeBuildId(result.build_id);
+            result.source = "nso";
+            return result;
+        }
+    }
+
+    if (!has_prod_keys) {
+        result.failure_reason = BuildIdFailureReason::ProdKeysMissing;
+        return result;
+    }
+
+    if (!HasApplicationContentMeta(title_id)) {
+        result.failure_reason = BuildIdFailureReason::GameNotFound;
+        return result;
+    }
+
+    // A lingering title record without readable Program content means the game
+    // itself is not present, even if ns still lists application metadata.
+    if (installed_content_missing) {
+        result.failure_reason = BuildIdFailureReason::GameNotFound;
+        return result;
+    }
+
+    result.failure_reason = BuildIdFailureReason::ExactBuildIdUnavailable;
+    return result;
+}
+
+auto GetBuildIdFailureMessage(BuildIdFailureReason reason) -> std::string {
+    switch (reason) {
+        case BuildIdFailureReason::ProdKeysMissing:
+            return "prod.keys not found";
+        case BuildIdFailureReason::GameNotFound:
+            return "Game Not Found";
+        case BuildIdFailureReason::ExactBuildIdUnavailable:
+            return "Unable to determine the exact Build ID.\n\n"
+                   "For reliable cheat matching, launch the game first\n"
+                   "or retry from a mode where installed-title code can be read.";
+        case BuildIdFailureReason::None:
+        default:
+            return {};
+    }
+}
+
+bool WritePayloadLaunchConfig(const fs::FsPath& payload_path) {
+    fs::FsNativeSd fs;
+    fs.CreateDirectoryRecursively("/config/hats-tools");
+
+    std::string payload_path_fatfs = static_cast<const char*>(payload_path);
+    if (payload_path_fatfs.starts_with('/')) {
+        payload_path_fatfs = "sd:" + payload_path_fatfs;
+    }
+
+    FILE* f = std::fopen(PAYLOAD_LAUNCH_CONFIG_PATH, "wb");
+    if (!f) {
+        log_write("[Cheats] failed to open payload launch config for writing\n");
+        return false;
+    }
+
+    const int written = std::fprintf(
+        f,
+        "[payload]\n"
+        "launch_path=%s\n",
+        payload_path_fatfs.c_str()
+    );
+    std::fclose(f);
+    fsdevCommitDevice("sdmc");
+
+    return written > 0;
+}
+
+void ShowProdKeysMissingDialog() {
+    fs::FsPath lockpick_payload;
+    if (!utils::findLockpickPayload(lockpick_payload)) {
+        App::Push<OptionBox>(
+            "prod.keys not found.\nPlace Lockpick_RCM in /bootloader/payloads"_i18n,
+            "OK"_i18n
+        );
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "prod.keys not found.\nLaunch Lockpick_RCM payload now?"_i18n,
+        "Cancel"_i18n,
+        "Launch"_i18n,
+        1,
+        [lockpick_payload](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            log_write("[Cheats] launching Lockpick through hekate autoboot payload: %s\n",
+                      static_cast<const char*>(lockpick_payload));
+
+            if (!WritePayloadLaunchConfig(lockpick_payload)) {
+                App::Push<ErrorBox>("Failed to configure payload launch");
+                return;
+            }
+
+            if (!utils::setHekateAutobootPayload(static_cast<const char*>(lockpick_payload))) {
+                App::Push<ErrorBox>("Failed to configure hekate");
+                return;
+            }
+
+            const Result rc = utils::requestForcedReboot();
+            if (R_FAILED(rc)) {
+                App::Push<ErrorBox>(rc, "Failed to reboot");
+            }
+        }
+    );
+}
+
+// Get version for a title (like aio-switch-updater does)
+auto GetTitleVersion(u64 title_id) -> u32 {
+    u32 version = 0;
+    s32 out = 0;
+
+    // Use title namespace functions to get meta entries
+    s32 count = 0;
+    Result rc = nsCountApplicationContentMeta(title_id, &count);
+    if (R_FAILED(rc) || count == 0) {
+        return 0;
+    }
+
+    std::vector<NsApplicationContentMetaStatus> meta_statuses(count);
+    rc = nsListApplicationContentMetaStatus(title_id, 0, meta_statuses.data(), meta_statuses.size(), &out);
+    if (R_FAILED(rc)) {
+        return 0;
+    }
+
+    meta_statuses.resize(out);
+
+    // Find the highest version
+    for (const auto& meta : meta_statuses) {
+        if (meta.version > version) {
+            version = meta.version;
+        }
+    }
+
+    return version;
+}
+
+// Get title name using nsGetApplicationControlData
+auto GetTitleName(u64 title_id) -> std::string {
+    const auto base_title_id = GetBaseApplicationTitleId(title_id);
+
+    // Get language entry for the name
+    const auto copy_valid_name = [](u64 source_title_id, const NacpLanguageEntry& entry) -> std::string {
+        constexpr size_t name_size = sizeof(entry.name);
+        const auto name_len = strnlen(entry.name, name_size);
+        if (name_len == 0 || name_len == name_size) {
+            return "";
+        }
+
+        bool has_visible_char = false;
+        for (size_t i = 0; i < name_len; i++) {
+            const auto c = static_cast<unsigned char>(entry.name[i]);
+            if (c < 0x20 && c != '\t') {
+                log_write("[Cheats] GetTitleName: invalid control character for %016lx at offset %zu\n", source_title_id, i);
+                return "";
+            }
+            if (!std::isspace(c)) {
+                has_visible_char = true;
+            }
+        }
+
+        if (!has_visible_char) {
+            return "";
+        }
+
+        return std::string(entry.name, name_len);
+    };
+
+    const auto extract_nacp_name = [&](u64 source_title_id, NacpStruct& nacp) -> std::string {
+        NacpLanguageEntry* lang_entry = nullptr;
+        const auto rc = nacpGetLanguageEntry(&nacp, &lang_entry);
+        if (R_SUCCEEDED(rc) && lang_entry) {
+            if (auto name = copy_valid_name(source_title_id, *lang_entry); !name.empty()) {
+                return name;
+            }
+            log_write("[Cheats] GetTitleName: selected language entry invalid for %016lx, trying fallbacks\n", source_title_id);
+        }
+
+        for (size_t i = 0; i < 16; i++) {
+            const auto& entry = nacp_util::GetLanguageEntry(nacp, i);
+            if (&entry == lang_entry) {
+                continue;
+            }
+            if (auto name = copy_valid_name(source_title_id, entry); !name.empty()) {
+                return name;
+            }
+        }
+
+        return "";
+    };
+
+    const auto try_get_base_application_name = [&]() -> std::string {
+        title::MetaEntries entries;
+        if (R_FAILED(title::GetMetaEntries(base_title_id, entries, title::ContentFlag_Application)) || entries.empty()) {
+            return "";
+        }
+
+        u64 program_id = 0;
+        fs::FsPath path;
+        if (R_FAILED(title::GetControlPathFromStatus(entries.front(), &program_id, &path))) {
+            return "";
+        }
+
+        NacpStruct nacp{};
+        std::vector<u8> icon;
+        if (R_FAILED(nca::ParseControl(path, program_id, &nacp, sizeof(nacp), &icon))) {
+            return "";
+        }
+
+        if (auto name = extract_nacp_name(base_title_id, nacp); !name.empty()) {
+            log_write("[Cheats] GetTitleName: loaded base application control name for %016lx\n", base_title_id);
+            return name;
+        }
+
+        log_write("[Cheats] GetTitleName: base application control name invalid for %016lx\n", base_title_id);
+        return "";
+    };
+
+    if (R_SUCCEEDED(title::Init())) {
+        ON_SCOPE_EXIT(title::Exit());
+
+        if (auto name = try_get_base_application_name(); !name.empty()) {
+            return name;
+        }
+
+        if (auto data = title::Get(base_title_id); data && data->status == title::NacpLoadStatus::Loaded) {
+            if (auto name = copy_valid_name(base_title_id, data->lang); !name.empty()) {
+                return name;
+            }
+            log_write("[Cheats] GetTitleName: title cache/manual name invalid for %016lx\n", base_title_id);
+        }
+    } else {
+        log_write("[Cheats] GetTitleName: title::Init failed for %016lx\n", base_title_id);
+    }
+
+    const auto try_get_name = [&](NsApplicationControlSource source, u64 source_title_id) -> std::string {
+        NsApplicationControlData control_data{};
+        u64 actual_size = 0;
+        const auto rc = nsGetApplicationControlData(
+            source,
+            source_title_id,
+            &control_data,
+            sizeof(control_data),
+            &actual_size
+        );
+
+        if (R_FAILED(rc)) {
+            return "";
+        }
+
+        if (actual_size != 0 && actual_size < sizeof(control_data.nacp)) {
+            log_write("[Cheats] GetTitleName: control data too small for %016lx: %llu bytes\n",
+                      source_title_id, static_cast<unsigned long long>(actual_size));
+            return "";
+        }
+
+        return extract_nacp_name(source_title_id, control_data.nacp);
+    };
+
+    if (auto name = try_get_name(NsApplicationControlSource_CacheOnly, base_title_id); !name.empty()) {
+        return name;
+    }
+
+    // Storage can include update-provided control data, so only use it after base cache misses.
+    if (auto name = try_get_name(NsApplicationControlSource_Storage, base_title_id); !name.empty()) {
+        return name;
+    }
+
+    if (title_id != base_title_id) {
+        log_write("[Cheats] GetTitleName: base lookup failed for %016lx, trying original title %016lx\n",
+                  base_title_id, title_id);
+        if (auto name = try_get_name(NsApplicationControlSource_CacheOnly, title_id); !name.empty()) {
+            return name;
+        }
+        if (auto name = try_get_name(NsApplicationControlSource_Storage, title_id); !name.empty()) {
+            return name;
+        }
+    }
+
+    return "";
+}
+
+// Clean cheat content by removing non-cheat entries (credits, website headers)
+auto CleanCheatContent(const std::string& content) -> std::string {
+    std::istringstream stream(content);
+    std::string line;
+    std::string cleaned_content;
+    bool in_cheat = false;
+    std::string current_cheat_name;
+
+    while (std::getline(stream, line)) {
+        // Trim whitespace
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+        // Skip empty lines
+        if (line.empty()) {
+            if (in_cheat) {
+                cleaned_content += "\n";
+            }
+            continue;
+        }
+
+        // Check if this is a cheat title/master-code line [Title] or {Title}
+        if (line.size() > 2 &&
+            ((line.front() == '[' && line.back() == ']') ||
+             (line.front() == '{' && line.back() == '}'))) {
+            std::string title = line.substr(1, line.length() - 2);
+            std::string lower_title = title;
+            std::transform(lower_title.begin(), lower_title.end(), lower_title.begin(), ::tolower);
+
+            // Check if this should be skipped
+            bool should_skip = false;
+            if (lower_title.find("www.") != std::string::npos) should_skip = true;  // Website URLs
+            if (lower_title.find("credits:") == 0) should_skip = true;  // credits: author
+            if (lower_title.find("credit:") == 0) should_skip = true;   // credit: author
+            if (lower_title == "credits") should_skip = true;
+            if (lower_title == "credit") should_skip = true;
+
+            if (should_skip) {
+                // Skip this entry and its content until next cheat
+                in_cheat = false;
+                continue;
+            }
+
+            // Valid cheat title, add it
+            cleaned_content += line + "\n";
+            in_cheat = true;
+        } else if (in_cheat) {
+            // Add content lines if we're in a valid cheat
+            cleaned_content += line + "\n";
+        }
+    }
+
+    // Remove trailing newlines
+    while (!cleaned_content.empty() && (cleaned_content.back() == '\n' || cleaned_content.back() == '\r')) {
+        cleaned_content.pop_back();
+    }
+
+    return cleaned_content;
+}
+
+// Parse CheatSlips JSON response and filter by Build ID
+// API returns: [{"slug": "xxx", "name": "xxx", "cheats": [{"id": 0, "buildid": "xxx", "content": "xxx", "credits": "xxx", "titles": ["cheat1", "cheat2"]}]}]
+auto ParseCheatslipsCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry> {
+    std::vector<CheatEntry> cheats;
+
+    // Log raw response for debugging
+    log_write("[Cheats] Parsing API response, target Build ID: %s\n", target_build_id.c_str());
+
+    yyjson_doc* doc = yyjson_read(json_str.data(), json_str.size(), 0);
+    if (!doc) {
+        log_write("[Cheats] Failed to parse CheatSlips JSON\n");
+        return cheats;
+    }
+
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+
+    // Response is an array with a single game object
+    if (yyjson_is_arr(root)) {
+        log_write("[Cheats] Response is an array\n");
+        // Get the first (and usually only) game object
+        size_t idx, max;
+        yyjson_val* game_val;
+        yyjson_arr_foreach(root, idx, max, game_val) {
+            if (!yyjson_is_obj(game_val)) continue;
+
+            // Get game name for context
+            yyjson_val* name_val = yyjson_obj_get(game_val, "name");
+            std::string game_name = name_val && yyjson_is_str(name_val) ? yyjson_get_str(name_val) : "";
+
+            // Get cheats array for this version
+            yyjson_val* cheats_arr = yyjson_obj_get(game_val, "cheats");
+            if (!cheats_arr || !yyjson_is_arr(cheats_arr)) continue;
+
+            log_write("[Cheats] Processing game: %s with %zu cheat entries\n", game_name.c_str(), yyjson_arr_size(cheats_arr));
+
+            size_t cheat_idx, cheat_max;
+            yyjson_val* cheat_val;
+            yyjson_arr_foreach(cheats_arr, cheat_idx, cheat_max, cheat_val) {
+                if (!yyjson_is_obj(cheat_val)) continue;
+
+                // Get buildid (note: lowercase field name in API)
+                yyjson_val* build_id_val = yyjson_obj_get(cheat_val, "buildid");
+                std::string build_id = build_id_val && yyjson_is_str(build_id_val) ? yyjson_get_str(build_id_val) : "";
+
+                // Get content
+                yyjson_val* content_val = yyjson_obj_get(cheat_val, "content");
+                if (!content_val || !yyjson_is_str(content_val)) continue;
+
+                const char* content = yyjson_get_str(content_val);
+
+                // Check if API returned quota exceeded message
+                if (strstr(content, "Quota exceeded") || strstr(content, "quota exceeded")) {
+                    log_write("[Cheats] API quota exceeded, skipping cheat\n");
+                    continue; // Skip quota-exceeded cheats entirely
+                }
+
+                // Get credits (optional)
+                yyjson_val* credits_val = yyjson_obj_get(cheat_val, "credits");
+                std::string credits = credits_val && yyjson_is_str(credits_val) ? yyjson_get_str(credits_val) : "";
+
+                // Only add cheats matching the target Build ID (case-insensitive)
+                if (!target_build_id.empty() && !StringsEqualIgnoreCase(build_id, target_build_id)) {
+                    log_write("[Cheats] Skipping cheat with Build ID: %s (target: %s)\n",
+                              build_id.c_str(), target_build_id.c_str());
+                    continue;
+                }
+
+                // Get titles array and parse into individual cheat entries
+                // CheatSlips returns ALL cheats in a single content field
+                // We need to parse it and create individual entries for each cheat
+                std::string raw_content = yyjson_get_str(content_val);
+                std::string cleaned_content = CleanCheatContent(raw_content);
+
+                // Parse the cleaned content to extract individual cheats
+                std::istringstream content_stream(cleaned_content);
+                std::string line;
+                std::string current_cheat_name;
+                std::string current_cheat_content;
+                bool in_cheat = false;
+
+                while (std::getline(content_stream, line)) {
+                    // Trim whitespace
+                    line.erase(0, line.find_first_not_of(" \t\r\n"));
+                    line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+                    // Check for cheat title/master-code format [Title] or {Title}
+                    if (line.size() > 2 &&
+                        ((line.front() == '[' && line.back() == ']') ||
+                         (line.front() == '{' && line.back() == '}'))) {
+                        // Save previous cheat if exists
+                        if (in_cheat && !current_cheat_name.empty()) {
+                            CheatEntry entry;
+                            entry.name = current_cheat_name;
+                            entry.content = current_cheat_content;
+                            entry.build_id = build_id;
+                            entry.source = CheatSource::Cheatslips;
+                            entry.selected = false;
+                            cheats.push_back(std::move(entry));
+                            log_write("[Cheats] Parsed cheat: %s\n", current_cheat_name.c_str());
+                        }
+
+                        // Start new cheat
+                        current_cheat_name = line.substr(1, line.length() - 2);
+                        current_cheat_content = line + "\n";
+                        in_cheat = true;
+                    } else if (in_cheat) {
+                        // Add line to current cheat content
+                        current_cheat_content += line + "\n";
+                    }
+                }
+
+                // Don't forget the last cheat
+                if (in_cheat && !current_cheat_name.empty()) {
+                    CheatEntry entry;
+                    entry.name = current_cheat_name;
+                    entry.content = current_cheat_content;
+                    entry.build_id = build_id;
+                    entry.source = CheatSource::Cheatslips;
+                    entry.selected = false;
+                    cheats.push_back(std::move(entry));
+                    log_write("[Cheats] Parsed cheat: %s\n", current_cheat_name.c_str());
+                }
+
+                log_write("[Cheats] Total cheats parsed from CheatSlips: %zu\n", cheats.size());
+            }
+        }
+    } else if (yyjson_is_obj(root)) {
+        log_write("[Cheats] Response is an object (error or single game)\n");
+        // Check for error message
+        yyjson_val* error_val = yyjson_obj_get(root, "error");
+        if (error_val && yyjson_is_str(error_val)) {
+            log_write("[Cheats] API Error: %s\n", yyjson_get_str(error_val));
+        }
+        // Check for message (like "Quota exceeded")
+        yyjson_val* msg_val = yyjson_obj_get(root, "message");
+        if (msg_val && yyjson_is_str(msg_val)) {
+            log_write("[Cheats] API Message: %s\n", yyjson_get_str(msg_val));
+        }
+
+        // Check if response has "cheats" field directly
+        yyjson_val* cheats_arr = yyjson_obj_get(root, "cheats");
+        if (cheats_arr && yyjson_is_arr(cheats_arr)) {
+            log_write("[Cheats] Found cheats array in object response\n");
+            size_t cheat_idx, cheat_max;
+            yyjson_val* cheat_val;
+            yyjson_arr_foreach(cheats_arr, cheat_idx, cheat_max, cheat_val) {
+                if (!yyjson_is_obj(cheat_val)) continue;
+
+                yyjson_val* build_id_val = yyjson_obj_get(cheat_val, "buildid");
+                std::string build_id = build_id_val && yyjson_is_str(build_id_val) ? yyjson_get_str(build_id_val) : "";
+
+                yyjson_val* content_val = yyjson_obj_get(cheat_val, "content");
+                if (!content_val || !yyjson_is_str(content_val)) continue;
+
+                yyjson_val* credits_val = yyjson_obj_get(cheat_val, "credits");
+                std::string credits = credits_val && yyjson_is_str(credits_val) ? yyjson_get_str(credits_val) : "";
+
+                // Only add cheats matching the target Build ID (case-insensitive)
+                if (!target_build_id.empty() && !StringsEqualIgnoreCase(build_id, target_build_id)) {
+                    continue;
+                }
+
+                // Parse content into individual cheat entries
+                std::string raw_content = yyjson_get_str(content_val);
+                std::string cleaned_content = CleanCheatContent(raw_content);
+
+                // Parse the cleaned content to extract individual cheats
+                std::istringstream content_stream(cleaned_content);
+                std::string line;
+                std::string current_cheat_name;
+                std::string current_cheat_content;
+                bool in_cheat = false;
+
+                while (std::getline(content_stream, line)) {
+                    // Trim whitespace
+                    line.erase(0, line.find_first_not_of(" \t\r\n"));
+                    line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+                    // Check for cheat title/master-code format [Title] or {Title}
+                    if (line.size() > 2 &&
+                        ((line.front() == '[' && line.back() == ']') ||
+                         (line.front() == '{' && line.back() == '}'))) {
+                        // Save previous cheat if exists
+                        if (in_cheat && !current_cheat_name.empty()) {
+                            CheatEntry entry;
+                            entry.name = current_cheat_name;
+                            entry.content = current_cheat_content;
+                            entry.build_id = build_id;
+                            entry.source = CheatSource::Cheatslips;
+                            entry.selected = false;
+                            cheats.push_back(std::move(entry));
+                        }
+
+                        // Start new cheat
+                        current_cheat_name = line.substr(1, line.length() - 2);
+                        current_cheat_content = line + "\n";
+                        in_cheat = true;
+                    } else if (in_cheat) {
+                        // Add line to current cheat content
+                        current_cheat_content += line + "\n";
+                    }
+                }
+
+                // Don't forget the last cheat
+                if (in_cheat && !current_cheat_name.empty()) {
+                    CheatEntry entry;
+                    entry.name = current_cheat_name;
+                    entry.content = current_cheat_content;
+                    entry.build_id = build_id;
+                    entry.source = CheatSource::Cheatslips;
+                    entry.selected = false;
+                    cheats.push_back(std::move(entry));
+                }
+            }
+        }
+    }
+
+    log_write("[Cheats] Parsed %zu cheats from CheatSlips matching Build ID %s\n",
+              cheats.size(), target_build_id.c_str());
+    return cheats;
+}
+
+// Parse nx-cheats-db JSON file
+// Format: {"BUILD_ID": {"[Cheat Name]": "[Cheat Name]\n[cheat code]\n\n", ...}, "attribution": {...}}
+auto ParseNxDbCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry> {
+    std::vector<CheatEntry> cheats;
+    const auto normalized_build_id = NormalizeBuildId(target_build_id);
+
+    log_write("[Cheats] Parsing nx-cheats-db JSON, target Build ID: %s\n", normalized_build_id.c_str());
+
+    yyjson_doc* doc = yyjson_read(json_str.data(), json_str.size(), 0);
+    if (!doc) {
+        log_write("[Cheats] Failed to parse nx-cheats-db JSON\n");
+        return cheats;
+    }
+
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!yyjson_is_obj(root)) {
+        log_write("[Cheats] nx-cheats-db JSON root is not an object\n");
+        return cheats;
+    }
+
+    // Look for the target Build ID in the JSON. Build IDs must still refer to the
+    // same exact hex value, but tolerate letter-case differences between sources.
+    yyjson_val* build_id_val = yyjson_obj_get(root, normalized_build_id.c_str());
+    std::string resolved_build_id = normalized_build_id;
+
+    if (!build_id_val || !yyjson_is_obj(build_id_val)) {
+        yyjson_val* key;
+        yyjson_obj_iter iter;
+        yyjson_obj_iter_init(root, &iter);
+
+        while ((key = yyjson_obj_iter_next(&iter))) {
+            const char* key_str = yyjson_get_str(key);
+            yyjson_val* value = yyjson_obj_iter_get_val(key);
+            if (!key_str || !yyjson_is_obj(value)) {
+                continue;
+            }
+            if (StringsEqualIgnoreCase(key_str, normalized_build_id)) {
+                build_id_val = value;
+                resolved_build_id = NormalizeBuildId(key_str);
+                break;
+            }
+        }
+    }
+
+    // If not found, return empty cheats - NO fallback
+    if (!build_id_val || !yyjson_is_obj(build_id_val)) {
+        log_write("[Cheats] Build ID %s not found in nx-cheats-db\n", normalized_build_id.c_str());
+        log_write("[Cheats] Available build IDs in this file:\n");
+
+        // List available build IDs for debugging
+        yyjson_val* key;
+        yyjson_obj_iter iter;
+        yyjson_obj_iter_init(root, &iter);
+        while ((key = yyjson_obj_iter_next(&iter))) {
+            const char* key_str = yyjson_get_str(key);
+            if (key_str && std::string(key_str) != "attribution") {
+                log_write("[Cheats]   - %s\n", key_str);
+            }
+        }
+
+        log_write("[Cheats] No cheats will be shown - Build ID must match exactly\n");
+        return cheats;
+    }
+
+    // Parse cheats from the build ID object
+    yyjson_val* key;
+    yyjson_obj_iter iter;
+    yyjson_obj_iter_init(build_id_val, &iter);
+
+    while ((key = yyjson_obj_iter_next(&iter))) {
+        const char* cheat_name = yyjson_get_str(key);
+        yyjson_val* cheat_content_val = yyjson_obj_iter_get_val(key);
+
+        if (!cheat_content_val || !yyjson_is_str(cheat_content_val)) {
+            continue;
+        }
+
+        const char* content = yyjson_get_str(cheat_content_val);
+
+        // Try to extract name from key first
+        std::string name_str;
+        std::string content_str = content;
+
+        if (cheat_name && strlen(cheat_name) > 0) {
+            name_str = cheat_name;
+
+            // Check if this is a game header in format {- Game Name -}
+            // Convert it to [Game Name] format
+            if (name_str.size() > 2 && name_str[0] == '{' && name_str[name_str.size() - 1] == '}') {
+                // Remove braces and dashes
+                std::string inner = name_str.substr(1, name_str.size() - 2);
+                // Remove leading/trailing dashes and spaces
+                size_t start = inner.find_first_not_of("- ");
+                size_t end = inner.find_last_not_of("- ");
+                if (start != std::string::npos && end != std::string::npos) {
+                    inner = inner.substr(start, end - start + 1);
+                }
+                name_str = inner;
+            }
+            // Extract cheat name without brackets if present
+            else if (name_str.size() > 2 && name_str[0] == '[' && name_str[name_str.size() - 1] == ']') {
+                name_str = name_str.substr(1, name_str.size() - 2);
+            }
+        } else {
+            // Key is empty, try to extract name from content (format: "[Name]\n{codes}")
+            size_t bracket_start = content_str.find('[');
+            size_t bracket_end = content_str.find(']', bracket_start);
+            if (bracket_start != std::string::npos && bracket_end != std::string::npos) {
+                name_str = content_str.substr(bracket_start + 1, bracket_end - bracket_start - 1);
+            } else {
+                name_str = "Unknown Cheat";
+            }
+        }
+
+        // Filter out non-cheat entries
+        std::string lower_name = name_str;
+        std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(), ::tolower);
+
+        // Skip metadata files (attribution entries)
+        if (lower_name.find(".txt") != std::string::npos) continue;
+
+        // Skip credits, website headers, etc.
+        if (lower_name.find("www.") != std::string::npos) continue;
+        if (lower_name.find("cheatslips") != std::string::npos) continue;
+        if (lower_name.find("credits:") == 0) continue;
+        if (lower_name.find("credit:") == 0) continue;
+        if (lower_name == "credits") continue;
+        if (lower_name == "credit") continue;
+        if (lower_name.find("original code by") == 0) continue;  // Skip attribution entries
+
+        // Skip entries with empty content (metadata headers only)
+        std::string content_check = content_str;
+        size_t first_newline_temp = content_check.find('\n');
+        if (first_newline_temp != std::string::npos) {
+            content_check = content_check.substr(first_newline_temp + 1);
+        }
+        // Trim whitespace
+        content_check.erase(0, content_check.find_first_not_of(" \t\r\n"));
+        content_check.erase(content_check.find_last_not_of(" \t\r\n") + 1);
+        if (content_check.empty()) {
+            log_write("[Cheats] Skipping entry with empty content: %s\n", name_str.c_str());
+            continue;
+        }
+
+        // Process content: remove duplicate title line if it exists
+        // The content might start with "{- Game Name -}\n" or "[Game Name]\n"
+        // We need to remove this first line to avoid duplication
+        std::string processed_content = content_str;
+        size_t first_newline = processed_content.find('\n');
+        if (first_newline != std::string::npos) {
+            std::string first_line = processed_content.substr(0, first_newline);
+            std::string first_line_lower = first_line;
+            std::transform(first_line_lower.begin(), first_line_lower.end(), first_line_lower.begin(), ::tolower);
+
+            // Check if first line matches the name (with or without brackets/dashes)
+            bool matches = false;
+            if (first_line.size() > 2 && first_line[0] == '[' && first_line[first_line.size() - 1] == ']') {
+                std::string first_line_name = first_line.substr(1, first_line.size() - 2);
+                if (first_line_name == name_str || first_line_lower.find(lower_name) != std::string::npos) {
+                    matches = true;
+                }
+            }
+
+            // Check for {- Game Name -} format
+            if (first_line.size() > 2 && first_line[0] == '{' && first_line[first_line.size() - 1] == '}') {
+                if (first_line_lower.find(lower_name) != std::string::npos) {
+                    matches = true;
+                }
+            }
+
+            // Remove first line if it's a duplicate title
+            if (matches) {
+                processed_content = processed_content.substr(first_newline + 1);
+                log_write("[Cheats] Removed duplicate title line from content\n");
+            }
+        }
+
+        CheatEntry entry;
+        entry.name = name_str;
+        entry.content = processed_content;
+        entry.build_id = resolved_build_id;
+        entry.source = CheatSource::NxDb;
+        entry.selected = false;
+
+        cheats.push_back(std::move(entry));
+        log_write("[Cheats] Added nx-cheats-db cheat: %s\n", entry.name.c_str());
+    }
+
+    log_write("[Cheats] Parsed %zu cheats from nx-cheats-db for Build ID %s\n",
+              cheats.size(), resolved_build_id.c_str());
+    return cheats;
+}
+
+auto ExtractNxDbBuildIds(const std::string& json_str) -> std::vector<std::string> {
+    std::vector<std::string> build_ids;
+
+    yyjson_doc* doc = yyjson_read(json_str.data(), json_str.size(), 0);
+    if (!doc) {
+        log_write("[Cheats] Failed to parse nx-cheats-db JSON while extracting Build IDs\n");
+        return build_ids;
+    }
+
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!yyjson_is_obj(root)) {
+        log_write("[Cheats] nx-cheats-db JSON root is not an object while extracting Build IDs\n");
+        return build_ids;
+    }
+
+    yyjson_val* key;
+    yyjson_obj_iter iter;
+    yyjson_obj_iter_init(root, &iter);
+
+    while ((key = yyjson_obj_iter_next(&iter))) {
+        const char* key_str = yyjson_get_str(key);
+        if (!key_str || std::strcmp(key_str, "attribution") == 0) {
+            continue;
+        }
+
+        const auto len = std::strlen(key_str);
+        if (len == 16 || len == 32) {
+            build_ids.emplace_back(NormalizeBuildId(key_str));
+        }
+    }
+
+    std::sort(build_ids.begin(), build_ids.end());
+    build_ids.erase(std::unique(build_ids.begin(), build_ids.end()), build_ids.end());
+    return build_ids;
+}
+
+struct CachedCheatMetadata {
+    u64 title_id{};
+    std::string name;
+    std::string build_id;
+    std::string source;
+    u32 version{};
+    u64 scanned_at{};
+};
+
+void AppendGameCardGames(std::vector<GameCheatInfo>& games, std::unordered_set<u64>& seen_title_ids) {
+    NcmContentMetaDatabase db{};
+    Result rc = ncmOpenContentMetaDatabase(&db, NcmStorageId_GameCard);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] AppendGameCardGames: failed to open game card metadata DB: %x\n", rc);
+        return;
+    }
+    ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
+
+    std::vector<NcmContentMetaKey> keys(16);
+    s32 total = 0;
+    s32 written = 0;
+    rc = ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+        NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] AppendGameCardGames: failed to list game card metadata: %x\n", rc);
+        return;
+    }
+
+    if (total > written && total > static_cast<s32>(keys.size())) {
+        keys.resize(total);
+        rc = ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+            NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] AppendGameCardGames: failed to list all game card metadata: %x\n", rc);
+            return;
+        }
+    }
+
+    keys.resize(written);
+    log_write("[Cheats] AppendGameCardGames: found %d game card metadata entries (%d written)\n", total, written);
+
+    for (const auto& key : keys) {
+        if (key.type != NcmContentMetaType_Application && key.type != NcmContentMetaType_Patch) {
+            continue;
+        }
+
+        const auto base_title_id = GetBaseApplicationTitleId(ncm::GetAppId(key));
+        if (base_title_id == 0 || !seen_title_ids.insert(base_title_id).second) {
+            continue;
+        }
+
+        GameCheatInfo info;
+        info.title_id = base_title_id;
+        info.version = GetTitleVersion(base_title_id);
+        info.name = GetTitleName(base_title_id);
+        if (info.name.empty()) {
+            info.name = std::format("Game {:016X}", base_title_id);
+        }
+
+        log_write("[Cheats] AppendGameCardGames: added inserted game card %016lX (%s) v%u\n",
+                  info.title_id, info.name.c_str(), info.version);
+        games.push_back(std::move(info));
+    }
+}
+
+auto EnumerateInstalledGames() -> std::vector<GameCheatInfo> {
+    std::vector<GameCheatInfo> games;
+
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] EnumerateInstalledGames: nsInitialize failed: %x\n", rc);
+        return games;
+    }
+    ON_SCOPE_EXIT(nsExit());
+
+    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
+    std::unordered_set<u64> seen_title_ids;
+    s32 offset = 0;
+
+    while (true) {
+        s32 record_count = 0;
+        rc = nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] EnumerateInstalledGames: nsListApplicationRecord failed at offset %d: %x\n", offset, rc);
+            break;
+        }
+
+        if (record_count == 0) {
+            break;
+        }
+
+        for (s32 i = 0; i < record_count; i++) {
+            const auto& record = record_list[i];
+            if (record.application_id == 0) {
+                continue;
+            }
+            const auto base_title_id = GetBaseApplicationTitleId(record.application_id);
+            if (!seen_title_ids.insert(base_title_id).second) {
+                continue;
+            }
+
+            GameCheatInfo info;
+            info.title_id = base_title_id;
+            info.version = GetTitleVersion(base_title_id);
+            info.name = GetTitleName(base_title_id);
+            if (info.name.empty()) {
+                info.name = std::format("Game {:016X}", base_title_id);
+            }
+            games.push_back(std::move(info));
+        }
+
+        offset += record_count;
+    }
+
+    AppendGameCardGames(games, seen_title_ids);
+
+    return games;
+}
+
+auto LoadCheatMetadataCacheUnlocked() -> std::unordered_map<u64, CachedCheatMetadata> {
+    std::unordered_map<u64, CachedCheatMetadata> entries;
+
+    fs::FsNativeSd fs;
+    if (!fs.FileExists(CHEAT_METADATA_CACHE_PATH)) {
+        return entries;
+    }
+
+    std::vector<u8> data;
+    if (R_FAILED(fs.read_entire_file(CHEAT_METADATA_CACHE_PATH, data))) {
+        log_write("[Cheats] Failed to read cheat metadata cache\n");
+        return entries;
+    }
+
+    data.push_back(0);
+    auto* doc = yyjson_read(reinterpret_cast<const char*>(data.data()), data.size() - 1, YYJSON_READ_NOFLAG);
+    if (!doc) {
+        log_write("[Cheats] Failed to parse cheat metadata cache JSON\n");
+        return entries;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    auto* root = yyjson_doc_get_root(doc);
+    if (!root || !yyjson_is_obj(root)) {
+        return entries;
+    }
+
+    auto* titles = yyjson_obj_get(root, "titles");
+    if (!titles || !yyjson_is_arr(titles)) {
+        return entries;
+    }
+
+    size_t idx, max;
+    yyjson_val* item;
+    yyjson_arr_foreach(titles, idx, max, item) {
+        if (!yyjson_is_obj(item)) {
+            continue;
+        }
+
+        CachedCheatMetadata entry;
+
+        if (auto* val = yyjson_obj_get(item, "title_id"); val && yyjson_is_str(val)) {
+            const auto* title_id_str = yyjson_get_str(val);
+            unsigned long long title_id = 0;
+            if (!title_id_str || std::sscanf(title_id_str, "%016llx", &title_id) != 1) {
+                continue;
+            }
+            entry.title_id = title_id;
+        } else {
+            continue;
+        }
+
+        if (auto* val = yyjson_obj_get(item, "name"); val && yyjson_is_str(val)) {
+            entry.name = yyjson_get_str(val);
+        }
+        if (auto* val = yyjson_obj_get(item, "build_id"); val && yyjson_is_str(val)) {
+            entry.build_id = NormalizeBuildId(yyjson_get_str(val));
+        }
+        if (auto* val = yyjson_obj_get(item, "source"); val && yyjson_is_str(val)) {
+            entry.source = yyjson_get_str(val);
+        }
+        if (auto* val = yyjson_obj_get(item, "version"); val && yyjson_is_uint(val)) {
+            entry.version = static_cast<u32>(yyjson_get_uint(val));
+        }
+        if (auto* val = yyjson_obj_get(item, "scanned_at"); val && yyjson_is_uint(val)) {
+            entry.scanned_at = yyjson_get_uint(val);
+        }
+
+        entries[entry.title_id] = std::move(entry);
+    }
+
+    return entries;
+}
+
+auto SaveCheatMetadataCacheUnlocked(const std::unordered_map<u64, CachedCheatMetadata>& entries) -> bool {
+    fs::FsNativeSd fs;
+    fs.CreateDirectoryRecursively("/config/hats-tools");
+
+    yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
+    if (!doc) {
+        return false;
+    }
+    ON_SCOPE_EXIT(yyjson_mut_doc_free(doc));
+
+    auto* root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
+    yyjson_mut_obj_add_uint(doc, root, "cache_version", CHEAT_METADATA_CACHE_VERSION);
+    yyjson_mut_obj_add_uint(doc, root, "generated_at", static_cast<u64>(std::time(nullptr)));
+
+    auto* titles = yyjson_mut_arr(doc);
+    yyjson_mut_obj_add_val(doc, root, "titles", titles);
+
+    std::vector<const CachedCheatMetadata*> sorted_entries;
+    sorted_entries.reserve(entries.size());
+    for (const auto& [title_id, entry] : entries) {
+        if (title_id == 0) {
+            continue;
+        }
+        sorted_entries.push_back(&entry);
+    }
+
+    std::sort(sorted_entries.begin(), sorted_entries.end(), [](const auto* lhs, const auto* rhs) {
+        return lhs->title_id < rhs->title_id;
+    });
+
+    for (const auto* entry : sorted_entries) {
+        auto* obj = yyjson_mut_obj(doc);
+        yyjson_mut_arr_add_val(titles, obj);
+        const auto title_id = FormatTitleId(entry->title_id);
+        yyjson_mut_obj_add_strncpy(doc, obj, "title_id", title_id.c_str(), title_id.size());
+        yyjson_mut_obj_add_strncpy(doc, obj, "name", entry->name.c_str(), entry->name.size());
+        yyjson_mut_obj_add_uint(doc, obj, "version", entry->version);
+        yyjson_mut_obj_add_strncpy(doc, obj, "build_id", entry->build_id.c_str(), entry->build_id.size());
+        yyjson_mut_obj_add_strncpy(doc, obj, "source", entry->source.c_str(), entry->source.size());
+        yyjson_mut_obj_add_uint(doc, obj, "scanned_at", entry->scanned_at);
+    }
+
+    char* json = yyjson_mut_write(doc, YYJSON_WRITE_PRETTY | YYJSON_WRITE_ESCAPE_UNICODE, nullptr);
+    if (!json) {
+        return false;
+    }
+    ON_SCOPE_EXIT(free(json));
+
+    const auto json_data = std::vector<u8>(
+        reinterpret_cast<const u8*>(json),
+        reinterpret_cast<const u8*>(json) + std::strlen(json)
+    );
+    const auto rc = fs.write_entire_file(CHEAT_METADATA_CACHE_PATH, json_data);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Failed to write cheat metadata cache: %x\n", rc);
+        return false;
+    }
+
+    return true;
+}
+
+auto GetCachedCheatMetadata(u64 title_id) -> std::optional<CachedCheatMetadata> {
+    mutexLock(&g_cheat_metadata_cache_mutex);
+    ON_SCOPE_EXIT(mutexUnlock(&g_cheat_metadata_cache_mutex));
+
+    auto entries = LoadCheatMetadataCacheUnlocked();
+    if (const auto it = entries.find(title_id); it != entries.end()) {
+        return it->second;
+    }
+
+    return std::nullopt;
+}
+
+auto GetCachedBuildIdForTitle(GameCheatInfo& game) -> std::string {
+    const auto cached = GetCachedCheatMetadata(game.title_id);
+    if (!cached || !IsValidBuildId(cached->build_id)) {
+        return "";
+    }
+
+    if (game.name.empty() && !cached->name.empty()) {
+        game.name = cached->name;
+    }
+    if (!game.version && cached->version) {
+        game.version = cached->version;
+    }
+
+    log_write("[Cheats] Using cached Build ID %s for title %016lx (source=%s)\n",
+              cached->build_id.c_str(), game.title_id, cached->source.c_str());
+    return cached->build_id;
+}
+
+void SaveDetectedBuildIdToCache(const GameCheatInfo& game, const std::string& build_id, const char* source) {
+    const auto normalized_build_id = NormalizeBuildId(build_id);
+    if (!IsValidBuildId(normalized_build_id)) {
+        return;
+    }
+
+    mutexLock(&g_cheat_metadata_cache_mutex);
+    ON_SCOPE_EXIT(mutexUnlock(&g_cheat_metadata_cache_mutex));
+
+    auto entries = LoadCheatMetadataCacheUnlocked();
+    auto& entry = entries[game.title_id];
+    entry.title_id = game.title_id;
+    if (!game.name.empty()) {
+        entry.name = game.name;
+    } else if (entry.name.empty()) {
+        entry.name = std::format("Game {:016X}", game.title_id);
+    }
+    entry.version = game.version;
+    entry.build_id = normalized_build_id;
+    entry.source = source ? source : "unknown";
+    entry.scanned_at = static_cast<u64>(std::time(nullptr));
+
+    if (!SaveCheatMetadataCacheUnlocked(entries)) {
+        log_write("[Cheats] Failed to persist detected Build ID cache update for %016lx\n", game.title_id);
+    }
+}
+
+// Load versions.json from nx-cheats-db
+struct NxDbVersionInfo {
+    std::string title;
+    std::string build_id;
+    u32 latest_version;
+};
+
+auto LoadNxDbVersions() -> std::unordered_map<u64, NxDbVersionInfo> {
+    std::unordered_map<u64, NxDbVersionInfo> version_map;
+
+    fs::FsNativeSd fs;
+    fs::FsPath versions_path;
+    std::snprintf(versions_path, sizeof(versions_path), "%s/%s", NX_DB_PATH, NX_DB_VERSIONS_FILE);
+
+    log_write("[Cheats] Loading nx-cheats-db versions from: %s\n", versions_path.s);
+
+    if (!fs.FileExists(versions_path)) {
+        log_write("[Cheats] nx-cheats-db versions.json not found\n");
+        return version_map;
+    }
+
+    std::vector<u8> data;
+    Result rc = fs.read_entire_file(versions_path, data);
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] Failed to read versions.json: %x\n", rc);
+        return version_map;
+    }
+
+    data.push_back(0); // Null-terminate
+    const auto data_len = std::strlen(reinterpret_cast<char*>(data.data()));
+
+    yyjson_doc* doc = yyjson_read(reinterpret_cast<char*>(data.data()), data_len, 0);
+    if (!doc) {
+        log_write("[Cheats] Failed to parse versions.json\n");
+        return version_map;
+    }
+
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!yyjson_is_obj(root)) {
+        log_write("[Cheats] versions.json root is not an object\n");
+        return version_map;
+    }
+
+    // Parse each title entry
+    yyjson_val* key;
+    yyjson_obj_iter iter;
+    yyjson_obj_iter_init(root, &iter);
+
+    while ((key = yyjson_obj_iter_next(&iter))) {
+        const char* title_id_str = yyjson_get_str(key);
+        yyjson_val* title_obj = yyjson_obj_iter_get_val(key);
+
+        if (!title_id_str || !yyjson_is_obj(title_obj)) {
+            continue;
+        }
+
+        // Parse title ID
+        u64 title_id = 0;
+        if (sscanf(title_id_str, "%016llx", (unsigned long long*)&title_id) != 1) {
+            continue;
+        }
+
+        NxDbVersionInfo info;
+
+        // Get title name
+        yyjson_val* title_val = yyjson_obj_get(title_obj, "title");
+        if (title_val && yyjson_is_str(title_val)) {
+            info.title = yyjson_get_str(title_val);
+        }
+
+        // Get latest version
+        yyjson_val* latest_val = yyjson_obj_get(title_obj, "latest");
+        if (latest_val && yyjson_is_uint(latest_val)) {
+            info.latest_version = yyjson_get_uint(latest_val);
+
+            // Get build ID for latest version
+            std::string version_key = std::to_string(info.latest_version);
+            yyjson_val* build_id_val = yyjson_obj_get(title_obj, version_key.c_str());
+            if (build_id_val && yyjson_is_str(build_id_val)) {
+                info.build_id = yyjson_get_str(build_id_val);
+            }
+        }
+
+        // If no latest version, try version 0
+        if (info.build_id.empty()) {
+            yyjson_val* build_id_val = yyjson_obj_get(title_obj, "0");
+            if (build_id_val && yyjson_is_str(build_id_val)) {
+                info.build_id = yyjson_get_str(build_id_val);
+                info.latest_version = 0;
+            }
+        }
+
+        if (!info.build_id.empty()) {
+            version_map[title_id] = std::move(info);
+            log_write("[Cheats] nx-cheats-db: %016llx - %s (v%u, %s)\n",
+                      (unsigned long long)title_id, info.title.c_str(),
+                      info.latest_version, info.build_id.c_str());
+        }
+    }
+
+    log_write("[Cheats] Loaded %zu titles from nx-cheats-db versions.json\n", version_map.size());
+    return version_map;
+}
+
+// Check if nx-cheats-db is available
+auto IsNxDbAvailable() -> bool {
+    fs::FsNativeSd fs;
+    fs::FsPath versions_path;
+    std::snprintf(versions_path, sizeof(versions_path), "%s/%s", NX_DB_PATH, NX_DB_VERSIONS_FILE);
+    return fs.FileExists(versions_path);
+}
+
+// Get saved CheatSlips token (checks HATS-Tools and AIO-Switch-Updater paths)
+auto GetCheatslipsToken() -> std::string {
+    fs::FsNativeSd fs;
+
+    // List of token paths to check (HATS-Tools first, then AIO for compatibility)
+    const char* token_paths[] = {TOKEN_PATH, AIO_TOKEN_PATH};
+
+    for (const char* token_path : token_paths) {
+        if (!fs.FileExists(token_path)) {
+            log_write("[Cheats] Token file not found at %s\n", token_path);
+            continue;
+        }
+
+        log_write("[Cheats] Found token file at %s\n", token_path);
+
+        std::vector<u8> data;
+        Result rc = fs.read_entire_file(token_path, data);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to read token file, result: %x\n", rc);
+            continue;
+        }
+
+        log_write("[Cheats] Read %zu bytes from token file\n", data.size());
+
+        // Null-terminate for JSON parsing
+        data.push_back(0);
+
+        const auto data_len = std::strlen(reinterpret_cast<char*>(data.data()));
+        yyjson_doc* doc = yyjson_read((char*)data.data(), data_len, 0);
+        if (!doc) {
+            log_write("[Cheats] Failed to parse token JSON, raw data: %s\n", (char*)data.data());
+            continue;
+        }
+
+        ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+        yyjson_val* root = yyjson_doc_get_root(doc);
+        if (!yyjson_is_obj(root)) {
+            log_write("[Cheats] Token JSON is not an object\n");
+            continue;
+        }
+
+        yyjson_val* token_val = yyjson_obj_get(root, "token");
+        if (token_val && yyjson_is_str(token_val)) {
+            const char* token = yyjson_get_str(token_val);
+            log_write("[Cheats] Loaded saved token from %s: %s\n", token_path, token);
+            // Copy the token string since the doc will be freed
+            return std::string(token);
+        }
+
+        log_write("[Cheats] No token field in JSON from %s\n", token_path);
+    }
+
+    log_write("[Cheats] No valid token found in any location\n");
+    return "";
+}
+
+// Authenticate with CheatSlips API and get token
+auto AuthenticateCheatslips(const std::string& email, const std::string& password) -> std::string {
+    // Create JSON body with credentials
+    yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
+    ON_SCOPE_EXIT(yyjson_mut_doc_free(doc));
+
+    yyjson_mut_val* root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
+
+    yyjson_mut_obj_add_strncpy(doc, root, "email", email.c_str(), email.size());
+    yyjson_mut_obj_add_strncpy(doc, root, "password", password.c_str(), password.size());
+
+    char* json_body = yyjson_mut_write(doc, 0, 0);
+    if (!json_body) {
+        log_write("[Cheats] Failed to create login JSON\n");
+        return "";
+    }
+
+    ON_SCOPE_EXIT(free(json_body));
+
+    // Send POST request to CheatSlips token endpoint
+    // Use ToMemory with Fields for POST (FromMemory adds trailing slash and uses CURLOPT_UPLOAD)
+    auto result = curl::Api().ToMemory(
+        curl::Url{CHEATSLIPS_TOKEN_URL},
+        curl::Header{
+            {"Accept", "application/json"},
+            {"Content-Type", "application/json"}
+        },
+        curl::Fields{json_body}
+    );
+
+    log_write("[Cheats] Auth HTTP code: %ld\n", result.code);
+    if (!result.success || result.data.empty()) {
+        log_write("[Cheats] Failed to authenticate with CheatSlips\n");
+        return "";
+    }
+
+    // Parse response to get token
+    result.data.push_back(0); // Null-terminate
+    const auto response_len = std::strlen(reinterpret_cast<char*>(result.data.data()));
+    yyjson_doc* resp_doc = yyjson_read(reinterpret_cast<char*>(result.data.data()), response_len, 0);
+    if (!resp_doc) {
+        log_write("[Cheats] Failed to parse auth response\n");
+        return "";
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(resp_doc));
+
+    yyjson_val* resp_root = yyjson_doc_get_root(resp_doc);
+    if (!yyjson_is_obj(resp_root)) {
+        return "";
+    }
+
+    yyjson_val* token_val = yyjson_obj_get(resp_root, "token");
+    if (token_val && yyjson_is_str(token_val)) {
+        const char* token = yyjson_get_str(token_val);
+        log_write("[Cheats] Authentication successful, token: %s\n", token);
+        // Copy the token string since the doc will be freed
+        return std::string(token);
+    }
+
+    // Check for error message
+    yyjson_val* error_val = yyjson_obj_get(resp_root, "error");
+    if (error_val && yyjson_is_str(error_val)) {
+        log_write("[Cheats] Auth error: %s\n", yyjson_get_str(error_val));
+    }
+
+    // Log full response for debugging
+    log_write("[Cheats] Auth response: %s\n", reinterpret_cast<char*>(result.data.data()));
+
+    return "";
+}
+
+// Save CheatSlips token
+auto SaveCheatslipsToken(const std::string& token) -> void {
+    fs::FsNativeSd fs;
+
+    // Create directory if needed
+    fs.CreateDirectoryRecursively("/config/hats-tools");
+
+    // Create JSON document
+    yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
+    ON_SCOPE_EXIT(yyjson_mut_doc_free(doc));
+
+    yyjson_mut_val* root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
+
+    yyjson_mut_obj_add_strncpy(doc, root, "token", token.c_str(), token.size());
+
+    // Write to file
+    char* json = yyjson_mut_write(doc, 0, 0);
+    if (!json) {
+        log_write("[Cheats] Failed to write token JSON\n");
+        return;
+    }
+
+    ON_SCOPE_EXIT(free(json));
+
+    const auto json_data = std::vector<u8>(
+        reinterpret_cast<const u8*>(json),
+        reinterpret_cast<const u8*>(json) + std::strlen(json)
+    );
+    if (R_FAILED(fs.write_entire_file(TOKEN_PATH, json_data))) {
+        log_write("[Cheats] Failed to write token file\n");
+        return;
+    }
+
+    // Commit to ensure data is written to disk
+    if (R_FAILED(fs.Commit())) {
+        log_write("[Cheats] Failed to commit token file\n");
+        return;
+    }
+
+    log_write("[Cheats] Saved CheatSlips token to file, JSON: %s\n", json);
+}
+
+// Get the cheats directory path for a title
+auto GetCheatsDirPath(u64 title_id) -> std::string {
+    const auto title_id_str = FormatTitleIdLower(title_id);
+    return std::string(ATMOSPHERE_CONTENTS_PATH) + "/" + title_id_str + "/" + CHEATS_SUBDIR;
+}
+
+auto GetFileStem(const std::string& path) -> std::string {
+    const auto slash = path.find_last_of("/\\");
+    const auto filename = slash == std::string::npos ? path : path.substr(slash + 1);
+    const auto dot = filename.find_last_of('.');
+    return dot == std::string::npos ? filename : filename.substr(0, dot);
+}
+
+auto GetManualCheatImportPath(u64 title_id, const std::string& build_id) -> fs::FsPath {
+    fs::FsPath file_path;
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+    std::snprintf(file_path, sizeof(file_path), "%s/%s.txt", cheats_dir.c_str(), build_id.c_str());
+    return file_path;
+}
+
+auto IsCheatHeaderLine(const std::string& line) -> bool {
+    return line.size() >= 3 &&
+        ((line.front() == '[' && line.back() == ']') ||
+         (line.front() == '{' && line.back() == '}'));
+}
+
+auto IsParenthesizedNoteLine(const std::string& line) -> bool {
+    return line.size() >= 2 && line.front() == '(' && line.back() == ')';
+}
+
+auto GetCheatHeaderName(const std::string& line) -> std::string {
+    if (!IsCheatHeaderLine(line)) {
+        return {};
+    }
+
+    return line.substr(1, line.length() - 2);
+}
+
+auto StripInlineCheatComment(std::string line) -> std::string {
+    const auto comment_pos = line.find("//");
+    if (comment_pos != std::string::npos) {
+        line.erase(comment_pos);
+    }
+
+    while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
+        line.pop_back();
+    }
+
+    return line;
+}
+
+auto IsHexCodeLine(const std::string& line) -> bool {
+    std::istringstream stream(line);
+    std::string part;
+    size_t count = 0;
+
+    while (stream >> part) {
+        if (part.size() != 8) {
+            return false;
+        }
+
+        for (const auto c : part) {
+            if (!std::isxdigit(static_cast<unsigned char>(c))) {
+                return false;
+            }
+        }
+
+        count++;
+    }
+
+    return count >= 1 && count <= 4;
+}
+
+auto NormalizeHexCodeLine(const std::string& line) -> std::string {
+    std::istringstream stream(line);
+    std::ostringstream out;
+    std::string part;
+    bool first = true;
+
+    while (stream >> part) {
+        std::transform(part.begin(), part.end(), part.begin(), [](unsigned char c) {
+            return static_cast<char>(std::toupper(c));
+        });
+
+        if (!first) {
+            out << ' ';
+        }
+        out << part;
+        first = false;
+    }
+
+    return out.str();
+}
+
+auto SanitizeCheatContentForAtmosphere(const std::string& content) -> std::string {
+    std::istringstream stream(content);
+    std::ostringstream sanitized;
+    std::string line;
+    std::string pending_header;
+    bool wrote_code_for_header = false;
+
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
+            line.pop_back();
+        }
+
+        std::string trimmed = line;
+        trimmed.erase(0, trimmed.find_first_not_of(" \t"));
+
+        if (trimmed.empty()) {
+            continue;
+        }
+
+        if (trimmed.rfind("//", 0) == 0 || IsParenthesizedNoteLine(trimmed)) {
+            continue;
+        }
+
+        if (IsCheatHeaderLine(trimmed)) {
+            pending_header = trimmed;
+            wrote_code_for_header = false;
+            continue;
+        }
+
+        trimmed = StripInlineCheatComment(trimmed);
+        if (trimmed.empty()) {
+            continue;
+        }
+
+        if (IsHexCodeLine(trimmed)) {
+            if (!pending_header.empty() && !wrote_code_for_header) {
+                sanitized << pending_header << '\n';
+                wrote_code_for_header = true;
+            }
+            sanitized << NormalizeHexCodeLine(trimmed) << '\n';
+        }
+    }
+
+    return sanitized.str();
+}
+
+auto SanitizeManualCheatContent(const std::vector<u8>& data, std::string& out) -> bool {
+    if (data.empty()) {
+        return false;
+    }
+
+    // Atmosphere/EdiZon cheat parsers can be picky about BOM-prefixed files.
+    size_t offset = 0;
+    if (data.size() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF) {
+        offset = 3;
+    } else if (data.size() >= 2 &&
+               ((data[0] == 0xFF && data[1] == 0xFE) || (data[0] == 0xFE && data[1] == 0xFF))) {
+        log_write("[Cheats] Manual import rejected UTF-16 cheat file\n");
+        return false;
+    }
+
+    std::string text(reinterpret_cast<const char*>(data.data() + offset), data.size() - offset);
+    if (!text.empty() && static_cast<unsigned char>(text.front()) == 0xEF) {
+        return false;
+    }
+
+    std::istringstream stream(text);
+    std::ostringstream sanitized;
+    std::string line;
+    std::string pending_header;
+    bool wrote_any_code = false;
+    bool wrote_code_for_header = false;
+
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
+            line.pop_back();
+        }
+
+        std::string trimmed = line;
+        trimmed.erase(0, trimmed.find_first_not_of(" \t"));
+
+        if (trimmed.empty() || trimmed.rfind("//", 0) == 0 || IsParenthesizedNoteLine(trimmed)) {
+            continue;
+        }
+
+        if (IsCheatHeaderLine(trimmed)) {
+            pending_header = trimmed;
+            wrote_code_for_header = false;
+            continue;
+        }
+
+        trimmed = StripInlineCheatComment(trimmed);
+        if (trimmed.empty()) {
+            continue;
+        }
+
+        if (!IsHexCodeLine(trimmed) || pending_header.empty()) {
+            continue;
+        }
+
+        if (!wrote_code_for_header) {
+            sanitized << pending_header << '\n';
+            wrote_code_for_header = true;
+        }
+
+        sanitized << NormalizeHexCodeLine(trimmed) << '\n';
+        wrote_any_code = true;
+    }
+
+    out = sanitized.str();
+    return wrote_any_code;
+}
+
+auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path) -> Result {
+    fs::FsNativeSd fs;
+
+    const auto build_id = NormalizeBuildId(GetFileStem(source_path.s));
+    if (!IsValidBuildId(build_id)) {
+        log_write("[Cheats] Manual import rejected invalid Build ID filename: %s\n", source_path.s);
+        return 1;
+    }
+
+    std::vector<u8> data;
+    R_TRY(fs.read_entire_file(source_path, data));
+    std::string sanitized_content;
+    if (!SanitizeManualCheatContent(data, sanitized_content)) {
+        log_write("[Cheats] Manual import rejected invalid cheat file: %s\n", source_path.s);
+        return 1;
+    }
+
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+    R_TRY(fs.CreateDirectoryRecursively(cheats_dir.c_str()));
+
+    const auto dest_path = GetManualCheatImportPath(title_id, build_id);
+    const auto content = std::vector<u8>(
+        reinterpret_cast<const u8*>(sanitized_content.data()),
+        reinterpret_cast<const u8*>(sanitized_content.data()) + sanitized_content.size()
+    );
+    R_TRY(fs.write_entire_file(dest_path, content));
+
+    log_write("[Cheats] Imported manual cheat %s to %s\n", source_path.s, dest_path.s);
+    return 0;
+}
+
+// Get list of existing cheat files for a title
+// Returns map of {build_id: filename}
+auto GetExistingCheats(u64 title_id) -> std::vector<std::pair<std::string, std::string>> {
+    std::vector<std::pair<std::string, std::string>> cheats;
+    fs::FsNativeSd fs;
+
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+    log_write("[Cheats] Checking for existing cheats in: %s\n", cheats_dir.c_str());
+
+    if (!fs.DirExists(cheats_dir.c_str())) {
+        log_write("[Cheats] Cheats directory doesn't exist\n");
+        return cheats;
+    }
+
+    // Open directory and read entries
+    fs::Dir dir;
+    if (R_FAILED(fs.OpenDirectory(cheats_dir.c_str(), FsDirOpenMode_ReadFiles, &dir))) {
+        log_write("[Cheats] Failed to open cheats directory\n");
+        return cheats;
+    }
+
+    ON_SCOPE_EXIT(dir.Close());
+
+    s64 count = 0;
+    if (R_FAILED(dir.GetEntryCount(&count))) {
+        log_write("[Cheats] Failed to get entry count\n");
+        return cheats;
+    }
+
+    log_write("[Cheats] Found %lld cheat files\n", count);
+
+    std::vector<FsDirectoryEntry> entries(count);
+    s64 read_count = 0;
+    if (R_FAILED(dir.Read(&read_count, entries.size(), entries.data()))) {
+        log_write("[Cheats] Failed to read directory entries\n");
+        return cheats;
+    }
+
+    for (s64 i = 0; i < read_count; i++) {
+        const auto& entry = entries[i];
+        if (entry.type == FsDirEntryType_File) {
+            // Extract build ID from filename (without .txt extension)
+            std::string name = entry.name;
+            if (name.length() > 4 && name.substr(name.length() - 4) == ".txt") {
+                std::string build_id = name.substr(0, name.length() - 4);
+                cheats.push_back({build_id, name});
+                log_write("[Cheats] Found cheat: %s (Build ID: %s)\n", name, build_id.c_str());
+            }
+        }
+    }
+
+    return cheats;
+}
+
+// Delete a specific cheat file
+auto DeleteCheatFile(u64 title_id, const std::string& build_id) -> bool {
+    fs::FsNativeSd fs;
+
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+    fs::FsPath file_path;
+    std::snprintf(file_path, sizeof(file_path), "%s/%s.txt", cheats_dir.c_str(), build_id.c_str());
+
+    if (fs.FileExists(file_path)) {
+        Result rc = fs.DeleteFile(file_path);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to delete cheat file %s: %x\n", file_path.s, rc);
+            return false;
+        }
+        log_write("[Cheats] Deleted cheat file: %s\n", file_path.s);
+        return true;
+    }
+
+    return false;
+}
+
+// Delete all cheats for a title
+auto DeleteAllCheatsForTitle(u64 title_id) -> bool {
+    fs::FsNativeSd fs;
+
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+
+    if (fs.DirExists(cheats_dir.c_str())) {
+        Result rc = fs.DeleteDirectoryRecursively(cheats_dir.c_str());
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to delete cheats directory %s: %x\n", cheats_dir.c_str(), rc);
+            return false;
+        }
+        log_write("[Cheats] Deleted all cheats for title %016lx\n", title_id);
+
+        // Also try to delete the title directory if empty
+        const auto title_dir = std::string(ATMOSPHERE_CONTENTS_PATH) + "/" + FormatTitleIdLower(title_id);
+        if (fs.DirExists(title_dir.c_str())) {
+            fs.DeleteDirectory(title_dir.c_str());
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// Clear cached cheats database from /config/hats-tools/cheats-db
+auto ClearCheatsCache() -> Result {
+    fs::FsNativeSd fs;
+
+    log_write("[Cheats] Clearing cheats cache: %s\n", NX_DB_PATH);
+
+    if (fs.DirExists(NX_DB_PATH)) {
+        Result rc = fs.DeleteDirectoryRecursively(NX_DB_PATH);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to clear cheats cache: %x\n", rc);
+            return rc;
+        }
+        log_write("[Cheats] Successfully cleared cheats cache\n");
+        return 0;
+    }
+
+    log_write("[Cheats] Cheats cache directory does not exist\n");
+    return 0;
+}
+
+// Write cheat file to atmosphere/contents/{titleid}/cheats/{buildid}.txt
+// Each selected cheat becomes a section in the file
+// Now merges with existing cheats instead of overwriting
+auto WriteCheatFile(u64 title_id, const std::string& build_id, const std::vector<CheatEntry>& cheats) -> Result {
+    fs::FsNativeSd fs;
+
+    // Create cheats directory path: /atmosphere/contents/{titleid}/cheats/
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+    fs.CreateDirectoryRecursively(cheats_dir.c_str());
+
+    // Create file path: /atmosphere/contents/{titleid}/cheats/{buildid}.txt
+    fs::FsPath file_path;
+    std::snprintf(file_path, sizeof(file_path), "%s/%s.txt", cheats_dir.c_str(), build_id.c_str());
+
+    log_write("[Cheats] Saving cheats to: %s\n", file_path.s);
+    log_write("[Cheats] Build ID: %s, Title ID: %016lx\n", build_id.c_str(), title_id);
+
+    // Parse existing file to get already saved cheats
+    std::set<std::string> existing_cheat_names;
+    size_t existing_cheat_count = 0;
+    if (fs.FileExists(file_path)) {
+        std::vector<u8> existing_data;
+        if (R_SUCCEEDED(fs.read_entire_file(file_path, existing_data))) {
+            std::string existing_content(existing_data.begin(), existing_data.end());
+            // Parse cheat names from existing content
+            std::istringstream stream(existing_content);
+            std::string line;
+            while (std::getline(stream, line)) {
+                // Trim whitespace
+                line.erase(0, line.find_first_not_of(" \t\r\n"));
+                line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+                // Check for cheat title/master-code format [Title] or {Title}
+                if (IsCheatHeaderLine(line)) {
+                    std::string name = GetCheatHeaderName(line);
+                    if (existing_cheat_names.insert(name).second) {
+                        existing_cheat_count++;
+                    }
+                }
+            }
+            log_write("[Cheats] Found %zu existing cheats in file\n", existing_cheat_names.size());
+        }
+    }
+
+    // Build Atmosphere-safe cheat file content.
+    std::string content;
+
+    // Group cheats by source
+    std::map<CheatSource, std::vector<const CheatEntry*>> cheats_by_source;
+    for (const auto& cheat : cheats) {
+        if (!cheat.selected) continue;
+        cheats_by_source[cheat.source].push_back(&cheat);
+    }
+
+    // Atmosphere's standard cheat tooling is limited to 128 cheats per file.
+    size_t total_cheat_count = existing_cheat_count;
+    size_t added_count = 0;
+    size_t duplicate_count = 0;
+    size_t limit_skipped_count = 0;
+    for (const auto& [source, source_cheats] : cheats_by_source) {
+        // Only process if we have cheats from this source
+        if (source_cheats.empty()) continue;
+
+        // Add cheats from this source
+        for (const auto* cheat : source_cheats) {
+            // Skip if this cheat already exists (by name)
+            if (existing_cheat_names.count(cheat->name)) {
+                log_write("[Cheats] Skipping duplicate cheat: %s\n", cheat->name.c_str());
+                duplicate_count++;
+                continue;
+            }
+
+            if (total_cheat_count >= ATMOSPHERE_MAX_CHEATS_PER_FILE) {
+                log_write("[Cheats] Skipping cheat due to Atmosphere limit (%zu): %s\n",
+                    ATMOSPHERE_MAX_CHEATS_PER_FILE, cheat->name.c_str());
+                limit_skipped_count++;
+                continue;
+            }
+
+            // Check if content already starts with [cheat_name]
+            // If so, don't duplicate it (nx-cheats-db format already has it)
+            std::string content_to_write = cheat->content;
+            if (!content_to_write.empty()) {
+                // Check if first line is [Name]
+                size_t first_newline = content_to_write.find('\n');
+                if (first_newline != std::string::npos) {
+                    std::string first_line = content_to_write.substr(0, first_newline);
+                    // Remove brackets for comparison
+                    if (IsCheatHeaderLine(first_line)) {
+                        std::string first_line_name = GetCheatHeaderName(first_line);
+                        // Check if it matches the cheat name
+                        if (first_line_name == cheat->name) {
+                            // Content already has [name] prefix, use it as-is
+                            content_to_write += "\n";
+                        } else {
+                            // First line is different, add our prefix
+                            content_to_write = "[" + cheat->name + "]\n" + content_to_write + "\n";
+                        }
+                    } else {
+                        // No [name] prefix in content, add it
+                        content_to_write = "[" + cheat->name + "]\n" + content_to_write + "\n";
+                    }
+                } else {
+                    // Single line or no newlines, add prefix
+                    content_to_write = "[" + cheat->name + "]\n" + content_to_write + "\n";
+                }
+            }
+
+            content += SanitizeCheatContentForAtmosphere(content_to_write);
+            existing_cheat_names.insert(cheat->name); // Mark as added
+            total_cheat_count++;
+            added_count++;
+        }
+
+        content += "\n";
+    }
+
+    // If no new cheats to add (all were duplicates)
+    if (content.empty()) {
+        log_write("[Cheats] No new cheats to add (all duplicates)\n");
+        if (limit_skipped_count) {
+            App::Notify("Cheat file already has 128 entries");
+        } else {
+            App::Notify("All cheats already exist!");
+        }
+        return 0;
+    }
+
+    // If file exists, append to it; otherwise create new
+    const auto content_data = std::vector<u8>(
+        reinterpret_cast<const u8*>(content.data()),
+        reinterpret_cast<const u8*>(content.data()) + content.size()
+    );
+
+    if (fs.FileExists(file_path)) {
+        // Append to existing file
+        FILE* f = fopen(file_path.s, "a");
+        if (f) {
+            fwrite(content.data(), 1, content.size(), f);
+            fclose(f);
+            log_write("[Cheats] Appended %zu cheats to %s (%zu duplicates, %zu limit-skipped)\n",
+                added_count, file_path.s, duplicate_count, limit_skipped_count);
+        } else {
+            log_write("[Cheats] Failed to open file for appending: %s\n", file_path.s);
+            return 1;
+        }
+    } else {
+        // Write new file
+        if (R_FAILED(fs.write_entire_file(file_path, content_data))) {
+            log_write("[Cheats] Failed to write cheat file %s\n", file_path.s);
+            return 1;
+        }
+        log_write("[Cheats] Wrote %zu cheats to %s (%zu duplicates, %zu limit-skipped)\n",
+            added_count, file_path.s, duplicate_count, limit_skipped_count);
+    }
+
+    if (limit_skipped_count) {
+        App::Notify("Installed first 128 cheats; skipped " + std::to_string(limit_skipped_count));
+    }
+
+    return 0;
+}
+
+// Delete all cheats for all games
+auto DeleteAllCheats() -> Result {
+    fs::FsNativeSd fs;
+
+    // Get all installed games first
+    std::vector<u64> installed_titles;
+
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] nsInitialize failed: %x\n", rc);
+        return rc;
+    }
+
+    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
+    s32 offset = 0;
+
+    while (true) {
+        s32 record_count = 0;
+        rc = nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count);
+
+        if (R_FAILED(rc)) {
+            break;
+        }
+
+        if (record_count == 0) {
+            break;
+        }
+
+        for (s32 i = 0; i < record_count; i++) {
+            if (record_list[i].application_id != 0) {
+                installed_titles.push_back(record_list[i].application_id);
+            }
+        }
+
+        offset += record_count;
+    }
+
+    nsExit();
+
+    // Delete cheats for each installed game
+    s32 deleted_count = 0;
+    for (u64 title_id : installed_titles) {
+        if (DeleteAllCheatsForTitle(title_id)) {
+            deleted_count++;
+        }
+    }
+
+    log_write("[Cheats] Deleted cheats for %d games\n", deleted_count);
+    return 0;
+}
+
+// Delete orphaned cheats (cheats for games that are no longer installed)
+auto DeleteOrphanedCheats() -> Result {
+    fs::FsNativeSd fs;
+
+    // Get all installed games
+    std::vector<u64> installed_titles;
+
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] nsInitialize failed: %x\n", rc);
+        return -1;
+    }
+
+    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
+    s32 offset = 0;
+
+    while (true) {
+        s32 record_count = 0;
+        rc = nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count);
+
+        if (R_FAILED(rc)) {
+            break;
+        }
+
+        if (record_count == 0) {
+            break;
+        }
+
+        for (s32 i = 0; i < record_count; i++) {
+            if (record_list[i].application_id != 0) {
+                installed_titles.push_back(record_list[i].application_id);
+            }
+        }
+
+        offset += record_count;
+    }
+
+    nsExit();
+
+    log_write("[Cheats] Found %zu installed games\n", installed_titles.size());
+
+    // Scan atmosphere/contents for cheat directories
+    s32 deleted_count = 0;
+
+    // Check if atmosphere directory exists
+    if (!fs.DirExists(ATMOSPHERE_CONTENTS_PATH)) {
+        log_write("[Cheats] Atmosphere contents directory not found\n");
+        return 0;
+    }
+
+    // Open directory and iterate through subdirectories
+    fs::Dir dir;
+    if (R_FAILED(fs.OpenDirectory(ATMOSPHERE_CONTENTS_PATH, FsDirOpenMode_ReadDirs, &dir))) {
+        log_write("[Cheats] Failed to open atmosphere contents directory\n");
+        return -1;
+    }
+
+    ON_SCOPE_EXIT(dir.Close());
+
+    s64 count = 0;
+    if (R_FAILED(dir.GetEntryCount(&count))) {
+        return -1;
+    }
+
+    std::vector<FsDirectoryEntry> entries(count);
+    s64 read_count = 0;
+    if (R_FAILED(dir.Read(&read_count, entries.size(), entries.data()))) {
+        return -1;
+    }
+
+    for (s64 i = 0; i < read_count; i++) {
+        const auto& entry = entries[i];
+        if (entry.type != FsDirEntryType_Dir) continue;
+
+        // Parse title ID from directory name
+        std::string dir_name = entry.name;
+        u64 title_id = 0;
+        if (sscanf(dir_name.c_str(), "%016lx", &title_id) != 1) {
+            continue;
+        }
+
+        // Check if this title is still installed
+        bool is_installed = false;
+        for (u64 installed : installed_titles) {
+            if (installed == title_id) {
+                is_installed = true;
+                break;
+            }
+        }
+
+        // If not installed, delete the cheats directory
+        if (!is_installed) {
+            const auto title_dir = std::string(ATMOSPHERE_CONTENTS_PATH) + "/" + dir_name;
+            const auto cheats_dir = title_dir + "/" + CHEATS_SUBDIR;
+
+            if (fs.DirExists(cheats_dir.c_str())) {
+                log_write("[Cheats] Deleting orphaned cheats for %016lx\n", title_id);
+                if (R_SUCCEEDED(fs.DeleteDirectoryRecursively(cheats_dir.c_str()))) {
+                    deleted_count++;
+                }
+
+                // Try to delete empty title directory
+                fs.DeleteDirectory(title_dir.c_str());
+            }
+        }
+    }
+
+    log_write("[Cheats] Deleted orphaned cheats for %d games\n", deleted_count);
+    return deleted_count;
+}
+
+} // namespace
+
+void RefreshCheatMetadataCache() {
+    log_write("[Cheats] Starting cheat metadata scan\n");
+
+    const bool can_scan_nso = App::IsApplication();
+    if (!can_scan_nso) {
+        log_write("[Cheats] Bulk NSO build ID scan disabled in applet mode; caching title metadata only\n");
+    }
+
+    const auto games = EnumerateInstalledGames();
+    if (games.empty()) {
+        log_write("[Cheats] Cheat metadata scan found no installed games\n");
+    }
+
+    std::unordered_map<u64, CachedCheatMetadata> scanned_entries;
+    scanned_entries.reserve(games.size());
+
+    for (const auto& game : games) {
+        CachedCheatMetadata entry;
+        entry.title_id = game.title_id;
+        entry.name = game.name;
+        entry.version = game.version;
+        entry.scanned_at = static_cast<u64>(std::time(nullptr));
+        entry.source = "scan";
+
+        const auto installed_nca_build_id = GetBuildIdFromInstalledNca(game.title_id);
+        if (!installed_nca_build_id.empty()) {
+            entry.build_id = NormalizeBuildId(installed_nca_build_id);
+            entry.source = "installed-nca-scan";
+        } else if (can_scan_nso) {
+            const auto build_id = GetBuildIdFromNso(game.title_id);
+            if (!build_id.empty()) {
+                entry.build_id = NormalizeBuildId(build_id);
+                entry.source = "nso-scan";
+            }
+        }
+
+        scanned_entries[game.title_id] = std::move(entry);
+    }
+
+    mutexLock(&g_cheat_metadata_cache_mutex);
+    ON_SCOPE_EXIT(mutexUnlock(&g_cheat_metadata_cache_mutex));
+
+    auto cache_entries = LoadCheatMetadataCacheUnlocked();
+
+    std::unordered_set<u64> installed_ids;
+    installed_ids.reserve(scanned_entries.size());
+    for (const auto& [title_id, _] : scanned_entries) {
+        installed_ids.insert(title_id);
+    }
+
+    for (auto it = cache_entries.begin(); it != cache_entries.end();) {
+        if (!installed_ids.contains(it->first)) {
+            it = cache_entries.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    for (const auto& [title_id, scanned] : scanned_entries) {
+        auto& entry = cache_entries[title_id];
+        entry.title_id = scanned.title_id;
+        entry.name = scanned.name;
+        entry.version = scanned.version;
+        entry.scanned_at = scanned.scanned_at;
+
+        if (IsValidBuildId(scanned.build_id)) {
+            entry.build_id = scanned.build_id;
+            entry.source = scanned.source;
+        } else if (entry.source.empty()) {
+            entry.source = scanned.source;
+        }
+    }
+
+    if (!SaveCheatMetadataCacheUnlocked(cache_entries)) {
+        log_write("[Cheats] Failed to save cheat metadata cache\n");
+        return;
+    }
+
+    size_t resolved_count = 0;
+    for (const auto& [_, entry] : cache_entries) {
+        if (IsValidBuildId(entry.build_id)) {
+            resolved_count++;
+        }
+    }
+
+    log_write("[Cheats] Cheat metadata scan complete: %zu/%zu titles resolved\n",
+              resolved_count, cache_entries.size());
+}
+
+// ============================================================
+// CheatsMenu - Main menu with cheat management options
+// ============================================================
+
+CheatsMenu::CheatsMenu() : MenuBase{"Cheats", MenuFlag_None} {
+    // Main cheat management options
+    m_items = {
+        {"Download Cheats", "from nx-cheats-db (GitHub)"},
+        {"Upload Cheats", "Install a local Build ID .txt file"},
+        {"View Cheats", "View installed cheat codes"},
+        {"Delete All Cheats", "Delete all existing cheat codes"},
+        {"Delete Orphaned", "Delete cheats for uninstalled games"},
+        {"Clear Cheats Cache", "Delete cached cheats database"}
+    };
+
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Select"_i18n, [this](){
+            OnSelect();
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatsMenu::~CheatsMenu() {
+}
+
+void CheatsMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    });
+}
+
+void CheatsMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    constexpr float text_xoffset{15.f};
+
+    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        const auto& [x, y, w, h] = v;
+        const auto& item = m_items[i];
+
+        auto text_id = ThemeEntryID_TEXT;
+        if (m_index == i) {
+            text_id = ThemeEntryID_TEXT_SELECTED;
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+        } else {
+            if (i != m_items.size() - 1) {
+                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
+        }
+
+        gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f - 6.f, 20.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            theme->GetColour(text_id),
+            "%s", item.first.c_str());
+
+        gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f + 14.f, 14.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s", item.second.c_str());
+    });
+}
+
+void CheatsMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+}
+
+void CheatsMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatsMenu::OnSelect() {
+    switch (m_index) {
+        case 0: // Download Cheats from nx-cheats-db (default)
+            App::Push<CheatGameSelectMenu>(CheatSource::NxDb);
+            break;
+        case 1: // Upload local cheat file
+            App::Push<filepicker::Menu>(
+                [](const fs::FsPath& path) -> bool {
+                    const auto build_id = NormalizeBuildId(GetFileStem(path.s));
+                    if (!IsValidBuildId(build_id)) {
+                        App::Notify("Cheat filename must be a 16-digit Build ID");
+                        return false;
+                    }
+
+                    App::Push<CheatGameSelectMenu>(CheatSource::ManualFile, path);
+                    return true;
+                },
+                std::vector<std::string>{"txt"}
+            );
+            break;
+        case 2: // View Cheats
+            App::Push<CheatViewMenu>();
+            break;
+        case 3: // Delete All Cheats
+            App::Push<OptionBox>(
+                "Delete all existing cheat codes?\nThis will remove ALL cheat files\nfor ALL installed games.",
+                "Cancel"_i18n, "Delete", 1,
+                [](auto op_index) {
+                    if (!op_index || *op_index != 1) {
+                        return;
+                    }
+                    App::Push<ProgressBox>(0, "Deleting..."_i18n, "Cheats"_i18n,
+                        [](auto pbox) -> Result {
+                            return DeleteAllCheats();
+                        },
+                        [](Result rc) {
+                            if (R_SUCCEEDED(rc)) {
+                                App::Notify("Deleted all cheat codes");
+                            } else {
+                                App::Push<ErrorBox>(rc, "Failed to delete cheats");
+                            }
+                        }
+                    );
+                }
+            );
+            break;
+        case 4: // Delete Orphaned Cheats
+            App::Push<ProgressBox>(0, "Scanning..."_i18n, "Cheats"_i18n,
+                [](auto pbox) -> Result {
+                    return DeleteOrphanedCheats();
+                },
+                [](Result rc) {
+                    if (rc == 0) {
+                        App::Notify("No orphaned cheats found");
+                    } else if (rc > 0) {
+                        App::Notify("Deleted " + std::to_string(rc) + " orphaned cheats");
+                    } else {
+                        App::Push<ErrorBox>(rc, "Failed to delete orphaned cheats");
+                    }
+                }
+            );
+            break;
+        case 5: // Clear Cheats Cache
+            App::Push<OptionBox>(
+                "Clear cached cheats database?",
+                "Cancel"_i18n, "Clear"_i18n, 0,
+                [](auto op_index) {
+                    if (!op_index || *op_index != 1) {
+                        return;
+                    }
+                    App::Push<ProgressBox>(0, "Clearing Cache"_i18n, "Cheats"_i18n,
+                        [](auto pbox) -> Result {
+                            return ClearCheatsCache();
+                        },
+                        [](Result rc) {
+                            if (R_SUCCEEDED(rc)) {
+                                App::Notify("Cheats cache cleared successfully");
+                            } else {
+                                App::Push<ErrorBox>(rc, "Failed to clear cheats cache");
+                            }
+                        }
+                    );
+                }
+            );
+            break;
+    }
+}
+
+// ============================================================
+// CheatViewMenu - View installed cheats
+// ============================================================
+
+CheatViewMenu::CheatViewMenu() : MenuBase{"Installed Cheats", MenuFlag_None} {
+    this->SetActions(
+        std::make_pair(Button::A, Action{"View"_i18n, [this](){
+            if (!m_games.empty()) {
+                OnSelect();
+            }
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }}),
+        std::make_pair(Button::Y, Action{"Delete"_i18n, [this](){
+            if (!m_games.empty()) {
+                OnDelete();
+            }
+        }})
+    );
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatViewMenu::~CheatViewMenu() {
+}
+
+void CheatViewMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    if (!m_games.empty()) {
+        m_list->OnUpdate(controller, touch, m_index, m_games.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        });
+    }
+}
+
+void CheatViewMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    if (m_scanning) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Scanning for cheats...");
+        return;
+    }
+
+    if (m_games.empty() && m_loaded) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "No installed cheats found");
+        return;
+    }
+
+    if (!m_games.empty()) {
+        // Save and restore scissor to clip list drawing area
+        nvgSave(vg);
+        // Clip area starts below the header text
+        nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+        ON_SCOPE_EXIT(nvgRestore(vg));
+
+        constexpr float text_xoffset{15.f};
+
+        m_list->Draw(vg, theme, m_games.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+            const auto& [x, y, w, h] = v;
+            const auto& game = m_games[i];
+
+            auto text_id = ThemeEntryID_TEXT;
+            if (m_index == i) {
+                text_id = ThemeEntryID_TEXT_SELECTED;
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            } else {
+                if (i != m_games.size() - 1) {
+                    gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+                }
+            }
+
+            // Game name
+            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f - 6.f, 20.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(text_id),
+                "%s", game.name.c_str());
+
+            // Title ID and cheat count
+            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f + 14.f, 14.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%016lX - %zu cheat(s)", game.title_id, game.cheat_count);
+        });
+    }
+}
+
+void CheatViewMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+
+    if (!m_loaded && !m_scanning) {
+        ScanGamesWithCheats();
+    }
+}
+
+void CheatViewMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatViewMenu::OnSelect() {
+    if (m_games.empty() || m_index >= (s64)m_games.size()) {
+        return;
+    }
+
+    const auto& game = m_games[m_index];
+    App::Push<CheatFilesMenu>(game);
+}
+
+void CheatViewMenu::OnDelete() {
+    if (m_games.empty() || m_index >= (s64)m_games.size()) {
+        return;
+    }
+
+    const auto& game = m_games[m_index];
+    App::Push<OptionBox>(
+        "Delete all cheats for " + game.name + "?",
+        "Cancel"_i18n, "Delete", 1,
+        [this, game](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            if (DeleteAllCheatsForTitle(game.title_id)) {
+                App::Notify("Deleted cheats for " + game.name);
+                m_loaded = false; // Rescan
+                ScanGamesWithCheats();
+            } else {
+                App::Notify("Failed to delete cheats");
+            }
+        }
+    );
+}
+
+void CheatViewMenu::ScanGamesWithCheats() {
+    m_scanning = true;
+    m_games.clear();
+
+    // Initialize ns service
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] nsInitialize failed: %x\n", rc);
+        m_scanning = false;
+        m_loaded = true;
+        return;
+    }
+
+    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
+    std::unordered_set<u64> seen_title_ids;
+    s32 offset = 0;
+
+    while (true) {
+        s32 record_count = 0;
+        rc = nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count);
+
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] nsListApplicationRecord failed at offset %d: %x\n", offset, rc);
+            break;
+        }
+
+        if (record_count == 0) {
+            break;
+        }
+
+        // Process each record
+        for (s32 i = 0; i < record_count; i++) {
+            const auto& record = record_list[i];
+            if (record.application_id == 0) continue;
+            const auto base_title_id = GetBaseApplicationTitleId(record.application_id);
+            if (!seen_title_ids.insert(base_title_id).second) {
+                continue;
+            }
+
+            // Check if this game has any cheats
+            auto existing = GetExistingCheats(base_title_id);
+            if (!existing.empty()) {
+                // Get game name
+                std::string name = GetTitleName(base_title_id);
+                if (name.empty()) {
+                    char placeholder[64];
+                    std::snprintf(placeholder, sizeof(placeholder), "Game %016llX", (unsigned long long)base_title_id);
+                    name = placeholder;
+                }
+
+                GameCheatInfo info;
+                info.title_id = base_title_id;
+                info.name = name;
+                info.build_id = "";
+                info.version = 0;
+                info.cheat_count = existing.size();
+
+                m_games.push_back(std::move(info));
+            }
+        }
+
+        offset += record_count;
+    }
+
+    nsExit();
+
+    m_scanning = false;
+    m_loaded = true;
+
+    if (!m_games.empty()) {
+        SetIndex(0);
+    }
+
+    log_write("[Cheats] Total: Found %zu games with cheats\n", m_games.size());
+}
+
+// ============================================================
+// CheatFilesMenu - View cheat files for a game
+// ============================================================
+
+CheatFilesMenu::CheatFilesMenu(const GameCheatInfo& game)
+    : MenuBase{"Cheat Files", MenuFlag_None}, m_game(game) {
+
+    // Get existing cheats for this game
+    auto existing = GetExistingCheats(game.title_id);
+    for (const auto& [build_id, filename] : existing) {
+        ExistingCheat cheat;
+        cheat.build_id = build_id;
+        cheat.filename = filename;
+        cheat.installed = true;
+        m_cheats.push_back(cheat);
+    }
+
+    this->SetActions(
+        std::make_pair(Button::A, Action{"View"_i18n, [this](){
+            if (!m_cheats.empty()) {
+                OnView();
+            }
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }}),
+        std::make_pair(Button::X, Action{"Delete"_i18n, [this](){
+            if (!m_cheats.empty()) {
+                OnDelete();
+            }
+        }})
+    );
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatFilesMenu::~CheatFilesMenu() {
+}
+
+void CheatFilesMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    if (!m_cheats.empty()) {
+        m_list->OnUpdate(controller, touch, m_index, m_cheats.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        });
+    }
+}
+
+void CheatFilesMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    // Draw game info
+    gfx::drawTextArgs(vg, 80.f, GetY() + 10.f, 16.f,
+        NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+        theme->GetColour(ThemeEntryID_TEXT_INFO),
+        "%s (%016lX)", m_game.name.c_str(), m_game.title_id);
+
+    if (m_cheats.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "No cheat files found");
+        return;
+    }
+
+    // Save and restore scissor to clip list drawing area
+    nvgSave(vg);
+    // Clip area starts below the header text
+    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+    ON_SCOPE_EXIT(nvgRestore(vg));
+
+    constexpr float text_xoffset{15.f};
+
+    m_list->Draw(vg, theme, m_cheats.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        const auto& [x, y, w, h] = v;
+        const auto& cheat = m_cheats[i];
+
+        auto text_id = ThemeEntryID_TEXT;
+        if (m_index == i) {
+            text_id = ThemeEntryID_TEXT_SELECTED;
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+        } else {
+            if (i != m_cheats.size() - 1) {
+                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
+        }
+
+        gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f, 18.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            theme->GetColour(text_id),
+            "Build ID: %s", cheat.build_id.c_str());
+    });
+}
+
+void CheatFilesMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+}
+
+void CheatFilesMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatFilesMenu::OnView() {
+    if (m_cheats.empty() || m_index >= (s64)m_cheats.size()) {
+        return;
+    }
+
+    const auto& cheat = m_cheats[m_index];
+    const auto cheats_dir = GetCheatsDirPath(m_game.title_id);
+    fs::FsPath file_path;
+    std::snprintf(file_path, sizeof(file_path), "%s/%s.txt", cheats_dir.c_str(), cheat.build_id.c_str());
+
+    fs::FsNativeSd fs;
+    std::vector<u8> data;
+    if (R_FAILED(fs.read_entire_file(file_path, data))) {
+        App::Notify("Failed to read cheat file");
+        return;
+    }
+
+    data.push_back(0);
+    std::string content(reinterpret_cast<char*>(data.data()));
+
+    // Show cheat content in a proper scrollable view
+    App::Push<CheatContentMenu>(m_game, cheat.build_id, content);
+}
+
+void CheatFilesMenu::OnDelete() {
+    if (m_cheats.empty() || m_index >= (s64)m_cheats.size()) {
+        return;
+    }
+
+    const auto& cheat = m_cheats[m_index];
+    App::Push<OptionBox>(
+        "Delete cheat file for Build ID " + cheat.build_id + "?",
+        "Cancel"_i18n, "Delete", 1,
+        [this, cheat](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            if (DeleteCheatFile(m_game.title_id, cheat.build_id)) {
+                App::Notify("Deleted cheat file");
+                SetPop(); // Go back to refresh the list
+            } else {
+                App::Notify("Failed to delete cheat file");
+            }
+        }
+    );
+}
+
+// ============================================================
+// CheatContentMenu - View cheat file content (shows titles in list)
+// ============================================================
+
+CheatContentMenu::CheatContentMenu(const GameCheatInfo& game, const std::string& build_id, const std::string& content)
+    : MenuBase{"Cheat Content", MenuFlag_None}, m_game(game), m_build_id(build_id) {
+
+    this->SetActions(
+        std::make_pair(Button::A, Action{"View Code"_i18n, [this](){
+            OnViewCheat();
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    // Parse the cheat content to extract titles
+    ParseCheatContent(content);
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatContentMenu::~CheatContentMenu() {
+}
+
+void CheatContentMenu::ParseCheatContent(const std::string& content) {
+    m_cheats.clear();
+
+    // First, scan for source footer comment to determine default source
+    // Format: // source: CheatSlips or // source: nx-cheats-db
+    CheatSource default_source = CheatSource::NxDb; // Default source
+    std::string lower_content = content;
+    std::transform(lower_content.begin(), lower_content.end(), lower_content.begin(), ::tolower);
+
+    if (lower_content.find("// source: cheatslips") != std::string::npos) {
+        default_source = CheatSource::Cheatslips;
+    } else if (lower_content.find("// source: nx-cheats-db") != std::string::npos ||
+               lower_content.find("// source: nxdb") != std::string::npos) {
+        default_source = CheatSource::NxDb;
+    } else if (lower_content.find("// source: gbatemp") != std::string::npos) {
+        default_source = CheatSource::Gbatemp;
+    }
+
+    // Parse cheat file format
+    std::istringstream stream(content);
+    std::string line;
+    CheatTitle current_cheat;
+    bool in_cheat = false;
+    CheatSource current_source = default_source; // Use detected source
+
+    // Helper function to check if a line should be skipped (non-cheat entries)
+    auto should_skip_entry = [](const std::string& name) -> bool {
+        if (name.empty()) return true;
+
+        std::string lower_name = name;
+        std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(), ::tolower);
+
+        // Skip common non-cheat entries
+        if (lower_name.find("www.") != std::string::npos) return true;  // Website URLs (e.g., www.cheatslips.com)
+        if (lower_name.find("credits:") == 0) return true;  // Credits entries (e.g., credits: author)
+        if (lower_name.find("credit:") == 0) return true;   // Credits entries (e.g., credit: author)
+        if (lower_name == "credits") return true;           // Just "Credits"
+        if (lower_name == "credit") return true;            // Just "Credit"
+
+        return false;
+    };
+
+    while (std::getline(stream, line)) {
+        // Trim whitespace
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+        // Check for source comment: // cheats from: xxx
+        if (!line.empty() && line.substr(0, 2) == "//") {
+            std::string lower_line = line;
+            std::transform(lower_line.begin(), lower_line.end(), lower_line.begin(), ::tolower);
+
+            if (lower_line.find("cheatslips") != std::string::npos) {
+                current_source = CheatSource::Cheatslips;
+            } else if (lower_line.find("nx-cheats-db") != std::string::npos || lower_line.find("nxdb") != std::string::npos) {
+                current_source = CheatSource::NxDb;
+            } else if (lower_line.find("gbatemp") != std::string::npos) {
+                current_source = CheatSource::Gbatemp;
+            }
+            continue;
+        }
+
+        // Check for cheat title/master-code format [Title] or {Title}
+        if (IsCheatHeaderLine(line)) {
+            // Save previous cheat if exists
+            if (in_cheat && !current_cheat.name.empty()) {
+                // Skip non-cheat entries like credits, website headers
+                if (!should_skip_entry(current_cheat.name)) {
+                    // Determine if cheat is empty (no actual code)
+                    std::string content_check = current_cheat.content;
+                    size_t start_pos = content_check.find('\n');
+                    if (start_pos != std::string::npos) {
+                        content_check = content_check.substr(start_pos + 1);
+                    }
+                    // Check if empty, whitespace only, or contains "Quota exceeded" message
+                    std::string content_lower = content_check;
+                    std::transform(content_lower.begin(), content_lower.end(), content_lower.begin(), ::tolower);
+                    current_cheat.is_empty = content_check.empty() ||
+                        content_check.find_first_not_of(" \t\r\n") == std::string::npos ||
+                        content_lower.find("quota exceeded") != std::string::npos ||
+                        content_lower.find("quotaexceeded") != std::string::npos;
+
+                    // Only add if it's a valid cheat (not empty/whitespace)
+                    if (!current_cheat.name.empty() && current_cheat.name.find_first_not_of(" \t\r\n") != std::string::npos) {
+                        m_cheats.push_back(current_cheat);
+                    }
+                }
+            }
+
+            // Start new cheat
+            current_cheat.name = GetCheatHeaderName(line);
+            current_cheat.content = line + "\n";
+            current_cheat.source = current_source;
+            current_cheat.is_empty = false;
+            in_cheat = true;
+        } else if (in_cheat) {
+            // Add line to current cheat content
+            current_cheat.content += line + "\n";
+        }
+    }
+
+    // Don't forget the last cheat
+    if (in_cheat && !current_cheat.name.empty()) {
+        // Skip non-cheat entries
+        if (!should_skip_entry(current_cheat.name)) {
+            // Determine if cheat is empty
+            std::string content_check = current_cheat.content;
+            size_t start_pos = content_check.find('\n');
+            if (start_pos != std::string::npos) {
+                content_check = content_check.substr(start_pos + 1);
+            }
+            // Check if empty, whitespace only, or contains "Quota exceeded" message
+            std::string content_lower = content_check;
+            std::transform(content_lower.begin(), content_lower.end(), content_lower.begin(), ::tolower);
+            current_cheat.is_empty = content_check.empty() ||
+                content_check.find_first_not_of(" \t\r\n") == std::string::npos ||
+                content_lower.find("quota exceeded") != std::string::npos ||
+                content_lower.find("quotaexceeded") != std::string::npos;
+
+            // Only add if it's a valid cheat (not empty/whitespace)
+            if (!current_cheat.name.empty() && current_cheat.name.find_first_not_of(" \t\r\n") != std::string::npos) {
+                m_cheats.push_back(current_cheat);
+            }
+        }
+    }
+
+    log_write("[Cheats] Parsed %zu cheat titles (filtered out non-cheat entries)\n", m_cheats.size());
+}
+
+void CheatContentMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    if (!m_cheats.empty()) {
+        m_list->OnUpdate(controller, touch, m_index, m_cheats.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                // On touch, could show full cheat content in a popup
+                App::Notify("Press A to view cheat code");
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        });
+    }
+}
+
+void CheatContentMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    // Draw header info
+    gfx::drawTextArgs(vg, 80.f, GetY() + 10.f, 16.f,
+        NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+        theme->GetColour(ThemeEntryID_TEXT_INFO),
+        "%s | %s | %zu cheats", m_game.name.c_str(), m_build_id.c_str(), m_cheats.size());
+
+    if (m_cheats.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Cheats Not Found");
+        return;
+    }
+
+    // Save and restore scissor to clip list drawing area
+    nvgSave(vg);
+    // Clip area starts below the header text
+    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, SCREEN_HEIGHT - 100.f - (GetY() + 40.f));
+    ON_SCOPE_EXIT(nvgRestore(vg));
+
+    constexpr float text_xoffset{15.f};
+
+    m_list->Draw(vg, theme, m_cheats.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        const auto& [x, y, w, h] = v;
+        const auto& cheat = m_cheats[i];
+
+        auto text_id = ThemeEntryID_TEXT;
+        if (m_index == i) {
+            text_id = ThemeEntryID_TEXT_SELECTED;
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+        } else {
+            if (i != m_cheats.size() - 1) {
+                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
+        }
+
+        // Draw source badge
+        const char* source_badge = "";
+        NVGcolor source_color = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        if (cheat.source == CheatSource::Cheatslips) {
+            source_badge = "CS";  // Removed brackets to fix rendering
+            source_color = nvgRGB(0x4A, 0x90, 0xE2); // Blue for CheatSlips
+        } else if (cheat.source == CheatSource::NxDb) {
+            source_badge = "NX";  // Removed brackets to fix rendering
+            source_color = nvgRGB(0x6B, 0xC6, 0x58); // Green for nx-cheats-db
+        } else if (cheat.source == CheatSource::Gbatemp) {
+            source_badge = "GB";  // Removed brackets to fix rendering
+            source_color = nvgRGB(0xE2, 0x7D, 0x4A); // Orange for GBATemp
+        }
+
+        // Cheat name (truncated if too long)
+        std::string name = cheat.name;
+        if (name.length() > 50) {
+            name = name.substr(0, 47) + "...";
+        }
+
+        float text_offset = text_xoffset;
+
+        // Draw source badge first (without brackets to avoid rendering issues)
+        if (strlen(source_badge) > 0) {
+            gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 14.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                source_color,
+                "%s", source_badge);
+            text_offset += 28.f; // Width of CS/NX/GB text
+        }
+
+        // Draw empty indicator if cheat has no content (without brackets)
+        if (cheat.is_empty) {
+            gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 14.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                nvgRGB(0xFF, 0x00, 0x00), // Red for empty
+                "EMPTY");  // Removed brackets to fix rendering
+            text_offset += 45.f; // Width of EMPTY text
+        }
+
+        // Add extra space before cheat name
+        text_offset += 8.f;
+
+        // Draw cheat name with proper spacing
+        gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 18.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            cheat.is_empty ? nvgRGB(0xFF, 0x66, 0x66) : theme->GetColour(text_id), // Red tint if empty
+            "[%s]", name.c_str());
+    });
+}
+
+void CheatContentMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+}
+
+void CheatContentMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatContentMenu::OnViewCheat() {
+    if (m_cheats.empty() || m_index < 0 || m_index >= (s64)m_cheats.size()) {
+        return;
+    }
+
+    const auto& cheat = m_cheats[m_index];
+    App::Push<CheatCodeViewerMenu>(cheat.name, cheat.content, cheat.is_empty);
+}
+
+// ============================================================
+// CheatCodeViewerMenu - View individual cheat code (scrollable)
+// ============================================================
+
+CheatCodeViewerMenu::CheatCodeViewerMenu(const std::string& title, const std::string& content, bool is_empty)
+    : MenuBase{"Cheat Code", MenuFlag_None}, m_title(title), m_content(content), m_is_empty(is_empty) {
+
+    this->SetActions(
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    // Calculate content height for scrolling
+    // Rough estimation: each line is about 20px tall
+    size_t line_count = std::count(m_content.begin(), m_content.end(), '\n') + 1;
+    m_content_height = line_count * 20.f;
+    if (m_content_height < 100.f) {
+        m_content_height = 100.f;
+    }
+}
+
+CheatCodeViewerMenu::~CheatCodeViewerMenu() {
+}
+
+void CheatCodeViewerMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    // Handle scrolling with joystick
+    if (controller->GotDown(Button::LS_UP) ||
+        controller->GotDown(Button::RS_UP) ||
+        controller->GotHeld(Button::LS_UP) ||
+        controller->GotHeld(Button::RS_UP)) {
+        m_scroll_offset -= 5.f;
+    }
+    if (controller->GotDown(Button::LS_DOWN) ||
+        controller->GotDown(Button::RS_DOWN) ||
+        controller->GotHeld(Button::LS_DOWN) ||
+        controller->GotHeld(Button::RS_DOWN)) {
+        m_scroll_offset += 5.f;
+    }
+
+    // Clamp scroll offset
+    float max_scroll = m_content_height - (SCREEN_HEIGHT - 150.f);
+    if (max_scroll < 0) max_scroll = 0;
+    if (m_scroll_offset < 0) m_scroll_offset = 0;
+    if (m_scroll_offset > max_scroll) m_scroll_offset = max_scroll;
+}
+
+void CheatCodeViewerMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    const float margin = 80.f;
+    const float top_margin = GetY() + 50.f;
+    const float content_width = SCREEN_WIDTH - 150.f;
+    const float max_height = SCREEN_HEIGHT - 150.f;
+
+    // Draw title
+    gfx::drawTextArgs(vg, margin, GetY() + 20.f, 20.f,
+        NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+        theme->GetColour(ThemeEntryID_HIGHLIGHT_1),
+        "[%s]", m_title.c_str());
+
+    // Draw empty warning if applicable
+    if (m_is_empty) {
+        gfx::drawTextArgs(vg, margin, GetY() + 120.f, 18.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            nvgRGB(0xFF, 0x00, 0x00),
+            "⚠️ EMPTY CHEAT CODE or QUOTA EXCEEDED!");
+    }
+
+    // Save and clip for scrolling
+    nvgSave(vg);
+    nvgScissor(vg, margin, top_margin, content_width, max_height);
+
+    // Draw cheat code content with scrolling
+    float y = top_margin - m_scroll_offset;
+    constexpr float line_height = 20.f;
+
+    std::istringstream stream(m_content);
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (y + line_height > top_margin - 20.f && y < top_margin + max_height) {
+            // Use monospace-like font for code
+            NVGcolor color = theme->GetColour(ThemeEntryID_TEXT);
+
+            // Highlight empty quota message
+            std::string line_lower = line;
+            std::transform(line_lower.begin(), line_lower.end(), line_lower.begin(), ::tolower);
+            if (line_lower.find("quota") != std::string::npos) {
+                color = nvgRGB(0xFF, 0x66, 0x66);
+            }
+
+            gfx::drawTextArgs(vg, margin, y, 16.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                color,
+                "%s", line.c_str());
+        }
+        y += line_height;
+    }
+
+    nvgRestore(vg);
+
+    // Draw scroll indicator if content is scrollable
+    if (m_content_height > max_height) {
+        float scroll_bar_height = (max_height / m_content_height) * max_height;
+        float scroll_bar_y = top_margin + (m_scroll_offset / m_content_height) * max_height;
+
+        gfx::drawRect(vg, SCREEN_WIDTH - margin + 10.f, scroll_bar_y, 5.f, scroll_bar_height,
+            nvgRGBA(0x80, 0x80, 0x80, 0x80));
+    }
+}
+
+// ============================================================
+// CheatGameSelectMenu - Select installed game
+// ============================================================
+
+CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source)
+    : MenuBase{"Select Game", MenuFlag_None}, m_source(source) {
+
+    // Add logout option for CheatSlips
+    if (m_source == CheatSource::Cheatslips) {
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Select"_i18n, [this](){
+                if (!m_games.empty() && !m_scanning) {
+                    OnSelect();
+                }
+            }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+                SetPop();
+            }}),
+            std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
+                m_loaded = false;
+                ScanGames();
+            }}),
+            std::make_pair(Button::Y, Action{"Account"_i18n, [this](){
+                auto token = GetCheatslipsToken();
+                if (!token.empty()) {
+                    // Logged in - show logout option
+                    App::Push<OptionBox>(
+                        "Logged in to CheatSlips.\nLog out?",
+                        "Cancel"_i18n, "Logout", 1,
+                        [](auto op_index) {
+                            if (!op_index || *op_index != 1) {
+                                return;
+                            }
+                            // Delete token file
+                            fs::FsNativeSd fs;
+                            fs.DeleteFile(TOKEN_PATH);
+                            // Also try AIO path
+                            fs.DeleteFile(AIO_TOKEN_PATH);
+                            App::Notify("Logged out from CheatSlips");
+                        }
+                    );
+                } else {
+                    // Logged out - show login option
+                    App::Push<OptionBox>(
+                        "Not logged in to CheatSlips.\nLog in for higher quotas?",
+                        "Cancel"_i18n, "Login", 1,
+                        [](auto op_index) {
+                            if (!op_index || *op_index != 1) {
+                                return;
+                            }
+
+                            // Push the login menu (OptionBox will close automatically)
+                            App::Push<CheatslipsLoginMenu>();
+                        }
+                    );
+                }
+            }})
+        );
+    } else {
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Select"_i18n, [this](){
+                if (!m_games.empty() && !m_scanning) {
+                    OnSelect();
+                }
+            }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+                SetPop();
+            }}),
+            std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
+                m_loaded = false;
+                ScanGames();
+            }})
+        );
+    }
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source, const fs::FsPath& manual_cheat_path)
+    : CheatGameSelectMenu(source) {
+    m_manual_cheat_path = manual_cheat_path;
+}
+
+CheatGameSelectMenu::~CheatGameSelectMenu() {
+}
+
+void CheatGameSelectMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    if (!m_games.empty()) {
+        m_list->OnUpdate(controller, touch, m_index, m_games.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        });
+    }
+}
+
+void CheatGameSelectMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    if (m_scanning) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Scanning games...");
+        return;
+    }
+
+    if (m_games.empty() && m_loaded) {
+        // Show "no games" message
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f - 20.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "No games found");
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f + 20.f, 18.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Press X to refresh");
+        return;
+    }
+
+    if (!m_games.empty()) {
+        // Save and restore scissor to clip list drawing area
+        nvgSave(vg);
+        // Clip area starts below the header text
+        nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+        ON_SCOPE_EXIT(nvgRestore(vg));
+
+        constexpr float text_xoffset{15.f};
+
+        m_list->Draw(vg, theme, m_games.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+            const auto& [x, y, w, h] = v;
+            const auto& game = m_games[i];
+
+            auto text_id = ThemeEntryID_TEXT;
+            if (m_index == i) {
+                text_id = ThemeEntryID_TEXT_SELECTED;
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            } else {
+                if (i != m_games.size() - 1) {
+                    gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+                }
+            }
+
+            // Game name
+            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f - 6.f, 20.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(text_id),
+                "%s", game.name.c_str());
+
+            // Title ID and version
+            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f + 14.f, 14.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%016lX v%u", game.title_id, game.version);
+        });
+    }
+}
+
+void CheatGameSelectMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+
+    if (!m_loaded && !m_scanning) {
+        ScanGames();
+    }
+}
+
+void CheatGameSelectMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatGameSelectMenu::OnSelect() {
+    if (m_games.empty() || m_index >= (s64)m_games.size()) {
+        return;
+    }
+
+    const auto& game = m_games[m_index];
+
+    if (m_source == CheatSource::ManualFile) {
+        const auto build_id = NormalizeBuildId(GetFileStem(m_manual_cheat_path.s));
+        if (!IsValidBuildId(build_id)) {
+            App::Notify("Cheat filename must be a 16-digit Build ID");
+            return;
+        }
+
+        fs::FsNativeSd fs;
+        const auto dest_path = GetManualCheatImportPath(game.title_id, build_id);
+        const auto action = [game, path = m_manual_cheat_path](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            const auto rc = ImportManualCheatFile(game.title_id, path);
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Cheat file uploaded");
+            } else {
+                App::Push<ErrorBox>(rc, "Failed to upload cheat file");
+            }
+        };
+
+        if (fs.FileExists(dest_path)) {
+            App::Push<OptionBox>(
+                "Cheats existed, reupload?",
+                "Cancel"_i18n, "Upload", 1,
+                action
+            );
+            return;
+        }
+
+        App::Push<OptionBox>(
+            "Upload cheats to this game?",
+            "Cancel"_i18n, "Upload", 1,
+            action
+        );
+        return;
+    }
+
+    // For CheatSlips, check if we have a token
+    if (m_source == CheatSource::Cheatslips) {
+        auto token = GetCheatslipsToken();
+        if (token.empty()) {
+            // No token, prompt for login (like aio-switch-updater)
+            App::Push<OptionBox>(
+                "No CheatSlips token found.\nLogin for higher quotas?",
+                "Cancel"_i18n, "Login", 1,
+                [this, game](auto op_index) {
+                    if (!op_index || *op_index != 1) {
+                        // User cancelled, proceed without login
+                        App::Push<CheatDownloadMenu>(m_source, game);
+                        return;
+                    }
+
+                    // Push the login menu (OptionBox will close automatically)
+                    App::Push<CheatslipsLoginMenu>();
+                    // After login, proceed to download
+                    App::Push<CheatDownloadMenu>(m_source, game);
+                }
+            );
+            return;
+        }
+    }
+
+    App::Push<CheatDownloadMenu>(m_source, game);
+}
+
+void CheatGameSelectMenu::ScanGames() {
+    m_scanning = true;
+    m_games.clear();
+
+    std::unordered_map<u64, CachedCheatMetadata> cached_entries;
+    {
+        mutexLock(&g_cheat_metadata_cache_mutex);
+        ON_SCOPE_EXIT(mutexUnlock(&g_cheat_metadata_cache_mutex));
+        cached_entries = LoadCheatMetadataCacheUnlocked();
+    }
+
+    // Initialize ns service (like original sphaira game_menu)
+    Result rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        log_write("[Cheats] nsInitialize failed: %x\n", rc);
+        m_scanning = false;
+        m_loaded = true;
+        return;
+    }
+
+    // Use chunked approach like original sphaira (game_menu.cpp ScanHomebrew)
+    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
+    std::unordered_set<u64> seen_title_ids;
+    s32 offset = 0;
+
+    while (true) {
+        s32 record_count = 0;
+        rc = nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count);
+
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] nsListApplicationRecord failed at offset %d: %x\n", offset, rc);
+            break;
+        }
+
+        // Finished parsing all entries
+        if (record_count == 0) {
+            break;
+        }
+
+        log_write("[Cheats] Got %d records at offset %d\n", record_count, offset);
+
+        // Process each record
+        for (s32 i = 0; i < record_count; i++) {
+            const auto& record = record_list[i];
+            if (record.application_id == 0) continue;
+            const auto base_title_id = GetBaseApplicationTitleId(record.application_id);
+            if (!seen_title_ids.insert(base_title_id).second) {
+                continue;
+            }
+
+            log_write("[Cheats] Processing %016lX\n", base_title_id);
+
+            // Get version
+            u32 version = GetTitleVersion(base_title_id);
+
+            // Get title name using nsGetApplicationControlData
+            std::string name = GetTitleName(base_title_id);
+            if (name.empty()) {
+                // Use placeholder name if we couldn't get it
+                char placeholder[64];
+                std::snprintf(placeholder, sizeof(placeholder), "Game %016llX", (unsigned long long)base_title_id);
+                name = placeholder;
+            }
+
+            GameCheatInfo info;
+            info.title_id = base_title_id;
+            info.name = name;
+            info.version = version;
+            if (const auto it = cached_entries.find(info.title_id); it != cached_entries.end() &&
+                IsValidBuildId(it->second.build_id)) {
+                info.build_id = it->second.build_id;
+            }
+
+            m_games.push_back(std::move(info));
+        }
+
+        offset += record_count;
+    }
+
+    AppendGameCardGames(m_games, seen_title_ids);
+
+    // Exit ns service when done
+    nsExit();
+
+    bool needs_cache_refresh = cached_entries.empty();
+    if (!needs_cache_refresh && App::IsApplication()) {
+        needs_cache_refresh = std::ranges::any_of(m_games, [&](const auto& game) {
+            return !IsValidBuildId(game.build_id);
+        });
+    }
+
+    if (needs_cache_refresh && App::IsApplication()) {
+        log_write("[Cheats] Refreshing cheat metadata cache from game select menu\n");
+        RefreshCheatMetadataCache();
+
+        mutexLock(&g_cheat_metadata_cache_mutex);
+        ON_SCOPE_EXIT(mutexUnlock(&g_cheat_metadata_cache_mutex));
+        cached_entries = LoadCheatMetadataCacheUnlocked();
+
+        for (auto& game : m_games) {
+            if (const auto it = cached_entries.find(game.title_id); it != cached_entries.end() &&
+                IsValidBuildId(it->second.build_id)) {
+                game.build_id = it->second.build_id;
+            }
+        }
+    }
+
+    m_scanning = false;
+    m_loaded = true;
+
+    if (!m_games.empty()) {
+        SetIndex(0);
+    }
+
+    log_write("[Cheats] Total: Found %zu games\n", m_games.size());
+}
+
+// ============================================================
+// CheatDownloadMenu - Select and download cheats
+// ============================================================
+
+CheatDownloadMenu::CheatDownloadMenu(CheatSource source, const GameCheatInfo& game)
+    : MenuBase{"Select Cheats", MenuFlag_None}, m_source(source), m_game(game) {
+
+    log_write("[Cheats] DEBUG: CheatDownloadMenu constructor called\n");
+    log_write("[Cheats] DEBUG: Source: %d, Game: %s, TitleID: %016llX, BuildID: %s\n",
+        static_cast<int>(source), game.name.c_str(), game.title_id, game.build_id.c_str());
+    log_write("[Cheats] DEBUG: m_should_close initial value: %d\n", m_should_close);
+
+    // Set different actions based on cheat source
+    if (m_source == CheatSource::Cheatslips) {
+        // CheatSlips: No individual selection (content is bundled), select all and download
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Download All"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading) {
+                    // Select all cheats and download
+                    for (auto& cheat : m_cheats) {
+                        cheat.selected = true;
+                    }
+                    DownloadCheats();
+                }
+            }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+                SetPop();
+            }}),
+            std::make_pair(Button::X, Action{"Preview"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading && m_index < (s64)m_cheats.size()) {
+                    PreviewCheat();
+                }
+            }})
+        );
+    } else {
+        // NxDb: Individual selection + Select All + Download + Manage + Preview
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Toggle"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading) {
+                    if (m_index < (s64)m_cheats.size()) {
+                        m_cheats[m_index].selected = !m_cheats[m_index].selected;
+                    }
+                }
+            }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+                SetPop();
+            }}),
+            std::make_pair(Button::X, Action{"Select All"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading) {
+                    // Select/deselect all cheats
+                    bool all_selected = std::all_of(m_cheats.begin(), m_cheats.end(),
+                        [](const CheatEntry& c) { return c.selected; });
+                    for (auto& cheat : m_cheats) {
+                        cheat.selected = !all_selected;
+                    }
+                }
+            }}),
+            std::make_pair(Button::Y, Action{"Download"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading) {
+                    DownloadCheats();
+                }
+            }}),
+            std::make_pair(Button::R, Action{"Preview"_i18n, [this](){
+                if (!m_cheats.empty() && !m_loading && m_index < (s64)m_cheats.size()) {
+                    PreviewCheat();
+                }
+            }})
+        );
+    }
+
+    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
+    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list->SetLayout(List::Layout::GRID);
+}
+
+CheatDownloadMenu::~CheatDownloadMenu() {
+    log_write("[Cheats] DEBUG: CheatDownloadMenu destructor called\n");
+    log_write("[Cheats] DEBUG: Cheats list size: %zu, m_should_close: %d\n", m_cheats.size(), m_should_close);
+}
+
+void CheatDownloadMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    // Check if we should close (from callback)
+    if (m_should_close) {
+        log_write("[Cheats] DEBUG: Update() - m_should_close flag detected, calling SetPop()\n");
+        log_write("[Cheats] DEBUG: Cheats list size: %zu, Index: %lld\n", m_cheats.size(), m_index);
+        log_write("[Cheats] DEBUG: Error message: %s\n", m_error_message.c_str());
+        SetPop();
+        return;
+    }
+
+    // Reset index if cheats list is empty
+    if (m_cheats.empty()) {
+        m_index = -1;
+    } else {
+        // Ensure index is valid
+        if (m_index < 0 || m_index >= (s64)m_cheats.size()) {
+            m_index = 0;
+        }
+
+        m_list->OnUpdate(controller, touch, m_index, m_cheats.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        });
+    }
+}
+
+void CheatDownloadMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    // Draw game info with Build ID
+    if (!m_game.build_id.empty()) {
+        gfx::drawTextArgs(vg, 80.f, GetY() + 10.f, 16.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s | %s", m_game.name.c_str(), m_game.build_id.c_str());
+    } else {
+        gfx::drawTextArgs(vg, 80.f, GetY() + 10.f, 16.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s", m_game.name.c_str());
+    }
+
+    if (m_loading) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Loading cheats...");
+        return;
+    }
+
+    if (!m_error_message.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 20.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_ERROR),
+            "%s", m_error_message.c_str());
+        return;
+    }
+
+    if (m_cheats.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "Cheats Not Found");
+        return;
+    }
+
+    // Save and restore scissor to clip list drawing area
+    nvgSave(vg);
+    // Clip area starts below the header text
+    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+    ON_SCOPE_EXIT(nvgRestore(vg));
+
+    constexpr float text_xoffset{15.f};
+
+    m_list->Draw(vg, theme, m_cheats.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        const auto& [x, y, w, h] = v;
+        const auto& cheat = m_cheats[i];
+
+        auto text_id = ThemeEntryID_TEXT;
+        if (m_index == i) {
+            text_id = ThemeEntryID_TEXT_SELECTED;
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+        } else {
+            if (i != m_cheats.size() - 1) {
+                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
+        }
+
+        // Selection indicator - only for NxDb, not for CheatSlips
+        if (m_source != CheatSource::Cheatslips) {
+            if (cheat.selected) {
+                gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f, 20.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_HIGHLIGHT_1),
+                    "[X]");
+            } else {
+                gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f, 20.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO),
+                    "[ ]");
+            }
+        }
+
+        // Cheat name (truncated)
+        std::string name = cheat.name;
+        if (name.length() > 60) {
+            name = name.substr(0, 57) + "...";
+        }
+
+        // Adjust text offset based on source type
+        float text_offset = (m_source == CheatSource::Cheatslips) ? text_xoffset : text_xoffset + 50.f;
+
+        // Draw cheat name (removed source badges - they're only in View Cheats)
+        gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 18.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            theme->GetColour(text_id),
+            "%s", name.c_str());
+    });
+}
+
+void CheatDownloadMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+
+    if (!m_loaded && !m_loading) {
+        FetchCheats();
+    }
+}
+
+void CheatDownloadMenu::SetIndex(s64 index) {
+    m_index = index;
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+}
+
+void CheatDownloadMenu::RunBuildIdDiagnostics(bool fetch_on_success) {
+    m_loading = false;
+    m_loaded = true;
+    m_error_message.clear();
+
+    std::ostringstream report;
+    report << "Build ID Scan Report\n\n";
+    report << "Title ID: " << FormatTitleId(m_game.title_id) << "\n";
+    report << "Version: v" << m_game.version << "\n";
+    report << "Mode: " << (App::IsApplication() ? "Application" : "Applet") << "\n\n";
+
+    log_write("[Cheats] ===== Build ID diagnostics for %016lx =====\n", m_game.title_id);
+    log_write("[Cheats] Diagnostics mode: %s\n", App::IsApplication() ? "application" : "applet");
+
+    if (const auto cached = GetCachedCheatMetadata(m_game.title_id); cached) {
+        report << "Cache: ";
+        if (IsValidBuildId(cached->build_id)) {
+            report << cached->build_id << " (" << cached->source << ")\n";
+            log_write("[Cheats] Diagnostics cache hit: %s (source=%s)\n",
+                      cached->build_id.c_str(), cached->source.c_str());
+        } else {
+            report << "present, but no valid Build ID\n";
+            log_write("[Cheats] Diagnostics cache entry present without valid Build ID\n");
+        }
+    } else {
+        report << "Cache: no entry\n";
+        log_write("[Cheats] Diagnostics cache miss\n");
+    }
+
+    report << "\nTrying dmnt:cht...\n";
+    const auto dmnt_build_id = GetBuildIdFromDmnt(m_game.title_id);
+    if (!dmnt_build_id.empty()) {
+        m_game.build_id = NormalizeBuildId(dmnt_build_id);
+        SaveDetectedBuildIdToCache(m_game, m_game.build_id, "dmnt");
+        report << "dmnt:cht resolved: " << m_game.build_id << "\n";
+        log_write("[Cheats] Diagnostics resolved via dmnt:cht: %s\n", m_game.build_id.c_str());
+
+        if (fetch_on_success) {
+            m_error_message.clear();
+            m_loading = true;
+            if (m_source == CheatSource::NxDb) {
+                FetchNxDbCheatsFromGithub(m_game.build_id);
+            } else {
+                FetchCheatsFromApi(m_game.build_id);
+            }
+            return;
+        }
+
+        report << "\nDetection succeeded. Press Back and re-open fetch if needed.";
+        m_error_message = report.str();
+        return;
+    }
+    report << "dmnt:cht failed. See log for exact service path details.\n";
+    log_write("[Cheats] Diagnostics dmnt:cht failed\n");
+
+    report << "\nTrying installed Program NCA...\n";
+    const auto installed_nca_build_id = GetBuildIdFromInstalledNca(m_game.title_id);
+    if (!installed_nca_build_id.empty()) {
+        m_game.build_id = NormalizeBuildId(installed_nca_build_id);
+        SaveDetectedBuildIdToCache(m_game, m_game.build_id, "installed-nca");
+        report << "Installed Program NCA resolved: " << m_game.build_id << "\n";
+        log_write("[Cheats] Diagnostics resolved via installed Program NCA: %s\n", m_game.build_id.c_str());
+
+        if (fetch_on_success) {
+            m_error_message.clear();
+            m_loading = true;
+            if (m_source == CheatSource::NxDb) {
+                FetchNxDbCheatsFromGithub(m_game.build_id);
+            } else {
+                FetchCheatsFromApi(m_game.build_id);
+            }
+            return;
+        }
+
+        report << "\nDetection succeeded. Press Back and re-open fetch if needed.";
+        m_error_message = report.str();
+        return;
+    }
+    report << "Installed Program NCA failed. See log for content lookup details.\n";
+    log_write("[Cheats] Diagnostics installed Program NCA failed\n");
+
+    report << "\nTrying installed NSO...\n";
+    const auto nso_build_id = GetBuildIdFromNso(m_game.title_id);
+    if (!nso_build_id.empty()) {
+        m_game.build_id = NormalizeBuildId(nso_build_id);
+        SaveDetectedBuildIdToCache(m_game, m_game.build_id, "nso");
+        report << "Installed NSO resolved: " << m_game.build_id << "\n";
+        log_write("[Cheats] Diagnostics resolved via installed NSO: %s\n", m_game.build_id.c_str());
+
+        if (fetch_on_success) {
+            m_error_message.clear();
+            m_loading = true;
+            if (m_source == CheatSource::NxDb) {
+                FetchNxDbCheatsFromGithub(m_game.build_id);
+            } else {
+                FetchCheatsFromApi(m_game.build_id);
+            }
+            return;
+        }
+
+        report << "\nDetection succeeded. Press Back and re-open fetch if needed.";
+        m_error_message = report.str();
+        return;
+    }
+    report << "Installed NSO failed. See log for storage/path attempts.\n";
+    log_write("[Cheats] Diagnostics installed NSO failed\n");
+
+    report << "\nExact detection failed.\n";
+    report << "HATS can only continue if nx-cheats-db exposes a single unambiguous candidate Build ID.";
+    m_error_message = report.str();
+}
+
+void CheatDownloadMenu::FetchCheats() {
+    m_loading = true;
+    m_error_message.clear();
+    m_cheats.clear();
+    m_should_close = false;
+
+    // nx-cheats-db and CheatSlips both require an exact Build ID match.
+    if (m_source == CheatSource::NxDb) {
+        FetchCheatsFromNxDb();
+        return;
+    }
+
+    // For CheatSlips, only trust exact Build IDs from the live process,
+    // the installed Program NCA, or the installed title's main NSO.
+    // Do not guess from version maps.
+    const auto lookup = LookupBuildIdForCheats(m_game.title_id);
+    if (!lookup.build_id.empty()) {
+        m_game.build_id = lookup.build_id;
+        SaveDetectedBuildIdToCache(m_game, m_game.build_id, lookup.source.c_str());
+        log_write("[Cheats] Got Build ID from %s: %s\n", lookup.source.c_str(), m_game.build_id.c_str());
+        FetchCheatsFromApi(m_game.build_id);
+        return;
+    }
+
+    m_loading = false;
+    m_loaded = true;
+    m_error_message = GetBuildIdFailureMessage(lookup.failure_reason);
+    log_write("[Cheats] Exact Build ID detection failed for CheatSlips, reason=%d\n",
+              static_cast<int>(lookup.failure_reason));
+
+    if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing) {
+        ShowProdKeysMissingDialog();
+        m_should_close = true;
+    } else if (lookup.failure_reason == BuildIdFailureReason::GameNotFound) {
+        App::Notify(m_error_message);
+        m_should_close = true;
+    }
+}
+
+// Fetch cheats from nx-cheats-db on GitHub
+void CheatDownloadMenu::FetchCheatsFromNxDb() {
+    log_write("[Cheats] Fetching cheats from nx-cheats-db (GitHub)\n");
+    m_should_close = false;
+
+    const auto lookup = LookupBuildIdForCheats(m_game.title_id);
+    if (!lookup.build_id.empty()) {
+        m_game.build_id = lookup.build_id;
+        SaveDetectedBuildIdToCache(m_game, m_game.build_id, lookup.source.c_str());
+        log_write("[Cheats] Got Build ID from %s: %s\n", lookup.source.c_str(), m_game.build_id.c_str());
+        FetchNxDbCheatsFromGithub(m_game.build_id);
+        return;
+    }
+
+    if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing ||
+        lookup.failure_reason == BuildIdFailureReason::GameNotFound) {
+        m_loading = false;
+        m_loaded = true;
+        m_error_message = GetBuildIdFailureMessage(lookup.failure_reason);
+        if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing) {
+            ShowProdKeysMissingDialog();
+        } else {
+            App::Notify(m_error_message);
+        }
+        m_should_close = true;
+        return;
+    }
+
+    // Refuse to guess from version maps. Inspect the cheats file directly
+    // and only proceed when there is a single unambiguous candidate.
+    log_write("[Cheats] Exact Build ID lookup failed, inspecting cheats file directly\n");
+    FetchCheatsFileAndExtractBuildIds();
+}
+
+// Inspect the nx-cheats-db cheats file directly and extract candidate Build IDs.
+void CheatDownloadMenu::FetchCheatsFileAndExtractBuildIds() {
+    const auto title_id_str = FormatTitleId(m_game.title_id);
+    const auto cheat_url = std::string(NX_DB_GITHUB_BASE) + "/cheats/" + title_id_str + ".json";
+
+    log_write("[Cheats] Fetching cheats file directly to inspect Build IDs: %s\n", cheat_url.c_str());
+
+    curl::Api().ToMemoryAsync(
+        curl::Url{cheat_url},
+        curl::Header{},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this](auto& result) {
+            if (!result.success || result.code == 404) {
+                m_loading = false;
+                m_loaded = true;
+                m_error_message.clear();
+                log_write("[Cheats] nx-cheats-db cheats file not found, HTTP code: %ld\n", result.code);
+                App::Notify("Cheats Not Found");
+                SetPop();
+                return true;
+            }
+
+            std::string content(result.data.begin(), result.data.end());
+            const auto build_ids = ExtractNxDbBuildIds(content);
+            log_write("[Cheats] Direct cheats file inspection found %zu Build ID(s)\n", build_ids.size());
+
+            if (build_ids.empty()) {
+                m_loading = false;
+                m_loaded = true;
+                m_error_message.clear();
+                App::Notify("Cheats Not Found");
+                SetPop();
+                return true;
+            }
+
+            if (build_ids.size() == 1) {
+                m_game.build_id = build_ids[0];
+                log_write("[Cheats] Only one Build ID found, using %s\n", m_game.build_id.c_str());
+                FetchNxDbCheatsFromGithub(m_game.build_id);
+                return true;
+            }
+
+            m_loading = false;
+            m_loaded = true;
+            log_write("[Cheats] Multiple candidate Build IDs found, refusing to guess\n");
+            m_error_message.clear();
+            App::Notify("Cheats Not Found");
+            SetPop();
+            return true;
+        }}
+    );
+}
+
+// Fetch cheat JSON file from GitHub
+void CheatDownloadMenu::FetchNxDbCheatsFromGithub(const std::string& build_id) {
+    const auto title_id_str = FormatTitleId(m_game.title_id);  // UPPERCASE for nx-cheats-db
+    const auto cheat_url = std::string(NX_DB_GITHUB_BASE) + "/cheats/" + title_id_str + ".json";
+
+    log_write("[Cheats] Fetching cheats from: %s\n", cheat_url.c_str());
+
+    curl::Api().ToMemoryAsync(
+        curl::Url{cheat_url},
+        curl::Header{},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this, build_id](auto& result) {
+            m_loading = false;
+            m_loaded = true;
+            m_index = -1; // Reset index
+
+            // Check for HTTP 404 (Not Found) - immediately notify user
+            if (result.code == 404) {
+                m_cheats.clear();
+                m_error_message.clear();
+                log_write("[Cheats] Cheats not found in nx-cheats-db (HTTP 404)\n");
+                App::Notify("Cheats Not Found");
+                SetPop();
+                return true;
+            }
+
+            if (!result.success) {
+                m_cheats.clear();
+                m_error_message = "Failed to fetch cheats from nx-cheats-db.\nTitle may not be supported.\nCheck your internet connection.";
+                log_write("[Cheats] Failed to fetch cheat file, HTTP code: %ld\n", result.code);
+                App::Notify("Failed to fetch from nx-cheats-db");
+                SetPop();
+                return true;
+            }
+
+            std::string content(result.data.begin(), result.data.end());
+            log_write("[Cheats] Cheat file response size: %zu bytes\n", content.size());
+
+            // Parse the cheat JSON
+            m_cheats = ParseNxDbCheats(content, build_id);
+
+            if (m_cheats.empty()) {
+                const auto reversed_build_id = ReverseBuildIdBytes(build_id);
+                if (reversed_build_id != NormalizeBuildId(build_id)) {
+                    log_write("[Cheats] Retrying with reversed-byte Build ID: %s -> %s\n",
+                              build_id.c_str(), reversed_build_id.c_str());
+                    m_cheats = ParseNxDbCheats(content, reversed_build_id);
+                    if (!m_cheats.empty()) {
+                        m_game.build_id = reversed_build_id;
+                        SaveDetectedBuildIdToCache(m_game, m_game.build_id, "byte-swap-fix");
+                    }
+                }
+            }
+
+            if (m_cheats.empty()) {
+                log_write("[Cheats] Build ID %s not found in cheats file\n", build_id.c_str());
+                m_error_message.clear();
+                App::Notify("Cheats Not Found"_i18n);
+                SetPop();
+            } else {
+                m_index = 0; // Set to first item when cheats are found
+                log_write("[Cheats] Successfully fetched %zu cheats from nx-cheats-db\n", m_cheats.size());
+                // Optionally cache the cheat file locally
+                CacheNxDbCheatFile(content);
+            }
+
+            return true;
+        }}
+    );
+}
+
+// Cache the fetched cheat file locally for offline use
+void CheatDownloadMenu::CacheNxDbCheatFile(const std::string& content) {
+    fs::FsNativeSd fs;
+
+    // Create cache directory
+    fs.CreateDirectoryRecursively(NX_DB_PATH);
+
+    // Write cheat file (use UPPERCASE for nx-cheats-db)
+    fs::FsPath cache_path;
+    const auto title_id_str = FormatTitleId(m_game.title_id);  // UPPERCASE for nx-cheats-db
+    std::snprintf(cache_path, sizeof(cache_path), "%s/%s.json", NX_DB_PATH, title_id_str.c_str());
+
+    const auto content_data = std::vector<u8>(
+        reinterpret_cast<const u8*>(content.data()),
+        reinterpret_cast<const u8*>(content.data()) + content.size()
+    );
+    if (R_SUCCEEDED(fs.write_entire_file(cache_path, content_data))) {
+        log_write("[Cheats] Cached cheat file to: %s\n", cache_path.s);
+    }
+}
+
+void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
+    // Get token (optional - API works without it but has lower quota)
+    auto token = GetCheatslipsToken();
+
+    const auto title_id_str = FormatTitleId(m_game.title_id);
+    // CheatSlips API URL: /api/v1/cheats/{title_id} (build_id is for filtering, not in URL)
+    const auto url = std::string(CHEATSLIPS_API_URL) + "/" + title_id_str;
+
+    log_write("[Cheats] Fetching cheats from CheatSlips: %s\n", url.c_str());
+
+    // Prepare headers - token is optional
+    if (!token.empty()) {
+        log_write("[Cheats] Using authenticated request (higher quota)\n");
+        curl::Api().ToMemoryAsync(
+            curl::Url{url},
+            curl::Header{
+                {"Accept", "application/json"},
+                {"X-API-TOKEN", token}
+            },
+            curl::StopToken{this->GetToken()},
+            curl::OnComplete{[this, build_id](auto& result) {
+                log_write("[Cheats] DEBUG: CheatSlips AUTH callback triggered\n");
+                log_write("[Cheats] CheatSlips request completed - success: %d, HTTP code: %ld\n", result.success, result.code);
+                log_write("[Cheats] DEBUG: Response data size: %zu bytes\n", result.data.size());
+
+                m_loading = false;
+                m_loaded = true;
+                m_index = -1; // Reset index when loading completes
+
+                // Check for HTTP 404 (Not Found) - immediately notify user
+                if (result.code == 404) {
+                    log_write("[Cheats] DEBUG: HTTP 404 detected (AUTH) - cheats not found on CheatSlips\n");
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message.clear();
+                    log_write("[Cheats] Cheats not found on CheatSlips (HTTP 404)\n");
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (404 case)\n");
+                    App::Notify("Cheats Not Found");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                if (!result.success) {
+                    log_write("[Cheats] DEBUG: Request failed (AUTH) - success=false, HTTP code: %ld\n", result.code);
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message = "Failed to fetch cheats from CheatSlips.\nCheck your internet connection.";
+                    log_write("[Cheats] Failed to fetch CheatSlips cheats, HTTP code: %ld\n", result.code);
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (failure case)\n");
+                    // Auto-exit with notification
+                    App::Notify("Failed to fetch from CheatSlips");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                std::string content(result.data.begin(), result.data.end());
+                log_write("[Cheats] CheatSlips response size: %zu bytes\n", content.size());
+                log_write("[Cheats] DEBUG: Response content preview (first 200 chars): %s\n",
+                    content.substr(0, std::min(size_t(200), content.size())).c_str());
+
+                // Check if response is empty or just "[]"
+                if (content.empty() || content == "[]" || content == "null") {
+                    log_write("[Cheats] DEBUG: Empty response detected (AUTH) - content: '%s'\n",
+                        content.empty() ? "(empty)" : content.c_str());
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message.clear();
+                    log_write("[Cheats] Empty response from CheatSlips\n");
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (empty response case)\n");
+                    App::Notify("Cheats Not Found");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                log_write("[Cheats] DEBUG: Parsing CheatSlips response (AUTH)...\n");
+                m_cheats = ParseCheatslipsCheats(content, build_id);
+                log_write("[Cheats] DEBUG: Parsing complete, cheats count: %zu\n", m_cheats.size());
+
+                if (m_cheats.empty()) {
+                    log_write("[Cheats] DEBUG: Parsed cheats list is empty (AUTH)\n");
+                    // Check if response contains quota error
+                    if (content.find("Quota exceeded") != std::string::npos ||
+                        content.find("quota") != std::string::npos) {
+                        m_error_message = "Daily quota exceeded.\nAdd a token for higher limits.";
+                        App::Notify("Daily quota exceeded - Add token for higher limits");
+                    } else {
+                        m_error_message.clear();
+                        App::Notify("Cheats Not Found");
+                    }
+                    log_write("[Cheats] No cheats found, error: %s\n", m_error_message.c_str());
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (no cheats case)\n");
+                    // Auto-exit
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                } else {
+                    m_index = 0; // Set to first item when cheats are found
+                    log_write("[Cheats] Successfully fetched %zu cheats\n", m_cheats.size());
+                    log_write("[Cheats] DEBUG: Leaving m_should_close = false (success case)\n");
+                }
+
+                return true;
+            }}
+        );
+    } else {
+        log_write("[Cheats] Using unauthenticated request (limited quota)\n");
+        curl::Api().ToMemoryAsync(
+            curl::Url{url},
+            curl::Header{
+                {"Accept", "application/json"}
+            },
+            curl::StopToken{this->GetToken()},
+            curl::OnComplete{[this, build_id](auto& result) {
+                log_write("[Cheats] DEBUG: CheatSlips NO-AUTH callback triggered\n");
+                log_write("[Cheats] CheatSlips request completed - success: %d, HTTP code: %ld\n", result.success, result.code);
+                log_write("[Cheats] DEBUG: Response data size: %zu bytes\n", result.data.size());
+
+                m_loading = false;
+                m_loaded = true;
+                m_index = -1; // Reset index when loading completes
+
+                // Check for HTTP 404 (Not Found) - immediately notify user
+                if (result.code == 404) {
+                    log_write("[Cheats] DEBUG: HTTP 404 detected (NO-AUTH) - cheats not found on CheatSlips\n");
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message.clear();
+                    log_write("[Cheats] Cheats not found on CheatSlips (HTTP 404)\n");
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (404 case)\n");
+                    App::Notify("Cheats Not Found");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                if (!result.success) {
+                    log_write("[Cheats] DEBUG: Request failed (NO-AUTH) - success=false, HTTP code: %ld\n", result.code);
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message = "Failed to fetch cheats from CheatSlips.\nCheck your internet connection.";
+                    log_write("[Cheats] Failed to fetch CheatSlips cheats, HTTP code: %ld\n", result.code);
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (failure case)\n");
+                    // Auto-exit with notification
+                    App::Notify("Failed to fetch from CheatSlips");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                std::string content(result.data.begin(), result.data.end());
+                log_write("[Cheats] CheatSlips response size: %zu bytes\n", content.size());
+                log_write("[Cheats] DEBUG: Response content preview (first 200 chars): %s\n",
+                    content.substr(0, std::min(size_t(200), content.size())).c_str());
+
+                // Check if response is empty or just "[]"
+                if (content.empty() || content == "[]" || content == "null") {
+                    log_write("[Cheats] DEBUG: Empty response detected (NO-AUTH) - content: '%s'\n",
+                        content.empty() ? "(empty)" : content.c_str());
+                    m_cheats.clear();
+                    m_index = -1;
+                    m_error_message.clear();
+                    log_write("[Cheats] Empty response from CheatSlips\n");
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (empty response case)\n");
+                    App::Notify("Cheats Not Found");
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                    return true;
+                }
+
+                log_write("[Cheats] DEBUG: Parsing CheatSlips response (NO-AUTH)...\n");
+                m_cheats = ParseCheatslipsCheats(content, build_id);
+                log_write("[Cheats] DEBUG: Parsing complete, cheats count: %zu\n", m_cheats.size());
+
+                if (m_cheats.empty()) {
+                    log_write("[Cheats] DEBUG: Parsed cheats list is empty (NO-AUTH)\n");
+                    // Check if response contains quota error
+                    if (content.find("Quota exceeded") != std::string::npos ||
+                        content.find("quota") != std::string::npos) {
+                        m_error_message = "Daily quota exceeded.\nAdd a token for higher limits.";
+                        App::Notify("Daily quota exceeded - Add token for higher limits");
+                    } else {
+                        m_error_message.clear();
+                        App::Notify("Cheats Not Found");
+                    }
+                    log_write("[Cheats] No cheats found, error: %s\n", m_error_message.c_str());
+                    log_write("[Cheats] DEBUG: Setting m_should_close = true (no cheats case)\n");
+                    // Auto-exit
+                    m_should_close = true;
+                    log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
+                } else {
+                    m_index = 0; // Set to first item when cheats are found
+                    log_write("[Cheats] Successfully fetched %zu cheats\n", m_cheats.size());
+                    log_write("[Cheats] DEBUG: Leaving m_should_close = false (success case)\n");
+                }
+
+                return true;
+            }}
+        );
+    }
+}
+
+void CheatDownloadMenu::DownloadCheats() {
+    // Check if we have a valid build ID
+    if (m_game.build_id.empty()) {
+        App::Notify("No Build ID detected!");
+        return;
+    }
+
+    // Check if cheats list is empty or still loading
+    if (m_loading) {
+        App::Notify("Still loading cheats, please wait...");
+        return;
+    }
+
+    if (m_cheats.empty()) {
+        App::Notify("No cheats available to download!");
+        return;
+    }
+
+    // Count selected cheats
+    size_t selected_count = 0;
+    for (const auto& cheat : m_cheats) {
+        if (cheat.selected) selected_count++;
+    }
+
+    if (selected_count == 0) {
+        App::Notify("No cheats selected!");
+        return;
+    }
+
+    auto prompt = "Download " + std::to_string(selected_count) + " cheat(s)?";
+    if (selected_count > ATMOSPHERE_MAX_CHEATS_PER_FILE) {
+        prompt += "\n\nAtmosphere/Edizon supports 128 cheats per file.\nOnly the first 128 new cheats will be installed.";
+    }
+
+    App::Push<OptionBox>(
+        prompt,
+        "Cancel"_i18n, "Download", 1,
+        [this, selected_count](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            App::Push<ProgressBox>(0, "Downloading"_i18n, m_game.name,
+                [this](auto pbox) -> Result {
+                    // Collect selected cheats
+                    std::vector<CheatEntry> selected;
+                    for (const auto& cheat : m_cheats) {
+                        if (cheat.selected) {
+                            selected.push_back(cheat);
+                        }
+                    }
+
+                    return WriteCheatFile(m_game.title_id, m_game.build_id, selected);
+                },
+                [this, selected_count](Result rc) {
+                    if (R_SUCCEEDED(rc)) {
+                        if (selected_count > ATMOSPHERE_MAX_CHEATS_PER_FILE) {
+                            App::Notify("Cheats installed up to the 128-entry limit");
+                        } else {
+                            App::Notify("Cheats installed for " + m_game.name);
+                        }
+                        SetPop();
+                    } else {
+                        App::Push<ErrorBox>(rc, "Failed to download cheats");
+                    }
+                }
+            );
+        }
+    );
+}
+
+void CheatDownloadMenu::DeleteCheat() {
+    if (m_game.build_id.empty()) {
+        App::Notify("No Build ID detected!");
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "Delete cheat file for Build ID " + m_game.build_id + "?",
+        "Cancel"_i18n, "Delete", 1,
+        [this](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            if (DeleteCheatFile(m_game.title_id, m_game.build_id)) {
+                App::Notify("Deleted cheat file");
+            } else {
+                App::Notify("Cheat file not found");
+            }
+        }
+    );
+}
+
+void CheatDownloadMenu::ShowExistingCheats() {
+    m_existing_cheats.clear();
+
+    auto existing = GetExistingCheats(m_game.title_id);
+    for (const auto& [build_id, filename] : existing) {
+        ExistingCheat cheat;
+        cheat.build_id = build_id;
+        cheat.filename = filename;
+        cheat.installed = (build_id == m_game.build_id);
+        m_existing_cheats.push_back(cheat);
+    }
+
+    if (m_existing_cheats.empty()) {
+        App::Notify("No existing cheats found");
+        return;
+    }
+
+    // Build a message showing existing cheats
+    std::string msg = "Existing cheat files:\n\n";
+    for (const auto& cheat : m_existing_cheats) {
+        msg += cheat.build_id;
+        if (cheat.build_id == m_game.build_id) {
+            msg += " [Current]";
+        }
+        msg += "\n";
+    }
+
+    App::Push<OptionBox>(msg, "Close"_i18n, "", 0, [](auto) {});
+}
+
+void CheatDownloadMenu::PreviewCheat() {
+    if (m_index < 0 || m_index >= (s64)m_cheats.size()) {
+        return;
+    }
+
+    const auto& cheat = m_cheats[m_index];
+
+    // Build preview message
+    std::string msg = "Cheat Preview:\n\n";
+    msg += "Name: " + cheat.name + "\n";
+    msg += "Build ID: " + cheat.build_id + "\n";
+
+    // Add source info
+    const char* source_str = "Unknown";
+    switch (cheat.source) {
+        case CheatSource::Cheatslips:
+            source_str = "CheatSlips";
+            break;
+        case CheatSource::NxDb:
+            source_str = "nx-cheats-db";
+            break;
+        case CheatSource::Gbatemp:
+            source_str = "GBATemp";
+            break;
+    }
+    msg += "Source: " + std::string(source_str) + "\n\n";
+
+    // Add content
+    msg += "Content:\n";
+    msg += "─────────────────────────────\n";
+
+    // Check if content is empty or just whitespace
+    std::string content = cheat.content;
+    if (content.empty() || content.find_first_not_of(" \t\r\n") == std::string::npos) {
+        msg += "[BLANK OR QUOTA EXCEEDED]\n";
+        msg += "\n⚠️ WARNING: This cheat has no content!\n";
+        msg += "This can happen when CheatSlips quota is exceeded.\n";
+    } else {
+        // Truncate content if too long for display (max ~500 chars)
+        if (content.length() > 500) {
+            content = content.substr(0, 497) + "...";
+        }
+        msg += content;
+    }
+
+    msg += "\n─────────────────────────────";
+
+    // Show preview dialog
+    App::Push<OptionBox>(msg, "Close"_i18n, "", 0, [](auto) {});
+}
+
+// CheatslipsLoginMenu implementation
+CheatslipsLoginMenu::CheatslipsLoginMenu()
+    : MenuBase{"CheatSlips Login", MenuFlag_None} {
+    this->SetActions(
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+}
+
+CheatslipsLoginMenu::~CheatslipsLoginMenu() = default;
+
+void CheatslipsLoginMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+}
+
+void CheatslipsLoginMenu::Draw(NVGcontext* vg, Theme* theme) {
+    // Don't draw anything - keyboard provides the UI
+    (void)vg;
+    (void)theme;
+}
+
+void CheatslipsLoginMenu::OnFocusGained() {
+    m_keyboard_shown = false;
+    ShowEmailKeyboard();
+}
+
+void CheatslipsLoginMenu::ShowEmailKeyboard() {
+    if (m_keyboard_shown) return;
+    m_keyboard_shown = true;
+
+    std::string email;
+    Result rc = swkbd::ShowText(email, "CheatSlips Email", "", 0, 32);
+    if (R_FAILED(rc) || email.empty()) {
+        SetPop();
+        return;
+    }
+
+    m_email = email;
+    m_state = LoginState::Password;
+    m_keyboard_shown = false;
+    ShowPasswordKeyboard();
+}
+
+void CheatslipsLoginMenu::ShowPasswordKeyboard() {
+    if (m_keyboard_shown) return;
+    m_keyboard_shown = true;
+
+    std::string password;
+    Result rc = swkbd::ShowText(password, "CheatSlips Password", "", 0, 32);
+    if (R_FAILED(rc) || password.empty()) {
+        SetPop();
+        return;
+    }
+
+    m_password = password;
+    Authenticate();
+}
+
+void CheatslipsLoginMenu::Authenticate() {
+    auto token = AuthenticateCheatslips(m_email, m_password);
+    if (token.empty()) {
+        App::Notify("Login failed. Check your credentials.");
+    } else {
+        SaveCheatslipsToken(token);
+        App::Notify("Logged in successfully!");
+    }
+    SetPop();
+}
+
+} // namespace sphaira::ui::menu::hats

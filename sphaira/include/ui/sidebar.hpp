@@ -91,6 +91,26 @@ private:
     std::string m_false_str;
 };
 
+class SidebarEntryCheckbox final : public SidebarEntryBase {
+public:
+    using Getter = std::function<bool()>;
+    using Callback = std::function<void(bool)>;
+
+public:
+    explicit SidebarEntryCheckbox(const std::string& title, Getter getter, Callback cb, const std::string& info = "");
+    void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
+
+private:
+    Getter m_getter;
+    Callback m_callback;
+};
+
+class SidebarEntryHeader final : public SidebarEntryBase {
+public:
+    explicit SidebarEntryHeader(const std::string& title, const std::string& info = "");
+    void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
+};
+
 class SidebarEntryCallback final : public SidebarEntryBase {
 public:
     using Callback = std::function<void()>;

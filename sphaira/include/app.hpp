@@ -107,6 +107,7 @@ public:
     static auto Get12HourTimeEnable() -> bool;
     static auto GetLanguage() -> long;
     static auto GetTextScrollSpeed() -> long;
+    static auto GetGodModeEnabled() -> bool;
 
     static void SetMtpEnable(bool enable);
     static void SetFtpEnable(bool enable);
@@ -123,6 +124,7 @@ public:
     static void Set12HourTimeEnable(bool enable);
     static void SetLanguage(long index);
     static void SetTextScrollSpeed(long index);
+    static void SetGodModeEnable(bool enable);
 
     static auto Install(OwoConfig& config) -> Result;
     static auto Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result;
@@ -301,6 +303,7 @@ public:
     option::OptionString m_left_menu{INI_SECTION, "left_side_menu", "FileBrowser"};
     option::OptionString m_right_menu{INI_SECTION, "right_side_menu", "Appstore"};
     option::OptionBool m_progress_boost_mode{INI_SECTION, "progress_boost_mode", true};
+    option::OptionBool m_god_mode{INI_SECTION, "god_mode", false};
 
     // install options
     option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};

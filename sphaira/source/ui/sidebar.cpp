@@ -17,6 +17,10 @@ auto DistanceBetweenY(Vec4 va, Vec4 vb) -> Vec4 {
     };
 }
 
+auto DisabledTextColour() -> NVGcolor {
+    return nvgRGBA(135, 138, 148, 255);
+}
+
 } // namespace
 
 SidebarEntryBase::SidebarEntryBase(const std::string& title, const std::string& info)
@@ -82,7 +86,7 @@ auto SidebarEntryBase::OnFocusLost() noexcept -> void {
 }
 
 void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
-    const auto colour_id = IsEnabled() ? ThemeEntryID_TEXT : ThemeEntryID_TEXT_INFO;
+    const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
 
     // scrolling text
     float bounds[4];
@@ -95,13 +99,13 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
     nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, bounds);
 
     const Vec2 key_text_pos{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f)};
-    gfx::drawText(vg, key_text_pos, 20.f, theme->GetColour(colour_id), left.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    gfx::drawText(vg, key_text_pos, 20.f, colour, left.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-    const auto value_id = use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+    const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
     const float xpos = m_pos.x + m_pos.w - 15.f - std::min(max_off, bounds[2]);
     const float ypos = m_pos.y + (m_pos.h / 2.f);
 
-    m_scolling_value.Draw(vg, HasFocus(), xpos, ypos, max_off, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(value_id), right);
+    m_scolling_value.Draw(vg, HasFocus(), xpos, ypos, max_off, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
 }
 
 SidebarEntryBool::SidebarEntryBool(const std::string& title, bool option, Callback cb, const std::string& info, const std::string& true_str, const std::string& false_str)
@@ -154,6 +158,41 @@ void SidebarEntryBool::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, 
     SidebarEntryBase::DrawEntry(vg, theme, m_title, m_option ? m_true_str : m_false_str, m_option);
 }
 
+SidebarEntryCheckbox::SidebarEntryCheckbox(const std::string& title, Getter getter, Callback cb, const std::string& info)
+: SidebarEntryBase{title, info}
+, m_getter{getter}
+, m_callback{cb} {
+    SetAction(Button::A, Action{"OK"_i18n, [this](){
+        if (!IsEnabled()) {
+            DependsClick();
+        } else if (m_callback) {
+            m_callback(!m_getter());
+        }
+    }});
+}
+
+void SidebarEntryCheckbox::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) {
+    SidebarEntryBase::Draw(vg, theme, root_pos, left);
+    SidebarEntryBase::DrawEntry(vg, theme, m_title, m_getter() ? "\uE14B" : "", m_getter());
+}
+
+SidebarEntryHeader::SidebarEntryHeader(const std::string& title, const std::string& info)
+: SidebarEntryBase{title, info} {
+}
+
+void SidebarEntryHeader::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) {
+    SidebarEntryBase::Draw(vg, theme, root_pos, left);
+
+    gfx::drawText(
+        vg,
+        Vec2{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f) + 10.f},
+        16.f,
+        theme->GetColour(ThemeEntryID_TEXT_SELECTED),
+        m_title.c_str(),
+        NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE
+    );
+}
+
 SidebarEntryCallback::SidebarEntryCallback(const std::string& title, Callback cb, bool pop_on_click, const std::string& info)
 : SidebarEntryBase{title, info}
 , m_callback{cb}
@@ -178,8 +217,8 @@ SidebarEntryCallback::SidebarEntryCallback(const std::string& title, Callback cb
 void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) {
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
-    const auto colour_id = IsEnabled() ? ThemeEntryID_TEXT : ThemeEntryID_TEXT_INFO;
-    gfx::drawText(vg, Vec2{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f)}, 20.f, theme->GetColour(colour_id), m_title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
+    gfx::drawText(vg, Vec2{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f)}, 20.f, colour, m_title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 }
 
 SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& items, std::string& index, const std::string& info)

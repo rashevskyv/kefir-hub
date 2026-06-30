@@ -17,6 +17,10 @@ enum FsEntryFlag {
     FsEntryFlag_ReadOnly = 1 << 0,
     // supports file assoc.
     FsEntryFlag_Assoc = 1 << 1,
+    // doesn't support file stat.
+    FsEntryFlag_NoStatFile = 1 << 2,
+    // doesn't support dir stat.
+    FsEntryFlag_NoStatDir = 1 << 3,
 };
 
 enum class FsType {
@@ -60,6 +64,14 @@ struct FsEntry {
 
     auto IsAssoc() const -> bool {
         return flags & FsEntryFlag_Assoc;
+    }
+
+    auto NoStatFile() const -> bool {
+        return flags & FsEntryFlag_NoStatFile;
+    }
+
+    auto NoStatDir() const -> bool {
+        return flags & FsEntryFlag_NoStatDir;
     }
 
     auto IsSame(const FsEntry& e) const {

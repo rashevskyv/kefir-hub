@@ -18,6 +18,7 @@
 #include "owo.hpp"
 #include "defines.hpp"
 #include "app.hpp"
+#include "nacp_util.hpp"
 #include "ui/progress_box.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -466,14 +467,16 @@ void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) {
 void patch_nacp(NacpStruct& nacp, const NcapPatch& patch) {
     // patch title
     if (!patch.name.empty()) {
-        for (auto& lang : nacp.lang) {
+        for (s64 i = 0; i < 16; i++) {
+            auto& lang = nacp_util::GetLanguageEntry(nacp, i);
             std::strncpy(lang.name, patch.name.c_str(), sizeof(lang.name)-1);
         }
     }
 
     // patch author
-    if (!patch.name.empty()) {
-        for (auto& lang : nacp.lang) {
+    if (!patch.author.empty()) {
+        for (s64 i = 0; i < 16; i++) {
+            auto& lang = nacp_util::GetLanguageEntry(nacp, i);
             std::strncpy(lang.author, patch.author.c_str(), sizeof(lang.author)-1);
         }
     }

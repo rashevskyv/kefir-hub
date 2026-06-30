@@ -559,6 +559,7 @@ enum class SphairaResult : Result {
 
     NcaFailedNcaHeaderHashVerify,
     NcaBadSigKeyGen,
+    NcaBadMagic,
 
     GcBadReadForDump,
     GcEmptyGamecard,
@@ -569,6 +570,7 @@ enum class SphairaResult : Result {
     GhdlEmptyAsset,
     GhdlFailedToDownloadAsset,
     GhdlFailedToDownloadAssetJson,
+    GhdlFileTooLarge,
 
     ThemezerFailedToDownloadThemeMeta,
     ThemezerFailedToDownloadTheme,
@@ -705,6 +707,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(KeyFailedDecyptETicketDeviceKey),
     MAKE_SPHAIRA_RESULT_ENUM(NcaFailedNcaHeaderHashVerify),
     MAKE_SPHAIRA_RESULT_ENUM(NcaBadSigKeyGen),
+    MAKE_SPHAIRA_RESULT_ENUM(NcaBadMagic),
     MAKE_SPHAIRA_RESULT_ENUM(GcBadReadForDump),
     MAKE_SPHAIRA_RESULT_ENUM(GcEmptyGamecard),
     MAKE_SPHAIRA_RESULT_ENUM(GcBadXciMagic),
@@ -713,6 +716,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(GhdlEmptyAsset),
     MAKE_SPHAIRA_RESULT_ENUM(GhdlFailedToDownloadAsset),
     MAKE_SPHAIRA_RESULT_ENUM(GhdlFailedToDownloadAssetJson),
+    MAKE_SPHAIRA_RESULT_ENUM(GhdlFileTooLarge),
     MAKE_SPHAIRA_RESULT_ENUM(ThemezerFailedToDownloadThemeMeta),
     MAKE_SPHAIRA_RESULT_ENUM(ThemezerFailedToDownloadTheme),
     MAKE_SPHAIRA_RESULT_ENUM(MainFailedToDownloadUpdate),
@@ -810,6 +814,33 @@ enum : Result {
 #define THREAD_AFFINITY_ALL (THREAD_AFFINITY_CORE0|THREAD_AFFINITY_CORE1|THREAD_AFFINITY_CORE2)
 
 // mutex helpers.
+struct ScopedRwLock {
+    ScopedRwLock(RwLock* lock, bool write) : m_lock{lock}, m_write{write} {
+        if (m_write) {
+            rwlockWriteLock(m_lock);
+        } else {
+            rwlockReadLock(m_lock);
+        }
+    }
+
+    ~ScopedRwLock() {
+        if (m_write) {
+            rwlockWriteUnlock(m_lock);
+        } else {
+            rwlockReadUnlock(m_lock);
+        }
+    }
+
+    ScopedRwLock(const ScopedRwLock&) = delete;
+    void operator=(const ScopedRwLock&) = delete;
+
+private:
+    RwLock* const m_lock;
+    bool const m_write;
+};
+
 #define SCOPED_MUTEX(mutex) \
     mutexLock(mutex); \
     ON_SCOPE_EXIT(mutexUnlock(mutex))
+
+#define SCOPED_RWLOCK(lock, write) ScopedRwLock ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE_){lock, write}

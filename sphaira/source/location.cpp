@@ -98,7 +98,11 @@ auto GetStdio(bool write) -> StdioEntries {
         char display_name[0x100];
         std::snprintf(display_name, sizeof(display_name), "%s (%s - %s - %zu GB)", e.name, LIBUSBHSFS_FS_TYPE_STR(e.fs_type), e.product_name, e.capacity / 1024 / 1024 / 1024);
 
-        out.emplace_back(e.name, display_name, e.write_protect);
+        u32 flags{};
+        if (e.write_protect || (e.flags & UsbHsFsMountFlags_ReadOnly)) {
+            flags |= ui::menu::filebrowser::FsEntryFlag_ReadOnly;
+        }
+        out.emplace_back(e.name, display_name, flags);
         log_write("\t[USBHSFS] %s name: %s serial: %s man: %s\n", e.name, e.product_name, e.serial_number, e.manufacturer);
     }
 

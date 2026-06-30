@@ -13,7 +13,8 @@ namespace sphaira::ui::menu::game {
 
 struct Entry {
     u64 app_id{};
-    u8 type{};
+    u8 last_event{};
+    u64 last_updated{};
     NacpLanguageEntry lang{};
     int image{};
     bool selected{};
@@ -30,6 +31,8 @@ struct Entry {
 
 enum SortType {
     SortType_Updated,
+    SortType_Alphabetical,
+    SortType_Publisher,
 };
 
 enum OrderType {
@@ -91,7 +94,6 @@ private:
     s64 m_index{}; // where i am in the array
     s64 m_selected_count{};
     std::unique_ptr<List> m_list{};
-    bool m_is_reversed{};
     bool m_dirty{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};

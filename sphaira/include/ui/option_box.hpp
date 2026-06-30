@@ -53,6 +53,7 @@ private:
     const bool m_own_image;
 
     Vec4 m_spacer_line{};
+    float m_button_yoff{};
 
     s64 m_index{};
     std::vector<OptionBoxEntry> m_entries{};
