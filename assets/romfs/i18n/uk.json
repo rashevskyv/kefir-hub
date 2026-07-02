@@ -419,5 +419,7 @@
   "Loading": "Завантаження",
   "Empty!": "Пусто!",
   "Not Ready...": "Не готово...",
-  "Error loading page!": "Помилка завантаження сторінки!"
+  "Error loading page!": "Помилка завантаження сторінки!",
+  "Open Updater": "Відкрити Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater видалено.\n\nОновлення Kefir тепер відбувається в меню Updater.\n\nЩоб перейти туди вручну, натисніть R, оберіть Updater, а потім оберіть версію Kefir."
 }

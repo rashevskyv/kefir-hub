@@ -5,12 +5,15 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "ui/scrollable_text.hpp"
+#include "ui/sidebar.hpp"
 #include "ui/menus/file_picker.hpp"
 
 #include "app.hpp"
 #include "log.hpp"
 #include "download.hpp"
 #include "fs.hpp"
+#include "threaded_file_transfer.hpp"
+#include "image.hpp"
 #include "i18n.hpp"
 #include "nacp_util.hpp"
 #include "yyjson_helper.hpp"
@@ -66,6 +69,15 @@ constexpr const char* AIO_TOKEN_PATH = "/config/aio-switch-updater/token.json";
 constexpr const char* CHEAT_METADATA_CACHE_PATH = "/config/hats-tools/cheat-metadata.json";
 constexpr u32 CHEAT_METADATA_CACHE_VERSION = 1;
 constexpr size_t ATMOSPHERE_MAX_CHEATS_PER_FILE = 128;
+
+// KefirUpdater-style full cheat packs. These do not require local Build ID lookup,
+// so they are the robust default path when installed title metadata is incomplete.
+constexpr const char* KEFIR_CHEATS_URL = "https://github.com/HamletDuFromage/switch-cheats-db/releases/latest/download/contents.zip";
+constexpr const char* KEFIR_CHEATS_GFX_URL = "https://github.com/HamletDuFromage/switch-cheats-db/releases/latest/download/contents_60fps-res-gfx.zip";
+constexpr const char* KEFIR_CHEATS_CACHE_DIR = "/config/kefir-updater";
+constexpr const char* KEFIR_CHEATS_ZIP = "/config/kefir-updater/cheats.zip";
+constexpr const char* KEFIR_VERSIONS_DIRECTORY = "https://raw.githubusercontent.com/HamletDuFromage/switch-cheats-db/master/versions/";
+constexpr const char* KEFIR_CHEATS_GBATEMP_DIRECTORY = "https://raw.githubusercontent.com/HamletDuFromage/switch-cheats-db/master/cheats_gbatemp/";
 
 // Number of titles to fetch per chunk (like original sphaira)
 constexpr s32 ENTRY_CHUNK_COUNT = 1000;
@@ -1630,6 +1642,7 @@ void AppendGameCardGames(std::vector<GameCheatInfo>& games, std::unordered_set<u
         if (info.name.empty()) {
             info.name = std::format("Game {:016X}", base_title_id);
         }
+        std::snprintf(info.lang.name, sizeof(info.lang.name), "%s", info.name.c_str());
 
         log_write("[Cheats] AppendGameCardGames: added inserted game card %016lX (%s) v%u\n",
                   info.title_id, info.name.c_str(), info.version);
@@ -1680,6 +1693,7 @@ auto EnumerateInstalledGames() -> std::vector<GameCheatInfo> {
             if (info.name.empty()) {
                 info.name = std::format("Game {:016X}", base_title_id);
             }
+            std::snprintf(info.lang.name, sizeof(info.lang.name), "%s", info.name.c_str());
             games.push_back(std::move(info));
         }
 
@@ -2385,12 +2399,32 @@ auto SanitizeManualCheatContent(const std::vector<u8>& data, std::string& out) -
     return wrote_any_code;
 }
 
-auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path) -> Result {
+auto ResolveManualTargetBuildId(const GameCheatInfo& game, const fs::FsPath* source_path = nullptr) -> std::string {
+    if (IsValidBuildId(game.build_id)) {
+        return NormalizeBuildId(game.build_id);
+    }
+
+    const auto lookup = LookupBuildIdForCheats(game.title_id);
+    if (IsValidBuildId(lookup.build_id)) {
+        return NormalizeBuildId(lookup.build_id);
+    }
+
+    if (source_path) {
+        const auto file_build_id = NormalizeBuildId(GetFileStem(source_path->s));
+        if (IsValidBuildId(file_build_id)) {
+            return file_build_id;
+        }
+    }
+
+    return {};
+}
+
+auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path, const std::string& target_build_id) -> Result {
     fs::FsNativeSd fs;
 
-    const auto build_id = NormalizeBuildId(GetFileStem(source_path.s));
+    const auto build_id = NormalizeBuildId(target_build_id);
     if (!IsValidBuildId(build_id)) {
-        log_write("[Cheats] Manual import rejected invalid Build ID filename: %s\n", source_path.s);
+        log_write("[Cheats] Manual import rejected invalid target Build ID: %s\n", target_build_id.c_str());
         return 1;
     }
 
@@ -2414,6 +2448,32 @@ auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path) -> Resul
 
     log_write("[Cheats] Imported manual cheat %s to %s\n", source_path.s, dest_path.s);
     return 0;
+}
+
+auto RenameCheatBuildId(u64 title_id, const std::string& old_build_id, const std::string& new_build_id, bool overwrite) -> Result {
+    const auto old_id = NormalizeBuildId(old_build_id);
+    const auto new_id = NormalizeBuildId(new_build_id);
+    R_UNLESS(IsValidBuildId(old_id) && IsValidBuildId(new_id), 1);
+
+    fs::FsNativeSd fs;
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+
+    fs::FsPath old_path;
+    std::snprintf(old_path, sizeof(old_path), "%s/%s.txt", cheats_dir.c_str(), old_id.c_str());
+
+    fs::FsPath new_path;
+    std::snprintf(new_path, sizeof(new_path), "%s/%s.txt", cheats_dir.c_str(), new_id.c_str());
+
+    R_UNLESS(fs.FileExists(old_path), 1);
+
+    if (fs.FileExists(new_path)) {
+        R_UNLESS(overwrite, FsError_PathAlreadyExists);
+        R_TRY(fs.DeleteFile(new_path));
+    }
+
+    R_TRY(fs.RenameFile(old_path, new_path));
+    R_TRY(fs.Commit());
+    R_SUCCEED();
 }
 
 // Get list of existing cheat files for a title
@@ -2952,6 +3012,99 @@ void RefreshCheatMetadataCache() {
               resolved_count, cache_entries.size());
 }
 
+auto DownloadAndExtractKefirCheats(ProgressBox* pbox, const char* url) -> Result {
+    fs::FsNativeSd fs;
+    R_TRY(fs.GetFsOpenResult());
+    R_TRY(fs.CreateDirectoryRecursively(KEFIR_CHEATS_CACHE_DIR));
+
+    if (fs.FileExists(KEFIR_CHEATS_ZIP)) {
+        fs.DeleteFile(KEFIR_CHEATS_ZIP);
+    }
+
+    pbox->NewTransfer("Downloading cheats pack...");
+    const auto result = curl::Api().ToFile(
+        curl::Url{url},
+        curl::Path{KEFIR_CHEATS_ZIP},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
+    R_UNLESS(result.success, Result_CurlFailedEasyInit);
+
+    pbox->NewTransfer("Installing cheats...");
+    R_TRY(thread::TransferUnzipAll(pbox, KEFIR_CHEATS_ZIP, &fs, "/atmosphere"));
+
+    if (fs.FileExists(KEFIR_CHEATS_ZIP)) {
+        fs.DeleteFile(KEFIR_CHEATS_ZIP);
+    }
+
+    R_TRY(fs.Commit());
+    R_SUCCEED();
+}
+
+void PromptKefirCheatsDownload(const char* title, const char* url) {
+    App::Push<OptionBox>(
+        "Download and install this cheats pack?\nExisting matching cheat files may be overwritten.",
+        "Cancel"_i18n, "Download"_i18n, 1,
+        [title, url](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            App::Push<ProgressBox>(0, "Downloading..."_i18n, title,
+                [url](auto pbox) -> Result {
+                    return DownloadAndExtractKefirCheats(pbox, url);
+                },
+                [](Result rc) {
+                    if (R_SUCCEEDED(rc)) {
+                        RefreshCheatMetadataCache();
+                        App::Notify("Cheats pack installed");
+                    } else {
+                        App::Push<ErrorBox>(rc, "Failed to install cheats pack");
+                    }
+                }
+            );
+        }
+    );
+}
+
+bool LoadGameControlImage(GameCheatInfo& game, title::ThreadResultData* result) {
+    if (!game.image && result && !result->icon.empty()) {
+        const auto image = ImageLoadFromMemory(result->icon, ImageFlag_JPEG);
+        if (!image.data.empty()) {
+            game.image = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void LoadGameResult(GameCheatInfo& game, title::ThreadResultData* result) {
+    if (!result) {
+        return;
+    }
+
+    game.status = result->status;
+    game.lang = result->lang;
+    if (game.lang.name[0] == '\0') {
+        std::snprintf(game.lang.name, sizeof(game.lang.name), "%s", game.name.c_str());
+    }
+}
+
+auto GetGameDisplayName(const GameCheatInfo& game) -> const char* {
+    return game.lang.name[0] != '\0' ? game.lang.name : game.name.c_str();
+}
+
+auto GetGameDisplayAuthor(const GameCheatInfo& game) -> const char* {
+    return game.lang.author[0] != '\0' ? game.lang.author : "Installed Title";
+}
+
+void FreeGameEntry(NVGcontext* vg, GameCheatInfo& game) {
+    if (game.image) {
+        nvgDeleteImage(vg, game.image);
+        game.image = 0;
+    }
+}
+
 // ============================================================
 // CheatsMenu - Main menu with cheat management options
 // ============================================================
@@ -2959,8 +3112,10 @@ void RefreshCheatMetadataCache() {
 CheatsMenu::CheatsMenu() : MenuBase{"Cheats", MenuFlag_None} {
     // Main cheat management options
     m_items = {
-        {"Download Cheats", "from nx-cheats-db (GitHub)"},
-        {"Upload Cheats", "Install a local Build ID .txt file"},
+        {"Download Kefir Cheats", "Full KefirUpdater cheats pack"},
+        {"Download 60FPS/GFX Cheats", "KefirUpdater performance/graphics pack"},
+        {"Download Exact Cheats", "Select game and match Build ID"},
+        {"Import From File", "Import a local cheat .txt file"},
         {"View Cheats", "View installed cheat codes"},
         {"Delete All Cheats", "Delete all existing cheat codes"},
         {"Delete Orphaned", "Delete cheats for uninstalled games"},
@@ -3041,28 +3196,28 @@ void CheatsMenu::SetIndex(s64 index) {
 
 void CheatsMenu::OnSelect() {
     switch (m_index) {
-        case 0: // Download Cheats from nx-cheats-db (default)
+        case 0: // Download full KefirUpdater cheats pack
+            PromptKefirCheatsDownload("Kefir Cheats", KEFIR_CHEATS_URL);
+            break;
+        case 1: // Download KefirUpdater 60FPS/GFX pack
+            PromptKefirCheatsDownload("60FPS/GFX Cheats", KEFIR_CHEATS_GFX_URL);
+            break;
+        case 2: // Download exact cheats from nx-cheats-db
             App::Push<CheatGameSelectMenu>(CheatSource::NxDb);
             break;
-        case 1: // Upload local cheat file
+        case 3: // Import local cheat file
             App::Push<filepicker::Menu>(
                 [](const fs::FsPath& path) -> bool {
-                    const auto build_id = NormalizeBuildId(GetFileStem(path.s));
-                    if (!IsValidBuildId(build_id)) {
-                        App::Notify("Cheat filename must be a 16-digit Build ID");
-                        return false;
-                    }
-
                     App::Push<CheatGameSelectMenu>(CheatSource::ManualFile, path);
                     return true;
                 },
                 std::vector<std::string>{"txt"}
             );
             break;
-        case 2: // View Cheats
+        case 4: // View Cheats
             App::Push<CheatViewMenu>();
             break;
-        case 3: // Delete All Cheats
+        case 5: // Delete All Cheats
             App::Push<OptionBox>(
                 "Delete all existing cheat codes?\nThis will remove ALL cheat files\nfor ALL installed games.",
                 "Cancel"_i18n, "Delete", 1,
@@ -3085,7 +3240,7 @@ void CheatsMenu::OnSelect() {
                 }
             );
             break;
-        case 4: // Delete Orphaned Cheats
+        case 6: // Delete Orphaned Cheats
             App::Push<ProgressBox>(0, "Scanning..."_i18n, "Cheats"_i18n,
                 [](auto pbox) -> Result {
                     return DeleteOrphanedCheats();
@@ -3101,7 +3256,7 @@ void CheatsMenu::OnSelect() {
                 }
             );
             break;
-        case 5: // Clear Cheats Cache
+        case 7: // Clear Cheats Cache
             App::Push<OptionBox>(
                 "Clear cached cheats database?",
                 "Cancel"_i18n, "Clear"_i18n, 0,
@@ -3331,7 +3486,7 @@ void CheatViewMenu::ScanGamesWithCheats() {
                 info.title_id = base_title_id;
                 info.name = name;
                 info.build_id = "";
-                info.version = 0;
+                info.version = GetTitleVersion(base_title_id);
                 info.cheat_count = existing.size();
 
                 m_games.push_back(std::move(info));
@@ -3360,15 +3515,7 @@ void CheatViewMenu::ScanGamesWithCheats() {
 CheatFilesMenu::CheatFilesMenu(const GameCheatInfo& game)
     : MenuBase{"Cheat Files", MenuFlag_None}, m_game(game) {
 
-    // Get existing cheats for this game
-    auto existing = GetExistingCheats(game.title_id);
-    for (const auto& [build_id, filename] : existing) {
-        ExistingCheat cheat;
-        cheat.build_id = build_id;
-        cheat.filename = filename;
-        cheat.installed = true;
-        m_cheats.push_back(cheat);
-    }
+    LoadCheatFiles();
 
     this->SetActions(
         std::make_pair(Button::A, Action{"View"_i18n, [this](){
@@ -3382,6 +3529,11 @@ CheatFilesMenu::CheatFilesMenu(const GameCheatInfo& game)
         std::make_pair(Button::X, Action{"Delete"_i18n, [this](){
             if (!m_cheats.empty()) {
                 OnDelete();
+            }
+        }}),
+        std::make_pair(Button::Y, Action{"Fix BID"_i18n, [this](){
+            if (!m_cheats.empty()) {
+                OnFixBuildId();
             }
         }})
     );
@@ -3466,6 +3618,23 @@ void CheatFilesMenu::SetIndex(s64 index) {
     }
 }
 
+void CheatFilesMenu::LoadCheatFiles() {
+    m_cheats.clear();
+
+    auto existing = GetExistingCheats(m_game.title_id);
+    for (const auto& [build_id, filename] : existing) {
+        ExistingCheat cheat;
+        cheat.build_id = NormalizeBuildId(build_id);
+        cheat.filename = filename;
+        cheat.installed = true;
+        m_cheats.push_back(cheat);
+    }
+
+    if (m_index >= static_cast<s64>(m_cheats.size())) {
+        m_index = m_cheats.empty() ? 0 : static_cast<s64>(m_cheats.size()) - 1;
+    }
+}
+
 void CheatFilesMenu::OnView() {
     if (m_cheats.empty() || m_index >= (s64)m_cheats.size()) {
         return;
@@ -3506,9 +3675,56 @@ void CheatFilesMenu::OnDelete() {
 
             if (DeleteCheatFile(m_game.title_id, cheat.build_id)) {
                 App::Notify("Deleted cheat file");
-                SetPop(); // Go back to refresh the list
+                LoadCheatFiles();
             } else {
                 App::Notify("Failed to delete cheat file");
+            }
+        }
+    );
+}
+
+void CheatFilesMenu::OnFixBuildId() {
+    if (m_cheats.empty() || m_index >= (s64)m_cheats.size()) {
+        return;
+    }
+
+    const auto cheat = m_cheats[m_index];
+    const auto target_build_id = ResolveManualTargetBuildId(m_game);
+    if (!IsValidBuildId(target_build_id)) {
+        App::Notify("Could not determine current Build ID");
+        return;
+    }
+
+    if (NormalizeBuildId(cheat.build_id) == target_build_id) {
+        App::Notify("Cheat file already matches current Build ID");
+        return;
+    }
+
+    const auto dest_path = GetManualCheatImportPath(m_game.title_id, target_build_id);
+    fs::FsNativeSd fs;
+    const bool overwrite = fs.FileExists(dest_path);
+
+    std::string prompt = "Rename cheat file to current Build ID?\n\n";
+    prompt += "Old: " + NormalizeBuildId(cheat.build_id) + "\n";
+    prompt += "New: " + target_build_id;
+    if (overwrite) {
+        prompt += "\n\nA cheat file for the current Build ID already exists and will be replaced.";
+    }
+
+    App::Push<OptionBox>(
+        prompt,
+        "Cancel"_i18n, "Fix BID", 1,
+        [this, cheat, target_build_id, overwrite](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            const auto rc = RenameCheatBuildId(m_game.title_id, cheat.build_id, target_build_id, overwrite);
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Cheat Build ID updated");
+                LoadCheatFiles();
+            } else {
+                App::Push<ErrorBox>(rc, "Failed to update cheat Build ID");
             }
         }
     );
@@ -3914,7 +4130,7 @@ void CheatCodeViewerMenu::Draw(NVGcontext* vg, Theme* theme) {
 // ============================================================
 
 CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source)
-    : MenuBase{"Select Game", MenuFlag_None}, m_source(source) {
+    : grid::Menu{"Select Game", MenuFlag_None}, m_source(source) {
 
     // Add logout option for CheatSlips
     if (m_source == CheatSource::Cheatslips) {
@@ -3930,6 +4146,9 @@ CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source)
             std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
                 m_loaded = false;
                 ScanGames();
+            }}),
+            std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+                DisplayOptions();
             }}),
             std::make_pair(Button::Y, Action{"Account"_i18n, [this](){
                 auto token = GetCheatslipsToken();
@@ -3980,13 +4199,15 @@ CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source)
             std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
                 m_loaded = false;
                 ScanGames();
+            }}),
+            std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+                DisplayOptions();
             }})
         );
     }
 
-    const Vec4 v{75, GetY() + 42.f, 1220.f - 150.f, 60.f};
-    m_list = std::make_unique<List>(1, 8, m_pos, v);
-    m_list->SetLayout(List::Layout::GRID);
+    OnLayoutChange();
+    title::Init();
 }
 
 CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source, const fs::FsPath& manual_cheat_path)
@@ -3995,6 +4216,8 @@ CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source, const fs::FsPath& m
 }
 
 CheatGameSelectMenu::~CheatGameSelectMenu() {
+    FreeGames();
+    title::Exit();
 }
 
 void CheatGameSelectMenu::Update(Controller* controller, TouchInfo* touch) {
@@ -4037,39 +4260,31 @@ void CheatGameSelectMenu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (!m_games.empty()) {
-        // Save and restore scissor to clip list drawing area
-        nvgSave(vg);
-        // Clip area starts below the header text
-        nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
-        ON_SCOPE_EXIT(nvgRestore(vg));
+        const int image_load_max = 2;
+        int image_load_count = 0;
 
-        constexpr float text_xoffset{15.f};
+        m_list->Draw(vg, theme, m_games.size(), [this, &image_load_count](auto* vg, auto* theme, Vec4 v, auto i) {
+            auto& game = m_games[i];
 
-        m_list->Draw(vg, theme, m_games.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
-            const auto& [x, y, w, h] = v;
-            const auto& game = m_games[i];
+            if (game.status == title::NacpLoadStatus::None) {
+                std::snprintf(game.lang.name, sizeof(game.lang.name), "%s", game.name.c_str());
+                title::PushAsync(game.title_id);
+                game.status = title::NacpLoadStatus::Progress;
+            } else if (game.status == title::NacpLoadStatus::Progress) {
+                LoadGameResult(game, title::GetAsync(game.title_id));
+            }
 
-            auto text_id = ThemeEntryID_TEXT;
-            if (m_index == i) {
-                text_id = ThemeEntryID_TEXT_SELECTED;
-                gfx::drawRectOutline(vg, theme, 4.f, v);
-            } else {
-                if (i != m_games.size() - 1) {
-                    gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            if (image_load_count < image_load_max) {
+                if (LoadGameControlImage(game, title::GetAsync(game.title_id))) {
+                    image_load_count++;
                 }
             }
 
-            // Game name
-            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f - 6.f, 20.f,
-                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-                theme->GetColour(text_id),
-                "%s", game.name.c_str());
+            char title_id[33];
+            std::snprintf(title_id, sizeof(title_id), "%016lX v%u", game.title_id, game.version);
 
-            // Title ID and version
-            gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f + 14.f, 14.f,
-                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-                theme->GetColour(ThemeEntryID_TEXT_INFO),
-                "%016lX v%u", game.title_id, game.version);
+            const auto selected = m_index == i;
+            DrawEntry(vg, theme, m_layout.Get(), v, selected, game.image, GetGameDisplayName(game), GetGameDisplayAuthor(game), title_id);
         });
     }
 }
@@ -4083,10 +4298,48 @@ void CheatGameSelectMenu::OnFocusGained() {
 }
 
 void CheatGameSelectMenu::SetIndex(s64 index) {
+    if (m_games.empty()) {
+        m_index = 0;
+        this->SetSubHeading("0 / 0");
+        return;
+    }
+
     m_index = index;
     if (!m_index) {
         m_list->SetYoff(0);
     }
+
+    this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_games.size()));
+    SetTitleSubHeading(GetGameDisplayName(m_games[m_index]));
+}
+
+void CheatGameSelectMenu::OnLayoutChange() {
+    m_index = 0;
+    grid::Menu::OnLayoutChange(m_list, m_layout.Get());
+}
+
+void CheatGameSelectMenu::DisplayOptions() {
+    auto options = std::make_unique<Sidebar>("Cheats Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    SidebarEntryArray::Items layout_items;
+    layout_items.push_back("List"_i18n);
+    layout_items.push_back("Icon"_i18n);
+    layout_items.push_back("Grid"_i18n);
+
+    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+        m_layout.Set(index_out);
+        OnLayoutChange();
+    }, m_layout.Get());
+}
+
+void CheatGameSelectMenu::FreeGames() {
+    auto* vg = App::GetVg();
+    for (auto& game : m_games) {
+        FreeGameEntry(vg, game);
+    }
+
+    m_games.clear();
 }
 
 void CheatGameSelectMenu::OnSelect() {
@@ -4097,39 +4350,48 @@ void CheatGameSelectMenu::OnSelect() {
     const auto& game = m_games[m_index];
 
     if (m_source == CheatSource::ManualFile) {
-        const auto build_id = NormalizeBuildId(GetFileStem(m_manual_cheat_path.s));
+        const auto build_id = ResolveManualTargetBuildId(game, &m_manual_cheat_path);
         if (!IsValidBuildId(build_id)) {
-            App::Notify("Cheat filename must be a 16-digit Build ID");
+            App::Notify("Could not determine target Build ID");
             return;
         }
 
         fs::FsNativeSd fs;
         const auto dest_path = GetManualCheatImportPath(game.title_id, build_id);
-        const auto action = [game, path = m_manual_cheat_path](auto op_index) {
+        const auto source_build_id = NormalizeBuildId(GetFileStem(m_manual_cheat_path.s));
+        auto prompt = "Import cheats to this game?\n\nTarget Build ID: " + build_id;
+        if (IsValidBuildId(source_build_id) && source_build_id != build_id) {
+            prompt += "\nSource Build ID: " + source_build_id;
+            prompt += "\n\nThe file will be renamed to the target Build ID.";
+        } else if (!IsValidBuildId(source_build_id)) {
+            prompt += "\n\nThe file will be renamed to the target Build ID.";
+        }
+
+        const auto action = [game, path = m_manual_cheat_path, build_id](auto op_index) {
             if (!op_index || *op_index != 1) {
                 return;
             }
 
-            const auto rc = ImportManualCheatFile(game.title_id, path);
+            const auto rc = ImportManualCheatFile(game.title_id, path, build_id);
             if (R_SUCCEEDED(rc)) {
-                App::Notify("Cheat file uploaded");
+                App::Notify("Cheat file imported");
             } else {
-                App::Push<ErrorBox>(rc, "Failed to upload cheat file");
+                App::Push<ErrorBox>(rc, "Failed to import cheat file");
             }
         };
 
         if (fs.FileExists(dest_path)) {
             App::Push<OptionBox>(
-                "Cheats existed, reupload?",
-                "Cancel"_i18n, "Upload", 1,
+                prompt + "\n\nExisting cheat file will be overwritten.",
+                "Cancel"_i18n, "Import", 1,
                 action
             );
             return;
         }
 
         App::Push<OptionBox>(
-            "Upload cheats to this game?",
-            "Cancel"_i18n, "Upload", 1,
+            prompt,
+            "Cancel"_i18n, "Import", 1,
             action
         );
         return;
@@ -4165,7 +4427,7 @@ void CheatGameSelectMenu::OnSelect() {
 
 void CheatGameSelectMenu::ScanGames() {
     m_scanning = true;
-    m_games.clear();
+    FreeGames();
 
     std::unordered_map<u64, CachedCheatMetadata> cached_entries;
     {
@@ -4231,6 +4493,7 @@ void CheatGameSelectMenu::ScanGames() {
             info.title_id = base_title_id;
             info.name = name;
             info.version = version;
+            std::snprintf(info.lang.name, sizeof(info.lang.name), "%s", info.name.c_str());
             if (const auto it = cached_entries.find(info.title_id); it != cached_entries.end() &&
                 IsValidBuildId(it->second.build_id)) {
                 info.build_id = it->second.build_id;
@@ -4666,24 +4929,57 @@ void CheatDownloadMenu::FetchCheatsFromNxDb() {
         return;
     }
 
-    if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing ||
-        lookup.failure_reason == BuildIdFailureReason::GameNotFound) {
-        m_loading = false;
-        m_loaded = true;
-        m_error_message = GetBuildIdFailureMessage(lookup.failure_reason);
-        if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing) {
-            ShowProdKeysMissingDialog();
-        } else {
-            App::Notify(m_error_message);
-        }
-        m_should_close = true;
-        return;
-    }
+    log_write("[Cheats] Local exact Build ID lookup failed, falling back to KefirUpdater versions map (reason=%d)\n",
+              static_cast<int>(lookup.failure_reason));
+    FetchKefirBuildIdFromVersionMap();
+}
 
-    // Refuse to guess from version maps. Inspect the cheats file directly
-    // and only proceed when there is a single unambiguous candidate.
-    log_write("[Cheats] Exact Build ID lookup failed, inspecting cheats file directly\n");
-    FetchCheatsFileAndExtractBuildIds();
+void CheatDownloadMenu::FetchKefirBuildIdFromVersionMap() {
+    const auto title_id_str = FormatTitleId(m_game.title_id);
+    const auto version_url = std::string(KEFIR_VERSIONS_DIRECTORY) + title_id_str + ".json";
+
+    log_write("[Cheats] Fetching KefirUpdater versions map: %s\n", version_url.c_str());
+
+    curl::Api().ToMemoryAsync(
+        curl::Url{version_url},
+        curl::Header{},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this](auto& result) {
+            if (!result.success || result.code == 404) {
+                log_write("[Cheats] KefirUpdater versions map unavailable, falling back to cheats JSON scan (HTTP %ld)\n",
+                          result.code);
+                FetchKefirCheatsFromGithub("");
+                return true;
+            }
+
+            const std::string content(result.data.begin(), result.data.end());
+            yyjson_doc* doc = yyjson_read(content.data(), content.size(), 0);
+            if (!doc) {
+                log_write("[Cheats] Failed to parse KefirUpdater versions map\n");
+                FetchKefirCheatsFromGithub("");
+                return true;
+            }
+
+            ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+            yyjson_val* root = yyjson_doc_get_root(doc);
+            const auto version_key = std::to_string(m_game.version);
+            yyjson_val* bid_val = yyjson_is_obj(root) ? yyjson_obj_get(root, version_key.c_str()) : nullptr;
+
+            if (bid_val && yyjson_is_str(bid_val)) {
+                m_game.build_id = NormalizeBuildId(yyjson_get_str(bid_val));
+                SaveDetectedBuildIdToCache(m_game, m_game.build_id, "kefir-versions");
+                log_write("[Cheats] KefirUpdater versions map resolved version %u to Build ID %s\n",
+                          m_game.version, m_game.build_id.c_str());
+                FetchKefirCheatsFromGithub(m_game.build_id);
+                return true;
+            }
+
+            log_write("[Cheats] KefirUpdater versions map has no Build ID for version %u\n", m_game.version);
+            FetchKefirCheatsFromGithub("");
+            return true;
+        }}
+    );
 }
 
 // Inspect the nx-cheats-db cheats file directly and extract candidate Build IDs.
@@ -4734,6 +5030,83 @@ void CheatDownloadMenu::FetchCheatsFileAndExtractBuildIds() {
             m_error_message.clear();
             App::Notify("Cheats Not Found");
             SetPop();
+            return true;
+        }}
+    );
+}
+
+void CheatDownloadMenu::FetchKefirCheatsFromGithub(const std::string& build_id) {
+    const auto title_id_str = FormatTitleId(m_game.title_id);
+    const auto cheat_url = std::string(KEFIR_CHEATS_GBATEMP_DIRECTORY) + title_id_str + ".json";
+
+    log_write("[Cheats] Fetching KefirUpdater individual cheats from: %s\n", cheat_url.c_str());
+
+    curl::Api().ToMemoryAsync(
+        curl::Url{cheat_url},
+        curl::Header{},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this, build_id, title_id_str](auto& result) {
+            m_loading = false;
+            m_loaded = true;
+            m_index = -1;
+
+            if (!result.success || result.code == 404) {
+                m_cheats.clear();
+                m_error_message.clear();
+                log_write("[Cheats] KefirUpdater cheats file not found, HTTP code: %ld\n", result.code);
+                App::Notify("Cheats Not Found");
+                SetPop();
+                return true;
+            }
+
+            const std::string content(result.data.begin(), result.data.end());
+            std::string resolved_build_id = NormalizeBuildId(build_id);
+
+            if (!resolved_build_id.empty()) {
+                m_cheats = ParseNxDbCheats(content, resolved_build_id);
+                if (m_cheats.empty()) {
+                    const auto reversed_build_id = ReverseBuildIdBytes(resolved_build_id);
+                    if (reversed_build_id != resolved_build_id) {
+                        log_write("[Cheats] KefirUpdater retry with reversed-byte Build ID: %s -> %s\n",
+                                  resolved_build_id.c_str(), reversed_build_id.c_str());
+                        m_cheats = ParseNxDbCheats(content, reversed_build_id);
+                        if (!m_cheats.empty()) {
+                            resolved_build_id = reversed_build_id;
+                        }
+                    }
+                }
+            }
+
+            const auto build_ids = ExtractNxDbBuildIds(content);
+            if (m_cheats.empty() && resolved_build_id.empty() && build_ids.size() == 1) {
+                resolved_build_id = build_ids[0];
+                m_cheats = ParseNxDbCheats(content, resolved_build_id);
+            }
+
+            if (m_cheats.empty()) {
+                std::ostringstream out;
+                out << "Cheats found, but no matching Build ID.\n\n";
+                out << "Title ID: " << title_id_str << "\n";
+                out << "Version: " << m_game.version << "\n";
+                if (!resolved_build_id.empty()) {
+                    out << "Detected Build ID: " << resolved_build_id << "\n";
+                }
+                if (!build_ids.empty()) {
+                    out << "\nAvailable Build ID(s):\n";
+                    for (const auto& id : build_ids) {
+                        out << id << "\n";
+                    }
+                }
+                m_error_message = out.str();
+                log_write("[Cheats] KefirUpdater exact cheats found no matching Build ID\n");
+                return true;
+            }
+
+            m_game.build_id = resolved_build_id;
+            SaveDetectedBuildIdToCache(m_game, m_game.build_id, "kefir-cheats");
+            m_index = 0;
+            CacheNxDbCheatFile(content);
+            log_write("[Cheats] Successfully fetched %zu KefirUpdater exact cheats\n", m_cheats.size());
             return true;
         }}
     );

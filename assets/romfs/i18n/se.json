@@ -419,5 +419,7 @@
   "Loading": "Laddar",
   "Empty!": "Tomt!",
   "Not Ready...": "Inte redo...",
-  "Error loading page!": "Fel vid laddning av sida!"
+  "Error loading page!": "Fel vid laddning av sida!",
+  "Open Updater": "Öppna Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater har tagits bort.\n\nKefir-uppdateringar görs nu via Updater-menyn.\n\nFör att gå dit manuellt, tryck R, välj Updater och välj sedan en Kefir-version."
 }

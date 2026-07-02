@@ -419,5 +419,7 @@
   "Loading": "Caricamento",
   "Empty!": "Vuoto!",
   "Not Ready...": "Non pronto...",
-  "Error loading page!": "Errore nel caricare la pagina!"
+  "Error loading page!": "Errore nel caricare la pagina!",
+  "Open Updater": "Apri Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater è stato rimosso.\n\nGli aggiornamenti di Kefir ora si fanno dal menu Updater.\n\nPer andarci manualmente, premi R, scegli Updater, poi scegli una versione di Kefir."
 }

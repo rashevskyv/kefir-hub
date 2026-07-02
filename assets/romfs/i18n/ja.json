@@ -419,5 +419,7 @@
   "Loading": "ロード中",
   "Empty!": "何も見つかりません",
   "Not Ready...": "準備ができていません",
-  "Error loading page!": "ページのロードエラー"
+  "Error loading page!": "ページのロードエラー",
+  "Open Updater": "Updaterを開く",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updaterは削除されました。\n\nKefirの更新はUpdaterメニューで行うようになりました。\n\n手動で移動するには、Rを押してUpdaterを選び、Kefirのバージョンを選択してください。"
 }

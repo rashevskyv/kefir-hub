@@ -466,5 +466,7 @@
   "Loading": "Загрузка",
   "Empty!": "Пусто!",
   "Not Ready...": "Не готово...",
-  "Error loading page!": "Ошибка загрузки страницы!"
+  "Error loading page!": "Ошибка загрузки страницы!",
+  "Open Updater": "Открыть Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater удалён.\n\nОбновления Kefir теперь выполняются через меню Updater.\n\nЧтобы перейти туда вручную, нажмите R, выберите Updater, затем выберите версию Kefir."
 }

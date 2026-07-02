@@ -82,6 +82,12 @@ Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
         { "Saves", "Backup and restore save data.", 0, [](){
             App::Push<ui::menu::save::Menu>(MenuFlag_None);
         }},
+        { "Software", "Install DBI and mod utilities.", 0, [](){
+            App::Push<ui::menu::settings::SoftwareMenu>();
+        }},
+        { "Themes", "Download and install theme packs.", 0, [](){
+            App::Push<ui::menu::settings::ThemesMenu>();
+        }},
         { "Settings", "Open application settings.", 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
@@ -95,7 +101,7 @@ Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
 
     const Vec2 pad{22.f, 22.f};
     const Vec4 v{75.f, 150.f, 330.f, 132.f};
-    m_list = std::make_unique<List>(3, 6, m_pos, v, pad);
+    m_list = std::make_unique<List>(3, 9, m_pos, v, pad);
     m_list->SetLayout(List::Layout::GRID);
 
     LoadIcons();
@@ -173,7 +179,9 @@ void Menu::LoadIcons() {
     m_items[2].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
     m_items[3].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
     m_items[4].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
-    m_items[5].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[5].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
+    m_items[6].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
 }
 
 void Menu::SetIndex(s64 index) {

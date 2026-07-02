@@ -419,5 +419,7 @@
   "Loading": "",
   "Empty!": "",
   "Not Ready...": "",
-  "Error loading page!": ""
+  "Error loading page!": "",
+  "Open Updater": "Updater openen",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater is verwijderd.\n\nKefir-updates gebeuren nu via het Updater-menu.\n\nDruk handmatig op R, kies Updater en kies daarna een Kefir-versie."
 }

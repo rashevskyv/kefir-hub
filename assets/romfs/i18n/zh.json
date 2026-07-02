@@ -491,5 +491,7 @@
   "USB Connection": "USB连接",
   "MTP Settings": "MTP设置",
   "USB Configuration": "USB配置",
-  "Data Storage": "数据存储"
+  "Data Storage": "数据存储",
+  "Open Updater": "打开 Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater 已被移除。\n\nKefir 更新现在通过 Updater 菜单进行。\n\n要手动进入，请按 R，选择 Updater，然后选择 Kefir 版本。"
 }

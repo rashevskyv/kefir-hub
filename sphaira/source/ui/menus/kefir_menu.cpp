@@ -5,6 +5,7 @@
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/sidebar.hpp"
 
 #include "ams_su.h"
 #include "app.hpp"
@@ -40,11 +41,88 @@ constexpr const char* FIRMWARE_DEST = "/firmware";
 constexpr const char* KEFIR_VERSION_PATH = "/switch/kefir-updater/version";
 constexpr const char* COPY_FILES_TXT = "/config/kefir-updater/copy_files.txt";
 constexpr const char* STAGED_COPY_FILES_TXT = "/kefir/config/kefir-updater/copy_files.txt";
+constexpr const char* DOWNGRADE_FIX_SAVE = "/save/8000000000000073";
 constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
+constexpr s64 TILE_COLUMNS = 5;
+constexpr s64 TILE_EMPTY = -1;
 
 struct FirmwareValidation {
     AmsSuUpdateInformation info{};
     AmsSuUpdateValidationInfo validation{};
+};
+
+class DowngradeHoldConfirmBox final : public Widget {
+public:
+    using Callback = std::function<void(bool)>;
+
+    DowngradeHoldConfirmBox(std::string message, Callback callback)
+    : m_message{std::move(message)}
+    , m_callback{std::move(callback)} {
+        m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
+        SetActions(
+            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
+                m_callback(false);
+                SetPop();
+            }})
+        );
+    }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        Widget::Update(controller, touch);
+
+        if (controller->GotHeld(Button::A)) {
+            if (!m_holding) {
+                m_holding = true;
+                m_hold_start = armTicksToNs(armGetSystemTick());
+            }
+
+            const auto now = armTicksToNs(armGetSystemTick());
+            m_progress = std::min(1.f, static_cast<float>(now - m_hold_start) / 3'000'000'000.f);
+            if (m_progress >= 1.f) {
+                m_callback(true);
+                SetPop();
+            }
+        } else {
+            m_holding = false;
+            m_progress = 0.f;
+        }
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        gfx::dimBackground(vg);
+        gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
+
+        constexpr float padding = 38.f;
+        nvgSave(vg);
+        nvgTextLineHeight(vg, 1.25f);
+        gfx::drawTextBox(
+            vg, m_pos.x + padding, m_pos.y + 30.f, 18.f, m_pos.w - padding * 2.f,
+            theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP
+        );
+        nvgRestore(vg);
+
+        const Vec4 button{m_pos.x, m_pos.y + m_pos.h - 86.f, m_pos.w, 86.f};
+        gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f});
+
+        const Vec4 bar{button.x + 178.f, button.y + button.h - 22.f, button.w - 356.f, 6.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
+
+        const auto hold_text = "Hold A for 3 seconds to continue"_i18n;
+        gfx::drawText(
+            vg, button.x + button.w / 2.f, button.y + 35.f, 22.f,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED),
+            hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
+        );
+    }
+
+private:
+    std::string m_message;
+    Callback m_callback;
+    bool m_holding{};
+    u64 m_hold_start{};
+    float m_progress{};
 };
 
 auto Trim(std::string value) -> std::string {
@@ -63,7 +141,7 @@ auto Trim(std::string value) -> std::string {
     return value;
 }
 
-auto ReadFirstLine(const char* path) -> std::string {
+auto ReadLineNumber(const char* path, size_t line_index) -> std::string {
     FILE* file = std::fopen(path, "r");
     if (!file) {
         return "Not Found";
@@ -71,12 +149,56 @@ auto ReadFirstLine(const char* path) -> std::string {
     ON_SCOPE_EXIT(std::fclose(file));
 
     char line[128]{};
-    if (!std::fgets(line, sizeof(line), file)) {
-        return "Not Found";
+    for (size_t i = 0; i <= line_index; i++) {
+        if (!std::fgets(line, sizeof(line), file)) {
+            return "Not Found";
+        }
     }
 
     auto value = Trim(line);
     return value.empty() ? "Not Found" : value;
+}
+
+auto ReadFirstLine(const char* path) -> std::string {
+    return ReadLineNumber(path, 0);
+}
+
+auto ReadSecondLine(const char* path) -> std::string {
+    return ReadLineNumber(path, 1);
+}
+
+auto IsKnownVersion(const std::string& version) -> bool {
+    if (version.empty() || version == "Not Found" || version == "Unknown") {
+        return false;
+    }
+
+    return std::any_of(version.begin(), version.end(), [](unsigned char c) {
+        return std::isdigit(c);
+    });
+}
+
+auto FirmwareUnsupportedReason(const std::string& target, const std::string& supported) -> std::string {
+    std::string message = "Firmware " + target + " is not supported by the current Kefir.";
+    if (IsKnownVersion(supported)) {
+        message += "\n\nCurrent Kefir supports system firmware up to " + supported + ".";
+    }
+    message += "\n\nUpdate Kefir first?";
+    return message;
+}
+
+auto UnsupportedFirmwareLabel(const std::string& supported) -> std::string {
+    if (IsKnownVersion(supported)) {
+        return "Unsupported > " + supported;
+    }
+    return "Unsupported";
+}
+
+auto ReadCurrentKefirSupportedFirmware() -> std::string {
+    const auto value = ReadSecondLine(KEFIR_VERSION_PATH);
+    if (!IsKnownVersion(value)) {
+        return "Not Found";
+    }
+    return value;
 }
 
 auto FindDigitsAfter(const std::string& value, std::string_view marker) -> std::string {
@@ -162,6 +284,47 @@ auto EntryDescription(const UpdaterEntry& entry) -> const char* {
     return entry.url.c_str();
 }
 
+auto EntryIsFolder(const UpdaterEntry& entry) -> bool {
+    return entry.type == UpdaterEntryType::Network;
+}
+
+auto EntryIsDownload(const UpdaterEntry& entry) -> bool {
+    return entry.type == UpdaterEntryType::Kefir ||
+        entry.type == UpdaterEntryType::Firmware ||
+        entry.type == UpdaterEntryType::CustomLink;
+}
+
+void DrawUpdaterEntryIcon(NVGcontext* vg, Theme* theme, const UpdaterEntry& entry, float x, float y, bool selected, bool disabled = false) {
+    if (!EntryIsFolder(entry) && !EntryIsDownload(entry)) {
+        return;
+    }
+
+    const auto colour = theme->GetColour(disabled ? ThemeEntryID_TEXT_INFO : (selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO));
+
+    nvgSave(vg);
+    nvgStrokeColor(vg, colour);
+    nvgStrokeWidth(vg, 2.f);
+
+    if (EntryIsFolder(entry)) {
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y + 3.f, 28.f, 19.f, 3.f);
+        nvgRect(vg, x + 3.f, y, 11.f, 5.f);
+        nvgStroke(vg);
+    } else {
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x + 14.f, y);
+        nvgLineTo(vg, x + 14.f, y + 17.f);
+        nvgMoveTo(vg, x + 7.f, y + 10.f);
+        nvgLineTo(vg, x + 14.f, y + 17.f);
+        nvgLineTo(vg, x + 21.f, y + 10.f);
+        nvgMoveTo(vg, x + 5.f, y + 23.f);
+        nvgLineTo(vg, x + 23.f, y + 23.f);
+        nvgStroke(vg);
+    }
+
+    nvgRestore(vg);
+}
+
 auto EntryDisplayName(const UpdaterEntry& entry) -> std::string {
     if (entry.type != UpdaterEntryType::Kefir) {
         return entry.name;
@@ -221,6 +384,95 @@ auto SelectablePosition(const std::vector<UpdaterEntry>& entries, s64 index) -> 
         }
     }
     return position;
+}
+
+auto TileSlots(const std::vector<UpdaterEntry>& entries) -> std::vector<s64> {
+    std::vector<s64> out;
+    bool has_group_entries{};
+
+    for (s64 i = 0; i < static_cast<s64>(entries.size()); i++) {
+        const auto& entry = entries[i];
+        if (entry.type == UpdaterEntryType::Section) {
+            if (has_group_entries) {
+                while (out.size() % TILE_COLUMNS) {
+                    out.emplace_back(TILE_EMPTY);
+                }
+            }
+            has_group_entries = false;
+            continue;
+        }
+
+        out.emplace_back(i);
+        has_group_entries = true;
+    }
+
+    while (out.size() % TILE_COLUMNS) {
+        out.emplace_back(TILE_EMPTY);
+    }
+
+    return out;
+}
+
+auto ResolveTileSlotIndex(const std::vector<s64>& slots, s64 index, s64 previous) -> s64 {
+    if (slots.empty()) {
+        return 0;
+    }
+
+    index = std::clamp<s64>(index, 0, static_cast<s64>(slots.size() - 1));
+    if (slots[index] != TILE_EMPTY) {
+        return index;
+    }
+
+    const auto direction = index >= previous ? 1 : -1;
+    for (s64 i = index; i >= 0 && i < static_cast<s64>(slots.size()); i += direction) {
+        if (slots[i] != TILE_EMPTY) {
+            return i;
+        }
+    }
+
+    for (s64 i = index; i >= 0 && i < static_cast<s64>(slots.size()); i -= direction) {
+        if (slots[i] != TILE_EMPTY) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+auto TileLabel(const UpdaterEntry& entry) -> std::string {
+    switch (entry.type) {
+        case UpdaterEntryType::Kefir:
+            if (const auto version = ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
+                return version;
+            }
+            return EntryDisplayName(entry);
+        case UpdaterEntryType::Firmware:
+            return entry.name;
+        case UpdaterEntryType::Network:
+            return "Network";
+        case UpdaterEntryType::CustomLink:
+            return "Link";
+        case UpdaterEntryType::Section:
+            return {};
+    }
+
+    return {};
+}
+
+auto TileGroupLabel(UpdaterEntryType type) -> const char* {
+    switch (type) {
+        case UpdaterEntryType::Kefir:
+            return "KEFIR";
+        case UpdaterEntryType::Firmware:
+            return "FIRMWARE";
+        case UpdaterEntryType::Network:
+        case UpdaterEntryType::CustomLink:
+            return "OTHER";
+        case UpdaterEntryType::Section:
+            return "";
+    }
+
+    return "";
 }
 
 void AddSectionEntry(std::vector<UpdaterEntry>& out, std::string name) {
@@ -444,7 +696,24 @@ auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result
     return out->validation.result;
 }
 
-auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path) -> Result {
+void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path);
+
+auto ApplyDowngradeFix(ProgressBox* pbox) -> Result {
+    pbox->NewTransfer("Applying downgrade fix...");
+
+    fs::FsNativeBis system(FsBisPartitionId_System, "");
+    R_TRY(system.GetFsOpenResult());
+
+    if (!system.FileExists(DOWNGRADE_FIX_SAVE)) {
+        R_SUCCEED();
+    }
+
+    R_TRY(system.DeleteFile(DOWNGRADE_FIX_SAVE));
+    R_TRY(system.Commit());
+    R_SUCCEED();
+}
+
+auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix) -> Result {
     Result rc = amssuInitialize();
     if (R_FAILED(rc)) {
         return rc;
@@ -482,7 +751,15 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     }
 
     pbox->NewTransfer("Applying system update...");
-    return amssuApplyPreparedUpdate();
+    R_TRY(amssuApplyPreparedUpdate());
+
+    if (apply_downgrade_fix) {
+        R_TRY(ApplyDowngradeFix(pbox));
+    }
+
+    CleanupFirmwareFiles(pbox, path);
+
+    R_SUCCEED();
 }
 
 auto GetFirmwareTargetName() -> std::string {
@@ -573,6 +850,27 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
     R_SUCCEED();
 }
 
+void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
+    fs::FsNativeSd fs;
+    if (R_FAILED(fs.GetFsOpenResult())) {
+        return;
+    }
+
+    fs::FsPath firmware_path = path;
+    if (firmware_path.s[0] == '\0') {
+        firmware_path = FIRMWARE_DEST;
+    }
+    pbox->NewTransfer("Removing firmware files...");
+
+    if (fs.DirExists(firmware_path)) {
+        fs.DeleteDirectoryRecursively(firmware_path);
+    }
+    if (fs.FileExists(FIRMWARE_ZIP)) {
+        fs.DeleteFile(FIRMWARE_ZIP);
+    }
+    fs.Commit();
+}
+
 } // namespace
 
 Menu::Menu() : MenuBase{"Updater", MenuFlag_None} {
@@ -591,12 +889,13 @@ Menu::Menu() : MenuBase{"Updater", MenuFlag_None} {
             m_loaded = false;
             RefreshSystemInfo();
             FetchLinks();
+        }}),
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+            DisplayOptions();
         }})
     );
 
-    const Vec4 v{75.f, GetY() + 1.f + 66.f, 1220.f - 150.f, 50.f};
-    m_list = std::make_unique<List>(1, 9, m_pos, v);
-    m_list->SetLayout(List::Layout::GRID);
+    OnLayoutChange();
 }
 
 Menu::~Menu() = default;
@@ -604,7 +903,44 @@ Menu::~Menu() = default;
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
-    if (!m_entries.empty()) {
+    if (m_entries.empty()) {
+        return;
+    }
+
+    if (static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles) {
+        if (controller->GotDown(Button::RIGHT)) {
+            MoveTileSelection(1);
+            return;
+        } else if (controller->GotDown(Button::LEFT)) {
+            MoveTileSelection(-1);
+            return;
+        } else if (controller->GotDown(Button::DOWN)) {
+            MoveTileSelection(TILE_COLUMNS);
+            return;
+        } else if (controller->GotDown(Button::UP)) {
+            MoveTileSelection(-TILE_COLUMNS);
+            return;
+        } else if (controller->GotDown(Button::R2)) {
+            MoveTileSelection(TILE_COLUMNS * 2);
+            return;
+        } else if (controller->GotDown(Button::L2)) {
+            MoveTileSelection(-TILE_COLUMNS * 2);
+            return;
+        }
+
+        m_list->OnUpdate(controller, touch, m_tile_index, m_tile_entries.size(), [this](bool touch, auto i) {
+            const auto tile_index = ResolveTileSlotIndex(m_tile_entries, i, m_tile_index);
+            if (touch && m_tile_index == tile_index) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_tile_index = tile_index;
+                if (tile_index >= 0 && tile_index < static_cast<s64>(m_tile_entries.size()) && m_tile_entries[tile_index] != TILE_EMPTY) {
+                    SetIndex(m_tile_entries[tile_index]);
+                }
+            }
+        });
+    } else {
         m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
             if (touch && m_index == i) {
                 FireAction(Button::A);
@@ -619,8 +955,9 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
+    const auto tiles = static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles;
     const auto info_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
-    const auto info_y = GetY() + 11.f;
+    const auto info_y = GetY() + 11.f - (tiles && m_list ? m_list->GetYoff() : 0.f);
     gfx::drawTextArgs(vg, 80.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         info_colour, "Current Kefir: %s", m_current_kefir.c_str());
     gfx::drawTextArgs(vg, 650.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
@@ -650,6 +987,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         return;
     }
 
+    if (tiles) {
+        DrawTiles(vg, theme);
+    } else {
+        DrawList(vg, theme);
+    }
+}
+
+void Menu::DrawList(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& entry = m_entries[i];
         if (entry.type == UpdaterEntryType::Section) {
@@ -657,7 +1002,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const Vec4 band{v.x, v.y + top_pad, v.w, 26.f};
             gfx::drawRect(vg, band.x, band.y, band.w, band.h, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 4.f);
             gfx::drawRect(vg, v.x + 15.f, band.y + 7.f, 4.f, band.h - 14.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 2.f);
-            gfx::drawTextArgs(vg, v.x + 30.f, band.y + band.h / 2.f, 15.f,
+            gfx::drawTextArgs(vg, v.x + 30.f, band.y + band.h / 2.f, 16.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED),
                 "%s", entry.name.c_str());
             return;
@@ -665,8 +1010,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto selected = m_index == i;
         const auto downgrade = entry.type == UpdaterEntryType::Firmware && IsDowngrade(entry.name);
+        const auto unsupported = entry.type == UpdaterEntryType::Firmware && !IsFirmwareSupported(entry.name);
         const auto text_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-        const auto name_id = downgrade ? ThemeEntryID_ERROR : text_id;
+        const auto name_id = unsupported ? ThemeEntryID_TEXT_INFO : (downgrade ? ThemeEntryID_ERROR : text_id);
 
         if (selected) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
@@ -678,18 +1024,76 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (downgrade) {
             name += " [DOWNGRADE]";
         }
+        if (unsupported) {
+            name += " [UNSUPPORTED]";
+        }
 
-        gfx::drawTextBox(vg, v.x + 15.f, v.y + 10.f, 20.f, v.w - 190.f,
+        const auto text_x = v.x + 55.f;
+        DrawUpdaterEntryIcon(vg, theme, entry, v.x + 15.f, v.y + 17.f, selected, unsupported);
+
+        gfx::drawTextBox(vg, text_x, v.y + 7.f, 23.f, v.w - 230.f,
             theme->GetColour(name_id), name.c_str());
 
         if (entry.type != UpdaterEntryType::Kefir) {
-            gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 14.f, 14.f,
+            gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 14.f, 15.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO),
-                "%s", TypeLabel(entry.type));
+                "%s", unsupported ? UnsupportedFirmwareLabel(m_supported_firmware).c_str() : TypeLabel(entry.type));
         }
 
-        gfx::drawTextBox(vg, v.x + 15.f, v.y + 34.f, 14.f, v.w - 30.f,
+        gfx::drawTextBox(vg, text_x, v.y + 37.f, 16.f, v.w - 70.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), EntryDescription(entry));
+    });
+}
+
+void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
+    m_list->Draw(vg, theme, m_tile_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto tile_i) {
+        const auto entry_index = m_tile_entries[tile_i];
+        if (entry_index == TILE_EMPTY) {
+            return;
+        }
+
+        const auto& entry = m_entries[entry_index];
+        const auto selected = m_index == entry_index;
+        const auto downgrade = entry.type == UpdaterEntryType::Firmware && IsDowngrade(entry.name);
+        const auto unsupported = entry.type == UpdaterEntryType::Firmware && !IsFirmwareSupported(entry.name);
+
+        s64 previous_entry_index = TILE_EMPTY;
+        for (s64 i = tile_i - 1; i >= 0; i--) {
+            if (m_tile_entries[i] != TILE_EMPTY) {
+                previous_entry_index = m_tile_entries[i];
+                break;
+            }
+        }
+
+        const bool show_group = previous_entry_index == TILE_EMPTY ||
+            TileGroupLabel(entry.type) != std::string_view{TileGroupLabel(m_entries[previous_entry_index].type)};
+
+        if (show_group) {
+            gfx::drawTextArgs(vg, v.x, v.y - 27.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", TileGroupLabel(entry.type));
+        }
+
+        const auto tile = Vec4{v.x, v.y, v.w, v.w};
+        gfx::drawRect(vg, tile, theme->GetColour(selected ? ThemeEntryID_SELECTED_BACKGROUND : ThemeEntryID_LINE_SEPARATOR), 16.f);
+        if (selected) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, tile.x - 2.f, tile.y - 2.f, tile.w + 4.f, tile.h + 4.f, 18.f);
+            nvgStrokeWidth(vg, 4.f);
+            nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+            nvgStroke(vg);
+        }
+
+        DrawUpdaterEntryIcon(vg, theme, entry, tile.x + 14.f, tile.y + 14.f, selected, unsupported);
+
+        const auto name_colour = unsupported ? theme->GetColour(ThemeEntryID_TEXT_INFO) : downgrade ? theme->GetColour(ThemeEntryID_ERROR) :
+            theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        const auto label = TileLabel(entry);
+        gfx::drawTextBox(vg, tile.x + 12.f, tile.y + 33.f, 26.f, tile.w - 24.f, name_colour, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+
+        const auto type_label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
+        gfx::drawTextArgs(vg, tile.x + tile.w / 2.f, tile.y + tile.h - 31.f, 14.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s", type_label.c_str());
     });
 }
 
@@ -702,12 +1106,84 @@ void Menu::OnFocusGained() {
     }
 }
 
+void Menu::DisplayOptions() {
+    auto options = std::make_unique<Sidebar>("Updater Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    SidebarEntryArray::Items view_items{
+        "List"_i18n,
+        "Tiles"_i18n,
+    };
+
+    options->Add<SidebarEntryArray>("View"_i18n, view_items, [this](s64& index_out) {
+        m_view_mode.Set(index_out);
+        OnLayoutChange();
+    }, m_view_mode.Get());
+}
+
+void Menu::OnLayoutChange() {
+    if (static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles) {
+        constexpr float x = 75.f;
+        constexpr float width = 1130.f;
+        constexpr float tile_size = 196.f;
+        constexpr float x_gap = (width - tile_size * static_cast<float>(TILE_COLUMNS)) / static_cast<float>(TILE_COLUMNS - 1);
+        constexpr float y_gap = 44.f;
+        const Vec4 v{x, GetY() + 1.f + 112.f, tile_size, tile_size};
+        m_list = std::make_unique<List>(TILE_COLUMNS, TILE_COLUMNS * 2, m_pos, v, Vec2{x_gap, y_gap});
+    } else {
+        const Vec4 v{75.f, GetY() + 1.f + 66.f, 1220.f - 150.f, 58.f};
+        m_list = std::make_unique<List>(1, 8, m_pos, v);
+    }
+    m_list->SetLayout(List::Layout::GRID);
+
+    m_tile_entries = TileSlots(m_entries);
+    const auto it = std::ranges::find(m_tile_entries, m_index);
+    m_tile_index = it == m_tile_entries.end() ? 0 : std::distance(m_tile_entries.begin(), it);
+    EnsureTileVisible();
+}
+
+void Menu::EnsureTileVisible() {
+    if (!m_list || static_cast<UpdaterViewMode>(m_view_mode.Get()) != UpdaterViewMode::Tiles || m_tile_entries.empty()) {
+        return;
+    }
+
+    constexpr s64 visible_rows = 2;
+    const auto row = m_tile_index / TILE_COLUMNS;
+    const auto first_visible_row = static_cast<s64>(m_list->GetYoff() / m_list->GetMaxY());
+
+    if (row < first_visible_row) {
+        m_list->SetYoff(static_cast<float>(row) * m_list->GetMaxY());
+    } else if (row >= first_visible_row + visible_rows) {
+        m_list->SetYoff(static_cast<float>(row - visible_rows + 1) * m_list->GetMaxY());
+    }
+}
+
+bool Menu::MoveTileSelection(s64 step) {
+    if (m_tile_entries.empty()) {
+        return false;
+    }
+
+    const auto old_index = m_tile_index;
+    const auto target = std::clamp<s64>(m_tile_index + step, 0, static_cast<s64>(m_tile_entries.size() - 1));
+    const auto next_index = ResolveTileSlotIndex(m_tile_entries, target, m_tile_index);
+    if (next_index == old_index || m_tile_entries[next_index] == TILE_EMPTY) {
+        return false;
+    }
+
+    m_tile_index = next_index;
+    SetIndex(m_tile_entries[m_tile_index]);
+    App::PlaySoundEffect(SoundEffect_Focus);
+    return true;
+}
+
 void Menu::FetchLinks() {
     m_loading = true;
     m_error_message.clear();
     m_entries.clear();
+    m_tile_entries.clear();
     m_latest_kefir = "Unknown";
     BuildSectionedEntries(m_entries, {});
+    m_tile_entries = TileSlots(m_entries);
     SetIndex(0);
 
     fs::FsNativeSd().CreateDirectoryRecursively(CACHE_DIR);
@@ -730,6 +1206,7 @@ void Menu::FetchLinks() {
             }
 
             BuildSectionedEntries(m_entries, entries);
+            m_tile_entries = TileSlots(m_entries);
             m_latest_kefir = latest_kefir.empty() ? "Unknown" : latest_kefir;
 
             if (entries.empty()) {
@@ -747,6 +1224,13 @@ void Menu::SetIndex(s64 index) {
     if (m_index <= 1) {
         m_list->SetYoff(0);
     }
+
+    const auto it = std::ranges::find(m_tile_entries, m_index);
+    if (it != m_tile_entries.end()) {
+        m_tile_index = std::distance(m_tile_entries.begin(), it);
+        EnsureTileVisible();
+    }
+
     UpdateSubheading();
 }
 
@@ -774,14 +1258,14 @@ void Menu::OpenSelected() {
     }
 }
 
-void Menu::InstallKefir(const UpdaterEntry& entry) {
+void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success) {
     std::string message = "Download and install " + entry.name + "?\n\n";
     message += "The archive will be staged like Kefir Updater:\n";
     message += AMS_ZIP;
     message += "\n\nThen it will be extracted to /kefir and Kefir bootloader files will be copied into place.";
 
     App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-        [entry](auto op_index) {
+        [this, entry, on_success = std::move(on_success)](auto op_index) mutable {
             if (!op_index || *op_index != 1) {
                 return;
             }
@@ -790,9 +1274,15 @@ void Menu::InstallKefir(const UpdaterEntry& entry) {
                 [entry](auto pbox) -> Result {
                     return DownloadAndInstallKefir(pbox, entry);
                 },
-                [entry](Result rc) {
+                [this, entry, on_success = std::move(on_success)](Result rc) mutable {
                     if (R_FAILED(rc)) {
                         App::Push<ErrorBox>(rc, "Failed to install " + entry.name);
+                        return;
+                    }
+
+                    RefreshSystemInfo();
+                    if (on_success) {
+                        on_success();
                         return;
                     }
 
@@ -808,7 +1298,12 @@ void Menu::InstallKefir(const UpdaterEntry& entry) {
         });
 }
 
-void Menu::DownloadFirmware(const UpdaterEntry& entry) {
+void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) {
+    if (!skip_support_check && !IsFirmwareSupported(entry.name)) {
+        PromptKefirThenFirmware(entry);
+        return;
+    }
+
     const auto downgrade = IsDowngrade(entry.name);
 
     std::string message = "Download firmware " + entry.name + "?\n\n";
@@ -868,31 +1363,56 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
             message += "Do not power off the console during installation.";
 
             App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-                [this, display_name, path](auto op_index) {
-                    if (op_index && *op_index == 1) {
-                        InstallFirmware(display_name, path);
+                [this, display_name, path, version](auto op_index) {
+                    if (!op_index || *op_index != 1) {
+                        return;
                     }
+
+                    if (!IsDowngrade(version)) {
+                        InstallFirmware(display_name, path);
+                        return;
+                    }
+
+                    std::string warning = "Firmware downgrade warning\n\n";
+                    warning += "Current: " + m_current_firmware + "\n";
+                    warning += "Target: " + version + "\n\n";
+                    warning += "Downgrading firmware can cause boot problems. Make sure you know what you are doing and have a NAND or emuMMC backup.\n\n";
+                    warning += "If you continue, Sphaira will install the firmware and automatically apply the downgrade fix after installation.\n\n";
+                    warning += "By continuing, you accept full responsibility.";
+
+                    App::Push<DowngradeHoldConfirmBox>(warning,
+                        [this, display_name, path](bool accepted) {
+                            if (accepted) {
+                                InstallFirmware(display_name, path, true);
+                            }
+                        });
                 });
         });
 }
 
-void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path) {
+void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix) {
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
-        [path](auto pbox) -> Result {
+        [path, apply_downgrade_fix](auto pbox) -> Result {
             FirmwareValidation validation{};
             R_TRY(ValidateFirmware(&validation, path));
             const bool use_exfat = validation.info.exfat_supported &&
                                    R_SUCCEEDED(validation.validation.exfat_result);
-            return InstallValidatedFirmware(pbox, use_exfat, path);
+            return InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix);
         },
-        [](Result rc) {
+        [apply_downgrade_fix](Result rc) {
             if (R_FAILED(rc)) {
                 App::Push<ErrorBox>(rc, "Firmware update failed");
                 return;
             }
 
+            std::string message = "Firmware update applied successfully.";
+            if (apply_downgrade_fix) {
+                message += "\n\nDowngrade fix applied.";
+            }
+            message += "\n\nReboot now?";
+
             App::Push<OptionBox>(
-                "Firmware update applied successfully.\n\nReboot now?",
+                message,
                 "Later"_i18n, "Reboot"_i18n, 1,
                 [](auto op_index) {
                     if (op_index && *op_index == 1) {
@@ -915,6 +1435,7 @@ void Menu::UpdateSubheading() {
 
 void Menu::RefreshSystemInfo() {
     m_current_kefir = ReadFirstLine(KEFIR_VERSION_PATH);
+    m_supported_firmware = ReadCurrentKefirSupportedFirmware();
     m_current_firmware = hats::getSystemFirmware();
     m_console_revision = hats::isErista() ? "Erista (v1)" : "Mariko (v2)";
     if (m_latest_kefir.empty()) {
@@ -924,6 +1445,53 @@ void Menu::RefreshSystemInfo() {
 
 bool Menu::IsDowngrade(const std::string& target_version) const {
     return IsVersionLower(target_version, m_current_firmware);
+}
+
+bool Menu::IsFirmwareSupported(const std::string& target_version) const {
+    if (!IsKnownVersion(m_supported_firmware)) {
+        return true;
+    }
+
+    return !IsVersionLower(m_supported_firmware, target_version);
+}
+
+bool Menu::FindKefirUpdate(UpdaterEntry& out) const {
+    for (const auto& entry : m_entries) {
+        if (entry.type == UpdaterEntryType::Kefir && entry.pack) {
+            out = entry;
+            return true;
+        }
+    }
+
+    for (const auto& entry : m_entries) {
+        if (entry.type == UpdaterEntryType::Kefir) {
+            out = entry;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Menu::PromptKefirThenFirmware(const UpdaterEntry& firmware_entry) {
+    UpdaterEntry kefir_entry;
+    if (!FindKefirUpdate(kefir_entry)) {
+        App::Push<ErrorBox>(0x1, "Firmware " + firmware_entry.name + " is not supported by the current Kefir, and no Kefir update entry was found.");
+        return;
+    }
+
+    App::Push<OptionBox>(
+        FirmwareUnsupportedReason(firmware_entry.name, m_supported_firmware),
+        "Cancel"_i18n, "Update Kefir"_i18n, 1,
+        [this, kefir_entry, firmware_entry](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            InstallKefir(kefir_entry, [this, firmware_entry]() {
+                DownloadFirmware(firmware_entry, true);
+            });
+        });
 }
 
 } // namespace sphaira::ui::menu::kefir

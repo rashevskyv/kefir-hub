@@ -129,8 +129,112 @@ auto List::ScrollUp(s64& index, s64 step, s64 count) -> bool {
     return false;
 }
 
+auto List::ScrollPageDown(s64& index, s64 count) -> bool {
+    if (count <= m_page) {
+        return false;
+    }
+
+    const auto step = std::max<s64>(m_row, m_page - m_row);
+    const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
+    const auto old_index = index;
+    const auto old_yoff = m_yoff;
+    auto start = static_cast<s64>(m_yoff / max) * m_row;
+
+    index = std::min<s64>(start + step, count - 1);
+    start = (index / m_row) * m_row;
+    const auto next_yoff = static_cast<float>(start / m_row) * max;
+    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+
+    if (index != old_index || m_yoff != old_yoff) {
+        App::PlaySoundEffect(SoundEffect_Scroll);
+        return true;
+    }
+
+    return false;
+}
+
+auto List::ScrollPageUp(s64& index, s64 count) -> bool {
+    if (count <= m_page) {
+        return false;
+    }
+
+    const auto step = std::max<s64>(m_row, m_page - m_row);
+    const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
+    const auto old_index = index;
+    const auto old_yoff = m_yoff;
+    auto start = static_cast<s64>(m_yoff / max) * m_row;
+
+    start = std::max<s64>(0, start - step);
+    index = std::min<s64>(start, count - 1);
+    const auto next_yoff = static_cast<float>(start / m_row) * max;
+    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+
+    if (index != old_index || m_yoff != old_yoff) {
+        App::PlaySoundEffect(SoundEffect_Scroll);
+        return true;
+    }
+
+    return false;
+}
+
+auto List::ScrollToEnd(s64& index, s64 count) -> bool {
+    if (count <= m_page) {
+        return false;
+    }
+
+    const auto old_index = index;
+    const auto old_yoff = m_yoff;
+    const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
+
+    index = count - 1;
+    const auto next_yoff = static_cast<float>(count) * max;
+    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+
+    if (index != old_index || m_yoff != old_yoff) {
+        App::PlaySoundEffect(SoundEffect_Scroll);
+        return true;
+    }
+
+    return false;
+}
+
+auto List::ScrollToStart(s64& index, s64 count) -> bool {
+    if (count <= m_page) {
+        return false;
+    }
+
+    const auto old_index = index;
+    const auto old_yoff = m_yoff;
+
+    index = 0;
+    m_yoff = 0;
+
+    if (index != old_index || m_yoff != old_yoff) {
+        App::PlaySoundEffect(SoundEffect_Scroll);
+        return true;
+    }
+
+    return false;
+}
+
 void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback) {
-    if (controller->GotDown(Button::RIGHT)) {
+    if (GetPageJump() && controller->GotDown(Button::R2)) {
+        if (ScrollToEnd(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && controller->GotDown(Button::L2)) {
+        if (ScrollToStart(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && (controller->GotDown(Button::R) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+        if (ScrollPageDown(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && (controller->GotDown(Button::L) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+        if (ScrollPageUp(index, count)) {
+            callback(false, index);
+        }
+    } else if (controller->GotDown(Button::RIGHT)) {
         if (ScrollDown(index, m_row, count)) {
             callback(false, index);
         }
@@ -166,23 +270,28 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
 }
 
 void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback) {
-    const auto page_up_button = GetPageJump() ? (m_row == 1 ? Button::DPAD_LEFT : Button::L2) : (Button::NONE);
-    const auto page_down_button = GetPageJump() ? (m_row == 1 ? Button::DPAD_RIGHT : Button::R2) : (Button::NONE);
-
-    if (controller->GotDown(Button::DOWN)) {
+    if (GetPageJump() && controller->GotDown(Button::R2)) {
+        if (ScrollToEnd(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && controller->GotDown(Button::L2)) {
+        if (ScrollToStart(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && (controller->GotDown(Button::R) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+        if (ScrollPageDown(index, count)) {
+            callback(false, index);
+        }
+    } else if (GetPageJump() && (controller->GotDown(Button::L) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+        if (ScrollPageUp(index, count)) {
+            callback(false, index);
+        }
+    } else if (controller->GotDown(Button::DOWN)) {
         if (ScrollDown(index, m_row, count)) {
             callback(false, index);
         }
     } else if (controller->GotDown(Button::UP)) {
         if (ScrollUp(index, m_row, count)) {
-            callback(false, index);
-        }
-    } else if (controller->GotDown(page_down_button)) {
-        if (ScrollDown(index, m_page, count)) {
-            callback(false, index);
-        }
-    } else if (controller->GotDown(page_up_button)) {
-        if (ScrollUp(index, m_page, count)) {
             callback(false, index);
         }
     } else if (m_row > 1 && controller->GotDown(Button::RIGHT)) {

@@ -419,5 +419,7 @@
   "Loading": "Đang tải",
   "Empty!": "Trống!",
   "Not Ready...": "Chưa sẵn sàng...",
-  "Error loading page!": "Lỗi tải trang!"
+  "Error loading page!": "Lỗi tải trang!",
+  "Open Updater": "Mở Updater",
+  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater đã bị gỡ bỏ.\n\nViệc cập nhật Kefir hiện được thực hiện trong menu Updater.\n\nĐể mở thủ công, nhấn R, chọn Updater, rồi chọn phiên bản Kefir."
 }
