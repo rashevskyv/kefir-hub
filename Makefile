@@ -1,6 +1,7 @@
 # === Configuration ===
 SPHAIRA_ROOT_DIR := ~/dev/sphaira
 SPHAIRA_BUILD_PRESET := ReleaseWithInstall
+SPHAIRA_BUILD_JOBS ?= $(shell nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Шлях до зібраного NRO
 SOURCE_NRO_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/switch/sphaira
@@ -26,8 +27,8 @@ all: copy
 build:
 	@echo ">>> Configuring Sphaira with preset: $(SPHAIRA_BUILD_PRESET)..."
 	@cd $(SPHAIRA_ROOT_DIR) && cmake --preset $(SPHAIRA_BUILD_PRESET)
-	@echo ">>> Building Sphaira with preset: $(SPHAIRA_BUILD_PRESET)..."
-	@cd $(SPHAIRA_ROOT_DIR) && cmake --build --preset $(SPHAIRA_BUILD_PRESET)
+	@echo ">>> Building Sphaira with preset: $(SPHAIRA_BUILD_PRESET) using $(SPHAIRA_BUILD_JOBS) jobs..."
+	@cd $(SPHAIRA_ROOT_DIR) && cmake --build --preset $(SPHAIRA_BUILD_PRESET) --parallel $(SPHAIRA_BUILD_JOBS)
 	@echo ">>> Build complete. Artifact: $(SOURCE_NRO_FILE)"
 
 # Копіювання результату збірки
@@ -55,7 +56,7 @@ clean:
 help:
 	@echo "Available targets:"
 	@echo "  make / make all    - Build Sphaira and copy result to $(DEST_NRO_FILE)"
-	@echo "  make build         - Only build Sphaira"
+	@echo "  make build         - Only build Sphaira (override jobs with SPHAIRA_BUILD_JOBS=N)"
 	@echo "  make copy          - Build (if needed) and copy result"
 	@echo "  make nxlink        - Build (if needed) and send via nxlink to $(NXLINK_IP)"
 	@echo "  make clean         - Remove build artifacts and copied NRO"
