@@ -12,14 +12,16 @@
 #include "ui/nvg_util.hpp"
 #include "swkbd.hpp"
 #include "i18n.hpp"
-#include "threaded_file_transfer.hpp"
 #include "image.hpp"
 #include "title_info.hpp"
 #include "nro.hpp"
 
 #include <minIni.h>
 #include <stb_image.h>
+#include <cstdio>
 #include <cstring>
+#include <iterator>
+#include <string_view>
 #include <yyjson.h>
 #include "yyjson_helper.hpp"
 
@@ -29,12 +31,13 @@ namespace {
 // format is /themes/sphaira/Theme Name by Author/theme_name-type.nxtheme
 constexpr fs::FsPath THEME_FOLDER{"/themes/sphaira/"};
 constexpr auto CACHE_PATH = "/switch/sphaira/cache/themezer";
-constexpr auto URL_BASE = "https://switch.cdn.fortheusers.org";
+constexpr auto GRAPHQL_URL = "https://api.themezer.net/graphql";
 
 constexpr const char* NRO_URL = "https://github.com/exelix11/SwitchThemeInjector";
 
 constexpr const char* NRO_PATHS[]{
     "/switch/NXThemesInstaller.nro",
+    "/switch/NXThemesInstaller/NXThemesInstaller.nro",
     "/switch/Switch_themes_Installer/NXThemesInstaller.nro",
 };
 
@@ -49,19 +52,25 @@ constexpr const char* REQUEST_TARGET[]{
 };
 
 constexpr const char* REQUEST_SORT[]{
-    "downloads",
-    "updated",
-    "likes",
-    "id"
+    "RISING",
+    "TRENDING",
+    "CREATED",
+    "UPDATED",
+    "DOWNLOADS",
+    "SAVES",
 };
 
 constexpr const char* REQUEST_ORDER[]{
-    "desc",
-    "asc"
+    "DESC",
+    "ASC",
 };
 
-// https://api.themezer.net/?query=query($nsfw:Boolean,$target:String,$page:Int,$limit:Int,$sort:String,$order:String,$query:String,$creators:[String!]){themeList(nsfw:$nsfw,target:$target,page:$page,limit:$limit,sort:$sort,order:$order,query:$query,creators:$creators){id,creator{id,display_name},details{name,description},last_updated,dl_count,like_count,target,preview{original,thumb}}}&variables={"nsfw":false,"target":null,"page":1,"limit":10,"sort":"updated","order":"desc","query":null,"creators":["695065006068334622"]}
-// https://api.themezer.net/?query=query($nsfw:Boolean,$page:Int,$limit:Int,$sort:String,$order:String,$query:String,$creators:[String!]){packList(nsfw:$nsfw,page:$page,limit:$limit,sort:$sort,order:$order,query:$query,creators:$creators){id,creator{id,display_name},details{name,description},last_updated,dl_count,like_count,themes{id,creator{display_name},details{name,description},last_updated,dl_count,like_count,target,preview{original,thumb}}}}&variables={"nsfw":false,"page":1,"limit":10,"sort":"updated","order":"desc","query":null,"creators":["695065006068334622"]}
+constexpr const char* PACKS_QUERY =
+    "query($paginationArgs:PaginationInput,$sort:ItemSort,$order:SortOrder,$query:String){"
+    "switch{packs(paginationArgs:$paginationArgs,sort:$sort,order:$order,query:$query){"
+    "nodes{hexId creator{username} name collagePreview{thumbUrl} "
+    "themes{hexId creator{username} name description updatedAt downloadCount saveCount target screenshotPreview{thumbUrl} downloadUrl}}"
+    "pageInfo{itemCount limit page pageCount}}}}";
 
 auto GetNroPath() -> const char* {
     fs::FsNativeSd fs;
@@ -78,89 +87,98 @@ auto HasNro() -> bool {
     return GetNroPath() != nullptr;
 }
 
-// i know, this is cursed
-// todo: send actual POST request rather than GET.
-auto apiBuildUrlListInternal(const Config& e, bool is_pack) -> std::string {
-    std::string api = "https://api.themezer.net/?query=query";
-    // std::string fields = "{id,creator{id,display_name},details{name,description},last_updated,dl_count,like_count";
-    std::string fields = "{id,creator{id,display_name},details{name}";
-    const char* boolarr[2] = { "false", "true" };
+auto JsonString(std::string_view str) -> std::string {
+    std::string out;
+    out.reserve(str.size() + 2);
+    out += '"';
 
-    std::string cmd;
-    std::string p0 = "$nsfw:Boolean,$page:Int,$limit:Int,$sort:String,$order:String";
-    std::string p1 = "nsfw:$nsfw,page:$page,limit:$limit,sort:$sort,order:$order";
-    std::string json = "\"nsfw\":"+std::string{boolarr[e.nsfw]}+",\"page\":"+std::to_string(e.page)+",\"limit\":"+std::to_string(e.limit)+",\"sort\":\""+std::string{REQUEST_SORT[e.sort_index]}+"\",\"order\":\""+std::string{REQUEST_ORDER[e.order_index]}+"\"";
-
-    if (is_pack) {
-        cmd = "packList";
-        // fields += ",themes{id,creator{display_name},details{name,description},last_updated,dl_count,like_count,target,preview{original,thumb}}";
-        fields += ",themes{id,preview{thumb}}";
-    } else {
-        cmd = "themeList";
-        p0 += ",$target:String";
-        p1 += ",target:$target";
-        if (e.target_index < 7) {
-            json += ",\"target\":\"" + std::string{REQUEST_TARGET[e.target_index]} + "\"";
-        } else {
-            json += ",\"target\":null";
+    for (const auto raw_ch : str) {
+        const auto ch = static_cast<unsigned char>(raw_ch);
+        switch (ch) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\b': out += "\\b"; break;
+            case '\f': out += "\\f"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (ch < 0x20) {
+                    char buf[7];
+                    std::snprintf(buf, sizeof(buf), "\\u%04x", ch);
+                    out += buf;
+                } else {
+                    out += raw_ch;
+                }
+                break;
         }
     }
 
-    if (!e.creator.empty()) {
-        p0 += ",$creators:[String!]";
-        p1 += ",creators:$creators";
-        json += ",\"creators\":[\"" + e.creator + "\"]";
+    out += '"';
+    return out;
+}
+
+auto HashString(std::string_view str) -> u32 {
+    u32 hash = 2166136261u;
+    for (const auto ch : str) {
+        hash ^= static_cast<unsigned char>(ch);
+        hash *= 16777619u;
     }
+    return hash;
+}
 
-    if (!e.query.empty()) {
-        p0 += ",$query:String";
-        p1 += ",query:$query";
-        json += ",\"query\":\"" + e.query + "\"";
+auto ClampArrayIndex(u32 index, u32 count) -> u32 {
+    if (count == 0) {
+        return 0;
     }
-
-    json = curl::EscapeString('{'+json+'}');
-
-    return api+"("+p0+"){"+cmd+"("+p1+")"+fields+"}}&variables="+json;
+    return index < count ? index : count - 1;
 }
 
-auto apiBuildUrlDownloadInternal(const std::string& id, bool is_pack) -> std::string {
-    char url[2048];
-    std::snprintf(url, sizeof(url), "https://api.themezer.net/?query=query{download%s(id:\"%s\"){filename,url,mimetype}}", is_pack ? "Pack" : "Theme", id.c_str());
-    return url;
-    // https://api.themezer.net/?query=query{downloadPack(id:"11"){filename,url,mimetype}}
-}
+auto apiBuildListPacksBody(const Config& e) -> std::string {
+    const auto sort_index = ClampArrayIndex(e.sort_index, std::size(REQUEST_SORT));
+    const auto order_index = ClampArrayIndex(e.order_index, std::size(REQUEST_ORDER));
 
-auto apiBuildUrlDownloadPack(const PackListEntry& e) -> std::string {
-    return apiBuildUrlDownloadInternal(e.id, true);
-}
-
-auto apiBuildUrlListPacks(const Config& e) -> std::string {
-    return apiBuildUrlListInternal(e, true);
+    std::string json;
+    json += "{\"query\":";
+    json += JsonString(PACKS_QUERY);
+    json += ",\"variables\":{\"paginationArgs\":{\"page\":";
+    json += std::to_string(e.page);
+    json += ",\"limit\":";
+    json += std::to_string(e.limit);
+    json += "},\"sort\":";
+    json += JsonString(REQUEST_SORT[sort_index]);
+    json += ",\"order\":";
+    json += JsonString(REQUEST_ORDER[order_index]);
+    json += ",\"query\":";
+    json += e.query.empty() ? "null" : JsonString(e.query);
+    json += "}}";
+    return json;
 }
 
 auto apiBuildListPacksCache(const Config& e) -> fs::FsPath {
     fs::FsPath path;
-    std::snprintf(path, sizeof(path), "%s/%u_page.json", CACHE_PATH, e.page);
+    const auto query_hash = HashString(e.query);
+    std::snprintf(path, sizeof(path), "%s/packs_%u_%u_%08x_%u_page.json", CACHE_PATH, e.sort_index, e.order_index, query_hash, e.page);
     return path;
 }
 
-auto apiBuildIconCache(const ThemeEntry& e) -> fs::FsPath {
+auto apiBuildIconCache(std::string_view id) -> fs::FsPath {
     fs::FsPath path;
-    std::snprintf(path, sizeof(path), "%s/%s_thumb.jpg", CACHE_PATH, e.id.c_str());
+    std::snprintf(path, sizeof(path), "%s/%.*s_thumb.jpg", CACHE_PATH, static_cast<int>(id.size()), id.data());
     return path;
 }
 
-auto loadThemeImage(ThemeEntry& e) -> bool {
-    auto& image = e.preview.lazy_image;
+auto loadPreviewImage(Preview& preview, std::string_view id) -> bool {
+    auto& image = preview.lazy_image;
 
     // already have the image
-    if (e.preview.lazy_image.image) {
+    if (image.image) {
         // log_write("warning, tried to load image: %s when already loaded\n", path.c_str());
         return true;
     }
     auto vg = App::GetVg();
 
-    const auto path = apiBuildIconCache(e);
+    const auto path = apiBuildIconCache(id);
     TimeStamp ts;
     const auto data = ImageLoadFromFile(path, ImageFlag_JPEG);
     if (!data.data.empty()) {
@@ -179,29 +197,68 @@ auto loadThemeImage(ThemeEntry& e) -> bool {
     }
 }
 
+void SetJsonString(std::string& out, yyjson_val* val) {
+    if (!yyjson_is_str(val)) {
+        return;
+    }
+
+    const auto str = yyjson_get_str(val);
+    const auto len = yyjson_get_len(val);
+    if (str) {
+        out.assign(str, len);
+    }
+}
+
 void from_json(yyjson_val* json, Creator& e) {
     JSON_OBJ_ITR(
         JSON_SET_STR(id);
         JSON_SET_STR(display_name);
+        case cexprHash("username"): {
+            SetJsonString(e.display_name, val);
+        } break;
     );
 }
 
 void from_json(yyjson_val* json, Details& e) {
     JSON_OBJ_ITR(
         JSON_SET_STR(name);
+        JSON_SET_STR(description);
     );
 }
 
 void from_json(yyjson_val* json, Preview& e) {
     JSON_OBJ_ITR(
         JSON_SET_STR(thumb);
+        case cexprHash("thumbUrl"): {
+            SetJsonString(e.thumb, val);
+        } break;
     );
 }
 
 void from_json(yyjson_val* json, ThemeEntry& e) {
     JSON_OBJ_ITR(
         JSON_SET_STR(id);
+        JSON_SET_OBJ(creator);
+        JSON_SET_OBJ(details);
         JSON_SET_OBJ(preview);
+        JSON_SET_STR(target);
+        case cexprHash("hexId"): {
+            SetJsonString(e.id, val);
+        } break;
+        case cexprHash("name"): {
+            SetJsonString(e.details.name, val);
+        } break;
+        case cexprHash("description"): {
+            SetJsonString(e.details.description, val);
+        } break;
+        case cexprHash("downloadUrl"): {
+            SetJsonString(e.download_url, val);
+        } break;
+        case cexprHash("screenshotPreview"): {
+            if (yyjson_is_obj(val)) {
+                from_json(val, e.preview);
+            }
+        } break;
     );
 }
 
@@ -210,7 +267,19 @@ void from_json(yyjson_val* json, PackListEntry& e) {
         JSON_SET_STR(id);
         JSON_SET_OBJ(creator);
         JSON_SET_OBJ(details);
+        JSON_SET_OBJ(preview);
         JSON_SET_ARR_OBJ(themes);
+        case cexprHash("hexId"): {
+            SetJsonString(e.id, val);
+        } break;
+        case cexprHash("name"): {
+            SetJsonString(e.details.name, val);
+        } break;
+        case cexprHash("collagePreview"): {
+            if (yyjson_is_obj(val)) {
+                from_json(val, e.preview);
+            }
+        } break;
     );
 }
 
@@ -220,97 +289,99 @@ void from_json(yyjson_val* json, Pagination& e) {
         JSON_SET_UINT(limit);
         JSON_SET_UINT(page_count);
         JSON_SET_UINT(item_count);
-    );
-}
-
-void from_json(const std::vector<u8>& data, DownloadPack& e) {
-    JSON_INIT_VEC(data, "data");
-    JSON_GET_OBJ("downloadPack");
-    JSON_OBJ_ITR(
-        JSON_SET_STR(filename);
-        JSON_SET_STR(url);
-        JSON_SET_STR(mimetype);
+        case cexprHash("pageCount"): {
+            if (yyjson_is_uint(val)) {
+                e.page_count = yyjson_get_uint(val);
+            }
+        } break;
+        case cexprHash("itemCount"): {
+            if (yyjson_is_uint(val)) {
+                e.item_count = yyjson_get_uint(val);
+            }
+        } break;
     );
 }
 
 void from_json(const fs::FsPath& path, PackList& e) {
-    JSON_INIT_VEC_FILE(path, "data", nullptr);
+    JSON_INIT_VEC_FILE(path, nullptr, nullptr);
+    JSON_GET_OBJ("data");
+    JSON_GET_OBJ("switch");
+    JSON_GET_OBJ("packs");
     JSON_OBJ_ITR(
-        JSON_SET_ARR_OBJ(packList);
-        JSON_SET_OBJ(pagination);
+        JSON_SET_ARR_OBJ2(nodes, e.packList);
+        case cexprHash("pageInfo"): {
+            if (yyjson_is_obj(val)) {
+                from_json(val, e.pagination);
+            }
+        } break;
     );
 }
 
-auto InstallTheme(ProgressBox* pbox, const PackListEntry& entry) -> Result {
-    static const fs::FsPath zip_out{"/switch/sphaira/cache/themezer/temp.zip"};
+auto ThemeTargetLabel(const ThemeEntry& theme) -> const char* {
+    static constexpr const char* TARGET_LABEL[]{
+        "Home Menu",
+        "Lock Screen",
+        "All Apps",
+        "Settings",
+        "Player Select",
+        "User Page",
+        "News",
+    };
 
+    for (u32 i = 0; i < std::size(REQUEST_TARGET); i++) {
+        if (theme.target == REQUEST_TARGET[i]) {
+            return TARGET_LABEL[i];
+        }
+    }
+
+    return theme.target.empty() ? "Theme" : theme.target.c_str();
+}
+
+auto SanitizedPathPart(const std::string& value, const char* fallback) -> fs::FsPath {
+    fs::FsPath out{value.empty() ? fallback : value.c_str()};
+    title::utilsReplaceIllegalCharacters(out, false);
+    return out;
+}
+
+auto BuildThemePath(const PackListEntry& entry, const ThemeEntry& theme) -> fs::FsPath {
+    const auto pack_name = SanitizedPathPart(entry.details.name, entry.id.empty() ? "Themezer Pack" : entry.id.c_str());
+    const auto pack_author = SanitizedPathPart(entry.creator.display_name, "Unknown");
+    const auto theme_name = SanitizedPathPart(theme.details.name, theme.id.empty() ? "Theme" : theme.id.c_str());
+    const auto target = SanitizedPathPart(ThemeTargetLabel(theme), "Theme");
+    const auto id = SanitizedPathPart(theme.id, "theme");
+
+    fs::FsPath out;
+    std::snprintf(out, sizeof(out), "%s/%s - By %s/%s (%s-%s).nxtheme", THEME_FOLDER.s, pack_name.s, pack_author.s, theme_name.s, target.s, id.s);
+    return out;
+}
+
+auto InstallTheme(ProgressBox* pbox, const PackListEntry& entry) -> Result {
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
 
-    DownloadPack download_pack;
-
-    // 1. download the zip
-    if (!pbox->ShouldExit()) {
-        pbox->NewTransfer("Downloading "_i18n + entry.details.name);
-        log_write("starting download\n");
-
-        const auto url = apiBuildUrlDownloadPack(entry);
-        log_write("using url: %s\n", url.c_str());
-        const auto result = curl::Api().ToMemory(
-            curl::Url{url},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()}
-        );
-
-        if (!result.success || result.data.empty()) {
-            log_write("error with download: %s\n", url.c_str());
-            R_THROW(Result_ThemezerFailedToDownloadThemeMeta);
+    std::vector<std::string> nxtheme_paths;
+    for (const auto& theme : entry.themes) {
+        if (pbox->ShouldExit()) {
+            break;
+        }
+        if (theme.download_url.empty()) {
+            continue;
         }
 
-        from_json(result.data, download_pack);
-    }
+        const auto theme_label = theme.details.name.empty() ? entry.details.name : theme.details.name;
+        pbox->NewTransfer("Downloading "_i18n + theme_label);
 
-    // 2. download the zip
-    if (!pbox->ShouldExit()) {
-        pbox->NewTransfer("Downloading "_i18n + entry.details.name);
-        log_write("starting download: %s\n", download_pack.url.c_str());
+        const auto out_path = BuildThemePath(entry, theme);
+        log_write("starting themezer download: %s -> %s\n", theme.download_url.c_str(), out_path.s);
 
         const auto result = curl::Api().ToFile(
-            curl::Url{download_pack.url},
-            curl::Path{zip_out},
+            curl::Url{theme.download_url},
+            curl::Path{out_path},
             curl::OnProgress{pbox->OnDownloadProgressCallback()}
         );
 
         R_UNLESS(result.success, Result_ThemezerFailedToDownloadTheme);
-    }
-
-    ON_SCOPE_EXIT(fs.DeleteFile(zip_out));
-
-    // replace invalid characters in the name.
-    fs::FsPath name_buf{entry.details.name};
-    title::utilsReplaceIllegalCharacters(name_buf, false);
-
-    // replace invalid characters in the author.
-    fs::FsPath author_buf{entry.creator.display_name};
-    title::utilsReplaceIllegalCharacters(author_buf, false);
-
-    // create directories.
-    fs::FsPath dir_path;
-    std::snprintf(dir_path, sizeof(dir_path), "%s/%s - By %s", THEME_FOLDER.s, name_buf.s, author_buf.s);
-    fs.CreateDirectoryRecursively(dir_path);
-
-    // 3. extract the zip
-    std::vector<std::string> nxtheme_paths;
-    if (!pbox->ShouldExit()) {
-        R_TRY(thread::TransferUnzipAll(pbox, zip_out, &fs, dir_path, [&nxtheme_paths](const fs::FsPath& name, fs::FsPath& path){
-            // just in case theme packs start adding invalid entries.
-            if (!path.ends_with(".nxtheme")) {
-                return false;
-            }
-
-            // store path for later.
-            nxtheme_paths.emplace_back(path);
-            return true;
-        }));
+        nxtheme_paths.emplace_back(out_path);
     }
 
     // ensure that we actually downloaded the theme.
@@ -380,9 +451,8 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
                         const auto& page = m_pages[m_page_index];
                         if (page.m_packList.size() && page.m_ready == PageLoadState::Done) {
                             const auto& entry = page.m_packList[m_index];
-                            const auto url = apiBuildUrlDownloadPack(entry);
 
-                            App::Push<ProgressBox>(entry.themes[0].preview.lazy_image.image, "Downloading "_i18n, entry.details.name, [this, &entry](auto pbox) -> Result {
+                            App::Push<ProgressBox>(entry.preview.lazy_image.image, "Downloading "_i18n, entry.details.name, [this, &entry](auto pbox) -> Result {
                                 return InstallTheme(pbox, entry);
                             }, [this, &entry](Result rc){
                                 App::PushErrorBox(rc, "Failed to download theme"_i18n);
@@ -494,14 +564,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const float xoff = (350 - 320) / 2;
 
         // lazy load image
-        if (e.themes.size()) {
-            auto& theme = e.themes[0];
-            auto& image = e.themes[0].preview.lazy_image;
+        Preview* preview = &e.preview;
+        std::string_view preview_id{e.id.c_str(), e.id.size()};
+        if (preview->thumb.empty() && e.themes.size()) {
+            preview = &e.themes[0].preview;
+            preview_id = std::string_view{e.themes[0].id.c_str(), e.themes[0].id.size()};
+        }
+
+        if (!preview->thumb.empty()) {
+            auto& image = preview->lazy_image;
 
             // try and load cached image.
             if (image_load_count < image_load_max && !image.image && !image.tried_cache) {
                 image.tried_cache = true;
-                image.cached = loadThemeImage(theme);
+                image.cached = loadPreviewImage(*preview, preview_id);
                 if (image.cached) {
                     image_load_count++;
                 }
@@ -510,10 +586,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             if (!image.image || image.cached) {
                 switch (image.state) {
                     case ImageDownloadState::None: {
-                        const auto path = apiBuildIconCache(theme);
+                        const auto path = apiBuildIconCache(preview_id);
                         log_write("downloading theme!: %s\n", path.s);
 
-                        const auto url = theme.preview.thumb;
+                        const auto url = preview->thumb;
                         log_write("downloading url: %s\n", url.c_str());
                         image.state = ImageDownloadState::Progress;
                         curl::Api().ToFileAsync(
@@ -540,7 +616,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                     }   break;
                     case ImageDownloadState::Done: {
                         image.cached = false;
-                        if (!loadThemeImage(theme)) {
+                        if (!loadPreviewImage(*preview, preview_id)) {
                             image.state = ImageDownloadState::Failed;
                         } else {
                             image_load_count++;
@@ -615,15 +691,19 @@ void Menu::PackListDownload() {
     config.SetQuery(m_search);
     config.sort_index = m_sort.Get();
     config.order_index = m_order.Get();
-    config.nsfw = m_nsfw.Get();
-    const auto packList_url = apiBuildUrlListPacks(config);
+    const auto packList_body = apiBuildListPacksBody(config);
     const auto packlist_path = apiBuildListPacksCache(config);
 
-    log_write("\npackList_url: %s\n\n", packList_url.c_str());
+    log_write("\npackList_body: %s\n\n", packList_body.c_str());
 
     curl::Api().ToFileAsync(
-        curl::Url{packList_url},
+        curl::Url{GRAPHQL_URL},
         curl::Path{packlist_path},
+        curl::Fields{packList_body},
+        curl::Header{
+            { "Accept", "application/json" },
+            { "Content-Type", "application/json" },
+        },
         curl::Flags{curl::Flag_Cache},
         curl::StopToken{this->GetToken()},
         curl::OnComplete{[this, page_index](auto& result){
@@ -640,6 +720,13 @@ void Menu::PackListDownload() {
 
             PackList a;
             from_json(result.path, a);
+
+            if (!a.pagination.page_count) {
+                auto& page = m_pages[page_index-1];
+                page.m_ready = PageLoadState::Error;
+                log_write("failed to parse themezer data...\n");
+                return;
+            }
 
             m_pages.resize(a.pagination.page_count);
             auto& page = m_pages[page_index-1];
@@ -664,28 +751,25 @@ void Menu::DisplayOptions() {
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     SidebarEntryArray::Items sort_items;
-    sort_items.push_back("Downloads"_i18n);
+    sort_items.push_back("Rising"_i18n);
+    sort_items.push_back("Trending"_i18n);
+    sort_items.push_back("Created"_i18n);
     sort_items.push_back("Updated"_i18n);
-    sort_items.push_back("Likes"_i18n);
-    sort_items.push_back("ID"_i18n);
+    sort_items.push_back("Downloads"_i18n);
+    sort_items.push_back("Saves"_i18n);
 
     SidebarEntryArray::Items order_items;
     order_items.push_back("Descending (down)"_i18n);
     order_items.push_back("Ascending (Up)"_i18n);
 
-    options->Add<SidebarEntryBool>("Nsfw"_i18n, m_nsfw.Get(), [this](bool& v_out){
-        m_nsfw.Set(v_out);
-        InvalidateAllPages();
-    });
-
-    options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
+    options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
         if (m_sort.Get() != index_out) {
             m_sort.Set(index_out);
             InvalidateAllPages();
         }
     }, m_sort.Get());
 
-    options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
+    options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
         if (m_order.Get() != index_out) {
             m_order.Set(index_out);
             InvalidateAllPages();
@@ -695,8 +779,8 @@ void Menu::DisplayOptions() {
     options->Add<SidebarEntryCallback>("Page"_i18n, [this](){
         s64 out;
         if (R_SUCCEEDED(swkbd::ShowNumPad(out, "Enter Page Number"_i18n.c_str(), nullptr, -1, 3))) {
-            if (out < m_page_index_max) {
-                m_page_index = out;
+            if (out > 0 && out <= m_page_index_max) {
+                m_page_index = out - 1;
                 PackListDownload();
             } else {
                 log_write("invalid page number\n");

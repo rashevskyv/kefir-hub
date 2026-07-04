@@ -50,6 +50,7 @@ struct Creator {
 
 struct Details {
     std::string name{};
+    std::string description{};
 };
 
 struct Preview {
@@ -57,16 +58,12 @@ struct Preview {
     LazyImage lazy_image{};
 };
 
-struct DownloadPack {
-    std::string filename{};
-    std::string url{};
-    std::string mimetype{};
-};
-
-using DownloadTheme = DownloadPack;
-
 struct ThemeEntry {
     std::string id{};
+    Creator creator{};
+    Details details{};
+    std::string target{};
+    std::string download_url{};
     Preview preview{};
 };
 
@@ -74,6 +71,7 @@ struct PackListEntry {
     std::string id{};
     Creator creator{};
     Details details{};
+    Preview preview{};
     std::vector<ThemeEntry> themes{};
 };
 
@@ -91,18 +89,13 @@ struct PackList {
 
 struct Config {
     // these index into a string array
-    u32 target_index{};
     u32 sort_index{};
     u32 order_index{};
     // search query, if empty, its not used
     std::string query{};
-    // this is actually an array of creator ids, but we don't support that feature
-    // if empty, its not used
-    std::string creator{};
     // defaults
     u32 page{1};
     u32 limit{18};
-    bool nsfw{false};
 
     void SetQuery(std::string new_query) {
         query = new_query;
@@ -110,14 +103,6 @@ struct Config {
 
     void RemoveQuery() {
         query.clear();
-    }
-
-    void SetCreator(Creator new_creator) {
-        creator = new_creator.id;
-    }
-
-    void RemoveCreator() {
-        creator.clear();
     }
 };
 
@@ -169,7 +154,6 @@ private:
     // options
     option::OptionLong m_sort{INI_SECTION, "sort", 0};
     option::OptionLong m_order{INI_SECTION, "order", 0};
-    option::OptionBool m_nsfw{INI_SECTION, "nsfw", false};
 
     bool m_checked_for_nro{};
 };
