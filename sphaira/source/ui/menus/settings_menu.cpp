@@ -2,6 +2,7 @@
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/themezer.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -12,16 +13,22 @@
 #include "app.hpp"
 #include "download.hpp"
 #include "i18n.hpp"
+#include "swkbd.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <dirent.h>
 #include <fstream>
+#include <iterator>
+#include <limits>
 #include <minIni.h>
+#include <switch/services/fan.h>
+#include <switch/services/tc.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
@@ -75,6 +82,7 @@ constexpr std::array TRANSLATION_PATHS{
 };
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
+constexpr const char* FAN_PRESETS_CONFIG = "/config/sphaira/fan_curve_presets.ini";
 constexpr const char* SPHAIRA_DOWNLOADS = "/config/sphaira/downloads";
 constexpr const char* DBI_TRANSLATIONS_PACKAGE = "/config/sphaira/packages/Software/DBI/Fan Translations/package.ini";
 constexpr const char* TRANSLATE_PACKAGE_DIR = "/config/sphaira/packages/Translate Interface";
@@ -147,13 +155,36 @@ auto ReadTextFile(const std::string& path) -> std::string {
     return {std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
 }
 
+auto EnsureParentDirectory(const std::string& path) -> Result;
+
 auto ReadLines(const std::string& path) -> std::vector<std::string> {
     std::vector<std::string> lines;
     std::ifstream file{path};
     for (std::string line; std::getline(file, line);) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
         lines.emplace_back(std::move(line));
     }
     return lines;
+}
+
+auto WriteLines(const std::string& path, const std::vector<std::string>& lines) -> Result {
+    R_TRY(EnsureParentDirectory(path));
+
+    std::ofstream file{path, std::ios::binary | std::ios::trunc};
+    if (!file) {
+        R_THROW(Result_FsUnknownStdioError);
+    }
+
+    for (const auto& line : lines) {
+        file << line << '\n';
+        if (!file) {
+            R_THROW(Result_FsUnknownStdioError);
+        }
+    }
+
+    R_SUCCEED();
 }
 
 auto ExtractBracketName(const std::string& line) -> std::string {
@@ -167,6 +198,20 @@ auto ExtractBracketName(const std::string& line) -> std::string {
         name.erase(name.begin());
     }
     return Trim(name);
+}
+
+auto ExtractIniKey(const std::string& line) -> std::string {
+    const auto trimmed = Trim(line);
+    if (trimmed.empty() || trimmed.front() == ';' || trimmed.front() == '#') {
+        return {};
+    }
+
+    const auto pos = trimmed.find_first_of("=:");
+    if (pos == std::string::npos) {
+        return {};
+    }
+
+    return Trim(trimmed.substr(0, pos));
 }
 
 auto StartsWith(const std::string& str, const char* prefix) -> bool {
@@ -377,6 +422,79 @@ auto SetIniValue(const char* path, const char* section, const char* key, const c
         R_THROW(fsdevGetLastResult());
     }
     R_SUCCEED();
+}
+
+auto ReadIniRawValue(const std::string& path, const std::string& section, const std::string& key) -> std::string {
+    const auto lines = ReadLines(path);
+    bool in_section{};
+
+    for (const auto& line : lines) {
+        const auto section_name = ExtractBracketName(line);
+        if (!section_name.empty()) {
+            in_section = section_name == section;
+            continue;
+        }
+
+        if (!in_section || ExtractIniKey(line) != key) {
+            continue;
+        }
+
+        const auto pos = line.find_first_of("=:");
+        if (pos == std::string::npos) {
+            return {};
+        }
+
+        return Trim(line.substr(pos + 1));
+    }
+
+    return {};
+}
+
+auto SetIniRawValue(const std::string& path, const std::string& section, const std::string& key, const std::string& value) -> Result {
+    auto lines = ReadLines(path);
+    const auto new_line = key + " = " + value;
+
+    auto section_begin = lines.end();
+    auto section_end = lines.end();
+
+    for (auto it = lines.begin(); it != lines.end(); ++it) {
+        const auto section_name = ExtractBracketName(*it);
+        if (section_name.empty()) {
+            continue;
+        }
+
+        if (section_begin == lines.end()) {
+            if (section_name == section) {
+                section_begin = it;
+            }
+        } else {
+            section_end = it;
+            break;
+        }
+    }
+
+    if (section_begin == lines.end()) {
+        if (!lines.empty() && !Trim(lines.back()).empty()) {
+            lines.emplace_back();
+        }
+        lines.emplace_back("[" + section + "]");
+        lines.emplace_back(new_line);
+        return WriteLines(path, lines);
+    }
+
+    if (section_end == lines.end()) {
+        section_end = lines.end();
+    }
+
+    for (auto it = std::next(section_begin); it != section_end; ++it) {
+        if (ExtractIniKey(*it) == key) {
+            *it = new_line;
+            return WriteLines(path, lines);
+        }
+    }
+
+    lines.insert(section_end, new_line);
+    return WriteLines(path, lines);
 }
 
 auto DownloadFile(ProgressBox* pbox, const std::string& label, const std::string& url, const fs::FsPath& dst) -> Result {
@@ -613,6 +731,406 @@ auto Apply8GbDram(bool enabled) -> Result {
     if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
         R_THROW(Result_FsUnknownStdioError);
     }
+    R_SUCCEED();
+}
+
+constexpr s32 FAN_TABLE_TEMP_MIN{-1000000};
+constexpr s32 FAN_TABLE_TEMP_MAX{1000000};
+constexpr s32 FAN_TEMP_MIN_C{0};
+constexpr s32 FAN_TEMP_MAX_C{90};
+constexpr s32 FAN_PERCENT_MIN{0};
+constexpr s32 FAN_PERCENT_MAX{100};
+constexpr u32 FAN_DEVICE_CODE_PWM{0x3D000001};
+constexpr u64 FAN_SENSOR_REFRESH_NS{500000000};
+constexpr s64 FAN_BUILTIN_PRESET_COUNT{5};
+constexpr s64 FAN_CUSTOM_PRESET_COUNT{3};
+
+auto DefaultHandheldFanCurve() -> std::vector<FanCurvePoint> {
+    return {
+        {10, 0},
+        {40, 20},
+        {47, 20},
+        {56, 60},
+        {58, 100},
+    };
+}
+
+auto DefaultDockedFanCurve() -> std::vector<FanCurvePoint> {
+    return {
+        {10, 0},
+        {40, 20},
+        {47, 20},
+        {54, 60},
+        {58, 100},
+    };
+}
+
+auto QuietFanCurve(bool docked) -> std::vector<FanCurvePoint> {
+    return docked ? std::vector<FanCurvePoint>{
+        {10, 0},
+        {42, 20},
+        {50, 20},
+        {58, 55},
+        {63, 85},
+        {68, 100},
+    } : std::vector<FanCurvePoint>{
+        {10, 0},
+        {43, 20},
+        {52, 20},
+        {60, 55},
+        {65, 85},
+        {70, 100},
+    };
+}
+
+auto BalancedFanCurve(bool docked) -> std::vector<FanCurvePoint> {
+    return docked ? std::vector<FanCurvePoint>{
+        {10, 0},
+        {39, 20},
+        {47, 30},
+        {55, 65},
+        {60, 100},
+    } : std::vector<FanCurvePoint>{
+        {10, 0},
+        {40, 20},
+        {49, 30},
+        {57, 65},
+        {62, 100},
+    };
+}
+
+auto CoolFanCurve(bool docked) -> std::vector<FanCurvePoint> {
+    return docked ? std::vector<FanCurvePoint>{
+        {10, 0},
+        {34, 25},
+        {42, 45},
+        {50, 75},
+        {56, 100},
+    } : std::vector<FanCurvePoint>{
+        {10, 0},
+        {35, 25},
+        {44, 45},
+        {52, 75},
+        {58, 100},
+    };
+}
+
+auto FullSpeedFanCurve() -> std::vector<FanCurvePoint> {
+    return {
+        {10, 100},
+        {90, 100},
+    };
+}
+
+auto FanPresetSection(bool docked) -> const char* {
+    return docked ? "docked" : "handheld";
+}
+
+auto FanCustomPresetKey(s64 index) -> std::string {
+    return "custom_" + std::to_string(index + 1);
+}
+
+auto FanCustomPresetNameKey(s64 index) -> std::string {
+    return FanCustomPresetKey(index) + "_name";
+}
+
+auto FanCustomPresetDefaultName(s64 index) -> std::string {
+    return "Custom " + std::to_string(index + 1);
+}
+
+auto SanitizeFanPresetName(std::string name) -> std::string {
+    for (auto& ch : name) {
+        if (ch == '\r' || ch == '\n' || ch == ';' || ch == '#') {
+            ch = ' ';
+        }
+    }
+    return Trim(std::move(name));
+}
+
+auto FanBuiltinPresetLabels() -> PopupList::Items {
+    return {
+        "Default"_i18n,
+        "Quiet"_i18n,
+        "Balanced"_i18n,
+        "Cool"_i18n,
+        "Full speed"_i18n,
+    };
+}
+
+auto FanPresetCurve(s64 index, bool docked) -> std::vector<FanCurvePoint> {
+    switch (index) {
+        case 1: return QuietFanCurve(docked);
+        case 2: return BalancedFanCurve(docked);
+        case 3: return CoolFanCurve(docked);
+        case 4: return FullSpeedFanCurve();
+        case 0:
+        default:
+            return docked ? DefaultDockedFanCurve() : DefaultHandheldFanCurve();
+    }
+}
+
+auto FanByteToPercent(s32 value) -> s32 {
+    value = std::clamp(value, 0, 255);
+    return (value * 100 + 127) / 255;
+}
+
+auto FanPercentToByte(s32 value) -> s32 {
+    value = std::clamp(value, FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+    return (value * 255 + 50) / 100;
+}
+
+auto DecodeAtmosphereString(std::string value) -> std::string {
+    value = Trim(std::move(value));
+    if (StartsWith(value, "str!")) {
+        value = Trim(value.substr(4));
+    }
+    return Trim(std::move(value));
+}
+
+auto ParseSignedIntegers(const std::string& value) -> std::vector<s32> {
+    std::vector<s32> out;
+    const char* ptr = value.c_str();
+
+    while (*ptr) {
+        if (*ptr == '-' || (*ptr >= '0' && *ptr <= '9')) {
+            char* end{};
+            const auto parsed = std::strtol(ptr, &end, 10);
+            if (end != ptr) {
+                out.push_back(static_cast<s32>(parsed));
+                ptr = end;
+                continue;
+            }
+        }
+        ptr++;
+    }
+
+    return out;
+}
+
+void NormalizeFanCurve(std::vector<FanCurvePoint>& curve) {
+    std::sort(curve.begin(), curve.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.temp_c < rhs.temp_c;
+    });
+
+    if (curve.size() > static_cast<size_t>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C + 1)) {
+        curve.resize(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C + 1);
+    }
+
+    for (size_t i = 0; i < curve.size(); i++) {
+        auto& point = curve[i];
+        const auto remaining = static_cast<s32>(curve.size() - i - 1);
+        const auto min_temp = i ? curve[i - 1].temp_c + 1 : FAN_TEMP_MIN_C;
+        const auto max_temp = FAN_TEMP_MAX_C - remaining;
+        point.temp_c = std::clamp(point.temp_c, min_temp, max_temp);
+        point.fan_percent = std::clamp(point.fan_percent, FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+
+        if (i) {
+            const auto& prev = curve[i - 1];
+            point.fan_percent = std::max(point.fan_percent, prev.fan_percent);
+        }
+    }
+
+    for (size_t i = curve.size(); i-- > 0;) {
+        auto& point = curve[i];
+        if (i + 1 < curve.size()) {
+            const auto& next = curve[i + 1];
+            point.fan_percent = std::min(point.fan_percent, next.fan_percent);
+        }
+    }
+}
+
+auto ParseFanCurveTable(const std::string& value, std::vector<FanCurvePoint>& out) -> bool {
+    const auto numbers = ParseSignedIntegers(DecodeAtmosphereString(value));
+    if (numbers.size() < 8 || numbers.size() % 4) {
+        return false;
+    }
+
+    std::vector<FanCurvePoint> curve;
+    for (size_t i = 0; i < numbers.size(); i += 4) {
+        const auto temp_max = numbers[i + 1];
+        const auto fan_max = numbers[i + 3];
+
+        if (temp_max >= 100000) {
+            continue;
+        }
+
+        const auto temp_c = std::clamp((temp_max + 500) / 1000, FAN_TEMP_MIN_C, FAN_TEMP_MAX_C);
+        const auto fan_percent = FanByteToPercent(fan_max);
+        if (!curve.empty() && temp_c <= curve.back().temp_c) {
+            continue;
+        }
+
+        curve.push_back({temp_c, fan_percent});
+    }
+
+    if (curve.size() < 2) {
+        return false;
+    }
+
+    NormalizeFanCurve(curve);
+    out = std::move(curve);
+    return true;
+}
+
+auto ReadFanCurve(const char* primary_key, const char* fallback_key, std::vector<FanCurvePoint> defaults) -> std::vector<FanCurvePoint> {
+    std::vector<FanCurvePoint> curve;
+
+    if (ParseFanCurveTable(ReadIniRawValue(ATMOSPHERE_CONFIG, "tc", primary_key), curve)) {
+        return curve;
+    }
+
+    if (fallback_key && ParseFanCurveTable(ReadIniRawValue(ATMOSPHERE_CONFIG, "tc", fallback_key), curve)) {
+        return curve;
+    }
+
+    return defaults;
+}
+
+auto ReadCustomFanPreset(s64 index, bool docked, std::vector<FanCurvePoint>& out) -> bool {
+    if (index < 0 || index >= FAN_CUSTOM_PRESET_COUNT) {
+        return false;
+    }
+
+    return ParseFanCurveTable(
+        ReadIniRawValue(FAN_PRESETS_CONFIG, FanPresetSection(docked), FanCustomPresetKey(index)),
+        out
+    );
+}
+
+auto ReadCustomFanPresetName(s64 index, bool docked) -> std::string {
+    if (index < 0 || index >= FAN_CUSTOM_PRESET_COUNT) {
+        return {};
+    }
+
+    auto name = Trim(ReadIniRawValue(FAN_PRESETS_CONFIG, FanPresetSection(docked), FanCustomPresetNameKey(index)));
+    return name.empty() ? FanCustomPresetDefaultName(index) : name;
+}
+
+auto FanCustomPresetLabel(s64 index, bool docked, bool for_save) -> std::string {
+    std::vector<FanCurvePoint> preset;
+    auto label = ReadCustomFanPresetName(index, docked);
+    const auto has_preset = ReadCustomFanPreset(index, docked, preset);
+    if (!has_preset) {
+        label += " (empty)";
+    } else if (for_save) {
+        label += " (overwrite)";
+    }
+    return label;
+}
+
+auto FanPresetLabels(bool docked) -> PopupList::Items {
+    auto items = FanBuiltinPresetLabels();
+    for (s64 i = 0; i < FAN_CUSTOM_PRESET_COUNT; i++) {
+        items.emplace_back(FanCustomPresetLabel(i, docked, false));
+    }
+    return items;
+}
+
+auto FanCustomPresetLabels(bool docked) -> PopupList::Items {
+    PopupList::Items items;
+    for (s64 i = 0; i < FAN_CUSTOM_PRESET_COUNT; i++) {
+        items.emplace_back(FanCustomPresetLabel(i, docked, true));
+    }
+    return items;
+}
+
+auto FormatFanCurveTable(std::vector<FanCurvePoint> curve) -> std::string {
+    if (curve.size() < 2) {
+        curve = DefaultHandheldFanCurve();
+    }
+
+    NormalizeFanCurve(curve);
+
+    std::string out{"["};
+    bool first = true;
+    const auto append = [&](s32 temp_min, s32 temp_max, s32 fan_min, s32 fan_max) {
+        if (!first) {
+            out += ", ";
+        }
+        first = false;
+        out += "[";
+        out += std::to_string(temp_min);
+        out += ", ";
+        out += std::to_string(temp_max);
+        out += ", ";
+        out += std::to_string(fan_min);
+        out += ", ";
+        out += std::to_string(fan_max);
+        out += "]";
+    };
+
+    append(
+        FAN_TABLE_TEMP_MIN,
+        curve.front().temp_c * 1000,
+        FanPercentToByte(curve.front().fan_percent),
+        FanPercentToByte(curve.front().fan_percent)
+    );
+
+    for (size_t i = 1; i < curve.size(); i++) {
+        const auto& prev = curve[i - 1];
+        const auto& cur = curve[i];
+        append(
+            prev.temp_c * 1000,
+            cur.temp_c * 1000,
+            FanPercentToByte(prev.fan_percent),
+            FanPercentToByte(cur.fan_percent)
+        );
+    }
+
+    append(
+        curve.back().temp_c * 1000,
+        FAN_TABLE_TEMP_MAX,
+        FanPercentToByte(curve.back().fan_percent),
+        FanPercentToByte(curve.back().fan_percent)
+    );
+
+    out += "]";
+    return out;
+}
+
+auto FormatAtmosphereFanCurve(std::vector<FanCurvePoint> curve) -> std::string {
+    return "str!\"" + FormatFanCurveTable(std::move(curve)) + "\"";
+}
+
+auto IsFanCurveEnabled() -> bool {
+    return IniValueEquals(ATMOSPHERE_CONFIG, "tc", "use_configurations_on_fwdbg", "u8!0x1");
+}
+
+auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, bool reboot) -> Result {
+    const auto handheld_value = FormatAtmosphereFanCurve(handheld);
+    const auto docked_value = FormatAtmosphereFanCurve(docked);
+
+    R_TRY(SetIniValue(ATMOSPHERE_CONFIG, "tc", "use_configurations_on_fwdbg", "u8!0x1"));
+    R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_handheld_on_fwdbg", handheld_value));
+    R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
+    if (reboot) {
+        RebootAfterSetting();
+    } else {
+        fsdevCommitDevice("sdmc");
+    }
+    R_SUCCEED();
+}
+
+auto SaveCustomFanPreset(s64 index, bool docked, const std::vector<FanCurvePoint>& curve, const std::string& name) -> Result {
+    R_UNLESS(index >= 0 && index < FAN_CUSTOM_PRESET_COUNT, Result_FsUnknownStdioError);
+    auto safe_name = SanitizeFanPresetName(name);
+    if (safe_name.empty()) {
+        safe_name = FanCustomPresetDefaultName(index);
+    }
+
+    R_TRY(SetIniRawValue(
+        FAN_PRESETS_CONFIG,
+        FanPresetSection(docked),
+        FanCustomPresetKey(index),
+        FormatFanCurveTable(curve)
+    ));
+    R_TRY(SetIniRawValue(
+        FAN_PRESETS_CONFIG,
+        FanPresetSection(docked),
+        FanCustomPresetNameKey(index),
+        safe_name
+    ));
+    fsdevCommitDevice("sdmc");
     R_SUCCEED();
 }
 
@@ -984,6 +1502,30 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
 auto BuildThemeItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
+    items.emplace_back(SettingsItem{
+        "Themezer",
+        "Browse, download and install theme packs from themezer.net.",
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::themezer::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
+        "Sphaira theme options",
+        "Select the Sphaira interface theme and music options.",
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::DisplayThemeOptions(false);
+        },
+        SettingsItemKind::Folder,
+    });
+
     items.emplace_back(MakePackageAction({
         "Mario BG Dark",
         "Download and extract Mario BG Modern theme.",
@@ -1125,6 +1667,17 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
 auto BuildKefirItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
+    items.emplace_back(SettingsItem{
+        "Fan curve",
+        "Edit Atmosphere tskin fan curves for handheld and docked modes.",
+        [](){
+            return OnOff(IsFanCurveEnabled());
+        },
+        [](){
+            App::Push<FanCurveMenu>();
+        },
+        SettingsItemKind::Folder,
+    });
     items.emplace_back(MakeKefirToggle({
         "Overclock status",
         "Enable or disable Kefir overclock files.",
@@ -1195,6 +1748,67 @@ auto ThemeValue() -> std::string {
 
 } // namespace
 
+struct FanCurveSensorSample {
+    bool valid{};
+    s32 temp_milli_c{};
+    s32 fan_percent{};
+};
+
+struct FanCurveSensorReader final {
+    FanCurveSensorReader() {
+        m_tc_available = R_SUCCEEDED(tcInitialize());
+        m_fan_available = R_SUCCEEDED(fanInitialize());
+        if (m_fan_available) {
+            m_fan_controller_open = R_SUCCEEDED(fanOpenController(&m_fan_controller, FAN_DEVICE_CODE_PWM));
+        }
+    }
+
+    ~FanCurveSensorReader() {
+        if (m_fan_controller_open) {
+            fanControllerClose(&m_fan_controller);
+        }
+        if (m_fan_available) {
+            fanExit();
+        }
+        if (m_tc_available) {
+            tcExit();
+        }
+    }
+
+    void Update() {
+        const auto now = armTicksToNs(armGetSystemTick());
+        if (m_last_update_ns && now - m_last_update_ns < FAN_SENSOR_REFRESH_NS) {
+            return;
+        }
+        m_last_update_ns = now;
+
+        FanCurveSensorSample next{};
+        float fan_level{};
+        if (m_tc_available &&
+            m_fan_controller_open &&
+            R_SUCCEEDED(tcGetSkinTemperatureMilliC(&next.temp_milli_c)) &&
+            R_SUCCEEDED(fanControllerGetRotationSpeedLevel(&m_fan_controller, &fan_level))) {
+            fan_level = std::clamp(fan_level, 0.f, 1.f);
+            next.fan_percent = std::clamp<s32>(static_cast<s32>(fan_level * 100.f + 0.5f), FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+            next.valid = true;
+        }
+
+        m_sample = next;
+    }
+
+    auto GetSample() const -> const FanCurveSensorSample* {
+        return m_sample.valid ? &m_sample : nullptr;
+    }
+
+private:
+    FanController m_fan_controller{};
+    FanCurveSensorSample m_sample{};
+    u64 m_last_update_ns{};
+    bool m_tc_available{};
+    bool m_fan_available{};
+    bool m_fan_controller_open{};
+};
+
 Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
     BuildCategories();
 
@@ -1209,9 +1823,11 @@ Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
 
     m_category_list = std::make_unique<List>(1, 8, m_pos, Vec4{76.f, 138.f, 300.f, 56.f});
     m_category_list->SetLayout(List::Layout::GRID);
+    m_category_list->SetPageJump(false);
 
     m_item_list = std::make_unique<List>(1, 7, m_pos, Vec4{420.f, 132.f, 780.f, 66.f});
     m_item_list->SetLayout(List::Layout::GRID);
+    m_item_list->SetPageJump(false);
 
     SetCategoryIndex(0);
 }
@@ -1234,22 +1850,6 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
-    const auto item_count = m_categories.empty() ? 0 : static_cast<s64>(m_categories[m_category_index].items.size());
-    const auto items_can_page = item_count > m_item_list->GetPage();
-    const auto categories_can_page = static_cast<s64>(m_categories.size()) > m_category_list->GetPage();
-
-    if (controller->GotDown(Button::RIGHT) && m_focus_pane == FocusPane::Categories && !categories_can_page) {
-        SetFocusPane(FocusPane::Items);
-        App::PlaySoundEffect(SoundEffect_Focus);
-        return;
-    }
-
-    if (controller->GotDown(Button::LEFT) && m_focus_pane == FocusPane::Items && !items_can_page) {
-        SetFocusPane(FocusPane::Categories);
-        App::PlaySoundEffect(SoundEffect_Focus);
-        return;
-    }
-
     if (touch->is_clicked) {
         if (touch->in_range(m_category_list->GetPos())) {
             SetFocusPane(FocusPane::Categories);
@@ -1285,7 +1885,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 namespace {
 
 auto SettingsItemTextX(const SettingsItem& item, float x) -> float {
-    return item.kind == SettingsItemKind::Normal ? x + 18.f : x + 58.f;
+    return item.kind == SettingsItemKind::Normal ? x + 18.f : x + 74.f;
 }
 
 void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& item, Vec4 v, bool selected) {
@@ -1295,26 +1895,32 @@ void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& 
 
     const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO);
     const auto x = v.x + 18.f;
-    const auto y = v.y + 21.f;
+    const auto y = v.y + 15.f;
 
     nvgSave(vg);
     nvgStrokeColor(vg, colour);
-    nvgStrokeWidth(vg, 2.f);
+    nvgStrokeWidth(vg, 3.f);
+    nvgLineCap(vg, NVG_ROUND);
+    nvgLineJoin(vg, NVG_ROUND);
 
     if (item.kind == SettingsItemKind::Folder) {
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x, y + 3.f, 28.f, 19.f, 3.f);
-        nvgRect(vg, x + 3.f, y, 11.f, 5.f);
+        nvgRoundedRect(vg, x, y + 8.f, 42.f, 28.f, 5.f);
+        nvgMoveTo(vg, x + 5.f, y + 9.f);
+        nvgLineTo(vg, x + 5.f, y + 4.f);
+        nvgLineTo(vg, x + 19.f, y + 4.f);
+        nvgLineTo(vg, x + 24.f, y + 9.f);
+        nvgLineTo(vg, x + 37.f, y + 9.f);
         nvgStroke(vg);
     } else if (item.kind == SettingsItemKind::Download) {
         nvgBeginPath(vg);
-        nvgMoveTo(vg, x + 14.f, y);
-        nvgLineTo(vg, x + 14.f, y + 17.f);
-        nvgMoveTo(vg, x + 7.f, y + 10.f);
-        nvgLineTo(vg, x + 14.f, y + 17.f);
-        nvgLineTo(vg, x + 21.f, y + 10.f);
-        nvgMoveTo(vg, x + 5.f, y + 23.f);
-        nvgLineTo(vg, x + 23.f, y + 23.f);
+        nvgMoveTo(vg, x + 21.f, y + 3.f);
+        nvgLineTo(vg, x + 21.f, y + 25.f);
+        nvgMoveTo(vg, x + 10.f, y + 16.f);
+        nvgLineTo(vg, x + 21.f, y + 27.f);
+        nvgLineTo(vg, x + 32.f, y + 16.f);
+        nvgMoveTo(vg, x + 8.f, y + 36.f);
+        nvgLineTo(vg, x + 34.f, y + 36.f);
         nvgStroke(vg);
     }
 
@@ -1455,11 +2061,6 @@ void Menu::BuildCategories() {
             }
         },
         {
-            "Kefir",
-            "Kefir patches and console-specific switches.",
-            BuildKefirItems(),
-        },
-        {
             "Translate Interface",
             "Interface translation package tools.",
             BuildTranslateItems(),
@@ -1578,8 +2179,280 @@ void Menu::OnBack() {
 
 namespace {
 
+auto FanCurveProfileLabel(bool docked) -> const char* {
+    return docked ? "Docked" : "Handheld";
+}
+
+auto FanCurveGraphRect() -> Vec4 {
+    return {360.f, 106.f, 860.f, 520.f};
+}
+
+auto FanCurvePlotRect() -> Vec4 {
+    const auto graph = FanCurveGraphRect();
+    return {graph.x + 58.f, graph.y + 66.f, graph.w - 90.f, graph.h - 132.f};
+}
+
+auto FanCurveListRect() -> Vec4 {
+    return {58.f, 134.f, 270.f, 468.f};
+}
+
+auto FanCurveListItemRect() -> Vec4 {
+    return {66.f, 184.f, 248.f, 46.f};
+}
+
+auto FanCurveXForTempValue(const Vec4& plot, float temp_c) -> float {
+    const auto span = static_cast<float>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C);
+    const auto value = std::clamp(temp_c, static_cast<float>(FAN_TEMP_MIN_C), static_cast<float>(FAN_TEMP_MAX_C));
+    return plot.x + plot.w * ((value - static_cast<float>(FAN_TEMP_MIN_C)) / span);
+}
+
+auto FanCurveXForTemp(const Vec4& plot, s32 temp_c) -> float {
+    return FanCurveXForTempValue(plot, static_cast<float>(temp_c));
+}
+
+auto FanCurveYForFan(const Vec4& plot, s32 fan_percent) -> float {
+    return plot.y + plot.h - plot.h * (static_cast<float>(fan_percent) / 100.f);
+}
+
+auto FanCurveTempForX(const Vec4& plot, float x) -> s32 {
+    const auto ratio = std::clamp((x - plot.x) / plot.w, 0.f, 1.f);
+    return FAN_TEMP_MIN_C + static_cast<s32>(ratio * static_cast<float>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C) + 0.5f);
+}
+
+auto FanCurveFanForY(const Vec4& plot, float y) -> s32 {
+    const auto ratio = std::clamp((plot.y + plot.h - y) / plot.h, 0.f, 1.f);
+    return static_cast<s32>(ratio * 100.f + 0.5f);
+}
+
+auto ExpandRect(Vec4 rect, float amount) -> Vec4 {
+    rect.x -= amount;
+    rect.y -= amount;
+    rect.w += amount * 2.f;
+    rect.h += amount * 2.f;
+    return rect;
+}
+
+auto WithAlpha(NVGcolor colour, float alpha) -> NVGcolor {
+    colour.a = alpha;
+    return colour;
+}
+
+auto FormatMilliC(s32 milli_c) -> std::string {
+    const auto negative = milli_c < 0;
+    const auto abs_milli = negative ? -milli_c : milli_c;
+    const auto tenths = (abs_milli + 50) / 100;
+    return std::string{negative ? "-" : ""} + std::to_string(tenths / 10) + "." + std::to_string(tenths % 10) + "C";
+}
+
+void DrawHorizontalDashes(NVGcontext* vg, float x0, float x1, float y, const NVGcolor& colour) {
+    if (x1 < x0) {
+        std::swap(x0, x1);
+    }
+
+    nvgStrokeWidth(vg, 1.5f);
+    nvgStrokeColor(vg, colour);
+    for (float x = x0; x < x1; x += 13.f) {
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x, y);
+        nvgLineTo(vg, std::min(x + 7.f, x1), y);
+        nvgStroke(vg);
+    }
+}
+
+void DrawVerticalDashes(NVGcontext* vg, float x, float y0, float y1, const NVGcolor& colour) {
+    if (y1 < y0) {
+        std::swap(y0, y1);
+    }
+
+    nvgStrokeWidth(vg, 1.5f);
+    nvgStrokeColor(vg, colour);
+    for (float y = y0; y < y1; y += 13.f) {
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x, y);
+        nvgLineTo(vg, x, std::min(y + 7.f, y1));
+        nvgStroke(vg);
+    }
+}
+
+void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, const FanCurveSensorSample* sensor) {
+    if (!sensor) {
+        return;
+    }
+
+    const auto accent = theme->GetColour(ThemeEntryID_TEXT_SELECTED);
+    const auto temp_c = static_cast<float>(sensor->temp_milli_c) / 1000.f;
+    const auto x = FanCurveXForTempValue(plot, temp_c);
+    const auto y = FanCurveYForFan(plot, sensor->fan_percent);
+    const auto guide_colour = WithAlpha(accent, 0.42f);
+
+    DrawHorizontalDashes(vg, plot.x, x, y, guide_colour);
+    DrawVerticalDashes(vg, x, y, plot.y + plot.h, guide_colour);
+
+    nvgBeginPath(vg);
+    nvgCircle(vg, x, y, 19.f);
+    nvgFillColor(vg, WithAlpha(accent, 0.20f));
+    nvgFill(vg);
+
+    nvgStrokeWidth(vg, 2.5f);
+    nvgStrokeColor(vg, WithAlpha(accent, 0.95f));
+    nvgBeginPath(vg);
+    nvgCircle(vg, x, y, 19.f);
+    nvgStroke(vg);
+
+    nvgBeginPath(vg);
+    nvgCircle(vg, x, y, 4.5f);
+    nvgFillColor(vg, WithAlpha(accent, 0.95f));
+    nvgFill(vg);
+
+    const auto place_left = x > plot.x + plot.w - 145.f;
+    const auto label_x = place_left ? x - 24.f : x + 24.f;
+    const auto label_y = std::clamp(y - 22.f, plot.y + 12.f, plot.y + plot.h - 10.f);
+    const auto align = (place_left ? NVG_ALIGN_RIGHT : NVG_ALIGN_LEFT) | NVG_ALIGN_MIDDLE;
+    const auto label = FormatMilliC(sensor->temp_milli_c);
+    gfx::drawTextArgs(
+        vg, label_x, label_y, 14.f, align,
+        theme->GetColour(ThemeEntryID_TEXT), "%s  %d%%", label.c_str(), sensor->fan_percent
+    );
+}
+
+void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurvePoint>& curve, s64 selected, bool docked, bool dirty, bool editing, const FanCurveSensorSample* sensor) {
+    const auto graph = FanCurveGraphRect();
+    const auto plot = FanCurvePlotRect();
+
+    gfx::drawRect(vg, graph, theme->GetColour(ThemeEntryID_SIDEBAR), 5.f);
+
+    gfx::drawTextArgs(
+        vg, graph.x + 24.f, graph.y + 20.f, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+        theme->GetColour(ThemeEntryID_TEXT), "%s curve", FanCurveProfileLabel(docked)
+    );
+    if (!curve.empty()) {
+        const auto safe_index = std::clamp<s64>(selected, 0, static_cast<s64>(curve.size() - 1));
+        const auto& point = curve[safe_index];
+        gfx::drawTextArgs(
+            vg, graph.x + graph.w - 24.f, graph.y + 20.f, 18.f,
+            NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT),
+            "%s %d   %dC   %d%%", editing ? "Editing point" : "Point", static_cast<int>(safe_index + 1), point.temp_c, point.fan_percent
+        );
+    }
+    if (dirty) {
+        gfx::drawText(
+            vg, graph.x + 24.f, graph.y + 44.f, 15.f,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED), "Unsaved changes", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE
+        );
+    }
+
+    const auto line_colour = theme->GetColour(ThemeEntryID_LINE_SEPARATOR);
+    const auto info_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto text_colour = theme->GetColour(ThemeEntryID_TEXT);
+    const auto accent_colour = theme->GetColour(ThemeEntryID_TEXT_SELECTED);
+
+    nvgSave(vg);
+    nvgStrokeWidth(vg, 1.f);
+    nvgStrokeColor(vg, line_colour);
+
+    for (s32 fan = 0; fan <= 100; fan += 25) {
+        const auto y = FanCurveYForFan(plot, fan);
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, plot.x, y);
+        nvgLineTo(vg, plot.x + plot.w, y);
+        nvgStroke(vg);
+        gfx::drawTextArgs(vg, plot.x - 10.f, y, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info_colour, "%d%%", fan);
+    }
+
+    for (s32 temp = 0; temp <= FAN_TEMP_MAX_C; temp += 15) {
+        const auto x = FanCurveXForTemp(plot, temp);
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x, plot.y);
+        nvgLineTo(vg, x, plot.y + plot.h);
+        nvgStroke(vg);
+        gfx::drawTextArgs(vg, x, plot.y + plot.h + 14.f, 14.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, info_colour, "%dC", temp);
+    }
+
+    nvgStrokeWidth(vg, 2.f);
+    nvgStrokeColor(vg, text_colour);
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, plot.x, plot.y);
+    nvgLineTo(vg, plot.x, plot.y + plot.h);
+    nvgLineTo(vg, plot.x + plot.w, plot.y + plot.h);
+    nvgStroke(vg);
+
+    if (!curve.empty()) {
+        nvgStrokeWidth(vg, 4.f);
+        nvgStrokeColor(vg, accent_colour);
+        nvgBeginPath(vg);
+        for (size_t i = 0; i < curve.size(); i++) {
+            const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+            const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
+            if (i) {
+                nvgLineTo(vg, x, y);
+            } else {
+                nvgMoveTo(vg, x, y);
+            }
+        }
+        nvgStroke(vg);
+
+        DrawFanCurveSensorMarker(vg, theme, plot, sensor);
+
+        for (size_t i = 0; i < curve.size(); i++) {
+            const auto point_selected = static_cast<s64>(i) == selected;
+            const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+            const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
+            nvgBeginPath(vg);
+            nvgCircle(vg, x, y, point_selected ? 10.f : 7.f);
+            nvgFillColor(vg, point_selected ? text_colour : accent_colour);
+            nvgFill(vg);
+            if (point_selected && editing) {
+                nvgStrokeWidth(vg, 2.5f);
+                nvgStrokeColor(vg, WithAlpha(accent_colour, 0.95f));
+                nvgBeginPath(vg);
+                nvgCircle(vg, x, y, 15.f);
+                nvgStroke(vg);
+            }
+        }
+
+    }
+    nvgRestore(vg);
+}
+
+void DrawFanCurveListItem(NVGcontext* vg, Theme* theme, Vec4 v, const FanCurvePoint& point, s64 index, bool selected) {
+    const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+    const auto value_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO;
+
+    if (selected) {
+        gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+        gfx::drawRectOutline(vg, theme, 4.f, v);
+    } else {
+        gfx::drawRect(vg, v.x, v.y + v.h, v.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+    }
+
+    gfx::drawTextArgs(
+        vg, v.x + 14.f, v.y + v.h / 2.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+        theme->GetColour(label_id), "%d", static_cast<int>(index + 1)
+    );
+    gfx::drawTextArgs(
+        vg, v.x + 142.f, v.y + v.h / 2.f, 18.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+        theme->GetColour(value_id), "%dC", point.temp_c
+    );
+    gfx::drawTextArgs(
+        vg, v.x + v.w - 14.f, v.y + v.h / 2.f, 18.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+        theme->GetColour(value_id), "%d%%", point.fan_percent
+    );
+}
+
+void DrawFanCurveListHeader(NVGcontext* vg, Theme* theme) {
+    const auto v = FanCurveListRect();
+    const auto title_colour = theme->GetColour(ThemeEntryID_TEXT);
+    const auto column_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    gfx::drawText(vg, v.x + 22.f, v.y, 23.f, title_colour, "Points:", NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    gfx::drawText(vg, v.x + 22.f, v.y + 34.f, 14.f, column_colour, "#", NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    gfx::drawText(vg, v.x + 150.f, v.y + 34.f, 14.f, column_colour, "Temp", NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+    gfx::drawText(vg, v.x + v.w - 22.f, v.y + 34.f, 14.f, column_colour, "Fan", NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+}
+
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected) {
     const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+    const auto value = item.value ? item.value() : std::string{};
+    const auto value_width = value.empty() ? 0.f : 224.f;
 
     if (selected) {
         gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
@@ -1593,18 +2466,508 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
     const auto text_offset = text_x - v.x;
 
     gfx::drawTextBox(
-        vg, text_x, v.y + 10.f, 20.f, v.w - 18.f - text_offset,
+        vg, text_x, v.y + 10.f, 20.f, v.w - 18.f - value_width - text_offset,
         theme->GetColour(label_id), item.label.c_str()
     );
     if (!item.description.empty()) {
         gfx::drawTextBox(
-            vg, text_x, v.y + 39.f, 14.f, v.w - 18.f - text_offset,
+            vg, text_x, v.y + 39.f, 14.f, v.w - 18.f - value_width - text_offset,
             theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
+        );
+    }
+
+    if (!value.empty()) {
+        gfx::drawText(
+            vg, v.x + v.w - 20.f, v.y + 21.f, 18.f,
+            SettingsValueColour(theme, value, selected),
+            value.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_TOP
         );
     }
 }
 
 } // namespace
+
+FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
+    m_handheld_curve = ReadFanCurve(
+        "tskin_rate_table_handheld_on_fwdbg",
+        "tskin_rate_table_handheld",
+        DefaultHandheldFanCurve()
+    );
+    m_docked_curve = ReadFanCurve(
+        "tskin_rate_table_console_on_fwdbg",
+        "tskin_rate_table_console",
+        DefaultDockedFanCurve()
+    );
+    m_sensor_reader = std::make_unique<FanCurveSensorReader>();
+    RefreshActions();
+
+    m_list = std::make_unique<List>(1, 9, FanCurveListRect(), FanCurveListItemRect());
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    SetIndex(0);
+}
+
+FanCurveMenu::~FanCurveMenu() = default;
+
+auto FanCurveMenu::ActiveCurve() -> std::vector<FanCurvePoint>& {
+    return m_docked ? m_docked_curve : m_handheld_curve;
+}
+
+auto FanCurveMenu::ActiveCurve() const -> const std::vector<FanCurvePoint>& {
+    return m_docked ? m_docked_curve : m_handheld_curve;
+}
+
+void FanCurveMenu::RefreshActions() {
+    RemoveActions();
+    SetUiButtonSort(true);
+    SetAction(Button::SELECT, Action{App::Exit});
+
+    if (m_editing) {
+        SetActions(
+            std::make_pair(Button::A, Action{"Done"_i18n, [this](){
+                SetEditing(false);
+            }}),
+            std::make_pair(Button::B, Action{"Done"_i18n, [this](){
+                SetEditing(false);
+            }})
+        );
+        return;
+    }
+
+    SetActions(
+        std::make_pair(Button::A, Action{"Edit"_i18n, [this](){
+            SetEditing(true);
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            OnBack();
+        }}),
+        std::make_pair(Button::X, Action{"Mode"_i18n, [this](){
+            SwitchProfile();
+        }}),
+        std::make_pair(Button::L2, Action{"Load Preset"_i18n, [this](){
+            DisplayPresets();
+        }}),
+        std::make_pair(Button::R2, Action{"Save Preset"_i18n, [this](){
+            DisplaySavePreset();
+        }}),
+        std::make_pair(Button::L, Action{"Add Point"_i18n, [this](){
+            AddPoint();
+        }}),
+        std::make_pair(Button::R, Action{"Remove Point"_i18n, [this](){
+            RemovePoint();
+        }}),
+        std::make_pair(Button::START, Action{"Apply"_i18n, [this](){
+            DisplayApplyMenu();
+        }})
+    );
+}
+
+void FanCurveMenu::RefreshSubHeading() {
+    SetSubHeading("");
+}
+
+void FanCurveMenu::SetIndex(s64 index) {
+    const auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        m_index = 0;
+        RefreshSubHeading();
+        return;
+    }
+
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(curve.size() - 1));
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+    RefreshSubHeading();
+}
+
+void FanCurveMenu::SetEditing(bool editing) {
+    if (m_editing == editing) {
+        return;
+    }
+    if (editing && ActiveCurve().empty()) {
+        return;
+    }
+
+    m_editing = editing;
+    RefreshActions();
+    RefreshSubHeading();
+}
+
+void FanCurveMenu::SwitchProfile() {
+    SetEditing(false);
+    m_docked = !m_docked;
+    SetIndex(m_index);
+}
+
+void FanCurveMenu::DisplayPresets() {
+    App::Push<PopupList>(
+        "Fan preset"_i18n,
+        FanPresetLabels(m_docked),
+        [this](auto index){
+            if (index) {
+                ApplyPreset(*index);
+            }
+        },
+        0
+    );
+}
+
+void FanCurveMenu::DisplaySavePreset() {
+    App::Push<PopupList>(
+        "Save fan preset"_i18n,
+        FanCustomPresetLabels(m_docked),
+        [this](auto index){
+            if (index) {
+                SavePreset(*index);
+            }
+        },
+        0
+    );
+}
+
+void FanCurveMenu::DisplayApplyMenu() {
+    App::Push<PopupList>(
+        "Apply fan curve"_i18n,
+        PopupList::Items{
+            "Apply"_i18n,
+            "Apply and Reboot"_i18n,
+        },
+        [this](auto index){
+            if (!index) {
+                return;
+            }
+            ApplyCurves(*index == 1);
+        },
+        0
+    );
+}
+
+void FanCurveMenu::ApplyPreset(s64 index) {
+    SetEditing(false);
+    std::vector<FanCurvePoint> curve;
+    if (index < FAN_BUILTIN_PRESET_COUNT) {
+        curve = FanPresetCurve(index, m_docked);
+    } else if (!ReadCustomFanPreset(index - FAN_BUILTIN_PRESET_COUNT, m_docked, curve)) {
+        App::Notify("Fan preset is empty");
+        return;
+    }
+
+    ActiveCurve() = std::move(curve);
+    m_dirty = true;
+    SetIndex(m_index);
+}
+
+void FanCurveMenu::SavePreset(s64 index) {
+    auto name = ReadCustomFanPresetName(index, m_docked);
+    if (R_FAILED(swkbd::ShowText(name, "Preset name", name.c_str(), 0, 48))) {
+        return;
+    }
+    name = SanitizeFanPresetName(std::move(name));
+    if (name.empty()) {
+        name = FanCustomPresetDefaultName(index);
+    }
+
+    const auto rc = SaveCustomFanPreset(index, m_docked, ActiveCurve(), name);
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to save fan preset");
+        return;
+    }
+
+    App::Notify("Saved fan preset: " + name);
+}
+
+void FanCurveMenu::AddPoint() {
+    auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        curve.push_back({40, 20});
+        m_dirty = true;
+        SetIndex(0);
+        return;
+    }
+
+    if (curve.size() >= static_cast<size_t>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C + 1)) {
+        App::Notify("No room for another fan point");
+        return;
+    }
+
+    NormalizeFanCurve(curve);
+
+    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
+    s64 insert_index = index + 1;
+    FanCurvePoint point{};
+    bool found{};
+
+    if (index + 1 < static_cast<s64>(curve.size()) && curve[index + 1].temp_c - curve[index].temp_c > 1) {
+        const auto& left = curve[index];
+        const auto& right = curve[index + 1];
+        point.temp_c = (left.temp_c + right.temp_c) / 2;
+        point.fan_percent = (left.fan_percent + right.fan_percent) / 2;
+        found = true;
+    } else if (index > 0 && curve[index].temp_c - curve[index - 1].temp_c > 1) {
+        const auto& left = curve[index - 1];
+        const auto& right = curve[index];
+        insert_index = index;
+        point.temp_c = (left.temp_c + right.temp_c) / 2;
+        point.fan_percent = (left.fan_percent + right.fan_percent) / 2;
+        found = true;
+    } else if (curve[index].temp_c < FAN_TEMP_MAX_C) {
+        const auto& base = curve[index];
+        point.temp_c = std::max(base.temp_c + 1, (base.temp_c + FAN_TEMP_MAX_C) / 2);
+        point.fan_percent = base.fan_percent;
+        found = true;
+    } else if (curve[index].temp_c > FAN_TEMP_MIN_C) {
+        const auto& base = curve[index];
+        insert_index = index;
+        point.temp_c = std::min(base.temp_c - 1, (FAN_TEMP_MIN_C + base.temp_c) / 2);
+        point.fan_percent = base.fan_percent;
+        found = true;
+    }
+
+    if (!found) {
+        App::Notify("No room for another fan point");
+        return;
+    }
+
+    curve.insert(curve.begin() + insert_index, point);
+    NormalizeFanCurve(curve);
+    m_dirty = true;
+    SetIndex(insert_index);
+}
+
+void FanCurveMenu::RemovePoint() {
+    auto& curve = ActiveCurve();
+    if (curve.size() <= 2) {
+        App::Notify("Fan curve needs at least two points");
+        return;
+    }
+
+    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
+    curve.erase(curve.begin() + index);
+    NormalizeFanCurve(curve);
+    m_dirty = true;
+    SetEditing(false);
+    SetIndex(std::min<s64>(index, static_cast<s64>(curve.size() - 1)));
+}
+
+void FanCurveMenu::AdjustSelectedFan(s32 delta) {
+    auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        return;
+    }
+
+    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
+    const auto& point = curve[index];
+    SetSelectedPoint(index, point.temp_c, point.fan_percent + delta);
+}
+
+void FanCurveMenu::AdjustSelectedTemp(s32 delta) {
+    auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        return;
+    }
+
+    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
+    const auto& point = curve[index];
+    SetSelectedPoint(index, point.temp_c + delta, point.fan_percent);
+}
+
+void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
+    auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        return;
+    }
+
+    index = std::clamp<s64>(index, 0, static_cast<s64>(curve.size() - 1));
+    const auto min_value = index ? curve[index - 1].temp_c + 1 : FAN_TEMP_MIN_C;
+    const auto max_value = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].temp_c - 1 : FAN_TEMP_MAX_C;
+    const auto min_fan = index ? curve[index - 1].fan_percent : FAN_PERCENT_MIN;
+    const auto max_fan = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].fan_percent : FAN_PERCENT_MAX;
+    auto& point = curve[index];
+    const auto next_temp = std::clamp<s32>(temp_c, min_value, max_value);
+    const auto next_fan = std::clamp<s32>(fan_percent, min_fan, max_fan);
+
+    m_index = index;
+    if (point.temp_c != next_temp || point.fan_percent != next_fan) {
+        point.temp_c = next_temp;
+        point.fan_percent = next_fan;
+        m_dirty = true;
+    }
+    RefreshSubHeading();
+}
+
+auto FanCurveMenu::HandleGraphTouch(TouchInfo* touch) -> bool {
+    auto& curve = ActiveCurve();
+    if (curve.empty()) {
+        m_touch_dragging = false;
+        return false;
+    }
+
+    const auto graph_touch = ExpandRect(FanCurveGraphRect(), 18.f);
+    const auto plot = FanCurvePlotRect();
+    const auto pick_point = [&](float x, float y, s64& out_index) {
+        constexpr float PICK_RADIUS = 34.f;
+        constexpr float PICK_DISTANCE = PICK_RADIUS * PICK_RADIUS;
+        auto best_distance = std::numeric_limits<float>::max();
+        s64 best_index{};
+
+        for (size_t i = 0; i < curve.size(); i++) {
+            const auto point_x = FanCurveXForTemp(plot, curve[i].temp_c);
+            const auto point_y = FanCurveYForFan(plot, curve[i].fan_percent);
+            const auto dx = point_x - x;
+            const auto dy = point_y - y;
+            const auto distance = dx * dx + dy * dy;
+            if (distance < best_distance) {
+                best_distance = distance;
+                best_index = static_cast<s64>(i);
+            }
+        }
+
+        if (best_distance > PICK_DISTANCE) {
+            return false;
+        }
+
+        out_index = best_index;
+        return true;
+    };
+
+    if (touch->is_clicked && touch->in_range(graph_touch)) {
+        m_touch_dragging = false;
+        s64 best_index{};
+        if (pick_point(static_cast<float>(touch->cur.x), static_cast<float>(touch->cur.y), best_index)) {
+            SetIndex(best_index);
+            return true;
+        }
+        return false;
+    }
+
+    if (touch->is_touching && (m_touch_dragging || touch->in_range(graph_touch))) {
+        if (!m_touch_dragging) {
+            s64 best_index{};
+            if (touch->is_scroll || !pick_point(static_cast<float>(touch->cur.x), static_cast<float>(touch->cur.y), best_index)) {
+                return false;
+            }
+            m_index = best_index;
+            m_touch_dragging = true;
+        }
+
+        SetSelectedPoint(m_index, FanCurveTempForX(plot, touch->cur.x), FanCurveFanForY(plot, touch->cur.y));
+        return true;
+    }
+
+    if (touch->is_end) {
+        m_touch_dragging = false;
+    }
+
+    return false;
+}
+
+void FanCurveMenu::ApplyCurves(bool reboot) {
+    const auto handheld = m_handheld_curve;
+    const auto docked = m_docked_curve;
+
+    App::Push<ProgressBox>(
+        0,
+        "Applying"_i18n,
+        "Fan curve",
+        [handheld, docked, reboot](auto pbox) -> Result {
+            pbox->NewTransfer(reboot ? "Writing Atmosphere fan curve and rebooting..." : "Writing Atmosphere fan curve...");
+            return ApplyFanCurves(handheld, docked, reboot);
+        },
+        [this, reboot](Result rc){
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to apply fan curve");
+                return;
+            }
+            m_dirty = false;
+            if (!reboot) {
+                App::Notify("Fan curve applied");
+            }
+        }
+    );
+}
+
+void FanCurveMenu::OnBack() {
+    if (m_editing) {
+        SetEditing(false);
+        return;
+    }
+
+    if (!m_dirty) {
+        SetPop();
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "Discard unsaved fan curve changes?"_i18n,
+        "Cancel"_i18n,
+        "Discard"_i18n,
+        0,
+        [this](auto op_index){
+            if (op_index && *op_index) {
+                SetPop();
+            }
+        }
+    );
+}
+
+void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+
+    if (m_sensor_reader) {
+        m_sensor_reader->Update();
+    }
+
+    if (HandleGraphTouch(touch)) {
+        return;
+    }
+
+    if (m_editing) {
+        s32 temp_delta{};
+        s32 fan_delta{};
+        if (controller->GotDown(Button::LEFT)) {
+            temp_delta--;
+        }
+        if (controller->GotDown(Button::RIGHT)) {
+            temp_delta++;
+        }
+        if (controller->GotDown(Button::UP)) {
+            fan_delta++;
+        }
+        if (controller->GotDown(Button::DOWN)) {
+            fan_delta--;
+        }
+
+        if (temp_delta || fan_delta) {
+            auto& curve = ActiveCurve();
+            if (!curve.empty()) {
+                const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
+                const auto point = curve[index];
+                SetSelectedPoint(index, point.temp_c + temp_delta, point.fan_percent + fan_delta);
+            }
+        }
+        return;
+    }
+
+    auto& curve = ActiveCurve();
+    m_list->OnUpdate(controller, touch, m_index, curve.size(), [this](bool touch, auto i) {
+        if (!touch || m_index != i) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    });
+}
+
+void FanCurveMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+
+    const auto& curve = ActiveCurve();
+    DrawFanCurveListHeader(vg, theme);
+    m_list->Draw(vg, theme, curve.size(), [this, &curve](auto* vg, auto* theme, Vec4 v, auto i) {
+        DrawFanCurveListItem(vg, theme, v, curve[i], i, m_index == i);
+    });
+    DrawFanCurveGraph(vg, theme, curve, m_index, m_docked, m_dirty, m_editing, m_sensor_reader ? m_sensor_reader->GetSample() : nullptr);
+}
 
 SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {
     m_items = BuildSoftwareItems();
@@ -1619,6 +2982,7 @@ SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {
 
     m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
     SetIndex(0);
 }
 
@@ -1687,6 +3051,7 @@ DbiMenu::DbiMenu() : MenuBase{"DBI", MenuFlag_None} {
 
     m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
     SetIndex(0);
 }
 
@@ -1742,6 +3107,75 @@ void DbiMenu::OnSelect() {
     }
 }
 
+KefirSettingsMenu::KefirSettingsMenu() : MenuBase{"Kefir Settings", MenuFlag_None} {
+    m_items = BuildKefirItems();
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Open"_i18n, [this](){
+            OnSelect();
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    SetIndex(0);
+}
+
+KefirSettingsMenu::~KefirSettingsMenu() = default;
+
+void KefirSettingsMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+    std::string item_label;
+    if (!m_items.empty()) {
+        item_label = m_items[m_index].label;
+    }
+    m_items = BuildKefirItems();
+    auto it = std::find_if(m_items.cbegin(), m_items.cend(), [&](const auto& item) {
+        return item.label == item_label;
+    });
+    SetIndex(it == m_items.cend() ? m_index : std::distance(m_items.cbegin(), it));
+}
+
+void KefirSettingsMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    });
+}
+
+void KefirSettingsMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
+    });
+}
+
+void KefirSettingsMenu::SetIndex(s64 index) {
+    if (m_items.empty()) {
+        m_index = 0;
+        return;
+    }
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+    SetSubHeading(m_items[m_index].description);
+}
+
+void KefirSettingsMenu::OnSelect() {
+    if (!m_items.empty() && m_items[m_index].action) {
+        m_items[m_index].action();
+    }
+}
+
 ThemesMenu::ThemesMenu() : MenuBase{"Themes", MenuFlag_None} {
     m_items = BuildThemeItems();
     this->SetActions(
@@ -1755,6 +3189,7 @@ ThemesMenu::ThemesMenu() : MenuBase{"Themes", MenuFlag_None} {
 
     m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
     SetIndex(0);
 }
 

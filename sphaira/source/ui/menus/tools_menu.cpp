@@ -70,6 +70,9 @@ Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
         { "Updater", "Update Kefir, firmware and network downloads.", 0, [](){
             App::Push<ui::menu::kefir::Menu>();
         }},
+        { "Kefir Settings", "Fan curves and console-specific Kefir switches.", 0, [](){
+            App::Push<ui::menu::settings::KefirSettingsMenu>();
+        }},
         { "Cheats", "Download and manage cheat databases.", 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
         }},
@@ -88,7 +91,7 @@ Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
         { "Themes", "Download and install theme packs.", 0, [](){
             App::Push<ui::menu::settings::ThemesMenu>();
         }},
-        { "Settings", "Open application settings.", 0, [](){
+        { "Settings", "Open Sphaira application settings.", 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
     };
@@ -144,20 +147,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
         }
 
-        const Vec4 icon_box{v.x + 18.f, v.y + 30.f, 70.f, 70.f};
+        const Vec4 icon_box{v.x + 18.f, v.y + 20.f, 92.f, 92.f};
         if (item.icon_texture) {
-            gfx::drawImage(vg, icon_box, item.icon_texture, 5.f);
+            gfx::drawImage(vg, icon_box, item.icon_texture, 8.f);
         } else {
-            gfx::drawImage(vg, icon_box, App::GetDefaultImage(), 5.f);
+            gfx::drawImage(vg, icon_box, App::GetDefaultImage(), 8.f);
         }
 
         const auto title_colour = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
         gfx::drawTextBox(
-            vg, v.x + 98.f, v.y + 24.f, 20.f, v.w - 112.f,
+            vg, v.x + 124.f, v.y + 24.f, 20.f, v.w - 138.f,
             theme->GetColour(title_colour), item.label.c_str()
         );
         gfx::drawTextBox(
-            vg, v.x + 98.f, v.y + 55.f, 13.f, v.w - 112.f,
+            vg, v.x + 124.f, v.y + 55.f, 13.f, v.w - 138.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
         );
     });
@@ -175,13 +178,14 @@ void Menu::LoadIcons() {
     }
 
     m_items[0].icon_texture = LoadIcon(vg, ICON_KEFIR, sizeof(ICON_KEFIR));
-    m_items[1].icon_texture = LoadIcon(vg, ICON_CHEATS, sizeof(ICON_CHEATS));
-    m_items[2].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
-    m_items[3].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
-    m_items[4].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
-    m_items[5].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
-    m_items[6].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[1].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[2].icon_texture = LoadIcon(vg, ICON_CHEATS, sizeof(ICON_CHEATS));
+    m_items[3].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
+    m_items[4].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
+    m_items[5].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
+    m_items[6].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
     m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[8].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
 }
 
 void Menu::SetIndex(s64 index) {

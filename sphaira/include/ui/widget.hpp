@@ -86,11 +86,16 @@ struct Widget : public Object {
         m_button_pos = pos;
     }
 
+    void SetUiButtonSort(bool sort = true) {
+        m_sort_ui_buttons = sort;
+    }
+
     auto GetUiButtons() const -> uiButtons;
     static void SetupUiButtons(uiButtons& buttons, const Vec2& button_pos = {1220, 675});
-    static auto GetUiButtons(const Actions& actions, const Vec2& button_pos = {1220, 675}) -> uiButtons;
+    static auto GetUiButtons(const Actions& actions, const Vec2& button_pos = {1220, 675}, bool sort = false) -> uiButtons;
 
     Actions m_actions{};
+    bool m_sort_ui_buttons{};
     Vec2 m_button_pos{1220, 675};
     bool m_focus{false};
     bool m_pop{false};

@@ -98,6 +98,74 @@ private:
     std::unique_ptr<List> m_list;
 };
 
+struct KefirSettingsMenu final : MenuBase {
+    KefirSettingsMenu();
+    ~KefirSettingsMenu();
+
+    auto GetShortTitle() const -> const char* override { return "Kefir Settings"; }
+    void OnFocusGained() override;
+    void Update(Controller* controller, TouchInfo* touch) override;
+    void Draw(NVGcontext* vg, Theme* theme) override;
+
+private:
+    void SetIndex(s64 index);
+    void OnSelect();
+
+private:
+    std::vector<SettingsItem> m_items;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+};
+
+struct FanCurvePoint {
+    s32 temp_c{};
+    s32 fan_percent{};
+};
+
+struct FanCurveSensorReader;
+
+struct FanCurveMenu final : MenuBase {
+    FanCurveMenu();
+    ~FanCurveMenu();
+
+    auto GetShortTitle() const -> const char* override { return "Fan curve"; }
+    void Update(Controller* controller, TouchInfo* touch) override;
+    void Draw(NVGcontext* vg, Theme* theme) override;
+
+private:
+    void RefreshActions();
+    void SetIndex(s64 index);
+    void SetEditing(bool editing);
+    void SwitchProfile();
+    void DisplayPresets();
+    void DisplaySavePreset();
+    void DisplayApplyMenu();
+    void ApplyPreset(s64 index);
+    void SavePreset(s64 index);
+    void AddPoint();
+    void RemovePoint();
+    void AdjustSelectedFan(s32 delta);
+    void AdjustSelectedTemp(s32 delta);
+    void SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent);
+    auto HandleGraphTouch(TouchInfo* touch) -> bool;
+    void ApplyCurves(bool reboot);
+    void OnBack();
+    auto ActiveCurve() -> std::vector<FanCurvePoint>&;
+    auto ActiveCurve() const -> const std::vector<FanCurvePoint>&;
+    void RefreshSubHeading();
+
+private:
+    std::vector<FanCurvePoint> m_handheld_curve;
+    std::vector<FanCurvePoint> m_docked_curve;
+    s64 m_index{};
+    bool m_docked{};
+    bool m_dirty{};
+    bool m_editing{};
+    bool m_touch_dragging{};
+    std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
+    std::unique_ptr<List> m_list;
+};
+
 struct ThemesMenu final : MenuBase {
     ThemesMenu();
     ~ThemesMenu();

@@ -3,7 +3,29 @@
 #include "app.hpp"
 #include "log.hpp"
 
+#include <algorithm>
+
 namespace sphaira::ui {
+
+namespace {
+
+auto GetUiButtonSortPriority(Button button) -> int {
+    switch (button) {
+        case Button::START: return 0;
+        case Button::A: return 10;
+        case Button::B: return 20;
+        case Button::X: return 30;
+        case Button::Y: return 40;
+        case Button::L2: return 50;
+        case Button::R2: return 60;
+        case Button::L: return 70;
+        case Button::R: return 80;
+        case Button::SELECT: return 90;
+        default: return 1000;
+    }
+}
+
+} // namespace
 
 uiButton::uiButton(Button button, const std::string& button_str, const std::string& action_str)
 : m_button{button}
@@ -119,7 +141,7 @@ void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
     }
 }
 
-auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos) -> uiButtons {
+auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool sort) -> uiButtons {
     uiButtons draw_actions;
     draw_actions.reserve(actions.size());
 
@@ -137,21 +159,34 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos) -> uiB
         uiButton ui_button{button, action.m_hint};
 
         bool should_swap = false;
-        for (auto [left, right] : swap_buttons) {
-            if (button == right && draw_actions.size() && draw_actions.back().m_button == left) {
-                const auto s = draw_actions.back();
-                draw_actions.back().m_button = button;
-                draw_actions.back().m_button_str = gfx::getButton(button);
-                draw_actions.back().m_action_str = action.m_hint;
-                draw_actions.emplace_back(s);
-                should_swap = true;
-                break;
+        if (!sort) {
+            for (auto [left, right] : swap_buttons) {
+                if (button == right && draw_actions.size() && draw_actions.back().m_button == left) {
+                    const auto s = draw_actions.back();
+                    draw_actions.back().m_button = button;
+                    draw_actions.back().m_button_str = gfx::getButton(button);
+                    draw_actions.back().m_action_str = action.m_hint;
+                    draw_actions.emplace_back(s);
+                    should_swap = true;
+                    break;
+                }
             }
         }
 
         if (!should_swap) {
             draw_actions.emplace_back(ui_button);
         }
+    }
+
+    if (sort) {
+        std::stable_sort(draw_actions.begin(), draw_actions.end(), [](const auto& lhs, const auto& rhs) {
+            const auto lhs_priority = GetUiButtonSortPriority(lhs.m_button);
+            const auto rhs_priority = GetUiButtonSortPriority(rhs.m_button);
+            if (lhs_priority != rhs_priority) {
+                return lhs_priority < rhs_priority;
+            }
+            return static_cast<u64>(lhs.m_button) < static_cast<u64>(rhs.m_button);
+        });
     }
 
     // setup positions.
@@ -161,7 +196,7 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos) -> uiB
 }
 
 auto Widget::GetUiButtons() const -> uiButtons {
-    return GetUiButtons(m_actions, m_button_pos);
+    return GetUiButtons(m_actions, m_button_pos, m_sort_ui_buttons);
 }
 
 } // namespace sphaira::ui
