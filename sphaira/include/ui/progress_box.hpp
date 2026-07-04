@@ -28,6 +28,7 @@ struct ProgressBox final : Widget {
     auto SetActionName(const std::string& action) -> ProgressBox&;
     auto SetTitle(const std::string& title) -> ProgressBox&;
     auto NewTransfer(const std::string& transfer) -> ProgressBox&;
+    auto ResetTransferProgress() -> ProgressBox&;
     auto UpdateTransfer(s64 offset, s64 size) -> ProgressBox&;
     // not const in order to avoid copy by using std::swap
     auto SetImage(int image) -> ProgressBox&;

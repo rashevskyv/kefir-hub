@@ -131,6 +131,7 @@ auto DownloadApp(ProgressBox* pbox, const GhApiAsset& gh_asset, const AssetEntry
     // 3. extract the zip / file
     if (gh_asset.content_type.find("zip") != gh_asset.content_type.npos) {
         log_write("found zip\n");
+        pbox->NewTransfer("Extracting..."_i18n);
         R_TRY(thread::TransferUnzipAll(pbox, temp_file, &fs, root_path));
     } else {
         fs.CreateDirectoryRecursivelyWithPath(root_path);

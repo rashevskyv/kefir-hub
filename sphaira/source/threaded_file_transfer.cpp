@@ -19,6 +19,17 @@ constexpr u64 SMALL_BUFFER_SIZE = 1024 * 512;
 // used for everything else.
 constexpr u64 NORMAL_BUFFER_SIZE = 1024*1024*4;
 
+using TransferProgressCallback = std::function<void(s64, s64)>;
+using UnzipProgressCallback = std::function<void(s64)>;
+
+void UpdateTransferProgress(ui::ProgressBox* pbox, const TransferProgressCallback& progress, s64 offset, s64 size) {
+    if (progress) {
+        progress(offset, size);
+    } else {
+        pbox->UpdateTransfer(offset, size);
+    }
+}
+
 struct ThreadBuffer {
     ThreadBuffer() {
         buf.reserve(NORMAL_BUFFER_SIZE);
@@ -355,7 +366,7 @@ auto GetAlternateCore(int id) {
     return id == 1 ? 2 : 1;
 }
 
-Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, WriteCallback wfunc, StartCallback2 sfunc, Mode mode, u64 buffer_size = NORMAL_BUFFER_SIZE) {
+Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, WriteCallback wfunc, StartCallback2 sfunc, Mode mode, u64 buffer_size = NORMAL_BUFFER_SIZE, TransferProgressCallback progress = nullptr) {
     const auto is_file_based_emummc = App::IsFileBaseEmummc();
 
     if (is_file_based_emummc) {
@@ -393,7 +404,7 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
             R_TRY(wfunc(buf.data(), offset, bytes_read));
 
             offset += bytes_read;
-            pbox->UpdateTransfer(offset, size);
+            UpdateTransferProgress(pbox, progress, offset, size);
         }
 
         R_SUCCEED();
@@ -444,7 +455,7 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
                 }
 
                 if (!idx) {
-                    pbox->UpdateTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
+                    UpdateTransferProgress(pbox, progress, t_data.GetWriteOffset(), t_data.GetWriteSize());
                 } else {
                     break;
                 }
@@ -495,7 +506,7 @@ Result TransferPull(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, StartCa
     return TransferInternal(pbox, size, rfunc, nullptr, sfunc, mode);
 }
 
-Result TransferUnzip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode) {
+static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode, UnzipProgressCallback progress, bool update_progress) {
     Result rc;
     if (R_FAILED(rc = fs->CreateDirectoryRecursivelyWithPath(path)) && rc != FsError_PathAlreadyExists) {
         log_write("failed to create folder: %s 0x%04X\n", path.s, rc);
@@ -534,15 +545,23 @@ Result TransferUnzip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::F
             R_SUCCEED();
         },
         [&](const void* data, s64 off, s64 size) -> Result {
-            return f.Write(off, data, size, FsWriteOption_None);
+            R_TRY(f.Write(off, data, size, FsWriteOption_None));
+            if (progress) {
+                progress(size);
+            }
+            R_SUCCEED();
         },
-        nullptr, mode, SMALL_BUFFER_SIZE
+        nullptr, mode, SMALL_BUFFER_SIZE, update_progress ? TransferProgressCallback{} : TransferProgressCallback{[](s64, s64){}}
     ));
 
     // validate crc32 (if set in the info).
     R_UNLESS(!crc32 || crc32 == crc32_out, 0x8);
 
     R_SUCCEED();
+}
+
+Result TransferUnzip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode, bool update_progress) {
+    return TransferUnzipInternal(pbox, zfile, fs, path, size, crc32, mode, nullptr, update_progress);
 }
 
 Result TransferZip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, u32* crc32, Mode mode) {
@@ -581,11 +600,42 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
         R_THROW(Result_UnzGetGlobalInfo64);
     }
 
+    const auto entry_count = static_cast<s64>(ginfo.number_entry);
+
     if (UNZ_OK != unzGoToFirstFile(zfile)) {
         R_THROW(Result_UnzGoToFirstFile);
     }
 
-    for (s64 i = 0; i < ginfo.number_entry; i++) {
+    s64 total_size = 0;
+    for (s64 i = 0; i < entry_count; i++) {
+        if (i > 0) {
+            if (UNZ_OK != unzGoToNextFile(zfile)) {
+                log_write("failed to unzGoToNextFile while sizing archive\n");
+                R_THROW(Result_UnzGoToNextFile);
+            }
+        }
+
+        unz_file_info64 info;
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, nullptr, 0, 0, 0, 0, 0)) {
+            log_write("failed to get current info while sizing archive\n");
+            R_THROW(Result_UnzGetCurrentFileInfo64);
+        }
+
+        total_size += static_cast<s64>(info.uncompressed_size);
+    }
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        R_THROW(Result_UnzGoToFirstFile);
+    }
+
+    const auto use_entry_progress = total_size == 0;
+    const s64 progress_total = use_entry_progress ? entry_count : total_size;
+    s64 progress_offset = 0;
+
+    pbox->ResetTransferProgress();
+    pbox->UpdateTransfer(0, progress_total);
+
+    for (s64 i = 0; i < entry_count; i++) {
         R_TRY(pbox->ShouldExitResult());
 
         if (i > 0) {
@@ -608,15 +658,25 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
 
+        const auto entry_progress_start = progress_offset;
+        const s64 entry_progress_size = use_entry_progress ? 1 : static_cast<s64>(info.uncompressed_size);
+        const auto update_progress = [&](s64 bytes) {
+            progress_offset = std::min(progress_offset + bytes, progress_total);
+            pbox->UpdateTransfer(progress_offset, progress_total);
+        };
+        const auto finish_entry = [&]() {
+            progress_offset = std::min(entry_progress_start + entry_progress_size, progress_total);
+            pbox->UpdateTransfer(progress_offset, progress_total);
+        };
+
         // check if we should skip this file.
         // don't make const as to allow the function to modify the path
         // this function is used for the updater to change sphaira.nro to exe path.
         auto path = fs::AppendPath(base_path, name);
         if (filter && !filter(name, path)) {
+            finish_entry();
             continue;
         }
-
-        pbox->NewTransfer(name);
 
         if (path[std::strlen(path) -1] == '/') {
             Result rc;
@@ -624,8 +684,15 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
                 log_write("failed to create folder: %s 0x%04X\n", path.s, rc);
                 R_THROW(rc);
             }
+            finish_entry();
         } else {
-            R_TRY(TransferUnzip(pbox, zfile, fs, path, info.uncompressed_size, info.crc, mode));
+            R_TRY(TransferUnzipInternal(pbox, zfile, fs, path, info.uncompressed_size, info.crc, mode,
+                [&](s64 bytes_written) {
+                    update_progress(bytes_written);
+                },
+                false
+            ));
+            finish_entry();
         }
     }
 

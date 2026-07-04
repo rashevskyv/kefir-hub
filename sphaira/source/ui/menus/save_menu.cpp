@@ -1592,6 +1592,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
 
     log_write("opened save file\n");
     // restore save data from zip.
+    pbox->NewTransfer("Restoring save..."_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
         // skip restoring the meta file.
         if (name == NX_SAVE_META_NAME) {

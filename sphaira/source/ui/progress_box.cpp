@@ -133,7 +133,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     // shapes.
-    if (offset && size) {
+    if (size) {
         const auto font_size = 18.F;
         const auto pad = 15.F;
         const float rounding = 5;
@@ -143,32 +143,34 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         gfx::drawRect(vg, prog_bar.x, prog_bar.y, ((float)offset / (float)size) * prog_bar.w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
         gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%u%%", percentage);
 
-        const double speed_mb = (double)speed / (1024.0 * 1024.0);
-        const double speed_kb = (double)speed / (1024.0);
+        if (speed > 0) {
+            const double speed_mb = (double)speed / (1024.0 * 1024.0);
+            const double speed_kb = (double)speed / (1024.0);
 
-        char speed_str[32];
-        if (speed_mb >= 0.01) {
-            std::snprintf(speed_str, sizeof(speed_str), "%.2f MiB/s", speed_mb);
-        } else {
-            std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", speed_kb);
+            char speed_str[32];
+            if (speed_mb >= 0.01) {
+                std::snprintf(speed_str, sizeof(speed_str), "%.2f MiB/s", speed_mb);
+            } else {
+                std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", speed_kb);
+            }
+
+            const auto left = size - last_offset;
+            const auto left_seconds = left / speed;
+            const auto hours = left_seconds / (60 * 60);
+            const auto minutes = left_seconds % (60 * 60) / 60;
+            const auto seconds = left_seconds % 60;
+
+            char time_str[64];
+            if (hours) {
+                std::snprintf(time_str, sizeof(time_str), "%zu hours %zu minutes remaining"_i18n.c_str(), hours, minutes);
+            } else if (minutes) {
+                std::snprintf(time_str, sizeof(time_str), "%zu minutes %zu seconds remaining"_i18n.c_str(), minutes, seconds);
+            } else {
+                std::snprintf(time_str, sizeof(time_str), "%zu seconds remaining"_i18n.c_str(), seconds);
+            }
+
+            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
         }
-
-        const auto left = size - last_offset;
-        const auto left_seconds = left / speed;
-        const auto hours = left_seconds / (60 * 60);
-        const auto minutes = left_seconds % (60 * 60) / 60;
-        const auto seconds = left_seconds % 60;
-
-        char time_str[64];
-        if (hours) {
-            std::snprintf(time_str, sizeof(time_str), "%zu hours %zu minutes remaining"_i18n.c_str(), hours, minutes);
-        } else if (minutes) {
-            std::snprintf(time_str, sizeof(time_str), "%zu minutes %zu seconds remaining"_i18n.c_str(), minutes, seconds);
-        } else {
-            std::snprintf(time_str, sizeof(time_str), "%zu seconds remaining"_i18n.c_str(), seconds);
-        }
-
-        gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
     }
 
     gfx::drawTextArgs(vg, center_x, m_pos.y + 40, 24, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), action.c_str());
@@ -214,6 +216,19 @@ auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
     m_size = 0;
     m_offset = 0;
     m_last_offset = 0;
+    m_speed = 0;
+    m_timestamp.Update();
+    mutexUnlock(&m_mutex);
+    Yield();
+    return *this;
+}
+
+auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
+    mutexLock(&m_mutex);
+    m_size = 0;
+    m_offset = 0;
+    m_last_offset = 0;
+    m_speed = 0;
     m_timestamp.Update();
     mutexUnlock(&m_mutex);
     Yield();

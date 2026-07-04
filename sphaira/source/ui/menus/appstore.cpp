@@ -471,7 +471,7 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
         }
 
         const auto unzip_to = [&](const fs::FsPath& inzip, const fs::FsPath& output) -> Result {
-            pbox->NewTransfer(inzip);
+            pbox->ResetTransferProgress();
 
             if (UNZ_END_OF_LIST_OF_FILE == unzLocateFile(zfile, inzip, 0)) {
                 log_write("failed to find %s\n", inzip.s);
@@ -495,16 +495,18 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
                 path = fs::AppendPath("/", path);
             }
 
-            return thread::TransferUnzip(pbox, zfile, &fs, path, info.uncompressed_size, info.crc);
+            return thread::TransferUnzip(pbox, zfile, &fs, path, info.uncompressed_size, info.crc, thread::Mode::SingleThreadedIfSmaller, false);
         };
 
         // unzip manifest, info and all entries.
         TimeStamp ts;
         #if 1
+        pbox->NewTransfer("Extracting app metadata"_i18n);
         R_TRY(unzip_to("info.json", BuildInfoCachePath(entry)));
         R_TRY(unzip_to("manifest.install", BuildManifestCachePath(entry)));
         #endif
 
+        pbox->NewTransfer("Extracting app files"_i18n);
         R_TRY(thread::TransferUnzipAll(pbox, zfile, &fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
             const auto it = std::ranges::find_if(new_manifest, [&name](auto& e){
                 return !strcasecmp(name, e.path);
@@ -513,8 +515,6 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
             if (it == new_manifest.end()) [[unlikely]] {
                 return false;
             }
-
-            pbox->NewTransfer(it->path);
 
             switch (it->command) {
                 case 'E': // both are the same?
