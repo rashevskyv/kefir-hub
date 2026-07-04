@@ -168,6 +168,21 @@ auto apiBuildIconCache(std::string_view id) -> fs::FsPath {
     return path;
 }
 
+auto ForceJpegPreviewUrl(std::string url) -> std::string {
+    if (!url.starts_with("https://img.themezer.net/")) {
+        return url;
+    }
+
+    const auto query_pos = url.find('?');
+    const auto insert_pos = query_pos == std::string::npos ? url.size() : query_pos;
+    if (insert_pos >= 4 && url.compare(insert_pos - 4, 4, "@jpg") == 0) {
+        return url;
+    }
+
+    url.insert(insert_pos, "@jpg");
+    return url;
+}
+
 auto loadPreviewImage(Preview& preview, std::string_view id) -> bool {
     auto& image = preview.lazy_image;
 
@@ -231,6 +246,7 @@ void from_json(yyjson_val* json, Preview& e) {
         JSON_SET_STR(thumb);
         case cexprHash("thumbUrl"): {
             SetJsonString(e.thumb, val);
+            e.thumb = ForceJpegPreviewUrl(e.thumb);
         } break;
     );
 }
@@ -469,7 +485,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }}),
-        std::make_pair(Button::R2, Action{"Next"_i18n, [this](){
+        std::make_pair(Button::R2, Action{"Next Page"_i18n, [this](){
             m_page_index++;
             if (m_page_index >= m_page_index_max) {
                 m_page_index = m_page_index_max - 1;
@@ -477,7 +493,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
                 PackListDownload();
             }
         }}),
-        std::make_pair(Button::L2, Action{"Prev"_i18n, [this](){
+        std::make_pair(Button::L2, Action{"Previous Page"_i18n, [this](){
             if (m_page_index) {
                 m_page_index--;
                 PackListDownload();
@@ -573,6 +589,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         if (!preview->thumb.empty()) {
             auto& image = preview->lazy_image;
+            const auto page_generation_for_image = m_page_generation;
+            const auto page_index_for_image = m_page_index;
+            const auto entry_index_for_image = pos;
+            const bool use_pack_preview = preview == &e.preview;
 
             // try and load cached image.
             if (image_load_count < image_load_max && !image.image && !image.tried_cache) {
@@ -597,7 +617,30 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                             curl::Path{path},
                             curl::Flags{curl::Flag_Cache},
                             curl::StopToken{this->GetToken()},
-                            curl::OnComplete{[this, &image](auto& result) {
+                            curl::Priority::Normal,
+                            curl::OnComplete{[this, page_generation_for_image, page_index_for_image, entry_index_for_image, use_pack_preview](auto& result) {
+                                if (page_generation_for_image != m_page_generation) {
+                                    return;
+                                }
+                                if (page_index_for_image >= m_pages.size()) {
+                                    return;
+                                }
+
+                                auto& page = m_pages[page_index_for_image];
+                                if (entry_index_for_image >= page.m_packList.size()) {
+                                    return;
+                                }
+
+                                auto& entry = page.m_packList[entry_index_for_image];
+                                auto* preview = &entry.preview;
+                                if (!use_pack_preview) {
+                                    if (entry.themes.empty()) {
+                                        return;
+                                    }
+                                    preview = &entry.themes[0].preview;
+                                }
+
+                                auto& image = preview->lazy_image;
                                 if (result.success) {
                                     image.state = ImageDownloadState::Done;
                                     // data hasn't changed
@@ -665,6 +708,7 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::InvalidateAllPages() {
+    m_page_generation++;
     m_pages.clear();
     m_pages.resize(1);
     m_page_index = 0;
@@ -693,6 +737,7 @@ void Menu::PackListDownload() {
     config.order_index = m_order.Get();
     const auto packList_body = apiBuildListPacksBody(config);
     const auto packlist_path = apiBuildListPacksCache(config);
+    const auto page_generation = m_page_generation;
 
     log_write("\npackList_body: %s\n\n", packList_body.c_str());
 
@@ -706,9 +751,19 @@ void Menu::PackListDownload() {
         },
         curl::Flags{curl::Flag_Cache},
         curl::StopToken{this->GetToken()},
-        curl::OnComplete{[this, page_index](auto& result){
+        curl::OnComplete{[this, page_index, page_generation](auto& result){
             App::SetBoostMode(true);
             ON_SCOPE_EXIT(App::SetBoostMode(false));
+
+            if (page_generation != m_page_generation) {
+                log_write("ignoring stale themezer generation\n");
+                return;
+            }
+
+            if (page_index == 0 || page_index > m_pages.size()) {
+                log_write("ignoring stale themezer page response: %zu\n", static_cast<size_t>(page_index));
+                return;
+            }
 
             log_write("got themezer data\n");
             if (!result.success) {
@@ -721,7 +776,7 @@ void Menu::PackListDownload() {
             PackList a;
             from_json(result.path, a);
 
-            if (!a.pagination.page_count) {
+            if (!a.pagination.page_count || page_index > a.pagination.page_count) {
                 auto& page = m_pages[page_index-1];
                 page.m_ready = PageLoadState::Error;
                 log_write("failed to parse themezer data...\n");
@@ -759,8 +814,8 @@ void Menu::DisplayOptions() {
     sort_items.push_back("Saves"_i18n);
 
     SidebarEntryArray::Items order_items;
-    order_items.push_back("Descending (down)"_i18n);
-    order_items.push_back("Ascending (Up)"_i18n);
+    order_items.push_back("Descending"_i18n);
+    order_items.push_back("Ascending"_i18n);
 
     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
         if (m_sort.Get() != index_out) {

@@ -142,6 +142,7 @@ private:
     std::vector<PageEntry> m_pages{};
     s64 m_page_index{};
     s64 m_page_index_max{1};
+    u64 m_page_generation{};
 
     std::string m_search{};
 
