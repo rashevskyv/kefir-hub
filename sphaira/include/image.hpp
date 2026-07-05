@@ -21,6 +21,7 @@ enum ImageFlag {
 auto ImageLoadFromMemory(std::span<const u8> data, u32 flags = ImageFlag_None) -> ImageResult;
 auto ImageLoadFromFile(const fs::FsPath& file, u32 flags = ImageFlag_None) -> ImageResult;
 auto ImageResize(std::span<const u8> data, int inx, int iny, int outx, int outy) -> ImageResult;
+auto ImageCrop(std::span<const u8> data, int inx, int iny, int crop_x, int crop_y, int crop_w, int crop_h) -> ImageResult;
 auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult;
 
 } // namespace sphaira

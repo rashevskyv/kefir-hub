@@ -161,4 +161,21 @@ auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult {
     return {};
 }
 
+auto ImageCrop(std::span<const u8> data, int inx, int iny, int crop_x, int crop_y, int crop_w, int crop_h) -> ImageResult {
+    log_write("doing crop inx: %d iny: %d to %d %d %d %d\n", inx, iny, crop_x, crop_y, crop_w, crop_h);
+    if (crop_x < 0 || crop_y < 0 || crop_x + crop_w > inx || crop_y + crop_h > iny) {
+        log_write("invalid crop coordinates\n");
+        return {};
+    }
+    std::vector<u8> cropped_data(crop_w * crop_h * BPP);
+    for (int row = 0; row < crop_h; ++row) {
+        std::memcpy(
+            cropped_data.data() + (row * crop_w) * BPP,
+            data.data() + ((crop_y + row) * inx + crop_x) * BPP,
+            crop_w * BPP
+        );
+    }
+    return { cropped_data, crop_w, crop_h };
+}
+
 } // namespace sphaira

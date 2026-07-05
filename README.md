@@ -77,6 +77,20 @@ Sphaira features customizable theme options and multi-language support:
 - **Theme Options:** Choose interface themes, configure background music, and set time formats under "Settings -> Appearance -> Sphaira theme options".
 - **Interface Translations:** Manage and download translation files to customize your console interface language under "Kefir Settings -> Translate Interface".
 
+## Image Viewer
+
+Sphaira provides an integrated image viewer with dedicated legend and controls:
+- **Custom Legend:** Clear bottom-bar indicators (`Prev / Next Image` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR).
+- **Zoom & Navigation:** Holding ZL with Analog Stick / D-Pad Up or Down zooms in or out without accidentally changing images.
+- **Stick Panning:** Releasing ZL while zoomed in enables smooth pan/scroll across the zoomed image using analog sticks or D-Pad without scale changes or switching files.
+
+## Theme Creator
+
+Sphaira includes a built-in theme creator that allows you to easily convert any image into a custom Nintendo Switch theme (`.nxtheme` format) directly from the console:
+- **Interactive Cropping:** Open any image in the File Browser, press the options button, and select "Create Switch Theme". You can zoom using ZL/ZR and pan using the Left Stick or D-Pad to select the perfect crop window (constrained to the native 16:9 aspect ratio).
+- **Target Selection:** Configure theme properties including target system menu (Home Menu, Lock Screen, All Apps, Settings, User Page, News, or Player Select), theme name, and author name.
+- **Auto Installation:** After generation, Sphaira can launch `NXThemesInstaller` with command line arguments (`--auto-install --reboot`) to automatically install the created theme and reboot the console instantly.
+
 ## Building from source
 
 You will first need to install [devkitPro](https://devkitpro.org/wiki/Getting_Started).

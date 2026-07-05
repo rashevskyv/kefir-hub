@@ -6,6 +6,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "ui/menus/file_viewer.hpp"
+#include "ui/menus/theme_creator.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
@@ -1893,6 +1894,9 @@ void FsView::DisplayAdvancedOptions() {
         if (IsExtension(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();
+            });
+            options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
+                App::Push<theme_creator::Menu>(GetNewPathCurrent());
             });
         } else if (GetEntry().file_size < 1024*64) {
             options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
