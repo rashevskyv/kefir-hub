@@ -96,6 +96,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     if (!App::IsApplication()) {
         draw(ThemeEntryID_ERROR, 0, ("[Applet Mode]"_i18n).c_str());
     }
+    draw(ThemeEntryID_TEXT_INFO, 0, "v%s", APP_VERSION_HASH);
 
     #undef draw
 

@@ -8,6 +8,7 @@ namespace sphaira::ui::menu::fileview {
 
 struct Menu final : MenuBase {
     Menu(const fs::FsPath& path);
+    ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "File"; };
     void Update(Controller* controller, TouchInfo* touch) override;
@@ -22,6 +23,10 @@ private:
     s64 m_file_offset{};
 
     std::unique_ptr<ScrollableText> m_scroll_text{};
+    bool m_is_image_file{};
+    int m_image{};
+    int m_image_w{};
+    int m_image_h{};
 
     s64 m_start{};
     s64 m_index{}; // where i am in the array

@@ -15,6 +15,7 @@ rm -rf out
 # --- SWITCH --- #
 mkdir -p out/switch/sphaira/
 cp -r build/Release/*.nro out/switch/sphaira/sphaira.nro
+cp -r build/Release/atmosphere out/
 pushd out
-zip -r9 sphaira.zip switch
+zip -r9 sphaira.zip switch atmosphere
 popd

@@ -62,6 +62,18 @@ The USB protocol is the same as tinfoil, so tools such as [ns-usbloader](https:/
 
 Once you have connected your ftp client to your switch, you can upload files to install into the `install` folder.
 
+## Fan curves & Fan sysmodule
+
+Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamically configure the Atmosphere `tc` skin temperature fan speed tables.
+- **Live Apply:** If the `sphaira_fan` sysmodule (`00FF46554E43544C`) is installed and enabled, you can apply your curve adjustments dynamically without rebooting the console (the option on START button will be "Apply").
+- **Save and Reboot:** If the sysmodule is disabled or not installed, the curves can be applied by saving the config and rebooting the console (the option on START button will be "Save and Reboot").
+
+## Themes & Translations
+
+Sphaira features customizable theme options and multi-language support:
+- **Theme Options:** Choose interface themes, configure background music, and set time formats under "Settings -> Appearance -> Sphaira theme options".
+- **Interface Translations:** Manage and download translation files to customize your console interface language under "Kefir Settings -> Translate Interface".
+
 ## Building from source
 
 You will first need to install [devkitPro](https://devkitpro.org/wiki/Getting_Started).

@@ -28,6 +28,7 @@
 #include <limits>
 #include <minIni.h>
 #include <switch/services/fan.h>
+#include <switch/services/pm.h>
 #include <switch/services/tc.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -83,6 +84,9 @@ constexpr std::array TRANSLATION_PATHS{
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
 constexpr const char* FAN_PRESETS_CONFIG = "/config/sphaira/fan_curve_presets.ini";
+constexpr u64 SPHAIRA_FAN_PROGRAM_ID{0x00FF46554E43544CULL};
+constexpr u64 SPHAIRA_OLD_FAN_PROGRAM_ID{0x00FF000053504846ULL};
+constexpr const char* SPHAIRA_FAN_EXEFS_PATH = "/atmosphere/contents/00FF46554E43544C/exefs.nsp";
 constexpr const char* SPHAIRA_DOWNLOADS = "/config/sphaira/downloads";
 constexpr const char* DBI_TRANSLATIONS_PACKAGE = "/config/sphaira/packages/Software/DBI/Fan Translations/package.ini";
 constexpr const char* TRANSLATE_PACKAGE_DIR = "/config/sphaira/packages/Translate Interface";
@@ -822,6 +826,13 @@ auto FullSpeedFanCurve() -> std::vector<FanCurvePoint> {
     };
 }
 
+auto FanOffCurve() -> std::vector<FanCurvePoint> {
+    return {
+        {10, 0},
+        {90, 0},
+    };
+}
+
 auto FanPresetSection(bool docked) -> const char* {
     return docked ? "docked" : "handheld";
 }
@@ -849,23 +860,23 @@ auto SanitizeFanPresetName(std::string name) -> std::string {
 
 auto FanBuiltinPresetLabels() -> PopupList::Items {
     return {
-        "Default"_i18n,
+        "Cold console"_i18n,
         "Quiet"_i18n,
         "Balanced"_i18n,
-        "Cool"_i18n,
-        "Full speed"_i18n,
+        "Fan off"_i18n,
+        "Fan 100%"_i18n,
     };
 }
 
 auto FanPresetCurve(s64 index, bool docked) -> std::vector<FanCurvePoint> {
     switch (index) {
+        case 0: return CoolFanCurve(docked);
         case 1: return QuietFanCurve(docked);
         case 2: return BalancedFanCurve(docked);
-        case 3: return CoolFanCurve(docked);
+        case 3: return FanOffCurve();
         case 4: return FullSpeedFanCurve();
-        case 0:
         default:
-            return docked ? DefaultDockedFanCurve() : DefaultHandheldFanCurve();
+            return BalancedFanCurve(docked);
     }
 }
 
@@ -1096,17 +1107,76 @@ auto IsFanCurveEnabled() -> bool {
     return IniValueEquals(ATMOSPHERE_CONFIG, "tc", "use_configurations_on_fwdbg", "u8!0x1");
 }
 
-auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, bool reboot) -> Result {
+auto IsSphairaFanSysmoduleInstalled() -> bool {
+    return FileExists("/atmosphere/contents/00FF46554E43544C/exefs.nsp");
+}
+
+auto IsSphairaFanSysmoduleRunning() -> bool {
+    if (!IsSphairaFanSysmoduleInstalled()) {
+        return false;
+    }
+
+    Result rc = pmshellInitialize();
+    if (R_FAILED(rc)) {
+        return false;
+    }
+
+    u64 pid{};
+    rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
+    pmshellExit();
+    return R_SUCCEEDED(rc);
+}
+
+auto EnsureSphairaFanSysmoduleInstalled() -> Result {
+    R_UNLESS(IsSphairaFanSysmoduleInstalled(), FsError_PathNotFound);
+    R_SUCCEED();
+}
+
+auto RestartSphairaFanSysmodule() -> Result {
+    R_TRY(EnsureSphairaFanSysmoduleInstalled());
+
+    Result rc = pmshellInitialize();
+    R_TRY(rc);
+
+    pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
+    pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
+    svcSleepThread(100000000);
+
+    const NcmProgramLocation location{
+        .program_id = SPHAIRA_FAN_PROGRAM_ID,
+        .storageID = NcmStorageId_None,
+    };
+    u64 pid{};
+    rc = pmshellLaunchProgram(PmLaunchFlag_None, &location, &pid);
+    if (R_SUCCEEDED(rc)) {
+        Result check_rc = rc;
+        for (u32 i = 0; i < 5; i++) {
+            svcSleepThread(100000000);
+            check_rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
+            if (R_SUCCEEDED(check_rc)) {
+                break;
+            }
+        }
+        rc = check_rc;
+    }
+    pmshellExit();
+    R_TRY(rc);
+
+    R_SUCCEED();
+}
+
+auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, FanCurveApplyMode mode) -> Result {
     const auto handheld_value = FormatAtmosphereFanCurve(handheld);
     const auto docked_value = FormatAtmosphereFanCurve(docked);
 
     R_TRY(SetIniValue(ATMOSPHERE_CONFIG, "tc", "use_configurations_on_fwdbg", "u8!0x1"));
     R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_handheld_on_fwdbg", handheld_value));
     R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
-    if (reboot) {
-        RebootAfterSetting();
+    fsdevCommitDevice("sdmc");
+    if (mode == FanCurveApplyMode::Live) {
+        R_TRY(RestartSphairaFanSysmodule());
     } else {
-        fsdevCommitDevice("sdmc");
+        RebootAfterSetting();
     }
     R_SUCCEED();
 }
@@ -1514,17 +1584,7 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
         SettingsItemKind::Folder,
     });
 
-    items.emplace_back(SettingsItem{
-        "Sphaira theme options",
-        "Select the Sphaira interface theme and music options.",
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::DisplayThemeOptions(false);
-        },
-        SettingsItemKind::Folder,
-    });
+
 
     items.emplace_back(MakePackageAction({
         "Mario BG Dark",
@@ -1671,7 +1731,7 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "Fan curve",
         "Edit Atmosphere tskin fan curves for handheld and docked modes.",
         [](){
-            return OnOff(IsFanCurveEnabled());
+            return "";
         },
         [](){
             App::Push<FanCurveMenu>();
@@ -1723,6 +1783,18 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         3.f,
     }));
 
+    items.emplace_back(SettingsItem{
+        "Translate Interface",
+        "Interface translation package tools.",
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::settings::TranslateMenu>();
+        },
+        SettingsItemKind::Folder,
+    });
+
     return items;
 }
 
@@ -1751,24 +1823,20 @@ auto ThemeValue() -> std::string {
 struct FanCurveSensorSample {
     bool valid{};
     s32 temp_milli_c{};
-    s32 fan_percent{};
+    s32 fan_percent{-1};
 };
 
 struct FanCurveSensorReader final {
     FanCurveSensorReader() {
-        m_tc_available = R_SUCCEEDED(tcInitialize());
-        m_fan_available = R_SUCCEEDED(fanInitialize());
-        if (m_fan_available) {
-            m_fan_controller_open = R_SUCCEEDED(fanOpenController(&m_fan_controller, FAN_DEVICE_CODE_PWM));
+        m_ts_available = R_SUCCEEDED(tsInitialize());
+        if (!m_ts_available) {
+            m_tc_available = R_SUCCEEDED(tcInitialize());
         }
     }
 
     ~FanCurveSensorReader() {
-        if (m_fan_controller_open) {
-            fanControllerClose(&m_fan_controller);
-        }
-        if (m_fan_available) {
-            fanExit();
+        if (m_ts_available) {
+            tsExit();
         }
         if (m_tc_available) {
             tcExit();
@@ -1783,14 +1851,48 @@ struct FanCurveSensorReader final {
         m_last_update_ns = now;
 
         FanCurveSensorSample next{};
-        float fan_level{};
-        if (m_tc_available &&
-            m_fan_controller_open &&
-            R_SUCCEEDED(tcGetSkinTemperatureMilliC(&next.temp_milli_c)) &&
-            R_SUCCEEDED(fanControllerGetRotationSpeedLevel(&m_fan_controller, &fan_level))) {
-            fan_level = std::clamp(fan_level, 0.f, 1.f);
-            next.fan_percent = std::clamp<s32>(static_cast<s32>(fan_level * 100.f + 0.5f), FAN_PERCENT_MIN, FAN_PERCENT_MAX);
-            next.valid = true;
+        s32 temp_milli_c = 0;
+        s32 temp_c = 0;
+
+        if (m_ts_available) {
+            TsSession session;
+            if (R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationExternal))) {
+                float temp_f = 0.0f;
+                Result rc = tsSessionGetTemperature(&session, &temp_f);
+                tsSessionClose(&session);
+                if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
+                    next.temp_milli_c = static_cast<s32>(temp_f * 1000.0f);
+                    next.valid = true;
+                }
+            }
+            if (!next.valid && R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationInternal))) {
+                float temp_f = 0.0f;
+                Result rc = tsSessionGetTemperature(&session, &temp_f);
+                tsSessionClose(&session);
+                if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
+                    next.temp_milli_c = static_cast<s32>(temp_f * 1000.0f);
+                    next.valid = true;
+                }
+            }
+            if (!next.valid && R_SUCCEEDED(tsGetTemperature(TsLocation_External, &temp_c)) && temp_c > 0) {
+                next.temp_milli_c = temp_c * 1000;
+                next.valid = true;
+            }
+            if (!next.valid && R_SUCCEEDED(tsGetTemperature(TsLocation_Internal, &temp_c)) && temp_c > 0) {
+                next.temp_milli_c = temp_c * 1000;
+                next.valid = true;
+            }
+            if (!next.valid && R_SUCCEEDED(tsGetTemperatureMilliC(TsLocation_External, &temp_milli_c)) && temp_milli_c > 0) {
+                next.temp_milli_c = temp_milli_c;
+                next.valid = true;
+            }
+        }
+
+        if (!next.valid && m_tc_available) {
+            if (R_SUCCEEDED(tcGetSkinTemperatureMilliC(&temp_milli_c)) && temp_milli_c > 0) {
+                next.temp_milli_c = temp_milli_c;
+                next.valid = true;
+            }
         }
 
         m_sample = next;
@@ -1801,12 +1903,10 @@ struct FanCurveSensorReader final {
     }
 
 private:
-    FanController m_fan_controller{};
     FanCurveSensorSample m_sample{};
     u64 m_last_update_ns{};
+    bool m_ts_available{};
     bool m_tc_available{};
-    bool m_fan_available{};
-    bool m_fan_controller_open{};
 };
 
 Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
@@ -2032,6 +2132,9 @@ void Menu::BuildCategories() {
                     }
                 }},
                 MakeBoolItem("Music", "Enable background music from the current theme.", App::GetThemeMusicEnable, App::SetThemeMusicEnable),
+                { "Sphaira theme options", "Select the Sphaira interface theme and music options.", [](){ return std::string{}; }, [](){
+                    App::DisplayThemeOptions(false);
+                }, SettingsItemKind::Folder },
             }
         },
         {
@@ -2060,11 +2163,7 @@ void Menu::BuildCategories() {
                 }},
             }
         },
-        {
-            "Translate Interface",
-            "Interface translation package tools.",
-            BuildTranslateItems(),
-        },
+
         {
             "Install",
             "Install behavior and safety switches.",
@@ -2274,7 +2373,26 @@ void DrawVerticalDashes(NVGcontext* vg, float x, float y0, float y1, const NVGco
     }
 }
 
-void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, const FanCurveSensorSample* sensor) {
+auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -> float {
+    if (curve.empty()) return 0.f;
+    if (temp_c <= curve.front().temp_c) return static_cast<float>(curve.front().fan_percent);
+    if (temp_c >= curve.back().temp_c) return static_cast<float>(curve.back().fan_percent);
+
+    for (size_t i = 1; i < curve.size(); ++i) {
+        const auto& prev = curve[i - 1];
+        const auto& cur = curve[i];
+        if (temp_c >= prev.temp_c && temp_c <= cur.temp_c) {
+            const float temp_span = cur.temp_c - prev.temp_c;
+            if (temp_span == 0.f) return static_cast<float>(prev.fan_percent);
+            const float fan_span = cur.fan_percent - prev.fan_percent;
+            const float temp_offset = temp_c - prev.temp_c;
+            return prev.fan_percent + (fan_span * temp_offset) / temp_span;
+        }
+    }
+    return static_cast<float>(curve.back().fan_percent);
+}
+
+void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::vector<FanCurvePoint>& curve, const FanCurveSensorSample* sensor) {
     if (!sensor) {
         return;
     }
@@ -2282,7 +2400,8 @@ void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, co
     const auto accent = theme->GetColour(ThemeEntryID_TEXT_SELECTED);
     const auto temp_c = static_cast<float>(sensor->temp_milli_c) / 1000.f;
     const auto x = FanCurveXForTempValue(plot, temp_c);
-    const auto y = FanCurveYForFan(plot, sensor->fan_percent);
+    const auto fan_percent = EvaluateFanPercent(curve, temp_c);
+    const auto y = FanCurveYForFan(plot, fan_percent);
     const auto guide_colour = WithAlpha(accent, 0.42f);
 
     DrawHorizontalDashes(vg, plot.x, x, y, guide_colour);
@@ -2311,7 +2430,7 @@ void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, co
     const auto label = FormatMilliC(sensor->temp_milli_c);
     gfx::drawTextArgs(
         vg, label_x, label_y, 14.f, align,
-        theme->GetColour(ThemeEntryID_TEXT), "%s  %d%%", label.c_str(), sensor->fan_percent
+        theme->GetColour(ThemeEntryID_TEXT), "%s  %d%%", label.c_str(), static_cast<s32>(fan_percent + 0.5f)
     );
 }
 
@@ -2391,7 +2510,7 @@ void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurveP
         }
         nvgStroke(vg);
 
-        DrawFanCurveSensorMarker(vg, theme, plot, sensor);
+        DrawFanCurveSensorMarker(vg, theme, plot, curve, sensor);
 
         for (size_t i = 0; i < curve.size(); i++) {
             const auto point_selected = static_cast<s64>(i) == selected;
@@ -2498,6 +2617,7 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
         "tskin_rate_table_console",
         DefaultDockedFanCurve()
     );
+    m_sysmodule_enabled = IsSphairaFanSysmoduleRunning();
     m_sensor_reader = std::make_unique<FanCurveSensorReader>();
     RefreshActions();
 
@@ -2534,6 +2654,9 @@ void FanCurveMenu::RefreshActions() {
         return;
     }
 
+    const auto apply_label = m_sysmodule_enabled ? "Apply"_i18n : "Save and Reboot"_i18n;
+    const auto apply_mode = m_sysmodule_enabled ? FanCurveApplyMode::Live : FanCurveApplyMode::Reboot;
+
     SetActions(
         std::make_pair(Button::A, Action{"Edit"_i18n, [this](){
             SetEditing(true);
@@ -2556,8 +2679,8 @@ void FanCurveMenu::RefreshActions() {
         std::make_pair(Button::R, Action{"Remove Point"_i18n, [this](){
             RemovePoint();
         }}),
-        std::make_pair(Button::START, Action{"Apply"_i18n, [this](){
-            DisplayApplyMenu();
+        std::make_pair(Button::START, Action{apply_label, [this, apply_mode](){
+            ApplyCurves(apply_mode);
         }})
     );
 }
@@ -2627,17 +2750,26 @@ void FanCurveMenu::DisplaySavePreset() {
 }
 
 void FanCurveMenu::DisplayApplyMenu() {
+    const bool live_apply_available = IsSphairaFanSysmoduleInstalled();
+    PopupList::Items items;
+    if (live_apply_available) {
+        items.emplace_back("Apply"_i18n);
+    } else {
+        items.emplace_back("Save and Reboot"_i18n);
+    }
+
     App::Push<PopupList>(
         "Apply fan curve"_i18n,
-        PopupList::Items{
-            "Apply"_i18n,
-            "Apply and Reboot"_i18n,
-        },
-        [this](auto index){
+        std::move(items),
+        [this, live_apply_available](auto index){
             if (!index) {
                 return;
             }
-            ApplyCurves(*index == 1);
+            if (live_apply_available && *index == 0) {
+                ApplyCurves(FanCurveApplyMode::Live);
+            } else {
+                ApplyCurves(FanCurveApplyMode::Reboot);
+            }
         },
         0
     );
@@ -2862,25 +2994,27 @@ auto FanCurveMenu::HandleGraphTouch(TouchInfo* touch) -> bool {
     return false;
 }
 
-void FanCurveMenu::ApplyCurves(bool reboot) {
+void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
     const auto handheld = m_handheld_curve;
     const auto docked = m_docked_curve;
+    const bool live_apply = mode == FanCurveApplyMode::Live;
 
     App::Push<ProgressBox>(
         0,
         "Applying"_i18n,
         "Fan curve",
-        [handheld, docked, reboot](auto pbox) -> Result {
-            pbox->NewTransfer(reboot ? "Writing Atmosphere fan curve and rebooting..." : "Writing Atmosphere fan curve...");
-            return ApplyFanCurves(handheld, docked, reboot);
+        [handheld, docked, mode, live_apply](auto pbox) -> Result {
+            pbox->NewTransfer(live_apply ? "Writing Atmosphere fan curve and restarting fan module..." :
+                "Writing Atmosphere fan curve and rebooting...");
+            return ApplyFanCurves(handheld, docked, mode);
         },
-        [this, reboot](Result rc){
+        [this, live_apply](Result rc){
             if (R_FAILED(rc)) {
                 App::PushErrorBox(rc, "Failed to apply fan curve");
                 return;
             }
             m_dirty = false;
-            if (!reboot) {
+            if (live_apply) {
                 App::Notify("Fan curve applied");
             }
         }
@@ -3232,6 +3366,67 @@ void ThemesMenu::SetIndex(s64 index) {
 }
 
 void ThemesMenu::OnSelect() {
+    if (!m_items.empty() && m_items[m_index].action) {
+        m_items[m_index].action();
+    }
+}
+
+TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface", MenuFlag_None} {
+    m_items = BuildTranslateItems();
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Open"_i18n, [this](){
+            OnSelect();
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    SetIndex(0);
+}
+
+TranslateMenu::~TranslateMenu() = default;
+
+void TranslateMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+    SetIndex(m_index);
+}
+
+void TranslateMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    });
+}
+
+void TranslateMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
+    });
+}
+
+void TranslateMenu::SetIndex(s64 index) {
+    if (m_items.empty()) {
+        m_index = 0;
+        return;
+    }
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+    SetSubHeading(m_items[m_index].description);
+}
+
+void TranslateMenu::OnSelect() {
     if (!m_items.empty() && m_items[m_index].action) {
         m_items[m_index].action();
     }
