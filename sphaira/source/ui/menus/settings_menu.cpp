@@ -1939,12 +1939,12 @@ struct SphairaFanState {
             if (m_displayed_fan_percent < 0.0f) {
                 m_displayed_fan_percent = target_fan;
             } else {
-                const float speed_rate = 65.0f; // smooth motor ramp ~1.5s full range
                 const float diff = target_fan - m_displayed_fan_percent;
                 const float abs_diff = std::abs(diff);
                 if (abs_diff < 0.2f) {
                     m_displayed_fan_percent = target_fan;
                 } else {
+                    const float speed_rate = (diff >= 0.0f) ? 25.0f : 18.0f; // 25% per sec up, 18% per sec down
                     const float max_step = std::min(abs_diff, speed_rate * dt);
                     m_displayed_fan_percent += (diff >= 0.0f ? max_step : -max_step);
                 }
@@ -2658,6 +2658,8 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
         "tskin_rate_table_console",
         DefaultDockedFanCurve()
     );
+    m_applied_handheld_curve = m_handheld_curve;
+    m_applied_docked_curve = m_docked_curve;
     m_sysmodule_enabled = IsSphairaFanSysmoduleRunning();
     m_sensor_reader = std::make_unique<FanCurveSensorReader>();
     RefreshActions();
@@ -3049,11 +3051,13 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
                 "Writing Atmosphere fan curve and rebooting...");
             return ApplyFanCurves(handheld, docked, mode);
         },
-        [this, live_apply](Result rc){
+        [this, live_apply, handheld, docked](Result rc){
             if (R_FAILED(rc)) {
                 App::PushErrorBox(rc, "Failed to apply fan curve");
                 return;
             }
+            m_applied_handheld_curve = handheld;
+            m_applied_docked_curve = docked;
             m_dirty = false;
             if (live_apply) {
                 App::Notify("Fan curve applied");
@@ -3090,7 +3094,8 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     if (m_sensor_reader) {
-        m_sensor_reader->Update(ActiveCurve());
+        const auto& applied_curve = m_docked ? m_applied_docked_curve : m_applied_handheld_curve;
+        m_sensor_reader->Update(applied_curve);
     }
 
     if (HandleGraphTouch(touch)) {

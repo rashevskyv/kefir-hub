@@ -162,6 +162,8 @@ private:
 private:
     std::vector<FanCurvePoint> m_handheld_curve;
     std::vector<FanCurvePoint> m_docked_curve;
+    std::vector<FanCurvePoint> m_applied_handheld_curve;
+    std::vector<FanCurvePoint> m_applied_docked_curve;
     s64 m_index{};
     bool m_docked{};
     bool m_dirty{};

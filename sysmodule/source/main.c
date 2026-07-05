@@ -490,11 +490,14 @@ int main(int argc, char* argv[]) {
 
         fanControllerSetRotationSpeedLevel(&controller, fan_level);
 
+        float actual_level = fan_level;
+        fanControllerGetRotationSpeedLevel(&controller, &actual_level);
+
         SphairaFanState state = {0};
         state.magic = 0x46414E53;
         state.version = 1;
         state.temp_milli_c = temp_milli_c;
-        state.fan_level = fan_level;
+        state.fan_level = actual_level;
         state.timestamp_ns = armTicksToNs(armGetSystemTick());
         state.sysmodule_active = 1;
 
