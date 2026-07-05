@@ -148,6 +148,7 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
     const std::pair<Button, Button> swap_buttons[] = {
         {Button::L, Button::R},
         {Button::L2, Button::R2},
+        {Button::LEFT, Button::RIGHT},
     };
 
     // build array

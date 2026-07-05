@@ -54,7 +54,11 @@ auto IsImageExtension(std::string_view ext) -> bool {
     return IsJpegExtension(ext) || ExtensionEquals(ext, "png") || ExtensionEquals(ext, "bmp") || ExtensionEquals(ext, "gif");
 }
 
-auto ImageBounds() -> Vec4 {
+auto ImageBounds(bool fullscreen) -> Vec4 {
+    if (fullscreen) {
+        return {0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
+    }
+
     return {60.f, 110.f, SCREEN_WIDTH - 120.f, 500.f};
 }
 
@@ -139,12 +143,9 @@ void Menu::LoadImageFile() {
     SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
         ResetImageView();
     }});
-    SetAction(Button::L2, Action{"Zoom Out"_i18n, [this](){
-        ZoomImage(1.f / 1.25f);
+    SetAction(Button::L2, Action{"Zoom"_i18n, [](){
     }});
-    SetAction(Button::R2, Action{"Zoom In"_i18n, [this](){
-        ZoomImage(1.25f);
-    }});
+    UpdateFullscreenAction();
 
     if (m_image_paths.size() > 1) {
         SetAction(Button::LEFT, Action{"Previous Image"_i18n, [this](){
@@ -213,7 +214,7 @@ void Menu::ClampPan() {
         return;
     }
 
-    const auto bounds = ImageBounds();
+    const auto bounds = ImageBounds(m_fullscreen);
     const auto fit_scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h));
     const auto image_w = static_cast<float>(m_image_w) * fit_scale * m_zoom;
     const auto image_h = static_cast<float>(m_image_h) * fit_scale * m_zoom;
@@ -228,6 +229,18 @@ void Menu::UpdateImageSubHeading() {
     SetSubHeading("");
 }
 
+void Menu::ToggleFullscreen() {
+    m_fullscreen = !m_fullscreen;
+    ResetImageView();
+    UpdateFullscreenAction();
+}
+
+void Menu::UpdateFullscreenAction() {
+    SetAction(Button::R2, Action{m_fullscreen ? "Exit Full Screen"_i18n : "Full Screen"_i18n, [this](){
+        ToggleFullscreen();
+    }});
+}
+
 auto Menu::GetDisplayName() const -> std::string {
     if (m_is_image_file && m_image_index >= 0 && static_cast<size_t>(m_image_index) < m_image_titles.size() && !m_image_titles[m_image_index].empty()) {
         return m_image_titles[m_image_index];
@@ -239,7 +252,19 @@ auto Menu::GetDisplayName() const -> std::string {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
-    if (!m_is_image_file && m_scroll_text) {
+    if (m_is_image_file) {
+        const auto zoom_modifier = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
+        const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
+            controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
+        const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
+            controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
+
+        if (zoom_modifier && zoom_in) {
+            ZoomImage(1.05f);
+        } else if (zoom_modifier && zoom_out) {
+            ZoomImage(1.f / 1.05f);
+        }
+    } else if (m_scroll_text) {
         m_scroll_text->Update(controller, touch);
     }
 }
@@ -248,18 +273,22 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     if (m_is_image_file) {
         DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
 
-        const auto title = GetDisplayName();
-        gfx::drawText(vg, 80, 70, 28.f, theme->GetColour(ThemeEntryID_TEXT), title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
-        gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
-        gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        if (!m_fullscreen) {
+            const auto title = GetDisplayName();
+            gfx::drawText(vg, 80, 70, 28.f, theme->GetColour(ThemeEntryID_TEXT), title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
+            gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+            gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        }
 
         if (!m_image || !m_image_w || !m_image_h) {
             gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to load image"_i18n.c_str());
-            Widget::Draw(vg, theme);
+            if (!m_fullscreen) {
+                Widget::Draw(vg, theme);
+            }
             return;
         }
 
-        const auto bounds = ImageBounds();
+        const auto bounds = ImageBounds(m_fullscreen);
         const auto scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h)) * m_zoom;
         const auto image_w = static_cast<float>(m_image_w) * scale;
         const auto image_h = static_cast<float>(m_image_h) * scale;
@@ -271,7 +300,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 5);
         nvgRestore(vg);
 
-        Widget::Draw(vg, theme);
+        if (!m_fullscreen) {
+            Widget::Draw(vg, theme);
+        }
         return;
     }
 

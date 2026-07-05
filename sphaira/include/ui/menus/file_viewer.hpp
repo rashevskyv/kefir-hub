@@ -28,6 +28,8 @@ private:
     void NextImage(s64 direction);
     void PanImage(float dx, float dy);
     void ClampPan();
+    void ToggleFullscreen();
+    void UpdateFullscreenAction();
     void UpdateImageSubHeading();
     auto GetDisplayName() const -> std::string;
 
@@ -49,6 +51,7 @@ private:
     float m_zoom{1.f};
     float m_pan_x{};
     float m_pan_y{};
+    bool m_fullscreen{};
 
     s64 m_start{};
     s64 m_index{}; // where i am in the array
