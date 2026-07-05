@@ -305,51 +305,109 @@ void Menu::GenerateThemeCallback() {
         App::Notify("Theme generated!"_i18n);
         
         if (HasNro()) {
-            App::Push<OptionBox>(
-                "Theme created, install and reboot now?"_i18n,
-                "Back"_i18n, "Install & Reboot"_i18n, 1, [this](auto op_index){
-                    if (op_index && *op_index) {
-                        std::string args = nro_add_arg_file(m_path.s) + " --auto-install --reboot";
-                        log_write("theme creator nro: %s\n", GetNroPath());
-                        log_write("theme creator args: %s\n", args.c_str());
-                        
-                        const auto rc = nro_launch(GetNroPath(), args);
-                        App::PushErrorBox(rc, "Failed to launch NXThemesInstaller.nro"_i18n);
-                    }
-                }
-            );
+            m_state = State_Confirm;
+            m_holding_a = false;
+            m_holding_y = false;
+            m_hold_progress = 0.f;
+            
+            SetAction(Button::A, Action{[](){}});
+            SetAction(Button::X, Action{[](){}});
+            SetAction(Button::Y, Action{[](){}});
+            SetAction(Button::START, Action{[](){}});
+            
+            SetAction(Button::B, Action{"Back"_i18n, [this](){
+                m_state = State_Crop;
+                LoadImageFile();
+            }});
+        } else {
+            SetPop();
         }
     });
 }
 
+void Menu::InstallThemeAction(bool reboot) {
+    std::string args = nro_add_arg_file(m_path.s) + " --auto-install";
+    if (reboot) {
+        args += " --reboot";
+    }
+    log_write("theme creator nro: %s\n", GetNroPath());
+    log_write("theme creator args: %s\n", args.c_str());
+    
+    const auto rc = nro_launch(GetNroPath(), args);
+    App::PushErrorBox(rc, "Failed to launch NXThemesInstaller.nro"_i18n);
+}
+
 void Menu::Update(Controller* controller, TouchInfo* touch) {
-    MenuBase::Update(controller, touch);
-    
-    const auto zoom_in = controller->GotDown(Button::R2) || controller->GotHeld(Button::R2);
-    const auto zoom_out = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
-    
-    if (zoom_in) {
-        ZoomImage(1.05f);
-    } else if (zoom_out) {
-        ZoomImage(1.f / 1.05f);
-    }
-    
-    constexpr float PAN_SPEED = 12.f;
-    if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-        controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
-        PanImage(0.f, -PAN_SPEED);
-    }
-    if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-        controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
-        PanImage(0.f, PAN_SPEED);
-    }
-    if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) ||
-        controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
-        PanImage(-PAN_SPEED, 0.f);
-    }
-    if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) ||
-        controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
-        PanImage(PAN_SPEED, 0.f);
+    if (m_state == State_Crop) {
+        MenuBase::Update(controller, touch);
+        
+        const auto zoom_in = controller->GotDown(Button::R2) || controller->GotHeld(Button::R2);
+        const auto zoom_out = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
+        
+        if (zoom_in) {
+            ZoomImage(1.05f);
+        } else if (zoom_out) {
+            ZoomImage(1.f / 1.05f);
+        }
+        
+        constexpr float PAN_SPEED = 12.f;
+        if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
+            controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
+            PanImage(0.f, -PAN_SPEED);
+        }
+        if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
+            controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
+            PanImage(0.f, PAN_SPEED);
+        }
+        if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) ||
+            controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
+            PanImage(-PAN_SPEED, 0.f);
+        }
+        if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) ||
+            controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
+            PanImage(PAN_SPEED, 0.f);
+        }
+    } else if (m_state == State_Confirm) {
+        MenuBase::Update(controller, touch);
+
+        const bool hold_a = controller->GotHeld(Button::A);
+        const bool hold_y = controller->GotHeld(Button::Y);
+
+        if (controller->GotDown(Button::A)) {
+            m_hold_start = std::chrono::steady_clock::now();
+            m_holding_a = true;
+            m_holding_y = false;
+        } else if (controller->GotDown(Button::Y)) {
+            m_hold_start = std::chrono::steady_clock::now();
+            m_holding_y = true;
+            m_holding_a = false;
+        }
+
+        if (m_holding_a && hold_a) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - m_hold_start
+            ).count();
+            m_hold_progress = std::min(1.f, elapsed / 3000.f);
+            if (elapsed >= 3000) {
+                m_holding_a = false;
+                m_hold_progress = 0.f;
+                InstallThemeAction(false);
+            }
+        } else if (m_holding_y && hold_y) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - m_hold_start
+            ).count();
+            m_hold_progress = std::min(1.f, elapsed / 3000.f);
+            if (elapsed >= 3000) {
+                m_holding_y = false;
+                m_hold_progress = 0.f;
+                InstallThemeAction(true);
+            }
+        } else {
+            m_holding_a = false;
+            m_holding_y = false;
+            m_hold_progress = 0.f;
+        }
     }
 }
 
@@ -371,20 +429,63 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 5);
 
-    // Draw overlay on top and bottom
-    nvgBeginPath(vg);
-    nvgRect(vg, 0, 0, SCREEN_WIDTH, 70);
-    nvgRect(vg, 0, SCREEN_HEIGHT - 60, SCREEN_WIDTH, 60);
-    nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
-    nvgFill(vg);
+    if (m_state == State_Crop) {
+        nvgBeginPath(vg);
+        nvgRect(vg, 0, 0, SCREEN_WIDTH, 70);
+        nvgRect(vg, 0, SCREEN_HEIGHT - 60, SCREEN_WIDTH, 60);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgFill(vg);
 
-    // Top texts
-    char top_text[256];
-    std::snprintf(top_text, sizeof(top_text), "Theme: %s  |  Author: %s  |  Target: %s", m_theme_name.c_str(), m_author.c_str(), m_target.c_str());
-    gfx::drawText(vg, 30, 45, 24.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), top_text, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        char top_text[256];
+        std::snprintf(top_text, sizeof(top_text), "Theme: %s  |  Author: %s  |  Target: %s", m_theme_name.c_str(), m_author.c_str(), m_target.c_str());
+        gfx::drawText(vg, 30, 45, 24.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), top_text, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-    // Bottom texts
-    gfx::drawText(vg, 30, SCREEN_HEIGHT - 30, 20.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "LS/DPAD: Move  |  ZL/ZR: Zoom  |  A: Target  |  X: Name  |  Y: Author  |  +: Generate", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        gfx::drawText(vg, 30, SCREEN_HEIGHT - 30, 20.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "LS/DPAD: Move  |  ZL/ZR: Zoom  |  A: Target  |  X: Name  |  Y: Author  |  +: Generate", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    } else if (m_state == State_Confirm) {
+        nvgBeginPath(vg);
+        nvgRect(vg, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 180));
+        nvgFill(vg);
+
+        const float dialog_w = 700.f;
+        const float dialog_h = 350.f;
+        const float dialog_x = (SCREEN_WIDTH - dialog_w) / 2.f;
+        const float dialog_y = (SCREEN_HEIGHT - dialog_h) / 2.f;
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, dialog_x, dialog_y, dialog_w, dialog_h, 15.f);
+        nvgFillColor(vg, nvgRGBA(20, 20, 20, 245));
+        nvgFill(vg);
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, dialog_x, dialog_y, dialog_w, dialog_h, 15.f);
+        nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+        nvgStrokeWidth(vg, 3.f);
+        nvgStroke(vg);
+
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, dialog_y + 50.f, 32.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED), "Theme Created Successfully!"_i18n.c_str());
+
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, dialog_y + 130.f, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Hold A (3s): Install Theme"_i18n.c_str());
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, dialog_y + 180.f, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Hold Y (3s): Install & Reboot"_i18n.c_str());
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, dialog_y + 230.f, 20.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Press B: Cancel"_i18n.c_str());
+
+        if (m_hold_progress > 0.f) {
+            const float bar_w = 400.f;
+            const float bar_h = 10.f;
+            const float bar_x = (SCREEN_WIDTH - bar_w) / 2.f;
+            const float bar_y = dialog_y + 280.f;
+
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, bar_x, bar_y, bar_w, bar_h, bar_h / 2.f);
+            nvgFillColor(vg, nvgRGBA(50, 50, 50, 255));
+            nvgFill(vg);
+
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, bar_x, bar_y, bar_w * m_hold_progress, bar_h, bar_h / 2.f);
+            nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            nvgFill(vg);
+        }
+    }
 
     Widget::Draw(vg, theme);
 }

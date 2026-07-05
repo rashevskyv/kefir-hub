@@ -4,12 +4,18 @@
 #include "fs.hpp"
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace sphaira::ui {
 struct ProgressBox;
 }
 
 namespace sphaira::ui::menu::theme_creator {
+
+enum State {
+    State_Crop,
+    State_Confirm
+};
 
 struct Menu final : MenuBase {
     Menu(const fs::FsPath& path, u32 flags = MenuFlag_None);
@@ -32,6 +38,7 @@ private:
     void EditAuthor();
     Result GenerateTheme(ui::ProgressBox* pbox);
     void GenerateThemeCallback();
+    void InstallThemeAction(bool reboot);
 
 private:
     fs::FsPath m_path;
@@ -51,6 +58,12 @@ private:
     std::string m_theme_name;
     std::string m_author;
     std::string m_target{"home"};
+
+    State m_state = State_Crop;
+    bool m_holding_a = false;
+    bool m_holding_y = false;
+    std::chrono::steady_clock::time_point m_hold_start;
+    float m_hold_progress = 0.f;
 };
 
 } // namespace sphaira::ui::menu::theme_creator
