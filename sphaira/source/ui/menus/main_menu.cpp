@@ -27,8 +27,9 @@
 namespace sphaira::ui::menu::main {
 namespace {
 
-constexpr const char* GITHUB_URL{"https://api.github.com/repos/ITotalJustice/sphaira/releases/latest"};
+constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/sphaira/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
+constexpr long HTTP_NOT_FOUND{404};
 
 template<typename T>
 auto MiscMenuFuncGenerator(u32 flags) {
@@ -112,6 +113,12 @@ MainMenu::MainMenu() {
             ON_SCOPE_EXIT( log_write("update status: %u\n", (u8)m_update_state) );
 
             if (!result.success) {
+                if (result.code == HTTP_NOT_FOUND) {
+                    m_update_state = UpdateState::None;
+                    log_write("no github release found for update check\n");
+                    return true;
+                }
+
                 return false;
             }
 
