@@ -99,6 +99,7 @@ struct Widget : public Object {
     Vec2 m_button_pos{1220, 675};
     bool m_focus{false};
     bool m_pop{false};
+    Button m_pending_button{Button::NONE};
 };
 
 template<typename T>

@@ -52,13 +52,34 @@ auto uiButton::Draw(NVGcontext* vg, Theme* theme) -> void {
 }
 
 void Widget::Update(Controller* controller, TouchInfo* touch) {
+    // 1. If a button goes down, mark it as pending
     for (const auto& [button, action] : m_actions) {
         if ((action.m_type & ActionType::DOWN) && controller->GotDown(button)) {
-            if (static_cast<u64>(button) & static_cast<u64>(Button::ANY_BUTTON)) {
-                App::PlaySoundEffect(SoundEffect_Focus);
-            }
-            action.Invoke(true);
+            m_pending_button = button;
             break;
+        }
+    }
+
+    // 2. Cancel pending action if any other button goes down simultaneously or subsequently
+    if (m_pending_button != Button::NONE) {
+        const u64 other_buttons_mask = ~static_cast<u64>(m_pending_button);
+        if (controller->m_kdown & other_buttons_mask) {
+            m_pending_button = Button::NONE;
+        }
+    }
+
+    // 3. Process actions
+    for (const auto& [button, action] : m_actions) {
+        if (action.m_type & ActionType::DOWN) {
+            // Trigger action on release only if it was the pending button and wasn't cancelled
+            if (button == m_pending_button && controller->GotUp(button)) {
+                if (static_cast<u64>(button) & static_cast<u64>(Button::ANY_BUTTON)) {
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                }
+                action.Invoke(true);
+                m_pending_button = Button::NONE;
+                break;
+            }
         }
         else if ((action.m_type & ActionType::UP) && controller->GotUp(button)) {
             action.Invoke(false);
@@ -68,6 +89,11 @@ void Widget::Update(Controller* controller, TouchInfo* touch) {
             action.Invoke(true);
             break;
         }
+    }
+
+    // Clear pending button on release
+    if (m_pending_button != Button::NONE && controller->GotUp(m_pending_button)) {
+        m_pending_button = Button::NONE;
     }
 
     auto draw_actions = GetUiButtons();
