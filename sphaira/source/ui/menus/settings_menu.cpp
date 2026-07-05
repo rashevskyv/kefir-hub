@@ -2517,7 +2517,7 @@ void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurveP
     if (easy_curve_mode) {
         gfx::drawText(
             vg, graph.x + 24.f, graph.y + (dirty ? 64.f : 44.f), 15.f,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), "Bezier Curve Mode", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE
+            theme->GetColour(ThemeEntryID_TEXT_INFO), "Bezier", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE
         );
     }
 
@@ -2812,16 +2812,32 @@ auto FanCurveMenu::ActiveControlPoints() const -> const std::vector<FanCurvePoin
     return m_docked ? m_docked_control_points : m_handheld_control_points;
 }
 
+auto FanCurveMenu::ActiveOriginalTemps() -> std::vector<s32>& {
+    return m_docked ? m_docked_original_temps : m_handheld_original_temps;
+}
+
+auto FanCurveMenu::ActiveOriginalTemps() const -> const std::vector<s32>& {
+    return m_docked ? m_docked_original_temps : m_handheld_original_temps;
+}
+
 void FanCurveMenu::InitializeControlPointsFromCurve() {
     auto& curve = ActiveCurve();
     auto& controls = ActiveControlPoints();
+    auto& orig_temps = ActiveOriginalTemps();
     controls.clear();
+    orig_temps.clear();
 
     if (curve.empty()) {
         controls.push_back({40, 20});
         controls.push_back({60, 50});
         controls.push_back({80, 100});
+        orig_temps = {40, 48, 56, 64, 72, 80};
         return;
+    }
+
+    // Save original temperatures
+    for (const auto& pt : curve) {
+        orig_temps.push_back(pt.temp_c);
     }
 
     controls.push_back(curve.front());
@@ -2877,18 +2893,55 @@ auto FanCurveMenu::EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& co
 void FanCurveMenu::RegenerateCurveFromControls() {
     auto& controls = ActiveControlPoints();
     auto& curve = ActiveCurve();
-    if (controls.size() != 3 || curve.empty()) {
+    const auto& orig_temps = ActiveOriginalTemps();
+    if (controls.size() != 3 || curve.empty() || orig_temps.size() != curve.size()) {
         return;
     }
-
-    // Keep Min and Max temperature fixed to the boundaries of the original curve
-    controls[0].temp_c = curve.front().temp_c;
-    controls[2].temp_c = curve.back().temp_c;
 
     // Clamp Mid temperature strictly between Min and Max
     controls[1].temp_c = std::clamp(controls[1].temp_c, controls[0].temp_c + 1, controls[2].temp_c - 1);
 
-    // Update each original point's fan speed based on the green Bezier curve
+    const double new_t_min = controls[0].temp_c;
+    const double new_t_max = controls[2].temp_c;
+    const double old_t_min = orig_temps.front();
+    const double old_t_max = orig_temps.back();
+
+    const double old_range = old_t_max - old_t_min;
+    const double new_range = new_t_max - new_t_min;
+
+    // 1. Update original points' temperatures proportionally
+    for (size_t i = 0; i < curve.size(); i++) {
+        if (i == 0) {
+            curve[i].temp_c = controls[0].temp_c;
+        } else if (i == curve.size() - 1) {
+            curve[i].temp_c = controls[2].temp_c;
+        } else {
+            if (old_range > 0.0) {
+                const double pct = (orig_temps[i] - old_t_min) / old_range;
+                curve[i].temp_c = static_cast<s32>(new_t_min + pct * new_range + 0.5);
+            } else {
+                curve[i].temp_c = controls[0].temp_c;
+            }
+        }
+    }
+
+    // Ensure the temperatures of the curve are strictly sorted/monotonic and separated by at least 1 degree
+    for (size_t i = 1; i < curve.size(); i++) {
+        if (curve[i].temp_c <= curve[i - 1].temp_c) {
+            curve[i].temp_c = curve[i - 1].temp_c + 1;
+        }
+    }
+    // Make sure we didn't overshoot max temp
+    if (curve.back().temp_c != controls[2].temp_c) {
+        curve.back().temp_c = controls[2].temp_c;
+        for (size_t i = curve.size() - 2; i > 0; i--) {
+            if (curve[i].temp_c >= curve[i + 1].temp_c) {
+                curve[i].temp_c = curve[i + 1].temp_c - 1;
+            }
+        }
+    }
+
+    // 2. Update each original point's fan speed based on the green Bezier curve
     for (size_t i = 0; i < curve.size(); i++) {
         curve[i].fan_percent = EvaluateBezierFanPercent(controls, curve[i].temp_c);
     }
@@ -2924,7 +2977,7 @@ void FanCurveMenu::RefreshActions() {
         std::make_pair(Button::X, Action{"Mode"_i18n, [this](){
             SwitchProfile();
         }}),
-        std::make_pair(Button::Y, Action{m_helper_curve_mode ? "Manual Mode"_i18n : "Bezier Helper"_i18n, [this](){
+        std::make_pair(Button::Y, Action{m_helper_curve_mode ? "Manual Mode"_i18n : "Bezier"_i18n, [this](){
             SetEditing(false);
             m_helper_curve_mode = !m_helper_curve_mode;
             if (m_helper_curve_mode) {
@@ -2944,14 +2997,12 @@ void FanCurveMenu::RefreshActions() {
         }})
     );
 
-    if (!m_helper_curve_mode) {
-        SetAction(Button::L, Action{"Add Point"_i18n, [this](){
-            AddPoint();
-        }});
-        SetAction(Button::R, Action{"Remove Point"_i18n, [this](){
-            RemovePoint();
-        }});
-    }
+    SetAction(Button::L, Action{"Add Point"_i18n, [this](){
+        AddPoint();
+    }});
+    SetAction(Button::R, Action{"Remove Point"_i18n, [this](){
+        RemovePoint();
+    }});
 }
 
 void FanCurveMenu::RefreshSubHeading() {
@@ -3136,6 +3187,9 @@ void FanCurveMenu::AddPoint() {
     curve.insert(curve.begin() + insert_index, point);
     NormalizeFanCurve(curve);
     m_dirty = true;
+    if (m_helper_curve_mode) {
+        InitializeControlPointsFromCurve();
+    }
     SetIndex(insert_index);
 }
 
@@ -3150,6 +3204,9 @@ void FanCurveMenu::RemovePoint() {
     curve.erase(curve.begin() + index);
     NormalizeFanCurve(curve);
     m_dirty = true;
+    if (m_helper_curve_mode) {
+        InitializeControlPointsFromCurve();
+    }
     SetEditing(false);
     SetIndex(std::min<s64>(index, static_cast<s64>(curve.size() - 1)));
 }
@@ -3187,14 +3244,14 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
         s32 min_temp = FAN_TEMP_MIN_C;
         s32 max_temp = FAN_TEMP_MAX_C;
         if (index == 0) {
-            min_temp = controls[0].temp_c;
-            max_temp = controls[0].temp_c;
+            min_temp = FAN_TEMP_MIN_C;
+            max_temp = controls[1].temp_c - 1;
         } else if (index == 1) {
             min_temp = controls[0].temp_c + 1;
             max_temp = controls[2].temp_c - 1;
         } else if (index == 2) {
-            min_temp = controls[2].temp_c;
-            max_temp = controls[2].temp_c;
+            min_temp = controls[1].temp_c + 1;
+            max_temp = FAN_TEMP_MAX_C;
         }
 
         s32 min_fan = FAN_PERCENT_MIN;

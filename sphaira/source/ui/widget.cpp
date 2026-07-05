@@ -131,7 +131,7 @@ void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
         nvgTextBounds(vg, x, y - 7.f, e.m_button_str.c_str(), nullptr, bounds);
         len = bounds[2] - bounds[0];
         e.m_button_pos = {x, y - 4.f, len, 26};
-        x -= len + 34.f;
+        x -= len + 16.f;
 
         e.SetPos(e.m_button_pos);
         e.SetX(e.GetX() - 40);

@@ -159,6 +159,8 @@ private:
     auto ActiveCurve() const -> const std::vector<FanCurvePoint>&;
     auto ActiveControlPoints() -> std::vector<FanCurvePoint>&;
     auto ActiveControlPoints() const -> const std::vector<FanCurvePoint>&;
+    auto ActiveOriginalTemps() -> std::vector<s32>&;
+    auto ActiveOriginalTemps() const -> const std::vector<s32>&;
     void RegenerateCurveFromControls();
     void InitializeControlPointsFromCurve();
     auto EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& controls, s32 temp_c) const -> s32;
@@ -171,6 +173,8 @@ private:
     std::vector<FanCurvePoint> m_applied_docked_curve;
     std::vector<FanCurvePoint> m_handheld_control_points;
     std::vector<FanCurvePoint> m_docked_control_points;
+    std::vector<s32> m_handheld_original_temps;
+    std::vector<s32> m_docked_original_temps;
     s64 m_index{};
     bool m_docked{};
     bool m_dirty{};
