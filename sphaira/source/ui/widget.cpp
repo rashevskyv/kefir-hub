@@ -4,6 +4,7 @@
 #include "log.hpp"
 
 #include <algorithm>
+#include "i18n.hpp"
 
 namespace sphaira::ui {
 
@@ -215,6 +216,55 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
             return static_cast<u64>(lhs.m_button) < static_cast<u64>(rhs.m_button);
         });
     }
+
+    // --- NEW COMBINING LOGIC ---
+    // If both L and R actions are in draw_actions, combine them
+    bool has_L = false;
+    bool has_R = false;
+    bool has_L2 = false;
+    bool has_R2 = false;
+    for (const auto& btn : draw_actions) {
+        if (btn.m_button == Button::L) has_L = true;
+        if (btn.m_button == Button::R) has_R = true;
+        if (btn.m_button == Button::L2) has_L2 = true;
+        if (btn.m_button == Button::R2) has_R2 = true;
+    }
+
+    uiButtons merged_actions;
+    merged_actions.reserve(draw_actions.size());
+
+    bool L_R_merged = false;
+    bool L2_R2_merged = false;
+
+    for (const auto& btn : draw_actions) {
+        if (btn.m_button == Button::L || btn.m_button == Button::R) {
+            if (has_L && has_R) {
+                if (!L_R_merged) {
+                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Add/Remove Point"_i18n};
+                    merged_actions.push_back(combined);
+                    L_R_merged = true;
+                }
+            } else {
+                merged_actions.push_back(btn);
+            }
+        }
+        else if (btn.m_button == Button::L2 || btn.m_button == Button::R2) {
+            if (has_L2 && has_R2) {
+                if (!L2_R2_merged) {
+                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Load/Save Preset"_i18n};
+                    merged_actions.push_back(combined);
+                    L2_R2_merged = true;
+                }
+            } else {
+                merged_actions.push_back(btn);
+            }
+        }
+        else {
+            merged_actions.push_back(btn);
+        }
+    }
+    draw_actions = std::move(merged_actions);
+    // ----------------------------
 
     // setup positions.
     SetupUiButtons(draw_actions, button_pos);
