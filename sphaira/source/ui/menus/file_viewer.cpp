@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <utility>
 
 namespace sphaira::ui::menu::fileview {
 namespace {
@@ -19,6 +20,16 @@ auto PathExtension(const fs::FsPath& path) -> std::string_view {
     }
 
     return view.substr(dot + 1);
+}
+
+auto PathFileName(const fs::FsPath& path) -> std::string {
+    const std::string_view view{path};
+    const auto slash = view.find_last_of('/');
+    if (slash == view.npos) {
+        return std::string{view};
+    }
+
+    return std::string{view.substr(slash + 1)};
 }
 
 auto ExtensionEquals(std::string_view a, std::string_view b) -> bool {
@@ -40,7 +51,11 @@ auto IsJpegExtension(std::string_view ext) -> bool {
 }
 
 auto IsImageExtension(std::string_view ext) -> bool {
-    return IsJpegExtension(ext) || ExtensionEquals(ext, "png") || ExtensionEquals(ext, "bmp");
+    return IsJpegExtension(ext) || ExtensionEquals(ext, "png") || ExtensionEquals(ext, "bmp") || ExtensionEquals(ext, "gif");
+}
+
+auto ImageBounds() -> Vec4 {
+    return {60.f, 110.f, SCREEN_WIDTH - 120.f, 500.f};
 }
 
 } // namespace
@@ -50,20 +65,63 @@ Menu::Menu(const fs::FsPath& path) : MenuBase{path, MenuFlag_None}, m_path{path}
         SetPop();
     }});
 
-    const auto ext = PathExtension(m_path);
-    m_is_image_file = IsImageExtension(ext);
+    LoadCurrentFile();
+}
 
-    if (m_is_image_file) {
-        const auto data = ImageLoadFromFile(m_path, IsJpegExtension(ext) ? ImageFlag_JPEG : ImageFlag_None);
-        if (!data.data.empty()) {
-            m_image_w = data.w;
-            m_image_h = data.h;
-            m_image = nvgCreateImageRGBA(App::GetVg(), data.w, data.h, 0, data.data.data());
-        }
+Menu::Menu(const fs::FsPath& path, std::vector<fs::FsPath> image_paths, s64 image_index, std::vector<std::string> image_titles)
+: MenuBase{path, MenuFlag_None}
+, m_path{path}
+, m_image_paths{std::move(image_paths)}
+, m_image_titles{std::move(image_titles)}
+, m_image_index{image_index} {
+    SetAction(Button::B, Action{"Back"_i18n, [this](){
+        SetPop();
+    }});
 
-        return;
+    if (m_image_paths.empty()) {
+        m_image_paths.emplace_back(path);
+        m_image_titles.clear();
+        m_image_index = 0;
+    } else {
+        const auto count = static_cast<s64>(m_image_paths.size());
+        m_image_index = std::clamp(m_image_index, static_cast<s64>(0), count - 1);
+        m_path = m_image_paths[m_image_index];
     }
 
+    LoadCurrentFile();
+}
+
+Menu::~Menu() {
+    FreeImage();
+}
+
+void Menu::LoadCurrentFile() {
+    FreeImage();
+    m_scroll_text.reset();
+    m_file.Close();
+    m_file_size = 0;
+    m_file_offset = 0;
+    m_is_image_file = IsImageExtension(PathExtension(m_path));
+
+    SetTitle(GetDisplayName());
+    SetSubHeading("");
+
+    RemoveAction(Button::A);
+    RemoveAction(Button::X);
+    RemoveAction(Button::Y);
+    RemoveAction(Button::L2);
+    RemoveAction(Button::R2);
+    RemoveAction(Button::LEFT);
+    RemoveAction(Button::RIGHT);
+
+    if (m_is_image_file) {
+        LoadImageFile();
+    } else {
+        LoadTextFile();
+    }
+}
+
+void Menu::LoadTextFile() {
     std::string buf;
     if (R_SUCCEEDED(m_fs.OpenFile(m_path, FsOpenMode_Read, &m_file))) {
         m_file.GetSize(&m_file_size);
@@ -77,39 +135,147 @@ Menu::Menu(const fs::FsPath& path) : MenuBase{path, MenuFlag_None}, m_path{path}
     m_scroll_text = std::make_unique<ScrollableText>(buf, 0, 120, 500, 1150-110, 18);
 }
 
-Menu::~Menu() {
+void Menu::LoadImageFile() {
+    SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
+        ResetImageView();
+    }});
+    SetAction(Button::L2, Action{"Zoom Out"_i18n, [this](){
+        ZoomImage(1.f / 1.25f);
+    }});
+    SetAction(Button::R2, Action{"Zoom In"_i18n, [this](){
+        ZoomImage(1.25f);
+    }});
+
+    if (m_image_paths.size() > 1) {
+        SetAction(Button::LEFT, Action{"Previous Image"_i18n, [this](){
+            NextImage(-1);
+        }});
+        SetAction(Button::RIGHT, Action{"Next Image"_i18n, [this](){
+            NextImage(1);
+        }});
+    }
+
+    const auto ext = PathExtension(m_path);
+    const auto data = ImageLoadFromFile(m_path, IsJpegExtension(ext) ? ImageFlag_JPEG : ImageFlag_None);
+    if (!data.data.empty()) {
+        m_image_w = data.w;
+        m_image_h = data.h;
+        m_image = nvgCreateImageRGBA(App::GetVg(), data.w, data.h, 0, data.data.data());
+    }
+
+    ResetImageView();
+}
+
+void Menu::FreeImage() {
     if (m_image) {
         nvgDeleteImage(App::GetVg(), m_image);
+        m_image = 0;
     }
+
+    m_image_w = 0;
+    m_image_h = 0;
+}
+
+void Menu::ResetImageView() {
+    m_zoom = 1.f;
+    m_pan_x = 0.f;
+    m_pan_y = 0.f;
+    UpdateImageSubHeading();
+}
+
+void Menu::ZoomImage(float factor) {
+    m_zoom = std::clamp(m_zoom * factor, 1.f, 8.f);
+    ClampPan();
+    UpdateImageSubHeading();
+}
+
+void Menu::NextImage(s64 direction) {
+    if (m_image_paths.empty()) {
+        return;
+    }
+
+    const auto count = static_cast<s64>(m_image_paths.size());
+    m_image_index = (m_image_index + direction + count) % count;
+    m_path = m_image_paths[m_image_index];
+    LoadCurrentFile();
+}
+
+void Menu::PanImage(float dx, float dy) {
+    m_pan_x += dx;
+    m_pan_y += dy;
+    ClampPan();
+}
+
+void Menu::ClampPan() {
+    if (!m_image_w || !m_image_h) {
+        m_pan_x = 0.f;
+        m_pan_y = 0.f;
+        return;
+    }
+
+    const auto bounds = ImageBounds();
+    const auto fit_scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h));
+    const auto image_w = static_cast<float>(m_image_w) * fit_scale * m_zoom;
+    const auto image_h = static_cast<float>(m_image_h) * fit_scale * m_zoom;
+    const auto max_pan_x = std::max(0.f, (image_w - bounds.w) / 2.f);
+    const auto max_pan_y = std::max(0.f, (image_h - bounds.h) / 2.f);
+
+    m_pan_x = std::clamp(m_pan_x, -max_pan_x, max_pan_x);
+    m_pan_y = std::clamp(m_pan_y, -max_pan_y, max_pan_y);
+}
+
+void Menu::UpdateImageSubHeading() {
+    SetSubHeading("");
+}
+
+auto Menu::GetDisplayName() const -> std::string {
+    if (m_is_image_file && m_image_index >= 0 && static_cast<size_t>(m_image_index) < m_image_titles.size() && !m_image_titles[m_image_index].empty()) {
+        return m_image_titles[m_image_index];
+    }
+
+    return PathFileName(m_path);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
-    if (m_scroll_text) {
+    if (!m_is_image_file && m_scroll_text) {
         m_scroll_text->Update(controller, touch);
     }
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
-    MenuBase::Draw(vg, theme);
-
     if (m_is_image_file) {
+        DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
+
+        const auto title = GetDisplayName();
+        gfx::drawText(vg, 80, 70, 28.f, theme->GetColour(ThemeEntryID_TEXT), title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
+        gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+
         if (!m_image || !m_image_w || !m_image_h) {
             gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to load image"_i18n.c_str());
+            Widget::Draw(vg, theme);
             return;
         }
 
-        const Vec4 bounds{60.f, 110.f, SCREEN_WIDTH - 120.f, 500.f};
-        const auto scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h));
+        const auto bounds = ImageBounds();
+        const auto scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h)) * m_zoom;
         const auto image_w = static_cast<float>(m_image_w) * scale;
         const auto image_h = static_cast<float>(m_image_h) * scale;
-        const auto image_x = bounds.x + (bounds.w - image_w) / 2.f;
-        const auto image_y = bounds.y + (bounds.h - image_h) / 2.f;
+        const auto image_x = bounds.x + (bounds.w - image_w) / 2.f + m_pan_x;
+        const auto image_y = bounds.y + (bounds.h - image_h) / 2.f + m_pan_y;
 
+        nvgSave(vg);
+        nvgIntersectScissor(vg, bounds.x, bounds.y, bounds.w, bounds.h);
         gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 5);
+        nvgRestore(vg);
+
+        Widget::Draw(vg, theme);
         return;
     }
+
+    MenuBase::Draw(vg, theme);
 
     if (m_scroll_text) {
         m_scroll_text->Draw(vg, theme);

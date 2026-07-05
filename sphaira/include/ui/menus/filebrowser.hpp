@@ -281,6 +281,7 @@ private:
         return (fs::FsNative*)m_fs.get();
     }
 
+    void OpenImageViewer();
     void DisplayHash(hash::Type type);
 
     void DisplayOptions();

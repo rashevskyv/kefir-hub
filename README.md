@@ -64,9 +64,12 @@ Once you have connected your ftp client to your switch, you can upload files to 
 
 ## Fan curves & Fan sysmodule
 
-Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamically configure the Atmosphere `tc` skin temperature fan speed tables.
-- **Live Apply:** If the `sphaira_fan` sysmodule (`00FF46554E43544C`) is installed and enabled, you can apply your curve adjustments dynamically without rebooting the console (the option on START button will be "Apply").
-- **Save and Reboot:** If the sysmodule is disabled or not installed, the curves can be applied by saving the config and rebooting the console (the option on START button will be "Save and Reboot").
+Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamically configure custom fan speed tables (Handheld and Docked modes).
+- **Live Apply:** If the `sphaira_fan` sysmodule (`00FF46554E43544C`, `FunControl`) is installed and enabled, curve changes apply dynamically without rebooting.
+- **Save and Reboot:** If the sysmodule is disabled or not installed, curves are saved to `/atmosphere/config/system_settings.ini` for the next boot.
+- **Conflict-Free Thermal Sensing:** Uses Nintendo Switch `ts` (Thermal Measurement) service (`tsOpenSession`) to read SoC temperature without IPC session collisions in `ptm`.
+- **Live Sysmodule Telemetry:** The background module exports state telemetry (`/switch/sphaira/fan_status.bin`), providing real-time hardware status to Sphaira.
+- **Physical Fan Motor Inertia Modeling:** UI graph markers smoothly model physical motor spin-up and spin-down acceleration/deceleration response.
 
 ## Themes & Translations
 

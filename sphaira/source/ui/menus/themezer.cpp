@@ -1,4 +1,5 @@
 #include "ui/menus/themezer.hpp"
+#include "ui/menus/file_viewer.hpp"
 #include "ui/menus/ghdl.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/option_box.hpp"
@@ -21,12 +22,19 @@
 #include <cstdio>
 #include <cstring>
 #include <iterator>
+#include <memory>
 #include <string_view>
 #include <yyjson.h>
 #include "yyjson_helper.hpp"
 
 namespace sphaira::ui::menu::themezer {
 namespace {
+
+struct ScreenshotEntry {
+    std::string title{};
+    std::string url{};
+    std::string cache_id{};
+};
 
 // format is /themes/sphaira/Theme Name by Author/theme_name-type.nxtheme
 constexpr fs::FsPath THEME_FOLDER{"/themes/sphaira/"};
@@ -68,8 +76,8 @@ constexpr const char* REQUEST_ORDER[]{
 constexpr const char* PACKS_QUERY =
     "query($paginationArgs:PaginationInput,$sort:ItemSort,$order:SortOrder,$query:String){"
     "switch{packs(paginationArgs:$paginationArgs,sort:$sort,order:$order,query:$query){"
-    "nodes{hexId creator{username} name collagePreview{thumbUrl} "
-    "themes{hexId creator{username} name description updatedAt downloadCount saveCount target screenshotPreview{thumbUrl} downloadUrl}}"
+    "nodes{hexId creator{username} name collagePreview{thumbUrl hdUrl} "
+    "themes{hexId creator{username} name description updatedAt downloadCount saveCount target screenshotPreview{thumbUrl hdUrl} downloadUrl}}"
     "pageInfo{itemCount limit page pageCount}}}}";
 
 auto GetNroPath() -> const char* {
@@ -168,6 +176,12 @@ auto apiBuildIconCache(std::string_view id) -> fs::FsPath {
     return path;
 }
 
+auto apiBuildScreenshotCache(std::string_view id) -> fs::FsPath {
+    fs::FsPath path;
+    std::snprintf(path, sizeof(path), "%s/%.*s_screen.jpg", CACHE_PATH, static_cast<int>(id.size()), id.data());
+    return path;
+}
+
 auto ForceJpegPreviewUrl(std::string url) -> std::string {
     if (!url.starts_with("https://img.themezer.net/")) {
         return url;
@@ -181,6 +195,10 @@ auto ForceJpegPreviewUrl(std::string url) -> std::string {
 
     url.insert(insert_pos, "@jpg");
     return url;
+}
+
+auto GetPreviewUrl(const Preview& preview) -> std::string {
+    return preview.full.empty() ? preview.thumb : preview.full;
 }
 
 auto loadPreviewImage(Preview& preview, std::string_view id) -> bool {
@@ -247,6 +265,10 @@ void from_json(yyjson_val* json, Preview& e) {
         case cexprHash("thumbUrl"): {
             SetJsonString(e.thumb, val);
             e.thumb = ForceJpegPreviewUrl(e.thumb);
+        } break;
+        case cexprHash("hdUrl"): {
+            SetJsonString(e.full, val);
+            e.full = ForceJpegPreviewUrl(e.full);
         } break;
     );
 }
@@ -351,6 +373,18 @@ auto ThemeTargetLabel(const ThemeEntry& theme) -> const char* {
     }
 
     return theme.target.empty() ? "Theme" : theme.target.c_str();
+}
+
+auto BuildScreenshotTitle(const PackListEntry& pack, const ThemeEntry& theme) -> std::string {
+    std::string title = ThemeTargetLabel(theme);
+    if (!theme.details.name.empty() && theme.details.name != title) {
+        title += " - ";
+        title += theme.details.name;
+    } else if (title.empty()) {
+        title = pack.details.name.empty() ? "Screenshot"_i18n : pack.details.name;
+    }
+
+    return title;
 }
 
 auto SanitizedPathPart(const std::string& value, const char* fallback) -> fs::FsPath {
@@ -484,6 +518,9 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
         }}),
         std::make_pair(Button::X, Action{"Options"_i18n, [this](){
             DisplayOptions();
+        }}),
+        std::make_pair(Button::Y, Action{"Screenshots"_i18n, [this](){
+            DisplayScreenshots();
         }}),
         std::make_pair(Button::R2, Action{"Next Page"_i18n, [this](){
             m_page_index++;
@@ -799,6 +836,108 @@ void Menu::PackListDownload() {
             log_write("a.pagination.page_count: %zu\n", a.pagination.page_count);
         }
     });
+}
+
+void Menu::DisplayScreenshots() {
+    if (m_pages.empty() || m_page_index < 0 || m_page_index >= static_cast<s64>(m_pages.size())) {
+        return;
+    }
+
+    const auto& page = m_pages[m_page_index];
+    if (page.m_ready != PageLoadState::Done || m_index < 0 || m_index >= static_cast<s64>(page.m_packList.size())) {
+        return;
+    }
+
+    const auto& pack = page.m_packList[m_index];
+    std::vector<ScreenshotEntry> screenshots;
+    screenshots.reserve(pack.themes.size());
+
+    for (size_t i = 0; i < pack.themes.size(); i++) {
+        const auto& theme = pack.themes[i];
+        const auto url = GetPreviewUrl(theme.preview);
+        if (url.empty()) {
+            continue;
+        }
+
+        auto cache_id = theme.id;
+        if (cache_id.empty()) {
+            cache_id = pack.id + "_" + std::to_string(i);
+        }
+
+        screenshots.push_back({BuildScreenshotTitle(pack, theme), url, cache_id});
+    }
+
+    if (screenshots.empty()) {
+        const auto url = GetPreviewUrl(pack.preview);
+        if (url.empty()) {
+            App::Notify("No screenshots"_i18n);
+            return;
+        }
+
+        const auto title = pack.details.name.empty() ? "Screenshot"_i18n : pack.details.name;
+        const auto cache_id = pack.id.empty() ? std::to_string(HashString(url)) : pack.id + "_collage";
+        screenshots.push_back({title, url, cache_id});
+    }
+
+    auto paths = std::make_shared<std::vector<fs::FsPath>>();
+    auto titles = std::make_shared<std::vector<std::string>>();
+    paths->reserve(screenshots.size());
+    titles->reserve(screenshots.size());
+
+    bool needs_download = false;
+    for (auto& screenshot : screenshots) {
+        if (screenshot.cache_id.empty()) {
+            screenshot.cache_id = std::to_string(HashString(screenshot.url));
+        }
+
+        const auto path = apiBuildScreenshotCache(screenshot.cache_id);
+        needs_download |= !fs::FileExists(path);
+        paths->emplace_back(path);
+        titles->emplace_back(screenshot.title);
+    }
+
+    const auto open_gallery = [paths, titles](){
+        if (!paths->empty()) {
+            App::Push<fileview::Menu>((*paths)[0], *paths, 0, *titles);
+        }
+    };
+
+    if (!needs_download) {
+        open_gallery();
+        return;
+    }
+
+    App::Push<ProgressBox>(
+        0, "Downloading "_i18n, pack.details.name, [screenshots, paths](auto pbox) -> Result {
+            for (size_t i = 0; i < screenshots.size(); i++) {
+                if (pbox->ShouldExit()) {
+                    return pbox->ShouldExitResult();
+                }
+
+                const auto& path = (*paths)[i];
+                if (fs::FileExists(path)) {
+                    continue;
+                }
+
+                pbox->NewTransfer(screenshots[i].title);
+                const auto result = curl::Api().ToFile(
+                    curl::Url{screenshots[i].url},
+                    curl::Path{path},
+                    curl::Flags{curl::Flag_Cache},
+                    curl::OnProgress{pbox->OnDownloadProgressCallback()}
+                );
+
+                R_UNLESS(result.success, Result_ThemezerFailedToDownloadThemeMeta);
+            }
+
+            R_SUCCEED();
+        }, [paths, titles](Result rc){
+            App::PushErrorBox(rc, "Failed to download screenshot"_i18n);
+            if (R_SUCCEEDED(rc) && !paths->empty()) {
+                App::Push<fileview::Menu>((*paths)[0], *paths, 0, *titles);
+            }
+        }
+    );
 }
 
 void Menu::DisplayOptions() {

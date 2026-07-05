@@ -55,6 +55,7 @@ struct Details {
 
 struct Preview {
     std::string thumb{};
+    std::string full{};
     LazyImage lazy_image{};
 };
 
@@ -134,6 +135,7 @@ private:
     void InvalidateAllPages();
     void PackListDownload();
     void DisplayOptions();
+    void DisplayScreenshots();
 
 private:
     static constexpr inline const char* INI_SECTION = "themezer";

@@ -463,6 +463,8 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                         });
                 } else if (IsExtension(entry.GetExtension(), INSTALL_EXTENSIONS)) {
                     InstallFiles();
+                } else if (IsSd() && IsExtension(entry.GetExtension(), IMAGE_EXTENSIONS)) {
+                    OpenImageViewer();
                 } else if (IsSd()) {
                     const auto assoc_list = m_menu->FindFileAssocFor();
                     if (!assoc_list.empty()) {
@@ -750,6 +752,26 @@ void FsView::InstallForwarder() {
             }
         }
     );
+}
+
+void FsView::OpenImageViewer() {
+    std::vector<fs::FsPath> paths;
+    s64 image_index{};
+
+    for (u32 i = 0; i < m_entries_current.size(); i++) {
+        const auto& entry = GetEntry(i);
+        if (!entry.IsFile() || !IsExtension(entry.GetExtension(), IMAGE_EXTENSIONS)) {
+            continue;
+        }
+
+        if (static_cast<s64>(i) == m_index) {
+            image_index = static_cast<s64>(paths.size());
+        }
+
+        paths.emplace_back(GetNewPath(i));
+    }
+
+    App::Push<fileview::Menu>(GetNewPathCurrent(), std::move(paths), image_index);
 }
 
 void FsView::InstallFiles() {
@@ -1867,10 +1889,16 @@ void FsView::DisplayAdvancedOptions() {
         }
     });
 
-    if (IsSd() && m_entries_current.size() && !m_selected_count && GetEntry().IsFile() && GetEntry().file_size < 1024*64) {
-        options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
-            App::Push<fileview::Menu>(GetNewPathCurrent());
-        });
+    if (IsSd() && m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
+        if (IsExtension(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
+            options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
+                OpenImageViewer();
+            });
+        } else if (GetEntry().file_size < 1024*64) {
+            options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
+                App::Push<fileview::Menu>(GetNewPathCurrent());
+            });
+        }
     }
 
     if (m_entries_current.size()) {

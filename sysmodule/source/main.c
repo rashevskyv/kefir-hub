@@ -243,6 +243,17 @@ static bool parse_fan_table(const char* value, FanTable* out) {
     return true;
 }
 
+#pragma pack(push, 1)
+typedef struct {
+    u32 magic;
+    u32 version;
+    s32 temp_milli_c;
+    float fan_level;
+    u64 timestamp_ns;
+    u32 sysmodule_active;
+} SphairaFanState;
+#pragma pack(pop)
+
 static bool ReadSocTemperatureMilliC(s32* out_temp_milli_c) {
     if (!out_temp_milli_c) return false;
 
@@ -478,7 +489,31 @@ int main(int argc, char* argv[]) {
         }
 
         fanControllerSetRotationSpeedLevel(&controller, fan_level);
+
+        SphairaFanState state = {0};
+        state.magic = 0x46414E53;
+        state.version = 1;
+        state.temp_milli_c = temp_milli_c;
+        state.fan_level = fan_level;
+        state.timestamp_ns = armTicksToNs(armGetSystemTick());
+        state.sysmodule_active = 1;
+
+        FILE* fp_state = fopen("sdmc:/switch/sphaira/fan_status.bin", "wb");
+        if (fp_state) {
+            fwrite(&state, sizeof(state), 1, fp_state);
+            fclose(fp_state);
+        }
+
         svcSleepThread(FAN_LOOP_SLEEP_NS);
+    }
+
+    SphairaFanState state = {0};
+    state.magic = 0x46414E53;
+    state.sysmodule_active = 0;
+    FILE* fp_state = fopen("sdmc:/switch/sphaira/fan_status.bin", "wb");
+    if (fp_state) {
+        fwrite(&state, sizeof(state), 1, fp_state);
+        fclose(fp_state);
     }
 
     fanControllerClose(&controller);

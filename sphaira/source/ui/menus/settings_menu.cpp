@@ -1818,6 +1818,25 @@ auto ThemeValue() -> std::string {
     return themes[index].name;
 }
 
+auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -> float {
+    if (curve.empty()) return 0.f;
+    if (temp_c <= curve.front().temp_c) return static_cast<float>(curve.front().fan_percent);
+    if (temp_c >= curve.back().temp_c) return static_cast<float>(curve.back().fan_percent);
+
+    for (size_t i = 1; i < curve.size(); ++i) {
+        const auto& prev = curve[i - 1];
+        const auto& cur = curve[i];
+        if (temp_c >= prev.temp_c && temp_c <= cur.temp_c) {
+            const float temp_span = cur.temp_c - prev.temp_c;
+            if (temp_span == 0.f) return static_cast<float>(prev.fan_percent);
+            const float fan_span = cur.fan_percent - prev.fan_percent;
+            const float temp_offset = temp_c - prev.temp_c;
+            return prev.fan_percent + (fan_span * temp_offset) / temp_span;
+        }
+    }
+    return static_cast<float>(curve.back().fan_percent);
+}
+
 } // namespace
 
 struct FanCurveSensorSample {
@@ -1829,32 +1848,52 @@ struct FanCurveSensorSample {
 struct FanCurveSensorReader final {
     FanCurveSensorReader() {
         m_ts_available = R_SUCCEEDED(tsInitialize());
-        if (!m_ts_available) {
-            m_tc_available = R_SUCCEEDED(tcInitialize());
-        }
     }
 
     ~FanCurveSensorReader() {
         if (m_ts_available) {
             tsExit();
         }
-        if (m_tc_available) {
-            tcExit();
-        }
     }
 
-    void Update() {
+#pragma pack(push, 1)
+struct SphairaFanState {
+    u32 magic;
+    u32 version;
+    s32 temp_milli_c;
+    float fan_level;
+    u64 timestamp_ns;
+    u32 sysmodule_active;
+};
+#pragma pack(pop)
+
+    void Update(const std::vector<FanCurvePoint>& active_curve) {
         const auto now = armTicksToNs(armGetSystemTick());
-        if (m_last_update_ns && now - m_last_update_ns < FAN_SENSOR_REFRESH_NS) {
-            return;
-        }
+        const float dt = m_last_update_ns ? std::min(static_cast<float>(now - m_last_update_ns) / 1e9f, 0.1f) : 0.05f;
         m_last_update_ns = now;
 
         FanCurveSensorSample next{};
-        s32 temp_milli_c = 0;
-        s32 temp_c = 0;
+        SphairaFanState sys_state{};
+        bool sys_ok = false;
 
-        if (m_ts_available) {
+        FILE* fp = fopen("/switch/sphaira/fan_status.bin", "rb");
+        if (fp) {
+            if (fread(&sys_state, sizeof(sys_state), 1, fp) == 1) {
+                if (sys_state.magic == 0x46414E53 && sys_state.sysmodule_active == 1) {
+                    if (now >= sys_state.timestamp_ns && (now - sys_state.timestamp_ns) < 3000000000ULL) {
+                        sys_ok = true;
+                    }
+                }
+            }
+            fclose(fp);
+        }
+
+        if (sys_ok) {
+            next.temp_milli_c = sys_state.temp_milli_c;
+            next.valid = true;
+        } else if (m_ts_available) {
+            s32 temp_milli_c = 0;
+            s32 temp_c = 0;
             TsSession session;
             if (R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationExternal))) {
                 float temp_f = 0.0f;
@@ -1888,11 +1927,30 @@ struct FanCurveSensorReader final {
             }
         }
 
-        if (!next.valid && m_tc_available) {
-            if (R_SUCCEEDED(tcGetSkinTemperatureMilliC(&temp_milli_c)) && temp_milli_c > 0) {
-                next.temp_milli_c = temp_milli_c;
-                next.valid = true;
+        if (next.valid) {
+            float target_fan = -1.0f;
+            if (sys_ok) {
+                target_fan = sys_state.fan_level * 100.0f;
+            } else {
+                const float temp_deg = static_cast<float>(next.temp_milli_c) / 1000.0f;
+                target_fan = EvaluateFanPercent(active_curve, temp_deg);
             }
+
+            if (m_displayed_fan_percent < 0.0f) {
+                m_displayed_fan_percent = target_fan;
+            } else {
+                const float speed_rate = 65.0f; // smooth motor ramp ~1.5s full range
+                const float diff = target_fan - m_displayed_fan_percent;
+                const float abs_diff = std::abs(diff);
+                if (abs_diff < 0.2f) {
+                    m_displayed_fan_percent = target_fan;
+                } else {
+                    const float max_step = std::min(abs_diff, speed_rate * dt);
+                    m_displayed_fan_percent += (diff >= 0.0f ? max_step : -max_step);
+                }
+            }
+
+            next.fan_percent = static_cast<s32>(m_displayed_fan_percent + 0.5f);
         }
 
         m_sample = next;
@@ -1905,8 +1963,8 @@ struct FanCurveSensorReader final {
 private:
     FanCurveSensorSample m_sample{};
     u64 m_last_update_ns{};
+    float m_displayed_fan_percent{-1.0f};
     bool m_ts_available{};
-    bool m_tc_available{};
 };
 
 Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
@@ -2373,24 +2431,7 @@ void DrawVerticalDashes(NVGcontext* vg, float x, float y0, float y1, const NVGco
     }
 }
 
-auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -> float {
-    if (curve.empty()) return 0.f;
-    if (temp_c <= curve.front().temp_c) return static_cast<float>(curve.front().fan_percent);
-    if (temp_c >= curve.back().temp_c) return static_cast<float>(curve.back().fan_percent);
 
-    for (size_t i = 1; i < curve.size(); ++i) {
-        const auto& prev = curve[i - 1];
-        const auto& cur = curve[i];
-        if (temp_c >= prev.temp_c && temp_c <= cur.temp_c) {
-            const float temp_span = cur.temp_c - prev.temp_c;
-            if (temp_span == 0.f) return static_cast<float>(prev.fan_percent);
-            const float fan_span = cur.fan_percent - prev.fan_percent;
-            const float temp_offset = temp_c - prev.temp_c;
-            return prev.fan_percent + (fan_span * temp_offset) / temp_span;
-        }
-    }
-    return static_cast<float>(curve.back().fan_percent);
-}
 
 void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::vector<FanCurvePoint>& curve, const FanCurveSensorSample* sensor) {
     if (!sensor) {
@@ -2400,7 +2441,7 @@ void DrawFanCurveSensorMarker(NVGcontext* vg, Theme* theme, const Vec4& plot, co
     const auto accent = theme->GetColour(ThemeEntryID_TEXT_SELECTED);
     const auto temp_c = static_cast<float>(sensor->temp_milli_c) / 1000.f;
     const auto x = FanCurveXForTempValue(plot, temp_c);
-    const auto fan_percent = EvaluateFanPercent(curve, temp_c);
+    const float fan_percent = (sensor->fan_percent >= 0) ? static_cast<float>(sensor->fan_percent) : EvaluateFanPercent(curve, temp_c);
     const auto y = FanCurveYForFan(plot, fan_percent);
     const auto guide_colour = WithAlpha(accent, 0.42f);
 
@@ -3049,7 +3090,7 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     if (m_sensor_reader) {
-        m_sensor_reader->Update();
+        m_sensor_reader->Update(ActiveCurve());
     }
 
     if (HandleGraphTouch(touch)) {

@@ -3,11 +3,14 @@
 #include "ui/menus/menu_base.hpp"
 #include "ui/scrollable_text.hpp"
 #include "fs.hpp"
+#include <string>
+#include <vector>
 
 namespace sphaira::ui::menu::fileview {
 
 struct Menu final : MenuBase {
     Menu(const fs::FsPath& path);
+    Menu(const fs::FsPath& path, std::vector<fs::FsPath> image_paths, s64 image_index, std::vector<std::string> image_titles = {});
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "File"; };
@@ -16,7 +19,23 @@ struct Menu final : MenuBase {
     void OnFocusGained() override;
 
 private:
-    const fs::FsPath m_path;
+    void LoadCurrentFile();
+    void LoadTextFile();
+    void LoadImageFile();
+    void FreeImage();
+    void ResetImageView();
+    void ZoomImage(float factor);
+    void NextImage(s64 direction);
+    void PanImage(float dx, float dy);
+    void ClampPan();
+    void UpdateImageSubHeading();
+    auto GetDisplayName() const -> std::string;
+
+private:
+    fs::FsPath m_path;
+    std::vector<fs::FsPath> m_image_paths{};
+    std::vector<std::string> m_image_titles{};
+    s64 m_image_index{};
     fs::FsNativeSd m_fs{};
     fs::File m_file{};
     s64 m_file_size{};
@@ -27,6 +46,9 @@ private:
     int m_image{};
     int m_image_w{};
     int m_image_h{};
+    float m_zoom{1.f};
+    float m_pan_x{};
+    float m_pan_y{};
 
     s64 m_start{};
     s64 m_index{}; // where i am in the array
