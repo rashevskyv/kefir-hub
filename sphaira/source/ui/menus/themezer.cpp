@@ -405,7 +405,9 @@ auto BuildThemePath(const PackListEntry& entry, const ThemeEntry& theme) -> fs::
     return out;
 }
 
-auto InstallTheme(ProgressBox* pbox, const PackListEntry& entry) -> Result {
+} // namespace
+
+auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) -> Result {
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
 
@@ -471,16 +473,174 @@ auto InstallTheme(ProgressBox* pbox, const PackListEntry& entry) -> Result {
     R_SUCCEED();
 }
 
-} // namespace
+auto PackListEntryToJson(const PackListEntry& entry) -> std::string {
+    yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
+    yyjson_mut_val* root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
 
-LazyImage::~LazyImage() {
-    if (image) {
-        nvgDeleteImage(App::GetVg(), image);
+    yyjson_mut_obj_add_str(doc, root, "id", entry.id.c_str());
+    yyjson_mut_obj_add_str(doc, root, "name", entry.details.name.c_str());
+    yyjson_mut_obj_add_str(doc, root, "description", entry.details.description.c_str());
+    yyjson_mut_obj_add_str(doc, root, "creator", entry.creator.display_name.c_str());
+
+    yyjson_mut_val* themes_arr = yyjson_mut_arr(doc);
+    yyjson_mut_obj_add_val(doc, root, "themes", themes_arr);
+
+    for (const auto& theme : entry.themes) {
+        yyjson_mut_val* theme_obj = yyjson_mut_obj(doc);
+        yyjson_mut_obj_add_str(doc, theme_obj, "id", theme.id.c_str());
+        yyjson_mut_obj_add_str(doc, theme_obj, "name", theme.details.name.c_str());
+        yyjson_mut_obj_add_str(doc, theme_obj, "description", theme.details.description.c_str());
+        yyjson_mut_obj_add_str(doc, theme_obj, "target", theme.target.c_str());
+        yyjson_mut_obj_add_str(doc, theme_obj, "downloadUrl", theme.download_url.c_str());
+        yyjson_mut_arr_add_val(themes_arr, theme_obj);
     }
+
+    size_t len = 0;
+    char* json = yyjson_mut_write(doc, YYJSON_WRITE_NOFLAG, &len);
+    std::string out;
+    if (json) {
+        out.assign(json, len);
+        std::free(json);
+    }
+    yyjson_mut_doc_free(doc);
+    return out;
+}
+
+auto JsonToPackListEntry(const std::string& json_str, PackListEntry& entry) -> bool {
+    yyjson_doc* doc = yyjson_read(json_str.c_str(), json_str.size(), 0);
+    if (!doc) return false;
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!root || !yyjson_is_obj(root)) {
+        yyjson_doc_free(doc);
+        return false;
+    }
+
+    yyjson_val* id_val = yyjson_obj_get(root, "id");
+    yyjson_val* name_val = yyjson_obj_get(root, "name");
+    yyjson_val* desc_val = yyjson_obj_get(root, "description");
+    yyjson_val* creator_val = yyjson_obj_get(root, "creator");
+
+    if (id_val) entry.id = yyjson_get_str(id_val);
+    if (name_val) entry.details.name = yyjson_get_str(name_val);
+    if (desc_val) entry.details.description = yyjson_get_str(desc_val);
+    if (creator_val) entry.creator.display_name = yyjson_get_str(creator_val);
+
+    yyjson_val* themes_arr = yyjson_obj_get(root, "themes");
+    if (themes_arr && yyjson_is_arr(themes_arr)) {
+        size_t idx, max;
+        yyjson_val* theme_val;
+        yyjson_arr_foreach(themes_arr, idx, max, theme_val) {
+            if (yyjson_is_obj(theme_val)) {
+                ThemeEntry theme;
+                yyjson_val* t_id = yyjson_obj_get(theme_val, "id");
+                yyjson_val* t_name = yyjson_obj_get(theme_val, "name");
+                yyjson_val* t_desc = yyjson_obj_get(theme_val, "description");
+                yyjson_val* t_target = yyjson_obj_get(theme_val, "target");
+                yyjson_val* t_url = yyjson_obj_get(theme_val, "downloadUrl");
+
+                if (t_id) theme.id = yyjson_get_str(t_id);
+                if (t_name) theme.details.name = yyjson_get_str(t_name);
+                if (t_desc) theme.details.description = yyjson_get_str(t_desc);
+                if (t_target) theme.target = yyjson_get_str(t_target);
+                if (t_url) theme.download_url = yyjson_get_str(t_url);
+                entry.themes.push_back(theme);
+            }
+        }
+    }
+
+    yyjson_doc_free(doc);
+    return true;
+}
+
+auto GetFavoriteIds() -> std::vector<std::string> {
+    struct Context {
+        std::vector<std::string> ids;
+    } ctx;
+
+    auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
+        auto* ctx = static_cast<Context*>(UserData);
+        if (std::strcmp(Section, "themezer_favorites") == 0) {
+            ctx->ids.push_back(Key);
+        }
+        return 1;
+    };
+
+    ini_browse(cb, &ctx, App::CONFIG_PATH);
+    return ctx.ids;
+}
+
+auto GetFavorites() -> std::vector<PackListEntry> {
+    struct Context {
+        std::vector<PackListEntry> favorites;
+    } ctx;
+
+    auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
+        auto* ctx = static_cast<Context*>(UserData);
+        if (std::strcmp(Section, "themezer_favorites") == 0) {
+            PackListEntry entry;
+            if (JsonToPackListEntry(Value, entry)) {
+                ctx->favorites.push_back(std::move(entry));
+            }
+        }
+        return 1;
+    };
+
+    ini_browse(cb, &ctx, App::CONFIG_PATH);
+    return ctx.favorites;
+}
+
+void Menu::ToggleFavorite() {
+    if (m_pages.empty() || m_page_index < 0 || m_page_index >= static_cast<s64>(m_pages.size())) {
+        return;
+    }
+    const auto& page = m_pages[m_page_index];
+    if (page.m_ready != PageLoadState::Done || m_index < 0 || m_index >= static_cast<s64>(page.m_packList.size())) {
+        return;
+    }
+    const auto& entry = page.m_packList[m_index];
+    const auto& id = entry.id;
+
+    auto it = std::find(m_favorite_ids.begin(), m_favorite_ids.end(), id);
+    if (it != m_favorite_ids.end()) {
+        m_favorite_ids.erase(it);
+        ini_puts("themezer_favorites", id.c_str(), nullptr, App::CONFIG_PATH);
+        App::Notify("Removed from Favorites"_i18n);
+    } else {
+        m_favorite_ids.push_back(id);
+        std::string json_str = PackListEntryToJson(entry);
+        ini_puts("themezer_favorites", id.c_str(), json_str.c_str(), App::CONFIG_PATH);
+        App::Notify("Added to Favorites"_i18n);
+    }
+    UpdateFavoriteAction();
+}
+
+void Menu::UpdateFavoriteAction() {
+    if (m_pages.empty() || m_page_index < 0 || m_page_index >= static_cast<s64>(m_pages.size())) {
+        RemoveAction(Button::R3);
+        return;
+    }
+    const auto& page = m_pages[m_page_index];
+    if (page.m_ready != PageLoadState::Done || m_index < 0 || m_index >= static_cast<s64>(page.m_packList.size())) {
+        RemoveAction(Button::R3);
+        return;
+    }
+    const auto& entry = page.m_packList[m_index];
+    if (IsFavorite(entry.id)) {
+        SetAction(Button::R3, Action{"Unstar"_i18n, [this](){ ToggleFavorite(); }});
+    } else {
+        SetAction(Button::R3, Action{"Star"_i18n, [this](){ ToggleFavorite(); }});
+    }
+}
+
+bool Menu::IsFavorite(const std::string& id) const {
+    return std::find(m_favorite_ids.begin(), m_favorite_ids.end(), id) != m_favorite_ids.end();
 }
 
 Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
     fs::FsNativeSd().CreateDirectoryRecursively(CACHE_PATH);
+    m_favorite_ids = GetFavoriteIds();
+    UpdateFavoriteAction();
 
     SetAction(Button::B, Action{"Back"_i18n, [this]{
         // if search is valid, then we are in search mode, return back to normal.
@@ -570,7 +730,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
@@ -827,6 +987,7 @@ void Menu::PackListDownload() {
             page.m_pagination = a.pagination;
             page.m_ready = PageLoadState::Done;
             m_page_index_max = a.pagination.page_count;
+            UpdateFavoriteAction();
 
             char subheading[128];
             std::snprintf(subheading, sizeof(subheading), "Page %zu / %zu"_i18n.c_str(), m_page_index+1, m_page_index_max);
@@ -997,6 +1158,12 @@ void Menu::DisplayOptions() {
             const auto rc = nro_launch(GetNroPath());
             App::PushErrorBox(rc, "Failed to launch NXthemes_Installer.nro"_i18n);
         });
+    }
+}
+
+sphaira::ui::menu::themezer::LazyImage::~LazyImage() {
+    if (image) {
+        nvgDeleteImage(App::GetVg(), image);
     }
 }
 

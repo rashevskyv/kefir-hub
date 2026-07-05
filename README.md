@@ -76,6 +76,7 @@ Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamical
 Sphaira features customizable theme options and multi-language support:
 - **Theme Options:** Choose interface themes, configure background music, and set time formats under "Settings -> Appearance -> Sphaira theme options".
 - **Interface Translations:** Manage and download translation files to customize your console interface language under "Kefir Settings -> Translate Interface".
+- **Themezer Favorites:** Add any theme pack from Themezer to your favorites list by pressing **R3** (Right Stick click) in the Themezer download menu. Favorites are instantly shown on the main "Themes" tab alongside built-in options, marked with a star icon for easy access and offline viewing.
 
 ## Image Viewer
 

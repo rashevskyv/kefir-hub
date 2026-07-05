@@ -353,19 +353,19 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         constexpr float PAN_SPEED = 12.f;
         if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
             controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
-            PanImage(0.f, -PAN_SPEED);
+            PanImage(0.f, PAN_SPEED);
         }
         if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
             controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
-            PanImage(0.f, PAN_SPEED);
+            PanImage(0.f, -PAN_SPEED);
         }
         if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) ||
             controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
-            PanImage(-PAN_SPEED, 0.f);
+            PanImage(PAN_SPEED, 0.f);
         }
         if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) ||
             controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
-            PanImage(PAN_SPEED, 0.f);
+            PanImage(-PAN_SPEED, 0.f);
         }
     } else if (m_state == State_Confirm) {
         MenuBase::Update(controller, touch);

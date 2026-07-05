@@ -107,13 +107,25 @@ struct Config {
     }
 };
 
-struct Menu; // fwd
-
 struct PageEntry {
     std::vector<PackListEntry> m_packList{};
     Pagination m_pagination{};
     PageLoadState m_ready{PageLoadState::None};
 };
+
+} // namespace sphaira::ui::menu::themezer
+
+namespace sphaira::ui {
+struct ProgressBox;
+}
+
+namespace sphaira::ui::menu::themezer {
+
+auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) -> Result;
+auto PackListEntryToJson(const PackListEntry& entry) -> std::string;
+auto JsonToPackListEntry(const std::string& json_str, PackListEntry& entry) -> bool;
+auto GetFavoriteIds() -> std::vector<std::string>;
+auto GetFavorites() -> std::vector<PackListEntry>;
 
 struct Menu final : MenuBase {
     Menu(u32 flags);
@@ -130,12 +142,17 @@ private:
         if (!m_index) {
             m_list->SetYoff(0);
         }
+        UpdateFavoriteAction();
     }
 
     void InvalidateAllPages();
     void PackListDownload();
     void DisplayOptions();
     void DisplayScreenshots();
+
+    void ToggleFavorite();
+    void UpdateFavoriteAction();
+    bool IsFavorite(const std::string& id) const;
 
 private:
     static constexpr inline const char* INI_SECTION = "themezer";
@@ -159,6 +176,7 @@ private:
     option::OptionLong m_order{INI_SECTION, "order", 0};
 
     bool m_checked_for_nro{};
+    std::vector<std::string> m_favorite_ids{};
 };
 
 } // namespace sphaira::ui::menu::themezer
