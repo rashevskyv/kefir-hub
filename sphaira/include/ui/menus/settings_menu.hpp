@@ -157,6 +157,10 @@ private:
     void OnBack();
     auto ActiveCurve() -> std::vector<FanCurvePoint>&;
     auto ActiveCurve() const -> const std::vector<FanCurvePoint>&;
+    auto ActiveControlPoints() -> std::vector<FanCurvePoint>&;
+    auto ActiveControlPoints() const -> const std::vector<FanCurvePoint>&;
+    void RegenerateCurveFromControls();
+    void InitializeControlPointsFromCurve();
     void RefreshSubHeading();
 
 private:
@@ -164,12 +168,15 @@ private:
     std::vector<FanCurvePoint> m_docked_curve;
     std::vector<FanCurvePoint> m_applied_handheld_curve;
     std::vector<FanCurvePoint> m_applied_docked_curve;
+    std::vector<FanCurvePoint> m_handheld_control_points;
+    std::vector<FanCurvePoint> m_docked_control_points;
     s64 m_index{};
     bool m_docked{};
     bool m_dirty{};
     bool m_editing{};
     bool m_touch_dragging{};
     bool m_sysmodule_enabled{};
+    bool m_easy_curve_mode{true}; // default to Easy Curve Mode
     std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
     std::unique_ptr<List> m_list;
 };
