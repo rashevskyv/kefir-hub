@@ -2557,40 +2557,135 @@ void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurveP
     nvgStroke(vg);
 
     if (!curve.empty()) {
-        nvgStrokeWidth(vg, 4.f);
-        nvgStrokeColor(vg, accent_colour);
-        nvgBeginPath(vg);
-        for (size_t i = 0; i < curve.size(); i++) {
-            const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
-            const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
-            if (i) {
-                nvgLineTo(vg, x, y);
-            } else {
-                nvgMoveTo(vg, x, y);
-            }
-        }
-        nvgStroke(vg);
-
-        const auto& points_to_draw = easy_curve_mode ? control_points : curve;
-        for (size_t i = 0; i < points_to_draw.size(); i++) {
-            const auto point_selected = static_cast<s64>(i) == selected;
-            const auto x = FanCurveXForTemp(plot, points_to_draw[i].temp_c);
-            const auto y = FanCurveYForFan(plot, points_to_draw[i].fan_percent);
+        if (easy_curve_mode) {
+            // 1. Draw original curve (thin line + small dots)
+            nvgStrokeWidth(vg, 2.5f);
+            nvgStrokeColor(vg, WithAlpha(text_colour, 0.4f));
             nvgBeginPath(vg);
-            nvgCircle(vg, x, y, point_selected ? 10.f : 7.f);
-            nvgFillColor(vg, point_selected ? text_colour : accent_colour);
-            nvgFill(vg);
-            if (point_selected && editing) {
-                nvgStrokeWidth(vg, 2.5f);
-                nvgStrokeColor(vg, WithAlpha(accent_colour, 0.95f));
+            for (size_t i = 0; i < curve.size(); i++) {
+                const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+                const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
+                if (i) {
+                    nvgLineTo(vg, x, y);
+                } else {
+                    nvgMoveTo(vg, x, y);
+                }
+            }
+            nvgStroke(vg);
+
+            for (size_t i = 0; i < curve.size(); i++) {
+                const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+                const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
                 nvgBeginPath(vg);
-                nvgCircle(vg, x, y, 15.f);
-                nvgStroke(vg);
+                nvgCircle(vg, x, y, 4.f);
+                nvgFillColor(vg, WithAlpha(text_colour, 0.6f));
+                nvgFill(vg);
+            }
+
+            // 2. Draw smooth Bezier green helper curve
+            const auto green_colour = nvgRGBA(46, 204, 113, 255); // emerald green
+            nvgStrokeWidth(vg, 4.5f);
+            nvgStrokeColor(vg, green_colour);
+            nvgBeginPath(vg);
+            
+            const double bx0 = control_points[0].temp_c;
+            const double bx2 = control_points[2].temp_c;
+            const s32 steps = 30;
+            for (s32 s = 0; s <= steps; s++) {
+                const s32 temp = static_cast<s32>(bx0 + (bx2 - bx0) * s / steps + 0.5);
+                const auto eval_bezier = [&](s32 temp_val) -> float {
+                    const double X0 = control_points[0].temp_c;
+                    const double Y0 = control_points[0].fan_percent;
+                    const double X1 = control_points[1].temp_c;
+                    const double Y1 = control_points[1].fan_percent;
+                    const double X2 = control_points[2].temp_c;
+                    const double Y2 = control_points[2].fan_percent;
+
+                    if (temp_val <= X0) return Y0;
+                    if (temp_val >= X2) return Y2;
+
+                    const double a = X0 - 2.0 * X1 + X2;
+                    const double b = 2.0 * (X1 - X0);
+                    const double c = X0 - temp_val;
+
+                    double t = 0.0;
+                    if (std::abs(a) < 1e-5) {
+                        if (std::abs(b) > 1e-5) t = -c / b;
+                    } else {
+                        const double disc = b * b - 4.0 * a * c;
+                        if (disc >= 0.0) {
+                            const double r1 = (-b + std::sqrt(disc)) / (2.0 * a);
+                            const double r2 = (-b - std::sqrt(disc)) / (2.0 * a);
+                            t = (r1 >= -0.01 && r1 <= 1.01) ? std::clamp(r1, 0.0, 1.0) : std::clamp(r2, 0.0, 1.0);
+                        }
+                    }
+                    const double fan = (1.0 - t) * (1.0 - t) * Y0 + 2.0 * (1.0 - t) * t * Y1 + t * t * Y2;
+                    return std::clamp(fan, static_cast<double>(FAN_PERCENT_MIN), static_cast<double>(FAN_PERCENT_MAX));
+                };
+
+                const auto x = FanCurveXForTemp(plot, temp);
+                const auto y = FanCurveYForFan(plot, eval_bezier(temp));
+                if (s) {
+                    nvgLineTo(vg, x, y);
+                } else {
+                    nvgMoveTo(vg, x, y);
+                }
+            }
+            nvgStroke(vg);
+
+            // 3. Draw the 3 green control points
+            for (size_t i = 0; i < control_points.size(); i++) {
+                const auto point_selected = static_cast<s64>(i) == selected;
+                const auto x = FanCurveXForTemp(plot, control_points[i].temp_c);
+                const auto y = FanCurveYForFan(plot, control_points[i].fan_percent);
+                nvgBeginPath(vg);
+                nvgCircle(vg, x, y, point_selected ? 10.f : 7.f);
+                nvgFillColor(vg, point_selected ? text_colour : green_colour);
+                nvgFill(vg);
+                if (point_selected && editing) {
+                    nvgStrokeWidth(vg, 2.5f);
+                    nvgStrokeColor(vg, WithAlpha(green_colour, 0.95f));
+                    nvgBeginPath(vg);
+                    nvgCircle(vg, x, y, 15.f);
+                    nvgStroke(vg);
+                }
+            }
+
+        } else {
+            // Draw normal curve
+            nvgStrokeWidth(vg, 4.f);
+            nvgStrokeColor(vg, accent_colour);
+            nvgBeginPath(vg);
+            for (size_t i = 0; i < curve.size(); i++) {
+                const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+                const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
+                if (i) {
+                    nvgLineTo(vg, x, y);
+                } else {
+                    nvgMoveTo(vg, x, y);
+                }
+            }
+            nvgStroke(vg);
+
+            for (size_t i = 0; i < curve.size(); i++) {
+                const auto point_selected = static_cast<s64>(i) == selected;
+                const auto x = FanCurveXForTemp(plot, curve[i].temp_c);
+                const auto y = FanCurveYForFan(plot, curve[i].fan_percent);
+                nvgBeginPath(vg);
+                nvgCircle(vg, x, y, point_selected ? 10.f : 7.f);
+                nvgFillColor(vg, point_selected ? text_colour : accent_colour);
+                nvgFill(vg);
+                if (point_selected && editing) {
+                    nvgStrokeWidth(vg, 2.5f);
+                    nvgStrokeColor(vg, WithAlpha(accent_colour, 0.95f));
+                    nvgBeginPath(vg);
+                    nvgCircle(vg, x, y, 15.f);
+                    nvgStroke(vg);
+                }
             }
         }
 
         DrawFanCurveSensorMarker(vg, theme, plot, curve, sensor);
-
     }
     nvgRestore(vg);
 }
@@ -2740,21 +2835,10 @@ void FanCurveMenu::InitializeControlPointsFromCurve() {
     controls.push_back(curve.back());
 }
 
-void FanCurveMenu::RegenerateCurveFromControls() {
-    auto& controls = ActiveControlPoints();
-    auto& curve = ActiveCurve();
+auto FanCurveMenu::EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& controls, s32 temp_c) const -> s32 {
     if (controls.size() != 3) {
-        return;
+        return 0;
     }
-
-    // Clamp Mid temperature strictly between Min and Max
-    controls[1].temp_c = std::clamp(controls[1].temp_c, controls[0].temp_c + 1, controls[2].temp_c - 1);
-
-    const size_t POINT_COUNT = 6;
-    curve.resize(POINT_COUNT);
-    curve[0] = controls[0];
-    curve[POINT_COUNT - 1] = controls[2];
-
     const double X0 = controls[0].temp_c;
     const double Y0 = controls[0].fan_percent;
     const double X1 = controls[1].temp_c;
@@ -2762,36 +2846,51 @@ void FanCurveMenu::RegenerateCurveFromControls() {
     const double X2 = controls[2].temp_c;
     const double Y2 = controls[2].fan_percent;
 
-    for (size_t i = 1; i < POINT_COUNT - 1; i++) {
-        const s32 temp = static_cast<s32>(X0 + (static_cast<double>(i) / (POINT_COUNT - 1)) * (X2 - X0) + 0.5);
-        
-        // Solve X(t) = temp for t using quadratic formula:
-        // (X0 - 2*X1 + X2)*t^2 + 2*(X1 - X0)*t + (X0 - temp) = 0
-        const double a = X0 - 2.0 * X1 + X2;
-        const double b = 2.0 * (X1 - X0);
-        const double c = X0 - temp;
-        
-        double t = 0.0;
-        if (std::abs(a) < 1e-5) {
-            if (std::abs(b) > 1e-5) {
-                t = -c / b;
-            }
-        } else {
-            const double disc = b * b - 4.0 * a * c;
-            if (disc >= 0.0) {
-                const double r1 = (-b + std::sqrt(disc)) / (2.0 * a);
-                const double r2 = (-b - std::sqrt(disc)) / (2.0 * a);
-                if (r1 >= -0.01 && r1 <= 1.01) {
-                    t = std::clamp(r1, 0.0, 1.0);
-                } else {
-                    t = std::clamp(r2, 0.0, 1.0);
-                }
+    if (temp_c <= X0) return static_cast<s32>(Y0);
+    if (temp_c >= X2) return static_cast<s32>(Y2);
+
+    const double a = X0 - 2.0 * X1 + X2;
+    const double b = 2.0 * (X1 - X0);
+    const double c = X0 - temp_c;
+
+    double t = 0.0;
+    if (std::abs(a) < 1e-5) {
+        if (std::abs(b) > 1e-5) {
+            t = -c / b;
+        }
+    } else {
+        const double disc = b * b - 4.0 * a * c;
+        if (disc >= 0.0) {
+            const double r1 = (-b + std::sqrt(disc)) / (2.0 * a);
+            const double r2 = (-b - std::sqrt(disc)) / (2.0 * a);
+            if (r1 >= -0.01 && r1 <= 1.01) {
+                t = std::clamp(r1, 0.0, 1.0);
+            } else {
+                t = std::clamp(r2, 0.0, 1.0);
             }
         }
-        
-        const double fan = (1.0 - t) * (1.0 - t) * Y0 + 2.0 * (1.0 - t) * t * Y1 + t * t * Y2;
-        curve[i].temp_c = temp;
-        curve[i].fan_percent = std::clamp(static_cast<s32>(fan + 0.5), FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+    }
+    const double fan = (1.0 - t) * (1.0 - t) * Y0 + 2.0 * (1.0 - t) * t * Y1 + t * t * Y2;
+    return std::clamp(static_cast<s32>(fan + 0.5), FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+}
+
+void FanCurveMenu::RegenerateCurveFromControls() {
+    auto& controls = ActiveControlPoints();
+    auto& curve = ActiveCurve();
+    if (controls.size() != 3 || curve.empty()) {
+        return;
+    }
+
+    // Keep Min and Max temperature fixed to the boundaries of the original curve
+    controls[0].temp_c = curve.front().temp_c;
+    controls[2].temp_c = curve.back().temp_c;
+
+    // Clamp Mid temperature strictly between Min and Max
+    controls[1].temp_c = std::clamp(controls[1].temp_c, controls[0].temp_c + 1, controls[2].temp_c - 1);
+
+    // Update each original point's fan speed based on the green Bezier curve
+    for (size_t i = 0; i < curve.size(); i++) {
+        curve[i].fan_percent = EvaluateBezierFanPercent(controls, curve[i].temp_c);
     }
 }
 
@@ -2825,10 +2924,10 @@ void FanCurveMenu::RefreshActions() {
         std::make_pair(Button::X, Action{"Mode"_i18n, [this](){
             SwitchProfile();
         }}),
-        std::make_pair(Button::Y, Action{m_easy_curve_mode ? "Manual Mode"_i18n : "Curve Mode"_i18n, [this](){
+        std::make_pair(Button::Y, Action{m_helper_curve_mode ? "Manual Mode"_i18n : "Bezier Helper"_i18n, [this](){
             SetEditing(false);
-            m_easy_curve_mode = !m_easy_curve_mode;
-            if (m_easy_curve_mode) {
+            m_helper_curve_mode = !m_helper_curve_mode;
+            if (m_helper_curve_mode) {
                 InitializeControlPointsFromCurve();
             }
             SetIndex(0);
@@ -2845,7 +2944,7 @@ void FanCurveMenu::RefreshActions() {
         }})
     );
 
-    if (!m_easy_curve_mode) {
+    if (!m_helper_curve_mode) {
         SetAction(Button::L, Action{"Add Point"_i18n, [this](){
             AddPoint();
         }});
@@ -2860,7 +2959,7 @@ void FanCurveMenu::RefreshSubHeading() {
 }
 
 void FanCurveMenu::SetIndex(s64 index) {
-    const auto& points = m_easy_curve_mode ? ActiveControlPoints() : ActiveCurve();
+    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
     if (points.empty()) {
         m_index = 0;
         RefreshSubHeading();
@@ -2956,7 +3055,7 @@ void FanCurveMenu::ApplyPreset(s64 index) {
     }
 
     ActiveCurve() = std::move(curve);
-    if (m_easy_curve_mode) {
+    if (m_helper_curve_mode) {
         InitializeControlPointsFromCurve();
     }
     m_dirty = true;
@@ -3056,7 +3155,7 @@ void FanCurveMenu::RemovePoint() {
 }
 
 void FanCurveMenu::AdjustSelectedFan(s32 delta) {
-    const auto& points = m_easy_curve_mode ? ActiveControlPoints() : ActiveCurve();
+    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
     if (points.empty()) {
         return;
     }
@@ -3067,7 +3166,7 @@ void FanCurveMenu::AdjustSelectedFan(s32 delta) {
 }
 
 void FanCurveMenu::AdjustSelectedTemp(s32 delta) {
-    const auto& points = m_easy_curve_mode ? ActiveControlPoints() : ActiveCurve();
+    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
     if (points.empty()) {
         return;
     }
@@ -3078,7 +3177,7 @@ void FanCurveMenu::AdjustSelectedTemp(s32 delta) {
 }
 
 void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
-    if (m_easy_curve_mode) {
+    if (m_helper_curve_mode) {
         auto& controls = ActiveControlPoints();
         if (controls.size() != 3) {
             return;
@@ -3088,12 +3187,14 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
         s32 min_temp = FAN_TEMP_MIN_C;
         s32 max_temp = FAN_TEMP_MAX_C;
         if (index == 0) {
-            max_temp = controls[1].temp_c - 1;
+            min_temp = controls[0].temp_c;
+            max_temp = controls[0].temp_c;
         } else if (index == 1) {
             min_temp = controls[0].temp_c + 1;
             max_temp = controls[2].temp_c - 1;
         } else if (index == 2) {
-            min_temp = controls[1].temp_c + 1;
+            min_temp = controls[2].temp_c;
+            max_temp = controls[2].temp_c;
         }
 
         s32 min_fan = FAN_PERCENT_MIN;
@@ -3136,7 +3237,7 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
 }
 
 auto FanCurveMenu::HandleGraphTouch(TouchInfo* touch) -> bool {
-    const auto& points = m_easy_curve_mode ? ActiveControlPoints() : ActiveCurve();
+    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
     if (points.empty()) {
         m_touch_dragging = false;
         return false;
@@ -3283,18 +3384,18 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
         }
 
         if (temp_delta || fan_delta) {
-            auto& curve = ActiveCurve();
-            if (!curve.empty()) {
-                const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
-                const auto point = curve[index];
+            const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
+            if (!points.empty()) {
+                const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(points.size() - 1));
+                const auto point = points[index];
                 SetSelectedPoint(index, point.temp_c + temp_delta, point.fan_percent + fan_delta);
             }
         }
         return;
     }
 
-    auto& curve = ActiveCurve();
-    m_list->OnUpdate(controller, touch, m_index, curve.size(), [this](bool touch, auto i) {
+    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
+    m_list->OnUpdate(controller, touch, m_index, points.size(), [this](bool touch, auto i) {
         if (!touch || m_index != i) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
@@ -3309,7 +3410,7 @@ void FanCurveMenu::Draw(NVGcontext* vg, Theme* theme) {
     const auto& controls = ActiveControlPoints();
     DrawFanCurveListHeader(vg, theme);
 
-    if (m_easy_curve_mode) {
+    if (m_helper_curve_mode) {
         m_list->Draw(vg, theme, controls.size(), [this, &controls](auto* vg, auto* theme, Vec4 v, auto i) {
             DrawFanCurveListItem(vg, theme, v, controls[i], i, m_index == i);
         });
@@ -3319,7 +3420,7 @@ void FanCurveMenu::Draw(NVGcontext* vg, Theme* theme) {
         });
     }
 
-    DrawFanCurveGraph(vg, theme, curve, controls, m_easy_curve_mode, m_index, m_docked, m_dirty, m_editing, m_sensor_reader ? m_sensor_reader->GetSample() : nullptr);
+    DrawFanCurveGraph(vg, theme, curve, controls, m_helper_curve_mode, m_index, m_docked, m_dirty, m_editing, m_sensor_reader ? m_sensor_reader->GetSample() : nullptr);
 }
 
 SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {

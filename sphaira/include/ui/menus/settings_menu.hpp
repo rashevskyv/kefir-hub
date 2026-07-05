@@ -161,6 +161,7 @@ private:
     auto ActiveControlPoints() const -> const std::vector<FanCurvePoint>&;
     void RegenerateCurveFromControls();
     void InitializeControlPointsFromCurve();
+    auto EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& controls, s32 temp_c) const -> s32;
     void RefreshSubHeading();
 
 private:
@@ -176,7 +177,7 @@ private:
     bool m_editing{};
     bool m_touch_dragging{};
     bool m_sysmodule_enabled{};
-    bool m_easy_curve_mode{true}; // default to Easy Curve Mode
+    bool m_helper_curve_mode{false}; // disabled by default (auxiliary mode)
     std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
     std::unique_ptr<List> m_list;
 };
