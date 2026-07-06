@@ -357,7 +357,7 @@ auto GetBuildIdFromInstalledNcaDetailed(u64 title_id) -> InstalledNcaLookupResul
     u64 bytes_read{};
     rc = file.Read(0x40, module_id, sizeof(module_id), FsReadOption_None, &bytes_read);
     if (R_FAILED(rc) || bytes_read < 8) {
-        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to read ModuleId from %s for %016lx: %x (read=%llu)\n",
+        log_write("[Cheats] GetBuildIdFromInstalledNca: failed to read ModuleId from %s for %016lx: %x (read=%lu)\n",
                   opened_path, title_id, rc, bytes_read);
         result.failure_reason = InstalledNcaFailureReason::ContentMissing;
         return result;
@@ -411,7 +411,7 @@ auto ReadBuildIdFromProgramContent(NcmContentStorage& cs, const NcmContentId& co
     u64 bytes_read{};
     rc = file.Read(0x40, module_id, sizeof(module_id), FsReadOption_None, &bytes_read);
     if (R_FAILED(rc) || bytes_read < 8) {
-        log_write("[Cheats] %s: failed to read ModuleId from %s for %016lx: %x (read=%llu)\n",
+        log_write("[Cheats] %s: failed to read ModuleId from %s for %016lx: %x (read=%lu)\n",
                   source, opened_path, title_id, rc, bytes_read);
         return "";
     }
@@ -639,7 +639,7 @@ auto TryGetBuildIdFromNsoWithStorage(u64 title_id, NcmStorageId storage_id, cons
     u64 bytes_read = 0;
     rc = fsFileRead(&file, 0x40, build_id_bytes, sizeof(build_id_bytes), FsReadOption_None, &bytes_read);
     if (R_FAILED(rc) || bytes_read != sizeof(build_id_bytes)) {
-        log_write("[Cheats] GetBuildIdFromNso: failed to read /main build ID for storage=%d path=%s: %x (read=%llu)\n",
+        log_write("[Cheats] GetBuildIdFromNso: failed to read /main build ID for storage=%d path=%s: %x (read=%lu)\n",
                   static_cast<int>(storage_id), path ? path : "(null)", rc, bytes_read);
         return "";
     }
@@ -2505,7 +2505,7 @@ auto GetExistingCheats(u64 title_id) -> std::vector<std::pair<std::string, std::
         return cheats;
     }
 
-    log_write("[Cheats] Found %lld cheat files\n", count);
+    log_write("[Cheats] Found %ld cheat files\n", count);
 
     std::vector<FsDirectoryEntry> entries(count);
     s64 read_count = 0;
@@ -2522,7 +2522,7 @@ auto GetExistingCheats(u64 title_id) -> std::vector<std::pair<std::string, std::
             if (name.length() > 4 && name.substr(name.length() - 4) == ".txt") {
                 std::string build_id = name.substr(0, name.length() - 4);
                 cheats.push_back({build_id, name});
-                log_write("[Cheats] Found cheat: %s (Build ID: %s)\n", name, build_id.c_str());
+                log_write("[Cheats] Found cheat: %s (Build ID: %s)\n", name.c_str(), build_id.c_str());
             }
         }
     }
@@ -3149,7 +3149,7 @@ void CheatsMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void CheatsMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3322,7 +3322,7 @@ void CheatViewMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -3557,7 +3557,7 @@ void CheatFilesMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -3898,7 +3898,7 @@ void CheatContentMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -4231,7 +4231,7 @@ void CheatGameSelectMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -4551,7 +4551,7 @@ CheatDownloadMenu::CheatDownloadMenu(CheatSource source, const GameCheatInfo& ga
     : MenuBase{"Select Cheats", MenuFlag_None}, m_source(source), m_game(game) {
 
     log_write("[Cheats] DEBUG: CheatDownloadMenu constructor called\n");
-    log_write("[Cheats] DEBUG: Source: %d, Game: %s, TitleID: %016llX, BuildID: %s\n",
+    log_write("[Cheats] DEBUG: Source: %d, Game: %s, TitleID: %016lX, BuildID: %s\n",
         static_cast<int>(source), game.name.c_str(), game.title_id, game.build_id.c_str());
     log_write("[Cheats] DEBUG: m_should_close initial value: %d\n", m_should_close);
 
@@ -4629,7 +4629,7 @@ void CheatDownloadMenu::Update(Controller* controller, TouchInfo* touch) {
     // Check if we should close (from callback)
     if (m_should_close) {
         log_write("[Cheats] DEBUG: Update() - m_should_close flag detected, calling SetPop()\n");
-        log_write("[Cheats] DEBUG: Cheats list size: %zu, Index: %lld\n", m_cheats.size(), m_index);
+        log_write("[Cheats] DEBUG: Cheats list size: %zu, Index: %ld\n", m_cheats.size(), m_index);
         log_write("[Cheats] DEBUG: Error message: %s\n", m_error_message.c_str());
         SetPop();
         return;
@@ -4651,7 +4651,7 @@ void CheatDownloadMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 

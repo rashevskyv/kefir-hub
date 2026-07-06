@@ -47,6 +47,14 @@ constexpr const char* DOWNGRADE_FIX_SAVE = "/save/8000000000000073";
 constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
 constexpr s64 TILE_COLUMNS = 5;
 constexpr s64 TILE_EMPTY = -1;
+constexpr s64 UPDATER_LIST_PAGE_ROWS = 6;
+constexpr float UPDATER_LIST_ROW_HEIGHT = 74.f;
+constexpr float UPDATER_LIST_ROW_GAP = 8.f;
+constexpr float UPDATER_INFO_Y_OFFSET = 11.f;
+constexpr float UPDATER_INFO_ROW_GAP = 25.f;
+constexpr float UPDATER_LIST_TOP_OFFSET = 1.f + 66.f;
+constexpr float UPDATER_TILE_TOP_OFFSET = 1.f + 112.f;
+constexpr float UPDATER_TILE_CLIP_TOP_OFFSET = UPDATER_TILE_TOP_OFFSET - 35.f;
 
 struct FirmwareValidation {
     AmsSuUpdateInformation info{};
@@ -310,36 +318,14 @@ auto IsFullBoldLine(const std::string& trimmed) -> bool {
         trimmed[trimmed.size() - 1] == '*' && trimmed[trimmed.size() - 2] == '*';
 }
 
-auto StripMarkdownLinks(const std::string& text) -> std::string {
-    std::string result;
-    result.reserve(text.size());
-
-    for (size_t i = 0; i < text.size();) {
-        if (text[i] == '[') {
-            const auto close_bracket = text.find(']', i + 1);
-            if (close_bracket != std::string::npos && close_bracket + 1 < text.size() && text[close_bracket + 1] == '(') {
-                const auto close_paren = text.find(')', close_bracket + 2);
-                if (close_paren != std::string::npos) {
-                    result += text.substr(i + 1, close_bracket - i - 1);
-                    i = close_paren + 1;
-                    continue;
-                }
-            }
-        }
-
-        result += text[i++];
-    }
-
-    return result;
-}
-
-auto StripMarkdownEmphasis(const std::string& text) -> std::string {
+auto NormalizeChangelogMarkdown(const std::string& text) -> std::string {
     std::string result;
     result.reserve(text.size());
 
     for (size_t i = 0; i < text.size();) {
         if (text[i] == '*') {
             if (i + 1 < text.size() && text[i + 1] == '*') {
+                result += "**";
                 i += 2;
             } else {
                 i++;
@@ -386,13 +372,13 @@ auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> 
             indent += line[i] == '\t' ? "    " : " ";
         }
 
-        trimmed = StripMarkdownEmphasis(StripMarkdownLinks(trimmed));
+        trimmed = NormalizeChangelogMarkdown(trimmed);
 
         if (!first_line) {
             result += '\n';
         }
         if (add_bullets) {
-            result += "     \u2022 " + indent + trimmed;
+            result += "\u00A0\u00A0\u00A0\u00A0\u00A0\u2022 " + indent + trimmed;
         } else {
             result += indent + trimmed;
         }
@@ -483,7 +469,7 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         }
 
         found_any = true;
-        result += std::to_string(version) + "\n";
+        result += "**" + std::to_string(version) + "**\n";
         result += display_content + "\n\n";
     }
 
@@ -492,6 +478,336 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
     }
 
     return Trim(result);
+}
+
+enum class ChangelogTextColour {
+    Normal,
+    Gray,
+    Red,
+    Blue,
+};
+
+struct ChangelogSegment {
+    std::string text;
+    bool bold{};
+    bool underline{};
+    ChangelogTextColour colour{ChangelogTextColour::Normal};
+};
+
+void AddChangelogSegment(std::vector<ChangelogSegment>& out, std::string text, bool bold, bool underline, ChangelogTextColour colour) {
+    if (text.empty()) {
+        return;
+    }
+
+    if (!out.empty()) {
+        auto& last = out.back();
+        if (last.bold == bold && last.underline == underline && last.colour == colour) {
+            last.text += text;
+            return;
+        }
+    }
+
+    out.push_back({
+        .text = std::move(text),
+        .bold = bold,
+        .underline = underline,
+        .colour = colour,
+    });
+}
+
+auto IsUrlStart(const std::string& text, size_t pos) -> bool {
+    return text.compare(pos, 7, "http://") == 0 || text.compare(pos, 8, "https://") == 0;
+}
+
+void ParseChangelogInline(const std::string& text, std::vector<ChangelogSegment>& out, bool bold = false,
+    bool underline = false, ChangelogTextColour colour = ChangelogTextColour::Normal) {
+    std::string current;
+
+    const auto flush = [&]() {
+        AddChangelogSegment(out, std::move(current), bold, underline, colour);
+        current.clear();
+    };
+
+    for (size_t i = 0; i < text.size();) {
+        if (i + 1 < text.size() && text[i] == '*' && text[i + 1] == '*') {
+            flush();
+            bold = !bold;
+            i += 2;
+            continue;
+        }
+
+        if (i + 1 < text.size() && text[i] == '_' && text[i + 1] == '_') {
+            flush();
+            underline = !underline;
+            i += 2;
+            continue;
+        }
+
+        if (text.compare(i, 3, "<u>") == 0) {
+            flush();
+            underline = true;
+            i += 3;
+            continue;
+        }
+
+        if (text.compare(i, 4, "</u>") == 0) {
+            flush();
+            underline = false;
+            i += 4;
+            continue;
+        }
+
+        if (text.compare(i, 7, "{{red}}") == 0) {
+            const auto end = text.find("{{/red}}", i + 7);
+            if (end != std::string::npos) {
+                flush();
+                ParseChangelogInline(text.substr(i + 7, end - i - 7), out, bold, underline, ChangelogTextColour::Red);
+                i = end + 8;
+                continue;
+            }
+        }
+
+        if (text.compare(i, 8, "{{blue}}") == 0) {
+            const auto end = text.find("{{/blue}}", i + 8);
+            if (end != std::string::npos) {
+                flush();
+                ParseChangelogInline(text.substr(i + 8, end - i - 8), out, bold, true, ChangelogTextColour::Blue);
+                i = end + 9;
+                continue;
+            }
+        }
+
+        if (text[i] == '`') {
+            const auto end = text.find('`', i + 1);
+            if (end != std::string::npos) {
+                flush();
+                AddChangelogSegment(out, "`", bold, underline, colour);
+                ParseChangelogInline(text.substr(i + 1, end - i - 1), out, false, underline, ChangelogTextColour::Gray);
+                AddChangelogSegment(out, "`", bold, underline, colour);
+                i = end + 1;
+                continue;
+            }
+        }
+
+        if (text[i] == '[') {
+            const auto close_bracket = text.find(']', i + 1);
+            if (close_bracket != std::string::npos) {
+                if (close_bracket + 1 < text.size() && text[close_bracket + 1] == '(') {
+                    const auto close_paren = text.find(')', close_bracket + 2);
+                    if (close_paren != std::string::npos) {
+                        flush();
+                        ParseChangelogInline(text.substr(i + 1, close_bracket - i - 1), out, bold, true, ChangelogTextColour::Blue);
+                        i = close_paren + 1;
+                        continue;
+                    }
+                }
+
+                flush();
+                AddChangelogSegment(out, "[", bold, underline, colour);
+                ParseChangelogInline(text.substr(i + 1, close_bracket - i - 1), out, bold, underline, ChangelogTextColour::Gray);
+                AddChangelogSegment(out, "]", bold, underline, colour);
+                i = close_bracket + 1;
+                continue;
+            }
+        }
+
+        if (text[i] == '\'' && (i == 0 || text[i - 1] == ' ' || text[i - 1] == '\t')) {
+            const auto end = text.find('\'', i + 1);
+            if (end != std::string::npos) {
+                flush();
+                AddChangelogSegment(out, "'", bold, underline, colour);
+                ParseChangelogInline(text.substr(i + 1, end - i - 1), out, bold, underline, ChangelogTextColour::Gray);
+                AddChangelogSegment(out, "'", bold, underline, colour);
+                i = end + 1;
+                continue;
+            }
+        }
+
+        if (IsUrlStart(text, i)) {
+            size_t end = i;
+            while (end < text.size() && text[end] != ' ' && text[end] != '\t') {
+                end++;
+            }
+
+            flush();
+            AddChangelogSegment(out, text.substr(i, end - i), bold, true, ChangelogTextColour::Blue);
+            i = end;
+            continue;
+        }
+
+        current += text[i++];
+    }
+
+    flush();
+}
+
+auto TrimAsciiWhitespace(std::string value) -> std::string {
+    while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) {
+        value.pop_back();
+    }
+
+    size_t start{};
+    while (start < value.size() && (value[start] == ' ' || value[start] == '\t' || value[start] == '\r' || value[start] == '\n')) {
+        start++;
+    }
+
+    if (start) {
+        value.erase(0, start);
+    }
+    return value;
+}
+
+auto IsVersionHeaderLine(const std::string& line) -> bool {
+    const auto trimmed = TrimAsciiWhitespace(line);
+    if (!IsFullBoldLine(trimmed)) {
+        return false;
+    }
+
+    const auto content = trimmed.substr(2, trimmed.size() - 4);
+    return !content.empty() && std::all_of(content.begin(), content.end(), [](unsigned char c) {
+        return std::isdigit(c);
+    });
+}
+
+auto ChangelogSegmentColour(const ChangelogSegment& segment, Theme* theme) -> NVGcolor {
+    switch (segment.colour) {
+        case ChangelogTextColour::Gray:
+            return nvgRGBA(128, 128, 128, 255);
+        case ChangelogTextColour::Red:
+            return nvgRGBA(255, 80, 80, 255);
+        case ChangelogTextColour::Blue:
+            return nvgRGBA(100, 150, 255, 255);
+        case ChangelogTextColour::Normal:
+            return theme->GetColour(ThemeEntryID_TEXT);
+    }
+
+    return theme->GetColour(ThemeEntryID_TEXT);
+}
+
+auto ChangelogSpaceWidth(NVGcontext* vg, float font_size) -> float {
+    float ab[4]{};
+    float a_b[4]{};
+    nvgFontSize(vg, font_size);
+    nvgTextBounds(vg, 0.f, 0.f, "ab", nullptr, ab);
+    nvgTextBounds(vg, 0.f, 0.f, "a b", nullptr, a_b);
+
+    const auto width = (a_b[2] - a_b[0]) - (ab[2] - ab[0]);
+    return width < 1.f ? font_size * 0.28f : width;
+}
+
+auto MeasureWord(NVGcontext* vg, const std::string& word, float font_size) -> float {
+    float bounds[4]{};
+    nvgFontSize(vg, font_size);
+    nvgTextBounds(vg, 0.f, 0.f, word.c_str(), nullptr, bounds);
+    return bounds[2] - bounds[0];
+}
+
+auto RenderChangelogLine(NVGcontext* vg, Theme* theme, const std::string& line, float x, float y, float width,
+    float font_size, float line_height, bool render) -> float {
+    std::vector<ChangelogSegment> segments;
+    ParseChangelogInline(line, segments);
+
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+    const auto space_width = ChangelogSpaceWidth(vg, font_size);
+    auto current_x = x;
+    auto current_y = y;
+    bool line_start = true;
+    bool needs_space = false;
+    std::string word;
+    ChangelogSegment word_segment{};
+
+    const auto flush_word = [&]() {
+        if (word.empty()) {
+            return;
+        }
+
+        const auto word_width = MeasureWord(vg, word, font_size);
+        const auto bold_extra = word_segment.bold ? 1.f : 0.f;
+        auto leading_space = needs_space ? space_width : 0.f;
+
+        if (!line_start && current_x + leading_space + word_width + bold_extra > x + width) {
+            current_x = x;
+            current_y += line_height;
+            line_start = true;
+            leading_space = 0.f;
+        }
+
+        current_x += leading_space;
+
+        if (render) {
+            const auto colour = ChangelogSegmentColour(word_segment, theme);
+            nvgFillColor(vg, colour);
+            nvgFontSize(vg, font_size);
+            nvgText(vg, current_x, current_y, word.c_str(), nullptr);
+            if (word_segment.bold) {
+                nvgText(vg, current_x + 1.f, current_y, word.c_str(), nullptr);
+            }
+            if (word_segment.underline) {
+                const auto underline_y = current_y + font_size + 2.f;
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, current_x, underline_y);
+                nvgLineTo(vg, current_x + word_width, underline_y);
+                nvgStrokeWidth(vg, std::max(1.f, font_size / 18.f));
+                nvgStrokeColor(vg, colour);
+                nvgStroke(vg);
+            }
+        }
+
+        current_x += word_width + bold_extra;
+        line_start = false;
+        needs_space = false;
+        word.clear();
+    };
+
+    for (const auto& segment : segments) {
+        word_segment = segment;
+        for (const auto c : segment.text) {
+            if (c == ' ') {
+                flush_word();
+                if (!line_start) {
+                    needs_space = true;
+                }
+            } else {
+                word += c;
+            }
+        }
+        flush_word();
+    }
+
+    return (current_y - y) + line_height;
+}
+
+auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, const Vec4& area, float scroll, bool render,
+    float regular_font_size, float line_height_scale, float header_font_size, float preamble_font_size) -> float {
+    std::istringstream stream(text);
+    std::string line;
+    auto y = area.y - scroll;
+    auto total_height = 0.f;
+    bool reached_version_entries = false;
+
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        const auto is_header = IsVersionHeaderLine(line);
+        const auto is_blank = TrimAsciiWhitespace(line).empty();
+        const auto is_preamble = !reached_version_entries && !is_header && !is_blank;
+        const auto font_size = is_header ? header_font_size : (is_preamble ? preamble_font_size : regular_font_size);
+        const auto line_height = font_size * (is_header ? 1.35f : line_height_scale);
+
+        if (is_header) {
+            reached_version_entries = true;
+        }
+
+        const auto height = is_blank ? line_height * 0.55f :
+            RenderChangelogLine(vg, theme, line, area.x, y, area.w, font_size, line_height, render);
+        y += height;
+        total_height += height;
+    }
+
+    return total_height;
 }
 
 auto TypeLabel(UpdaterEntryType type) -> const char* {
@@ -662,7 +978,9 @@ public:
     }
 
 private:
-    static constexpr float CHANGELOG_FONT_SIZE = 18.f;
+    static constexpr float CHANGELOG_FONT_SIZE = 20.f;
+    static constexpr float CHANGELOG_HEADER_FONT_SIZE = 26.f;
+    static constexpr float CHANGELOG_PREAMBLE_FONT_SIZE = 24.f;
     static constexpr float CHANGELOG_LINE_HEIGHT = 1.45f;
     static constexpr float CHANGELOG_SCROLL_STEP = 36.f;
 
@@ -717,12 +1035,8 @@ private:
         }
 
         nvgSave(vg);
-        nvgFontSize(vg, CHANGELOG_FONT_SIZE);
-        nvgTextLineHeight(vg, CHANGELOG_LINE_HEIGHT);
-
-        float bounds[4]{};
-        nvgTextBoxBounds(vg, m_text_area.x, m_text_area.y, m_text_area.w, m_text.c_str(), nullptr, bounds);
-        m_text_height = std::max(0.f, bounds[3] - bounds[1]);
+        m_text_height = RenderChangelogText(vg, theme, m_text, Vec4{0.f, 0.f, m_text_area.w, m_text_area.h}, 0.f, false,
+            CHANGELOG_FONT_SIZE, CHANGELOG_LINE_HEIGHT, CHANGELOG_HEADER_FONT_SIZE, CHANGELOG_PREAMBLE_FONT_SIZE);
         m_max_scroll = std::max(0.f, m_text_height - m_text_area.h + 14.f);
         m_scroll = std::clamp(m_scroll, 0.f, m_max_scroll);
 
@@ -731,8 +1045,8 @@ private:
         }
 
         nvgScissor(vg, m_text_area.x, m_text_area.y, m_text_area.w, m_text_area.h);
-        gfx::drawTextBox(vg, m_text_area.x, m_text_area.y - m_scroll, CHANGELOG_FONT_SIZE, m_text_area.w,
-            theme->GetColour(ThemeEntryID_TEXT), m_text.c_str());
+        RenderChangelogText(vg, theme, m_text, m_text_area, m_scroll, true,
+            CHANGELOG_FONT_SIZE, CHANGELOG_LINE_HEIGHT, CHANGELOG_HEADER_FONT_SIZE, CHANGELOG_PREAMBLE_FONT_SIZE);
         nvgRestore(vg);
 
         const auto count = std::max<s64>(1, static_cast<s64>(std::ceil(m_text_height / CHANGELOG_SCROLL_STEP)));
@@ -1353,7 +1667,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                     SetIndex(m_tile_entries[tile_index]);
                 }
             }
-        });
+        }, this);
     } else {
         m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
             if (touch && m_index == i) {
@@ -1362,7 +1676,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -1371,14 +1685,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     const auto tiles = static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles;
     const auto info_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
-    const auto info_y = GetY() + 11.f - (tiles && m_list ? m_list->GetYoff() : 0.f);
+    const auto info_y = GetY() + UPDATER_INFO_Y_OFFSET;
     gfx::drawTextArgs(vg, 80.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         info_colour, "Current Kefir: %s", m_current_kefir.c_str());
     gfx::drawTextArgs(vg, 650.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         info_colour, "Latest Kefir: %s", m_latest_kefir.c_str());
-    gfx::drawTextArgs(vg, 80.f, info_y + 25.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+    gfx::drawTextArgs(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         info_colour, "Current Firmware: %s", m_current_firmware.c_str());
-    gfx::drawTextArgs(vg, 650.f, info_y + 25.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+    gfx::drawTextArgs(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         info_colour, "Console: %s", m_console_revision.c_str());
 
     if (m_loading) {
@@ -1412,8 +1726,8 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& entry = m_entries[i];
         if (entry.type == UpdaterEntryType::Section) {
-            const auto top_pad = 16.f;
-            const Vec4 band{v.x, v.y + top_pad, v.w, 26.f};
+            const auto top_pad = 24.f;
+            const Vec4 band{v.x, v.y + top_pad, v.w, 34.f};
             gfx::drawRect(vg, band.x, band.y, band.w, band.h, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 4.f);
             gfx::drawRect(vg, v.x + 15.f, band.y + 7.f, 4.f, band.h - 14.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 2.f);
             gfx::drawTextArgs(vg, v.x + 30.f, band.y + band.h / 2.f, 16.f,
@@ -1443,18 +1757,18 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         }
 
         const auto text_x = v.x + 55.f;
-        DrawUpdaterEntryIcon(vg, theme, entry, v.x + 15.f, v.y + 17.f, selected, unsupported);
+        DrawUpdaterEntryIcon(vg, theme, entry, v.x + 15.f, v.y + 24.f, selected, unsupported);
 
-        gfx::drawTextBox(vg, text_x, v.y + 7.f, 23.f, v.w - 230.f,
+        gfx::drawTextBox(vg, text_x, v.y + 11.f, 23.f, v.w - 230.f,
             theme->GetColour(name_id), name.c_str());
 
         if (entry.type != UpdaterEntryType::Kefir) {
-            gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 14.f, 15.f,
+            gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO),
                 "%s", unsupported ? UnsupportedFirmwareLabel(m_supported_firmware).c_str() : TypeLabel(entry.type));
         }
 
-        gfx::drawTextBox(vg, text_x, v.y + 37.f, 16.f, v.w - 70.f,
+        gfx::drawTextBox(vg, text_x, v.y + 44.f, 16.f, v.w - 70.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), EntryDescription(entry));
     });
 }
@@ -1536,19 +1850,30 @@ void Menu::DisplayOptions() {
 }
 
 void Menu::OnLayoutChange() {
+    auto make_content_pos = [this](float top) {
+        auto pos = m_pos;
+        pos.y = top;
+        pos.h = std::max(0.f, GetY() + GetH() - top);
+        return pos;
+    };
+
+    Vec4 content_pos{};
     if (static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles) {
         constexpr float x = 75.f;
         constexpr float width = 1130.f;
         constexpr float tile_size = 196.f;
         constexpr float x_gap = (width - tile_size * static_cast<float>(TILE_COLUMNS)) / static_cast<float>(TILE_COLUMNS - 1);
         constexpr float y_gap = 44.f;
-        const Vec4 v{x, GetY() + 1.f + 112.f, tile_size, tile_size};
-        m_list = std::make_unique<List>(TILE_COLUMNS, TILE_COLUMNS * 2, m_pos, v, Vec2{x_gap, y_gap});
+        content_pos = make_content_pos(GetY() + UPDATER_TILE_CLIP_TOP_OFFSET);
+        const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_size, tile_size};
+        m_list = std::make_unique<List>(TILE_COLUMNS, TILE_COLUMNS * 2, content_pos, v, Vec2{x_gap, y_gap});
     } else {
-        const Vec4 v{75.f, GetY() + 1.f + 66.f, 1220.f - 150.f, 58.f};
-        m_list = std::make_unique<List>(1, 8, m_pos, v);
+        content_pos = make_content_pos(GetY() + UPDATER_LIST_TOP_OFFSET);
+        const Vec4 v{75.f, GetY() + UPDATER_LIST_TOP_OFFSET, 1220.f - 150.f, UPDATER_LIST_ROW_HEIGHT};
+        m_list = std::make_unique<List>(1, UPDATER_LIST_PAGE_ROWS, content_pos, v, Vec2{0.f, UPDATER_LIST_ROW_GAP});
     }
     m_list->SetLayout(List::Layout::GRID);
+    m_list->SetScrollBarPos(m_pos.x + m_pos.w, content_pos.y, content_pos.h);
 
     m_tile_entries = TileSlots(m_entries);
     const auto it = std::ranges::find(m_tile_entries, m_index);
@@ -1635,6 +1960,18 @@ void Menu::FetchLinks() {
 
 void Menu::SetIndex(s64 index) {
     m_index = ResolveSelectableIndex(m_entries, index, m_index);
+    if (m_list) {
+        if (static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::List) {
+            const auto max = UPDATER_LIST_ROW_HEIGHT + UPDATER_LIST_ROW_GAP;
+            const auto start = static_cast<s64>(m_list->GetYoff() / max);
+            if (m_index < start) {
+                m_list->SetYoff(m_index * max);
+            } else if (m_index >= start + UPDATER_LIST_PAGE_ROWS) {
+                m_list->SetYoff((m_index - UPDATER_LIST_PAGE_ROWS + 1) * max);
+            }
+        }
+    }
+
     if (m_index <= 1) {
         m_list->SetYoff(0);
     }

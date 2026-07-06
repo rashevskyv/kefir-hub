@@ -31,12 +31,25 @@ private:
     void ToggleFullscreen();
     void UpdateFullscreenAction();
     void UpdateImageSubHeading();
+    void ToggleCurrentSelection();
+    void InvertSelection();
+    void DisplayImageOptions();
+    void DeleteImages();
+    void ZipImages(fs::FsPath zip_path);
+    void UploadImages();
+    void CreateSwitchTheme();
+    void RemoveDeletedImages(const std::vector<s64>& indices);
     auto GetDisplayName() const -> std::string;
+    auto GetSelectedCount() const -> size_t;
+    auto GetTargetIndices() const -> std::vector<s64>;
+    auto GetTargetPaths() const -> std::vector<fs::FsPath>;
+    auto CurrentImageSelected() const -> bool;
 
 private:
     fs::FsPath m_path;
     std::vector<fs::FsPath> m_image_paths{};
     std::vector<std::string> m_image_titles{};
+    std::vector<bool> m_image_selected{};
     s64 m_image_index{};
     fs::FsNativeSd m_fs{};
     fs::File m_file{};

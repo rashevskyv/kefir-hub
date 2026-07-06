@@ -4,6 +4,8 @@
 
 namespace sphaira::ui {
 
+struct Widget;
+
 struct List final : Object {
     enum class Layout {
         HOME,
@@ -15,7 +17,7 @@ struct List final : Object {
 
     List(s64 row, s64 page, const Vec4& pos, const Vec4& v, const Vec2& pad = {});
 
-    void OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback);
+    void OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget = nullptr);
 
     void Draw(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
 
@@ -77,8 +79,8 @@ private:
     auto ClampX(float x, s64 count) const -> float;
     auto ClampY(float y, s64 count) const -> float;
 
-    void OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback);
-    void OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback);
+    void OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget);
+    void OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget);
     void DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
     void DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
 

@@ -206,12 +206,15 @@ struct FsView final : Widget {
 
 private:
     void SetIndex(s64 index);
+    void ToggleSelection();
+    void InvertSelection();
     void InstallForwarder();
 
     void InstallFiles();
     void UnzipFiles(fs::FsPath folder);
     void ZipFiles(fs::FsPath zip_path);
     void UploadFiles();
+    void ShareFolder();
 
     auto Scan(const fs::FsPath& new_path, bool is_walk_up = false) -> Result;
 

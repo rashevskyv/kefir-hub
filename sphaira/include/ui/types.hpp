@@ -342,7 +342,9 @@ struct Action final {
     Action(Callback cb) : Action{ActionType::DOWN, "", cb} {}
     Action(std::string hint, Callback cb) : Action{ActionType::DOWN, hint, cb} {}
     Action(u8 type, Callback cb) : Action{type, "", cb} {}
-    Action(u8 type, std::string hint, Callback cb) : m_type{type}, m_callback{cb}, m_hint{hint} {}
+    Action(u8 type, std::string hint, Callback cb) : Action{type, hint, "", cb} {}
+    Action(std::string hint, std::string button_str, Callback cb) : Action{ActionType::DOWN, hint, button_str, cb} {}
+    Action(u8 type, std::string hint, std::string button_str, Callback cb) : m_type{type}, m_callback{cb}, m_hint{hint}, m_button_str{button_str} {}
 
     auto IsHidden() const noexcept { return m_hint.empty(); }
 
@@ -362,6 +364,7 @@ struct Action final {
     u8 m_type{};
     Callback m_callback{};
     std::string m_hint{};
+    std::string m_button_str{};
 };
 
 struct Controller {

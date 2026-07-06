@@ -695,7 +695,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {

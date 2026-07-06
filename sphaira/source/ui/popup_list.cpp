@@ -101,7 +101,7 @@ auto PopupList::Update(Controller* controller, TouchInfo* touch) -> void {
         if (touch) {
             FireAction(Button::A);
         }
-    });
+    }, this);
 }
 
 auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {

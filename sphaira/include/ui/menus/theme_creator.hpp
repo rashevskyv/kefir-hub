@@ -33,6 +33,8 @@ private:
     void ZoomImage(float factor);
     void PanImage(float dx, float dy);
     void ClampPan();
+    void ToggleFullscreen();
+    void UpdateFullscreenAction();
     void DisplayTargetSelector();
     void EditThemeName();
     void EditAuthor();
@@ -54,6 +56,7 @@ private:
     float m_zoom{1.f};
     float m_pan_x{};
     float m_pan_y{};
+    bool m_fullscreen{};
 
     std::string m_theme_name;
     std::string m_author;

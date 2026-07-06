@@ -121,7 +121,7 @@ struct ProgressBox;
 
 namespace sphaira::ui::menu::themezer {
 
-auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) -> Result;
+auto InstallTheme(ProgressBox* pbox, const PackListEntry& entry) -> Result;
 auto PackListEntryToJson(const PackListEntry& entry) -> std::string;
 auto JsonToPackListEntry(const std::string& json_str, PackListEntry& entry) -> bool;
 auto GetFavoriteIds() -> std::vector<std::string>;

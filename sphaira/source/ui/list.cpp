@@ -1,4 +1,5 @@
 #include "ui/list.hpp"
+#include "ui/widget.hpp"
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "log.hpp"
@@ -35,13 +36,13 @@ auto List::ClampY(float y, s64 count) const -> float {
     return std::clamp(y, 0.F, y_max);
 }
 
-void List::OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback) {
+void List::OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget) {
     switch (m_layout) {
         case Layout::HOME:
-            OnUpdateHome(controller, touch, index, count, callback);
+            OnUpdateHome(controller, touch, index, count, callback, widget);
             break;
         case Layout::GRID:
-            OnUpdateGrid(controller, touch, index, count, callback);
+            OnUpdateGrid(controller, touch, index, count, callback, widget);
             break;
     }
 }
@@ -217,20 +218,25 @@ auto List::ScrollToStart(s64& index, s64 count) -> bool {
     return false;
 }
 
-void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback) {
-    if (GetPageJump() && controller->GotDown(Button::R2)) {
+void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget) {
+    const bool has_r2 = widget && widget->HasAction(Button::R2);
+    const bool has_l2 = widget && widget->HasAction(Button::L2);
+    const bool has_r  = widget && widget->HasAction(Button::R);
+    const bool has_l  = widget && widget->HasAction(Button::L);
+
+    if (!has_r2 && GetPageJump() && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && controller->GotDown(Button::L2)) {
+    } else if (!has_l2 && GetPageJump() && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (controller->GotDown(Button::R) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+    } else if (GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
         if (ScrollPageDown(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (controller->GotDown(Button::L) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+    } else if (GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
         if (ScrollPageUp(index, count)) {
             callback(false, index);
         }
@@ -269,20 +275,25 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
     }
 }
 
-void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback) {
-    if (GetPageJump() && controller->GotDown(Button::R2)) {
+void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget) {
+    const bool has_r2 = widget && widget->HasAction(Button::R2);
+    const bool has_l2 = widget && widget->HasAction(Button::L2);
+    const bool has_r  = widget && widget->HasAction(Button::R);
+    const bool has_l  = widget && widget->HasAction(Button::L);
+
+    if (!has_r2 && GetPageJump() && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && controller->GotDown(Button::L2)) {
+    } else if (!has_l2 && GetPageJump() && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (controller->GotDown(Button::R) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+    } else if (GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
         if (ScrollPageDown(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (controller->GotDown(Button::L) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+    } else if (GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
         if (ScrollPageUp(index, count)) {
             callback(false, index);
         }

@@ -163,7 +163,7 @@ void UninstallerMenu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 

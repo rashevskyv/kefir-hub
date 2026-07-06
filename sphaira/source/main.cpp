@@ -2,6 +2,7 @@
 #include <memory>
 #include "app.hpp"
 #include "log.hpp"
+#include "web.hpp"
 
 int main(int argc, char** argv) {
     if (!argc || !argv) {
@@ -74,6 +75,7 @@ void userAppInit(void) {
 }
 
 void userAppExit(void) {
+    sphaira::WebShareStop();
     log_nxlink_exit();
 
     ncmExit();

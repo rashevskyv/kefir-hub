@@ -13,6 +13,7 @@ enum class SettingsItemKind {
     Normal,
     Folder,
     Download,
+    Favorite,
 };
 
 struct SettingsItem {

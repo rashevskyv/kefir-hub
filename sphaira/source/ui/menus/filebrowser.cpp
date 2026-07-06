@@ -24,6 +24,7 @@
 #include "location.hpp"
 #include "threaded_file_transfer.hpp"
 #include "minizip_helper.hpp"
+#include "web.hpp"
 
 #include "yati/yati.hpp"
 #include "yati/source/file.hpp"
@@ -41,6 +42,8 @@
 #include <utility>
 #include <ranges>
 #include <expected>
+#include <memory>
+#include <algorithm>
 
 namespace sphaira::ui::menu::filebrowser {
 namespace {
@@ -404,34 +407,11 @@ void SignalChange() {
 
 FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSide side) : m_menu{menu}, m_side{side} {
     this->SetActions(
-        std::make_pair(Button::L2, Action{[this](){
-            if (!m_menu->m_selected.Empty()) {
-                m_menu->ResetSelection();
-            }
-
-            // if both set, select all.
-            if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
-                const auto set = m_selected_count != m_entries_current.size();
-
-                for (u32 i = 0; i < m_entries_current.size(); i++) {
-                    auto& e = GetEntry(i);
-                    if (e.selected != set) {
-                        e.selected = set;
-                        if (set) {
-                            m_selected_count++;
-                        } else {
-                            m_selected_count--;
-                        }
-                    }
-                }
-            } else {
-                GetEntry().selected ^= 1;
-                if (GetEntry().selected) {
-                    m_selected_count++;
-                } else {
-                    m_selected_count--;
-                }
-            }
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+            ToggleSelection();
+        }}),
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+            InvertSelection();
         }}),
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             if (m_entries_current.empty()) {
@@ -518,14 +498,6 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                     m_menu->PromptIfShouldExit();
                 }
             }
-        }}),
-
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
-            if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
-                DisplayAdvancedOptions();
-            } else {
-                DisplayOptions();
-            }
         }})
     );
 
@@ -558,7 +530,7 @@ void FsView::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void FsView::Draw(NVGcontext* vg, Theme* theme) {
@@ -723,6 +695,64 @@ void FsView::SetIndex(s64 index) {
     m_menu->UpdateSubheading();
 }
 
+void FsView::ToggleSelection() {
+    if (m_entries_current.empty()) {
+        return;
+    }
+
+    if (!m_menu->m_selected.Empty()) {
+        m_menu->ResetSelection();
+    }
+
+    if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
+        s64 visible_selected_count{};
+        for (u32 i = 0; i < m_entries_current.size(); i++) {
+            if (GetEntry(i).selected) {
+                visible_selected_count++;
+            }
+        }
+
+        const auto set = visible_selected_count != static_cast<s64>(m_entries_current.size());
+        for (u32 i = 0; i < m_entries_current.size(); i++) {
+            GetEntry(i).selected = set;
+        }
+    } else {
+        GetEntry().selected ^= 1;
+    }
+
+    m_selected_count = 0;
+    for (const auto& e : m_entries) {
+        if (e.selected) {
+            m_selected_count++;
+        }
+    }
+
+    m_menu->UpdateSubheading();
+}
+
+void FsView::InvertSelection() {
+    if (m_entries_current.empty()) {
+        return;
+    }
+
+    if (!m_menu->m_selected.Empty()) {
+        m_menu->ResetSelection();
+    }
+
+    for (u32 i = 0; i < m_entries_current.size(); i++) {
+        GetEntry(i).selected ^= 1;
+    }
+
+    m_selected_count = 0;
+    for (const auto& e : m_entries) {
+        if (e.selected) {
+            m_selected_count++;
+        }
+    }
+
+    m_menu->UpdateSubheading();
+}
+
 void FsView::InstallForwarder() {
     if (IsSamePath(GetEntry().GetExtension(), "nro")) {
         if (R_FAILED(homebrew::Menu::InstallHomebrewFromPath(GetNewPathCurrent()))) {
@@ -782,20 +812,71 @@ void FsView::InstallFiles() {
     }
 
     const auto targets = GetSelectedEntries();
+    auto failures = std::make_shared<std::vector<std::pair<std::string, Result>>>();
 
-    App::Push<OptionBox>("Install Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, targets](auto op_index){
+    App::Push<OptionBox>("Install Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, targets, failures](auto op_index){
         if (op_index && *op_index) {
             App::PopToMenu();
 
-            App::Push<ui::ProgressBox>(0, "Installing "_i18n, "", [this, targets](auto pbox) -> Result {
+            App::Push<ui::ProgressBox>(0, "Installing "_i18n, "", [this, targets, failures](auto pbox) -> Result {
                 for (auto& e : targets) {
-                    R_TRY(yati::InstallFromFile(pbox, m_fs.get(), GetNewPath(e)));
+                    R_TRY(pbox->ShouldExitResult());
+                    pbox->SetTitle(e.GetName());
+
+                    const auto rc = yati::InstallFromFile(pbox, m_fs.get(), GetNewPath(e));
+                    if (R_FAILED(rc)) {
+                        if (pbox->ShouldExit()) {
+                            return rc;
+                        }
+
+                        log_write("failed to install %s: 0x%X\n", e.name, rc);
+                        failures->emplace_back(e.GetName(), rc);
+                        continue;
+                    }
+
                     App::Notify("Installed "_i18n + e.GetName());
                 }
 
                 R_SUCCEED();
-            }, [this](Result rc){
-                App::PushErrorBox(rc, "File install failed!"_i18n);
+            }, [this, targets, failures](Result rc){
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "File install failed!"_i18n);
+                    return;
+                }
+
+                for (auto& entry : m_entries) {
+                    const auto is_target = std::ranges::any_of(targets, [&entry](const auto& target){
+                        return !std::strcmp(entry.name, target.name);
+                    });
+                    if (!is_target) {
+                        continue;
+                    }
+
+                    entry.selected = std::ranges::any_of(*failures, [&entry](const auto& failure){
+                        return failure.first == entry.name;
+                    });
+                }
+
+                m_selected_count = 0;
+                for (const auto& entry : m_entries) {
+                    if (entry.selected) {
+                        m_selected_count++;
+                    }
+                }
+                m_menu->UpdateSubheading();
+
+                if (!failures->empty()) {
+                    PopupList::Items items;
+                    items.reserve(failures->size());
+
+                    for (const auto& [name, fail_rc] : *failures) {
+                        char rc_buf[32]{};
+                        std::snprintf(rc_buf, sizeof(rc_buf), "0x%X", fail_rc);
+                        items.emplace_back(name + " (" + rc_buf + ")");
+                    }
+
+                    App::Push<PopupList>("Install errors"_i18n, std::move(items), [](auto){});
+                }
             });
         }
     });
@@ -1052,6 +1133,26 @@ void FsView::UploadFiles() {
     );
 }
 
+void FsView::ShareFolder() {
+    if (!IsSd()) {
+        App::Notify("Only microSD folders can be shared"_i18n);
+        return;
+    }
+
+    WebShareResult result;
+    if (const auto rc = WebShareFolder(m_path, result); R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to start folder server"_i18n);
+        return;
+    }
+
+    auto message = "Open this address in a browser:"_i18n + std::string{"\n"};
+    message += result.url;
+    message += "\n\n";
+    message += "Or scan the QR code."_i18n;
+
+    App::Push<OptionBox>(message, "OK"_i18n, [](auto){}, result.qr_image, true);
+}
+
 auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     App::SetBoostMode(true);
     ON_SCOPE_EXIT(App::SetBoostMode(false));
@@ -1218,6 +1319,9 @@ void FsView::SetIndexFromLastFile(const LastFile& last_file) {
 
 void FsView::OnDeleteCallback() {
     bool use_progress_box{true};
+    if (IsSd()) {
+        m_fs->SetIgnoreReadOnly(m_menu->m_ignore_read_only.Get());
+    }
 
     // check if we only have 1 file / folder
     if (m_menu->m_selected.m_files.size() == 1) {
@@ -1249,6 +1353,9 @@ void FsView::OnDeleteCallback() {
             FsDirCollections collections;
             auto& selected = m_menu->m_selected;
             auto src_fs = selected.m_view->GetFs();
+            if (selected.m_view->IsSd()) {
+                src_fs->SetIgnoreReadOnly(m_menu->m_ignore_read_only.Get());
+            }
 
             // build list of dirs / files
             for (const auto&p : selected.m_files) {
@@ -1668,6 +1775,12 @@ void FsView::DisplayOptions() {
         });
     });
 
+    if (IsSd()) {
+        options->Add<SidebarEntryCallback>("Share Folder"_i18n, [this](){
+            ShareFolder();
+        });
+    }
+
     if (m_entries_current.size()) {
         options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Cut);
@@ -1740,8 +1853,12 @@ void FsView::DisplayOptions() {
     // returns true if all entries match the ext array.
     const auto check_all_ext = [this](auto& exts){
         const auto entries = GetSelectedEntries();
+        if (entries.empty()) {
+            return false;
+        }
+
         for (auto&e : entries) {
-            if (!IsExtension(e.GetExtension(), exts)) {
+            if (!e.IsFile() || !IsExtension(e.GetExtension(), exts)) {
                 return false;
             }
         }
@@ -1938,6 +2055,14 @@ void FsView::DisplayAdvancedOptions() {
 }
 
 Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {
+    SetAction(Button::START, Action{"Options"_i18n, [this](){
+        if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
+            view->DisplayAdvancedOptions();
+        } else {
+            view->DisplayOptions();
+        }
+    }});
+
     SetAction(Button::L3, Action{"Split"_i18n, [this](){
         SetSplitScreen(IsSplitScreen() ^ 1);
     }});

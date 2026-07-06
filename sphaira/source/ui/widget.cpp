@@ -184,7 +184,8 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
             continue;
         }
 
-        uiButton ui_button{button, action.m_hint};
+        const auto btn_str = action.m_button_str.empty() ? gfx::getButton(button) : action.m_button_str;
+        uiButton ui_button{button, btn_str, action.m_hint};
 
         bool should_swap = false;
         if (!sort) {
@@ -192,7 +193,7 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
                 if (button == right && draw_actions.size() && draw_actions.back().m_button == left) {
                     const auto s = draw_actions.back();
                     draw_actions.back().m_button = button;
-                    draw_actions.back().m_button_str = gfx::getButton(button);
+                    draw_actions.back().m_button_str = btn_str;
                     draw_actions.back().m_action_str = action.m_hint;
                     draw_actions.emplace_back(s);
                     should_swap = true;
@@ -217,17 +218,15 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
         });
     }
 
-    // --- NEW COMBINING LOGIC ---
-    // If both L and R actions are in draw_actions, combine them
-    bool has_L = false;
-    bool has_R = false;
-    bool has_L2 = false;
-    bool has_R2 = false;
+    // --- COMBINING LOGIC ---
+    std::string l_hint, r_hint, l2_hint, r2_hint, left_hint, right_hint;
     for (const auto& btn : draw_actions) {
-        if (btn.m_button == Button::L) has_L = true;
-        if (btn.m_button == Button::R) has_R = true;
-        if (btn.m_button == Button::L2) has_L2 = true;
-        if (btn.m_button == Button::R2) has_R2 = true;
+        if (btn.m_button == Button::L) l_hint = btn.m_action_str;
+        if (btn.m_button == Button::R) r_hint = btn.m_action_str;
+        if (btn.m_button == Button::L2) l2_hint = btn.m_action_str;
+        if (btn.m_button == Button::R2) r2_hint = btn.m_action_str;
+        if (btn.m_button == Button::LEFT) left_hint = btn.m_action_str;
+        if (btn.m_button == Button::RIGHT) right_hint = btn.m_action_str;
     }
 
     uiButtons merged_actions;
@@ -235,10 +234,16 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
 
     bool L_R_merged = false;
     bool L2_R2_merged = false;
+    bool LEFT_RIGHT_merged = false;
+
+    const bool should_merge_L_R = (!l_hint.empty() && l_hint == "Add Point"_i18n) && (!r_hint.empty() && r_hint == "Remove Point"_i18n);
+    const bool should_merge_L2_R2 = (!l2_hint.empty() && l2_hint == "Load Preset"_i18n) && (!r2_hint.empty() && r2_hint == "Save Preset"_i18n);
+    const bool should_merge_LEFT_RIGHT = (!left_hint.empty() && (left_hint == "Previous Image"_i18n || left_hint == "Prev Image"_i18n)) &&
+                                          (!right_hint.empty() && right_hint == "Next Image"_i18n);
 
     for (const auto& btn : draw_actions) {
         if (btn.m_button == Button::L || btn.m_button == Button::R) {
-            if (has_L && has_R) {
+            if (should_merge_L_R) {
                 if (!L_R_merged) {
                     uiButton combined{Button::L, "\uE0E4/\uE0E5", "Add/Remove Point"_i18n};
                     merged_actions.push_back(combined);
@@ -249,11 +254,22 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
             }
         }
         else if (btn.m_button == Button::L2 || btn.m_button == Button::R2) {
-            if (has_L2 && has_R2) {
+            if (should_merge_L2_R2) {
                 if (!L2_R2_merged) {
                     uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Load/Save Preset"_i18n};
                     merged_actions.push_back(combined);
                     L2_R2_merged = true;
+                }
+            } else {
+                merged_actions.push_back(btn);
+            }
+        }
+        else if (btn.m_button == Button::LEFT || btn.m_button == Button::RIGHT) {
+            if (should_merge_LEFT_RIGHT) {
+                if (!LEFT_RIGHT_merged) {
+                    uiButton combined{Button::LEFT, "\uE0ED/\uE0EE", "Prev / Next Image"_i18n};
+                    merged_actions.push_back(combined);
+                    LEFT_RIGHT_merged = true;
                 }
             } else {
                 merged_actions.push_back(btn);

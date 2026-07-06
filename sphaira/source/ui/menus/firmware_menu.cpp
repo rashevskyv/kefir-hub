@@ -248,8 +248,8 @@ Menu::Menu() : MenuBase{"Firmware", MenuFlag_None} {
         }})
     );
 
-    const Vec4 v{75.f, GetY() + 1.f + 72.f, 1220.f - 150.f, 60.f};
-    m_list = std::make_unique<List>(1, 7, m_pos, v);
+    const Vec4 v{75.f, GetY() + 1.f + 72.f, 1220.f - 150.f, 74.f};
+    m_list = std::make_unique<List>(1, 6, m_pos, v, Vec2{0.f, 6.f});
     m_list->SetLayout(List::Layout::GRID);
 }
 
@@ -266,7 +266,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetIndex(i);
             }
-        });
+        }, this);
     }
 }
 

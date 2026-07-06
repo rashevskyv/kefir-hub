@@ -19,11 +19,14 @@
 
 #include <minIni.h>
 #include <stb_image.h>
+#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <string_view>
+#include <utility>
 #include <yyjson.h>
 #include "yyjson_helper.hpp"
 
@@ -473,6 +476,29 @@ auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) ->
     R_SUCCEED();
 }
 
+auto DelimitedThemesToPackListEntry(const std::string& themes_str, PackListEntry& entry) -> bool {
+    size_t start = 0;
+    while (start < themes_str.size()) {
+        size_t end = themes_str.find(';', start);
+        if (end == std::string::npos) end = themes_str.size();
+        std::string theme_part = themes_str.substr(start, end - start);
+        start = end + 1;
+
+        size_t p1 = theme_part.find('|');
+        if (p1 != std::string::npos) {
+            size_t p2 = theme_part.find('|', p1 + 1);
+            if (p2 != std::string::npos) {
+                ThemeEntry theme;
+                theme.details.name = theme_part.substr(0, p1);
+                theme.target = theme_part.substr(p1 + 1, p2 - p1 - 1);
+                theme.download_url = theme_part.substr(p2 + 1);
+                entry.themes.push_back(theme);
+            }
+        }
+    }
+    return !entry.themes.empty();
+}
+
 auto PackListEntryToJson(const PackListEntry& entry) -> std::string {
     yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
     yyjson_mut_val* root = yyjson_mut_obj(doc);
@@ -496,61 +522,66 @@ auto PackListEntryToJson(const PackListEntry& entry) -> std::string {
         yyjson_mut_arr_add_val(themes_arr, theme_obj);
     }
 
-    size_t len = 0;
+    size_t len{};
     char* json = yyjson_mut_write(doc, YYJSON_WRITE_NOFLAG, &len);
     std::string out;
     if (json) {
         out.assign(json, len);
         std::free(json);
     }
+
     yyjson_mut_doc_free(doc);
     return out;
 }
 
 auto JsonToPackListEntry(const std::string& json_str, PackListEntry& entry) -> bool {
     yyjson_doc* doc = yyjson_read(json_str.c_str(), json_str.size(), 0);
-    if (!doc) return false;
+    if (!doc) {
+        return false;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
     yyjson_val* root = yyjson_doc_get_root(doc);
     if (!root || !yyjson_is_obj(root)) {
-        yyjson_doc_free(doc);
         return false;
     }
 
-    yyjson_val* id_val = yyjson_obj_get(root, "id");
-    yyjson_val* name_val = yyjson_obj_get(root, "name");
-    yyjson_val* desc_val = yyjson_obj_get(root, "description");
-    yyjson_val* creator_val = yyjson_obj_get(root, "creator");
+    const auto assign_string = [](yyjson_val* obj, const char* key, std::string& out) {
+        if (auto val = yyjson_obj_get(obj, key); val && yyjson_is_str(val)) {
+            out = yyjson_get_str(val);
+        }
+    };
 
-    if (id_val) entry.id = yyjson_get_str(id_val);
-    if (name_val) entry.details.name = yyjson_get_str(name_val);
-    if (desc_val) entry.details.description = yyjson_get_str(desc_val);
-    if (creator_val) entry.creator.display_name = yyjson_get_str(creator_val);
+    assign_string(root, "id", entry.id);
+    assign_string(root, "name", entry.details.name);
+    assign_string(root, "description", entry.details.description);
+    assign_string(root, "creator", entry.creator.display_name);
 
-    yyjson_val* themes_arr = yyjson_obj_get(root, "themes");
-    if (themes_arr && yyjson_is_arr(themes_arr)) {
-        size_t idx, max;
-        yyjson_val* theme_val;
-        yyjson_arr_foreach(themes_arr, idx, max, theme_val) {
-            if (yyjson_is_obj(theme_val)) {
-                ThemeEntry theme;
-                yyjson_val* t_id = yyjson_obj_get(theme_val, "id");
-                yyjson_val* t_name = yyjson_obj_get(theme_val, "name");
-                yyjson_val* t_desc = yyjson_obj_get(theme_val, "description");
-                yyjson_val* t_target = yyjson_obj_get(theme_val, "target");
-                yyjson_val* t_url = yyjson_obj_get(theme_val, "downloadUrl");
+    auto themes = yyjson_obj_get(root, "themes");
+    if (!themes || !yyjson_is_arr(themes)) {
+        return false;
+    }
 
-                if (t_id) theme.id = yyjson_get_str(t_id);
-                if (t_name) theme.details.name = yyjson_get_str(t_name);
-                if (t_desc) theme.details.description = yyjson_get_str(t_desc);
-                if (t_target) theme.target = yyjson_get_str(t_target);
-                if (t_url) theme.download_url = yyjson_get_str(t_url);
-                entry.themes.push_back(theme);
-            }
+    size_t idx, max;
+    yyjson_val* theme_val;
+    yyjson_arr_foreach(themes, idx, max, theme_val) {
+        if (!yyjson_is_obj(theme_val)) {
+            continue;
+        }
+
+        ThemeEntry theme;
+        assign_string(theme_val, "id", theme.id);
+        assign_string(theme_val, "name", theme.details.name);
+        assign_string(theme_val, "description", theme.details.description);
+        assign_string(theme_val, "target", theme.target);
+        assign_string(theme_val, "downloadUrl", theme.download_url);
+
+        if (!theme.download_url.empty()) {
+            entry.themes.push_back(std::move(theme));
         }
     }
 
-    yyjson_doc_free(doc);
-    return true;
+    return !entry.themes.empty();
 }
 
 auto GetFavoriteIds() -> std::vector<std::string> {
@@ -561,7 +592,17 @@ auto GetFavoriteIds() -> std::vector<std::string> {
     auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
         auto* ctx = static_cast<Context*>(UserData);
         if (std::strcmp(Section, "themezer_favorites") == 0) {
-            ctx->ids.push_back(Key);
+            const auto add_id = [ctx](std::string id) {
+                if (std::find(ctx->ids.begin(), ctx->ids.end(), id) == ctx->ids.end()) {
+                    ctx->ids.push_back(std::move(id));
+                }
+            };
+            std::string key_str(Key);
+            if (key_str.ends_with("_name")) {
+                add_id(key_str.substr(0, key_str.size() - 5));
+            } else if (!key_str.ends_with("_creator") && !key_str.ends_with("_themes")) {
+                add_id(std::move(key_str));
+            }
         }
         return 1;
     };
@@ -573,14 +614,48 @@ auto GetFavoriteIds() -> std::vector<std::string> {
 auto GetFavorites() -> std::vector<PackListEntry> {
     struct Context {
         std::vector<PackListEntry> favorites;
+
+        void Add(PackListEntry entry) {
+            const auto found = std::find_if(favorites.begin(), favorites.end(), [&entry](const auto& favorite) {
+                return favorite.id == entry.id;
+            });
+            if (found == favorites.end()) {
+                favorites.push_back(std::move(entry));
+            }
+        }
     } ctx;
 
     auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
         auto* ctx = static_cast<Context*>(UserData);
         if (std::strcmp(Section, "themezer_favorites") == 0) {
-            PackListEntry entry;
-            if (JsonToPackListEntry(Value, entry)) {
-                ctx->favorites.push_back(std::move(entry));
+            std::string key_str(Key);
+            if (key_str.ends_with("_creator") || key_str.ends_with("_themes")) {
+                return 1;
+            }
+
+            if (!key_str.ends_with("_name")) {
+                PackListEntry entry;
+                if (JsonToPackListEntry(Value, entry)) {
+                    ctx->Add(std::move(entry));
+                }
+                return 1;
+            }
+
+            if (key_str.ends_with("_name")) {
+                std::string id = key_str.substr(0, key_str.size() - 5);
+                PackListEntry entry;
+                entry.id = id;
+                entry.details.name = Value;
+
+                char creator_buf[256];
+                ini_gets("themezer_favorites", (id + "_creator").c_str(), "Unknown", creator_buf, sizeof(creator_buf), App::CONFIG_PATH);
+                entry.creator.display_name = creator_buf;
+
+                char themes_buf[1024];
+                ini_gets("themezer_favorites", (id + "_themes").c_str(), "", themes_buf, sizeof(themes_buf), App::CONFIG_PATH);
+                if (DelimitedThemesToPackListEntry(themes_buf, entry)) {
+                    ctx->Add(std::move(entry));
+                }
             }
         }
         return 1;
@@ -605,11 +680,16 @@ void Menu::ToggleFavorite() {
     if (it != m_favorite_ids.end()) {
         m_favorite_ids.erase(it);
         ini_puts("themezer_favorites", id.c_str(), nullptr, App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_name").c_str(), nullptr, App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_creator").c_str(), nullptr, App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_themes").c_str(), nullptr, App::CONFIG_PATH);
         App::Notify("Removed from Favorites"_i18n);
     } else {
         m_favorite_ids.push_back(id);
-        std::string json_str = PackListEntryToJson(entry);
-        ini_puts("themezer_favorites", id.c_str(), json_str.c_str(), App::CONFIG_PATH);
+        ini_puts("themezer_favorites", id.c_str(), PackListEntryToJson(entry).c_str(), App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_name").c_str(), nullptr, App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_creator").c_str(), nullptr, App::CONFIG_PATH);
+        ini_puts("themezer_favorites", (id + "_themes").c_str(), nullptr, App::CONFIG_PATH);
         App::Notify("Added to Favorites"_i18n);
     }
     UpdateFavoriteAction();

@@ -375,7 +375,7 @@ auto Sidebar::Update(Controller* controller, TouchInfo* touch) -> void {
             if (touch) {
                 FireAction(Button::A);
             }
-        });
+        }, this);
     }
 
     if (m_items[m_index]->ShouldPop()) {

@@ -1570,6 +1570,35 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     return items;
 }
 
+auto MakeFavoriteThemeItem(ui::menu::themezer::PackListEntry entry) -> SettingsItem {
+    return {
+        entry.details.name,
+        entry.details.description.empty() ? "Install favorite theme." : entry.details.description,
+        [](){
+            return std::string{};
+        },
+        [entry](){
+            App::Push<OptionBox>(
+                "Download theme?"_i18n,
+                "Back"_i18n, "Download"_i18n, 1, [entry](auto op_index){
+                    if (op_index && *op_index) {
+                        App::Push<ProgressBox>(0, "Downloading "_i18n, entry.details.name, [entry](auto pbox) -> Result {
+                            return ui::menu::themezer::InstallTheme(pbox, entry);
+                        }, [entry](Result rc){
+                            App::PushErrorBox(rc, "Failed to download theme"_i18n);
+
+                            if (R_SUCCEEDED(rc)) {
+                                App::Notify("Downloaded "_i18n + entry.details.name);
+                            }
+                        });
+                    }
+                }
+            );
+        },
+        SettingsItemKind::Favorite
+    };
+}
+
 auto BuildThemeItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -1584,8 +1613,6 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
         },
         SettingsItemKind::Folder,
     });
-
-
 
     items.emplace_back(MakePackageAction({
         "Mario BG Dark",
@@ -1618,6 +1645,10 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
     }));
+
+    for (const auto& entry : ui::menu::themezer::GetFavorites()) {
+        items.emplace_back(MakeFavoriteThemeItem(entry));
+    }
 
     return items;
 }
@@ -2027,7 +2058,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetCategoryIndex(i);
             }
-        });
+        }, this);
     } else {
         const auto& category = m_categories[m_category_index];
         m_item_list->OnUpdate(controller, touch, m_item_index, category.items.size(), [this](bool touch, auto i) {
@@ -2037,7 +2068,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetItemIndex(i);
             }
-        });
+        }, this);
     }
 }
 
@@ -2080,6 +2111,25 @@ void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& 
         nvgLineTo(vg, x + 32.f, y + 16.f);
         nvgMoveTo(vg, x + 8.f, y + 36.f);
         nvgLineTo(vg, x + 34.f, y + 36.f);
+        nvgStroke(vg);
+    } else if (item.kind == SettingsItemKind::Favorite) {
+        const float cx = x + 21.f;
+        const float cy = y + 20.f;
+        const float rOut = 15.f;
+        const float rIn = 7.f;
+        nvgBeginPath(vg);
+        for (int i = 0; i < 10; ++i) {
+            float r = (i % 2 == 0) ? rOut : rIn;
+            float angle = -3.14159265f / 2.f + i * 3.14159265f / 5.f;
+            float px = cx + r * std::cos(angle);
+            float py = cy + r * std::sin(angle);
+            if (i == 0) {
+                nvgMoveTo(vg, px, py);
+            } else {
+                nvgLineTo(vg, px, py);
+            }
+        }
+        nvgClosePath(vg);
         nvgStroke(vg);
     }
 
@@ -3457,7 +3507,7 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void FanCurveMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3521,7 +3571,7 @@ void SoftwareMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void SoftwareMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3590,7 +3640,7 @@ void DbiMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void DbiMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3659,7 +3709,7 @@ void KefirSettingsMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void KefirSettingsMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3708,6 +3758,7 @@ ThemesMenu::~ThemesMenu() = default;
 
 void ThemesMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    m_items = BuildThemeItems();
     SetIndex(m_index);
 }
 
@@ -3720,7 +3771,7 @@ void ThemesMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void ThemesMenu::Draw(NVGcontext* vg, Theme* theme) {
@@ -3781,7 +3832,7 @@ void TranslateMenu::Update(Controller* controller, TouchInfo* touch) {
             App::PlaySoundEffect(SoundEffect_Focus);
             SetIndex(i);
         }
-    });
+    }, this);
 }
 
 void TranslateMenu::Draw(NVGcontext* vg, Theme* theme) {
