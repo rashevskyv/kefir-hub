@@ -952,10 +952,33 @@ public:
             theme->GetColour(ThemeEntryID_TEXT_SELECTED), m_title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
         const auto target = m_target_version.empty() ? "Unknown" : m_target_version;
-        gfx::drawTextArgs(vg, m_pos.x + 42.f, m_pos.y + 70.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), "Current: %s", m_current_version.c_str());
-        gfx::drawTextArgs(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, 17.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), "Target: %s", target.c_str());
+
+        nvgSave(vg);
+        nvgFontSize(vg, 17.f);
+        nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
+
+        // Draw "Current: " bold, version normal
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current: ", nullptr);
+        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, "Current: ", nullptr);
+
+        float current_bounds[4]{};
+        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current: ", nullptr, current_bounds);
+        float current_width = current_bounds[2] - current_bounds[0];
+
+        nvgText(vg, m_pos.x + 42.f + current_width, m_pos.y + 70.f, m_current_version.c_str(), nullptr);
+
+        // Draw "Target: " bold, version normal
+        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+        float target_bounds[4]{};
+        nvgTextBounds(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr, target_bounds);
+        float target_width = target_bounds[2] - target_bounds[0];
+
+        nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr);
+
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width, m_pos.y + 70.f, "Target: ", nullptr);
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width + 1.f, m_pos.y + 70.f, "Target: ", nullptr);
+        nvgRestore(vg);
 
         gfx::drawRect(vg, m_pos.x, m_pos.y + 102.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         gfx::drawRect(vg, m_pos.x, m_pos.y + m_pos.h - 82.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
