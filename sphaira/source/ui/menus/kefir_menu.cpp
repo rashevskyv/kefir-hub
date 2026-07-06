@@ -833,7 +833,7 @@ auto EntryDescription(const UpdaterEntry& entry) -> const char* {
     if (entry.type == UpdaterEntryType::CustomLink) {
         return "Enter a ZIP URL and extract it to the SD card.";
     }
-    return "";
+    return entry.url.c_str();
 }
 
 auto EntryIsFolder(const UpdaterEntry& entry) -> bool {
@@ -1894,7 +1894,11 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), type_label.c_str());
 
         // 3. Description
-        gfx::drawTextBox(vg, text_x, tile.y + 92.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), EntryDescription(entry));
+        const char* description = EntryDescription(entry);
+        if (entry.type == UpdaterEntryType::Kefir || entry.type == UpdaterEntryType::Firmware) {
+            description = "";
+        }
+        gfx::drawTextBox(vg, text_x, tile.y + 92.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), description);
     });
 }
 
