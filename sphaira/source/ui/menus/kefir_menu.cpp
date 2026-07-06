@@ -1889,10 +1889,10 @@ void Menu::DisplayOptions() {
 
     SidebarEntryArray::Items view_items{
         "List"_i18n,
-        "Tiles"_i18n,
+        "Grid"_i18n,
     };
 
-    options->Add<SidebarEntryArray>("View"_i18n, view_items, [this](s64& index_out) {
+    options->Add<SidebarEntryArray>("Layout"_i18n, view_items, [this](s64& index_out) {
         m_view_mode.Set(index_out);
         OnLayoutChange();
     }, m_view_mode.Get());
