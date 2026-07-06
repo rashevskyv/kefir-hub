@@ -819,7 +819,7 @@ auto TypeLabel(UpdaterEntryType type) -> const char* {
         case UpdaterEntryType::CustomLink:
             return "Other";
         case UpdaterEntryType::Kefir:
-            return "Version";
+            return "Kefir";
         case UpdaterEntryType::Firmware:
             return "Firmware";
     }
