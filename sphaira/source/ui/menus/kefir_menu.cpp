@@ -45,7 +45,7 @@ constexpr const char* COPY_FILES_TXT = "/config/kefir-updater/copy_files.txt";
 constexpr const char* STAGED_COPY_FILES_TXT = "/kefir/config/kefir-updater/copy_files.txt";
 constexpr const char* DOWNGRADE_FIX_SAVE = "/save/8000000000000073";
 constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
-constexpr s64 TILE_COLUMNS = 5;
+constexpr s64 TILE_COLUMNS = 3;
 constexpr s64 TILE_EMPTY = -1;
 constexpr s64 UPDATER_LIST_PAGE_ROWS = 6;
 constexpr float UPDATER_LIST_ROW_HEIGHT = 74.f;
@@ -1850,27 +1850,51 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
                 theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", TileGroupLabel(entry.type));
         }
 
-        const auto tile = Vec4{v.x, v.y, v.w, v.w};
-        gfx::drawRect(vg, tile, theme->GetColour(selected ? ThemeEntryID_SELECTED_BACKGROUND : ThemeEntryID_LINE_SEPARATOR), 16.f);
+        const auto tile = v;
         if (selected) {
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, tile.x - 2.f, tile.y - 2.f, tile.w + 4.f, tile.h + 4.f, 18.f);
-            nvgStrokeWidth(vg, 4.f);
-            nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
-            nvgStroke(vg);
+            gfx::drawRectOutline(vg, theme, 4.f, tile);
+        } else {
+            gfx::drawRect(vg, tile, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 16.f);
         }
 
-        DrawUpdaterEntryIcon(vg, theme, entry, tile.x + 14.f, tile.y + 14.f, selected, unsupported);
+        // Draw icon container frame (subtle background)
+        gfx::drawRect(vg, tile.x + 20.f, tile.y + 20.f, 115.f, 115.f, nvgRGBA(0, 0, 0, 25), 8.f);
 
+        // Center and scale the vector icon inside the 115x115 container
+        // Original icon size: 28x23. With 2.5x scale: 70x57.5.
+        const float ix = tile.x + 20.f + (115.f - 70.f) / 2.f;
+        const float iy = tile.y + 20.f + (115.f - 57.5f) / 2.f;
+
+        nvgSave(vg);
+        nvgTranslate(vg, ix, iy);
+        nvgScale(vg, 2.5f, 2.5f);
+        DrawUpdaterEntryIcon(vg, theme, entry, 0.f, 0.f, selected, unsupported);
+        nvgRestore(vg);
+
+        // Draw texts on the right side of the card
         const auto name_colour = unsupported ? theme->GetColour(ThemeEntryID_TEXT_INFO) : downgrade ? theme->GetColour(ThemeEntryID_ERROR) :
             theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
-        const auto label = TileLabel(entry);
-        gfx::drawTextBox(vg, tile.x + 12.f, tile.y + 33.f, 26.f, tile.w - 24.f, name_colour, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
+        std::string name = EntryDisplayName(entry);
+        if (downgrade) {
+            name += " [DOWNGRADE]";
+        }
+        if (unsupported) {
+            name += " [UNSUPPORTED]";
+        }
+
+        const float text_x = tile.x + 148.f;
+        const float text_clip_w = tile.w - 20.f - 148.f;
+
+        // 1. Title/Name
+        gfx::drawTextBox(vg, text_x, tile.y + 24.f, 18.f, text_clip_w, name_colour, name.c_str());
+
+        // 2. Type/Status
         const auto type_label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
-        gfx::drawTextArgs(vg, tile.x + tile.w / 2.f, tile.y + tile.h - 31.f, 14.f,
-            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%s", type_label.c_str());
+        gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), type_label.c_str());
+
+        // 3. Description
+        gfx::drawTextBox(vg, text_x, tile.y + 92.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), EntryDescription(entry));
     });
 }
 
@@ -1909,13 +1933,13 @@ void Menu::OnLayoutChange() {
     Vec4 content_pos{};
     if (static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles) {
         constexpr float x = 75.f;
-        constexpr float width = 1130.f;
-        constexpr float tile_size = 196.f;
-        constexpr float x_gap = (width - tile_size * static_cast<float>(TILE_COLUMNS)) / static_cast<float>(TILE_COLUMNS - 1);
-        constexpr float y_gap = 44.f;
+        constexpr float tile_w = 370.f;
+        constexpr float tile_h = 155.f;
+        constexpr float x_gap = 10.f;
+        constexpr float y_gap = 34.f;
         content_pos = make_content_pos(GetY() + UPDATER_TILE_CLIP_TOP_OFFSET);
-        const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_size, tile_size};
-        m_list = std::make_unique<List>(TILE_COLUMNS, TILE_COLUMNS * 2, content_pos, v, Vec2{x_gap, y_gap});
+        const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_w, tile_h};
+        m_list = std::make_unique<List>(3, 3 * 3, content_pos, v, Vec2{x_gap, y_gap});
     } else {
         content_pos = make_content_pos(GetY() + UPDATER_LIST_TOP_OFFSET);
         const Vec4 v{75.f, GetY() + UPDATER_LIST_TOP_OFFSET, 1220.f - 150.f, UPDATER_LIST_ROW_HEIGHT};
@@ -1935,7 +1959,7 @@ void Menu::EnsureTileVisible() {
         return;
     }
 
-    constexpr s64 visible_rows = 2;
+    constexpr s64 visible_rows = 3;
     const auto row = m_tile_index / TILE_COLUMNS;
     const auto first_visible_row = static_cast<s64>(m_list->GetYoff() / m_list->GetMaxY());
 
