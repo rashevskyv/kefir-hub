@@ -957,18 +957,18 @@ public:
         nvgFontSize(vg, 17.f);
         nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
 
-        // Draw "Current: " bold, version normal
+        // Draw "Current:" bold, version normal
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current: ", nullptr);
-        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, "Current: ", nullptr);
+        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current:", nullptr);
+        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, "Current:", nullptr);
 
         float current_bounds[4]{};
-        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current: ", nullptr, current_bounds);
+        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current:", nullptr, current_bounds);
         float current_width = current_bounds[2] - current_bounds[0];
 
-        nvgText(vg, m_pos.x + 42.f + current_width, m_pos.y + 70.f, m_current_version.c_str(), nullptr);
+        nvgText(vg, m_pos.x + 42.f + current_width + 7.f, m_pos.y + 70.f, m_current_version.c_str(), nullptr);
 
-        // Draw "Target: " bold, version normal
+        // Draw "Target:" bold, version normal
         nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
         float target_bounds[4]{};
         nvgTextBounds(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr, target_bounds);
@@ -976,8 +976,8 @@ public:
 
         nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr);
 
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width, m_pos.y + 70.f, "Target: ", nullptr);
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width + 1.f, m_pos.y + 70.f, "Target: ", nullptr);
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f, m_pos.y + 70.f, "Target:", nullptr);
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f + 1.f, m_pos.y + 70.f, "Target:", nullptr);
         nvgRestore(vg);
 
         gfx::drawRect(vg, m_pos.x, m_pos.y + 102.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
@@ -1715,32 +1715,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
     // Current Kefir
-    nvgText(vg, 80.f, info_y, "Current Kefir: ", nullptr);
-    nvgText(vg, 81.f, info_y, "Current Kefir: ", nullptr);
+    nvgText(vg, 80.f, info_y, "Current Kefir:", nullptr);
+    nvgText(vg, 81.f, info_y, "Current Kefir:", nullptr);
     float ck_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y, "Current Kefir: ", nullptr, ck_bounds);
-    nvgText(vg, ck_bounds[2], info_y, m_current_kefir.c_str(), nullptr);
+    nvgTextBounds(vg, 80.f, info_y, "Current Kefir:", nullptr, ck_bounds);
+    nvgText(vg, ck_bounds[2] + 7.f, info_y, m_current_kefir.c_str(), nullptr);
 
     // Latest Kefir
-    nvgText(vg, 650.f, info_y, "Latest Kefir: ", nullptr);
-    nvgText(vg, 651.f, info_y, "Latest Kefir: ", nullptr);
+    nvgText(vg, 650.f, info_y, "Latest Kefir:", nullptr);
+    nvgText(vg, 651.f, info_y, "Latest Kefir:", nullptr);
     float lk_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y, "Latest Kefir: ", nullptr, lk_bounds);
-    nvgText(vg, lk_bounds[2], info_y, m_latest_kefir.c_str(), nullptr);
+    nvgTextBounds(vg, 650.f, info_y, "Latest Kefir:", nullptr, lk_bounds);
+    nvgText(vg, lk_bounds[2] + 7.f, info_y, m_latest_kefir.c_str(), nullptr);
 
     // Current Firmware
-    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr);
-    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr);
+    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr);
+    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr);
     float cf_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr, cf_bounds);
-    nvgText(vg, cf_bounds[2], info_y + UPDATER_INFO_ROW_GAP, m_current_firmware.c_str(), nullptr);
+    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr, cf_bounds);
+    nvgText(vg, cf_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_current_firmware.c_str(), nullptr);
 
     // Console
-    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr);
-    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr);
+    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr);
+    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr);
     float c_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr, c_bounds);
-    nvgText(vg, c_bounds[2], info_y + UPDATER_INFO_ROW_GAP, m_console_revision.c_str(), nullptr);
+    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr, c_bounds);
+    nvgText(vg, c_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_console_revision.c_str(), nullptr);
 
     nvgRestore(vg);
 
