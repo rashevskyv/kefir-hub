@@ -102,8 +102,8 @@ Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
         }})
     );
 
-    const Vec2 pad{22.f, 22.f};
-    const Vec4 v{75.f, 150.f, 330.f, 132.f};
+    const Vec2 pad{10.f, 10.f};
+    const Vec4 v{75.f, 110.f, 370.f, 155.f};
     m_list = std::make_unique<List>(3, 9, m_pos, v, pad);
     m_list->SetLayout(List::Layout::GRID);
 
@@ -147,20 +147,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
         }
 
-        const Vec4 icon_box{v.x + 18.f, v.y + 20.f, 92.f, 92.f};
+        const Vec4 icon_box{v.x + 20.f, v.y + 20.f, 115.f, 115.f};
         if (item.icon_texture) {
-            gfx::drawImage(vg, icon_box, item.icon_texture, 8.f);
+            gfx::drawImage(vg, icon_box, item.icon_texture, 5.f);
         } else {
-            gfx::drawImage(vg, icon_box, App::GetDefaultImage(), 8.f);
+            gfx::drawImage(vg, icon_box, App::GetDefaultImage(), 5.f);
         }
 
         const auto title_colour = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
         gfx::drawTextBox(
-            vg, v.x + 124.f, v.y + 24.f, 20.f, v.w - 138.f,
+            vg, v.x + 148.f, v.y + 45.f, 20.f, v.w - 178.f,
             theme->GetColour(title_colour), item.label.c_str()
         );
         gfx::drawTextBox(
-            vg, v.x + 124.f, v.y + 55.f, 13.f, v.w - 138.f,
+            vg, v.x + 148.f, v.y + 80.f, 13.f, v.w - 178.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
         );
     });
