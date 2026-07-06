@@ -1709,14 +1709,40 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const auto tiles = static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles;
     const auto info_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto info_y = GetY() + UPDATER_INFO_Y_OFFSET;
-    gfx::drawTextArgs(vg, 80.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        info_colour, "Current Kefir: %s", m_current_kefir.c_str());
-    gfx::drawTextArgs(vg, 650.f, info_y, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        info_colour, "Latest Kefir: %s", m_latest_kefir.c_str());
-    gfx::drawTextArgs(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        info_colour, "Current Firmware: %s", m_current_firmware.c_str());
-    gfx::drawTextArgs(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        info_colour, "Console: %s", m_console_revision.c_str());
+    nvgSave(vg);
+    nvgFontSize(vg, 17.f);
+    nvgFillColor(vg, info_colour);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+    // Current Kefir
+    nvgText(vg, 80.f, info_y, "Current Kefir: ", nullptr);
+    nvgText(vg, 81.f, info_y, "Current Kefir: ", nullptr);
+    float ck_bounds[4]{};
+    nvgTextBounds(vg, 80.f, info_y, "Current Kefir: ", nullptr, ck_bounds);
+    nvgText(vg, ck_bounds[2], info_y, m_current_kefir.c_str(), nullptr);
+
+    // Latest Kefir
+    nvgText(vg, 650.f, info_y, "Latest Kefir: ", nullptr);
+    nvgText(vg, 651.f, info_y, "Latest Kefir: ", nullptr);
+    float lk_bounds[4]{};
+    nvgTextBounds(vg, 650.f, info_y, "Latest Kefir: ", nullptr, lk_bounds);
+    nvgText(vg, lk_bounds[2], info_y, m_latest_kefir.c_str(), nullptr);
+
+    // Current Firmware
+    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr);
+    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr);
+    float cf_bounds[4]{};
+    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware: ", nullptr, cf_bounds);
+    nvgText(vg, cf_bounds[2], info_y + UPDATER_INFO_ROW_GAP, m_current_firmware.c_str(), nullptr);
+
+    // Console
+    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr);
+    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr);
+    float c_bounds[4]{};
+    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console: ", nullptr, c_bounds);
+    nvgText(vg, c_bounds[2], info_y + UPDATER_INFO_ROW_GAP, m_console_revision.c_str(), nullptr);
+
+    nvgRestore(vg);
 
     if (m_loading) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
