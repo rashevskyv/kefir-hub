@@ -266,8 +266,12 @@ SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& item
         if (!IsEnabled()) {
             DependsClick();
         } else {
-            // m_callback(m_index);
-            m_list_callback();
+            if (m_items.size() == 2) {
+                m_index = (m_index + 1) % 2;
+                m_callback(m_index);
+            } else {
+                m_list_callback();
+            }
         }}
     });
 }

@@ -833,7 +833,7 @@ auto EntryDescription(const UpdaterEntry& entry) -> const char* {
     if (entry.type == UpdaterEntryType::CustomLink) {
         return "Enter a ZIP URL and extract it to the SD card.";
     }
-    return entry.url.c_str();
+    return "";
 }
 
 auto EntryIsFolder(const UpdaterEntry& entry) -> bool {
@@ -1846,7 +1846,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
             TileGroupLabel(entry.type) != std::string_view{TileGroupLabel(m_entries[previous_entry_index].type)};
 
         if (show_group) {
-            gfx::drawTextArgs(vg, v.x, v.y - 27.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            gfx::drawTextArgs(vg, v.x, v.y - 25.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
                 theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", TileGroupLabel(entry.type));
         }
 
@@ -1936,7 +1936,7 @@ void Menu::OnLayoutChange() {
         constexpr float tile_w = 370.f;
         constexpr float tile_h = 155.f;
         constexpr float x_gap = 10.f;
-        constexpr float y_gap = 34.f;
+        constexpr float y_gap = 37.f;
         content_pos = make_content_pos(GetY() + UPDATER_TILE_CLIP_TOP_OFFSET);
         const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_w, tile_h};
         m_list = std::make_unique<List>(3, 3 * 3, content_pos, v, Vec2{x_gap, y_gap});
@@ -1959,7 +1959,7 @@ void Menu::EnsureTileVisible() {
         return;
     }
 
-    constexpr s64 visible_rows = 3;
+    constexpr s64 visible_rows = 2;
     const auto row = m_tile_index / TILE_COLUMNS;
     const auto first_visible_row = static_cast<s64>(m_list->GetYoff() / m_list->GetMaxY());
 
