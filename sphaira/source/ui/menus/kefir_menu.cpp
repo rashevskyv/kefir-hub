@@ -1798,9 +1798,6 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         }
 
         std::string name = EntryDisplayName(entry);
-        if (downgrade) {
-            name += " [DOWNGRADE]";
-        }
         if (unsupported) {
             name += " [UNSUPPORTED]";
         }
@@ -1812,9 +1809,11 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
             theme->GetColour(name_id), name.c_str());
 
         if (entry.type != UpdaterEntryType::Kefir) {
+            const auto label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
+            const auto label_colour = (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
             gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
-                NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO),
-                "%s", unsupported ? UnsupportedFirmwareLabel(m_supported_firmware).c_str() : TypeLabel(entry.type));
+                NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, label_colour,
+                "%s", label.c_str());
         }
 
         gfx::drawTextBox(vg, text_x, v.y + 44.f, 16.f, v.w - 70.f,
@@ -1846,7 +1845,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
             TileGroupLabel(entry.type) != std::string_view{TileGroupLabel(m_entries[previous_entry_index].type)};
 
         if (show_group) {
-            gfx::drawTextArgs(vg, v.x, v.y - 25.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            gfx::drawTextArgs(vg, v.x, v.y - 33.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
                 theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", TileGroupLabel(entry.type));
         }
 
@@ -1876,9 +1875,6 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
             theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
 
         std::string name = EntryDisplayName(entry);
-        if (downgrade) {
-            name += " [DOWNGRADE]";
-        }
         if (unsupported) {
             name += " [UNSUPPORTED]";
         }
@@ -1891,7 +1887,8 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
 
         // 2. Type/Status
         const auto type_label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
-        gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), type_label.c_str());
+        const auto type_colour = (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, type_colour, type_label.c_str());
 
         // 3. Description
         const char* description = EntryDescription(entry);
