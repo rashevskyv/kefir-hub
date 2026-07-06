@@ -1939,7 +1939,7 @@ void Menu::OnLayoutChange() {
         constexpr float y_gap = 37.f;
         content_pos = make_content_pos(GetY() + UPDATER_TILE_CLIP_TOP_OFFSET);
         const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_w, tile_h};
-        m_list = std::make_unique<List>(3, 3 * 3, content_pos, v, Vec2{x_gap, y_gap});
+        m_list = std::make_unique<List>(3, 2 * 3, content_pos, v, Vec2{x_gap, y_gap});
     } else {
         content_pos = make_content_pos(GetY() + UPDATER_LIST_TOP_OFFSET);
         const Vec4 v{75.f, GetY() + UPDATER_LIST_TOP_OFFSET, 1220.f - 150.f, UPDATER_LIST_ROW_HEIGHT};
