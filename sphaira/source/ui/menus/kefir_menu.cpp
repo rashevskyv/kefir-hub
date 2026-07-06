@@ -1775,8 +1775,8 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& entry = m_entries[i];
         if (entry.type == UpdaterEntryType::Section) {
-            const auto top_pad = 24.f;
-            const Vec4 band{v.x, v.y + top_pad, v.w, 34.f};
+            const auto top_pad = 32.f;
+            const Vec4 band{v.x, v.y + top_pad, v.w, 26.f};
             gfx::drawRect(vg, band.x, band.y, band.w, band.h, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 4.f);
             gfx::drawRect(vg, v.x + 15.f, band.y + 7.f, 4.f, band.h - 14.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 2.f);
             gfx::drawTextArgs(vg, v.x + 30.f, band.y + band.h / 2.f, 16.f,
@@ -1937,7 +1937,7 @@ void Menu::OnLayoutChange() {
         constexpr float tile_w = 370.f;
         constexpr float tile_h = 155.f;
         constexpr float x_gap = 10.f;
-        constexpr float y_gap = 37.f;
+        constexpr float y_gap = 65.f;
         content_pos = make_content_pos(GetY() + UPDATER_TILE_CLIP_TOP_OFFSET);
         const Vec4 v{x, GetY() + UPDATER_TILE_TOP_OFFSET, tile_w, tile_h};
         m_list = std::make_unique<List>(3, 2 * 3, content_pos, v, Vec2{x_gap, y_gap});
