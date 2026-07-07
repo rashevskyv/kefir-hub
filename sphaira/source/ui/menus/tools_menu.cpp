@@ -65,33 +65,33 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 } // namespace
 
-Menu::Menu() : MenuBase{"Tools", MenuFlag_Tab} {
+Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
     m_items = {
-        { "Updater", "Update Kefir, firmware and network downloads.", 0, [](){
+        { "Updater"_i18n, "Update Kefir, firmware and network downloads."_i18n, 0, [](){
             App::Push<ui::menu::kefir::Menu>();
         }},
-        { "Kefir Settings", "Fan curves and console-specific Kefir switches.", 0, [](){
+        { "Kefir Settings"_i18n, "Fan curves and console-specific Kefir switches."_i18n, 0, [](){
             App::Push<ui::menu::settings::KefirSettingsMenu>();
         }},
-        { "Cheats", "Download and manage cheat databases.", 0, [](){
+        { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
         }},
-        { "App Store", "Download and update homebrew apps.", 0, [](){
+        { "App Store"_i18n, "Download and update homebrew apps."_i18n, 0, [](){
             App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
         }},
-        { "File Browser", "Browse and manage SD card files.", 0, [](){
+        { "File Browser"_i18n, "Browse and manage SD card files."_i18n, 0, [](){
             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
         }},
-        { "Saves", "Backup and restore save data.", 0, [](){
+        { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
             App::Push<ui::menu::save::Menu>(MenuFlag_None);
         }},
-        { "Software", "Install DBI and mod utilities.", 0, [](){
+        { "Software"_i18n, "Install DBI and mod utilities."_i18n, 0, [](){
             App::Push<ui::menu::settings::SoftwareMenu>();
         }},
-        { "Themes", "Download and install theme packs.", 0, [](){
+        { "Themes"_i18n, "Download and install theme packs."_i18n, 0, [](){
             App::Push<ui::menu::settings::ThemesMenu>();
         }},
-        { "Settings", "Open Sphaira application settings.", 0, [](){
+        { "Settings"_i18n, "Open Sphaira application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
     };

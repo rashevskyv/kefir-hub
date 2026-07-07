@@ -232,11 +232,11 @@ void MainMenu::AddOnLRPress() {
     RemoveAction(Button::R);
 
     if (m_current_menu == m_centre_menu.get()) {
-        SetAction(Button::R, Action{m_tools_menu->GetShortTitle(), [this]{
+        SetAction(Button::R, Action{i18n::get(m_tools_menu->GetShortTitle()), [this]{
             SwitchTo(m_tools_menu.get());
         }});
     } else {
-        SetAction(Button::L, Action{m_centre_menu->GetShortTitle(), [this]{
+        SetAction(Button::L, Action{i18n::get(m_centre_menu->GetShortTitle()), [this]{
             SwitchTo(m_centre_menu.get());
         }});
     }

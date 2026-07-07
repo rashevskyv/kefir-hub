@@ -2259,10 +2259,10 @@ void Menu::BuildCategories() {
 
     m_categories = {
         {
-            "General",
-            "Language, timing and application flow.",
+            "General"_i18n,
+            "Language, timing and application flow."_i18n,
             {
-                { "Language", "Select the active interface language.", LanguageValue, [](){
+                { "Language"_i18n, "Select the active interface language."_i18n, LanguageValue, [](){
                     PopupList::Items items;
                     for (const auto& lang : LANGUAGE_ITEMS) {
                         items.push_back(i18n::get(lang));
@@ -2273,7 +2273,7 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetLanguage());
                 }},
-                { "Text scroll speed", "Select how fast long labels scroll.", TextScrollSpeedValue, [](){
+                { "Text scroll speed"_i18n, "Select how fast long labels scroll."_i18n, TextScrollSpeedValue, [](){
                     PopupList::Items items;
                     for (const auto& speed : TEXT_SCROLL_SPEED_ITEMS) {
                         items.push_back(i18n::get(speed));
@@ -2284,20 +2284,20 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetTextScrollSpeed());
                 }},
-                MakeBoolItem("12 Hour Time", "Use 12 hour clock format.", App::Get12HourTimeEnable, App::Set12HourTimeEnable),
-                { "Restart Sphaira", "Close and reopen the application.", [](){ return std::string{}; }, [](){
+                MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
+                { "Restart Sphaira"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
                     App::ExitRestart();
                 }},
-                { "Exit", "Close Sphaira.", [](){ return std::string{}; }, [](){
+                { "Exit"_i18n, "Close Sphaira."_i18n, [](){ return std::string{}; }, [](){
                     App::Exit();
                 }},
             }
         },
         {
-            "Appearance",
-            "Theme and audio options.",
+            "Appearance"_i18n,
+            "Theme and audio options."_i18n,
             {
-                { "Theme", "Select the active Sphaira theme.", ThemeValue, [](){
+                { "Theme"_i18n, "Select the active Sphaira theme."_i18n, ThemeValue, [](){
                     const auto themes = App::GetThemeMetaList();
                     if (!themes.empty()) {
                         PopupList::Items items;
@@ -2311,88 +2311,88 @@ void Menu::BuildCategories() {
                         }, App::GetThemeIndex());
                     }
                 }},
-                MakeBoolItem("Music", "Enable background music from the current theme.", App::GetThemeMusicEnable, App::SetThemeMusicEnable),
-                MakeBoolItem("Animated waves", "Enable animated background waves in the bottom bar.", App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
-                { "Sphaira theme options", "Select the Sphaira interface theme and music options.", [](){ return std::string{}; }, [](){
+                MakeBoolItem("Music"_i18n, "Enable background music from the current theme."_i18n, App::GetThemeMusicEnable, App::SetThemeMusicEnable),
+                MakeBoolItem("Animated waves"_i18n, "Enable animated background waves in the bottom bar."_i18n, App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
+                { "Sphaira theme options"_i18n, "Select the Sphaira interface theme and music options."_i18n, [](){ return std::string{}; }, [](){
                     App::DisplayThemeOptions(false);
                 }, SettingsItemKind::Folder },
             }
         },
         {
-            "Network",
-            "Background services and network downloads.",
+            "Network"_i18n,
+            "Background services and network downloads."_i18n,
             {
-                MakeBoolItem("FTP", "Run the FTP server in the background.", App::GetFtpEnable, App::SetFtpEnable),
-                MakeBoolItem("MTP", "Run the MTP server in the background.", App::GetMtpEnable, App::SetMtpEnable),
-                MakeBoolItem("Nxlink", "Receive .nro files from a PC.", App::GetNxlinkEnable, App::SetNxlinkEnable),
-                MakeBoolItem("HDD", "Mount connected USB/HDD devices.", App::GetHddEnable, App::SetHddEnable),
-                MakeBoolItem("HDD write protect", "Make connected HDD storage read-only.", App::GetWriteProtect, App::SetWriteProtect),
+                MakeBoolItem("FTP"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable),
+                MakeBoolItem("MTP"_i18n, "Run the MTP server in the background."_i18n, App::GetMtpEnable, App::SetMtpEnable),
+                MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
+                MakeBoolItem("HDD"_i18n, "Mount connected USB/HDD devices."_i18n, App::GetHddEnable, App::SetHddEnable),
+                MakeBoolItem("HDD write protect"_i18n, "Make connected HDD storage read-only."_i18n, App::GetWriteProtect, App::SetWriteProtect),
             }
         },
         {
-            "Homebrew",
-            "Shortcuts for core Sphaira tools.",
+            "Homebrew"_i18n,
+            "Shortcuts for core Sphaira tools."_i18n,
             {
-                { "Homebrew App Store", "Download and update homebrew apps.", [](){ return std::string{}; }, [](){
+                { "Homebrew App Store"_i18n, "Download and update homebrew apps."_i18n, [](){ return std::string{}; }, [](){
                     App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
                 }},
-                { "File Browser", "Browse and manage files on the SD card.", [](){ return std::string{}; }, [](){
+                { "File Browser"_i18n, "Browse and manage files on the SD card."_i18n, [](){ return std::string{}; }, [](){
                     App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
                 }},
-                { "Component Manager", "Manage installed packages and modules.", [](){ return std::string{}; }, [](){
+                { "Component Manager"_i18n, "Manage installed packages and modules."_i18n, [](){ return std::string{}; }, [](){
                     App::Push<ui::menu::hats::UninstallerMenu>();
                 }},
             }
         },
 
         {
-            "Install",
-            "Install behavior and safety switches.",
+            "Install"_i18n,
+            "Install behavior and safety switches."_i18n,
             {
-                MakeInstallToggle("Enable sysMMC", "Allow installing while running sysMMC.", app->m_install_sysmmc),
-                MakeInstallToggle("Enable emuMMC", "Allow installing while running emuMMC.", app->m_install_emummc),
-                { "Install location", "Choose system memory or microSD card.", [](){
+                MakeInstallToggle("Enable sysMMC"_i18n, "Allow installing while running sysMMC."_i18n, app->m_install_sysmmc),
+                MakeInstallToggle("Enable emuMMC"_i18n, "Allow installing while running emuMMC."_i18n, app->m_install_emummc),
+                { "Install location"_i18n, "Choose system memory or microSD card."_i18n, [](){
                     return App::GetInstallSdEnable() ? "microSD card"_i18n : "System memory"_i18n;
                 }, [](){
                     App::SetInstallSdEnable(!App::GetInstallSdEnable());
                 }},
-                MakeOptionItem("Allow downgrade", "Allow lower title updates to be installed.", app->m_allow_downgrade),
-                MakeOptionItem("Skip if already installed", "Skip titles or NCAs that are already installed.", app->m_skip_if_already_installed),
-                MakeOptionItem("Ticket only", "Install tickets without title contents.", app->m_ticket_only),
-                MakeOptionItem("Skip base", "Skip installing base applications.", app->m_skip_base),
-                MakeOptionItem("Skip patch", "Skip installing title updates.", app->m_skip_patch),
-                MakeOptionItem("Skip DLC", "Skip installing DLC content.", app->m_skip_addon),
-                MakeOptionItem("Skip data patch", "Skip installing DLC updates.", app->m_skip_data_patch),
-                MakeOptionItem("Skip ticket", "Skip installing tickets.", app->m_skip_ticket),
+                MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
+                MakeOptionItem("Skip if already installed"_i18n, "Skip titles or NCAs that are already installed."_i18n, app->m_skip_if_already_installed),
+                MakeOptionItem("Ticket only"_i18n, "Install tickets without title contents."_i18n, app->m_ticket_only),
+                MakeOptionItem("Skip base"_i18n, "Skip installing base applications."_i18n, app->m_skip_base),
+                MakeOptionItem("Skip patch"_i18n, "Skip installing title updates."_i18n, app->m_skip_patch),
+                MakeOptionItem("Skip DLC"_i18n, "Skip installing DLC content."_i18n, app->m_skip_addon),
+                MakeOptionItem("Skip data patch"_i18n, "Skip installing DLC updates."_i18n, app->m_skip_data_patch),
+                MakeOptionItem("Skip ticket"_i18n, "Skip installing tickets."_i18n, app->m_skip_ticket),
             }
         },
         {
-            "Dump",
-            "Game dump naming and transfer options.",
+            "Dump"_i18n,
+            "Game dump naming and transfer options."_i18n,
             {
-                MakeOptionItem("Created nested folder", "Create a nested folder for each game dump.", app->m_dump_app_folder),
-                MakeOptionItem("Append folder with .xci", "Append .xci to XCI dump folders.", app->m_dump_append_folder_with_xci),
-                MakeOptionItem("Trim XCI", "Remove unused data from XCI dumps.", app->m_dump_trim_xci),
-                MakeOptionItem("Label trimmed XCI", "Mark trimmed XCI output names.", app->m_dump_label_trim_xci),
-                MakeOptionItem("USB transfer stream", "Stream dump output over USB.", app->m_dump_usb_transfer_stream),
-                MakeOptionItem("Convert to common ticket", "Convert personalized tickets during dump.", app->m_dump_convert_to_common_ticket),
+                MakeOptionItem("Created nested folder"_i18n, "Create a nested folder for each game dump."_i18n, app->m_dump_app_folder),
+                MakeOptionItem("Append folder with .xci"_i18n, "Append .xci to XCI dump folders."_i18n, app->m_dump_append_folder_with_xci),
+                MakeOptionItem("Trim XCI"_i18n, "Remove unused data from XCI dumps."_i18n, app->m_dump_trim_xci),
+                MakeOptionItem("Label trimmed XCI"_i18n, "Mark trimmed XCI output names."_i18n, app->m_dump_label_trim_xci),
+                MakeOptionItem("USB transfer stream"_i18n, "Stream dump output over USB."_i18n, app->m_dump_usb_transfer_stream),
+                MakeOptionItem("Convert to common ticket"_i18n, "Convert personalized tickets during dump."_i18n, app->m_dump_convert_to_common_ticket),
             }
         },
         {
-            "Advanced",
-            "Power-user options and verification controls.",
+            "Advanced"_i18n,
+            "Power-user options and verification controls."_i18n,
             {
-                MakeBoolItem("Logging", "Write logs to /config/sphaira/log.txt.", App::GetLogEnable, App::SetLogEnable),
-                MakeBoolItem("Replace hbmenu on exit", "Replace /hbmenu.nro with Sphaira on exit.", App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
-                MakeOptionItem("Boost CPU during transfer", "Enable CPU boost during transfers.", app->m_progress_boost_mode),
-                MakeOptionItem("Skip NCA hash verify", "Skip SHA-256 verification over NCA content.", app->m_skip_nca_hash_verify),
-                MakeOptionItem("Skip RSA header verify", "Skip RSA NCA fixed-key header verification.", app->m_skip_rsa_header_fixed_key_verify),
-                MakeOptionItem("Skip RSA NPDM verify", "Skip RSA NPDM fixed-key verification.", app->m_skip_rsa_npdm_fixed_key_verify),
-                MakeOptionItem("Ignore distribution bit", "Ignore the NCA distribution bit.", app->m_ignore_distribution_bit),
-                MakeOptionItem("Convert to common ticket", "Convert personalized tickets to common tickets.", app->m_convert_to_common_ticket),
-                MakeOptionItem("Convert to standard crypto", "Convert titlekey to standard crypto.", app->m_convert_to_standard_crypto),
-                MakeOptionItem("Lower master key", "Encrypt key area keys with master key 0.", app->m_lower_master_key),
-                MakeOptionItem("Lower system version", "Lower the system firmware field in metadata.", app->m_lower_system_version),
+                MakeBoolItem("Logging"_i18n, "Write logs to /config/sphaira/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
+                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Sphaira on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
+                MakeOptionItem("Boost CPU during transfer"_i18n, "Enable CPU boost during transfers."_i18n, app->m_progress_boost_mode),
+                MakeOptionItem("Skip NCA hash verify"_i18n, "Skip SHA-256 verification over NCA content."_i18n, app->m_skip_nca_hash_verify),
+                MakeOptionItem("Skip RSA header verify"_i18n, "Skip RSA NCA fixed-key header verification."_i18n, app->m_skip_rsa_header_fixed_key_verify),
+                MakeOptionItem("Skip RSA NPDM verify"_i18n, "Skip RSA NPDM fixed-key verification."_i18n, app->m_skip_rsa_npdm_fixed_key_verify),
+                MakeOptionItem("Ignore distribution bit"_i18n, "Ignore the NCA distribution bit."_i18n, app->m_ignore_distribution_bit),
+                MakeOptionItem("Convert to common ticket"_i18n, "Convert personalized tickets to common tickets."_i18n, app->m_convert_to_common_ticket),
+                MakeOptionItem("Convert to standard crypto"_i18n, "Convert titlekey to standard crypto."_i18n, app->m_convert_to_standard_crypto),
+                MakeOptionItem("Lower master key"_i18n, "Encrypt key area keys with master key 0."_i18n, app->m_lower_master_key),
+                MakeOptionItem("Lower system version"_i18n, "Lower the system firmware field in metadata."_i18n, app->m_lower_system_version),
             }
         },
     };
