@@ -119,10 +119,12 @@ public:
     explicit SidebarEntryCallback(const std::string& title, Callback cb, const std::string& info);
     explicit SidebarEntryCallback(const std::string& title, Callback cb, bool pop_on_click = false, const std::string& info = "");
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
+    auto OnFocusLost() noexcept -> void override;
 
 private:
     Callback m_callback;
     bool m_pop_on_click;
+    ScrollingText m_scolling_entry_title{};
 };
 
 class SidebarEntryArray final : public SidebarEntryBase {

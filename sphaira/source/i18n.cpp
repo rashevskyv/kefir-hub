@@ -8,9 +8,12 @@
 namespace sphaira::i18n {
 namespace {
 
-std::vector<u8> g_i18n_data;
-yyjson_doc* json;
-yyjson_val* root;
+std::vector<u8> g_sdmc_data;
+std::vector<u8> g_romfs_data;
+yyjson_doc* sdmc_json = nullptr;
+yyjson_val* sdmc_root = nullptr;
+yyjson_doc* romfs_json = nullptr;
+yyjson_val* romfs_root = nullptr;
 std::unordered_map<std::string, std::string> g_tr_cache;
 
 std::string get_internal(std::string_view str) {
@@ -20,31 +23,38 @@ std::string get_internal(std::string_view str) {
         return it->second;
     }
 
-    // add default entry
+    // add default entry in cache
     const auto it = g_tr_cache.emplace(kkey, kkey).first;
 
-    if (!json || !root) {
-        log_write("no json or root\n");
-        return kkey;
+    // 1. Try to find the key in SDMC override file first
+    if (sdmc_json && sdmc_root) {
+        auto key = yyjson_obj_getn(sdmc_root, str.data(), str.length());
+        if (key) {
+            auto val = yyjson_get_str(key);
+            auto val_len = yyjson_get_len(key);
+            if (val && val_len) {
+                const std::string ret = {val, val_len};
+                g_tr_cache.insert_or_assign(it, kkey, ret);
+                return ret;
+            }
+        }
     }
 
-    auto key = yyjson_obj_getn(root, str.data(), str.length());
-    if (!key) {
-        log_write("\tfailed to find key: [%s]\n", kkey.c_str());
-        return kkey;
+    // 2. Fall back to romfs if key was not found or invalid in SDMC
+    if (romfs_json && romfs_root) {
+        auto key = yyjson_obj_getn(romfs_root, str.data(), str.length());
+        if (key) {
+            auto val = yyjson_get_str(key);
+            auto val_len = yyjson_get_len(key);
+            if (val && val_len) {
+                const std::string ret = {val, val_len};
+                g_tr_cache.insert_or_assign(it, kkey, ret);
+                return ret;
+            }
+        }
     }
 
-    auto val = yyjson_get_str(key);
-    auto val_len = yyjson_get_len(key);
-    if (!val || !val_len) {
-        log_write("\tfailed to get value: [%s]\n", kkey.c_str());
-        return kkey;
-    }
-
-    // update entry in cache
-    const std::string ret = {val, val_len};
-    g_tr_cache.insert_or_assign(it, kkey, ret);
-    return ret;
+    return kkey;
 }
 
 } // namespace
@@ -98,41 +108,41 @@ bool init(long index) {
 
     const fs::FsPath sdmc_path = "/config/sphaira/i18n/" + lang_name + ".json";
     const fs::FsPath romfs_path = "romfs:/i18n/" + lang_name + ".json";
-    fs::FsPath path = sdmc_path;
 
-    // try and load override translation first
-    Result rc = fs::FsNativeSd().read_entire_file(path, g_i18n_data);
-    if (R_FAILED(rc)) {
-        path = romfs_path;
-        rc = fs::FsStdio().read_entire_file(path, g_i18n_data);
-    }
-
+    // Load romfs built-in translation first (always loaded as fallback)
+    Result rc = fs::FsStdio().read_entire_file(romfs_path, g_romfs_data);
     if (R_SUCCEEDED(rc)) {
-        json = yyjson_read((const char*)g_i18n_data.data(), g_i18n_data.size(), YYJSON_READ_ALLOW_TRAILING_COMMAS|YYJSON_READ_ALLOW_COMMENTS|YYJSON_READ_ALLOW_INVALID_UNICODE);
-        if (json) {
-            root = yyjson_doc_get_root(json);
-            if (root) {
-                log_write("opened json: %s\n", path.s);
-                return true;
-            } else {
-                log_write("failed to find root\n");
-            }
-        } else {
-            log_write("failed open json\n");
+        romfs_json = yyjson_read((const char*)g_romfs_data.data(), g_romfs_data.size(), YYJSON_READ_ALLOW_TRAILING_COMMAS|YYJSON_READ_ALLOW_COMMENTS|YYJSON_READ_ALLOW_INVALID_UNICODE);
+        if (romfs_json) {
+            romfs_root = yyjson_doc_get_root(romfs_json);
         }
-    } else {
-        log_write("failed to read file\n");
     }
 
-    return false;
+    // Try loading SDMC override translation
+    rc = fs::FsNativeSd().read_entire_file(sdmc_path, g_sdmc_data);
+    if (R_SUCCEEDED(rc)) {
+        sdmc_json = yyjson_read((const char*)g_sdmc_data.data(), g_sdmc_data.size(), YYJSON_READ_ALLOW_TRAILING_COMMAS|YYJSON_READ_ALLOW_COMMENTS|YYJSON_READ_ALLOW_INVALID_UNICODE);
+        if (sdmc_json) {
+            sdmc_root = yyjson_doc_get_root(sdmc_json);
+        }
+    }
+
+    return (romfs_json != nullptr) || (sdmc_json != nullptr);
 }
 
 void exit() {
-    if (json) {
-        yyjson_doc_free(json);
-        json = nullptr;
+    if (sdmc_json) {
+        yyjson_doc_free(sdmc_json);
+        sdmc_json = nullptr;
+        sdmc_root = nullptr;
     }
-    g_i18n_data.clear();
+    if (romfs_json) {
+        yyjson_doc_free(romfs_json);
+        romfs_json = nullptr;
+        romfs_root = nullptr;
+    }
+    g_sdmc_data.clear();
+    g_romfs_data.clear();
 }
 
 std::string get(std::string_view str) {

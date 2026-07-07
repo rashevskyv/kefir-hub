@@ -218,7 +218,15 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
-    gfx::drawText(vg, Vec2{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f)}, 20.f, colour, m_title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    const float x = m_pos.x + 15.f;
+    const float y = m_pos.y + (m_pos.h / 2.f);
+    const float max_w = m_pos.w - 30.f;
+    m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title);
+}
+
+auto SidebarEntryCallback::OnFocusLost() noexcept -> void {
+    SidebarEntryBase::OnFocusLost();
+    m_scolling_entry_title.Reset();
 }
 
 SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& items, std::string& index, const std::string& info)

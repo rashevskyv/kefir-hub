@@ -155,12 +155,36 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const auto title_colour = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+        const float text_x = v.x + 148.f;
+        const float text_w = v.w - 178.f;
+        const float icon_top = icon_box.y;
+        const float icon_h = icon_box.h;
+
+        // measure title block height
+        nvgFontSize(vg, 20.f);
+        nvgTextLineHeight(vg, 1.0f);
+        float title_bounds[4];
+        nvgTextBoxBounds(vg, text_x, 0, text_w, item.label.c_str(), nullptr, title_bounds);
+        const float title_h = title_bounds[3] - title_bounds[1];
+
+        // measure description block height
+        nvgFontSize(vg, 13.f);
+        nvgTextLineHeight(vg, 1.0f);
+        float desc_bounds[4];
+        nvgTextBoxBounds(vg, text_x, 0, text_w, item.description.c_str(), nullptr, desc_bounds);
+        const float desc_h = desc_bounds[3] - desc_bounds[1];
+
+        // equal spacing: gap = (icon_h - title_h - desc_h) / 3
+        const float gap = (icon_h - title_h - desc_h) / 3.f;
+        const float title_y = icon_top + gap;
+        const float desc_y = title_y + title_h + gap;
+
         gfx::drawTextBox(
-            vg, v.x + 148.f, v.y + 45.f, 20.f, v.w - 178.f,
+            vg, text_x, title_y, 20.f, text_w,
             theme->GetColour(title_colour), item.label.c_str()
         );
         gfx::drawTextBox(
-            vg, v.x + 148.f, v.y + 80.f, 13.f, v.w - 178.f,
+            vg, text_x, desc_y, 13.f, text_w,
             theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
         );
     });
