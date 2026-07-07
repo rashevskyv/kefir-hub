@@ -589,10 +589,15 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += ".delete-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
     
     // Checkbox styling
-    body += ".file-checkbox{cursor:pointer;accent-color:#38bdf8;z-index:5}";
-    body += ".list .file-checkbox{width:18px;height:18px;margin-right:12px;flex-shrink:0}";
+    body += ".file-checkbox{-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.3);border-radius:4px;outline:none;cursor:pointer;transition:all 0.15s;display:block}";
+    body += ".file-checkbox:hover{border-color:#38bdf8;background:rgba(56,189,248,0.08)}";
+    body += ".file-checkbox:checked{background:#38bdf8;border-color:#38bdf8}";
+    body += ".file-checkbox:checked::after{content:'';position:absolute;border:solid #0f0f12;border-width:0 2px 2px 0;transform:rotate(45deg)}";
+    body += ".list .file-checkbox{position:relative;width:18px;height:18px;margin-right:12px;flex-shrink:0}";
+    body += ".list .file-checkbox:checked::after{left:5px;top:1px;width:4px;height:9px}";
     body += ".grid .item{position:relative}";
-    body += ".grid .file-checkbox{position:absolute;top:8px;left:8px;width:20px;height:20px;margin:0}";
+    body += ".grid .file-checkbox{position:absolute;top:12px;left:12px;width:20px;height:20px;margin:0;z-index:5}";
+    body += ".grid .file-checkbox:checked::after{left:6px;top:2px;width:4px;height:9px}";
 
     body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
     body += HtmlEscape(abs_path);
