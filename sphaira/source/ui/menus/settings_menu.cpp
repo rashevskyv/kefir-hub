@@ -1178,14 +1178,9 @@ auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vecto
     R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_handheld_on_fwdbg", handheld_value));
     R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
     fsdevCommitDevice("sdmc");
-    if (mode == FanCurveApplyMode::Live) {
-        Result rc = RestartSphairaFanSysmodule();
-        if (R_FAILED(rc)) {
-            RebootAfterSetting();
-        }
-    } else {
-        RebootAfterSetting();
-    }
+
+    R_TRY(RestartSphairaFanSysmodule());
+
     R_SUCCEED();
 }
 
@@ -3434,21 +3429,29 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
         "Applying"_i18n,
         "Fan curve",
         [handheld, docked, mode, live_apply](auto pbox) -> Result {
-            pbox->NewTransfer(live_apply ? "Writing Atmosphere fan curve and restarting fan module..." :
-                "Writing Atmosphere fan curve and rebooting...");
+            pbox->NewTransfer("Writing Atmosphere fan curve and restarting fan module...");
             return ApplyFanCurves(handheld, docked, mode);
         },
         [this, live_apply, handheld, docked](Result rc){
             if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Failed to apply fan curve");
+                App::Push<HoldConfirmBox>(
+                    "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes."_i18n,
+                    3.f,
+                    [](bool confirmed){
+                        if (confirmed) {
+                            RebootAfterSetting();
+                        }
+                    }
+                );
+                m_applied_handheld_curve = handheld;
+                m_applied_docked_curve = docked;
+                m_dirty = false;
                 return;
             }
             m_applied_handheld_curve = handheld;
             m_applied_docked_curve = docked;
             m_dirty = false;
-            if (live_apply) {
-                App::Notify("Fan curve applied");
-            }
+            App::Notify("Fan curve applied");
         }
     );
 }

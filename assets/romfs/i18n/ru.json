@@ -471,5 +471,6 @@
   "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater удалён.\n\nОбновления Kefir теперь выполняются через меню Updater.\n\nЧтобы перейти туда вручную, нажмите R, выберите Updater, затем выберите версию Kefir.",
   "Apply": "Применить",
   "Module activated": "Модуль активирован",
-  "Failed to activate module": "Не удалось активировать модуль"
+  "Failed to activate module": "Не удалось активировать модуль",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Не удалось активировать модуль кулера.\n\nИзменения применятся при следующей перезагрузке.\n\nЗажмите A для перезагрузки сейчас."
 }
