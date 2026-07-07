@@ -28,7 +28,6 @@ constexpr std::string_view READONLY_ROOT_FOLDERS[]{
 
     "/backup", // some people never back this up...
 
-    "/Nintendo", // Nintendo private folder
     "/Nintendo/Contents",
     "/Nintendo/save",
 
