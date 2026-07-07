@@ -816,11 +816,12 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "if(bestMatch)focusItem(bestMatch);";
     body += "}";
     body += "document.addEventListener('mouseover',function(e){const item=e.target.closest('.item');if(item)focusItem(item);});";
+    body += "document.addEventListener('dragstart',function(e){e.preventDefault();});";
     body += "document.addEventListener('keydown',function(e){";
     body += "if(e.target.tagName==='INPUT'&&e.target.type!=='checkbox')return;";
     body += "const items=Array.from(document.querySelectorAll('.item'));if(!items.length)return;";
     body += "const current=getFocusedItem();if(!current){focusItem(items[0]);return;}";
-    body += "const isGrid=document.getElementById('list-container').classList.contains('grid');";
+    body += "const isGrid=document.getElementById('items-container').classList.contains('grid');";
     body += "if(e.key==='ArrowDown'){";
     body += "e.preventDefault();";
     body += "if(isGrid)navigateGrid('down');else{const idx=items.indexOf(current);if(idx<items.length-1)focusItem(items[idx+1]);}";
