@@ -1251,9 +1251,27 @@ public:
 
         constexpr float padding = 34.f;
         nvgSave(vg);
+        float font_size = 22.f;
+        if (m_message.length() < 60) {
+            font_size = 26.f;
+        } else if (m_message.length() < 120) {
+            font_size = 24.f;
+        } else if (m_message.length() > 200) {
+            font_size = 18.f;
+        }
+
+        nvgFontSize(vg, font_size);
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
         nvgTextLineHeight(vg, 1.35f);
+
+        float bounds[4]{};
+        nvgTextBoxBounds(vg, m_pos.x + padding, m_pos.y, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+        float text_h = bounds[3] - bounds[1];
+        float text_area_h = m_pos.h - 82.f;
+        float text_y = m_pos.y + (text_area_h - text_h) / 2.f;
+
         gfx::drawTextBox(
-            vg, m_pos.x + padding, m_pos.y + 38.f, 18.f, m_pos.w - padding * 2.f,
+            vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding * 2.f,
             theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP
         );
         nvgRestore(vg);
@@ -3509,8 +3527,6 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
                         }
                     }
                 );
-                m_applied_handheld_curve = handheld;
-                m_applied_docked_curve = docked;
                 m_dirty = false;
                 return;
             }

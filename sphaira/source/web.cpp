@@ -502,35 +502,57 @@ auto BuildFolderPage(std::string rel) -> std::string {
         return strcasecmp(lhs.name, rhs.name) < 0;
     });
 
-    bool has_images = false;
-    for (const auto& entry : entries) {
-        if (entry.type == FsDirEntryType_File && IsImagePath(entry.name)) {
-            has_images = true;
-            break;
-        }
-    }
-
     const auto encoded_rel = UrlEncode(rel);
     std::string body;
-    body.reserve(8192 + entries.size() * 256);
+    body.reserve(16384 + entries.size() * 512);
 
     body += "<!doctype html><html><head><meta charset=\"utf-8\">";
     body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
     body += "<title>Sphaira Files</title>";
     body += "<style>";
-    body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
-    body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:1}";
-    body += "h1{font-size:20px;margin:0 0 6px}.path{color:#b9c2cc;word-break:break-all}.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}";
-    body += "button{border:1px solid #50545c;background:#252a32;color:#fff;border-radius:6px;padding:10px 12px;font:inherit;cursor:pointer}";
-    body += "input{display:none}.status{color:#9fb1c8}.list{padding:8px 0}.row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:13px 18px;border-bottom:1px solid #25272d;color:inherit;text-decoration:none}";
-    body += ".row:hover{background:#191d24}.meta{color:#9aa3ad;font-size:13px}.crumbs a{color:#9fc6ff;text-decoration:none}.empty{padding:26px 18px;color:#98a1aa}";
+    body += "body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0}";
+    body += "header{position:sticky;top:0;background:rgba(23,25,35,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.08);z-index:10}";
+    body += "h1{font-size:22px;margin:0 0 4px;font-weight:600;letter-spacing:-0.5px}";
+    body += ".path{color:#94a3b8;font-size:14px;word-break:break-all}";
+    body += ".crumbs a{color:#38bdf8;text-decoration:none}";
+    body += ".crumbs a:hover{text-decoration:underline}";
+    body += ".bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}";
+    body += "button{border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#fff;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}";
+    body += "button:hover{background:#334155;border-color:rgba(255,255,255,0.25)}";
+    body += "button:disabled{opacity:0.5;cursor:not-allowed}";
+    body += "input{display:none}.status{color:#38bdf8;font-size:14px}";
+    body += ".container{padding:24px;max-width:1200px;margin:0 auto}";
+    
+    // List layout CSS
+    body += ".list{display:flex;flex-direction:column;gap:8px}";
+    body += ".list .item{display:flex;align-items:center;gap:16px;padding:12px 16px;background:#1e1e24;border:1px solid rgba(255,255,255,0.05);border-radius:8px;color:inherit;text-decoration:none;transition:background 0.15s,transform 0.15s}";
+    body += ".list .item:hover{background:#272730;transform:translateY(-1px)}";
+    body += ".list .thumbnail-box{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;flex-shrink:0}";
+    body += ".list .thumbnail-box img{width:100%;height:100%;object-fit:cover}";
+    body += ".list .thumbnail-box svg{width:24px;height:24px}";
+    body += ".list .info{display:flex;flex-grow:1;align-items:center;justify-content:space-between;min-width:0}";
+    body += ".list .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:16px}";
+    body += ".list .meta{color:#64748b;font-size:13px;flex-shrink:0}";
+
+    // Grid layout CSS
+    body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}";
+    body += ".grid .item{display:flex;flex-direction:column;background:#18181f;border:1px solid rgba(255,255,255,0.05);border-radius:12px;color:inherit;text-decoration:none;overflow:hidden;transition:all 0.2s}";
+    body += ".grid .item:hover{background:#202029;transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,0.3);border-color:rgba(56,189,248,0.3)}";
+    body += ".grid .thumbnail-box{width:100%;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;background:#0d0d11;overflow:hidden;border-bottom:1px solid rgba(255,255,255,0.03)}";
+    body += ".grid .thumbnail-box img{width:100%;height:100%;object-fit:cover}";
+    body += ".grid .thumbnail-box svg{width:48px;height:48px}";
+    body += ".grid .info{padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}";
+    body += ".grid .name{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}";
+    body += ".grid .meta{color:#64748b;font-size:12px}";
+
+    body += ".empty{padding:40px;text-align:center;color:#64748b;font-size:16px}";
     body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
     body += HtmlEscape(root);
     if (!rel.empty()) {
         body += "/";
         body += HtmlEscape(rel);
     }
-    body += "</div><div class=\"crumbs\"><a href=\"/files\">root</a>";
+    body += "</div><div class=\"crumbs\"><a href=\"/\">root</a>";
 
     std::string crumb_accum;
     size_t start{};
@@ -542,7 +564,7 @@ auto BuildFolderPage(std::string rel) -> std::string {
                 crumb_accum += '/';
             }
             crumb_accum += part;
-            body += " / <a href=\"/files?path=";
+            body += " / <a href=\"/?path=";
             body += UrlEncode(crumb_accum);
             body += "\">";
             body += HtmlEscape(part);
@@ -555,10 +577,9 @@ auto BuildFolderPage(std::string rel) -> std::string {
     }
 
     body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Upload</button>";
-    if (has_images) {
-        body += "<button onclick=\"location.href='/gallery?path=" + encoded_rel + "'\">Gallery</button>";
-    }
-    body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header><main class=\"list\">";
+    body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\">Grid View</button>";
+    body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
+    body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
     if (!rel.empty()) {
         auto parent = rel;
@@ -568,9 +589,12 @@ auto BuildFolderPage(std::string rel) -> std::string {
             parent.clear();
         }
 
-        body += "<a class=\"row\" href=\"/files?path=";
+        body += "<a class=\"item\" href=\"/?path=";
         body += UrlEncode(parent);
-        body += "\"><span>..</span><span>..</span><span class=\"meta\">folder</span></a>";
+        body += "\"><div class=\"thumbnail-box\">"
+                "<svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
+                "</div>";
+        body += "<div class=\"info\"><span class=\"name\">..</span><span class=\"meta\">parent folder</span></div></a>";
     }
 
     if (entries.empty()) {
@@ -588,19 +612,28 @@ auto BuildFolderPage(std::string rel) -> std::string {
         const auto encoded_child = UrlEncode(child);
         const auto escaped_name = HtmlEscape(name);
         if (entry.type == FsDirEntryType_Dir) {
-            body += "<a class=\"row\" href=\"/files?path=";
+            body += "<a class=\"item\" href=\"/?path=";
             body += encoded_child;
-            body += "\"><span>[D]</span><span>";
+            body += "\"><div class=\"thumbnail-box\">"
+                    "<svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
+                    "</div>";
+            body += "<div class=\"info\"><span class=\"name\">";
             body += escaped_name;
-            body += "</span><span class=\"meta\">folder</span></a>";
+            body += "</span><span class=\"meta\">folder</span></div></a>";
         } else {
             const bool is_image = IsImagePath(name);
-            body += "<a class=\"row\" href=\"";
+            body += "<a class=\"item\" href=\"";
             body += is_image ? "/view?path=" : "/download?path=";
             body += encoded_child;
-            body += "\"><span>";
-            body += is_image ? "[I]" : "[F]";
-            body += "</span><span>";
+            body += "\"><div class=\"thumbnail-box\">";
+            if (is_image) {
+                body += "<img class=\"thumb\" src=\"/view?path=";
+                body += encoded_child;
+                body += "\" alt=\"\" loading=\"lazy\">";
+            } else {
+                body += "<svg viewBox=\"0 0 24 24\" fill=\"#90a4ae\"><path d=\"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z\"/></svg>";
+            }
+            body += "</div><div class=\"info\"><span class=\"name\">";
             body += escaped_name;
             body += "</span><span class=\"meta\">";
             if (entry.file_size >= 1024 * 1024) {
@@ -612,11 +645,11 @@ auto BuildFolderPage(std::string rel) -> std::string {
                 std::snprintf(size_buf, sizeof(size_buf), "%.2f KiB", static_cast<double>(entry.file_size) / 1024.0);
                 body += size_buf;
             }
-            body += "</span></a>";
+            body += "</span></div></a>";
         }
     }
 
-    body += "</main><script>";
+    body += "</main></div><script>";
     body += "const currentPath='";
     body += encoded_rel;
     body += "';";
@@ -627,6 +660,34 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += "const res=await fetch('/upload?path='+currentPath+'&name='+encodeURIComponent(file.name),{method:'PUT',body:file});";
     body += "if(!res.ok){button.disabled=false;status.textContent='Failed: '+await res.text();input.value='';return;}}";
     body += "status.textContent='Done';input.value='';setTimeout(()=>location.reload(),500);}";
+    
+    // View mode toggle JS
+    body += "function toggleViewMode(){";
+    body += "const container=document.getElementById('items-container');";
+    body += "const btn=document.getElementById('view-toggle');";
+    body += "if(container.classList.contains('list')){";
+    body += "container.classList.remove('list');";
+    body += "container.classList.add('grid');";
+    body += "btn.textContent='List View';";
+    body += "localStorage.setItem('viewMode','grid');";
+    body += "}else{";
+    body += "container.classList.remove('grid');";
+    body += "container.classList.add('list');";
+    body += "btn.textContent='Grid View';";
+    body += "localStorage.setItem('viewMode','list');";
+    body += "}";
+    body += "}";
+    
+    body += "document.addEventListener('DOMContentLoaded',()=>{";
+    body += "const container=document.getElementById('items-container');";
+    body += "const btn=document.getElementById('view-toggle');";
+    body += "const saved=localStorage.getItem('viewMode');";
+    body += "if(saved==='grid'&&container){";
+    body += "container.classList.remove('list');";
+    body += "container.classList.add('grid');";
+    body += "if(btn)btn.textContent='List View';";
+    body += "}";
+    body += "});";
     body += "</script>";
 
     AppendLightbox(body);
@@ -1055,32 +1116,13 @@ void HandleRequest(Socket sock) {
         return;
     }
 
-    if (path == "/") {
-        if (GetShareMode() == ShareMode::Folder) {
-            SendResponse(sock, "200 OK", "text/html", BuildFolderPage({}));
-        } else {
-            SendResponse(sock, "200 OK", "text/html", BuildImagesPage());
-        }
-        return;
-    }
-
-    if (path == "/images" || path == "/images/") {
-        SendResponse(sock, "200 OK", "text/html", BuildImagesPage());
-        return;
-    }
-
-    if (path == "/files" || path == "/files/") {
+    if (path == "/" || path == "/files" || path == "/files/" || path == "/images" || path == "/images/" || path == "/gallery" || path == "/gallery/") {
         SendResponse(sock, "200 OK", "text/html", BuildFolderPage(GetQueryValue(query, "path")));
         return;
     }
 
     if (path == "/download") {
         SendDownload(sock, GetQueryValue(query, "path"));
-        return;
-    }
-
-    if (path == "/gallery" || path == "/gallery/") {
-        SendResponse(sock, "200 OK", "text/html", BuildGalleryPage(GetQueryValue(query, "path")));
         return;
     }
 

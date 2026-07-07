@@ -96,6 +96,27 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
 
 auto PopupList::Update(Controller* controller, TouchInfo* touch) -> void {
     Widget::Update(controller, touch);
+
+    if (!m_items.empty()) {
+        if (controller->GotDown(Button::DOWN) && m_index == static_cast<s64>(m_items.size() - 1)) {
+            SetIndex(0);
+            m_list->SetYoff(0);
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            return;
+        }
+        if (controller->GotDown(Button::UP) && m_index == 0) {
+            const auto target = static_cast<s64>(m_items.size() - 1);
+            SetIndex(target);
+            if (m_items.size() >= 6) {
+                m_list->SetYoff((target - 5) * m_list->GetMaxY());
+            } else {
+                m_list->SetYoff(0);
+            }
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            return;
+        }
+    }
+
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         SetIndex(i);
         if (touch) {
