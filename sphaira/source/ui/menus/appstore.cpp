@@ -801,7 +801,7 @@ void EntryMenu::UpdateOptions() {
             return InstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
-            App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+            App::PushErrorBox(rc, "Failed to download application"_i18n);
 
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Downloaded "_i18n + m_entry.title);
@@ -817,7 +817,7 @@ void EntryMenu::UpdateOptions() {
             return UninstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
-            App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+            App::PushErrorBox(rc, "Failed to uninstall application"_i18n);
 
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Removed "_i18n + m_entry.title);

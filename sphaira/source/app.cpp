@@ -65,7 +65,7 @@ void download_default_music() {
 
         R_SUCCEED();
     }, [](Result rc){
-        App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+        App::PushErrorBox(rc, "Failed to download background music"_i18n);
 
         if (R_SUCCEEDED(rc)) {
             App::Notify("Downloaded "_i18n + "default_music.bfstm");
@@ -817,7 +817,6 @@ void App::SetReplaceHbmenuEnable(bool enable) {
                     if (R_FAILED(rc = fs.copy_entire_file("/hbmenu.nro", "/switch/hbmenu.nro")))  {
                         // try and restore sphaira in a last ditch effort.
                         if (R_FAILED(rc = fs.copy_entire_file("/hbmenu.nro", sphaira_path))) {
-                            App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
                             App::PushErrorBox(rc,
                                 "Failed to restore hbmenu, please re-download hbmenu"_i18n
                             );

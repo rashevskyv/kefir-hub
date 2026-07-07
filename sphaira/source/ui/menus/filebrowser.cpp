@@ -559,8 +559,10 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
+        const float x_offset = (m_selected_count > 0) ? 45.f : 15.f;
+
         if (e.IsDir()) {
-            DrawElement(x + text_xoffset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
+            DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();
@@ -579,49 +581,45 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
                 icon = ThemeEntryID_ICON_NRO;
             }
 
-            DrawElement(x + text_xoffset, y + 5, 50, 50, icon);
+            DrawElement(x + x_offset, y + 5, 50, 50, icon);
         }
 
-        // Draw radiobutton outline and background in the top right part of the icon
-        float radio_x = x + text_xoffset + 50.f - 6.f;
-        float radio_y = y + 5.f + 6.f;
-        float radio_r = 7.f;
+        if (m_selected_count > 0) {
+            float box_size = 20.f;
+            float box_x = x + 15.f;
+            float box_y = y + (h / 2.f) - (box_size / 2.f);
 
-        nvgBeginPath(vg);
-        nvgCircle(vg, radio_x, radio_y, radio_r);
-        nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
-        nvgFill(vg);
-
-        nvgBeginPath(vg);
-        nvgCircle(vg, radio_x, radio_y, radio_r);
-        nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        nvgStrokeWidth(vg, 1.5f);
-        nvgStroke(vg);
-
-        if (e.IsSelected()) {
-            // Draw filled inner circle of the radiobutton
+            // Draw checkbox outline and background
             nvgBeginPath(vg);
-            nvgCircle(vg, radio_x, radio_y, radio_r - 3.f);
-            nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            nvgRect(vg, box_x, box_y, box_size, box_size);
+            nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
             nvgFill(vg);
 
-            // Draw checkmark with contrasting stroke/outline
-            float check_x = x + text_xoffset + 50.f / 2.f;
-            float check_y = y + (h / 2.f) - (24.f / 2.f);
+            nvgBeginPath(vg);
+            nvgRect(vg, box_x, box_y, box_size, box_size);
+            nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            nvgStrokeWidth(vg, 1.5f);
+            nvgStroke(vg);
 
-            const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
-            float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
-            NVGcolor outline_col = (bg_lum > 0.5f) ? nvgRGBA(0, 0, 0, 255) : nvgRGBA(0, 0, 0, 255);
+            if (e.IsSelected()) {
+                // Draw checkmark inside the checkbox on the left
+                float check_x = box_x + box_size / 2.f;
+                float check_y = box_y + box_size / 2.f - (20.f / 2.f); // center vertically
 
-            gfx::drawText(vg, check_x - 1.f, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-            gfx::drawText(vg, check_x + 1.f, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-            gfx::drawText(vg, check_x, check_y - 1.f, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-            gfx::drawText(vg, check_x, check_y + 1.f, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
+                float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
+                NVGcolor outline_col = (bg_lum > 0.5f) ? nvgRGBA(0, 0, 0, 255) : nvgRGBA(0, 0, 0, 255);
 
-            gfx::drawText(vg, check_x, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+                gfx::drawText(vg, check_x - 1.f, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x + 1.f, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y - 1.f, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y + 1.f, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+
+                gfx::drawText(vg, check_x, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            }
         }
 
-        m_scroll_name.Draw(vg, selected, x + text_xoffset+65, y + (h / 2.f), w-(75+text_xoffset+65+50), 20, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+        m_scroll_name.Draw(vg, selected, x + x_offset+65, y + (h / 2.f), w-(75+x_offset+65+50), 20, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
 
         // NOTE: make this native only if i disable dir scan from above.
         if (e.IsDir()) {
@@ -1153,7 +1151,7 @@ void FsView::UploadFiles() {
 
                 R_SUCCEED();
             }, [this](Result rc){
-                App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+                App::PushErrorBox(rc, "Failed to upload files"_i18n);
                 m_menu->ResetSelection();
 
                 if (R_SUCCEEDED(rc)) {
@@ -1406,7 +1404,7 @@ void FsView::OnDeleteCallback() {
 
             return DeleteAllCollectionsWithSelected(pbox, src_fs, selected, collections);
         }, [this](Result rc){
-            App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+            App::PushErrorBox(rc, "Failed to delete files"_i18n);
 
             m_menu->RefreshViews();
             log_write("did delete\n");
@@ -1544,7 +1542,7 @@ void FsView::OnPasteCallback() {
 
             R_SUCCEED();
         }, [this](Result rc){
-            App::PushErrorBox(rc, "Failed to, TODO: add message here"_i18n);
+            App::PushErrorBox(rc, "Failed to copy or move files"_i18n);
 
             m_menu->RefreshViews();
             log_write("did paste\n");
