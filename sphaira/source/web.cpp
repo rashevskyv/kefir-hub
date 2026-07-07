@@ -1357,6 +1357,8 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         const auto write_size = std::min<s64>(available, content_length);
         if (write_size > 0) {
             if (R_FAILED(file.Write(offset, req.data() + body_start, write_size, FsWriteOption_None))) {
+                App::NotifyClear();
+                App::Notify("Upload failed: " + name);
                 SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
                 return;
             }
@@ -1364,27 +1366,45 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         }
     }
 
+    App::NotifyClear();
+    App::Notify("Uploading " + name + " (0%)");
+    s64 last_pct = 0;
+
     std::vector<u8> buf(HTTP_FILE_CHUNK);
     while (offset < content_length) {
         const auto want = std::min<s64>(buf.size(), content_length - offset);
         const auto got = recv(sock, buf.data(), want, 0);
         if (got > 0) {
             if (R_FAILED(file.Write(offset, buf.data(), got, FsWriteOption_None))) {
+                App::NotifyClear();
+                App::Notify("Upload failed: " + name);
                 SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
                 return;
             }
             offset += got;
+            s64 pct = (offset * 100) / content_length;
+            if (pct >= last_pct + 10 || pct == 100) {
+                last_pct = pct;
+                App::NotifyClear();
+                App::Notify("Uploading " + name + " (" + std::to_string(pct) + "%)");
+            }
         } else if (got == 0) {
+            App::NotifyClear();
+            App::Notify("Upload failed: " + name);
             SendResponse(sock, "400 Bad Request", "text/plain", "Upload ended early");
             return;
         } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
             svcSleepThread(1'000'000);
         } else {
+            App::NotifyClear();
+            App::Notify("Upload failed: " + name);
             SendResponse(sock, "500 Internal Server Error", "text/plain", "Socket read failed");
             return;
         }
     }
 
+    App::NotifyClear();
+    App::Notify("Uploaded: " + name);
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
 
