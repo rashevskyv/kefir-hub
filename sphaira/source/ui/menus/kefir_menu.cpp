@@ -388,13 +388,15 @@ auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> 
     return result;
 }
 
-auto BuildKefirChangelogText(const std::string& raw, const std::string& current_version, const std::string& target_version) -> std::string {
+auto BuildKefirChangelogText(const std::string& raw, const std::string& current_version, const std::string& target_version, bool& should_skip) -> std::string {
     const auto target_ver = ParseKefirChangelogVersion(target_version);
     if (!target_ver) {
+        should_skip = false;
         return "Could not determine target Kefir version.";
     }
 
     if (raw.empty()) {
+        should_skip = true;
         return "Failed to download changelog.";
     }
 
@@ -459,11 +461,23 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
     }
 
     const auto current_ver = ParseKefirChangelogVersion(current_version);
-    const auto start_ver = current_ver >= target_ver ? target_ver : current_ver + 1;
+    const auto latest_available_ver = version_blocks.empty() ? 0 : version_blocks.front().first;
+
+    should_skip = (latest_available_ver != target_ver);
+
+    int start_ver = 0;
+    int end_ver = target_ver;
+
+    if (current_ver == target_ver) {
+        start_ver = latest_available_ver;
+        end_ver = latest_available_ver;
+    } else {
+        start_ver = current_ver + 1;
+    }
 
     bool found_any = false;
     for (const auto& [version, content] : version_blocks) {
-        if (version < start_ver || version > target_ver) {
+        if (version < start_ver || version > end_ver) {
             continue;
         }
 
@@ -1013,7 +1027,8 @@ private:
 
     void LoadChangelog() {
         if (!ParseKefirChangelogVersion(m_target_version)) {
-            m_text = BuildKefirChangelogText({}, m_current_version, m_target_version);
+            bool dummy = false;
+            m_text = BuildKefirChangelogText({}, m_current_version, m_target_version, dummy);
             m_loading = false;
             return;
         }
@@ -1022,11 +1037,18 @@ private:
             curl::Url{KEFIR_CHANGELOG_URL},
             curl::StopToken{this->GetToken()},
             curl::OnComplete{[this](auto& result) {
+                bool should_skip = false;
                 if (!result.success || result.data.empty()) {
-                    m_text = BuildKefirChangelogText({}, m_current_version, m_target_version);
+                    m_text = BuildKefirChangelogText({}, m_current_version, m_target_version, should_skip);
                 } else {
                     const std::string raw{reinterpret_cast<const char*>(result.data.data()), result.data.size()};
-                    m_text = BuildKefirChangelogText(raw, m_current_version, m_target_version);
+                    m_text = BuildKefirChangelogText(raw, m_current_version, m_target_version, should_skip);
+                }
+
+                if (should_skip) {
+                    m_callback();
+                    SetPop();
+                    return;
                 }
 
                 m_scroll = 0.f;

@@ -1179,7 +1179,10 @@ auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vecto
     R_TRY(SetIniRawValue(ATMOSPHERE_CONFIG, "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
     fsdevCommitDevice("sdmc");
     if (mode == FanCurveApplyMode::Live) {
-        R_TRY(RestartSphairaFanSysmodule());
+        Result rc = RestartSphairaFanSysmodule();
+        if (R_FAILED(rc)) {
+            RebootAfterSetting();
+        }
     } else {
         RebootAfterSetting();
     }
@@ -3026,8 +3029,8 @@ void FanCurveMenu::RefreshActions() {
         return;
     }
 
-    const auto apply_label = m_sysmodule_enabled ? "Apply"_i18n : "Save and Reboot"_i18n;
-    const auto apply_mode = m_sysmodule_enabled ? FanCurveApplyMode::Live : FanCurveApplyMode::Reboot;
+    const auto apply_label = "Apply"_i18n;
+    const auto apply_mode = FanCurveApplyMode::Live;
 
     SetActions(
         std::make_pair(Button::A, Action{"Edit"_i18n, [this](){
