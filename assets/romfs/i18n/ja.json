@@ -453,7 +453,7 @@
   "Downloading SimpleModDownloader...": "SimpleModDownloader をダウンロード中...",
   "No replacement languages found": "代替言語が見つかりません",
   "Removing translations...": "翻訳を削除しています...",
-  "Share Folder": "フォルダーを共有する",
+  "StartWebServer": "Webサーバーを起動する",
   "Only microSD folders can be shared": "共有できるのはmicroSDフォルダのみです",
   "Open this address in a browser:": "このアドレスをブラウザで開きます。",
   "Or scan the QR code.": "または、QR コードをスキャンします。",

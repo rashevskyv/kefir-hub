@@ -453,7 +453,7 @@
   "Downloading SimpleModDownloader...": "SimpleModDownloader 다운로드 중...",
   "No replacement languages found": "대체 언어를 찾을 수 없습니다.",
   "Removing translations...": "번역 삭제 중...",
-  "Share Folder": "폴더 공유",
+  "StartWebServer": "웹 서버 시작",
   "Only microSD folders can be shared": "microSD 폴더만 공유 가능",
   "Open this address in a browser:": "브라우저에서 이 주소를 엽니다.",
   "Or scan the QR code.": "아니면 QR코드를 스캔해보세요.",

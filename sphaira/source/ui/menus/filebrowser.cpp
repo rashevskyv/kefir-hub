@@ -1826,7 +1826,7 @@ void FsView::DisplayOptions() {
     });
 
     if (IsSd()) {
-        options->Add<SidebarEntryCallback>("Share Folder"_i18n, [this](){
+        options->Add<SidebarEntryCallback>("StartWebServer"_i18n, [this](){
             ShareFolder();
         });
     }

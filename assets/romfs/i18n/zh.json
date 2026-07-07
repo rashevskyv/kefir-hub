@@ -521,7 +521,7 @@
   "Downloading SimpleModDownloader...": "正在下载 SimpleModDownloader...",
   "No replacement languages found": "未找到替代语言",
   "Removing translations...": "正在删除翻译...",
-  "Share Folder": "共享文件夹",
+  "StartWebServer": "启动 Web 服务器",
   "Only microSD folders can be shared": "仅可共享 microSD 文件夹",
   "Open this address in a browser:": "在浏览器中打开该地址：",
   "Or scan the QR code.": "或扫描二维码。",
