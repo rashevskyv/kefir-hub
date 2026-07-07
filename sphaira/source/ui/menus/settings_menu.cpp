@@ -1136,6 +1136,10 @@ auto EnsureSphairaFanSysmoduleInstalled() -> Result {
 auto RestartSphairaFanSysmodule() -> Result {
     R_TRY(EnsureSphairaFanSysmoduleInstalled());
 
+    if (FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
+        DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
+    }
+
     Result rc = pmshellInitialize();
     R_TRY(rc);
 
@@ -2814,6 +2818,14 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
 } // namespace
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
+    if (FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
+        DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
+    }
+
+    if (!IsSphairaFanSysmoduleRunning() && IsSphairaFanSysmoduleInstalled()) {
+        RestartSphairaFanSysmodule();
+    }
+
     m_handheld_curve = ReadFanCurve(
         "tskin_rate_table_handheld_on_fwdbg",
         "tskin_rate_table_handheld",
