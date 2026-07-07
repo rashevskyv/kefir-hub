@@ -389,7 +389,7 @@ auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> 
 }
 
 auto BuildKefirChangelogText(const std::string& raw, const std::string& current_version, const std::string& target_version) -> std::string {
-    const auto target_ver = ParseKefirChangelogVersion(target_version);
+    auto target_ver = ParseKefirChangelogVersion(target_version);
     if (!target_ver) {
         return "Could not determine target Kefir version.";
     }
@@ -418,7 +418,11 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
             continue;
         }
 
-        const auto trimmed = line.substr(non_space);
+        auto trimmed = line.substr(non_space);
+        while (!trimmed.empty() && std::isspace(static_cast<unsigned char>(trimmed.back()))) {
+            trimmed.pop_back();
+        }
+
         if (IsFullBoldLine(trimmed)) {
             const auto content = trimmed.substr(2, trimmed.size() - 4);
             const bool is_version = !content.empty() && std::all_of(content.begin(), content.end(), [](unsigned char c) {
@@ -454,7 +458,23 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         result += display_preamble + "\n\n";
     }
 
-    const auto current_ver = ParseKefirChangelogVersion(current_version);
+    int max_changelog_ver = 0;
+    for (const auto& [version, content] : version_blocks) {
+        if (version > max_changelog_ver) {
+            max_changelog_ver = version;
+        }
+    }
+
+    auto current_ver = ParseKefirChangelogVersion(current_version);
+    if (max_changelog_ver > 0) {
+        if (current_ver > max_changelog_ver) {
+            current_ver = max_changelog_ver;
+        }
+        if (target_ver > max_changelog_ver) {
+            target_ver = max_changelog_ver;
+        }
+    }
+
     const auto start_ver = current_ver >= target_ver ? target_ver : current_ver + 1;
 
     bool found_any = false;
