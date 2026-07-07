@@ -2188,10 +2188,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
         }
 
-        gfx::drawTextBox(
-            vg, v.x + 18.f, v.y + 16.f, 20.f, v.w - 36.f,
-            theme->GetColour(text_id), m_categories[i].label.c_str()
-        );
+        {
+            const float text_x = v.x + 18.f;
+            const float text_w = v.w - 36.f;
+            nvgFontSize(vg, 20.f);
+            nvgTextLineHeight(vg, 1.0f);
+            float label_bounds[4];
+            nvgTextBoxBounds(vg, text_x, 0, text_w, m_categories[i].label.c_str(), nullptr, label_bounds);
+            const float label_h = label_bounds[3] - label_bounds[1];
+            const float label_y = v.y + (v.h - label_h) / 2.f;
+            gfx::drawTextBox(
+                vg, text_x, label_y, 20.f, text_w,
+                theme->GetColour(text_id), m_categories[i].label.c_str()
+            );
+        }
     });
 
     if (m_categories.empty()) {

@@ -194,7 +194,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
 
     gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
     m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
-    m_scroll_sub_heading.Draw(vg, true, 80, 685, text_w - 160, 18, NVG_ALIGN_LEFT, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+    m_scroll_sub_heading.Draw(vg, true, 80, 683, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
 }
 
 void MenuBase::SetTitle(std::string title) {
