@@ -2051,6 +2051,18 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         }
     }
 
+    if (m_focus_pane == FocusPane::Categories) {
+        if (controller->GotDown(Button::RIGHT)) {
+            SetFocusPane(FocusPane::Items);
+            App::PlaySoundEffect(SoundEffect_Focus);
+        }
+    } else {
+        if (controller->GotDown(Button::LEFT)) {
+            SetFocusPane(FocusPane::Categories);
+            App::PlaySoundEffect(SoundEffect_Focus);
+        }
+    }
+
     MenuBase::Update(controller, touch);
 
     if (m_focus_pane == FocusPane::Categories) {
@@ -2232,11 +2244,27 @@ void Menu::BuildCategories() {
             "General",
             "Language, timing and application flow.",
             {
-                { "Language", "Cycle the active interface language.", LanguageValue, [](){
-                    App::SetLanguage(ClampIndex(App::GetLanguage() + 1, static_cast<long>(LANGUAGE_ITEMS.size())));
+                { "Language", "Select the active interface language.", LanguageValue, [](){
+                    PopupList::Items items;
+                    for (const auto& lang : LANGUAGE_ITEMS) {
+                        items.push_back(i18n::get(lang));
+                    }
+                    App::Push<PopupList>("Language"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            App::SetLanguage(*op_index);
+                        }
+                    }, App::GetLanguage());
                 }},
-                { "Text scroll speed", "Change how fast long labels scroll.", TextScrollSpeedValue, [](){
-                    App::SetTextScrollSpeed(ClampIndex(App::GetTextScrollSpeed() + 1, static_cast<long>(TEXT_SCROLL_SPEED_ITEMS.size())));
+                { "Text scroll speed", "Select how fast long labels scroll.", TextScrollSpeedValue, [](){
+                    PopupList::Items items;
+                    for (const auto& speed : TEXT_SCROLL_SPEED_ITEMS) {
+                        items.push_back(i18n::get(speed));
+                    }
+                    App::Push<PopupList>("Text scroll speed"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            App::SetTextScrollSpeed(*op_index);
+                        }
+                    }, App::GetTextScrollSpeed());
                 }},
                 MakeBoolItem("12 Hour Time", "Use 12 hour clock format.", App::Get12HourTimeEnable, App::Set12HourTimeEnable),
                 { "Restart Sphaira", "Close and reopen the application.", [](){ return std::string{}; }, [](){
@@ -2251,10 +2279,18 @@ void Menu::BuildCategories() {
             "Appearance",
             "Theme and audio options.",
             {
-                { "Theme", "Cycle installed Sphaira themes.", ThemeValue, [](){
+                { "Theme", "Select the active Sphaira theme.", ThemeValue, [](){
                     const auto themes = App::GetThemeMetaList();
                     if (!themes.empty()) {
-                        App::SetTheme(ClampIndex(App::GetThemeIndex() + 1, static_cast<long>(themes.size())));
+                        PopupList::Items items;
+                        for (const auto& theme : themes) {
+                            items.push_back(theme.name);
+                        }
+                        App::Push<PopupList>("Theme"_i18n, std::move(items), [](std::optional<s64> op_index){
+                            if (op_index) {
+                                App::SetTheme(*op_index);
+                            }
+                        }, App::GetThemeIndex());
                     }
                 }},
                 MakeBoolItem("Music", "Enable background music from the current theme.", App::GetThemeMusicEnable, App::SetThemeMusicEnable),
