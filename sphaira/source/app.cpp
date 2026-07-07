@@ -666,6 +666,18 @@ auto App::GetThemeMusicEnable() -> bool {
     return g_app->m_theme_music.Get();
 }
 
+auto App::GetAnimatedWavesEnable() -> bool {
+    return g_app->m_animated_waves.Get();
+}
+
+auto App::GetWaveColorDark() -> std::string {
+    return g_app->m_wave_color_dark.Get();
+}
+
+auto App::GetWaveColorLight() -> std::string {
+    return g_app->m_wave_color_light.Get();
+}
+
 auto App::GetMtpEnable() -> bool {
     return g_app->m_mtp_enabled.Get();
 }
@@ -853,6 +865,10 @@ void App::SetInstallSdEnable(bool enable) {
 void App::SetThemeMusicEnable(bool enable) {
     g_app->m_theme_music.Set(enable);
     PlaySoundEffect(SoundEffect::SoundEffect_Music);
+}
+
+void App::SetAnimatedWavesEnable(bool enable) {
+    g_app->m_animated_waves.Set(enable);
 }
 
 void App::Set12HourTimeEnable(bool enable) {

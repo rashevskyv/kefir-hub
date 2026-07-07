@@ -4,6 +4,31 @@
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 
+#include <switch.h>
+#include <cmath>
+
+namespace {
+NVGcolor ParseColor(const std::string& str, NVGcolor fallback) {
+    if (str.empty()) return fallback;
+    std::string_view val = str;
+    if (val.starts_with("0x")) {
+        val = val.substr(2);
+    } else {
+        return fallback;
+    }
+    char* end;
+    u32 c = std::strtoul(val.data(), &end, 16);
+    if (!c && val.data() == end) {
+        return fallback;
+    }
+    if (val.length() <= 6) {
+        c <<= 8;
+        c |= 0xFF;
+    }
+    return nvgRGBA((c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+}
+}
+
 namespace sphaira::ui::menu {
 
 auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
@@ -58,6 +83,64 @@ void MenuBase::Update(Controller* controller, TouchInfo* touch) {
 
 void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
+
+    if (App::GetAnimatedWavesEnable()) {
+        // Draw animated waves at the bottom of the screen
+        const float time = static_cast<float>(armTicksToNs(armGetSystemTick())) / 1'000'000'000.f;
+
+        // Determine if light theme or dark theme based on background color brightness
+        auto bg_color = theme->GetColour(ThemeEntryID_BACKGROUND);
+        float brightness = 0.299f * bg_color.r + 0.587f * bg_color.g + 0.114f * bg_color.b;
+        bool is_light = brightness > 0.5f;
+
+        NVGcolor col1, col2;
+        if (is_light) {
+            std::string custom_color_str = App::GetWaveColorLight();
+            if (!custom_color_str.empty()) {
+                col1 = ParseColor(custom_color_str, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+                col2 = col1;
+            } else {
+                col1 = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+                col2 = theme->GetColour(ThemeEntryID_HIGHLIGHT_2);
+            }
+        } else {
+            std::string custom_color_str = App::GetWaveColorDark();
+            if (!custom_color_str.empty()) {
+                col1 = ParseColor(custom_color_str, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+                col2 = col1;
+            } else {
+                col1 = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+                col2 = theme->GetColour(ThemeEntryID_HIGHLIGHT_2);
+            }
+        }
+
+        auto draw_wave = [&](float base_y, float amp, float freq, float speed, NVGcolor color) {
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, 0.f, SCREEN_HEIGHT);
+            const float phase = time * speed;
+            for (float x = 0.f; x <= SCREEN_WIDTH; x += 15.f) {
+                float y = base_y + amp * std::sin(x * freq + phase);
+                nvgLineTo(vg, x, y);
+            }
+            nvgLineTo(vg, SCREEN_WIDTH, SCREEN_HEIGHT);
+            nvgClosePath(vg);
+            nvgFillColor(vg, color);
+            nvgFill(vg);
+        };
+
+        // Layer 1 (Back wave)
+        col1.a = 0.15f;
+        draw_wave(670.f, 15.f, 0.004f, 1.2f, col1);
+
+        // Layer 2 (Middle wave)
+        col2.a = 0.20f;
+        draw_wave(685.f, 10.f, 0.007f, -0.8f, col2);
+
+        // Layer 3 (Front wave)
+        col1.a = 0.30f;
+        draw_wave(695.f, 8.f, 0.005f, 1.6f, col1);
+    }
+
     Widget::Draw(vg, theme);
 
     const auto pdata = GetPolledData();

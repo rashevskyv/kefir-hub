@@ -104,6 +104,9 @@ public:
     static auto GetInstallEmummcEnable() -> bool;
     static auto GetInstallSdEnable() -> bool;
     static auto GetThemeMusicEnable() -> bool;
+    static auto GetAnimatedWavesEnable() -> bool;
+    static auto GetWaveColorDark() -> std::string;
+    static auto GetWaveColorLight() -> std::string;
     static auto Get12HourTimeEnable() -> bool;
     static auto GetLanguage() -> long;
     static auto GetTextScrollSpeed() -> long;
@@ -121,6 +124,7 @@ public:
     static void SetInstallSdEnable(bool enable);
     static void SetInstallPrompt(bool enable);
     static void SetThemeMusicEnable(bool enable);
+    static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
     static void SetLanguage(long index);
     static void SetTextScrollSpeed(long index);
@@ -298,6 +302,9 @@ public:
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};
     option::OptionString m_theme_path{INI_SECTION, "theme", DEFAULT_THEME_PATH};
     option::OptionBool m_theme_music{INI_SECTION, "theme_music", true};
+    option::OptionBool m_animated_waves{INI_SECTION, "animated_waves", true};
+    option::OptionString m_wave_color_dark{INI_SECTION, "wave_color_dark", ""};
+    option::OptionString m_wave_color_light{INI_SECTION, "wave_color_light", ""};
     option::OptionBool m_12hour_time{INI_SECTION, "12hour_time", false};
     option::OptionLong m_language{INI_SECTION, "language", 0}; // auto
     option::OptionString m_left_menu{INI_SECTION, "left_side_menu", "FileBrowser"};

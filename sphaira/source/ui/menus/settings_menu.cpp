@@ -2258,6 +2258,7 @@ void Menu::BuildCategories() {
                     }
                 }},
                 MakeBoolItem("Music", "Enable background music from the current theme.", App::GetThemeMusicEnable, App::SetThemeMusicEnable),
+                MakeBoolItem("Animated waves", "Enable animated background waves in the bottom bar.", App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
                 { "Sphaira theme options", "Select the Sphaira interface theme and music options.", [](){ return std::string{}; }, [](){
                     App::DisplayThemeOptions(false);
                 }, SettingsItemKind::Folder },
