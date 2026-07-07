@@ -37,7 +37,10 @@ MTP can be enabled via the Network menu.
 
 ## Web File Manager
 
-Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled in the Network menu) to browse, download, upload, and view files on the console directly from a web browser:
+Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled under the file options via the **Start Web Server** action, which is localized across all 14 languages) to browse, download, upload, delete, and view files on the console directly from a web browser:
+- **Checkbox Selection & Batch Operations:** Displays checkboxes next to files and directories in list and grid views, allowing bulk selection. The bottom toolbar provides options to delete all selected items or download them collectively.
+- **Recursive Directory Deletion:** Select folders and delete them recursively directly from the browser window (performing safe recursive deletion on the console's filesystem).
+- **Bulk Download as ZIP:** Select multiple files or entire folders to download them as a single packaged ZIP file. The ZIP archive is generated on-the-fly directly in the client browser's memory without compression, shifting the processing load entirely to the user's computer and keeping the console's CPU and RAM free.
 - **Direct Image Viewer:** Image files (PNG, JPG, JPEG, GIF, BMP) are highlighted as `[I]` in the directory listing and open directly on the page in a seamless lightbox viewer.
 - **Integrated Gallery & Lightbox Viewer:** Any folder containing images features a **Gallery** button in the web interface. Clicking it opens a beautiful, responsive grid gallery displaying thumbnails. Both standard list and gallery views feature an integrated **Lightbox Modal Viewer**. Clicking any image opens it instantly in an overlay on the same page with interactive navigation controls (Prev/Next buttons, Left/Right keyboard arrows, and Escape key to close), making it easy to flip through screenshots and albums.
 
