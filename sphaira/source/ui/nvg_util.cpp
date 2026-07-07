@@ -75,7 +75,7 @@ void drawRectIntenal(NVGcontext* vg, const Vec4& v, const NVGpaint& p, float rou
     nvgFill(vg);
 }
 
-void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, float corner_radius = 0.5F) {
+void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, float corner_radius = 4.0F) {
     float gradientX, gradientY, color;
     getHighlightAnimation(&gradientX, &gradientY, &color);
 
@@ -146,7 +146,7 @@ void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, con
     nvgStroke(vg);
 }
 
-void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, const NVGcolor& c, float corner_radius = 0.5F) {
+void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, const NVGcolor& c, float corner_radius = 4.0F) {
     if (ClipRect(v.x, v.y)) {
         return;
     }

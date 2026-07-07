@@ -16,8 +16,8 @@ void drawRect(NVGcontext*, const Vec4& v, const NVGcolor& c, float rounding = 0.
 void drawRect(NVGcontext*, float x, float y, float w, float h, const NVGpaint& p, float rounding = 0.F);
 void drawRect(NVGcontext*, const Vec4& v, const NVGpaint& p, float rounding = 0.F);
 
-void drawRectOutline(NVGcontext*, const Theme*, float size, float x, float y, float w, float h, float rounding = 0.5F);
-void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float rounding = 0.5F);
+void drawRectOutline(NVGcontext*, const Theme*, float size, float x, float y, float w, float h, float rounding = 4.0F);
+void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float rounding = 4.0F);
 
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);
