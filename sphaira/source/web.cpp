@@ -546,6 +546,8 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += ".grid .meta{color:#64748b;font-size:12px}";
 
     body += ".empty{padding:40px;text-align:center;color:#64748b;font-size:16px}";
+    body += ".delete-btn{margin-left:8px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;transition:all 0.15s}";
+    body += ".delete-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
     body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
     body += HtmlEscape(root);
     if (!rel.empty()) {
@@ -645,7 +647,9 @@ auto BuildFolderPage(std::string rel) -> std::string {
                 std::snprintf(size_buf, sizeof(size_buf), "%.2f KiB", static_cast<double>(entry.file_size) / 1024.0);
                 body += size_buf;
             }
-            body += "</span></div></a>";
+            body += "</span><button class=\"delete-btn\" onclick=\"deleteFile(event,'";
+            body += encoded_child;
+            body += "')\">Delete</button></div></a>";
         }
     }
 
@@ -688,6 +692,7 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += "if(btn)btn.textContent='List View';";
     body += "}";
     body += "});";
+    body += "async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){location.reload();}else{alert('Delete failed: '+await res.text());}}";
     body += "</script>";
 
     AppendLightbox(body);
@@ -909,6 +914,8 @@ auto BuildGalleryPage(std::string rel) -> std::string {
     body += "img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#050505}";
     body += "span{display:block;padding:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd}";
     body += ".empty{padding:26px 18px;color:#98a1aa}";
+    body += ".del-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:6px 0;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s}";
+    body += ".del-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
     body += "</style></head><body><header><h1>Sphaira Gallery</h1><div class=\"path\">";
     body += HtmlEscape(root);
     if (!rel.empty()) {
@@ -966,12 +973,18 @@ auto BuildGalleryPage(std::string rel) -> std::string {
         body += escaped_name;
         body += "\"><span>";
         body += escaped_name;
-        body += "</span></a>";
+        body += "</span><button class=\"del-btn\" onclick=\"deleteImg(event,'";
+        body += encoded_child;
+        body += "')\">Delete</button></a>";
     }
 
     body += "</main>";
 
     AppendLightbox(body);
+
+    body += "<script>";
+    body += "async function deleteImg(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){location.reload();}else{alert('Delete failed: '+await res.text());}}";
+    body += "</script>";
 
     body += "</body></html>";
     return body;
@@ -1076,6 +1089,35 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
 
+void HandleDelete(Socket sock, const std::string& query) {
+    const auto root = GetShareFolderRoot();
+    const auto rel = SanitizeRelativePath(GetQueryValue(query, "path"));
+    if (rel.empty()) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Missing file path");
+        return;
+    }
+
+    const auto path = JoinSharePath(root, rel);
+
+    fs::FsNativeSd sd;
+    if (sd.DirExists(path)) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Cannot delete directories");
+        return;
+    }
+
+    if (!sd.FileExists(path)) {
+        SendResponse(sock, "404 Not Found", "text/plain", "File not found");
+        return;
+    }
+
+    if (R_FAILED(sd.DeleteFile(path))) {
+        SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not delete file");
+        return;
+    }
+
+    SendResponse(sock, "200 OK", "text/plain", "Deleted");
+}
+
 void HandleRequest(Socket sock) {
     std::string req;
     if (!ReadHttpRequest(sock, req)) {
@@ -1111,8 +1153,18 @@ void HandleRequest(Socket sock) {
         return;
     }
 
+    if (method == "DELETE") {
+        if (path == "/delete") {
+            HandleDelete(sock, query);
+            return;
+        }
+
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
     if (method != "GET") {
-        SendResponse(sock, "405 Method Not Allowed", "text/plain", "Only GET and PUT are supported");
+        SendResponse(sock, "405 Method Not Allowed", "text/plain", "Only GET, PUT and DELETE are supported");
         return;
     }
 
