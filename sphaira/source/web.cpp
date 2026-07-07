@@ -620,6 +620,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Upload</button>";
     body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\">Grid View</button>";
     body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\">Select All</button>";
+    body += "<button id=\"download-selected\" onclick=\"downloadSelected()\" style=\"border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.1);color:#38bdf8;\" disabled>Download Selected (0)</button>";
     body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" style=\"border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;\" disabled>Delete Selected (0)</button>";
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
@@ -658,12 +659,18 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         if (entry.type == FsDirEntryType_Dir) {
             body += "<a class=\"item\" href=\"/?path=";
             body += encoded_child;
-            body += "\"><div class=\"thumbnail-box\">"
+            body += "\">";
+            body += "<input type=\"checkbox\" class=\"file-checkbox\" data-path=\"";
+            body += encoded_child;
+            body += "\" onclick=\"event.stopPropagation(); updateSelectCount();\">";
+            body += "<div class=\"thumbnail-box\">"
                     "<svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
                     "</div>";
             body += "<div class=\"info\"><span class=\"name\">";
             body += escaped_name;
-            body += "</span><span class=\"meta\">folder</span></div></a>";
+            body += "</span><span class=\"meta\">folder</span><button class=\"delete-btn\" onclick=\"deleteFile(event,'";
+            body += encoded_child;
+            body += "')\">Delete</button></div></a>";
         } else {
             const bool is_image = IsImagePath(name);
             body += "<a class=\"item\" href=\"";
@@ -745,6 +752,8 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
     body += "const btn=document.getElementById('delete-selected');";
     body += "if(btn){btn.disabled=checked.length===0;btn.textContent='Delete Selected ('+checked.length+')';}";
+    body += "const dlBtn=document.getElementById('download-selected');";
+    body += "if(dlBtn){dlBtn.disabled=checked.length===0;dlBtn.textContent='Download Selected ('+checked.length+')';}";
     body += "const selectAllBtn=document.getElementById('select-all-btn');";
     body += "if(selectAllBtn){";
     body += "const all=document.querySelectorAll('.file-checkbox');";
@@ -763,7 +772,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "async function deleteSelected(){";
     body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
     body += "if(!checked.length)return;";
-    body += "if(!confirm('Delete '+checked.length+' selected files?'))return;";
+    body += "if(!confirm('Delete '+checked.length+' selected files/folders?'))return;";
     body += "const btn=document.getElementById('delete-selected');";
     body += "if(btn)btn.disabled=true;";
     body += "const status=document.getElementById('status');";
@@ -784,6 +793,153 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "deleteSelected();";
     body += "}";
     body += "});";
+
+    body += "function makeCRCTable(){";
+    body += "let c;const crcTable=[];";
+    body += "for(let n=0;n<256;n++){";
+    body += "c=n;";
+    body += "for(let k=0;k<8;k++){";
+    body += "c=((c&1)?(0xEDB88320^(c>>>1)):(c>>>1));";
+    body += "}";
+    body += "crcTable[n]=c;";
+    body += "}";
+    body += "return crcTable;";
+    body += "}";
+    body += "const crcTable=makeCRCTable();";
+    body += "function crc32(arr){";
+    body += "let crc=0^(-1);";
+    body += "for(let i=0;i<arr.length;i++){";
+    body += "crc=(crc>>>8)^crcTable[(crc^arr[i])&0xFF];";
+    body += "}";
+    body += "return (crc^(-1))>>>0;";
+    body += "}";
+
+    body += "function createZip(files){";
+    body += "const localHeaders=[];const centralHeaders=[];let offset=0;";
+    body += "for(const file of files){";
+    body += "const nameBytes=new TextEncoder().encode(file.name);";
+    body += "const dataBytes=file.data;";
+    body += "const crc=crc32(dataBytes);";
+    body += "const size=dataBytes.length;";
+    body += "const lh=new ArrayBuffer(30+nameBytes.length);";
+    body += "const lhView=new DataView(lh);";
+    body += "lhView.setUint32(0,0x04034b50,true);";
+    body += "lhView.setUint16(4,10,true);";
+    body += "lhView.setUint16(6,0,true);";
+    body += "lhView.setUint16(8,0,true);";
+    body += "lhView.setUint16(10,0,true);";
+    body += "lhView.setUint16(12,0,true);";
+    body += "lhView.setUint32(14,crc,true);";
+    body += "lhView.setUint32(18,size,true);";
+    body += "lhView.setUint32(22,size,true);";
+    body += "lhView.setUint16(26,nameBytes.length,true);";
+    body += "lhView.setUint16(28,0,true);";
+    body += "new Uint8Array(lh,30).set(nameBytes);";
+    body += "localHeaders.push(new Uint8Array(lh));";
+    body += "localHeaders.push(dataBytes);";
+    body += "const ch=new ArrayBuffer(46+nameBytes.length);";
+    body += "const chView=new DataView(ch);";
+    body += "chView.setUint32(0,0x02014b50,true);";
+    body += "chView.setUint16(4,20,true);";
+    body += "chView.setUint16(6,10,true);";
+    body += "chView.setUint16(8,0,true);";
+    body += "chView.setUint16(10,0,true);";
+    body += "chView.setUint16(12,0,true);";
+    body += "chView.setUint16(14,0,true);";
+    body += "chView.setUint32(16,crc,true);";
+    body += "chView.setUint32(20,size,true);";
+    body += "chView.setUint32(24,size,true);";
+    body += "chView.setUint16(28,nameBytes.length,true);";
+    body += "chView.setUint16(30,0,true);";
+    body += "chView.setUint16(32,0,true);";
+    body += "chView.setUint16(34,0,true);";
+    body += "chView.setUint16(36,0,true);";
+    body += "chView.setUint32(38,0,true);";
+    body += "chView.setUint32(42,offset,true);";
+    body += "new Uint8Array(ch,46).set(nameBytes);";
+    body += "centralHeaders.push(new Uint8Array(ch));";
+    body += "offset+=lh.byteLength+size;";
+    body += "}";
+    body += "const cdOffset=offset;let cdSize=0;";
+    body += "for(const ch of centralHeaders)cdSize+=ch.byteLength;";
+    body += "const eocd=new ArrayBuffer(22);";
+    body += "const eocdView=new DataView(eocd);";
+    body += "eocdView.setUint32(0,0x06054b50,true);";
+    body += "eocdView.setUint16(4,0,true);";
+    body += "eocdView.setUint16(6,0,true);";
+    body += "eocdView.setUint16(8,files.length,true);";
+    body += "eocdView.setUint16(10,files.length,true);";
+    body += "eocdView.setUint32(12,cdSize,true);";
+    body += "eocdView.setUint32(16,cdOffset,true);";
+    body += "eocdView.setUint16(20,0,true);";
+    body += "const blobParts=[];";
+    body += "for(const part of localHeaders)blobParts.push(part);";
+    body += "for(const part of centralHeaders)blobParts.push(part);";
+    body += "blobParts.push(new Uint8Array(eocd));";
+    body += "return new Blob(blobParts,{type:'application/zip'});";
+    body += "}";
+
+    body += "async function downloadSelected(){";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "if(!checked.length)return;";
+    body += "const status=document.getElementById('status');";
+    body += "status.textContent='Preparing download list...';";
+    body += "const allFiles=[];";
+    body += "for(const cb of checked){";
+    body += "const path=cb.getAttribute('data-path');";
+    body += "const isDir=cb.closest('.item').querySelector('.meta').textContent==='folder';";
+    body += "if(isDir){";
+    body += "status.textContent='Scanning folder...';";
+    body += "const res=await fetch('/list-recursive?path='+path);";
+    body += "if(res.ok){";
+    body += "const nested=await res.json();";
+    body += "allFiles.push(...nested);";
+    body += "}";
+    body += "}else{";
+    body += "allFiles.push({path:path,size:0});";
+    body += "}";
+    body += "}";
+    body += "if(allFiles.length===0){";
+    body += "status.textContent='No files found';";
+    body += "return;";
+    body += "}";
+    body += "if(allFiles.length===1&&checked.length===1&&!checked[0].closest('.item').querySelector('.meta').textContent.includes('folder')){";
+    body += "const path=allFiles[0].path;";
+    body += "const link=document.createElement('a');";
+    body += "link.href='/download?path='+path;";
+    body += "link.download=decodeURIComponent(path.split('/').pop());";
+    body += "link.click();";
+    body += "status.textContent='Done';";
+    body += "return;";
+    body += "}";
+    body += "status.textContent='Downloading files to bundle...';";
+    body += "const zipFiles=[];";
+    body += "const basePath=decodeURIComponent(currentPath);";
+    body += "let count=0;";
+    body += "for(const file of allFiles){";
+    body += "count++;";
+    body += "status.textContent='Downloading ('+count+'/'+allFiles.length+')...';";
+    body += "const res=await fetch('/download?path='+file.path);";
+    body += "if(res.ok){";
+    body += "const data=new Uint8Array(await res.arrayBuffer());";
+    body += "let zipPath=decodeURIComponent(file.path);";
+    body += "if(zipPath.startsWith(basePath)){";
+    body += "zipPath=zipPath.substring(basePath.length);";
+    body += "if(zipPath.startsWith('/'))zipPath=zipPath.substring(1);";
+    body += "}";
+    body += "zipFiles.push({name:zipPath,data:data});";
+    body += "}";
+    body += "}";
+    body += "status.textContent='Generating ZIP...';";
+    body += "const zipBlob=createZip(zipFiles);";
+    body += "const url=URL.createObjectURL(zipBlob);";
+    body += "const link=document.createElement('a');";
+    body += "link.href=url;";
+    body += "link.download=(basePath==='/'?'sd_card':basePath.split('/').pop())+'.zip';";
+    body += "link.click();";
+    body += "URL.revokeObjectURL(url);";
+    body += "status.textContent='Done';";
+    body += "}";
 
     body += "</script>";
 
@@ -1182,7 +1338,11 @@ void HandleDelete(Socket sock, const std::string& query) {
 
     fs::FsNativeSd sd;
     if (sd.DirExists(path)) {
-        SendResponse(sock, "400 Bad Request", "text/plain", "Cannot delete directories");
+        if (R_FAILED(sd.DeleteDirectoryRecursively(path))) {
+            SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not delete folder recursively");
+            return;
+        }
+        SendResponse(sock, "200 OK", "text/plain", "Deleted");
         return;
     }
 
@@ -1199,6 +1359,81 @@ void HandleDelete(Socket sock, const std::string& query) {
     SendResponse(sock, "200 OK", "text/plain", "Deleted");
 }
 
+
+auto JsonEscape(std::string_view in) -> std::string {
+    std::string out;
+    out.reserve(in.size());
+    for (const auto c : in) {
+        if (c == '"') {
+            out += "\\\"";
+        } else if (c == '\\') {
+            out += "\\\\";
+        } else if (c == '\n') {
+            out += "\\n";
+        } else if (c == '\r') {
+            out += "\\r";
+        } else if (c == '\t') {
+            out += "\\t";
+        } else {
+            out += c;
+        }
+    }
+    return out;
+}
+
+void ScanDirectoryRecursive(fs::FsNativeSd& fs, const std::string& path, std::vector<std::pair<std::string, s64>>& out_files) {
+    fs::Dir dir;
+    std::vector<FsDirectoryEntry> entries;
+    if (R_SUCCEEDED(fs.OpenDirectory(path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
+        dir.ReadAll(entries);
+        for (const auto& entry : entries) {
+            std::string child = path;
+            if (child.empty() || child.back() != '/') {
+                child += '/';
+            }
+            child += entry.name;
+            if (entry.type == FsDirEntryType_Dir) {
+                ScanDirectoryRecursive(fs, child, out_files);
+            } else {
+                out_files.push_back({child, entry.file_size});
+            }
+        }
+    }
+}
+
+void HandleListRecursive(Socket sock, const std::string& query) {
+    const auto raw_path = GetQueryValue(query, "path");
+    if (raw_path.empty()) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Missing path");
+        return;
+    }
+
+    const auto path = CanonicalizeAbsolutePath(raw_path);
+
+    fs::FsNativeSd fs;
+    std::vector<std::pair<std::string, s64>> files;
+    if (fs.DirExists(path)) {
+        ScanDirectoryRecursive(fs, path, files);
+    } else if (fs.FileExists(path)) {
+        fs::File file;
+        s64 size = 0;
+        if (R_SUCCEEDED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
+            file.GetSize(&size);
+        }
+        files.push_back({path, size});
+    }
+
+    std::string json = "[";
+    for (size_t i = 0; i < files.size(); ++i) {
+        if (i > 0) {
+            json += ",";
+        }
+        json += "{\"path\":\"" + JsonEscape(files[i].first) + "\",\"size\":" + std::to_string(files[i].second) + "}";
+    }
+    json += "]";
+
+    SendResponse(sock, "200 OK", "application/json", json);
+}
 
 void HandleRequest(Socket sock) {
     std::string req;
@@ -1257,6 +1492,11 @@ void HandleRequest(Socket sock) {
 
     if (path == "/download") {
         SendDownload(sock, GetQueryValue(query, "path"));
+        return;
+    }
+
+    if (path == "/list-recursive") {
+        HandleListRecursive(sock, query);
         return;
     }
 
