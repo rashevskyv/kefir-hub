@@ -225,6 +225,8 @@ struct Dir {
     u32 m_mode{};
 };
 
+bool is_read_only(std::string_view path);
+
 FsPath AppendPath(const fs::FsPath& root_path, const fs::FsPath& file_path);
 
 Result CreateFile(FsFileSystem* fs, const FsPath& path, u64 size = 0, u32 option = 0, bool ignore_read_only = true);

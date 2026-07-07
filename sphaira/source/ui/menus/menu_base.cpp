@@ -177,7 +177,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         draw(ThemeEntryID_TEXT, 0, ("No Internet"_i18n).c_str());
     }
     if (!App::IsApplication()) {
-        draw(ThemeEntryID_ERROR, 0, ("[Applet Mode]"_i18n).c_str());
+        draw(ThemeEntryID_ERROR, 0, "[A]");
     }
     draw(ThemeEntryID_TEXT_INFO, 0, "v%s", APP_VERSION_HASH);
 

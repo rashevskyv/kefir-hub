@@ -266,6 +266,9 @@ private:
         return m_fs_entry.type == FsType::Sd;
     }
 
+    auto IsReadOnly(const fs::FsPath& path) const -> bool;
+    auto AnySelectedReadOnly() const -> bool;
+
     void Sort();
     void SortAndFindLastFile(bool scan = false);
     void SetIndexFromLastFile(const LastFile& last_file);

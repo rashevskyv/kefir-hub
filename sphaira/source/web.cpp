@@ -412,6 +412,13 @@ auto HeaderValue(const std::string& req, std::string_view name) -> std::string {
     return {};
 }
 
+auto IsImagePath(std::string_view name) -> bool {
+    const auto ext = PathExtension(name);
+    return ExtensionEquals(ext, "png") || ExtensionEquals(ext, "jpg") || 
+           ExtensionEquals(ext, "jpeg") || ExtensionEquals(ext, "gif") || 
+           ExtensionEquals(ext, "bmp");
+}
+
 auto BuildFolderPage(std::string rel) -> std::string {
     rel = SanitizeRelativePath(std::move(rel));
     const auto root = GetShareFolderRoot();
@@ -431,6 +438,14 @@ auto BuildFolderPage(std::string rel) -> std::string {
         return strcasecmp(lhs.name, rhs.name) < 0;
     });
 
+    bool has_images = false;
+    for (const auto& entry : entries) {
+        if (entry.type == FsDirEntryType_File && IsImagePath(entry.name)) {
+            has_images = true;
+            break;
+        }
+    }
+
     const auto encoded_rel = UrlEncode(rel);
     std::string body;
     body.reserve(8192 + entries.size() * 256);
@@ -442,7 +457,7 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
     body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:1}";
     body += "h1{font-size:20px;margin:0 0 6px}.path{color:#b9c2cc;word-break:break-all}.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}";
-    body += "button{border:1px solid #50545c;background:#252a32;color:#fff;border-radius:6px;padding:10px 12px;font:inherit}";
+    body += "button{border:1px solid #50545c;background:#252a32;color:#fff;border-radius:6px;padding:10px 12px;font:inherit;cursor:pointer}";
     body += "input{display:none}.status{color:#9fb1c8}.list{padding:8px 0}.row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:13px 18px;border-bottom:1px solid #25272d;color:inherit;text-decoration:none}";
     body += ".row:hover{background:#191d24}.meta{color:#9aa3ad;font-size:13px}.crumbs a{color:#9fc6ff;text-decoration:none}.empty{padding:26px 18px;color:#98a1aa}";
     body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
@@ -476,6 +491,9 @@ auto BuildFolderPage(std::string rel) -> std::string {
     }
 
     body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Upload</button>";
+    if (has_images) {
+        body += "<button onclick=\"location.href='/gallery?path=" + encoded_rel + "'\">Gallery</button>";
+    }
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header><main class=\"list\">";
 
     if (!rel.empty()) {
@@ -512,9 +530,16 @@ auto BuildFolderPage(std::string rel) -> std::string {
             body += escaped_name;
             body += "</span><span class=\"meta\">folder</span></a>";
         } else {
-            body += "<a class=\"row\" href=\"/download?path=";
+            const bool is_image = IsImagePath(name);
+            body += "<a class=\"row\" href=\"";
+            body += is_image ? "/view?path=" : "/download?path=";
             body += encoded_child;
-            body += "\"><span>[F]</span><span>";
+            if (is_image) {
+                body += "\" target=\"_blank";
+            }
+            body += "\"><span>";
+            body += is_image ? "[I]" : "[F]";
+            body += "</span><span>";
             body += escaped_name;
             body += "</span><span class=\"meta\">";
             if (entry.file_size >= 1024 * 1024) {
@@ -655,6 +680,171 @@ void SendDownload(Socket sock, const std::string& rel) {
 
         offset += bytes_read;
     }
+}
+
+void SendView(Socket sock, const std::string& rel) {
+    const auto root = GetShareFolderRoot();
+    const auto clean_rel = SanitizeRelativePath(rel);
+    if (clean_rel.empty()) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Missing file path");
+        return;
+    }
+
+    const auto path = JoinSharePath(root, clean_rel);
+    auto name = clean_rel;
+    if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
+        name = name.substr(slash + 1);
+    }
+    name = SanitizeFileName(name);
+
+    fs::FsNativeSd fs;
+    fs::File file;
+    if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
+        SendResponse(sock, "404 Not Found", "text/plain", "Could not open file");
+        return;
+    }
+
+    s64 size{};
+    if (R_FAILED(file.GetSize(&size))) {
+        SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not read file size");
+        return;
+    }
+
+    char header[768]{};
+    std::snprintf(header, sizeof(header),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Disposition: inline; filename=\"%s\"\r\n"
+        "Content-Length: %zd\r\n"
+        "Cache-Control: no-store\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        ContentTypeForPath(path), name.c_str(), size);
+
+    if (!SendString(sock, header)) {
+        return;
+    }
+
+    std::vector<u8> buf(HTTP_FILE_CHUNK);
+    s64 offset{};
+    while (offset < size) {
+        const auto todo = std::min<s64>(buf.size(), size - offset);
+        u64 bytes_read{};
+        if (R_FAILED(file.Read(offset, buf.data(), todo, FsReadOption_None, &bytes_read)) || !bytes_read) {
+            return;
+        }
+
+        if (!SendAll(sock, buf.data(), bytes_read)) {
+            return;
+        }
+
+        offset += bytes_read;
+    }
+}
+
+auto BuildGalleryPage(std::string rel) -> std::string {
+    rel = SanitizeRelativePath(std::move(rel));
+    const auto root = GetShareFolderRoot();
+    const auto dir_path = JoinSharePath(root, rel);
+
+    fs::FsNativeSd fs;
+    fs::Dir dir;
+    std::vector<FsDirectoryEntry> entries;
+    if (R_SUCCEEDED(fs.OpenDirectory(dir_path, FsDirOpenMode_ReadFiles, &dir))) {
+        dir.ReadAll(entries);
+    }
+
+    std::vector<FsDirectoryEntry> images;
+    for (const auto& entry : entries) {
+        if (entry.type == FsDirEntryType_File && IsImagePath(entry.name)) {
+            images.push_back(entry);
+        }
+    }
+
+    std::sort(images.begin(), images.end(), [](const auto& lhs, const auto& rhs){
+        return strcasecmp(lhs.name, rhs.name) < 0;
+    });
+
+    const auto encoded_rel = UrlEncode(rel);
+    std::string body;
+    body.reserve(4096 + images.size() * 256);
+
+    body += "<!doctype html><html><head><meta charset=\"utf-8\">";
+    body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
+    body += "<title>Sphaira Gallery</title>";
+    body += "<style>";
+    body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
+    body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:1}";
+    body += "h1{font-size:20px;margin:0 0 6px}.path{color:#b9c2cc;word-break:break-all}.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}";
+    body += "button{border:1px solid #50545c;background:#252a32;color:#fff;border-radius:6px;padding:10px 12px;font:inherit;cursor:pointer}";
+    body += ".crumbs a{color:#9fc6ff;text-decoration:none}";
+    body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:12px}";
+    body += "a.card{display:block;color:inherit;text-decoration:none;background:#1c1c1c;border:1px solid #333;border-radius:8px;overflow:hidden}";
+    body += "img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#050505}";
+    body += "span{display:block;padding:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd}";
+    body += ".empty{padding:26px 18px;color:#98a1aa}";
+    body += "</style></head><body><header><h1>Sphaira Gallery</h1><div class=\"path\">";
+    body += HtmlEscape(root);
+    if (!rel.empty()) {
+        body += "/";
+        body += HtmlEscape(rel);
+    }
+    body += "</div><div class=\"crumbs\"><a href=\"/files\">root</a>";
+
+    std::string crumb_accum;
+    size_t start{};
+    while (start < rel.size()) {
+        const auto end = rel.find('/', start);
+        const auto part = rel.substr(start, end == std::string::npos ? std::string::npos : end - start);
+        if (!part.empty()) {
+            if (!crumb_accum.empty()) {
+                crumb_accum += '/';
+            }
+            crumb_accum += part;
+            body += " / <a href=\"/gallery?path=";
+            body += UrlEncode(crumb_accum);
+            body += "\">";
+            body += HtmlEscape(part);
+            body += "</a>";
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+
+    body += "</div><div class=\"bar\">";
+    body += "<button onclick=\"location.href='/files?path=" + encoded_rel + "'\">List View</button>";
+    body += "</div></header><main class=\"grid\">";
+
+    if (images.empty()) {
+        body += "<div class=\"empty\">No images found in this folder</div>";
+    }
+
+    for (const auto& entry : images) {
+        const std::string name{entry.name};
+        auto child = rel;
+        if (!child.empty()) {
+            child += '/';
+        }
+        child += name;
+
+        const auto encoded_child = UrlEncode(child);
+        const auto escaped_name = HtmlEscape(name);
+
+        body += "<a class=\"card\" href=\"/view?path=";
+        body += encoded_child;
+        body += "\" target=\"_blank\"><img loading=\"lazy\" src=\"/view?path=";
+        body += encoded_child;
+        body += "\" alt=\"";
+        body += escaped_name;
+        body += "\"><span>";
+        body += escaped_name;
+        body += "</span></a>";
+    }
+
+    body += "</main></body></html>";
+    return body;
 }
 
 auto UniqueUploadPath(fs::FsNativeSd& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath {
@@ -817,6 +1007,16 @@ void HandleRequest(Socket sock) {
 
     if (path == "/download") {
         SendDownload(sock, GetQueryValue(query, "path"));
+        return;
+    }
+
+    if (path == "/gallery" || path == "/gallery/") {
+        SendResponse(sock, "200 OK", "text/html", BuildGalleryPage(GetQueryValue(query, "path")));
+        return;
+    }
+
+    if (path == "/view") {
+        SendView(sock, GetQueryValue(query, "path"));
         return;
     }
 

@@ -80,6 +80,8 @@ bool is_read_only_file(std::string_view path) {
     return false;
 }
 
+} // namespace
+
 bool is_read_only(std::string_view path) {
     if (is_read_only_root(path)) {
         return true;
@@ -89,8 +91,6 @@ bool is_read_only(std::string_view path) {
     }
     return false;
 }
-
-} // namespace
 
 FsPath AppendPath(const FsPath& root_path, const FsPath& _file_path) {
     // strip leading '/' in file path.

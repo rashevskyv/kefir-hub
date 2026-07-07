@@ -1517,6 +1517,23 @@ void FsView::OnPasteCallback() {
     }
 }
 
+auto FsView::IsReadOnly(const fs::FsPath& path) const -> bool {
+    if (m_menu->m_ignore_read_only.Get()) {
+        return false;
+    }
+    return fs::is_read_only(path);
+}
+
+auto FsView::AnySelectedReadOnly() const -> bool {
+    const auto entries = GetSelectedEntries();
+    for (const auto& e : entries) {
+        if (IsReadOnly(GetNewPath(e))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void FsView::OnRenameCallback() {
 
 }
@@ -1782,9 +1799,10 @@ void FsView::DisplayOptions() {
     }
 
     if (m_entries_current.size()) {
-        options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
+        auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Cut);
         }, true);
+        cut_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot cut read-only files"_i18n);
 
         options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Copy);
@@ -1792,7 +1810,7 @@ void FsView::DisplayOptions() {
     }
 
     if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
-        options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
+        auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
             const std::string buf = "Paste file(s)?"_i18n;
             App::Push<OptionBox>(
                 buf, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
@@ -1802,11 +1820,12 @@ void FsView::DisplayOptions() {
                 }
             });
         });
+        paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
     }
 
     // can't rename more than 1 file
     if (m_entries_current.size() && !m_selected_count) {
-        options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
+        auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
             std::string out;
             const auto& entry = GetEntry();
             const auto name = entry.GetName();
@@ -1831,10 +1850,11 @@ void FsView::DisplayOptions() {
                 }
             }
         });
+        rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
     }
 
     if (m_entries_current.size()) {
-        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+        auto delete_entry = options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Delete);
 
             log_write("clicked on delete\n");
@@ -1848,6 +1868,7 @@ void FsView::DisplayOptions() {
             );
             log_write("pushed delete\n");
         });
+        delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
     }
 
     // returns true if all entries match the ext array.
@@ -1964,7 +1985,7 @@ void FsView::DisplayAdvancedOptions() {
         SetFs(fs_entries[index_out].root, fs_entries[index_out]);
     }, i18n::get(m_fs_entry.name));
 
-    options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
+    auto create_file_entry = options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
         std::string out;
         if (R_SUCCEEDED(swkbd::ShowText(out, "Set File Name"_i18n.c_str(), fs::AppendPath(m_path, ""))) && !out.empty()) {
             App::PopToMenu();
@@ -1985,8 +2006,9 @@ void FsView::DisplayAdvancedOptions() {
             }
         }
     });
+    create_file_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
 
-    options->Add<SidebarEntryCallback>("Create Folder"_i18n, [this](){
+    auto create_folder_entry = options->Add<SidebarEntryCallback>("Create Folder"_i18n, [this](){
         std::string out;
         if (R_SUCCEEDED(swkbd::ShowText(out, "Set Folder Name"_i18n.c_str(), fs::AppendPath(m_path, ""))) && !out.empty()) {
             App::PopToMenu();
@@ -2006,6 +2028,7 @@ void FsView::DisplayAdvancedOptions() {
             }
         }
     });
+    create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
 
     if (IsSd() && m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
         if (IsExtension(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {

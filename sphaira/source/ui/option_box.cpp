@@ -29,10 +29,29 @@ auto EstimateLineCount(const std::string& text, size_t chars_per_line) -> size_t
     return lines;
 }
 
+auto GetFontSize(const std::string& message, bool has_image) -> float {
+    if (has_image) {
+        return 22.f;
+    }
+    if (message.length() < 60) {
+        return 26.f;
+    } else if (message.length() < 120) {
+        return 22.f;
+    }
+    return 18.f;
+}
+
+auto GetCharsPerLine(float font_size, bool has_image) -> size_t {
+    if (has_image) {
+        return 36;
+    }
+    return static_cast<size_t>(710.f / (font_size * 0.55f));
+}
+
 auto CalculateButtonYoff(const std::string& message, bool has_image) -> float {
-    const auto font_size = has_image ? 22.f : 18.f;
+    const auto font_size = GetFontSize(message, has_image);
     const auto text_y = has_image ? OPTION_IMAGE_TEXT_Y : OPTION_NO_IMAGE_TEXT_Y;
-    const auto chars_per_line = has_image ? static_cast<size_t>(36) : static_cast<size_t>(66);
+    const auto chars_per_line = GetCharsPerLine(font_size, has_image);
     const auto min_yoff = has_image ? 220.f : 190.f;
     const auto lines = static_cast<float>(EstimateLineCount(message, chars_per_line));
 
@@ -147,7 +166,16 @@ auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         gfx::drawTextBox(vg, image.x + image.w + padding, m_pos.y + 110.f, 22.f, m_pos.w - (image.x - m_pos.x) - image.w - padding*2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     } else {
         const float padding = 30;
-        gfx::drawTextBox(vg, m_pos.x + padding, m_pos.y + OPTION_NO_IMAGE_TEXT_Y, 18.f, m_pos.w - padding*2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+        const float font_size = GetFontSize(m_message, false);
+
+        nvgFontSize(vg, font_size);
+        nvgTextLineHeight(vg, 1.5);
+        float bounds[4];
+        nvgTextBoxBounds(vg, m_pos.x + padding, 0.f, m_pos.w - padding*2, m_message.c_str(), nullptr, bounds);
+        const float text_h = bounds[3] - bounds[1];
+        const float text_y = m_pos.y + std::max(20.f, (m_button_yoff - text_h) / 2.f);
+
+        gfx::drawTextBox(vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding*2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
     }
     nvgRestore(vg);
 

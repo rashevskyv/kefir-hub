@@ -35,6 +35,12 @@ of all configs available](https://github.com/ITotalJustice/ftpsrv/blob/master/as
 
 MTP can be enabled via the Network menu.
 
+## Web File Manager
+
+Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled in the Network menu) to browse, download, upload, and view files on the console directly from a web browser:
+- **Direct Image Viewer:** Image files (PNG, JPG, JPEG, GIF, BMP) are highlighted as `[I]` in the directory listing and open directly in a new browser tab for inline viewing instead of forcing a download.
+- **Integrated Gallery View:** Any folder containing images features a **Gallery** button in the web interface. Clicking it opens a beautiful, responsive grid gallery displaying thumbnails of all image files in that folder, letting you easily scroll and view screenshots and albums.
+
 ## File association
 
 Sphaira has file association support. Let's say your app supports loading .png files, then you could write an association file, then when using the file browser, clicking on a .png file will launch your app along with the .png file as argv[1]. This was primarly added for rom loading support for emulators / frontends such as RetroArch, MelonDS, mGBA etc.
@@ -84,6 +90,11 @@ Sphaira provides an integrated image viewer with dedicated legend and controls:
 - **Custom Legend:** Clear bottom-bar indicators (`Prev / Next Image` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR).
 - **Zoom & Navigation:** Holding ZL with Analog Stick / D-Pad Up or Down zooms in or out without accidentally changing images.
 - **Stick Panning:** Releasing ZL while zoomed in enables smooth pan/scroll across the zoomed image using analog sticks or D-Pad without scale changes or switching files.
+
+## File Browser
+
+Sphaira includes a robust file manager with standard operations (Cut, Paste, Rename, Delete, Create File/Folder, Extract/Compress zip, Install/Forwarder) and write protection handling:
+- **Write Protection Support:** If a file or folder is marked as Read-Only (and "Ignore read only" is disabled in Advanced Settings), destructive or modification actions such as **Cut**, **Rename**, **Delete**, **Paste**, **Create File**, and **Create Folder** are automatically disabled and grayed out in the options sidebars, clearly showing the reason when selected.
 
 ## Theme Creator
 
