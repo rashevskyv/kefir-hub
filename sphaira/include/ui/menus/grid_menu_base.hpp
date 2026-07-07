@@ -12,6 +12,7 @@ enum LayoutType {
     LayoutType_List,
     LayoutType_Grid,
     LayoutType_GridDetail,
+    LayoutType_HbMenu,
 };
 
 struct Menu : MenuBase {
@@ -22,6 +23,7 @@ protected:
     void DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version);
     // same as above but doesn't draw image and returns image dimension.
     Vec4 DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version);
+    void DrawHbMenuHeader(NVGcontext* vg, Theme* theme, int image, const char* name, const char* author, const char* version, const char* description = nullptr);
 
 private:
     Vec4 DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version);

@@ -1761,17 +1761,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
 auto BuildKefirItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
-    items.emplace_back(SettingsItem{
-        "Fan curve",
-        "Edit Atmosphere tskin fan curves for handheld and docked modes.",
-        [](){
-            return "";
-        },
-        [](){
-            App::Push<FanCurveMenu>();
-        },
-        SettingsItemKind::Folder,
-    });
     items.emplace_back(MakeKefirToggle({
         "Overclock status",
         "Enable or disable Kefir overclock files.",
@@ -1816,6 +1805,18 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n\nTo disable it if the console does not boot:\nhekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te",
         3.f,
     }));
+
+    items.emplace_back(SettingsItem{
+        "Fan curve",
+        "Edit Atmosphere tskin fan curves for handheld and docked modes.",
+        [](){
+            return "";
+        },
+        [](){
+            App::Push<FanCurveMenu>();
+        },
+        SettingsItemKind::Folder,
+    });
 
     items.emplace_back(SettingsItem{
         "Translate Interface",
@@ -2205,6 +2206,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 SettingsValueColour(theme, value, selected),
                 value.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_TOP
             );
+        }
+
+        if (item.kind == SettingsItemKind::Folder) {
+            const float x1 = v.x + v.w - 24.f;
+            const float y1 = v.y + v.h / 2.f;
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, x1 - 8.f, y1 - 8.f);
+            nvgLineTo(vg, x1, y1);
+            nvgLineTo(vg, x1 - 8.f, y1 + 8.f);
+            nvgStrokeColor(vg, theme->GetColour(focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO));
+            nvgStrokeWidth(vg, 3.f);
+            nvgLineCap(vg, NVG_ROUND);
+            nvgLineJoin(vg, NVG_ROUND);
+            nvgStroke(vg);
         }
     });
 }
@@ -2810,6 +2825,20 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
             SettingsValueColour(theme, value, selected),
             value.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_TOP
         );
+    }
+
+    if (item.kind == SettingsItemKind::Folder) {
+        const float x1 = v.x + v.w - 24.f;
+        const float y1 = v.y + v.h / 2.f;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x1 - 8.f, y1 - 8.f);
+        nvgLineTo(vg, x1, y1);
+        nvgLineTo(vg, x1 - 8.f, y1 + 8.f);
+        nvgStrokeColor(vg, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO));
+        nvgStrokeWidth(vg, 3.f);
+        nvgLineCap(vg, NVG_ROUND);
+        nvgLineJoin(vg, NVG_ROUND);
+        nvgStroke(vg);
     }
 }
 

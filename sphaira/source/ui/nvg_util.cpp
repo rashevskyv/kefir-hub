@@ -75,7 +75,7 @@ void drawRectIntenal(NVGcontext* vg, const Vec4& v, const NVGpaint& p, float rou
     nvgFill(vg);
 }
 
-void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v) {
+void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, float corner_radius = 0.5F) {
     float gradientX, gradientY, color;
     getHighlightAnimation(&gradientX, &gradientY, &color);
 
@@ -86,7 +86,6 @@ void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, con
     v2.y -= strokeWidth / 2.F;
     v2.w += strokeWidth;
     v2.h += strokeWidth;
-    const auto corner_radius = 0.5F;
 
     const auto shadow_width = 2.F;
     const auto shadow_offset = 10.F;
@@ -147,13 +146,12 @@ void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, con
     nvgStroke(vg);
 }
 
-void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, const NVGcolor& c) {
+void drawRectOutlineInternal(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, const NVGcolor& c, float corner_radius = 0.5F) {
     if (ClipRect(v.x, v.y)) {
         return;
     }
 
-    const auto corner_radius = 0.5;
-    drawRectOutlineInternal(vg, theme, size, v);
+    drawRectOutlineInternal(vg, theme, size, v, corner_radius);
     nvgBeginPath(vg);
     nvgRoundedRect(vg, v.x, v.y, v.w, v.h, corner_radius);
     nvgFillColor(vg, c);
@@ -266,12 +264,12 @@ void drawRect(NVGcontext* vg, const Vec4& v, const NVGpaint& p, float rounded) {
     drawRectIntenal(vg, v, p, rounded);
 }
 
-void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, float x, float y, float w, float h) {
-    drawRectOutlineInternal(vg, theme, size, {x,y,w,h}, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND));
+void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, float x, float y, float w, float h, float rounding) {
+    drawRectOutlineInternal(vg, theme, size, {x,y,w,h}, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), rounding);
 }
 
-void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, const Vec4& v) {
-    drawRectOutlineInternal(vg, theme, size, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND));
+void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, const Vec4& v, float rounding) {
+    drawRectOutlineInternal(vg, theme, size, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), rounding);
 }
 
 void drawText(NVGcontext* vg, float x, float y, float size, const char* str, const char* end, int align, const NVGcolor& c) {

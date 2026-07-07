@@ -494,9 +494,9 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     order_items.push_back("Ascending"_i18n);
 
                     SidebarEntryArray::Items layout_items;
-                    layout_items.push_back("List"_i18n);
                     layout_items.push_back("Icon"_i18n);
                     layout_items.push_back("Grid"_i18n);
+                    layout_items.push_back("HB Menu"_i18n);
 
                     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                         m_sort.Set(index_out);
@@ -508,10 +508,15 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                         SortAndFindLastFile(false);
                     }, m_order.Get());
 
+                    auto current_layout = m_layout.Get();
+                    if (current_layout == grid::LayoutType_List) {
+                        current_layout = grid::LayoutType_Grid;
+                        m_layout.Set(current_layout);
+                    }
                     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                        m_layout.Set(index_out);
+                        m_layout.Set(index_out + 1);
                         OnLayoutChange();
-                    }, m_layout.Get());
+                    }, current_layout - 1);
 
                     options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
                         m_hide_forwarders.Set(v_out);
@@ -704,6 +709,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     if (m_entries.empty()) {
         gfx::drawTextArgs(vg, GetX() + GetW() / 2.f, GetY() + GetH() / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty..."_i18n.c_str());
         return;
+    }
+
+    if (m_layout.Get() == grid::LayoutType_HbMenu) {
+        auto& e = m_entries[m_index];
+        char title_id[33];
+        std::snprintf(title_id, sizeof(title_id), "%016lX", e.app_id);
+        DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, e.GetAuthor());
     }
 
     // max images per frame, in order to not hit io / gpu too hard.

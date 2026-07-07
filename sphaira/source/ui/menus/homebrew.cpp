@@ -25,6 +25,19 @@ constinit UEvent g_change_uevent;
 constexpr const char* KEFIR_UPDATER_STUB_PATH = "/switch/kefir-updater/kefir-updater.nro";
 option::OptionBool g_kefir_updater_notice_ack{"homebrew", "kefir_updater_notice_ack", false};
 
+auto GetNroFilename(const NroEntry& e) -> std::string {
+    std::string filename = e.path.s;
+    size_t last_slash = filename.find_last_of('/');
+    if (last_slash != std::string::npos) {
+        filename = filename.substr(last_slash + 1);
+    }
+    size_t dot = filename.find_last_of('.');
+    if (dot != std::string::npos) {
+        filename = filename.substr(0, dot);
+    }
+    return filename;
+}
+
 auto GenerateStarPath(const fs::FsPath& nro_path) -> fs::FsPath {
     fs::FsPath out{};
     const auto dilem = std::strrchr(nro_path.s, '/');
@@ -205,6 +218,23 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
+    if (m_layout.Get() == grid::LayoutType_HbMenu && !m_entries_current.empty()) {
+        const auto index = m_entries_current[m_index];
+        auto& e = m_entries[index];
+        bool has_star = false;
+        if (IsStarEnabled()) {
+            if (!e.has_star.has_value()) {
+                e.has_star = fs::FsNativeSd().FileExists(GenerateStarPath(e.path));
+            }
+            has_star = e.has_star.value();
+        }
+        std::string title_text = GetNroFilename(e);
+        if (has_star) {
+            title_text = std::string("\u2605 ") + title_text;
+        }
+        DrawHbMenuHeader(vg, theme, e.image, title_text.c_str(), e.GetAuthor(), e.GetDisplayVersion(), e.GetName());
+    }
+
     // max images per frame, in order to not hit io / gpu too hard.
     const int image_load_max = 2;
     int image_load_count = 0;
@@ -245,15 +275,27 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             has_star = e.has_star.value();
         }
 
-        std::string name;
-        if (has_star) {
-            name = std::string("\u2605 ") + e.GetName();
+        std::string card_name;
+        std::string card_version;
+        if (m_layout.Get() == grid::LayoutType_HbMenu) {
+            std::string nro_fn = GetNroFilename(e);
+            if (has_star) {
+                card_name = std::string("\u2605 ") + nro_fn;
+            } else {
+                card_name = nro_fn;
+            }
+            card_version = e.GetName();
         } else {
-            name = e.GetName();
+            if (has_star) {
+                card_name = std::string("\u2605 ") + e.GetName();
+            } else {
+                card_name = e.GetName();
+            }
+            card_version = e.GetDisplayVersion();
         }
 
         const auto selected = pos == m_index;
-        DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, name.c_str(), e.GetAuthor(), e.GetDisplayVersion());
+        DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, card_name.c_str(), e.GetAuthor(), card_version.c_str());
     });
 }
 
@@ -553,9 +595,9 @@ void Menu::DisplayOptions() {
     order_items.push_back("Ascending"_i18n);
 
     SidebarEntryArray::Items layout_items;
-    layout_items.push_back("List"_i18n);
     layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
+    layout_items.push_back("HB Menu"_i18n);
 
     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
         m_sort.Set(index_out);
@@ -567,10 +609,15 @@ void Menu::DisplayOptions() {
         SortAndFindLastFile();
     }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
 
+    auto current_layout = m_layout.Get();
+    if (current_layout == grid::LayoutType_List) {
+        current_layout = grid::LayoutType_Grid;
+        m_layout.Set(current_layout);
+    }
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-        m_layout.Set(index_out);
+        m_layout.Set(index_out + 1);
         OnLayoutChange();
-    }, m_layout.Get(), "Change the layout to List, Icon and Grid."_i18n);
+    }, current_layout - 1, "Change the layout to Icon, Grid and HB Menu."_i18n);
 
     options->Add<SidebarEntryBool>("Show hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
         m_show_hidden.Set(enable);

@@ -232,11 +232,11 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+    } else if (GetPageJump() && (!has_r && controller->GotDown(Button::R))) {
         if (ScrollPageDown(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+    } else if (GetPageJump() && (!has_l && controller->GotDown(Button::L))) {
         if (ScrollPageUp(index, count)) {
             callback(false, index);
         }
@@ -306,12 +306,12 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
             callback(false, index);
         }
     } else if (m_row > 1 && controller->GotDown(Button::RIGHT)) {
-        if (count && index < (count - 1) && (index + 1) % m_row != 0) {
-            callback(false, index + 1);
+        if (ScrollDown(index, 1, count)) {
+            callback(false, index);
         }
     } else if (m_row > 1 && controller->GotDown(Button::LEFT)) {
-        if (count && index != 0 && (index % m_row) != 0) {
-            callback(false, index - 1);
+        if (ScrollUp(index, 1, count)) {
+            callback(false, index);
         }
     } else if (touch->is_clicked && touch->in_range(GetPos())) {
         auto v = m_v;

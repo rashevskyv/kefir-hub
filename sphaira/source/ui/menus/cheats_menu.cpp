@@ -4260,6 +4260,13 @@ void CheatGameSelectMenu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (!m_games.empty()) {
+        if (m_layout.Get() == grid::LayoutType_HbMenu) {
+            auto& game = m_games[m_index];
+            char title_id[33];
+            std::snprintf(title_id, sizeof(title_id), "%016lX v%u", game.title_id, game.version);
+            DrawHbMenuHeader(vg, theme, game.image, GetGameDisplayName(game), GetGameDisplayAuthor(game), title_id, game.build_id.c_str());
+        }
+
         const int image_load_max = 2;
         int image_load_count = 0;
 
@@ -4323,14 +4330,19 @@ void CheatGameSelectMenu::DisplayOptions() {
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     SidebarEntryArray::Items layout_items;
-    layout_items.push_back("List"_i18n);
     layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
+    layout_items.push_back("HB Menu"_i18n);
 
+    auto current_layout = m_layout.Get();
+    if (current_layout == grid::LayoutType_List) {
+        current_layout = grid::LayoutType_Grid;
+        m_layout.Set(current_layout);
+    }
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-        m_layout.Set(index_out);
+        m_layout.Set(index_out + 1);
         OnLayoutChange();
-    }, m_layout.Get());
+    }, current_layout - 1);
 }
 
 void CheatGameSelectMenu::FreeGames() {

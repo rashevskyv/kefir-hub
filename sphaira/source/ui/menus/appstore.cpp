@@ -943,9 +943,9 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             order_items.push_back("Ascending"_i18n);
 
             SidebarEntryArray::Items layout_items;
-            layout_items.push_back("List"_i18n);
             layout_items.push_back("Icon"_i18n);
             layout_items.push_back("Grid"_i18n);
+            layout_items.push_back("HB Menu"_i18n);
 
             options->Add<SidebarEntryArray>("Filter"_i18n, filter_items, [this](s64& index_out){
                 m_filter.Set(index_out);
@@ -962,10 +962,15 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
                 SortAndFindLastFile();
             }, m_order.Get());
 
+            auto current_layout = m_layout.Get();
+            if (current_layout == grid::LayoutType_List) {
+                current_layout = grid::LayoutType_Grid;
+                m_layout.Set(current_layout);
+            }
             options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                m_layout.Set(index_out);
+                m_layout.Set(index_out + 1);
                 OnLayoutChange();
-            }, m_layout.Get());
+            }, current_layout - 1);
 
             options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
                 std::string out;
@@ -1025,6 +1030,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     if (m_entries_current.empty()) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty!"_i18n.c_str());
         return;
+    }
+
+    if (m_layout.Get() == grid::LayoutType_HbMenu) {
+        const auto index = m_entries_current[m_index];
+        auto& e = m_entries[index];
+        DrawHbMenuHeader(vg, theme, e.image.image ? e.image.image : m_default_image.image, e.title.c_str(), e.author.c_str(), e.version.c_str(), e.description.c_str());
     }
 
     // max images per frame, in order to not hit io / gpu too hard.
