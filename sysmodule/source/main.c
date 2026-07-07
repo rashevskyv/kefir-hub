@@ -52,6 +52,11 @@ static bool g_ts_ready;
 static bool g_tc_ready;
 static bool g_fan_ready;
 
+static TsSession g_ts_session_external;
+static TsSession g_ts_session_internal;
+static bool g_ts_session_external_open;
+static bool g_ts_session_internal_open;
+
 void __appInit(void) {
     Result rc = smInitialize();
     if (R_FAILED(rc)) {
@@ -91,6 +96,8 @@ void __appInit(void) {
         rc = tsInitialize();
         if (R_SUCCEEDED(rc)) {
             g_ts_ready = true;
+            g_ts_session_external_open = R_SUCCEEDED(tsOpenSession(&g_ts_session_external, TsDeviceCode_LocationExternal));
+            g_ts_session_internal_open = R_SUCCEEDED(tsOpenSession(&g_ts_session_internal, TsDeviceCode_LocationInternal));
             break;
         }
         svcSleepThread(100000000LL);
@@ -137,6 +144,16 @@ void __appExit(void) {
     if (g_tc_ready) {
         tcExit();
         g_tc_ready = false;
+    }
+
+    if (g_ts_session_external_open) {
+        tsSessionClose(&g_ts_session_external);
+        g_ts_session_external_open = false;
+    }
+
+    if (g_ts_session_internal_open) {
+        tsSessionClose(&g_ts_session_internal);
+        g_ts_session_internal_open = false;
     }
 
     if (g_ts_ready) {
@@ -257,21 +274,18 @@ typedef struct {
 static bool ReadSocTemperatureMilliC(s32* out_temp_milli_c) {
     if (!out_temp_milli_c) return false;
 
-    TsSession session;
-    if (R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationExternal))) {
+    if (g_ts_session_external_open) {
         float temp_f = 0.0f;
-        Result rc = tsSessionGetTemperature(&session, &temp_f);
-        tsSessionClose(&session);
+        Result rc = tsSessionGetTemperature(&g_ts_session_external, &temp_f);
         if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
             *out_temp_milli_c = (s32)(temp_f * 1000.0f);
             return true;
         }
     }
 
-    if (R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationInternal))) {
+    if (g_ts_session_internal_open) {
         float temp_f = 0.0f;
-        Result rc = tsSessionGetTemperature(&session, &temp_f);
-        tsSessionClose(&session);
+        Result rc = tsSessionGetTemperature(&g_ts_session_internal, &temp_f);
         if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
             *out_temp_milli_c = (s32)(temp_f * 1000.0f);
             return true;
@@ -279,23 +293,23 @@ static bool ReadSocTemperatureMilliC(s32* out_temp_milli_c) {
     }
 
     s32 temp_c = 0;
-    if (R_SUCCEEDED(tsGetTemperature(TsLocation_External, &temp_c)) && temp_c > 0) {
+    if (g_ts_ready && R_SUCCEEDED(tsGetTemperature(TsLocation_External, &temp_c)) && temp_c > 0) {
         *out_temp_milli_c = temp_c * 1000;
         return true;
     }
 
-    if (R_SUCCEEDED(tsGetTemperature(TsLocation_Internal, &temp_c)) && temp_c > 0) {
+    if (g_ts_ready && R_SUCCEEDED(tsGetTemperature(TsLocation_Internal, &temp_c)) && temp_c > 0) {
         *out_temp_milli_c = temp_c * 1000;
         return true;
     }
 
     s32 temp_milli = 0;
-    if (R_SUCCEEDED(tsGetTemperatureMilliC(TsLocation_External, &temp_milli)) && temp_milli > 0) {
+    if (g_ts_ready && R_SUCCEEDED(tsGetTemperatureMilliC(TsLocation_External, &temp_milli)) && temp_milli > 0) {
         *out_temp_milli_c = temp_milli;
         return true;
     }
 
-    if (R_SUCCEEDED(tcGetSkinTemperatureMilliC(&temp_milli)) && temp_milli > 0) {
+    if (g_tc_ready && R_SUCCEEDED(tcGetSkinTemperatureMilliC(&temp_milli)) && temp_milli > 0) {
         *out_temp_milli_c = temp_milli;
         return true;
     }
