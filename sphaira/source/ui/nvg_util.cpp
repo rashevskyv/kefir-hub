@@ -217,7 +217,7 @@ void drawImage(NVGcontext* vg, float x, float y, float w, float h, int texture, 
     drawImage(vg, Vec4(x, y, w, h), texture, rounded, alpha);
 }
 
-void drawTextBox(NVGcontext* vg, float x, float y, float size, float bound, const NVGcolor& c, const char* str, int align, const char* end) {
+void drawTextBox(NVGcontext* vg, float x, float y, float size, float bound, const NVGcolor& c, const char* str, int align, const char* end, float line_height) {
     if (ClipText(x, y, align)) {
         return;
     }
@@ -226,7 +226,9 @@ void drawTextBox(NVGcontext* vg, float x, float y, float size, float bound, cons
     nvgFontSize(vg, size);
     nvgTextAlign(vg, align);
     nvgFillColor(vg, c);
+    nvgTextLineHeight(vg, line_height);
     nvgTextBox(vg, x, y, bound, str, end);
+    nvgTextLineHeight(vg, 1.0f);
 }
 
 void textBounds(NVGcontext* vg, float x, float y, float *bounds, const char* str) {

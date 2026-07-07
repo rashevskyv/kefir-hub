@@ -1921,7 +1921,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         if (entry.type == UpdaterEntryType::Kefir || entry.type == UpdaterEntryType::Firmware) {
             description = "";
         }
-        gfx::drawTextBox(vg, text_x, tile.y + 92.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), description);
+        gfx::drawTextBox(vg, text_x, tile.y + 92.f, 14.f, text_clip_w, theme->GetColour(ThemeEntryID_TEXT_INFO), description, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.5f);
     });
 }
 
