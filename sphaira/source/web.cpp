@@ -224,6 +224,44 @@ auto SanitizeRelativePath(std::string path) -> std::string {
     return out;
 }
 
+auto CanonicalizeAbsolutePath(std::string path) -> std::string {
+    for (auto& c : path) {
+        if (c == '\\') {
+            c = '/';
+        }
+    }
+
+    std::vector<std::string> parts;
+    size_t start = 0;
+    while (start <= path.size()) {
+        const auto end = path.find('/', start);
+        auto part = path.substr(start, end == std::string::npos ? std::string::npos : end - start);
+        if (!part.empty() && part != "." && part.find(':') == std::string::npos) {
+            if (part == "..") {
+                if (!parts.empty()) {
+                    parts.pop_back();
+                }
+            } else {
+                parts.push_back(std::string{part});
+            }
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+
+    std::string out = "/";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        if (i > 0) {
+            out += "/";
+        }
+        out += parts[i];
+    }
+    return out;
+}
+
+
 auto SanitizeFileName(std::string name) -> std::string {
     if (const auto slash = name.find_last_of("/\\"); slash != std::string::npos) {
         name = name.substr(slash + 1);
@@ -483,15 +521,16 @@ void AppendLightbox(std::string& body) {
     body += "</script>";
 }
 
-auto BuildFolderPage(std::string rel) -> std::string {
-    rel = SanitizeRelativePath(std::move(rel));
-    const auto root = GetShareFolderRoot();
-    const auto dir_path = JoinSharePath(root, rel);
+auto BuildFolderPage(std::string path_str) -> std::string {
+    if (path_str.empty()) {
+        path_str = GetShareFolderRoot().toString();
+    }
+    const auto abs_path = CanonicalizeAbsolutePath(path_str);
 
     fs::FsNativeSd fs;
     fs::Dir dir;
     std::vector<FsDirectoryEntry> entries;
-    if (R_SUCCEEDED(fs.OpenDirectory(dir_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
+    if (R_SUCCEEDED(fs.OpenDirectory(abs_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
         dir.ReadAll(entries);
     }
 
@@ -502,9 +541,9 @@ auto BuildFolderPage(std::string rel) -> std::string {
         return strcasecmp(lhs.name, rhs.name) < 0;
     });
 
-    const auto encoded_rel = UrlEncode(rel);
+    const auto encoded_path = UrlEncode(abs_path);
     std::string body;
-    body.reserve(16384 + entries.size() * 512);
+    body.reserve(24576 + entries.size() * 512);
 
     body += "<!doctype html><html><head><meta charset=\"utf-8\">";
     body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
@@ -548,24 +587,24 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += ".empty{padding:40px;text-align:center;color:#64748b;font-size:16px}";
     body += ".delete-btn{margin-left:8px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;transition:all 0.15s}";
     body += ".delete-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
+    
+    // Checkbox styling
+    body += ".file-checkbox{cursor:pointer;accent-color:#38bdf8;z-index:5}";
+    body += ".list .file-checkbox{width:18px;height:18px;margin-right:12px;flex-shrink:0}";
+    body += ".grid .item{position:relative}";
+    body += ".grid .file-checkbox{position:absolute;top:8px;left:8px;width:20px;height:20px;margin:0}";
+
     body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
-    body += HtmlEscape(root);
-    if (!rel.empty()) {
-        body += "/";
-        body += HtmlEscape(rel);
-    }
-    body += "</div><div class=\"crumbs\"><a href=\"/\">root</a>";
+    body += HtmlEscape(abs_path);
+    body += "</div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
     size_t start{};
-    while (start < rel.size()) {
-        const auto end = rel.find('/', start);
-        const auto part = rel.substr(start, end == std::string::npos ? std::string::npos : end - start);
+    while (start < abs_path.size()) {
+        const auto end = abs_path.find('/', start);
+        const auto part = abs_path.substr(start, end == std::string::npos ? std::string::npos : end - start);
         if (!part.empty()) {
-            if (!crumb_accum.empty()) {
-                crumb_accum += '/';
-            }
-            crumb_accum += part;
+            crumb_accum += '/' + part;
             body += " / <a href=\"/?path=";
             body += UrlEncode(crumb_accum);
             body += "\">";
@@ -580,15 +619,18 @@ auto BuildFolderPage(std::string rel) -> std::string {
 
     body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Upload</button>";
     body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\">Grid View</button>";
+    body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\">Select All</button>";
+    body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" style=\"border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;\" disabled>Delete Selected (0)</button>";
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
-    if (!rel.empty()) {
-        auto parent = rel;
+    if (abs_path != "/") {
+        auto parent = abs_path;
         if (const auto slash = parent.find_last_of('/'); slash != std::string::npos) {
             parent.resize(slash);
-        } else {
-            parent.clear();
+        }
+        if (parent.empty()) {
+            parent = "/";
         }
 
         body += "<a class=\"item\" href=\"/?path=";
@@ -605,8 +647,8 @@ auto BuildFolderPage(std::string rel) -> std::string {
 
     for (const auto& entry : entries) {
         const std::string name{entry.name};
-        auto child = rel;
-        if (!child.empty()) {
+        auto child = abs_path;
+        if (child.empty() || child.back() != '/') {
             child += '/';
         }
         child += name;
@@ -627,7 +669,11 @@ auto BuildFolderPage(std::string rel) -> std::string {
             body += "<a class=\"item\" href=\"";
             body += is_image ? "/view?path=" : "/download?path=";
             body += encoded_child;
-            body += "\"><div class=\"thumbnail-box\">";
+            body += "\">";
+            body += "<input type=\"checkbox\" class=\"file-checkbox\" data-path=\"";
+            body += encoded_child;
+            body += "\" onclick=\"event.stopPropagation(); updateSelectCount();\">";
+            body += "<div class=\"thumbnail-box\">";
             if (is_image) {
                 body += "<img class=\"thumb\" src=\"/view?path=";
                 body += encoded_child;
@@ -655,7 +701,7 @@ auto BuildFolderPage(std::string rel) -> std::string {
 
     body += "</main></div><script>";
     body += "const currentPath='";
-    body += encoded_rel;
+    body += encoded_path;
     body += "';";
     body += "async function uploadFiles(files){const input=document.getElementById('files');const button=document.getElementById('upload');const status=document.getElementById('status');";
     body += "if(!files||!files.length){return;}";
@@ -692,7 +738,53 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += "if(btn)btn.textContent='List View';";
     body += "}";
     body += "});";
+    
     body += "async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){location.reload();}else{alert('Delete failed: '+await res.text());}}";
+
+    body += "function updateSelectCount(){";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "const btn=document.getElementById('delete-selected');";
+    body += "if(btn){btn.disabled=checked.length===0;btn.textContent='Delete Selected ('+checked.length+')';}";
+    body += "const selectAllBtn=document.getElementById('select-all-btn');";
+    body += "if(selectAllBtn){";
+    body += "const all=document.querySelectorAll('.file-checkbox');";
+    body += "if(all.length&&checked.length===all.length){selectAllBtn.textContent='Deselect All';}else{selectAllBtn.textContent='Select All';}";
+    body += "}";
+    body += "}";
+
+    body += "function toggleSelectAll(){";
+    body += "const checkboxes=document.querySelectorAll('.file-checkbox');";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "const targetState=checked.length<checkboxes.length;";
+    body += "for(const cb of checkboxes){cb.checked=targetState;}";
+    body += "updateSelectCount();";
+    body += "}";
+
+    body += "async function deleteSelected(){";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "if(!checked.length)return;";
+    body += "if(!confirm('Delete '+checked.length+' selected files?'))return;";
+    body += "const btn=document.getElementById('delete-selected');";
+    body += "if(btn)btn.disabled=true;";
+    body += "const status=document.getElementById('status');";
+    body += "let count=0;";
+    body += "for(const cb of checked){";
+    body += "count++;";
+    body += "status.textContent='Deleting ('+count+'/'+checked.length+')...';";
+    body += "const path=cb.getAttribute('data-path');";
+    body += "await fetch('/delete?path='+path,{method:'DELETE'});";
+    body += "}";
+    body += "status.textContent='Done';";
+    body += "location.reload();";
+    body += "}";
+
+    body += "document.addEventListener('keydown',function(e){";
+    body += "if(e.key==='Delete'){";
+    body += "if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;";
+    body += "deleteSelected();";
+    body += "}";
+    body += "});";
+
     body += "</script>";
 
     AppendLightbox(body);
@@ -754,15 +846,13 @@ void SendImage(Socket sock, size_t index) {
 }
 
 void SendDownload(Socket sock, const std::string& rel) {
-    const auto root = GetShareFolderRoot();
-    const auto clean_rel = SanitizeRelativePath(rel);
-    if (clean_rel.empty()) {
+    if (rel.empty()) {
         SendResponse(sock, "400 Bad Request", "text/plain", "Missing file path");
         return;
     }
 
-    const auto path = JoinSharePath(root, clean_rel);
-    auto name = clean_rel;
+    const auto path = CanonicalizeAbsolutePath(rel);
+    auto name = path;
     if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
         name = name.substr(slash + 1);
     }
@@ -814,15 +904,13 @@ void SendDownload(Socket sock, const std::string& rel) {
 }
 
 void SendView(Socket sock, const std::string& rel) {
-    const auto root = GetShareFolderRoot();
-    const auto clean_rel = SanitizeRelativePath(rel);
-    if (clean_rel.empty()) {
+    if (rel.empty()) {
         SendResponse(sock, "400 Bad Request", "text/plain", "Missing file path");
         return;
     }
 
-    const auto path = JoinSharePath(root, clean_rel);
-    auto name = clean_rel;
+    const auto path = CanonicalizeAbsolutePath(rel);
+    auto name = path;
     if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
         name = name.substr(slash + 1);
     }
@@ -873,15 +961,17 @@ void SendView(Socket sock, const std::string& rel) {
     }
 }
 
-auto BuildGalleryPage(std::string rel) -> std::string {
-    rel = SanitizeRelativePath(std::move(rel));
-    const auto root = GetShareFolderRoot();
-    const auto dir_path = JoinSharePath(root, rel);
+
+auto BuildGalleryPage(std::string path_str) -> std::string {
+    if (path_str.empty()) {
+        path_str = GetShareFolderRoot().toString();
+    }
+    const auto abs_path = CanonicalizeAbsolutePath(path_str);
 
     fs::FsNativeSd fs;
     fs::Dir dir;
     std::vector<FsDirectoryEntry> entries;
-    if (R_SUCCEEDED(fs.OpenDirectory(dir_path, FsDirOpenMode_ReadFiles, &dir))) {
+    if (R_SUCCEEDED(fs.OpenDirectory(abs_path, FsDirOpenMode_ReadFiles, &dir))) {
         dir.ReadAll(entries);
     }
 
@@ -896,7 +986,7 @@ auto BuildGalleryPage(std::string rel) -> std::string {
         return strcasecmp(lhs.name, rhs.name) < 0;
     });
 
-    const auto encoded_rel = UrlEncode(rel);
+    const auto encoded_path = UrlEncode(abs_path);
     std::string body;
     body.reserve(4096 + images.size() * 256);
 
@@ -917,23 +1007,16 @@ auto BuildGalleryPage(std::string rel) -> std::string {
     body += ".del-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:6px 0;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s}";
     body += ".del-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
     body += "</style></head><body><header><h1>Sphaira Gallery</h1><div class=\"path\">";
-    body += HtmlEscape(root);
-    if (!rel.empty()) {
-        body += "/";
-        body += HtmlEscape(rel);
-    }
-    body += "</div><div class=\"crumbs\"><a href=\"/files\">root</a>";
+    body += HtmlEscape(abs_path);
+    body += "</div><div class=\"crumbs\"><a href=\"/files?path=/\">SD Card</a>";
 
     std::string crumb_accum;
     size_t start{};
-    while (start < rel.size()) {
-        const auto end = rel.find('/', start);
-        const auto part = rel.substr(start, end == std::string::npos ? std::string::npos : end - start);
+    while (start < abs_path.size()) {
+        const auto end = abs_path.find('/', start);
+        const auto part = abs_path.substr(start, end == std::string::npos ? std::string::npos : end - start);
         if (!part.empty()) {
-            if (!crumb_accum.empty()) {
-                crumb_accum += '/';
-            }
-            crumb_accum += part;
+            crumb_accum += '/' + part;
             body += " / <a href=\"/gallery?path=";
             body += UrlEncode(crumb_accum);
             body += "\">";
@@ -947,7 +1030,7 @@ auto BuildGalleryPage(std::string rel) -> std::string {
     }
 
     body += "</div><div class=\"bar\">";
-    body += "<button onclick=\"location.href='/files?path=" + encoded_rel + "'\">List View</button>";
+    body += "<button onclick=\"location.href='/files?path=" + encoded_path + "'\">List View</button>";
     body += "</div></header><main class=\"grid\">";
 
     if (images.empty()) {
@@ -956,8 +1039,8 @@ auto BuildGalleryPage(std::string rel) -> std::string {
 
     for (const auto& entry : images) {
         const std::string name{entry.name};
-        auto child = rel;
-        if (!child.empty()) {
+        auto child = abs_path;
+        if (child.empty() || child.back() != '/') {
             child += '/';
         }
         child += name;
@@ -1026,11 +1109,10 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         return;
     }
 
-    const auto root = GetShareFolderRoot();
-    const auto rel = SanitizeRelativePath(GetQueryValue(query, "path"));
+    const auto raw_path = GetQueryValue(query, "path");
+    const auto dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
     const auto raw_name = GetQueryValue(query, "name");
     const auto name = SanitizeFileName(raw_name);
-    const auto dir = JoinSharePath(root, rel);
 
     fs::FsNativeSd fs;
     if (!fs.DirExists(dir)) {
@@ -1090,14 +1172,13 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
 }
 
 void HandleDelete(Socket sock, const std::string& query) {
-    const auto root = GetShareFolderRoot();
-    const auto rel = SanitizeRelativePath(GetQueryValue(query, "path"));
-    if (rel.empty()) {
+    const auto raw_path = GetQueryValue(query, "path");
+    if (raw_path.empty()) {
         SendResponse(sock, "400 Bad Request", "text/plain", "Missing file path");
         return;
     }
 
-    const auto path = JoinSharePath(root, rel);
+    const auto path = CanonicalizeAbsolutePath(raw_path);
 
     fs::FsNativeSd sd;
     if (sd.DirExists(path)) {
@@ -1117,6 +1198,7 @@ void HandleDelete(Socket sock, const std::string& query) {
 
     SendResponse(sock, "200 OK", "text/plain", "Deleted");
 }
+
 
 void HandleRequest(Socket sock) {
     std::string req;
