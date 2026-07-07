@@ -582,8 +582,43 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             DrawElement(x + text_xoffset, y + 5, 50, 50, icon);
         }
 
+        // Draw radiobutton outline and background in the top right part of the icon
+        float radio_x = x + text_xoffset + 50.f - 6.f;
+        float radio_y = y + 5.f + 6.f;
+        float radio_r = 7.f;
+
+        nvgBeginPath(vg);
+        nvgCircle(vg, radio_x, radio_y, radio_r);
+        nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
+        nvgFill(vg);
+
+        nvgBeginPath(vg);
+        nvgCircle(vg, radio_x, radio_y, radio_r);
+        nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        nvgStrokeWidth(vg, 1.5f);
+        nvgStroke(vg);
+
         if (e.IsSelected()) {
-            gfx::drawText(vg, x + text_xoffset + 50 / 2, y + (h / 2.f) - (24.f / 2), 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            // Draw filled inner circle of the radiobutton
+            nvgBeginPath(vg);
+            nvgCircle(vg, radio_x, radio_y, radio_r - 3.f);
+            nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            nvgFill(vg);
+
+            // Draw checkmark with contrasting stroke/outline
+            float check_x = x + text_xoffset + 50.f / 2.f;
+            float check_y = y + (h / 2.f) - (24.f / 2.f);
+
+            const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
+            float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
+            NVGcolor outline_col = (bg_lum > 0.5f) ? nvgRGBA(0, 0, 0, 255) : nvgRGBA(0, 0, 0, 255);
+
+            gfx::drawText(vg, check_x - 1.f, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+            gfx::drawText(vg, check_x + 1.f, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+            gfx::drawText(vg, check_x, check_y - 1.f, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+            gfx::drawText(vg, check_x, check_y + 1.f, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+
+            gfx::drawText(vg, check_x, check_y, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
         }
 
         m_scroll_name.Draw(vg, selected, x + text_xoffset+65, y + (h / 2.f), w-(75+text_xoffset+65+50), 20, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);

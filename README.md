@@ -38,8 +38,8 @@ MTP can be enabled via the Network menu.
 ## Web File Manager
 
 Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled in the Network menu) to browse, download, upload, and view files on the console directly from a web browser:
-- **Direct Image Viewer:** Image files (PNG, JPG, JPEG, GIF, BMP) are highlighted as `[I]` in the directory listing and open directly in a new browser tab for inline viewing instead of forcing a download.
-- **Integrated Gallery View:** Any folder containing images features a **Gallery** button in the web interface. Clicking it opens a beautiful, responsive grid gallery displaying thumbnails of all image files in that folder, letting you easily scroll and view screenshots and albums.
+- **Direct Image Viewer:** Image files (PNG, JPG, JPEG, GIF, BMP) are highlighted as `[I]` in the directory listing and open directly on the page in a seamless lightbox viewer.
+- **Integrated Gallery & Lightbox Viewer:** Any folder containing images features a **Gallery** button in the web interface. Clicking it opens a beautiful, responsive grid gallery displaying thumbnails. Both standard list and gallery views feature an integrated **Lightbox Modal Viewer**. Clicking any image opens it instantly in an overlay on the same page with interactive navigation controls (Prev/Next buttons, Left/Right keyboard arrows, and Escape key to close), making it easy to flip through screenshots and albums.
 
 ## File association
 

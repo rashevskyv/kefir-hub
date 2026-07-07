@@ -419,6 +419,70 @@ auto IsImagePath(std::string_view name) -> bool {
            ExtensionEquals(ext, "bmp");
 }
 
+void AppendLightbox(std::string& body) {
+    body += "<style>";
+    body += ".lightbox{display:none;position:fixed;z-index:1000;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.95);align-items:center;justify-content:center;user-select:none}";
+    body += ".lightbox-content{position:relative;max-width:90%;max-height:85%;display:flex;flex-direction:column;align-items:center}";
+    body += ".lightbox-img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.5)}";
+    body += ".lightbox-caption{margin-top:12px;color:#eee;font-size:15px;text-align:center;word-break:break-all;max-width:600px}";
+    body += ".lightbox-close{position:absolute;top:20px;right:25px;color:#bbb;font-size:40px;font-weight:bold;cursor:pointer;transition:color 0.2s;line-height:1}";
+    body += ".lightbox-close:hover{color:#fff}";
+    body += ".lightbox-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(40,45,50,0.5);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:24px;width:50px;height:50px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,color 0.2s}";
+    body += ".lightbox-btn:hover{background:rgba(60,65,70,0.8)}";
+    body += ".lightbox-prev{left:20px}";
+    body += ".lightbox-next{right:20px}";
+    body += "</style>";
+
+    body += "<div id=\"lightbox\" class=\"lightbox\">";
+    body += "<span class=\"lightbox-close\" onclick=\"closeLightbox()\">&times;</span>";
+    body += "<button class=\"lightbox-btn lightbox-prev\" onclick=\"prevImage(event)\">&lt;</button>";
+    body += "<button class=\"lightbox-btn lightbox-next\" onclick=\"nextImage(event)\">&gt;</button>";
+    body += "<div class=\"lightbox-content\">";
+    body += "<img id=\"lightbox-img\" class=\"lightbox-img\" src=\"\" alt=\"\">";
+    body += "<div id=\"lightbox-caption\" class=\"lightbox-caption\"></div>";
+    body += "</div></div>";
+
+    body += "<script>";
+    body += "let imageList=[];let currentImageIndex=-1;";
+    body += "function initLightbox(){";
+    body += "const links=document.querySelectorAll('a');";
+    body += "for(const link of links){";
+    body += "const href=link.getAttribute('href');";
+    body += "if(href&&href.includes('/view?path=')){";
+    body += "let name='';const span=link.querySelector('span:nth-child(2)')||link.querySelector('span');";
+    body += "if(span){name=span.textContent;}";
+    body += "const idx=imageList.length;imageList.push({href:href,name:name});";
+    body += "link.addEventListener('click',function(e){";
+    body += "e.preventDefault();openLightbox(idx);";
+    body += "});";
+    body += "}";
+    body += "}";
+    body += "document.addEventListener('keydown',function(e){";
+    body += "const modal=document.getElementById('lightbox');";
+    body += "if(modal&&modal.style.display==='flex'){";
+    body += "if(e.key==='ArrowLeft')prevImage();";
+    body += "else if(e.key==='ArrowRight')nextImage();";
+    body += "else if(e.key==='Escape')closeLightbox();";
+    body += "}";
+    body += "});";
+    body += "}";
+    body += "function openLightbox(index){";
+    body += "if(index<0||index>=imageList.length)return;";
+    body += "currentImageIndex=index;";
+    body += "const modal=document.getElementById('lightbox');";
+    body += "const img=document.getElementById('lightbox-img');";
+    body += "const caption=document.getElementById('lightbox-caption');";
+    body += "img.src=imageList[index].href;caption.textContent=imageList[index].name;";
+    body += "modal.style.display='flex';";
+    body += "}";
+    body += "function closeLightbox(){document.getElementById('lightbox').style.display='none';}";
+    body += "function prevImage(e){if(e)e.stopPropagation();if(imageList.length<=1)return;let idx=currentImageIndex-1;if(idx<0)idx=imageList.length-1;openLightbox(idx);}";
+    body += "function nextImage(e){if(e)e.stopPropagation();if(imageList.length<=1)return;let idx=currentImageIndex+1;if(idx>=imageList.length)idx=0;openLightbox(idx);}";
+    body += "document.addEventListener('DOMContentLoaded',initLightbox);";
+    body += "initLightbox();";
+    body += "</script>";
+}
+
 auto BuildFolderPage(std::string rel) -> std::string {
     rel = SanitizeRelativePath(std::move(rel));
     const auto root = GetShareFolderRoot();
@@ -534,9 +598,6 @@ auto BuildFolderPage(std::string rel) -> std::string {
             body += "<a class=\"row\" href=\"";
             body += is_image ? "/view?path=" : "/download?path=";
             body += encoded_child;
-            if (is_image) {
-                body += "\" target=\"_blank";
-            }
             body += "\"><span>";
             body += is_image ? "[I]" : "[F]";
             body += "</span><span>";
@@ -566,7 +627,11 @@ auto BuildFolderPage(std::string rel) -> std::string {
     body += "const res=await fetch('/upload?path='+currentPath+'&name='+encodeURIComponent(file.name),{method:'PUT',body:file});";
     body += "if(!res.ok){button.disabled=false;status.textContent='Failed: '+await res.text();input.value='';return;}}";
     body += "status.textContent='Done';input.value='';setTimeout(()=>location.reload(),500);}";
-    body += "</script></body></html>";
+    body += "</script>";
+
+    AppendLightbox(body);
+
+    body += "</body></html>";
 
     return body;
 }
@@ -834,7 +899,7 @@ auto BuildGalleryPage(std::string rel) -> std::string {
 
         body += "<a class=\"card\" href=\"/view?path=";
         body += encoded_child;
-        body += "\" target=\"_blank\"><img loading=\"lazy\" src=\"/view?path=";
+        body += "\"><img loading=\"lazy\" src=\"/view?path=";
         body += encoded_child;
         body += "\" alt=\"";
         body += escaped_name;
@@ -843,7 +908,11 @@ auto BuildGalleryPage(std::string rel) -> std::string {
         body += "</span></a>";
     }
 
-    body += "</main></body></html>";
+    body += "</main>";
+
+    AppendLightbox(body);
+
+    body += "</body></html>";
     return body;
 }
 
