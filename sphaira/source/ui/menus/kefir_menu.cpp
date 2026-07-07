@@ -389,7 +389,7 @@ auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> 
 }
 
 auto BuildKefirChangelogText(const std::string& raw, const std::string& current_version, const std::string& target_version) -> std::string {
-    auto target_ver = ParseKefirChangelogVersion(target_version);
+    const auto target_ver = ParseKefirChangelogVersion(target_version);
     if (!target_ver) {
         return "Could not determine target Kefir version.";
     }
@@ -458,23 +458,7 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         result += display_preamble + "\n\n";
     }
 
-    int max_changelog_ver = 0;
-    for (const auto& [version, content] : version_blocks) {
-        if (version > max_changelog_ver) {
-            max_changelog_ver = version;
-        }
-    }
-
-    auto current_ver = ParseKefirChangelogVersion(current_version);
-    if (max_changelog_ver > 0) {
-        if (current_ver > max_changelog_ver) {
-            current_ver = max_changelog_ver;
-        }
-        if (target_ver > max_changelog_ver) {
-            target_ver = max_changelog_ver;
-        }
-    }
-
+    const auto current_ver = ParseKefirChangelogVersion(current_version);
     const auto start_ver = current_ver >= target_ver ? target_ver : current_ver + 1;
 
     bool found_any = false;
