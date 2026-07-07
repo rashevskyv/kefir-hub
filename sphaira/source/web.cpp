@@ -1654,7 +1654,7 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     }
 
     char url[128]{};
-    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/files",
+    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
         ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
 
     out.url = url;

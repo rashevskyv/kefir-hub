@@ -74,6 +74,14 @@ struct List final : Object {
         return m_page_jump;
     }
 
+    auto SetWrap(bool enable) {
+        m_wrap = enable;
+    }
+
+    auto GetWrap() const {
+        return m_wrap;
+    }
+
 private:
     auto Draw(NVGcontext* vg, Theme* theme) -> void override {}
     auto ClampX(float x, s64 count) const -> float;
@@ -100,6 +108,7 @@ private:
 
     Layout m_layout{Layout::GRID};
     bool m_page_jump{true};
+    bool m_wrap{false};
 };
 
 } // namespace sphaira::ui

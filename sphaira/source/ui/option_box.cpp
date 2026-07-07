@@ -79,6 +79,11 @@ auto OptionBoxEntry::Selected(bool enable) -> void {
     m_selected = enable;
 }
 
+void OptionBoxEntry::UpdateLayout(const Vec4& pos) {
+    m_pos = pos;
+    m_text_pos = Vec2{m_pos.x + (m_pos.w / 2.f), m_pos.y + (m_pos.h / 2.f)};
+}
+
 OptionBox::OptionBox(const std::string& message, const Option& a, const Callback& cb, int image, bool own_image)
 : m_message{message}
 , m_callback{cb}
@@ -149,11 +154,63 @@ auto OptionBox::Update(Controller* controller, TouchInfo* touch) -> void {
 }
 
 auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
+    if (!m_layout_done) {
+        float text_h = 0.f;
+        if (m_image) {
+            const float padding = 40.f;
+            const float text_w = m_pos.w - 40.f - 150.f - padding - padding;
+            nvgSave(vg);
+            nvgFontSize(vg, 22.f);
+            nvgTextLineHeight(vg, 1.4f);
+            float bounds[4];
+            nvgTextBoxBounds(vg, 0.f, 0.f, text_w, m_message.c_str(), nullptr, bounds);
+            text_h = bounds[3] - bounds[1];
+            nvgRestore(vg);
+            
+            m_button_yoff = 40.f + std::max(150.f, text_h) + 40.f;
+            m_button_yoff = std::max(230.f, m_button_yoff);
+        } else {
+            const float padding = 30.f;
+            const float font_size = GetFontSize(m_message, false);
+            nvgSave(vg);
+            nvgFontSize(vg, font_size);
+            nvgTextLineHeight(vg, 1.4f);
+            float bounds[4];
+            nvgTextBoxBounds(vg, 0.f, 0.f, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+            text_h = bounds[3] - bounds[1];
+            nvgRestore(vg);
+            
+            m_button_yoff = 40.f + text_h + 40.f;
+            m_button_yoff = std::max(190.f, m_button_yoff);
+        }
+
+        // Recalculate popup size and position
+        m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT;
+        m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
+
+        // Re-align buttons
+        m_spacer_line = Vec4{m_pos.x, m_pos.y + m_button_yoff - 2.f, m_pos.w, 2.f};
+        
+        auto box = m_pos;
+        box.y += m_button_yoff;
+        box.h -= m_button_yoff;
+        
+        if (m_entries.size() == 1) {
+            m_entries[0].UpdateLayout(box);
+        } else if (m_entries.size() == 2) {
+            box.w /= 2.f;
+            m_entries[0].UpdateLayout(box);
+            box.x += box.w;
+            m_entries[1].UpdateLayout(box);
+        }
+
+        m_layout_done = true;
+    }
+
     gfx::dimBackground(vg);
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5);
 
     nvgSave(vg);
-    nvgTextLineHeight(vg, 1.5);
     if (m_image) {
         Vec4 image{m_pos};
         image.x += 40;
@@ -163,25 +220,34 @@ auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
         const float padding = 40;
         gfx::drawImage(vg, image, m_image, 5);
-        gfx::drawTextBox(vg, image.x + image.w + padding, m_pos.y + 110.f, 22.f, m_pos.w - (image.x - m_pos.x) - image.w - padding*2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+
+        // Measure text height to vertically center it next to the image
+        float bounds[4];
+        nvgFontSize(vg, 22.f);
+        nvgTextLineHeight(vg, 1.4f);
+        nvgTextBoxBounds(vg, 0.f, 0.f, m_pos.w - (image.x - m_pos.x) - image.w - padding * 2, m_message.c_str(), nullptr, bounds);
+        const float text_h = bounds[3] - bounds[1];
+        const float text_y = m_pos.y + 40.f + std::max(0.f, (150.f - text_h) / 2.f);
+
+        gfx::drawTextBox(vg, image.x + image.w + padding, text_y, 22.f, m_pos.w - (image.x - m_pos.x) - image.w - padding * 2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.4f);
     } else {
         const float padding = 30;
         const float font_size = GetFontSize(m_message, false);
 
         nvgFontSize(vg, font_size);
-        nvgTextLineHeight(vg, 1.5);
+        nvgTextLineHeight(vg, 1.4f);
         float bounds[4];
-        nvgTextBoxBounds(vg, m_pos.x + padding, 0.f, m_pos.w - padding*2, m_message.c_str(), nullptr, bounds);
+        nvgTextBoxBounds(vg, m_pos.x + padding, 0.f, m_pos.w - padding * 2, m_message.c_str(), nullptr, bounds);
         const float text_h = bounds[3] - bounds[1];
         const float text_y = m_pos.y + std::max(20.f, (m_button_yoff - text_h) / 2.f);
 
-        gfx::drawTextBox(vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding*2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+        gfx::drawTextBox(vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding * 2, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.4f);
     }
     nvgRestore(vg);
 
     gfx::drawRect(vg, m_spacer_line, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
 
-    for (auto&p: m_entries) {
+    for (auto& p : m_entries) {
         p.Draw(vg, theme);
     }
 }

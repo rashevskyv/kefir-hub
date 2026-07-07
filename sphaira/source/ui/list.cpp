@@ -69,11 +69,19 @@ auto List::ScrollDown(s64& index, s64 step, s64 count) -> bool {
     if (index + step < count) {
         index += step;
     } else {
-        index = count - 1;
+        if (m_wrap) {
+            index = 0;
+        } else {
+            index = count - 1;
+        }
     }
 
     if (index != old_index) {
         App::PlaySoundEffect(SoundEffect_Scroll);
+        if (m_wrap && index == 0) {
+            m_yoff = 0;
+            return true;
+        }
         s64 delta = index - old_index;
         s64 start = m_yoff / max * m_row;
 
@@ -107,11 +115,19 @@ auto List::ScrollUp(s64& index, s64 step, s64 count) -> bool {
     if (index >= step) {
         index -= step;
     } else {
-        index = 0;
+        if (m_wrap) {
+            index = count - 1;
+        } else {
+            index = 0;
+        }
     }
 
     if (index != old_index) {
         App::PlaySoundEffect(SoundEffect_Scroll);
+        if (m_wrap && index == count - 1) {
+            m_yoff = m_layout == Layout::GRID ? ClampY(1e9f, count) : ClampX(1e9f, count);
+            return true;
+        }
         s64 start = m_yoff / max * m_row;
 
         while (index < start) {

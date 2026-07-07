@@ -1741,31 +1741,35 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
     // Current Kefir
-    nvgText(vg, 80.f, info_y, "Current Kefir:", nullptr);
-    nvgText(vg, 81.f, info_y, "Current Kefir:", nullptr);
+    const std::string current_kefir_lbl = "Current Kefir:"_i18n;
+    nvgText(vg, 80.f, info_y, current_kefir_lbl.c_str(), nullptr);
+    nvgText(vg, 81.f, info_y, current_kefir_lbl.c_str(), nullptr);
     float ck_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y, "Current Kefir:", nullptr, ck_bounds);
+    nvgTextBounds(vg, 80.f, info_y, current_kefir_lbl.c_str(), nullptr, ck_bounds);
     nvgText(vg, ck_bounds[2] + 7.f, info_y, m_current_kefir.c_str(), nullptr);
 
     // Latest Kefir
-    nvgText(vg, 650.f, info_y, "Latest Kefir:", nullptr);
-    nvgText(vg, 651.f, info_y, "Latest Kefir:", nullptr);
+    const std::string latest_kefir_lbl = "Latest Kefir:"_i18n;
+    nvgText(vg, 650.f, info_y, latest_kefir_lbl.c_str(), nullptr);
+    nvgText(vg, 651.f, info_y, latest_kefir_lbl.c_str(), nullptr);
     float lk_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y, "Latest Kefir:", nullptr, lk_bounds);
+    nvgTextBounds(vg, 650.f, info_y, latest_kefir_lbl.c_str(), nullptr, lk_bounds);
     nvgText(vg, lk_bounds[2] + 7.f, info_y, m_latest_kefir.c_str(), nullptr);
 
     // Current Firmware
-    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr);
-    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr);
+    const std::string current_fw_lbl = "Current Firmware:"_i18n;
+    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr);
+    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr);
     float cf_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, "Current Firmware:", nullptr, cf_bounds);
+    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr, cf_bounds);
     nvgText(vg, cf_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_current_firmware.c_str(), nullptr);
 
     // Console
-    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr);
-    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr);
+    const std::string console_lbl = "Console:"_i18n;
+    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr);
+    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr);
     float c_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, "Console:", nullptr, c_bounds);
+    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr, c_bounds);
     nvgText(vg, c_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_console_revision.c_str(), nullptr);
 
     nvgRestore(vg);

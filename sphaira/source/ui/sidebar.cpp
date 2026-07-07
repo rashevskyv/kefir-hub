@@ -359,6 +359,7 @@ Sidebar::Sidebar(const std::string& title, const std::string& sub, Side side, It
 
     const Vec4 pos = DistanceBetweenY(m_top_bar, m_bottom_bar);
     m_list = std::make_unique<List>(1, 6, pos, m_base_pos);
+    m_list->SetWrap(true);
     m_list->SetScrollBarPos(GetX() + GetW() - 20, m_base_pos.y - 10, pos.h - m_base_pos.y + 48);
 }
 

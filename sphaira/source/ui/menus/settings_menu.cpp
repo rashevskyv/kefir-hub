@@ -1467,12 +1467,12 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(MakePackageAction({
-        "Download DBI translations list",
-        "Update the DBI fan translations package list.",
+        "Download DBI translations list"_i18n,
+        "Update the DBI fan translations package list."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading list of translations...",
+                "Downloading list of translations..."_i18n,
                 "https://github.com/rashevskyv/DBI_watcher/raw/main/output/package.ini",
                 "/config/sphaira/downloads/dbi.package.ini"
             ));
@@ -1484,7 +1484,7 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
     for (const auto& entry : ParseDbiTranslations(DBI_TRANSLATIONS_PACKAGE)) {
         items.emplace_back(MakePackageAction({
             entry.name,
-            "Install DBI fan translation.",
+            "Install DBI fan translation."_i18n,
             [entry](auto pbox) -> Result {
                 return InstallDbiTranslation(pbox, entry);
             },
@@ -1492,12 +1492,12 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
     }
 
     items.emplace_back(MakePackageAction({
-        "Russian latest DBI",
-        "Download the latest Russian DBI build.",
+        "Russian latest DBI"_i18n,
+        "Download the latest Russian DBI build."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading Russian DBI...",
+                "Downloading Russian DBI..."_i18n,
                 "https://github.com/rashevskyv/DBI/releases/latest/download/DBI.nro",
                 "/switch/DBI/DBI_new.nro"
             ));
@@ -1507,12 +1507,12 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
     }));
 
     items.emplace_back(MakePackageAction({
-        "Reset DBI config",
-        "Download a clean DBI config from Kefir.",
+        "Reset DBI config"_i18n,
+        "Download a clean DBI config from Kefir."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Resetting DBI Config...",
+                "Resetting DBI Config..."_i18n,
                 "https://github.com/rashevskyv/DBI/releases/latest/download/dbi.config",
                 "/switch/DBI/dbi.config_new"
             ));
@@ -1520,7 +1520,7 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
         true,
-        "This will replace your current DBI config with the default Kefir config.",
+        "This will replace your current DBI config with the default Kefir config."_i18n,
         0.5f,
     }));
 
@@ -1531,8 +1531,8 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(SettingsItem{
-        "DBI",
-        "DBI installer and translations.",
+        "DBI"_i18n,
+        "DBI installer and translations."_i18n,
         [](){
             return std::string{};
         },
@@ -1543,12 +1543,12 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     });
 
     items.emplace_back(MakePackageAction({
-        "UAModDownloader",
-        "Ukrainian mods.",
+        "UAModDownloader"_i18n,
+        "Ukrainian mods."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading UAModDownloader...",
+                "Downloading UAModDownloader..."_i18n,
                 "https://github.com/pro100luk/UAModDownloader/releases/latest/download/UAModDownloader.nro",
                 "/switch/UAModDownloader/UAModDownloader_new.nro"
             ));
@@ -1558,12 +1558,12 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     }));
 
     items.emplace_back(MakePackageAction({
-        "ModCD",
-        "ECLIPS graphic mods.",
+        "ModCD"_i18n,
+        "ECLIPS graphic mods."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading ModCD...",
+                "Downloading ModCD..."_i18n,
                 "https://github.com/kawaii-flesh/ModCD/releases/latest/download/ModCD.nro",
                 "/switch/ModCD/ModCD_new.nro"
             ));
@@ -1573,12 +1573,12 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     }));
 
     items.emplace_back(MakePackageAction({
-        "SimpleModDownloader",
-        "Game mods from GameBanana.",
+        "SimpleModDownloader"_i18n,
+        "Game mods from GameBanana."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading SimpleModDownloader...",
+                "Downloading SimpleModDownloader..."_i18n,
                 "https://github.com/PoloNX/SimpleModDownloader/releases/latest/download/SimpleModDownloader.nro",
                 "/switch/SimpleModDownloader/SimpleModDownloader_new.nro"
             ));
@@ -1677,12 +1677,12 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(MakePackageAction({
-        "Download language packs",
-        "Download the UltraHand language package list.",
+        "Download language packs"_i18n,
+        "Download the UltraHand language package list."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
                 pbox,
-                "Downloading language packs...",
+                "Downloading language packs..."_i18n,
                 "https://github.com/rashevskyv/switch-translations-mirrors/raw/main/lang_packs_ultra.zip",
                 "/config/sphaira/downloads/lang_packs.zip"
             ));
@@ -1700,10 +1700,10 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     }));
 
     items.emplace_back(MakePackageAction({
-        "Remove installed translation",
-        "Delete installed interface translations and reboot.",
+        "Remove installed translation"_i18n,
+        "Delete installed interface translations and reboot."_i18n,
         [](auto pbox) -> Result {
-            pbox->NewTransfer("Removing translations...");
+            pbox->NewTransfer("Removing translations..."_i18n);
             for (const auto path : TRANSLATION_PATHS) {
                 R_TRY(DeletePath(path));
             }
@@ -1711,21 +1711,21 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
         true,
-        "This removes installed system interface translation files and reboots the console.",
+        "This removes installed system interface translation files and reboots the console."_i18n,
         0.5f,
     }));
 
     for (const auto& entry : ParseInterfaceTranslations(TRANSLATE_PACKAGE)) {
         items.emplace_back(SettingsItem{
             entry.name,
-            "Install interface translation.",
+            "Install interface translation."_i18n,
             [](){
                 return std::string{};
             },
             [entry](){
                 const auto options = ReadInterfaceReplacementOptions(entry);
                 if (options.empty()) {
-                    App::PushErrorBox(Result_FsEmpty, "No replacement languages found");
+                    App::PushErrorBox(Result_FsEmpty, "No replacement languages found"_i18n);
                     return;
                 }
 
@@ -1745,7 +1745,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
                         const auto dir = options[*index].second;
                         App::Push<HoldConfirmBox>(
-                            "This will replace the selected system interface language and reboot the console.",
+                            "This will replace the selected system interface language and reboot the console."_i18n,
                             0.5f,
                             [entry, dir](bool confirmed){
                                 if (!confirmed) {
@@ -1761,7 +1761,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                                     },
                                     [](Result rc){
                                         if (R_FAILED(rc)) {
-                                            App::PushErrorBox(rc, "Failed to install translation");
+                                            App::PushErrorBox(rc, "Failed to install translation"_i18n);
                                         }
                                     }
                                 );
@@ -1780,8 +1780,8 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 auto BuildKefirItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
     items.emplace_back(MakeKefirToggle({
-        "Overclock status",
-        "Enable or disable Kefir overclock files.",
+        "Overclock status"_i18n,
+        "Enable or disable Kefir overclock files."_i18n,
         [](){
             return FileExists("/atmosphere/kips/kefir.kip");
         },
@@ -1790,8 +1790,8 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         0.5f,
     }));
     items.emplace_back(MakeKefirToggle({
-        "40MB Memory",
-        "Toggle the 40MB applet memory patch.",
+        "40MB Memory"_i18n,
+        "Toggle the 40MB applet memory patch."_i18n,
         [](){
             return IniValueEquals(ATMOSPHERE_CONFIG, "atmosphere", "force_40mb_applet", "u8!0x1");
         },
@@ -1802,31 +1802,31 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
 
     if (IsEmummcEnabled()) {
         items.emplace_back(MakeKefirToggle({
-            "Redirect Emunand saves to SD",
-            "Experimental save redirection for emuMMC.",
+            "Redirect Emunand saves to SD"_i18n,
+            "Experimental save redirection for emuMMC."_i18n,
             [](){
                 return IniValueEquals(ATMOSPHERE_CONFIG, "atmosphere", "fsmitm_redirect_saves_to_sd", "u8!0x1");
             },
             ApplyRedirectSaves,
-            "Experimental option.\n\nThis redirects emuMMC saves to the SD card. Use it only if you understand the risk; changing save paths can make saves appear missing until the setting is reverted.",
+            "Experimental option.\n\nThis redirects emuMMC saves to the SD card. Use it only if you understand the risk; changing save paths can make saves appear missing until the setting is reverted."_i18n,
             0.5f,
         }));
     }
 
     items.emplace_back(MakeKefirToggle({
-        "8GB DRAM status",
-        "Only for consoles with physically soldered 8GB RAM.",
+        "8GB DRAM status"_i18n,
+        "Only for consoles with physically soldered 8GB RAM."_i18n,
         [](){
             return FileExists("/tegraexplorer/scripts/Remove_8GB-RAM_config.te");
         },
         Apply8GbDram,
-        "Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n\nTo disable it if the console does not boot:\nhekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te",
+        "Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n\nTo disable it if the console does not boot:\nhekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te"_i18n,
         3.f,
     }));
 
     items.emplace_back(SettingsItem{
-        "Fan curve",
-        "Edit Atmosphere tskin fan curves for handheld and docked modes.",
+        "Fan curve"_i18n,
+        "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n,
         [](){
             return "";
         },
@@ -1837,8 +1837,8 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
     });
 
     items.emplace_back(SettingsItem{
-        "Translate Interface",
-        "Interface translation package tools.",
+        "Translate Interface"_i18n,
+        "Interface translation package tools."_i18n,
         [](){
             return std::string{};
         },
