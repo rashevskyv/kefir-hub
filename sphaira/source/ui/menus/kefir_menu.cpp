@@ -1879,7 +1879,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         if (selected) {
             gfx::drawRectOutline(vg, theme, 4.f, tile);
         } else {
-            gfx::drawRect(vg, tile, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 16.f);
+            gfx::drawRect(vg, tile, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 4.f);
         }
 
         // Draw icon container frame (subtle background)

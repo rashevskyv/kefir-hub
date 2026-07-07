@@ -559,7 +559,7 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        const float x_offset = (m_selected_count > 0) ? 45.f : 15.f;
+        const float x_offset = 15.f;
 
         if (e.IsDir()) {
             DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
@@ -585,8 +585,8 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         if (m_selected_count > 0) {
-            float box_size = 20.f;
-            float box_x = x + 15.f;
+            float box_size = 12.f;
+            float box_x = x + 1.5f;
             float box_y = y + (h / 2.f) - (box_size / 2.f);
 
             // Draw checkbox outline and background
@@ -604,18 +604,18 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             if (e.IsSelected()) {
                 // Draw checkmark inside the checkbox on the left
                 float check_x = box_x + box_size / 2.f;
-                float check_y = box_y + box_size / 2.f - (20.f / 2.f); // center vertically
+                float check_y = y + (h / 2.f) - (14.f / 2.f); // center vertically
 
                 const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
                 float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
                 NVGcolor outline_col = (bg_lum > 0.5f) ? nvgRGBA(0, 0, 0, 255) : nvgRGBA(0, 0, 0, 255);
 
-                gfx::drawText(vg, check_x - 1.f, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x + 1.f, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y - 1.f, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y + 1.f, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x - 1.f, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x + 1.f, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y - 1.f, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y + 1.f, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
 
-                gfx::drawText(vg, check_x, check_y, 20.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+                gfx::drawText(vg, check_x, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
             }
         }
 
