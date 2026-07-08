@@ -80,7 +80,7 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
         SetPop();
     }});
 
-    SetAction(Button::X, Action{"Options"_i18n, [this](){
+    SetAction(Button::START, Action{"Options"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
 

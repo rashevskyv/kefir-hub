@@ -173,7 +173,7 @@ MainMenu::MainMenu() {
     this->SetActions(
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             if (m_current_menu) {
-                m_current_menu->FireAction(Button::X);
+                m_current_menu->FireAction(Button::START);
             }
         }}),
         std::make_pair(Button::SELECT, Action{App::Exit})

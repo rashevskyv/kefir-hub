@@ -756,7 +756,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
                 }
             );
         }}),
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }}),
         std::make_pair(Button::Y, Action{"Screenshots"_i18n, [this](){

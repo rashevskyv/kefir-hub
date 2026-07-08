@@ -181,7 +181,7 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
                 nro_launch(GetEntry().path);
             }
         }}),
-        std::make_pair(Button::X, Action{"Sort"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Sort"_i18n, [this](){
             DisplayOptions();
         }})
     );

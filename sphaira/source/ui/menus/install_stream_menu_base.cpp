@@ -130,7 +130,7 @@ Menu::Menu(const std::string& title, u32 flags) : MenuBase{title, flags} {
         SetPop();
     }});
 
-    SetAction(Button::X, Action{"Options"_i18n, [this](){
+    SetAction(Button::START, Action{"Options"_i18n, [this](){
         App::DisplayInstallOptions(false);
     }});
 

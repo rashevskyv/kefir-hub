@@ -396,7 +396,7 @@ Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, c
             }
         }}),
 
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }})
     );

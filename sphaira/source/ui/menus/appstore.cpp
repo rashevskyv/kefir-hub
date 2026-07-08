@@ -587,7 +587,7 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
                 App::PlaySoundEffect(SoundEffect_Focus);
             }
         }}),
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 
@@ -918,7 +918,7 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             }
             App::Push<EntryMenu>(m_entries[m_entries_current[m_index]], m_default_image, *this);
         }}),
-        std::make_pair(Button::X, Action{"Options"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             auto options = std::make_unique<Sidebar>("AppStore Options"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 

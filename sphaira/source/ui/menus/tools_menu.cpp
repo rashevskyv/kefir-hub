@@ -121,19 +121,8 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             OnSelect();
         }}),
-        std::make_pair(Button::X, Action{"Network"_i18n, [this](){
-            PopupList::Items items;
-            items.push_back("Web Server"_i18n);
-            items.push_back("Screenshots"_i18n);
-            App::Push<PopupList>("Network Server"_i18n, items, [this](auto op_index) {
-                if (op_index) {
-                    if (*op_index == 0) {
-                        StartShareServerFromTools(false);
-                    } else if (*op_index == 1) {
-                        StartShareServerFromTools(true);
-                    }
-                }
-            });
+        std::make_pair(Button::START, Action{"Web Server"_i18n, [this](){
+            StartShareServerFromTools(false);
         }})
     );
 

@@ -464,8 +464,9 @@ constexpr std::string_view FOLDER_PAGE_HEADER = R"HTML(
 <style>
 body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0}
 header{position:sticky;top:0;background:rgba(23,25,35,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.08);z-index:10}
-h1{font-size:22px;margin:0 0 4px;font-weight:600;letter-spacing:-0.5px}
-.path{color:#94a3b8;font-size:14px;word-break:break-all}
+.header-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+h1{font-size:22px;margin:0;font-weight:600;letter-spacing:-0.5px}
+.crumbs{font-size:14px;color:#94a3b8;text-align:right;max-width:60%;word-break:break-all}
 .crumbs a{color:#38bdf8;text-decoration:none}
 .crumbs a:hover{text-decoration:underline}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
@@ -481,7 +482,7 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
 .list .thumbnail-box img{width:100%;height:100%;object-fit:cover}
 .list .thumbnail-box svg{width:24px;height:24px}
 .list .info{display:flex;flex-grow:1;align-items:center;min-width:0}
-.list .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:16px;flex-grow:1}
+.list .name{font-weight:500;margin-right:16px;flex-grow:1;word-break:break-all}
 .list .meta{color:#64748b;font-size:13px;flex-shrink:0;width:120px;text-align:right;margin-right:24px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
 .grid .item{display:flex;flex-direction:column;background:#18181f;border:1px solid rgba(255,255,255,0.05);border-radius:12px;color:inherit;text-decoration:none;overflow:hidden;transition:all 0.2s;scroll-margin-top:160px}
@@ -490,11 +491,12 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
 .grid .thumbnail-box img{width:100%;height:100%;object-fit:cover}
 .grid .thumbnail-box svg{width:48px;height:48px}
 .grid .info{padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.grid .name{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid .name{font-size:14px;font-weight:500;word-break:break-all}
 .grid .meta{color:#64748b;font-size:12px}
 .empty{padding:40px;text-align:center;color:#64748b;font-size:16px}
-.delete-btn{margin-left:8px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.delete-btn{margin-left:8px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;cursor:pointer;flex-shrink:0;transition:all 0.15s;padding:0;line-height:1}
 .delete-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}
+.grid .delete-btn{position:absolute;top:12px;right:12px;margin:0;z-index:5}
 .file-checkbox{-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.3);border-radius:4px;outline:none;cursor:pointer;transition:all 0.15s;display:block}
 .file-checkbox:hover{border-color:#38bdf8;background:rgba(56,189,248,0.08)}
 .file-checkbox:checked{background:#38bdf8;border-color:#38bdf8}
@@ -526,13 +528,51 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
 .queue-item.failed .queue-item-progress-fill{background:#f87171}
 .queue-item-install-label{display:flex;align-items:center;gap:4px;font-size:11px;color:#cbd5e1;cursor:pointer}
 .queue-item-install-label input{display:inline-block;margin:0;cursor:pointer}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,18,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal-content{background:#181822;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;width:360px;max-width:90%;box-shadow:0 20px 40px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:20px;transform:scale(0.95);transition:transform 0.15s ease}
+.modal-text{font-size:16px;font-weight:500;color:#f1f5f9;text-align:center;line-height:1.5;word-break:break-all}
+.modal-buttons{display:flex;gap:12px}
+.modal-btn{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;transition:all 0.15s}
+.yes-btn{background:#10b981;color:#fff;border-color:#10b981}
+.yes-btn:hover{background:#059669}
+.no-btn{background:#ef4444;color:#fff;border-color:#ef4444}
+.no-btn:hover{background:#dc2626}
+.key-badge{background:rgba(255,255,255,0.25);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.4);box-shadow:0 2px 0 rgba(0,0,0,0.2)}
+@media (max-width: 600px) {
+  header{padding:12px 16px}
+  .header-top{flex-direction:column;align-items:flex-start;gap:6px}
+  .crumbs{text-align:left;max-width:100%}
+  .bar{gap:4px;margin-top:8px}
+  button{padding:6px 10px}
+  button .text{display:none}
+  .list{gap:4px}
+  .list .item{padding:8px 10px;gap:8px}
+  .list .file-checkbox{margin-right:4px}
+  .grid .file-checkbox{top:6px;left:6px}
+  .list .name{font-size:13px}
+  .meta-folder{display:none !important}
+  .meta-size{font-size:10px;margin-right:0 !important;width:auto !important;text-align:right;margin-left:auto}
+  .list .thumbnail-box{width:28px;height:28px}
+  .delete-btn{display:none !important}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px}
+  .grid .info{padding:6px;gap:2px}
+  .grid .name{font-size:11px}
+  .grid .meta{font-size:9px}
+}
 </style></head><body>
 <div id="transfer-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,18,0.7);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:90;align-items:center;justify-content:center;flex-direction:column;gap:16px;box-sizing:border-box;">
 <div style="font-size:24px;font-weight:600;color:#38bdf8;">Transfer in Progress</div>
 <div style="color:#94a3b8;font-size:14px;text-align:center;max-width:400px;padding:0 20px;line-height:1.5;">Please wait while the console is processing file transfers or game installations. You can monitor the progress in the Queue panel on the right.</div>
 </div>
+<div id="confirm-modal" class="modal" style="display:none;">
+<div class="modal-content">
+<div class="modal-text" id="confirm-text">Are you sure?</div>
+<div class="modal-buttons">
+<button id="confirm-yes-btn" class="modal-btn yes-btn"><span class="key-badge">+</span> Yes</button>
+<button id="confirm-no-btn" class="modal-btn no-btn"><span class="key-badge">B</span> No</button>
+</div></div></div>
 <div id="queue-panel" class="queue-panel"><div class="queue-header"><h2>Transfer Queue</h2><button class="queue-close" onclick="toggleQueuePanel()">&times;</button></div><div id="queue-list" class="queue-list"></div><div class="queue-footer"><button id="start-transfers-btn" onclick="startTransfers()">Start transfers</button><button id="clear-queue-btn" onclick="clearCompletedQueue()">Clear completed</button></div></div>
-<header><h1>Sphaira Files</h1><div class="path">
+<header>
 )HTML";
 
 auto BuildFolderPage(std::string path_str) -> std::string {
@@ -560,8 +600,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    body += HtmlEscape(abs_path);
-    body += "</div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
+    body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
     size_t start{};
@@ -582,12 +621,12 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         start = end + 1;
     }
 
-    body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Add to Upload</button>";
-    body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\">Grid View</button>";
-    body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\">Select All</button>";
-    body += "<button id=\"download-selected\" onclick=\"addSelectedToDownloadQueue()\" style=\"border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.1);color:#38bdf8;\" disabled>Download Selected (0)</button>";
-    body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" style=\"border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;\" disabled>Delete Selected (0)</button>";
-    body += "<button id=\"queue-toggle-btn\" onclick=\"toggleQueuePanel()\" style=\"border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:#c084fc;\">Queue (0)</button>";
+    body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\"><span class=\"icon\">↑</span> <span class=\"text\">Add to Upload</span></button>";
+    body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\"><span class=\"icon\">⊞</span> <span class=\"text\">Grid View</span></button>";
+    body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\"><span class=\"icon\">✓</span> <span class=\"text\">Select All</span></button>";
+    body += "<button id=\"download-selected\" onclick=\"addSelectedToDownloadQueue()\" style=\"border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.1);color:#38bdf8;\" disabled><span class=\"icon\">↓</span> <span class=\"text\">Download Selected</span> <span class=\"count\">(0)</span></button>";
+    body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" style=\"border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;\" disabled><span class=\"icon\">🗑</span> <span class=\"text\">Delete Selected</span> <span class=\"count\">(0)</span></button>";
+    body += "<button id=\"queue-toggle-btn\" onclick=\"toggleQueuePanel()\" style=\"border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:#c084fc;\"><span class=\"icon\">📋</span> <span class=\"text\">Queue</span> <span class=\"count\">(0)</span></button>";
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"addFilesToUploadQueue(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
@@ -634,9 +673,9 @@ auto BuildFolderPage(std::string path_str) -> std::string {
                     "</div>";
             body += "<div class=\"info\"><span class=\"name\">";
             body += escaped_name;
-            body += "</span><span class=\"meta\">folder</span><button class=\"delete-btn\" onclick=\"deleteFile(event,'";
+            body += "</span><span class=\"meta meta-folder\">folder</span><button class=\"delete-btn\" onclick=\"deleteFile(event,'";
             body += encoded_child;
-            body += "')\">Delete</button></div></a>";
+            body += "')\">&times;</button></div></a>";
         } else {
             const bool is_image = IsImagePath(name);
             body += "<a class=\"item\" href=\"";
@@ -656,7 +695,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
             }
             body += "</div><div class=\"info\"><span class=\"name\">";
             body += escaped_name;
-            body += "</span><span class=\"meta\">";
+            body += "</span><span class=\"meta meta-size\">";
             if (entry.file_size >= 1024 * 1024) {
                 char size_buf[64]{};
                 std::snprintf(size_buf, sizeof(size_buf), "%.2f MiB", static_cast<double>(entry.file_size) / 1024.0 / 1024.0);
@@ -668,12 +707,17 @@ auto BuildFolderPage(std::string path_str) -> std::string {
             }
             body += "</span><button class=\"delete-btn\" onclick=\"deleteFile(event,'";
             body += encoded_child;
-            body += "')\">Delete</button></div></a>";
+            body += "')\">&times;</button></div></a>";
         }
     }
 
 constexpr std::string_view FOLDER_PAGE_JS = R"HTML(
 let transferQueue=[];let isTransferring=false;
+let confirmPromiseResolve=null;
+function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}
+function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}
+document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(!m||m.style.display==='none')return;if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}});
+document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});
 function toggleQueuePanel(){const p=document.getElementById('queue-panel');if(p)p.classList.toggle('open');}
 function addFilesToUploadQueue(files){if(!files||!files.length)return;
 for(const f of files){const isGame=/\.(nsp|nsz|xci|xcz)$/i.test(f.name);transferQueue.push({id:'up_'+Math.random().toString(36).substr(2,9),type:'upload',file:f,name:f.name,size:f.size,status:'pending',progress:0,speed:'',install:isGame,xhr:null,uploadPath:currentPath});}
@@ -681,7 +725,7 @@ updateQueueCount();renderQueue();const p=document.getElementById('queue-panel');
 function addSelectedToDownloadQueue(){const ch=document.querySelectorAll('.file-checkbox:checked');if(!ch.length)return;
 for(const cb of ch){const p=cb.getAttribute('data-path');const dp=decodeURIComponent(p);const n=dp.split('/').pop()||'file';if(transferQueue.some(item=>item.type==='download'&&item.path===p))continue;transferQueue.push({id:'dl_'+Math.random().toString(36).substr(2,9),type:'download',path:p,name:n,size:0,status:'pending',progress:0,speed:'',controller:null});}
 for(const cb of ch)cb.checked=false;updateSelectCount();updateQueueCount();renderQueue();toggleQueuePanel();}
-function updateQueueCount(){const b=document.getElementById('queue-toggle-btn');if(b){const active=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status)).length;b.textContent='Queue ('+active+')';}}
+function updateQueueCount(){const b=document.getElementById('queue-toggle-btn');if(b){const active=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status)).length;const countEl=b.querySelector('.count');if(countEl)countEl.textContent='('+active+')';}}
 function renderQueue(){const l=document.getElementById('queue-list');if(!l)return;l.innerHTML='';
 for(const i of transferQueue){const el=document.createElement('div');el.className='queue-item '+i.status;const pct=Math.round(i.progress);const speed=i.speed?' · '+i.speed:'';const sizeStr=i.size?formatBytes(i.size):'Unknown size';
 let st=i.status;if(i.status==='pending')st='Pending';else if(i.status==='uploading')st='Uploading';else if(i.status==='downloading')st='Downloading';else if(i.status==='installing')st='Installing...';else if(i.status==='completed')st='Completed';else if(i.status==='failed')st='Failed';else if(i.status==='cancelled')st='Cancelled';
@@ -712,12 +756,14 @@ const btn=document.getElementById('view-toggle');
 if(container.classList.contains('list')){
 container.classList.remove('list');
 container.classList.add('grid');
-btn.textContent='List View';
+if(btn.querySelector('.text'))btn.querySelector('.text').textContent='List View';
+if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='☰';
 localStorage.setItem('viewMode','grid');
 }else{
 container.classList.remove('grid');
 container.classList.add('list');
-btn.textContent='Grid View';
+if(btn.querySelector('.text'))btn.querySelector('.text').textContent='Grid View';
+if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='⊞';
 localStorage.setItem('viewMode','list');
 }
 }
@@ -728,20 +774,34 @@ const saved=localStorage.getItem('viewMode');
 if(saved==='grid'&&container){
 container.classList.remove('list');
 container.classList.add('grid');
-if(btn)btn.textContent='List View';
+if(btn){
+if(btn.querySelector('.text'))btn.querySelector('.text').textContent='List View';
+if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='☰';
+}
 }
 });
-async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){navigateTo(currentPath,false);}else{alert('Delete failed: '+await res.text());}}
+async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!await showConfirmDialog('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){navigateTo(currentPath,false);}else{alert('Delete failed: '+await res.text());}}
 function updateSelectCount(){
 const checked=document.querySelectorAll('.file-checkbox:checked');
 const btn=document.getElementById('delete-selected');
-if(btn){btn.disabled=checked.length===0;btn.textContent='Delete Selected ('+checked.length+')';}
+if(btn){
+btn.disabled=checked.length===0;
+const countEl=btn.querySelector('.count');
+if(countEl)countEl.textContent='('+checked.length+')';
+}
 const dlBtn=document.getElementById('download-selected');
-if(dlBtn){dlBtn.disabled=checked.length===0;dlBtn.textContent='Download Selected ('+checked.length+')';}
+if(dlBtn){
+dlBtn.disabled=checked.length===0;
+const countEl=dlBtn.querySelector('.count');
+if(countEl)countEl.textContent='('+checked.length+')';
+}
 const selectAllBtn=document.getElementById('select-all-btn');
 if(selectAllBtn){
 const all=document.querySelectorAll('.file-checkbox');
-if(all.length&&checked.length===all.length){selectAllBtn.textContent='Deselect All';}else{selectAllBtn.textContent='Select All';}
+const txt=selectAllBtn.querySelector('.text');
+if(txt){
+if(all.length&&checked.length===all.length){txt.textContent='Deselect All';}else{txt.textContent='Select All';}
+}
 }
 }
 function toggleSelectAll(){
@@ -754,7 +814,7 @@ updateSelectCount();
 async function deleteSelected(){
 const checked=document.querySelectorAll('.file-checkbox:checked');
 if(!checked.length)return;
-if(!confirm('Delete '+checked.length+' selected files/folders?'))return;
+if(!await showConfirmDialog('Delete '+checked.length+' selected files/folders?'))return;
 const btn=document.getElementById('delete-selected');
 if(btn)btn.disabled=true;
 const status=document.getElementById('status');
@@ -820,8 +880,10 @@ const checked=document.querySelectorAll('.file-checkbox:checked');
 if(checked.length>0){deleteSelected();}
 else{
 const path=current.querySelector('.file-checkbox')?.getAttribute('data-path');
-if(path&&confirm('Delete '+current.querySelector('.name').textContent+'?')){
-fetch('/delete?path='+path,{method:'DELETE'}).then(()=>navigateTo(currentPath,false));
+if(path){
+showConfirmDialog('Delete '+current.querySelector('.name').textContent+'?').then(async (approved)=>{
+if(approved){await fetch('/delete?path='+path,{method:'DELETE'});navigateTo(currentPath,false);}
+});
 }
 }
 }else if(e.key==='Enter'){
@@ -970,8 +1032,14 @@ renderCrumbs(data.path);renderItems(data.path,data.entries);
 if(shouldPushState){const newUrl=window.location.protocol+'//'+window.location.host+'/?path='+encodeURIComponent(data.path);window.history.pushState({path:data.path},'',newUrl);}
 updateSelectCount();
 const container=document.getElementById('items-container');const saved=localStorage.getItem('viewMode');const btn=document.getElementById('view-toggle');
-if(saved==='grid'&&container){container.classList.remove('list');container.classList.add('grid');if(btn)btn.textContent='List View';}
-else if(container){container.classList.remove('grid');container.classList.add('list');if(btn)btn.textContent='Grid View';}
+if(saved==='grid'&&container){container.classList.remove('list');container.classList.add('grid');if(btn){
+if(btn.querySelector('.text'))btn.querySelector('.text').textContent='List View';
+if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='☰';
+}}
+else if(container){container.classList.remove('grid');container.classList.add('list');if(btn){
+if(btn.querySelector('.text'))btn.querySelector('.text').textContent='Grid View';
+if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='⊞';
+}}
 if(typeof initLightbox==='function')initLightbox();
 }catch(err){alert('Failed to load folder: '+err.message);}finally{if(status)status.textContent='';}}
 function renderCrumbs(path){
@@ -1011,7 +1079,7 @@ else metaStr=(entry.size/1024).toFixed(2)+' KiB';
 }
 el.innerHTML='<input type="checkbox" class="file-checkbox" data-path="'+encChild+'" onclick="event.stopPropagation(); updateSelectCount();">';
 el.innerHTML+='<div class="thumbnail-box">'+thumb+'</div>';
-el.innerHTML+='<div class="info"><span class="name">'+nameEsc+'</span><span class="meta">'+metaStr+'</span><button class="delete-btn" onclick="deleteFile(event,\''+encChild+'\')">Delete</button></div>';
+el.innerHTML+='<div class="info"><span class="name">'+nameEsc+'</span><span class="meta">'+metaStr+'</span><button class="delete-btn" onclick="deleteFile(event,\''+encChild+'\')">&times;</button></div>';
 container.appendChild(el);
 }}
 document.addEventListener('click',e=>{
@@ -1866,7 +1934,26 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "button.del-btn{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171}";
     body += "button.del-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
     body += ".empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#98a1aa;font-style:italic}";
-    body += "</style></head><body><header><h1>Sphaira Album</h1>";
+    body += ".header-top{display:flex;justify-content:space-between;align-items:center;gap:16px}";
+    body += "a.header-link-btn button{border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#fff;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}";
+    body += "a.header-link-btn button:hover{background:#334155;border-color:rgba(255,255,255,0.25)}";
+    body += "@media (max-width: 600px) {";
+    body += "  header{padding:12px 16px}";
+    body += "  .header-top{flex-direction:column;align-items:flex-start;gap:6px}";
+    body += "  .crumbs{text-align:left;max-width:100%}";
+    body += "  a.header-link-btn button{padding:8px 12px}";
+    body += "  a.header-link-btn button .text{display:none}";
+    body += "  .folder-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;padding:12px}";
+    body += "  .grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;padding:12px}";
+    body += "  .grid .info{padding:6px;gap:2px}";
+    body += "  .game-name{font-size:11px}";
+    body += "  .timestamp{font-size:9px}";
+    body += "  .size{font-size:8px}";
+    body += "  .folder-card{padding:10px}";
+    body += "  .folder-icon{width:32px;height:32px;margin-bottom:6px}";
+    body += "  .folder-name{font-size:11px}";
+    body += "}";
+    body += "</style></head><body><header><div class=\"header-top\"><h1>Sphaira Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div>";
     body += "<div class=\"crumbs\"><a href=\"/files?path=/\">SD Card File Browser</a></div>";
     body += "</header>";
 
@@ -2004,14 +2091,10 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     }
 
     body += "<script>";
-    body += "async function deleteItem(e,path){";
-    body += "e.preventDefault();e.stopPropagation();";
-    body += "if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?')) return;";
-    body += "const res=await fetch('/delete?path='+path,{method:'DELETE'});";
-    body += "if(res.ok){ location.reload(); }else{ alert('Delete failed: '+await res.text()); }";
-    body += "}";
-    body += "document.addEventListener('keydown',function(e){";
-    body += "if(e.key==='Backspace'){";
+    body += "let confirmPromiseResolve=null;";
+    body += "function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}";
+    body += "function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}";
+    body += "document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(m&&m.style.display==='flex'){if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}}else if(e.key==='Backspace'){";
     body += "e.preventDefault();";
     body += "const urlParams=new URLSearchParams(window.location.search);";
     body += "const path=urlParams.get('path');";
@@ -2023,7 +2106,22 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "}";
     body += "}";
     body += "});";
+    body += "document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});";
+    body += "async function deleteItem(e,path){";
+    body += "e.preventDefault();e.stopPropagation();";
+    body += "if(!await showConfirmDialog('Delete '+decodeURIComponent(path.split('/').pop())+'?')) return;";
+    body += "const res=await fetch('/delete?path='+path,{method:'DELETE'});";
+    body += "if(res.ok){ location.reload(); }else{ alert('Delete failed: '+await res.text()); }";
+    body += "}";
     body += "</script>";
+
+    body += "<div id=\"confirm-modal\" class=\"modal\" style=\"display:none;\">";
+    body += "<div class=\"modal-content\">";
+    body += "<div class=\"modal-text\" id=\"confirm-text\">Are you sure?</div>";
+    body += "<div class=\"modal-buttons\">";
+    body += "<button id=\"confirm-yes-btn\" class=\"modal-btn yes-btn\"><span class=\"key-badge\">+</span> Yes</button>";
+    body += "<button id=\"confirm-no-btn\" class=\"modal-btn no-btn\"><span class=\"key-badge\">B</span> No</button>";
+    body += "</div></div></div>";
 
     AppendLightbox(body);
 
