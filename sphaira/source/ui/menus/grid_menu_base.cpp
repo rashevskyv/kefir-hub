@@ -4,8 +4,8 @@
 
 namespace sphaira::ui::menu::grid {
 
-void Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
-    DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version);
+Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
+    return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version);
 }
 
 Vec4 Menu::DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version) {
@@ -53,6 +53,26 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         return v;
     }
 
+    // List layout: small icon + name/author on one row
+    if (layout == LayoutType_List) {
+        if (!selected) {
+            DrawElement(v, ThemeEntryID_GRID);
+        } else {
+            gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
+        }
+        const float icon_size = 46.f;
+        const float icon_x = x + 10.f;
+        const float icon_y = y + (h - icon_size) / 2.f;
+        if (draw_image) {
+            gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size}, image ?: App::GetDefaultImage(), 4);
+        }
+        const float text_x = icon_x + icon_size + 14.f;
+        const float text_clip_w = w - text_x + x - 15.f;
+        m_scroll_name.Draw(vg, selected, text_x, y + h / 2.f - 12.f, text_clip_w, 18.f, NVG_ALIGN_LEFT, theme->GetColour(text_id), name);
+        m_scroll_author.Draw(vg, selected, text_x, y + h / 2.f + 12.f, text_clip_w, 15.f, NVG_ALIGN_LEFT, theme->GetColour(ThemeEntryID_TEXT_INFO), author);
+        return Vec4{icon_x, icon_y, icon_size, icon_size};
+    }
+
     Vec4 image_v = v;
 
     if (layout == LayoutType_GridDetail) {
@@ -86,11 +106,13 @@ void Menu::OnLayoutChange(std::unique_ptr<List>& list, int layout) {
     m_scroll_author.Reset();
     m_scroll_version.Reset();
 
-    if (layout == LayoutType_List) {
-        layout = LayoutType_Grid;
-    }
-
     switch (layout) {
+        case LayoutType_List: {
+            const Vec2 pad{0, 2};
+            const Vec4 v{75, 110, 1130, 70};
+            list = std::make_unique<List>(1, 7, m_pos, v, pad);
+        }   break;
+
         case LayoutType_Grid: {
             const Vec2 pad{10, 10};
             const Vec4 v{93, 186, 174, 174};

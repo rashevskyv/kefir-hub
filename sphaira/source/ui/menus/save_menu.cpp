@@ -664,42 +664,51 @@ void Menu::DisplaySaveOptions() {
     auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
-        auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
+    SidebarEntryArray::Items layout_items;
+    layout_items.push_back("Icon"_i18n);
+    layout_items.push_back("Grid"_i18n);
+    layout_items.push_back("HB Menu"_i18n);
+    layout_items.push_back("List"_i18n);
 
-        SidebarEntryArray::Items sort_items;
-        sort_items.push_back("Updated"_i18n);
+    // Map layout index: Icon=1,Grid=2,HbMenu=3,List=0 -> sidebar index 0,1,2,3
+    // LayoutType: List=0, Grid=1, GridDetail=2, HbMenu=3
+    // We store: 0=Icon(Grid), 1=Grid(Grid), 2=HbMenu, 3=List
+    static const int layout_map[] = {
+        grid::LayoutType_Grid,     // Icon -> same as Grid for saves
+        grid::LayoutType_Grid,     // Grid
+        grid::LayoutType_HbMenu,   // HB Menu
+        grid::LayoutType_List,     // List
+    };
+    static const int layout_map_inv[] = {
+        3, // LayoutType_List -> index 3
+        0, // LayoutType_Grid -> index 0
+        0, // LayoutType_GridDetail -> index 0
+        2, // LayoutType_HbMenu -> index 2
+    };
+    const auto cur_layout = m_layout.Get();
+    const auto cur_idx = (cur_layout >= 0 && cur_layout < 4) ? layout_map_inv[cur_layout] : 0;
 
-        SidebarEntryArray::Items order_items;
-        order_items.push_back("Descending"_i18n);
-        order_items.push_back("Ascending"_i18n);
+    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+        const int layout_map_local[] = {
+            grid::LayoutType_Grid,
+            grid::LayoutType_Grid,
+            grid::LayoutType_HbMenu,
+            grid::LayoutType_List,
+        };
+        const auto new_layout = layout_map_local[std::clamp<s64>(index_out, 0, 3)];
+        m_layout.Set(new_layout);
+        OnLayoutChange();
+    }, cur_idx);
 
-        SidebarEntryArray::Items layout_items;
-        layout_items.push_back("Icon"_i18n);
-        layout_items.push_back("Grid"_i18n);
-        layout_items.push_back("HB Menu"_i18n);
+    options->Add<SidebarEntryArray>("Sort"_i18n, SidebarEntryArray::Items{"Updated"_i18n}, [this](s64& index_out){
+        m_sort.Set(index_out);
+        SortAndFindLastFile(false);
+    }, m_sort.Get());
 
-        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
-            m_sort.Set(index_out);
-            SortAndFindLastFile(false);
-        }, m_sort.Get());
-
-        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
-            m_order.Set(index_out);
-            SortAndFindLastFile(false);
-        }, m_order.Get());
-
-        auto current_layout = m_layout.Get();
-        if (current_layout == grid::LayoutType_List) {
-            current_layout = grid::LayoutType_Grid;
-            m_layout.Set(current_layout);
-        }
-        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-            m_layout.Set(index_out + 1);
-            OnLayoutChange();
-        }, current_layout - 1);
-    });
+    options->Add<SidebarEntryArray>("Order"_i18n, SidebarEntryArray::Items{"Descending"_i18n, "Ascending"_i18n}, [this](s64& index_out){
+        m_order.Set(index_out);
+        SortAndFindLastFile(false);
+    }, m_order.Get());
 
     options->Add<SidebarEntryCallback>("Accounts"_i18n, [this](){
         DisplayAccountOptions();
@@ -790,17 +799,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const auto selected = pos == m_index;
+        Vec4 image_v = v;
         if (!IsSystemLikeSave(e.save_data_type)) {
-            DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), "");
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), "");
         } else {
-            const auto image_vec = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), "");
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), "");
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
-            gfx::drawTextArgs(vg, image_vec.x + image_vec.w / 2, image_vec.y + image_vec.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), GetSystemSaveName(e.system_save_data_id));
+            gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), GetSystemSaveName(e.system_save_data_id));
         }
 
         if (e.selected) {
-            gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_FOCUS), 5);
-            gfx::drawText(vg, x + w / 2, y + h / 2, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+            gfx::drawRect(vg, image_v, theme->GetColour(ThemeEntryID_FOCUS), 5);
+            gfx::drawText(vg, image_v.x + image_v.w / 2, image_v.y + image_v.h / 2, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
         }
     });
 }
