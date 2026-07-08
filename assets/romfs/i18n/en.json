@@ -563,5 +563,9 @@
   "Stop Server": "Stop Server",
   "Press B to Stop Server": "Press B to Stop Server",
   "Installation completed": "Installation completed",
-  "Upload completed": "Upload completed"
+  "Upload completed": "Upload completed",
+  "Current:": "Current:",
+  "Target:": "Target:",
+  "Cancel": "Cancel",
+  "Scroll down to select Install.": "Scroll down to select Install."
 }

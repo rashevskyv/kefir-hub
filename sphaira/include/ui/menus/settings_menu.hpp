@@ -67,7 +67,6 @@ struct SoftwareMenu final : MenuBase {
     ~SoftwareMenu();
 
     auto GetShortTitle() const -> const char* override { return "Software"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -87,7 +86,6 @@ struct DbiMenu final : MenuBase {
     ~DbiMenu();
 
     auto GetShortTitle() const -> const char* override { return "DBI"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -107,7 +105,6 @@ struct KefirSettingsMenu final : MenuBase {
     ~KefirSettingsMenu();
 
     auto GetShortTitle() const -> const char* override { return "Kefir Settings"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -139,7 +136,6 @@ struct FanCurveMenu final : MenuBase {
     ~FanCurveMenu();
 
     auto GetShortTitle() const -> const char* override { return "Fan curve"; }
-    auto IsSettings() const -> bool override { return true; }
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
 
@@ -197,7 +193,6 @@ struct ThemesMenu final : MenuBase {
     ~ThemesMenu();
 
     auto GetShortTitle() const -> const char* override { return "Themes"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -217,7 +212,6 @@ struct TranslateMenu final : MenuBase {
     ~TranslateMenu();
 
     auto GetShortTitle() const -> const char* override { return "Translate Interface"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;

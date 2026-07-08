@@ -58,6 +58,16 @@ auto CalculateButtonYoff(const std::string& message, bool has_image) -> float {
     return std::max(min_yoff, text_y + lines * font_size * 1.5f + 28.f);
 }
 
+auto AddGlyphIfMissing(const std::string& text, const std::string& glyph) -> std::string {
+    if (text.empty()) {
+        return text;
+    }
+    if (text.find(glyph) == 0) {
+        return text;
+    }
+    return glyph + " " + text;
+}
+
 } // namespace
 
 OptionBoxEntry::OptionBoxEntry(const std::string& text, Vec4 pos)
@@ -125,9 +135,13 @@ OptionBox::OptionBox(const std::string& message, const Option& a, const Option& 
     box.w /= 2.f;
     box.y += m_button_yoff;
     box.h -= m_button_yoff;
-    m_entries.emplace_back(a, box);
+
+    std::string text_a = AddGlyphIfMissing(a, "\uE0E1"); // B (No/Cancel)
+    std::string text_b = AddGlyphIfMissing(b, "\uE0EF"); // + (Yes/Accept)
+
+    m_entries.emplace_back(text_a, box);
     box.x += box.w;
-    m_entries.emplace_back(b, box);
+    m_entries.emplace_back(text_b, box);
 
     Setup(index);
 }

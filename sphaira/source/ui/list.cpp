@@ -195,7 +195,7 @@ auto List::ScrollPageUp(s64& index, s64 count) -> bool {
 }
 
 auto List::ScrollToEnd(s64& index, s64 count) -> bool {
-    if (count <= m_page) {
+    if (count <= 0) {
         return false;
     }
 
@@ -204,8 +204,12 @@ auto List::ScrollToEnd(s64& index, s64 count) -> bool {
     const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
 
     index = count - 1;
-    const auto next_yoff = static_cast<float>(count) * max;
-    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+    if (count > m_page) {
+        const auto next_yoff = static_cast<float>(count) * max;
+        m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+    } else {
+        m_yoff = 0;
+    }
 
     if (index != old_index || m_yoff != old_yoff) {
         App::PlaySoundEffect(SoundEffect_Scroll);
@@ -216,7 +220,7 @@ auto List::ScrollToEnd(s64& index, s64 count) -> bool {
 }
 
 auto List::ScrollToStart(s64& index, s64 count) -> bool {
-    if (count <= m_page) {
+    if (count <= 0) {
         return false;
     }
 

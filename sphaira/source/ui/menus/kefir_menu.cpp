@@ -990,6 +990,8 @@ public:
             theme->GetColour(ThemeEntryID_TEXT_SELECTED), m_title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
         const auto target = m_target_version.empty() ? "Unknown" : m_target_version;
+        const std::string current_lbl = "Current:"_i18n;
+        const std::string target_lbl = "Target:"_i18n;
 
         nvgSave(vg);
         nvgFontSize(vg, 17.f);
@@ -997,11 +999,11 @@ public:
 
         // Draw "Current:" bold, version normal
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current:", nullptr);
-        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, "Current:", nullptr);
+        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr);
+        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr);
 
         float current_bounds[4]{};
-        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, "Current:", nullptr, current_bounds);
+        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr, current_bounds);
         float current_width = current_bounds[2] - current_bounds[0];
 
         nvgText(vg, m_pos.x + 42.f + current_width + 7.f, m_pos.y + 70.f, m_current_version.c_str(), nullptr);
@@ -1014,8 +1016,8 @@ public:
 
         nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr);
 
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f, m_pos.y + 70.f, "Target:", nullptr);
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f + 1.f, m_pos.y + 70.f, "Target:", nullptr);
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f, m_pos.y + 70.f, target_lbl.c_str(), nullptr);
+        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f + 1.f, m_pos.y + 70.f, target_lbl.c_str(), nullptr);
         nvgRestore(vg);
 
         gfx::drawRect(vg, m_pos.x, m_pos.y + 102.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
@@ -1024,19 +1026,19 @@ public:
         m_text_area = Vec4{m_pos.x + 48.f, m_pos.y + 122.f, m_pos.w - 118.f, m_pos.h - 232.f};
         if (m_loading) {
             gfx::drawText(vg, m_pos.x + m_pos.w / 2.f, m_text_area.y + m_text_area.h / 2.f, 24.f,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), "Loading changelog...", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+                theme->GetColour(ThemeEntryID_TEXT_INFO), "Loading changelog..."_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         } else {
             DrawChangelogText(vg, theme);
         }
 
-        const auto footer = m_loading ? "Loading changelog..." :
-            (m_unlocked ? (m_button_focused ? "Press A to Install." : "Scroll down to select Install.") : "Scroll to the bottom to unlock Install.");
+        const auto footer = m_loading ? "Loading changelog..."_i18n :
+            (m_unlocked ? (m_button_focused ? "Press A to Install."_i18n : "Scroll down to select Install."_i18n) : "Scroll to the bottom to unlock Install."_i18n);
         gfx::drawText(vg, m_pos.x + 42.f, m_pos.y + m_pos.h - 52.f, 17.f,
             theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR),
-            footer, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            footer.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-        // Малюємо кнопку
-        m_install_button_rect = Vec4{m_pos.x + m_pos.w - 262.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
+        // Малюємо кнопку по центру горизонталі
+        m_install_button_rect = Vec4{m_pos.x + (m_pos.w - 220.f) / 2.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
 
         nvgSave(vg);
         if (!m_unlocked) {

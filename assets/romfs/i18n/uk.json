@@ -562,5 +562,9 @@
   "Stop Server": "Зупинити сервер",
   "Press B to Stop Server": "Натисніть B, щоб зупинити сервер",
   "Installation completed": "Встановлення завершено",
-  "Upload completed": "Завантаження завершено"
+  "Upload completed": "Завантаження завершено",
+  "Current:": "Поточна:",
+  "Target:": "Цільова:",
+  "Cancel": "Скасувати",
+  "Scroll down to select Install.": "Прокрутіть вниз для встановлення."
 }
