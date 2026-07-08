@@ -1253,16 +1253,17 @@ public:
         nvgSave(vg);
         float font_size = 22.f;
         if (m_message.length() < 60) {
-            font_size = 26.f;
+            font_size = 28.f;
         } else if (m_message.length() < 120) {
-            font_size = 24.f;
+            font_size = 25.f;
         } else if (m_message.length() > 200) {
-            font_size = 18.f;
+            font_size = 20.f;
         }
+        float line_height = 1.55f;
 
         nvgFontSize(vg, font_size);
         nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
-        nvgTextLineHeight(vg, 1.35f);
+        nvgTextLineHeight(vg, line_height);
 
         float bounds[4]{};
         nvgTextBoxBounds(vg, m_pos.x + padding, m_pos.y, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
@@ -1272,7 +1273,7 @@ public:
 
         gfx::drawTextBox(
             vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding * 2.f,
-            theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP
+            theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, line_height
         );
         nvgRestore(vg);
 

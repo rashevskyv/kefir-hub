@@ -566,5 +566,21 @@
   "Current:": "Поточна:",
   "Target:": "Цільова:",
   "Cancel": "Скасувати",
-  "Scroll down to select Install.": "Прокрутіть вниз для встановлення."
+  "Scroll down to select Install.": "Прокрутіть вниз для встановлення.",
+  "Download Kefir Cheats": "Завантажити чити Kefir",
+  "Full KefirUpdater cheats pack": "Повний пакет читів KefirUpdater",
+  "Download 60FPS/GFX Cheats": "Завантажити чити 60FPS/GFX",
+  "KefirUpdater performance/graphics pack": "Пакет продуктивності та графіки KefirUpdater",
+  "Download Exact Cheats": "Завантажити точні чити",
+  "Select game and match Build ID": "Виберіть гру та знайдіть Build ID",
+  "Import From File": "Імпортувати з файлу",
+  "Import a local cheat .txt file": "Імпортувати локальний .txt файл читів",
+  "View Cheats": "Переглянути чити",
+  "View installed cheat codes": "Переглянути встановлені коди читів",
+  "Delete All Cheats": "Видалити всі чити",
+  "Delete all existing cheat codes": "Видалити всі наявні коди читів",
+  "Delete Orphaned": "Видалити застарілі чити",
+  "Delete cheats for uninstalled games": "Видалити чити для видалених ігор",
+  "Clear Cheats Cache": "Очистити кеш читів",
+  "Delete cached cheats database": "Видалити кешовану базу даних читів"
 }

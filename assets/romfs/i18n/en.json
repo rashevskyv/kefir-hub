@@ -567,5 +567,21 @@
   "Current:": "Current:",
   "Target:": "Target:",
   "Cancel": "Cancel",
-  "Scroll down to select Install.": "Scroll down to select Install."
+  "Scroll down to select Install.": "Scroll down to select Install.",
+  "Download Kefir Cheats": "Download Kefir Cheats",
+  "Full KefirUpdater cheats pack": "Full KefirUpdater cheats pack",
+  "Download 60FPS/GFX Cheats": "Download 60FPS/GFX Cheats",
+  "KefirUpdater performance/graphics pack": "KefirUpdater performance/graphics pack",
+  "Download Exact Cheats": "Download Exact Cheats",
+  "Select game and match Build ID": "Select game and match Build ID",
+  "Import From File": "Import From File",
+  "Import a local cheat .txt file": "Import a local cheat .txt file",
+  "View Cheats": "View Cheats",
+  "View installed cheat codes": "View installed cheat codes",
+  "Delete All Cheats": "Delete All Cheats",
+  "Delete all existing cheat codes": "Delete all existing cheat codes",
+  "Delete Orphaned": "Delete Orphaned",
+  "Delete cheats for uninstalled games": "Delete cheats for uninstalled games",
+  "Clear Cheats Cache": "Clear Cheats Cache",
+  "Delete cached cheats database": "Delete cached cheats database"
 }

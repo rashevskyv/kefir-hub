@@ -3109,17 +3109,17 @@ void FreeGameEntry(NVGcontext* vg, GameCheatInfo& game) {
 // CheatsMenu - Main menu with cheat management options
 // ============================================================
 
-CheatsMenu::CheatsMenu() : MenuBase{"Cheats", MenuFlag_None} {
+CheatsMenu::CheatsMenu() : MenuBase{"Cheats"_i18n, MenuFlag_None} {
     // Main cheat management options
     m_items = {
-        {"Download Kefir Cheats", "Full KefirUpdater cheats pack"},
-        {"Download 60FPS/GFX Cheats", "KefirUpdater performance/graphics pack"},
-        {"Download Exact Cheats", "Select game and match Build ID"},
-        {"Import From File", "Import a local cheat .txt file"},
-        {"View Cheats", "View installed cheat codes"},
-        {"Delete All Cheats", "Delete all existing cheat codes"},
-        {"Delete Orphaned", "Delete cheats for uninstalled games"},
-        {"Clear Cheats Cache", "Delete cached cheats database"}
+        {"Download Kefir Cheats"_i18n, "Full KefirUpdater cheats pack"_i18n},
+        {"Download 60FPS/GFX Cheats"_i18n, "KefirUpdater performance/graphics pack"_i18n},
+        {"Download Exact Cheats"_i18n, "Select game and match Build ID"_i18n},
+        {"Import From File"_i18n, "Import a local cheat .txt file"_i18n},
+        {"View Cheats"_i18n, "View installed cheat codes"_i18n},
+        {"Delete All Cheats"_i18n, "Delete all existing cheat codes"_i18n},
+        {"Delete Orphaned"_i18n, "Delete cheats for uninstalled games"_i18n},
+        {"Clear Cheats Cache"_i18n, "Delete cached cheats database"_i18n}
     };
 
     this->SetActions(
