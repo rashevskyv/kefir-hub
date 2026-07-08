@@ -56,7 +56,7 @@ unreferenced-function warnings and no UI path invokes the removed feature.
 
 ---
 
-### P0-2. Upload / stream / send loops can hang forever → app freeze on Stop
+### P0-2. [RESOLVED] Upload / stream / send loops can hang forever → app freeze on Stop
 **Problem.** Every socket read/write loop retries `EWOULDBLOCK`/`EAGAIN` with a
 1 ms sleep and no timeout and no cancellation check:
 - `SocketStream::ReadChunk` (web.cpp:1453-1467)

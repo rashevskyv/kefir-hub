@@ -322,11 +322,16 @@ auto GetShareMode() -> ShareMode {
 
 auto SendAll(Socket sock, const void* buf, size_t size) -> bool {
     auto data = static_cast<const char*>(buf);
+    u32 idle_count = 0;
 
     while (size) {
         const auto sent = send(sock, data, size, 0);
         if (sent < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                idle_count++;
+                if (idle_count > 30000) { // 30 seconds
+                    return false;
+                }
                 svcSleepThread(1'000'000);
                 continue;
             }
@@ -334,6 +339,7 @@ auto SendAll(Socket sock, const void* buf, size_t size) -> bool {
             return false;
         }
 
+        idle_count = 0;
         data += sent;
         size -= sent;
     }
@@ -1455,9 +1461,16 @@ struct SocketStream final : yati::source::Stream {
             want -= todo;
         }
 
+        u32 idle_count = 0;
         while (want > 0) {
+            if (auto pbox = WebGetProgressBox()) {
+                if (pbox->ShouldExit()) {
+                    return -1;
+                }
+            }
             int got = recv(m_sock, out_ptr, want, 0);
             if (got > 0) {
+                idle_count = 0;
                 m_total_read += got;
                 read_now += got;
                 out_ptr += got;
@@ -1465,6 +1478,10 @@ struct SocketStream final : yati::source::Stream {
             } else if (got == 0) {
                 break;
             } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                idle_count++;
+                if (idle_count > 30000) { // 30 seconds
+                    return -1;
+                }
                 svcSleepThread(1'000'000);
             } else {
                 return -1;
@@ -1619,10 +1636,19 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     g_upload_state.active.store(true);
 
     std::vector<u8> buf(HTTP_FILE_CHUNK);
+    u32 idle_count = 0;
     while (offset < content_length) {
+        if (auto pbox = WebGetProgressBox()) {
+            if (pbox->ShouldExit()) {
+                g_upload_state.active.store(false);
+                SendResponse(sock, "400 Bad Request", "text/plain", "Cancelled by user");
+                return;
+            }
+        }
         const auto want = std::min<s64>(buf.size(), content_length - offset);
         const auto got = recv(sock, buf.data(), want, 0);
         if (got > 0) {
+            idle_count = 0;
             if (R_FAILED(file.Write(offset, buf.data(), got, FsWriteOption_None))) {
                 g_upload_state.active.store(false);
                 SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
@@ -1635,6 +1661,12 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
             SendResponse(sock, "400 Bad Request", "text/plain", "Upload ended early");
             return;
         } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            idle_count++;
+            if (idle_count > 30000) { // 30 seconds
+                g_upload_state.active.store(false);
+                SendResponse(sock, "408 Request Timeout", "text/plain", "Receive timeout");
+                return;
+            }
             svcSleepThread(1'000'000);
         } else {
             g_upload_state.active.store(false);
