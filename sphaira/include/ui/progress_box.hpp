@@ -22,6 +22,11 @@ struct ProgressBox final : Widget {
     );
     ~ProgressBox();
 
+    ProgressBox(const ProgressBox&) = delete;
+    ProgressBox& operator=(const ProgressBox&) = delete;
+    ProgressBox(ProgressBox&&) = delete;
+    ProgressBox& operator=(ProgressBox&&) = delete;
+
     auto Update(Controller* controller, TouchInfo* touch) -> void override;
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
 
@@ -31,7 +36,7 @@ struct ProgressBox final : Widget {
     auto ResetTransferProgress() -> ProgressBox&;
     auto UpdateTransfer(s64 offset, s64 size) -> ProgressBox&;
 
-    auto Mute(bool mute) { m_muted = mute; return *this; }
+    auto Mute(bool mute) -> ProgressBox& { m_muted = mute; return *this; }
     auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
     auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
 
