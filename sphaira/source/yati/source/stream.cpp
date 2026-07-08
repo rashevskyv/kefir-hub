@@ -1,6 +1,7 @@
 #include "yati/source/stream.hpp"
 #include "defines.hpp"
 #include "log.hpp"
+#include <algorithm>
 
 namespace sphaira::yati::source {
 
@@ -17,7 +18,7 @@ Result Stream::Read(void* _buf, s64 off, s64 size, u64* bytes_read_out) {
         // this can be done to skip padding, skip undeeded files etc.
         // to handle this, simply read the data into a buffer and discard it.
         if (off > m_offset) {
-            const auto skip_size = off - m_offset;
+            const auto skip_size = std::min<s64>(off - m_offset, 65536);
             std::vector<u8> temp_buf(skip_size);
             u64 bytes_read;
             R_TRY(ReadChunk(temp_buf.data(), temp_buf.size(), &bytes_read));
