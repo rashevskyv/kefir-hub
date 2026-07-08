@@ -454,12 +454,6 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         version_blocks.push_back({current_block, block_content});
     }
 
-    std::string result;
-    const auto display_preamble = BuildChangelogDisplayText(preamble, false);
-    if (!display_preamble.empty()) {
-        result += display_preamble + "\n\n";
-    }
-
     const auto current_ver = ParseKefirChangelogVersion(current_version);
     const auto latest_available_ver = version_blocks.empty() ? 0 : version_blocks.front().first;
 
@@ -475,6 +469,7 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         start_ver = current_ver + 1;
     }
 
+    std::string version_content;
     bool found_any = false;
     for (const auto& [version, content] : version_blocks) {
         if (version < start_ver || version > end_ver) {
@@ -487,8 +482,15 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         }
 
         found_any = true;
-        result += "**" + std::to_string(version) + "**\n";
-        result += display_content + "\n\n";
+        version_content += "**" + std::to_string(version) + "**\n";
+        version_content += display_content + "\n\n";
+    }
+
+    std::string result;
+    if (found_any) {
+        result = version_content;
+    } else {
+        result = BuildChangelogDisplayText(preamble, false);
     }
 
     return Trim(result);
