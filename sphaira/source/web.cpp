@@ -1542,21 +1542,9 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
 
         auto stream_source = std::make_unique<SocketStream>(sock, initial_body, content_length);
         
-        s64 estimated_size = content_length;
         const auto ext = PathExtension(name);
-        if (ExtensionEquals(ext, "nsz") || ExtensionEquals(ext, "xcz")) {
-            estimated_size = static_cast<s64>(content_length * 1.6);
-        }
-
-        s64 free_nand = 0;
-        bool install_to_sd = true;
-        fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
-        if (R_SUCCEEDED(fs_nand.GetFreeSpace("/", &free_nand))) {
-            const s64 min_free_nand = 500ULL * 1024ULL * 1024ULL; // 500 MB
-            if (free_nand - estimated_size >= min_free_nand) {
-                install_to_sd = false;
-            }
-        }
+        const bool is_compressed = ExtensionEquals(ext, "nsz") || ExtensionEquals(ext, "xcz") || ExtensionEquals(ext, "ncz");
+        const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
 
         const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";
         {

@@ -142,7 +142,7 @@ unchanged.
 
 ## P2 — Design / maintainability
 
-### P2-6. The NAND-first auto-target heuristic is duplicated in two places
+### P2-6. [RESOLVED] The NAND-first auto-target heuristic is duplicated in two places
 **The strategy is fine and intended** — try NAND first, fall back to SD so at
 least ~500 MB stays free on NAND. The issue is purely that the *same* heuristic
 is implemented twice, and the two copies already disagree:
