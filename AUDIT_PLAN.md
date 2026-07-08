@@ -89,7 +89,7 @@ during a transfer returns to the UI within a few seconds.
 
 ## P1 — Robustness / concurrency
 
-### P1-3. `g_web_pbox` is a non-atomic raw pointer shared across threads
+### P1-3. [RESOLVED] `g_web_pbox` is a non-atomic raw pointer shared across threads
 **Problem.** `WebSetProgressBox`/`WebGetProgressBox` (web.cpp:2421-2429) store a
 plain `ui::ProgressBox*` written by the ProgressBox thread and read by the server
 thread — a data race (non-atomic). `ProgressBox::Mute` reads/writes `m_muted`

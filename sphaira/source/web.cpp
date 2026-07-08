@@ -2465,14 +2465,14 @@ WebUploadState WebGetUploadState() {
     return out;
 }
 
-static ui::ProgressBox* g_web_pbox = nullptr;
+static std::atomic<ui::ProgressBox*> g_web_pbox = nullptr;
 
 void WebSetProgressBox(ui::ProgressBox* pbox) {
-    g_web_pbox = pbox;
+    g_web_pbox.store(pbox);
 }
 
 ui::ProgressBox* WebGetProgressBox() {
-    return g_web_pbox;
+    return g_web_pbox.load();
 }
 
 bool WebShareIsRunning() {

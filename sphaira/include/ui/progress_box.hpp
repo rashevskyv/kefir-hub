@@ -5,6 +5,7 @@
 #include "fs.hpp"
 #include <functional>
 #include <span>
+#include <atomic>
 
 namespace sphaira::ui {
 
@@ -117,7 +118,7 @@ private:
     int m_cpuid{};
     int m_image{};
     bool m_own_image{};
-    bool m_muted{false};
+    std::atomic<bool> m_muted{false};
 };
 
 // this is a helper function that does many things.
