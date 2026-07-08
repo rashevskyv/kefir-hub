@@ -558,5 +558,10 @@
   "Convert titlekey to standard crypto.": "Convert titlekey to standard crypto.",
   "Encrypt key area keys with master key 0.": "Encrypt key area keys with master key 0.",
   "Lower the system firmware field in metadata.": "Lower the system firmware field in metadata.",
-  "Browse, download and install theme packs from themezer.net.": "Browse, download and install theme packs from themezer.net."
+  "Browse, download and install theme packs from themezer.net.": "Browse, download and install theme packs from themezer.net.",
+  "Stop": "Stop",
+  "Stop Server": "Stop Server",
+  "Press B to Stop Server": "Press B to Stop Server",
+  "Installation completed": "Installation completed",
+  "Upload completed": "Upload completed"
 }

@@ -585,8 +585,8 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         if (m_selected_count > 0) {
-            float box_size = 12.f;
-            float box_x = x + 1.5f;
+            float box_size = 20.f;
+            float box_x = x - 30.f;
             float box_y = y + (h / 2.f) - (box_size / 2.f);
 
             // Draw checkbox outline and background
@@ -598,24 +598,24 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             nvgBeginPath(vg);
             nvgRect(vg, box_x, box_y, box_size, box_size);
             nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-            nvgStrokeWidth(vg, 1.5f);
+            nvgStrokeWidth(vg, 2.0f);
             nvgStroke(vg);
 
             if (e.IsSelected()) {
                 // Draw checkmark inside the checkbox on the left
                 float check_x = box_x + box_size / 2.f;
-                float check_y = y + (h / 2.f) - (14.f / 2.f); // center vertically
+                float check_y = y + (h / 2.f) - (18.f / 2.f); // center vertically
 
                 const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
                 float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
-                NVGcolor outline_col = (bg_lum > 0.5f) ? nvgRGBA(0, 0, 0, 255) : nvgRGBA(0, 0, 0, 255);
+                NVGcolor outline_col = nvgRGBA(0, 0, 0, 255);
 
-                gfx::drawText(vg, check_x - 1.f, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x + 1.f, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y - 1.f, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y + 1.f, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x - 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x + 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y - 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
+                gfx::drawText(vg, check_x, check_y + 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
 
-                gfx::drawText(vg, check_x, check_y, 14.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+                gfx::drawText(vg, check_x, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
             }
         }
 
@@ -1178,12 +1178,48 @@ void FsView::ShareFolder() {
         return;
     }
 
-    auto message = "Open this address in a browser:"_i18n + std::string{"\n"};
-    message += result.url;
-    message += "\n\n";
-    message += "Or scan the QR code."_i18n;
-
-    App::Push<OptionBox>(message, "OK"_i18n, [](auto){}, result.qr_image, true);
+    const auto url = result.url;
+    const auto qr_image = result.qr_image;
+    App::Push<ProgressBox>(qr_image, "StartWebServer"_i18n, url,
+        [url](auto pbox) -> Result {
+            pbox->NewTransferForce("Press B to Stop Server"_i18n);
+            WebSetProgressBox(pbox);
+            ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
+            std::string last_name;
+            while (!pbox->ShouldExit() && WebShareIsRunning()) {
+                const auto state = WebGetUploadState();
+                if (state.active) {
+                    if (state.name != last_name) {
+                        last_name = state.name;
+                        pbox->NewTransferForce(state.name);
+                    }
+                    pbox->UpdateTransferForce(state.bytes, state.total);
+                } else if (!last_name.empty()) {
+                    const std::string completed_name = last_name;
+                    last_name.clear();
+                    pbox->ResetTransferProgress();
+                    pbox->SetTitle(url);
+                    if (completed_name.starts_with("Installing:")) {
+                        pbox->NewTransferForce("Installation completed"_i18n);
+                    } else {
+                        pbox->NewTransferForce("Upload completed"_i18n);
+                    }
+                    for (int i = 0; i < 30 && !WebGetUploadState().active && !pbox->ShouldExit(); ++i) {
+                        svcSleepThread(100'000'000LL);
+                    }
+                    if (!WebGetUploadState().active && !pbox->ShouldExit()) {
+                        pbox->NewTransferForce("Press B to Stop Server"_i18n);
+                    }
+                }
+                svcSleepThread(100'000'000LL);
+            }
+            WebShareStop();
+            R_SUCCEED();
+        },
+        [qr_image](Result) {
+            nvgDeleteImage(App::GetVg(), qr_image);
+        }
+    );
 }
 
 auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {

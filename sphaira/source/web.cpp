@@ -15,6 +15,11 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include <memory>
+
+#include "ui/progress_box.hpp"
+#include "yati/yati.hpp"
+#include "yati/source/stream.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -46,6 +51,15 @@ Thread g_share_thread{};
 std::atomic_bool g_share_running{false};
 Socket g_share_socket{-1};
 u16 g_share_port{};
+
+struct UploadState {
+    std::atomic<bool> active{false};
+    std::atomic<s64> bytes{0};
+    std::atomic<s64> total{0};
+    std::mutex name_mutex{};
+    std::string name{};
+};
+static UploadState g_upload_state;
 
 auto PathExtension(std::string_view path) -> std::string_view {
     const auto slash = path.find_last_of('/');
@@ -483,6 +497,7 @@ void AppendLightbox(std::string& body) {
     body += "<script>";
     body += "let imageList=[];let currentImageIndex=-1;";
     body += "function initLightbox(){";
+    body += "imageList=[];";
     body += "const links=document.querySelectorAll('a');";
     body += "for(const link of links){";
     body += "const href=link.getAttribute('href');";
@@ -569,9 +584,9 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += ".list .thumbnail-box{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;flex-shrink:0}";
     body += ".list .thumbnail-box img{width:100%;height:100%;object-fit:cover}";
     body += ".list .thumbnail-box svg{width:24px;height:24px}";
-    body += ".list .info{display:flex;flex-grow:1;align-items:center;justify-content:space-between;min-width:0}";
-    body += ".list .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:16px}";
-    body += ".list .meta{color:#64748b;font-size:13px;flex-shrink:0}";
+    body += ".list .info{display:flex;flex-grow:1;align-items:center;min-width:0}";
+    body += ".list .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:16px;flex-grow:1}";
+    body += ".list .meta{color:#64748b;font-size:13px;flex-shrink:0;width:120px;text-align:right;margin-right:24px}";
 
     // Grid layout CSS
     body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}";
@@ -599,8 +614,29 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += ".grid .file-checkbox{position:absolute;top:12px;left:12px;width:20px;height:20px;margin:0;z-index:5}";
     body += ".grid .file-checkbox:checked::after{left:6px;top:2px;width:4px;height:9px}";
     body += ".item.focused{outline:2px solid #38bdf8;outline-offset:-2px;box-shadow:0 0 12px rgba(56,189,248,0.25)}";
+    body += ".queue-panel{position:fixed;top:0;right:-380px;width:340px;height:100%;background:rgba(20,20,25,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-left:1px solid rgba(255,255,255,0.08);box-shadow:-10px 0 30px rgba(0,0,0,0.5);transition:right 0.3s cubic-bezier(0.4,0,0.2,1);z-index:100;display:flex;flex-direction:column;padding:20px;box-sizing:border-box}";
+    body += ".queue-panel.open{right:0}";
+    body += ".queue-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:12px;margin-bottom:16px}";
+    body += ".queue-header h2{margin:0;font-size:18px;font-weight:600;color:#f1f5f9}";
+    body += ".queue-close{background:none;border:none;color:#94a3b8;font-size:24px;cursor:pointer;padding:0;line-height:1}";
+    body += ".queue-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:16px;padding-right:4px}";
+    body += ".queue-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px;position:relative;display:flex;flex-direction:column;gap:6px}";
+    body += ".queue-item-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}";
+    body += ".queue-item-name{font-size:13px;font-weight:500;word-break:break-all;color:#e2e8f0;flex-grow:1}";
+    body += ".queue-item-cancel{background:none;border:none;color:#f87171;cursor:pointer;padding:0 4px;font-size:16px;font-weight:bold;line-height:1}";
+    body += ".queue-item-progress-bg{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}";
+    body += ".queue-item-progress-fill{height:100%;background:#38bdf8;width:0;transition:width 0.1s ease}";
+    body += ".queue-item-meta{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8}";
+    body += ".queue-footer{display:flex;gap:10px}";
+    body += ".queue-footer button{flex:1;padding:10px 14px}";
+    body += "#start-transfers-btn{background:#38bdf8;color:#0f0f12;border-color:#38bdf8}";
+    body += "#start-transfers-btn:hover{background:#0ea5e9;border-color:#0ea5e9}";
+    body += ".queue-item.completed .queue-item-progress-fill{background:#4ade80}";
+    body += ".queue-item.failed .queue-item-progress-fill{background:#f87171}";
+    body += ".queue-item-install-label{display:flex;align-items:center;gap:4px;font-size:11px;color:#cbd5e1;cursor:pointer}";
+    body += ".queue-item-install-label input{display:inline-block;margin:0;cursor:pointer}";
 
-    body += "</style></head><body><header><h1>Sphaira Files</h1><div class=\"path\">";
+    body += "</style></head><body><div id=\"queue-panel\" class=\"queue-panel\"><div class=\"queue-header\"><h2>Transfer Queue</h2><button class=\"queue-close\" onclick=\"toggleQueuePanel()\">&times;</button></div><div id=\"queue-list\" class=\"queue-list\"></div><div class=\"queue-footer\"><button id=\"start-transfers-btn\" onclick=\"startTransfers()\">Start transfers</button><button id=\"clear-queue-btn\" onclick=\"clearCompletedQueue()\">Clear completed</button></div></div><header><h1>Sphaira Files</h1><div class=\"path\">";
     body += HtmlEscape(abs_path);
     body += "</div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
@@ -623,12 +659,13 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         start = end + 1;
     }
 
-    body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Upload</button>";
+    body += "</div><div class=\"bar\"><button id=\"upload\" onclick=\"document.getElementById('files').click()\">Add to Upload</button>";
     body += "<button id=\"view-toggle\" onclick=\"toggleViewMode()\">Grid View</button>";
     body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\">Select All</button>";
-    body += "<button id=\"download-selected\" onclick=\"downloadSelected()\" style=\"border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.1);color:#38bdf8;\" disabled>Download Selected (0)</button>";
+    body += "<button id=\"download-selected\" onclick=\"addSelectedToDownloadQueue()\" style=\"border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.1);color:#38bdf8;\" disabled>Download Selected (0)</button>";
     body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" style=\"border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;\" disabled>Delete Selected (0)</button>";
-    body += "<input id=\"files\" type=\"file\" multiple onchange=\"uploadFiles(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
+    body += "<button id=\"queue-toggle-btn\" onclick=\"toggleQueuePanel()\" style=\"border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:#c084fc;\">Queue (0)</button>";
+    body += "<input id=\"files\" type=\"file\" multiple onchange=\"addFilesToUploadQueue(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
     if (abs_path != "/") {
@@ -712,19 +749,43 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         }
     }
 
-    body += "</main></div><script>";
-    body += "const currentPath='";
+    body += "<script>let currentPath=decodeURIComponent('";
     body += encoded_path;
-    body += "';";
-    body += "async function uploadFiles(files){const input=document.getElementById('files');const button=document.getElementById('upload');const status=document.getElementById('status');";
-    body += "if(!files||!files.length){return;}";
-    body += "button.disabled=true;";
-    body += "for(const file of files){status.textContent='Uploading '+file.name+'...';";
-    body += "const res=await fetch('/upload?path='+currentPath+'&name='+encodeURIComponent(file.name),{method:'PUT',body:file});";
-    body += "if(!res.ok){button.disabled=false;status.textContent='Failed: '+await res.text();input.value='';return;}}";
-    body += "status.textContent='Done';input.value='';setTimeout(()=>location.reload(),500);}";
+    body += "');";
+    body += "let transferQueue=[];let isTransferring=false;";
+    body += "function toggleQueuePanel(){const p=document.getElementById('queue-panel');if(p)p.classList.toggle('open');}";
+    body += "function addFilesToUploadQueue(files){if(!files||!files.length)return;";
+    body += "for(const f of files){const isGame=/\\.(nsp|nsz|xci|xcz)$/i.test(f.name);transferQueue.push({id:'up_'+Math.random().toString(36).substr(2,9),type:'upload',file:f,name:f.name,size:f.size,status:'pending',progress:0,speed:'',install:isGame,xhr:null,uploadPath:currentPath});}";
+    body += "updateQueueCount();renderQueue();const p=document.getElementById('queue-panel');if(p&&!p.classList.contains('open'))p.classList.add('open');document.getElementById('files').value='';}";
+    body += "function addSelectedToDownloadQueue(){const ch=document.querySelectorAll('.file-checkbox:checked');if(!ch.length)return;";
+    body += "for(const cb of ch){const p=cb.getAttribute('data-path');const dp=decodeURIComponent(p);const n=dp.split('/').pop()||'file';if(transferQueue.some(item=>item.type==='download'&&item.path===p))continue;transferQueue.push({id:'dl_'+Math.random().toString(36).substr(2,9),type:'download',path:p,name:n,size:0,status:'pending',progress:0,speed:'',controller:null});}";
+    body += "for(const cb of ch)cb.checked=false;updateSelectCount();updateQueueCount();renderQueue();toggleQueuePanel();}";
+    body += "function updateQueueCount(){const b=document.getElementById('queue-toggle-btn');if(b){const active=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status)).length;b.textContent='Queue ('+active+')';}}";
+    body += "function renderQueue(){const l=document.getElementById('queue-list');if(!l)return;l.innerHTML='';";
+    body += "for(const i of transferQueue){const el=document.createElement('div');el.className='queue-item '+i.status;const pct=Math.round(i.progress);const speed=i.speed?' · '+i.speed:'';const sizeStr=i.size?formatBytes(i.size):'Unknown size';";
+    body += "let st=i.status;if(i.status==='pending')st='Pending';else if(i.status==='uploading')st='Uploading';else if(i.status==='downloading')st='Downloading';else if(i.status==='installing')st='Installing...';else if(i.status==='completed')st='Completed';else if(i.status==='failed')st='Failed';else if(i.status==='cancelled')st='Cancelled';";
+    body += "let hdr='<div class=\"queue-item-header\"><span class=\"queue-item-name\">'+escapeHtml(i.name)+'</span>';if(['pending','uploading','downloading','installing'].includes(i.status)){hdr+='<button class=\"queue-item-cancel\" onclick=\"cancelTransfer(\\''+i.id+'\\')\">&times;</button>';}hdr+='</div>';";
+    body += "let inst='';if(i.type==='upload'&&i.status==='pending'&&/\\.(nsp|nsz|xci|xcz)$/i.test(i.name)){inst='<label class=\"queue-item-install-label\"><input type=\"checkbox\" '+(i.install?'checked':'')+' onchange=\"toggleInstallOption(\\''+i.id+'\\',this.checked)\">Install directly</label>';}else if(i.type==='upload'&&i.install){inst='<div style=\"font-size:11px;color:#c084fc\">Direct Install mode</div>';}";
+    body += "el.innerHTML=hdr+'<div style=\"font-size:11px;color:#94a3b8;margin-bottom:4px\">'+(i.type==='upload'?'Upload':'Download')+'</div>'+inst+'<div class=\"queue-item-progress-bg\"><div class=\"queue-item-progress-fill\" style=\"width:'+pct+'%\"></div></div><div class=\"queue-item-meta\"><span>'+pct+'%'+speed+'</span><span>'+sizeStr+'</span></div>';l.appendChild(el);}}";
+    body += "function toggleInstallOption(id,chk){const i=transferQueue.find(item=>item.id===id);if(i)i.install=chk;}";
+    body += "function formatBytes(b){if(b===0)return '0 Bytes';const k=1024;const sizes=['Bytes','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(k));return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+sizes[i];}";
+    body += "function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}";
+    body += "function cancelTransfer(id){const i=transferQueue.find(item=>item.id===id);if(!i)return;";
+    body += "if(i.status==='uploading'&&i.xhr){i.xhr.abort();}else if(i.status==='downloading'&&i.controller){i.controller.abort();}";
+    body += "i.status='cancelled';i.progress=0;i.speed='';renderQueue();updateQueueCount();}";
+    body += "function clearCompletedQueue(){transferQueue=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status));renderQueue();updateQueueCount();}";
+    body += "async function startTransfers(){if(isTransferring)return;isTransferring=true;const btn=document.getElementById('start-transfers-btn');if(btn)btn.disabled=true;";
+    body += "try{while(true){const next=transferQueue.find(i=>i.status==='pending');if(!next)break;if(next.type==='upload')await uploadFileItem(next);else await downloadFileItem(next);updateQueueCount();renderQueue();}}finally{isTransferring=false;if(btn)btn.disabled=false;navigateTo(currentPath,false);}}";
+    body += "function uploadFileItem(item){return new Promise(res=>{item.status='uploading';renderQueue();const xhr=new XMLHttpRequest();item.xhr=xhr;let url='/upload?path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name);if(item.install){url+='&install=1';item.status='installing';}xhr.open('PUT',url,true);let startTime=Date.now();let lastTime=startTime;let lastLoaded=0;";
+    body += "xhr.upload.addEventListener('progress',e=>{if(e.lengthComputable){const now=Date.now();item.progress=(e.loaded/e.total)*100;const diff=(now-lastTime)/1000;if(diff>=0.5){const speed=(e.loaded-lastLoaded)/diff;item.speed=formatBytes(speed)+'/s';lastTime=now;lastLoaded=e.loaded;}if(item.install&&item.progress>=99){item.status='installing';}renderQueue();}});";
+    body += "xhr.onload=()=>{if(xhr.status===200){item.status='completed';item.progress=100;item.speed='';}else{item.status='failed';item.speed='Error: '+xhr.statusText;}res();};";
+    body += "xhr.onerror=()=>{item.status='failed';item.speed='Network error';res();};";
+    body += "xhr.onabort=()=>{item.status='cancelled';res();};";
+    body += "xhr.send(item.file);});}";
+    body += "async function downloadFileItem(item){item.status='downloading';renderQueue();const ctrl=new AbortController();item.controller=ctrl;try{const res=await fetch('/download?path='+item.path,{signal:ctrl.signal});if(!res.ok)throw new Error(res.statusText);const len=res.headers.get('content-length');const total=len?parseInt(len,10):0;item.size=total;const reader=res.body.getReader();let loaded=0;let chunks=[];let lastTime=Date.now();let lastLoaded=0;";
+    body += "while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);loaded+=value.length;if(total)item.progress=(loaded/total)*100;const now=Date.now();const diff=(now-lastTime)/1000;if(diff>=0.5){const speed=(loaded-lastLoaded)/diff;item.speed=formatBytes(speed)+'/s';lastTime=now;lastLoaded=loaded;}renderQueue();}";
+    body += "const blob=new Blob(chunks);const dlUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=dlUrl;a.download=item.name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(dlUrl);item.status='completed';item.progress=100;item.speed='';}catch(err){if(err.name==='AbortError')item.status='cancelled';else{item.status='failed';item.speed=err.message;}}}";
     
-    // View mode toggle JS
     body += "function toggleViewMode(){";
     body += "const container=document.getElementById('items-container');";
     body += "const btn=document.getElementById('view-toggle');";
@@ -752,7 +813,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "}";
     body += "});";
     
-    body += "async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){location.reload();}else{alert('Delete failed: '+await res.text());}}";
+    body += "async function deleteFile(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){navigateTo(currentPath,false);}else{alert('Delete failed: '+await res.text());}}";
 
     body += "function updateSelectCount(){";
     body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
@@ -790,7 +851,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "await fetch('/delete?path='+path,{method:'DELETE'});";
     body += "}";
     body += "status.textContent='Done';";
-    body += "location.reload();";
+    body += "navigateTo(currentPath,false);";
     body += "}";
 
     body += "function getFocusedItem(){return document.querySelector('.item.focused');}";
@@ -846,7 +907,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "else{";
     body += "const path=current.querySelector('.file-checkbox')?.getAttribute('data-path');";
     body += "if(path&&confirm('Delete '+current.querySelector('.name').textContent+'?')){";
-    body += "fetch('/delete?path='+path,{method:'DELETE'}).then(()=>location.reload());";
+    body += "fetch('/delete?path='+path,{method:'DELETE'}).then(()=>navigateTo(currentPath,false));";
     body += "}";
     body += "}";
     body += "}else if(e.key==='Enter'){";
@@ -940,67 +1001,116 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "return new Blob(blobParts,{type:'application/zip'});";
     body += "}";
 
-    body += "async function downloadSelected(){";
+    body += "async function addSelectedToDownloadQueue(){";
     body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
     body += "if(!checked.length)return;";
     body += "const status=document.getElementById('status');";
-    body += "status.textContent='Preparing download list...';";
-    body += "const allFiles=[];";
+    body += "if(status)status.textContent='Preparing download queue...';";
     body += "for(const cb of checked){";
     body += "const path=cb.getAttribute('data-path');";
+    body += "const decodedPath=decodeURIComponent(path);";
+    body += "const name=decodedPath.split('/').pop()||'file';";
     body += "const isDir=cb.closest('.item').querySelector('.meta').textContent==='folder';";
     body += "if(isDir){";
-    body += "status.textContent='Scanning folder...';";
+    body += "if(status)status.textContent='Scanning folder '+name+'...';";
+    body += "try{";
     body += "const res=await fetch('/list-recursive?path='+path);";
     body += "if(res.ok){";
     body += "const nested=await res.json();";
-    body += "allFiles.push(...nested);";
+    body += "for(const f of nested){";
+    body += "const fName=decodeURIComponent(f.path).substring(decodeURIComponent(currentPath).length);";
+    body += "const cleanFName=fName.startsWith('/')?fName.substring(1):fName;";
+    body += "if(!transferQueue.some(item=>item.type==='download'&&item.path===f.path)){";
+    body += "transferQueue.push({id:'dl_'+Math.random().toString(36).substr(2,9),type:'download',path:f.path,name:cleanFName,size:f.size,status:'pending',progress:0,speed:'',controller:null});";
     body += "}";
+    body += "}";
+    body += "}";
+    body += "}catch(e){console.error(e);}";
     body += "}else{";
-    body += "allFiles.push({path:path,size:0});";
+    body += "if(!transferQueue.some(item=>item.type==='download'&&item.path===path)){";
+    body += "let sizeVal=0;";
+    body += "const sizeMeta=cb.closest('.item').querySelector('.meta').textContent;";
+    body += "if(sizeMeta.includes('MiB'))sizeVal=parseFloat(sizeMeta)*1024*1024;";
+    body += "else if(sizeMeta.includes('KiB'))sizeVal=parseFloat(sizeMeta)*1024;";
+    body += "transferQueue.push({id:'dl_'+Math.random().toString(36).substr(2,9),type:'download',path:path,name:name,size:sizeVal,status:'pending',progress:0,speed:'',controller:null});";
     body += "}";
     body += "}";
-    body += "if(allFiles.length===0){";
-    body += "status.textContent='No files found';";
-    body += "return;";
     body += "}";
-    body += "if(allFiles.length===1&&checked.length===1&&!checked[0].closest('.item').querySelector('.meta').textContent.includes('folder')){";
-    body += "const path=allFiles[0].path;";
-    body += "const link=document.createElement('a');";
-    body += "link.href='/download?path='+path;";
-    body += "link.download=decodeURIComponent(path.split('/').pop());";
-    body += "link.click();";
-    body += "status.textContent='Done';";
-    body += "return;";
+    body += "for(const cb of checked)cb.checked=false;";
+    body += "updateSelectCount();updateQueueCount();renderQueue();";
+    body += "if(status)status.textContent='';";
+    body += "const panel=document.getElementById('queue-panel');";
+    body += "if(panel&&!panel.classList.contains('open'))panel.classList.add('open');";
     body += "}";
-    body += "status.textContent='Downloading files to bundle...';";
-    body += "const zipFiles=[];";
-    body += "const basePath=decodeURIComponent(currentPath);";
-    body += "let count=0;";
-    body += "for(const file of allFiles){";
-    body += "count++;";
-    body += "status.textContent='Downloading ('+count+'/'+allFiles.length+')...';";
-    body += "const res=await fetch('/download?path='+file.path);";
-    body += "if(res.ok){";
-    body += "const data=new Uint8Array(await res.arrayBuffer());";
-    body += "let zipPath=decodeURIComponent(file.path);";
-    body += "if(zipPath.startsWith(basePath)){";
-    body += "zipPath=zipPath.substring(basePath.length);";
-    body += "if(zipPath.startsWith('/'))zipPath=zipPath.substring(1);";
+
+    body += "async function navigateTo(path,shouldPushState=true){";
+    body += "const status=document.getElementById('status');if(status)status.textContent='Loading...';";
+    body += "try{const res=await fetch('/list?path='+encodeURIComponent(path));if(!res.ok)throw new Error(res.statusText);";
+    body += "const data=await res.json();currentPath=data.path;";
+    body += "const pathDiv=document.querySelector('.path');if(pathDiv)pathDiv.textContent=data.path;";
+    body += "renderCrumbs(data.path);renderItems(data.path,data.entries);";
+    body += "if(shouldPushState){const newUrl=window.location.protocol+'//'+window.location.host+'/?path='+encodeURIComponent(data.path);window.history.pushState({path:data.path},'',newUrl);}";
+    body += "updateSelectCount();";
+    body += "const container=document.getElementById('items-container');const saved=localStorage.getItem('viewMode');const btn=document.getElementById('view-toggle');";
+    body += "if(saved==='grid'&&container){container.classList.remove('list');container.classList.add('grid');if(btn)btn.textContent='List View';}";
+    body += "else if(container){container.classList.remove('grid');container.classList.add('list');if(btn)btn.textContent='Grid View';}";
+    body += "if(typeof initLightbox==='function')initLightbox();";
+    body += "}catch(err){alert('Failed to load folder: '+err.message);}finally{if(status)status.textContent='';}}";
+
+    body += "function renderCrumbs(path){";
+    body += "const container=document.querySelector('.crumbs');if(!container)return;";
+    body += "let html='<a href=\"/?path=/\">SD Card</a>';";
+    body += "if(path!=='/'&&path!==''){";
+    body += "const parts=path.split('/').filter(Boolean);let accum='';";
+    body += "for(const part of parts){accum+='/'+part;html+=' / <a href=\"/?path='+encodeURIComponent(accum)+'\">'+escapeHtml(part)+'</a>';}";
     body += "}";
-    body += "zipFiles.push({name:zipPath,data:data});";
+    body += "container.innerHTML=html;}";
+
+    body += "function renderItems(path,entries){";
+    body += "const container=document.getElementById('items-container');if(!container)return;container.innerHTML='';";
+    body += "if(path!=='/'){";
+    body += "let parent=path;const lastSlash=parent.lastIndexOf('/');if(lastSlash!==-1)parent=parent.substring(0,lastSlash);if(parent==='')parent='/';";
+    body += "const el=document.createElement('a');el.className='item';el.href='/?path='+encodeURIComponent(parent);";
+    body += "el.innerHTML='<div class=\"thumbnail-box\"><svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg></div><div class=\"info\"><span class=\"name\">..</span><span class=\"meta\">parent folder</span></div>';";
+    body += "container.appendChild(el);";
     body += "}";
+    body += "if(!entries||!entries.length){";
+    body += "const el=document.createElement('div');el.className='empty';el.textContent='Empty folder';container.appendChild(el);return;";
     body += "}";
-    body += "status.textContent='Generating ZIP...';";
-    body += "const zipBlob=createZip(zipFiles);";
-    body += "const url=URL.createObjectURL(zipBlob);";
-    body += "const link=document.createElement('a');";
-    body += "link.href=url;";
-    body += "link.download=(basePath==='/'?'sd_card':basePath.split('/').pop())+'.zip';";
-    body += "link.click();";
-    body += "URL.revokeObjectURL(url);";
-    body += "status.textContent='Done';";
+    body += "for(const entry of entries){";
+    body += "let child=path;if(!child.endsWith('/'))child+='/';child+=entry.name;const encChild=encodeURIComponent(child);const nameEsc=escapeHtml(entry.name);";
+    body += "const el=document.createElement('a');el.className='item';let thumb='';";
+    body += "if(entry.type===0){";
+    body += "el.href='/?path='+encChild;";
+    body += "thumb='<svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>';";
+    body += "}else{";
+    body += "const ext=entry.name.split('.').pop().toLowerCase();const isImage=['png','jpg','jpeg','gif','bmp'].includes(ext);";
+    body += "el.href=isImage?('/view?path='+encChild):('/download?path='+encChild);";
+    body += "if(isImage)thumb='<img class=\"thumb\" src=\"/view?path='+encChild+'\" alt=\"\" loading=\"lazy\">';";
+    body += "else thumb='<svg viewBox=\"0 0 24 24\" fill=\"#90a4ae\"><path d=\"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z\"/></svg>';";
     body += "}";
+    body += "let metaStr='folder';if(entry.type!==0){";
+    body += "if(entry.size>=1024*1024)metaStr=(entry.size/(1024*1024)).toFixed(2)+' MiB';";
+    body += "else metaStr=(entry.size/1024).toFixed(2)+' KiB';";
+    body += "}";
+    body += "el.innerHTML=\'<input type=\"checkbox\" class=\"file-checkbox\" data-path=\"\'+encChild+\'\" onclick=\"event.stopPropagation(); updateSelectCount();\">\';";
+    body += "el.innerHTML+=\'<div class=\"thumbnail-box\">\'+thumb+\'</div>\';";
+    body += "el.innerHTML+=\'<div class=\"info\"><span class=\"name\">\'+nameEsc+\'</span><span class=\"meta\">\'+metaStr+\'</span><button class=\"delete-btn\" onclick=\"deleteFile(event,\\'\'+encChild+\'\\')\">Delete</button></div>\';";
+    body += "container.appendChild(el);";
+    body += "}}";
+
+    body += "document.addEventListener('click',e=>{";
+    body += "const a=e.target.closest('a');if(!a)return;";
+    body += "if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.closest('.delete-btn'))return;";
+    body += "const href=a.getAttribute('href');";
+    body += "if(href&&href.startsWith('/?path=')){";
+    body += "e.preventDefault();const url=new URL(href,window.location.origin);const path=url.searchParams.get('path')||'/';navigateTo(path);";
+    body += "}";
+    body += "});";
+
+    body += "window.addEventListener('popstate',e=>{";
+    body += "const url=new URL(window.location.href);const path=url.searchParams.get('path')||'/';navigateTo(path,false);";
+    body += "});";;
 
     body += "</script>";
 
@@ -1313,6 +1423,62 @@ auto UniqueUploadPath(fs::FsNativeSd& sd, const fs::FsPath& dir, const std::stri
     }
 }
 
+struct SocketStream final : yati::source::Stream {
+    SocketStream(Socket sock, const std::string& initial_data, s64 content_length)
+        : m_sock(sock), m_initial_data(initial_data), m_content_length(content_length) {
+        m_open_result = 0;
+    }
+
+    Result ReadChunk(void* buf, s64 size, u64* bytes_read) override {
+        *bytes_read = 0;
+        if (m_total_read >= m_content_length || size <= 0) {
+            return 0;
+        }
+
+        s64 want = std::min<s64>(size, m_content_length - m_total_read);
+        u8* out_ptr = static_cast<u8*>(buf);
+        s64 read_now = 0;
+
+        if (m_initial_offset < static_cast<s64>(m_initial_data.size())) {
+            s64 avail = static_cast<s64>(m_initial_data.size()) - m_initial_offset;
+            s64 todo = std::min<s64>(want, avail);
+            std::memcpy(out_ptr, m_initial_data.data() + m_initial_offset, todo);
+            m_initial_offset += todo;
+            m_total_read += todo;
+            read_now += todo;
+            out_ptr += todo;
+            want -= todo;
+        }
+
+        while (want > 0) {
+            int got = recv(m_sock, out_ptr, want, 0);
+            if (got > 0) {
+                m_total_read += got;
+                read_now += got;
+                out_ptr += got;
+                want -= got;
+            } else if (got == 0) {
+                break;
+            } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                svcSleepThread(1'000'000);
+            } else {
+                return -1;
+            }
+        }
+
+        *bytes_read = read_now;
+        g_upload_state.bytes.store(m_total_read);
+        return 0;
+    }
+
+private:
+    Socket m_sock;
+    std::string m_initial_data;
+    s64 m_initial_offset{0};
+    s64 m_content_length;
+    s64 m_total_read{0};
+};
+
 void ReceiveUpload(Socket sock, const std::string& req, const std::string& query) {
     const auto length_str = HeaderValue(req, "content-length");
     if (length_str.empty()) {
@@ -1330,6 +1496,81 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     const auto dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
     const auto raw_name = GetQueryValue(query, "name");
     const auto name = SanitizeFileName(raw_name);
+
+    const auto install_param = GetQueryValue(query, "install");
+    const bool direct_install = (install_param == "1");
+
+    if (direct_install) {
+        auto pbox = WebGetProgressBox();
+        if (!pbox) {
+            SendResponse(sock, "500 Internal Server Error", "text/plain", "Installation not possible (No active UI)");
+            return;
+        }
+
+        std::string initial_body;
+        const auto header_end = req.find("\r\n\r\n");
+        if (header_end != std::string::npos) {
+            const auto body_start = header_end + 4;
+            const auto available = static_cast<s64>(req.size() - body_start);
+            const auto write_size = std::min<s64>(available, content_length);
+            if (write_size > 0) {
+                initial_body = req.substr(body_start, write_size);
+            }
+        }
+
+        auto stream_source = std::make_unique<SocketStream>(sock, initial_body, content_length);
+        
+        s64 estimated_size = content_length;
+        const auto ext = PathExtension(name);
+        if (ExtensionEquals(ext, "nsz") || ExtensionEquals(ext, "xcz")) {
+            estimated_size = static_cast<s64>(content_length * 1.6);
+        }
+
+        s64 free_nand = 0;
+        bool install_to_sd = true;
+        fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
+        if (R_SUCCEEDED(fs_nand.GetFreeSpace("/", &free_nand))) {
+            const s64 min_free_nand = 500ULL * 1024ULL * 1024ULL; // 500 MB
+            if (free_nand - estimated_size >= min_free_nand) {
+                install_to_sd = false;
+            }
+        }
+
+        const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";
+        {
+            std::scoped_lock lock{g_upload_state.name_mutex};
+            g_upload_state.name = "Installing: " + name + dest_str;
+        }
+        g_upload_state.total.store(content_length);
+        g_upload_state.bytes.store(initial_body.size());
+        g_upload_state.active.store(true);
+
+        fs::FsPath dummy_path = "/";
+        dummy_path += name;
+
+        yati::ConfigOverride override{};
+        override.sd_card_install = install_to_sd;
+        if (pbox) {
+            pbox->Mute(true);
+        }
+        const auto rc = yati::InstallFromSource(pbox, stream_source.get(), dummy_path, override);
+        if (pbox) {
+            pbox->Mute(false);
+        }
+
+        g_upload_state.active.store(false);
+
+        if (R_FAILED(rc)) {
+            log_write("Direct install failed: 0x%X\n", rc);
+            char err_msg[128]{};
+            std::snprintf(err_msg, sizeof(err_msg), "Installation failed: 0x%X", rc);
+            SendResponse(sock, "500 Internal Server Error", "text/plain", err_msg);
+            return;
+        }
+
+        SendResponse(sock, "200 OK", "text/plain", "Installed");
+        return;
+    }
 
     fs::FsNativeSd fs;
     if (!fs.DirExists(dir)) {
@@ -1357,8 +1598,6 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         const auto write_size = std::min<s64>(available, content_length);
         if (write_size > 0) {
             if (R_FAILED(file.Write(offset, req.data() + body_start, write_size, FsWriteOption_None))) {
-                App::NotifyClear();
-                App::Notify("Upload failed: " + name);
                 SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
                 return;
             }
@@ -1366,9 +1605,13 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         }
     }
 
-    App::NotifyClear();
-    App::Notify("Uploading " + name + " (0%)");
-    s64 last_pct = 0;
+    {
+        std::scoped_lock lock{g_upload_state.name_mutex};
+        g_upload_state.name = name;
+    }
+    g_upload_state.total.store(content_length);
+    g_upload_state.bytes.store(offset);
+    g_upload_state.active.store(true);
 
     std::vector<u8> buf(HTTP_FILE_CHUNK);
     while (offset < content_length) {
@@ -1376,35 +1619,26 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         const auto got = recv(sock, buf.data(), want, 0);
         if (got > 0) {
             if (R_FAILED(file.Write(offset, buf.data(), got, FsWriteOption_None))) {
-                App::NotifyClear();
-                App::Notify("Upload failed: " + name);
+                g_upload_state.active.store(false);
                 SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
                 return;
             }
             offset += got;
-            s64 pct = (offset * 100) / content_length;
-            if (pct >= last_pct + 10 || pct == 100) {
-                last_pct = pct;
-                App::NotifyClear();
-                App::Notify("Uploading " + name + " (" + std::to_string(pct) + "%)");
-            }
+            g_upload_state.bytes.store(offset);
         } else if (got == 0) {
-            App::NotifyClear();
-            App::Notify("Upload failed: " + name);
+            g_upload_state.active.store(false);
             SendResponse(sock, "400 Bad Request", "text/plain", "Upload ended early");
             return;
         } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
             svcSleepThread(1'000'000);
         } else {
-            App::NotifyClear();
-            App::Notify("Upload failed: " + name);
+            g_upload_state.active.store(false);
             SendResponse(sock, "500 Internal Server Error", "text/plain", "Socket read failed");
             return;
         }
     }
 
-    App::NotifyClear();
-    App::Notify("Uploaded: " + name);
+    g_upload_state.active.store(false);
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
 
@@ -1516,6 +1750,36 @@ void HandleListRecursive(Socket sock, const std::string& query) {
     SendResponse(sock, "200 OK", "application/json", json);
 }
 
+void HandleList(Socket sock, const std::string& query) {
+    const auto raw_path = GetQueryValue(query, "path");
+    const auto path = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
+
+    fs::FsNativeSd fs;
+    fs::Dir dir;
+    std::vector<FsDirectoryEntry> entries;
+    if (R_SUCCEEDED(fs.OpenDirectory(path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
+        dir.ReadAll(entries);
+    }
+
+    std::sort(entries.begin(), entries.end(), [](const auto& lhs, const auto& rhs){
+        if (lhs.type != rhs.type) {
+            return lhs.type == FsDirEntryType_Dir;
+        }
+        return strcasecmp(lhs.name, rhs.name) < 0;
+    });
+
+    std::string json = "{\"path\":\"" + JsonEscape(path) + "\",\"entries\":[";
+    for (size_t i = 0; i < entries.size(); ++i) {
+        if (i > 0) {
+            json += ",";
+        }
+        json += "{\"name\":\"" + JsonEscape(entries[i].name) + "\",\"type\":" + std::to_string(entries[i].type) + ",\"size\":" + std::to_string(entries[i].file_size) + "}";
+    }
+    json += "]}";
+
+    SendResponse(sock, "200 OK", "application/json", json);
+}
+
 void HandleRequest(Socket sock) {
     std::string req;
     if (!ReadHttpRequest(sock, req)) {
@@ -1573,6 +1837,11 @@ void HandleRequest(Socket sock) {
 
     if (path == "/download") {
         SendDownload(sock, GetQueryValue(query, "path"));
+        return;
+    }
+
+    if (path == "/list") {
+        HandleList(sock, query);
         return;
     }
 
@@ -2137,6 +2406,30 @@ void WebShareStop() {
     g_share_entries.clear();
     g_share_folder_root = {};
     g_share_mode = ShareMode::None;
+}
+
+WebUploadState WebGetUploadState() {
+    WebUploadState out;
+    out.active = g_upload_state.active.load();
+    out.bytes = g_upload_state.bytes.load();
+    out.total = g_upload_state.total.load();
+    std::scoped_lock lock{g_upload_state.name_mutex};
+    out.name = g_upload_state.name;
+    return out;
+}
+
+static ui::ProgressBox* g_web_pbox = nullptr;
+
+void WebSetProgressBox(ui::ProgressBox* pbox) {
+    g_web_pbox = pbox;
+}
+
+ui::ProgressBox* WebGetProgressBox() {
+    return g_web_pbox;
+}
+
+bool WebShareIsRunning() {
+    return g_share_running.load();
 }
 
 } // namespace sphaira

@@ -599,5 +599,10 @@
   "Convert titlekey to standard crypto.": "Конвертируйте titlekey в стандартную криптовалюту.",
   "Encrypt key area keys with master key 0.": "Зашифруйте ключи области ключей с помощью главного ключа 0.",
   "Lower the system firmware field in metadata.": "Опустите поле системной прошивки в метаданных.",
-  "Browse, download and install theme packs from themezer.net.": "Просматривайте, загружайте и устанавливайте пакеты тем с сайта themezer.net."
+  "Browse, download and install theme packs from themezer.net.": "Просматривайте, загружайте и устанавливайте пакеты тем с сайта themezer.net.",
+  "Stop": "Остановить",
+  "Stop Server": "Остановить сервер",
+  "Press B to Stop Server": "Нажмите B, чтобы остановить сервер",
+  "Installation completed": "Установка завершена",
+  "Upload completed": "Загрузка завершена"
 }

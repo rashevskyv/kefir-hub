@@ -1561,10 +1561,37 @@ Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, c
 }
 
 Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
+    ConfigOverride dynamic_override = override;
+    if (!dynamic_override.sd_card_install.has_value()) {
+        s64 total_size = 0;
+        bool is_compressed = false;
+        for (const auto& entry : collections) {
+            total_size += entry.size;
+            if (entry.name.ends_with(".ncz")) {
+                is_compressed = true;
+            }
+        }
+        s64 estimated_size = total_size;
+        if (is_compressed) {
+            estimated_size = static_cast<s64>(total_size * 1.6);
+        }
+
+        s64 free_nand = 0;
+        bool install_to_sd = true;
+        fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
+        if (R_SUCCEEDED(fs_nand.GetFreeSpace("/", &free_nand))) {
+            const s64 min_free_nand = 500ULL * 1024ULL * 1024ULL; // 500 MB
+            if (free_nand - estimated_size >= min_free_nand) {
+                install_to_sd = false;
+            }
+        }
+        dynamic_override.sd_card_install = install_to_sd;
+    }
+
     if (source->IsStream()) {
-        return InstallInternalStream(pbox, source, collections, override);
+        return InstallInternalStream(pbox, source, collections, dynamic_override);
     } else {
-        return InstallInternal(pbox, source, collections, override);
+        return InstallInternal(pbox, source, collections, dynamic_override);
     }
 }
 

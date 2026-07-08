@@ -30,6 +30,11 @@ struct ProgressBox final : Widget {
     auto NewTransfer(const std::string& transfer) -> ProgressBox&;
     auto ResetTransferProgress() -> ProgressBox&;
     auto UpdateTransfer(s64 offset, s64 size) -> ProgressBox&;
+
+    auto Mute(bool mute) { m_muted = mute; return *this; }
+    auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
+    auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
+
     // not const in order to avoid copy by using std::swap
     auto SetImage(int image) -> ProgressBox&;
     auto SetImageData(std::vector<u8>& data) -> ProgressBox&;
@@ -107,6 +112,7 @@ private:
     int m_cpuid{};
     int m_image{};
     bool m_own_image{};
+    bool m_muted{false};
 };
 
 // this is a helper function that does many things.

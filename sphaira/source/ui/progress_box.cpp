@@ -80,6 +80,23 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
     if (ShouldExit()) {
         SetPop();
     }
+
+    mutexLock(&m_mutex);
+    const auto size = m_size;
+    mutexUnlock(&m_mutex);
+
+    if (!size && touch->is_clicked) {
+        const float center_x = m_pos.x + m_pos.w / 2.f;
+        const float btn_w = 200.f;
+        const float btn_h = 40.f;
+        const float btn_x = center_x - btn_w / 2.f;
+        const float btn_y = m_pos.y + m_pos.h - 65.f;
+        if (touch->in_range(btn_x, btn_y, btn_w, btn_h)) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            RequestExit();
+            SetPop();
+        }
+    }
 }
 
 auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
@@ -191,7 +208,22 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 30, ThemeEntryID_TEXT_INFO);
     }
 
+    if (!size) {
+        const float btn_w = 200.f;
+        const float btn_h = 40.f;
+        const float btn_x = center_x - btn_w / 2.f;
+        const float btn_y = m_pos.y + m_pos.h - 65.f;
+
+        gfx::drawRect(vg, btn_x, btn_y, btn_w, btn_h, nvgRGBA(239, 68, 68, 255), 6.f);
+
+        nvgFontSize(vg, 18.f);
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgText(vg, center_x, btn_y + 10.f, "Stop"_i18n.c_str(), nullptr);
+    }
+
     nvgRestore(vg);
+    Widget::Draw(vg, theme);
 }
 
 auto ProgressBox::SetActionName(const std::string& action)  -> ProgressBox& {
@@ -203,6 +235,7 @@ auto ProgressBox::SetActionName(const std::string& action)  -> ProgressBox& {
 }
 
 auto ProgressBox::SetTitle(const std::string& title)  -> ProgressBox& {
+    if (m_muted) return *this;
     mutexLock(&m_mutex);
     m_title = title;
     mutexUnlock(&m_mutex);
@@ -211,6 +244,20 @@ auto ProgressBox::SetTitle(const std::string& title)  -> ProgressBox& {
 }
 
 auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
+    if (m_muted) return *this;
+    mutexLock(&m_mutex);
+    m_transfer = transfer;
+    m_size = 0;
+    m_offset = 0;
+    m_last_offset = 0;
+    m_speed = 0;
+    m_timestamp.Update();
+    mutexUnlock(&m_mutex);
+    Yield();
+    return *this;
+}
+
+auto ProgressBox::NewTransferForce(const std::string& transfer)  -> ProgressBox& {
     mutexLock(&m_mutex);
     m_transfer = transfer;
     m_size = 0;
@@ -224,6 +271,7 @@ auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
 }
 
 auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
+    if (m_muted) return *this;
     mutexLock(&m_mutex);
     m_size = 0;
     m_offset = 0;
@@ -236,6 +284,16 @@ auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
 }
 
 auto ProgressBox::UpdateTransfer(s64 offset, s64 size)  -> ProgressBox& {
+    if (m_muted) return *this;
+    mutexLock(&m_mutex);
+    m_size = size;
+    m_offset = offset;
+    mutexUnlock(&m_mutex);
+    Yield();
+    return *this;
+}
+
+auto ProgressBox::UpdateTransferForce(s64 offset, s64 size)  -> ProgressBox& {
     mutexLock(&m_mutex);
     m_size = size;
     m_offset = offset;
@@ -245,6 +303,7 @@ auto ProgressBox::UpdateTransfer(s64 offset, s64 size)  -> ProgressBox& {
 }
 
 auto ProgressBox::SetImage(int image) -> ProgressBox& {
+    if (m_muted) return *this;
     mutexLock(&m_mutex);
     m_image_pending = image;
     m_is_image_pending = true;
@@ -253,6 +312,7 @@ auto ProgressBox::SetImage(int image) -> ProgressBox& {
 }
 
 auto ProgressBox::SetImageData(std::vector<u8>& data) -> ProgressBox& {
+    if (m_muted) return *this;
     mutexLock(&m_mutex);
     std::swap(m_image_data, data);
     mutexUnlock(&m_mutex);
@@ -260,6 +320,7 @@ auto ProgressBox::SetImageData(std::vector<u8>& data) -> ProgressBox& {
 }
 
 auto ProgressBox::SetImageDataConst(std::span<const u8> data) -> ProgressBox& {
+    if (m_muted) return *this;
     mutexLock(&m_mutex);
     m_image_data.resize(data.size());
     std::memcpy(m_image_data.data(), data.data(), m_image_data.size());

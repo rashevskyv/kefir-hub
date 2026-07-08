@@ -167,7 +167,24 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         float time = static_cast<float>(armTicksToNs(armGetSystemTick())) / 1'000'000'000.f;
         float factor = 0.5f + 0.5f * std::sin(time * 15.f);
         NVGcolor battery_color = nvgRGBA(255, static_cast<u8>(128 + 127 * factor), 0, 255);
-        gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, battery_color, "%u\u26A1", pdata.battery_percetange);
+        gfx::drawTextArgs(vg, start_x - 20, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, battery_color, "%u", pdata.battery_percetange);
+        
+        float lb_h = 18.f;
+        float lb_w = lb_h * 0.55f;
+        float lb_x = start_x - 15;
+        float lb_y = start_y - 19;
+        
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, lb_x + lb_w * 0.55f, lb_y);
+        nvgLineTo(vg, lb_x + lb_w * 0.05f, lb_y + lb_h * 0.55f);
+        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.55f);
+        nvgLineTo(vg, lb_x + lb_w * 0.35f, lb_y + lb_h);
+        nvgLineTo(vg, lb_x + lb_w * 0.95f, lb_y + lb_h * 0.45f);
+        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.45f);
+        nvgClosePath(vg);
+        nvgFillColor(vg, battery_color);
+        nvgFill(vg);
+        
         start_x -= 90;
     } else {
         draw(ThemeEntryID_TEXT, 90, "%u\uFE6A", pdata.battery_percetange);
