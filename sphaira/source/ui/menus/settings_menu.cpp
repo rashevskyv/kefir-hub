@@ -1531,6 +1531,18 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(SettingsItem{
+        "Homebrew App Store"_i18n,
+        "Download and update homebrew apps."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
         "DBI"_i18n,
         "DBI installer and translations."_i18n,
         [](){

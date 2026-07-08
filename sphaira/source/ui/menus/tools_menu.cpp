@@ -92,9 +92,6 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
         }},
-        { "App Store"_i18n, "Download and update homebrew apps."_i18n, 0, [](){
-            App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
-        }},
         { "File Browser"_i18n, "Browse and manage SD card files."_i18n, 0, [](){
             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
         }},
@@ -223,12 +220,11 @@ void Menu::LoadIcons() {
     m_items[0].icon_texture = LoadIcon(vg, ICON_KEFIR, sizeof(ICON_KEFIR));
     m_items[1].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
     m_items[2].icon_texture = LoadIcon(vg, ICON_CHEATS, sizeof(ICON_CHEATS));
-    m_items[3].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
-    m_items[4].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
-    m_items[5].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
-    m_items[6].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
+    m_items[3].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
+    m_items[4].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
+    m_items[5].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
+    m_items[6].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
     m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
-    m_items[8].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
 }
 
 void Menu::SetIndex(s64 index) {

@@ -486,12 +486,11 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         version_content += display_content + "\n\n";
     }
 
-    std::string result;
-    if (found_any) {
-        result = version_content;
-    } else {
-        result = BuildChangelogDisplayText(preamble, false);
+    std::string result = BuildChangelogDisplayText(preamble, false);
+    if (!result.empty() && found_any) {
+        result += "\n\n";
     }
+    result += version_content;
 
     return Trim(result);
 }
@@ -1041,23 +1040,21 @@ public:
         m_install_button_rect = Vec4{m_pos.x + (m_pos.w - 220.f) / 2.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
 
         nvgSave(vg);
-        if (!m_unlocked) {
-            // Inactive
-            gfx::drawRect(vg, m_install_button_rect, nvgRGBA(60, 60, 64, 255), 4.f);
-            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
-                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        } else {
-            // Active
-            const auto btn_color = m_button_focused ? nvgRGBA(76, 175, 80, 255) : nvgRGBA(46, 125, 50, 255);
+        if (m_button_focused) {
+            // Focused - Green
+            const auto btn_color = nvgRGBA(46, 125, 50, 255);
             gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
-            if (m_button_focused) {
-                // Draw focus outline around the button
-                gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
-            }
+            gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
             gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
                 m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
                 nvgRGBA(255, 255, 255, 255), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        } else {
+            // Unfocused (always gray, whether unlocked or not)
+            const auto btn_color = nvgRGBA(60, 60, 64, 255);
+            gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
+            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
+                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         }
         nvgRestore(vg);
 
