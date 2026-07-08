@@ -163,7 +163,15 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
             start_x -= spacing + (bounds[2] - bounds[0]); \
         }
 
-    draw(ThemeEntryID_TEXT, 90, "%u\uFE6A", pdata.battery_percetange);
+    if (pdata.charger_type != 0) {
+        float time = static_cast<float>(armTicksToNs(armGetSystemTick())) / 1'000'000'000.f;
+        float factor = 0.5f + 0.5f * std::sin(time * 15.f);
+        NVGcolor battery_color = nvgRGBA(255, static_cast<u8>(128 + 127 * factor), 0, 255);
+        gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, battery_color, "%u\u26A1", pdata.battery_percetange);
+        start_x -= 90;
+    } else {
+        draw(ThemeEntryID_TEXT, 90, "%u\uFE6A", pdata.battery_percetange);
+    }
 
     if (App::Get12HourTimeEnable()) {
         draw(ThemeEntryID_TEXT, 132, "%02u:%02u %s", (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
