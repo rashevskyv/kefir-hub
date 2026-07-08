@@ -108,7 +108,7 @@ read the pointer once into a local and null-check before use.
 **Acceptance criteria.** No non-atomic cross-thread access to the pbox pointer or
 `m_muted`; direct install still drives the progress UI correctly.
 
-### P1-4. Recursive directory scan on a 32 KB server-thread stack
+### P1-4. [RESOLVED] Recursive directory scan on a 32 KB server-thread stack
 **Problem.** `ScanDirectoryRecursive` (web.cpp:1699) recurses once per directory
 level, each frame holding a `fs::Dir` plus a `std::vector<FsDirectoryEntry>`. The
 share thread stack is only `1024 * 32` bytes (web.cpp:1928). A deeply nested tree

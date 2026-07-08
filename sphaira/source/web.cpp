@@ -1733,21 +1733,37 @@ auto JsonEscape(std::string_view in) -> std::string {
     return out;
 }
 
-void ScanDirectoryRecursive(fs::FsNativeSd& fs, const std::string& path, std::vector<std::pair<std::string, s64>>& out_files) {
-    fs::Dir dir;
-    std::vector<FsDirectoryEntry> entries;
-    if (R_SUCCEEDED(fs.OpenDirectory(path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
-        dir.ReadAll(entries);
-        for (const auto& entry : entries) {
-            std::string child = path;
-            if (child.empty() || child.back() != '/') {
-                child += '/';
-            }
-            child += entry.name;
-            if (entry.type == FsDirEntryType_Dir) {
-                ScanDirectoryRecursive(fs, child, out_files);
-            } else {
-                out_files.push_back({child, entry.file_size});
+void ScanDirectoryRecursive(fs::FsNativeSd& fs, const std::string& start_path, std::vector<std::pair<std::string, s64>>& out_files) {
+    struct StackEntry {
+        std::string path;
+        int depth;
+    };
+    std::vector<StackEntry> stack;
+    stack.push_back({start_path, 0});
+
+    while (!stack.empty()) {
+        auto entry = stack.back();
+        stack.pop_back();
+
+        if (entry.depth > 64) {
+            continue;
+        }
+
+        fs::Dir dir;
+        std::vector<FsDirectoryEntry> entries;
+        if (R_SUCCEEDED(fs.OpenDirectory(entry.path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
+            dir.ReadAll(entries);
+            for (const auto& d_entry : entries) {
+                std::string child = entry.path;
+                if (child.empty() || child.back() != '/') {
+                    child += '/';
+                }
+                child += d_entry.name;
+                if (d_entry.type == FsDirEntryType_Dir) {
+                    stack.push_back({child, entry.depth + 1});
+                } else {
+                    out_files.push_back({child, d_entry.file_size});
+                }
             }
         }
     }
@@ -1972,7 +1988,7 @@ auto StartShareServer() -> Result {
         g_share_port = port;
         g_share_running = true;
 
-        Result rc = utils::CreateThread(&g_share_thread, ShareThreadFunc, nullptr, 1024 * 32, PRIO_PREEMPTIVE);
+        Result rc = utils::CreateThread(&g_share_thread, ShareThreadFunc, nullptr, 1024 * 128, PRIO_PREEMPTIVE);
         if (R_FAILED(rc)) {
             g_share_running = false;
             close(g_share_socket);
