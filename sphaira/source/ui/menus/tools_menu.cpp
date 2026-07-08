@@ -16,6 +16,7 @@
 
 #include "web.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/popup_list.hpp"
 
 #include <cstddef>
 
@@ -46,13 +47,7 @@ constexpr const u8 ICON_SETTINGS[]{
     #embed <icons/advanced-options.png>
 };
 
-constexpr const u8 ICON_NETWORK[]{
-    #embed <icons/network.png>
-};
 
-constexpr const u8 ICON_GAME_HUB[]{
-    #embed <icons/game-hub.png>
-};
 
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     int width{};
@@ -122,23 +117,31 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Settings"_i18n, "Open Sphaira application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
-        { "Start Web Server"_i18n, "Start a local web server to upload/download files."_i18n, 0, [](){
-            StartShareServerFromTools(false);
-        }},
-        { "Screenshots"_i18n, "View and manage console screenshots in a browser."_i18n, 0, [](){
-            StartShareServerFromTools(true);
-        }},
     };
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             OnSelect();
+        }}),
+        std::make_pair(Button::X, Action{"Network"_i18n, [this](){
+            PopupList::Items items;
+            items.push_back({ .name = "Web Server"_i18n, .info = "Start a local web server to upload/download files."_i18n });
+            items.push_back({ .name = "Screenshots"_i18n, .info = "View and manage console screenshots in a browser."_i18n });
+            App::Push<PopupList>("Network Server"_i18n, items, [this](auto op_index) {
+                if (op_index) {
+                    if (*op_index == 0) {
+                        StartShareServerFromTools(false);
+                    } else if (*op_index == 1) {
+                        StartShareServerFromTools(true);
+                    }
+                }
+            });
         }})
     );
 
     const Vec2 pad{10.f, 10.f};
     const Vec4 v{75.f, 110.f, 370.f, 155.f};
-    m_list = std::make_unique<List>(3, 11, m_pos, v, pad);
+    m_list = std::make_unique<List>(3, 9, m_pos, v, pad);
     m_list->SetLayout(List::Layout::GRID);
 
     LoadIcons();
@@ -244,8 +247,6 @@ void Menu::LoadIcons() {
     m_items[6].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
     m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
     m_items[8].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
-    m_items[9].icon_texture = LoadIcon(vg, ICON_NETWORK, sizeof(ICON_NETWORK));
-    m_items[10].icon_texture = LoadIcon(vg, ICON_GAME_HUB, sizeof(ICON_GAME_HUB));
 }
 
 void Menu::SetIndex(s64 index) {

@@ -1050,9 +1050,9 @@ let metaStr='folder';if(entry.type!==0){
 if(entry.size>=1024*1024)metaStr=(entry.size/(1024*1024)).toFixed(2)+' MiB';
 else metaStr=(entry.size/1024).toFixed(2)+' KiB';
 }
-el.innerHTML=\'<input type="checkbox" class="file-checkbox" data-path="\'+encChild+\'" onclick="event.stopPropagation(); updateSelectCount();">\';
-el.innerHTML+=\'<div class="thumbnail-box">\'+thumb+\'</div>\';
-el.innerHTML+=\'<div class="info"><span class="name">\'+nameEsc+\'</span><span class="meta">\'+metaStr+\'</span><button class="delete-btn" onclick="deleteFile(event,\\'\'+encChild+\\'\')">Delete</button></div>\';
+el.innerHTML='<input type="checkbox" class="file-checkbox" data-path="'+encChild+'" onclick="event.stopPropagation(); updateSelectCount();">';
+el.innerHTML+='<div class="thumbnail-box">'+thumb+'</div>';
+el.innerHTML+='<div class="info"><span class="name">'+nameEsc+'</span><span class="meta">'+metaStr+'</span><button class="delete-btn" onclick="deleteFile(event,\''+encChild+'\')">Delete</button></div>';
 container.appendChild(el);
 }}
 document.addEventListener('click',e=>{
@@ -1878,7 +1878,7 @@ void HandleRequest(Socket sock) {
         return;
     }
 
-    if (path == "/screenshots" || path == "/screenshots/") {
+    if (path == "/album" || path == "/album/") {
         SendResponse(sock, "200 OK", "text/html", BuildScreenshotGalleryPage());
         return;
     }
@@ -2417,7 +2417,7 @@ auto WebShareScreenshots(WebShareResult& out) -> Result {
     }
 
     char url[128]{};
-    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/screenshots",
+    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/album",
         ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
 
     out.url = url;
