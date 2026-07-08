@@ -636,7 +636,12 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += ".queue-item-install-label{display:flex;align-items:center;gap:4px;font-size:11px;color:#cbd5e1;cursor:pointer}";
     body += ".queue-item-install-label input{display:inline-block;margin:0;cursor:pointer}";
 
-    body += "</style></head><body><div id=\"queue-panel\" class=\"queue-panel\"><div class=\"queue-header\"><h2>Transfer Queue</h2><button class=\"queue-close\" onclick=\"toggleQueuePanel()\">&times;</button></div><div id=\"queue-list\" class=\"queue-list\"></div><div class=\"queue-footer\"><button id=\"start-transfers-btn\" onclick=\"startTransfers()\">Start transfers</button><button id=\"clear-queue-btn\" onclick=\"clearCompletedQueue()\">Clear completed</button></div></div><header><h1>Sphaira Files</h1><div class=\"path\">";
+    body += "</style></head><body>"
+            "<div id=\"transfer-overlay\" style=\"display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,18,0.7);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:90;align-items:center;justify-content:center;flex-direction:column;gap:16px;box-sizing:border-box;\">"
+            "<div style=\"font-size:24px;font-weight:600;color:#38bdf8;\">Transfer in Progress</div>"
+            "<div style=\"color:#94a3b8;font-size:14px;text-align:center;max-width:400px;padding:0 20px;line-height:1.5;\">Please wait while the console is processing file transfers or game installations. You can monitor the progress in the Queue panel on the right.</div>"
+            "</div>"
+            "<div id=\"queue-panel\" class=\"queue-panel\"><div class=\"queue-header\"><h2>Transfer Queue</h2><button class=\"queue-close\" onclick=\"toggleQueuePanel()\">&times;</button></div><div id=\"queue-list\" class=\"queue-list\"></div><div class=\"queue-footer\"><button id=\"start-transfers-btn\" onclick=\"startTransfers()\">Start transfers</button><button id=\"clear-queue-btn\" onclick=\"clearCompletedQueue()\">Clear completed</button></div></div><header><h1>Sphaira Files</h1><div class=\"path\">";
     body += HtmlEscape(abs_path);
     body += "</div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
@@ -774,8 +779,8 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "if(i.status==='uploading'&&i.xhr){i.xhr.abort();}else if(i.status==='downloading'&&i.controller){i.controller.abort();}";
     body += "i.status='cancelled';i.progress=0;i.speed='';renderQueue();updateQueueCount();}";
     body += "function clearCompletedQueue(){transferQueue=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status));renderQueue();updateQueueCount();}";
-    body += "async function startTransfers(){if(isTransferring)return;isTransferring=true;const btn=document.getElementById('start-transfers-btn');if(btn)btn.disabled=true;";
-    body += "try{while(true){const next=transferQueue.find(i=>i.status==='pending');if(!next)break;if(next.type==='upload')await uploadFileItem(next);else await downloadFileItem(next);updateQueueCount();renderQueue();}}finally{isTransferring=false;if(btn)btn.disabled=false;navigateTo(currentPath,false);}}";
+    body += "async function startTransfers(){if(isTransferring)return;isTransferring=true;const btn=document.getElementById('start-transfers-btn');if(btn)btn.disabled=true;const ov=document.getElementById('transfer-overlay');if(ov)ov.style.display='flex';";
+    body += "try{while(true){const next=transferQueue.find(i=>i.status==='pending');if(!next)break;if(next.type==='upload')await uploadFileItem(next);else await downloadFileItem(next);updateQueueCount();renderQueue();}}finally{isTransferring=false;if(btn)btn.disabled=false;if(ov)ov.style.display='none';navigateTo(currentPath,false);}}";
     body += "function uploadFileItem(item){return new Promise(res=>{item.status='uploading';renderQueue();const xhr=new XMLHttpRequest();item.xhr=xhr;let url='/upload?path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name);if(item.install){url+='&install=1';item.status='installing';}xhr.open('PUT',url,true);let startTime=Date.now();let lastTime=startTime;let lastLoaded=0;";
     body += "xhr.upload.addEventListener('progress',e=>{if(e.lengthComputable){const now=Date.now();item.progress=(e.loaded/e.total)*100;const diff=(now-lastTime)/1000;if(diff>=0.5){const speed=(e.loaded-lastLoaded)/diff;item.speed=formatBytes(speed)+'/s';lastTime=now;lastLoaded=e.loaded;}if(item.install&&item.progress>=99){item.status='installing';}renderQueue();}});";
     body += "xhr.onload=()=>{if(xhr.status===200){item.status='completed';item.progress=100;item.speed='';}else{item.status='failed';item.speed='Error: '+xhr.statusText;}res();};";

@@ -103,10 +103,22 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     mutexLock(&m_mutex);
     std::vector<u8> image_data{};
     std::swap(m_image_data, image_data);
-    if (m_timestamp.GetSeconds()) {
+    const double elapsed = m_timestamp.GetSecondsD();
+    if (elapsed >= 0.5) {
         m_timestamp.Update();
-        m_speed = m_offset - m_last_offset;
+        const s64 bytes_sent = m_offset - m_last_offset;
         m_last_offset = m_offset;
+
+        double current_speed = static_cast<double>(bytes_sent) / elapsed;
+        if (current_speed < 0) {
+            current_speed = 0;
+        }
+
+        if (m_speed == 0) {
+            m_speed = static_cast<s64>(current_speed);
+        } else {
+            m_speed = static_cast<s64>(0.25 * current_speed + 0.75 * static_cast<double>(m_speed));
+        }
     }
 
     const auto action = m_action;
