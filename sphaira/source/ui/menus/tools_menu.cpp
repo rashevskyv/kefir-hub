@@ -172,7 +172,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const Vec4 icon_box{v.x + 20.f, v.y + 20.f, 115.f, 115.f};
-        gfx::drawRect(vg, icon_box, nvgRGBA(10, 10, 12, 255), 5.f);
+        gfx::drawRect(vg, icon_box, nvgRGBA(17, 17, 17, 255), 5.f);
         if (item.icon_texture) {
             gfx::drawImage(vg, icon_box, item.icon_texture, 5.f);
         } else {
