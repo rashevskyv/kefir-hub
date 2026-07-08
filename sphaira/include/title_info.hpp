@@ -79,4 +79,8 @@ void utilsReplaceIllegalCharacters(char *str, bool ascii_only);
 // /atmosphere/contents/xxx
 auto GetContentsPath(u64 app_id) -> fs::FsPath;
 
+inline bool IsPlaceholderName(const char* name) {
+    return name && (__builtin_strcmp(name, "Corrupted") == 0);
+}
+
 } // namespace sphaira::title

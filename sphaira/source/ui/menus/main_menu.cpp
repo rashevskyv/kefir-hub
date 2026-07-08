@@ -186,7 +186,9 @@ MainMenu::MainMenu() {
     AddOnLRPress();
 
     for (auto [button, action] : m_actions) {
-        m_current_menu->SetAction(button, action);
+        if (button != Button::START) {
+            m_current_menu->SetAction(button, action);
+        }
     }
 }
 
@@ -223,7 +225,9 @@ void MainMenu::SwitchTo(MenuBase* menu) {
     m_current_menu->OnFocusGained();
 
     for (auto [button, action] : m_actions) {
-        m_current_menu->SetAction(button, action);
+        if (button != Button::START) {
+            m_current_menu->SetAction(button, action);
+        }
     }
 }
 

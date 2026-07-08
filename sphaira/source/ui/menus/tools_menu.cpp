@@ -67,21 +67,16 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     return texture;
 }
 
-void StartShareServerFromTools(bool screenshots) {
+void StartShareServerFromTools() {
     WebShareResult result;
-    Result rc;
-    if (screenshots) {
-        rc = WebShareScreenshots(result);
-    } else {
-        rc = WebShareFolder("/", result);
-    }
+    Result rc = WebShareFolder("/", result);
 
     if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, screenshots ? "Failed to start screenshot server"_i18n : "Failed to start web server"_i18n);
+        App::PushErrorBox(rc, "Failed to start web server"_i18n);
         return;
     }
 
-    WebPushServerProgressBox(result.url, result.qr_image, screenshots ? "Screenshot Gallery"_i18n : "Web Sharing Server"_i18n);
+    WebPushServerProgressBox(result.url, result.qr_image, "Web Sharing Server"_i18n);
 }
 
 } // namespace
@@ -122,7 +117,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
             OnSelect();
         }}),
         std::make_pair(Button::START, Action{"Web Server"_i18n, [this](){
-            StartShareServerFromTools(false);
+            StartShareServerFromTools();
         }})
     );
 

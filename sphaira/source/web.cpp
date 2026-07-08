@@ -419,8 +419,7 @@ const links=document.querySelectorAll('a');
 for(const link of links){
 const href=link.getAttribute('href');
 if(href&&href.includes('/view?path=')){
-let name='';const span=link.querySelector('span:nth-child(2)')||link.querySelector('span');
-if(span){name=span.textContent;}
+let name='';const span=link.querySelector('span:nth-child(2)')||link.querySelector('span');if(span){name=span.textContent;}else{const img=link.querySelector('img');if(img){name=img.getAttribute('alt')||'';}}
 const idx=imageList.length;imageList.push({href:href,name:name});
 link.addEventListener('click',function(e){
 e.preventDefault();openLightbox(idx);
@@ -455,6 +454,22 @@ initLightbox();
 
 void AppendLightbox(std::string& body) {
     body += LIGHTBOX_CONTENT;
+}
+
+constexpr std::string_view CONFIRM_MODAL_HTML = R"HTML(
+<div id="confirm-modal" class="modal" style="display:none;"><div class="modal-content"><div class="modal-text" id="confirm-text">Are you sure?</div><div class="modal-buttons"><button id="confirm-yes-btn" class="modal-btn yes-btn"><span class="key-badge">+</span> Yes</button><button id="confirm-no-btn" class="modal-btn no-btn"><span class="key-badge">B</span> No</button></div></div></div>
+)HTML";
+
+constexpr std::string_view CONFIRM_MODAL_JS = R"HTML(
+let confirmPromiseResolve=null;
+function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}
+function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}
+document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(!m||m.style.display==='none')return;if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}});
+document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});
+)HTML";
+
+void AppendConfirmModal(std::string& body) {
+    body += CONFIRM_MODAL_HTML;
 }
 
 constexpr std::string_view FOLDER_PAGE_HEADER = R"HTML(
@@ -564,13 +579,6 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
 <div style="font-size:24px;font-weight:600;color:#38bdf8;">Transfer in Progress</div>
 <div style="color:#94a3b8;font-size:14px;text-align:center;max-width:400px;padding:0 20px;line-height:1.5;">Please wait while the console is processing file transfers or game installations. You can monitor the progress in the Queue panel on the right.</div>
 </div>
-<div id="confirm-modal" class="modal" style="display:none;">
-<div class="modal-content">
-<div class="modal-text" id="confirm-text">Are you sure?</div>
-<div class="modal-buttons">
-<button id="confirm-yes-btn" class="modal-btn yes-btn"><span class="key-badge">+</span> Yes</button>
-<button id="confirm-no-btn" class="modal-btn no-btn"><span class="key-badge">B</span> No</button>
-</div></div></div>
 <div id="queue-panel" class="queue-panel"><div class="queue-header"><h2>Transfer Queue</h2><button class="queue-close" onclick="toggleQueuePanel()">&times;</button></div><div id="queue-list" class="queue-list"></div><div class="queue-footer"><button id="start-transfers-btn" onclick="startTransfers()">Start transfers</button><button id="clear-queue-btn" onclick="clearCompletedQueue()">Clear completed</button></div></div>
 <header>
 )HTML";
@@ -600,6 +608,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
+    AppendConfirmModal(body);
     body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
@@ -713,11 +722,6 @@ auto BuildFolderPage(std::string path_str) -> std::string {
 
 constexpr std::string_view FOLDER_PAGE_JS = R"HTML(
 let transferQueue=[];let isTransferring=false;
-let confirmPromiseResolve=null;
-function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}
-function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}
-document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(!m||m.style.display==='none')return;if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}});
-document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});
 function toggleQueuePanel(){const p=document.getElementById('queue-panel');if(p)p.classList.toggle('open');}
 function addFilesToUploadQueue(files){if(!files||!files.length)return;
 for(const f of files){const isGame=/\.(nsp|nsz|xci|xcz)$/i.test(f.name);transferQueue.push({id:'up_'+Math.random().toString(36).substr(2,9),type:'upload',file:f,name:f.name,size:f.size,status:'pending',progress:0,speed:'',install:isGame,xhr:null,uploadPath:currentPath});}
@@ -853,6 +857,7 @@ if(bestMatch)focusItem(bestMatch);
 document.addEventListener('mouseover',function(e){const item=e.target.closest('.item');if(item)focusItem(item);});
 document.addEventListener('dragstart',function(e){e.preventDefault();});
 document.addEventListener('keydown',function(e){
+const m=document.getElementById('confirm-modal');if(m&&m.style.display==='flex')return;
 if(e.target.tagName==='INPUT'&&e.target.type!=='checkbox')return;
 const items=Array.from(document.querySelectorAll('.item'));if(!items.length)return;
 const current=getFocusedItem();if(!current){focusItem(items[0]);return;}
@@ -1099,6 +1104,7 @@ const url=new URL(window.location.href);const path=url.searchParams.get('path')|
     body += "<script>let currentPath=decodeURIComponent('";
     body += encoded_path;
     body += "');";
+    body += CONFIRM_MODAL_JS;
     body += FOLDER_PAGE_JS;
 
     AppendLightbox(body);
@@ -1672,6 +1678,75 @@ struct ScreenshotEntry {
     bool is_video{};
 };
 
+bool TryParseScreenshotEntry(const FsDirectoryEntry& d_entry, const std::string& full_path, ScreenshotEntry& se) {
+    std::string ext = d_entry.name;
+    if (const auto dot = ext.find_last_of('.'); dot != std::string::npos) {
+        ext = ext.substr(dot + 1);
+    }
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+    if (ext != "jpg" && ext != "png" && ext != "mp4" && ext != "jpeg") {
+        return false;
+    }
+
+    se.path = full_path;
+    se.filename = d_entry.name;
+    se.file_size = d_entry.file_size;
+    se.is_video = (ext == "mp4");
+
+    std::string stem = d_entry.name;
+    if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
+        stem = stem.substr(0, dot);
+    }
+
+    bool parsed = false;
+    if (stem.size() >= 33 && stem[16] == '-') {
+        bool all_digits = true;
+        for (int i = 0; i < 16; i++) {
+            if (!std::isdigit(static_cast<unsigned char>(stem[i]))) {
+                all_digits = false;
+                break;
+            }
+        }
+        if (all_digits) {
+            se.raw_timestamp = stem.substr(0, 16);
+            se.timestamp = stem.substr(0, 4) + "-" + stem.substr(4, 2) + "-" + stem.substr(6, 2) + " " +
+                           stem.substr(8, 2) + ":" + stem.substr(10, 2) + ":" + stem.substr(12, 2);
+
+            std::string title_id_hex = stem.substr(17, 16);
+            char* endptr = nullptr;
+            u64 title_id = std::strtoull(title_id_hex.c_str(), &endptr, 16);
+            if (endptr != nullptr && *endptr == '\0') {
+                if (auto info = title::Get(title_id)) {
+                    if (title::IsPlaceholderName(info->lang.name)) {
+                        se.game_name = "Title: " + title_id_hex;
+                    } else {
+                        se.game_name = info->lang.name;
+                    }
+                } else {
+                    se.game_name = "Title: " + title_id_hex;
+                }
+            } else {
+                se.game_name = "Unknown Game";
+            }
+            parsed = true;
+        }
+    }
+
+    if (!parsed) {
+        se.raw_timestamp = "";
+        se.timestamp = "Unknown Date";
+        se.game_name = "Unknown Game";
+    }
+
+    return true;
+}
+
+bool CompareScreenshotEntries(const ScreenshotEntry& lhs, const ScreenshotEntry& rhs) {
+    if (lhs.raw_timestamp.empty() && !rhs.raw_timestamp.empty()) return false;
+    if (!lhs.raw_timestamp.empty() && rhs.raw_timestamp.empty()) return true;
+    return lhs.raw_timestamp > rhs.raw_timestamp;
+}
+
 void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
     fs::FsNativeSd fs;
     if (!fs.DirExists("/Nintendo/Album")) {
@@ -1707,63 +1782,8 @@ void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
                 if (d_entry.type == FsDirEntryType_Dir) {
                     stack.push_back({child, entry.depth + 1});
                 } else {
-                    std::string ext = child;
-                    if (const auto dot = ext.find_last_of('.'); dot != std::string::npos) {
-                        ext = ext.substr(dot + 1);
-                    }
-                    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-                    if (ext == "jpg" || ext == "png" || ext == "mp4" || ext == "jpeg") {
-                        ScreenshotEntry se;
-                        se.path = child;
-                        se.filename = d_entry.name;
-                        se.file_size = d_entry.file_size;
-                        se.is_video = (ext == "mp4");
-
-                        std::string stem = d_entry.name;
-                        if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
-                            stem = stem.substr(0, dot);
-                        }
-
-                        bool parsed = false;
-                        if (stem.size() >= 33 && stem[16] == '-') {
-                            bool all_digits = true;
-                            for (int i = 0; i < 16; i++) {
-                                if (!std::isdigit(static_cast<unsigned char>(stem[i]))) {
-                                    all_digits = false;
-                                    break;
-                                }
-                            }
-                            if (all_digits) {
-                                se.raw_timestamp = stem.substr(0, 16);
-                                se.timestamp = stem.substr(0, 4) + "-" + stem.substr(4, 2) + "-" + stem.substr(6, 2) + " " +
-                                               stem.substr(8, 2) + ":" + stem.substr(10, 2) + ":" + stem.substr(12, 2);
-
-                                std::string title_id_hex = stem.substr(17, 16);
-                                char* endptr = nullptr;
-                                u64 title_id = std::strtoull(title_id_hex.c_str(), &endptr, 16);
-                                if (endptr != nullptr && *endptr == '\0') {
-                                    if (auto info = title::Get(title_id)) {
-                                        if (std::strcmp(info->lang.name, "Corrupted") == 0) {
-                                            se.game_name = "Title: " + title_id_hex;
-                                        } else {
-                                            se.game_name = info->lang.name;
-                                        }
-                                    } else {
-                                        se.game_name = "Title: " + title_id_hex;
-                                    }
-                                } else {
-                                    se.game_name = "Unknown Game";
-                                }
-                                parsed = true;
-                            }
-                        }
-
-                        if (!parsed) {
-                            se.raw_timestamp = "";
-                            se.timestamp = "Unknown Date";
-                            se.game_name = "Unknown Game";
-                        }
-
+                    ScreenshotEntry se;
+                    if (TryParseScreenshotEntry(d_entry, child, se)) {
                         out_entries.push_back(se);
                     }
                 }
@@ -1771,12 +1791,7 @@ void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
         }
     }
 
-    std::sort(out_entries.begin(), out_entries.end(), [](const ScreenshotEntry& lhs, const ScreenshotEntry& rhs) {
-        if (lhs.raw_timestamp.empty() && !rhs.raw_timestamp.empty()) return false;
-        if (!lhs.raw_timestamp.empty() && rhs.raw_timestamp.empty()) return true;
-        return lhs.raw_timestamp > rhs.raw_timestamp;
-    });
-
+    std::sort(out_entries.begin(), out_entries.end(), CompareScreenshotEntries);
 }
 
 bool IsValidAlbumPath(const std::string& path) {
@@ -1799,7 +1814,16 @@ void ScanFolders(const std::string& parent_path, std::vector<std::string>& out_f
         dir.ReadAll(entries);
         for (const auto& entry : entries) {
             if (entry.type == FsDirEntryType_Dir) {
-                out_folders.push_back(entry.name);
+                bool all_digits = true;
+                for (size_t i = 0; entry.name[i] != '\0'; ++i) {
+                    if (!std::isdigit(static_cast<unsigned char>(entry.name[i]))) {
+                        all_digits = false;
+                        break;
+                    }
+                }
+                if (all_digits) {
+                    out_folders.push_back(entry.name);
+                }
             }
         }
     }
@@ -1819,73 +1843,14 @@ void ScanFolderFiles(const std::string& folder_path, std::vector<ScreenshotEntry
             }
             child += d_entry.name;
 
-            std::string ext = child;
-            if (const auto dot = ext.find_last_of('.'); dot != std::string::npos) {
-                ext = ext.substr(dot + 1);
-            }
-            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (ext == "jpg" || ext == "png" || ext == "mp4" || ext == "jpeg") {
-                ScreenshotEntry se;
-                se.path = child;
-                se.filename = d_entry.name;
-                se.file_size = d_entry.file_size;
-                se.is_video = (ext == "mp4");
-
-                std::string stem = d_entry.name;
-                if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
-                    stem = stem.substr(0, dot);
-                }
-
-                bool parsed = false;
-                if (stem.size() >= 33 && stem[16] == '-') {
-                    bool all_digits = true;
-                    for (int i = 0; i < 16; i++) {
-                        if (!std::isdigit(static_cast<unsigned char>(stem[i]))) {
-                            all_digits = false;
-                            break;
-                        }
-                    }
-                    if (all_digits) {
-                        se.raw_timestamp = stem.substr(0, 16);
-                        se.timestamp = stem.substr(0, 4) + "-" + stem.substr(4, 2) + "-" + stem.substr(6, 2) + " " +
-                                       stem.substr(8, 2) + ":" + stem.substr(10, 2) + ":" + stem.substr(12, 2);
-
-                        std::string title_id_hex = stem.substr(17, 16);
-                        char* endptr = nullptr;
-                        u64 title_id = std::strtoull(title_id_hex.c_str(), &endptr, 16);
-                        if (endptr != nullptr && *endptr == '\0') {
-                            if (auto info = title::Get(title_id)) {
-                                if (std::strcmp(info->lang.name, "Corrupted") == 0) {
-                                    se.game_name = "Title: " + title_id_hex;
-                                } else {
-                                    se.game_name = info->lang.name;
-                                }
-                            } else {
-                                se.game_name = "Title: " + title_id_hex;
-                            }
-                        } else {
-                            se.game_name = "Unknown Game";
-                        }
-                        parsed = true;
-                    }
-                }
-
-                if (!parsed) {
-                    se.raw_timestamp = "";
-                    se.timestamp = "Unknown Date";
-                    se.game_name = "Unknown Game";
-                }
-
+            ScreenshotEntry se;
+            if (TryParseScreenshotEntry(d_entry, child, se)) {
                 out_entries.push_back(se);
             }
         }
     }
 
-    std::sort(out_entries.begin(), out_entries.end(), [](const ScreenshotEntry& lhs, const ScreenshotEntry& rhs) {
-        if (lhs.raw_timestamp.empty() && !rhs.raw_timestamp.empty()) return false;
-        if (!lhs.raw_timestamp.empty() && rhs.raw_timestamp.empty()) return true;
-        return lhs.raw_timestamp > rhs.raw_timestamp;
-    });
+    std::sort(out_entries.begin(), out_entries.end(), CompareScreenshotEntries);
 }
 
 auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
@@ -1953,9 +1918,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "  .folder-icon{width:32px;height:32px;margin-bottom:6px}";
     body += "  .folder-name{font-size:11px}";
     body += "}";
-    body += "</style></head><body><header><div class=\"header-top\"><h1>Sphaira Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div>";
-    body += "<div class=\"crumbs\"><a href=\"/files?path=/\">SD Card File Browser</a></div>";
-    body += "</header>";
+    body += "</style></head><body><header><div class=\"header-top\"><h1>Sphaira Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div></header>";
 
     body += "<div class=\"tabs\">";
     body += "<a href=\"/album\" class=\"tab" + std::string(!browse_mode ? " active" : "") + "\">All Screenshots</a>";
@@ -2091,10 +2054,11 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     }
 
     body += "<script>";
-    body += "let confirmPromiseResolve=null;";
-    body += "function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}";
-    body += "function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}";
-    body += "document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(m&&m.style.display==='flex'){if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}}else if(e.key==='Backspace'){";
+    body += CONFIRM_MODAL_JS;
+    body += "document.addEventListener('keydown',function(e){";
+    body += "const m=document.getElementById('confirm-modal');";
+    body += "if(m&&m.style.display==='flex') return;";
+    body += "if(e.key==='Backspace'){";
     body += "e.preventDefault();";
     body += "const urlParams=new URLSearchParams(window.location.search);";
     body += "const path=urlParams.get('path');";
@@ -2106,7 +2070,6 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "}";
     body += "}";
     body += "});";
-    body += "document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});";
     body += "async function deleteItem(e,path){";
     body += "e.preventDefault();e.stopPropagation();";
     body += "if(!await showConfirmDialog('Delete '+decodeURIComponent(path.split('/').pop())+'?')) return;";
@@ -2115,13 +2078,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "}";
     body += "</script>";
 
-    body += "<div id=\"confirm-modal\" class=\"modal\" style=\"display:none;\">";
-    body += "<div class=\"modal-content\">";
-    body += "<div class=\"modal-text\" id=\"confirm-text\">Are you sure?</div>";
-    body += "<div class=\"modal-buttons\">";
-    body += "<button id=\"confirm-yes-btn\" class=\"modal-btn yes-btn\"><span class=\"key-badge\">+</span> Yes</button>";
-    body += "<button id=\"confirm-no-btn\" class=\"modal-btn no-btn\"><span class=\"key-badge\">B</span> No</button>";
-    body += "</div></div></div>";
+    AppendConfirmModal(body);
 
     AppendLightbox(body);
 
@@ -2692,38 +2649,12 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
         R_THROW(rc);
     }
 
-    char url[128]{};
-    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
-        ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
-
-    out.url = url;
-    out.qr_image = CreateQrImage(out.url);
-
-    R_SUCCEED();
-}
-
-auto WebShareScreenshots(WebShareResult& out) -> Result {
-    u32 ip{};
-    R_TRY(nifmGetCurrentIpAddress(&ip));
-    R_UNLESS(ip != 0, Result_FsNotActive);
-
-    {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_folder_root = "/";
-    }
-
-    if (const auto rc = StartShareServer(); R_FAILED(rc)) {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_folder_root = {};
-        R_THROW(rc);
-    }
-
     if (!g_title_initialized.exchange(true)) {
         title::Init();
     }
 
     char url[128]{};
-    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/album",
+    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
         ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
 
     out.url = url;
