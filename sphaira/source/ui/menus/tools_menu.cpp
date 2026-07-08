@@ -23,16 +23,16 @@
 namespace sphaira::ui::menu::tools {
 namespace {
 
-constexpr const u8 ICON_KEFIR[]{
-    #embed <icons/update-hats.png>
+constexpr const u8 ICON_UPDATER[]{
+    #embed <icons/updater.png>
+};
+
+constexpr const u8 ICON_KEFIR_SETTINGS[]{
+    #embed <icons/kefir-settings.png>
 };
 
 constexpr const u8 ICON_CHEATS[]{
     #embed <icons/cheats.png>
-};
-
-constexpr const u8 ICON_APPSTORE[]{
-    #embed <icons/app-shop.png>
 };
 
 constexpr const u8 ICON_FILE_BROWSER[]{
@@ -40,11 +40,19 @@ constexpr const u8 ICON_FILE_BROWSER[]{
 };
 
 constexpr const u8 ICON_SAVES[]{
-    #embed <icons/default.png>
+    #embed <icons/saves.png>
+};
+
+constexpr const u8 ICON_SOFTWARE[]{
+    #embed <icons/software.png>
+};
+
+constexpr const u8 ICON_THEMES[]{
+    #embed <icons/themes.png>
 };
 
 constexpr const u8 ICON_SETTINGS[]{
-    #embed <icons/advanced-options.png>
+    #embed <icons/settings.png>
 };
 
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
@@ -164,6 +172,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const Vec4 icon_box{v.x + 20.f, v.y + 20.f, 115.f, 115.f};
+        gfx::drawRect(vg, icon_box, nvgRGBA(10, 10, 12, 255), 5.f);
         if (item.icon_texture) {
             gfx::drawImage(vg, icon_box, item.icon_texture, 5.f);
         } else {
@@ -217,13 +226,13 @@ void Menu::LoadIcons() {
         return;
     }
 
-    m_items[0].icon_texture = LoadIcon(vg, ICON_KEFIR, sizeof(ICON_KEFIR));
-    m_items[1].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[0].icon_texture = LoadIcon(vg, ICON_UPDATER, sizeof(ICON_UPDATER));
+    m_items[1].icon_texture = LoadIcon(vg, ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS));
     m_items[2].icon_texture = LoadIcon(vg, ICON_CHEATS, sizeof(ICON_CHEATS));
     m_items[3].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
     m_items[4].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
-    m_items[5].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
-    m_items[6].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[5].icon_texture = LoadIcon(vg, ICON_SOFTWARE, sizeof(ICON_SOFTWARE));
+    m_items[6].icon_texture = LoadIcon(vg, ICON_THEMES, sizeof(ICON_THEMES));
     m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
 }
 
