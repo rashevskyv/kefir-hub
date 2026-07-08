@@ -1202,14 +1202,14 @@ void Menu::DisplayOptions() {
             m_sort.Set(index_out);
             InvalidateAllPages();
         }
-    }, m_sort.Get());
+    }, m_sort.Get(), "Select how themes are sorted in the list."_i18n);
 
     options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
         if (m_order.Get() != index_out) {
             m_order.Set(index_out);
             InvalidateAllPages();
         }
-    }, m_order.Get());
+    }, m_order.Get(), "Sort themes in ascending or descending order."_i18n);
 
     options->Add<SidebarEntryCallback>("Page"_i18n, [this](){
         s64 out;
@@ -1222,7 +1222,7 @@ void Menu::DisplayOptions() {
                 App::Notify("Bad Page"_i18n);
             }
         }
-    });
+    }, "Jump to a specific page number in the theme list."_i18n);
 
     options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
         std::string out;
@@ -1231,13 +1231,13 @@ void Menu::DisplayOptions() {
             // PackListDownload();
             InvalidateAllPages();
         }
-    });
+    }, "Search for themes by name or keyword."_i18n);
 
     if (HasNro()) {
         options->Add<SidebarEntryCallback>("Launch NXthemes_Installer.nro"_i18n, [](){
             const auto rc = nro_launch(GetNroPath());
             App::PushErrorBox(rc, "Failed to launch NXthemes_Installer.nro"_i18n);
-        });
+        }, "Open the NXthemes Installer to apply downloaded themes."_i18n);
     }
 }
 

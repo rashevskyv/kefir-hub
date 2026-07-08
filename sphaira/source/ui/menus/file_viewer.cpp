@@ -326,17 +326,17 @@ void Menu::DisplayImageOptions() {
     options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
         App::PopToMenu();
         DeleteImages();
-    });
+    }, "Permanently delete the selected image(s) from the SD card."_i18n);
 
     options->Add<SidebarEntryCallback>("Compress to zip"_i18n, [this](){
         App::PopToMenu();
         ZipImages("");
-    });
+    }, "Compress the selected image(s) into a zip archive."_i18n);
 
     options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
         App::PopToMenu();
         CreateSwitchTheme();
-    });
+    }, "Use the selected image to create a custom Switch theme."_i18n);
 
     App::Push(std::move(options));
 }

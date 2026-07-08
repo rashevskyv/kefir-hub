@@ -4342,7 +4342,7 @@ void CheatGameSelectMenu::DisplayOptions() {
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
         m_layout.Set(index_out + 1);
         OnLayoutChange();
-    }, current_layout - 1);
+    }, current_layout - 1, "Choose how the cheat game list is displayed on screen."_i18n);
 }
 
 void CheatGameSelectMenu::FreeGames() {

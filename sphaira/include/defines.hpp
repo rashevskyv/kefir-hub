@@ -226,6 +226,7 @@ enum SvcError {
 
 enum FsError {
     FsError_PathNotFound = 0x202,
+    FsError_PathNotFoundFsDev = 0x1002,
     FsError_PathAlreadyExists = 0x402,
     FsError_TargetLocked = 0xE02,
     FsError_UsableSpaceNotEnoughMmcCalibration = 0x4602,

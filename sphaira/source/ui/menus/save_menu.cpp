@@ -571,7 +571,7 @@ void Menu::DisplayAccountOptions() {
                 m_account_enabled[m_account_index] = true;
             }
             MarkFiltersChanged();
-        });
+        }, "Show saves from all user accounts."_i18n);
 
     for (size_t i = 0; i < m_accounts.size(); i++) {
         auto* entry = options->Add<SidebarEntryCheckbox>(
@@ -588,7 +588,7 @@ void Menu::DisplayAccountOptions() {
                     m_account_enabled[i] = true;
                 }
                 MarkFiltersChanged();
-            });
+            }, "Filter saves by this user account."_i18n);
 
         entry->Depends(
             [this](){ return !m_all_accounts; },
@@ -645,7 +645,7 @@ void Menu::DisplayDataTypeOptions() {
                 }
 
                 MarkFiltersChanged();
-            });
+            }, "Show or hide saves of this data type."_i18n);
 
         if (type != FsSaveDataType_System) {
             entry->Depends(
@@ -698,25 +698,25 @@ void Menu::DisplaySaveOptions() {
         const auto new_layout = layout_map_local[std::clamp<s64>(index_out, 0, 3)];
         m_layout.Set(new_layout);
         OnLayoutChange();
-    }, cur_idx);
+    }, cur_idx, "Choose how saves are displayed on screen."_i18n);
 
     options->Add<SidebarEntryArray>("Sort"_i18n, SidebarEntryArray::Items{"Updated"_i18n}, [this](s64& index_out){
         m_sort.Set(index_out);
         SortAndFindLastFile(false);
-    }, m_sort.Get());
+    }, m_sort.Get(), "Select which field to sort saves by."_i18n);
 
     options->Add<SidebarEntryArray>("Order"_i18n, SidebarEntryArray::Items{"Descending"_i18n, "Ascending"_i18n}, [this](s64& index_out){
         m_order.Set(index_out);
         SortAndFindLastFile(false);
-    }, m_order.Get());
+    }, m_order.Get(), "Sort saves from newest to oldest or oldest to newest."_i18n);
 
     options->Add<SidebarEntryCallback>("Accounts"_i18n, [this](){
         DisplayAccountOptions();
-    }, GetAccountSummary());
+    }, "Filter saves by user account."_i18n);
 
     options->Add<SidebarEntryCallback>("Data Types"_i18n, [this](){
         DisplayDataTypeOptions();
-    }, GetDataTypeSummary());
+    }, "Choose which save data types to display."_i18n);
 
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
@@ -724,12 +724,12 @@ void Menu::DisplaySaveOptions() {
 
         options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
             m_auto_backup_on_restore.Set(v_out);
-        });
+        }, "Automatically create a backup before restoring a save."_i18n);
 
         options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
             m_compress_save_backup.Set(v_out);
-        });
-    });
+        }, "Save backups as compressed ZIP archives to reduce disk space."_i18n);
+    }, "Access advanced backup and restore settings."_i18n);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -1249,10 +1249,10 @@ void Menu::PromptSaveTypeOptions(bool restore) {
         } else {
             BackupSaves(entries, location, backup_root);
         }
-    });
+    }, restore ? "Begin restoring saves from the selected location."_i18n : "Begin backing up saves to the selected location."_i18n);
 
     options->Add<SidebarEntryHeader>("LOCATION"_i18n);
-    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){});
+    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the folder where backups will be stored or read from."_i18n);
     location_entry->SetCallback([state, location_entry]() {
         auto items = state->location_items;
         const auto picker_index = static_cast<s64>(items.size());
@@ -1299,7 +1299,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
                 if (!enabled && std::ranges::none_of(state->account_enabled, [](auto v){ return v; }) && !state->account_enabled.empty()) {
                     state->account_enabled[0] = true;
                 }
-            });
+            }, "Include saves from all user accounts."_i18n);
 
         for (size_t i = 0; i < m_accounts.size(); i++) {
             auto* entry = options->Add<SidebarEntryCheckbox>(
@@ -1315,7 +1315,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
                     if (std::ranges::none_of(state->account_enabled, [](auto v){ return v; })) {
                         state->account_enabled[i] = true;
                     }
-                });
+                }, "Include saves from this user account."_i18n);
 
             entry->Depends(
                 [state](){ return !state->all_accounts; },

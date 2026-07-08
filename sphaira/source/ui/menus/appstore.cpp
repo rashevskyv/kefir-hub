@@ -594,7 +594,7 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
             options->Add<SidebarEntryCallback>("More by Author"_i18n, [this](){
                 m_menu.SetAuthor();
                 SetPop();
-            }, true);
+            }, true, "Browse all apps published by this author."_i18n);
 
             options->Add<SidebarEntryCallback>("Leave Feedback"_i18n, [this](){
                 std::string out;
@@ -616,12 +616,12 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
                         }
                     });
                 }
-            }, true);
+            }, true, "Send feedback or a comment about this application."_i18n);
 
             if (App::IsApplication() && !m_entry.url.empty()) {
                 options->Add<SidebarEntryCallback>("Visit Website"_i18n, [this](){
                     WebShow(m_entry.url);
-                });
+                }, "Open the author's website for this application."_i18n);
             }
         }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
@@ -950,17 +950,17 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             options->Add<SidebarEntryArray>("Filter"_i18n, filter_items, [this](s64& index_out){
                 m_filter.Set(index_out);
                 SetFilter();
-            }, m_filter.Get());
+            }, m_filter.Get(), "Show only apps from a specific category."_i18n);
 
             options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                 m_sort.Set(index_out);
                 SortAndFindLastFile();
-            }, m_sort.Get());
+            }, m_sort.Get(), "Select which field to sort the app list by."_i18n);
 
             options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
                 m_order.Set(index_out);
                 SortAndFindLastFile();
-            }, m_order.Get());
+            }, m_order.Get(), "Sort apps from newest to oldest or A to Z."_i18n);
 
             auto current_layout = m_layout.Get();
             if (current_layout == grid::LayoutType_List) {
@@ -970,7 +970,7 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
                 m_layout.Set(index_out + 1);
                 OnLayoutChange();
-            }, current_layout - 1);
+            }, current_layout - 1, "Choose how apps are displayed on screen."_i18n);
 
             options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
                 std::string out;
@@ -978,7 +978,7 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
                     SetSearch(out);
                     log_write("got %s\n", out.c_str());
                 }
-            });
+            }, "Search for apps by name or keyword."_i18n);
         }})
     );
 

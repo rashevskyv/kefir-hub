@@ -602,7 +602,7 @@ void Menu::DisplayOptions() {
     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
         m_sort.Set(index_out);
         SortAndFindLastFile();
-    }, m_sort.Get());
+    }, m_sort.Get(), "Select which field to sort homebrew by."_i18n);
 
     options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
         m_order.Set(index_out);

@@ -1797,44 +1797,44 @@ void FsView::DisplayOptions() {
         options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
             m_menu->m_sort.Set(index_out);
             SortAndFindLastFile();
-        }, m_menu->m_sort.Get());
+        }, m_menu->m_sort.Get(), "Select which field to sort files and folders by."_i18n);
 
         options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
             m_menu->m_order.Set(index_out);
             SortAndFindLastFile();
-        }, m_menu->m_order.Get());
+        }, m_menu->m_order.Get(), "Sort entries from largest to smallest or A to Z."_i18n);
 
         options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_menu->m_show_hidden.Get(), [this](bool& v_out){
             m_menu->m_show_hidden.Set(v_out);
             SortAndFindLastFile();
-        });
+        }, "Show files and folders that start with a dot (hidden)."_i18n);
 
         options->Add<SidebarEntryBool>("Folders First"_i18n, m_menu->m_folders_first.Get(), [this](bool& v_out){
             m_menu->m_folders_first.Set(v_out);
             SortAndFindLastFile();
-        });
+        }, "Place folders before files in the listing."_i18n);
 
         options->Add<SidebarEntryBool>("Hidden Last"_i18n, m_menu->m_hidden_last.Get(), [this](bool& v_out){
             m_menu->m_hidden_last.Set(v_out);
             SortAndFindLastFile();
-        });
-    });
+        }, "Push hidden entries to the bottom of the listing."_i18n);
+    }, "Change display order and visibility settings for files."_i18n);
 
     if (IsSd()) {
         options->Add<SidebarEntryCallback>("StartWebServer"_i18n, [this](){
             ShareFolder();
-        });
+        }, "Share the current folder via the built-in web server."_i18n);
     }
 
     if (m_entries_current.size()) {
         auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Cut);
-        }, true);
+        }, true, "Move the selected files to the clipboard."_i18n);
         cut_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot cut read-only files"_i18n);
 
         options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Copy);
-        }, true);
+        }, true, "Copy the selected files to the clipboard."_i18n);
     }
 
     if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
@@ -1847,7 +1847,7 @@ void FsView::DisplayOptions() {
                     OnPasteCallback();
                 }
             });
-        });
+        }, "Paste the clipboard contents into the current folder."_i18n);
         paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
     }
 
@@ -1877,7 +1877,7 @@ void FsView::DisplayOptions() {
                     App::PushErrorBox(rc, msg);
                 }
             }
-        });
+        }, "Rename the selected file or folder."_i18n);
         rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
     }
 
@@ -1895,7 +1895,7 @@ void FsView::DisplayOptions() {
                 }
             );
             log_write("pushed delete\n");
-        });
+        }, "Permanently delete the selected file(s) or folder(s)."_i18n);
         delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
     }
 
@@ -1919,7 +1919,7 @@ void FsView::DisplayOptions() {
         if (check_all_ext(INSTALL_EXTENSIONS)) {
             auto entry = options->Add<SidebarEntryCallback>("Install"_i18n, [this](){
                 InstallFiles();
-            });
+            }, "Install the selected NSP/XCI file(s) to the console."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
         }
     }
@@ -1928,7 +1928,7 @@ void FsView::DisplayOptions() {
         if (GetEntry().IsFile() && (IsSamePath(GetEntry().GetExtension(), "nro") || !m_menu->FindFileAssocFor().empty())) {
             auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){;
                 InstallForwarder();
-            });
+            }, "Install a forwarder shortcut for this file."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
         }
     }
@@ -1941,7 +1941,7 @@ void FsView::DisplayOptions() {
 
                 options->Add<SidebarEntryCallback>("Extract here"_i18n, [this](){
                     UnzipFiles("");
-                });
+                }, "Extract the archive contents into the current folder."_i18n);
 
                 options->Add<SidebarEntryCallback>("Extract to root"_i18n, [this](){
                     App::Push<OptionBox>("Are you sure you want to extract to root?"_i18n,
@@ -1950,15 +1950,15 @@ void FsView::DisplayOptions() {
                             UnzipFiles(m_fs->Root());
                         }
                     });
-                });
+                }, "Extract the archive contents to the root of this storage."_i18n);
 
                 options->Add<SidebarEntryCallback>("Extract to..."_i18n, [this](){
                     std::string out;
                     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", fs::AppendPath(m_path, ""))) && !out.empty()) {
                         UnzipFiles(out);
                     }
-                });
-            });
+                }, "Extract the archive to a custom path you specify."_i18n);
+            }, "Extract the contents of the selected ZIP archive."_i18n);
         }
 
         if (!check_all_ext(ZIP_EXTENSIONS) || m_selected_count) {
@@ -1968,21 +1968,21 @@ void FsView::DisplayOptions() {
 
                 options->Add<SidebarEntryCallback>("Compress"_i18n, [this](){
                     ZipFiles("");
-                });
+                }, "Compress the selected file(s) into a zip in the current folder."_i18n);
 
                 options->Add<SidebarEntryCallback>("Compress to..."_i18n, [this](){
                     std::string out;
                     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", m_path)) && !out.empty()) {
                         ZipFiles(out);
                     }
-                });
-            });
+                }, "Compress the selected file(s) to a custom output path."_i18n);
+            }, "Compress the selected file(s) into a ZIP archive."_i18n);
         }
     }
 
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         DisplayAdvancedOptions();
-    });
+    }, "Access file browser advanced tools.");
 }
 
 void FsView::DisplayAdvancedOptions() {
@@ -2011,7 +2011,7 @@ void FsView::DisplayAdvancedOptions() {
     options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
         App::PopToMenu();
         SetFs(fs_entries[index_out].root, fs_entries[index_out]);
-    }, i18n::get(m_fs_entry.name));
+    }, i18n::get(m_fs_entry.name), "Switch the file source to a different storage or mount point."_i18n);
 
     auto create_file_entry = options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
         std::string out;
@@ -2062,21 +2062,21 @@ void FsView::DisplayAdvancedOptions() {
         if (IsExtension(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();
-            });
+            }, "Open the selected image in the built-in viewer."_i18n);
             options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
                 App::Push<theme_creator::Menu>(GetNewPathCurrent());
-            });
+            }, "Use the selected image to create a custom Switch theme."_i18n);
         } else if (GetEntry().file_size < 1024*64) {
             options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
                 App::Push<fileview::Menu>(GetNewPathCurrent());
-            });
+            }, "Open the selected file as plain text."_i18n);
         }
     }
 
     if (m_entries_current.size()) {
         options->Add<SidebarEntryCallback>("Upload"_i18n, [this](){
             UploadFiles();
-        });
+        }, "Upload the selected file(s) via the web server."_i18n);
     }
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
@@ -2086,23 +2086,23 @@ void FsView::DisplayAdvancedOptions() {
 
             options->Add<SidebarEntryCallback>("CRC32"_i18n, [this](){
                 DisplayHash(hash::Type::Crc32);
-            });
+            }, "Calculate and display the CRC32 hash of the selected file."_i18n);
             options->Add<SidebarEntryCallback>("MD5"_i18n, [this](){
                 DisplayHash(hash::Type::Md5);
-            });
+            }, "Calculate and display the MD5 hash of the selected file."_i18n);
             options->Add<SidebarEntryCallback>("SHA1"_i18n, [this](){
                 DisplayHash(hash::Type::Sha1);
-            });
+            }, "Calculate and display the SHA1 hash of the selected file."_i18n);
             options->Add<SidebarEntryCallback>("SHA256"_i18n, [this](){
                 DisplayHash(hash::Type::Sha256);
-            });
-        });
+            }, "Calculate and display the SHA256 hash of the selected file."_i18n);
+        }, "Calculate a checksum hash for the selected file."_i18n);
     }
 
     options->Add<SidebarEntryBool>("Ignore read only"_i18n, m_menu->m_ignore_read_only.Get(), [this](bool& v_out){
         m_menu->m_ignore_read_only.Set(v_out);
         m_fs->SetIgnoreReadOnly(v_out);
-    });
+    }, "Allow modifying files and folders that are marked as read-only."_i18n);
 }
 
 Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {

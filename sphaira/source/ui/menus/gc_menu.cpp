@@ -383,20 +383,20 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
                     auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-                    const auto add = [&](const std::string& name, u32 flags){
+                    const auto add = [&](const std::string& name, u32 flags, const std::string& info){
                         options->Add<SidebarEntryCallback>(name, [this, flags](){
                             DumpGames(flags);
                             m_dirty = true;
-                        }, true);
+                        }, true, info);
                     };
 
-                    add("Dump All"_i18n, DumpFileFlag_All);
-                    add("Dump All Bins"_i18n, DumpFileFlag_AllBin);
-                    add("Dump XCI"_i18n, DumpFileFlag_XCI);
-                    add("Dump Card ID Set"_i18n, DumpFileFlag_Set);
-                    add("Dump Card UID"_i18n, DumpFileFlag_UID);
-                    add("Dump Certificate"_i18n, DumpFileFlag_Cert);
-                    add("Dump Initial Data"_i18n, DumpFileFlag_Initial);
+                    add("Dump All"_i18n, DumpFileFlag_All, "Dump the full XCI and all binary data."_i18n);
+                    add("Dump All Bins"_i18n, DumpFileFlag_AllBin, "Dump all binary files without the XCI."_i18n);
+                    add("Dump XCI"_i18n, DumpFileFlag_XCI, "Dump the full XCI image of the game card."_i18n);
+                    add("Dump Card ID Set"_i18n, DumpFileFlag_Set, "Dump the Card ID Set binary file."_i18n);
+                    add("Dump Card UID"_i18n, DumpFileFlag_UID, "Dump the Card UID binary file."_i18n);
+                    add("Dump Certificate"_i18n, DumpFileFlag_Cert, "Dump the game card Certificate binary file."_i18n);
+                    add("Dump Initial Data"_i18n, DumpFileFlag_Initial, "Dump the Initial Data binary file."_i18n);
                 }
             }
         }}),
@@ -409,11 +409,11 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
 
             options->Add<SidebarEntryCallback>("Install options"_i18n, [this](){
                 App::DisplayInstallOptions(false);
-            });
+            }, "Configure installation settings such as skipping content types."_i18n);
 
             options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
                 App::DisplayDumpOptions(false);
-            });
+            }, "Configure dump output settings and file format options."_i18n);
         }})
     );
 

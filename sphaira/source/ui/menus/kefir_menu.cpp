@@ -2031,7 +2031,7 @@ void Menu::DisplayOptions() {
     options->Add<SidebarEntryArray>("Layout"_i18n, view_items, [this](s64& index_out) {
         m_view_mode.Set(index_out);
         OnLayoutChange();
-    }, m_view_mode.Get());
+    }, m_view_mode.Get(), "Switch between list and grid view for the updater."_i18n);
 }
 
 void Menu::OnLayoutChange() {

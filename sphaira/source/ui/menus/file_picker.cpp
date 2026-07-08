@@ -334,7 +334,7 @@ void Menu::DisplayOptions() {
     options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
         App::PopToMenu();
         SetFs(fs_entries[index_out].root, fs_entries[index_out]);
-    }, i18n::get(m_fs_entry.name));
+    }, i18n::get(m_fs_entry.name), "Switch the file source to a different storage or mount point."_i18n);
 }
 
 Menu::Menu(const Callback& cb, const std::vector<std::string>& filter, const fs::FsPath& path)

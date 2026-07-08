@@ -130,37 +130,37 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
             irsStopImageProcessor(m_entries[m_index].m_handle);
             m_index = index;
             UpdateConfig(&m_config);
-        }, m_index);
+        }, m_index, "Select which controller's IR camera to use."_i18n);
 
         options->Add<SidebarEntryArray>("Rotation"_i18n, rotation_str, [this](s64& index){
             m_rotation = (Rotation)index;
-        }, m_rotation);
+        }, m_rotation, "Rotate the IR camera image view."_i18n);
 
         options->Add<SidebarEntryArray>("Colour"_i18n, colour_str, [this](s64& index){
             m_colour = (Colour)index;
             updateColourArray();
-        }, m_colour);
+        }, m_colour, "Choose the colour palette for the IR image."_i18n);
 
         options->Add<SidebarEntryArray>("Light Target"_i18n, light_target_str, [this](s64& index){
             m_config.light_target = index;
             UpdateConfig(&m_config);
-        }, m_config.light_target);
+        }, m_config.light_target, "Control which IR LED group is active."_i18n);
 
         options->Add<SidebarEntryArray>("Gain"_i18n, gain_str, [this](s64& index){
             m_config.gain = GAIN_MIN + index;
             UpdateConfig(&m_config);
-        }, m_config.gain - GAIN_MIN);
+        }, m_config.gain - GAIN_MIN, "Adjust the sensitivity of the IR sensor."_i18n);
 
         options->Add<SidebarEntryArray>("Negative Image"_i18n, is_negative_image_used_str, [this](s64& index){
             m_config.is_negative_image_used = index;
             UpdateConfig(&m_config);
-        }, m_config.is_negative_image_used);
+        }, m_config.is_negative_image_used, "Toggle between normal and inverted IR image."_i18n);
 
         options->Add<SidebarEntryArray>("Format"_i18n, format_str, [this](s64& index){
             m_config.orig_format = index;
             m_config.trimming_format = index;
             UpdateConfig(&m_config);
-        }, m_config.orig_format);
+        }, m_config.orig_format, "Set the capture resolution of the IR camera."_i18n);
 
         if (hosversionAtLeast(4,0,0)) {
             options->Add<SidebarEntryArray>("Trimming Format"_i18n, format_str, [this](s64& index){
@@ -171,17 +171,17 @@ Menu::Menu(u32 flags) : MenuBase{"Irs"_i18n, flags} {
                 m_config.trimming_format = index;
                 UpdateConfig(&m_config);
             }
-        }, m_config.orig_format);
+        }, m_config.orig_format, "Set the trimmed output resolution (must be <= source format)."_i18n);
 
             options->Add<SidebarEntryBool>("External Light Filter"_i18n, m_config.is_external_light_filter_enabled, [this](bool& enable){
                 m_config.is_external_light_filter_enabled = enable;
                 UpdateConfig(&m_config);
-            });
+            }, "Filter out ambient external light to improve IR accuracy."_i18n);
         }
 
         options->Add<SidebarEntryCallback>("Load Default"_i18n, [this](){
             LoadDefaultConfig();
-        }, true);
+        }, true, "Reset all IR camera settings to factory defaults."_i18n);
     }});
 
     if (R_FAILED(m_init_rc = irsInitialize())) {

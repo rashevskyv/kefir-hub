@@ -25,3 +25,8 @@ compile_commands.json
 out
 
 usb_test/
+plan.md
+graphify-out/
+scratch/
+build.sh
+

@@ -1718,7 +1718,9 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         [](auto pbox) -> Result {
             pbox->NewTransfer("Removing translations..."_i18n);
             for (const auto path : TRANSLATION_PATHS) {
-                DeletePath(path);
+                if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFoundFsDev) {
+                    R_THROW(rc);
+                }
             }
             RebootAfterSetting();
             R_SUCCEED();
