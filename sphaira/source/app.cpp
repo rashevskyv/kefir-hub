@@ -23,6 +23,7 @@
 #include "haze_helper.hpp"
 #include "web.hpp"
 #include "swkbd.hpp"
+#include <sys/statvfs.h>
 
 #include <nanovg_dk.h>
 #include <minIni.h>
@@ -659,7 +660,34 @@ auto App::GetInstallEmummcEnable() -> bool {
 }
 
 auto App::GetInstallSdEnable() -> bool {
-    return g_app->m_install_sd.Get();
+    long loc = g_app->m_install_location.Get();
+    if (loc == 0) return true; // SdOnly
+    if (loc == 1) return false; // NandOnly
+    if (loc == 3) return true; // SdThenNand
+    if (loc == 2) return false; // NandThenSd
+    if (loc == 4) { // Auto
+        s64 free_nand = 0;
+        FsFileSystem nand_fs;
+        if (R_SUCCEEDED(fsOpenBisFileSystem(&nand_fs, FsBisPartitionId_User, ""))) {
+            fsFsGetFreeSpace(&nand_fs, "/", &free_nand);
+            fsFsClose(&nand_fs);
+        }
+        s64 free_sd = 0;
+        struct statvfs st{};
+        if (statvfs("sdmc:/", &st) == 0) {
+            free_sd = (s64)st.f_bfree * (s64)st.f_bsize;
+        }
+        return free_sd > free_nand;
+    }
+    return true;
+}
+
+auto App::GetInstallLocation() -> long {
+    return g_app->m_install_location.Get();
+}
+
+auto App::GetInstallReserveMb() -> long {
+    return g_app->m_install_reserve_mb.Get();
 }
 
 auto App::GetThemeMusicEnable() -> bool {
@@ -858,7 +886,15 @@ void App::SetInstallEmummcEnable(bool enable) {
 }
 
 void App::SetInstallSdEnable(bool enable) {
-    g_app->m_install_sd.Set(enable);
+    g_app->m_install_location.Set(enable ? 0 : 1);
+}
+
+void App::SetInstallLocation(long location) {
+    g_app->m_install_location.Set(location);
+}
+
+void App::SetInstallReserveMb(long reserve_mb) {
+    g_app->m_install_reserve_mb.Set(reserve_mb);
 }
 
 void App::SetThemeMusicEnable(bool enable) {
@@ -1352,7 +1388,8 @@ App::App(const char* argv0) {
             else if (app->m_god_mode.LoadFrom(Key, Value)) {}
             else if (app->m_install_sysmmc.LoadFrom(Key, Value)) {}
             else if (app->m_install_emummc.LoadFrom(Key, Value)) {}
-            else if (app->m_install_sd.LoadFrom(Key, Value)) {}
+            else if (app->m_install_location.LoadFrom(Key, Value)) {}
+            else if (app->m_install_reserve_mb.LoadFrom(Key, Value)) {}
             else if (app->m_progress_boost_mode.LoadFrom(Key, Value)) {}
             else if (app->m_allow_downgrade.LoadFrom(Key, Value)) {}
             else if (app->m_skip_if_already_installed.LoadFrom(Key, Value)) {}
@@ -1380,7 +1417,16 @@ App::App(const char* argv0) {
     // load all configs ahead of time, as this is actually faster than
     // loading each config one by one as it avoids re-opening the file multiple times.
     ini_browse(cb, this, CONFIG_PATH);
-
+ 
+    // Migration: if install_location is not in ini, but install_sd is, migrate it.
+    if (ini_getl(INI_SECTION, "install_location", -1, CONFIG_PATH) == -1) {
+        if (ini_getbool(INI_SECTION, "install_sd", true, CONFIG_PATH)) {
+            m_install_location.Set(0); // SdOnly
+        } else {
+            m_install_location.Set(1); // NandOnly
+        }
+    }
+ 
     i18n::init(GetLanguage());
 
     if (App::GetLogEnable()) {
@@ -1821,8 +1867,11 @@ void App::DisplayInstallOptions(bool left_side) {
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     ui::SidebarEntryArray::Items install_items;
-    install_items.push_back("System memory"_i18n);
-    install_items.push_back("microSD card"_i18n);
+    install_items.push_back("microSD card only"_i18n);
+    install_items.push_back("System memory only"_i18n);
+    install_items.push_back("System first, then SD"_i18n);
+    install_items.push_back("SD first, then system"_i18n);
+    install_items.push_back("Automatic"_i18n);
 
     options->Add<ui::SidebarEntryBool>("Enable sysmmc"_i18n, App::GetInstallSysmmcEnable(), [](bool& enable){
         ShowEnableInstallPromptOption(g_app->m_install_sysmmc, enable);
@@ -1833,8 +1882,25 @@ void App::DisplayInstallOptions(bool left_side) {
     }, "Enables installing whilst in emuMMC mode."_i18n);
 
     options->Add<ui::SidebarEntryArray>("Install location"_i18n, install_items, [](s64& index_out){
-        App::SetInstallSdEnable(index_out);
-    }, (s64)App::GetInstallSdEnable());
+        App::SetInstallLocation(index_out);
+    }, (s64)App::GetInstallLocation());
+
+    auto reserve_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Reserve free space"_i18n,
+        std::to_string(App::GetInstallReserveMb()) + " MB",
+        nullptr,
+        "Set the threshold of free space to reserve on installation target (MB)."_i18n
+    );
+    auto* reserve_entry = reserve_entry_ptr.get();
+    reserve_entry->SetCallback([reserve_entry](){
+        s64 out = App::GetInstallReserveMb();
+        if (R_SUCCEEDED(swkbd::ShowNumPad(out, "Enter Reserve Free Space (MB)"_i18n.c_str(), std::to_string(out).c_str(), 1, 5))) {
+            if (out >= 0 && out <= 32768) {
+                App::SetInstallReserveMb(out);
+                reserve_entry->SetValue(std::to_string(out) + " MB");
+            }
+        }
+    });
+    options->Add(std::move(reserve_entry_ptr));
 
     options->Add<ui::SidebarEntryBool>("Allow downgrade"_i18n, App::GetApp()->m_allow_downgrade,
         "Allows for installing title updates that are lower than the currently installed update."_i18n);

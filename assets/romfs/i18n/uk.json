@@ -683,6 +683,13 @@
   "Calculate and display the MD5 hash of the selected file.": "Calculate and display the MD5 hash of the selected file.",
   "Calculate and display the SHA1 hash of the selected file.": "Calculate and display the SHA1 hash of the selected file.",
   "Calculate and display the SHA256 hash of the selected file.": "Calculate and display the SHA256 hash of the selected file.",
-  "Allow modifying files and folders that are marked as read-only.": "Allow modifying files and folders that are marked as read-only."
-
+  "Allow modifying files and folders that are marked as read-only.": "Allow modifying files and folders that are marked as read-only.",
+  "microSD card only": "Тільки microSD",
+  "System memory only": "Тільки пам'ять консолі",
+  "System first, then SD": "Пам'ять консолі, потім SD",
+  "SD first, then system": "SD, потім пам'ять консолі",
+  "Automatic": "Автоматично",
+  "Reserve free space": "Резерв вільного місця",
+  "Enter Reserve Free Space (MB)": "Введіть резерв вільного місця (МБ)",
+  "Set the threshold of free space to reserve on installation target (MB).": "Встановіть поріг вільного місця для резервування на цільовому накопичувачі (МБ)."
 }

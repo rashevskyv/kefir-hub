@@ -446,14 +446,14 @@ struct FsInstallProxy final : FsProxyVfs {
     }
 
     Result GetTotalSpace(const char *path, s64 *out) override {
-        if (App::GetApp()->m_install_sd.Get()) {
+        if (App::GetInstallSdEnable()) {
             return fs::FsNativeContentStorage(FsContentStorageId_SdCard).GetTotalSpace("/", out);
         } else {
             return fs::FsNativeContentStorage(FsContentStorageId_User).GetTotalSpace("/", out);
         }
     }
     Result GetFreeSpace(const char *path, s64 *out) override {
-        if (App::GetApp()->m_install_sd.Get()) {
+        if (App::GetInstallSdEnable()) {
             return fs::FsNativeContentStorage(FsContentStorageId_SdCard).GetFreeSpace("/", out);
         } else {
             return fs::FsNativeContentStorage(FsContentStorageId_User).GetFreeSpace("/", out);

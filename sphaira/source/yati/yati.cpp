@@ -16,6 +16,7 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include <sys/statvfs.h>
 
 #include <zstd.h>
 #include <minIni.h>
@@ -892,7 +893,7 @@ Yati::~Yati() {
 }
 
 Result Yati::Setup(const ConfigOverride& override) {
-    config.sd_card_install = override.sd_card_install.value_or(App::GetApp()->m_install_sd.Get());
+    config.sd_card_install = override.sd_card_install.value_or(App::GetInstallSdEnable());
     config.allow_downgrade = App::GetApp()->m_allow_downgrade.Get();
     config.skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
     config.ticket_only = App::GetApp()->m_ticket_only.Get();
@@ -1561,22 +1562,55 @@ Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, c
 }
 
 bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
-    s64 estimated_size = total_size;
-    if (is_compressed) {
-        constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
-        estimated_size = static_cast<s64>(total_size * COMPRESSED_SIZE_FACTOR);
+    s64 free_nand = 0;
+    fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
+    fs_nand.GetFreeSpace("/", &free_nand);
+
+    s64 free_sd = 0;
+    struct statvfs st{};
+    if (statvfs("sdmc:/", &st) == 0) {
+        free_sd = (s64)st.f_bfree * (s64)st.f_bsize;
     }
 
-    s64 free_nand = 0;
-    bool install_to_sd = true;
-    fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
-    if (R_SUCCEEDED(fs_nand.GetFreeSpace("/", &free_nand))) {
-        const s64 min_free_nand = 500ULL * 1024ULL * 1024ULL; // 500 MB
-        if (free_nand - estimated_size >= min_free_nand) {
-            install_to_sd = false;
-        }
+    constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
+    s64 estimated = total_size;
+    if (is_compressed) {
+        estimated = static_cast<s64>(total_size * COMPRESSED_SIZE_FACTOR);
     }
-    return install_to_sd;
+
+    s64 reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
+
+    bool fits_nand = (free_nand - estimated >= reserve);
+    bool fits_sd = (free_sd - estimated >= reserve);
+
+    long loc = App::GetInstallLocation();
+    switch (loc) {
+        case 0: // SdOnly
+            if (!fits_sd) {
+                log_write("[Install] WARNING: Target SD space is below reserve!\n");
+            }
+            return true;
+        case 1: // NandOnly
+            if (!fits_nand) {
+                log_write("[Install] WARNING: Target NAND space is below reserve!\n");
+            }
+            return false;
+        case 2: // NandThenSd
+            return fits_nand ? false : true;
+        case 3: // SdThenNand
+            return fits_sd ? true : false;
+        case 4: // Auto
+        default:
+            if (fits_nand && fits_sd) {
+                return free_sd > free_nand;
+            } else if (fits_nand) {
+                return false; // NAND
+            } else if (fits_sd) {
+                return true; // SD
+            } else {
+                return free_sd > free_nand; // fallback to where more space is available
+            }
+    }
 }
 
 Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
