@@ -19,6 +19,11 @@ struct PolledData {
     NifmInternetConnectionStatus status{};
     u32 strength{};
     u32 ip{};
+    // Storage info (NAND built-in + SD card)
+    s64 nand_free{};
+    s64 nand_total{};
+    s64 sd_free{};
+    s64 sd_total{};
 };
 
 struct MenuBase : Widget {

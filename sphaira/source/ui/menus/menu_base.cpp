@@ -6,6 +6,7 @@
 
 #include <switch.h>
 #include <cmath>
+#include <sys/statvfs.h>
 
 namespace {
 NVGcolor ParseColor(const std::string& str, NVGcolor fallback) {
@@ -51,6 +52,10 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.status = {};
         data.strength = {};
         data.ip = {};
+        data.nand_free = {};
+        data.nand_total = {};
+        data.sd_free = {};
+        data.sd_total = {};
 
         const auto t = std::time(NULL);
         localtime_r(&t, &data.tm);
@@ -58,6 +63,21 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         psmGetChargerType(&data.charger_type);
         nifmGetInternetConnectionStatus(&data.type, &data.strength, &data.status);
         nifmGetCurrentIpAddress(&data.ip);
+
+        // Query NAND (built-in) storage
+        FsFileSystem nand_fs;
+        if (R_SUCCEEDED(fsOpenBisFileSystem(&nand_fs, FsBisPartitionId_User, ""))) {
+            fsFsGetFreeSpace(&nand_fs, "/", &data.nand_free);
+            fsFsGetTotalSpace(&nand_fs, "/", &data.nand_total);
+            fsFsClose(&nand_fs);
+        }
+
+        // Query SD card storage via sdmc: mount
+        struct statvfs st{};
+        if (statvfs("sdmc:/", &st) == 0) {
+            data.sd_free  = (s64)st.f_bfree  * (s64)st.f_bsize;
+            data.sd_total = (s64)st.f_blocks * (s64)st.f_frsize;
+        }
 
         timestamp.Update();
     }
@@ -142,11 +162,21 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
 
     const auto pdata = GetPolledData();
 
-    const float start_y = 70;
-    const float font_size = 22;
-    const float spacing = 30;
+    // --- Status bar layout (top-right) ---
+    // Line 1 (y=48): IP address
+    // Line 2 (y=63): NAND storage bar
+    // Line 3 (y=76): SD storage bar
+    // Line 4 (y=70 = start_y): Clock + Battery
 
-    float start_x = 1220;
+    const float start_y   = 70;
+    const float font_size = 22;
+    const float spacing   = 30;
+    const float bar_right = 1220;
+    const float bar_w     = 160.f;
+    const float bar_h     = 7.f;
+    const float small_font = 14.f;
+
+    float start_x = bar_right;
     float bounds[4];
 
     nvgFontSize(vg, font_size);
@@ -160,50 +190,80 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
             start_x -= spacing + (bounds[2] - bounds[0]); \
         }
 
+    // ---- Row 4 (start_y=70): Clock + Battery ----
+    // Battery: show lightning bolt icon when charging, percentage otherwise
     if (pdata.charger_type != 0) {
-        float time = static_cast<float>(armTicksToNs(armGetSystemTick())) / 1'000'000'000.f;
-        float factor = 0.5f + 0.5f * std::sin(time * 15.f);
-        NVGcolor battery_color = nvgRGBA(255, static_cast<u8>(128 + 127 * factor), 0, 255);
-        gfx::drawTextArgs(vg, start_x - 20, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, battery_color, "%u", pdata.battery_percetange);
-        
-        float lb_h = 18.f;
-        float lb_w = lb_h * 0.55f;
-        float lb_x = start_x - 15;
-        float lb_y = start_y - 19;
-        
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, lb_x + lb_w * 0.55f, lb_y);
-        nvgLineTo(vg, lb_x + lb_w * 0.05f, lb_y + lb_h * 0.55f);
-        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.55f);
-        nvgLineTo(vg, lb_x + lb_w * 0.35f, lb_y + lb_h);
-        nvgLineTo(vg, lb_x + lb_w * 0.95f, lb_y + lb_h * 0.45f);
-        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.45f);
-        nvgClosePath(vg);
-        nvgFillColor(vg, battery_color);
-        nvgFill(vg);
-        
-        start_x -= 90;
+        // charging: fixed green color, no animation
+        const NVGcolor charge_col = nvgRGBA(100, 230, 100, 255);
+
+        // Draw lightning bolt glyph (U+26A1)
+        gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, charge_col, "\xE2\x9A\xA1");
+        start_x -= 32;
     } else {
+        // discharging: normal color percentage
         draw(ThemeEntryID_TEXT, 90, "%u\uFE6A", pdata.battery_percetange);
     }
 
+    // Clock
     if (App::Get12HourTimeEnable()) {
-        draw(ThemeEntryID_TEXT, 132, "%02u:%02u %s", (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
+        draw(ThemeEntryID_TEXT, 132, "%02u:%02u %s",
+            (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12,
+            pdata.tm.tm_min, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
     } else {
         draw(ThemeEntryID_TEXT, 90, "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
     }
 
-    if (pdata.ip) {
-        draw(ThemeEntryID_TEXT, 0, "%u.%u.%u.%u", pdata.ip&0xFF, (pdata.ip>>8)&0xFF, (pdata.ip>>16)&0xFF, (pdata.ip>>24)&0xFF);
-    } else {
-        draw(ThemeEntryID_TEXT, 0, ("No Internet"_i18n).c_str());
-    }
     if (!App::IsApplication()) {
         draw(ThemeEntryID_ERROR, 0, "[A]");
     }
-    draw(ThemeEntryID_TEXT_INFO, 0, "v%s", APP_VERSION_HASH);
 
     #undef draw
+
+    // ---- Row 1 (y=48): IP address ----
+    {
+        const float y_ip = 48.f;
+        const auto ip_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        if (pdata.ip) {
+            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
+                "%u.%u.%u.%u",
+                pdata.ip & 0xFF, (pdata.ip >> 8) & 0xFF,
+                (pdata.ip >> 16) & 0xFF, (pdata.ip >> 24) & 0xFF);
+        } else {
+            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
+                "%s", ("No Internet"_i18n).c_str());
+        }
+    }
+
+    // ---- Helper: draw a storage bar ----
+    // bar_right-aligned; label on left of bar
+    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes) {
+        if (total_bytes <= 0) return;
+        const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
+        const float fill_w     = bar_w * used_ratio;
+        const float bar_x      = bar_right - bar_w;
+        const float bar_y      = y - bar_h;
+
+        // Track (background)
+        const NVGcolor track_col = nvgRGBA(80, 80, 80, 180);
+        gfx::drawRect(vg, bar_x, bar_y, bar_w, bar_h, track_col);
+
+        // Fill
+        NVGcolor fill_col;
+        if (used_ratio > 0.9f)       fill_col = nvgRGBA(230, 60,  60,  255);
+        else if (used_ratio > 0.75f) fill_col = nvgRGBA(230, 180, 60,  255);
+        else                         fill_col = nvgRGBA(90,  200, 120, 255);
+        gfx::drawRect(vg, bar_x, bar_y, fill_w, bar_h, fill_col);
+
+        // Free space text (right-aligned)
+        const float free_gb  = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
+        const auto  text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawTextArgs(vg, bar_x - 4.f, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
+            "%s %.1f GB", label, free_gb);
+    };
+
+    // ---- Rows 2-3 (y=62, y=76): NAND / SD bars ----
+    draw_storage_bar(62.f, "NAND", pdata.nand_free, pdata.nand_total);
+    draw_storage_bar(76.f, "SD",   pdata.sd_free,   pdata.sd_total);
 
     gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
@@ -214,6 +274,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     const auto text_w = SCREEN_WIDTH / 2 - 30;
     const auto title_sub_x = 80 + (bounds[2] - bounds[0]) + 10;
 
+    gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
     gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
     m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
     m_scroll_sub_heading.Draw(vg, true, 80, 683, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
