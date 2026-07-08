@@ -47,10 +47,6 @@ struct Widget : public Object {
         return false;
     }
 
-    virtual auto IsSettings() const -> bool {
-        return false;
-    }
-
     auto HasAction(Button button) const -> bool;
     void SetAction(Button button, Action action);
     void SetActions(std::same_as<std::pair<Button, Action>> auto ...args) {

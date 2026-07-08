@@ -244,13 +244,11 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    const bool is_settings = widget && widget->IsSettings();
-
-    if (!is_settings && !has_r2 && controller->GotDown(Button::R2)) {
+    if (m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (!is_settings && !has_l2 && controller->GotDown(Button::L2)) {
+    } else if (m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
@@ -303,13 +301,11 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    const bool is_settings = widget && widget->IsSettings();
-
-    if (!is_settings && !has_r2 && controller->GotDown(Button::R2)) {
+    if (m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (!is_settings && !has_l2 && controller->GotDown(Button::L2)) {
+    } else if (m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
@@ -466,22 +462,29 @@ auto List::ScrollStepList(s64& index, s64 count, bool forward) -> bool {
 
     s64 start_index = static_cast<s64>(m_yoff / max);
     s64 middle_index = start_index + m_page / 2;
+    s64 new_start = start_index;
 
     if (forward) {
         if (index < middle_index) {
             index = std::min<s64>(middle_index, count - 1);
+            new_start = start_index;
         } else {
             index = std::min<s64>(start_index + m_page, count - 1);
+            new_start = start_index + m_page;
         }
     } else {
         if (index > middle_index) {
             index = std::max<s64>(middle_index, 0);
+            new_start = start_index;
         } else {
             index = std::max<s64>(start_index - m_page, 0);
+            new_start = start_index - m_page;
         }
     }
 
-    s64 new_start = (index / m_page) * m_page;
+    s64 max_start = std::max<s64>(0, count - m_page);
+    new_start = std::clamp<s64>(new_start, 0, max_start);
+
     const auto next_yoff = static_cast<float>(new_start) * max;
     m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
 

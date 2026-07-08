@@ -2035,10 +2035,12 @@ Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
     m_category_list = std::make_unique<List>(1, 8, m_pos, Vec4{76.f, 138.f, 300.f, 56.f});
     m_category_list->SetLayout(List::Layout::GRID);
     m_category_list->SetPageJump(false);
+    m_category_list->SetFastScroll(false);
 
     m_item_list = std::make_unique<List>(1, 7, m_pos, Vec4{420.f, 132.f, 780.f, 66.f});
     m_item_list->SetLayout(List::Layout::GRID);
     m_item_list->SetPageJump(false);
+    m_item_list->SetFastScroll(false);
 
     SetCategoryIndex(0);
 }

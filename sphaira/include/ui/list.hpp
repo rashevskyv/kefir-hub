@@ -83,6 +83,14 @@ struct List final : Object {
         return m_wrap;
     }
 
+    auto SetFastScroll(bool enable) {
+        m_fast_scroll = enable;
+    }
+
+    auto GetFastScroll() const {
+        return m_fast_scroll;
+    }
+
 private:
     auto Draw(NVGcontext* vg, Theme* theme) -> void override {}
     auto ClampX(float x, s64 count) const -> float;
@@ -110,6 +118,7 @@ private:
     Layout m_layout{Layout::GRID};
     bool m_page_jump{true};
     bool m_wrap{false};
+    bool m_fast_scroll{true};
 };
 
 } // namespace sphaira::ui

@@ -35,7 +35,6 @@ struct Menu final : MenuBase {
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Settings"; }
-    auto IsSettings() const -> bool override { return true; }
     void OnFocusGained() override;
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;

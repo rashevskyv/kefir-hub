@@ -1037,22 +1037,22 @@ public:
             theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR),
             footer.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-        // Малюємо кнопку по центру горизонталі
+        // Draw button centered horizontally
         m_install_button_rect = Vec4{m_pos.x + (m_pos.w - 220.f) / 2.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
 
         nvgSave(vg);
         if (!m_unlocked) {
-            // Неактивна
+            // Inactive
             gfx::drawRect(vg, m_install_button_rect, nvgRGBA(60, 60, 64, 255), 4.f);
             gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
                 m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
                 theme->GetColour(ThemeEntryID_TEXT_INFO), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         } else {
-            // Активна
+            // Active
             const auto btn_color = m_button_focused ? nvgRGBA(76, 175, 80, 255) : nvgRGBA(46, 125, 50, 255);
             gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
             if (m_button_focused) {
-                // Малюємо рамку виділення навколо кнопки
+                // Draw focus outline around the button
                 gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
             }
             gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
