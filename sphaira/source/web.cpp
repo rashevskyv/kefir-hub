@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "title_info.hpp"
 #include "utils/thread.hpp"
 #include <algorithm>
 #include <array>
@@ -1621,6 +1622,206 @@ void HandleList(Socket sock, const std::string& query) {
     SendResponse(sock, "200 OK", "application/json", json);
 }
 
+struct ScreenshotEntry {
+    std::string path;
+    std::string filename;
+    std::string timestamp; // YYYY-MM-DD HH:MM:SS
+    std::string game_name;
+    s64 file_size{};
+    std::string raw_timestamp; // YYYYMMDDHHMMSS00 (for sorting)
+};
+
+void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
+    title::Init();
+    fs::FsNativeSd fs;
+    if (!fs.DirExists("/Nintendo/Album")) {
+        title::Exit();
+        return;
+    }
+
+    struct StackEntry {
+        std::string path;
+        int depth;
+    };
+    std::vector<StackEntry> stack;
+    stack.push_back({"/Nintendo/Album", 0});
+
+    while (!stack.empty()) {
+        auto entry = stack.back();
+        stack.pop_back();
+
+        if (entry.depth > 64) {
+            continue;
+        }
+
+        fs::Dir dir;
+        std::vector<FsDirectoryEntry> entries;
+        if (R_SUCCEEDED(fs.OpenDirectory(entry.path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
+            dir.ReadAll(entries);
+            for (const auto& d_entry : entries) {
+                std::string child = entry.path;
+                if (child.empty() || child.back() != '/') {
+                    child += '/';
+                }
+                child += d_entry.name;
+
+                if (d_entry.type == FsDirEntryType_Dir) {
+                    stack.push_back({child, entry.depth + 1});
+                } else {
+                    std::string ext = child;
+                    if (const auto dot = ext.find_last_of('.'); dot != std::string::npos) {
+                        ext = ext.substr(dot + 1);
+                    }
+                    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+                    if (ext == "jpg" || ext == "png" || ext == "mp4" || ext == "jpeg") {
+                        ScreenshotEntry se;
+                        se.path = child;
+                        se.filename = d_entry.name;
+                        se.file_size = d_entry.file_size;
+
+                        std::string stem = d_entry.name;
+                        if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
+                            stem = stem.substr(0, dot);
+                        }
+
+                        bool parsed = false;
+                        if (stem.size() >= 33 && stem[16] == '-') {
+                            bool all_digits = true;
+                            for (int i = 0; i < 16; i++) {
+                                if (!std::isdigit(static_cast<unsigned char>(stem[i]))) {
+                                    all_digits = false;
+                                    break;
+                                }
+                            }
+                            if (all_digits) {
+                                se.raw_timestamp = stem.substr(0, 16);
+                                se.timestamp = stem.substr(0, 4) + "-" + stem.substr(4, 2) + "-" + stem.substr(6, 2) + " " +
+                                               stem.substr(8, 2) + ":" + stem.substr(10, 2) + ":" + stem.substr(12, 2);
+
+                                std::string title_id_hex = stem.substr(17, 16);
+                                char* endptr = nullptr;
+                                u64 title_id = std::strtoull(title_id_hex.c_str(), &endptr, 16);
+                                if (endptr != nullptr && *endptr == '\0') {
+                                    if (auto info = title::Get(title_id)) {
+                                        se.game_name = info->lang.name;
+                                    } else {
+                                        se.game_name = "Title: " + title_id_hex;
+                                    }
+                                } else {
+                                    se.game_name = "Unknown Game";
+                                }
+                                parsed = true;
+                            }
+                        }
+
+                        if (!parsed) {
+                            se.raw_timestamp = "";
+                            se.timestamp = "Unknown Date";
+                            se.game_name = "Unknown Game";
+                        }
+
+                        out_entries.push_back(se);
+                    }
+                }
+            }
+        }
+    }
+
+    std::sort(out_entries.begin(), out_entries.end(), [](const ScreenshotEntry& lhs, const ScreenshotEntry& rhs) {
+        if (lhs.raw_timestamp.empty() && !rhs.raw_timestamp.empty()) return false;
+        if (!lhs.raw_timestamp.empty() && rhs.raw_timestamp.empty()) return true;
+        return lhs.raw_timestamp > rhs.raw_timestamp;
+    });
+
+    title::Exit();
+}
+
+auto BuildScreenshotGalleryPage() -> std::string {
+    std::vector<ScreenshotEntry> entries;
+    ScanScreenshots(entries);
+
+    std::string body;
+    body.reserve(8192 + entries.size() * 384);
+
+    body += "<!doctype html><html><head><meta charset=\"utf-8\">";
+    body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
+    body += "<title>Sphaira Screenshots</title>";
+    body += "<style>";
+    body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
+    body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:1}";
+    body += "h1{font-size:20px;margin:0 0 6px}.subtitle{color:#b9c2cc;font-size:14px}";
+    body += ".crumbs{margin-top:8px}.crumbs a{color:#9fc6ff;text-decoration:none}";
+    body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding:18px}";
+    body += ".card{display:flex;flex-direction:column;background:#1c1c1c;border:1px solid #333;border-radius:10px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:transform 0.15s}";
+    body += ".card:hover{transform:translateY(-2px)}";
+    body += "img,video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#050505;border-bottom:1px solid #2d2d2d}";
+    body += ".info{padding:12px;display:flex;flex-direction:column;gap:6px;flex-grow:1}";
+    body += ".game-name{font-weight:600;color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+    body += ".timestamp{color:#8a939e;font-size:12px}";
+    body += ".size{color:#6c757d;font-size:11px}";
+    body += ".actions{display:flex;gap:8px;margin-top:auto;padding-top:10px}";
+    body += "a.btn,button.btn{flex:1;text-align:center;text-decoration:none;border:1px solid #4f535c;background:#252a32;color:#fff;border-radius:6px;padding:8px 0;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}";
+    body += "a.btn:hover,button.btn:hover{background:#303640;border-color:#656b77}";
+    body += "button.del-btn{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171}";
+    body += "button.del-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
+    body += ".empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#98a1aa;font-style:italic}";
+    body += "</style></head><body><header><h1>Sphaira Screenshots</h1>";
+    body += "<div class=\"subtitle\">" + std::to_string(entries.size()) + " screenshots/videos found</div>";
+    body += "<div class=\"crumbs\"><a href=\"/files?path=/\">SD Card File Browser</a></div>";
+    body += "</header><main class=\"grid\">";
+
+    if (entries.empty()) {
+        body += "<div class=\"empty\">No screenshots or videos found in /Nintendo/Album</div>";
+    }
+
+    for (const auto& entry : entries) {
+        const auto encoded_path = UrlEncode(entry.path);
+        const auto escaped_game = HtmlEscape(entry.game_name);
+        const auto escaped_time = HtmlEscape(entry.timestamp);
+        const auto escaped_filename = HtmlEscape(entry.filename);
+        
+        body += "<div class=\"card\">";
+        
+        bool is_video = entry.filename.ends_with(".mp4");
+        if (is_video) {
+            body += "<video controls preload=\"none\" src=\"/view?path=" + encoded_path + "\"></video>";
+        } else {
+            body += "<img loading=\"lazy\" src=\"/view?path=" + encoded_path + "\" alt=\"" + escaped_game + "\">";
+        }
+        
+        body += "<div class=\"info\">";
+        body += "<div class=\"game-name\" title=\"" + escaped_game + "\">" + escaped_game + "</div>";
+        body += "<div class=\"timestamp\">" + escaped_time + "</div>";
+        
+        char size_buf[32]{};
+        if (entry.file_size >= 1024 * 1024) {
+            std::snprintf(size_buf, sizeof(size_buf), "%.2f MB", static_cast<double>(entry.file_size) / (1024.0 * 1024.0));
+        } else {
+            std::snprintf(size_buf, sizeof(size_buf), "%.1f KB", static_cast<double>(entry.file_size) / 1024.0);
+        }
+        body += "<div class=\"size\">" + std::string(size_buf) + " (" + escaped_filename + ")</div>";
+        
+        body += "<div class=\"actions\">";
+        body += "<a class=\"btn\" href=\"/download?path=" + encoded_path + "\" download=\"" + escaped_filename + "\">Download</a>";
+        body += "<button class=\"btn del-btn\" onclick=\"deleteItem(event,'" + encoded_path + "')\">Delete</button>";
+        body += "</div>";
+        body += "</div>";
+        body += "</div>";
+    }
+
+    body += "</main>";
+    body += "<script>";
+    body += "async function deleteItem(e,path){";
+    body += "e.preventDefault();e.stopPropagation();";
+    body += "if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?')) return;";
+    body += "const res=await fetch('/delete?path='+path,{method:'DELETE'});";
+    body += "if(res.ok){ location.reload(); }else{ alert('Delete failed: '+await res.text()); }";
+    body += "}";
+    body += "</script></body></html>";
+
+    return body;
+}
+
 void HandleRequest(Socket sock) {
     std::string req;
     if (!ReadHttpRequest(sock, req)) {
@@ -1673,6 +1874,11 @@ void HandleRequest(Socket sock) {
 
     if (path == "/" || path == "/files" || path == "/files/") {
         SendResponse(sock, "200 OK", "text/html", BuildFolderPage(GetQueryValue(query, "path")));
+        return;
+    }
+
+    if (path == "/screenshots" || path == "/screenshots/") {
+        SendResponse(sock, "200 OK", "text/html", BuildScreenshotGalleryPage());
         return;
     }
 
@@ -2181,6 +2387,34 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
 
     char url[128]{};
     std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
+        ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
+
+    out.url = url;
+    out.qr_image = CreateQrImage(out.url);
+
+    R_SUCCEED();
+}
+
+auto WebShareScreenshots(WebShareResult& out) -> Result {
+    u32 ip{};
+    R_TRY(nifmGetCurrentIpAddress(&ip));
+    R_UNLESS(ip != 0, Result_FsNotActive);
+
+    {
+        std::scoped_lock lock{g_share_mutex};
+        g_share_folder_root = "/";
+        g_share_mode = ShareMode::Folder;
+    }
+
+    if (const auto rc = StartShareServer(); R_FAILED(rc)) {
+        std::scoped_lock lock{g_share_mutex};
+        g_share_folder_root = {};
+        g_share_mode = ShareMode::None;
+        R_THROW(rc);
+    }
+
+    char url[128]{};
+    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/screenshots",
         ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
 
     out.url = url;

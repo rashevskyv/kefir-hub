@@ -30,6 +30,7 @@ struct WebUploadState {
 
 auto WebShow(const std::string& url) -> Result;
 auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result;
+auto WebShareScreenshots(WebShareResult& out) -> Result;
 void WebShareStop();
 WebUploadState WebGetUploadState();
 bool WebShareIsRunning();

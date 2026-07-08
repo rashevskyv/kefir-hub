@@ -14,6 +14,9 @@
 #include "log.hpp"
 #include "stb_image.h"
 
+#include "web.hpp"
+#include "ui/progress_box.hpp"
+
 #include <cstddef>
 
 namespace sphaira::ui::menu::tools {
@@ -43,6 +46,14 @@ constexpr const u8 ICON_SETTINGS[]{
     #embed <icons/advanced-options.png>
 };
 
+constexpr const u8 ICON_NETWORK[]{
+    #embed <icons/network.png>
+};
+
+constexpr const u8 ICON_GAME_HUB[]{
+    #embed <icons/game-hub.png>
+};
+
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     int width{};
     int height{};
@@ -61,6 +72,64 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     }
 
     return texture;
+}
+
+void StartShareServerFromTools(bool screenshots) {
+    WebShareResult result;
+    Result rc;
+    if (screenshots) {
+        rc = WebShareScreenshots(result);
+    } else {
+        rc = WebShareFolder("/", result);
+    }
+
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, screenshots ? "Failed to start screenshot server"_i18n : "Failed to start web server"_i18n);
+        return;
+    }
+
+    const auto url = result.url;
+    const auto qr_image = result.qr_image;
+    App::Push<ProgressBox>(qr_image, screenshots ? "Screenshot Gallery"_i18n : "Web Sharing Server"_i18n, url,
+        [url](auto pbox) -> Result {
+            pbox->NewTransferForce("Press B to Stop Server"_i18n);
+            WebSetProgressBox(pbox);
+            std::string last_name;
+            while (!pbox->ShouldExit() && WebShareIsRunning()) {
+                const auto state = WebGetUploadState();
+                if (state.active) {
+                    if (state.name != last_name) {
+                        last_name = state.name;
+                        pbox->NewTransferForce(state.name);
+                    }
+                    pbox->UpdateTransferForce(state.bytes, state.total);
+                } else if (!last_name.empty()) {
+                    const std::string completed_name = last_name;
+                    last_name.clear();
+                    pbox->ResetTransferProgress();
+                    pbox->SetTitle(url);
+                    if (completed_name.starts_with("Installing:")) {
+                        pbox->NewTransferForce("Installation completed"_i18n);
+                    } else {
+                        pbox->NewTransferForce("Upload completed"_i18n);
+                    }
+                    for (int i = 0; i < 30 && !WebGetUploadState().active && !pbox->ShouldExit(); ++i) {
+                        svcSleepThread(100'000'000LL);
+                    }
+                    if (!WebGetUploadState().active && !pbox->ShouldExit()) {
+                        pbox->NewTransferForce("Press B to Stop Server"_i18n);
+                    }
+                }
+                svcSleepThread(100'000'000LL);
+            }
+            WebSetProgressBox(nullptr);
+            WebShareStop();
+            R_SUCCEED();
+        },
+        [qr_image](Result) {
+            nvgDeleteImage(App::GetVg(), qr_image);
+        }
+    );
 }
 
 } // namespace
@@ -94,6 +163,12 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Settings"_i18n, "Open Sphaira application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
+        { "Start Web Server"_i18n, "Start a local web server to upload/download files."_i18n, 0, [](){
+            StartShareServerFromTools(false);
+        }},
+        { "Screenshots"_i18n, "View and manage console screenshots in a browser."_i18n, 0, [](){
+            StartShareServerFromTools(true);
+        }},
     };
 
     this->SetActions(
@@ -104,7 +179,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
 
     const Vec2 pad{10.f, 10.f};
     const Vec4 v{75.f, 110.f, 370.f, 155.f};
-    m_list = std::make_unique<List>(3, 9, m_pos, v, pad);
+    m_list = std::make_unique<List>(3, 11, m_pos, v, pad);
     m_list->SetLayout(List::Layout::GRID);
 
     LoadIcons();
@@ -210,6 +285,8 @@ void Menu::LoadIcons() {
     m_items[6].icon_texture = LoadIcon(vg, ICON_APPSTORE, sizeof(ICON_APPSTORE));
     m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
     m_items[8].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    m_items[9].icon_texture = LoadIcon(vg, ICON_NETWORK, sizeof(ICON_NETWORK));
+    m_items[10].icon_texture = LoadIcon(vg, ICON_GAME_HUB, sizeof(ICON_GAME_HUB));
 }
 
 void Menu::SetIndex(s64 index) {

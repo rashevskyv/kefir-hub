@@ -50,7 +50,7 @@ all return `BuildFolderPage(...)` (web.cpp:1833-1836). Consequences:
 
 ---
 
-### P0-1b. Screenshot Gallery and Tools Integration
+### P0-1b. [RESOLVED] Screenshot Gallery and Tools Integration
 **Problem.** The old `WebShareImages` and image sharing/gallery logic are obsolete. Users need a dedicated Screenshot Gallery feature that displays files from `/Nintendo/Album` on the SD card:
 - The gallery should scan `/Nintendo/Album` recursively (iteratively).
 - Screenshots and videos must be sorted by date (newest first) based on filename timestamps.
