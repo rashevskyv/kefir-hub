@@ -202,37 +202,6 @@ auto SplitPathAndQuery(std::string path, std::string& query) -> std::string {
     return path;
 }
 
-auto SanitizeRelativePath(std::string path) -> std::string {
-    for (auto& c : path) {
-        if (c == '\\') {
-            c = '/';
-        }
-    }
-
-    while (!path.empty() && path.front() == '/') {
-        path.erase(path.begin());
-    }
-
-    std::string out;
-    size_t start{};
-    while (start <= path.size()) {
-        const auto end = path.find('/', start);
-        auto part = path.substr(start, end == std::string::npos ? std::string::npos : end - start);
-        if (!part.empty() && part != "." && part != ".." && part.find(':') == std::string::npos) {
-            if (!out.empty()) {
-                out += '/';
-            }
-            out += part;
-        }
-
-        if (end == std::string::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-
-    return out;
-}
 
 auto CanonicalizeAbsolutePath(std::string path) -> std::string {
     for (auto& c : path) {

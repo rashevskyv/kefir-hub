@@ -47,8 +47,6 @@ constexpr const u8 ICON_SETTINGS[]{
     #embed <icons/advanced-options.png>
 };
 
-
-
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     int width{};
     int height{};
@@ -125,8 +123,8 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         }}),
         std::make_pair(Button::X, Action{"Network"_i18n, [this](){
             PopupList::Items items;
-            items.push_back({ .name = "Web Server"_i18n, .info = "Start a local web server to upload/download files."_i18n });
-            items.push_back({ .name = "Screenshots"_i18n, .info = "View and manage console screenshots in a browser."_i18n });
+            items.push_back("Web Server"_i18n);
+            items.push_back("Screenshots"_i18n);
             App::Push<PopupList>("Network Server"_i18n, items, [this](auto op_index) {
                 if (op_index) {
                     if (*op_index == 0) {
