@@ -594,4 +594,18 @@
   "Remove installed interface translations and reboot.": "Видалити встановлені переклади інтерфейсу та перезавантажити консоль.",
   "Replace language": "Замінити мову",
   "Failed to run package action": "Не вдалося виконати дію пакета",
+  "Failed to apply Kefir setting": "Не вдалося застосувати налаштування Kefir",
+  "Fan preset is empty": "Пресет вентилятора порожній",
+  "Failed to save fan preset": "Не вдалося зберегти пресет вентилятора",
+  "Saved fan preset: ": "Пресет вентилятора збережено: ",
+  "No room for another fan point": "Немає місця для нової точки кривої",
+  "Fan curve needs at least two points": "Крива вентилятора повинна мати принаймні дві точки",
+  "Fan curve applied": "Криву вентилятора застосовано",
+  "Accounts": "Облікові записи",
+  "Data Types": "Типи даних",
+  "Save Options": "Параметри збережень",
+  "All Accounts": "Всі облікові записи",
+  "All Accounts is enabled.": "Усі облікові записи увімкнено.",
+  "System is enabled.": "Системні дані увімкнено.",
+  "HB Menu": "Головне меню"
 }

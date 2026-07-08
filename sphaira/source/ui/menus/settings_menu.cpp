@@ -1389,7 +1389,7 @@ void ToggleKefirSetting(const KefirSetting& setting) {
                 },
                 [](Result rc){
                     if (R_FAILED(rc)) {
-                        App::PushErrorBox(rc, "Failed to apply Kefir setting");
+                        App::PushErrorBox(rc, "Failed to apply Kefir setting"_i18n);
                     }
                 }
             );
@@ -1421,7 +1421,7 @@ void RunPackageAction(const PackageAction& action) {
             },
             [](Result rc){
                 if (R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Failed to run package action");
+                    App::PushErrorBox(rc, "Failed to run package action"_i18n);
                 } else {
                     App::Notify("Done"_i18n);
                 }
@@ -3270,7 +3270,7 @@ void FanCurveMenu::ApplyPreset(s64 index) {
     if (index < FAN_BUILTIN_PRESET_COUNT) {
         curve = FanPresetCurve(index, m_docked);
     } else if (!ReadCustomFanPreset(index - FAN_BUILTIN_PRESET_COUNT, m_docked, curve)) {
-        App::Notify("Fan preset is empty");
+        App::Notify("Fan preset is empty"_i18n);
         return;
     }
 
@@ -3294,11 +3294,11 @@ void FanCurveMenu::SavePreset(s64 index) {
 
     const auto rc = SaveCustomFanPreset(index, m_docked, ActiveCurve(), name);
     if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to save fan preset");
+        App::PushErrorBox(rc, "Failed to save fan preset"_i18n);
         return;
     }
 
-    App::Notify("Saved fan preset: " + name);
+    App::Notify("Saved fan preset: "_i18n + name);
 }
 
 void FanCurveMenu::AddPoint() {
@@ -3311,7 +3311,7 @@ void FanCurveMenu::AddPoint() {
     }
 
     if (curve.size() >= static_cast<size_t>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C + 1)) {
-        App::Notify("No room for another fan point");
+        App::Notify("No room for another fan point"_i18n);
         return;
     }
 
@@ -3349,7 +3349,7 @@ void FanCurveMenu::AddPoint() {
     }
 
     if (!found) {
-        App::Notify("No room for another fan point");
+        App::Notify("No room for another fan point"_i18n);
         return;
     }
 
@@ -3365,7 +3365,7 @@ void FanCurveMenu::AddPoint() {
 void FanCurveMenu::RemovePoint() {
     auto& curve = ActiveCurve();
     if (curve.size() <= 2) {
-        App::Notify("Fan curve needs at least two points");
+        App::Notify("Fan curve needs at least two points"_i18n);
         return;
     }
 
@@ -3558,7 +3558,7 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
             m_applied_handheld_curve = handheld;
             m_applied_docked_curve = docked;
             m_dirty = false;
-            App::Notify("Fan curve applied");
+            App::Notify("Fan curve applied"_i18n);
         }
     );
 }
