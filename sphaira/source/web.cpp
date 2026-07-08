@@ -40,14 +40,9 @@ constexpr size_t HTTP_READ_LIMIT = 16384;
 constexpr size_t HTTP_FILE_CHUNK = 1024 * 32;
 constexpr u32 IDLE_TIMEOUT_MS = 30000;
 
-enum class ShareMode {
-    None,
-    Folder,
-};
-
 std::mutex g_share_mutex{};
 fs::FsPath g_share_folder_root{};
-ShareMode g_share_mode{ShareMode::None};
+std::atomic_bool g_title_initialized{false};
 Thread g_share_thread{};
 std::atomic_bool g_share_running{false};
 Socket g_share_socket{-1};
@@ -303,22 +298,9 @@ auto SanitizeFileName(std::string name) -> std::string {
     return out;
 }
 
-auto JoinSharePath(const fs::FsPath& root, const std::string& rel) -> fs::FsPath {
-    if (rel.empty()) {
-        return root;
-    }
-
-    return fs::AppendPath(root, rel);
-}
-
 auto GetShareFolderRoot() -> fs::FsPath {
     std::scoped_lock lock{g_share_mutex};
     return g_share_folder_root;
-}
-
-auto GetShareMode() -> ShareMode {
-    std::scoped_lock lock{g_share_mutex};
-    return g_share_mode;
 }
 
 auto SendAll(Socket sock, const void* buf, size_t size) -> bool {
@@ -1388,6 +1370,19 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         return;
     }
 
+    struct UploadGuard {
+        fs::FsNativeSd& fs;
+        const fs::FsPath& path;
+        bool success = false;
+
+        ~UploadGuard() {
+            if (!success) {
+                fs.DeleteFile(path);
+                log_write("Upload aborted or failed. Deleted incomplete file: %s\n", path.toString().c_str());
+            }
+        }
+    } upload_guard{fs, out_path};
+
     fs::File file;
     if (R_FAILED(fs.OpenFile(out_path, FsOpenMode_Write, &file))) {
         SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not open output file");
@@ -1461,6 +1456,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         }
     }
 
+    upload_guard.success = true;
     g_upload_state.active.store(false);
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
@@ -1632,10 +1628,8 @@ struct ScreenshotEntry {
 };
 
 void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
-    title::Init();
     fs::FsNativeSd fs;
     if (!fs.DirExists("/Nintendo/Album")) {
-        title::Exit();
         return;
     }
 
@@ -1734,7 +1728,6 @@ void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
         return lhs.raw_timestamp > rhs.raw_timestamp;
     });
 
-    title::Exit();
 }
 
 auto BuildScreenshotGalleryPage() -> std::string {
@@ -2378,13 +2371,11 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     {
         std::scoped_lock lock{g_share_mutex};
         g_share_folder_root = path;
-        g_share_mode = ShareMode::Folder;
     }
 
     if (const auto rc = StartShareServer(); R_FAILED(rc)) {
         std::scoped_lock lock{g_share_mutex};
         g_share_folder_root = {};
-        g_share_mode = ShareMode::None;
         R_THROW(rc);
     }
 
@@ -2406,14 +2397,16 @@ auto WebShareScreenshots(WebShareResult& out) -> Result {
     {
         std::scoped_lock lock{g_share_mutex};
         g_share_folder_root = "/";
-        g_share_mode = ShareMode::Folder;
     }
 
     if (const auto rc = StartShareServer(); R_FAILED(rc)) {
         std::scoped_lock lock{g_share_mutex};
         g_share_folder_root = {};
-        g_share_mode = ShareMode::None;
         R_THROW(rc);
+    }
+
+    if (!g_title_initialized.exchange(true)) {
+        title::Init();
     }
 
     char url[128]{};
@@ -2441,9 +2434,12 @@ void WebShareStop() {
         g_share_port = 0;
     }
 
+    if (g_title_initialized.exchange(false)) {
+        title::Exit();
+    }
+
     std::scoped_lock lock{g_share_mutex};
     g_share_folder_root = {};
-    g_share_mode = ShareMode::None;
 }
 
 WebUploadState WebGetUploadState() {
