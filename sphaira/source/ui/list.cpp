@@ -240,11 +240,13 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    if (!has_r2 && GetPageJump() && controller->GotDown(Button::R2)) {
+    const bool is_settings = widget && widget->IsSettings();
+
+    if (!is_settings && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (!has_l2 && GetPageJump() && controller->GotDown(Button::L2)) {
+    } else if (!is_settings && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
@@ -297,21 +299,35 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    if (!has_r2 && GetPageJump() && controller->GotDown(Button::R2)) {
+    const bool is_settings = widget && widget->IsSettings();
+
+    if (!is_settings && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (!has_l2 && GetPageJump() && controller->GotDown(Button::L2)) {
+    } else if (!is_settings && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
     } else if (GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
-        if (ScrollPageDown(index, count)) {
-            callback(false, index);
+        if (m_row == 1) {
+            if (ScrollStepList(index, count, true)) {
+                callback(false, index);
+            }
+        } else {
+            if (ScrollPageDown(index, count)) {
+                callback(false, index);
+            }
         }
     } else if (GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
-        if (ScrollPageUp(index, count)) {
-            callback(false, index);
+        if (m_row == 1) {
+            if (ScrollStepList(index, count, false)) {
+                callback(false, index);
+            }
+        } else {
+            if (ScrollPageUp(index, count)) {
+                callback(false, index);
+            }
         }
     } else if (controller->GotDown(Button::DOWN)) {
         if (ScrollDown(index, m_row, count)) {
@@ -436,6 +452,40 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     }
 
     nvgRestore(vg);
+}
+
+auto List::ScrollStepList(s64& index, s64 count, bool forward) -> bool {
+    if (count <= 0) return false;
+    const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
+    const auto old_index = index;
+    const auto old_yoff = m_yoff;
+
+    s64 start_index = static_cast<s64>(m_yoff / max);
+    s64 middle_index = start_index + m_page / 2;
+
+    if (forward) {
+        if (index < middle_index) {
+            index = std::min<s64>(middle_index, count - 1);
+        } else {
+            index = std::min<s64>(start_index + m_page, count - 1);
+        }
+    } else {
+        if (index > middle_index) {
+            index = std::max<s64>(middle_index, 0);
+        } else {
+            index = std::max<s64>(start_index - m_page, 0);
+        }
+    }
+
+    s64 new_start = (index / m_page) * m_page;
+    const auto next_yoff = static_cast<float>(new_start) * max;
+    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+
+    if (index != old_index || m_yoff != old_yoff) {
+        App::PlaySoundEffect(SoundEffect_Scroll);
+        return true;
+    }
+    return false;
 }
 
 } // namespace sphaira::ui

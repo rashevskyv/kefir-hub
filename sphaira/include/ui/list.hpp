@@ -33,6 +33,7 @@ struct List final : Object {
     auto ScrollPageUp(s64& index, s64 count) -> bool;
     auto ScrollToEnd(s64& index, s64 count) -> bool;
     auto ScrollToStart(s64& index, s64 count) -> bool;
+    auto ScrollStepList(s64& index, s64 count, bool forward) -> bool;
 
     auto GetYoff() const {
         return m_yoff;
