@@ -35,7 +35,7 @@ using Socket = int;
 
 constexpr u16 SHARE_PORT_FIRST = 8080;
 constexpr u16 SHARE_PORT_LAST = 8090;
-constexpr size_t HTTP_READ_LIMIT = 4096;
+constexpr size_t HTTP_READ_LIMIT = 16384;
 constexpr size_t HTTP_FILE_CHUNK = 1024 * 32;
 constexpr u32 IDLE_TIMEOUT_MS = 30000;
 
