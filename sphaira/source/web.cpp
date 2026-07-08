@@ -1,6 +1,7 @@
 #include "web.hpp"
 #include "log.hpp"
 #include "app.hpp"
+#include "i18n.hpp"
 #include "defines.hpp"
 #include "title_info.hpp"
 #include "utils/thread.hpp"
@@ -503,7 +504,6 @@ initLightbox();
 
 void AppendLightbox(std::string& body) {
     body += LIGHTBOX_CONTENT;
-}
 }
 
 constexpr std::string_view FOLDER_PAGE_HEADER = R"HTML(
@@ -2468,7 +2468,7 @@ ui::ProgressBox* WebGetProgressBox() {
 
 void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title) {
     App::Push<ui::ProgressBox>(qr_image, title, url,
-        [url](auto pbox) -> Result {
+        [url](ui::ProgressBox* pbox) -> Result {
             pbox->NewTransferForce("Press B to Stop Server"_i18n);
             WebSetProgressBox(pbox);
             ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
