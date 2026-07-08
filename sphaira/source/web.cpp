@@ -1835,8 +1835,18 @@ void HandleRequest(Socket sock) {
         return;
     }
 
-    if (path == "/" || path == "/files" || path == "/files/" || path == "/images" || path == "/images/" || path == "/gallery" || path == "/gallery/") {
+    if (path == "/" || path == "/files" || path == "/files/") {
         SendResponse(sock, "200 OK", "text/html", BuildFolderPage(GetQueryValue(query, "path")));
+        return;
+    }
+
+    if (path == "/images" || path == "/images/") {
+        SendResponse(sock, "200 OK", "text/html", BuildImagesPage());
+        return;
+    }
+
+    if (path == "/gallery" || path == "/gallery/") {
+        SendResponse(sock, "200 OK", "text/html", BuildGalleryPage(GetQueryValue(query, "path")));
         return;
     }
 
