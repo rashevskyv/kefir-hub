@@ -25,7 +25,7 @@ ProgressBox::ProgressBox(int image, const std::string& action, const std::string
     }
 
     SetAction(Button::B, Action{"Back"_i18n, [this](){
-        App::Push<OptionBox>("Are you sure you wish to cancel?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
+        App::Push<OptionBox>("Are you sure you wish to cancel?"_i18n, "\uE0E1 " + "No"_i18n, "\uE0EF " + "Yes"_i18n, 1, [this](auto op_index){
             if (op_index && *op_index) {
                 RequestExit();
                 SetPop();

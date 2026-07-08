@@ -464,7 +464,7 @@ constexpr std::string_view CONFIRM_MODAL_JS = R"HTML(
 let confirmPromiseResolve=null;
 function showConfirmDialog(text){return new Promise(res=>{const m=document.getElementById('confirm-modal');const t=document.getElementById('confirm-text');if(!m||!t){res(confirm(text));return;}t.textContent=text;m.style.display='flex';confirmPromiseResolve=res;});}
 function handleConfirmResult(res){const m=document.getElementById('confirm-modal');if(m)m.style.display='none';if(confirmPromiseResolve){const r=confirmPromiseResolve;confirmPromiseResolve=null;r(res);}}
-document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(!m||m.style.display==='none')return;if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleConfirmResult(false);}});
+document.addEventListener('keydown',function(e){const m=document.getElementById('confirm-modal');if(!m||m.style.display==='none')return;if(e.key==='+'||e.key==='='||e.key==='Add'){e.preventDefault();e.stopImmediatePropagation();handleConfirmResult(true);}else if(e.key==='b'||e.key==='B'||e.key==='Escape'||e.key==='Backspace'){e.preventDefault();e.stopImmediatePropagation();handleConfirmResult(false);}},true);
 document.addEventListener('DOMContentLoaded',()=>{const y=document.getElementById('confirm-yes-btn');if(y)y.onclick=()=>handleConfirmResult(true);const n=document.getElementById('confirm-no-btn');if(n)n.onclick=()=>handleConfirmResult(false);});
 )HTML";
 
@@ -569,7 +569,7 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
   .meta-size{font-size:10px;margin-right:0 !important;width:auto !important;text-align:right;margin-left:auto}
   .list .thumbnail-box{width:28px;height:28px}
   .delete-btn{display:none !important}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
   .grid .info{padding:6px;gap:2px}
   .grid .name{font-size:11px}
   .grid .meta{font-size:9px}
@@ -608,7 +608,6 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    AppendConfirmModal(body);
     body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
@@ -1107,6 +1106,7 @@ const url=new URL(window.location.href);const path=url.searchParams.get('path')|
     body += CONFIRM_MODAL_JS;
     body += FOLDER_PAGE_JS;
 
+    AppendConfirmModal(body);
     AppendLightbox(body);
 
     body += "</body></html>";
@@ -1908,8 +1908,8 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "  .crumbs{text-align:left;max-width:100%}";
     body += "  a.header-link-btn button{padding:8px 12px}";
     body += "  a.header-link-btn button .text{display:none}";
-    body += "  .folder-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;padding:12px}";
-    body += "  .grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;padding:12px}";
+    body += "  .folder-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:12px}";
+    body += "  .grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:12px}";
     body += "  .grid .info{padding:6px;gap:2px}";
     body += "  .game-name{font-size:11px}";
     body += "  .timestamp{font-size:9px}";

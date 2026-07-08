@@ -283,8 +283,18 @@ auto OptionBox::Setup(s64 index) -> void {
             SetPop();
         }}),
         std::make_pair(Button::B, Action{[this](){
-            m_callback({});
+            if (m_entries.size() == 2) {
+                m_callback(0);
+            } else {
+                m_callback({});
+            }
             SetPop();
+        }}),
+        std::make_pair(Button::START, Action{[this](){
+            if (m_entries.size() == 2) {
+                m_callback(1);
+                SetPop();
+            }
         }})
     );
 }
