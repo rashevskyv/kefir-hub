@@ -469,8 +469,8 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
     int end_ver = target_ver;
 
     if (current_ver == target_ver) {
-        start_ver = latest_available_ver;
-        end_ver = latest_available_ver;
+        start_ver = target_ver;
+        end_ver = target_ver;
     } else {
         start_ver = current_ver + 1;
     }
@@ -489,10 +489,6 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
         found_any = true;
         result += "**" + std::to_string(version) + "**\n";
         result += display_content + "\n\n";
-    }
-
-    if (!found_any) {
-        result += "No changelog entries found.";
     }
 
     return Trim(result);
@@ -933,7 +929,7 @@ public:
 
         SetActions(
             std::make_pair(Button::A, Action{"Install"_i18n, [this](){
-                if (m_loading || !m_unlocked || m_installing) {
+                if (m_loading || !m_unlocked || m_installing || !m_button_focused) {
                     App::PlaySoundEffect(SoundEffect_Limit);
                     return;
                 }
@@ -946,16 +942,38 @@ public:
                 SetPop();
             }}),
             std::make_pair(Button::UP | Button::LS_UP | Button::RS_UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
-                ScrollBy(-CHANGELOG_SCROLL_STEP);
+                if (m_button_focused) {
+                    m_button_focused = false;
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                } else {
+                    ScrollBy(-CHANGELOG_SCROLL_STEP);
+                }
             }}),
             std::make_pair(Button::DOWN | Button::LS_DOWN | Button::RS_DOWN, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
-                ScrollBy(CHANGELOG_SCROLL_STEP);
+                if (!m_button_focused) {
+                    if (m_scroll >= m_max_scroll - 0.5f) {
+                        if (m_unlocked) {
+                            m_button_focused = true;
+                            App::PlaySoundEffect(SoundEffect_Focus);
+                        } else {
+                            App::PlaySoundEffect(SoundEffect_Limit);
+                        }
+                    } else {
+                        ScrollBy(CHANGELOG_SCROLL_STEP);
+                    }
+                } else {
+                    App::PlaySoundEffect(SoundEffect_Limit);
+                }
             }}),
             std::make_pair(Button::L | Button::L2, Action{[this](){
-                ScrollBy(-m_text_area.h);
+                if (!m_button_focused) {
+                    ScrollBy(-m_text_area.h);
+                }
             }}),
             std::make_pair(Button::R | Button::R2, Action{[this](){
-                ScrollBy(m_text_area.h);
+                if (!m_button_focused) {
+                    ScrollBy(m_text_area.h);
+                }
             }})
         );
 
@@ -1010,10 +1028,34 @@ public:
         }
 
         const auto footer = m_loading ? "Loading changelog..." :
-            (m_unlocked ? "Ready to install." : "Scroll to the bottom to unlock Install.");
+            (m_unlocked ? (m_button_focused ? "Press A to Install." : "Scroll down to select Install.") : "Scroll to the bottom to unlock Install.");
         gfx::drawText(vg, m_pos.x + 42.f, m_pos.y + m_pos.h - 52.f, 17.f,
             theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR),
             footer, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+        // Малюємо кнопку
+        m_install_button_rect = Vec4{m_pos.x + m_pos.w - 262.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
+
+        nvgSave(vg);
+        if (!m_unlocked) {
+            // Неактивна
+            gfx::drawRect(vg, m_install_button_rect, nvgRGBA(60, 60, 64, 255), 4.f);
+            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
+                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        } else {
+            // Активна
+            const auto btn_color = m_button_focused ? nvgRGBA(76, 175, 80, 255) : nvgRGBA(46, 125, 50, 255);
+            gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
+            if (m_button_focused) {
+                // Малюємо рамку виділення навколо кнопки
+                gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
+            }
+            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
+                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
+                nvgRGBA(255, 255, 255, 255), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        }
+        nvgRestore(vg);
 
         Widget::Draw(vg, theme);
     }
@@ -1098,6 +1140,20 @@ private:
         gfx::drawScrollbar2(vg, theme, m_text_area.x + m_text_area.w + 20.f, m_text_area.y, m_text_area.h, index, count, 1, page);
     }
 
+    void Update(Controller* controller, TouchInfo* touch) override {
+        Widget::Update(controller, touch);
+
+        if (touch->is_clicked) {
+            if (m_unlocked && touch->in_range(m_install_button_rect)) {
+                if (!m_installing) {
+                    m_installing = true;
+                    m_callback();
+                    SetPop();
+                }
+            }
+        }
+    }
+
     UpdaterEntry m_entry;
     Callback m_callback;
     std::string m_current_version;
@@ -1111,6 +1167,8 @@ private:
     bool m_loading{true};
     bool m_unlocked{};
     bool m_installing{};
+    bool m_button_focused{false};
+    Vec4 m_install_button_rect{};
 };
 
 auto IsSelectableEntry(const UpdaterEntry& entry) -> bool {
