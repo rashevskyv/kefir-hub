@@ -36,7 +36,6 @@ private:
     void DisplayImageOptions();
     void DeleteImages();
     void ZipImages(fs::FsPath zip_path);
-    void UploadImages();
     void CreateSwitchTheme();
     void RemoveDeletedImages(const std::vector<s64>& indices);
     auto GetDisplayName() const -> std::string;

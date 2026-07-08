@@ -29,7 +29,6 @@ struct WebUploadState {
 };
 
 auto WebShow(const std::string& url) -> Result;
-auto WebShareImages(const std::vector<WebShareEntry>& entries, WebShareResult& out) -> Result;
 auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result;
 void WebShareStop();
 WebUploadState WebGetUploadState();

@@ -39,12 +39,10 @@ constexpr size_t HTTP_FILE_CHUNK = 1024 * 32;
 
 enum class ShareMode {
     None,
-    Images,
     Folder,
 };
 
 std::mutex g_share_mutex{};
-std::vector<WebShareEntry> g_share_entries{};
 fs::FsPath g_share_folder_root{};
 ShareMode g_share_mode{ShareMode::None};
 Thread g_share_thread{};
@@ -389,49 +387,7 @@ auto ReadHttpRequest(Socket sock, std::string& out) -> bool {
     return !out.empty();
 }
 
-auto GetSharedEntries() -> std::vector<WebShareEntry> {
-    std::scoped_lock lock{g_share_mutex};
-    return g_share_entries;
-}
 
-auto BuildImagesPage() -> std::string {
-    const auto entries = GetSharedEntries();
-    std::string body;
-    body.reserve(4096 + entries.size() * 256);
-
-    body += "<!doctype html><html><head><meta charset=\"utf-8\">";
-    body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
-    body += "<title>Sphaira Images</title>";
-    body += "<style>";
-    body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:#f7f7f7}";
-    body += "header{position:sticky;top:0;background:#181818;padding:16px 18px;border-bottom:1px solid #333}";
-    body += "h1{font-size:20px;margin:0 0 4px}p{margin:0;color:#bbb}";
-    body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:12px}";
-    body += "a{display:block;color:inherit;text-decoration:none;background:#1c1c1c;border:1px solid #333;border-radius:8px;overflow:hidden}";
-    body += "img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#050505}";
-    body += "span{display:block;padding:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd}";
-    body += "</style></head><body>";
-    body += "<header><h1>Sphaira Images</h1><p>";
-    body += std::to_string(entries.size());
-    body += entries.size() == 1 ? " image" : " images";
-    body += "</p></header><main class=\"grid\">";
-
-    for (size_t i = 0; i < entries.size(); i++) {
-        const auto name = HtmlEscape(entries[i].name);
-        body += "<a href=\"/image/";
-        body += std::to_string(i);
-        body += "\" target=\"_blank\"><img loading=\"lazy\" src=\"/image/";
-        body += std::to_string(i);
-        body += "\" alt=\"";
-        body += name;
-        body += "\"><span>";
-        body += name;
-        body += "</span></a>";
-    }
-
-    body += "</main></body></html>";
-    return body;
-}
 
 auto HeaderValue(const std::string& req, std::string_view name) -> std::string {
     auto pos = req.find("\r\n");
@@ -1132,56 +1088,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     return body;
 }
 
-void SendImage(Socket sock, size_t index) {
-    const auto entries = GetSharedEntries();
-    if (index >= entries.size()) {
-        SendResponse(sock, "404 Not Found", "text/plain", "Image not found");
-        return;
-    }
 
-    fs::FsNativeSd fs;
-    fs::File file;
-    if (R_FAILED(fs.OpenFile(entries[index].path, FsOpenMode_Read, &file))) {
-        SendResponse(sock, "404 Not Found", "text/plain", "Could not open image");
-        return;
-    }
-
-    s64 size{};
-    if (R_FAILED(file.GetSize(&size))) {
-        SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not read image size");
-        return;
-    }
-
-    char header[512]{};
-    std::snprintf(header, sizeof(header),
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: %s\r\n"
-        "Content-Length: %zd\r\n"
-        "Cache-Control: no-store\r\n"
-        "Connection: close\r\n"
-        "\r\n",
-        ContentTypeForPath(entries[index].path), size);
-
-    if (!SendString(sock, header)) {
-        return;
-    }
-
-    std::vector<u8> buf(HTTP_FILE_CHUNK);
-    s64 offset{};
-    while (offset < size) {
-        const auto todo = std::min<s64>(buf.size(), size - offset);
-        u64 bytes_read{};
-        if (R_FAILED(file.Read(offset, buf.data(), todo, FsReadOption_None, &bytes_read)) || !bytes_read) {
-            return;
-        }
-
-        if (!SendAll(sock, buf.data(), bytes_read)) {
-            return;
-        }
-
-        offset += bytes_read;
-    }
-}
 
 void SendDownload(Socket sock, const std::string& rel) {
     if (rel.empty()) {
@@ -1300,116 +1207,7 @@ void SendView(Socket sock, const std::string& rel) {
 }
 
 
-auto BuildGalleryPage(std::string path_str) -> std::string {
-    if (path_str.empty()) {
-        path_str = GetShareFolderRoot().toString();
-    }
-    const auto abs_path = CanonicalizeAbsolutePath(path_str);
 
-    fs::FsNativeSd fs;
-    fs::Dir dir;
-    std::vector<FsDirectoryEntry> entries;
-    if (R_SUCCEEDED(fs.OpenDirectory(abs_path, FsDirOpenMode_ReadFiles, &dir))) {
-        dir.ReadAll(entries);
-    }
-
-    std::vector<FsDirectoryEntry> images;
-    for (const auto& entry : entries) {
-        if (entry.type == FsDirEntryType_File && IsImagePath(entry.name)) {
-            images.push_back(entry);
-        }
-    }
-
-    std::sort(images.begin(), images.end(), [](const auto& lhs, const auto& rhs){
-        return strcasecmp(lhs.name, rhs.name) < 0;
-    });
-
-    const auto encoded_path = UrlEncode(abs_path);
-    std::string body;
-    body.reserve(4096 + images.size() * 256);
-
-    body += "<!doctype html><html><head><meta charset=\"utf-8\">";
-    body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
-    body += "<title>Sphaira Gallery</title>";
-    body += "<style>";
-    body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
-    body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:1}";
-    body += "h1{font-size:20px;margin:0 0 6px}.path{color:#b9c2cc;word-break:break-all}.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}";
-    body += "button{border:1px solid #50545c;background:#252a32;color:#fff;border-radius:6px;padding:10px 12px;font:inherit;cursor:pointer}";
-    body += ".crumbs a{color:#9fc6ff;text-decoration:none}";
-    body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:12px}";
-    body += "a.card{display:block;color:inherit;text-decoration:none;background:#1c1c1c;border:1px solid #333;border-radius:8px;overflow:hidden}";
-    body += "img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#050505}";
-    body += "span{display:block;padding:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd}";
-    body += ".empty{padding:26px 18px;color:#98a1aa}";
-    body += ".del-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171;border-radius:6px;padding:6px 0;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s}";
-    body += ".del-btn:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
-    body += "</style></head><body><header><h1>Sphaira Gallery</h1><div class=\"path\">";
-    body += HtmlEscape(abs_path);
-    body += "</div><div class=\"crumbs\"><a href=\"/files?path=/\">SD Card</a>";
-
-    std::string crumb_accum;
-    size_t start{};
-    while (start < abs_path.size()) {
-        const auto end = abs_path.find('/', start);
-        const auto part = abs_path.substr(start, end == std::string::npos ? std::string::npos : end - start);
-        if (!part.empty()) {
-            crumb_accum += '/' + part;
-            body += " / <a href=\"/gallery?path=";
-            body += UrlEncode(crumb_accum);
-            body += "\">";
-            body += HtmlEscape(part);
-            body += "</a>";
-        }
-        if (end == std::string::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-
-    body += "</div><div class=\"bar\">";
-    body += "<button onclick=\"location.href='/files?path=" + encoded_path + "'\">List View</button>";
-    body += "</div></header><main class=\"grid\">";
-
-    if (images.empty()) {
-        body += "<div class=\"empty\">No images found in this folder</div>";
-    }
-
-    for (const auto& entry : images) {
-        const std::string name{entry.name};
-        auto child = abs_path;
-        if (child.empty() || child.back() != '/') {
-            child += '/';
-        }
-        child += name;
-
-        const auto encoded_child = UrlEncode(child);
-        const auto escaped_name = HtmlEscape(name);
-
-        body += "<a class=\"card\" href=\"/view?path=";
-        body += encoded_child;
-        body += "\"><img loading=\"lazy\" src=\"/view?path=";
-        body += encoded_child;
-        body += "\" alt=\"";
-        body += escaped_name;
-        body += "\"><span>";
-        body += escaped_name;
-        body += "</span><button class=\"del-btn\" onclick=\"deleteImg(event,'";
-        body += encoded_child;
-        body += "')\">Delete</button></a>";
-    }
-
-    body += "</main>";
-
-    AppendLightbox(body);
-
-    body += "<script>";
-    body += "async function deleteImg(e,path){e.preventDefault();e.stopPropagation();if(!confirm('Delete '+decodeURIComponent(path.split('/').pop())+'?'))return;const res=await fetch('/delete?path='+path,{method:'DELETE'});if(res.ok){location.reload();}else{alert('Delete failed: '+await res.text());}}";
-    body += "</script>";
-
-    body += "</body></html>";
-    return body;
-}
 
 auto UniqueUploadPath(fs::FsNativeSd& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath {
     auto out = fs::AppendPath(dir, name);
@@ -1878,15 +1676,7 @@ void HandleRequest(Socket sock) {
         return;
     }
 
-    if (path == "/images" || path == "/images/") {
-        SendResponse(sock, "200 OK", "text/html", BuildImagesPage());
-        return;
-    }
 
-    if (path == "/gallery" || path == "/gallery/") {
-        SendResponse(sock, "200 OK", "text/html", BuildGalleryPage(GetQueryValue(query, "path")));
-        return;
-    }
 
     if (path == "/download") {
         SendDownload(sock, GetQueryValue(query, "path"));
@@ -1908,16 +1698,7 @@ void HandleRequest(Socket sock) {
         return;
     }
 
-    constexpr std::string_view IMAGE_PREFIX{"/image/"};
-    if (path.starts_with(IMAGE_PREFIX)) {
-        const auto value = path.substr(IMAGE_PREFIX.size());
-        char* end{};
-        const auto index = std::strtoull(value.c_str(), &end, 10);
-        if (end && *end == '\0') {
-            SendImage(sock, index);
-            return;
-        }
-    }
+
 
     SendResponse(sock, "404 Not Found", "text/plain", "Not found");
 }
@@ -2373,37 +2154,7 @@ auto WebShow(const std::string& url) -> Result {
     R_SUCCEED();
 }
 
-auto WebShareImages(const std::vector<WebShareEntry>& entries, WebShareResult& out) -> Result {
-    R_UNLESS(!entries.empty(), Result_FsEmpty);
 
-    u32 ip{};
-    R_TRY(nifmGetCurrentIpAddress(&ip));
-    R_UNLESS(ip != 0, Result_FsNotActive);
-
-    {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_entries = entries;
-        g_share_folder_root = {};
-        g_share_mode = ShareMode::Images;
-    }
-
-    if (const auto rc = StartShareServer(); R_FAILED(rc)) {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_entries.clear();
-        g_share_folder_root = {};
-        g_share_mode = ShareMode::None;
-        R_THROW(rc);
-    }
-
-    char url[128]{};
-    std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u/images",
-        ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
-
-    out.url = url;
-    out.qr_image = CreateQrImage(out.url);
-
-    R_SUCCEED();
-}
 
 auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     R_UNLESS(!path.empty(), Result_FsEmpty);
@@ -2417,14 +2168,12 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
 
     {
         std::scoped_lock lock{g_share_mutex};
-        g_share_entries.clear();
         g_share_folder_root = path;
         g_share_mode = ShareMode::Folder;
     }
 
     if (const auto rc = StartShareServer(); R_FAILED(rc)) {
         std::scoped_lock lock{g_share_mutex};
-        g_share_entries.clear();
         g_share_folder_root = {};
         g_share_mode = ShareMode::None;
         R_THROW(rc);
@@ -2456,7 +2205,6 @@ void WebShareStop() {
     }
 
     std::scoped_lock lock{g_share_mutex};
-    g_share_entries.clear();
     g_share_folder_root = {};
     g_share_mode = ShareMode::None;
 }

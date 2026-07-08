@@ -28,7 +28,7 @@ Acceptance criteria**. Work top-down; one logical fix per commit, and update
 
 ## P0 — Correctness / functional regressions
 
-### P0-1. [RESOLVED] "Share Images" and "Gallery" are broken; two page builders are dead code
+### P0-1. [RESOLVED] Drop old dead image share feature (Option B)
 **Problem.** In `HandleRequest` the routes `/`, `/files`, `/images`, `/gallery`
 all return `BuildFolderPage(...)` (web.cpp:1833-1836). Consequences:
 - `WebShareImages()` advertises URL `.../images`, but that URL now renders the
@@ -42,17 +42,30 @@ all return `BuildFolderPage(...)` (web.cpp:1833-1836). Consequences:
 
 **Where.** web.cpp:1833-1836, 391, 1292, 1124 (`SendImage`), 2323 (`WebShareImages`).
 
-**Fix (pick one, record the choice in walkthrough):**
-- Option A (keep images): route `/images` → `BuildImagesPage()` and
-  `/gallery` → `BuildGalleryPage(path)`; leave `/` and `/files` on
-  `BuildFolderPage`. Verify the images-share flow renders the grid.
-- Option B (drop images): remove `BuildImagesPage`, `BuildGalleryPage`,
+**Fix.** Option B (drop images): remove `BuildImagesPage`, `BuildGalleryPage`,
   `SendImage`, the `/image/` route, `WebShareImages`, `ShareMode::Images` and
-  the now-unused `g_share_entries`, plus any UI entry point that calls them.
+  the now-unused `g_share_entries`, plus any UI entry point that calls them (like `UploadImages()` in `file_viewer.cpp`).
 
-**Acceptance criteria.** No dead functions remain. If kept: sharing images opens
-a working grid whose thumbnails and `/image/N` load. If dropped: compiles with no
-unreferenced-function warnings and no UI path invokes the removed feature.
+**Acceptance criteria.** compiles with no unreferenced-function warnings and no UI path invokes the removed feature.
+
+---
+
+### P0-1b. Screenshot Gallery and Tools Integration
+**Problem.** The old `WebShareImages` and image sharing/gallery logic are obsolete. Users need a dedicated Screenshot Gallery feature that displays files from `/Nintendo/Album` on the SD card:
+- The gallery should scan `/Nintendo/Album` recursively (iteratively).
+- Screenshots and videos must be sorted by date (newest first) based on filename timestamps.
+- Switch screenshot filename structure (`YYYYMMDDHHMMSS00-TITLEID.ext`) should be parsed:
+  - Extract the formatted timestamp (e.g. `YYYY-MM-DD HH:MM:SS`).
+  - Extract the Title ID and resolve the game's display name using `title::Get(title_id)`.
+- The Web Sharing Server and Screenshot Gallery should be directly launchable from the **Tools** menu (as "Start Web Server" and "Share Screenshots" respectively), without requiring the user to navigate through the File Browser.
+
+**Where.** `sphaira/source/web.cpp`, `sphaira/source/ui/menus/tools_menu.cpp`.
+
+**Fix.**
+- Implement a new `/screenshots` and `/screenshots/` web route that serves a screenshot gallery page showing all files from `/Nintendo/Album` with date-sorting and game names parsed from filenames.
+- Add "Start Web Server" and "Screenshots" entries to `tools_menu.cpp`. Selecting "Start Web Server" launches the share server. Selecting "Screenshots" launches the share server configured for the screenshot gallery.
+
+**Acceptance criteria.** Tools menu includes the two new tiles. Accessing the web server's screenshots page shows a beautiful gallery of Switch screenshots sorted by date, with human-readable timestamps and parsed game names instead of raw filenames.
 
 ---
 

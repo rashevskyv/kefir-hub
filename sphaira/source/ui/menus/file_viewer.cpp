@@ -338,11 +338,6 @@ void Menu::DisplayImageOptions() {
         CreateSwitchTheme();
     });
 
-    options->Add<SidebarEntryCallback>("Upload"_i18n, [this](){
-        App::PopToMenu();
-        UploadImages();
-    });
-
     App::Push(std::move(options));
 }
 
@@ -470,30 +465,7 @@ void Menu::ZipImages(fs::FsPath zip_out) {
     });
 }
 
-void Menu::UploadImages() {
-    const auto targets = GetTargetPaths();
-    if (targets.empty()) {
-        return;
-    }
 
-    std::vector<WebShareEntry> entries;
-    entries.reserve(targets.size());
-    for (const auto& path : targets) {
-        entries.push_back(WebShareEntry{
-            .path = path,
-            .name = PathFileName(path),
-        });
-    }
-
-    WebShareResult result;
-    if (const auto rc = WebShareImages(entries, result); R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to start image server"_i18n);
-        return;
-    }
-
-    auto message = "Open this address in a browser:"_i18n + std::string{"\n"} + result.url + "\n\n" + "Or scan the QR code."_i18n;
-    App::Push<OptionBox>(message, "OK"_i18n, [](auto){}, result.qr_image, true);
-}
 
 void Menu::CreateSwitchTheme() {
     const auto targets = GetTargetPaths();
