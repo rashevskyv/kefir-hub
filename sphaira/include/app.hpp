@@ -113,6 +113,7 @@ public:
     static auto GetLanguage() -> long;
     static auto GetTextScrollSpeed() -> long;
     static auto GetGodModeEnabled() -> bool;
+    static auto GetProgressActive() -> bool;
 
     static void SetMtpEnable(bool enable);
     static void SetFtpEnable(bool enable);
@@ -133,6 +134,7 @@ public:
     static void SetLanguage(long index);
     static void SetTextScrollSpeed(long index);
     static void SetGodModeEnable(bool enable);
+    static void SetProgressActive(bool active);
 
     static auto Install(OwoConfig& config) -> Result;
     static auto Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result;

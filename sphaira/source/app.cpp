@@ -6,6 +6,7 @@
 #include "ui/error_box.hpp"
 
 #include "ui/menus/main_menu.hpp"
+#include "ui/menus/install_stream_menu_base.hpp"
 
 #include "app.hpp"
 #include "log.hpp"
@@ -488,6 +489,11 @@ void App::Loop() {
                     if (arg.callback && !arg.stoken.stop_requested()) {
                         arg.callback(arg.result);
                     }
+                } else if constexpr(std::is_same_v<T, evman::FunctionalEventData>) {
+                    log_write("[FunctionalEventData] got event\n");
+                    if (arg.callback) {
+                        arg.callback();
+                    }
                 } else {
                     static_assert(false, "non-exhaustive visitor!");
                 }
@@ -725,7 +731,17 @@ auto App::GetTextScrollSpeed() -> long {
 auto App::GetGodModeEnabled() -> bool {
     return g_app->m_god_mode.Get();
 }
-
+ 
+static std::atomic<bool> g_progress_active{false};
+ 
+auto App::GetProgressActive() -> bool {
+    return g_progress_active;
+}
+ 
+void App::SetProgressActive(bool active) {
+    g_progress_active = active;
+}
+ 
 auto App::Get12HourTimeEnable() -> bool {
     return g_app->m_12hour_time.Get();
 }
@@ -915,6 +931,7 @@ void App::SetMtpEnable(bool enable) {
         g_app->m_mtp_enabled.Set(enable);
         if (enable) {
             haze::Init();
+            ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
         } else {
             haze::Exit();
         }
@@ -1479,6 +1496,7 @@ App::App(const char* argv0) {
 
     if (App::GetMtpEnable()) {
         haze::Init();
+        ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
     }
 
     if (App::GetFtpEnable()) {

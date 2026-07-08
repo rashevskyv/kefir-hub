@@ -20,6 +20,7 @@ void threadFunc(void* arg) {
 } // namespace
 
 ProgressBox::ProgressBox(int image, const std::string& action, const std::string& title, ProgressBoxCallback callback, ProgressBoxDoneCallback done, int cpuid, int prio, int stack_size) {
+    App::SetProgressActive(true);
     if (App::GetApp()->m_progress_boost_mode.Get()) {
         App::SetBoostMode(true);
     }
@@ -72,6 +73,7 @@ ProgressBox::~ProgressBox() {
     m_done(m_thread_data.result);
 
     App::SetBoostMode(false);
+    App::SetProgressActive(false);
 }
 
 auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {

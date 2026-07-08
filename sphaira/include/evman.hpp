@@ -1,6 +1,7 @@
 // simple thread-safe list of events.
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <variant>
 #include <list>
@@ -20,11 +21,16 @@ struct ExitEventData {
     bool dummy;
 };
 
+struct FunctionalEventData {
+    std::function<void()> callback;
+};
+
 using EventData = std::variant<
     LaunchNroEventData,
     ExitEventData,
     NxlinkCallbackData,
-    curl::DownloadEventData
+    curl::DownloadEventData,
+    FunctionalEventData
 >;
 
 // returns number of events

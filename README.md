@@ -119,6 +119,7 @@ Sphaira features a built-in game installer supporting multiple formats (NSP, NSZ
   - **System first, then SD:** Install to NAND; if NAND does not have enough free space (taking the reserve threshold into account), automatically fall back to microSD.
   - **SD first, then system:** Install to microSD; if microSD space is below the reserve threshold, fall back to NAND.
   - **Automatic:** Install to whichever storage has the most free space (NAND or microSD) after verifying that both satisfy the reserve threshold.
+- **Background MTP Installation:** When MTP is enabled, you can copy game files directly to the virtual `install` folder from your PC via USB MTP at any time. Sphaira will automatically detect the file transfer, launch the installer in the background, and display a progress overlay with real-time transfer speed and estimated remaining time. If another installation or storage operation is already in progress, it will safely reject the MTP file transfer and notify you.
 - **Customizable Reserve Threshold:** Set the free space reserve threshold in Megabytes (MB) via Settings -> Install -> "Reserve free space" (opens an on-screen numpad). If a target storage doesn't meet the reserve limit during installation, the installer falls back to the secondary storage or warns the user.
 
 ## Theme Creator

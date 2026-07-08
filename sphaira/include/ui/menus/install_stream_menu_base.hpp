@@ -2,8 +2,18 @@
 
 #include "ui/menus/menu_base.hpp"
 #include "yati/source/stream.hpp"
+#include <atomic>
+#include <memory>
 
 namespace sphaira::ui::menu::stream {
+
+enum InstallState {
+    InstallState_None,
+    InstallState_Progress,
+    InstallState_Finished,
+};
+
+extern std::atomic<int> INSTALL_STATE;
 
 enum class State {
     // not connected.
@@ -51,6 +61,7 @@ struct Menu : MenuBase {
     virtual void OnDisableInstallMode() = 0;
 
 protected:
+    friend class BackgroundInstaller;
     bool OnInstallStart(const char* path);
     bool OnInstallWrite(const void* buf, size_t size);
     void OnInstallClose();
@@ -60,6 +71,22 @@ private:
     Thread m_thread{};
     Mutex m_mutex{};
     State m_state{State::None};
+};
+
+class BackgroundInstaller {
+public:
+    static void RegisterMtpCallbacks();
+    static void SetActiveMenu(Menu* menu);
+
+    static bool OnInstallStart(const char* path);
+    static bool OnInstallWrite(const void* buf, size_t size);
+    static void OnInstallClose();
+
+private:
+    static Menu* s_active_menu;
+    static std::shared_ptr<Stream> s_source;
+    static std::stop_source s_stop_source;
+    static std::atomic<bool> s_installing;
 };
 
 } // namespace sphaira::ui::menu::stream
