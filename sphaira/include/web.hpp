@@ -31,5 +31,6 @@ WebUploadState WebGetUploadState();
 bool WebShareIsRunning();
 void WebSetProgressBox(ui::ProgressBox* pbox);
 ui::ProgressBox* WebGetProgressBox();
+void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title);
 
 } // namespace sphaira

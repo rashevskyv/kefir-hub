@@ -1563,7 +1563,8 @@ Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, c
 bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
     s64 estimated_size = total_size;
     if (is_compressed) {
-        estimated_size = static_cast<s64>(total_size * 1.6);
+        constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
+        estimated_size = static_cast<s64>(total_size * COMPRESSED_SIZE_FACTOR);
     }
 
     s64 free_nand = 0;

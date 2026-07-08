@@ -1178,48 +1178,7 @@ void FsView::ShareFolder() {
         return;
     }
 
-    const auto url = result.url;
-    const auto qr_image = result.qr_image;
-    App::Push<ProgressBox>(qr_image, "StartWebServer"_i18n, url,
-        [url](auto pbox) -> Result {
-            pbox->NewTransferForce("Press B to Stop Server"_i18n);
-            WebSetProgressBox(pbox);
-            ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
-            std::string last_name;
-            while (!pbox->ShouldExit() && WebShareIsRunning()) {
-                const auto state = WebGetUploadState();
-                if (state.active) {
-                    if (state.name != last_name) {
-                        last_name = state.name;
-                        pbox->NewTransferForce(state.name);
-                    }
-                    pbox->UpdateTransferForce(state.bytes, state.total);
-                } else if (!last_name.empty()) {
-                    const std::string completed_name = last_name;
-                    last_name.clear();
-                    pbox->ResetTransferProgress();
-                    pbox->SetTitle(url);
-                    if (completed_name.starts_with("Installing:")) {
-                        pbox->NewTransferForce("Installation completed"_i18n);
-                    } else {
-                        pbox->NewTransferForce("Upload completed"_i18n);
-                    }
-                    for (int i = 0; i < 30 && !WebGetUploadState().active && !pbox->ShouldExit(); ++i) {
-                        svcSleepThread(100'000'000LL);
-                    }
-                    if (!WebGetUploadState().active && !pbox->ShouldExit()) {
-                        pbox->NewTransferForce("Press B to Stop Server"_i18n);
-                    }
-                }
-                svcSleepThread(100'000'000LL);
-            }
-            WebShareStop();
-            R_SUCCEED();
-        },
-        [qr_image](Result) {
-            nvgDeleteImage(App::GetVg(), qr_image);
-        }
-    );
+    WebPushServerProgressBox(result.url, result.qr_image, "StartWebServer"_i18n);
 }
 
 auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {

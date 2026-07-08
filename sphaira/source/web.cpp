@@ -1422,7 +1422,6 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     while (offset < content_length) {
         if (!g_share_running.load()) {
             g_upload_state.active.store(false);
-            SendResponse(sock, "400 Bad Request", "text/plain", "Server stopped");
             return;
         }
         if (auto pbox = WebGetProgressBox()) {
@@ -1629,6 +1628,7 @@ struct ScreenshotEntry {
     std::string game_name;
     s64 file_size{};
     std::string raw_timestamp; // YYYYMMDDHHMMSS00 (for sorting)
+    bool is_video{};
 };
 
 void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
@@ -1678,6 +1678,7 @@ void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
                         se.path = child;
                         se.filename = d_entry.name;
                         se.file_size = d_entry.file_size;
+                        se.is_video = (ext == "mp4");
 
                         std::string stem = d_entry.name;
                         if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
@@ -1782,7 +1783,7 @@ auto BuildScreenshotGalleryPage() -> std::string {
         
         body += "<div class=\"card\">";
         
-        bool is_video = entry.filename.ends_with(".mp4");
+        bool is_video = entry.is_video;
         if (is_video) {
             body += "<video controls preload=\"none\" src=\"/view?path=" + encoded_path + "\"></video>";
         } else {
@@ -1909,6 +1910,8 @@ void HandleRequest(Socket sock) {
     SendResponse(sock, "404 Not Found", "text/plain", "Not found");
 }
 
+// ShareThreadFunc processes client requests sequentially.
+// NOTE: It handles only one connection at a time (single-threaded concurrency model).
 void ShareThreadFunc(void*) {
     while (g_share_running) {
         sockaddr_in remote{};
@@ -2461,6 +2464,49 @@ void WebSetProgressBox(ui::ProgressBox* pbox) {
 
 ui::ProgressBox* WebGetProgressBox() {
     return g_web_pbox.load();
+}
+
+void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title) {
+    App::Push<ui::ProgressBox>(qr_image, title, url,
+        [url](auto pbox) -> Result {
+            pbox->NewTransferForce("Press B to Stop Server"_i18n);
+            WebSetProgressBox(pbox);
+            ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
+            std::string last_name;
+            while (!pbox->ShouldExit() && WebShareIsRunning()) {
+                const auto state = WebGetUploadState();
+                if (state.active) {
+                    if (state.name != last_name) {
+                        last_name = state.name;
+                        pbox->NewTransferForce(state.name);
+                    }
+                    pbox->UpdateTransferForce(state.bytes, state.total);
+                } else if (!last_name.empty()) {
+                    const std::string completed_name = last_name;
+                    last_name.clear();
+                    pbox->ResetTransferProgress();
+                    pbox->SetTitle(url);
+                    if (completed_name.starts_with("Installing:")) {
+                        pbox->NewTransferForce("Installation completed"_i18n);
+                    } else {
+                        pbox->NewTransferForce("Upload completed"_i18n);
+                    }
+                    for (int i = 0; i < 30 && !WebGetUploadState().active && !pbox->ShouldExit(); ++i) {
+                        svcSleepThread(100'000'000LL);
+                    }
+                    if (!WebGetUploadState().active && !pbox->ShouldExit()) {
+                        pbox->NewTransferForce("Press B to Stop Server"_i18n);
+                    }
+                }
+                svcSleepThread(100'000'000LL);
+            }
+            WebShareStop();
+            R_SUCCEED();
+        },
+        [qr_image](Result) {
+            nvgDeleteImage(App::GetVg(), qr_image);
+        }
+    );
 }
 
 bool WebShareIsRunning() {
