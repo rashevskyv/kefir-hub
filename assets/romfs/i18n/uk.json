@@ -582,5 +582,16 @@
   "Delete Orphaned": "Видалити застарілі чити",
   "Delete cheats for uninstalled games": "Видалити чити для видалених ігор",
   "Clear Cheats Cache": "Очистити кеш читів",
-  "Delete cached cheats database": "Видалити кешовану базу даних читів"
+  "Delete cached cheats database": "Видалити кешовану базу даних читів",
+  "FilePicker": "Вибір файлу",
+  "Close File Picker?": "Закрити вибір файлу?",
+  "Press A to Install.": "Натисніть A для встановлення.",
+  "Scroll to the bottom to unlock Install.": "Прокрутіть до самого низу, щоб розблокувати встановлення.",
+  "Save Action": "Дія зі збереженням",
+  "Backup": "Резервна копія",
+  "Hold A to continue": "Утримуйте A для продовження",
+  "This action changes files on the SD card. Hold A to continue.": "Ця дія змінює файли на карті SD. Утримуйте A для продовження.",
+  "Remove installed interface translations and reboot.": "Видалити встановлені переклади інтерфейсу та перезавантажити консоль.",
+  "Replace language": "Замінити мову",
+  "Failed to run package action": "Не вдалося виконати дію пакета",
 }

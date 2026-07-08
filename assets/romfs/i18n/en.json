@@ -583,5 +583,15 @@
   "Delete Orphaned": "Delete Orphaned",
   "Delete cheats for uninstalled games": "Delete cheats for uninstalled games",
   "Clear Cheats Cache": "Clear Cheats Cache",
-  "Delete cached cheats database": "Delete cached cheats database"
+  "Delete cached cheats database": "Delete cached cheats database",
+  "FilePicker": "FilePicker",
+  "Close File Picker?": "Close File Picker?",
+  "Press A to Install.": "Press A to Install.",
+  "Scroll to the bottom to unlock Install.": "Scroll to the bottom to unlock Install.",
+  "Save Action": "Save Action",
+  "Backup": "Backup",
+  "Hold A to continue": "Hold A to continue",
+  "This action changes files on the SD card. Hold A to continue.": "This action changes files on the SD card. Hold A to continue.",
+  "Replace language": "Replace language",
+  "Failed to run package action": "Failed to run package action",
 }

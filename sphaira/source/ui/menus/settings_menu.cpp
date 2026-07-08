@@ -1436,7 +1436,7 @@ void RunPackageAction(const PackageAction& action) {
 
     auto warning = action.warning;
     if (warning.empty()) {
-        warning = "This action changes files on the SD card. Hold A to continue.";
+        warning = "This action changes files on the SD card. Hold A to continue."_i18n;
     }
 
     App::Push<HoldConfirmBox>(
@@ -1718,7 +1718,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         [](auto pbox) -> Result {
             pbox->NewTransfer("Removing translations..."_i18n);
             for (const auto path : TRANSLATION_PATHS) {
-                R_TRY(DeletePath(path));
+                DeletePath(path);
             }
             RebootAfterSetting();
             R_SUCCEED();
@@ -3924,7 +3924,7 @@ void ThemesMenu::OnSelect() {
     }
 }
 
-TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface", MenuFlag_None} {
+TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_None} {
     m_items = BuildTranslateItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
