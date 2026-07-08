@@ -1045,12 +1045,6 @@ private:
                     m_text = BuildKefirChangelogText(raw, m_current_version, m_target_version, should_skip);
                 }
 
-                if (should_skip) {
-                    m_callback();
-                    SetPop();
-                    return;
-                }
-
                 m_scroll = 0.f;
                 m_max_scroll = 0.f;
                 m_unlocked = false;
@@ -1418,7 +1412,12 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
         curl::Path{AMS_ZIP},
         curl::OnProgress{pbox->OnDownloadProgressCallback()}
     );
-    R_UNLESS(result.success, 0x1);
+    if (!result.success) {
+        if (pbox->ShouldExit()) {
+            R_THROW(Result_TransferCancelled);
+        }
+        R_THROW(Result_AppstoreFailedZipDownload);
+    }
 
     if (fs.DirExists(KEFIR_PATH)) {
         R_TRY(fs.DeleteDirectoryRecursively(KEFIR_PATH));
@@ -1608,7 +1607,12 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
         curl::Path{FIRMWARE_ZIP},
         curl::OnProgress{pbox->OnDownloadProgressCallback()}
     );
-    R_UNLESS(result.success, 0x1);
+    if (!result.success) {
+        if (pbox->ShouldExit()) {
+            R_THROW(Result_TransferCancelled);
+        }
+        R_THROW(Result_AppstoreFailedZipDownload);
+    }
 
     if (fs.DirExists(FIRMWARE_DEST)) {
         R_TRY(fs.DeleteDirectoryRecursively(FIRMWARE_DEST));
@@ -2122,7 +2126,14 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
                 },
                 [this, entry, on_success = std::move(on_success)](Result rc) mutable {
                     if (R_FAILED(rc)) {
-                        App::Push<ErrorBox>(rc, "Failed to install " + entry.name);
+                        if (rc == Result_TransferCancelled) {
+                            return;
+                        }
+                        if (rc == Result_AppstoreFailedZipDownload) {
+                            App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
+                        } else {
+                            App::Push<ErrorBox>(rc, "Failed to install " + entry.name);
+                        }
                         return;
                     }
 
@@ -2179,6 +2190,9 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
                 },
                 [this, entry](Result rc) {
                     if (R_FAILED(rc)) {
+                        if (rc == Result_TransferCancelled) {
+                            return;
+                        }
                         App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
                         return;
                     }
