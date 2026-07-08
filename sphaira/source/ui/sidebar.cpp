@@ -82,30 +82,28 @@ auto SidebarEntryBase::OnFocusGained() noexcept -> void {
 
 auto SidebarEntryBase::OnFocusLost() noexcept -> void {
     Widget::OnFocusLost();
-    m_scolling_value.Reset();
+    m_scolling_title.Reset();
 }
 
 void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
+    const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
 
-    // scrolling text
+    // measure right value width to know how much space it occupies
     float bounds[4];
     nvgFontSize(vg, 20);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgTextBounds(vg, 0, 0, left.c_str(), nullptr, bounds);
-    const float start_x = bounds[2] + 50;
-    const float max_off = m_pos.w - start_x - 15.f;
-
     nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, bounds);
+    const float right_w = bounds[2];
 
-    const Vec2 key_text_pos{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f)};
-    gfx::drawText(vg, key_text_pos, 20.f, colour, left.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    // right value drawn statically at the right edge
+    const float right_x = m_pos.x + m_pos.w - 15.f - right_w;
+    const float mid_y = m_pos.y + (m_pos.h / 2.f);
+    gfx::drawText(vg, Vec2{right_x, mid_y}, 20.f, value_colour, right.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-    const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
-    const float xpos = m_pos.x + m_pos.w - 15.f - std::min(max_off, bounds[2]);
-    const float ypos = m_pos.y + (m_pos.h / 2.f);
-
-    m_scolling_value.Draw(vg, HasFocus(), xpos, ypos, max_off, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
+    // left label scrolls in the remaining space
+    const float max_label_w = m_pos.w - 30.f - right_w - (right_w > 0.f ? 10.f : 0.f);
+    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + 15.f, mid_y, max_label_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
 }
 
 SidebarEntryBool::SidebarEntryBool(const std::string& title, bool option, Callback cb, const std::string& info, const std::string& true_str, const std::string& false_str)
