@@ -465,8 +465,6 @@ void Menu::ZipImages(fs::FsPath zip_out) {
     });
 }
 
-
-
 void Menu::CreateSwitchTheme() {
     const auto targets = GetTargetPaths();
     if (targets.size() != 1) {

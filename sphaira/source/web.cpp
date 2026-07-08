@@ -37,6 +37,7 @@ constexpr u16 SHARE_PORT_FIRST = 8080;
 constexpr u16 SHARE_PORT_LAST = 8090;
 constexpr size_t HTTP_READ_LIMIT = 4096;
 constexpr size_t HTTP_FILE_CHUNK = 1024 * 32;
+constexpr u32 IDLE_TIMEOUT_MS = 30000;
 
 enum class ShareMode {
     None,
@@ -324,11 +325,14 @@ auto SendAll(Socket sock, const void* buf, size_t size) -> bool {
     u32 idle_count = 0;
 
     while (size) {
+        if (!g_share_running.load()) {
+            return false;
+        }
         const auto sent = send(sock, data, size, 0);
         if (sent < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 idle_count++;
-                if (idle_count > 30000) { // 30 seconds
+                if (idle_count > IDLE_TIMEOUT_MS) {
                     return false;
                 }
                 svcSleepThread(1'000'000);
@@ -1262,6 +1266,9 @@ struct SocketStream final : yati::source::Stream {
 
         u32 idle_count = 0;
         while (want > 0) {
+            if (!g_share_running.load()) {
+                return -1;
+            }
             if (auto pbox = WebGetProgressBox()) {
                 if (pbox->ShouldExit()) {
                     return -1;
@@ -1278,7 +1285,7 @@ struct SocketStream final : yati::source::Stream {
                 break;
             } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 idle_count++;
-                if (idle_count > 30000) { // 30 seconds
+                if (idle_count > IDLE_TIMEOUT_MS) {
                     return -1;
                 }
                 svcSleepThread(1'000'000);
@@ -1425,6 +1432,11 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     std::vector<u8> buf(HTTP_FILE_CHUNK);
     u32 idle_count = 0;
     while (offset < content_length) {
+        if (!g_share_running.load()) {
+            g_upload_state.active.store(false);
+            SendResponse(sock, "400 Bad Request", "text/plain", "Server stopped");
+            return;
+        }
         if (auto pbox = WebGetProgressBox()) {
             if (pbox->ShouldExit()) {
                 g_upload_state.active.store(false);
@@ -1449,7 +1461,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
             return;
         } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
             idle_count++;
-            if (idle_count > 30000) { // 30 seconds
+            if (idle_count > IDLE_TIMEOUT_MS) {
                 g_upload_state.active.store(false);
                 SendResponse(sock, "408 Request Timeout", "text/plain", "Receive timeout");
                 return;

@@ -11,11 +11,6 @@ namespace ui {
 class ProgressBox;
 }
 
-struct WebShareEntry {
-    fs::FsPath path{};
-    std::string name{};
-};
-
 struct WebShareResult {
     std::string url{};
     int qr_image{};
