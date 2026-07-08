@@ -1690,6 +1690,7 @@ void HandleDelete(Socket sock, const std::string& query) {
 
     fs::FsNativeSd sd;
     if (sd.DirExists(path)) {
+        log_write("Web UI deleting directory recursively: %s\n", path.c_str());
         if (R_FAILED(sd.DeleteDirectoryRecursively(path))) {
             SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not delete folder recursively");
             return;
@@ -1703,6 +1704,7 @@ void HandleDelete(Socket sock, const std::string& query) {
         return;
     }
 
+    log_write("Web UI deleting file: %s\n", path.c_str());
     if (R_FAILED(sd.DeleteFile(path))) {
         SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not delete file");
         return;

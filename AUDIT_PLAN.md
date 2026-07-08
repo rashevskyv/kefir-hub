@@ -122,7 +122,7 @@ thread stack size; add a depth cap.
 **Acceptance criteria.** `/list-recursive` on a deeply nested tree (100+ levels)
 does not crash.
 
-### P1-5. Recursive delete is not logged (optional / low priority)
+### P1-5. [RESOLVED] Recursive delete is not logged (optional / low priority)
 **Problem.** Full-card browsing and deletion from the web UI is intentional — this
 is a file manager, not a confined share. So deleting anywhere is by design. The
 only real gap is observability: `HandleDelete` (web.cpp:1645) runs
