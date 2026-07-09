@@ -1429,12 +1429,12 @@ App::App(const char* argv0) {
  
     // Migration: if install_location is not in ini, but install_sd is, migrate it.
     if (ini_getl(INI_SECTION, "install_location", -1, CONFIG_PATH) == -1) {
-        if (ini_getbool(INI_SECTION, "install_sd", true, CONFIG_PATH)) {
-            m_install_location.Set(0); // SdOnly
-        } else {
-            m_install_location.Set(1); // NandOnly
+        char buf[8]{};
+        if (ini_gets(INI_SECTION, "install_sd", "", buf, sizeof(buf), CONFIG_PATH) > 0) {
+            m_install_location.Set(ini_getbool(INI_SECTION, "install_sd", true, CONFIG_PATH) ? 0 : 1);
         }
     }
+
  
     i18n::init(GetLanguage());
 
