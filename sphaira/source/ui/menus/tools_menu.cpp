@@ -6,10 +6,13 @@
 #include "ui/menus/kefir_menu.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
+#include "ui/menus/dbi_menu.hpp"
+#include "ui/sidebar.hpp"
 
 #include "ui/nvg_util.hpp"
 
 #include "app.hpp"
+#include "defines.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "stb_image.h"
@@ -121,8 +124,8 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             OnSelect();
         }}),
-        std::make_pair(Button::START, Action{"Web Server"_i18n, [this](){
-            StartShareServerFromTools();
+        std::make_pair(Button::START, Action{"Install & Share"_i18n, [this](){
+            DisplayConnectionOptions();
         }})
     );
 
@@ -255,6 +258,21 @@ void Menu::OnSelect() {
     }
 
     m_items[m_index].action();
+}
+
+void Menu::DisplayConnectionOptions() {
+    auto options = std::make_unique<Sidebar>("Install & Share"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>("Web Server"_i18n, [](){
+        StartShareServerFromTools();
+    }, "Start the web sharing server to transfer files via web browser."_i18n);
+
+#if ENABLE_NETWORK_INSTALL
+    options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){
+        App::Push<ui::menu::dbi::Menu>(MenuFlag_None);
+    }, "Install games from a PC over USB using DBI backend."_i18n);
+#endif
 }
 
 } // namespace sphaira::ui::menu::tools

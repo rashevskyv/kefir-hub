@@ -1,5 +1,27 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.122 — Бокове меню для вибору типу встановлення (Web / PC Install) по кнопці Plus в Tools
+
+### Завдання
+Перенести виклик встановлення ігор з ПК ("PC Install (USB)") з підменю DBI в основне меню інструментів ("Tools"). Замінити пряме відкриття веб-сервера при натисканні кнопки ПЛЮС (Plus) на боковий Sidebar, де користувач зможе обрати між запуском веб-сервера ("Web Server") та встановленням через USB-кабель з ПК ("PC Install (USB)").
+
+### Підхід
+* У файлі [tools_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/tools_menu.hpp) оголошено приватний метод `void DisplayConnectionOptions();`.
+* У файлі [tools_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/tools_menu.cpp):
+  * Додано заголовки `#include "ui/menus/dbi_menu.hpp"` та `#include "ui/sidebar.hpp"`.
+  * Дія кнопки `Button::START` (кнопка PLUS) змінена з `StartShareServerFromTools()` на виклик `DisplayConnectionOptions()`.
+  * Реалізовано метод `DisplayConnectionOptions()`, який створює бокове меню `Sidebar` з двома опціями: `"Web Server"` (запуск веб-сервера) та `"PC Install (USB)"` (запуск `ui::menu::dbi::Menu` для встановлення ігор через USB).
+* З підменю DBI у файлі [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp) вилучено пункт `"PC Install (USB)"` та прибрано заголовок `#include "ui/menus/dbi_menu.hpp"`.
+* Додано локалізацію `"Install & Share"` (українською `"Встановлення та обмін"`) у файли [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+
+Версію програми збільшено до `0.13.122` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компилюється.
+* При натисканні кнопки Plus (+) у меню інструментів відкривається бічна панель, яка дозволяє вибрати один із двох інструментів мережевого встановлення: Web Server або PC Install (USB).
+
+---
+
 ## v0.13.121 — Видалення тем з обраного за допомогою R3 у меню тем
 
 ### Завдання
