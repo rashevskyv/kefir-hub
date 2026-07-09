@@ -829,7 +829,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }}),
-        std::make_pair(Button::Y, Action{"Screenshots"_i18n, [this](){
+        std::make_pair(Button::Y, Action{"Screenshot"_i18n, [this](){
             DisplayScreenshots();
         }}),
         std::make_pair(Button::R2, Action{"Next Page"_i18n, [this](){

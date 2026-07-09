@@ -740,5 +740,6 @@
   "Change the layout to Icon, Grid and HB Menu.": "Змінити макет відображення: іконки, сітка або головне меню.",
   "Shows all hidden homebrew.": "Показує всі приховані програми.",
   "PC Install (USB)": "Встановлення з ПК (USB)",
-  "Install apps via DBI Backend (USB).": "Встановлення програм через DBI Backend (USB)."
+  "Install apps via DBI Backend (USB).": "Встановлення програм через DBI Backend (USB).",
+  "Prev/Next Page": "Попередня/Наступна сторінка"
 }

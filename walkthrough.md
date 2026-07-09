@@ -1,5 +1,23 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.120 — Об'єднання легенд Themezer та переклад Screenshot
+
+### Завдання
+Об'єднати елементи легенди для перегортання сторінок ZL та ZR в один рядок: `ZL/ZR Previews/Next Page` (українською "ZL/ZR Попередня/Наступна сторінка") та перекласти підпис кнопки "Screenshot" (Y) у легенді Themezer.
+
+### Підхід
+* У файлі [widget.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/widget.cpp) розширено логіку об'єднання кнопок: додано автооб'єднання для L2 (`"Previous Page"_i18n`) та R2 (`"Next Page"_i18n`) в одну спільну кнопку з гліфами `\uE0E6/\uE0E7` та локалізованим підписом `"Prev/Next Page"_i18n`.
+* У файлі [themezer.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/themezer.cpp) змінено підпис кнопки `Y` з `"Screenshots"_i18n` на `"Screenshot"_i18n` для використання існуючого перекладу `"Screenshot"`.
+* Додано нові рядки перекладу `"Prev/Next Page"` у файли [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+
+Версію програми збільшено до `0.13.120` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компилюється.
+* Легенда для сторінок ZL/ZR у меню Themezer об'єднується в один пункт, а кнопка "Screenshot" успішно перекладається.
+
+---
+
 ## v0.13.119 — Реорганізація меню Software -> DBI та PC Install (USB)
 
 ### Завдання

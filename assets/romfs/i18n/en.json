@@ -734,5 +734,6 @@
   "Change the layout to Icon, Grid and HB Menu.": "Change the layout to Icon, Grid and HB Menu.",
   "Shows all hidden homebrew.": "Shows all hidden homebrew.",
   "PC Install (USB)": "PC Install (USB)",
-  "Install apps via DBI Backend (USB).": "Install apps via DBI Backend (USB)."
+  "Install apps via DBI Backend (USB).": "Install apps via DBI Backend (USB).",
+  "Prev/Next Page": "Prev/Next Page"
 }
