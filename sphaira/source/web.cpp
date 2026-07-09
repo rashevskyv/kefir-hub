@@ -39,11 +39,16 @@ constexpr u16 SHARE_PORT_LAST = 8090;
 constexpr size_t HTTP_READ_LIMIT = 16384;
 constexpr size_t HTTP_FILE_CHUNK = 1024 * 512;
 constexpr u32 IDLE_TIMEOUT_MS = 30000;
+// Multiple worker threads accept() on the same listening socket so a status
+// poll (e.g. from a second device) can still be served while another thread
+// is blocked handling a long upload/install request.
+constexpr size_t SHARE_WORKER_COUNT = 3;
 
 std::mutex g_share_mutex{};
 fs::FsPath g_share_folder_root{};
 std::atomic_bool g_title_initialized{false};
-Thread g_share_thread{};
+Thread g_share_threads[SHARE_WORKER_COUNT]{};
+size_t g_share_thread_count{};
 std::atomic_bool g_share_running{false};
 Socket g_share_socket{-1};
 u16 g_share_port{};
@@ -56,6 +61,11 @@ struct UploadState {
     std::string name{};
 };
 static UploadState g_upload_state;
+
+// Serializes write operations (upload/install) across the worker threads. Read
+// operations (browse/status/download/view) stay concurrent; only one transfer
+// touches the shared g_upload_state / install pipeline at a time.
+std::atomic_bool g_transfer_busy{false};
 
 auto PathExtension(std::string_view path) -> std::string_view {
     const auto slash = path.find_last_of('/');
@@ -578,6 +588,7 @@ input{display:none}.status{color:#38bdf8;font-size:14px}
 <div id="transfer-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,18,0.7);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:90;align-items:center;justify-content:center;flex-direction:column;gap:16px;box-sizing:border-box;">
 <div style="font-size:24px;font-weight:600;color:#38bdf8;">Transfer in Progress</div>
 <div style="color:#94a3b8;font-size:14px;text-align:center;max-width:400px;padding:0 20px;line-height:1.5;">Please wait while the console is processing file transfers or game installations. You can monitor the progress in the Queue panel on the right.</div>
+<div id="transfer-progress-info" style="display:flex;flex-direction:column;align-items:center;"></div>
 </div>
 <div id="queue-panel" class="queue-panel"><div class="queue-header"><h2>Transfer Queue</h2><button class="queue-close" onclick="toggleQueuePanel()">&times;</button></div><div id="queue-list" class="queue-list"></div><div class="queue-footer"><button id="start-transfers-btn" onclick="startTransfers()">Start transfers</button><button id="clear-queue-btn" onclick="clearCompletedQueue()">Clear completed</button></div></div>
 <header>
@@ -608,7 +619,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
+    body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
     size_t start{};
@@ -721,6 +732,29 @@ auto BuildFolderPage(std::string path_str) -> std::string {
 
 constexpr std::string_view FOLDER_PAGE_JS = R"HTML(
 let transferQueue=[];let isTransferring=false;
+async function pollServerStatus(){
+try{
+const res=await fetch('/status');
+if(!res.ok)return;
+const s=await res.json();
+const ov=document.getElementById('transfer-overlay');
+const info=document.getElementById('transfer-progress-info');
+if(s.active){
+if(info){
+const pct=s.total>0?Math.min(100,Math.round((s.bytes/s.total)*100)):0;
+info.innerHTML='<div style="font-size:14px;color:#e2e8f0;margin-top:4px;word-break:break-all;max-width:340px;text-align:center;">'+escapeHtml(s.name)+'</div>'+
+'<div style="width:280px;height:10px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;margin-top:10px;"><div style="height:100%;background:#38bdf8;width:'+pct+'%;transition:width 0.3s;"></div></div>'+
+'<div style="font-size:13px;color:#38bdf8;margin-top:6px;">'+pct+'%</div>';
+}
+if(ov&&ov.style.display!=='flex')ov.style.display='flex';
+}else if(!isTransferring){
+if(ov)ov.style.display='none';
+if(info)info.innerHTML='';
+}
+}catch(e){}
+}
+setInterval(pollServerStatus,1000);
+pollServerStatus();
 function toggleQueuePanel(){const p=document.getElementById('queue-panel');if(p)p.classList.toggle('open');}
 function addFilesToUploadQueue(files){if(!files||!files.length)return;
 for(const f of files){const isGame=/\.(nsp|nsz|xci|xcz)$/i.test(f.name);transferQueue.push({id:'up_'+Math.random().toString(36).substr(2,9),type:'upload',file:f,name:f.name,size:f.size,status:'pending',progress:0,speed:'',install:isGame,xhr:null,uploadPath:currentPath});}
@@ -1341,6 +1375,15 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         return;
     }
 
+    // Only one transfer may run at a time; a concurrent upload/install would
+    // clobber the shared progress state and install pipeline.
+    bool expected = false;
+    if (!g_transfer_busy.compare_exchange_strong(expected, true)) {
+        SendResponse(sock, "409 Conflict", "text/plain", "Another transfer is already in progress");
+        return;
+    }
+    ON_SCOPE_EXIT(g_transfer_busy.store(false));
+
     const auto raw_path = GetQueryValue(query, "path");
     const auto dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
     const auto raw_name = GetQueryValue(query, "name");
@@ -1667,6 +1710,55 @@ void HandleList(Socket sock, const std::string& query) {
 
     SendResponse(sock, "200 OK", "application/json", json);
 }
+
+void HandleStatus(Socket sock) {
+    const auto state = WebGetUploadState();
+    std::string json = "{\"active\":";
+    json += state.active ? "true" : "false";
+    json += ",\"name\":\"" + JsonEscape(state.name) + "\"";
+    json += ",\"bytes\":" + std::to_string(state.bytes);
+    json += ",\"total\":" + std::to_string(state.total);
+    json += "}";
+
+    SendResponse(sock, "200 OK", "application/json", json);
+}
+
+constexpr std::string_view PROGRESS_PAGE = R"HTML(
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sphaira Progress</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box}
+.card{max-width:420px;width:100%;text-align:center}
+h1{font-size:20px;margin:0 0 24px}
+.name{font-size:15px;color:#94a3b8;word-break:break-all;margin-bottom:16px;min-height:20px}
+.bar-bg{height:14px;background:rgba(255,255,255,0.08);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:#38bdf8;width:0%;transition:width 0.3s ease}
+.pct{margin-top:12px;font-size:28px;font-weight:600}
+.idle{color:#64748b;font-size:15px}
+</style></head><body>
+<div class="card">
+<h1>Sphaira Progress</h1>
+<div id="content"><div class="idle">Waiting for activity&hellip;</div></div>
+</div>
+<script>
+async function poll(){
+try{
+const res=await fetch('/status');
+const s=await res.json();
+const c=document.getElementById('content');
+if(!s.active){c.innerHTML='<div class="idle">No transfer in progress</div>';return;}
+const pct=s.total>0?Math.min(100,Math.round((s.bytes/s.total)*100)):0;
+c.innerHTML='<div class="name">'+s.name.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]))+'</div>'+
+'<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div>'+
+'<div class="pct">'+pct+'%</div>';
+}catch(e){}
+}
+poll();
+setInterval(poll,1000);
+</script>
+</body></html>
+)HTML";
 
 struct ScreenshotEntry {
     std::string path;
@@ -2168,13 +2260,22 @@ void HandleRequest(Socket sock) {
         return;
     }
 
+    if (path == "/status") {
+        HandleStatus(sock);
+        return;
+    }
 
+    if (path == "/progress") {
+        SendResponse(sock, "200 OK", "text/html", std::string{PROGRESS_PAGE});
+        return;
+    }
 
     SendResponse(sock, "404 Not Found", "text/plain", "Not found");
 }
 
-// ShareThreadFunc processes client requests sequentially.
-// NOTE: It handles only one connection at a time (single-threaded concurrency model).
+// Multiple instances of this run concurrently (see SHARE_WORKER_COUNT), each
+// accept()-ing on the shared listening socket, so one client's long-running
+// request (e.g. install) doesn't block other clients (e.g. a status poll).
 void ShareThreadFunc(void*) {
     while (g_share_running) {
         sockaddr_in remote{};
@@ -2231,23 +2332,28 @@ auto StartShareServer() -> Result {
         g_share_port = port;
         g_share_running = true;
 
-        Result rc = utils::CreateThread(&g_share_thread, ShareThreadFunc, nullptr, 1024 * 128, PRIO_PREEMPTIVE);
-        if (R_FAILED(rc)) {
+        size_t started = 0;
+        for (; started < SHARE_WORKER_COUNT; started++) {
+            Result rc = utils::CreateThread(&g_share_threads[started], ShareThreadFunc, nullptr, 1024 * 128, PRIO_PREEMPTIVE);
+            if (R_SUCCEEDED(rc)) {
+                rc = threadStart(&g_share_threads[started]);
+                if (R_FAILED(rc)) {
+                    threadClose(&g_share_threads[started]);
+                }
+            }
+            if (R_FAILED(rc)) {
+                break;
+            }
+        }
+
+        if (!started) {
             g_share_running = false;
             close(g_share_socket);
             g_share_socket = -1;
-            return rc;
+            return Result_FsUnknownStdioError;
         }
 
-        rc = threadStart(&g_share_thread);
-        if (R_FAILED(rc)) {
-            g_share_running = false;
-            threadClose(&g_share_thread);
-            close(g_share_socket);
-            g_share_socket = -1;
-            return rc;
-        }
-
+        g_share_thread_count = started;
         R_SUCCEED();
     }
 
@@ -2673,8 +2779,11 @@ void WebShareStop() {
             g_share_socket = -1;
         }
 
-        threadWaitForExit(&g_share_thread);
-        threadClose(&g_share_thread);
+        for (size_t i = 0; i < g_share_thread_count; i++) {
+            threadWaitForExit(&g_share_threads[i]);
+            threadClose(&g_share_threads[i]);
+        }
+        g_share_thread_count = 0;
         g_share_port = 0;
     }
 
