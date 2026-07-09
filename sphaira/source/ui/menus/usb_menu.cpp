@@ -47,8 +47,13 @@ Menu::Menu(u32 flags) : MenuBase{"USB"_i18n, flags} {
     }
 
     if (m_state != State::Failed) {
-        threadCreate(&m_thread, thread_func, this, nullptr, 1024*32, PRIO_PREEMPTIVE, 1);
-        threadStart(&m_thread);
+        Result rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024*32, PRIO_PREEMPTIVE, 1);
+        if (R_SUCCEEDED(rc)) {
+            m_thread_created = true;
+            threadStart(&m_thread);
+        } else {
+            m_state = State::Failed;
+        }
     }
 }
 
@@ -56,8 +61,10 @@ Menu::~Menu() {
     // signal for thread to exit and wait.
     m_stop_source.request_stop();
     m_usb_source->SignalCancel();
-    threadWaitForExit(&m_thread);
-    threadClose(&m_thread);
+    if (m_thread_created) {
+        threadWaitForExit(&m_thread);
+        threadClose(&m_thread);
+    }
 
     // free usb source before re-enabling mtp.
     log_write("closing data!!!!\n");

@@ -35,6 +35,7 @@ private:
     bool m_was_mtp_enabled{};
 
     Thread m_thread{};
+    bool m_thread_created{false};
     std::atomic<State> m_state{State::None};
     std::vector<std::string> m_names{};
 };

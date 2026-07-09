@@ -505,3 +505,22 @@
 * Код успішно компілюється під WSL (devkitPro/GCC).
 * Логіка рукостискання, передачі списку файлів та вичитування діапазонів блоків повністю відповідає стандарту DBI0.
 
+
+## v0.13.111 — Виправлення безпеки потоків та очищення ресурсів у USB та DBI меню
+
+### Проблема
+У меню встановлення через USB (`usb::Menu`) та DBI (`dbi::Menu`) при невдалій ініціалізації джерела (стан `State::Failed`) фоновий потік не створювався. Однак у деструкторі меню все одно викликалися функції `threadWaitForExit` та `threadClose` на неініціалізованій структурі `Thread`, що могло призвести до неочікуваної поведінки або збоїв на консолі.
+
+### Підхід
+1. **Відстеження створення потоку**:
+   - У файли [usb_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/usb_menu.hpp) та [dbi_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/dbi_menu.hpp) додано прапорець `m_thread_created` (типу `bool`), який за замовчуванням дорівнює `false`.
+2. **Безпечне створення та очищення**:
+   - У [usb_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/usb_menu.cpp) та [dbi_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/dbi_menu.cpp) під час конструювання меню перевіряється успішність виклику `threadCreate`. У разі успіху встановлюється `m_thread_created = true` і запускається потік через `threadStart`.
+   - У деструкторі виклик `threadWaitForExit` та `threadClose` виконується лише тоді, коли `m_thread_created` встановлено в `true`.
+3. **Налаштування збірки**: Версію програми ітеровано до `0.13.111` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компілюється в WSL.
+* Усунено потенційні збої та витоки ресурсів під час невдалого підключення USB/DBI.
+
+
