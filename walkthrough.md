@@ -1,5 +1,24 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.119 — Реорганізація меню Software -> DBI та PC Install (USB)
+
+### Завдання
+Реорганізувати запуск встановлення ігор через USB (колишній DBI Install). Перенести його з головного меню в нове підменю "DBI" всередині категорії "Software" та перейменувати на "PC Install (USB)".
+
+### Підхід
+* З головного меню у файлі [main_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/main_menu.cpp) видалено пункт `"DBI Install"`.
+* До меню "DBI" (яке містить переклади DBI) у файлі [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp) додано пункт `"PC Install (USB)"` для запуску встановлення з ПК за допомогою протоколу DBI Backend. Цей пункт додано за умови `#if ENABLE_NETWORK_INSTALL` для забезпечення правильної умовної збірки.
+* Додано заголовок `#include "ui/menus/dbi_menu.hpp"` у [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp).
+* У файли локалізації [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json) додано нові рядки перекладу для `"PC Install (USB)"` та опису `"Install apps via DBI Backend (USB)."`.
+
+Версію програми збільшено до `0.13.119` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компилюється.
+* Встановлювач DBI тепер запускається безпосередньо з підменю "DBI" в розділі "Software" та правильно локалізований українською як "Встановлення з ПК (USB)".
+
+---
+
 ## v0.13.118 — Виправлення перекладів тултіпів сортування та "Show Hidden"
 
 ### Завдання

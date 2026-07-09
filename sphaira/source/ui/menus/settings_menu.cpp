@@ -1,6 +1,7 @@
 #include "ui/menus/settings_menu.hpp"
 
 #include "ui/menus/appstore.hpp"
+#include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
@@ -1466,6 +1467,20 @@ auto MakePackageAction(PackageAction action) -> SettingsItem {
 
 auto BuildDbiItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
+
+#if ENABLE_NETWORK_INSTALL
+    items.emplace_back(SettingsItem{
+        "PC Install (USB)"_i18n,
+        "Install apps via DBI Backend (USB)."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::dbi::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+#endif
 
     items.emplace_back(MakePackageAction({
         "Download DBI translations list"_i18n,

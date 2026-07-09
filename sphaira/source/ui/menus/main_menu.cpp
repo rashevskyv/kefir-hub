@@ -81,13 +81,6 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "A USB client is required on PC, such as ns-usbloader and fluffy.\n\n"\
         "NOTE: This feature does not always work, use at your own risk. "\
         "If you encounter an issue, do not open an issue, it will not be fixed." },
-
-    { .name = "DBI", .title = "DBI Install", .func = MiscMenuFuncGenerator<ui::menu::dbi::Menu>, .flag = MiscMenuFlag_Install, .info =
-        "Install apps via DBI Backend (USB).\n\n"\
-        "A DBI USB client is required on PC, such as dbibackend (Python/EXE).\n\n"\
-        "NOTE: This feature does not always work, use at your own risk. "\
-        "If you encounter an issue, do not open an issue, it will not be fixed." },
-
 #endif
     { .name = "GameCard", .title = "GameCard", .func = MiscMenuFuncGenerator<ui::menu::gc::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
         "View info on the inserted Game Card (GC). "\

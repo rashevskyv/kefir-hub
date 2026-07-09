@@ -732,5 +732,7 @@
   "Select which field to sort homebrew by.": "Select which field to sort homebrew by.",
   "Display entries in Ascending or Descending order.": "Display entries in Ascending or Descending order.",
   "Change the layout to Icon, Grid and HB Menu.": "Change the layout to Icon, Grid and HB Menu.",
-  "Shows all hidden homebrew.": "Shows all hidden homebrew."
+  "Shows all hidden homebrew.": "Shows all hidden homebrew.",
+  "PC Install (USB)": "PC Install (USB)",
+  "Install apps via DBI Backend (USB).": "Install apps via DBI Backend (USB)."
 }

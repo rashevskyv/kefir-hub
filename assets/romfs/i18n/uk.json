@@ -738,5 +738,7 @@
   "Select which field to sort homebrew by.": "Виберіть поле, за яким сортувати програми.",
   "Display entries in Ascending or Descending order.": "Відображати записи за зростанням чи спаданням.",
   "Change the layout to Icon, Grid and HB Menu.": "Змінити макет відображення: іконки, сітка або головне меню.",
-  "Shows all hidden homebrew.": "Показує всі приховані програми."
+  "Shows all hidden homebrew.": "Показує всі приховані програми.",
+  "PC Install (USB)": "Встановлення з ПК (USB)",
+  "Install apps via DBI Backend (USB).": "Встановлення програм через DBI Backend (USB)."
 }
