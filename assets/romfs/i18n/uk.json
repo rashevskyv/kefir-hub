@@ -720,6 +720,19 @@
   "Enter username (optional)": "Введіть ім'я користувача (опціонально)",
   "Enter password (optional)": "Введіть пароль (опціонально)",
   "Configure a new network storage share.": "Налаштувати нове мережеве сховище.",
-  "Failed to connect to SMB server!": "Не вдалося підключитися до SMB-сервера!",
-  "Location added successfully!": "Джерело успішно додано!"
+  "Location added successfully!": "Джерело успішно додано!",
+  "Sync with remote": "Синхронізувати з хмарою",
+  "Auto-sync saves after backup": "Автосинхронізація після бекапу",
+  "Automatically upload backups to remote WebDAV after local backup.": "Автоматично вивантажувати бекапи на віддалений WebDAV після локального бекапу.",
+  "Syncing saves...": "Синхронізація збережень...",
+  "Listing remote files...": "Отримання списку віддалених файлів...",
+  "Uploading: ": "Вивантаження: ",
+  "Downloading: ": "Завантаження: ",
+  "No network location configured for sync. Add one in settings.": "Не налаштовано жодного мережевого джерела. Додайте його в налаштуваннях.",
+  "No saves selected for sync.": "Не вибрано жодного збереження для синхронізації.",
+  "Sync failed!": "Синхронізація не вдалася!",
+  "Sync successfull!": "Синхронізація успішна!",
+  "Auto-syncing saves...": "Автосинхронізація збережень...",
+  "Auto-sync failed!": "Автосинхронізація не вдалася!",
+  "Auto-sync successfull!": "Автосинхронізація успішна!"
 }

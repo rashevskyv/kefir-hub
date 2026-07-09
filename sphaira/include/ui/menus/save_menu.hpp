@@ -93,6 +93,7 @@ private:
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void PromptSaveAction();
     void PromptSaveTypeOptions(bool restore);
+    void SyncSavesRemote();
 
     auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const;
@@ -137,6 +138,7 @@ private:
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_Grid};
     option::OptionBool m_auto_backup_on_restore{INI_SECTION, "auto_backup_on_restore", true};
     option::OptionBool m_compress_save_backup{INI_SECTION, "compress_save_backup", true};
+    option::OptionBool m_save_autosync{INI_SECTION, "save_autosync", true};
 };
 
 } // namespace sphaira::ui::menu::save

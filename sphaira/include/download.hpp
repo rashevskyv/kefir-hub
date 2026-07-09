@@ -157,6 +157,10 @@ auto FromFileAsync(const Api& e) -> bool;
 
 // uses curl to convert string to their %XX
 auto EscapeString(const std::string& str) -> std::string;
+auto UnescapeString(const std::string& str) -> std::string;
+
+// lists files in a WebDAV folder
+auto ListWebdav(const std::string& url, const std::string& user, const std::string& pass, const std::string& folder) -> std::vector<std::string>;
 
 struct Api {
     Api() = default;

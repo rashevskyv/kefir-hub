@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.113)
+set(sphaira_VERSION 0.13.114)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -289,6 +289,7 @@ set(ENABLE_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set(CMAKE_DISABLE_FIND_PACKAGE_OpenSSL ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_GSSAPI ON)
+set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_compile_definitions(__SWITCH__)
 
 FetchContent_MakeAvailable(

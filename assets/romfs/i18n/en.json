@@ -714,6 +714,19 @@
   "Enter username (optional)": "Enter username (optional)",
   "Enter password (optional)": "Enter password (optional)",
   "Configure a new network storage share.": "Configure a new network storage share.",
-  "Failed to connect to SMB server!": "Failed to connect to SMB server!",
-  "Location added successfully!": "Location added successfully!"
+  "Location added successfully!": "Location added successfully!",
+  "Sync with remote": "Sync with remote",
+  "Auto-sync saves after backup": "Auto-sync saves after backup",
+  "Automatically upload backups to remote WebDAV after local backup.": "Automatically upload backups to remote WebDAV after local backup.",
+  "Syncing saves...": "Syncing saves...",
+  "Listing remote files...": "Listing remote files...",
+  "Uploading: ": "Uploading: ",
+  "Downloading: ": "Downloading: ",
+  "No network location configured for sync. Add one in settings.": "No network location configured for sync. Add one in settings.",
+  "No saves selected for sync.": "No saves selected for sync.",
+  "Sync failed!": "Sync failed!",
+  "Sync successfull!": "Sync successfull!",
+  "Auto-syncing saves...": "Auto-syncing saves...",
+  "Auto-sync failed!": "Auto-sync failed!",
+  "Auto-sync successfull!": "Auto-sync successfull!"
 }

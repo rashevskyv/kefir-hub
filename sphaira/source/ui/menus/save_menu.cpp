@@ -729,8 +729,14 @@ void Menu::DisplaySaveOptions() {
         options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
             m_compress_save_backup.Set(v_out);
         }, "Save backups as compressed ZIP archives to reduce disk space."_i18n);
+
+        options->Add<SidebarEntryBool>("Auto-sync saves after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
+            m_save_autosync.Set(v_out);
+        }, "Automatically upload backups to remote WebDAV after local backup."_i18n);
     }, "Access advanced backup and restore settings."_i18n);
 }
+
+
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (R_SUCCEEDED(waitSingle(waiterForUEvent(&g_change_uevent), 0))) {
@@ -1083,13 +1089,18 @@ void Menu::PromptSaveAction() {
     PopupList::Items items;
     items.emplace_back("Backup"_i18n);
     items.emplace_back("Restore"_i18n);
+    items.emplace_back("Sync with remote"_i18n);
 
     App::Push<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
         if (!op_index) {
             return;
         }
 
-        PromptSaveTypeOptions(*op_index == 1);
+        if (*op_index == 2) {
+            SyncSavesRemote();
+        } else {
+            PromptSaveTypeOptions(*op_index == 1);
+        }
     });
 }
 
@@ -1401,11 +1412,52 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), false, backup_root));
         }
         R_SUCCEED();
-    }, [](Result rc){
+    }, [this, entries, backup_root](Result rc){
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
             App::Notify("Backup successfull!"_i18n);
+
+            if (m_save_autosync.Get()) {
+                const auto network_locations = location::Load();
+                if (!network_locations.empty()) {
+                    const auto& loc = network_locations.front();
+                    App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, backup_root](auto pbox) mutable -> Result {
+                        fs::FsNativeSd sd_fs;
+                        for (auto& e : entries) {
+                            LoadControlEntry(e);
+                            fs::FsPath latest_path;
+                            if (FindLatestBackupPath(&sd_fs, e, backup_root, latest_path)) {
+                                std::string latest_path_str = latest_path.toString();
+                                size_t last_slash = latest_path_str.find_last_of('/');
+                                std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
+                                const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
+                                pbox->NewTransfer("Uploading: "_i18n + filename);
+
+                                curl::Api api;
+                                api.SetUpload(true);
+                                api.SetOption(curl::Url{loc.url + "/" + remote_rel});
+                                api.SetOption(curl::UserPass{loc.user, loc.pass});
+                                api.SetOption(curl::Path{latest_path});
+                                api.SetOption(curl::UploadInfo{filename});
+
+                                auto res = curl::FromFile(api);
+                                if (!res.success) {
+                                    log_write("[SYNC] auto-sync failed to upload: %s\n", filename.c_str());
+                                    R_THROW(0xdeadbeef);
+                                }
+                            }
+                        }
+                        R_SUCCEED();
+                    }, [](Result rc){
+                        if (R_FAILED(rc)) {
+                            App::PushErrorBox(rc, "Auto-sync failed!"_i18n);
+                        } else {
+                            App::Notify("Auto-sync successfull!"_i18n);
+                        }
+                    });
+                }
+            }
         }
     });
 }
@@ -1801,6 +1853,121 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     R_TRY(fs->RenameFile(temp_path, path));
 
     R_SUCCEED();
+}
+
+void Menu::SyncSavesRemote() {
+    const auto network_locations = location::Load();
+    if (network_locations.empty()) {
+        App::Push<OptionBox>("No network location configured for sync. Add one in settings."_i18n, "OK"_i18n);
+        return;
+    }
+
+    const auto& loc = network_locations.front();
+
+    const auto seeds = GetSelectedEntries();
+    if (seeds.empty()) {
+        App::Push<OptionBox>("No saves selected for sync."_i18n, "OK"_i18n);
+        return;
+    }
+
+    App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "", [this, seeds, loc](auto pbox) mutable -> Result {
+        fs::FsNativeSd sd_fs;
+        const fs::FsPath backup_root{"/dumps"};
+
+        for (const auto& e : seeds) {
+            pbox->SetTitle(e.GetName());
+            if (e.image) {
+                pbox->SetImage(e.image);
+            } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+                pbox->SetImageDataConst(data->icon);
+            } else {
+                pbox->SetImage(0);
+            }
+
+            const auto local_base = BuildSaveBasePath(e, false, backup_root);
+            const auto local_path = fs::AppendPath(sd_fs.Root(), local_base);
+
+            filebrowser::FsDirCollection local_col{};
+            filebrowser::FsView::get_collection(&sd_fs, local_path, "", local_col, true, false, false);
+
+            const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
+            pbox->NewTransfer("Listing remote files..."_i18n);
+            const auto remote_files = curl::ListWebdav(loc.url, loc.user, loc.pass, remote_rel);
+
+            std::vector<std::string> to_upload;
+            for (const auto& f : local_col.files) {
+                std::string fname(f.name);
+                if (!fname.ends_with(".zip")) continue;
+                if (std::ranges::find(remote_files, fname) == remote_files.end()) {
+                    to_upload.push_back(fname);
+                }
+            }
+
+            std::vector<std::string> to_download;
+            for (const auto& f : remote_files) {
+                if (!f.ends_with(".zip")) continue;
+                bool found = false;
+                for (const auto& lf : local_col.files) {
+                    if (std::string(lf.name) == f) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    to_download.push_back(f);
+                }
+            }
+
+            for (const auto& f : to_upload) {
+                pbox->NewTransfer("Uploading: "_i18n + f);
+                const auto local_file = fs::AppendPath(local_path, f);
+
+                curl::Api api;
+                api.SetUpload(true);
+                api.SetOption(curl::Url{loc.url + "/" + remote_rel});
+                api.SetOption(curl::UserPass{loc.user, loc.pass});
+                api.SetOption(curl::Path{local_file});
+                api.SetOption(curl::UploadInfo{f});
+
+                auto res = curl::FromFile(api);
+                if (!res.success) {
+                    log_write("[SYNC] failed to upload: %s\n", f.c_str());
+                    R_THROW(0xdeadbeef);
+                }
+            }
+
+            for (const auto& f : to_download) {
+                pbox->NewTransfer("Downloading: "_i18n + f);
+                const auto local_file = fs::AppendPath(local_path, f);
+                sd_fs.CreateDirectoryRecursivelyWithPath(local_path);
+
+                const auto temp_file = local_file + ".temp";
+
+                curl::Api api;
+                api.SetOption(curl::Url{loc.url + "/" + remote_rel + "/" + f});
+                api.SetOption(curl::UserPass{loc.user, loc.pass});
+                api.SetOption(curl::Path{temp_file});
+
+                auto res = curl::ToFile(api);
+                if (!res.success) {
+                    log_write("[SYNC] failed to download: %s\n", f.c_str());
+                    sd_fs.DeleteFile(temp_file);
+                    R_THROW(0xdeadbeef);
+                }
+
+                sd_fs.DeleteFile(local_file);
+                R_TRY(sd_fs.RenameFile(temp_file, local_file));
+            }
+        }
+
+        R_SUCCEED();
+    }, [](Result rc){
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Sync failed!"_i18n);
+        } else {
+            App::Notify("Sync successfull!"_i18n);
+        }
+    });
 }
 
 } // namespace sphaira::ui::menu::save

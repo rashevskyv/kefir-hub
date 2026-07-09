@@ -576,6 +576,25 @@ auto EscapeString(CURL* curl, const std::string& str) -> std::string {
     return result;
 }
 
+auto UnescapeString(CURL* curl, const std::string& str) -> std::string {
+    int out_len = 0;
+    char* s{};
+    if (!curl) {
+        s = curl_unescape(str.data(), str.length());
+    } else {
+        s = curl_easy_unescape(curl, str.data(), str.length(), &out_len);
+    }
+
+    if (!s) {
+        return str;
+    }
+
+    const std::string result(s, out_len > 0 ? out_len : std::strlen(s));
+    curl_free(s);
+    return result;
+}
+
+
 auto EncodeUrl(std::string url) -> std::string {
     log_write("[CURL] encoding url\n");
 
@@ -1217,6 +1236,67 @@ auto FromFileAsync(const Api& e) -> bool {
 
 auto EscapeString(const std::string& str) -> std::string {
     return EscapeString(nullptr, str);
+}
+
+auto UnescapeString(const std::string& str) -> std::string {
+    return UnescapeString(nullptr, str);
+}
+
+auto ListWebdav(const std::string& url, const std::string& user, const std::string& pass, const std::string& folder) -> std::vector<std::string> {
+    std::vector<std::string> files;
+    
+    // Construct the full URL
+    std::string full_url = url;
+    if (!folder.empty()) {
+        if (!full_url.ends_with("/")) {
+            full_url += "/";
+        }
+        full_url += folder;
+    }
+    
+    Api e;
+    e.SetOption(Url{full_url});
+    e.SetOption(UserPass{user, pass});
+    e.SetOption(CustomRequest{"PROPFIND"});
+    e.SetOption(Header{
+        { "Depth", "1" },
+    });
+    
+    ApiResult result = ToMemory(e);
+    if (!result.success) {
+        log_write("[CURL] PROPFIND failed for listing: %s\n", full_url.c_str());
+        return files;
+    }
+    
+    std::string xml(result.data.begin(), result.data.end());
+    size_t pos = 0;
+    while (true) {
+        pos = xml.find("href>", pos);
+        if (pos == std::string::npos) {
+            break;
+        }
+        
+        size_t start = pos + 5;
+        size_t end = xml.find("</", start);
+        if (end == std::string::npos) {
+            break;
+        }
+        
+        std::string href = xml.substr(start, end - start);
+        pos = end;
+        
+        std::string decoded_href = UnescapeString(href);
+        if (decoded_href.ends_with(".zip")) {
+            size_t slash_pos = decoded_href.find_last_of('/');
+            if (slash_pos != std::string::npos) {
+                files.push_back(decoded_href.substr(slash_pos + 1));
+            } else {
+                files.push_back(decoded_href);
+            }
+        }
+    }
+    
+    return files;
 }
 
 } // namespace sphaira::curl

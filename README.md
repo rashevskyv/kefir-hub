@@ -117,6 +117,12 @@ Sphaira includes a robust file manager with standard operations (Cut, Paste, Ren
 - **Polished Option Dialogs:** Option boxes and confirmation popups (such as the web folder sharing QR code) feature optimized text line-height spacing (`1.4f`), dynamic height auto-scaling to eliminate excess empty space, and vertical centering next to images/QR codes.
 - **Write Protection Support:** If a file or folder is marked as Read-Only (and "Ignore read only" is disabled in Advanced Settings), destructive or modification actions such as **Cut**, **Rename**, **Delete**, **Paste**, **Create File**, and **Create Folder** are automatically disabled and grayed out in the options sidebars, clearly showing the reason when selected.
 
+## Saves
+
+Backup and restore save data.
+- **WebDAV Save Synchronization:** Synchronize your save game backups with a remote WebDAV server. Select "Sync with remote" from the save actions menu to upload local backups that are missing remotely, and download remote backups that are missing locally. The backup folder structure (e.g. `sphaira-saves/Save/Super Mario Odyssey`) is created automatically.
+- **Auto-Sync after Backup:** Enable "Auto-sync saves after backup" in Advanced Options. When active, Sphaira will automatically upload your newly created ZIP backup to the configured remote WebDAV server right after the local backup completes.
+
 ## Game Installer
 
 Sphaira features a built-in game installer supporting multiple formats (NSP, NSZ, XCI, XCZ) with configurable storage destination priority:
