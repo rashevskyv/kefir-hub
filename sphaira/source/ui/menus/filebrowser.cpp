@@ -2086,7 +2086,6 @@ void FsView::DisplayOptions() {
         DisplayAdvancedOptions();
     }, "Access file browser advanced tools."_i18n);
 }
-}
 
 void FsView::DisplayAdvancedOptions() {
     auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
