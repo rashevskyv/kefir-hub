@@ -673,16 +673,8 @@ auto App::GetInstallSdEnable() -> bool {
     if (loc == 2) return false; // NandThenSd
     if (loc == 4) { // Auto
         s64 free_nand = 0;
-        FsFileSystem nand_fs;
-        if (R_SUCCEEDED(fsOpenBisFileSystem(&nand_fs, FsBisPartitionId_User, ""))) {
-            fsFsGetFreeSpace(&nand_fs, "/", &free_nand);
-            fsFsClose(&nand_fs);
-        }
         s64 free_sd = 0;
-        struct statvfs st{};
-        if (statvfs("sdmc:/", &st) == 0) {
-            free_sd = (s64)st.f_bfree * (s64)st.f_bsize;
-        }
+        fs::GetStorageSpaces(&free_nand, nullptr, &free_sd, nullptr);
         return free_sd > free_nand;
     }
     return true;

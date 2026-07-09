@@ -4,6 +4,7 @@
 #include "log.hpp"
 
 #include <switch.h>
+#include <sys/statvfs.h>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -865,4 +866,37 @@ Result IsDirEmpty(fs::Fs* m_fs, const fs::FsPath& path, bool* out) {
     R_SUCCEED();
 }
 
+void GetStorageSpaces(s64* nand_free, s64* nand_total, s64* sd_free, s64* sd_total) {
+    if (nand_free || nand_total) {
+        FsFileSystem nand_fs;
+        if (R_SUCCEEDED(fsOpenBisFileSystem(&nand_fs, FsBisPartitionId_User, ""))) {
+            if (nand_free) {
+                fsFsGetFreeSpace(&nand_fs, "/", nand_free);
+            }
+            if (nand_total) {
+                fsFsGetTotalSpace(&nand_fs, "/", nand_total);
+            }
+            fsFsClose(&nand_fs);
+        } else {
+            if (nand_free) *nand_free = 0;
+            if (nand_total) *nand_total = 0;
+        }
+    }
+    if (sd_free || sd_total) {
+        struct statvfs st{};
+        if (statvfs("sdmc:/", &st) == 0) {
+            if (sd_free) {
+                *sd_free = (s64)st.f_bfree * (s64)st.f_bsize;
+            }
+            if (sd_total) {
+                *sd_total = (s64)st.f_blocks * (s64)st.f_frsize;
+            }
+        } else {
+            if (sd_free) *sd_free = 0;
+            if (sd_total) *sd_total = 0;
+        }
+    }
+}
+
 } // namespace fs
+

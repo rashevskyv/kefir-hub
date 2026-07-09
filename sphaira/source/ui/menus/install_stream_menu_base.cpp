@@ -19,6 +19,9 @@ Menu* BackgroundInstaller::s_active_menu{nullptr};
 std::shared_ptr<Stream> BackgroundInstaller::s_source{nullptr};
 std::stop_source BackgroundInstaller::s_stop_source{};
 std::atomic<bool> BackgroundInstaller::s_installing{false};
+Mutex BackgroundInstaller::s_mutex{};
+CondVar BackgroundInstaller::s_callback_cond{};
+std::atomic<int> BackgroundInstaller::s_callback_count{0};
  
 namespace {
  
@@ -278,10 +281,24 @@ void Menu::OnInstallClose() {
 }
  
 void BackgroundInstaller::SetActiveMenu(Menu* menu) {
+    mutexLock(&s_mutex);
     s_active_menu = menu;
+    if (menu == nullptr) {
+        while (s_callback_count > 0) {
+            condvarWait(&s_callback_cond, &s_mutex);
+        }
+    }
+    mutexUnlock(&s_mutex);
 }
  
 void BackgroundInstaller::RegisterMtpCallbacks() {
+    static bool initialized = false;
+    if (!initialized) {
+        mutexInit(&s_mutex);
+        condvarInit(&s_callback_cond);
+        initialized = true;
+    }
+
     haze::InitInstallMode(
         [](const char* path) { return OnInstallStart(path); },
         [](const void* buf, size_t size) { return OnInstallWrite(buf, size); },
@@ -291,8 +308,25 @@ void BackgroundInstaller::RegisterMtpCallbacks() {
  
 bool BackgroundInstaller::OnInstallStart(const char* path) {
     log_write("[BackgroundInstaller::OnInstallStart] inside for path: %s\n", path);
-    if (s_active_menu) {
-        return s_active_menu->OnInstallStart(path);
+    Menu* active = nullptr;
+    {
+        mutexLock(&s_mutex);
+        if (s_active_menu) {
+            active = s_active_menu;
+            s_callback_count++;
+        }
+        mutexUnlock(&s_mutex);
+    }
+
+    if (active) {
+        bool res = active->OnInstallStart(path);
+        mutexLock(&s_mutex);
+        s_callback_count--;
+        if (s_callback_count == 0) {
+            condvarWakeAll(&s_callback_cond);
+        }
+        mutexUnlock(&s_mutex);
+        return res;
     }
  
     if (App::GetProgressActive() || s_installing) {
@@ -319,7 +353,11 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
  
     s_installing = true;
     s_stop_source = std::stop_source();
-    s_source = std::make_shared<Stream>(path, s_stop_source.get_token());
+    {
+        mutexLock(&s_mutex);
+        s_source = std::make_shared<Stream>(path, s_stop_source.get_token());
+        mutexUnlock(&s_mutex);
+    }
     INSTALL_STATE = InstallState_None;
  
     evman::push(evman::FunctionalEventData {
@@ -328,10 +366,17 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
             App::SetAutoSleepDisabled(true);
             App::Push<ui::ProgressBox>(0, "Installing "_i18n, path_str, [](auto pbox) -> Result {
                 INSTALL_STATE = InstallState_Progress;
-                const auto rc = yati::InstallFromSource(pbox, s_source.get(), s_source->GetPath());
+                std::shared_ptr<Stream> src;
+                {
+                    mutexLock(&s_mutex);
+                    src = s_source;
+                    mutexUnlock(&s_mutex);
+                }
+                if (!src) R_THROW(Result_TransferCancelled);
+                const auto rc = yati::InstallFromSource(pbox, src.get(), src->GetPath());
                 INSTALL_STATE = InstallState_Finished;
                 if (R_FAILED(rc)) {
-                    s_source->Disable();
+                    src->Disable();
                     R_THROW(rc);
                 }
                 R_SUCCEED();
@@ -344,7 +389,11 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                     App::PlaySoundEffect(SoundEffect_Error);
                     App::PushErrorBox(rc, "Install failed!"_i18n);
                 }
-                s_source.reset();
+                {
+                    mutexLock(&s_mutex);
+                    s_source.reset();
+                    mutexUnlock(&s_mutex);
+                }
                 s_installing = false;
             });
         }
@@ -354,21 +403,68 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
 }
  
 bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) {
-    if (s_active_menu) {
-        return s_active_menu->OnInstallWrite(buf, size);
+    Menu* active = nullptr;
+    {
+        mutexLock(&s_mutex);
+        if (s_active_menu) {
+            active = s_active_menu;
+            s_callback_count++;
+        }
+        mutexUnlock(&s_mutex);
     }
-    if (!s_source) return false;
-    return s_source->Push(buf, size);
+
+    if (active) {
+        bool res = active->OnInstallWrite(buf, size);
+        mutexLock(&s_mutex);
+        s_callback_count--;
+        if (s_callback_count == 0) {
+            condvarWakeAll(&s_callback_cond);
+        }
+        mutexUnlock(&s_mutex);
+        return res;
+    }
+
+    std::shared_ptr<Stream> src;
+    {
+        mutexLock(&s_mutex);
+        src = s_source;
+        mutexUnlock(&s_mutex);
+    }
+    if (!src) return false;
+    return src->Push(buf, size);
 }
  
 void BackgroundInstaller::OnInstallClose() {
     log_write("[BackgroundInstaller::OnInstallClose] inside\n");
-    if (s_active_menu) {
-        s_active_menu->OnInstallClose();
+    Menu* active = nullptr;
+    {
+        mutexLock(&s_mutex);
+        if (s_active_menu) {
+            active = s_active_menu;
+            s_callback_count++;
+        }
+        mutexUnlock(&s_mutex);
+    }
+
+    if (active) {
+        active->OnInstallClose();
+        mutexLock(&s_mutex);
+        s_callback_count--;
+        if (s_callback_count == 0) {
+            condvarWakeAll(&s_callback_cond);
+        }
+        mutexUnlock(&s_mutex);
         return;
     }
-    if (!s_source) return;
-    s_source->Disable();
+
+    std::shared_ptr<Stream> src;
+    {
+        mutexLock(&s_mutex);
+        src = s_source;
+        mutexUnlock(&s_mutex);
+    }
+    if (!src) return;
+    src->Disable();
     while (INSTALL_STATE == InstallState_Progress) {
         svcSleepThread(1e+7);
     }

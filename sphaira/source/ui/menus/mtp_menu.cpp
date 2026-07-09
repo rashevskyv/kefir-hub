@@ -22,6 +22,7 @@ Menu::Menu(u32 flags) : stream::Menu{"MTP Install"_i18n, flags} {
 }
  
 Menu::~Menu() {
+    m_stop_source.request_stop();
     stream::BackgroundInstaller::SetActiveMenu(nullptr);
  
     if (!m_was_mtp_enabled) {

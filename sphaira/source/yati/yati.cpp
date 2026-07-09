@@ -1563,14 +1563,8 @@ Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, c
 
 bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
     s64 free_nand = 0;
-    fs::FsNativeBis fs_nand{FsBisPartitionId_User, "/"};
-    fs_nand.GetFreeSpace("/", &free_nand);
-
     s64 free_sd = 0;
-    struct statvfs st{};
-    if (statvfs("sdmc:/", &st) == 0) {
-        free_sd = (s64)st.f_bfree * (s64)st.f_bsize;
-    }
+    fs::GetStorageSpaces(&free_nand, nullptr, &free_sd, nullptr);
 
     constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
     s64 estimated = total_size;

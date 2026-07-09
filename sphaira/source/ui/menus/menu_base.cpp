@@ -35,6 +35,7 @@ namespace sphaira::ui::menu {
 auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
     static PolledData data{};
     static TimeStamp timestamp{};
+    static TimeStamp storage_timestamp{};
     static bool has_init = false;
 
     if (!has_init) {
@@ -52,10 +53,6 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.status = {};
         data.strength = {};
         data.ip = {};
-        data.nand_free = {};
-        data.nand_total = {};
-        data.sd_free = {};
-        data.sd_total = {};
 
         const auto t = std::time(NULL);
         localtime_r(&t, &data.tm);
@@ -64,22 +61,12 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         nifmGetInternetConnectionStatus(&data.type, &data.strength, &data.status);
         nifmGetCurrentIpAddress(&data.ip);
 
-        // Query NAND (built-in) storage
-        FsFileSystem nand_fs;
-        if (R_SUCCEEDED(fsOpenBisFileSystem(&nand_fs, FsBisPartitionId_User, ""))) {
-            fsFsGetFreeSpace(&nand_fs, "/", &data.nand_free);
-            fsFsGetTotalSpace(&nand_fs, "/", &data.nand_total);
-            fsFsClose(&nand_fs);
-        }
-
-        // Query SD card storage via sdmc: mount
-        struct statvfs st{};
-        if (statvfs("sdmc:/", &st) == 0) {
-            data.sd_free  = (s64)st.f_bfree  * (s64)st.f_bsize;
-            data.sd_total = (s64)st.f_blocks * (s64)st.f_frsize;
-        }
-
         timestamp.Update();
+    }
+
+    if (force_refresh || storage_timestamp.GetSeconds() >= 15) {
+        fs::GetStorageSpaces(&data.nand_free, &data.nand_total, &data.sd_free, &data.sd_total);
+        storage_timestamp.Update();
     }
 
     return data;

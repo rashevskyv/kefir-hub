@@ -87,6 +87,9 @@ private:
     static std::shared_ptr<Stream> s_source;
     static std::stop_source s_stop_source;
     static std::atomic<bool> s_installing;
+    static Mutex s_mutex;
+    static CondVar s_callback_cond;
+    static std::atomic<int> s_callback_count;
 };
 
 } // namespace sphaira::ui::menu::stream

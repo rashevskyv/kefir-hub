@@ -282,6 +282,8 @@ Result DirGetEntryCount(fs::Fs* fs, const fs::FsPath& path, s64* file_count, s64
 // but can avoid the second (expensive) stat call.
 Result FileGetSizeAndTimestamp(fs::Fs* fs, const FsPath& path, FsTimeStampRaw* ts, s64* size);
 Result IsDirEmpty(fs::Fs* m_fs, const fs::FsPath& path, bool* out);
+void GetStorageSpaces(s64* nand_free, s64* nand_total, s64* sd_free, s64* sd_total);
+
 
 struct Fs {
     Fs(bool ignore_read_only = true) : m_ignore_read_only{ignore_read_only} {}
