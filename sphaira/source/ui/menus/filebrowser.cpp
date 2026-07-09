@@ -2088,7 +2088,6 @@ void FsView::DisplayOptions() {
     }, "Access file browser advanced tools."_i18n);
     adv_entry->SetHasSubmenu(true);
 }
-}
 
 void FsView::DisplayAdvancedOptions() {
     auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);

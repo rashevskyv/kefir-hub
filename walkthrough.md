@@ -1,5 +1,18 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.129 — Виправлення помилки компіляції
+
+### Завдання
+Виправити помилку передчасного закриття namespace у [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp).
+
+### Підхід
+* Вилучено зайву фігурну дужку `}` на лінії 2091, яка передчасно закривала namespace `sphaira::ui::menu::filebrowser`.
+* Відновлено виклик `adv_entry->SetHasSubmenu(true);` перед кінцем методу `DisplayOptions()`.
+
+Версію програми збільшено до `0.13.129` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+---
+
 ## v0.13.128 — Реорганізація меню файлового менеджера та індикатори підменю
 
 ### Завдання
