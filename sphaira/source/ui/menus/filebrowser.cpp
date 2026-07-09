@@ -1849,8 +1849,8 @@ void FsView::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
-        auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+    options->Add<SidebarEntryCallback>("View"_i18n, [this](){
+        auto options = std::make_unique<Sidebar>("View Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
 
         SidebarEntryArray::Items sort_items;
@@ -1886,85 +1886,6 @@ void FsView::DisplayOptions() {
             SortAndFindLastFile();
         }, "Push hidden entries to the bottom of the listing."_i18n);
     }, "Change display order and visibility settings for files."_i18n);
-
-    if (IsSd()) {
-        options->Add<SidebarEntryCallback>("StartWebServer"_i18n, [this](){
-            ShareFolder();
-        }, "Share the current folder via the built-in web server."_i18n);
-    }
-
-    if (m_entries_current.size()) {
-        auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
-            m_menu->AddSelectedEntries(SelectedType::Cut);
-        }, true, "Move the selected files to the clipboard."_i18n);
-        cut_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot cut read-only files"_i18n);
-
-        options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
-            m_menu->AddSelectedEntries(SelectedType::Copy);
-        }, true, "Copy the selected files to the clipboard."_i18n);
-    }
-
-    if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
-        auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
-            const std::string buf = "Paste file(s)?"_i18n;
-            App::Push<OptionBox>(
-                buf, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
-                if (op_index && *op_index) {
-                    App::PopToMenu();
-                    OnPasteCallback();
-                }
-            });
-        }, "Paste the clipboard contents into the current folder."_i18n);
-        paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
-    }
-
-    // can't rename more than 1 file
-    if (m_entries_current.size() && !m_selected_count) {
-        auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
-            std::string out;
-            const auto& entry = GetEntry();
-            const auto name = entry.GetName();
-            if (R_SUCCEEDED(swkbd::ShowText(out, "Set New File Name"_i18n.c_str(), name.c_str())) && !out.empty() && out != name) {
-                App::PopToMenu();
-
-                const auto src_path = GetNewPath(entry);
-                const auto dst_path = GetNewPath(m_path, out);
-
-                Result rc;
-                if (entry.IsFile()) {
-                    rc = m_fs->RenameFile(src_path, dst_path);
-                } else {
-                    rc = m_fs->RenameDirectory(src_path, dst_path);
-                }
-
-                if (R_SUCCEEDED(rc)) {
-                    Scan(m_path);
-                } else {
-                    const auto msg = std::string("Failed to rename file: ") + entry.name;
-                    App::PushErrorBox(rc, msg);
-                }
-            }
-        }, "Rename the selected file or folder."_i18n);
-        rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
-    }
-
-    if (m_entries_current.size()) {
-        auto delete_entry = options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-            m_menu->AddSelectedEntries(SelectedType::Delete);
-
-            log_write("clicked on delete\n");
-            App::Push<OptionBox>(
-                "Delete Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
-                    if (op_index && *op_index) {
-                        App::PopToMenu();
-                        OnDeleteCallback();
-                    }
-                }
-            );
-            log_write("pushed delete\n");
-        }, "Permanently delete the selected file(s) or folder(s)."_i18n);
-        delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
-    }
 
     // returns true if all entries match the ext array.
     const auto check_all_ext = [this](auto& exts){
@@ -2088,9 +2009,83 @@ void FsView::DisplayOptions() {
         }
     }
 
+    if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
+        auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
+            const std::string buf = "Paste file(s)?"_i18n;
+            App::Push<OptionBox>(
+                buf, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
+                if (op_index && *op_index) {
+                    App::PopToMenu();
+                    OnPasteCallback();
+                }
+            });
+        }, "Paste the clipboard contents into the current folder."_i18n);
+        paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
+    }
+
+    if (m_entries_current.size()) {
+        auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
+            m_menu->AddSelectedEntries(SelectedType::Cut);
+        }, true, "Move the selected files to the clipboard."_i18n);
+        cut_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot cut read-only files"_i18n);
+
+        options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
+            m_menu->AddSelectedEntries(SelectedType::Copy);
+        }, true, "Copy the selected files to the clipboard."_i18n);
+    }
+
+    if (m_entries_current.size()) {
+        auto delete_entry = options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            m_menu->AddSelectedEntries(SelectedType::Delete);
+
+            log_write("clicked on delete\n");
+            App::Push<OptionBox>(
+                "Delete Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
+                    if (op_index && *op_index) {
+                        App::PopToMenu();
+                        OnDeleteCallback();
+                    }
+                }
+            );
+            log_write("pushed delete\n");
+        }, "Permanently delete the selected file(s) or folder(s)."_i18n);
+        delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
+    }
+
+    // can't rename more than 1 file
+    if (m_entries_current.size() && !m_selected_count) {
+        auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
+            std::string out;
+            const auto& entry = GetEntry();
+            const auto name = entry.GetName();
+            if (R_SUCCEEDED(swkbd::ShowText(out, "Set New File Name"_i18n.c_str(), name.c_str())) && !out.empty() && out != name) {
+                App::PopToMenu();
+
+                const auto src_path = GetNewPath(entry);
+                const auto dst_path = GetNewPath(m_path, out);
+
+                Result rc;
+                if (entry.IsFile()) {
+                    rc = m_fs->RenameFile(src_path, dst_path);
+                } else {
+                    rc = m_fs->RenameDirectory(src_path, dst_path);
+                }
+
+                if (R_SUCCEEDED(rc)) {
+                    Scan(m_path);
+                } else {
+                    const auto msg = std::string("Failed to rename file: ") + entry.name;
+                    App::PushErrorBox(rc, msg);
+                }
+            }
+        }, "Rename the selected file or folder."_i18n);
+        rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
+    }
+
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         DisplayAdvancedOptions();
-    }, "Access file browser advanced tools.");
+    }, "Access file browser advanced tools."_i18n);
+}
 }
 
 void FsView::DisplayAdvancedOptions() {
@@ -2140,6 +2135,9 @@ void FsView::DisplayAdvancedOptions() {
             FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
             if (other_view && other_view->m_fs_entry.type == FsType::Network && other_view->m_fs_entry.url != target_entry.url) {
                 other_view->SetFs("/", FS_ENTRY_DEFAULT);
+            }
+            if (m_fs_entry.type == FsType::Network && m_fs_entry.url != target_entry.url) {
+                SetFs("/", FS_ENTRY_DEFAULT);
             }
 
             App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
@@ -2203,6 +2201,12 @@ void FsView::DisplayAdvancedOptions() {
         location::Add(e);
         App::Notify("Location added successfully!"_i18n);
     }, "Configure a new network storage share."_i18n);
+
+    if (IsSd()) {
+        options->Add<SidebarEntryCallback>("StartWebServer"_i18n, [this](){
+            ShareFolder();
+        }, "Share the current folder via the built-in web server."_i18n);
+    }
 
     auto create_file_entry = options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
         std::string out;
