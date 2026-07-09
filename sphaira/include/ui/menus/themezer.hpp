@@ -94,6 +94,8 @@ struct Config {
     u32 order_index{};
     // search query, if empty, its not used
     std::string query{};
+    std::string target{};
+    std::vector<std::string> tags{};
     // defaults
     u32 page{1};
     u32 limit{18};
@@ -174,6 +176,8 @@ private:
     // options
     option::OptionLong m_sort{INI_SECTION, "sort", 0};
     option::OptionLong m_order{INI_SECTION, "order", 0};
+    option::OptionLong m_target{INI_SECTION, "target", 0};
+    option::OptionString m_tags{INI_SECTION, "tags", ""};
 
     bool m_checked_for_nro{};
     std::vector<std::string> m_favorite_ids{};

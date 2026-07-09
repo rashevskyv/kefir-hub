@@ -77,11 +77,18 @@ constexpr const char* REQUEST_ORDER[]{
 };
 
 constexpr const char* PACKS_QUERY =
-    "query($paginationArgs:PaginationInput,$sort:ItemSort,$order:SortOrder,$query:String){"
-    "switch{packs(paginationArgs:$paginationArgs,sort:$sort,order:$order,query:$query){"
+    "query($paginationArgs:PaginationInput,$sort:ItemSort,$order:SortOrder,$query:String,$activeTags:[String!]){"
+    "switch{packs(paginationArgs:$paginationArgs,sort:$sort,order:$order,query:$query,activeTags:$activeTags){"
     "nodes{hexId creator{username} name collagePreview{thumbUrl hdUrl} "
     "themes{hexId creator{username} name description updatedAt downloadCount saveCount target screenshotPreview{thumbUrl hdUrl} downloadUrl}}"
     "pageInfo{itemCount limit page pageCount}}}}";
+
+constexpr const char* THEMES_QUERY =
+    "query($paginationArgs:PaginationInput,$sort:ItemSort,$order:SortOrder,$query:String,$target:Target,$activeTags:[String!]){"
+    "switch{themes(paginationArgs:$paginationArgs,sort:$sort,order:$order,query:$query,target:$target,activeTags:$activeTags){"
+    "nodes{hexId creator{username} name description updatedAt downloadCount saveCount target screenshotPreview{thumbUrl hdUrl} downloadUrl}"
+    "pageInfo{itemCount limit page pageCount}}}}";
+
 
 auto GetNroPath() -> const char* {
     fs::FsNativeSd fs;
@@ -151,7 +158,11 @@ auto apiBuildListPacksBody(const Config& e) -> std::string {
 
     std::string json;
     json += "{\"query\":";
-    json += JsonString(PACKS_QUERY);
+    if (!e.target.empty()) {
+        json += JsonString(THEMES_QUERY);
+    } else {
+        json += JsonString(PACKS_QUERY);
+    }
     json += ",\"variables\":{\"paginationArgs\":{\"page\":";
     json += std::to_string(e.page);
     json += ",\"limit\":";
@@ -162,6 +173,24 @@ auto apiBuildListPacksBody(const Config& e) -> std::string {
     json += JsonString(REQUEST_ORDER[order_index]);
     json += ",\"query\":";
     json += e.query.empty() ? "null" : JsonString(e.query);
+
+    if (!e.target.empty()) {
+        json += ",\"target\":";
+        json += JsonString(e.target);
+    }
+
+    json += ",\"activeTags\":";
+    if (e.tags.empty()) {
+        json += "null";
+    } else {
+        json += "[";
+        for (size_t i = 0; i < e.tags.size(); ++i) {
+            if (i > 0) json += ",";
+            json += JsonString(e.tags[i]);
+        }
+        json += "]";
+    }
+
     json += "}}";
     return json;
 }
@@ -169,7 +198,13 @@ auto apiBuildListPacksBody(const Config& e) -> std::string {
 auto apiBuildListPacksCache(const Config& e) -> fs::FsPath {
     fs::FsPath path;
     const auto query_hash = HashString(e.query);
-    std::snprintf(path, sizeof(path), "%s/packs_%u_%u_%08x_%u_page.json", CACHE_PATH, e.sort_index, e.order_index, query_hash, e.page);
+    std::string tags_str;
+    for (const auto& tag : e.tags) {
+        tags_str += tag + ";";
+    }
+    const auto target_hash = HashString(e.target);
+    const auto tags_hash = HashString(tags_str);
+    std::snprintf(path, sizeof(path), "%s/packs_%u_%u_%08x_%08x_%08x_%u_page.json", CACHE_PATH, e.sort_index, e.order_index, query_hash, target_hash, tags_hash, e.page);
     return path;
 }
 
@@ -347,15 +382,50 @@ void from_json(const fs::FsPath& path, PackList& e) {
     JSON_INIT_VEC_FILE(path, nullptr, nullptr);
     JSON_GET_OBJ("data");
     JSON_GET_OBJ("switch");
-    JSON_GET_OBJ("packs");
-    JSON_OBJ_ITR(
-        JSON_SET_ARR_OBJ2(nodes, e.packList);
-        case cexprHash("pageInfo"): {
-            if (yyjson_is_obj(val)) {
-                from_json(val, e.pagination);
+
+    yyjson_val* packs_val = yyjson_obj_get(json, "packs");
+    if (packs_val) {
+        yyjson_val* nodes_val = yyjson_obj_get(packs_val, "nodes");
+        if (nodes_val && yyjson_is_arr(nodes_val)) {
+            const auto arr_size = yyjson_arr_size(nodes_val);
+            e.packList.resize(arr_size);
+            size_t idx, max;
+            yyjson_val* val;
+            yyjson_arr_foreach(nodes_val, idx, max, val) {
+                from_json(val, e.packList[idx]);
             }
-        } break;
-    );
+        }
+        yyjson_val* page_info_val = yyjson_obj_get(packs_val, "pageInfo");
+        if (page_info_val && yyjson_is_obj(page_info_val)) {
+            from_json(page_info_val, e.pagination);
+        }
+    } else {
+        yyjson_val* themes_val = yyjson_obj_get(json, "themes");
+        if (themes_val) {
+            yyjson_val* nodes_val = yyjson_obj_get(themes_val, "nodes");
+            if (nodes_val && yyjson_is_arr(nodes_val)) {
+                const auto arr_size = yyjson_arr_size(nodes_val);
+                e.packList.resize(arr_size);
+                size_t idx, max;
+                yyjson_val* val;
+                yyjson_arr_foreach(nodes_val, idx, max, val) {
+                    ThemeEntry theme;
+                    from_json(val, theme);
+
+                    PackListEntry& entry = e.packList[idx];
+                    entry.id = theme.id;
+                    entry.creator = theme.creator;
+                    entry.details = theme.details;
+                    entry.preview = theme.preview;
+                    entry.themes.push_back(std::move(theme));
+                }
+            }
+            yyjson_val* page_info_val = yyjson_obj_get(themes_val, "pageInfo");
+            if (page_info_val && yyjson_is_obj(page_info_val)) {
+                from_json(page_info_val, e.pagination);
+            }
+        }
+    }
 }
 
 auto ThemeTargetLabel(const ThemeEntry& theme) -> const char* {
@@ -1012,6 +1082,30 @@ void Menu::PackListDownload() {
     config.SetQuery(m_search);
     config.sort_index = m_sort.Get();
     config.order_index = m_order.Get();
+
+    const auto target_val = m_target.Get();
+    if (target_val > 0 && target_val <= std::size(REQUEST_TARGET)) {
+        config.target = REQUEST_TARGET[target_val - 1];
+    }
+
+    const auto tags_val = m_tags.Get();
+    if (!tags_val.empty()) {
+        std::string current;
+        for (char ch : tags_val) {
+            if (ch == ',' || ch == ' ' || ch == ';') {
+                if (!current.empty()) {
+                    config.tags.push_back(current);
+                    current.clear();
+                }
+            } else {
+                current += ch;
+            }
+        }
+        if (!current.empty()) {
+            config.tags.push_back(current);
+        }
+    }
+
     const auto packList_body = apiBuildListPacksBody(config);
     const auto packlist_path = apiBuildListPacksCache(config);
     const auto page_generation = m_page_generation;
@@ -1197,6 +1291,16 @@ void Menu::DisplayOptions() {
     order_items.push_back("Descending"_i18n);
     order_items.push_back("Ascending"_i18n);
 
+    SidebarEntryArray::Items target_items;
+    target_items.push_back("All"_i18n);
+    target_items.push_back("Home Menu"_i18n);
+    target_items.push_back("Lock Screen"_i18n);
+    target_items.push_back("All Apps"_i18n);
+    target_items.push_back("Settings"_i18n);
+    target_items.push_back("Player Select"_i18n);
+    target_items.push_back("User Page"_i18n);
+    target_items.push_back("News"_i18n);
+
     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
         if (m_sort.Get() != index_out) {
             m_sort.Set(index_out);
@@ -1210,6 +1314,21 @@ void Menu::DisplayOptions() {
             InvalidateAllPages();
         }
     }, m_order.Get(), "Sort themes in ascending or descending order."_i18n);
+
+    options->Add<SidebarEntryArray>("Target"_i18n, target_items, [this](s64& index_out){
+        if (m_target.Get() != index_out) {
+            m_target.Set(index_out);
+            InvalidateAllPages();
+        }
+    }, m_target.Get(), "Filter themes by target layout."_i18n);
+
+    options->Add<SidebarEntryCallback>("Tags"_i18n, [this](){
+        std::string out;
+        if (R_SUCCEEDED(swkbd::ShowText(out, "Enter tags (separated by spaces or commas)"_i18n.c_str(), m_tags.Get().c_str()))) {
+            m_tags.Set(out);
+            InvalidateAllPages();
+        }
+    }, "Filter themes by tags (e.g. anime, dark). Separate with spaces or commas."_i18n);
 
     options->Add<SidebarEntryCallback>("Page"_i18n, [this](){
         s64 out;
