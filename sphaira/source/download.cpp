@@ -1242,7 +1242,7 @@ auto UnescapeString(const std::string& str) -> std::string {
     return UnescapeString(nullptr, str);
 }
 
-auto ListWebdav(const std::string& url, const std::string& user, const std::string& pass, const std::string& folder) -> std::vector<std::string> {
+auto ListWebdav(const std::string& url, const std::string& user, const std::string& pass, const std::string& folder, const std::string& bearer, const std::string& pub_key, const std::string& priv_key, u16 port) -> std::vector<std::string> {
     std::vector<std::string> files;
     
     // Construct the full URL
@@ -1257,6 +1257,10 @@ auto ListWebdav(const std::string& url, const std::string& user, const std::stri
     Api e;
     e.SetOption(Url{full_url});
     e.SetOption(UserPass{user, pass});
+    e.SetOption(Bearer{bearer});
+    e.SetOption(PubKey{pub_key});
+    e.SetOption(PrivKey{priv_key});
+    e.SetOption(Port{port});
     e.SetOption(CustomRequest{"PROPFIND"});
     e.SetOption(Header{
         { "Depth", "1" },

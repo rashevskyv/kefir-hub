@@ -1419,9 +1419,14 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             App::Notify("Backup successfull!"_i18n);
 
             if (m_save_autosync.Get()) {
-                const auto network_locations = location::Load();
-                if (!network_locations.empty()) {
-                    const auto& loc = network_locations.front();
+                std::vector<location::Entry> webdav_locations;
+                for (const auto& loc : location::Load()) {
+                    if (loc.url.starts_with("webdav://") || loc.url.starts_with("http://") || loc.url.starts_with("https://")) {
+                        webdav_locations.push_back(loc);
+                    }
+                }
+                if (!webdav_locations.empty()) {
+                    const auto& loc = webdav_locations.front();
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, backup_root](auto pbox) mutable -> Result {
                         fs::FsNativeSd sd_fs;
                         for (auto& e : entries) {
@@ -1433,18 +1438,16 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
                                 const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
                                 pbox->NewTransfer("Uploading: "_i18n + filename);
-
-                                curl::Api api;
+                                
+                                curl::Api api(CURL_LOCATION_TO_API(loc));
                                 api.SetUpload(true);
-                                api.SetOption(curl::Url{loc.url + "/" + remote_rel});
-                                api.SetOption(curl::UserPass{loc.user, loc.pass});
                                 api.SetOption(curl::Path{latest_path});
-                                api.SetOption(curl::UploadInfo{filename});
+                                api.SetOption(curl::UploadInfo{remote_rel + "/" + filename});
 
                                 auto res = curl::FromFile(api);
                                 if (!res.success) {
                                     log_write("[SYNC] auto-sync failed to upload: %s\n", filename.c_str());
-                                    R_THROW(0xdeadbeef);
+                                    R_THROW(Result_SaveSyncFailed);
                                 }
                             }
                         }
@@ -1856,17 +1859,42 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
 }
 
 void Menu::SyncSavesRemote() {
-    const auto network_locations = location::Load();
-    if (network_locations.empty()) {
-        App::Push<OptionBox>("No network location configured for sync. Add one in settings."_i18n, "OK"_i18n);
-        return;
+    std::vector<location::Entry> webdav_locations;
+    for (const auto& loc : location::Load()) {
+        if (loc.url.starts_with("webdav://") || loc.url.starts_with("http://") || loc.url.starts_with("https://")) {
+            webdav_locations.push_back(loc);
+        }
     }
 
-    const auto& loc = network_locations.front();
+    if (webdav_locations.empty()) {
+        App::Push<OptionBox>("No WebDAV network location configured for sync. Add one in settings."_i18n, "OK"_i18n);
+        return;
+    }
 
     const auto seeds = GetSelectedEntries();
     if (seeds.empty()) {
         App::Push<OptionBox>("No saves selected for sync."_i18n, "OK"_i18n);
+        return;
+    }
+
+    if (webdav_locations.size() == 1) {
+        SyncSavesRemoteWithLocation(webdav_locations.front());
+    } else {
+        PopupList::Items items;
+        for (const auto& loc : webdav_locations) {
+            items.emplace_back(loc.name);
+        }
+        App::Push<PopupList>("Select Sync Location"_i18n, items, [this, webdav_locations](auto op_index) {
+            if (op_index) {
+                SyncSavesRemoteWithLocation(webdav_locations[*op_index]);
+            }
+        });
+    }
+}
+
+void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
+    const auto seeds = GetSelectedEntries();
+    if (seeds.empty()) {
         return;
     }
 
@@ -1892,7 +1920,7 @@ void Menu::SyncSavesRemote() {
 
             const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
             pbox->NewTransfer("Listing remote files..."_i18n);
-            const auto remote_files = curl::ListWebdav(loc.url, loc.user, loc.pass, remote_rel);
+            const auto remote_files = curl::ListWebdav(loc.url, loc.user, loc.pass, remote_rel, loc.bearer, loc.pub_key, loc.priv_key, loc.port);
 
             std::vector<std::string> to_upload;
             for (const auto& f : local_col.files) {
@@ -1922,17 +1950,15 @@ void Menu::SyncSavesRemote() {
                 pbox->NewTransfer("Uploading: "_i18n + f);
                 const auto local_file = fs::AppendPath(local_path, f);
 
-                curl::Api api;
+                curl::Api api(CURL_LOCATION_TO_API(loc));
                 api.SetUpload(true);
-                api.SetOption(curl::Url{loc.url + "/" + remote_rel});
-                api.SetOption(curl::UserPass{loc.user, loc.pass});
                 api.SetOption(curl::Path{local_file});
-                api.SetOption(curl::UploadInfo{f});
+                api.SetOption(curl::UploadInfo{remote_rel + "/" + f});
 
                 auto res = curl::FromFile(api);
                 if (!res.success) {
                     log_write("[SYNC] failed to upload: %s\n", f.c_str());
-                    R_THROW(0xdeadbeef);
+                    R_THROW(Result_SaveSyncFailed);
                 }
             }
 
@@ -1943,16 +1969,15 @@ void Menu::SyncSavesRemote() {
 
                 const auto temp_file = local_file + ".temp";
 
-                curl::Api api;
+                curl::Api api(CURL_LOCATION_TO_API(loc));
                 api.SetOption(curl::Url{loc.url + "/" + remote_rel + "/" + f});
-                api.SetOption(curl::UserPass{loc.user, loc.pass});
                 api.SetOption(curl::Path{temp_file});
 
                 auto res = curl::ToFile(api);
                 if (!res.success) {
                     log_write("[SYNC] failed to download: %s\n", f.c_str());
                     sd_fs.DeleteFile(temp_file);
-                    R_THROW(0xdeadbeef);
+                    R_THROW(Result_SaveSyncFailed);
                 }
 
                 sd_fs.DeleteFile(local_file);

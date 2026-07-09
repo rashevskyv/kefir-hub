@@ -653,6 +653,7 @@ enum class SphairaResult : Result {
     YatiNcmDbCorruptInfos,
     SmbConnectionFailed,
     SmbNotSupported,
+    SaveSyncFailed,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -774,6 +775,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(YatiNcmDbCorruptInfos),
     MAKE_SPHAIRA_RESULT_ENUM(SmbConnectionFailed),
     MAKE_SPHAIRA_RESULT_ENUM(SmbNotSupported),
+    MAKE_SPHAIRA_RESULT_ENUM(SaveSyncFailed),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

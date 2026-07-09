@@ -150,6 +150,7 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_YatiNcmDbCorruptInfos: return "SphairaError_YatiNcmDbCorruptInfos";
         case Result_SmbConnectionFailed: return "SphairaError_SmbConnectionFailed";
         case Result_SmbNotSupported: return "SphairaError_SmbNotSupported";
+        case Result_SaveSyncFailed: return "SphairaError_SaveSyncFailed";
     }
 
     return "";
@@ -173,6 +174,8 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "Failed to connect to the SMB server. Please check your network connection, server IP address, share name, and credentials."_i18n;
         case Result_SmbNotSupported:
             return "Samba support is not enabled in this build of Sphaira."_i18n;
+        case Result_SaveSyncFailed:
+            return "Save synchronization failed. Please check your WebDAV server connection and credentials."_i18n;
         default:
             return "";
     }

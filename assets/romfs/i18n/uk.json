@@ -90,7 +90,6 @@
   "Home Menu": "Головне меню",
   "Lock Screen": "Екран блокування",
   "All Apps": "Всі програми",
-  "Settings": "Налаштування",
   "Player Select": "Вибір гравця",
   "User Page": "Сторінка користувача",
   "News": "Новини",
@@ -251,8 +250,6 @@
   "Updating ncm database": "Оновлення бази даних NCM",
   "Pushing application record": "Запис даних програми",
   "Failed to install forwarder": "Не вдалося встановити форвардер",
-  "Unstar": "Прибрати з обраного",
-  "Star": "Позначити зіркою",
   "Unstarred ": "Знято зірку з ",
   "Starred ": "Позначено зіркою ",
   "Failed to remove old forwarder, please manually remove it!": "Не вдалося видалити старий форвардер, видаліть його вручну!",
@@ -625,9 +622,7 @@
   "All Accounts is enabled.": "Усі облікові записи увімкнено.",
   "System is enabled.": "Системні дані увімкнено.",
   "HB Menu": "Головне меню",
-
   "Switch between list and grid view for the updater.": "Switch between list and grid view for the updater.",
-
   "Browse all apps published by this author.": "Browse all apps published by this author.",
   "Send feedback or a comment about this application.": "Send feedback or a comment about this application.",
   "Open the author's website for this application.": "Open the author's website for this application.",
@@ -636,13 +631,11 @@
   "Sort apps from newest to oldest or A to Z.": "Sort apps from newest to oldest or A to Z.",
   "Choose how apps are displayed on screen.": "Choose how apps are displayed on screen.",
   "Search for apps by name or keyword.": "Search for apps by name or keyword.",
-
   "Select how themes are sorted in the list.": "Select how themes are sorted in the list.",
   "Sort themes in ascending or descending order.": "Sort themes in ascending or descending order.",
   "Jump to a specific page number in the theme list.": "Jump to a specific page number in the theme list.",
   "Search for themes by name or keyword.": "Search for themes by name or keyword.",
   "Open the NXthemes Installer to apply downloaded themes.": "Open the NXthemes Installer to apply downloaded themes.",
-
   "Dump the full XCI and all binary data.": "Dump the full XCI and all binary data.",
   "Dump all binary files without the XCI.": "Dump all binary files without the XCI.",
   "Dump the full XCI image of the game card.": "Dump the full XCI image of the game card.",
@@ -652,7 +645,6 @@
   "Dump the Initial Data binary file.": "Dump the Initial Data binary file.",
   "Configure installation settings such as skipping content types.": "Configure installation settings such as skipping content types.",
   "Configure dump output settings and file format options.": "Configure dump output settings and file format options.",
-
   "Select which controller's IR camera to use.": "Select which controller's IR camera to use.",
   "Rotate the IR camera image view.": "Rotate the IR camera image view.",
   "Choose the colour palette for the IR image.": "Choose the colour palette for the IR image.",
@@ -663,13 +655,10 @@
   "Set the trimmed output resolution (must be <= source format).": "Set the trimmed output resolution (must be <= source format).",
   "Filter out ambient external light to improve IR accuracy.": "Filter out ambient external light to improve IR accuracy.",
   "Reset all IR camera settings to factory defaults.": "Reset all IR camera settings to factory defaults.",
-
   "Switch the file source to a different storage or mount point.": "Switch the file source to a different storage or mount point.",
-
   "Permanently delete the selected image(s) from the SD card.": "Permanently delete the selected image(s) from the SD card.",
   "Compress the selected image(s) into a zip archive.": "Compress the selected image(s) into a zip archive.",
   "Use the selected image to create a custom Switch theme.": "Use the selected image to create a custom Switch theme.",
-
   "Change display order and visibility settings for files.": "Зміна порядку відображення та налаштувань видимості файлів.",
   "Select which field to sort files and folders by.": "Виберіть поле, за яким сортувати файли та папки.",
   "Sort entries from largest to smallest or A to Z.": "Сортувати записи за розміром або за алфавітом.",
@@ -701,11 +690,6 @@
   "Calculate and display the SHA1 hash of the selected file.": "Обчислити та показати SHA1 хеш вибраного файлу.",
   "Calculate and display the SHA256 hash of the selected file.": "Обчислити та показати SHA256 хеш вибраного файлу.",
   "Allow modifying files and folders that are marked as read-only.": "Дозволити зміну файлів та папок, позначених як тільки для читання.",
-  "microSD card only": "Тільки microSD",
-  "System memory only": "Тільки пам'ять консолі",
-  "System first, then SD": "Пам'ять консолі, потім SD",
-  "SD first, then system": "SD, потім пам'ять консолі",
-  "Automatic": "Автоматично",
   "Reserve free space": "Резерв вільного місця",
   "Enter Reserve Free Space (MB)": "Введіть резерв вільного місця (МБ)",
   "Set the threshold of free space to reserve on installation target (MB).": "Встановіть поріг вільного місця для резервування на цільовому накопичувачі (МБ).",

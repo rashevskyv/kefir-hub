@@ -1,6 +1,6 @@
-#if ENABLE_NETWORK_INSTALL
- 
 #include "ui/menus/install_stream_menu_base.hpp"
+
+#if ENABLE_NETWORK_INSTALL
 #include "yati/yati.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -471,5 +471,17 @@ void BackgroundInstaller::OnInstallClose() {
 }
  
 } // namespace sphaira::ui::menu::stream
- 
+
+#else
+
+namespace sphaira::ui::menu::stream {
+
+void BackgroundInstaller::RegisterMtpCallbacks() {}
+void BackgroundInstaller::SetActiveMenu(Menu* menu) {}
+bool BackgroundInstaller::OnInstallStart(const char* path) { return false; }
+bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) { return false; }
+void BackgroundInstaller::OnInstallClose() {}
+
+} // namespace sphaira::ui::menu::stream
+
 #endif

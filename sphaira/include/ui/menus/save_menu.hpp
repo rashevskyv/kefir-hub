@@ -94,6 +94,7 @@ private:
     void PromptSaveAction();
     void PromptSaveTypeOptions(bool restore);
     void SyncSavesRemote();
+    void SyncSavesRemoteWithLocation(const location::Entry& loc);
 
     auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const;
