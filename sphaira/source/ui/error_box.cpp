@@ -148,6 +148,8 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_YatiCertNotFound: return "SphairaError_YatiCertNotFound";
         case Result_YatiNcmDbCorruptHeader: return "SphairaError_YatiNcmDbCorruptHeader";
         case Result_YatiNcmDbCorruptInfos: return "SphairaError_YatiNcmDbCorruptInfos";
+        case Result_SmbConnectionFailed: return "SphairaError_SmbConnectionFailed";
+        case Result_SmbNotSupported: return "SphairaError_SmbNotSupported";
     }
 
     return "";
@@ -167,6 +169,10 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "The name contains invalid characters. Do not use characters like *, ?, :, etc."_i18n;
         case Result_FsReadOnly:
             return "This directory or file is write-protected."_i18n;
+        case Result_SmbConnectionFailed:
+            return "Failed to connect to the SMB server. Please check your network connection, server IP address, share name, and credentials."_i18n;
+        case Result_SmbNotSupported:
+            return "Samba support is not enabled in this build of Sphaira."_i18n;
         default:
             return "";
     }

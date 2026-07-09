@@ -548,4 +548,36 @@
 * Логіка редіректу до AppStore перевірена.
 
 
+## v0.13.113 — Інтеграція Samba (SMB2/3) мережевих джерел у файловий менеджер
+
+### Проблема
+Користувачі не мали можливості переглядати та програвати файли з мережевих Samba-серверів (SMB2/3) безпосередньо у Sphaira.
+
+### Підхід
+1. **Інтеграція libsmb2**:
+   - Додано FetchContent для `libsmb2` з накладанням латки `libsmb2.patch` для коректної сумісності з `libnx` під Nintendo Switch у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Налаштовано збірку `libsmb2` з використанням глобального макросу `__SWITCH__` та додаванням `compat.c` до списку вихідних файлів для забезпечення підтримки функцій `readv`/`writev`.
+   - Налаштовано правильне лінкування бібліотеки `smb2` та додано шляхи до її заголовків до `sphaira` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+2. **Devoptab драйвер**:
+   - Портовано та інтегровано класи `CSMB2FS` та `CSMB2_PARSER` у [devoptab_smb2.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_smb2.hpp) та [devoptab_smb2.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_smb2.cpp), що реалізують POSIX-інтерфейс для Samba з префіксом шляху `smb2:/`.
+3. **Файловий браузер та монтування**:
+   - Розширено структуру `FsEntry` та енум `FsType` для підтримки мережевих джерел та збереження їхніх облікових даних (URL, user, pass) у [filebrowser.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser.hpp).
+   - Реалізовано асинхронне монтування мережевих сховищ через діалогове вікно прогресу `ProgressBox` у [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp).
+   - Створено інтерфейс додавання мережевих локацій "Add network location" з послідовним запитом параметрів через віртуальну клавіатуру `swkbd::ShowText` та збереженням у `/config/sphaira/locations.ini`.
+   - Забезпечено передачу повної SMB URL-адреси з вбудованими обліковими даними (формат `smb://user:pass@host/share/path/file.mp4`) до NXMP при запуску відтворення медіафайлу з мережевого джерела.
+4. **Локалізація**:
+   - Додано нові переклади до [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+5. **Сумісність зі Split-Screen та безпека**:
+   - Впроваджено лічильник посилань `g_smb_ref_count` для спільного SMB devoptab пристрою. Це запобігає випадковому видаленню та розмонтуванню `g_smb2fs` при закритті однієї з панелей у split-screen.
+   - Додано логіку автоматичного скидання іншої панелі на SD-карту, якщо користувач монтує новий SMB URL на поточній панелі, усуваючи конфлікти єдиного devoptab префіксу `smb2:`.
+   - Замінено магічні Result-коди (`0x100` / `0x200`) на іменовані константи `Result_SmbConnectionFailed` та `Result_SmbNotSupported` у [defines.hpp](file:///d:/git/dev/sphaira/sphaira/include/defines.hpp) з їхнім описом в [error_box.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/error_box.cpp).
+   - Додано попередження про збереження паролів у відкритому вигляді у [README.md](file:///d:/git/dev/sphaira/README.md).
+
+### Результати тестування
+* Код успішно збирається під WSL без помилок лінкера.
+* Додано підтримку Samba-джерел у меню "Mount", а також діалоги для конфігурування нових підключень.
+* Запобігається крашам при роботі зі split-screen та перемиканні джерел.
+
+
+
 

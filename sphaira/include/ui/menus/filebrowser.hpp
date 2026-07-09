@@ -28,6 +28,7 @@ enum class FsType {
     ImageNand,
     ImageSd,
     Stdio,
+    Network,
 };
 
 enum class SelectedType {
@@ -57,6 +58,9 @@ struct FsEntry {
     fs::FsPath root{};
     FsType type{};
     u32 flags{FsEntryFlag_None};
+    fs::FsPath url{};
+    fs::FsPath user{};
+    fs::FsPath pass{};
 
     auto IsReadOnly() const -> bool {
         return flags & FsEntryFlag_ReadOnly;

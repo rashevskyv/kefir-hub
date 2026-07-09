@@ -8,6 +8,7 @@
 #include "ui/menus/file_viewer.hpp"
 #include "ui/menus/theme_creator.hpp"
 #include "ui/menus/appstore.hpp"
+#include "utils/devoptab_smb2.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
@@ -205,6 +206,23 @@ auto GetNxmpPath() -> const char* {
 auto HasNxmp() -> bool {
     return GetNxmpPath() != nullptr;
 }
+
+#ifdef BUILD_SMB2
+static int g_smb_ref_count = 0;
+
+void ParseSmbUrl(const std::string& url, std::string& server, std::string& share) {
+    if (url.rfind("smb://", 0) != 0) return;
+    size_t host_start = 6;
+    size_t slash_pos = url.find('/', host_start);
+    if (slash_pos == std::string::npos) {
+        server = url.substr(host_start);
+        share = "";
+    } else {
+        server = url.substr(host_start, slash_pos - host_start);
+        share = url.substr(slash_pos + 1);
+    }
+}
+#endif
 
 auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool {
     for (auto e : list) {
@@ -540,6 +558,16 @@ FsView::~FsView() {
     if (IsSd()) {
         ini_puts("paths", "last_path", m_path, App::CONFIG_PATH);
     }
+#ifdef BUILD_SMB2
+    if (m_fs_entry.type == FsType::Network) {
+        g_smb_ref_count--;
+        if (g_smb_ref_count <= 0 && g_smb2fs) {
+            delete g_smb2fs;
+            g_smb2fs = nullptr;
+            g_smb_ref_count = 0;
+        }
+    }
+#endif
 }
 
 void FsView::Update(Controller* controller, TouchInfo* touch) {
@@ -1735,9 +1763,25 @@ static Result DeleteAllCollectionsWithSelected(ProgressBox* pbox, fs::Fs* fs, co
 
 void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
     if (m_fs && m_fs_entry.root == new_entry.root && m_fs_entry.type == new_entry.type) {
-        log_write("same fs, ignoring\n");
-        return;
+        if (new_entry.type != FsType::Network || m_fs_entry.url == new_entry.url) {
+            log_write("same fs, ignoring\n");
+            return;
+        }
     }
+
+#ifdef BUILD_SMB2
+    if (m_fs_entry.type == FsType::Network) {
+        g_smb_ref_count--;
+        if (g_smb_ref_count <= 0 && g_smb2fs) {
+            delete g_smb2fs;
+            g_smb2fs = nullptr;
+            g_smb_ref_count = 0;
+        }
+    }
+    if (new_entry.type == FsType::Network) {
+        g_smb_ref_count++;
+    }
+#endif
 
     // m_fs.reset();
     m_path = new_path;
@@ -1762,6 +1806,9 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
             m_fs = std::make_unique<fs::FsNativeImage>(FsImageDirectoryId_Sd);
             break;
         case FsType::Stdio:
+            m_fs = std::make_unique<fs::FsStdio>(true, new_entry.root);
+            break;
+        case FsType::Network:
             m_fs = std::make_unique<fs::FsStdio>(true, new_entry.root);
             break;
     }
@@ -1953,11 +2000,33 @@ void FsView::DisplayOptions() {
         }
     }
 
-    if (IsSd() && m_entries_current.size() && !m_selected_count) {
+    if ((IsSd() || m_fs_entry.type == FsType::Network) && m_entries_current.size() && !m_selected_count) {
         if (check_all_ext(VIDEO_EXTENSIONS) || check_all_ext(AUDIO_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("Play with NXMP"_i18n, [this](){
                 if (HasNxmp()) {
-                    nro_launch(GetNxmpPath(), nro_add_arg_file(GetNewPathCurrent()));
+                    std::string play_url;
+                    if (m_fs_entry.type == FsType::Network) {
+                        std::string raw_url = m_fs_entry.url.toString();
+                        std::string user = m_fs_entry.user.toString();
+                        std::string pass = m_fs_entry.pass.toString();
+                        if (!user.empty()) {
+                            std::string creds = user;
+                            if (!pass.empty()) {
+                                creds += ":" + pass;
+                            }
+                            creds += "@";
+                            raw_url.insert(6, creds);
+                        }
+                        std::string rel_path = GetNewPathCurrent().toString();
+                        if (rel_path.starts_with("smb2:")) {
+                            rel_path = rel_path.substr(5);
+                        }
+                        play_url = raw_url + rel_path;
+                        nro_launch(GetNxmpPath(), nro_add_arg(play_url));
+                    } else {
+                        play_url = GetNewPathCurrent().toString();
+                        nro_launch(GetNxmpPath(), nro_add_arg_file(play_url));
+                    }
                 } else {
                     App::Push<OptionBox>(
                         "NXMP not found, open AppStore to install?"_i18n,
@@ -2047,10 +2116,93 @@ void FsView::DisplayAdvancedOptions() {
         mount_items.push_back(i18n::get(e.name));
     }
 
+    const auto network_locations = location::Load();
+    for (const auto& e: network_locations) {
+        if (e.url.rfind("smb://", 0) == 0) {
+            FsEntry entry{
+                .name = e.name,
+                .root = "smb2:/",
+                .type = FsType::Network,
+                .flags = FsEntryFlag_None,
+                .url = e.url,
+                .user = e.user,
+                .pass = e.pass
+            };
+            fs_entries.emplace_back(entry);
+            mount_items.push_back(e.name);
+        }
+    }
+
     options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
         App::PopToMenu();
-        SetFs(fs_entries[index_out].root, fs_entries[index_out]);
+        const auto& target_entry = fs_entries[index_out];
+        if (target_entry.type == FsType::Network) {
+            FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
+            if (other_view && other_view->m_fs_entry.type == FsType::Network && other_view->m_fs_entry.url != target_entry.url) {
+                other_view->SetFs("/", FS_ENTRY_DEFAULT);
+            }
+
+            App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
+#ifdef BUILD_SMB2
+                if (g_smb2fs) {
+                    if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
+                        R_SUCCEED();
+                    }
+                    delete g_smb2fs;
+                    g_smb2fs = nullptr;
+                }
+                std::string server, share;
+                ParseSmbUrl(target_entry.url.toString(), server, share);
+                g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
+                if (g_smb2fs->RegisterFilesystem_v2()) {
+                    R_SUCCEED();
+                } else {
+                    delete g_smb2fs;
+                    g_smb2fs = nullptr;
+                    R_THROW(Result_SmbConnectionFailed);
+                }
+#else
+                R_THROW(Result_SmbNotSupported);
+#endif
+            }, [this, target_entry](Result rc) {
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
+                } else {
+                    SetFs(target_entry.root, target_entry);
+                }
+            });
+        } else {
+            SetFs(target_entry.root, target_entry);
+        }
     }, i18n::get(m_fs_entry.name), "Switch the file source to a different storage or mount point."_i18n);
+
+    options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
+        std::string name;
+        if (R_FAILED(swkbd::ShowText(name, "Enter location name (e.g. My NAS)"_i18n.c_str(), "")) || name.empty()) return;
+
+        std::string server;
+        if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), "")) || server.empty()) return;
+
+        std::string share;
+        if (R_FAILED(swkbd::ShowText(share, "Enter share name (e.g. shared_folder)"_i18n.c_str(), "")) || share.empty()) return;
+
+        std::string user;
+        if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
+
+        std::string pass;
+        if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
+
+        App::PopToMenu();
+
+        location::Entry e;
+        e.name = name;
+        e.url = "smb://" + server + "/" + share;
+        e.user = user;
+        e.pass = pass;
+
+        location::Add(e);
+        App::Notify("Location added successfully!"_i18n);
+    }, "Configure a new network storage share."_i18n);
 
     auto create_file_entry = options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
         std::string out;

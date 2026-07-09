@@ -651,6 +651,8 @@ enum class SphairaResult : Result {
     YatiNcmDbCorruptHeader,
     // unable to total infos from ncm database.
     YatiNcmDbCorruptInfos,
+    SmbConnectionFailed,
+    SmbNotSupported,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -770,6 +772,8 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(YatiCertNotFound),
     MAKE_SPHAIRA_RESULT_ENUM(YatiNcmDbCorruptHeader),
     MAKE_SPHAIRA_RESULT_ENUM(YatiNcmDbCorruptInfos),
+    MAKE_SPHAIRA_RESULT_ENUM(SmbConnectionFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(SmbNotSupported),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

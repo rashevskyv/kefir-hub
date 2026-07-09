@@ -711,5 +711,15 @@
   "Set the threshold of free space to reserve on installation target (MB).": "Встановіть поріг вільного місця для резервування на цільовому накопичувачі (МБ).",
   "Play with NXMP": "Відтворити в NXMP",
   "Play the selected media file using NXMP player.": "Відтворити вибраний медіафайл за допомогою плеєра NXMP.",
-  "NXMP not found, open AppStore to install?": "NXMP не знайдено, відкрити AppStore для встановлення?"
+  "NXMP not found, open AppStore to install?": "NXMP не знайдено, відкрити AppStore для встановлення?",
+  "Add network location": "Додати мережеве джерело",
+  "Connecting to SMB...": "Підключення до SMB...",
+  "Enter location name (e.g. My NAS)": "Введіть назву джерела (наприклад, Мій NAS)",
+  "Enter server IP or hostname (e.g. 192.168.1.100)": "Введіть IP або ім'я сервера (наприклад, 192.168.1.100)",
+  "Enter share name (e.g. shared_folder)": "Введіть назву спільної папки (наприклад, shared_folder)",
+  "Enter username (optional)": "Введіть ім'я користувача (опціонально)",
+  "Enter password (optional)": "Введіть пароль (опціонально)",
+  "Configure a new network storage share.": "Налаштувати нове мережеве сховище.",
+  "Failed to connect to SMB server!": "Не вдалося підключитися до SMB-сервера!",
+  "Location added successfully!": "Джерело успішно додано!"
 }

@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.112)
+set(sphaira_VERSION 0.13.113)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -102,6 +102,7 @@ add_executable(sphaira
     source/utils/devoptab_common.cpp
     source/utils/devoptab_romfs.cpp
     source/utils/devoptab_nca.cpp
+    source/utils/devoptab_smb2.cpp
 
     source/usb/base.cpp
     source/usb/usbds.cpp
@@ -131,6 +132,7 @@ target_compile_definitions(sphaira PRIVATE
     -DAPP_VERSION_HASH="${sphaira_VERSION_HASH}"
     -DCURL_NO_OLDIES=1
     -DENABLE_NETWORK_INSTALL=$<BOOL:${ENABLE_NETWORK_INSTALL}>
+    -DBUILD_SMB2
 )
 
 target_compile_options(sphaira PRIVATE
@@ -233,6 +235,12 @@ FetchContent_Declare(nvjpg
     GIT_TAG 45680e7
 )
 
+FetchContent_Declare(libsmb2
+    GIT_REPOSITORY https://github.com/sahlberg/libsmb2.git
+    GIT_TAG v4.0.0
+    PATCH_COMMAND patch -p1 -N -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/patches/libsmb2.patch || true
+)
+
 set(USE_NEW_ZSTD ON)
 # has issues with some homebrew and game icons (oxenfree, overwatch2).
 set(USE_NVJPG ON)
@@ -277,6 +285,12 @@ set(YYJSON_DISABLE_UNALIGNED_MEMORY_ACCESS OFF)
 set(USBHSFS_GPL OFF)
 set(USBHSFS_SXOS_DISABLE ON)
 
+set(ENABLE_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+set(CMAKE_DISABLE_FIND_PACKAGE_OpenSSL ON)
+set(CMAKE_DISABLE_FIND_PACKAGE_GSSAPI ON)
+add_compile_definitions(__SWITCH__)
+
 FetchContent_MakeAvailable(
     ftpsrv
     libhaze
@@ -289,7 +303,11 @@ FetchContent_MakeAvailable(
     libusbhsfs
     libnxtc
     nvjpg
+    libsmb2
 )
+
+target_compile_definitions(smb2 PRIVATE -D__SWITCH__)
+target_sources(smb2 PRIVATE ${libsmb2_SOURCE_DIR}/lib/compat.c)
 
 if (EXISTS "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h")
     file(READ "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h" LIBNX_NACP_HEADER)
@@ -387,6 +405,7 @@ target_link_libraries(sphaira PRIVATE
     yyjson
     # libusbhsfs
     libnxtc
+    smb2
 
     ${minizip_lib}
     ZLIB::ZLIB
@@ -412,6 +431,7 @@ target_include_directories(sphaira PRIVATE
     include
     ${minizip_inc}
     ${mbedtls_inc}
+    ${libsmb2_SOURCE_DIR}/include
 )
 
 # copy the romfs

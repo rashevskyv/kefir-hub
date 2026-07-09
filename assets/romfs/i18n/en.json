@@ -705,5 +705,15 @@
   "Allow modifying files and folders that are marked as read-only.": "Allow modifying files and folders that are marked as read-only.",
   "Play with NXMP": "Play with NXMP",
   "Play the selected media file using NXMP player.": "Play the selected media file using NXMP player.",
-  "NXMP not found, open AppStore to install?": "NXMP not found, open AppStore to install?"
+  "NXMP not found, open AppStore to install?": "NXMP not found, open AppStore to install?",
+  "Add network location": "Add network location",
+  "Connecting to SMB...": "Connecting to SMB...",
+  "Enter location name (e.g. My NAS)": "Enter location name (e.g. My NAS)",
+  "Enter server IP or hostname (e.g. 192.168.1.100)": "Enter server IP or hostname (e.g. 192.168.1.100)",
+  "Enter share name (e.g. shared_folder)": "Enter share name (e.g. shared_folder)",
+  "Enter username (optional)": "Enter username (optional)",
+  "Enter password (optional)": "Enter password (optional)",
+  "Configure a new network storage share.": "Configure a new network storage share.",
+  "Failed to connect to SMB server!": "Failed to connect to SMB server!",
+  "Location added successfully!": "Location added successfully!"
 }
