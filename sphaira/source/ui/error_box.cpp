@@ -38,6 +38,7 @@ auto GetCodeMessage(Result rc) -> const char* {
 
         case Result_TransferCancelled: return "SphairaError_TransferCancelled";
         case Result_StreamBadSeek: return "SphairaError_StreamBadSeek";
+        case Result_StreamUnexpectedEof: return "SphairaError_StreamUnexpectedEof";
         case Result_FsTooManyEntries: return "SphairaError_FsTooManyEntries";
         case Result_FsNewPathTooLarge: return "SphairaError_FsNewPathTooLarge";
         case Result_FsInvalidType: return "SphairaError_FsInvalidType";

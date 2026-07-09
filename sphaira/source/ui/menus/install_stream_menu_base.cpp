@@ -67,6 +67,12 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
             break;
         }
 
+        // spurious wakeup with no data yet, wait again rather than
+        // returning a zero-byte read (treated as eof by the caller).
+        if (m_buffer.empty()) {
+            continue;
+        }
+
         size = std::min<s64>(size, m_buffer.size());
         std::memcpy(buf, m_buffer.data(), size);
         m_buffer.erase(m_buffer.begin(), m_buffer.begin() + size);
