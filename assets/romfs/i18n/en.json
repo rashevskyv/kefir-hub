@@ -702,6 +702,8 @@
   "Calculate and display the MD5 hash of the selected file.": "Calculate and display the MD5 hash of the selected file.",
   "Calculate and display the SHA1 hash of the selected file.": "Calculate and display the SHA1 hash of the selected file.",
   "Calculate and display the SHA256 hash of the selected file.": "Calculate and display the SHA256 hash of the selected file.",
-  "Allow modifying files and folders that are marked as read-only.": "Allow modifying files and folders that are marked as read-only."
-
+  "Allow modifying files and folders that are marked as read-only.": "Allow modifying files and folders that are marked as read-only.",
+  "Play with NXMP": "Play with NXMP",
+  "Play the selected media file using NXMP player.": "Play the selected media file using NXMP player.",
+  "NXMP not found, open AppStore to install?": "NXMP not found, open AppStore to install?"
 }

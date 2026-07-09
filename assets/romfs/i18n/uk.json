@@ -708,5 +708,8 @@
   "Automatic": "Автоматично",
   "Reserve free space": "Резерв вільного місця",
   "Enter Reserve Free Space (MB)": "Введіть резерв вільного місця (МБ)",
-  "Set the threshold of free space to reserve on installation target (MB).": "Встановіть поріг вільного місця для резервування на цільовому накопичувачі (МБ)."
+  "Set the threshold of free space to reserve on installation target (MB).": "Встановіть поріг вільного місця для резервування на цільовому накопичувачі (МБ).",
+  "Play with NXMP": "Відтворити в NXMP",
+  "Play the selected media file using NXMP player.": "Відтворити вибраний медіафайл за допомогою плеєра NXMP.",
+  "NXMP not found, open AppStore to install?": "NXMP не знайдено, відкрити AppStore для встановлення?"
 }

@@ -7,6 +7,7 @@
 #include "ui/error_box.hpp"
 #include "ui/menus/file_viewer.hpp"
 #include "ui/menus/theme_creator.hpp"
+#include "ui/menus/appstore.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
@@ -185,6 +186,25 @@ constexpr RomDatabaseEntry PATHS[]{
 };
 
 constexpr fs::FsPath DAYBREAK_PATH{"/switch/daybreak.nro"};
+
+constexpr const char* NXMP_PATHS[]{
+    "/switch/nxmp/nxmp.nro",
+    "/switch/nxmp.nro",
+};
+
+auto GetNxmpPath() -> const char* {
+    fs::FsNativeSd fs;
+    for (auto& path : NXMP_PATHS) {
+        if (fs.FileExists(path)) {
+            return path;
+        }
+    }
+    return nullptr;
+}
+
+auto HasNxmp() -> bool {
+    return GetNxmpPath() != nullptr;
+}
 
 auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool {
     for (auto e : list) {
@@ -1930,6 +1950,25 @@ void FsView::DisplayOptions() {
                 InstallForwarder();
             }, "Install a forwarder shortcut for this file."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+        }
+    }
+
+    if (IsSd() && m_entries_current.size() && !m_selected_count) {
+        if (check_all_ext(VIDEO_EXTENSIONS) || check_all_ext(AUDIO_EXTENSIONS)) {
+            options->Add<SidebarEntryCallback>("Play with NXMP"_i18n, [this](){
+                if (HasNxmp()) {
+                    nro_launch(GetNxmpPath(), nro_add_arg_file(GetNewPathCurrent()));
+                } else {
+                    App::Push<OptionBox>(
+                        "NXMP not found, open AppStore to install?"_i18n,
+                        "No"_i18n, "Yes"_i18n, 1, [](auto op_index){
+                            if (op_index && *op_index) {
+                                App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
+                            }
+                        }
+                    );
+                }
+            }, "Play the selected media file using NXMP player."_i18n);
         }
     }
 
