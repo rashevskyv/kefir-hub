@@ -2379,9 +2379,31 @@ void Menu::BuildCategories() {
                 MakeInstallToggle("Enable sysMMC"_i18n, "Allow installing while running sysMMC."_i18n, app->m_install_sysmmc),
                 MakeInstallToggle("Enable emuMMC"_i18n, "Allow installing while running emuMMC."_i18n, app->m_install_emummc),
                 { "Install location"_i18n, "Choose system memory or microSD card."_i18n, [](){
-                    return App::GetInstallSdEnable() ? "microSD card"_i18n : "System memory"_i18n;
+                    const auto loc = App::GetInstallLocation();
+                    if (loc >= 0 && loc < 5) {
+                        static constexpr const char* labels[] = {
+                            "microSD card only",
+                            "System memory only",
+                            "System first, then SD",
+                            "SD first, then system",
+                            "Automatic"
+                        };
+                        return i18n::get(labels[loc]);
+                    }
+                    return std::string{};
                 }, [](){
-                    App::SetInstallSdEnable(!App::GetInstallSdEnable());
+                    PopupList::Items items;
+                    items.push_back("microSD card only"_i18n);
+                    items.push_back("System memory only"_i18n);
+                    items.push_back("System first, then SD"_i18n);
+                    items.push_back("SD first, then system"_i18n);
+                    items.push_back("Automatic"_i18n);
+
+                    App::Push<PopupList>("Install location"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            App::SetInstallLocation(*op_index);
+                        }
+                    }, App::GetInstallLocation());
                 }},
                 MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
                 MakeOptionItem("Skip if already installed"_i18n, "Skip titles or NCAs that are already installed."_i18n, app->m_skip_if_already_installed),

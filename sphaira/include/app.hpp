@@ -321,7 +321,7 @@ public:
     // install options
     option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};
     option::OptionBool m_install_emummc{INI_SECTION, "install_emummc", false};
-    option::OptionLong m_install_location{INI_SECTION, "install_location", 0};
+    option::OptionLong m_install_location{INI_SECTION, "install_location", 4};
     option::OptionLong m_install_reserve_mb{INI_SECTION, "install_reserve_mb", 500};
     option::OptionBool m_allow_downgrade{INI_SECTION, "allow_downgrade", false};
     option::OptionBool m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", true};

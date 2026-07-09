@@ -114,7 +114,7 @@ Sphaira includes a robust file manager with standard operations (Cut, Paste, Ren
 ## Game Installer
 
 Sphaira features a built-in game installer supporting multiple formats (NSP, NSZ, XCI, XCZ) with configurable storage destination priority:
-- **Storage Destination Priority:** Choose where titles are installed in Settings -> Install:
+- **Storage Destination Priority:** Choose where titles are installed in Settings -> Install (defaults to **Automatic** for new installations):
   - **microSD card only:** Always install to microSD storage.
   - **System memory only:** Always install to NAND storage.
   - **System first, then SD:** Install to NAND; if NAND does not have enough free space (taking the reserve threshold into account), automatically fall back to microSD.
