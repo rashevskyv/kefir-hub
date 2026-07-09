@@ -1849,44 +1849,6 @@ void FsView::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>("View"_i18n, [this](){
-        auto options = std::make_unique<Sidebar>("View Options"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-        SidebarEntryArray::Items sort_items;
-        sort_items.push_back("Size"_i18n);
-        sort_items.push_back("Alphabetical"_i18n);
-
-        SidebarEntryArray::Items order_items;
-        order_items.push_back("Descending"_i18n);
-        order_items.push_back("Ascending"_i18n);
-
-        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
-            m_menu->m_sort.Set(index_out);
-            SortAndFindLastFile();
-        }, m_menu->m_sort.Get(), "Select which field to sort files and folders by."_i18n);
-
-        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
-            m_menu->m_order.Set(index_out);
-            SortAndFindLastFile();
-        }, m_menu->m_order.Get(), "Sort entries from largest to smallest or A to Z."_i18n);
-
-        options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_menu->m_show_hidden.Get(), [this](bool& v_out){
-            m_menu->m_show_hidden.Set(v_out);
-            SortAndFindLastFile();
-        }, "Show files and folders that start with a dot (hidden)."_i18n);
-
-        options->Add<SidebarEntryBool>("Folders First"_i18n, m_menu->m_folders_first.Get(), [this](bool& v_out){
-            m_menu->m_folders_first.Set(v_out);
-            SortAndFindLastFile();
-        }, "Place folders before files in the listing."_i18n);
-
-        options->Add<SidebarEntryBool>("Hidden Last"_i18n, m_menu->m_hidden_last.Get(), [this](bool& v_out){
-            m_menu->m_hidden_last.Set(v_out);
-            SortAndFindLastFile();
-        }, "Push hidden entries to the bottom of the listing."_i18n);
-    }, "Change display order and visibility settings for files."_i18n);
-
     // returns true if all entries match the ext array.
     const auto check_all_ext = [this](auto& exts){
         const auto entries = GetSelectedEntries();
@@ -1902,7 +1864,6 @@ void FsView::DisplayOptions() {
         return true;
     };
 
-    // if install is enabled, check if all currently selected files are installable.
     if (m_entries_current.size()) {
         if (check_all_ext(INSTALL_EXTENSIONS)) {
             auto entry = options->Add<SidebarEntryCallback>("Install"_i18n, [this](){
@@ -1962,53 +1923,6 @@ void FsView::DisplayOptions() {
         }
     }
 
-    if (m_entries_current.size()) {
-        if (check_all_ext(ZIP_EXTENSIONS)) {
-            options->Add<SidebarEntryCallback>("Extract zip"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                options->Add<SidebarEntryCallback>("Extract here"_i18n, [this](){
-                    UnzipFiles("");
-                }, "Extract the archive contents into the current folder."_i18n);
-
-                options->Add<SidebarEntryCallback>("Extract to root"_i18n, [this](){
-                    App::Push<OptionBox>("Are you sure you want to extract to root?"_i18n,
-                        "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
-                        if (op_index && *op_index) {
-                            UnzipFiles(m_fs->Root());
-                        }
-                    });
-                }, "Extract the archive contents to the root of this storage."_i18n);
-
-                options->Add<SidebarEntryCallback>("Extract to..."_i18n, [this](){
-                    std::string out;
-                    if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", fs::AppendPath(m_path, ""))) && !out.empty()) {
-                        UnzipFiles(out);
-                    }
-                }, "Extract the archive to a custom path you specify."_i18n);
-            }, "Extract the contents of the selected ZIP archive."_i18n);
-        }
-
-        if (!check_all_ext(ZIP_EXTENSIONS) || m_selected_count) {
-            options->Add<SidebarEntryCallback>("Compress to zip"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Compress Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                options->Add<SidebarEntryCallback>("Compress"_i18n, [this](){
-                    ZipFiles("");
-                }, "Compress the selected file(s) into a zip in the current folder."_i18n);
-
-                options->Add<SidebarEntryCallback>("Compress to..."_i18n, [this](){
-                    std::string out;
-                    if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", m_path)) && !out.empty()) {
-                        ZipFiles(out);
-                    }
-                }, "Compress the selected file(s) to a custom output path."_i18n);
-            }, "Compress the selected file(s) into a ZIP archive."_i18n);
-        }
-    }
-
     if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
         auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
             const std::string buf = "Paste file(s)?"_i18n;
@@ -2052,7 +1966,6 @@ void FsView::DisplayOptions() {
         delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
     }
 
-    // can't rename more than 1 file
     if (m_entries_current.size() && !m_selected_count) {
         auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
             std::string out;
@@ -2082,9 +1995,99 @@ void FsView::DisplayOptions() {
         rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
     }
 
-    options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
+    auto view_entry = options->Add<SidebarEntryCallback>("View"_i18n, [this](){
+        auto options = std::make_unique<Sidebar>("View Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        SidebarEntryArray::Items sort_items;
+        sort_items.push_back("Size"_i18n);
+        sort_items.push_back("Alphabetical"_i18n);
+
+        SidebarEntryArray::Items order_items;
+        order_items.push_back("Descending"_i18n);
+        order_items.push_back("Ascending"_i18n);
+
+        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+            m_menu->m_sort.Set(index_out);
+            SortAndFindLastFile();
+        }, m_menu->m_sort.Get(), "Select which field to sort files and folders by."_i18n);
+
+        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+            m_menu->m_order.Set(index_out);
+            SortAndFindLastFile();
+        }, m_menu->m_order.Get(), "Sort entries from largest to smallest or A to Z."_i18n);
+
+        options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_menu->m_show_hidden.Get(), [this](bool& v_out){
+            m_menu->m_show_hidden.Set(v_out);
+            SortAndFindLastFile();
+        }, "Show files and folders that start with a dot (hidden)."_i18n);
+
+        options->Add<SidebarEntryBool>("Folders First"_i18n, m_menu->m_folders_first.Get(), [this](bool& v_out){
+            m_menu->m_folders_first.Set(v_out);
+            SortAndFindLastFile();
+        }, "Place folders before files in the listing."_i18n);
+
+        options->Add<SidebarEntryBool>("Hidden Last"_i18n, m_menu->m_hidden_last.Get(), [this](bool& v_out){
+            m_menu->m_hidden_last.Set(v_out);
+            SortAndFindLastFile();
+        }, "Push hidden entries to the bottom of the listing."_i18n);
+    }, "Change display order and visibility settings for files."_i18n);
+    view_entry->SetHasSubmenu(true);
+
+    if (m_entries_current.size()) {
+        if (check_all_ext(ZIP_EXTENSIONS)) {
+            auto extract_entry = options->Add<SidebarEntryCallback>("Extract zip"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+                options->Add<SidebarEntryCallback>("Extract here"_i18n, [this](){
+                    UnzipFiles("");
+                }, "Extract the archive contents into the current folder."_i18n);
+
+                options->Add<SidebarEntryCallback>("Extract to root"_i18n, [this](){
+                    App::Push<OptionBox>("Are you sure you want to extract to root?"_i18n,
+                        "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
+                        if (op_index && *op_index) {
+                            UnzipFiles(m_fs->Root());
+                        }
+                    });
+                }, "Extract the archive contents to the root of this storage."_i18n);
+
+                options->Add<SidebarEntryCallback>("Extract to..."_i18n, [this](){
+                    std::string out;
+                    if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", fs::AppendPath(m_path, ""))) && !out.empty()) {
+                        UnzipFiles(out);
+                    }
+                }, "Extract the archive to a custom path you specify."_i18n);
+            }, "Extract the contents of the selected ZIP archive."_i18n);
+            extract_entry->SetHasSubmenu(true);
+        }
+
+        if (!check_all_ext(ZIP_EXTENSIONS) || m_selected_count) {
+            auto compress_entry = options->Add<SidebarEntryCallback>("Compress to zip"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Compress Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+                options->Add<SidebarEntryCallback>("Compress"_i18n, [this](){
+                    ZipFiles("");
+                }, "Compress the selected file(s) into a zip in the current folder."_i18n);
+
+                options->Add<SidebarEntryCallback>("Compress to..."_i18n, [this](){
+                    std::string out;
+                    if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", m_path)) && !out.empty()) {
+                        ZipFiles(out);
+                    }
+                }, "Compress the selected file(s) to a custom output path."_i18n);
+            }, "Compress the selected file(s) into a ZIP archive."_i18n);
+            compress_entry->SetHasSubmenu(true);
+        }
+    }
+
+    auto adv_entry = options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         DisplayAdvancedOptions();
     }, "Access file browser advanced tools."_i18n);
+    adv_entry->SetHasSubmenu(true);
+}
 }
 
 void FsView::DisplayAdvancedOptions() {
@@ -2257,9 +2260,10 @@ void FsView::DisplayAdvancedOptions() {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();
             }, "Open the selected image in the built-in viewer."_i18n);
-            options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
+            auto theme_entry = options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
                 App::Push<theme_creator::Menu>(GetNewPathCurrent());
             }, "Use the selected image to create a custom Switch theme."_i18n);
+            theme_entry->SetHasSubmenu(true);
         } else if (GetEntry().file_size < 1024*64) {
             options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
                 App::Push<fileview::Menu>(GetNewPathCurrent());
@@ -2274,7 +2278,7 @@ void FsView::DisplayAdvancedOptions() {
     }
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
-        options->Add<SidebarEntryCallback>("Hash"_i18n, [this](){
+        auto hash_entry = options->Add<SidebarEntryCallback>("Hash"_i18n, [this](){
             auto options = std::make_unique<Sidebar>("Hash Options"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 
@@ -2291,6 +2295,7 @@ void FsView::DisplayAdvancedOptions() {
                 DisplayHash(hash::Type::Sha256);
             }, "Calculate and display the SHA256 hash of the selected file."_i18n);
         }, "Calculate a checksum hash for the selected file."_i18n);
+        hash_entry->SetHasSubmenu(true);
     }
 
     options->Add<SidebarEntryBool>("Ignore read only"_i18n, m_menu->m_ignore_read_only.Get(), [this](bool& v_out){

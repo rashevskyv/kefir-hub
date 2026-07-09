@@ -1,5 +1,24 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.128 — Реорганізація меню файлового менеджера та індикатори підменю
+
+### Завдання
+1. Перенести опції "Вигляд" (`View`) та "Стиснути в зіп / Розпакувати зіп" (`Compress to zip` / `Extract zip`) у контекстному меню файлового менеджера нижче кнопки "Перейменувати" (`Rename`), але вище кнопки "Додатково" (`Advanced`).
+2. Додати графічну стрілочку (індикатор `▸`) для всіх пунктів меню Sidebar, які ведуть вглиб до підменю, щоб покращити користувацький досвід та зробити навігацію наочною.
+
+### Підхід
+* **Стрілочки підменю (`▸`)**:
+  * У класі `SidebarEntryCallback` у [sidebar.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/sidebar.hpp) додано властивість `m_has_submenu` та методи `SetHasSubmenu()` / `HasSubmenu()`.
+  * У методі малювання `SidebarEntryCallback::Draw` у [sidebar.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/sidebar.cpp) реалізовано відображення гліфа `\u25B8` (маленький трикутник `▸`) у правій частині елемента, якщо активовано `m_has_submenu`.
+* **Перебудова контекстного меню файлів**:
+  * У [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) у методі `DisplayOptions()` змінено порядок додавання елементів. Тепер "Вигляд" (`View`) та робота з архівами (`Extract zip` / `Compress to zip`) додаються відразу після `"Rename"`, але перед `"Advanced"`.
+  * Для пунктів `"View"`, `"Extract zip"`, `"Compress to zip"`, `"Advanced"`, а також `"Hash"` та `"Create Switch Theme"` (в `DisplayAdvancedOptions()`) активовано показ стрілочки підменю за допомогою `SetHasSubmenu(true)`.
+  * У [tools_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/tools_menu.cpp) пункт `"PC Install (USB)"` також отримав стрілочку, оскільки він переводить користувача до DBI меню.
+
+Версію програми збільшено до `0.13.128` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+---
+
 ## v0.13.127 — Інтеграція WebDAV автосинхронізації та оновлення статус-бару
 
 ### Завдання

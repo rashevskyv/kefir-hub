@@ -121,9 +121,18 @@ public:
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
     auto OnFocusLost() noexcept -> void override;
 
+    void SetHasSubmenu(bool value = true) {
+        m_has_submenu = value;
+    }
+
+    bool HasSubmenu() const noexcept {
+        return m_has_submenu;
+    }
+
 private:
     Callback m_callback;
     bool m_pop_on_click;
+    bool m_has_submenu{false};
     ScrollingText m_scolling_entry_title{};
 };
 

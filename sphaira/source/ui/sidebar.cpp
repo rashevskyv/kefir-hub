@@ -218,7 +218,14 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
     const float x = m_pos.x + 15.f;
     const float y = m_pos.y + (m_pos.h / 2.f);
-    const float max_w = m_pos.w - 30.f;
+    float max_w = m_pos.w - 30.f;
+
+    if (m_has_submenu) {
+        max_w -= 20.f;
+        const float arrow_x = m_pos.x + m_pos.w - 20.f;
+        gfx::drawText(vg, Vec2{arrow_x, y}, 20.f, colour, "\u25B8", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    }
+
     m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title);
 }
 
