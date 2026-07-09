@@ -832,7 +832,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
         std::make_pair(Button::Y, Action{"Screenshot"_i18n, [this](){
             DisplayScreenshots();
         }}),
-        std::make_pair(Button::R2, Action{"Next Page"_i18n, [this](){
+        std::make_pair(Button::R, Action{"Next Page"_i18n, [this](){
             m_page_index++;
             if (m_page_index >= m_page_index_max) {
                 m_page_index = m_page_index_max - 1;
@@ -840,11 +840,27 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
                 PackListDownload();
             }
         }}),
-        std::make_pair(Button::L2, Action{"Previous Page"_i18n, [this](){
+        std::make_pair(Button::L, Action{"Previous Page"_i18n, [this](){
             if (m_page_index) {
                 m_page_index--;
                 PackListDownload();
             }
+        }}),
+        std::make_pair(Button::R2, Action{"Jump Forward"_i18n, [this](){
+            if (m_page_index + 10 >= m_page_index_max) {
+                m_page_index = m_page_index_max - 1;
+            } else {
+                m_page_index += 10;
+            }
+            PackListDownload();
+        }}),
+        std::make_pair(Button::L2, Action{"Jump Backward"_i18n, [this](){
+            if (m_page_index >= 10) {
+                m_page_index -= 10;
+            } else {
+                m_page_index = 0;
+            }
+            PackListDownload();
         }})
     );
 
@@ -1066,7 +1082,8 @@ void Menu::PackListDownload() {
     const auto page_index = m_page_index + 1;
     char subheading[128];
     std::snprintf(subheading, sizeof(subheading), "Page %zu / %zu"_i18n.c_str(), m_page_index+1, m_page_index_max);
-    SetSubHeading(subheading);
+    SetTitleSubHeading(subheading);
+    SetSubHeading("");
 
     m_index = 0;
     m_list->SetYoff(0);
@@ -1165,7 +1182,8 @@ void Menu::PackListDownload() {
 
             char subheading[128];
             std::snprintf(subheading, sizeof(subheading), "Page %zu / %zu"_i18n.c_str(), m_page_index+1, m_page_index_max);
-            SetSubHeading(subheading);
+            SetTitleSubHeading(subheading);
+            SetSubHeading("");
 
             log_write("a.pagination.page: %zu\n", a.pagination.page);
             log_write("a.pagination.page_count: %zu\n", a.pagination.page_count);

@@ -233,13 +233,15 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
     merged_actions.reserve(draw_actions.size());
 
     bool L_R_merged = false;
+    bool L_R_page_merged = false;
     bool L2_R2_merged = false;
+    bool L2_R2_jump_merged = false;
     bool LEFT_RIGHT_merged = false;
-    bool L2_R2_page_merged = false;
 
     const bool should_merge_L_R = (!l_hint.empty() && l_hint == "Add Point"_i18n) && (!r_hint.empty() && r_hint == "Remove Point"_i18n);
+    const bool should_merge_L_R_page = (!l_hint.empty() && l_hint == "Previous Page"_i18n) && (!r_hint.empty() && r_hint == "Next Page"_i18n);
     const bool should_merge_L2_R2 = (!l2_hint.empty() && l2_hint == "Load Preset"_i18n) && (!r2_hint.empty() && r2_hint == "Save Preset"_i18n);
-    const bool should_merge_L2_R2_page = (!l2_hint.empty() && l2_hint == "Previous Page"_i18n) && (!r2_hint.empty() && r2_hint == "Next Page"_i18n);
+    const bool should_merge_L2_R2_jump = (!l2_hint.empty() && l2_hint == "Jump Backward"_i18n) && (!r2_hint.empty() && r2_hint == "Jump Forward"_i18n);
     const bool should_merge_LEFT_RIGHT = (!left_hint.empty() && (left_hint == "Previous Image"_i18n || left_hint == "Prev Image"_i18n)) &&
                                           (!right_hint.empty() && right_hint == "Next Image"_i18n);
 
@@ -250,6 +252,12 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
                     uiButton combined{Button::L, "\uE0E4/\uE0E5", "Add/Remove Point"_i18n};
                     merged_actions.push_back(combined);
                     L_R_merged = true;
+                }
+            } else if (should_merge_L_R_page) {
+                if (!L_R_page_merged) {
+                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Prev/Next Page"_i18n};
+                    merged_actions.push_back(combined);
+                    L_R_page_merged = true;
                 }
             } else {
                 merged_actions.push_back(btn);
@@ -262,11 +270,11 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
                     merged_actions.push_back(combined);
                     L2_R2_merged = true;
                 }
-            } else if (should_merge_L2_R2_page) {
-                if (!L2_R2_page_merged) {
-                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Prev/Next Page"_i18n};
+            } else if (should_merge_L2_R2_jump) {
+                if (!L2_R2_jump_merged) {
+                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Jump Back/Forward"_i18n};
                     merged_actions.push_back(combined);
-                    L2_R2_page_merged = true;
+                    L2_R2_jump_merged = true;
                 }
             } else {
                 merged_actions.push_back(btn);

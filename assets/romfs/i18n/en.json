@@ -736,5 +736,13 @@
   "PC Install (USB)": "PC Install (USB)",
   "Install apps via DBI Backend (USB).": "Install apps via DBI Backend (USB).",
   "Prev/Next Page": "Prev/Next Page",
-  "Install & Share": "Install & Share"
+  "Install & Share": "Install & Share",
+  "Previous Page": "Previous Page",
+  "Next Page": "Next Page",
+  "Jump Backward": "Jump Backward",
+  "Jump Forward": "Jump Forward",
+  "Jump Back/Forward": "Jump Back/Forward",
+  "Star": "Star",
+  "Unstar": "Unstar",
+  "Screenshot": "Screenshot"
 }
