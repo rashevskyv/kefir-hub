@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.109)
+set(sphaira_VERSION 0.13.110)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -53,6 +53,7 @@ add_executable(sphaira
     source/ui/menus/cheats_menu.cpp
     source/ui/menus/ghdl.cpp
     source/ui/menus/usb_menu.cpp
+    source/ui/menus/dbi_menu.cpp
     source/ui/menus/ftp_menu.cpp
     source/ui/menus/mtp_menu.cpp
     source/ui/menus/gc_menu.cpp
@@ -112,6 +113,7 @@ add_executable(sphaira
     source/yati/container/xci.cpp
     source/yati/source/file.cpp
     source/yati/source/usb.cpp
+    source/yati/source/usb_dbi.cpp
     source/yati/source/stream.cpp
     source/yati/source/stream_file.cpp
 

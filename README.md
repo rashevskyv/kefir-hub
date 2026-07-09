@@ -73,6 +73,10 @@ For informantion about the install options, [see the wiki](https://github.com/IT
 
 The USB protocol is the same as tinfoil, so tools such as [ns-usbloader](https://github.com/developersu/ns-usbloader) and [fluffy](https://github.com/fourminute/Fluffy) should work with sphaira. You may also use the provided python script found [here](tools/usb_install_pc.py).
 
+### DBI Backend (install)
+
+Sphaira supports the official **DBI Backend** (DBI0) USB protocol. This allows installing games from your PC using the official Python backend server script `dbibackend.py` (or companion executables). DBI Backend uses custom 16-byte headers and supports on-demand random-access block reading for efficient transfers. Select "DBI Install" from the network/install options to connect.
+
 ### Ftp (install)
 
 Once you have connected your ftp client to your switch, you can upload files to install into the `install` folder.

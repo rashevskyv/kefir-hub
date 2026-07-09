@@ -480,3 +480,28 @@
 * Код успішно компілюється через WSL без помилок чи попереджень.
 * Усі MTP-операції коректно маршрутизуються.
 * Зміни ітеровано до версії `0.13.105`.
+
+---
+
+## v0.13.110 — Реалізація протоколу DBI Backend (USB) та інтеграція меню
+
+### Завдання
+Реалізувати підтримку USB-протоколу DBI Backend (DBI0) для потокового встановлення ігор з ПК на консоль за допомогою офіційного скрипту `dbibackend.py` або аналогічних клієнтів.
+
+### Підхід
+1. **Структури протоколу**: У новому файлі [dbi.hpp](file:///d:/git/dev/sphaira/sphaira/include/usb/dbi.hpp) створено описи заголовків `CmdHeader` та `FileRangeHeader`, константи `Magic_Dbi0` (магічне число `'DBI0'`), переліки типів команд `CmdType` (Request, Response, Ack) та ідентифікаторів команд `CmdId` (Exit, FileRange, List).
+2. **Джерело Yati**:
+   - У нових файлах [usb_dbi.hpp](file:///d:/git/dev/sphaira/sphaira/include/yati/source/usb_dbi.hpp) та [usb_dbi.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/source/usb_dbi.cpp) реалізовано клас `DbiUsb`, що наслідує `yati::source::Base`.
+   - Метод `WaitForConnection` ініціює запит списку файлів (`CmdId::List`), обробляє відповідь (`CmdType::Response`), відсилає підтвердження (`CmdType::Ack`) та вичитує перелік імен файлів, переданих хостом.
+   - Метод `Read` реалізує блокове читання діапазонів файлу (`CmdId::FileRange`): надсилає запит, зчитує ACK від хоста, відправляє структуру `FileRangeHeader` із назвою файлу, зчитує RESPONSE із розміром даних, надсилає ACK та вичитує сам буфер даних.
+   - Метод `Finished` коректно завершує з'єднання відсиланням команди виходу (`CmdId::Exit`).
+3. **Меню інтерфейсу**:
+   - У нових файлах [dbi_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/dbi_menu.hpp) та [dbi_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/dbi_menu.cpp) створено меню `dbi::Menu`, що є аналогом `usb::Menu` для запуску та моніторингу встановлення через `DbiUsb`.
+   - В [main_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/main_menu.cpp) додано пункт меню "DBI Install" (поруч із "USB Install").
+4. **Налаштування збірки**: У [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) додано нові файли `dbi_menu.cpp` та `usb_dbi.cpp`, версію програми ітеровано до `0.13.110`.
+5. **Документація**: Додано опис нової функції та інструкцію до [README.md](file:///d:/git/dev/sphaira/README.md).
+
+### Результати тестування
+* Код успішно компілюється під WSL (devkitPro/GCC).
+* Логіка рукостискання, передачі списку файлів та вичитування діапазонів блоків повністю відповідає стандарту DBI0.
+
