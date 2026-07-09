@@ -846,7 +846,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
                 PackListDownload();
             }
         }}),
-        std::make_pair(Button::R2, Action{"Jump Forward"_i18n, [this](){
+        std::make_pair(Button::R2, Action{"", [this](){
             if (m_page_index + 10 >= m_page_index_max) {
                 m_page_index = m_page_index_max - 1;
             } else {
@@ -854,7 +854,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
             }
             PackListDownload();
         }}),
-        std::make_pair(Button::L2, Action{"Jump Backward"_i18n, [this](){
+        std::make_pair(Button::L2, Action{"", [this](){
             if (m_page_index >= 10) {
                 m_page_index -= 10;
             } else {
@@ -887,6 +887,18 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     const auto& page = m_pages[m_page_index];
     if (page.m_ready != PageLoadState::Done) {
         return;
+    }
+
+    if (m_index == static_cast<s64>(page.m_packList.size() - 1)) {
+        if (controller->GotDown(Button::DOWN) || controller->GotDown(Button::RIGHT)) {
+            if (m_page_index < m_page_index_max - 1) {
+                m_page_index++;
+                m_index = 0;
+                PackListDownload();
+                controller->Reset();
+                return;
+            }
+        }
     }
 
     m_list->OnUpdate(controller, touch, m_index, page.m_packList.size(), [this](bool touch, auto i) {
@@ -981,7 +993,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                             curl::Flags{curl::Flag_Cache},
                             curl::StopToken{this->GetToken()},
                             curl::Priority::Normal,
-                            curl::OnComplete{[this, page_generation_for_image, page_index_for_image, entry_index_for_image, use_pack_preview](auto& result) {
+                            curl::OnComplete{[this, page_generation_for_image, page_index_for_image, entry_index_for_image, use_pack_preview, alive_weak = std::weak_ptr<bool>(m_alive)](auto& result) {
+                                auto alive = alive_weak.lock();
+                                if (!alive) {
+                                    return;
+                                }
                                 if (page_generation_for_image != m_page_generation) {
                                     return;
                                 }
@@ -1139,7 +1155,11 @@ void Menu::PackListDownload() {
         },
         curl::Flags{curl::Flag_Cache},
         curl::StopToken{this->GetToken()},
-        curl::OnComplete{[this, page_index, page_generation](auto& result){
+        curl::OnComplete{[this, page_index, page_generation, alive_weak = std::weak_ptr<bool>(m_alive)](auto& result){
+            auto alive = alive_weak.lock();
+            if (!alive) {
+                return;
+            }
             App::SetBoostMode(true);
             ON_SCOPE_EXIT(App::SetBoostMode(false));
 

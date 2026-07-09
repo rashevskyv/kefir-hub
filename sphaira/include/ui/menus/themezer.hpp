@@ -181,6 +181,7 @@ private:
 
     bool m_checked_for_nro{};
     std::vector<std::string> m_favorite_ids{};
+    std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)};
 };
 
 } // namespace sphaira::ui::menu::themezer
