@@ -5,6 +5,7 @@
 #include "i18n.hpp"
 
 #include <switch.h>
+#include <algorithm>
 #include <cmath>
 #include <sys/statvfs.h>
 
@@ -150,113 +151,105 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     const auto pdata = GetPolledData();
 
     // --- Status bar layout (top-right) ---
-    // We use a clean, static grid layout with fixed right-aligned positions
-    // to prevent any element shifting or jumping when charger states or values change.
-    //
-    // Fixed Horizontal Anchors (Right Aligned):
-    // - Clock: right aligned to 1220 (width max 132 for 12h) -> starts at x=1080 (reserved 140px)
-    // - Battery: right aligned to 1070 -> starts at x=980 (reserved 90px)
-    // - Storage Bars (NAND/SD): right aligned to 960 (width 160px) -> starts at x=800
-    // - Storage Values: right aligned to 790 -> starts at x=690
-    // - Storage Labels (NAND/SD): right aligned to 680
-    
-    const float start_y     = 70;
-    const float font_size   = 22;
-    const float bar_right   = 960.f;  // Storage bar right anchor
-    const float bar_w       = 160.f;
-    const float bar_h       = 7.f;
-    const float small_font  = 14.f;
+    // Line 1 (y=48): IP address
+    // Lines 2-3: NAND / SD storage bars, vertically centered between line 1 and line 4
+    // Line 4 (y=70 = start_y): Clock + Battery
+
+    const float start_y   = 70;
+    const float font_size = 22;
+    const float spacing   = 30;
+    const float bar_right = 1220;
+    const float bar_w     = 172.f;
+    const float bar_h     = 8.f;
+    const float small_font = 15.f;
+    const float y_ip      = 48.f;
+
+    // Align clock + battery at the rightmost position (bar_right = 1220)
+    float start_x = bar_right;
     float bounds[4];
 
-    // ---- Clock (Fixed anchor: x = 1220, right-aligned) ----
     nvgFontSize(vg, font_size);
+
+    #define draw(colour, fixed, ...) \
+        gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(colour), __VA_ARGS__); \
+        if (fixed) { \
+            start_x -= fixed; \
+        } else { \
+            gfx::textBoundsArgs(vg, 0, 0, bounds, __VA_ARGS__); \
+            start_x -= spacing + (bounds[2] - bounds[0]); \
+        }
+
+    // ---- Row 4 (start_y=70): Clock + Battery ----
+    // Battery: show battery percentage with a small percent symbol. While charging,
+    // the percentage and symbol turn green; while discharging, they use the normal text color.
+    if (pdata.charger_type != 0) {
+        // charging: fixed green color, no animation
+        const NVGcolor charge_col = nvgRGBA(100, 230, 100, 255);
+        gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, charge_col, "%u\uFE6A", pdata.battery_percetange);
+        start_x -= 64;
+    } else {
+        // discharging: normal color percentage
+        draw(ThemeEntryID_TEXT, 64, "%u\uFE6A", pdata.battery_percetange);
+    }
+
+    // Clock
     if (App::Get12HourTimeEnable()) {
-        gfx::drawTextArgs(vg, 1220.f, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT),
-            "%02u:%02u %s",
+        draw(ThemeEntryID_TEXT, 132, "%02u:%02u %s",
             (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12,
             pdata.tm.tm_min, (pdata.tm.tm_hour < 12) ? "AM" : "PM");
     } else {
-        gfx::drawTextArgs(vg, 1220.f, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT),
-            "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
+        draw(ThemeEntryID_TEXT, 90, "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
     }
 
     if (!App::IsApplication()) {
-        gfx::drawTextArgs(vg, 1220.f - 132.f, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_ERROR), "[A]");
+        draw(ThemeEntryID_ERROR, 0, "[A]");
     }
 
-    // ---- Battery (Fixed anchor: x = 1070, right-aligned) ----
-    // Percentage is always displayed. If charging, % sign is replaced by lightning bolt symbol.
-    if (pdata.charger_type != 0) {
-        // charging: draw number, and replace the '%' sign with a pulsing lightning bolt.
-        const float time = static_cast<float>(armTicksToNs(armGetSystemTick())) / 1'000'000'000.f;
-        const float factor = 0.5f + 0.5f * std::sin(time * 6.f); // Pulsing speed
-        const NVGcolor pulse_col = nvgRGBA(255, static_cast<u8>(140 + 100 * factor), 0, 255);
+    #undef draw
 
-        // Draw percentage value (right aligned to 1045.f)
-        gfx::drawTextArgs(vg, 1045.f, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%u", pdata.battery_percetange);
-
-        // Draw lightning bolt glyph right after the number (centered vertically with text baseline)
-        const float lb_h = 18.f;
-        const float lb_w = lb_h * 0.55f;
-        const float lb_x = 1051.f;
-        const float lb_y = start_y - 20.f;
-
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, lb_x + lb_w * 0.55f, lb_y);
-        nvgLineTo(vg, lb_x + lb_w * 0.05f, lb_y + lb_h * 0.55f);
-        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.55f);
-        nvgLineTo(vg, lb_x + lb_w * 0.35f, lb_y + lb_h);
-        nvgLineTo(vg, lb_x + lb_w * 0.95f, lb_y + lb_h * 0.45f);
-        nvgLineTo(vg, lb_x + lb_w * 0.5f,  lb_y + lb_h * 0.45f);
-        nvgClosePath(vg);
-        nvgFillColor(vg, pulse_col);
-        nvgFill(vg);
-    } else {
-        // discharging: normal text with percentage symbol (right aligned to 1070.f)
-        gfx::drawTextArgs(vg, 1070.f, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%u\uFE6A", pdata.battery_percetange);
-    }
+    // The storage bars should be shifted to the left of the clock/battery.
+    // We add a gap to start_x (which currently sits to the left of the leftmost element in Row 4).
+    const float storage_right = start_x - 10.f;
 
     // ---- Row 1 (y=48): IP address ----
-    // Align it to the right of the screen (1220.f)
     {
-        const float y_ip = 48.f;
         const auto ip_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
         if (pdata.ip) {
-            gfx::drawTextArgs(vg, 1220.f, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
+            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
                 "%u.%u.%u.%u",
                 pdata.ip & 0xFF, (pdata.ip >> 8) & 0xFF,
                 (pdata.ip >> 16) & 0xFF, (pdata.ip >> 24) & 0xFF);
         } else {
-            gfx::drawTextArgs(vg, 1220.f, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
+            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
                 "%s", ("No Internet"_i18n).c_str());
         }
     }
 
-    // ---- Storage Bars Helper ----
-    // Pre-calculate the maximum text width between NAND and SD values to align their labels on the exact same vertical line.
-    float nand_val_w = 0.f;
-    float sd_val_w = 0.f;
-    char temp_nand[32];
-    char temp_sd[32];
-    std::snprintf(temp_nand, sizeof(temp_nand), "%.1f GB", static_cast<float>(pdata.nand_free) / (1024.f * 1024.f * 1024.f));
-    std::snprintf(temp_sd, sizeof(temp_sd), "%.1f GB", static_cast<float>(pdata.sd_free) / (1024.f * 1024.f * 1024.f));
-    
-    nvgFontSize(vg, small_font);
-    if (pdata.nand_total > 0) {
-        gfx::textBounds(vg, 0, 0, bounds, temp_nand);
-        nand_val_w = bounds[2] - bounds[0];
-    }
-    if (pdata.sd_total > 0) {
-        gfx::textBounds(vg, 0, 0, bounds, temp_sd);
-        sd_val_w = bounds[2] - bounds[0];
-    }
-    const float max_val_w = std::max(nand_val_w, sd_val_w);
+    // ---- Helper: compute the left-aligned x of a storage row's label ----
+    // storage_right-aligned; label on left of bar
+    const float bar_x = storage_right - bar_w;
+
+    auto label_x_of = [&](s64 free_bytes, s64 total_bytes) -> float {
+        if (total_bytes <= 0) return bar_x - 4.f;
+        const float free_gb = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
+        char temp_buf[32];
+        std::snprintf(temp_buf, sizeof(temp_buf), "%.1f GB", free_gb);
+        nvgFontSize(vg, small_font);
+        gfx::textBounds(vg, 0, 0, bounds, temp_buf);
+        const float value_w = bounds[2] - bounds[0];
+        return bar_x - 4.f - value_w - 10.f;
+    };
+
+    // NAND and SD labels must line up under one another: use whichever row's
+    // label position sits further left (i.e. has the wider value text).
+    const float label_x = std::min(
+        label_x_of(pdata.nand_free, pdata.nand_total),
+        label_x_of(pdata.sd_free, pdata.sd_total));
 
     auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes) {
         if (total_bytes <= 0) return;
         const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
         const float fill_w     = bar_w * used_ratio;
-        const float bar_x      = bar_right - bar_w;
         const float bar_y      = y - bar_h;
 
         // Track (background)
@@ -270,21 +263,24 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         else                         fill_col = nvgRGBA(90,  200, 120, 255);
         gfx::drawRect(vg, bar_x, bar_y, fill_w, bar_h, fill_col);
 
-        // Free space text (right-aligned value at bar_x - 4.f)
+        // Free space text (right-aligned value next to the bar)
         const float free_gb  = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
         const auto  text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+        nvgFontSize(vg, small_font);
         gfx::drawTextArgs(vg, bar_x - 4.f, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
             "%.1f GB", free_gb);
-        
-        // Label is right-aligned to a position that is (max_val_w + 10px) to the left of the bar.
-        // This ensures NAND and SD labels always stay in one vertical line and shift smoothly if values change.
-        gfx::drawTextArgs(vg, bar_x - 4.f - max_val_w - 10.f, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
+
+        // Label shares the same x across both rows so NAND/SD sit one above the other.
+        gfx::drawTextArgs(vg, label_x, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
             "%s", label);
     };
 
-    // ---- Rows 2-3 (y=62, y=76): NAND / SD bars ----
-    draw_storage_bar(62.f, "NAND", pdata.nand_free, pdata.nand_total);
-    draw_storage_bar(76.f, "SD",   pdata.sd_free,   pdata.sd_total);
+    // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
+    const float storage_mid  = (y_ip + start_y) * 0.5f;
+    const float storage_gap  = 15.f;
+    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total);
+    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total);
 
     gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
