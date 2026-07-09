@@ -22,6 +22,7 @@ struct SettingsItem {
     std::function<std::string()> value;
     std::function<void()> action;
     SettingsItemKind kind{SettingsItemKind::Normal};
+    std::string id{};
 };
 
 struct SettingsCategory {

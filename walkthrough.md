@@ -1,5 +1,25 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.121 — Видалення тем з обраного за допомогою R3 у меню тем
+
+### Завдання
+Реалізувати можливість видалення завантажених обраних тем (Favorites) безпосередньо з меню "Themes" за допомогою натискання кнопки **R3**, а також оновлення легенди.
+
+### Підхід
+* У структуру `SettingsItem` у файлі [settings_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/settings_menu.hpp) додано поле `std::string id{};` для зберігання ідентифікатора теми.
+* У файлі [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp):
+  * У функції `MakeFavoriteThemeItem` ідентифікатор `entry.id` передається у створений `SettingsItem`.
+  * У функції `ThemesMenu::SetIndex` реалізовано перевірку, чи є поточний елемент обраною темою (`SettingsItemKind::Favorite`). Якщо так, то реєструється дія на кнопку **R3** з текстом `"Unstar"_i18n`.
+  * При натисканні **R3** тема видаляється з секції `[themezer_favorites]` конфігураційного файлу, після чого список тем оновлюється та перебудовується.
+
+Версію програми збільшено до `0.13.121` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компилюється.
+* Користувач може легко видаляти теми з обраного безпосередньо з меню "Themes", при цьому легенда та список миттєво оновлюються.
+
+---
+
 ## v0.13.120 — Об'єднання легенд Themezer та переклад Screenshot
 
 ### Завдання
