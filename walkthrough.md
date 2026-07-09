@@ -1,5 +1,26 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.118 — Виправлення перекладів тултіпів сортування та "Show Hidden"
+
+### Завдання
+Виправити відсутність перекладів для тултіпів сортування у меню Homebrew та вирішити проблему з неробочим перекладом опції "Show Hidden" в меню Homebrew.
+
+### Підхід
+* У файлі [homebrew.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/homebrew.cpp) змінено ключ перекладу з `"Show hidden"_i18n` на `"Show Hidden"_i18n` для уніфікації з іншими меню та файлами перекладів.
+* У файли локалізації [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json) додано переклади для тултіпів сортування у меню Homebrew:
+  * `"Select which field to sort homebrew by."`
+  * `"Display entries in Ascending or Descending order."`
+  * `"Change the layout to Icon, Grid and HB Menu."`
+  * `"Shows all hidden homebrew."`
+
+Версію програми збільшено до `0.13.118` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Код успішно компілюється.
+* Всі тултіпи та опція "Show Hidden" тепер коректно локалізуються українською мовою.
+
+---
+
 ## v0.13.59 — P0-1: Відновлення роботи "Share Images" та "Gallery"
 
 ### Завдання

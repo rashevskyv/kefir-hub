@@ -619,7 +619,7 @@ void Menu::DisplayOptions() {
         OnLayoutChange();
     }, current_layout - 1, "Change the layout to Icon, Grid and HB Menu."_i18n);
 
-    options->Add<SidebarEntryBool>("Show hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
+    options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
         m_show_hidden.Set(enable);
         SortAndFindLastFile();
     }, "Shows all hidden homebrew."_i18n);
