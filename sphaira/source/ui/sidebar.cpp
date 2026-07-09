@@ -222,8 +222,17 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
 
     if (m_has_submenu) {
         max_w -= 20.f;
-        const float arrow_x = m_pos.x + m_pos.w - 20.f;
-        gfx::drawText(vg, Vec2{arrow_x, y}, 20.f, colour, "\u25B8", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        const float x1 = m_pos.x + m_pos.w - 24.f;
+        const float y1 = y;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x1 - 8.f, y1 - 8.f);
+        nvgLineTo(vg, x1, y1);
+        nvgLineTo(vg, x1 - 8.f, y1 + 8.f);
+        nvgStrokeColor(vg, colour);
+        nvgStrokeWidth(vg, 3.f);
+        nvgLineCap(vg, NVG_ROUND);
+        nvgLineJoin(vg, NVG_ROUND);
+        nvgStroke(vg);
     }
 
     m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title);

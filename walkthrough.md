@@ -1,5 +1,21 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.130 — Векторні стрілочки підменю та виправлення PC Install
+
+### Завдання
+1. Прибрати "квадратик" — замінити unicode-символ `▸` на справжню векторну стрілочку через NanoVG (як у меню Software).
+2. Прибрати стрілочку з пункту **"PC Install (USB)"** — він одразу запускає DBI, а не відкриває підменю.
+
+### Підхід
+* **Векторна стрілочка** у [sidebar.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/sidebar.cpp):
+  * Замінено `gfx::drawText(... "▸" ...)` на малювання через `nvgBeginPath` / `nvgMoveTo` / `nvgLineTo` / `nvgStroke` — той самий підхід, що вже використовується в `DrawActionListItem` у [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp).
+* **Прибрано стрілочку з PC Install** у [tools_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/tools_menu.cpp):
+  * Видалено `pci_entry->SetHasSubmenu(true)` — кнопка одразу запускає функцію, підменю немає.
+
+Версію програми збільшено до `0.13.130` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+---
+
 ## v0.13.129 — Виправлення помилки компіляції
 
 ### Завдання

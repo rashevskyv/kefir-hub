@@ -269,10 +269,9 @@ void Menu::DisplayConnectionOptions() {
     }, "Start the web sharing server to transfer files via web browser."_i18n);
 
 #if ENABLE_NETWORK_INSTALL
-    auto pci_entry = options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){
+    options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){
         App::Push<ui::menu::dbi::Menu>(MenuFlag_None);
     }, "Install games from a PC over USB using DBI backend."_i18n);
-    pci_entry->SetHasSubmenu(true);
 #endif
 }
 
