@@ -35,6 +35,51 @@
 namespace sphaira::ui::menu::save {
 namespace {
 
+auto WebdavLocationKey(std::string url) -> std::string {
+    constexpr const char* whitespace = " \t\r\n";
+    const auto first = url.find_first_not_of(whitespace);
+    if (first == std::string::npos) {
+        return {};
+    }
+    const auto last = url.find_last_not_of(whitespace);
+    url = url.substr(first, last - first + 1);
+    if (url.starts_with("webdav://")) {
+        url.replace(0, std::strlen("webdav"), "https");
+    }
+    while (url.ends_with('/')) {
+        url.pop_back();
+    }
+    return url;
+}
+
+auto GetWebdavLocations() -> std::vector<location::Entry> {
+    std::vector<location::Entry> locations;
+
+    const auto settings_url = App::GetWebdavUrl();
+    if (!settings_url.empty()) {
+        locations.emplace_back(location::Entry{
+            .name = "WebDAV (Settings)"_i18n,
+            .url = settings_url,
+            .user = App::GetWebdavUser(),
+            .pass = App::GetWebdavPass(),
+        });
+    }
+
+    for (const auto& loc : location::Load()) {
+        const auto is_webdav = loc.url.starts_with("webdav://") ||
+            loc.url.starts_with("http://") || loc.url.starts_with("https://");
+        const auto location_key = WebdavLocationKey(loc.url);
+        const auto is_duplicate = std::ranges::any_of(locations, [&location_key](const auto& existing){
+            return WebdavLocationKey(existing.url) == location_key;
+        });
+        if (is_webdav && !is_duplicate) {
+            locations.push_back(loc);
+        }
+    }
+
+    return locations;
+}
+
 constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
 constexpr u32 NX_SAVE_META_VERSION = 1;
 constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
@@ -1419,12 +1464,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             App::Notify("Backup successfull!"_i18n);
 
             if (m_save_autosync.Get()) {
-                std::vector<location::Entry> webdav_locations;
-                for (const auto& loc : location::Load()) {
-                    if (loc.url.starts_with("webdav://") || loc.url.starts_with("http://") || loc.url.starts_with("https://")) {
-                        webdav_locations.push_back(loc);
-                    }
-                }
+                const auto webdav_locations = GetWebdavLocations();
                 if (!webdav_locations.empty()) {
                     const auto& loc = webdav_locations.front();
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, backup_root](auto pbox) mutable -> Result {
@@ -1859,12 +1899,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
 }
 
 void Menu::SyncSavesRemote() {
-    std::vector<location::Entry> webdav_locations;
-    for (const auto& loc : location::Load()) {
-        if (loc.url.starts_with("webdav://") || loc.url.starts_with("http://") || loc.url.starts_with("https://")) {
-            webdav_locations.push_back(loc);
-        }
-    }
+    const auto webdav_locations = GetWebdavLocations();
 
     if (webdav_locations.empty()) {
         App::Push<OptionBox>("No WebDAV network location configured for sync. Add one in settings."_i18n, "OK"_i18n);

@@ -277,13 +277,14 @@ bool Menu::OnInstallWrite(const void* buf, size_t size) {
 
 void Menu::OnInstallClose() {
     log_write("[Menu::OnInstallClose] inside\n");
- 
+
+    // don't block here waiting for the install to finish: this runs on
+    // haze's single MTP responder thread, and stalling it for the seconds
+    // an install can take makes Windows declare the device unresponsive
+    // and disconnect it (the install itself still completes in the
+    // background - OnInstallStart already waits for INSTALL_STATE to
+    // clear before accepting the next file, so nothing here needs to).
     m_source->Disable();
- 
-    // wait until the install has finished before returning.
-    while (INSTALL_STATE == InstallState_Progress) {
-        svcSleepThread(1e+7);
-    }
 }
  
 void BackgroundInstaller::SetActiveMenu(Menu* menu) {
@@ -370,7 +371,9 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
         [path_str = std::string(path)]() {
             log_write("[BackgroundInstaller] UI event triggered, creating ProgressBox\n");
             App::SetAutoSleepDisabled(true);
-            App::Push<ui::ProgressBox>(0, "Installing "_i18n, path_str, [](auto pbox) -> Result {
+            // detached: doesn't block the widget stack, so the user can keep
+            // navigating menus while this install runs. minimise/expand via L3.
+            App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Installing "_i18n, path_str, [](auto pbox) -> Result {
                 INSTALL_STATE = InstallState_Progress;
                 std::shared_ptr<Stream> src;
                 {
@@ -401,7 +404,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                     mutexUnlock(&s_mutex);
                 }
                 s_installing = false;
-            });
+            }));
         }
     }, false);
  
@@ -470,10 +473,12 @@ void BackgroundInstaller::OnInstallClose() {
         mutexUnlock(&s_mutex);
     }
     if (!src) return;
+
+    // don't block the MTP responder thread waiting for the install to
+    // finish - see the comment in Menu::OnInstallClose. s_installing
+    // already guards OnInstallStart against accepting a new file before
+    // this one is done.
     src->Disable();
-    while (INSTALL_STATE == InstallState_Progress) {
-        svcSleepThread(1e+7);
-    }
 }
  
 } // namespace sphaira::ui::menu::stream

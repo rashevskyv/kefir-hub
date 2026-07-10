@@ -101,6 +101,35 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
     }
 }
 
+namespace {
+
+// small corner badge shown while a detached transfer is minimised via L3.
+// speed_str may be empty if no sample has landed yet.
+void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 offset, s64 size, const std::string& speed_str) {
+    constexpr float w = 340.f;
+    constexpr float h = 64.f;
+    constexpr float x = SCREEN_WIDTH - w - 20.f;
+    constexpr float y = 20.f;
+
+    gfx::drawRect(vg, x, y, w, h, theme->GetColour(ThemeEntryID_POPUP), 6);
+
+    const u32 percentage = size ? (u32)(((double)offset / (double)size) * 100.0) : 0;
+    const float bar_x = x + 15.f;
+    const float bar_y = y + h - 18.f;
+    const float bar_w = w - 30.f;
+    gfx::drawRect(vg, bar_x, bar_y, bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3);
+    if (size) {
+        gfx::drawRect(vg, bar_x, bar_y, ((float)offset / (float)size) * bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
+    }
+
+    gfx::drawTextArgs(vg, x + 15.f, y + 8.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT),
+        speed_str.empty() ? "%s (%u%%)" : "%s (%u%% - %s)", title.c_str(), percentage, speed_str.c_str());
+
+    gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), " " "Expand"_i18n.c_str());
+}
+
+} // namespace
+
 auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     mutexLock(&m_mutex);
     std::vector<u8> image_data{};
@@ -146,7 +175,25 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         m_own_image = true;
     }
 
-    gfx::dimBackground(vg);
+    if (m_minimized) {
+        std::string speed_str{};
+        if (speed > 0) {
+            const double speed_mb = (double)speed / (1024.0 * 1024.0);
+            char buf[32];
+            if (speed_mb >= 0.01) {
+                std::snprintf(buf, sizeof(buf), "%.1f MiB/s", speed_mb);
+            } else {
+                std::snprintf(buf, sizeof(buf), "%.1f KiB/s", (double)speed / 1024.0);
+            }
+            speed_str = buf;
+        }
+        DrawMiniBadge(vg, theme, transfer.empty() ? title : transfer, offset, size, speed_str);
+        return;
+    }
+
+    if (!m_detached) {
+        gfx::dimBackground(vg);
+    }
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5);
 
     // The pop up shape.
@@ -222,7 +269,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 30, ThemeEntryID_TEXT_INFO);
     }
 
-    if (!size) {
+    // the stop button relies on Update() detecting the touch, which never runs
+    // for a detached box (it isn't on the widget stack), so it'd be a dead click.
+    if (!size && !m_detached) {
         const float btn_w = 200.f;
         const float btn_h = 40.f;
         const float btn_x = center_x - btn_w / 2.f;
@@ -236,8 +285,18 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         nvgText(vg, center_x, btn_y + 10.f, "Stop"_i18n.c_str(), nullptr);
     }
 
+    if (m_detached) {
+        const auto minimize_hint = " " + "Minimize"_i18n;
+        // Home suspends the whole console (all threads, including this transfer)
+        // rather than just this app - we can't intercept the press itself, only warn.
+        gfx::drawTextArgs(vg, center_x, end_y - 20.f, 14.f, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s    %s", minimize_hint.c_str(), "Pressing HOME will pause this transfer"_i18n.c_str());
+    }
+
     nvgRestore(vg);
-    Widget::Draw(vg, theme);
+    if (!m_detached) {
+        Widget::Draw(vg, theme);
+    }
 }
 
 auto ProgressBox::SetActionName(const std::string& action)  -> ProgressBox& {

@@ -3,6 +3,7 @@
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/cheats_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/game_menu.hpp"
 #include "ui/menus/kefir_menu.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
@@ -44,6 +45,10 @@ constexpr const u8 ICON_FILE_BROWSER[]{
 
 constexpr const u8 ICON_SAVES[]{
     #embed <icons/saves.png>
+};
+
+constexpr const u8 ICON_GAMES[]{
+    #embed <icons/game-hub.png>
 };
 
 constexpr const u8 ICON_SOFTWARE[]{
@@ -108,6 +113,9 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         }},
         { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
             App::Push<ui::menu::save::Menu>(MenuFlag_None);
+        }},
+        { "Games"_i18n, "View, launch and manage installed games."_i18n, 0, [](){
+            App::Push<ui::menu::game::Menu>(MenuFlag_None);
         }},
         { "Software"_i18n, "Install DBI and mod utilities."_i18n, 0, [](){
             App::Push<ui::menu::settings::SoftwareMenu>();
@@ -229,14 +237,27 @@ void Menu::LoadIcons() {
         return;
     }
 
-    m_items[0].icon_texture = LoadIcon(vg, ICON_UPDATER, sizeof(ICON_UPDATER));
-    m_items[1].icon_texture = LoadIcon(vg, ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS));
-    m_items[2].icon_texture = LoadIcon(vg, ICON_CHEATS, sizeof(ICON_CHEATS));
-    m_items[3].icon_texture = LoadIcon(vg, ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER));
-    m_items[4].icon_texture = LoadIcon(vg, ICON_SAVES, sizeof(ICON_SAVES));
-    m_items[5].icon_texture = LoadIcon(vg, ICON_SOFTWARE, sizeof(ICON_SOFTWARE));
-    m_items[6].icon_texture = LoadIcon(vg, ICON_THEMES, sizeof(ICON_THEMES));
-    m_items[7].icon_texture = LoadIcon(vg, ICON_SETTINGS, sizeof(ICON_SETTINGS));
+    struct IconData {
+        const u8* data;
+        std::size_t size;
+    };
+
+    constexpr IconData icons[] = {
+        { ICON_UPDATER, sizeof(ICON_UPDATER) },
+        { ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS) },
+        { ICON_CHEATS, sizeof(ICON_CHEATS) },
+        { ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER) },
+        { ICON_SAVES, sizeof(ICON_SAVES) },
+        { ICON_GAMES, sizeof(ICON_GAMES) },
+        { ICON_SOFTWARE, sizeof(ICON_SOFTWARE) },
+        { ICON_THEMES, sizeof(ICON_THEMES) },
+        { ICON_SETTINGS, sizeof(ICON_SETTINGS) },
+    };
+
+    const auto count = std::min(m_items.size(), std::size(icons));
+    for (std::size_t i = 0; i < count; ++i) {
+        m_items[i].icon_texture = LoadIcon(vg, icons[i].data, icons[i].size);
+    }
 }
 
 void Menu::SetIndex(s64 index) {

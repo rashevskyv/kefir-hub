@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 namespace sphaira {
 namespace {
@@ -1506,52 +1507,168 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     g_upload_state.bytes.store(offset);
     g_upload_state.active.store(true);
 
-    std::vector<u8> buf(HTTP_FILE_CHUNK);
-    u32 idle_count = 0;
-    while (offset < content_length) {
-        if (!g_share_running.load()) {
-            g_upload_state.active.store(false);
-            return;
-        }
-        if (auto pbox = WebGetProgressBox()) {
-            if (pbox->ShouldExit()) {
-                g_upload_state.active.store(false);
-                SendResponse(sock, "400 Bad Request", "text/plain", "Cancelled by user");
-                return;
+    // Overlap the network receive with SD-card writes: while the writer
+    // thread flushes one chunk to the card, this thread keeps draining the
+    // socket into the next one. Doing the two sequentially adds their
+    // latencies together and leaves the TCP window idle during each write.
+    struct UploadWriter {
+        static void Func(void* p) {
+            auto self = static_cast<UploadWriter*>(p);
+            while (true) {
+                waitSingle(waiterForUEvent(&self->work_event), UINT64_MAX);
+                if (self->exit) {
+                    return;
+                }
+                if (R_SUCCEEDED(self->result)) {
+                    self->result = self->file->Write(self->off, self->buf.data(), self->buf.size(), FsWriteOption_None);
+                }
+                ueventSignal(&self->done_event);
             }
         }
-        const auto want = std::min<s64>(buf.size(), content_length - offset);
-        const auto got = recv(sock, buf.data(), want, 0);
-        if (got > 0) {
-            idle_count = 0;
-            if (R_FAILED(file.Write(offset, buf.data(), got, FsWriteOption_None))) {
-                g_upload_state.active.store(false);
-                SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not write file");
-                return;
-            }
-            offset += got;
-            g_upload_state.bytes.store(offset);
-        } else if (got == 0) {
-            g_upload_state.active.store(false);
-            SendResponse(sock, "400 Bad Request", "text/plain", "Upload ended early");
-            return;
-        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            idle_count++;
-            if (idle_count > IDLE_TIMEOUT_MS) {
-                g_upload_state.active.store(false);
-                SendResponse(sock, "408 Request Timeout", "text/plain", "Receive timeout");
-                return;
-            }
-            svcSleepThread(1'000'000);
+
+        fs::File* file{};
+        std::vector<u8> buf{};
+        s64 off{};
+        std::atomic<Result> result{};
+        std::atomic_bool exit{};
+        UEvent work_event{};
+        UEvent done_event{};
+        Thread thread{};
+        bool started{};
+        bool busy{};
+    } writer{};
+
+    writer.file = &file;
+    ueventCreate(&writer.work_event, true);
+    ueventCreate(&writer.done_event, true);
+    if (R_SUCCEEDED(utils::CreateThread(&writer.thread, UploadWriter::Func, &writer, 1024 * 32, PRIO_PREEMPTIVE))) {
+        if (R_SUCCEEDED(threadStart(&writer.thread))) {
+            writer.started = true;
         } else {
-            g_upload_state.active.store(false);
-            SendResponse(sock, "500 Internal Server Error", "text/plain", "Socket read failed");
-            return;
+            threadClose(&writer.thread);
         }
     }
 
-    upload_guard.success = true;
+    std::vector<u8> buf(HTTP_FILE_CHUNK);
+    size_t fill{};
+    s64 block_off = offset;
+
+    // hand the filled buffer over to the writer thread, waiting for its
+    // previous write to finish first. falls back to a synchronous write if
+    // the writer thread could not be started.
+    const auto write_block = [&]() -> Result {
+        if (!writer.started) {
+            const auto rc = file.Write(block_off, buf.data(), fill, FsWriteOption_None);
+            block_off += fill;
+            fill = 0;
+            return rc;
+        }
+
+        if (writer.busy) {
+            waitSingle(waiterForUEvent(&writer.done_event), UINT64_MAX);
+            writer.busy = false;
+        }
+        R_TRY(writer.result.load());
+
+        buf.resize(fill);
+        std::swap(buf, writer.buf);
+        writer.off = block_off;
+        buf.resize(HTTP_FILE_CHUNK);
+
+        block_off += fill;
+        fill = 0;
+        writer.busy = true;
+        ueventSignal(&writer.work_event);
+        R_SUCCEED();
+    };
+
+    // waits for the in-flight write and stops the writer thread. must be
+    // called on every exit path so the thread never outlives this frame.
+    const auto finish_writer = [&]() -> Result {
+        if (!writer.started) {
+            R_SUCCEED();
+        }
+        if (writer.busy) {
+            waitSingle(waiterForUEvent(&writer.done_event), UINT64_MAX);
+            writer.busy = false;
+        }
+        writer.exit = true;
+        ueventSignal(&writer.work_event);
+        threadWaitForExit(&writer.thread);
+        threadClose(&writer.thread);
+        writer.started = false;
+        return writer.result;
+    };
+
+    const char* fail_status{};
+    const char* fail_msg{};
+    bool aborted{};
+
+    u32 idle_count = 0;
+    while (offset < content_length) {
+        if (!g_share_running.load()) {
+            aborted = true;
+            break;
+        }
+        if (auto pbox = WebGetProgressBox()) {
+            if (pbox->ShouldExit()) {
+                fail_status = "400 Bad Request";
+                fail_msg = "Cancelled by user";
+                break;
+            }
+        }
+        const auto want = std::min<s64>(buf.size() - fill, content_length - offset);
+        const auto got = recv(sock, buf.data() + fill, want, 0);
+        if (got > 0) {
+            idle_count = 0;
+            fill += got;
+            offset += got;
+            g_upload_state.bytes.store(offset);
+
+            if (fill == buf.size() || offset == content_length) {
+                if (R_FAILED(write_block())) {
+                    fail_status = "500 Internal Server Error";
+                    fail_msg = "Could not write file";
+                    break;
+                }
+            }
+        } else if (got == 0) {
+            fail_status = "400 Bad Request";
+            fail_msg = "Upload ended early";
+            break;
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            idle_count++;
+            if (idle_count > IDLE_TIMEOUT_MS) {
+                fail_status = "408 Request Timeout";
+                fail_msg = "Receive timeout";
+                break;
+            }
+            svcSleepThread(1'000'000);
+        } else {
+            fail_status = "500 Internal Server Error";
+            fail_msg = "Socket read failed";
+            break;
+        }
+    }
+
+    const auto write_rc = finish_writer();
     g_upload_state.active.store(false);
+
+    if (aborted) {
+        return;
+    }
+
+    if (!fail_status && R_FAILED(write_rc)) {
+        fail_status = "500 Internal Server Error";
+        fail_msg = "Could not write file";
+    }
+
+    if (fail_status) {
+        SendResponse(sock, fail_status, "text/plain", fail_msg);
+        return;
+    }
+
+    upload_guard.success = true;
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
 
@@ -2273,6 +2390,28 @@ void HandleRequest(Socket sock) {
     SendResponse(sock, "404 Not Found", "text/plain", "Not found");
 }
 
+// The advertised TCP window equals the socket buffer size, and the default
+// initial buffer (64K, see SocketInitConfig in main.cpp) caps throughput at
+// window/RTT — with the Switch's high wifi power-save latency that lands at
+// only a few Mbit/s. Request bigger buffers, falling back if the bsd service
+// rejects the size (applet mode has a much lower tcp_*_buf_max_size).
+void TuneShareSocket(Socket sock) {
+    for (int size = 1024 * 1024; size >= 1024 * 128; size /= 2) {
+        if (!setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size))) {
+            break;
+        }
+    }
+
+    for (int size = 1024 * 1024; size >= 1024 * 128; size /= 2) {
+        if (!setsockopt(sock, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size))) {
+            break;
+        }
+    }
+
+    const int nodelay = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+}
+
 // Multiple instances of this run concurrently (see SHARE_WORKER_COUNT), each
 // accept()-ing on the shared listening socket, so one client's long-running
 // request (e.g. install) doesn't block other clients (e.g. a status poll).
@@ -2292,6 +2431,7 @@ void ShareThreadFunc(void*) {
         }
 
         fcntl(client, F_SETFL, fcntl(client, F_GETFL) | O_NONBLOCK);
+        TuneShareSocket(client);
         HandleRequest(client);
         shutdown(client, SHUT_RDWR);
         close(client);
@@ -2311,6 +2451,10 @@ auto StartShareServer() -> Result {
 
         const int opt = 1;
         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+        // set before listen() so the window scale factor negotiated during the
+        // handshake accounts for the enlarged buffer (inherited by accept()).
+        TuneShareSocket(sock);
 
         sockaddr_in addr{};
         addr.sin_family = AF_INET;

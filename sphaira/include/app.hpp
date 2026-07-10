@@ -67,6 +67,14 @@ public:
         Push(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
+    // owns a single ProgressBox outside of the widget stack: it keeps running
+    // and drawing (as a corner badge or, expanded via L3, a non-blocking
+    // dialog) without ever consuming Update() from the active menu. used for
+    // transfers triggered from outside the UI (e.g. MTP installs), where the
+    // user should be able to keep navigating while it runs in the background.
+    // reclaimed automatically once its worker thread finishes.
+    static void PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox);
+
     // pops all widgets above a menu
     static void PopToMenu();
 
@@ -97,6 +105,9 @@ public:
     static auto GetNxlinkEnable() -> bool;
     static auto GetHddEnable() -> bool;
     static auto GetWriteProtect() -> bool;
+    static auto GetWebdavUrl() -> std::string;
+    static auto GetWebdavUser() -> std::string;
+    static auto GetWebdavPass() -> std::string;
     static auto GetLogEnable() -> bool;
     static auto GetReplaceHbmenuEnable() -> bool;
     static auto GetInstallEnable() -> bool;
@@ -120,6 +131,9 @@ public:
     static void SetNxlinkEnable(bool enable);
     static void SetHddEnable(bool enable);
     static void SetWriteProtect(bool enable);
+    static void SetWebdavUrl(std::string value);
+    static void SetWebdavUser(std::string value);
+    static void SetWebdavPass(std::string value);
     static void SetLogEnable(bool enable);
     static void SetReplaceHbmenuEnable(bool enable);
     static void SetInstallSysmmcEnable(bool enable);
@@ -287,6 +301,7 @@ public:
     std::vector<std::unique_ptr<ui::Widget>> m_widgets;
     u32 m_pop_count{};
     ui::NotifMananger m_notif_manager{};
+    std::unique_ptr<ui::ProgressBox> m_active_transfer_pbox{};
 
     AppletHookCookie m_appletHookCookie{};
 
@@ -303,6 +318,9 @@ public:
     option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", false};
     option::OptionBool m_hdd_enabled{INI_SECTION, "hdd_enabled", true};
     option::OptionBool m_hdd_write_protect{INI_SECTION, "hdd_write_protect", false};
+    option::OptionString m_webdav_url{INI_SECTION, "webdav_url", ""};
+    option::OptionString m_webdav_user{INI_SECTION, "webdav_user", ""};
+    option::OptionString m_webdav_pass{INI_SECTION, "webdav_pass", ""};
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};

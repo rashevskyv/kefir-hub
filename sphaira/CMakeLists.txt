@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.133)
+set(sphaira_VERSION 0.13.146)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -85,7 +85,6 @@ add_executable(sphaira
     source/main.cpp
     source/ams_su.c
     source/hats_version.cpp
-    source/manifest.cpp
     source/nro.cpp
     source/nxlink.cpp
     source/owo.cpp

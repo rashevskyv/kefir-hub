@@ -2,61 +2,42 @@
 
 #include "ui/menus/menu_base.hpp"
 #include "ui/list.hpp"
-#include "manifest.hpp"
+
 #include <string>
 #include <vector>
-#include <set>
 
 namespace sphaira::ui::menu::hats {
 
-struct ComponentItem {
-    std::string id;
+struct ModuleItem {
+    u64 program_id{};
+    std::string program_id_text;
     std::string name;
-    std::string version;
-    std::string category;
-    size_t file_count{};
-    bool is_protected{};
-    bool is_selected{};
-};
-
-enum class ComponentView {
-    Installed,
-    Disabled,
+    bool requires_reboot{};
+    bool running{};
+    bool autostart{};
 };
 
 struct UninstallerMenu final : MenuBase {
     UninstallerMenu();
     ~UninstallerMenu();
 
-    auto GetShortTitle() const -> const char* override { return "Components"; }
+    auto GetShortTitle() const -> const char* override { return "Modules"; }
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
 private:
     void SetIndex(s64 index);
-    void LoadComponents();
-    void SwitchView();
-    void ToggleSelection();
-    void DisableSelected();
-    void EnableSelected();
-    void DeleteSelectedPermanently();
-    void SelectAll();
-    void DeselectAll();
+    void LoadModules();
+    void RefreshStatuses();
+    void ToggleSelectedModule();
+    void ToggleSelectedAutostart();
     void UpdateSubheading();
-    void UpdateActions();
-
-    size_t GetSelectedCount() const;
 
 private:
-    manifest::Manifest m_manifest;
-    manifest::DisabledComponents m_disabled;
-    std::vector<ComponentItem> m_items;
-    std::set<std::string> m_selected_ids;
+    std::vector<ModuleItem> m_items;
     s64 m_index{};
     std::unique_ptr<List> m_list;
-    ComponentView m_view{ComponentView::Installed};
-
     bool m_loaded{false};
     std::string m_error_message;
 };

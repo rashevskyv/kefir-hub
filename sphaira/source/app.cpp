@@ -49,6 +49,28 @@ constexpr fs::FsPath DEFAULT_MUSIC_PATH = "/config/sphaira/themes/default_music.
 constexpr const char* DEFAULT_MUSIC_URL = "https://files.catbox.moe/1ovji1.bfstm";
 // constexpr const char* DEFAULT_MUSIC_URL = "https://raw.githubusercontent.com/ITotalJustice/sphaira/refs/heads/master/assets/default_music.bfstm";
 
+auto NormalizeWebdavUrl(std::string url) -> std::string {
+    constexpr const char* whitespace = " \t\r\n";
+    const auto first = url.find_first_not_of(whitespace);
+    if (first == std::string::npos) {
+        return {};
+    }
+    const auto last = url.find_last_not_of(whitespace);
+    url = url.substr(first, last - first + 1);
+
+    if (url.find("://") == std::string::npos) {
+        url.insert(0, "webdav://");
+    } else if (url.starts_with("https://")) {
+        url.replace(0, std::strlen("https"), "webdav");
+    }
+
+    const auto scheme_end = url.find("://");
+    while (url.ends_with('/') && scheme_end != std::string::npos && url.size() > scheme_end + 3) {
+        url.pop_back();
+    }
+    return url;
+}
+
 constexpr const u8 DEFAULT_IMAGE_DATA[]{
     #embed <icons/default.png>
 };
@@ -537,6 +559,18 @@ auto App::Push(std::unique_ptr<ui::Widget>&& widget) -> void {
     log_write("did it\n");
 }
 
+auto App::PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> void {
+    pbox->SetDetached(true);
+    // if one is already running (shouldn't normally happen, callers are
+    // expected to serialise transfers), let the old one keep running in the
+    // background rather than silently destroying (and thus blocking on) it.
+    if (g_app->m_active_transfer_pbox) {
+        log_write("[Mui] PushTransfer called while one is already active, ignoring\n");
+        return;
+    }
+    g_app->m_active_transfer_pbox = std::move(pbox);
+}
+
 auto App::PopToMenu() -> void {
     for (auto& p : std::ranges::views::reverse(g_app->m_widgets)) {
         if (p->IsMenu()) {
@@ -639,6 +673,18 @@ auto App::GetHddEnable() -> bool {
 
 auto App::GetWriteProtect() -> bool {
     return g_app->m_hdd_write_protect.Get();
+}
+
+auto App::GetWebdavUrl() -> std::string {
+    return NormalizeWebdavUrl(g_app->m_webdav_url.Get());
+}
+
+auto App::GetWebdavUser() -> std::string {
+    return g_app->m_webdav_user.Get();
+}
+
+auto App::GetWebdavPass() -> std::string {
+    return g_app->m_webdav_pass.Get();
 }
 
 auto App::GetLogEnable() -> bool {
@@ -773,6 +819,18 @@ void App::SetWriteProtect(bool enable) {
             usbHsFsSetFileSystemMountFlags(0);
         }
     }
+}
+
+void App::SetWebdavUrl(std::string value) {
+    g_app->m_webdav_url.Set(NormalizeWebdavUrl(std::move(value)));
+}
+
+void App::SetWebdavUser(std::string value) {
+    g_app->m_webdav_user.Set(std::move(value));
+}
+
+void App::SetWebdavPass(std::string value) {
+    g_app->m_webdav_pass.Set(std::move(value));
 }
 
 void App::SetLogEnable(bool enable) {
@@ -1107,6 +1165,18 @@ void App::Poll() {
 }
 
 void App::Update() {
+    if (m_active_transfer_pbox) {
+        if (m_controller.GotDown(Button::L3)) {
+            m_active_transfer_pbox->ToggleMinimized();
+            App::PlaySoundEffect(SoundEffect_Focus);
+        }
+        // its worker thread signals exit once the transfer finishes; reclaim
+        // it here rather than in the ProgressBox's own (never-called) Update().
+        if (m_active_transfer_pbox->ShouldExit()) {
+            m_active_transfer_pbox.reset();
+        }
+    }
+
     m_widgets.back()->Update(&m_controller, &m_touch_info);
 
     bool popped_at_least1 = false;
@@ -1165,6 +1235,10 @@ void App::Draw() {
     }
 
     m_notif_manager.Draw(vg, &m_theme);
+
+    if (m_active_transfer_pbox) {
+        m_active_transfer_pbox->Draw(vg, &m_theme);
+    }
 
     nvgResetTransform(vg);
     nvgEndFrame(this->vg);
@@ -2057,6 +2131,26 @@ App::~App() {
 
     appletUnhook(&m_appletHookCookie);
 
+    if (App::GetMtpEnable()) {
+        log_write("closing mtp\n");
+        haze::Exit();
+    }
+
+    if (App::GetFtpEnable()) {
+        log_write("closing ftp\n");
+        ftpsrv::Exit();
+    }
+
+    if (App::GetNxlinkEnable()) {
+        log_write("closing nxlink\n");
+        nxlinkExit();
+    }
+
+    if (App::GetHddEnable()) {
+        log_write("closing hdd\n");
+        usbHsFsExit();
+    }
+
     // destroy this first as it seems to prevent a crash when exiting the appstore
     // when an image that was being drawn is displayed
     // replicate: saves -> homebrew -> misc -> appstore -> sphaira -> changelog -> exit
@@ -2142,26 +2236,6 @@ App::~App() {
         } else {
             log_write("no longer hbmenu!\n");
         }
-    }
-
-    if (App::GetMtpEnable()) {
-        log_write("closing mtp\n");
-        haze::Exit();
-    }
-
-    if (App::GetFtpEnable()) {
-        log_write("closing ftp\n");
-        ftpsrv::Exit();
-    }
-
-    if (App::GetNxlinkEnable()) {
-        log_write("closing nxlink\n");
-        nxlinkExit();
-    }
-
-    if (App::GetHddEnable()) {
-        log_write("closing hdd\n");
-        usbHsFsExit();
     }
 
     log_write("\t[EXIT] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());

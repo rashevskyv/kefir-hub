@@ -50,6 +50,15 @@ struct ProgressBox final : Widget {
     auto ShouldExit() -> bool;
     auto ShouldExitResult() -> Result;
 
+    // a "detached" box lives outside the widget stack (see App::PushTransfer()):
+    // it still runs its worker thread and can be Draw()n, but never receives
+    // Update() and thus never blocks input to whatever menu is on screen.
+    // it can be minimised into a small corner badge via L3 (see App::Update()).
+    void SetDetached(bool detached) { m_detached = detached; }
+    auto IsDetached() const { return m_detached; }
+    void ToggleMinimized() { m_minimized = !m_minimized; }
+    auto IsMinimized() const { return m_minimized; }
+
     // helper functions
     auto CopyFile(fs::Fs* fs_src, fs::Fs* fs_dst, const fs::FsPath& src, const fs::FsPath& dst, bool single_threaded = false) -> Result;
     auto CopyFile(fs::Fs* fs, const fs::FsPath& src, const fs::FsPath& dst, bool single_threaded = false) -> Result;
@@ -119,6 +128,8 @@ private:
     int m_image{};
     bool m_own_image{};
     std::atomic<bool> m_muted{false};
+    bool m_detached{false};
+    bool m_minimized{false};
 };
 
 // this is a helper function that does many things.
