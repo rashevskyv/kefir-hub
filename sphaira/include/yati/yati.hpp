@@ -10,7 +10,7 @@
 #include "fs.hpp"
 #include "source/base.hpp"
 #include "container/base.hpp"
-#include "ui/progress_box.hpp"
+#include "ui/install_progress.hpp"
 #include <memory>
 #include <optional>
 
@@ -78,11 +78,27 @@ struct ConfigOverride {
     std::optional<bool> lower_system_version{};
 };
 
+enum class AnalysisSizeKind {
+    Exact,
+    Estimate,
+};
+
+struct InstallAnalysis {
+    container::Collections collections{};
+    s64 source_size{};
+    s64 install_size{};
+    AnalysisSizeKind size_kind{AnalysisSizeKind::Exact};
+    bool compressed{};
+    bool suggested_sd{};
+    std::string size_reason{};
+};
+
 bool ChooseInstallTarget(s64 total_size, bool is_compressed);
 
-Result InstallFromFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override = {});
-Result InstallFromSource(ui::ProgressBox* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override = {});
-Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, const ConfigOverride& override = {});
-Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override = {});
+Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalysis& out);
+Result InstallFromFile(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override = {});
+Result InstallFromSource(ui::InstallProgress* progress, source::Base* source, const fs::FsPath& path, const ConfigOverride& override = {});
+Result InstallFromContainer(ui::InstallProgress* progress, container::Base* container, const ConfigOverride& override = {});
+Result InstallFromCollections(ui::InstallProgress* progress, source::Base* source, const container::Collections& collections, const ConfigOverride& override = {});
 
 } // namespace sphaira::yati

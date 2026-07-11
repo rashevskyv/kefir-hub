@@ -1,38 +1,48 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi_menu.hpp"
-#include "yati/yati.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 #include "ui/nvg_util.hpp"
-#include "i18n.hpp"
-#include <cstring>
+#include "ui/option_box.hpp"
+#include "utils/utils.hpp"
+
+#include <algorithm>
+#include <cstdio>
+#include <ranges>
 
 namespace sphaira::ui::menu::dbi {
 namespace {
 
 constexpr u64 CONNECTION_TIMEOUT = UINT64_MAX;
 constexpr u64 TRANSFER_TIMEOUT = UINT64_MAX;
-constexpr u64 FINISHED_TIMEOUT = 1e+9 * 3; // 3 seconds.
+constexpr u64 FINISHED_TIMEOUT = 1e+9 * 3;
+constexpr size_t MAX_LOG_LINES = 128;
 
 void thread_func(void* user) {
-    auto app = static_cast<Menu*>(user);
-    app->ThreadFunction();
+    static_cast<Menu*>(user)->ThreadFunction();
+}
+
+auto ResultText(Result rc) -> std::string {
+    char out[32]{};
+    std::snprintf(out, sizeof(out), "0x%08X", R_VALUE(rc));
+    return out;
 }
 
 } // namespace
 
-Menu::Menu(u32 flags) : MenuBase{"DBI"_i18n, flags} {
-    SetAction(Button::B, Action{"Back"_i18n, [this](){
-        SetPop();
-    }});
+Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
+    mutexInit(&m_mutex);
+    ueventCreate(&m_cancel_event, false);
 
-    SetAction(Button::START, Action{"Options"_i18n, [this](){
-        App::DisplayInstallOptions(false);
-    }});
+    const Vec4 row{70.f, GetY() + 80.f, 1140.f, 82.f};
+    m_list = std::make_unique<List>(1, 6, m_pos, row);
+    m_list->SetLayout(List::Layout::GRID);
+    UpdateActions();
 
-    // if mtp is enabled, disable it for now.
     m_was_mtp_enabled = App::GetMtpEnable();
     if (m_was_mtp_enabled) {
         App::Notify("Disable MTP for usb install"_i18n);
@@ -41,32 +51,31 @@ Menu::Menu(u32 flags) : MenuBase{"DBI"_i18n, flags} {
 
     m_usb_source = std::make_unique<yati::source::DbiUsb>(TRANSFER_TIMEOUT);
     if (R_FAILED(m_usb_source->GetOpenResult())) {
-        log_write("dbi usb init failed\n");
         m_state = State::Failed;
+        m_actions_dirty = true;
+        return;
     }
 
-    if (m_state != State::Failed) {
-        Result rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024*32, PRIO_PREEMPTIVE, 1);
-        if (R_SUCCEEDED(rc)) {
-            m_thread_created = true;
-            threadStart(&m_thread);
-        } else {
-            m_state = State::Failed;
-        }
+    const auto rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 64, PRIO_PREEMPTIVE, 1);
+    if (R_SUCCEEDED(rc) && R_SUCCEEDED(threadStart(&m_thread))) {
+        m_thread_created = true;
+    } else {
+        m_state = State::Failed;
+        m_actions_dirty = true;
     }
 }
 
 Menu::~Menu() {
-    // signal for thread to exit and wait.
+    m_cancel_requested = true;
     m_stop_source.request_stop();
-    m_usb_source->SignalCancel();
+    ueventSignal(&m_cancel_event);
+    if (m_usb_source) {
+        m_usb_source->SignalCancel();
+    }
     if (m_thread_created) {
         threadWaitForExit(&m_thread);
         threadClose(&m_thread);
     }
-
-    // free usb source before re-enabling mtp.
-    log_write("closing data (dbi)!!!!\n");
     m_usb_source.reset();
 
     if (m_was_mtp_enabled) {
@@ -75,124 +84,321 @@ Menu::~Menu() {
     }
 }
 
+void Menu::UpdateActions() {
+    RemoveActions();
+    const auto state = m_state.load();
+    if (state == State::ReviewQueue) {
+        SetActions(
+            std::make_pair(Button::A, Action{"Select package"_i18n, [this]() {
+                SCOPED_MUTEX(&m_mutex);
+                if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size()) && R_SUCCEEDED(m_queue[m_index].analysis_result)) {
+                    m_queue[m_index].selected = !m_queue[m_index].selected;
+                }
+            }}),
+            std::make_pair(Button::X, Action{"Select all / none"_i18n, [this]() {
+                SCOPED_MUTEX(&m_mutex);
+                const bool any_unselected = std::ranges::any_of(m_queue, [](const auto& entry) {
+                    return R_SUCCEEDED(entry.analysis_result) && !entry.selected;
+                });
+                for (auto& entry : m_queue) {
+                    if (R_SUCCEEDED(entry.analysis_result)) entry.selected = any_unselected;
+                }
+            }}),
+            std::make_pair(Button::Y, Action{"Install target"_i18n, [this]() { CycleTarget(); })),
+            std::make_pair(Button::START, Action{"Install selected"_i18n, [this]() { StartInstall(); })),
+            std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }))
+        );
+    } else if (state == State::Installing) {
+        SetAction(Button::B, Action{"Cancel remaining"_i18n, [this]() { CancelSession(); }});
+    } else if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
+        SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }));
+    } else {
+        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }));
+    }
+    m_actions_dirty = false;
+}
+
 void Menu::Update(Controller* controller, TouchInfo* touch) {
+    if (m_actions_dirty) UpdateActions();
     MenuBase::Update(controller, touch);
 
-    static TimeStamp poll_ts;
-    if (poll_ts.GetSeconds() >= 1) {
-        poll_ts.Update();
-
-        UsbState state{UsbState_Detached};
-        usbDsGetState(&state);
-
-        UsbDeviceSpeed speed{(UsbDeviceSpeed)UsbDeviceSpeed_None};
-        usbDsGetSpeed(&speed);
-
-        char buf[128];
-        std::snprintf(buf, sizeof(buf), "State: %s | Speed: %s", i18n::get(GetUsbDsStateStr(state)).c_str(), i18n::get(GetUsbDsSpeedStr(speed)).c_str());
-        SetSubHeading(buf);
-    }
-
-    if (m_state == State::Connected_StartingTransfer) {
-        log_write("dbi set to progress\n");
-        m_state = State::Progress;
-        log_write("dbi got connection\n");
-        App::Push<ui::ProgressBox>(0, "Installing "_i18n, "", [this](auto pbox) -> Result {
-            ON_SCOPE_EXIT(m_usb_source->Finished(FINISHED_TIMEOUT));
-
-            yati::ConfigOverride config_override{};
-            if (m_usb_source->IsStream()) {
-                config_override.skip_nca_hash_verify = true;
-                config_override.skip_rsa_header_fixed_key_verify = true;
-                config_override.skip_rsa_npdm_fixed_key_verify = true;
-            }
-
-            log_write("inside dbi progress box\n");
-            for (const auto& file_name : m_names) {
-                pbox->SetTitle(file_name);
-                m_usb_source->SetFileNameForTranfser(file_name);
-                const auto rc = yati::InstallFromSource(pbox, m_usb_source.get(), file_name, config_override);
-                if (R_FAILED(rc)) {
-                    m_usb_source->SignalCancel();
-                    log_write("exiting dbi usb install\n");
-                    R_THROW(rc);
-                }
-
-                App::Notify("Installed via usb"_i18n);
-            }
-
-            R_SUCCEED();
-        }, [this](Result rc){
-            App::PushErrorBox(rc, "DBI install failed!"_i18n);
-
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("DBI install success!"_i18n);
-                m_state = State::Done;
-                SetPop();
+    const auto state = m_state.load();
+    SCOPED_MUTEX(&m_mutex);
+    if (state == State::ReviewQueue && !m_queue.empty()) {
+        m_list->OnUpdate(controller, touch, m_index, m_queue.size(), [this](bool pressed, s64 index) {
+            if (pressed && m_index == index && R_SUCCEEDED(m_queue[index].analysis_result)) {
+                m_queue[index].selected = !m_queue[index].selected;
             } else {
-                m_state = State::Failed;
+                m_index = index;
             }
-        });
+        }, this);
+    } else if ((state == State::Installing || state == State::Summary || state == State::Cancelled) && !m_log.empty()) {
+        m_list->OnUpdate(controller, touch, m_log_index, m_log.size(), [this](bool, s64 index) {
+            m_log_index = index;
+        }, this);
     }
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
+    const auto state = m_state.load();
 
-    switch (m_state) {
-        case State::None:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Waiting for connection (DBI)..."_i18n.c_str());
-            break;
-
-        case State::Connected_WaitForFileList:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Connected, waiting for file list..."_i18n.c_str());
-            break;
-
-        case State::Connected_StartingTransfer:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Connected, starting transfer..."_i18n.c_str());
-            break;
-
-        case State::Progress:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Transferring data..."_i18n.c_str());
-            break;
-
-        case State::Done:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Press B to exit..."_i18n.c_str());
-            break;
-
-        case State::Failed:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to init usb, press B to exit..."_i18n.c_str());
-            break;
+    if (state == State::WaitingForList || state == State::Analysing) {
+        const auto text = state == State::WaitingForList
+            ? "Waiting for DBI package list..."_i18n
+            : "Analysing packages (nothing is being installed)..."_i18n;
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 30.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str());
+        return;
     }
+    if (state == State::Failed) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 28.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_ERROR), "DBI session failed"_i18n.c_str());
+        return;
+    }
+
+    SCOPED_MUTEX(&m_mutex);
+    if (state == State::ReviewQueue) {
+        s64 selected_size{};
+        size_t selected_count{};
+        for (const auto& entry : m_queue) {
+            if (entry.selected && R_SUCCEEDED(entry.analysis_result)) {
+                selected_size += entry.analysis.install_size;
+                selected_count++;
+            }
+        }
+        const auto spaces = GetPolledData();
+        const auto reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
+        gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %zu / %zu    %s: %s",
+            "Target"_i18n.c_str(), TargetName().c_str(), "Selected"_i18n.c_str(), selected_count, m_queue.size(),
+            "Required"_i18n.c_str(), utils::formatSizeStorage(selected_size).c_str());
+        gfx::drawTextArgs(vg, 70.f, GetY() + 36.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s    %s: %s",
+            "microSD free"_i18n.c_str(), utils::formatSizeStorage(std::max<s64>(0, spaces.sd_free - reserve)).c_str(),
+            "System memory free"_i18n.c_str(), utils::formatSizeStorage(std::max<s64>(0, spaces.nand_free - reserve)).c_str(),
+            "Reserve"_i18n.c_str(), utils::formatSizeStorage(reserve).c_str());
+
+        m_list->Draw(vg, theme, m_queue.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+            const auto& entry = m_queue[index];
+            if (index == m_index) gfx::drawRectOutline(vg, theme, 4.f, v);
+            const auto colour = R_FAILED(entry.analysis_result) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT);
+            const char* mark = !R_SUCCEEDED(entry.analysis_result) ? "!" : (entry.selected ? "[x]" : "[ ]");
+            gfx::drawTextArgs(vg, v.x + 12.f, v.y + 8.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+                "%s %s", mark, entry.file_name.c_str());
+            if (R_FAILED(entry.analysis_result)) {
+                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+                    "%s: %s", "Analysis failed"_i18n.c_str(), ResultText(entry.analysis_result).c_str());
+            } else {
+                const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
+                const auto target = entry.analysis.suggested_sd ? "microSD"_i18n : "System memory"_i18n;
+                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s (%s)    Auto: %s",
+                    "Package size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.source_size).c_str(),
+                    "Install size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.install_size).c_str(), kind.c_str(), target.c_str());
+            }
+        });
+        return;
+    }
+
+    gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu",
+        "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
+        "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count);
+    if (!m_current_title.empty()) {
+        gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT), "%s", m_current_title.c_str());
+    }
+    if (m_progress_size > 0) {
+        const Vec4 bar{70.f, GetY() + 67.f, 1140.f, 12.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
+            theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
+    }
+    m_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+        if (index == m_log_index) gfx::drawRectOutline(vg, theme, 2.f, v);
+        gfx::drawTextArgs(vg, v.x + 10.f, v.y + 10.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT), "%s", m_log[index].c_str());
+    });
 }
 
 void Menu::ThreadFunction() {
     for (;;) {
-        if (GetToken().stop_requested()) {
-            break;
-        }
-
+        if (GetToken().stop_requested()) return;
         const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
-        if (rc == Result_UsbCancelled) {
-            break;
+        if (rc == Result_UsbCancelled) return;
+        if (R_FAILED(rc)) continue;
+
+        std::vector<std::string> names;
+        const auto list_rc = m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names);
+        if (R_FAILED(list_rc)) continue;
+
+        m_state = State::Analysing;
+        m_actions_dirty = true;
+        for (const auto& name : names) {
+            if (m_cancel_requested || GetToken().stop_requested()) break;
+            QueueEntry entry{};
+            entry.file_name = name;
+            m_usb_source->SetFileNameForTranfser(name);
+            entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
+            entry.selected = R_SUCCEEDED(entry.analysis_result);
+            SCOPED_MUTEX(&m_mutex);
+            m_queue.emplace_back(std::move(entry));
         }
 
-        // set connected status
-        if (R_SUCCEEDED(rc)) {
-            m_state = State::Connected_WaitForFileList;
-        } else {
-            m_state = State::None;
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            m_usb_source->Finished(FINISHED_TIMEOUT);
+            m_state = State::Cancelled;
+            m_actions_dirty = true;
+            return;
         }
 
-        if (R_SUCCEEDED(rc)) {
-            std::vector<std::string> names;
-            if (R_SUCCEEDED(m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names))) {
-                m_names = names;
-                m_state = State::Connected_StartingTransfer;
-                break;
+        m_state = State::ReviewQueue;
+        m_actions_dirty = true;
+        while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) svcSleepThread(1e+6);
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            m_usb_source->Finished(FINISHED_TIMEOUT);
+            m_state = State::Cancelled;
+            m_actions_dirty = true;
+            return;
+        }
+
+        m_state = State::Installing;
+        m_actions_dirty = true;
+        for (size_t i = 0; i < m_queue.size(); i++) {
+            bool selected{};
+            yati::InstallAnalysis analysis{};
+            std::string name{};
+            {
+                SCOPED_MUTEX(&m_mutex);
+                selected = m_queue[i].selected && R_SUCCEEDED(m_queue[i].analysis_result);
+                analysis = m_queue[i].analysis;
+                name = m_queue[i].file_name;
+                m_current_package = i;
+                m_current_title = name;
+                m_progress_offset = 0;
+                m_progress_size = 0;
             }
+            if (!selected) continue;
+            if (m_cancel_requested) break;
+
+            AddLog("Starting: "_i18n + name);
+            m_usb_source->SetFileNameForTranfser(name);
+            yati::ConfigOverride override{};
+            override.sd_card_install = m_target == InstallTarget::Sd ? true
+                : m_target == InstallTarget::Nand ? false : analysis.suggested_sd;
+            const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+            {
+                SCOPED_MUTEX(&m_mutex);
+                m_queue[i].install_result = install_rc;
+                m_queue[i].installed = R_SUCCEEDED(install_rc);
+                if (R_SUCCEEDED(install_rc)) m_success_count++;
+                else m_failure_count++;
+            }
+            if (R_SUCCEEDED(install_rc)) AddLog("Installed: "_i18n + name);
+            else AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")");
+            if (m_cancel_requested) break;
+        }
+
+        m_usb_source->Finished(FINISHED_TIMEOUT);
+        if (m_cancel_requested) {
+            AddLog("Session cancelled; completed installs were kept."_i18n);
+            m_state = State::Cancelled;
+        } else {
+            AddLog("Queue finished."_i18n);
+            m_state = State::Summary;
+        }
+        m_actions_dirty = true;
+        return;
+    }
+}
+
+void Menu::StartInstall() {
+    s64 sd_required{}, nand_required{};
+    size_t count{};
+    {
+        SCOPED_MUTEX(&m_mutex);
+        for (const auto& entry : m_queue) {
+            if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
+            count++;
+            const bool sd = m_target == InstallTarget::Sd || (m_target == InstallTarget::Auto && entry.analysis.suggested_sd);
+            (sd ? sd_required : nand_required) += entry.analysis.install_size;
         }
     }
+    if (!count) {
+        App::Notify("Select at least one package"_i18n);
+        return;
+    }
+    const auto spaces = GetPolledData(true);
+    const auto reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
+    if ((sd_required && spaces.sd_free - sd_required < static_cast<s64>(reserve)) ||
+        (nand_required && spaces.nand_free - nand_required < static_cast<s64>(reserve))) {
+        App::Push<OptionBox>("Selected packages may not fit after the configured reserve. Continue?"_i18n,
+            "Cancel"_i18n, "Install selected"_i18n, 0, [this](auto choice) {
+                if (choice && *choice == 1) m_install_requested = true;
+            });
+        return;
+    }
+    m_install_requested = true;
+}
+
+void Menu::CancelSession() {
+    m_cancel_requested = true;
+    ueventSignal(&m_cancel_event);
+    const auto state = m_state.load();
+    if (state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
+        m_usb_source->SignalCancel();
+    }
+    if (state == State::WaitingForList) {
+        m_state = State::Cancelled;
+        m_actions_dirty = true;
+    }
+    AddLog("Cancellation requested."_i18n);
+}
+
+void Menu::CycleTarget() {
+    m_target = m_target == InstallTarget::Auto ? InstallTarget::Sd
+        : m_target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
+}
+
+auto Menu::TargetName() const -> std::string {
+    if (m_target == InstallTarget::Sd) return "microSD"_i18n;
+    if (m_target == InstallTarget::Nand) return "System memory"_i18n;
+    return "Auto"_i18n;
+}
+
+void Menu::AddLog(const std::string& text) {
+    SCOPED_MUTEX(&m_mutex);
+    if (m_log.size() == MAX_LOG_LINES) m_log.erase(m_log.begin());
+    m_log.emplace_back(text);
+    m_log_index = m_log.size() - 1;
+}
+
+Result Menu::CheckCancelled() {
+    R_UNLESS(!m_cancel_requested && !GetToken().stop_requested(), Result_TransferCancelled);
+    R_SUCCEED();
+}
+
+void Menu::SetInstallTitle(const std::string& title) {
+    SCOPED_MUTEX(&m_mutex);
+    m_current_title = title;
+}
+
+void Menu::SetInstallTransfer(const std::string& transfer) {
+    SCOPED_MUTEX(&m_mutex);
+    m_current_transfer = transfer;
+    m_progress_offset = 0;
+    m_progress_size = 0;
+}
+
+void Menu::UpdateInstallTransfer(s64 offset, s64 size) {
+    SCOPED_MUTEX(&m_mutex);
+    m_progress_offset = offset;
+    m_progress_size = size;
+}
+
+void Menu::InstallYield() {
+    svcSleepThread(1e+6);
 }
 
 } // namespace sphaira::ui::menu::dbi

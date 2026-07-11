@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/widget.hpp"
+#include "ui/install_progress.hpp"
 #include "ui/scrolling_text.hpp"
 #include "fs.hpp"
 #include <functional>
@@ -13,7 +14,7 @@ struct ProgressBox;
 using ProgressBoxCallback = std::function<Result(ProgressBox*)>;
 using ProgressBoxDoneCallback = std::function<void(Result rc)>;
 
-struct ProgressBox final : Widget {
+struct ProgressBox final : Widget, InstallProgress {
     ProgressBox(
         int image,
         const std::string& action,
@@ -89,6 +90,14 @@ struct ProgressBox final : Widget {
     auto GetCancelEvent() {
         return &m_uevent;
     }
+
+    Result CheckCancelled() override { return ShouldExitResult(); }
+    UEvent* GetInstallCancelEvent() override { return GetCancelEvent(); }
+    void SetInstallTitle(const std::string& title) override { SetTitle(title); }
+    void SetInstallImage(std::vector<u8>& image) override { SetImageData(image); }
+    void SetInstallTransfer(const std::string& transfer) override { NewTransfer(transfer); }
+    void UpdateInstallTransfer(s64 offset, s64 size) override { UpdateTransfer(offset, size); }
+    void InstallYield() override { Yield(); }
 
 private:
     void FreeImage();

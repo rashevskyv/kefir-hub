@@ -319,7 +319,7 @@ struct ThreadData {
 };
 
 struct Yati {
-    Yati(ui::ProgressBox*, source::Base*);
+    Yati(ui::InstallProgress*, source::Base*);
     ~Yati();
 
     Result Setup(const ConfigOverride& override);
@@ -340,7 +340,7 @@ struct Yati {
 
 
 // private:
-    ui::ProgressBox* pbox{};
+    ui::InstallProgress* pbox{};
     source::Base* source{};
 
     // for all content storages
@@ -358,7 +358,7 @@ struct Yati {
 };
 
 auto ThreadData::GetResults() volatile -> Result {
-    R_TRY(yati->pbox->ShouldExitResult());
+    R_TRY(yati->pbox->CheckCancelled());
     R_TRY(read_result.load());
     R_TRY(decompress_result.load());
     R_TRY(write_result.load());
@@ -897,7 +897,7 @@ struct BufHelper {
     u64 offset{};
 };
 
-Yati::Yati(ui::ProgressBox* _pbox, source::Base* _source) : pbox{_pbox}, source{_source} {
+Yati::Yati(ui::InstallProgress* _pbox, source::Base* _source) : pbox{_pbox}, source{_source} {
     App::SetAutoSleepDisabled(true);
 }
 
@@ -1004,7 +1004,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
     ON_SCOPE_EXIT(threadWaitForExit(std::addressof(t_write)));
 
     const auto waiter_progress = waiterForUEvent(t_data.GetProgressEvent());
-    const auto waiter_cancel = waiterForUEvent(pbox->GetCancelEvent());
+    const auto waiter_cancel = waiterForUEvent(pbox->GetInstallCancelEvent());
     const auto waiter_done = waiterForUEvent(t_data.GetDoneEvent());
 
     for (;;) {
@@ -1014,7 +1014,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
         }
 
         if (!idx) {
-            pbox->UpdateTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
+            pbox->UpdateInstallTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
         } else {
             break;
         }
@@ -1024,7 +1024,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
     log_write("waiting for threads to close\n");
     while (t_data.IsAnyRunning()) {
         t_data.WakeAllThreads();
-        pbox->Yield();
+        pbox->InstallYield();
 
         if (R_FAILED(waitSingleHandle(t_read.handle, 1000))) {
             continue;
@@ -1065,7 +1065,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
 
 Result Yati::InstallNca(std::span<TikCollection> tickets, NcaCollection& nca) {
     log_write("in install nca\n");
-    pbox->NewTransfer(nca.name);
+    pbox->SetInstallTransfer(nca.name);
     keys::parse_hex_key(std::addressof(nca.content_id), nca.name.c_str());
 
     R_TRY(InstallNcaInternal(tickets, nca));
@@ -1085,7 +1085,8 @@ Result Yati::InstallNca(std::span<TikCollection> tickets, NcaCollection& nca) {
         std::vector<u8> icon;
         // this may fail if tickets aren't installed and the nca uses title key crypto.
         if (R_SUCCEEDED(nca::ParseControl(path, nca.header.program_id, &entry, sizeof(entry), &icon))) {
-            pbox->SetTitle(entry.name).SetImageData(icon);
+            pbox->SetInstallTitle(entry.name);
+            pbox->SetInstallImage(icon);
         }
     }
 
@@ -1387,7 +1388,7 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         buf.write(std::addressof(info.info), sizeof(info.info));
     }
 
-    pbox->NewTransfer("Updating ncm database"_i18n);
+    pbox->SetInstallTransfer("Updating ncm database"_i18n);
     R_TRY(ncmContentMetaDatabaseSet(std::addressof(db), std::addressof(cnmt.key), buf.buf.data(), buf.tell()));
     R_TRY(ncmContentMetaDatabaseCommit(std::addressof(db)));
 
@@ -1395,7 +1396,7 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
     ncm::ContentStorageRecord content_storage_record{};
     content_storage_record.key = cnmt.key;
     content_storage_record.storage_id = storage_id;
-    pbox->NewTransfer("Pushing application record"_i18n);
+    pbox->SetInstallTransfer("Pushing application record"_i18n);
 
     R_TRY(ns::PushApplicationRecord(std::addressof(ns_app), app_id, std::addressof(content_storage_record), 1));
     if (hosversionAtLeast(6,0,0)) {
@@ -1409,7 +1410,7 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
     R_SUCCEED();
 }
 
-Result InstallInternal(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
+Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
     auto yati = std::make_unique<Yati>(pbox, source);
     R_TRY(yati->Setup(override));
 
@@ -1459,7 +1460,7 @@ Result InstallInternal(ui::ProgressBox* pbox, source::Base* source, const contai
     R_SUCCEED();
 }
 
-Result InstallInternalStream(ui::ProgressBox* pbox, source::Base* source, container::Collections collections, const ConfigOverride& override) {
+Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, container::Collections collections, const ConfigOverride& override) {
     auto yati = std::make_unique<Yati>(pbox, source);
     R_TRY(yati->Setup(override));
 
@@ -1557,13 +1558,50 @@ Result InstallInternalStream(ui::ProgressBox* pbox, source::Base* source, contai
 
 } // namespace
 
-Result InstallFromFile(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override) {
+Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalysis& out) {
+    out = {};
+    R_TRY(source->GetOpenResult());
+
+    const auto ext = std::strrchr(path.s, '.');
+    R_UNLESS(ext, Result_YatiContainerNotFound);
+
+    std::unique_ptr<container::Base> container;
+    if (!strcasecmp(ext, ".nsp") || !strcasecmp(ext, ".nsz")) {
+        container = std::make_unique<container::Nsp>(source);
+    } else if (!strcasecmp(ext, ".xci") || !strcasecmp(ext, ".xcz")) {
+        container = std::make_unique<container::Xci>(source);
+    }
+    R_UNLESS(container, Result_YatiContainerNotFound);
+    R_TRY(container->GetCollections(out.collections));
+    R_UNLESS(!out.collections.empty(), Result_YatiContainerNotFound);
+
+    for (const auto& entry : out.collections) {
+        R_UNLESS(entry.offset >= 0 && entry.size >= 0, Result_YatiContainerNotFound);
+        out.source_size = std::max(out.source_size, entry.offset + entry.size);
+        if (EndsWithIC(entry.name, ".nca") || EndsWithIC(entry.name, ".ncz")) {
+            R_UNLESS(out.install_size <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
+            out.install_size += entry.size;
+            out.compressed |= EndsWithIC(entry.name, ".ncz");
+        }
+    }
+
+    if (out.compressed) {
+        constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
+        out.install_size = static_cast<s64>(static_cast<double>(out.install_size) * COMPRESSED_SIZE_FACTOR);
+        out.size_kind = AnalysisSizeKind::Estimate;
+        out.size_reason = "Compressed content size is estimated (x1.6)";
+    }
+    out.suggested_sd = ChooseInstallTarget(out.install_size, false);
+    R_SUCCEED();
+}
+
+Result InstallFromFile(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override) {
     auto source = std::make_unique<source::File>(fs, path);
     // auto source = std::make_unique<source::StreamFile>(fs, path, override); // enable for testing.
     return InstallFromSource(pbox, source.get(), path, override);
 }
 
-Result InstallFromSource(ui::ProgressBox* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override) {
+Result InstallFromSource(ui::InstallProgress* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override) {
     const auto ext = std::strrchr(path.s, '.');
     R_UNLESS(ext, Result_YatiContainerNotFound);
 
@@ -1578,7 +1616,7 @@ Result InstallFromSource(ui::ProgressBox* pbox, source::Base* source, const fs::
     return InstallFromContainer(pbox, container.get(), override);
 }
 
-Result InstallFromContainer(ui::ProgressBox* pbox, container::Base* container, const ConfigOverride& override) {
+Result InstallFromContainer(ui::InstallProgress* pbox, container::Base* container, const ConfigOverride& override) {
     container::Collections collections;
     R_TRY(container->GetCollections(collections));
     return InstallFromCollections(pbox, container->GetSource(), collections, override);
@@ -1630,7 +1668,7 @@ bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
     }
 }
 
-Result InstallFromCollections(ui::ProgressBox* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
+Result InstallFromCollections(ui::InstallProgress* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
     ConfigOverride dynamic_override = override;
     if (!dynamic_override.sd_card_install.has_value()) {
         s64 total_size = 0;
