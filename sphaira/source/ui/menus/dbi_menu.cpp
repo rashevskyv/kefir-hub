@@ -153,12 +153,14 @@ void Menu::UpdateActions() {
         SetActions(
             std::make_pair(Button::X, Action{"Select"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
+                if (m_install_requested) return;
                 if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size()) && R_SUCCEEDED(m_queue[m_index].analysis_result)) {
                     m_queue[m_index].selected = !m_queue[m_index].selected;
                 }
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
+                if (m_install_requested) return;
                 for (auto& entry : m_queue) {
                     if (R_SUCCEEDED(entry.analysis_result)) entry.selected = !entry.selected;
                 }
@@ -372,9 +374,9 @@ void Menu::ThreadFunction() {
             std::string name{};
             {
                 SCOPED_MUTEX(&m_mutex);
-                selected = m_queue[i].selected && R_SUCCEEDED(m_queue[i].analysis_result);
+                selected = m_queue[i].install_selected;
                 analysis = m_queue[i].analysis;
-                target = m_queue[i].target;
+                target = m_queue[i].install_target;
                 name = m_queue[i].file_name;
                 m_current_package = i;
                 m_current_title = name;
@@ -453,10 +455,20 @@ void Menu::StartInstall() {
         App::Push<OptionBox>("Selected packages may not fit after the configured reserve. Continue?"_i18n,
             "Cancel"_i18n, "Install selected"_i18n, 0, [this](auto choice) {
                 if (choice && *choice == 1) {
-                    m_install_requested = true;
+                    ConfirmInstallPlan();
                 }
             });
         return;
+    }
+    ConfirmInstallPlan();
+}
+
+void Menu::ConfirmInstallPlan() {
+    SCOPED_MUTEX(&m_mutex);
+    if (m_install_requested) return;
+    for (auto& entry : m_queue) {
+        entry.install_selected = entry.selected && R_SUCCEEDED(entry.analysis_result);
+        entry.install_target = entry.target;
     }
     m_install_requested = true;
 }
@@ -477,6 +489,7 @@ void Menu::CancelSession() {
 
 void Menu::CycleSelectedTarget() {
     SCOPED_MUTEX(&m_mutex);
+    if (m_install_requested) return;
     if (m_index < 0 || m_index >= static_cast<s64>(m_queue.size()) || R_FAILED(m_queue[m_index].analysis_result)) return;
     auto& target = m_queue[m_index].target;
     target = target == InstallTarget::Auto ? InstallTarget::Sd

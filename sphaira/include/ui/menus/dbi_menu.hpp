@@ -33,6 +33,8 @@ struct QueueEntry {
     bool selected{true};
     bool installed{};
     InstallTarget target{InstallTarget::Auto};
+    bool install_selected{};
+    InstallTarget install_target{InstallTarget::Auto};
 };
 
 struct Menu final : MenuBase, InstallProgress {
@@ -56,6 +58,7 @@ private:
     void UpdateActions();
     void CancelSession();
     void StartInstall();
+    void ConfirmInstallPlan();
     void CycleSelectedTarget();
     void AddLog(const std::string& text);
     static auto TargetName(InstallTarget target) -> std::string;
