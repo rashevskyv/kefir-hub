@@ -39,6 +39,14 @@ enum OrderType {
 
 using LayoutType = grid::LayoutType;
 
+// a folder the user previously confirmed via "Choose Folder...".
+struct RecentBackupDir {
+    bool stdio{};
+    std::string mount{};
+    std::string name{};
+    fs::FsPath path{};
+};
+
 void SignalChange();
 
 struct Menu final : grid::Menu {
@@ -93,7 +101,6 @@ private:
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void PromptSaveAction();
     void PromptSaveTypeOptions(bool restore);
-    void PromptAutoSyncToggle();
     void SyncSavesRemote();
     void SyncSavesRemoteWithLocation(const location::Entry& loc);
 
@@ -109,6 +116,8 @@ private:
     auto CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry>;
     void ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const;
     void MarkFiltersChanged();
+    auto GetRecentBackupDirs() -> std::vector<RecentBackupDir>;
+    void AddRecentBackupDir(const RecentBackupDir& dir);
 
 private:
     static constexpr inline const char* INI_SECTION = "saves";
@@ -141,6 +150,16 @@ private:
     option::OptionBool m_auto_backup_on_restore{INI_SECTION, "auto_backup_on_restore", true};
     option::OptionBool m_compress_save_backup{INI_SECTION, "compress_save_backup", true};
     option::OptionBool m_save_autosync{INI_SECTION, "save_autosync", true};
+
+    // last folders confirmed via "Choose Folder...", newest first.
+    static constexpr inline size_t RECENT_BACKUP_DIR_MAX = 5;
+    std::array<option::OptionString, RECENT_BACKUP_DIR_MAX> m_recent_backup_dirs{
+        option::OptionString{INI_SECTION, "recent_backup_dir_0", ""},
+        option::OptionString{INI_SECTION, "recent_backup_dir_1", ""},
+        option::OptionString{INI_SECTION, "recent_backup_dir_2", ""},
+        option::OptionString{INI_SECTION, "recent_backup_dir_3", ""},
+        option::OptionString{INI_SECTION, "recent_backup_dir_4", ""},
+    };
 };
 
 } // namespace sphaira::ui::menu::save

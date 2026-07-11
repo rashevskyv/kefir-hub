@@ -88,18 +88,22 @@ auto SidebarEntryBase::OnFocusLost() noexcept -> void {
 void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
     const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
+    const float mid_y = m_pos.y + (m_pos.h / 2.f);
 
-    // measure right value width to know how much space it occupies
+    // measure right value width, but never let it take more than roughly
+    // half the row - a long value (e.g. a backup folder path, see id 52)
+    // must not push the label off-screen or draw over it.
     float bounds[4];
     nvgFontSize(vg, 20);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
     nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, bounds);
-    const float right_w = bounds[2];
+    const float max_value_w = std::max(80.f, (m_pos.w - 30.f) * 0.45f);
+    const float right_w = std::min(bounds[2], max_value_w);
 
-    // right value drawn statically at the right edge
+    // right value: scrolls on focus like the label does when it overflows
+    // its bounded width, instead of drawing statically past the row edge.
     const float right_x = m_pos.x + m_pos.w - 15.f - right_w;
-    const float mid_y = m_pos.y + (m_pos.h / 2.f);
-    gfx::drawText(vg, Vec2{right_x, mid_y}, 20.f, value_colour, right.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    m_scolling_value.Draw(vg, HasFocus(), right_x, mid_y, right_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
 
     // left label scrolls in the remaining space
     const float max_label_w = m_pos.w - 30.f - right_w - (right_w > 0.f ? 10.f : 0.f);

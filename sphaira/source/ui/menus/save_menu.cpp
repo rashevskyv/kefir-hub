@@ -649,6 +649,62 @@ auto MakeLocationLabel(const std::string& name, const fs::FsPath& backup_root) -
     return name + ": " + backup_root.toString();
 }
 
+// "sd|<mount>|<name>|<path>" or "stdio|<mount>|<name>|<path>".
+// mount never contains '|', the path is taken from the last separator,
+// so a '|' inside the display name still round-trips.
+auto SerializeRecentBackupDir(const RecentBackupDir& d) -> std::string {
+    return std::string{d.stdio ? "stdio" : "sd"} + "|" + d.mount + "|" + d.name + "|" + d.path.toString();
+}
+
+// identity of a location for de-duplication: display name is ignored.
+auto MakeLocationKey(const RecentBackupDir& d) -> std::string {
+    return std::string{d.stdio ? "stdio|" : "sd|"} + d.mount + "|" + d.path.toString();
+}
+
+auto ParseRecentBackupDir(const std::string& s, RecentBackupDir& out) -> bool {
+    const auto type_end = s.find('|');
+    const auto path_start = s.rfind('|');
+    if (type_end == std::string::npos || path_start <= type_end) {
+        return false;
+    }
+
+    const auto type = s.substr(0, type_end);
+    if (type != "sd" && type != "stdio") {
+        return false;
+    }
+
+    const auto mount_end = s.find('|', type_end + 1);
+    if (mount_end == std::string::npos || mount_end > path_start) {
+        return false;
+    }
+
+    out.stdio = type == "stdio";
+    out.mount = s.substr(type_end + 1, mount_end - type_end - 1);
+    out.name = s.substr(mount_end + 1, path_start - mount_end - 1);
+    out.path = s.substr(path_start + 1);
+    if (out.path.empty() || (out.stdio && out.mount.empty())) {
+        return false;
+    }
+
+    return true;
+}
+
+auto MakeDumpLocationFromRecent(const RecentBackupDir& d) -> dump::DumpLocation {
+    dump::DumpLocation location{};
+    if (d.stdio) {
+        location.entry = {dump::DumpLocationType_Stdio, 0};
+
+        location::StdioEntry stdio{};
+        stdio.mount = d.mount;
+        stdio.name = d.name;
+        location.stdio.emplace_back(std::move(stdio));
+    } else {
+        location.entry = {dump::DumpLocationType_SdCard, 0};
+    }
+
+    return location;
+}
+
 void FreeEntry(NVGcontext* vg, Entry& e) {
     nvgDeleteImage(vg, e.image);
     e.image = 0;
@@ -725,6 +781,44 @@ Menu::~Menu() {
 
 void Menu::MarkFiltersChanged() {
     m_dirty = true;
+}
+
+auto Menu::GetRecentBackupDirs() -> std::vector<RecentBackupDir> {
+    std::vector<RecentBackupDir> out;
+    for (auto& opt : m_recent_backup_dirs) {
+        RecentBackupDir dir;
+        if (ParseRecentBackupDir(opt.Get(), dir)) {
+            out.emplace_back(std::move(dir));
+        }
+    }
+
+    return out;
+}
+
+void Menu::AddRecentBackupDir(const RecentBackupDir& dir) {
+    const auto key = SerializeRecentBackupDir(dir);
+
+    // move-to-front, drop duplicates, keep at most RECENT_BACKUP_DIR_MAX.
+    std::vector<std::string> keys{key};
+    for (auto& opt : m_recent_backup_dirs) {
+        const auto v = opt.Get();
+        if (v.empty() || v == key) {
+            continue;
+        }
+
+        RecentBackupDir parsed;
+        if (!ParseRecentBackupDir(v, parsed)) {
+            continue;
+        }
+
+        if (keys.size() < m_recent_backup_dirs.size()) {
+            keys.emplace_back(v);
+        }
+    }
+
+    for (size_t i = 0; i < m_recent_backup_dirs.size(); i++) {
+        m_recent_backup_dirs[i].Set(i < keys.size() ? keys[i] : "");
+    }
 }
 
 void Menu::ToggleCurrentSelection() {
@@ -1350,36 +1444,13 @@ void Menu::PromptSaveAction() {
     PopupList::Items items;
     items.emplace_back("Backup"_i18n);
     items.emplace_back("Restore"_i18n);
-    items.emplace_back("Sync with remote"_i18n);
-    items.emplace_back(m_save_autosync.Get() ? "Auto-sync after backup: On"_i18n : "Auto-sync after backup: Off"_i18n);
 
     App::Push<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
         if (!op_index) {
             return;
         }
 
-        if (*op_index == 2) {
-            SyncSavesRemote();
-        } else if (*op_index == 3) {
-            PromptAutoSyncToggle();
-        } else {
-            PromptSaveTypeOptions(*op_index == 1);
-        }
-    });
-}
-
-void Menu::PromptAutoSyncToggle() {
-    const auto enabled = m_save_autosync.Get();
-    const auto scope = "After each Backup, auto-sync uploads only the newly created backup ZIP to WebDAV. It does not sync your whole backup library - use 'Sync with remote' to copy all missing backups both ways."_i18n;
-    const auto question = enabled ? "Disable auto-sync?"_i18n : "Enable auto-sync?"_i18n;
-
-    App::Push<OptionBox>(scope + "\n\n" + question, "Cancel"_i18n, enabled ? "Disable"_i18n : "Enable"_i18n, 0, [this, enabled](auto op_index){
-        if (!op_index || *op_index != 1) {
-            return;
-        }
-
-        m_save_autosync.Set(!enabled);
-        App::Notify(!enabled ? "Auto-sync enabled."_i18n : "Auto-sync disabled."_i18n);
+        PromptSaveTypeOptions(*op_index == 1);
     });
 }
 
@@ -1475,23 +1546,41 @@ void Menu::PromptSaveTypeOptions(bool restore) {
     }
 
     const fs::FsPath default_backup_root{"/dumps"};
+    const auto stdio_locations = location::GetStdio(true);
+
+    // de-dup key set: the default /dumps entry and every stdio mount are
+    // never repeated by the recent-folder history below.
+    std::vector<fs::FsPath> stdio_backup_roots(stdio_locations.size());
+    std::set<std::string> location_keys;
+    location_keys.insert(MakeLocationKey(RecentBackupDir{false, "", "", default_backup_root}));
+    for (size_t i = 0; i < stdio_locations.size(); i++) {
+        stdio_backup_roots[i] = stdio_locations[i].dump_path.empty() ? default_backup_root : fs::FsPath{stdio_locations[i].dump_path};
+        location_keys.insert(MakeLocationKey(RecentBackupDir{true, stdio_locations[i].mount, "", stdio_backup_roots[i]}));
+    }
+
     state->locations.emplace_back(MakeSdCardDumpLocation());
     state->location_base_paths.emplace_back(default_backup_root);
-    state->location_items.emplace_back(MakeLocationLabel("microSD card"_i18n, default_backup_root));
+    state->location_items.emplace_back(MakeLocationLabel("SD"_i18n, default_backup_root));
 
-    const auto stdio_locations = location::GetStdio(true);
+    // up to 5 most recently confirmed "Choose Folder..." picks, newest first.
+    for (const auto& dir : GetRecentBackupDirs()) {
+        if (!location_keys.insert(MakeLocationKey(dir)).second) {
+            continue;
+        }
+
+        state->locations.emplace_back(MakeDumpLocationFromRecent(dir));
+        state->location_base_paths.emplace_back(dir.path);
+        state->location_items.emplace_back(MakeLocationLabel(dir.stdio ? dir.name : "SD"_i18n, dir.path));
+    }
+
     for (s32 i = 0; i < static_cast<s32>(stdio_locations.size()); i++) {
         dump::DumpLocation location{};
         location.entry = {dump::DumpLocationType_Stdio, i};
         location.stdio = stdio_locations;
 
-        fs::FsPath backup_root = default_backup_root;
-        if (!stdio_locations[i].dump_path.empty()) {
-            backup_root = stdio_locations[i].dump_path;
-        }
         state->locations.emplace_back(std::move(location));
-        state->location_base_paths.emplace_back(backup_root);
-        state->location_items.emplace_back(MakeLocationLabel(stdio_locations[i].name, backup_root));
+        state->location_base_paths.emplace_back(stdio_backup_roots[i]);
+        state->location_items.emplace_back(MakeLocationLabel(stdio_locations[i].name, stdio_backup_roots[i]));
     }
 
     auto options = std::make_unique<Sidebar>(restore ? "Restore Options"_i18n : "Backup Options"_i18n, Sidebar::Side::RIGHT);
@@ -1560,7 +1649,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             }
 
             App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
+                filepicker::LocationCallback{[this, state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
                     const auto backup_root = NormalizeBackupRoot(path, fs_entry);
                     const auto label = MakeLocationLabel(fs_entry.name.toString(), backup_root);
 
@@ -1569,6 +1658,15 @@ void Menu::PromptSaveTypeOptions(bool restore) {
                     state->location_items.emplace_back(label);
                     state->location_index = static_cast<s64>(state->location_items.size() - 1);
                     location_entry->SetValue(label);
+
+                    const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
+                    AddRecentBackupDir(RecentBackupDir{
+                        is_stdio,
+                        is_stdio ? fs_entry.root.toString() : "",
+                        fs_entry.name.toString(),
+                        backup_root,
+                    });
+
                     return true;
                 }},
                 std::vector<std::string>{},
@@ -1577,6 +1675,18 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             );
         }, state->location_index);
     });
+
+    if (!restore) {
+        options->Add<SidebarEntryHeader>("SYNC"_i18n);
+
+        options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
+            SyncSavesRemote();
+        }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared."_i18n);
+
+        options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
+            m_save_autosync.Set(v_out);
+        }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that."_i18n);
+    }
 
     const auto account_available = state->type_available[SaveTypeIndex(FsSaveDataType_Account)];
     if (account_available && m_accounts.size() > 1) {
@@ -2378,41 +2488,47 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             }
         }
 
-        // phase 1: local -> WebDAV.
+        // phase 1: local -> WebDAV. the bar tracks files completed out of the
+        // whole upload phase, not bytes of the current file - it only moves
+        // forward once a file finishes, it never resets per file.
+        if (!uploads.empty()) {
+            pbox->NewTransfer("Local → WebDAV"_i18n);
+            pbox->UpdateTransfer(0, static_cast<s64>(uploads.size()));
+        }
         for (size_t i = 0; i < uploads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
 
             const auto& u = uploads[i];
             set_entry_visuals(seeds[u.entry_index]);
-
-            char counter[64];
-            std::snprintf(counter, sizeof(counter), " (%zu/%zu): ", i + 1, uploads.size());
-            pbox->NewTransfer("Local → WebDAV"_i18n + counter + u.name);
+            pbox->SetActionName("Local → WebDAV"_i18n + ": " + u.name);
 
             curl::Api api(CURL_LOCATION_TO_API(loc));
             api.SetUpload(true);
             api.SetOption(curl::Path{u.path});
             api.SetOption(curl::UploadInfo{u.remote_rel + "/" + u.name});
-            api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
 
             auto res = curl::FromFile(api);
             if (!res.success) {
                 log_write("[SYNC] failed to upload: %s\n", u.name.c_str());
                 R_THROW(Result_SaveSyncFailed);
             }
+
+            pbox->UpdateTransfer(static_cast<s64>(i + 1), static_cast<s64>(uploads.size()));
         }
 
-        // phase 2: WebDAV -> SD, only after every upload has finished.
+        // phase 2: WebDAV -> SD, only after every upload has finished. its own
+        // separate bar, again counting completed files rather than bytes.
+        if (!downloads.empty()) {
+            pbox->NewTransfer("WebDAV → SD"_i18n);
+            pbox->UpdateTransfer(0, static_cast<s64>(downloads.size()));
+        }
         for (size_t i = 0; i < downloads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
 
             const auto& d = downloads[i];
             const auto& e = seeds[d.entry_index];
             set_entry_visuals(e);
-
-            char counter[64];
-            std::snprintf(counter, sizeof(counter), " (%zu/%zu): ", i + 1, downloads.size());
-            pbox->NewTransfer("WebDAV → SD"_i18n + counter + d.name);
+            pbox->SetActionName("WebDAV → SD"_i18n + ": " + d.name);
 
             // dbi-named backups go into the dbi layout: <game>/<YYYYMMDD>/<file>.
             fs::FsPath local_file;
@@ -2431,7 +2547,6 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             curl::Api api(CURL_LOCATION_TO_API(loc));
             api.SetOption(curl::Url{loc.url + "/" + d.remote_rel + "/" + d.name});
             api.SetOption(curl::Path{temp_file});
-            api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
 
             auto res = curl::ToFile(api);
             if (!res.success) {
@@ -2442,6 +2557,8 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
 
             sd_fs.DeleteFile(local_file);
             R_TRY(sd_fs.RenameFile(temp_file, local_file));
+
+            pbox->UpdateTransfer(static_cast<s64>(i + 1), static_cast<s64>(downloads.size()));
         }
 
         R_SUCCEED();
