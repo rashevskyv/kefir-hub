@@ -93,6 +93,7 @@ private:
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void PromptSaveAction();
     void PromptSaveTypeOptions(bool restore);
+    void PromptAutoSyncToggle();
     void SyncSavesRemote();
     void SyncSavesRemoteWithLocation(const location::Entry& loc);
 

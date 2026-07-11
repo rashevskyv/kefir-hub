@@ -994,10 +994,6 @@ void Menu::DisplaySaveOptions() {
         options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
             m_compress_save_backup.Set(v_out);
         }, "Save backups as compressed ZIP archives to reduce disk space."_i18n);
-
-        options->Add<SidebarEntryBool>("Auto-sync saves after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
-            m_save_autosync.Set(v_out);
-        }, "Automatically upload backups to remote WebDAV after local backup."_i18n);
     }, "Access advanced backup and restore settings."_i18n);
 }
 
@@ -1355,6 +1351,7 @@ void Menu::PromptSaveAction() {
     items.emplace_back("Backup"_i18n);
     items.emplace_back("Restore"_i18n);
     items.emplace_back("Sync with remote"_i18n);
+    items.emplace_back(m_save_autosync.Get() ? "Auto-sync after backup: On"_i18n : "Auto-sync after backup: Off"_i18n);
 
     App::Push<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
         if (!op_index) {
@@ -1363,9 +1360,26 @@ void Menu::PromptSaveAction() {
 
         if (*op_index == 2) {
             SyncSavesRemote();
+        } else if (*op_index == 3) {
+            PromptAutoSyncToggle();
         } else {
             PromptSaveTypeOptions(*op_index == 1);
         }
+    });
+}
+
+void Menu::PromptAutoSyncToggle() {
+    const auto enabled = m_save_autosync.Get();
+    const auto scope = "After each Backup, auto-sync uploads only the newly created backup ZIP to WebDAV. It does not sync your whole backup library - use 'Sync with remote' to copy all missing backups both ways."_i18n;
+    const auto question = enabled ? "Disable auto-sync?"_i18n : "Enable auto-sync?"_i18n;
+
+    App::Push<OptionBox>(scope + "\n\n" + question, "Cancel"_i18n, enabled ? "Disable"_i18n : "Enable"_i18n, 0, [this, enabled](auto op_index){
+        if (!op_index || *op_index != 1) {
+            return;
+        }
+
+        m_save_autosync.Set(!enabled);
+        App::Notify(!enabled ? "Auto-sync enabled."_i18n : "Auto-sync disabled."_i18n);
     });
 }
 
@@ -2259,19 +2273,27 @@ void Menu::SyncSavesRemote() {
         return;
     }
 
-    if (webdav_locations.size() == 1) {
-        SyncSavesRemoteWithLocation(webdav_locations.front());
-    } else {
-        PopupList::Items items;
-        for (const auto& loc : webdav_locations) {
-            items.emplace_back(loc.name);
+    const auto message = "Sync backup ZIPs of the currently selected saves in both directions. Every archive missing on the other side will be copied: new local backups are uploaded to WebDAV, new remote backups are downloaded to the SD card. Files with the same name are not overwritten and are not compared by date or content. After downloading from remote, use Restore to apply a backup."_i18n + "\n\n" + "Start sync?"_i18n;
+
+    App::Push<OptionBox>(message, "Cancel"_i18n, "Sync"_i18n, 0, [this, webdav_locations](auto op_index){
+        if (!op_index || *op_index != 1) {
+            return;
         }
-        App::Push<PopupList>("Select Sync Location"_i18n, items, [this, webdav_locations](auto op_index) {
-            if (op_index) {
-                SyncSavesRemoteWithLocation(webdav_locations[*op_index]);
+
+        if (webdav_locations.size() == 1) {
+            SyncSavesRemoteWithLocation(webdav_locations.front());
+        } else {
+            PopupList::Items items;
+            for (const auto& loc : webdav_locations) {
+                items.emplace_back(loc.name);
             }
-        });
-    }
+            App::Push<PopupList>("Select Sync Location"_i18n, items, [this, webdav_locations](auto op_index) {
+                if (op_index) {
+                    SyncSavesRemoteWithLocation(webdav_locations[*op_index]);
+                }
+            });
+        }
+    });
 }
 
 void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
@@ -2284,7 +2306,24 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
         fs::FsNativeSd sd_fs;
         const fs::FsPath backup_root{"/dumps"};
 
-        for (const auto& e : seeds) {
+        // full sync plan, built before any transfer starts. uploads run as one
+        // phase with its own counter, downloads follow as a second phase.
+        struct UploadItem {
+            size_t entry_index;
+            std::string name;
+            fs::FsPath path;
+            std::string remote_rel;
+        };
+        struct DownloadItem {
+            size_t entry_index;
+            std::string name;
+            std::string remote_rel;
+            fs::FsPath local_path;
+        };
+        std::vector<UploadItem> uploads;
+        std::vector<DownloadItem> downloads;
+
+        const auto set_entry_visuals = [pbox](const Entry& e) {
             pbox->SetTitle(e.GetName());
             if (e.image) {
                 pbox->SetImage(e.image);
@@ -2293,6 +2332,13 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             } else {
                 pbox->SetImage(0);
             }
+        };
+
+        for (size_t i = 0; i < seeds.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+
+            const auto& e = seeds[i];
+            set_entry_visuals(e);
 
             const auto local_base = BuildSaveBasePath(e, false, backup_root);
             const auto local_path = fs::AppendPath(sd_fs.Root(), local_base);
@@ -2316,69 +2362,86 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             pbox->NewTransfer("Listing remote files..."_i18n);
             const auto remote_files = curl::ListWebdav(loc.url, loc.user, loc.pass, remote_rel, loc.bearer, loc.pub_key, loc.priv_key, loc.port);
 
-            std::vector<std::pair<std::string, fs::FsPath>> to_upload;
             for (const auto& [fname, fpath] : local_files) {
                 if (!fname.ends_with(".zip")) continue;
                 if (std::ranges::find(remote_files, fname) != remote_files.end()) continue;
-                if (std::ranges::find_if(to_upload, [&](const auto& u){ return u.first == fname; }) != to_upload.end()) continue;
-                to_upload.emplace_back(fname, fpath);
+                if (std::ranges::find_if(uploads, [&](const auto& u){ return u.entry_index == i && u.name == fname; }) != uploads.end()) continue;
+                uploads.emplace_back(i, fname, fpath, remote_rel);
             }
 
-            std::vector<std::string> to_download;
             for (const auto& f : remote_files) {
                 if (!f.ends_with(".zip")) continue;
                 const auto found = std::ranges::find_if(local_files, [&](const auto& l){ return l.first == f; }) != local_files.end();
                 if (!found) {
-                    to_download.push_back(f);
+                    downloads.emplace_back(i, f, remote_rel, local_path);
                 }
             }
+        }
 
-            for (const auto& [fname, fpath] : to_upload) {
-                pbox->NewTransfer("Uploading: "_i18n + fname);
+        // phase 1: local -> WebDAV.
+        for (size_t i = 0; i < uploads.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
 
-                curl::Api api(CURL_LOCATION_TO_API(loc));
-                api.SetUpload(true);
-                api.SetOption(curl::Path{fpath});
-                api.SetOption(curl::UploadInfo{remote_rel + "/" + fname});
+            const auto& u = uploads[i];
+            set_entry_visuals(seeds[u.entry_index]);
 
-                auto res = curl::FromFile(api);
-                if (!res.success) {
-                    log_write("[SYNC] failed to upload: %s\n", fname.c_str());
-                    R_THROW(Result_SaveSyncFailed);
-                }
+            char counter[64];
+            std::snprintf(counter, sizeof(counter), " (%zu/%zu): ", i + 1, uploads.size());
+            pbox->NewTransfer("Local → WebDAV"_i18n + counter + u.name);
+
+            curl::Api api(CURL_LOCATION_TO_API(loc));
+            api.SetUpload(true);
+            api.SetOption(curl::Path{u.path});
+            api.SetOption(curl::UploadInfo{u.remote_rel + "/" + u.name});
+            api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+
+            auto res = curl::FromFile(api);
+            if (!res.success) {
+                log_write("[SYNC] failed to upload: %s\n", u.name.c_str());
+                R_THROW(Result_SaveSyncFailed);
+            }
+        }
+
+        // phase 2: WebDAV -> SD, only after every upload has finished.
+        for (size_t i = 0; i < downloads.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+
+            const auto& d = downloads[i];
+            const auto& e = seeds[d.entry_index];
+            set_entry_visuals(e);
+
+            char counter[64];
+            std::snprintf(counter, sizeof(counter), " (%zu/%zu): ", i + 1, downloads.size());
+            pbox->NewTransfer("WebDAV → SD"_i18n + counter + d.name);
+
+            // dbi-named backups go into the dbi layout: <game>/<YYYYMMDD>/<file>.
+            fs::FsPath local_file;
+            if (!IsSystemLikeSave(e.save_data_type) && IsDbiBackupName(e, d.name.c_str()) && ParseDbiBackupNameTimestamp(d.name)) {
+                fs::FsPath dbi_dir;
+                std::snprintf(dbi_dir, sizeof(dbi_dir), "%s/%s/%.8s",
+                    DBI_SAVES_PATH, BuildDbiGameFolderName(e).s, d.name.c_str() + 19);
+                local_file = fs::AppendPath(fs::AppendPath(sd_fs.Root(), dbi_dir), d.name);
+            } else {
+                local_file = fs::AppendPath(d.local_path, d.name);
+            }
+            sd_fs.CreateDirectoryRecursivelyWithPath(local_file);
+
+            const auto temp_file = local_file + ".temp";
+
+            curl::Api api(CURL_LOCATION_TO_API(loc));
+            api.SetOption(curl::Url{loc.url + "/" + d.remote_rel + "/" + d.name});
+            api.SetOption(curl::Path{temp_file});
+            api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+
+            auto res = curl::ToFile(api);
+            if (!res.success) {
+                log_write("[SYNC] failed to download: %s\n", d.name.c_str());
+                sd_fs.DeleteFile(temp_file);
+                R_THROW(Result_SaveSyncFailed);
             }
 
-            for (const auto& f : to_download) {
-                pbox->NewTransfer("Downloading: "_i18n + f);
-
-                // dbi-named backups go into the dbi layout: <game>/<YYYYMMDD>/<file>.
-                fs::FsPath local_file;
-                if (!IsSystemLikeSave(e.save_data_type) && IsDbiBackupName(e, f.c_str()) && ParseDbiBackupNameTimestamp(f)) {
-                    fs::FsPath dbi_dir;
-                    std::snprintf(dbi_dir, sizeof(dbi_dir), "%s/%s/%.8s",
-                        DBI_SAVES_PATH, BuildDbiGameFolderName(e).s, f.c_str() + 19);
-                    local_file = fs::AppendPath(fs::AppendPath(sd_fs.Root(), dbi_dir), f);
-                } else {
-                    local_file = fs::AppendPath(local_path, f);
-                }
-                sd_fs.CreateDirectoryRecursivelyWithPath(local_file);
-
-                const auto temp_file = local_file + ".temp";
-
-                curl::Api api(CURL_LOCATION_TO_API(loc));
-                api.SetOption(curl::Url{loc.url + "/" + remote_rel + "/" + f});
-                api.SetOption(curl::Path{temp_file});
-
-                auto res = curl::ToFile(api);
-                if (!res.success) {
-                    log_write("[SYNC] failed to download: %s\n", f.c_str());
-                    sd_fs.DeleteFile(temp_file);
-                    R_THROW(Result_SaveSyncFailed);
-                }
-
-                sd_fs.DeleteFile(local_file);
-                R_TRY(sd_fs.RenameFile(temp_file, local_file));
-            }
+            sd_fs.DeleteFile(local_file);
+            R_TRY(sd_fs.RenameFile(temp_file, local_file));
         }
 
         R_SUCCEED();
