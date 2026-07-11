@@ -649,10 +649,16 @@ auto MakeLocationLabel(const std::string& name, const fs::FsPath& backup_root) -
     return name + ": " + backup_root.toString();
 }
 
-// compact URI-style label for the SD card, e.g. "sd:///dumps" - shorter than
+// compact URI-style label for the SD card, e.g. "sd://dumps" - shorter than
 // the old "microSD card: /dumps" and matches the existing "webdav://" style.
+// the path's leading '/' is dropped so "sd://" + "dumps" stays a two-slash
+// scheme instead of tripling up with the path's own root slash.
 auto MakeSdLocationLabel(const fs::FsPath& backup_root) -> std::string {
-    return "sd://" + backup_root.toString();
+    auto path = backup_root.toString();
+    if (!path.empty() && path.front() == '/') {
+        path.erase(0, 1);
+    }
+    return "sd://" + path;
 }
 
 // "sd|<mount>|<name>|<path>" or "stdio|<mount>|<name>|<path>".
