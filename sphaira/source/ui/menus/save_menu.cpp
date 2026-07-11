@@ -1083,6 +1083,16 @@ void Menu::DisplaySaveOptions() {
         DisplayDataTypeOptions();
     }, "Choose which save data types to display."_i18n);
 
+    options->Add<SidebarEntryHeader>("SYNC"_i18n);
+
+    options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
+        SyncSavesRemote();
+    }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared."_i18n);
+
+    options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
+        m_save_autosync.Set(v_out);
+    }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that."_i18n);
+
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -1657,7 +1667,8 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             App::Push<filepicker::Menu>(
                 filepicker::LocationCallback{[this, state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
                     const auto backup_root = NormalizeBackupRoot(path, fs_entry);
-                    const auto label = MakeLocationLabel(fs_entry.name.toString(), backup_root);
+                    const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
+                    const auto label = is_stdio ? MakeLocationLabel(fs_entry.name.toString(), backup_root) : MakeSdLocationLabel(backup_root);
 
                     state->locations.emplace_back(MakeDumpLocationFromFsEntry(fs_entry));
                     state->location_base_paths.emplace_back(backup_root);
@@ -1665,7 +1676,6 @@ void Menu::PromptSaveTypeOptions(bool restore) {
                     state->location_index = static_cast<s64>(state->location_items.size() - 1);
                     location_entry->SetValue(label);
 
-                    const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
                     AddRecentBackupDir(RecentBackupDir{
                         is_stdio,
                         is_stdio ? fs_entry.root.toString() : "",
@@ -1681,18 +1691,6 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             );
         }, state->location_index);
     });
-
-    if (!restore) {
-        options->Add<SidebarEntryHeader>("SYNC"_i18n);
-
-        options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
-            SyncSavesRemote();
-        }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared."_i18n);
-
-        options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
-            m_save_autosync.Set(v_out);
-        }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that."_i18n);
-    }
 
     const auto account_available = state->type_available[SaveTypeIndex(FsSaveDataType_Account)];
     if (account_available && m_accounts.size() > 1) {
@@ -2494,12 +2492,34 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             }
         }
 
-        // phase 1: local -> WebDAV. the bar tracks files completed out of the
-        // whole upload phase, not bytes of the current file - it only moves
-        // forward once a file finishes, it never resets per file.
+        // each phase's bar spans PROGRESS_SCALE units per file: it advances
+        // smoothly with the current file's actual byte progress (so it's
+        // never frozen while data is moving), but it never resets to 0% when
+        // a new file starts - the bar only ever climbs across the whole phase.
+        constexpr s64 PROGRESS_SCALE = 1'000'000;
+
+        const auto make_progress_cb = [pbox](s64 files_done, s64 total_units) {
+            return curl::OnProgress{[pbox, files_done, total_units](s64 dltotal, s64 dlnow, s64 ultotal, s64 ulnow) -> bool {
+                if (pbox->ShouldExit()) {
+                    return false;
+                }
+
+                const auto total = ultotal ? ultotal : dltotal;
+                const auto now = ultotal ? ulnow : dlnow;
+                s64 file_units = 0;
+                if (total > 0) {
+                    file_units = static_cast<s64>((static_cast<double>(now) / static_cast<double>(total)) * PROGRESS_SCALE);
+                }
+
+                pbox->UpdateTransfer(files_done * PROGRESS_SCALE + file_units, total_units);
+                return true;
+            }};
+        };
+
+        // phase 1: local -> WebDAV.
         if (!uploads.empty()) {
             pbox->NewTransfer("Local → WebDAV"_i18n);
-            pbox->UpdateTransfer(0, static_cast<s64>(uploads.size()));
+            pbox->UpdateTransfer(0, static_cast<s64>(uploads.size()) * PROGRESS_SCALE);
         }
         for (size_t i = 0; i < uploads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
@@ -2512,6 +2532,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             api.SetUpload(true);
             api.SetOption(curl::Path{u.path});
             api.SetOption(curl::UploadInfo{u.remote_rel + "/" + u.name});
+            api.SetOption(make_progress_cb(static_cast<s64>(i), static_cast<s64>(uploads.size()) * PROGRESS_SCALE));
 
             auto res = curl::FromFile(api);
             if (!res.success) {
@@ -2519,14 +2540,14 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 R_THROW(Result_SaveSyncFailed);
             }
 
-            pbox->UpdateTransfer(static_cast<s64>(i + 1), static_cast<s64>(uploads.size()));
+            pbox->UpdateTransfer(static_cast<s64>(i + 1) * PROGRESS_SCALE, static_cast<s64>(uploads.size()) * PROGRESS_SCALE);
         }
 
         // phase 2: WebDAV -> SD, only after every upload has finished. its own
-        // separate bar, again counting completed files rather than bytes.
+        // separate bar with the same smooth, non-resetting behaviour.
         if (!downloads.empty()) {
             pbox->NewTransfer("WebDAV → SD"_i18n);
-            pbox->UpdateTransfer(0, static_cast<s64>(downloads.size()));
+            pbox->UpdateTransfer(0, static_cast<s64>(downloads.size()) * PROGRESS_SCALE);
         }
         for (size_t i = 0; i < downloads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
@@ -2553,6 +2574,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             curl::Api api(CURL_LOCATION_TO_API(loc));
             api.SetOption(curl::Url{loc.url + "/" + d.remote_rel + "/" + d.name});
             api.SetOption(curl::Path{temp_file});
+            api.SetOption(make_progress_cb(static_cast<s64>(i), static_cast<s64>(downloads.size()) * PROGRESS_SCALE));
 
             auto res = curl::ToFile(api);
             if (!res.success) {
@@ -2564,7 +2586,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             sd_fs.DeleteFile(local_file);
             R_TRY(sd_fs.RenameFile(temp_file, local_file));
 
-            pbox->UpdateTransfer(static_cast<s64>(i + 1), static_cast<s64>(downloads.size()));
+            pbox->UpdateTransfer(static_cast<s64>(i + 1) * PROGRESS_SCALE, static_cast<s64>(downloads.size()) * PROGRESS_SCALE);
         }
 
         R_SUCCEED();
