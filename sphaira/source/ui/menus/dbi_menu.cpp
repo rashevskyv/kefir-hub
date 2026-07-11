@@ -43,7 +43,6 @@ auto IsDbiSessionError(Result rc) -> bool {
         case Result_UsbBadTransferSize:
         case Result_UsbEmptyTransferSize:
         case Result_UsbOverflowTransferSize:
-        case Result_UsbBadTotalSize:
         case Result_UsbDsBadDeviceSpeed:
         case KERNELRESULT(TimedOut):
             return true;
