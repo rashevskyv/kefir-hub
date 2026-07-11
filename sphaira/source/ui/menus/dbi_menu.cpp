@@ -104,16 +104,16 @@ void Menu::UpdateActions() {
                     if (R_SUCCEEDED(entry.analysis_result)) entry.selected = any_unselected;
                 }
             }}),
-            std::make_pair(Button::Y, Action{"Install target"_i18n, [this]() { CycleTarget(); })),
-            std::make_pair(Button::START, Action{"Install selected"_i18n, [this]() { StartInstall(); })),
-            std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }))
+            std::make_pair(Button::Y, Action{"Install target"_i18n, [this]() { CycleTarget(); }}),
+            std::make_pair(Button::START, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
+            std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );
     } else if (state == State::Installing) {
         SetAction(Button::B, Action{"Cancel remaining"_i18n, [this]() { CancelSession(); }});
     } else if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
-        SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }));
+        SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
     } else {
-        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }));
+        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
     }
     m_actions_dirty = false;
 }
