@@ -661,6 +661,32 @@ auto MakeSdLocationLabel(const fs::FsPath& backup_root) -> std::string {
     return "sd://" + path;
 }
 
+// each phase/batch of a WebDAV transfer gets a PROGRESS_SCALE budget per
+// file: the callback maps the current file's real dlnow/dltotal (or
+// ulnow/ultotal) into a fraction of that budget added on top of already
+// finished files. This way the bar moves live during every transfer (it's
+// never frozen while data is moving) and never resets to 0% when a new
+// file starts - it only ever climbs across the whole batch.
+constexpr s64 SYNC_PROGRESS_SCALE = 1'000'000;
+
+auto MakeAggregateProgressCb(ProgressBox* pbox, s64 files_done, s64 total_units) -> curl::OnProgress {
+    return curl::OnProgress{[pbox, files_done, total_units](s64 dltotal, s64 dlnow, s64 ultotal, s64 ulnow) -> bool {
+        if (pbox->ShouldExit()) {
+            return false;
+        }
+
+        const auto total = ultotal ? ultotal : dltotal;
+        const auto now = ultotal ? ulnow : dlnow;
+        s64 file_units = 0;
+        if (total > 0) {
+            file_units = static_cast<s64>((static_cast<double>(now) / static_cast<double>(total)) * SYNC_PROGRESS_SCALE);
+        }
+
+        pbox->UpdateTransfer(files_done * SYNC_PROGRESS_SCALE + file_units, total_units);
+        return true;
+    }};
+}
+
 // "sd|<mount>|<name>|<path>" or "stdio|<mount>|<name>|<path>".
 // mount never contains '|', the path is taken from the last separator,
 // so a '|' inside the display name still round-trips.
@@ -1825,7 +1851,15 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                     const auto& loc = webdav_locations.front();
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, backup_root](auto pbox) mutable -> Result {
                         fs::FsNativeSd sd_fs;
-                        for (auto& e : entries) {
+                        const auto total_units = static_cast<s64>(entries.size()) * SYNC_PROGRESS_SCALE;
+                        if (total_units) {
+                            pbox->UpdateTransfer(0, total_units);
+                        }
+
+                        for (size_t i = 0; i < entries.size(); i++) {
+                            R_TRY(pbox->ShouldExitResult());
+
+                            auto& e = entries[i];
                             LoadControlEntry(e);
                             fs::FsPath latest_path;
                             if (FindLatestBackupPath(&sd_fs, e, backup_root, latest_path)) {
@@ -1834,11 +1868,12 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
                                 const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
                                 pbox->NewTransfer("Uploading: "_i18n + filename);
-                                
+
                                 curl::Api api(CURL_LOCATION_TO_API(loc));
                                 api.SetUpload(true);
                                 api.SetOption(curl::Path{latest_path});
                                 api.SetOption(curl::UploadInfo{remote_rel + "/" + filename});
+                                api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), total_units));
 
                                 auto res = curl::FromFile(api);
                                 if (!res.success) {
@@ -1846,6 +1881,8 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                     R_THROW(Result_SaveSyncFailed);
                                 }
                             }
+
+                            pbox->UpdateTransfer(static_cast<s64>(i + 1) * SYNC_PROGRESS_SCALE, total_units);
                         }
                         R_SUCCEED();
                     }, [](Result rc){
@@ -2500,34 +2537,10 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             }
         }
 
-        // each phase's bar spans PROGRESS_SCALE units per file: it advances
-        // smoothly with the current file's actual byte progress (so it's
-        // never frozen while data is moving), but it never resets to 0% when
-        // a new file starts - the bar only ever climbs across the whole phase.
-        constexpr s64 PROGRESS_SCALE = 1'000'000;
-
-        const auto make_progress_cb = [pbox](s64 files_done, s64 total_units) {
-            return curl::OnProgress{[pbox, files_done, total_units](s64 dltotal, s64 dlnow, s64 ultotal, s64 ulnow) -> bool {
-                if (pbox->ShouldExit()) {
-                    return false;
-                }
-
-                const auto total = ultotal ? ultotal : dltotal;
-                const auto now = ultotal ? ulnow : dlnow;
-                s64 file_units = 0;
-                if (total > 0) {
-                    file_units = static_cast<s64>((static_cast<double>(now) / static_cast<double>(total)) * PROGRESS_SCALE);
-                }
-
-                pbox->UpdateTransfer(files_done * PROGRESS_SCALE + file_units, total_units);
-                return true;
-            }};
-        };
-
         // phase 1: local -> WebDAV.
         if (!uploads.empty()) {
             pbox->NewTransfer("Local → WebDAV"_i18n);
-            pbox->UpdateTransfer(0, static_cast<s64>(uploads.size()) * PROGRESS_SCALE);
+            pbox->UpdateTransfer(0, static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE);
         }
         for (size_t i = 0; i < uploads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
@@ -2540,7 +2553,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             api.SetUpload(true);
             api.SetOption(curl::Path{u.path});
             api.SetOption(curl::UploadInfo{u.remote_rel + "/" + u.name});
-            api.SetOption(make_progress_cb(static_cast<s64>(i), static_cast<s64>(uploads.size()) * PROGRESS_SCALE));
+            api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE));
 
             auto res = curl::FromFile(api);
             if (!res.success) {
@@ -2548,14 +2561,14 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 R_THROW(Result_SaveSyncFailed);
             }
 
-            pbox->UpdateTransfer(static_cast<s64>(i + 1) * PROGRESS_SCALE, static_cast<s64>(uploads.size()) * PROGRESS_SCALE);
+            pbox->UpdateTransfer(static_cast<s64>(i + 1) * SYNC_PROGRESS_SCALE, static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE);
         }
 
         // phase 2: WebDAV -> SD, only after every upload has finished. its own
         // separate bar with the same smooth, non-resetting behaviour.
         if (!downloads.empty()) {
             pbox->NewTransfer("WebDAV → SD"_i18n);
-            pbox->UpdateTransfer(0, static_cast<s64>(downloads.size()) * PROGRESS_SCALE);
+            pbox->UpdateTransfer(0, static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE);
         }
         for (size_t i = 0; i < downloads.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
@@ -2582,7 +2595,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             curl::Api api(CURL_LOCATION_TO_API(loc));
             api.SetOption(curl::Url{loc.url + "/" + d.remote_rel + "/" + d.name});
             api.SetOption(curl::Path{temp_file});
-            api.SetOption(make_progress_cb(static_cast<s64>(i), static_cast<s64>(downloads.size()) * PROGRESS_SCALE));
+            api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE));
 
             auto res = curl::ToFile(api);
             if (!res.success) {
@@ -2594,7 +2607,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             sd_fs.DeleteFile(local_file);
             R_TRY(sd_fs.RenameFile(temp_file, local_file));
 
-            pbox->UpdateTransfer(static_cast<s64>(i + 1) * PROGRESS_SCALE, static_cast<s64>(downloads.size()) * PROGRESS_SCALE);
+            pbox->UpdateTransfer(static_cast<s64>(i + 1) * SYNC_PROGRESS_SCALE, static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE);
         }
 
         R_SUCCEED();
