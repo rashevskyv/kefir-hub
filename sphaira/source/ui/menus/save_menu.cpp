@@ -669,20 +669,29 @@ auto MakeSdLocationLabel(const fs::FsPath& backup_root) -> std::string {
 // file starts - it only ever climbs across the whole batch.
 constexpr s64 SYNC_PROGRESS_SCALE = 1'000'000;
 
-auto MakeAggregateProgressCb(ProgressBox* pbox, s64 files_done, s64 total_units) -> curl::OnProgress {
-    return curl::OnProgress{[pbox, files_done, total_units](s64 dltotal, s64 dlnow, s64 ultotal, s64 ulnow) -> bool {
+auto MakeAggregateProgressCb(ProgressBox* pbox, bool is_upload, s64 files_done, s64 total_units) -> curl::OnProgress {
+    // curl keeps firing this callback for the other direction too (e.g. the
+    // tiny server response after an upload finishes, where ultotal drops back
+    // to 0 and dl counters kick in) - reading whichever pair happens to be
+    // non-zero made the bar jump backwards at every file boundary. Only the
+    // requested direction is read, and the shown value never decreases.
+    auto max_units = std::make_shared<s64>(files_done * SYNC_PROGRESS_SCALE);
+
+    return curl::OnProgress{[pbox, is_upload, files_done, total_units, max_units](s64 dltotal, s64 dlnow, s64 ultotal, s64 ulnow) -> bool {
         if (pbox->ShouldExit()) {
             return false;
         }
 
-        const auto total = ultotal ? ultotal : dltotal;
-        const auto now = ultotal ? ulnow : dlnow;
+        const auto total = is_upload ? ultotal : dltotal;
+        const auto now = is_upload ? ulnow : dlnow;
         s64 file_units = 0;
         if (total > 0) {
             file_units = static_cast<s64>((static_cast<double>(now) / static_cast<double>(total)) * SYNC_PROGRESS_SCALE);
+            file_units = std::min(file_units, SYNC_PROGRESS_SCALE);
         }
 
-        pbox->UpdateTransfer(files_done * SYNC_PROGRESS_SCALE + file_units, total_units);
+        *max_units = std::max(*max_units, files_done * SYNC_PROGRESS_SCALE + file_units);
+        pbox->UpdateTransfer(*max_units, total_units);
         return true;
     }};
 }
@@ -1119,7 +1128,7 @@ void Menu::DisplaySaveOptions() {
 
     options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
         SyncSavesRemote();
-    }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared."_i18n);
+    }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location. Every archive missing on the other side is copied: new local backups are uploaded to WebDAV, new remote backups are downloaded to the SD card. Files with the same name are never overwritten and are not compared by date or content. After downloading from remote, use Restore to apply a backup."_i18n);
 
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
@@ -1853,6 +1862,9 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                         fs::FsNativeSd sd_fs;
                         const auto total_units = static_cast<s64>(entries.size()) * SYNC_PROGRESS_SCALE;
                         if (total_units) {
+                            // one transfer for the whole batch: NewTransfer resets the
+                            // bar to zero, so calling it per file made the bar jump.
+                            pbox->NewTransfer("Local → WebDAV"_i18n);
                             pbox->UpdateTransfer(0, total_units);
                         }
 
@@ -1867,13 +1879,13 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                 size_t last_slash = latest_path_str.find_last_of('/');
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
                                 const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
-                                pbox->NewTransfer("Uploading: "_i18n + filename);
+                                pbox->SetActionName("Uploading: "_i18n + filename);
 
                                 curl::Api api(CURL_LOCATION_TO_API(loc));
                                 api.SetUpload(true);
                                 api.SetOption(curl::Path{latest_path});
                                 api.SetOption(curl::UploadInfo{remote_rel + "/" + filename});
-                                api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), total_units));
+                                api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
 
                                 auto res = curl::FromFile(api);
                                 if (!res.success) {
@@ -2432,27 +2444,21 @@ void Menu::SyncSavesRemote() {
         return;
     }
 
-    const auto message = "Sync backup ZIPs of the currently selected saves in both directions. Every archive missing on the other side will be copied: new local backups are uploaded to WebDAV, new remote backups are downloaded to the SD card. Files with the same name are not overwritten and are not compared by date or content. After downloading from remote, use Restore to apply a backup."_i18n + "\n\n" + "Start sync?"_i18n;
-
-    App::Push<OptionBox>(message, "Cancel"_i18n, "Sync"_i18n, 0, [this, webdav_locations](auto op_index){
-        if (!op_index || *op_index != 1) {
-            return;
+    // no confirmation popup: the entry's tooltip in Save Options already
+    // explains exactly what the sync does.
+    if (webdav_locations.size() == 1) {
+        SyncSavesRemoteWithLocation(webdav_locations.front());
+    } else {
+        PopupList::Items items;
+        for (const auto& loc : webdav_locations) {
+            items.emplace_back(loc.name);
         }
-
-        if (webdav_locations.size() == 1) {
-            SyncSavesRemoteWithLocation(webdav_locations.front());
-        } else {
-            PopupList::Items items;
-            for (const auto& loc : webdav_locations) {
-                items.emplace_back(loc.name);
+        App::Push<PopupList>("Select Sync Location"_i18n, items, [this, webdav_locations](auto op_index) {
+            if (op_index) {
+                SyncSavesRemoteWithLocation(webdav_locations[*op_index]);
             }
-            App::Push<PopupList>("Select Sync Location"_i18n, items, [this, webdav_locations](auto op_index) {
-                if (op_index) {
-                    SyncSavesRemoteWithLocation(webdav_locations[*op_index]);
-                }
-            });
-        }
-    });
+        });
+    }
 }
 
 void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
@@ -2553,7 +2559,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             api.SetUpload(true);
             api.SetOption(curl::Path{u.path});
             api.SetOption(curl::UploadInfo{u.remote_rel + "/" + u.name});
-            api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE));
+            api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE));
 
             auto res = curl::FromFile(api);
             if (!res.success) {
@@ -2595,7 +2601,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             curl::Api api(CURL_LOCATION_TO_API(loc));
             api.SetOption(curl::Url{loc.url + "/" + d.remote_rel + "/" + d.name});
             api.SetOption(curl::Path{temp_file});
-            api.SetOption(MakeAggregateProgressCb(pbox, static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE));
+            api.SetOption(MakeAggregateProgressCb(pbox, false, static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE));
 
             auto res = curl::ToFile(api);
             if (!res.success) {
