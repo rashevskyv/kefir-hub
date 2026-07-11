@@ -256,16 +256,35 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::ThreadFunction() {
+    const auto finish_cancelled = [this]() {
+        m_state = State::Cancelled;
+        m_actions_dirty = true;
+    };
+
     for (;;) {
-        if (GetToken().stop_requested()) return;
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            finish_cancelled();
+            return;
+        }
         m_state = State::WaitingForUsb;
         const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
-        if (rc == Result_UsbCancelled) return;
+        if (rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
+            finish_cancelled();
+            return;
+        }
         if (R_FAILED(rc)) continue;
 
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            finish_cancelled();
+            return;
+        }
         m_state = State::WaitingForList;
         std::vector<std::string> names;
         const auto list_rc = m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names);
+        if (list_rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
+            finish_cancelled();
+            return;
+        }
         if (R_FAILED(list_rc)) continue;
 
         m_state = State::Analysing;
