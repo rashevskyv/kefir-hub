@@ -815,5 +815,9 @@
   "Cancelled: ": "Скасовано: ",
   "DBI session failed; remaining packages were skipped.": "Помилка сеансу DBI; решту пакетів пропущено.",
   "Waiting for PC connection. Connect the USB cable and make sure the console is detected.": "Очікування підключення до ПК. Підключіть USB-кабель і переконайтеся, що консоль визначилася.",
-  "PC connected. Select packages and press Start in DBI Backend.": "ПК підключено. Виберіть пакети й натисніть Start у DBI Backend."
+  "PC connected. Select packages and press Start in DBI Backend.": "ПК підключено. Виберіть пакети й натисніть Start у DBI Backend.",
+  "Package target": "Сховище пакета",
+  "Targets": "Сховища",
+  "Per package": "Для кожного пакета",
+  "Speed": "Швидкість"
 }

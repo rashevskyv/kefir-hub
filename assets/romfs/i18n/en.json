@@ -824,5 +824,9 @@
   "Cancelled: ": "Cancelled: ",
   "DBI session failed; remaining packages were skipped.": "DBI session failed; remaining packages were skipped.",
   "Waiting for PC connection. Connect the USB cable and make sure the console is detected.": "Waiting for PC connection. Connect the USB cable and make sure the console is detected.",
-  "PC connected. Select packages and press Start in DBI Backend.": "PC connected. Select packages and press Start in DBI Backend."
+  "PC connected. Select packages and press Start in DBI Backend.": "PC connected. Select packages and press Start in DBI Backend.",
+  "Package target": "Package target",
+  "Targets": "Targets",
+  "Per package": "Per package",
+  "Speed": "Speed"
 }

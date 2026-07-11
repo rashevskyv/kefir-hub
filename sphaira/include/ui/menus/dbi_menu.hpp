@@ -32,6 +32,7 @@ struct QueueEntry {
     Result install_result{};
     bool selected{true};
     bool installed{};
+    InstallTarget target{InstallTarget::Auto};
 };
 
 struct Menu final : MenuBase, InstallProgress {
@@ -55,12 +56,13 @@ private:
     void UpdateActions();
     void CancelSession();
     void StartInstall();
-    void CycleTarget();
+    void CycleSelectedTarget();
     void AddLog(const std::string& text);
-    auto TargetName() const -> std::string;
+    static auto TargetName(InstallTarget target) -> std::string;
 
     std::unique_ptr<yati::source::DbiUsb> m_usb_source{};
     std::unique_ptr<List> m_list{};
+    std::unique_ptr<List> m_log_list{};
     bool m_was_mtp_enabled{};
 
     Thread m_thread{};
@@ -76,12 +78,13 @@ private:
     std::vector<std::string> m_log{};
     s64 m_index{};
     s64 m_log_index{};
-    InstallTarget m_target{InstallTarget::Auto};
-    InstallTarget m_install_target{InstallTarget::Auto};
     std::string m_current_title{};
     std::string m_current_transfer{};
     s64 m_progress_offset{};
     s64 m_progress_size{};
+    s64 m_progress_last_offset{};
+    s64 m_progress_speed{};
+    TimeStamp m_progress_timestamp{};
     size_t m_current_package{};
     size_t m_success_count{};
     size_t m_failure_count{};

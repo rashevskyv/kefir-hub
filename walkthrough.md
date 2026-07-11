@@ -1,6 +1,6 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
-## v0.13.152 — DBI Install queue (id 50)
+## v0.13.153 — DBI Install queue (id 50)
 
 ### Що зроблено і як це працює
 
@@ -12,6 +12,8 @@
 * Yati тепер приймає вузький `InstallProgress`. Звичайні File, MTP root-drop і Web Server install як і раніше передають наявний `ProgressBox`; новий повноекранний UI використовується лише DBI.
 * **Runtime fix для DBI Backend Qt:** `DbiUsb::Read()` раніше оголошував `FILE_RANGE data_size = sizeof(header) + filename`, але відправляв header і filename двома окремими USB transfers. PyUSB `read(data_size)` міг завершитися на першому 16-байтовому short packet, отримати порожнє ім’я й не відправити дані; Switch тоді безстроково лишався на `Analysing`. Тепер весь payload формується в одному буфері й надсилається одним transfer. Додатково worker stack збільшено з 64 до 128 КБ, handle закривається при невдалому `threadStart`, а fullscreen log показує поточний NCA/етап Yati.
 * **Зрозумілий connection state:** до `UsbState_Configured` екран показує `Waiting for PC connection` і просить підключити кабель та перевірити, що консоль визначилася. Лише після реального USB configure текст змінюється на `PC connected` та інструкцію вибрати пакети й натиснути Start у DBI Backend. Після disconnect/помилки до отримання списку цикл повертається до очікування ПК.
+* **Узгоджене керування чергою:** як у файловому менеджері, X перемикає поточний пакет, Y інвертує всі доступні пакети, A переходить до встановлення. ASCII `[x]`/`[ ]` замінено тим самим NanoVG checkbox і glyph `\uE14B`. R3 циклічно змінює ціль окремого поточного пакета (`Auto → microSD → System memory`); підсумок місця та фактичний `ConfigOverride` рахуються для кожного пакета окремо.
+* **Install log:** у верхньому рядку показується згладжена швидкість поточного content у MiB/s. Журнал використовує окремий компактний список із рядком 30 px замість queue-карток 82 px. Автоперехід до нового рядка працює лише коли користувач уже був у кінці; ручний scroll більше не відкидається назад кожною новою подією.
 
 ### Ручна перевірка
 
@@ -23,6 +25,7 @@
 6. Окремо перевірити MTP root-drop, Web Server install і звичайний file install: їхній `ProgressBox` та поведінка не повинні змінитися.
 7. У DBI Backend Qt на Windows надіслати один NSP: після `Sending list...` екран `Analysing` має перейти до ReviewQueue без зависання; у backend не повинно бути `Requested file not found in list` з порожнім ім’ям. Після START поточний NCA/етап має бути видимий біля назви пакета.
 8. Відкрити USB Install без кабелю: має бути `Waiting for PC connection`. Підключити кабель до ПК з коректним драйвером, але ще не натискати Start у DBI Backend: має з’явитися `PC connected... press Start`. Від’єднати кабель до списку — UI має повернутися до першого стану; підключити знову й передати список.
+9. У ReviewQueue перевірити X для одного пакета, Y для інверсії, A для старту та R3 для незалежної цілі кожного рядка. Checkbox має збігатися з файловим менеджером. Під час install перевірити швидкість, компактний інтервал логу, touch-scroll угору під час надходження нових рядків і автоматичне слідування за кінцем після повернення вниз.
 
 ### Відомі обмеження
 
@@ -37,7 +40,7 @@
 * `sphaira/source/yati/yati.cpp`, `sphaira/include/yati/yati.hpp` — read-only preflight та спільний progress API.
 * `sphaira/include/ui/install_progress.hpp`, `sphaira/include/ui/progress_box.hpp` — ізоляція DBI fullscreen UI від старих install-шляхів.
 * `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json` — нові рядки.
-* `sphaira/CMakeLists.txt` — версія `0.13.152`.
+* `sphaira/CMakeLists.txt` — версія `0.13.153`.
 
 ## v0.13.149 — сумісність сейв-бекапів із DBI (id 51)
 

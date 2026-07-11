@@ -55,15 +55,48 @@ void AddSizeSaturated(s64& total, s64 value) {
     total = value > INT64_MAX - total ? INT64_MAX : total + value;
 }
 
+void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected) {
+    constexpr float box_size = 20.f;
+    const float box_x = row.x + 12.f;
+    const float box_y = row.y + (row.h - box_size) / 2.f;
+
+    nvgBeginPath(vg);
+    nvgRect(vg, box_x, box_y, box_size, box_size);
+    nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
+    nvgFill(vg);
+    nvgBeginPath(vg);
+    nvgRect(vg, box_x, box_y, box_size, box_size);
+    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+    nvgStrokeWidth(vg, 2.f);
+    nvgStroke(vg);
+
+    if (selected) {
+        const float check_x = box_x + box_size / 2.f;
+        const float check_y = row.y + (row.h - 18.f) / 2.f;
+        const auto outline = nvgRGBA(0, 0, 0, 255);
+        gfx::drawText(vg, check_x - 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+        gfx::drawText(vg, check_x + 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+        gfx::drawText(vg, check_x, check_y - 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+        gfx::drawText(vg, check_x, check_y + 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+        gfx::drawText(vg, check_x, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+    }
+}
+
 } // namespace
 
 Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     mutexInit(&m_mutex);
     ueventCreate(&m_cancel_event, false);
 
-    const Vec4 row{70.f, GetY() + 80.f, 1140.f, 82.f};
-    m_list = std::make_unique<List>(1, 6, m_pos, row);
+    const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
+    const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 82.f};
+    m_list = std::make_unique<List>(1, 6, queue_pos, row);
     m_list->SetLayout(List::Layout::GRID);
+    const Vec4 log_pos{70.f, GetY() + 100.f, 1140.f, 470.f};
+    const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
+    m_log_list = std::make_unique<List>(1, 15, log_pos, log_row);
+    m_log_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
     m_was_mtp_enabled = App::GetMtpEnable();
@@ -118,23 +151,20 @@ void Menu::UpdateActions() {
     const auto state = m_state.load();
     if (state == State::ReviewQueue) {
         SetActions(
-            std::make_pair(Button::A, Action{"Select package"_i18n, [this]() {
+            std::make_pair(Button::X, Action{"Select"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size()) && R_SUCCEEDED(m_queue[m_index].analysis_result)) {
                     m_queue[m_index].selected = !m_queue[m_index].selected;
                 }
             }}),
-            std::make_pair(Button::X, Action{"Select all / none"_i18n, [this]() {
+            std::make_pair(Button::Y, Action{"Invert"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
-                const bool any_unselected = std::ranges::any_of(m_queue, [](const auto& entry) {
-                    return R_SUCCEEDED(entry.analysis_result) && !entry.selected;
-                });
                 for (auto& entry : m_queue) {
-                    if (R_SUCCEEDED(entry.analysis_result)) entry.selected = any_unselected;
+                    if (R_SUCCEEDED(entry.analysis_result)) entry.selected = !entry.selected;
                 }
             }}),
-            std::make_pair(Button::Y, Action{"Install target"_i18n, [this]() { CycleTarget(); }}),
-            std::make_pair(Button::START, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
+            std::make_pair(Button::A, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
+            std::make_pair(Button::R3, Action{"Package target"_i18n, [this]() { CycleSelectedTarget(); }}),
             std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );
     } else if (state == State::Installing) {
@@ -152,17 +182,19 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     const auto state = m_state.load();
-    SCOPED_MUTEX(&m_mutex);
+    bool activate{};
     if (state == State::ReviewQueue && !m_queue.empty()) {
-        m_list->OnUpdate(controller, touch, m_index, m_queue.size(), [this](bool pressed, s64 index) {
-            if (pressed && m_index == index && R_SUCCEEDED(m_queue[index].analysis_result)) {
-                m_queue[index].selected = !m_queue[index].selected;
-            } else {
-                m_index = index;
-            }
-        }, this);
+        {
+            SCOPED_MUTEX(&m_mutex);
+            m_list->OnUpdate(controller, touch, m_index, m_queue.size(), [this, &activate](bool pressed, s64 index) {
+                if (pressed && m_index == index) activate = true;
+                else m_index = index;
+            }, this);
+        }
+        if (activate) FireAction(Button::A);
     } else if ((state == State::Installing || state == State::Summary || state == State::Cancelled) && !m_log.empty()) {
-        m_list->OnUpdate(controller, touch, m_log_index, m_log.size(), [this](bool, s64 index) {
+        SCOPED_MUTEX(&m_mutex);
+        m_log_list->OnUpdate(controller, touch, m_log_index, m_log.size(), [this](bool, s64 index) {
             m_log_index = index;
         }, this);
     }
@@ -202,7 +234,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
         gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
             theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %zu / %zu    %s: %s",
-            "Target"_i18n.c_str(), TargetName().c_str(), "Selected"_i18n.c_str(), selected_count, m_queue.size(),
+            "Targets"_i18n.c_str(), "Per package"_i18n.c_str(), "Selected"_i18n.c_str(), selected_count, m_queue.size(),
             "Required"_i18n.c_str(), utils::formatSizeStorage(selected_size).c_str());
         gfx::drawTextArgs(vg, 70.f, GetY() + 36.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
             theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s    %s: %s",
@@ -214,28 +246,42 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const auto& entry = m_queue[index];
             if (index == m_index) gfx::drawRectOutline(vg, theme, 4.f, v);
             const auto colour = R_FAILED(entry.analysis_result) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT);
-            const char* mark = !R_SUCCEEDED(entry.analysis_result) ? "!" : (entry.selected ? "[x]" : "[ ]");
-            gfx::drawTextArgs(vg, v.x + 12.f, v.y + 8.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
-                "%s %s", mark, entry.file_name.c_str());
+            if (R_SUCCEEDED(entry.analysis_result)) DrawCheckbox(vg, theme, v, entry.selected);
+            gfx::drawTextArgs(vg, v.x + (R_SUCCEEDED(entry.analysis_result) ? 42.f : 12.f), v.y + 8.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+                R_FAILED(entry.analysis_result) ? "! %s" : "%s", entry.file_name.c_str());
             if (R_FAILED(entry.analysis_result)) {
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
                     "%s: %s", "Analysis failed"_i18n.c_str(), ResultText(entry.analysis_result).c_str());
             } else {
                 const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
-                const auto target = entry.analysis.suggested_sd ? "microSD"_i18n : "System memory"_i18n;
+                const auto target = entry.target == InstallTarget::Auto
+                    ? TargetName(entry.target) + " → " + (entry.analysis.suggested_sd ? "microSD"_i18n : "System memory"_i18n)
+                    : TargetName(entry.target);
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s (%s)    Auto: %s",
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s (%s)    %s: %s",
                     "Package size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.source_size).c_str(),
-                    "Install size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.install_size).c_str(), kind.c_str(), target.c_str());
+                    "Install size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.install_size).c_str(), kind.c_str(),
+                    "Target"_i18n.c_str(), target.c_str());
             }
         });
         return;
     }
 
+    const double elapsed = m_progress_timestamp.GetSecondsD();
+    if (elapsed >= 0.5) {
+        m_progress_timestamp.Update();
+        const auto bytes = std::max<s64>(0, m_progress_offset - m_progress_last_offset);
+        m_progress_last_offset = m_progress_offset;
+        const auto current_speed = static_cast<s64>(static_cast<double>(bytes) / elapsed);
+        m_progress_speed = m_progress_speed == 0 ? current_speed
+            : static_cast<s64>(0.25 * current_speed + 0.75 * static_cast<double>(m_progress_speed));
+    }
+    const double speed_mib = static_cast<double>(m_progress_speed) / (1024.0 * 1024.0);
     gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu",
+        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu    %s: %.2f MiB/s",
         "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
-        "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count);
+        "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count,
+        "Speed"_i18n.c_str(), speed_mib);
     if (!m_current_title.empty()) {
         const auto title = m_current_transfer.empty()
             ? m_current_title : m_current_title + " — " + m_current_transfer;
@@ -248,9 +294,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
             theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
     }
-    m_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
-        if (index == m_log_index) gfx::drawRectOutline(vg, theme, 2.f, v);
-        gfx::drawTextArgs(vg, v.x + 10.f, v.y + 10.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+    m_log_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+        gfx::drawTextArgs(vg, v.x + 4.f, v.y + 5.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
             theme->GetColour(ThemeEntryID_TEXT), "%s", m_log[index].c_str());
     });
 }
@@ -319,20 +364,17 @@ void Menu::ThreadFunction() {
 
         m_state = State::Installing;
         m_actions_dirty = true;
-        InstallTarget install_target{};
-        {
-            SCOPED_MUTEX(&m_mutex);
-            install_target = m_install_target;
-        }
         bool session_failed{};
         for (size_t i = 0; i < m_queue.size(); i++) {
             bool selected{};
             yati::InstallAnalysis analysis{};
+            InstallTarget target{};
             std::string name{};
             {
                 SCOPED_MUTEX(&m_mutex);
                 selected = m_queue[i].selected && R_SUCCEEDED(m_queue[i].analysis_result);
                 analysis = m_queue[i].analysis;
+                target = m_queue[i].target;
                 name = m_queue[i].file_name;
                 m_current_package = i;
                 m_current_title = name;
@@ -345,8 +387,8 @@ void Menu::ThreadFunction() {
             AddLog("Starting: "_i18n + name);
             m_usb_source->SetFileNameForTranfser(name);
             yati::ConfigOverride override{};
-            override.sd_card_install = install_target == InstallTarget::Sd ? true
-                : install_target == InstallTarget::Nand ? false : analysis.suggested_sd;
+            override.sd_card_install = target == InstallTarget::Sd ? true
+                : target == InstallTarget::Nand ? false : analysis.suggested_sd;
             const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
             const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
             const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
@@ -396,7 +438,7 @@ void Menu::StartInstall() {
         for (const auto& entry : m_queue) {
             if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
             count++;
-            const bool sd = m_target == InstallTarget::Sd || (m_target == InstallTarget::Auto && entry.analysis.suggested_sd);
+            const bool sd = entry.target == InstallTarget::Sd || (entry.target == InstallTarget::Auto && entry.analysis.suggested_sd);
             AddSizeSaturated(sd ? sd_required : nand_required, entry.analysis.install_size);
         }
     }
@@ -411,18 +453,12 @@ void Menu::StartInstall() {
         App::Push<OptionBox>("Selected packages may not fit after the configured reserve. Continue?"_i18n,
             "Cancel"_i18n, "Install selected"_i18n, 0, [this](auto choice) {
                 if (choice && *choice == 1) {
-                    SCOPED_MUTEX(&m_mutex);
-                    m_install_target = m_target;
                     m_install_requested = true;
                 }
             });
         return;
     }
-    {
-        SCOPED_MUTEX(&m_mutex);
-        m_install_target = m_target;
-        m_install_requested = true;
-    }
+    m_install_requested = true;
 }
 
 void Menu::CancelSession() {
@@ -439,23 +475,29 @@ void Menu::CancelSession() {
     AddLog("Cancellation requested."_i18n);
 }
 
-void Menu::CycleTarget() {
+void Menu::CycleSelectedTarget() {
     SCOPED_MUTEX(&m_mutex);
-    m_target = m_target == InstallTarget::Auto ? InstallTarget::Sd
-        : m_target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
+    if (m_index < 0 || m_index >= static_cast<s64>(m_queue.size()) || R_FAILED(m_queue[m_index].analysis_result)) return;
+    auto& target = m_queue[m_index].target;
+    target = target == InstallTarget::Auto ? InstallTarget::Sd
+        : target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
 }
 
-auto Menu::TargetName() const -> std::string {
-    if (m_target == InstallTarget::Sd) return "microSD"_i18n;
-    if (m_target == InstallTarget::Nand) return "System memory"_i18n;
+auto Menu::TargetName(InstallTarget target) -> std::string {
+    if (target == InstallTarget::Sd) return "microSD"_i18n;
+    if (target == InstallTarget::Nand) return "System memory"_i18n;
     return "Auto"_i18n;
 }
 
 void Menu::AddLog(const std::string& text) {
     SCOPED_MUTEX(&m_mutex);
-    if (m_log.size() == MAX_LOG_LINES) m_log.erase(m_log.begin());
+    const bool follow_tail = m_log.empty() || m_log_index >= static_cast<s64>(m_log.size()) - 1;
+    if (m_log.size() == MAX_LOG_LINES) {
+        m_log.erase(m_log.begin());
+        if (!follow_tail && m_log_index > 0) m_log_index--;
+    }
     m_log.emplace_back(text);
-    m_log_index = m_log.size() - 1;
+    if (follow_tail) m_log_index = m_log.size() - 1;
 }
 
 Result Menu::CheckCancelled() {
@@ -473,6 +515,9 @@ void Menu::SetInstallTransfer(const std::string& transfer) {
     m_current_transfer = transfer;
     m_progress_offset = 0;
     m_progress_size = 0;
+    m_progress_last_offset = 0;
+    m_progress_speed = 0;
+    m_progress_timestamp.Update();
 }
 
 void Menu::UpdateInstallTransfer(s64 offset, s64 size) {
