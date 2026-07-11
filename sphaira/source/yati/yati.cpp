@@ -1591,8 +1591,11 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
         // malformed container cannot overflow into a small/negative plan.
         constexpr s64 FACTOR_NUMERATOR = 8;
         constexpr s64 FACTOR_DENOMINATOR = 5;
-        R_UNLESS(out.install_size <= (INT64_MAX / FACTOR_NUMERATOR) * FACTOR_DENOMINATOR, Result_YatiContainerNotFound);
-        out.install_size = (out.install_size * FACTOR_NUMERATOR + FACTOR_DENOMINATOR - 1) / FACTOR_DENOMINATOR;
+        const auto quotient = out.install_size / FACTOR_DENOMINATOR;
+        const auto remainder = out.install_size % FACTOR_DENOMINATOR;
+        const auto rounded_remainder = (remainder * FACTOR_NUMERATOR + FACTOR_DENOMINATOR - 1) / FACTOR_DENOMINATOR;
+        R_UNLESS(quotient <= (INT64_MAX - rounded_remainder) / FACTOR_NUMERATOR, Result_YatiContainerNotFound);
+        out.install_size = quotient * FACTOR_NUMERATOR + rounded_remainder;
         out.size_kind = AnalysisSizeKind::Estimate;
         out.size_reason = "Compressed content size is estimated (x1.6)";
     }
