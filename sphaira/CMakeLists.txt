@@ -460,28 +460,28 @@ dkp_install_assets(sphaira_romfs
 
 # create nacp
 nx_generate_nacp(
-    OUTPUT sphaira.nacp
-    NAME ${CMAKE_PROJECT_NAME}
-    AUTHOR TotalJustice
+    OUTPUT kefir-hub.nacp
+    NAME "Kefir Hub"
+    AUTHOR Kefir
     VERSION ${sphaira_VERSION}
 )
 
 # create nro
 nx_create_nro(sphaira
-    OUTPUT ${CMAKE_BINARY_DIR}/sphaira.nro
+    OUTPUT ${CMAKE_BINARY_DIR}/kefir-hub.nro
     ICON ${CMAKE_SOURCE_DIR}/assets/icon.jpg
-    NACP sphaira.nacp
+    NACP kefir-hub.nacp
     ROMFS sphaira_romfs
 )
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/switch/sphaira)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/switch/kefir-hub)
 
 add_custom_command(
     TARGET sphaira_nro POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_BINARY_DIR}/sphaira.nro
-        ${CMAKE_BINARY_DIR}/switch/sphaira/sphaira.nro
+        ${CMAKE_BINARY_DIR}/kefir-hub.nro
+        ${CMAKE_BINARY_DIR}/switch/kefir-hub/kefir-hub.nro
 )
 
-message(STATUS "generating nro in: ${CMAKE_BINARY_DIR}/sphaira.nro")
-message(STATUS "run nxlink -s ${CMAKE_BINARY_DIR}/sphaira.nro")
+message(STATUS "generating nro in: ${CMAKE_BINARY_DIR}/kefir-hub.nro")
+message(STATUS "run nxlink -s ${CMAKE_BINARY_DIR}/kefir-hub.nro")

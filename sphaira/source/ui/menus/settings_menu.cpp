@@ -84,15 +84,15 @@ constexpr std::array TRANSLATION_PATHS{
 };
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
-constexpr const char* FAN_PRESETS_CONFIG = "/config/sphaira/fan_curve_presets.ini";
+const auto FAN_PRESETS_CONFIG = paths::DATA_ROOT + "/fan_curve_presets.ini";
 constexpr u64 SPHAIRA_FAN_PROGRAM_ID{0x00FF46554E43544CULL};
 constexpr u64 SPHAIRA_OLD_FAN_PROGRAM_ID{0x00FF000053504846ULL};
 constexpr const char* SPHAIRA_FAN_EXEFS_PATH = "/atmosphere/contents/00FF46554E43544C/exefs.nsp";
-constexpr const char* SPHAIRA_DOWNLOADS = "/config/sphaira/downloads";
-constexpr const char* DBI_TRANSLATIONS_PACKAGE = "/config/sphaira/packages/Software/DBI/Fan Translations/package.ini";
-constexpr const char* TRANSLATE_PACKAGE_DIR = "/config/sphaira/packages/Translate Interface";
-constexpr const char* TRANSLATE_PACKAGE = "/config/sphaira/packages/Translate Interface/package.ini";
-constexpr const char* TRANSLATE_PACKAGE_BACKUP = "/config/sphaira/packages/translate_interface.package.ini.bkp";
+const auto SPHAIRA_DOWNLOADS = paths::DOWNLOADS;
+const auto DBI_TRANSLATIONS_PACKAGE = paths::PACKAGES + "/Software/DBI/Fan Translations/package.ini";
+const auto TRANSLATE_PACKAGE_DIR = paths::PACKAGES + "/Translate Interface";
+const auto TRANSLATE_PACKAGE = paths::PACKAGES + "/Translate Interface/package.ini";
+const auto TRANSLATE_PACKAGE_BACKUP = paths::PACKAGES + "/translate_interface.package.ini.bkp";
 
 struct KefirSetting {
     std::string label;
@@ -1475,9 +1475,9 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
                 pbox,
                 "Downloading list of translations..."_i18n,
                 "https://github.com/rashevskyv/DBI_watcher/raw/main/output/package.ini",
-                "/config/sphaira/downloads/dbi.package.ini"
+                paths::DOWNLOADS + "/dbi.package.ini"
             ));
-            R_TRY(MovePath("/config/sphaira/downloads/dbi.package.ini", DBI_TRANSLATIONS_PACKAGE));
+            R_TRY(MovePath(paths::DOWNLOADS + "/dbi.package.ini", DBI_TRANSLATIONS_PACKAGE));
             R_SUCCEED();
         },
     }));
@@ -1656,10 +1656,10 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
                 pbox,
                 "Downloading Mario BG Dark...",
                 "https://github.com/rashevskyv/mario_bg_theme/releases/latest/download/Mario.BG.Modern.zip",
-                "/config/sphaira/downloads/theme.zip"
+                paths::DOWNLOADS + "/theme.zip"
             ));
-            R_TRY(UnzipFile(pbox, "/config/sphaira/downloads/theme.zip", "/themes/"));
-            R_TRY(DeletePath("/config/sphaira/downloads/theme.zip"));
+            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/theme.zip", "/themes/"));
+            R_TRY(DeletePath(paths::DOWNLOADS + "/theme.zip"));
             R_SUCCEED();
         },
     }));
@@ -1672,10 +1672,10 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
                 pbox,
                 "Downloading Switch 2 Theme...",
                 "https://github.com/alexwak/Switch-2-Switch-Theme/releases/latest/download/Switch-2-Switch-Banned.zip",
-                "/config/sphaira/downloads/theme.zip"
+                paths::DOWNLOADS + "/theme.zip"
             ));
-            R_TRY(UnzipFile(pbox, "/config/sphaira/downloads/theme.zip", "/themes/"));
-            R_TRY(DeletePath("/config/sphaira/downloads/theme.zip"));
+            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/theme.zip", "/themes/"));
+            R_TRY(DeletePath(paths::DOWNLOADS + "/theme.zip"));
             R_SUCCEED();
         },
     }));
@@ -1698,17 +1698,17 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                 pbox,
                 "Downloading language packs..."_i18n,
                 "https://github.com/rashevskyv/switch-translations-mirrors/raw/main/lang_packs_ultra.zip",
-                "/config/sphaira/downloads/lang_packs.zip"
+                paths::DOWNLOADS + "/lang_packs.zip"
             ));
             R_TRY(MovePath(TRANSLATE_PACKAGE, TRANSLATE_PACKAGE_BACKUP));
             R_TRY(DeletePath(TRANSLATE_PACKAGE_DIR));
             fs::FsNativeSd fs;
             R_TRY(fs.CreateDirectoryRecursively(TRANSLATE_PACKAGE_DIR));
-            if (FileExists(TRANSLATE_PACKAGE_BACKUP)) {
+            if (FileExists(TRANSLATE_PACKAGE_BACKUP.c_str())) {
                 R_TRY(CopyFileSimple(TRANSLATE_PACKAGE_BACKUP, std::string{TRANSLATE_PACKAGE_DIR} + "/package.ini.bkp"));
             }
-            R_TRY(UnzipFile(pbox, "/config/sphaira/downloads/lang_packs.zip", TRANSLATE_PACKAGE_DIR));
-            R_TRY(DeletePath("/config/sphaira/downloads/lang_packs.zip"));
+            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/lang_packs.zip", TRANSLATE_PACKAGE_DIR));
+            R_TRY(DeletePath(paths::DOWNLOADS + "/lang_packs.zip"));
             R_SUCCEED();
         },
     }));
@@ -2325,10 +2325,10 @@ void Menu::BuildCategories() {
                     }, App::GetTextScrollSpeed());
                 }},
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
-                { "Restart Sphaira"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
+                { "Restart Kefir Hub"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
                     App::ExitRestart();
                 }},
-                { "Exit"_i18n, "Close Sphaira."_i18n, [](){ return std::string{}; }, [](){
+                { "Exit"_i18n, "Close Kefir Hub."_i18n, [](){ return std::string{}; }, [](){
                     App::Exit();
                 }},
             }
@@ -2337,7 +2337,7 @@ void Menu::BuildCategories() {
             "Appearance"_i18n,
             "Theme and audio options."_i18n,
             {
-                { "Theme"_i18n, "Select the active Sphaira theme."_i18n, ThemeValue, [](){
+                { "Theme"_i18n, "Select the active Kefir Hub theme."_i18n, ThemeValue, [](){
                     const auto themes = App::GetThemeMetaList();
                     if (!themes.empty()) {
                         PopupList::Items items;
@@ -2353,7 +2353,7 @@ void Menu::BuildCategories() {
                 }},
                 MakeBoolItem("Music"_i18n, "Enable background music from the current theme."_i18n, App::GetThemeMusicEnable, App::SetThemeMusicEnable),
                 MakeBoolItem("Animated waves"_i18n, "Enable animated background waves in the bottom bar."_i18n, App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
-                { "Sphaira theme options"_i18n, "Select the Sphaira interface theme and music options."_i18n, [](){ return std::string{}; }, [](){
+                { "Kefir Hub theme options"_i18n, "Select the Kefir Hub interface theme and music options."_i18n, [](){ return std::string{}; }, [](){
                     App::DisplayThemeOptions(false);
                 }, SettingsItemKind::Folder },
             }
@@ -2394,7 +2394,7 @@ void Menu::BuildCategories() {
         },
         {
             "Homebrew"_i18n,
-            "Shortcuts for core Sphaira tools."_i18n,
+            "Shortcuts for core Kefir Hub tools."_i18n,
             {
                 { "Homebrew App Store"_i18n, "Download and update homebrew apps."_i18n, [](){ return std::string{}; }, [](){
                     App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
@@ -2464,8 +2464,8 @@ void Menu::BuildCategories() {
             "Advanced"_i18n,
             "Power-user options and verification controls."_i18n,
             {
-                MakeBoolItem("Logging"_i18n, "Write logs to /config/sphaira/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
-                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Sphaira on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
+                MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
+                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
                 MakeOptionItem("Boost CPU during transfer"_i18n, "Enable CPU boost during transfers."_i18n, app->m_progress_boost_mode),
                 MakeOptionItem("Skip NCA hash verify"_i18n, "Skip SHA-256 verification over NCA content."_i18n, app->m_skip_nca_hash_verify),
                 MakeOptionItem("Skip RSA header verify"_i18n, "Skip RSA NCA fixed-key header verification."_i18n, app->m_skip_rsa_header_fixed_key_verify),

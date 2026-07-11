@@ -63,7 +63,7 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
 
     { .name = "GitHub", .title = "GitHub", .func = MiscMenuFuncGenerator<ui::menu::gh::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
         "Download releases directly from GitHub. "\
-        "Custom entries can be added to /config/sphaira/github" },
+        "Custom entries can be added to /config/kefir/github" },
 
 #if ENABLE_NETWORK_INSTALL
     { .name = "FTP", .title = "FTP Install", .func = MiscMenuFuncGenerator<ui::menu::ftp::Menu>, .flag = MiscMenuFlag_Install, .info =

@@ -123,7 +123,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Themes"_i18n, "Download and install theme packs."_i18n, 0, [](){
             App::Push<ui::menu::settings::ThemesMenu>();
         }},
-        { "Settings"_i18n, "Open Sphaira application settings."_i18n, 0, [](){
+        { "Settings"_i18n, "Open Kefir Hub application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
     };

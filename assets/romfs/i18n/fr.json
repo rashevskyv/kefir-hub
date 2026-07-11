@@ -549,7 +549,7 @@
   "Stream dump output over USB.": "Diffuser le flux du dump via USB.",
   "Convert personalized tickets during dump.": "Convertir les tickets personnalisés pendant le dump.",
   "Power-user options and verification controls.": "Options pour utilisateurs avancés et contrôles de vérification.",
-  "Write logs to /config/sphaira/log.txt.": "Écrire les logs dans /config/sphaira/log.txt.",
+  "Write logs to /config/kefir/log.txt.": "Écrire les logs dans /config/kefir/log.txt.",
   "Replace /hbmenu.nro with Sphaira on exit.": "Remplacer /hbmenu.nro par Sphaira en quittant.",
   "Enable CPU boost during transfers.": "Activer le boost CPU pendant les transferts.",
   "Skip SHA-256 verification over NCA content.": "Ignorer la vérification SHA-256 sur le contenu NCA.",

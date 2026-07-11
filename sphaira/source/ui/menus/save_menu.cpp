@@ -166,6 +166,66 @@ auto GetSaveTypeSubdir(u8 data_type) -> fs::FsPath {
     std::unreachable();
 }
 
+// DBI save backup layout:
+// /switch/DBI/saves/<game>/<YYYYMMDD>/<TID>_<type letter>_<YYYYMMDDHHMMSS>_<index>.zip
+// the zip stores save files with absolute paths and two metadata entries:
+// .dbi_save_info.ini (text) and .dbi_save_extra (raw FsSaveDataExtraData).
+constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
+constexpr const char* DBI_SAVE_INFO_NAME = ".dbi_save_info.ini";
+constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";
+
+// A (Account) and B (Bcat) are confirmed against real DBI backups,
+// the remaining letters follow the same first-letter scheme.
+auto GetDbiTypeLetter(u8 data_type) -> char {
+    switch (data_type) {
+        case FsSaveDataType_Account:   return 'A';
+        case FsSaveDataType_Bcat:      return 'B';
+        case FsSaveDataType_Device:    return 'D';
+        case FsSaveDataType_Temporary: return 'T';
+        case FsSaveDataType_Cache:     return 'C';
+    }
+    std::unreachable();
+}
+
+// timestamp from a dbi backup file name (<TID>_<letter>_<YYYYMMDDHHMMSS>_<index>.zip)
+// as a YYYYMMDDHHMMSS number, 0 if the name doesn't match.
+auto ParseDbiBackupNameTimestamp(std::string_view name) -> u64 {
+    if (name.size() < 34 || name[16] != '_' || name[18] != '_' || name[33] != '_') {
+        return 0;
+    }
+
+    u64 ts{};
+    for (size_t i = 19; i < 33; i++) {
+        if (name[i] < '0' || name[i] > '9') {
+            return 0;
+        }
+        ts = ts * 10 + (name[i] - '0');
+    }
+    return ts;
+}
+
+// timestamp key parsed from any known backup file name, 0 if unknown.
+auto ParseBackupNameTimestamp(std::string_view name) -> u64 {
+    if (const auto ts = ParseDbiBackupNameTimestamp(name)) {
+        return ts;
+    }
+
+    // sphaira: [prefix - ]YYYY.MM.DD @ HH.MM.SS.zip
+    constexpr auto tail_len = std::string_view{"YYYY.MM.DD @ HH.MM.SS.zip"}.size();
+    if (name.size() >= tail_len) {
+        char buf[tail_len + 1]{};
+        std::memcpy(buf, name.data() + name.size() - tail_len, tail_len);
+
+        u32 year, mon, day, hour, min, sec;
+        if (6 == std::sscanf(buf, "%4u.%2u.%2u @ %2u.%2u.%2u", &year, &mon, &day, &hour, &min, &sec)) {
+            return (u64)year * 10000000000ULL + (u64)mon * 100000000ULL + (u64)day * 1000000ULL
+                + (u64)hour * 10000ULL + (u64)min * 100ULL + sec;
+        }
+    }
+
+    return 0;
+}
+
 auto GetSaveTypeLabel(u8 data_type) -> const char* {
     switch (data_type) {
         case FsSaveDataType_System:     return "System";
@@ -407,6 +467,143 @@ auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& bac
     }
 
     return fs::AppendPath(fs::AppendPath(backup_root, BuildSavePathName(e, force_id_path)), GetSaveTypeSubdir(e.save_data_type));
+}
+
+// DBI keeps only ascii letters, digits and spaces in the game folder name
+// (e.g. "Adam's Venture: Origins" -> "Adams Venture Origins").
+auto BuildDbiGameFolderName(const Entry& e) -> fs::FsPath {
+    fs::FsPath out{};
+    size_t len{};
+
+    if (strcasecmp(e.GetName(), "corrupted")) {
+        for (const char* p = e.GetName(); *p && len < sizeof(out) - 1; p++) {
+            const char c = *p;
+            const bool keep = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == ' ';
+            if (keep && !(len == 0 && c == ' ')) {
+                out.s[len++] = c;
+            }
+        }
+
+        // FAT strips trailing spaces from directory names.
+        while (len && out.s[len - 1] == ' ') {
+            len--;
+        }
+        out.s[len] = '\0';
+    }
+
+    if (!len) {
+        std::snprintf(out, sizeof(out), "%016lX", e.application_id);
+    }
+
+    return out;
+}
+
+auto BuildDbiSavePath(const Entry& e, const struct tm& tm) -> fs::FsPath {
+    fs::FsPath path;
+    std::snprintf(path, sizeof(path), "%s/%s/%04d%02d%02d/%016lX_%c_%04d%02d%02d%02d%02d%02d_%u.zip",
+        DBI_SAVES_PATH, BuildDbiGameFolderName(e).s,
+        tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+        e.application_id, GetDbiTypeLetter(e.save_data_type),
+        tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
+        (u32)e.save_data_index);
+    return path;
+}
+
+// matches <TID>_<letter>_*.zip at the start of a dbi backup file name.
+auto IsDbiBackupName(const Entry& e, const char* name) -> bool {
+    char prefix[0x20];
+    std::snprintf(prefix, sizeof(prefix), "%016lX_%c_", e.application_id, GetDbiTypeLetter(e.save_data_type));
+
+    if (strncasecmp(name, prefix, std::strlen(prefix))) {
+        return false;
+    }
+
+    const auto len = std::strlen(name);
+    return len > 4 && !strcasecmp(name + len - 4, ".zip");
+}
+
+// account saves are per-profile and cache saves are per-index, but the dbi file
+// name does not encode either, so peek at the attribute stored inside the zip.
+auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool {
+    if (e.save_data_type != FsSaveDataType_Account && e.save_data_type != FsSaveDataType_Cache) {
+        return true;
+    }
+
+    zlib_filefunc64_def file_func;
+    mz::FileFuncStdio(&file_func);
+
+    auto zfile = unzOpen2_64(zip_path, &file_func);
+    if (!zfile) {
+        return true;
+    }
+    ON_SCOPE_EXIT(unzClose(zfile));
+
+    if (UNZ_END_OF_LIST_OF_FILE == unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
+        return true;
+    }
+    if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+        return true;
+    }
+    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+
+    FsSaveDataExtraData extra{};
+    if (sizeof(extra) != unzReadCurrentFile(zfile, &extra, sizeof(extra))) {
+        return true;
+    }
+
+    if (e.save_data_type == FsSaveDataType_Account) {
+        return !std::memcmp(&extra.attr.uid, &e.uid, sizeof(e.uid));
+    }
+    return extra.attr.save_data_index == e.save_data_index;
+}
+
+// collects every dbi-format backup zip belonging to e, newest first.
+auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
+    std::vector<fs::FsPath> out;
+
+    const auto sort_desc = [](std::vector<FsDirectoryEntry>& entries) {
+        std::ranges::sort(entries, [](const FsDirectoryEntry& a, const FsDirectoryEntry& b) {
+            return strcasecmp(a.name, b.name) > 0;
+        });
+    };
+
+    const auto scan_game_dir = [&](const fs::FsPath& game_dir) {
+        filebrowser::FsDirCollection dates{};
+        filebrowser::FsView::get_collection(fs, game_dir, "", dates, false, true, false);
+        sort_desc(dates.dirs);
+
+        for (const auto& date : dates.dirs) {
+            filebrowser::FsDirCollection files{};
+            filebrowser::FsView::get_collection(fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
+            sort_desc(files.files);
+
+            for (const auto& file : files.files) {
+                if (IsDbiBackupName(e, file.name)) {
+                    out.emplace_back(fs::AppendPath(files.path, file.name));
+                }
+            }
+        }
+    };
+
+    const auto dbi_root = fs::AppendPath(fs->Root(), DBI_SAVES_PATH);
+    const auto game_folder = BuildDbiGameFolderName(e);
+    scan_game_dir(fs::AppendPath(dbi_root, game_folder));
+
+    // the folder name guess may not match how DBI sanitized the title,
+    // fall back to scanning every game folder (file names carry the title id).
+    if (out.empty()) {
+        filebrowser::FsDirCollection root{};
+        filebrowser::FsView::get_collection(fs, dbi_root, "", root, false, true, false);
+
+        for (const auto& dir : root.dirs) {
+            if (!strcasecmp(dir.name, game_folder)) {
+                continue;
+            }
+            scan_game_dir(fs::AppendPath(dbi_root, dir.name));
+        }
+    }
+
+    return out;
 }
 
 auto MakeSdCardDumpLocation() -> dump::DumpLocation {
@@ -1529,31 +1726,63 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
 }
 
 bool Menu::FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const {
-    filebrowser::FsDirCollection collections[4]{};
-    for (auto i = 0; i < std::size(collections); i++) {
+    // best candidate across all backup locations, compared by the timestamp
+    // encoded in the file name so that an old dbi backup doesn't shadow a
+    // fresh sphaira backup (or the other way around).
+    struct Candidate {
+        u64 ts;
+        int source;
+        fs::FsPath path;
+    };
+    std::optional<Candidate> best;
+
+    const auto offer = [&](u64 ts, int source, const fs::FsPath& path) {
+        if (!best || ts > best->ts || (ts == best->ts && source < best->source)) {
+            best = Candidate{ts, source, path};
+        }
+    };
+
+    // dbi-format backups (sphaira now writes these as well), newest first.
+    if (!IsSystemLikeSave(e.save_data_type)) {
+        for (const auto& path : CollectDbiBackups(fs, e)) {
+            if (DbiBackupMatchesEntry(path, e)) {
+                const auto name = std::strrchr(path.s, '/');
+                offer(ParseBackupNameTimestamp(name ? name + 1 : path.s), 0, path);
+                break;
+            }
+        }
+    }
+
+    // sphaira backups: new structure (name, title id), then legacy (name, title id).
+    for (auto i = 0; i < 4; i++) {
         const bool legacy = i >= 2;
         const bool force_id_path = i % 2 != 0;
         const auto base_path = legacy
             ? BuildSaveBasePathLegacy(e, force_id_path, backup_root)
             : BuildSaveBasePath(e, force_id_path, backup_root);
         const auto save_path = fs::AppendPath(fs->Root(), base_path);
-        filebrowser::FsView::get_collection(fs, save_path, "", collections[i], true, false, false);
-        std::ranges::reverse(collections[i].files);
-    }
 
-    for (const auto& collection : collections) {
+        filebrowser::FsDirCollection collection{};
+        filebrowser::FsView::get_collection(fs, save_path, "", collection, true, false, false);
+        std::ranges::reverse(collection.files);
+
         for (const auto& p : collection.files) {
             const auto view = std::string_view{p.name};
             if (!view.ends_with(".zip")) {
                 continue;
             }
 
-            path_out = fs::AppendPath(collection.path, p.name);
-            return true;
+            offer(ParseBackupNameTimestamp(view), 1 + i, fs::AppendPath(collection.path, p.name));
+            break;
         }
     }
 
-    return false;
+    if (!best) {
+        return false;
+    }
+
+    path_out = best->path;
+    return true;
 }
 
 void Menu::RestoreSaves(std::vector<Entry> entries) {
@@ -1682,10 +1911,28 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         }
     }
 
+    // dbi backups store the raw FsSaveDataExtraData instead of the sphaira meta.
+    std::optional<FsSaveDataExtraData> dbi_extra{};
+    if (!meta.has_value() && UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
+        if (UNZ_OK == unzOpenCurrentFile(zfile)) {
+            ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+
+            FsSaveDataExtraData temp{};
+            if (sizeof(temp) == unzReadCurrentFile(zfile, &temp, sizeof(temp))) {
+                dbi_extra = temp;
+                log_write("loaded dbi save extra data\n");
+            }
+        }
+    }
+
     if (meta.has_value()) {
         log_write("extending save file\n");
         R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, meta->data_size, meta->journal_size));
         log_write("extended save file\n");
+    } else if (dbi_extra.has_value() && dbi_extra->data_size > 0 && dbi_extra->journal_size > 0) {
+        log_write("extending save file from dbi extra data\n");
+        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, dbi_extra->data_size, dbi_extra->journal_size));
+        log_write("extended save file from dbi extra data\n");
     } else {
         log_write("doing manual meta parse\n");
         s64 total_size{};
@@ -1709,7 +1956,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
             fs::FsPath name;
             R_UNLESS(UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name, sizeof(name), 0, 0, 0, 0), Result_UnzGetCurrentFileInfo64);
 
-            if (name == NX_SAVE_META_NAME) {
+            if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
                 continue;
             }
             total_size += info.uncompressed_size;
@@ -1743,8 +1990,8 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     // restore save data from zip.
     pbox->NewTransfer("Restoring save..."_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
-        // skip restoring the meta file.
-        if (name == NX_SAVE_META_NAME) {
+        // skip restoring the meta files (sphaira and dbi).
+        if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
             log_write("skipping meta\n");
             return false;
         }
@@ -1814,7 +2061,16 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     zip_info_default.tmz_date.tm_mon = tm->tm_mon;
     zip_info_default.tmz_date.tm_year = tm->tm_year;
 
-    const auto path = fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
+    // non-system saves are written in the dbi backup format so that DBI can
+    // restore them and vice versa. system saves keep the sphaira format.
+    const auto dbi_format = !IsSystemLikeSave(e.save_data_type);
+
+    const auto now = std::time(NULL);
+    const auto now_tm = *std::localtime(&now);
+
+    const auto path = dbi_format
+        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm))
+        : fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
     const auto temp_path = path + ".temp";
 
     fs->CreateDirectoryRecursivelyWithPath(temp_path);
@@ -1839,8 +2095,8 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         R_UNLESS(zfile, Result_ZipOpen2_64);
         ON_SCOPE_EXIT(zipClose(zfile, "sphaira v" APP_VERSION_HASH));
 
-        // add save meta.
-        {
+        // add save meta (sphaira format only, dbi stores its own meta below).
+        if (!dbi_format) {
             const NXSaveMeta meta{
                 .magic = NX_SAVE_META_MAGIC,
                 .version = NX_SAVE_META_VERSION,
@@ -1860,6 +2116,20 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
             R_UNLESS(ZIP_OK == zipWriteInFileInZip(zfile, &meta, sizeof(meta)), Result_ZipWriteInFileInZip);
         }
 
+        // dbi stores explicit directory entries with absolute paths.
+        if (dbi_format) {
+            for (const auto& collection : collections) {
+                if (collection.path == "/") {
+                    continue;
+                }
+
+                fs::FsPath dir_name;
+                std::snprintf(dir_name, sizeof(dir_name), "%s/", collection.path.s);
+                R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, dir_name, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
+                zipCloseFileInZip(zfile);
+            }
+        }
+
         const auto zip_add = [&](const fs::FsPath& file_path) -> Result {
             const char* file_name_in_zip = file_path.s;
 
@@ -1871,6 +2141,13 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
             // root paths are banned in zips, they will warn when extracting otherwise.
             while (file_name_in_zip[0] == '/') {
                 file_name_in_zip++;
+            }
+
+            // dbi stores entries with absolute paths.
+            fs::FsPath dbi_name;
+            if (dbi_format) {
+                std::snprintf(dbi_name, sizeof(dbi_name), "/%s", file_name_in_zip);
+                file_name_in_zip = dbi_name.s;
             }
 
             pbox->NewTransfer(file_name_in_zip);
@@ -1891,6 +2168,48 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
                 const auto file_path = fs::AppendPath(collection.path, file.name);
                 R_TRY(zip_add(file_path));
             }
+        }
+
+        // add the dbi meta entries last, matching real dbi backups.
+        if (dbi_format) {
+            const auto write_meta_file = [&](const char* name, const void* data, size_t size) -> Result {
+                R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, name, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
+                ON_SCOPE_EXIT(zipCloseFileInZip(zfile));
+                R_UNLESS(ZIP_OK == zipWriteInFileInZip(zfile, data, size), Result_ZipWriteInFileInZip);
+                R_SUCCEED();
+            };
+
+            const auto account = e.save_data_type == FsSaveDataType_Account
+                ? GetAccountName(e.uid)
+                : std::string{GetSaveTypeLabel(e.save_data_type)};
+
+            const char* space = "User";
+            switch (e.save_data_space_id) {
+                case FsSaveDataSpaceId_System:
+                case FsSaveDataSpaceId_SdSystem:
+                case FsSaveDataSpaceId_ProperSystem:
+                    space = "System";
+                    break;
+                case FsSaveDataSpaceId_Temporary:
+                    space = "Temporary";
+                    break;
+            }
+
+            char info[0x400];
+            std::snprintf(info, sizeof(info),
+                "TitleId=%016lX\n"
+                "TitleName=%s\n"
+                "BackupDate=%04d-%02d-%02d %02d:%02d:%02d\n"
+                "Account=%s\n"
+                "Space=%s",
+                e.application_id,
+                e.GetName(),
+                now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec,
+                account.c_str(),
+                space);
+
+            R_TRY(write_meta_file(DBI_SAVE_INFO_NAME, info, std::strlen(info)));
+            R_TRY(write_meta_file(DBI_SAVE_EXTRA_NAME, &extra, sizeof(extra)));
         }
     }
 
@@ -1981,54 +2300,68 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             filebrowser::FsDirCollection local_col{};
             filebrowser::FsView::get_collection(&sd_fs, local_path, "", local_col, true, false, false);
 
+            // name -> full local path, dbi-format backups included.
+            std::vector<std::pair<std::string, fs::FsPath>> local_files;
+            for (const auto& f : local_col.files) {
+                local_files.emplace_back(f.name, fs::AppendPath(local_col.path, f.name));
+            }
+            if (!IsSystemLikeSave(e.save_data_type)) {
+                for (const auto& p : CollectDbiBackups(&sd_fs, e)) {
+                    const auto name = std::strrchr(p.s, '/');
+                    local_files.emplace_back(name ? name + 1 : p.s, p);
+                }
+            }
+
             const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
             pbox->NewTransfer("Listing remote files..."_i18n);
             const auto remote_files = curl::ListWebdav(loc.url, loc.user, loc.pass, remote_rel, loc.bearer, loc.pub_key, loc.priv_key, loc.port);
 
-            std::vector<std::string> to_upload;
-            for (const auto& f : local_col.files) {
-                std::string fname(f.name);
+            std::vector<std::pair<std::string, fs::FsPath>> to_upload;
+            for (const auto& [fname, fpath] : local_files) {
                 if (!fname.ends_with(".zip")) continue;
-                if (std::ranges::find(remote_files, fname) == remote_files.end()) {
-                    to_upload.push_back(fname);
-                }
+                if (std::ranges::find(remote_files, fname) != remote_files.end()) continue;
+                if (std::ranges::find_if(to_upload, [&](const auto& u){ return u.first == fname; }) != to_upload.end()) continue;
+                to_upload.emplace_back(fname, fpath);
             }
 
             std::vector<std::string> to_download;
             for (const auto& f : remote_files) {
                 if (!f.ends_with(".zip")) continue;
-                bool found = false;
-                for (const auto& lf : local_col.files) {
-                    if (std::string(lf.name) == f) {
-                        found = true;
-                        break;
-                    }
-                }
+                const auto found = std::ranges::find_if(local_files, [&](const auto& l){ return l.first == f; }) != local_files.end();
                 if (!found) {
                     to_download.push_back(f);
                 }
             }
 
-            for (const auto& f : to_upload) {
-                pbox->NewTransfer("Uploading: "_i18n + f);
-                const auto local_file = fs::AppendPath(local_path, f);
+            for (const auto& [fname, fpath] : to_upload) {
+                pbox->NewTransfer("Uploading: "_i18n + fname);
 
                 curl::Api api(CURL_LOCATION_TO_API(loc));
                 api.SetUpload(true);
-                api.SetOption(curl::Path{local_file});
-                api.SetOption(curl::UploadInfo{remote_rel + "/" + f});
+                api.SetOption(curl::Path{fpath});
+                api.SetOption(curl::UploadInfo{remote_rel + "/" + fname});
 
                 auto res = curl::FromFile(api);
                 if (!res.success) {
-                    log_write("[SYNC] failed to upload: %s\n", f.c_str());
+                    log_write("[SYNC] failed to upload: %s\n", fname.c_str());
                     R_THROW(Result_SaveSyncFailed);
                 }
             }
 
             for (const auto& f : to_download) {
                 pbox->NewTransfer("Downloading: "_i18n + f);
-                const auto local_file = fs::AppendPath(local_path, f);
-                sd_fs.CreateDirectoryRecursivelyWithPath(local_path);
+
+                // dbi-named backups go into the dbi layout: <game>/<YYYYMMDD>/<file>.
+                fs::FsPath local_file;
+                if (!IsSystemLikeSave(e.save_data_type) && IsDbiBackupName(e, f.c_str()) && ParseDbiBackupNameTimestamp(f)) {
+                    fs::FsPath dbi_dir;
+                    std::snprintf(dbi_dir, sizeof(dbi_dir), "%s/%s/%.8s",
+                        DBI_SAVES_PATH, BuildDbiGameFolderName(e).s, f.c_str() + 19);
+                    local_file = fs::AppendPath(fs::AppendPath(sd_fs.Root(), dbi_dir), f);
+                } else {
+                    local_file = fs::AppendPath(local_path, f);
+                }
+                sd_fs.CreateDirectoryRecursivelyWithPath(local_file);
 
                 const auto temp_file = local_file + ".temp";
 

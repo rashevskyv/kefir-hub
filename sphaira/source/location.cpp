@@ -9,7 +9,7 @@
 namespace sphaira::location {
 namespace {
 
-constexpr fs::FsPath location_path{"/config/sphaira/locations.ini"};
+const fs::FsPath location_path{paths::LOCATIONS};
 
 } // namespace
 

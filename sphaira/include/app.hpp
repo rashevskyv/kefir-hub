@@ -9,6 +9,7 @@
 #include "option.hpp"
 #include "fs.hpp"
 #include "log.hpp"
+#include "app_paths.hpp"
 
 #ifdef USE_NVJPG
 #include <nvjpg.hpp>
@@ -279,8 +280,8 @@ public:
     }
 
 // private:
-    static constexpr inline auto CONFIG_PATH = "/config/sphaira/config.ini";
-    static constexpr inline auto PLAYLOG_PATH = "/config/sphaira/playlog.ini";
+    static inline const auto CONFIG_PATH = paths::CONFIG.c_str();
+    static inline const auto PLAYLOG_PATH = paths::PLAYLOG.c_str();
     static constexpr inline auto INI_SECTION = "config";
     static constexpr inline auto DEFAULT_THEME_PATH = "romfs:/themes/default_theme.ini";
 

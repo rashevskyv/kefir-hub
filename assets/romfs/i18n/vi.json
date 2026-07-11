@@ -543,7 +543,7 @@
   "Convert to common ticket": "Chuyển đổi sang vé phổ thông",
   "Convert personalized tickets during dump.": "Chuyển đổi vé cá nhân trong thời gian đổ.",
   "Power-user options and verification controls.": "Tùy chọn người dùng thành thạo và kiểm soát xác minh.",
-  "Write logs to /config/sphaira/log.txt.": "Viết nhật ký vào /config/sphaira/log.txt.",
+  "Write logs to /config/kefir/log.txt.": "Viết nhật ký vào /config/kefir/log.txt.",
   "Replace /hbmenu.nro with Sphaira on exit.": "Thay thế /hbmenu.nro bằng Sphaira khi thoát.",
   "Enable CPU boost during transfers.": "Cho phép tăng CPU trong quá trình truyền.",
   "Skip SHA-256 verification over NCA content.": "Bỏ qua xác minh SHA-256 đối với nội dung NCA.",

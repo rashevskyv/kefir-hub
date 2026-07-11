@@ -45,9 +45,14 @@ extern "C" {
 namespace sphaira {
 namespace {
 
-constexpr fs::FsPath DEFAULT_MUSIC_PATH = "/config/sphaira/themes/default_music.bfstm";
+const fs::FsPath DEFAULT_MUSIC_PATH = paths::THEMES + "default_music.bfstm";
 constexpr const char* DEFAULT_MUSIC_URL = "https://files.catbox.moe/1ovji1.bfstm";
 // constexpr const char* DEFAULT_MUSIC_URL = "https://raw.githubusercontent.com/ITotalJustice/sphaira/refs/heads/master/assets/default_music.bfstm";
+
+bool IsKefirHubNacp(const NacpStruct& nacp) {
+    const auto name = nacp_util::GetName(nacp);
+    return !std::strcmp(name, "Kefir Hub") || !std::strcmp(name, "sphaira");
+}
 
 auto NormalizeWebdavUrl(std::string url) -> std::string {
     constexpr const char* whitespace = " \t\r\n";
@@ -851,7 +856,7 @@ void App::SetReplaceHbmenuEnable(bool enable) {
             // check we have already replaced hbmenu with sphaira
             NacpStruct hbmenu_nacp{};
             if (R_SUCCEEDED(nro_get_nacp("/hbmenu.nro", hbmenu_nacp))) {
-                if (std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
+                if (!IsKefirHubNacp(hbmenu_nacp)) {
                     return;
                 }
             }
@@ -882,17 +887,17 @@ void App::SetReplaceHbmenuEnable(bool enable) {
                     // the full read/write will succeed.
                     fs::FsNativeSd fs;
                     NacpStruct sphaira_nacp;
-                    fs::FsPath sphaira_path = "/switch/sphaira/sphaira.nro";
+                    fs::FsPath sphaira_path = "/switch/kefir-hub/kefir-hub.nro";
                     Result rc;
 
                     // first, try and backup sphaira, its not super important if this fails.
                     rc = nro_get_nacp(sphaira_path, sphaira_nacp);
-                    if (R_FAILED(rc) || std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
-                        sphaira_path = "/switch/sphaira.nro";
+                    if (R_FAILED(rc) || !IsKefirHubNacp(sphaira_nacp)) {
+                        sphaira_path = "/switch/kefir-hub.nro";
                         rc = nro_get_nacp(sphaira_path, sphaira_nacp);
                     }
 
-                    if (R_SUCCEEDED(rc) && !std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
+                    if (R_SUCCEEDED(rc) && IsKefirHubNacp(sphaira_nacp)) {
                         if (IsVersionNewer(sphaira_nacp.display_version, hbmenu_nacp.display_version)) {
                             if (R_FAILED(rc = fs.copy_entire_file(sphaira_path, "/hbmenu.nro"))) {
                                 log_write("failed to copy entire file: %s 0x%X module: %u desc: %u\n", sphaira_path.s, rc, R_MODULE(rc), R_DESCRIPTION(rc));
@@ -902,8 +907,8 @@ void App::SetReplaceHbmenuEnable(bool enable) {
                         }
                     } else {
                         // sphaira doesn't yet exist, create a new file.
-                        sphaira_path = "/switch/sphaira/sphaira.nro";
-                        fs.CreateDirectoryRecursively("/switch/sphaira/");
+                        sphaira_path = "/switch/kefir-hub/kefir-hub.nro";
+                        fs.CreateDirectoryRecursively("/switch/kefir-hub/");
                         fs.copy_entire_file(sphaira_path, "/hbmenu.nro");
                     }
 
@@ -916,7 +921,7 @@ void App::SetReplaceHbmenuEnable(bool enable) {
                             );
                         } else {
                             App::Push<ui::OptionBox>(
-                                "Failed to restore hbmenu, using sphaira instead"_i18n,
+                                "Failed to restore hbmenu, using Kefir Hub instead"_i18n,
                                 "OK"_i18n
                             );
                         }
@@ -929,7 +934,7 @@ void App::SetReplaceHbmenuEnable(bool enable) {
                     // if we were hbmenu, exit now (as romfs is gone).
                     if (IsHbmenu()) {
                         App::Push<ui::OptionBox>(
-                            "Restored hbmenu, closing sphaira"_i18n,
+                            "Restored hbmenu, closing Kefir Hub"_i18n,
                             "OK"_i18n, [](auto) {
                                 App::Exit();
                             }
@@ -1005,7 +1010,7 @@ void App::SetLanguage(long index) {
         on_i18n_change();
 
         App::Push<ui::OptionBox>(
-            "Restart Sphaira?"_i18n,
+            "Restart Kefir Hub?"_i18n,
             "Back"_i18n, "Restart"_i18n, 1, [](auto op_index){
                 if (op_index && *op_index) {
                     App::ExitRestart();
@@ -1045,11 +1050,11 @@ auto App::Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result {
     }
 
     if (config.logo.empty()) {
-        fs::FsNativeSd().read_entire_file("/config/sphaira/logo/NintendoLogo.png", config.logo);
+        fs::FsNativeSd().read_entire_file(paths::LOGO + "/NintendoLogo.png", config.logo);
     }
 
     if (config.gif.empty()) {
-        fs::FsNativeSd().read_entire_file("/config/sphaira/logo/StartupMovie.gif", config.gif);
+        fs::FsNativeSd().read_entire_file(paths::LOGO + "/StartupMovie.gif", config.gif);
     }
 
     return install_forwarder(pbox, config, GetInstallSdEnable() ? NcmStorageId_SdCard : NcmStorageId_BuiltInUser);
@@ -1421,7 +1426,7 @@ void App::ScanThemeEntries() {
     }
 
     // then load custom entries
-    ScanThemes("/config/sphaira/themes/");
+    ScanThemes(paths::THEMES);
 }
 
 App::App(const char* argv0) {
@@ -1445,11 +1450,23 @@ App::App(const char* argv0) {
     }
 
     fs::FsNativeSd fs;
-    fs.CreateDirectoryRecursively("/config/sphaira");
-    fs.CreateDirectory("/config/sphaira/assoc");
-    fs.CreateDirectory("/config/sphaira/themes");
-    fs.CreateDirectory("/config/sphaira/github");
-    fs.CreateDirectory("/config/sphaira/i18n");
+    const bool has_legacy_data = fs.DirExists(paths::LEGACY_DATA_ROOT);
+    const bool has_kefir_data = fs.DirExists(paths::DATA_ROOT);
+    if (has_legacy_data && has_kefir_data) {
+        diagAbortWithResult(FsError_PathAlreadyExists);
+    }
+    if (has_legacy_data) {
+        const auto rc = fs.RenameDirectory(paths::LEGACY_DATA_ROOT, paths::DATA_ROOT);
+        if (R_FAILED(rc)) {
+            diagAbortWithResult(rc);
+        }
+    }
+
+    fs.CreateDirectoryRecursively(paths::DATA_ROOT);
+    fs.CreateDirectory(paths::DATA_ROOT + "/assoc");
+    fs.CreateDirectory(paths::DATA_ROOT + "/themes");
+    fs.CreateDirectory(paths::DATA_ROOT + "/github");
+    fs.CreateDirectory(paths::DATA_ROOT + "/i18n");
 
     auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
         auto app = static_cast<App*>(UserData);
@@ -1515,7 +1532,7 @@ App::App(const char* argv0) {
     if (App::GetLogEnable()) {
         log_file_init();
         log_write("hello world v%s\n", APP_VERSION_HASH);
-        App::Notify("Warning! Logs are enabled, Sphaira will run slowly!"_i18n);
+        App::Notify("Warning! Logs are enabled, Kefir Hub will run slowly!"_i18n);
     }
 
     if (log_is_init()) {
@@ -1761,7 +1778,7 @@ void App::DisplayThemeOptions(bool left_side) {
 
     options->Add<ui::SidebarEntryArray>("Select Theme"_i18n, theme_items, [](s64& index_out){
         App::SetTheme(index_out);
-    }, App::GetThemeIndex(), "Customise the look of Sphaira by changing the theme"_i18n);
+    }, App::GetThemeIndex(), "Customise the look of Kefir Hub by changing the theme"_i18n);
 
     options->Add<ui::SidebarEntryBool>("Music"_i18n, App::GetThemeMusicEnable(), [](bool& enable){
         App::SetThemeMusicEnable(enable);
@@ -1788,7 +1805,7 @@ void App::DisplayThemeOptions(bool left_side) {
         } else {
             download_default_music();
         }
-    },  "Downloads the default background music for sphaira."_i18n);
+    },  "Downloads the default background music for Kefir Hub."_i18n);
 }
 
 void App::DisplayNetworkOptions(bool left_side) {
@@ -1868,11 +1885,11 @@ void App::DisplayAdvancedOptions(bool left_side) {
 
     options->Add<ui::SidebarEntryBool>("Logging"_i18n, App::GetLogEnable(), [](bool& enable){
         App::SetLogEnable(enable);
-    }, "Logs to /config/sphaira/log.txt"_i18n);
+    }, "Logs to /config/kefir/log.txt"_i18n);
 
     options->Add<ui::SidebarEntryBool>("Replace hbmenu on exit"_i18n, App::GetReplaceHbmenuEnable(), [](bool& enable){
         App::SetReplaceHbmenuEnable(enable);
-    }, "When enabled, it replaces /hbmenu.nro with Sphaira, creating a backup of hbmenu to /switch/hbmenu.nro\n\n" \
+    }, "When enabled, it replaces /hbmenu.nro with Kefir Hub, creating a backup of hbmenu to /switch/hbmenu.nro\n\n" \
        "Disabling will give you the option to restore hbmenu."_i18n);
 
     options->Add<ui::SidebarEntryBool>("Boost CPU during transfer"_i18n, App::GetApp()->m_progress_boost_mode,
@@ -1893,7 +1910,7 @@ void App::DisplayAdvancedOptions(bool left_side) {
             g_app->m_left_menu.Set(e);
 
             App::Push<ui::OptionBox>(
-                "Press OK to restart Sphaira"_i18n, "OK"_i18n, [](auto){
+                "Press OK to restart Kefir Hub"_i18n, "OK"_i18n, [](auto){
                     App::ExitRestart();
                 }
             );
@@ -1910,7 +1927,7 @@ void App::DisplayAdvancedOptions(bool left_side) {
             g_app->m_right_menu.Set(e);
 
             App::Push<ui::OptionBox>(
-                "Press OK to restart Sphaira"_i18n, "OK"_i18n, [](auto){
+                "Press OK to restart Kefir Hub"_i18n, "OK"_i18n, [](auto){
                     App::ExitRestart();
                 }
             );
@@ -2192,7 +2209,7 @@ App::~App() {
         fs::FsNativeSd fs;
         Result rc;
 
-        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
+        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && !IsKefirHubNacp(hbmenu_nacp)) {
             log_write("backing up hbmenu.nro\n");
             if (R_FAILED(rc = fs.copy_entire_file("/switch/hbmenu.nro", "/hbmenu.nro"))) {
                 log_write("failed to backup  hbmenu.nro\n");
@@ -2213,18 +2230,18 @@ App::~App() {
         Result rc;
 
         // ensure that are still sphaira
-        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && !std::strcmp(nacp_util::GetName(hbmenu_nacp), "sphaira")) {
+        if (R_SUCCEEDED(rc = nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) && IsKefirHubNacp(hbmenu_nacp)) {
             NacpStruct sphaira_nacp;
-            fs::FsPath sphaira_path = "/switch/sphaira/sphaira.nro";
+            fs::FsPath sphaira_path = "/switch/kefir-hub/kefir-hub.nro";
 
             rc = nro_get_nacp(sphaira_path, sphaira_nacp);
-            if (R_FAILED(rc) || std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
-                sphaira_path = "/switch/sphaira.nro";
+            if (R_FAILED(rc) || !IsKefirHubNacp(sphaira_nacp)) {
+                sphaira_path = "/switch/kefir-hub.nro";
                 rc = nro_get_nacp(sphaira_path, sphaira_nacp);
             }
 
             // found sphaira, now lets get compare version
-            if (R_SUCCEEDED(rc) && !std::strcmp(nacp_util::GetName(sphaira_nacp), "sphaira")) {
+            if (R_SUCCEEDED(rc) && IsKefirHubNacp(sphaira_nacp)) {
                 if (IsVersionNewer(hbmenu_nacp.display_version, sphaira_nacp.display_version)) {
                     if (R_FAILED(rc = fs.copy_entire_file(GetExePath(), sphaira_path))) {
                         log_write("failed to copy entire file: %s 0x%X module: %u desc: %u\n", sphaira_path.s, rc, R_MODULE(rc), R_DESCRIPTION(rc));

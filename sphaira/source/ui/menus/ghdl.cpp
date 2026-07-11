@@ -363,7 +363,7 @@ void Menu::Scan() {
     }
 
     // then load custom entries
-    LoadEntriesFromPath("/config/sphaira/github/");
+    LoadEntriesFromPath(paths::GITHUB);
 
     Sort();
 

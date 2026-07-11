@@ -1,4 +1,5 @@
 #include "log.hpp"
+#include "app_paths.hpp"
 #include <cstdio>
 #include <cstdarg>
 #include <unistd.h>
@@ -8,7 +9,7 @@
 #if sphaira_USE_LOG
 namespace {
 
-constexpr const char* logpath = "/config/sphaira/log.txt";
+const auto& logpath = sphaira::paths::LOG;
 
 int nxlink_socket{};
 bool g_file_open{};
@@ -23,7 +24,7 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
     std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
 
     if (g_file_open) {
-        auto file = std::fopen(logpath, "a");
+        auto file = std::fopen(logpath.c_str(), "a");
         if (file) {
             std::fprintf(file, "%s", buf);
             std::fclose(file);
@@ -44,7 +45,7 @@ auto log_file_init() -> bool {
         return false;
     }
 
-    auto file = std::fopen(logpath, "w");
+    auto file = std::fopen(logpath.c_str(), "w");
     if (file) {
         g_file_open = true;
         std::fclose(file);

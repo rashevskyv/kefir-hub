@@ -486,7 +486,7 @@ void AppendConfirmModal(std::string& body) {
 constexpr std::string_view FOLDER_PAGE_HEADER = R"HTML(
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sphaira Files</title>
+<title>Kefir Hub Files</title>
 <style>
 body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0}
 header{position:sticky;top:0;background:rgba(23,25,35,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.08);z-index:10}
@@ -620,7 +620,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    body += "<div class=\"header-top\"><h1>Sphaira Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
+    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
 
     std::string crumb_accum;
     size_t start{};
@@ -1843,7 +1843,7 @@ void HandleStatus(Socket sock) {
 constexpr std::string_view PROGRESS_PAGE = R"HTML(
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sphaira Progress</title>
+<title>Kefir Hub Progress</title>
 <style>
 body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box}
 .card{max-width:420px;width:100%;text-align:center}
@@ -1855,7 +1855,7 @@ h1{font-size:20px;margin:0 0 24px}
 .idle{color:#64748b;font-size:15px}
 </style></head><body>
 <div class="card">
-<h1>Sphaira Progress</h1>
+<h1>Kefir Hub Progress</h1>
 <div id="content"><div class="idle">Waiting for activity&hellip;</div></div>
 </div>
 <script>
@@ -2075,7 +2075,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
 
     body += "<!doctype html><html><head><meta charset=\"utf-8\">";
     body += "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
-    body += "<title>Sphaira Album</title>";
+    body += "<title>Kefir Hub Album</title>";
     body += "<style>";
     body += "body{margin:0;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#f7f7f7}";
     body += "header{position:sticky;top:0;background:#17191d;padding:16px 18px;border-bottom:1px solid #333;z-index:10}";
@@ -2127,7 +2127,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "  .folder-icon{width:32px;height:32px;margin-bottom:6px}";
     body += "  .folder-name{font-size:11px}";
     body += "}";
-    body += "</style></head><body><header><div class=\"header-top\"><h1>Sphaira Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div></header>";
+    body += "</style></head><body><header><div class=\"header-top\"><h1>Kefir Hub Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div></header>";
 
     body += "<div class=\"tabs\">";
     body += "<a href=\"/album\" class=\"tab" + std::string(!browse_mode ? " active" : "") + "\">All Screenshots</a>";

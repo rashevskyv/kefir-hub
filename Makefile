@@ -5,8 +5,8 @@ SPHAIRA_BUILD_JOBS ?= $(shell nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/
 SPHAIRA_FAN_TITLE_ID := 00FF46554E43544C
 
 # Шлях до зібраного NRO
-SOURCE_NRO_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/switch/sphaira
-SOURCE_NRO_FILE := $(SOURCE_NRO_DIR)/sphaira.nro
+SOURCE_NRO_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/switch/kefir-hub
+SOURCE_NRO_FILE := $(SOURCE_NRO_DIR)/kefir-hub.nro
 SOURCE_SYSMODULE_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)
 
 # Куди копіювати NRO
@@ -28,14 +28,14 @@ FTP_PORT ?= 5000
 # Команда за замовчуванням (make або make all)
 all: copy
 	@echo "-------------------------------------------------------"
-	@echo "Sphaira built and copied to $(DEST_NRO_FILE)"
+	@echo "Kefir Hub built and copied to $(DEST_NRO_FILE)"
 	@echo "-------------------------------------------------------"
 
 # Тільки збірка
 build:
-	@echo ">>> Configuring Sphaira with preset: $(SPHAIRA_BUILD_PRESET)..."
+	@echo ">>> Configuring Kefir Hub with preset: $(SPHAIRA_BUILD_PRESET)..."
 	@cd $(SPHAIRA_ROOT_DIR) && cmake --preset $(SPHAIRA_BUILD_PRESET)
-	@echo ">>> Building Sphaira with preset: $(SPHAIRA_BUILD_PRESET) using $(SPHAIRA_BUILD_JOBS) jobs..."
+	@echo ">>> Building Kefir Hub with preset: $(SPHAIRA_BUILD_PRESET) using $(SPHAIRA_BUILD_JOBS) jobs..."
 	@cd $(SPHAIRA_ROOT_DIR) && cmake --build --preset $(SPHAIRA_BUILD_PRESET) --parallel $(SPHAIRA_BUILD_JOBS)
 	@echo ">>> Build complete. Artifact: $(SOURCE_NRO_FILE)"
 
@@ -44,7 +44,7 @@ copy: build
 	@echo ">>> Copying $(SOURCE_NRO_FILE) to $(DEST_NRO_FILE)..."
 	@mkdir -p $(DEST_DIR)
 	@cp $(SOURCE_NRO_FILE) $(DEST_NRO_FILE)
-	@echo ">>> Copying Sphaira fan sysmodule to $(DEST_CONTENTS_DIR)..."
+	@echo ">>> Copying Kefir fan sysmodule to $(DEST_CONTENTS_DIR)..."
 	@mkdir -p $(DEST_CONTENTS_DIR)
 	@rm -rf $(DEST_SYSMODULE_DIR)
 	@cp -r $(SOURCE_SYSMODULE_DIR) $(DEST_CONTENTS_DIR)/
@@ -59,14 +59,14 @@ nxlink:
 # Відправка через FTP
 ftp pftp:
 	@echo ">>> Uploading NRO and sysmodule to $(FTP_IP):$(FTP_PORT) via FTP..."
-	curl --ftp-create-dirs -T $(SOURCE_NRO_FILE) ftp://$(FTP_IP):$(FTP_PORT)/switch/sphaira/sphaira.nro
+	curl --ftp-create-dirs -T $(SOURCE_NRO_FILE) ftp://$(FTP_IP):$(FTP_PORT)/switch/kefir-hub/kefir-hub.nro
 	curl --ftp-create-dirs -T $(SOURCE_SYSMODULE_DIR)/exefs.nsp ftp://$(FTP_IP):$(FTP_PORT)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)/exefs.nsp
 	curl --ftp-create-dirs -T $(SOURCE_SYSMODULE_DIR)/toolbox.json ftp://$(FTP_IP):$(FTP_PORT)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)/toolbox.json
 	@echo ">>> FTP upload complete."
 
 # Очищення
 clean:
-	@echo ">>> Cleaning Sphaira build directory: $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)..."
+	@echo ">>> Cleaning Kefir Hub build directory: $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)..."
 	@rm -rf $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)
 	@echo ">>> Cleaning copied NRO: $(DEST_NRO_FILE)..."
 	@rm -f $(DEST_NRO_FILE)

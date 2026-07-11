@@ -1,6 +1,6 @@
-# Sphaira
+# Kefir Hub
 
-A homebrew menu for the Nintendo Switch.
+A Kefir-focused homebrew hub for the Nintendo Switch, based on the upstream Sphaira project.
 
 [See the GBATemp thread for more details / discussion](https://gbatemp.net/threads/sphaira-hbmenu-replacement.664523/).
 
@@ -109,7 +109,7 @@ Sphaira provides an integrated image viewer with dedicated legend and controls:
 ## File Browser
 
 Sphaira includes a robust file manager with standard operations (Cut, Paste, Rename, Delete, Create File/Folder, Extract/Compress zip, Install/Forwarder) and write protection handling:
-- **Samba (SMB2/3) Network Storage:** Mount network folders directly in the file manager. Select "Add network location" from the Advanced Options sidebar to configure server addresses, share names, and optional credentials. Connection is established asynchronously using a progress screen and the location is saved to `/config/sphaira/locations.ini` (Note: credentials are saved in plain text for compatibility with NXMP). You can browse network folders as native directories and play audio or video files from them directly using NXMP (which will receive the full credential-embedded `smb://` URL in its arguments).
+- **Samba (SMB2/3) Network Storage:** Mount network folders directly in the file manager. Select "Add network location" from the Advanced Options sidebar to configure server addresses, share names, and optional credentials. Connection is established asynchronously using a progress screen and the location is saved to `/config/kefir/locations.ini` (Note: credentials are saved in plain text for compatibility with NXMP). You can browse network folders as native directories and play audio or video files from them directly using NXMP (which will receive the full credential-embedded `smb://` URL in its arguments).
 - **NXMP Media Player Integration:** When selecting audio (MP3, OGG, FLAC, WAV, etc.) or video (MP4, MKV, AVI, TS, etc.) files on the SD card, you can choose "Play with NXMP" from the options sidebar. It will launch the external NXMP media player directly, passing the file's SD card path as an argument. If NXMP is not installed on the console, it prompts the user to open the App Store to download it.
 - **Looping Menu Navigation:** Option sidebar lists feature looping circular navigation (pressing UP on the first item wraps to the last, and vice-versa).
 - **Enhanced Selection Checkboxes:** Checkboxes shown when marking multiple files (triggered by X/Y) are enlarged to 20px, shifted left into the empty margin (-30px) to prevent overlapping filenames, and feature a larger 18px checkmark icon for improved readability.
@@ -149,7 +149,7 @@ Sphaira supports multiple display layouts for homebrew and games, customizable t
 - **NACP v2 Support:** Added compatibility for parsing the new compressed NACP metadata format introduced in Nintendo Switch firmware 20.0+, ensuring titles and authors display correctly.
 - **Grid & Icon Views:** Grid and Icon views now support seamless row-to-row navigation. Pressing **Right** on the last item of a row moves the cursor directly to the next row, and **Left** on the first item of a row moves it back to the previous row.
 - **HB Menu Layout:** Replicates the classic Nintendo Switch Homebrew Menu style. It displays a large icon of the selected app on the left along with detailed metadata (Name, Author, Version) on the right, and lists all available applications in a horizontal row at the bottom. The horizontal row uses custom dual-banner cards (showing the clean filename in a white banner on top, and the full-sized icon below).
-- **Animated Waves:** An animated wave background (reproducing the classic hbmenu background) runs along the bottom of the screen. This can be enabled or disabled via "Settings -> Appearance -> Animated waves". Its colors are fully customizable in `/config/sphaira/config.ini` by specifying `wave_color_dark` (for dark themes) and `wave_color_light` (for light themes) as hex values (e.g. `0x00FFC8`). If left blank, it automatically resolves to the active theme's highlight colors.
+- **Animated Waves:** An animated wave background (reproducing the classic hbmenu background) runs along the bottom of the screen. This can be enabled or disabled via "Settings -> Appearance -> Animated waves". Its colors are fully customizable in `/config/kefir/config.ini` by specifying `wave_color_dark` (for dark themes) and `wave_color_light` (for light themes) as hex values (e.g. `0x00FFC8`). If left blank, it automatically resolves to the active theme's highlight colors.
 - **Charging Indicator:** When charging, the battery percentage numbers are displayed in a clean green color with a static lightning bolt icon on the right, maintaining a consistent size and layout to align perfectly with other status bar elements.
 
 ## Building from source
@@ -172,9 +172,11 @@ cmake --preset MinSizeRel
 cmake --build --preset MinSizeRel
 ```
 
-The output will be found in `build/MinSizeRel/sphaira.nro`
+The output will be found in `build/MinSizeRel/kefir-hub.nro`
 
 ## Credits
+
+Kefir Hub is derived from Sphaira; upstream links and attribution are retained below.
 
 - [borealis](https://github.com/natinusala/borealis)
 - [stb](https://github.com/nothings/stb)

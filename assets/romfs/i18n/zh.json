@@ -610,7 +610,7 @@
   "Convert to common ticket": "转换为普通票",
   "Convert personalized tickets during dump.": "在转储期间转换个性化门票。",
   "Power-user options and verification controls.": "高级用户选项和验证控制。",
-  "Write logs to /config/sphaira/log.txt.": "将日志写入/config/sphaira/log.txt。",
+  "Write logs to /config/kefir/log.txt.": "将日志写入/config/kefir/log.txt。",
   "Replace /hbmenu.nro with Sphaira on exit.": "退出时将 /hbmenu.nro 替换为 Sphaira。",
   "Enable CPU boost during transfers.": "在传输期间启用 CPU 加速。",
   "Skip SHA-256 verification over NCA content.": "跳过 NCA 内容的 SHA-256 验证。",

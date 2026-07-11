@@ -2314,7 +2314,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                     warning += "Current: " + m_current_firmware + "\n";
                     warning += "Target: " + version + "\n\n";
                     warning += "Downgrading firmware can cause boot problems. Make sure you know what you are doing and have a NAND or emuMMC backup.\n\n";
-                    warning += "If you continue, Sphaira will install the firmware and automatically apply the downgrade fix after installation.\n\n";
+                    warning += "If you continue, Kefir Hub will install the firmware and automatically apply the downgrade fix after installation.\n\n";
                     warning += "By continuing, you accept full responsibility.";
 
                     App::Push<DowngradeHoldConfirmBox>(warning,

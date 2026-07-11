@@ -547,7 +547,7 @@
   "Convert to common ticket": "일반 티켓으로 변환",
   "Convert personalized tickets during dump.": "덤프 중 개인화된 티켓을 변환합니다.",
   "Power-user options and verification controls.": "고급 사용자 옵션 및 검증 제어 기능입니다.",
-  "Write logs to /config/sphaira/log.txt.": "/config/sphaira/log.txt에 로그를 기록합니다.",
+  "Write logs to /config/kefir/log.txt.": "/config/kefir/log.txt에 로그를 기록합니다.",
   "Replace /hbmenu.nro with Sphaira on exit.": "종료 시 /hbmenu.nro를 Sphaira로 대체합니다.",
   "Enable CPU boost during transfers.": "전송 중 CPU 부스트를 활성화합니다.",
   "Skip SHA-256 verification over NCA content.": "NCA 콘텐츠에 대한 SHA-256 검증을 건너뜁니다.",

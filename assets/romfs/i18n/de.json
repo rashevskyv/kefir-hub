@@ -548,7 +548,7 @@
   "Convert to common ticket": "In Common-Ticket umwandeln",
   "Convert personalized tickets during dump.": "Personalisierte Tickets während des Dumps umwandeln.",
   "Power-user options and verification controls.": "Optionen für Power-User und Verifizierungskontrollen.",
-  "Write logs to /config/sphaira/log.txt.": "Logs nach /config/sphaira/log.txt schreiben.",
+  "Write logs to /config/kefir/log.txt.": "Logs nach /config/kefir/log.txt schreiben.",
   "Replace /hbmenu.nro with Sphaira on exit.": "/hbmenu.nro beim Beenden durch Sphaira ersetzen.",
   "Enable CPU boost during transfers.": "CPU-Boost während Übertragungen aktivieren.",
   "Skip SHA-256 verification over NCA content.": "SHA-256-Verifizierung von NCA-Inhalten überspringen.",

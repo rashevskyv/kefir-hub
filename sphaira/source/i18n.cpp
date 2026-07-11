@@ -1,6 +1,7 @@
 #include "i18n.hpp"
 #include "fs.hpp"
 #include "log.hpp"
+#include "app_paths.hpp"
 #include <yyjson.h>
 #include <vector>
 #include <unordered_map>
@@ -106,7 +107,7 @@ bool init(long index) {
         default: break;
     }
 
-    const fs::FsPath sdmc_path = "/config/sphaira/i18n/" + lang_name + ".json";
+    const fs::FsPath sdmc_path = paths::I18N + lang_name + ".json";
     const fs::FsPath romfs_path = "romfs:/i18n/" + lang_name + ".json";
 
     // Load romfs built-in translation first (always loaded as fallback)

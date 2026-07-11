@@ -133,7 +133,7 @@ Menu::Menu(const fs::FsPath& path, u32 flags) : MenuBase{path, flags}, m_path{pa
         orig_name = orig_name.substr(0, last_dot);
     }
     m_theme_name = orig_name;
-    m_author = "Sphaira"; // Default author
+    m_author = "Kefir Hub"; // Default author
     
     LoadImageFile();
 }
