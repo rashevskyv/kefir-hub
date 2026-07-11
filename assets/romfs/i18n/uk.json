@@ -813,5 +813,7 @@
   "Select at least one package": "Виберіть принаймні один пакет",
   "Selected packages may not fit after the configured reserve. Continue?": "Для вибраних пакетів може не вистачити місця з урахуванням резерву. Продовжити?",
   "Cancelled: ": "Скасовано: ",
-  "DBI session failed; remaining packages were skipped.": "Помилка сеансу DBI; решту пакетів пропущено."
+  "DBI session failed; remaining packages were skipped.": "Помилка сеансу DBI; решту пакетів пропущено.",
+  "Waiting for PC connection. Connect the USB cable and make sure the console is detected.": "Очікування підключення до ПК. Підключіть USB-кабель і переконайтеся, що консоль визначилася.",
+  "PC connected. Select packages and press Start in DBI Backend.": "ПК підключено. Виберіть пакети й натисніть Start у DBI Backend."
 }

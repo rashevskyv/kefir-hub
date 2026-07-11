@@ -9,6 +9,7 @@
 namespace sphaira::ui::menu::dbi {
 
 enum class State {
+    WaitingForUsb,
     WaitingForList,
     Analysing,
     ReviewQueue,
@@ -66,7 +67,7 @@ private:
     bool m_thread_created{};
     Mutex m_mutex{};
     UEvent m_cancel_event{};
-    std::atomic<State> m_state{State::WaitingForList};
+    std::atomic<State> m_state{State::WaitingForUsb};
     std::atomic_bool m_install_requested{};
     std::atomic_bool m_cancel_requested{};
     std::atomic_bool m_actions_dirty{true};

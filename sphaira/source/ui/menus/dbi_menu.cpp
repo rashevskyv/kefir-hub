@@ -172,10 +172,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
     const auto state = m_state.load();
 
-    if (state == State::WaitingForList || state == State::Analysing) {
-        const auto text = state == State::WaitingForList
-            ? "Waiting for DBI package list..."_i18n
-            : "Analysing packages (nothing is being installed)..."_i18n;
+    if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing) {
+        const auto text = state == State::WaitingForUsb
+            ? "Waiting for PC connection. Connect the USB cable and make sure the console is detected."_i18n
+            : state == State::WaitingForList
+                ? "PC connected. Select packages and press Start in DBI Backend."_i18n
+                : "Analysing packages (nothing is being installed)..."_i18n;
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 30.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str());
         return;
@@ -256,10 +258,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 void Menu::ThreadFunction() {
     for (;;) {
         if (GetToken().stop_requested()) return;
+        m_state = State::WaitingForUsb;
         const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
         if (rc == Result_UsbCancelled) return;
         if (R_FAILED(rc)) continue;
 
+        m_state = State::WaitingForList;
         std::vector<std::string> names;
         const auto list_rc = m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names);
         if (R_FAILED(list_rc)) continue;
@@ -406,10 +410,10 @@ void Menu::CancelSession() {
     m_cancel_requested = true;
     ueventSignal(&m_cancel_event);
     const auto state = m_state.load();
-    if (state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
+    if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
         m_usb_source->SignalCancel();
     }
-    if (state == State::WaitingForList) {
+    if (state == State::WaitingForUsb || state == State::WaitingForList) {
         m_state = State::Cancelled;
         m_actions_dirty = true;
     }
