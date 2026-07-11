@@ -103,31 +103,38 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
     nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, value_bounds);
     const float value_w = value_bounds[2];
 
-    // label wider than half the row: nothing sensible fits beside it, so the
-    // value moves to its own line below (id 52 - long backup folder paths).
-    const bool label_too_wide = label_w > usable_w * 0.5f;
-    // label fits, but the value alone would still need more than 3/4 of the
-    // row: also give it its own line rather than squeezing/scrolling it in
-    // whatever sliver is left next to the label.
-    const bool value_too_wide = !label_too_wide && value_w > usable_w * 0.75f;
-
-    if (label_too_wide || value_too_wide) {
+    // wrapping onto a second line is the last resort, used only when BOTH
+    // sides are individually so long (over 3/4 of the row each) that
+    // neither could reasonably sit beside the other. A long label with a
+    // short value ("Auto-sync after backup: On") must stay on one line -
+    // the label simply takes whatever the value doesn't need and scrolls
+    // on focus if that still isn't enough. Same the other way around.
+    if (label_w > usable_w * 0.75f && value_w > usable_w * 0.75f) {
         const float line_gap = 24.f;
         const float top_y = mid_y - line_gap / 2.f;
         const float bottom_y = mid_y + line_gap / 2.f;
 
         m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
-        // second line: scrolls on focus if even the full row width isn't enough.
+        // each line scrolls on focus if even the full row width isn't enough.
         m_scolling_value.Draw(vg, HasFocus(), m_pos.x + pad, bottom_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
         return;
     }
 
-    // single line: the label takes only the width it actually needs, and
-    // everything left over goes to the value - capped and flush against the
-    // row's right edge, matching the previous look for short values exactly.
-    const float left_w = std::min(label_w, usable_w);
-    const float remaining_w = std::max(0.f, usable_w - left_w - (right.empty() ? 0.f : gap));
-    const float right_w = std::min(value_w, remaining_w);
+    // single line: the shorter side keeps its natural width (capped at 3/4
+    // so the longer side always keeps at least a quarter of the row), the
+    // longer side takes the remainder and scrolls on focus if it overflows.
+    // for the common short-value case ("On"/"Off", a checkbox glyph) this is
+    // identical to the old look: value flush right, label gets the rest.
+    const float side_cap = usable_w * 0.75f;
+    const float side_gap = right.empty() ? 0.f : gap;
+    float left_w, right_w;
+    if (label_w <= value_w) {
+        left_w = std::min(label_w, side_cap);
+        right_w = std::max(0.f, std::min(value_w, usable_w - left_w - side_gap));
+    } else {
+        right_w = std::min(value_w, side_cap);
+        left_w = std::max(0.f, std::min(label_w, usable_w - right_w - side_gap));
+    }
     const float right_x = m_pos.x + m_pos.w - pad - right_w;
 
     m_scolling_value.Draw(vg, HasFocus(), right_x, mid_y, right_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
