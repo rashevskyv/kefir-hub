@@ -155,6 +155,17 @@ auto GetSaveFolder(u8 data_type) -> fs::FsPath {
     std::unreachable();
 }
 
+auto GetSaveTypeSubdir(u8 data_type) -> fs::FsPath {
+    switch (data_type) {
+        case FsSaveDataType_Account:   return "Account";
+        case FsSaveDataType_Bcat:      return "BCAT";
+        case FsSaveDataType_Device:    return "Device";
+        case FsSaveDataType_Temporary: return "Temporary";
+        case FsSaveDataType_Cache:     return "Cache";
+    }
+    std::unreachable();
+}
+
 auto GetSaveTypeLabel(u8 data_type) -> const char* {
     switch (data_type) {
         case FsSaveDataType_System:     return "System";
@@ -373,7 +384,7 @@ auto BuildSaveName(const Entry& e) -> fs::FsPath {
     return name_buf;
 }
 
-auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath {
+auto BuildSavePathName(const Entry& e, bool force_id_path) -> fs::FsPath {
     fs::FsPath name;
     if (e.save_data_type == FsSaveDataType_System || e.save_data_type == FsSaveDataType_SystemBcat) {
         std::snprintf(name, sizeof(name), "%016lX", e.system_save_data_id);
@@ -383,7 +394,19 @@ auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& bac
         name = BuildSaveName(e);
     }
 
-    return fs::AppendPath(fs::AppendPath(backup_root, GetSaveFolder(e)), name);
+    return name;
+}
+
+auto BuildSaveBasePathLegacy(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath {
+    return fs::AppendPath(fs::AppendPath(backup_root, GetSaveFolder(e)), BuildSavePathName(e, force_id_path));
+}
+
+auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath {
+    if (IsSystemLikeSave(e.save_data_type)) {
+        return BuildSaveBasePathLegacy(e, force_id_path, backup_root);
+    }
+
+    return fs::AppendPath(fs::AppendPath(backup_root, BuildSavePathName(e, force_id_path)), GetSaveTypeSubdir(e.save_data_type));
 }
 
 auto MakeSdCardDumpLocation() -> dump::DumpLocation {
@@ -1506,9 +1529,14 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
 }
 
 bool Menu::FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const {
-    filebrowser::FsDirCollection collections[2]{};
+    filebrowser::FsDirCollection collections[4]{};
     for (auto i = 0; i < std::size(collections); i++) {
-        const auto save_path = fs::AppendPath(fs->Root(), BuildSaveBasePath(e, i != 0, backup_root));
+        const bool legacy = i >= 2;
+        const bool force_id_path = i % 2 != 0;
+        const auto base_path = legacy
+            ? BuildSaveBasePathLegacy(e, force_id_path, backup_root)
+            : BuildSaveBasePath(e, force_id_path, backup_root);
+        const auto save_path = fs::AppendPath(fs->Root(), base_path);
         filebrowser::FsView::get_collection(fs, save_path, "", collections[i], true, false, false);
         std::ranges::reverse(collections[i].files);
     }
