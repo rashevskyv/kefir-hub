@@ -1095,10 +1095,6 @@ void Menu::DisplaySaveOptions() {
         SyncSavesRemote();
     }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared."_i18n);
 
-    options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
-        m_save_autosync.Set(v_out);
-    }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that."_i18n);
-
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -1697,6 +1693,12 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             );
         }, state->location_index);
     });
+
+    if (!restore) {
+        options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
+            m_save_autosync.Set(v_out);
+        }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that."_i18n);
+    }
 
     const auto account_available = state->type_available[SaveTypeIndex(FsSaveDataType_Account)];
     if (account_available && m_accounts.size() > 1) {

@@ -1,5 +1,23 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.159 — Auto-sync after backup повернуто в Backup Options
+
+Користувач уточнив ще раз: перенесення `Auto-sync after backup` у `Save Options` разом із `Sync with remote` у v0.13.157 було помилковим. Логіка користувача: `Auto-sync after backup` — це властивість саме дії Backup (одразу після створення бекапу вирішити, чи вивантажити його в хмару й лишити на карті, чи ні), тому їй місце поруч із самою дією, а не в загальних параметрах збережень. `Sync with remote` (окрема, явно запускана дія над уже наявними бекапами) залишається в `Save Options`.
+
+* `DisplaySaveOptions()` (Save Options, кнопка `+`): секція `SYNC` тепер містить лише `Sync with remote`.
+* `PromptSaveTypeOptions(false)` (Backup Options, тільки Backup): `Auto-sync after backup` повернуто назад, одразу після блоку `Location`. Restore Options цього пункту як і раніше не має.
+* Текст tooltip уточнено: `"...use Sync with remote (Save Options) for that."`, щоб було зрозуміло, де шукати повну двобічну синхронізацію.
+
+### Ручна перевірка
+
+`Backup Options` знову містить `Auto-sync after backup` (можна одразу після Backup увімкнути/вимкнути вивантаження в хмару); `Save Options` (кнопка `+`) містить лише `Sync with remote`.
+
+### Ключові файли
+
+* `sphaira/source/ui/menus/save_menu.cpp` — переміщення `SidebarEntryBool` між `DisplaySaveOptions()` і `PromptSaveTypeOptions()`.
+* `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json` — уточнений текст tooltip.
+* `sphaira/CMakeLists.txt` — версія `0.13.159`.
+
 ## v0.13.158 — фікс потрійного слеша в мітці SD
 
 `MakeSdLocationLabel()` конкатенував `"sd://"` з абсолютним шляхом, що вже починається з `/` (наприклад `/dumps`), даючи `sd:///dumps` (три слеші). Виправлено: провідний `/` шляху прибирається перед конкатенацією, тому результат — `sd://dumps` (два слеші, як у `webdav://`). Стосується стандартного `/dumps`, записів історії та щойно вибраної SD-папки.

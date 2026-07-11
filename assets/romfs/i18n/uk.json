@@ -731,7 +731,7 @@
   "SYNC": "СИНХРОНІЗАЦІЯ",
   "Auto-sync after backup": "Автосинк після бекапу",
   "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared.": "Двобічна синхронізація ZIP-бекапів вибраних зараз сейвів із WebDAV-джерелом: вивантажує бекапи, яких бракує на сервері, завантажує ті, яких бракує на SD-карті. Файли з однаковим ім'ям ніколи не перезаписуються й не порівнюються.",
-  "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that.": "Після кожного Backup автоматично вивантажує на WebDAV лише щойно створений ZIP-бекап. Не синхронізує всю бібліотеку бекапів — для цього скористайтеся «Синхронізувати з хмарою».",
+  "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that.": "Після кожного Backup автоматично вивантажує на WebDAV лише щойно створений ZIP-бекап. Не синхронізує всю бібліотеку бекапів — для цього скористайтеся «Синхронізувати з хмарою» (Save Options).",
   "WebDAV URL": "URL WebDAV",
   "Use webdav:// for HTTPS and automatic remote folder creation. Leave empty to disable.": "Використовуйте webdav:// для HTTPS та автоматичного створення віддалених папок. Залиште порожнім, щоб вимкнути.",
   "WebDAV User": "Користувач WebDAV",

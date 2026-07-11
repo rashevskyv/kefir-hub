@@ -740,7 +740,7 @@
   "SYNC": "SYNC",
   "Auto-sync after backup": "Auto-sync after backup",
   "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared.": "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location: uploads backups missing on the server, downloads backups missing on the SD card. Files with the same name are never overwritten or compared.",
-  "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that.": "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote for that.",
+  "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that.": "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that.",
   "WebDAV URL": "WebDAV URL",
   "Use webdav:// for HTTPS and automatic remote folder creation. Leave empty to disable.": "Use webdav:// for HTTPS and automatic remote folder creation. Leave empty to disable.",
   "WebDAV User": "WebDAV User",
