@@ -1577,6 +1577,7 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
 
     for (const auto& entry : out.collections) {
         R_UNLESS(entry.offset >= 0 && entry.size >= 0, Result_YatiContainerNotFound);
+        R_UNLESS(entry.offset <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
         out.source_size = std::max(out.source_size, entry.offset + entry.size);
         if (EndsWithIC(entry.name, ".nca") || EndsWithIC(entry.name, ".ncz")) {
             R_UNLESS(out.install_size <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
@@ -1586,8 +1587,12 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
     }
 
     if (out.compressed) {
-        constexpr double COMPRESSED_SIZE_FACTOR = 1.6;
-        out.install_size = static_cast<s64>(static_cast<double>(out.install_size) * COMPRESSED_SIZE_FACTOR);
+        // Existing Yati policy is x1.6. Use checked integer arithmetic so a
+        // malformed container cannot overflow into a small/negative plan.
+        constexpr s64 FACTOR_NUMERATOR = 8;
+        constexpr s64 FACTOR_DENOMINATOR = 5;
+        R_UNLESS(out.install_size <= (INT64_MAX / FACTOR_NUMERATOR) * FACTOR_DENOMINATOR, Result_YatiContainerNotFound);
+        out.install_size = (out.install_size * FACTOR_NUMERATOR + FACTOR_DENOMINATOR - 1) / FACTOR_DENOMINATOR;
         out.size_kind = AnalysisSizeKind::Estimate;
         out.size_reason = "Compressed content size is estimated (x1.6)";
     }

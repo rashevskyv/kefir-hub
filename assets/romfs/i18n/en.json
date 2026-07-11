@@ -807,5 +807,7 @@
   "Cancellation requested.": "Cancellation requested.",
   "Session cancelled; completed installs were kept.": "Session cancelled; completed installs were kept.",
   "Select at least one package": "Select at least one package",
-  "Selected packages may not fit after the configured reserve. Continue?": "Selected packages may not fit after the configured reserve. Continue?"
+  "Selected packages may not fit after the configured reserve. Continue?": "Selected packages may not fit after the configured reserve. Continue?",
+  "Cancelled: ": "Cancelled: ",
+  "DBI session failed; remaining packages were skipped.": "DBI session failed; remaining packages were skipped."
 }

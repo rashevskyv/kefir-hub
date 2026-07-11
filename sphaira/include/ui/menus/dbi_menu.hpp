@@ -76,6 +76,7 @@ private:
     s64 m_index{};
     s64 m_log_index{};
     InstallTarget m_target{InstallTarget::Auto};
+    InstallTarget m_install_target{InstallTarget::Auto};
     std::string m_current_title{};
     std::string m_current_transfer{};
     s64 m_progress_offset{};

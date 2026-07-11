@@ -32,6 +32,30 @@ auto ResultText(Result rc) -> std::string {
     return out;
 }
 
+auto IsDbiSessionError(Result rc) -> bool {
+    switch (rc) {
+        case Result_TransferCancelled:
+        case Result_UsbCancelled:
+        case Result_UsbBadMagic:
+        case Result_UsbBadVersion:
+        case Result_UsbBadCount:
+        case Result_UsbBadBufferAlign:
+        case Result_UsbBadTransferSize:
+        case Result_UsbEmptyTransferSize:
+        case Result_UsbOverflowTransferSize:
+        case Result_UsbBadTotalSize:
+        case Result_UsbDsBadDeviceSpeed:
+        case KERNELRESULT(TimedOut):
+            return true;
+        default:
+            return false;
+    }
+}
+
+void AddSizeSaturated(s64& total, s64 value) {
+    total = value > INT64_MAX - total ? INT64_MAX : total + value;
+}
+
 } // namespace
 
 Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
@@ -163,7 +187,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         size_t selected_count{};
         for (const auto& entry : m_queue) {
             if (entry.selected && R_SUCCEEDED(entry.analysis_result)) {
-                selected_size += entry.analysis.install_size;
+                AddSizeSaturated(selected_size, entry.analysis.install_size);
                 selected_count++;
             }
         }
@@ -265,6 +289,12 @@ void Menu::ThreadFunction() {
 
         m_state = State::Installing;
         m_actions_dirty = true;
+        InstallTarget install_target{};
+        {
+            SCOPED_MUTEX(&m_mutex);
+            install_target = m_install_target;
+        }
+        bool session_failed{};
         for (size_t i = 0; i < m_queue.size(); i++) {
             bool selected{};
             yati::InstallAnalysis analysis{};
@@ -285,25 +315,40 @@ void Menu::ThreadFunction() {
             AddLog("Starting: "_i18n + name);
             m_usb_source->SetFileNameForTranfser(name);
             yati::ConfigOverride override{};
-            override.sd_card_install = m_target == InstallTarget::Sd ? true
-                : m_target == InstallTarget::Nand ? false : analysis.suggested_sd;
+            override.sd_card_install = install_target == InstallTarget::Sd ? true
+                : install_target == InstallTarget::Nand ? false : analysis.suggested_sd;
             const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+            const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
+            const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
             {
                 SCOPED_MUTEX(&m_mutex);
                 m_queue[i].install_result = install_rc;
                 m_queue[i].installed = R_SUCCEEDED(install_rc);
                 if (R_SUCCEEDED(install_rc)) m_success_count++;
-                else m_failure_count++;
+                else if (!cancelled) m_failure_count++;
             }
             if (R_SUCCEEDED(install_rc)) AddLog("Installed: "_i18n + name);
+            else if (cancelled) AddLog("Cancelled: "_i18n + name);
             else AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")");
-            if (m_cancel_requested) break;
+            if (cancelled) {
+                m_cancel_requested = true;
+                break;
+            }
+            if (fatal_session_error) {
+                session_failed = true;
+                AddLog("DBI session failed; remaining packages were skipped."_i18n);
+                break;
+            }
         }
 
-        m_usb_source->Finished(FINISHED_TIMEOUT);
+        if (!session_failed) m_usb_source->Finished(FINISHED_TIMEOUT);
         if (m_cancel_requested) {
             AddLog("Session cancelled; completed installs were kept."_i18n);
             m_state = State::Cancelled;
+        } else if (session_failed) {
+            // Keep the completed-package history visible even though the USB
+            // session itself cannot safely continue.
+            m_state = State::Summary;
         } else {
             AddLog("Queue finished."_i18n);
             m_state = State::Summary;
@@ -322,7 +367,7 @@ void Menu::StartInstall() {
             if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
             count++;
             const bool sd = m_target == InstallTarget::Sd || (m_target == InstallTarget::Auto && entry.analysis.suggested_sd);
-            (sd ? sd_required : nand_required) += entry.analysis.install_size;
+            AddSizeSaturated(sd ? sd_required : nand_required, entry.analysis.install_size);
         }
     }
     if (!count) {
@@ -335,11 +380,19 @@ void Menu::StartInstall() {
         (nand_required && spaces.nand_free - nand_required < static_cast<s64>(reserve))) {
         App::Push<OptionBox>("Selected packages may not fit after the configured reserve. Continue?"_i18n,
             "Cancel"_i18n, "Install selected"_i18n, 0, [this](auto choice) {
-                if (choice && *choice == 1) m_install_requested = true;
+                if (choice && *choice == 1) {
+                    SCOPED_MUTEX(&m_mutex);
+                    m_install_target = m_target;
+                    m_install_requested = true;
+                }
             });
         return;
     }
-    m_install_requested = true;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        m_install_target = m_target;
+        m_install_requested = true;
+    }
 }
 
 void Menu::CancelSession() {
@@ -357,6 +410,7 @@ void Menu::CancelSession() {
 }
 
 void Menu::CycleTarget() {
+    SCOPED_MUTEX(&m_mutex);
     m_target = m_target == InstallTarget::Auto ? InstallTarget::Sd
         : m_target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
 }
