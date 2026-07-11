@@ -79,10 +79,16 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
         return;
     }
 
-    const auto rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 64, PRIO_PREEMPTIVE, 1);
-    if (R_SUCCEEDED(rc) && R_SUCCEEDED(threadStart(&m_thread))) {
-        m_thread_created = true;
-    } else {
+    const auto create_rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1);
+    if (R_SUCCEEDED(create_rc)) {
+        const auto start_rc = threadStart(&m_thread);
+        if (R_SUCCEEDED(start_rc)) {
+            m_thread_created = true;
+        } else {
+            threadClose(&m_thread);
+        }
+    }
+    if (!m_thread_created) {
         m_state = State::Failed;
         m_actions_dirty = true;
     }
@@ -229,8 +235,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
         "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count);
     if (!m_current_title.empty()) {
+        const auto title = m_current_transfer.empty()
+            ? m_current_title : m_current_title + " — " + m_current_transfer;
         gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-            theme->GetColour(ThemeEntryID_TEXT), "%s", m_current_title.c_str());
+            theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
     }
     if (m_progress_size > 0) {
         const Vec4 bar{70.f, GetY() + 67.f, 1140.f, 12.f};

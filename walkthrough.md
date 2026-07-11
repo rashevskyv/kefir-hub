@@ -1,6 +1,6 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
-## v0.13.150 — DBI Install queue (id 50)
+## v0.13.151 — DBI Install queue (id 50)
 
 ### Що зроблено і як це працює
 
@@ -10,6 +10,7 @@
 * Підсумок вибраного порівнюється з вільним місцем microSD/NAND після налаштованого reserve. Для Auto кожен пакет отримує запропоноване Yati сховище; явний вибір задає спільну ціль. Якщо план не вміщується після reserve, перед запуском є окреме попередження.
 * Інсталяція відбувається на повноекранному екрані з прогресом поточного content і кільцевим журналом до 128 рядків, який прокручується контролером або пальцем. Успіхи й recoverable package-помилки з Result-кодом залишаються в історії, після такої помилки черга продовжується. Cancel або USB/protocol session error зупиняє решту, бо наступні `FileRange` після розсинхронізації небезпечні; попередні успіхи лишаються в журналі без rollback.
 * Yati тепер приймає вузький `InstallProgress`. Звичайні File, MTP root-drop і Web Server install як і раніше передають наявний `ProgressBox`; новий повноекранний UI використовується лише DBI.
+* **Runtime fix для DBI Backend Qt:** `DbiUsb::Read()` раніше оголошував `FILE_RANGE data_size = sizeof(header) + filename`, але відправляв header і filename двома окремими USB transfers. PyUSB `read(data_size)` міг завершитися на першому 16-байтовому short packet, отримати порожнє ім’я й не відправити дані; Switch тоді безстроково лишався на `Analysing`. Тепер весь payload формується в одному буфері й надсилається одним transfer. Додатково worker stack збільшено з 64 до 128 КБ, handle закривається при невдалому `threadStart`, а fullscreen log показує поточний NCA/етап Yati.
 
 ### Ручна перевірка
 
@@ -19,6 +20,7 @@
 4. Додати пошкоджений або непідтримуваний пакет: помилка аналізу має блокувати його вибір. Для помилки під час install журнал має зберегти ім’я й Result-код, а наступний вибраний пакет — стартувати.
 5. Скасувати у ReviewQueue та посеред Installing. У першому випадку не має бути запису; у другому вже завершені пакети лишаються у Summary/журналі без обіцянки rollback. Після виходу перевірити повернення MTP, якщо він був увімкнений.
 6. Окремо перевірити MTP root-drop, Web Server install і звичайний file install: їхній `ProgressBox` та поведінка не повинні змінитися.
+7. У DBI Backend Qt на Windows надіслати один NSP: після `Sending list...` екран `Analysing` має перейти до ReviewQueue без зависання; у backend не повинно бути `Requested file not found in list` з порожнім ім’ям. Після START поточний NCA/етап має бути видимий біля назви пакета.
 
 ### Відомі обмеження
 
@@ -33,7 +35,7 @@
 * `sphaira/source/yati/yati.cpp`, `sphaira/include/yati/yati.hpp` — read-only preflight та спільний progress API.
 * `sphaira/include/ui/install_progress.hpp`, `sphaira/include/ui/progress_box.hpp` — ізоляція DBI fullscreen UI від старих install-шляхів.
 * `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json` — нові рядки.
-* `sphaira/CMakeLists.txt` — версія `0.13.150`.
+* `sphaira/CMakeLists.txt` — версія `0.13.151`.
 
 ## v0.13.149 — сумісність сейв-бекапів із DBI (id 51)
 

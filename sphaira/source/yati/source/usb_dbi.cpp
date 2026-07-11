@@ -3,6 +3,7 @@
 #include "yati/source/usb_dbi.hpp"
 #include "usb/dbi.hpp"
 #include "log.hpp"
+#include <cstring>
 #include <ranges>
 
 namespace sphaira::yati::source {
@@ -77,6 +78,7 @@ Result DbiUsb::SendCmdHeader(dbi::CmdType type, dbi::CmdId id, u32 dataSize, u64
 
 Result DbiUsb::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
     R_TRY(GetOpenResult());
+    R_UNLESS(off >= 0 && size >= 0 && size <= UINT32_MAX, Result_UsbBadTransferSize);
 
     u64 timeout = m_usb->GetTransferTimeout();
     u32 nsp_name_len = m_transfer_file_name.size();
@@ -93,13 +95,15 @@ Result DbiUsb::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
     R_UNLESS(ackHeader.type == dbi::CmdType::Ack, Result_UsbBadMagic);
 
     // 3. Console writes the payload: range_size, range_offset, nsp_name_len, name
-    dbi::FileRangeHeader payload{
+    dbi::FileRangeHeader range_header{
         .range_size = static_cast<u32>(size),
         .range_offset = static_cast<u64>(off),
         .name_len = nsp_name_len
     };
-    R_TRY(m_usb->TransferAll(false, &payload, sizeof(payload), timeout));
-    R_TRY(m_usb->TransferAll(false, m_transfer_file_name.data(), nsp_name_len, timeout));
+    std::vector<u8> payload(payload_size);
+    std::memcpy(payload.data(), &range_header, sizeof(range_header));
+    std::memcpy(payload.data() + sizeof(range_header), m_transfer_file_name.data(), nsp_name_len);
+    R_TRY(m_usb->TransferAll(false, payload.data(), static_cast<u32>(payload.size()), timeout));
 
     // 4. PC sends RESPONSE header: RESPONSE, FILE_RANGE, range_size. Read it:
     dbi::CmdHeader responseHeader{};
