@@ -88,26 +88,50 @@ auto SidebarEntryBase::OnFocusLost() noexcept -> void {
 void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
     const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
+
+    const float pad = 15.f;
+    const float gap = 10.f;
+    const float usable_w = m_pos.w - pad * 2.f;
     const float mid_y = m_pos.y + (m_pos.h / 2.f);
 
-    // measure right value width, but never let it take more than roughly
-    // half the row - a long value (e.g. a backup folder path, see id 52)
-    // must not push the label off-screen or draw over it.
-    float bounds[4];
     nvgFontSize(vg, 20);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, bounds);
-    const float max_value_w = std::max(80.f, (m_pos.w - 30.f) * 0.45f);
-    const float right_w = std::min(bounds[2], max_value_w);
+    float label_bounds[4];
+    nvgTextBounds(vg, 0, 0, left.c_str(), nullptr, label_bounds);
+    const float label_w = label_bounds[2];
+    float value_bounds[4];
+    nvgTextBounds(vg, 0, 0, right.c_str(), nullptr, value_bounds);
+    const float value_w = value_bounds[2];
 
-    // right value: scrolls on focus like the label does when it overflows
-    // its bounded width, instead of drawing statically past the row edge.
-    const float right_x = m_pos.x + m_pos.w - 15.f - right_w;
+    // label wider than half the row: nothing sensible fits beside it, so the
+    // value moves to its own line below (id 52 - long backup folder paths).
+    const bool label_too_wide = label_w > usable_w * 0.5f;
+    // label fits, but the value alone would still need more than 3/4 of the
+    // row: also give it its own line rather than squeezing/scrolling it in
+    // whatever sliver is left next to the label.
+    const bool value_too_wide = !label_too_wide && value_w > usable_w * 0.75f;
+
+    if (label_too_wide || value_too_wide) {
+        const float line_gap = 24.f;
+        const float top_y = mid_y - line_gap / 2.f;
+        const float bottom_y = mid_y + line_gap / 2.f;
+
+        m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
+        // second line: scrolls on focus if even the full row width isn't enough.
+        m_scolling_value.Draw(vg, HasFocus(), m_pos.x + pad, bottom_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
+        return;
+    }
+
+    // single line: the label takes only the width it actually needs, and
+    // everything left over goes to the value - capped and flush against the
+    // row's right edge, matching the previous look for short values exactly.
+    const float left_w = std::min(label_w, usable_w);
+    const float remaining_w = std::max(0.f, usable_w - left_w - (right.empty() ? 0.f : gap));
+    const float right_w = std::min(value_w, remaining_w);
+    const float right_x = m_pos.x + m_pos.w - pad - right_w;
+
     m_scolling_value.Draw(vg, HasFocus(), right_x, mid_y, right_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
-
-    // left label scrolls in the remaining space
-    const float max_label_w = m_pos.w - 30.f - right_w - (right_w > 0.f ? 10.f : 0.f);
-    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + 15.f, mid_y, max_label_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
+    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, mid_y, left_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
 }
 
 SidebarEntryBool::SidebarEntryBool(const std::string& title, bool option, Callback cb, const std::string& info, const std::string& true_str, const std::string& false_str)

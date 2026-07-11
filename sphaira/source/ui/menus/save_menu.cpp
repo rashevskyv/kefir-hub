@@ -649,6 +649,12 @@ auto MakeLocationLabel(const std::string& name, const fs::FsPath& backup_root) -
     return name + ": " + backup_root.toString();
 }
 
+// compact URI-style label for the SD card, e.g. "sd:///dumps" - shorter than
+// the old "microSD card: /dumps" and matches the existing "webdav://" style.
+auto MakeSdLocationLabel(const fs::FsPath& backup_root) -> std::string {
+    return "sd://" + backup_root.toString();
+}
+
 // "sd|<mount>|<name>|<path>" or "stdio|<mount>|<name>|<path>".
 // mount never contains '|', the path is taken from the last separator,
 // so a '|' inside the display name still round-trips.
@@ -1560,7 +1566,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
 
     state->locations.emplace_back(MakeSdCardDumpLocation());
     state->location_base_paths.emplace_back(default_backup_root);
-    state->location_items.emplace_back(MakeLocationLabel("SD"_i18n, default_backup_root));
+    state->location_items.emplace_back(MakeSdLocationLabel(default_backup_root));
 
     // up to 5 most recently confirmed "Choose Folder..." picks, newest first.
     for (const auto& dir : GetRecentBackupDirs()) {
@@ -1570,7 +1576,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
 
         state->locations.emplace_back(MakeDumpLocationFromRecent(dir));
         state->location_base_paths.emplace_back(dir.path);
-        state->location_items.emplace_back(MakeLocationLabel(dir.stdio ? dir.name : "SD"_i18n, dir.path));
+        state->location_items.emplace_back(dir.stdio ? MakeLocationLabel(dir.name, dir.path) : MakeSdLocationLabel(dir.path));
     }
 
     for (s32 i = 0; i < static_cast<s32>(stdio_locations.size()); i++) {
@@ -1632,12 +1638,12 @@ void Menu::PromptSaveTypeOptions(bool restore) {
 
     options->Add<SidebarEntryHeader>("LOCATION"_i18n);
     auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the folder where backups will be stored or read from."_i18n);
-    location_entry->SetCallback([state, location_entry]() {
+    location_entry->SetCallback([this, state, location_entry]() {
         auto items = state->location_items;
         const auto picker_index = static_cast<s64>(items.size());
         items.emplace_back("Choose Folder..."_i18n);
 
-        App::Push<PopupList>("Location"_i18n, items, [state, location_entry, picker_index](auto op_index) {
+        App::Push<PopupList>("Location"_i18n, items, [this, state, location_entry, picker_index](auto op_index) {
             if (!op_index) {
                 return;
             }
