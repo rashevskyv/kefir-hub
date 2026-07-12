@@ -1,4 +1,5 @@
 #include "ui/menus/cheats_menu.hpp"
+#include "ui/menus/cheats/cheats_dmnt.hpp"
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -84,22 +85,6 @@ constexpr s32 ENTRY_CHUNK_COUNT = 1000;
 
 Mutex g_cheat_metadata_cache_mutex{};
 
-// DmntCheatProcessMetadata structure for getting build ID from dmnt:cht
-// Must match Atmosphere's actual IPC response layout exactly
-struct DmntMemoryRegionExtents {
-    u64 base;
-    u64 size;
-};
-
-struct DmntCheatProcessMetadata {
-    u64 process_id;                              // offset 0x00
-    u64 title_id;                                // offset 0x08
-    DmntMemoryRegionExtents main_nso_extents;    // offset 0x10
-    DmntMemoryRegionExtents heap_extents;        // offset 0x20
-    DmntMemoryRegionExtents alias_extents;       // offset 0x30
-    DmntMemoryRegionExtents address_space_extents; // offset 0x40
-    u8 main_nso_build_id[0x20];                 // offset 0x50
-};
 
 // Format title ID as 16-character hex string (lowercase for atmosphere paths)
 auto FormatTitleId(u64 title_id) -> std::string {
@@ -501,119 +486,6 @@ auto GetBuildIdFromGameCardNca(u64 title_id) -> std::string {
     return "";
 }
 
-// Get Build ID from dmnt:cht service (when game is running/suspended)
-auto GetBuildIdFromDmnt(u64 title_id) -> std::string {
-    Result rc = pmdmntInitialize();
-    if (R_FAILED(rc)) {
-        log_write("[Cheats] Failed to initialize pmdmnt: %x\n", rc);
-        return "";
-    }
-    ON_SCOPE_EXIT(pmdmntExit());
-
-    u64 application_pid = 0;
-    bool found_application = false;
-
-    // Mirror EdiZon's attach flow as closely as possible: wait for the
-    // suspended application PID, then let dmnt attach and trust the metadata.
-    for (int i = 0; i < 10; i++) {
-        if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&application_pid)) && application_pid != 0) {
-            found_application = true;
-            break;
-        }
-        svcSleepThread(100'000'000ULL);
-    }
-
-    if (!found_application) {
-        log_write("[Cheats] No application PID available from pmdmnt\n");
-        return "";
-    }
-
-    u64 application_title_id = 0;
-    rc = pmdmntGetProgramId(&application_title_id, application_pid);
-    if (R_SUCCEEDED(rc)) {
-        log_write("[Cheats] Active application PID %016lx reports title %016lx\n",
-                  application_pid, application_title_id);
-    } else {
-        log_write("[Cheats] Failed to get program ID for active application PID %016lx: %x\n",
-                  application_pid, rc);
-    }
-
-    Service dmntchtSrv;
-    rc = smGetService(&dmntchtSrv, "dmnt:cht");
-    if (R_FAILED(rc)) {
-        log_write("[Cheats] Failed to get dmnt:cht service: %x\n", rc);
-        return "";
-    }
-
-    ON_SCOPE_EXIT(serviceClose(&dmntchtSrv));
-
-    u8 has_cheat_process = 0;
-    bool attached = false;
-    for (int attempt = 0; attempt < 10; attempt++) {
-        rc = serviceDispatch(&dmntchtSrv, 65003);
-        if (R_FAILED(rc)) {
-            log_write("[Cheats] Force-open cheat process failed on attempt %d: %x\n", attempt + 1, rc);
-            svcSleepThread(100'000'000ULL);
-            continue;
-        }
-
-        rc = serviceDispatchOut(&dmntchtSrv, 65000, has_cheat_process);
-        if (R_FAILED(rc)) {
-            log_write("[Cheats] Failed to query cheat-process state on attempt %d: %x\n", attempt + 1, rc);
-            svcSleepThread(100'000'000ULL);
-            continue;
-        }
-
-        if ((has_cheat_process & 1) != 0) {
-            attached = true;
-            break;
-        }
-
-        svcSleepThread(100'000'000ULL);
-    }
-
-    if (!attached) {
-        log_write("[Cheats] dmnt:cht never reported an attached cheat process\n");
-        return "";
-    }
-
-    // Get process metadata (command 65002)
-    DmntCheatProcessMetadata metadata{};
-    rc = serviceDispatchOut(&dmntchtSrv, 65002, metadata);
-    if (R_FAILED(rc)) {
-        log_write("[Cheats] Failed to get cheat metadata: %x\n", rc);
-        return "";
-    }
-
-    log_write("[Cheats] dmnt:cht metadata - title_id: %016lx, process_id: %016lx, app_pid: %016lx\n",
-              metadata.title_id, metadata.process_id, application_pid);
-
-    if (metadata.process_id == 0) {
-        log_write("[Cheats] dmnt:cht returned metadata with no process ID\n");
-        return "";
-    }
-
-    if (metadata.title_id != title_id) {
-        log_write("[Cheats] Running title %016lx doesn't match target %016lx\n",
-                  metadata.title_id, title_id);
-        return "";
-    }
-
-    if (metadata.process_id != application_pid) {
-        log_write("[Cheats] dmnt:cht process %016lx differs from pmdmnt PID %016lx, using metadata title match\n",
-                  metadata.process_id, application_pid);
-    }
-
-    std::string build_id = NormalizeBuildId(BytesToBuildId(metadata.main_nso_build_id, 8));
-    if (!IsValidBuildId(build_id)) {
-        log_write("[Cheats] dmnt:cht returned an invalid Build ID: %s\n", build_id.c_str());
-        return "";
-    }
-
-    log_write("[Cheats] Got Build ID from dmnt:cht: %s\n", build_id.c_str());
-
-    return build_id;
-}
 
 auto TryGetBuildIdFromNsoWithStorage(u64 title_id, NcmStorageId storage_id, const char* path) -> std::string {
     FsCodeInfo code_info{};

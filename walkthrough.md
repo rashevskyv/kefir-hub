@@ -1,5 +1,138 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.165 — рефакторинг cheats_menu.cpp (Крок 1.1)
+
+Виділено допоміжні структури та функції роботи з `dmnt:cht` з великого файлу `cheats_menu.cpp` в окремі модулі компіляції.
+
+### 1. Виділення cheats_dmnt
+- Створено `sphaira/include/ui/menus/cheats/cheats_dmnt.hpp` та `sphaira/source/ui/menus/cheats/cheats_dmnt.cpp`.
+- Перенесено структури `DmntMemoryRegionExtents` та `DmntCheatProcessMetadata`, а також функцію `GetBuildIdFromDmnt`.
+- Вилучено цей код із `cheats_menu.cpp`.
+
+### 2. Створення cheats_lookup (забезпечення цілісності збірки)
+- Створено `sphaira/include/ui/menus/cheats/cheats_lookup.hpp` та `sphaira/source/ui/menus/cheats/cheats_lookup.cpp`.
+- Перенесено допоміжні функції роздільної здатності build-id (`FormatTitleId`, `NormalizeBuildId`, `IsValidBuildId`, `BytesToBuildId` тощо) у простір імен `sphaira::ui::menu::hats::detail` для спільного використання між `cheats_dmnt.cpp` та `cheats_menu.cpp`.
+
+### 3. Оновлення конфігурації збірки
+- Додано нові `.cpp` файли до `sphaira/CMakeLists.txt`.
+- Версію програми оновлено до `0.13.165`.
+
+## v0.13.165 — рев'ю v0.13.164: 8 виправлень (регресія, фриз UI, недетермінізм, дублювання)
+
+Багатоагентне рев'ю власного диффу v0.13.164 (пикер бекапів). 8 підтверджених знахідок, усі виправлено.
+
+### Суттєві
+
+1. **Регресія: бекапи з нерозпізнаваним іменем (ts==0) стали невідновлюваними.** Старий `FindLatestBackupPath` приймав будь-який кандидат, новий `offer()` у `CollectBackups` відкидав `ts==0`. Повернуто: такі архіви знову збираються (сортуються в кінець списку — вони не мають дати для порівняння), у пикері показуються під власною назвою файлу замість фейкової дати `0000.00.00`.
+2. **`CollectBackups` блокував UI-потік у `ShowRestorePicker`.** Сканування тек + відкриття кожного dbi-zip (Account/Cache) виконувалось синхронно при відкритті пикера. Тепер `ShowRestorePicker` пушить короткий `ProgressBox`-воркер (як і решта backup/restore-сканів), результат передається у новий `ShowRestorePickerPopup()` через done-колбек (UI-потік).
+3. **Втрачено детермінований tie-break для однакових timestamp.** Старий код при рівних `ts` завжди обирав dbi-архів (`source` пріоритет). Новий `std::ranges::sort` за самим лише `ts` — нестабільний, вибір міг «плавати». Повернуто `source` (dbi=0, sphaira new/legacy=1..4) як другий ключ сортування — вибір знову детермінований.
+
+### UX / i18n
+
+4. **OptionBox «No WebDAV…» одразу перекривався пикером.** При `Include remote backups` без налаштованого WebDAV попередження пушилось і в ту саму мить ховалось під пикером. Прибрано зайвий OptionBox — тепер тихий fallback на локальний пикер (попередження й так є в `Save Options → Sync with remote`).
+5. **Тип сейву в рядку пикера — неперекладений і завжди однаковий.** `GetSaveTypeLabel()` без `i18n::get` + однаковий для всіх кандидатів одного сейву (не розрізняє нічого). Суфікс прибрано повністю.
+
+### Дублювання (reuse)
+
+6. **`MakeFsForLocation()`** — новий спільний хелпер замінив 4 копії вибору `FsStdio`/`FsNativeSd` за `DumpLocation` (дві нові копії мали небезпечний bare-`else`, дві старі — `std::unreachable()`; тепер одна поведінка всюди).
+7. **`DownloadOneBackupFile()`** — новий спільний хелпер замінив ~30 рядків дослівного дублювання download-фази (dbi-шлях, temp+rename, curl) між `DownloadRemoteBackupsForEntry` та `SyncSavesRemoteWithLocation`.
+8. Прибрано зайвий паралельний вектор `paths` у `ShowRestorePickerPopup` — колбек пикера індексує `candidates` напряму.
+
+### Ключові файли
+
+* `sphaira/source/ui/menus/save_menu.cpp` — `CollectBackups` (source tie-break, ts==0), `MakeFsForLocation`, `DownloadOneBackupFile`, `ShowRestorePicker`/`ShowRestorePickerPopup` (worker+popup split), `StartRestore` (без зайвого OptionBox).
+* `sphaira/include/ui/menus/save_menu.hpp` — `BackupCandidate{ts, path, source}` (прибрано мертві `save_data_type`/`remote`), декларація `ShowRestorePickerPopup`.
+* `sphaira/CMakeLists.txt` — версія `0.13.165`.
+
+### Перевірено рев'ю без зауважень
+
+Потокобезпека `ProgressBox::m_hide_speed` (atomic, безпечно навіть у вікні перед першим записом воркера); коректність вкладених лямбд у `StartRestore` (без use-after-move); незачепленість наявних користувачів `PopupList` (стара геометрія байт-у-байт при `menu_style=false`); i18n/версія/walkthrough-конвенції дотримані.
+
+## v0.13.164 — вибір бекапу при відновленні + віддалені бекапи з хмарною іконкою
+
+Нова фіча за запитом користувача. Раніше відновлення завжди тихо брало найновіший бекап — вибрати конкретний (не останній) було неможливо.
+
+### 1. Пикер бекапів при відновленні
+
+`FindLatestBackupPath` узагальнено до `CollectBackups()` — збирає **всі** відновлювані архіви для сейву (DBI-формат + sphaira new/legacy, усі локації), відсортовані від найновішого, з дедуплікацією за повним шляхом. `FindLatestBackupPath` тепер тонка обгортка (бере `front()`).
+
+Потік Restore переписано: `Start Restore` → `StartRestore()`:
+- **Мультивибір** (>1 сейв) — стара поведінка: найновіша копія кожного (без N діалогів).
+- **Один сейв** — `ShowRestorePicker()`: 0 копій → «бекапів не знайдено»; 1 копія → відновити одразу; >1 → `PopupList` зі списком (дата+час, тип сейву), вибір веде у `RestoreSavesPicked()` — той самий цикл авто-бекапу+`RestoreSaveInternal`, але з явно обраним архівом.
+
+### 2. Формат — без змін (уже коректно)
+
+Ігрові сейви (Account/Device/Cache/BCAT) вже пишуться **лише** у DBI-форматі й читаються DBI. Sphaira-формат лишається тільки для системних сейвів (System/SystemBcat), бо DBI-ім'я будується навколо Title ID, якого системні сейви не мають — DBI їх не бекапить у принципі. Другий формат читається ще й для відновлення старих бекапів. Тут нічого не змінювалось.
+
+### 3. Віддалені бекапи + хмарна іконка
+
+У `Restore Options` додано галку **`Include remote backups`** (`m_restore_include_remote`, persistent). Коли ввімкнено й відновлюється один сейв: перед показом пикера виконується **download-only** синхронізація (`DownloadRemoteBackupsForEntry`) — з WebDAV стягуються лише архіви, яких нема локально (нічого не вивантажується), у ту саму локацію відновлення (dbi-іменовані → у dbi-розкладку, решта → у sphaira-теку), тож `CollectBackups` їх бачить. Щойно завантажені архіви позначаються у пикері **іконкою хмари** зліва (у зарезервованому лівому жолобі, щоб не зміщати текст рядка). При помилці синку пикер усе одно показується з локальних.
+
+### 4. Прибрано хибну «галочку» з Save Action
+
+`PopupList` отримав `SetMenuStyle(true)` — для меню-навігації (Backup/Restore у «Save Action») замість «поточне значення» (tick ``) малюється **шеврон вправо** ▸ на кожному рядку (натяк, що пункт веде далі). Звичайні chooser-и (Location, Sync Location) не змінилися.
+
+### Ключові файли
+
+* `sphaira/include/ui/popup_list.hpp`, `sphaira/source/ui/popup_list.cpp` — `SetMenuStyle` (шеврон), `SetRemoteMarkers` (хмара у лівому жолобі); векторні `DrawCloudIcon`/`DrawChevron` (без залежності від шрифту).
+* `sphaira/source/ui/menus/save_menu.cpp` — `CollectBackups`, `StartRestore`, `ShowRestorePicker`, `RestoreSavesPicked`, `DownloadRemoteBackupsForEntry`; галка `Include remote backups`; `Save Action` у menu-style.
+* `sphaira/include/ui/menus/save_menu.hpp` — `BackupCandidate`, `m_restore_include_remote`, нові декларації.
+* `assets/romfs/i18n/en.json`, `uk.json` — `Include remote backups` + tooltip, `Select backup`, `No backups found for selected saves.`.
+* `sphaira/CMakeLists.txt` — версія `0.13.164`.
+
+### Ручна перевірка (Агент 1)
+
+1. Один сейв, кілька бекапів → `Restore` показує список дат; вибір старішого відновлює саме його (не останній).
+2. Один сейв, один бекап → відновлюється без пикера. Жодного → «бекапів не знайдено».
+3. Мультивибір кількох ігор → без пикера, найновіша копія кожної (як раніше).
+4. `Include remote backups` увімкнено, є WebDAV з архівом, якого нема локально → перед списком тягнеться download, рядок має іконку хмари; вибір відновлює.
+5. `Save Action` (Backup/Restore) показує шеврон ▸, а не галочку.
+
+### Відомі межі
+
+* Пикер збирає бекапи на UI-потоці (швидко для одного сейву; для Account/Cache відкриває zip'и, щоб звірити uid/index).
+* Віддалене відновлення розраховане на локацію відновлення = та сама, куди тягнуться завантаження (типово SD).
+
+## v0.13.163 — виправлення за аудитом: переклади Location/Backup, валідація зниклих папок, коректна швидкість sync
+
+Виправлено сім пунктів статичного аудиту v0.13.154–162 (задача id 52 та суміжна sync-логіка).
+
+### 1. Незавершений переклад інтерфейсу Backup/Restore (uk.json) — суттєве
+
+Крок 3 задачі id 52 вимагав перекласти всі видимі підписи блоку локації, але низка ключів була відсутня в `uk.json` і показувалась англійською. Додано: `Backup Options`, `Restore Options`, `Start Backup`, `Start Restore`, `LOCATION`, `Location`, `Choose Folder...`, `ACCOUNTS`, `SAVE TYPES`, `Select Sync Location`, `No matching saves found.` і три tooltip-описи (Location + Start Backup/Restore).
+
+### 2. Зниклі/переміщені папки історії лишались у списку Location — суттєве
+
+`GetRecentBackupDirs()` лише парсив ini-записи й повертав навіть ті папки, яких уже немає (видалена тека) або чий носій відключено (USB/HDD). Мертвий пункт «спрацьовував» помилкою вже під час операції. Додано хелпер `RecentBackupDirExists()`: для SD перевіряє `fs::DirExists(path)`, для stdio — `fs::DirExists(mount + path)` (відключений носій не має devoptab → `stat` падає → пункт відсіюється). Історія в конфізі **не** видаляється — носій, що повернувся, знову з'явиться при наступному відкритті.
+
+### 3. Текст швидкості під час sync показував синтетичні одиниці як MiB/s — суттєве
+
+Прогрес-бар sync живиться синтетичним бюджетом (`SYNC_PROGRESS_SCALE` = 1 млн/файл), а `ProgressBox::Draw` рахував «швидкість» із дельт offset і підписував `MiB/s` — виходили неправдиві числа. Додано прапорець `ProgressBox::SetHideSpeed(true)` (встановлюється на обох sync-боксах). При ньому рядок швидкості приховується, але **ETA лишається** (одиниці-залишку / одиниці-за-секунду = справжні секунди, тож час коректний).
+
+### 4. Дедуплікація історії тепер справді за нормалізованим шляхом — дрібне
+
+Walkthrough v0.13.155 стверджував «дедуплікація за нормалізованим шляхом (ім'я ігнорується)», але `AddRecentBackupDir` порівнював повну серіалізацію разом з іменем. Тепер порівняння через `MakeLocationKey` (ім'я ігнорується) — заява й код узгоджені.
+
+### 5. Повторний вибір тієї самої папки не дублює рядок у сесії — дрібне
+
+Filepicker-callback безумовно додавав новий рядок. Тепер `ActionState` тримає паралельний `location_keys`; якщо вибрана папка вже є у списку (default, історія, mount або попередній вибір цієї сесії) — просто виділяється наявний пункт замість дубля.
+
+### 6. `OnFocusLost` скидає й скрол значення — косметика
+
+`SidebarEntryBase::OnFocusLost()` скидав лише `m_scolling_title`; додано `m_scolling_value.Reset()`, щоб довге значення після повторного фокусу скролилось з початку.
+
+### 7. Прибрано осиротілий ключ `"Downloading: "` — прибирання
+
+Після переробки фаз sync ключ ніде не вживався; видалено з en/uk.
+
+### Ключові файли
+
+* `sphaira/source/ui/menus/save_menu.cpp` — `RecentBackupDirExists`, дедуп за `MakeLocationKey`, `location_keys` у `ActionState` + перевірка в picker-callback, `SetHideSpeed(true)` на sync-боксах.
+* `sphaira/source/ui/progress_box.cpp`, `sphaira/include/ui/progress_box.hpp` — прапорець `m_hide_speed`/`SetHideSpeed`; приховування рядка швидкості зі збереженням ETA.
+* `sphaira/source/ui/sidebar.cpp` — `m_scolling_value.Reset()` у `OnFocusLost`.
+* `assets/romfs/i18n/uk.json` — 16 нових ключів; `assets/romfs/i18n/en.json`, `uk.json` — видалено `Downloading: `.
+* `sphaira/CMakeLists.txt` — версія `0.13.163`.
+
 ## v0.13.162 — стабільний прогрес-бар авто-синку; прибрано підтверджувальне віконце Sync
 
 ### 1. Прогрес-бар авто-синку стрибав туди-сюди на межах файлів
