@@ -560,7 +560,7 @@ void FsView::OnPasteCallback() {
                 // the folders cannot be deleted until the end as they have to be removed in
                 // reverse order so that the folder can be deleted (it must be empty).
                 if (selected.m_type == SelectedType::Cut) {
-                    R_TRY(DeleteAllCollections(pbox, src_fs, collections, FsDirOpenMode_ReadDirs));
+                    R_TRY(DeleteAllCollectionsWithSelected(pbox, src_fs, selected, collections, FsDirOpenMode_ReadDirs));
                 }
             }
 
@@ -735,6 +735,10 @@ auto FsView::AnySelectedReadOnly() const -> bool {
         }
     }
     return false;
+}
+
+void FsView::OnRenameCallback() {
+    // Stub implementation
 }
 
 } // namespace sphaira::ui::menu::filebrowser
