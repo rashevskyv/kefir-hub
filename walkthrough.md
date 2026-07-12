@@ -1791,3 +1791,25 @@ Filepicker-callback безумовно додавав новий рядок. Т�
 * Код успішно збирається під WSL без помилок лінкера.
 * Додано підтримку Samba-джерел у меню "Mount", а також діалоги для конфігурування нових підключень.
 * Запобігається крашам при роботі зі split-screen та перемиканні джерел.
+
+---
+
+## v0.13.181 — Рефакторинг файлового браузера: винесення операцій FsView у filebrowser_ops.cpp (Крок 6.3)
+
+### Завдання
+Виконати Крок 6.3 плану рефакторингу: перенести "важкі" операції роботи з файловою системою (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`) з класу `FsView` у файлі [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) в окремий файл реалізації [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp). Очистити `filebrowser.cpp` від цих функцій та забезпечити успішну збірку.
+
+### Підхід
+1. **Перенесення методів**:
+   - Створено файл [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp) і перенесено туди важкі методи життєвого циклу файлових операцій `FsView` (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`).
+   - Додано необхідні заголовки (`#include "download.hpp"`, `ui/menus/filebrowser.hpp`, `ui/menus/filebrowser_assoc.hpp` тощо).
+2. **Очищення `filebrowser.cpp`**:
+   - Вилучено перенесені методи з файлу [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp), залишивши в ньому лише методи рендерингу, навігації, сортування та базового оновлення.
+3. **CMakeLists.txt та Версія**:
+   - Додано `source/ui/menus/filebrowser_ops.cpp` до списку збірки у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Збільшено версію програми до `0.13.181` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake.
+* Усі залежності та виклики методів лінкуються без помилок.
+

@@ -24,10 +24,10 @@
     - [x] Крок 5.1: Виділення kefir/kefir_changelog.hpp/.cpp (ChangelogSegment та хелпери списків змін) <!-- id: r5.1 -->
     - [x] Крок 5.2: Виділення kefir/kefir_firmware.hpp/.cpp (Валідація та версії прошивки) <!-- id: r5.2 -->
     - [x] Крок 5.3: Виділення спільного віджета HoldConfirmBox <!-- id: r5.3 -->
-- [/] Рефакторинг filebrowser.cpp (Фаза 6):
+- [x] Рефакторинг filebrowser.cpp (Фаза 6):
     - [x] Крок 6.1: Виділення хелперів типів файлів та ROM у filebrowser_assoc.hpp/.cpp <!-- id: r6.1 -->
     - [x] Крок 6.2: Виділення форми створення форвардерів ForwarderForm у filebrowser_forwarder.hpp/.cpp <!-- id: r6.2 -->
-    - [ ] Крок 6.3: Винесення важких операцій FsView у filebrowser_ops.cpp <!-- id: r6.3 -->
+    - [x] Крок 6.3: Винесення важких операцій FsView у filebrowser_ops.cpp <!-- id: r6.3 -->
 - [x] Вивчити наявний стан та спланувати синхронізацію сейвів з віддаленим джерелом (WebDAV) <!-- id: 0 -->
 - [x] Реалізувати лістинг віддаленої теки WebDAV (PROPFIND XML парсер / рядковий пошук) <!-- id: 1 -->
 - [x] Додати синхронізацію сейвів (SyncPlan, UI в Save Menu, опція Auto-sync) <!-- id: 2 -->
