@@ -103,10 +103,10 @@ The `App` class stays one class; its method definitions get split across TUs.
 ## Phase 8 — `utils/devoptab_common.cpp` (1660 lines)
 
 | Step | New file | What moves there |
-|---|---|---|
-| 8.1 | `utils/devoptab_buffered.hpp/.cpp` | `BufferedData` and `LruBufferedData` (declarations may currently live in a header — if so, only the definitions move). |
-| 8.2 | `utils/devoptab_curl_thread.hpp/.cpp` | `PushPullThreadData`, `PushThreadData`, `PullThreadData` with their callbacks and `thread_func`. |
-| 8.3 | `utils/devoptab_curl_device.cpp` | `MountCurlDevice` methods: `Mount`, `CreatePushData`, `CreatePullData`, `curl_set_common_options`, the write/read callbacks, `html_decode`, `url_decode`, `build_url`. |
+| [x] 8.1 | `utils/devoptab_buffered.hpp/.cpp` | `BufferedData` and `LruBufferedData` (declarations may currently live in a header — if so, only the definitions move). |
+| [x] 8.2 | `utils/devoptab_curl_thread.hpp/.cpp` | `PushPullThreadData`, `PushThreadData`, `PullThreadData` with their callbacks and `thread_func`. |
+| [x] 8.3 | `utils/devoptab_curl_device.cpp` | `MountCurlDevice` methods: `Mount`, `CreatePushData`, `CreatePullData`, `curl_set_common_options`, the write/read callbacks, `html_decode`, `url_decode`, `build_url`. |
+
 
 ## Backlog (only after Phases 1–8 are reviewed)
 

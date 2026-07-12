@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.183)
+set(sphaira_VERSION 0.13.186)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -118,6 +118,9 @@ add_executable(sphaira
     source/minizip_helper.cpp
     source/utils/utils.cpp
     source/utils/devoptab_common.cpp
+    source/utils/devoptab_buffered.cpp
+    source/utils/devoptab_curl_thread.cpp
+    source/utils/devoptab_curl_device.cpp
     source/utils/devoptab_romfs.cpp
     source/utils/devoptab_nca.cpp
     source/utils/devoptab_smb2.cpp

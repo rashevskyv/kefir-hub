@@ -1,6 +1,35 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.186 — Рефакторинг devoptab_common.cpp (Фаза 8)
+
+### Завдання
+Виконати Фазу 8 плану рефакторингу: декомпозиція занадто великого файлу реалізації [devoptab_common.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_common.cpp) (~1660 рядків) та його заголовка на окремі логічні модулі:
+1. **Крок 8.1 (Буферизація читання)**: `BufferedData` та `LruBufferedData`.
+2. **Крок 8.2 (Потокова передача Curl)**: `PushPullThreadData`, `PushThreadData`, `PullThreadData`.
+3. **Крок 8.3 (Curl пристрій)**: `MountCurlDevice` та його допоміжні функції.
+
+### Підхід
+1. **Створення нового файлу буферизації**:
+   - Створено [devoptab_buffered.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_buffered.hpp) та [devoptab_buffered.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_buffered.cpp).
+   - Перенесено класи `BufferedDataBase`, `BufferedData`, `BufferedFileData` та `LruBufferedData` з їх реалізацією методу `Read`.
+2. **Створення файлу curl-потоків**:
+   - Створено [devoptab_curl_thread.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_curl_thread.hpp) та [devoptab_curl_thread.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_curl_thread.cpp).
+   - Перенесено структури `PushPullThreadData`, `PullThreadData`, `PushThreadData` та методи життєвого циклу потоку, черг push/pull та callback-функції curl.
+3. **Створення файлу curl-пристрою**:
+   - Створено [devoptab_curl_device.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_curl_device.hpp) та [devoptab_curl_device.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_curl_device.cpp).
+   - Перенесено клас `MountCurlDevice` разом з ініціалізацією сесій curl, обробкою URL, декодуванням HTML та коллбеками запису/читання пам'яті.
+   - Виправлено потенційну проблему циклічної залежності між заголовками: `devoptab_common.hpp` більше не імпортує `devoptab_curl_device.hpp` (оскільки базовий клас не має знати про своїх нащадків), що дозволило розірвати коло.
+4. **Спрощення та очищення**:
+   - Всі винесені класи та методи повністю видалено з [devoptab_common.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_common.hpp) та [devoptab_common.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_common.cpp).
+5. **CMake та Версія**:
+   - Додано `devoptab_buffered.cpp`, `devoptab_curl_thread.cpp` та `devoptab_curl_device.cpp` до [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Оновлено версію проекту до `0.13.186` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake, збірка бінарника `sphaira.nro` успішна.
+
 ## v0.13.183 — Декомпозиція класу App: винесення роботи з темами у app_theme.cpp (Крок 7.2) та фінальне очищення (Крок 7.3)
+
 
 ### Завдання
 Виконати Крок 7.2 та 7.3 плану рефакторингу:
