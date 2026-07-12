@@ -1,5 +1,23 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.168 — рефакторинг cheats_menu.cpp (Крок 1.4)
+
+Завершено перенесення класів `CheatFilesMenu`, `CheatContentMenu` та `CheatCodeViewerMenu` з `cheats_menu.cpp` до окремих файлів `cheat_files_menu.hpp/.cpp`.
+
+### 1. Виділення cheats/cheat_files_menu
+- Створено заголовний файл `sphaira/include/ui/menus/cheats/cheat_files_menu.hpp`, який містить оголошення класів `CheatFilesMenu`, `CheatContentMenu`, `CheatCodeViewerMenu` та декларації спільних допоміжних функцій у просторі імен `sphaira::ui::menu::hats::detail`.
+- Створено файл реалізації `sphaira/source/ui/menus/cheats/cheat_files_menu.cpp`, куди перенесені визначення вищезазначених класів.
+- Перенесено функції `GetCheatsDirPath`, `GetFileStem`, `GetManualCheatImportPath`, `IsCheatHeaderLine`, `GetCheatHeaderName`, `GetExistingCheats`, `DeleteCheatFile` у простір імен `detail` для спільного використання між модулями компіляції.
+- Функцію `RenameCheatBuildId` зроблено локальною в анонімному просторі імен у `cheat_files_menu.cpp`.
+
+### 2. Очищення cheats_menu.cpp та cheats_menu.hpp
+- Вилучено визначення та оголошення класів `CheatFilesMenu`, `CheatContentMenu` та `CheatCodeViewerMenu` з `cheats_menu.cpp` та `cheats_menu.hpp`.
+- Додано підключення `#include "ui/menus/cheats/cheat_files_menu.hpp"` у `cheats_menu.cpp`.
+
+### 3. Збірка програми
+- Додано `source/ui/menus/cheats/cheat_files_menu.cpp` до `sphaira/CMakeLists.txt`.
+- Успішно проведено збірку програми в середовищі WSL. Версію оновлено до `0.13.168`.
+
 ## v0.13.167 — рефакторинг cheats_menu.cpp (Крок 1.3)
 
 Завершено перенесення функцій роботи з кешем метаданих читів та базою даних версій `nx-cheats-db` з `cheats_menu.cpp` до `cheats_db.hpp/.cpp`.

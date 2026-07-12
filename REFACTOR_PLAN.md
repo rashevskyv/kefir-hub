@@ -43,7 +43,7 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 | [x] 1.1 | `cheats/cheats_dmnt.hpp/.cpp` | `DmntMemoryRegionExtents`, `DmntCheatProcessMetadata` (line ~89) and every helper that talks to dmnt/dmntcht (attach, toggle, read metadata). |
 | [x] 1.2 | `cheats/cheats_lookup.hpp/.cpp` | `InstalledNcaLookupResult` (~229), `BuildIdLookupResult` (~718) and their helper functions (build-id resolution, NCA lookup). |
 | [x] 1.3 | `cheats/cheats_db.hpp/.cpp` | `CachedCheatMetadata` (~1587), `NxDbVersionInfo` (~1902) and helpers for the cheat DB / cache / download-side metadata. |
-| 1.4 | `cheats/cheat_files_menu.cpp` | Classes `CheatFilesMenu`, `CheatContentMenu`, `CheatCodeViewerMenu` (~3515–4130). Their declarations move from `cheats_menu.hpp` into `include/ui/menus/cheats/cheat_files_menu.hpp` if they are declared there; if declared only in the .cpp, keep them local. |
+| [x] 1.4 | `cheats/cheat_files_menu.cpp` | Classes `CheatFilesMenu`, `CheatContentMenu`, `CheatCodeViewerMenu` (~3515–4130). Their declarations move from `cheats_menu.hpp` into `include/ui/menus/cheats/cheat_files_menu.hpp` if they are declared there; if declared only in the .cpp, keep them local. |
 | 1.5 | `cheats/cheat_game_select_menu.cpp` | Classes `CheatGameSelectMenu`, `CheatDownloadMenu` (~4132–end). Same header rule as 1.4. |
 | 1.6 | leftover check | `cheats_menu.cpp` should now contain only `CheatsMenu` + `CheatViewMenu` and the helpers used exclusively by them. Target: under ~1500 lines. |
 
