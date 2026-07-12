@@ -62,8 +62,8 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 
 | Step | New file | What moves there |
 |---|---|---|
-| 3.1 | `source/web_pages.hpp` | All `constexpr std::string_view` HTML/JS blobs: `LIGHTBOX_CONTENT`, `CONFIRM_MODAL_HTML`, `CONFIRM_MODAL_JS`, `FOLDER_PAGE_HEADER`, `FOLDER_PAGE_JS`, `PROGRESS_PAGE` (~lines 404–1880). Header-only, `namespace sphaira::webpages`. This alone removes ~1200 lines. |
-| 3.2 | `source/web_qr.hpp/.cpp` | `class QrCode` (~2507). |
+| [x] 3.1 | `source/web_pages.hpp` | All `constexpr std::string_view` HTML/JS blobs: `LIGHTBOX_CONTENT`, `CONFIRM_MODAL_HTML`, `CONFIRM_MODAL_JS`, `FOLDER_PAGE_HEADER`, `FOLDER_PAGE_JS`, `PROGRESS_PAGE` (~lines 404–1880). Header-only, `namespace sphaira::webpages`. This alone removes ~1200 lines. |
+| [x] 3.2 | `source/web_qr.hpp/.cpp` | `class QrCode` (~2507). |
 | 3.3 | `source/web_upload.hpp/.cpp` | `UploadState` (~57) and `SocketStream` (~1296) plus their helpers, if extraction is clean; if they are tightly interleaved with the server loop, skip and note why. |
 
 ## Phase 4 — `ui/menus/save_menu.cpp` (2923 lines, heavily diverged fork file)
