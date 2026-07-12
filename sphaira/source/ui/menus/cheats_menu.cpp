@@ -518,6 +518,50 @@ auto SaveCheatslipsToken(const std::string& token) -> void {
 
 
 
+auto DeleteAllCheatsForTitle(u64 title_id) -> bool {
+    fs::FsNativeSd fs;
+
+    const auto cheats_dir = GetCheatsDirPath(title_id);
+
+    if (fs.DirExists(cheats_dir.c_str())) {
+        Result rc = fs.DeleteDirectoryRecursively(cheats_dir.c_str());
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to delete cheats directory %s: %x\n", cheats_dir.c_str(), rc);
+            return false;
+        }
+        log_write("[Cheats] Deleted all cheats for title %016lx\n", title_id);
+
+        // Also try to delete the title directory if empty
+        const auto title_dir = std::string(ATMOSPHERE_CONTENTS_PATH) + "/" + FormatTitleIdLower(title_id);
+        if (fs.DirExists(title_dir.c_str())) {
+            fs.DeleteDirectory(title_dir.c_str());
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// Clear cached cheats database from /config/hats-tools/cheats-db
+auto ClearCheatsCache() -> Result {
+    fs::FsNativeSd fs;
+
+    log_write("[Cheats] Clearing cheats cache: %s\n", NX_DB_PATH);
+
+    if (fs.DirExists(NX_DB_PATH)) {
+        Result rc = fs.DeleteDirectoryRecursively(NX_DB_PATH);
+        if (R_FAILED(rc)) {
+            log_write("[Cheats] Failed to clear cheats cache: %x\n", rc);
+            return rc;
+        }
+        log_write("[Cheats] Successfully cleared cheats cache\n");
+        return 0;
+    }
+
+    log_write("[Cheats] Cheats cache directory does not exist\n");
+    return 0;
+}
+
 // Delete all cheats for all games
 auto DeleteAllCheats() -> Result {
     fs::FsNativeSd fs;

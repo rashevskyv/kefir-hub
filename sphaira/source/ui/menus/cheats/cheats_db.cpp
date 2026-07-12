@@ -26,15 +26,6 @@ namespace sphaira::ui::menu::hats {
 
 using namespace detail;
 
-namespace {
-
-constexpr const char* NX_DB_PATH = "/config/hats-tools/cheats-db";
-constexpr const char* NX_DB_VERSIONS_FILE = "versions.json";
-constexpr const char* CHEAT_METADATA_CACHE_PATH = "/config/hats-tools/cheat-metadata.json";
-constexpr u32 CHEAT_METADATA_CACHE_VERSION = 1;
-
-} // namespace
-
 Mutex g_cheat_metadata_cache_mutex{};
 
 auto LoadCheatMetadataCacheUnlocked() -> std::unordered_map<u64, CachedCheatMetadata> {

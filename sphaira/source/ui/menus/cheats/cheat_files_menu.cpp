@@ -22,9 +22,6 @@ namespace sphaira::ui::menu::hats {
 
 using namespace detail;
 
-constexpr const char* ATMOSPHERE_CONTENTS_PATH = "/atmosphere/contents";
-constexpr const char* CHEATS_SUBDIR = "cheats";
-
 namespace detail {
 
 auto GetCheatsDirPath(u64 title_id) -> std::string {
