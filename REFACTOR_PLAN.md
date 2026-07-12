@@ -96,9 +96,9 @@ The `App` class stays one class; its method definitions get split across TUs.
 
 | Step | New file | What moves there |
 |---|---|---|
-| 7.1 | `source/app_settings.cpp` | The long run of trivial option accessors: `GetNxlinkEnable`, `GetHddEnable`, `GetWriteProtect`, `GetWebdavUrl/User/Pass`, `GetLogEnable`, `GetReplaceHbmenuEnable`, `GetInstall*`, `GetThemeMusicEnable`, `GetAnimatedWavesEnable`, `GetWaveColor*`, and every sibling Get/Set that just reads/writes an option (roughly lines 671–1100+). Also `NormalizeWebdavUrl`. |
-| 7.2 | `source/app_theme.cpp` | Theme handling: `ThemeData`, `ThemeIdPair`, `LoadThemeMeta`, `GetThemeMetaList`, `SetTheme`, `GetThemeIndex`, theme scan/load helpers, `DEFAULT_MUSIC_PATH`, `GetDefaultImage*`. |
-| 7.3 | leftover check | `app.cpp` keeps init/deinit, `Loop`, `Push*`, `Notify*`, frame-buffer and input plumbing. Target: under ~1200 lines. |
+| [x] 7.1 | `source/app_settings.cpp` | The long run of trivial option accessors: `GetNxlinkEnable`, `GetHddEnable`, `GetWriteProtect`, `GetWebdavUrl/User/Pass`, `GetLogEnable`, `GetReplaceHbmenuEnable`, `GetInstall*`, `GetThemeMusicEnable`, `GetAnimatedWavesEnable`, `GetWaveColor*`, and every sibling Get/Set that just reads/writes an option (roughly lines 671–1100+). Also `NormalizeWebdavUrl`. |
+| [x] 7.2 | `source/app_theme.cpp` | Theme handling: `ThemeData`, `ThemeIdPair`, `LoadThemeMeta`, `GetThemeMetaList`, `SetTheme`, `GetThemeIndex`, theme scan/load helpers, `DEFAULT_MUSIC_PATH`, `GetDefaultImage*`. |
+| [x] 7.3 | leftover check | `app.cpp` keeps init/deinit, `Loop`, `Push*`, `Notify*`, frame-buffer and input plumbing. Target: under ~1200 lines. |
 
 ## Phase 8 — `utils/devoptab_common.cpp` (1660 lines)
 

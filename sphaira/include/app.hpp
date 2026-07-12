@@ -182,6 +182,7 @@ public:
     void CloseTheme();
     void ScanThemes(const std::string& path);
     void ScanThemeEntries();
+    void InitDefaultImage();
 
     // helper that converts 1.2.3 to a u32 used for comparisons.
     static auto GetVersionFromString(const char* str) -> u32;

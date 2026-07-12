@@ -1,5 +1,47 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.183 — Декомпозиція класу App: винесення роботи з темами у app_theme.cpp (Крок 7.2) та фінальне очищення (Крок 7.3)
+
+### Завдання
+Виконати Крок 7.2 та 7.3 плану рефакторингу:
+1. Перенести методи роботи з темами (від `GetThemeMetaList`, `SetTheme`, `GetThemeIndex`, `GetDefaultImage*`, `LoadTheme`, `ScanThemes`, `ScanThemeEntries` до допоміжних функцій `LoadElement*`, `CloseTheme`, `LoadThemeInternal`, `LoadThemeMeta`) та масив `THEME_ENTRIES` з файлу [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp) до нового файлу реалізації [app_theme.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_theme.cpp).
+2. Провести фінальну перевірку `app.cpp`, видалити залишки коду та забезпечити успішну збірку.
+
+### Підхід
+1. **Створення нового файлу**:
+   - Створено [app_theme.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_theme.cpp) і перенесено туди всі методи завантаження, сканування та застосування тем, а також допоміжний масив `THEME_ENTRIES` та структури `ThemeData`, `ThemeIdPair`.
+   - Забезпечено коректний лінкінг та доступ до `g_app` та `DEFAULT_MUSIC_PATH` з `app.cpp`.
+2. **Очищення `app.cpp`**:
+   - Вилучено всі перенесені методи з файлу [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp).
+   - Оголошено `DEFAULT_MUSIC_PATH` з зовнішнім зв'язуванням (external linkage) для можливості доступу з `app_theme.cpp`.
+   - Створено та оголошено метод `InitDefaultImage()` в `App` для ініціалізації в конструкторі, що дозволило зберегти `DEFAULT_IMAGE_DATA` повністю приватним для `app_theme.cpp`.
+3. **CMakeLists.txt та Версія**:
+   - Додано `source/app_theme.cpp` до списку збірки у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Збільшено версію програми до `0.13.183` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake (бінарний файл `sphaira.nro` успішно лінкується та упаковується).
+
+
+## v0.13.182 — Декомпозиція класу App: винесення налаштувань у app_settings.cpp (Крок 7.1)
+
+### Завдання
+Виконати Крок 7.1 плану рефакторингу: перенести Get/Set методи роботи з опціями (від `GetNxlinkEnable` до `ExitRestart` включно) та допоміжні функції анонімного простору імен (`IsKefirHubNacp`, `NormalizeWebdavUrl`, `GetNroIcon`) з файлу [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp) до нового файлу реалізації [app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp). Очистити `app.cpp` від цих функцій та перевірити збірку.
+
+### Підхід
+1. **Створення нового файлу**:
+   - Створено [app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp) і перенесено туди всі методи Get/Set доступу до налаштувань класу `App`, а також локальні хелпери `IsKefirHubNacp`, `NormalizeWebdavUrl` та `GetNroIcon`.
+   - Забезпечено коректний лінкінг через оголошення глобального вказівника `extern App* g_app;` та функцій `nxlink_callback`, `on_i18n_change`.
+2. **Очищення `app.cpp`**:
+   - Вилучено перенесені методи з файлу [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp).
+   - Закрито анонімний простір імен раніше, щоб функції `nxlink_callback` та `on_i18n_change` були доступні для лінкінгу з `app_settings.cpp`.
+3. **CMakeLists.txt та Версія**:
+   - Додано `source/app_settings.cpp` до списку збірки у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Збільшено версію програми до `0.13.182` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake.
+
 ## v0.13.181 — Рефакторинг файлового браузера: винесення операцій FsView у filebrowser_ops.cpp (Крок 6.3)
 
 ### Завдання

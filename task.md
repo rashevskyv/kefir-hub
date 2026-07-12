@@ -1,6 +1,6 @@
 # Поточні задачі
 
-- [ ] Рефакторинг cheats_menu.cpp (Фаза 1):
+- [x] Рефакторинг cheats_menu.cpp (Фаза 1):
     - [x] Крок 1.1: Виділення cheats/cheats_dmnt.hpp/.cpp (Helpers dmnt/dmntcht) <!-- id: r1.1 -->
     - [x] Крок 1.2: Виділення cheats/cheats_lookup.hpp/.cpp (InstalledNcaLookupResult, BuildIdLookupResult) <!-- id: r1.2 -->
     - [x] Крок 1.3: Виділення cheats/cheats_db.hpp/.cpp (CachedCheatMetadata, NxDbVersionInfo) <!-- id: r1.3 -->
@@ -28,6 +28,10 @@
     - [x] Крок 6.1: Виділення хелперів типів файлів та ROM у filebrowser_assoc.hpp/.cpp <!-- id: r6.1 -->
     - [x] Крок 6.2: Виділення форми створення форвардерів ForwarderForm у filebrowser_forwarder.hpp/.cpp <!-- id: r6.2 -->
     - [x] Крок 6.3: Винесення важких операцій FsView у filebrowser_ops.cpp <!-- id: r6.3 -->
+- [x] Рефакторинг app.cpp (Фаза 7):
+    - [x] Крок 7.1: Винесення налаштувань та супутніх методів з app.cpp до source/app_settings.cpp <!-- id: r7.1 -->
+    - [x] Крок 7.2: Винесення роботи з темами до source/app_theme.cpp <!-- id: r7.2 -->
+    - [x] Крок 7.3: Фінальне очищення app.cpp та верифікація збірки <!-- id: r7.3 -->
 - [x] Вивчити наявний стан та спланувати синхронізацію сейвів з віддаленим джерелом (WebDAV) <!-- id: 0 -->
 - [x] Реалізувати лістинг віддаленої теки WebDAV (PROPFIND XML парсер / рядковий пошук) <!-- id: 1 -->
 - [x] Додати синхронізацію сейвів (SyncPlan, UI в Save Menu, опція Auto-sync) <!-- id: 2 -->
