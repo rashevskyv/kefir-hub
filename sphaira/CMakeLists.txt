@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.171)
+set(sphaira_VERSION 0.13.172)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -46,6 +46,7 @@ add_executable(sphaira
     source/ui/menus/settings_menu.cpp
     source/ui/menus/settings/settings_fs_utils.cpp
     source/ui/menus/settings/settings_translations.cpp
+    source/ui/menus/settings/settings_tweaks.cpp
     source/ui/menus/save_menu.cpp
     source/ui/menus/themezer.cpp
     source/ui/menus/theme_creator.cpp
