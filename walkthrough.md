@@ -1,5 +1,19 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.167 — рефакторинг cheats_menu.cpp (Крок 1.3)
+
+Завершено перенесення функцій роботи з кешем метаданих читів та базою даних версій `nx-cheats-db` з `cheats_menu.cpp` до `cheats_db.hpp/.cpp`.
+
+### 1. Виділення cheats_db
+- Створено `sphaira/source/ui/menus/cheats/cheats_db.cpp` (відповідний заголовок `cheats_db.hpp` вже існував).
+- Перенесено глобальний м'ютекс `g_cheat_metadata_cache_mutex`.
+- Перенесено функції `LoadCheatMetadataCacheUnlocked`, `SaveCheatMetadataCacheUnlocked`, `GetCachedCheatMetadata`, `GetCachedBuildIdForTitle`, `SaveDetectedBuildIdToCache`, `LoadNxDbVersions`, `IsNxDbAvailable` та видалено дублікати структур `CachedCheatMetadata` і `NxDbVersionInfo` з `cheats_menu.cpp`.
+- Вилучено цей код із `cheats_menu.cpp`.
+
+### 2. Оновлення конфігурації збірки
+- Додано `source/ui/menus/cheats/cheats_db.cpp` до `sphaira/CMakeLists.txt`.
+- Версію програми оновлено до `0.13.167`.
+
 ## v0.13.166 — рефакторинг cheats_menu.cpp (Крок 1.2)
 
 Завершено перенесення функцій пошуку Build ID та NCA з `cheats_menu.cpp` до `cheats_lookup.hpp/.cpp`.

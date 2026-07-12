@@ -1,7 +1,6 @@
-
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.166)
+set(sphaira_VERSION 0.13.167)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -53,6 +52,7 @@ add_executable(sphaira
     source/ui/menus/cheats_menu.cpp
     source/ui/menus/cheats/cheats_dmnt.cpp
     source/ui/menus/cheats/cheats_lookup.cpp
+    source/ui/menus/cheats/cheats_db.cpp
     source/ui/menus/ghdl.cpp
     source/ui/menus/usb_menu.cpp
     source/ui/menus/dbi_menu.cpp

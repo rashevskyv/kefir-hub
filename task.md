@@ -3,7 +3,7 @@
 - [ ] Рефакторинг cheats_menu.cpp (Фаза 1):
     - [x] Крок 1.1: Виділення cheats/cheats_dmnt.hpp/.cpp (Helpers dmnt/dmntcht) <!-- id: r1.1 -->
     - [x] Крок 1.2: Виділення cheats/cheats_lookup.hpp/.cpp (InstalledNcaLookupResult, BuildIdLookupResult) <!-- id: r1.2 -->
-    - [ ] Крок 1.3: Виділення cheats/cheats_db.hpp/.cpp (CachedCheatMetadata, NxDbVersionInfo) <!-- id: r1.3 -->
+    - [x] Крок 1.3: Виділення cheats/cheats_db.hpp/.cpp (CachedCheatMetadata, NxDbVersionInfo) <!-- id: r1.3 -->
     - [ ] Крок 1.4: Виділення cheats/cheat_files_menu.hpp/.cpp (CheatFilesMenu, CheatContentMenu, CheatCodeViewerMenu) <!-- id: r1.4 -->
     - [ ] Крок 1.5: Виділення cheats/cheat_game_select_menu.hpp/.cpp (CheatGameSelectMenu, CheatDownloadMenu) <!-- id: r1.5 -->
     - [ ] Крок 1.6: Фінальне очищення cheats_menu.cpp та верифікація збірки <!-- id: r1.6 -->
