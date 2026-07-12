@@ -1,5 +1,21 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.170 — рефакторинг settings_menu.cpp (Крок 2.1)
+
+Завершено рефакторинг `settings_menu.cpp` шляхом виділення загальних допоміжних функцій для роботи з файлами та рядками в окремий компонент `settings_fs_utils.hpp/.cpp` у просторі імен `sphaira::ui::menu::settings::detail`.
+
+### 1. Виділення settings/settings_fs_utils
+- Створено заголовний файл `sphaira/include/ui/menus/settings/settings_fs_utils.hpp`, який містить декларації перенесених утиліт у просторі імен `sphaira::ui::menu::settings::detail`.
+- Створено файл реалізації `sphaira/source/ui/menus/settings/settings_fs_utils.cpp`, куди перенесені визначення наступних функцій: `Trim`, `ReadTextFile`, `ReadLines`, `WriteLines`, `StartsWith`, `SplitCommand`, `ExtractBracketName`, `ExtractIniKey`, `ExtractJsonStringField`, `FileExists`, `DirectoryExists`, `ParentPath`, `EnsureParentDirectory`, `CopyFileSimple`, `DeletePath`, `CopyDirectoryContents`, `MovePath`, `IniValueEquals`, `SetIniValue`, `ReadIniRawValue`, `SetIniRawValue`.
+
+### 2. Очищення settings_menu.cpp
+- Додано підключення `#include "ui/menus/settings/settings_fs_utils.hpp"` та директиву `using namespace detail;` у `settings_menu.cpp` для доступу до винесених функцій.
+- Вилучено всі вищезазначені утиліти з `settings_menu.cpp` (функція `SettingsValueColour` була залишена в `settings_menu.cpp`, оскільки вона не входила до списку перенесення).
+
+### 3. Складальна система та версія
+- Додано `source/ui/menus/settings/settings_fs_utils.cpp` до списку джерел у `sphaira/CMakeLists.txt`.
+- Версію програми оновлено до `0.13.170`.
+
 ## v0.13.169 — рефакторинг cheats_menu.cpp (Крок 1.5 та 1.6)
 
 Завершено рефакторинг та оптимізацію `cheats_menu.cpp` шляхом виділення класів вибору та завантаження читів, а також очищення залишків коду.
