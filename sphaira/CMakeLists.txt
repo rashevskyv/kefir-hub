@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.177)
+set(sphaira_VERSION 0.13.178)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -40,6 +40,8 @@ add_executable(sphaira
     source/ui/menus/homebrew.cpp
     source/ui/menus/irs_menu.cpp
     source/ui/menus/kefir_menu.cpp
+    source/ui/menus/kefir/kefir_changelog.cpp
+    source/ui/menus/kefir/kefir_firmware.cpp
     source/ui/menus/main_menu.cpp
     source/ui/menus/menu_base.cpp
     source/ui/menus/firmware_menu.cpp
@@ -77,6 +79,7 @@ add_executable(sphaira
     source/ui/popup_list.cpp
     source/ui/progress_box.cpp
     source/ui/scrollable_text.cpp
+    source/ui/hold_confirm_box.cpp
     source/ui/sidebar.cpp
     source/ui/widget.cpp
     source/ui/list.cpp

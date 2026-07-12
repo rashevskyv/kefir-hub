@@ -28,11 +28,18 @@
 #include <sstream>
 #include <string_view>
 #include <utility>
+#include "ui/menus/kefir/kefir_changelog.hpp"
+#include "ui/menus/kefir/kefir_firmware.hpp"
+#include "ui/hold_confirm_box.hpp"
+
 
 namespace sphaira::ui::menu::kefir {
+using namespace detail;
+
 namespace {
 
 constexpr const char* NXLINKS_URL = "https://raw.githubusercontent.com/rashevskyv/nx-links/master/nx-links.json";
+
 constexpr const char* CACHE_DIR = "/config/kefir-updater";
 constexpr const char* NXLINKS_CACHE = "/config/kefir-updater/nx-links.json";
 constexpr const char* AMS_ZIP = "/config/kefir-updater/atmo.zip";
@@ -56,808 +63,14 @@ constexpr float UPDATER_LIST_TOP_OFFSET = 1.f + 66.f;
 constexpr float UPDATER_TILE_TOP_OFFSET = 1.f + 112.f;
 constexpr float UPDATER_TILE_CLIP_TOP_OFFSET = UPDATER_TILE_TOP_OFFSET - 35.f;
 
-struct FirmwareValidation {
-    AmsSuUpdateInformation info{};
-    AmsSuUpdateValidationInfo validation{};
-};
 
-class DowngradeHoldConfirmBox final : public Widget {
-public:
-    using Callback = std::function<void(bool)>;
 
-    DowngradeHoldConfirmBox(std::string message, Callback callback)
-    : m_message{std::move(message)}
-    , m_callback{std::move(callback)} {
-        m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
-        SetActions(
-            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
-                m_callback(false);
-                SetPop();
-            }})
-        );
-    }
 
-    void Update(Controller* controller, TouchInfo* touch) override {
-        Widget::Update(controller, touch);
 
-        if (controller->GotHeld(Button::A)) {
-            if (!m_holding) {
-                m_holding = true;
-                m_hold_start = armTicksToNs(armGetSystemTick());
-            }
 
-            const auto now = armTicksToNs(armGetSystemTick());
-            m_progress = std::min(1.f, static_cast<float>(now - m_hold_start) / 3'000'000'000.f);
-            if (m_progress >= 1.f) {
-                m_callback(true);
-                SetPop();
-            }
-        } else {
-            m_holding = false;
-            m_progress = 0.f;
-        }
-    }
 
-    void Draw(NVGcontext* vg, Theme* theme) override {
-        gfx::dimBackground(vg);
-        gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 
-        constexpr float padding = 38.f;
-        nvgSave(vg);
-        float font_size = 22.f;
-        if (m_message.length() < 60) {
-            font_size = 28.f;
-        } else if (m_message.length() < 120) {
-            font_size = 25.f;
-        } else if (m_message.length() > 200) {
-            font_size = 20.f;
-        }
-        float line_height = 1.55f;
 
-        nvgTextLineHeight(vg, line_height);
-        
-        float bounds[4]{};
-        nvgFontSize(vg, font_size);
-        nvgTextBoxBounds(vg, m_pos.x + padding, m_pos.y + 30.f, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
-        float text_h = bounds[3] - bounds[1];
-        float text_area_h = m_pos.h - 86.f - 30.f;
-        float text_y = m_pos.y + 30.f + (text_area_h - text_h) / 2.f;
-
-        gfx::drawTextBox(
-            vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding * 2.f,
-            theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, line_height
-        );
-        nvgRestore(vg);
-
-        const Vec4 button{m_pos.x, m_pos.y + m_pos.h - 86.f, m_pos.w, 86.f};
-        gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f});
-
-        const Vec4 bar{button.x + 178.f, button.y + button.h - 22.f, button.w - 356.f, 6.f};
-        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
-
-        const auto hold_text = "Hold A for 3 seconds to continue"_i18n;
-        gfx::drawText(
-            vg, button.x + button.w / 2.f, button.y + 35.f, 22.f,
-            theme->GetColour(ThemeEntryID_TEXT_SELECTED),
-            hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
-        );
-    }
-
-private:
-    std::string m_message;
-    Callback m_callback;
-    bool m_holding{};
-    u64 m_hold_start{};
-    float m_progress{};
-};
-
-auto Trim(std::string value) -> std::string {
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back()))) {
-        value.pop_back();
-    }
-
-    size_t start{};
-    while (start < value.size() && std::isspace(static_cast<unsigned char>(value[start]))) {
-        start++;
-    }
-
-    if (start) {
-        value.erase(0, start);
-    }
-    return value;
-}
-
-auto ReadLineNumber(const char* path, size_t line_index) -> std::string {
-    FILE* file = std::fopen(path, "r");
-    if (!file) {
-        return "Not Found";
-    }
-    ON_SCOPE_EXIT(std::fclose(file));
-
-    char line[128]{};
-    for (size_t i = 0; i <= line_index; i++) {
-        if (!std::fgets(line, sizeof(line), file)) {
-            return "Not Found";
-        }
-    }
-
-    auto value = Trim(line);
-    return value.empty() ? "Not Found" : value;
-}
-
-auto ReadFirstLine(const char* path) -> std::string {
-    return ReadLineNumber(path, 0);
-}
-
-auto ReadSecondLine(const char* path) -> std::string {
-    return ReadLineNumber(path, 1);
-}
-
-auto IsKnownVersion(const std::string& version) -> bool {
-    if (version.empty() || version == "Not Found" || version == "Unknown") {
-        return false;
-    }
-
-    return std::any_of(version.begin(), version.end(), [](unsigned char c) {
-        return std::isdigit(c);
-    });
-}
-
-auto FirmwareUnsupportedReason(const std::string& target, const std::string& supported) -> std::string {
-    std::string message = "Firmware " + target + " is not supported by the current Kefir.";
-    if (IsKnownVersion(supported)) {
-        message += "\n\nCurrent Kefir supports system firmware up to " + supported + ".";
-    }
-    message += "\n\nUpdate Kefir first?";
-    return message;
-}
-
-auto UnsupportedFirmwareLabel(const std::string& supported) -> std::string {
-    if (IsKnownVersion(supported)) {
-        return "Unsupported > " + supported;
-    }
-    return "Unsupported";
-}
-
-auto ReadCurrentKefirSupportedFirmware() -> std::string {
-    const auto value = ReadSecondLine(KEFIR_VERSION_PATH);
-    if (!IsKnownVersion(value)) {
-        return "Not Found";
-    }
-    return value;
-}
-
-auto FindDigitsAfter(const std::string& value, std::string_view marker) -> std::string {
-    auto pos = value.find(marker);
-    if (pos == std::string::npos) {
-        return {};
-    }
-
-    pos += marker.size();
-    const auto start = pos;
-    while (pos < value.size() && std::isdigit(static_cast<unsigned char>(value[pos]))) {
-        pos++;
-    }
-
-    if (pos == start) {
-        return {};
-    }
-    return value.substr(start, pos - start);
-}
-
-auto ExtractKefirVersion(const std::string& name, const std::string& url) -> std::string {
-    for (const auto* value : { &url, &name }) {
-        if (auto version = FindDigitsAfter(*value, "/download/"); !version.empty()) {
-            return version;
-        }
-        if (auto version = FindDigitsAfter(*value, "kefir_"); !version.empty()) {
-            return version;
-        }
-    }
-
-    for (const auto* value : { &url, &name }) {
-        for (size_t i = 0; i < value->size(); i++) {
-            if (!std::isdigit(static_cast<unsigned char>((*value)[i]))) {
-                continue;
-            }
-
-            size_t end = i;
-            while (end < value->size() && std::isdigit(static_cast<unsigned char>((*value)[end]))) {
-                end++;
-            }
-
-            const auto len = end - i;
-            if (len >= 3 && len <= 4) {
-                return value->substr(i, len);
-            }
-            i = end;
-        }
-    }
-
-    return {};
-}
-
-auto MakeKefirLatestLabel(const UpdaterEntry& entry) -> std::string {
-    if (const auto version = ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
-        return version;
-    }
-    return entry.name;
-}
-
-auto ParseKefirChangelogVersion(const std::string& version) -> int {
-    std::string number;
-    for (const auto c : version) {
-        if (std::isdigit(static_cast<unsigned char>(c))) {
-            number += c;
-        } else if (!number.empty()) {
-            break;
-        }
-    }
-
-    if (number.empty()) {
-        return 0;
-    }
-
-    return std::strtol(number.c_str(), nullptr, 10);
-}
-
-auto IsUkrainianLanguage() -> bool {
-    return App::GetLanguage() == 14;
-}
-
-auto ExtractChangelogSection(const std::string& raw, bool ukrainian) -> std::string {
-    constexpr std::string_view ukr_header = "#### **UKR**";
-    constexpr std::string_view eng_header = "#### **ENG**";
-    constexpr std::string_view separator = "____";
-
-    if (ukrainian) {
-        const auto pos = raw.find(ukr_header);
-        if (pos == std::string::npos) {
-            return raw;
-        }
-
-        const auto start = pos + ukr_header.size();
-        const auto sep_pos = raw.find(separator, start);
-        return raw.substr(start, (sep_pos != std::string::npos ? sep_pos : raw.size()) - start);
-    }
-
-    const auto pos = raw.find(eng_header);
-    if (pos == std::string::npos) {
-        return raw;
-    }
-    return raw.substr(pos + eng_header.size());
-}
-
-auto IsFullBoldLine(const std::string& trimmed) -> bool {
-    return trimmed.size() >= 5 &&
-        trimmed[0] == '*' && trimmed[1] == '*' &&
-        trimmed[trimmed.size() - 1] == '*' && trimmed[trimmed.size() - 2] == '*';
-}
-
-auto NormalizeChangelogMarkdown(const std::string& text) -> std::string {
-    std::string result;
-    result.reserve(text.size());
-
-    for (size_t i = 0; i < text.size();) {
-        if (text[i] == '*') {
-            if (i + 1 < text.size() && text[i + 1] == '*') {
-                result += "**";
-                i += 2;
-            } else {
-                i++;
-            }
-            continue;
-        }
-
-        result += text[i++];
-    }
-
-    return result;
-}
-
-auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> std::string {
-    std::istringstream stream(section);
-    std::string line;
-    std::string result;
-    bool first_line = true;
-
-    while (std::getline(stream, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-
-        const auto non_space = line.find_first_not_of(" \t");
-        if (non_space == std::string::npos) {
-            continue;
-        }
-
-        auto trimmed = line.substr(non_space);
-
-        if (trimmed.size() >= 2 && trimmed[0] == '#' && trimmed[1] == '#') {
-            continue;
-        }
-        if (!trimmed.empty() && trimmed.find_first_not_of('_') == std::string::npos) {
-            continue;
-        }
-        if (trimmed.size() >= 3 && trimmed.find_first_not_of('-') == std::string::npos) {
-            continue;
-        }
-
-        std::string indent;
-        for (size_t i = 0; i < non_space; i++) {
-            indent += line[i] == '\t' ? "    " : " ";
-        }
-
-        trimmed = NormalizeChangelogMarkdown(trimmed);
-
-        if (!first_line) {
-            result += '\n';
-        }
-        if (add_bullets) {
-            result += "\u00A0\u00A0\u00A0\u00A0\u00A0\u2022 " + indent + trimmed;
-        } else {
-            result += indent + trimmed;
-        }
-        first_line = false;
-    }
-
-    return result;
-}
-
-auto BuildKefirChangelogText(const std::string& raw, const std::string& current_version, const std::string& target_version, bool& should_skip) -> std::string {
-    const auto target_ver = ParseKefirChangelogVersion(target_version);
-    if (!target_ver) {
-        should_skip = false;
-        return "Could not determine target Kefir version.";
-    }
-
-    if (raw.empty()) {
-        should_skip = true;
-        return "Failed to download changelog.";
-    }
-
-    const auto section = ExtractChangelogSection(raw, IsUkrainianLanguage());
-    std::string preamble;
-    std::vector<std::pair<int, std::string>> version_blocks;
-
-    std::istringstream stream(section);
-    std::string line;
-    bool in_preamble = true;
-    int current_block = -1;
-    std::string block_content;
-
-    while (std::getline(stream, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-
-        const auto non_space = line.find_first_not_of(" \t");
-        if (non_space == std::string::npos) {
-            continue;
-        }
-
-        auto trimmed = line.substr(non_space);
-        while (!trimmed.empty() && std::isspace(static_cast<unsigned char>(trimmed.back()))) {
-            trimmed.pop_back();
-        }
-
-        if (IsFullBoldLine(trimmed)) {
-            const auto content = trimmed.substr(2, trimmed.size() - 4);
-            const bool is_version = !content.empty() && std::all_of(content.begin(), content.end(), [](unsigned char c) {
-                return std::isdigit(c);
-            });
-
-            if (is_version) {
-                if (current_block != -1 && !block_content.empty()) {
-                    version_blocks.push_back({current_block, block_content});
-                }
-
-                in_preamble = false;
-                current_block = std::strtol(content.c_str(), nullptr, 10);
-                block_content.clear();
-                continue;
-            }
-        }
-
-        if (in_preamble) {
-            preamble += line + "\n";
-        } else if (current_block != -1) {
-            block_content += line + "\n";
-        }
-    }
-
-    if (current_block != -1 && !block_content.empty()) {
-        version_blocks.push_back({current_block, block_content});
-    }
-
-    const auto current_ver = ParseKefirChangelogVersion(current_version);
-    const auto latest_available_ver = version_blocks.empty() ? 0 : version_blocks.front().first;
-
-    should_skip = (latest_available_ver != target_ver);
-
-    int start_ver = 0;
-    int end_ver = target_ver;
-
-    if (current_ver == target_ver) {
-        start_ver = target_ver;
-        end_ver = target_ver;
-    } else {
-        start_ver = current_ver + 1;
-    }
-
-    std::string version_content;
-    bool found_any = false;
-    for (const auto& [version, content] : version_blocks) {
-        if (version < start_ver || version > end_ver) {
-            continue;
-        }
-
-        const auto display_content = BuildChangelogDisplayText(content, true);
-        if (display_content.empty()) {
-            continue;
-        }
-
-        found_any = true;
-        version_content += "**" + std::to_string(version) + "**\n";
-        version_content += display_content + "\n\n";
-    }
-
-    std::string result = BuildChangelogDisplayText(preamble, false);
-    if (!result.empty() && found_any) {
-        result += "\n\n";
-    }
-    result += version_content;
-
-    return Trim(result);
-}
-
-enum class ChangelogTextColour {
-    Normal,
-    Gray,
-    Red,
-    Blue,
-};
-
-struct ChangelogSegment {
-    std::string text;
-    bool bold{};
-    bool underline{};
-    ChangelogTextColour colour{ChangelogTextColour::Normal};
-};
-
-void AddChangelogSegment(std::vector<ChangelogSegment>& out, std::string text, bool bold, bool underline, ChangelogTextColour colour) {
-    if (text.empty()) {
-        return;
-    }
-
-    if (!out.empty()) {
-        auto& last = out.back();
-        if (last.bold == bold && last.underline == underline && last.colour == colour) {
-            last.text += text;
-            return;
-        }
-    }
-
-    out.push_back({
-        .text = std::move(text),
-        .bold = bold,
-        .underline = underline,
-        .colour = colour,
-    });
-}
-
-auto IsUrlStart(const std::string& text, size_t pos) -> bool {
-    return text.compare(pos, 7, "http://") == 0 || text.compare(pos, 8, "https://") == 0;
-}
-
-void ParseChangelogInline(const std::string& text, std::vector<ChangelogSegment>& out, bool bold = false,
-    bool underline = false, ChangelogTextColour colour = ChangelogTextColour::Normal) {
-    std::string current;
-
-    const auto flush = [&]() {
-        AddChangelogSegment(out, std::move(current), bold, underline, colour);
-        current.clear();
-    };
-
-    for (size_t i = 0; i < text.size();) {
-        if (i + 1 < text.size() && text[i] == '*' && text[i + 1] == '*') {
-            flush();
-            bold = !bold;
-            i += 2;
-            continue;
-        }
-
-        if (i + 1 < text.size() && text[i] == '_' && text[i + 1] == '_') {
-            flush();
-            underline = !underline;
-            i += 2;
-            continue;
-        }
-
-        if (text.compare(i, 3, "<u>") == 0) {
-            flush();
-            underline = true;
-            i += 3;
-            continue;
-        }
-
-        if (text.compare(i, 4, "</u>") == 0) {
-            flush();
-            underline = false;
-            i += 4;
-            continue;
-        }
-
-        if (text.compare(i, 7, "{{red}}") == 0) {
-            const auto end = text.find("{{/red}}", i + 7);
-            if (end != std::string::npos) {
-                flush();
-                ParseChangelogInline(text.substr(i + 7, end - i - 7), out, bold, underline, ChangelogTextColour::Red);
-                i = end + 8;
-                continue;
-            }
-        }
-
-        if (text.compare(i, 8, "{{blue}}") == 0) {
-            const auto end = text.find("{{/blue}}", i + 8);
-            if (end != std::string::npos) {
-                flush();
-                ParseChangelogInline(text.substr(i + 8, end - i - 8), out, bold, true, ChangelogTextColour::Blue);
-                i = end + 9;
-                continue;
-            }
-        }
-
-        if (text[i] == '`') {
-            const auto end = text.find('`', i + 1);
-            if (end != std::string::npos) {
-                flush();
-                AddChangelogSegment(out, "`", bold, underline, colour);
-                ParseChangelogInline(text.substr(i + 1, end - i - 1), out, false, underline, ChangelogTextColour::Gray);
-                AddChangelogSegment(out, "`", bold, underline, colour);
-                i = end + 1;
-                continue;
-            }
-        }
-
-        if (text[i] == '[') {
-            const auto close_bracket = text.find(']', i + 1);
-            if (close_bracket != std::string::npos) {
-                if (close_bracket + 1 < text.size() && text[close_bracket + 1] == '(') {
-                    const auto close_paren = text.find(')', close_bracket + 2);
-                    if (close_paren != std::string::npos) {
-                        flush();
-                        ParseChangelogInline(text.substr(i + 1, close_bracket - i - 1), out, bold, true, ChangelogTextColour::Blue);
-                        i = close_paren + 1;
-                        continue;
-                    }
-                }
-
-                flush();
-                AddChangelogSegment(out, "[", bold, underline, colour);
-                ParseChangelogInline(text.substr(i + 1, close_bracket - i - 1), out, bold, underline, ChangelogTextColour::Gray);
-                AddChangelogSegment(out, "]", bold, underline, colour);
-                i = close_bracket + 1;
-                continue;
-            }
-        }
-
-        if (text[i] == '\'' && (i == 0 || text[i - 1] == ' ' || text[i - 1] == '\t')) {
-            const auto end = text.find('\'', i + 1);
-            if (end != std::string::npos) {
-                flush();
-                AddChangelogSegment(out, "'", bold, underline, colour);
-                ParseChangelogInline(text.substr(i + 1, end - i - 1), out, bold, underline, ChangelogTextColour::Gray);
-                AddChangelogSegment(out, "'", bold, underline, colour);
-                i = end + 1;
-                continue;
-            }
-        }
-
-        if (IsUrlStart(text, i)) {
-            size_t end = i;
-            while (end < text.size() && text[end] != ' ' && text[end] != '\t') {
-                end++;
-            }
-
-            flush();
-            AddChangelogSegment(out, text.substr(i, end - i), bold, true, ChangelogTextColour::Blue);
-            i = end;
-            continue;
-        }
-
-        current += text[i++];
-    }
-
-    flush();
-}
-
-auto TrimAsciiWhitespace(std::string value) -> std::string {
-    while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) {
-        value.pop_back();
-    }
-
-    size_t start{};
-    while (start < value.size() && (value[start] == ' ' || value[start] == '\t' || value[start] == '\r' || value[start] == '\n')) {
-        start++;
-    }
-
-    if (start) {
-        value.erase(0, start);
-    }
-    return value;
-}
-
-auto IsVersionHeaderLine(const std::string& line) -> bool {
-    const auto trimmed = TrimAsciiWhitespace(line);
-    if (!IsFullBoldLine(trimmed)) {
-        return false;
-    }
-
-    const auto content = trimmed.substr(2, trimmed.size() - 4);
-    return !content.empty() && std::all_of(content.begin(), content.end(), [](unsigned char c) {
-        return std::isdigit(c);
-    });
-}
-
-auto ChangelogSegmentColour(const ChangelogSegment& segment, Theme* theme) -> NVGcolor {
-    switch (segment.colour) {
-        case ChangelogTextColour::Gray:
-            return nvgRGBA(128, 128, 128, 255);
-        case ChangelogTextColour::Red:
-            return nvgRGBA(255, 80, 80, 255);
-        case ChangelogTextColour::Blue:
-            return nvgRGBA(100, 150, 255, 255);
-        case ChangelogTextColour::Normal:
-            return theme->GetColour(ThemeEntryID_TEXT);
-    }
-
-    return theme->GetColour(ThemeEntryID_TEXT);
-}
-
-auto ChangelogSpaceWidth(NVGcontext* vg, float font_size) -> float {
-    float ab[4]{};
-    float a_b[4]{};
-    nvgFontSize(vg, font_size);
-    nvgTextBounds(vg, 0.f, 0.f, "ab", nullptr, ab);
-    nvgTextBounds(vg, 0.f, 0.f, "a b", nullptr, a_b);
-
-    const auto width = (a_b[2] - a_b[0]) - (ab[2] - ab[0]);
-    return width < 1.f ? font_size * 0.28f : width;
-}
-
-auto MeasureWord(NVGcontext* vg, const std::string& word, float font_size) -> float {
-    float bounds[4]{};
-    nvgFontSize(vg, font_size);
-    nvgTextBounds(vg, 0.f, 0.f, word.c_str(), nullptr, bounds);
-    return bounds[2] - bounds[0];
-}
-
-auto RenderChangelogLine(NVGcontext* vg, Theme* theme, const std::string& line, float x, float y, float width,
-    float font_size, float line_height, bool render) -> float {
-    std::vector<ChangelogSegment> segments;
-    ParseChangelogInline(line, segments);
-
-    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-
-    const auto space_width = ChangelogSpaceWidth(vg, font_size);
-    auto current_x = x;
-    auto current_y = y;
-    bool line_start = true;
-    bool needs_space = false;
-    std::string word;
-    ChangelogSegment word_segment{};
-
-    const auto flush_word = [&]() {
-        if (word.empty()) {
-            return;
-        }
-
-        const auto word_width = MeasureWord(vg, word, font_size);
-        const auto bold_extra = word_segment.bold ? 1.f : 0.f;
-        auto leading_space = needs_space ? space_width : 0.f;
-
-        if (!line_start && current_x + leading_space + word_width + bold_extra > x + width) {
-            current_x = x;
-            current_y += line_height;
-            line_start = true;
-            leading_space = 0.f;
-        }
-
-        current_x += leading_space;
-
-        if (render) {
-            const auto colour = ChangelogSegmentColour(word_segment, theme);
-            nvgFillColor(vg, colour);
-            nvgFontSize(vg, font_size);
-            nvgText(vg, current_x, current_y, word.c_str(), nullptr);
-            if (word_segment.bold) {
-                nvgText(vg, current_x + 1.f, current_y, word.c_str(), nullptr);
-            }
-            if (word_segment.underline) {
-                const auto underline_y = current_y + font_size + 2.f;
-                nvgBeginPath(vg);
-                nvgMoveTo(vg, current_x, underline_y);
-                nvgLineTo(vg, current_x + word_width, underline_y);
-                nvgStrokeWidth(vg, std::max(1.f, font_size / 18.f));
-                nvgStrokeColor(vg, colour);
-                nvgStroke(vg);
-            }
-        }
-
-        current_x += word_width + bold_extra;
-        line_start = false;
-        needs_space = false;
-        word.clear();
-    };
-
-    for (const auto& segment : segments) {
-        word_segment = segment;
-        for (const auto c : segment.text) {
-            if (c == ' ') {
-                flush_word();
-                if (!line_start) {
-                    needs_space = true;
-                }
-            } else {
-                word += c;
-            }
-        }
-        flush_word();
-    }
-
-    return (current_y - y) + line_height;
-}
-
-auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, const Vec4& area, float scroll, bool render,
-    float regular_font_size, float line_height_scale, float header_font_size, float preamble_font_size) -> float {
-    std::istringstream stream(text);
-    std::string line;
-    auto y = area.y - scroll;
-    auto total_height = 0.f;
-    bool reached_version_entries = false;
-
-    while (std::getline(stream, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-
-        const auto is_header = IsVersionHeaderLine(line);
-        const auto is_blank = TrimAsciiWhitespace(line).empty();
-        const auto is_preamble = !reached_version_entries && !is_header && !is_blank;
-        const auto font_size = is_header ? header_font_size : (is_preamble ? preamble_font_size : regular_font_size);
-        const auto line_height = font_size * (is_header ? 1.35f : line_height_scale);
-
-        if (is_header) {
-            reached_version_entries = true;
-        }
-
-        const auto height = is_blank ? line_height * 0.55f :
-            RenderChangelogLine(vg, theme, line, area.x, y, area.w, font_size, line_height, render);
-        y += height;
-        total_height += height;
-    }
-
-    return total_height;
-}
-
-auto TypeLabel(UpdaterEntryType type) -> const char* {
-    switch (type) {
-        case UpdaterEntryType::Section:
-            return "";
-        case UpdaterEntryType::Network:
-            return "Network";
-        case UpdaterEntryType::CustomLink:
-            return "Other";
-        case UpdaterEntryType::Kefir:
-            return "Kefir";
-        case UpdaterEntryType::Firmware:
-            return "Firmware";
-    }
-    return "";
-}
 
 auto EntryDescription(const UpdaterEntry& entry) -> const char* {
     if (entry.type == UpdaterEntryType::Network) {
@@ -915,280 +128,17 @@ auto EntryDisplayName(const UpdaterEntry& entry) -> std::string {
         return entry.name;
     }
 
-    if (const auto version = ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
+    if (const auto version = detail::ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
         return "Version " + version;
     }
 
     auto name = entry.name;
     if (name.starts_with("Kefir")) {
         name.erase(0, std::strlen("Kefir"));
-        name = Trim(name);
+        name = detail::Trim(name);
     }
     return name.empty() ? "Version" : "Version " + name;
 }
-
-class KefirChangelogBox final : public Widget {
-public:
-    using Callback = std::function<void()>;
-
-    KefirChangelogBox(UpdaterEntry entry, Callback callback)
-    : m_entry{std::move(entry)}
-    , m_callback{std::move(callback)} {
-        m_current_version = ReadFirstLine(KEFIR_VERSION_PATH);
-        m_target_version = ExtractKefirVersion(m_entry.name, m_entry.url);
-
-        if (const auto version = ParseKefirChangelogVersion(m_target_version)) {
-            m_title = "Kefir " + std::to_string(version) + " changelog";
-        } else {
-            m_title = "Kefir changelog";
-        }
-
-        m_pos = Vec4{70.f, 42.f, 1140.f, 636.f};
-        SetUiButtonPos({m_pos.x + m_pos.w - 30.f, m_pos.y + m_pos.h - 49.f});
-
-        SetActions(
-            std::make_pair(Button::A, Action{"Install"_i18n, [this](){
-                if (m_loading || !m_unlocked || m_installing || !m_button_focused) {
-                    App::PlaySoundEffect(SoundEffect_Limit);
-                    return;
-                }
-
-                m_installing = true;
-                m_callback();
-                SetPop();
-            }}),
-            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
-                SetPop();
-            }}),
-            std::make_pair(Button::UP | Button::LS_UP | Button::RS_UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
-                if (m_button_focused) {
-                    m_button_focused = false;
-                    App::PlaySoundEffect(SoundEffect_Focus);
-                } else {
-                    ScrollBy(-CHANGELOG_SCROLL_STEP);
-                }
-            }}),
-            std::make_pair(Button::DOWN | Button::LS_DOWN | Button::RS_DOWN, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
-                if (!m_button_focused) {
-                    if (m_scroll >= m_max_scroll - 0.5f) {
-                        if (m_unlocked) {
-                            m_button_focused = true;
-                            App::PlaySoundEffect(SoundEffect_Focus);
-                        } else {
-                            App::PlaySoundEffect(SoundEffect_Limit);
-                        }
-                    } else {
-                        ScrollBy(CHANGELOG_SCROLL_STEP);
-                    }
-                } else {
-                    App::PlaySoundEffect(SoundEffect_Limit);
-                }
-            }}),
-            std::make_pair(Button::L | Button::L2, Action{[this](){
-                if (!m_button_focused) {
-                    ScrollBy(-m_text_area.h);
-                }
-            }}),
-            std::make_pair(Button::R | Button::R2, Action{[this](){
-                if (!m_button_focused) {
-                    ScrollBy(m_text_area.h);
-                }
-            }})
-        );
-
-        LoadChangelog();
-    }
-
-    void Draw(NVGcontext* vg, Theme* theme) override {
-        gfx::dimBackground(vg);
-        gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
-
-        gfx::drawText(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 28.f, 27.f,
-            theme->GetColour(ThemeEntryID_TEXT_SELECTED), m_title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
-
-        const auto target = m_target_version.empty() ? "Unknown" : m_target_version;
-        const std::string current_lbl = "Current:"_i18n;
-        const std::string target_lbl = "Target:"_i18n;
-
-        nvgSave(vg);
-        nvgFontSize(vg, 17.f);
-        nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
-
-        // Draw "Current:" bold, version normal
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgText(vg, m_pos.x + 42.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr);
-        nvgText(vg, m_pos.x + 42.f + 1.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr);
-
-        float current_bounds[4]{};
-        nvgTextBounds(vg, m_pos.x + 42.f, m_pos.y + 70.f, current_lbl.c_str(), nullptr, current_bounds);
-        float current_width = current_bounds[2] - current_bounds[0];
-
-        nvgText(vg, m_pos.x + 42.f + current_width + 7.f, m_pos.y + 70.f, m_current_version.c_str(), nullptr);
-
-        // Draw "Target:" bold, version normal
-        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
-        float target_bounds[4]{};
-        nvgTextBounds(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr, target_bounds);
-        float target_width = target_bounds[2] - target_bounds[0];
-
-        nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 70.f, target.c_str(), nullptr);
-
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f, m_pos.y + 70.f, target_lbl.c_str(), nullptr);
-        nvgText(vg, m_pos.x + m_pos.w - 42.f - target_width - 7.f + 1.f, m_pos.y + 70.f, target_lbl.c_str(), nullptr);
-        nvgRestore(vg);
-
-        gfx::drawRect(vg, m_pos.x, m_pos.y + 102.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        gfx::drawRect(vg, m_pos.x, m_pos.y + m_pos.h - 82.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-
-        m_text_area = Vec4{m_pos.x + 48.f, m_pos.y + 122.f, m_pos.w - 118.f, m_pos.h - 232.f};
-        if (m_loading) {
-            gfx::drawText(vg, m_pos.x + m_pos.w / 2.f, m_text_area.y + m_text_area.h / 2.f, 24.f,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), "Loading changelog..."_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        } else {
-            DrawChangelogText(vg, theme);
-        }
-
-        const auto footer = m_loading ? "Loading changelog..."_i18n :
-            (m_unlocked ? (m_button_focused ? "Press A to Install."_i18n : "Scroll down to select Install."_i18n) : "Scroll to the bottom to unlock Install."_i18n);
-        gfx::drawText(vg, m_pos.x + 42.f, m_pos.y + m_pos.h - 52.f, 17.f,
-            theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR),
-            footer.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-
-        // Draw button centered horizontally
-        m_install_button_rect = Vec4{m_pos.x + (m_pos.w - 220.f) / 2.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
-
-        nvgSave(vg);
-        if (m_button_focused) {
-            // Focused - Green
-            const auto btn_color = nvgRGBA(46, 125, 50, 255);
-            gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
-            gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
-            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
-                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
-                nvgRGBA(255, 255, 255, 255), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        } else {
-            // Unfocused (always gray, whether unlocked or not)
-            const auto btn_color = nvgRGBA(60, 60, 64, 255);
-            gfx::drawRect(vg, m_install_button_rect, btn_color, 4.f);
-            gfx::drawText(vg, m_install_button_rect.x + m_install_button_rect.w / 2.f,
-                m_install_button_rect.y + m_install_button_rect.h / 2.f, 18.f,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), "Install"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        }
-        nvgRestore(vg);
-
-        Widget::Draw(vg, theme);
-    }
-
-private:
-    static constexpr float CHANGELOG_FONT_SIZE = 20.f;
-    static constexpr float CHANGELOG_HEADER_FONT_SIZE = 26.f;
-    static constexpr float CHANGELOG_PREAMBLE_FONT_SIZE = 24.f;
-    static constexpr float CHANGELOG_LINE_HEIGHT = 1.45f;
-    static constexpr float CHANGELOG_SCROLL_STEP = 36.f;
-
-    void LoadChangelog() {
-        if (!ParseKefirChangelogVersion(m_target_version)) {
-            bool dummy = false;
-            m_text = BuildKefirChangelogText({}, m_current_version, m_target_version, dummy);
-            m_loading = false;
-            return;
-        }
-
-        const auto queued = curl::Api().ToMemoryAsync(
-            curl::Url{KEFIR_CHANGELOG_URL},
-            curl::StopToken{this->GetToken()},
-            curl::OnComplete{[this](auto& result) {
-                bool should_skip = false;
-                if (!result.success || result.data.empty()) {
-                    m_text = BuildKefirChangelogText({}, m_current_version, m_target_version, should_skip);
-                } else {
-                    const std::string raw{reinterpret_cast<const char*>(result.data.data()), result.data.size()};
-                    m_text = BuildKefirChangelogText(raw, m_current_version, m_target_version, should_skip);
-                }
-
-                m_scroll = 0.f;
-                m_max_scroll = 0.f;
-                m_unlocked = false;
-                m_loading = false;
-            }}
-        );
-
-        if (!queued) {
-            m_text = "Failed to queue changelog download.";
-            m_loading = false;
-        }
-    }
-
-    void ScrollBy(float amount) {
-        if (m_loading || m_max_scroll <= 0.f) {
-            return;
-        }
-
-        const auto old_scroll = m_scroll;
-        m_scroll = std::clamp(m_scroll + amount, 0.f, m_max_scroll);
-        if (old_scroll != m_scroll) {
-            App::PlaySoundEffect(SoundEffect_Scroll);
-        } else {
-            App::PlaySoundEffect(SoundEffect_Limit);
-        }
-    }
-
-    void DrawChangelogText(NVGcontext* vg, Theme* theme) {
-        if (m_text.empty()) {
-            m_text = "No changelog entries found.";
-        }
-
-        nvgSave(vg);
-        m_text_height = RenderChangelogText(vg, theme, m_text, Vec4{0.f, 0.f, m_text_area.w, m_text_area.h}, 0.f, false,
-            CHANGELOG_FONT_SIZE, CHANGELOG_LINE_HEIGHT, CHANGELOG_HEADER_FONT_SIZE, CHANGELOG_PREAMBLE_FONT_SIZE);
-        m_max_scroll = std::max(0.f, m_text_height - m_text_area.h + 14.f);
-        m_scroll = std::clamp(m_scroll, 0.f, m_max_scroll);
-
-        if (m_max_scroll <= 0.5f || m_scroll >= m_max_scroll - 1.f) {
-            m_unlocked = true;
-        }
-
-        nvgScissor(vg, m_text_area.x, m_text_area.y, m_text_area.w, m_text_area.h);
-        RenderChangelogText(vg, theme, m_text, m_text_area, m_scroll, true,
-            CHANGELOG_FONT_SIZE, CHANGELOG_LINE_HEIGHT, CHANGELOG_HEADER_FONT_SIZE, CHANGELOG_PREAMBLE_FONT_SIZE);
-        nvgRestore(vg);
-
-        const auto count = std::max<s64>(1, static_cast<s64>(std::ceil(m_text_height / CHANGELOG_SCROLL_STEP)));
-        const auto page = std::max<s64>(1, static_cast<s64>(std::ceil(m_text_area.h / CHANGELOG_SCROLL_STEP)));
-        const auto index = std::min<s64>(std::max<s64>(0, count - page), static_cast<s64>(std::ceil(m_scroll / CHANGELOG_SCROLL_STEP)));
-        gfx::drawScrollbar2(vg, theme, m_text_area.x + m_text_area.w + 20.f, m_text_area.y, m_text_area.h, index, count, 1, page);
-    }
-
-    void Update(Controller* controller, TouchInfo* touch) override {
-        Widget::Update(controller, touch);
-
-        if (touch->is_clicked) {
-            if (m_unlocked && touch->in_range(m_install_button_rect)) {
-                if (!m_installing) {
-                    m_installing = true;
-                    m_callback();
-                    SetPop();
-                }
-            }
-        }
-    }
-
-    UpdaterEntry m_entry;
-    Callback m_callback;
-    std::string m_current_version;
-    std::string m_target_version;
-    std::string m_title;
-    std::string m_text;
-    Vec4 m_text_area{};
-    float m_scroll{};
-    float m_max_scroll{};
-    float m_text_height{};
-    bool m_loading{true};
-    bool m_unlocked{};
-    bool m_installing{};
-    bool m_button_focused{false};
-    Vec4 m_install_button_rect{};
-};
 
 auto IsSelectableEntry(const UpdaterEntry& entry) -> bool {
     return entry.type != UpdaterEntryType::Section;
@@ -1220,19 +170,7 @@ auto ResolveSelectableIndex(const std::vector<UpdaterEntry>& entries, s64 index,
     return 0;
 }
 
-auto SelectableCount(const std::vector<UpdaterEntry>& entries) -> s64 {
-    return std::count_if(entries.begin(), entries.end(), IsSelectableEntry);
-}
 
-auto SelectablePosition(const std::vector<UpdaterEntry>& entries, s64 index) -> s64 {
-    s64 position{};
-    for (s64 i = 0; i <= index && i < static_cast<s64>(entries.size()); i++) {
-        if (IsSelectableEntry(entries[i])) {
-            position++;
-        }
-    }
-    return position;
-}
 
 auto TileSlots(const std::vector<UpdaterEntry>& entries) -> std::vector<s64> {
     std::vector<s64> out;
@@ -1290,7 +228,7 @@ auto ResolveTileSlotIndex(const std::vector<s64>& slots, s64 index, s64 previous
 auto TileLabel(const UpdaterEntry& entry) -> std::string {
     switch (entry.type) {
         case UpdaterEntryType::Kefir:
-            if (const auto version = ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
+            if (const auto version = detail::ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
                 return version;
             }
             return EntryDisplayName(entry);
@@ -1397,7 +335,7 @@ auto AddJsonEntries(yyjson_val* object, UpdaterEntryType type, std::vector<Updat
         };
 
         if (entry.type == UpdaterEntryType::Kefir && (latest_kefir.empty() || (entry.pack && !latest_from_pack))) {
-            latest_kefir = MakeKefirLatestLabel(entry);
+            latest_kefir = detail::MakeKefirLatestLabel(entry);
             latest_from_pack = entry.pack;
         }
 
@@ -1428,305 +366,6 @@ auto ParseUpdaterLinks(const fs::FsPath& path, std::vector<UpdaterEntry>& out, s
     found |= AddJsonEntries(atmosphere, UpdaterEntryType::Kefir, out, latest_kefir, latest_from_pack);
     found |= AddJsonEntries(firmwares, UpdaterEntryType::Firmware, out, latest_kefir, latest_from_pack);
     return found;
-}
-
-auto CopyIfExists(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src, const fs::FsPath& dst) -> Result {
-    if (!fs.FileExists(src)) {
-        R_SUCCEED();
-    }
-
-    R_TRY(fs.CreateDirectoryRecursivelyWithPath(dst));
-    pbox->NewTransfer("Copying " + dst.toString());
-    return pbox->CopyFile(&fs, src, dst, true);
-}
-
-auto CopyListedFiles(ProgressBox* pbox, fs::FsNativeSd& fs, const char* list_path) -> Result {
-    FILE* file = std::fopen(list_path, "r");
-    if (!file) {
-        R_SUCCEED();
-    }
-    ON_SCOPE_EXIT(std::fclose(file));
-
-    char line[FS_MAX_PATH * 2]{};
-    while (std::fgets(line, sizeof(line), file)) {
-        std::string entry{line};
-        while (!entry.empty() && (entry.back() == '\n' || entry.back() == '\r')) {
-            entry.pop_back();
-        }
-        if (entry.empty()) {
-            continue;
-        }
-
-        const auto sep = entry.find('|');
-        if (sep == std::string::npos) {
-            continue;
-        }
-
-        fs::FsPath src{entry.substr(0, sep)};
-        fs::FsPath dst{entry.substr(sep + 1)};
-        if (!fs.FileExists(src) && src.s[0] == '/') {
-            src = std::string{KEFIR_PATH} + src.s;
-        }
-        R_TRY(CopyIfExists(pbox, fs, src, dst));
-    }
-
-    R_SUCCEED();
-}
-
-auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Result {
-    fs::FsNativeSd fs;
-    R_TRY(fs.GetFsOpenResult());
-
-    R_TRY(fs.CreateDirectoryRecursively(CACHE_DIR));
-
-    if (fs.FileExists(AMS_ZIP)) {
-        fs.DeleteFile(AMS_ZIP);
-    }
-
-    pbox->NewTransfer("Downloading " + entry.name);
-    const auto result = curl::Api().ToFile(
-        curl::Url{entry.url},
-        curl::Path{AMS_ZIP},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
-    );
-    if (!result.success) {
-        if (pbox->ShouldExit()) {
-            R_THROW(Result_TransferCancelled);
-        }
-        R_THROW(Result_AppstoreFailedZipDownload);
-    }
-
-    if (fs.DirExists(KEFIR_PATH)) {
-        R_TRY(fs.DeleteDirectoryRecursively(KEFIR_PATH));
-    }
-    R_TRY(fs.CreateDirectoryRecursively(KEFIR_PATH));
-
-    pbox->NewTransfer("Extracting to /kefir...");
-    R_TRY(thread::TransferUnzipAll(pbox, AMS_ZIP, &fs, KEFIR_PATH));
-    R_TRY(fs.Commit());
-
-    R_TRY(CopyIfExists(pbox, fs, "/kefir/bootloader/hekate_ipl.ini", "/bootloader/hekate_ipl.ini"));
-    R_TRY(CopyIfExists(pbox, fs, "/kefir/config/kefir-updater/kefir_updater.ini", "/bootloader/ini/!kefir_updater.ini"));
-    R_TRY(CopyIfExists(pbox, fs, "/kefir/bootloader/res/ku.bmp", "/bootloader/res/ku.bmp"));
-    R_TRY(CopyListedFiles(pbox, fs, COPY_FILES_TXT));
-    R_TRY(CopyListedFiles(pbox, fs, STAGED_COPY_FILES_TXT));
-
-    if (fs.FileExists(AMS_ZIP)) {
-        fs.DeleteFile(AMS_ZIP);
-    }
-    R_TRY(fs.Commit());
-
-    R_SUCCEED();
-}
-
-auto FormatFirmwareVersion(u32 version) -> std::string {
-    return std::to_string((version >> 26) & 0x1f) + "." +
-           std::to_string((version >> 20) & 0x1f) + "." +
-           std::to_string((version >> 16) & 0xf);
-}
-
-auto BuildFirmwareServicePath(const fs::FsPath& path) -> std::string {
-    std::string service_path = path.s;
-    if (service_path.empty()) {
-        service_path = FIRMWARE_DEST;
-    }
-    if (service_path.back() != '/') {
-        service_path += '/';
-    }
-    return service_path;
-}
-
-auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result {
-    Result rc = amssuInitialize();
-    if (R_FAILED(rc)) {
-        return rc;
-    }
-    ON_SCOPE_EXIT(amssuExit());
-
-    const auto service_path = BuildFirmwareServicePath(path);
-    R_TRY(amssuGetUpdateInformation(&out->info, service_path.c_str()));
-    R_TRY(amssuValidateUpdate(&out->validation, service_path.c_str()));
-    return out->validation.result;
-}
-
-void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path);
-
-auto ApplyDowngradeFix(ProgressBox* pbox) -> Result {
-    pbox->NewTransfer("Applying downgrade fix...");
-
-    fs::FsNativeBis system(FsBisPartitionId_System, "");
-    R_TRY(system.GetFsOpenResult());
-
-    if (!system.FileExists(DOWNGRADE_FIX_SAVE)) {
-        R_SUCCEED();
-    }
-
-    R_TRY(system.DeleteFile(DOWNGRADE_FIX_SAVE));
-    R_TRY(system.Commit());
-    R_SUCCEED();
-}
-
-auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix) -> Result {
-    Result rc = amssuInitialize();
-    if (R_FAILED(rc)) {
-        return rc;
-    }
-    ON_SCOPE_EXIT(amssuExit());
-
-    const auto service_path = BuildFirmwareServicePath(path);
-    pbox->NewTransfer("Setting up system update...");
-    R_TRY(amssuSetupUpdate(nullptr, UPDATE_TASK_BUFFER_SIZE, service_path.c_str(), use_exfat));
-
-    AsyncResult prepare{};
-    R_TRY(amssuRequestPrepareUpdate(&prepare));
-    ON_SCOPE_EXIT(asyncResultClose(&prepare));
-    pbox->NewTransfer("Preparing system update...");
-
-    while (true) {
-        rc = asyncResultWait(&prepare, 0);
-        if (R_FAILED(rc) && rc != 0xea01) {
-            return rc;
-        }
-        if (R_SUCCEEDED(rc)) {
-            R_TRY(asyncResultGet(&prepare));
-        }
-
-        bool prepared = false;
-        R_TRY(amssuHasPreparedUpdate(&prepared));
-        if (prepared) {
-            break;
-        }
-
-        NsSystemUpdateProgress progress{};
-        R_TRY(amssuGetPrepareUpdateProgress(&progress));
-        pbox->UpdateTransfer(progress.current_size, progress.total_size);
-        svcSleepThread(50'000'000);
-    }
-
-    pbox->NewTransfer("Applying system update...");
-    R_TRY(amssuApplyPreparedUpdate());
-
-    if (apply_downgrade_fix) {
-        R_TRY(ApplyDowngradeFix(pbox));
-    }
-
-    CleanupFirmwareFiles(pbox, path);
-
-    R_SUCCEED();
-}
-
-auto GetFirmwareTargetName() -> std::string {
-    bool emummc = false;
-    Result rc = splInitialize();
-    if (R_SUCCEEDED(rc)) {
-        u64 value{};
-        if (R_SUCCEEDED(splGetConfig((SplConfigItem)65007, &value))) {
-            emummc = value != 0;
-        }
-        splExit();
-    }
-    return emummc ? "emuMMC" : "sysMMC";
-}
-
-auto ParseVersion(const std::string& version) -> std::vector<int> {
-    std::vector<int> parts;
-    std::stringstream ss(version);
-    std::string segment;
-
-    while (std::getline(ss, segment, '.')) {
-        if (segment.empty()) {
-            continue;
-        }
-
-        char* end = nullptr;
-        const auto part = std::strtol(segment.c_str(), &end, 10);
-        if (end == segment.c_str()) {
-            break;
-        }
-        parts.push_back(static_cast<int>(part));
-    }
-
-    return parts;
-}
-
-auto IsVersionLower(const std::string& target, const std::string& current) -> bool {
-    const auto target_parts = ParseVersion(target);
-    const auto current_parts = ParseVersion(current);
-    const auto max_len = std::max(target_parts.size(), current_parts.size());
-
-    for (size_t i = 0; i < max_len; i++) {
-        const auto t = i < target_parts.size() ? target_parts[i] : 0;
-        const auto c = i < current_parts.size() ? current_parts[i] : 0;
-        if (t < c) {
-            return true;
-        }
-        if (t > c) {
-            return false;
-        }
-    }
-
-    return false;
-}
-
-auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) -> Result {
-    fs::FsNativeSd fs;
-    R_TRY(fs.GetFsOpenResult());
-
-    R_TRY(fs.CreateDirectoryRecursively(CACHE_DIR));
-
-    if (fs.FileExists(FIRMWARE_ZIP)) {
-        fs.DeleteFile(FIRMWARE_ZIP);
-    }
-
-    pbox->NewTransfer("Downloading " + entry.name);
-    const auto result = curl::Api().ToFile(
-        curl::Url{entry.url},
-        curl::Path{FIRMWARE_ZIP},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
-    );
-    if (!result.success) {
-        if (pbox->ShouldExit()) {
-            R_THROW(Result_TransferCancelled);
-        }
-        R_THROW(Result_AppstoreFailedZipDownload);
-    }
-
-    if (fs.DirExists(FIRMWARE_DEST)) {
-        R_TRY(fs.DeleteDirectoryRecursively(FIRMWARE_DEST));
-    }
-    R_TRY(fs.CreateDirectoryRecursively(FIRMWARE_DEST));
-
-    pbox->NewTransfer("Extracting to /firmware...");
-    R_TRY(thread::TransferUnzipAll(pbox, FIRMWARE_ZIP, &fs, FIRMWARE_DEST));
-    R_TRY(fs.Commit());
-
-    if (fs.FileExists(FIRMWARE_ZIP)) {
-        fs.DeleteFile(FIRMWARE_ZIP);
-    }
-    R_TRY(fs.Commit());
-
-    R_SUCCEED();
-}
-
-void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
-    fs::FsNativeSd fs;
-    if (R_FAILED(fs.GetFsOpenResult())) {
-        return;
-    }
-
-    fs::FsPath firmware_path = path;
-    if (firmware_path.s[0] == '\0') {
-        firmware_path = FIRMWARE_DEST;
-    }
-    pbox->NewTransfer("Removing firmware files...");
-
-    if (fs.DirExists(firmware_path)) {
-        fs.DeleteDirectoryRecursively(firmware_path);
-    }
-    if (fs.FileExists(FIRMWARE_ZIP)) {
-        fs.DeleteFile(FIRMWARE_ZIP);
-    }
-    fs.Commit();
 }
 
 } // namespace
@@ -2199,7 +838,7 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
         [this, entry, on_success = std::move(on_success)]() mutable {
             App::Push<ProgressBox>(0, "Installing"_i18n, entry.name,
                 [entry](auto pbox) -> Result {
-                    return DownloadAndInstallKefir(pbox, entry);
+                    return detail::DownloadAndInstallKefir(pbox, entry);
                 },
                 [this, entry, on_success = std::move(on_success)](Result rc) mutable {
                     if (R_FAILED(rc)) {
@@ -2263,7 +902,7 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
 
             App::Push<ProgressBox>(0, "Downloading"_i18n, entry.name,
                 [entry](auto pbox) -> Result {
-                    return DownloadAndExtractFirmware(pbox, entry);
+                    return detail::DownloadAndExtractFirmware(pbox, entry);
                 },
                 [this, entry](Result rc) {
                     if (R_FAILED(rc)) {
@@ -2284,7 +923,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
             pbox->NewTransfer("Validating firmware contents...");
-            return ValidateFirmware(validation.get(), path);
+            return detail::ValidateFirmware(validation.get(), path);
         },
         [this, display_name, path, validation](Result rc) {
             if (R_FAILED(rc)) {
@@ -2292,10 +931,10 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                 return;
             }
 
-            const auto version = FormatFirmwareVersion(validation->info.version);
+            const auto version = detail::FormatFirmwareVersion(validation->info.version);
             const bool use_exfat = validation->info.exfat_supported &&
                                    R_SUCCEEDED(validation->validation.exfat_result);
-            std::string message = "Install firmware " + version + " on " + GetFirmwareTargetName() + "?\n\n";
+            std::string message = "Install firmware " + version + " on " + detail::GetFirmwareTargetName() + "?\n\n";
             message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
             message += "Do not power off the console during installation.";
 
@@ -2317,8 +956,8 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                     warning += "If you continue, Kefir Hub will install the firmware and automatically apply the downgrade fix after installation.\n\n";
                     warning += "By continuing, you accept full responsibility.";
 
-                    App::Push<DowngradeHoldConfirmBox>(warning,
-                        [this, display_name, path](bool accepted) {
+                    App::Push<sphaira::ui::HoldConfirmBox>(warning,
+                        [this, display_name, path, version](bool accepted) {
                             if (accepted) {
                                 InstallFirmware(display_name, path, true);
                             }
@@ -2331,10 +970,10 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
         [path, apply_downgrade_fix](auto pbox) -> Result {
             FirmwareValidation validation{};
-            R_TRY(ValidateFirmware(&validation, path));
+            R_TRY(detail::ValidateFirmware(&validation, path));
             const bool use_exfat = validation.info.exfat_supported &&
                                    R_SUCCEEDED(validation.validation.exfat_result);
-            return InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix);
+            return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix);
         },
         [apply_downgrade_fix](Result rc) {
             if (R_FAILED(rc)) {
@@ -2360,19 +999,19 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
 }
 
 void Menu::UpdateSubheading() {
-    const auto count = SelectableCount(m_entries);
+    const auto count = detail::SelectableCount(m_entries);
     if (m_entries.empty() || !count) {
         this->SetSubHeading("0 / 0");
         return;
     }
 
     const auto& entry = m_entries[m_index];
-    this->SetSubHeading(std::to_string(SelectablePosition(m_entries, m_index)) + " / " + std::to_string(count) + " - " + TypeLabel(entry.type));
+    this->SetSubHeading(std::to_string(detail::SelectablePosition(m_entries, m_index)) + " / " + std::to_string(count) + " - " + detail::TypeLabel(entry.type));
 }
 
 void Menu::RefreshSystemInfo() {
-    m_current_kefir = ReadFirstLine(KEFIR_VERSION_PATH);
-    m_supported_firmware = ReadCurrentKefirSupportedFirmware();
+    m_current_kefir = detail::ReadFirstLine(KEFIR_VERSION_PATH);
+    m_supported_firmware = detail::ReadCurrentKefirSupportedFirmware();
     m_current_firmware = hats::getSystemFirmware();
     m_console_revision = hats::isErista() ? "Erista (v1)" : "Mariko (v2)";
     if (m_latest_kefir.empty()) {
@@ -2381,15 +1020,15 @@ void Menu::RefreshSystemInfo() {
 }
 
 bool Menu::IsDowngrade(const std::string& target_version) const {
-    return IsVersionLower(target_version, m_current_firmware);
+    return detail::IsVersionLower(target_version, m_current_firmware);
 }
 
 bool Menu::IsFirmwareSupported(const std::string& target_version) const {
-    if (!IsKnownVersion(m_supported_firmware)) {
+    if (!detail::IsKnownVersion(m_supported_firmware)) {
         return true;
     }
 
-    return !IsVersionLower(m_supported_firmware, target_version);
+    return !detail::IsVersionLower(m_supported_firmware, target_version);
 }
 
 bool Menu::FindKefirUpdate(UpdaterEntry& out) const {
@@ -2418,7 +1057,7 @@ void Menu::PromptKefirThenFirmware(const UpdaterEntry& firmware_entry) {
     }
 
     App::Push<OptionBox>(
-        FirmwareUnsupportedReason(firmware_entry.name, m_supported_firmware),
+        detail::FirmwareUnsupportedReason(firmware_entry.name, m_supported_firmware),
         "Cancel"_i18n, "Update Kefir"_i18n, 1,
         [this, kefir_entry, firmware_entry](auto op_index) {
             if (!op_index || *op_index != 1) {
@@ -2429,6 +1068,7 @@ void Menu::PromptKefirThenFirmware(const UpdaterEntry& firmware_entry) {
                 DownloadFirmware(firmware_entry, true);
             });
         });
+
 }
 
 } // namespace sphaira::ui::menu::kefir

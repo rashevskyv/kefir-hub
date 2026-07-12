@@ -78,9 +78,9 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 
 | Step | New file | What moves there |
 |---|---|---|
-| 5.1 | `ui/menus/kefir/kefir_changelog.hpp/.cpp` | `ChangelogSegment` (~523), `AddChangelogSegment` and all changelog parsing/rendering helpers (~330–700). |
-| 5.2 | `ui/menus/kefir/kefir_firmware.hpp/.cpp` | `FirmwareValidation` and version-string parsing helpers (`Trim`-style loops, digit parsing, ~150–310). |
-| 5.3 | optional | `DowngradeHoldConfirmBox` widget → `ui/hold_confirm_box.hpp/.cpp` only if the reviewer approves making it reusable; otherwise leave it. |
+| [x] 5.1 | `ui/menus/kefir/kefir_changelog.hpp/.cpp` | `ChangelogSegment` (~523), `AddChangelogSegment` and all changelog parsing/rendering helpers (~330–700). |
+| [x] 5.2 | `ui/menus/kefir/kefir_firmware.hpp/.cpp` | `FirmwareValidation` and version-string parsing helpers (`Trim`-style loops, digit parsing, ~150–310). |
+| [x] 5.3 | optional | `DowngradeHoldConfirmBox` widget → `ui/hold_confirm_box.hpp/.cpp` only if the reviewer approves making it reusable; otherwise leave it. |
 
 ## Phase 6 — `ui/menus/filebrowser.cpp` (2621 lines)
 

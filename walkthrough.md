@@ -1,5 +1,34 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.178 — Декомпозиція меню оновлення Kefir та прошивки (`kefir_menu.cpp`)
+
+### Проблема
+Файл `kefir_menu.cpp` був занадто великим (~2430 рядків) та містив велику кількість допоміжної логіку для парсингу списків змін (changelog), перевірки версій прошивок та встановлення системного ПЗ через `amssu`, що ускладнювало супровід та розвиток коду.
+
+### Підхід
+1. **Виділення логіки списку змін Kefir (Changelog) (Крок 5.1)**:
+   - Створено [kefir_changelog.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/kefir/kefir_changelog.hpp) та [kefir_changelog.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/kefir/kefir_changelog.cpp).
+   - Перенесено структури `ChangelogTextColour`, `ChangelogSegment` та клас `KefirChangelogBox`.
+   - Перенесено допоміжні функції парсингу маркдауну та рендерингу тексту списку змін (такі як `BuildKefirChangelogText`, `RenderChangelogText` тощо) у простір назв `sphaira::ui::menu::kefir::detail`.
+2. **Виділення логіки валідації та встановлення прошивки (Firmware) (Крок 5.2)**:
+   - Створено [kefir_firmware.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/kefir/kefir_firmware.hpp) та [kefir_firmware.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/kefir/kefir_firmware.cpp).
+   - Перенесено структуру `FirmwareValidation`, функції валідації й встановлення через `amssu` (`ValidateFirmware`, `InstallValidatedFirmware`), функції витягування версії з назв (`ExtractKefirVersion`, `IsVersionLower`) та інші допоміжні утиліти у простір назв `sphaira::ui::menu::kefir::detail`.
+3. **Виділення спільного віджета HoldConfirmBox (Крок 5.3)**:
+   - Створено [hold_confirm_box.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/hold_confirm_box.hpp) та [hold_confirm_box.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/hold_confirm_box.cpp).
+   - Перенесено колишній віджет `DowngradeHoldConfirmBox` у global простір `sphaira::ui` під загальною назвою `HoldConfirmBox` для можливості його повторного використання іншими вікнами та меню.
+   - Оновили виклики та підключення віджета у `kefir_menu.cpp`.
+   - Додано новий файл віджета до `sphaira/CMakeLists.txt`.
+4. **Повне очищення `kefir_menu.cpp`**:
+   - Повністю вилучено мертві та дубльовані функції (всього близько ~630 рядків коду) з анонімного простору назв `kefir_menu.cpp`.
+   - Переведено виклики `Trim`, `ExtractKefirVersion`, `MakeKefirLatestLabel` та інших хелперів на використання простору назв `detail::` з нових заголовних файлів.
+   - Розмір файлу `kefir_menu.cpp` було успішно зменшено з 1704 до 902 рядків (орієнтовано на чистий код UI/Menu).
+   - Прибрано зайвий порожній рядок в `CMakeLists.txt` та виправлено подвійне оголошення `FIRMWARE_ZIP` в `kefir_firmware.cpp`.
+   - Скасовано випадкову зміну в `save_locations.hpp`.
+
+### Результати тестування
+* Проект успішно збирається під WSL без помилок лінкера та попереджень компілятора.
+* Усі функції та віджети працюють ідентично до оригінальної реалізації.
+
 ## v0.13.177 — рефакторинг web.cpp (Фаза 3, Крок 3.3)
 
 Виконано повне виділення UploadState та SocketStream з web.cpp згідно з вимогами Фази 3.
