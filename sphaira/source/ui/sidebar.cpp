@@ -83,6 +83,7 @@ auto SidebarEntryBase::OnFocusGained() noexcept -> void {
 auto SidebarEntryBase::OnFocusLost() noexcept -> void {
     Widget::OnFocusLost();
     m_scolling_title.Reset();
+    m_scolling_value.Reset();
 }
 
 void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
