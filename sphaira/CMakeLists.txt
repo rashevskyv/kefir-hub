@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.176)
+set(sphaira_VERSION 0.13.177)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -99,6 +99,7 @@ add_executable(sphaira
     source/owo.cpp
     source/swkbd.cpp
     source/web_qr.cpp
+    source/web_upload.cpp
     source/web.cpp
     source/hasher.cpp
     source/i18n.cpp

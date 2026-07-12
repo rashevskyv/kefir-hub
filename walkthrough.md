@@ -1,5 +1,57 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.177 — рефакторинг web.cpp (Фаза 3, Крок 3.3)
+
+Виконано повне виділення UploadState та SocketStream з web.cpp згідно з вимогами Фази 3.
+
+### 1. Виділення UploadState та SocketStream (Крок 3.3)
+- Створено нові файли [web_upload.hpp](file:///d:/git/dev/sphaira/sphaira/include/web_upload.hpp) та [web_upload.cpp](file:///d:/git/dev/sphaira/sphaira/source/web_upload.cpp).
+- Перенесено структуру `UploadState`, глобальний об'єкт `g_upload_state` та `SocketStream` (з його методом `ReadChunk`).
+- `web.cpp` більше не містить коду для читання сокет-потоку та прямого управління станом завантажень. Його підключено до `web_upload.hpp`.
+- Додано `source/web_upload.cpp` до списку джерел у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### 2. Версія
+- Версію програми оновлено до `0.13.177` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+## v0.13.176 — рефакторинг save_menu.cpp (Фаза 4, Кроки 4.1 - 4.3)
+
+Виконано декомпозицію та очищення файлу `save_menu.cpp` згідно з планом рефакторингу Фази 4.
+
+### 1. Виділення допоміжних функцій шляхів та імен бекапів (Крок 4.1)
+- Створено нові файли [save_paths.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/save/save_paths.hpp) та [save_paths.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_paths.cpp).
+- Усі функції побудови шляхів бекапів (включаючи `GetSaveFolder`, `GetSaveTypeSubdir`, `GetDbiTypeLetter`, `ParseDbiBackupNameTimestamp`, `ParseBackupNameTimestamp`, `GetSaveTypeLabel`, `SaveTypeIndex`, `SaveEntryKey`, `IsSystemLikeSave`, `DisplayEntryKey`, `BuildSaveName`, `BuildSavePathName`, `BuildSaveBasePathLegacy`, `BuildSaveBasePath`, `BuildDbiGameFolderName`, `BuildDbiSavePath`, `IsDbiBackupName`, `DbiBackupMatchesEntry`, `CollectDbiBackups`, `NormalizeBackupRoot`) було перенесено до цього нового модуля під простором назв `sphaira::ui::menu::save`.
+
+### 2. Виділення функцій WebDAV та локацій (Крок 4.2)
+- Створено нові файли [save_locations.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/save/save_locations.hpp) та [save_locations.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_locations.cpp).
+- Усі функції роботи з WebDAV, локаціями та прогресом синхронізації (включаючи `WebdavLocationKey`, `GetWebdavLocations`, `MakeSdCardDumpLocation`, `MakeDumpLocationFromFsEntry`, `MakeLocationLabel`, `MakeSdLocationLabel`, `SerializeRecentBackupDir`, `MakeLocationKey`, `ParseRecentBackupDir`, `RecentBackupDirExists`, `MakeDumpLocationFromRecent`, `MakeFsForLocation`, `MakeAggregateProgressCb`) перенесено до цього модуля.
+
+### 3. Очищення save_menu.cpp та оновлення CMakeLists.txt (Крок 4.3)
+- Вилучено всі перенесені функції з [save_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save_menu.cpp).
+- Підключено нові заголовні файли `ui/menus/save/save_paths.hpp` та `ui/menus/save/save_locations.hpp` у `save_menu.cpp`.
+- Додано нові файли `source/ui/menus/save/save_paths.cpp` та `source/ui/menus/save/save_locations.cpp` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### 4. Версія
+- Версію програми оновлено до `0.13.176` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+## v0.13.175 — рефакторинг web.cpp (Фаза 3, Кроки 3.1 - 3.3)
+
+Виконано декомпозицію та очищення файлу `web.cpp` згідно з планом рефакторингу Фази 3.
+
+### 1. Виділення HTML/JS констант (Крок 3.1)
+- Усі довгі HTML/JS константи сторінок (`LIGHTBOX_CONTENT`, `CONFIRM_MODAL_HTML`, `CONFIRM_MODAL_JS`, `FOLDER_PAGE_HEADER`, `FOLDER_PAGE_JS`, `PROGRESS_PAGE`) перенесено в новий заголовочний файл [web_pages.hpp](file:///d:/git/dev/sphaira/sphaira/source/web_pages.hpp) під простором назв `sphaira::webpages`.
+- Оновлено [web.cpp](file:///d:/git/dev/sphaira/sphaira/source/web.cpp) для підключення `web_pages.hpp` та імпорту простору назв `sphaira::webpages` за допомогою `using namespace webpages;`. Це зменшило кількість рядків у `web.cpp` приблизно на 1450 рядків.
+
+### 2. Виділення класу QrCode (Крок 3.2)
+- Виділено клас `QrCode` в окремі файли [web_qr.hpp](file:///d:/git/dev/sphaira/sphaira/source/web_qr.hpp) та [web_qr.cpp](file:///d:/git/dev/sphaira/sphaira/source/web_qr.cpp).
+- Клас `QrCode` більше не засмічує `web.cpp`, його опис повністю вилучено з основного файлу веб-сервера.
+- Додано `source/web_qr.cpp` до списку джерел у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### 3. Аналіз UploadState та SocketStream (Крок 3.3)
+- Відповідно до інструкцій плану рефакторингу, `UploadState` та `SocketStream` було залишено в [web.cpp](file:///d:/git/dev/sphaira/sphaira/source/web.cpp) через їхній тісний зв'язок з циклом сервера та внутрішнім станом глобальних змінних. Їх виділення призвело б до ускладнення архітектури через необхідність створення додаткових інтерфейсів доступу до глобальних змінних стану (`g_share_running`, `WebGetProgressBox()`, `g_upload_state`).
+
+### 4. Версія
+- Версію програми оновлено до `0.13.175` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
 ## v0.13.174 — виправлення помилок підключення заголовків у settings_menu.hpp (Крок 2.4)
 
 Виправлено помилки компіляції, спричинені некоректним підключенням заголовка та вилученням forward-declaration.

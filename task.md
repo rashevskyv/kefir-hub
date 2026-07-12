@@ -12,6 +12,14 @@
     - [x] Крок 2.2: Виділення settings/settings_translations.hpp/.cpp (Переклади та завантаження) <!-- id: r2.2 -->
     - [x] Крок 2.3: Виділення settings/settings_tweaks.hpp/.cpp (Налаштування системи/розгін/пресети вентилятора) <!-- id: r2.3 -->
     - [x] Крок 2.4: Фінальне очищення settings_menu.cpp та верифікація збірки <!-- id: r2.4 -->
+- [x] Рефакторинг web.cpp (Фаза 3):
+    - [x] Крок 3.1: Виділення HTML/JS констант (source/web_pages.hpp) <!-- id: r3.1 -->
+    - [x] Крок 3.2: Виділення класу QrCode (source/web_qr.hpp/.cpp) <!-- id: r3.2 -->
+    - [x] Крок 3.3: Виділення UploadState та SocketStream у web_upload.hpp/.cpp <!-- id: r3.3 -->
+- [x] Рефакторинг save_menu.cpp (Фаза 4):
+    - [x] Крок 4.1: Виділення допоміжних функцій шляхів та імен бекапів у ui/menus/save/save_paths.hpp/.cpp <!-- id: r4.1 -->
+    - [x] Крок 4.2: Виділення функцій WebDAV та локацій у ui/menus/save/save_locations.hpp/.cpp <!-- id: r4.2 -->
+    - [x] Крок 4.3: Очищення save_menu.cpp та оновлення CMakeLists.txt <!-- id: r4.3 -->
 - [x] Вивчити наявний стан та спланувати синхронізацію сейвів з віддаленим джерелом (WebDAV) <!-- id: 0 -->
 - [x] Реалізувати лістинг віддаленої теки WebDAV (PROPFIND XML парсер / рядковий пошук) <!-- id: 1 -->
 - [x] Додати синхронізацію сейвів (SyncPlan, UI в Save Menu, опція Auto-sync) <!-- id: 2 -->

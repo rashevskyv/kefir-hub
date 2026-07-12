@@ -64,15 +64,15 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 |---|---|---|
 | [x] 3.1 | `source/web_pages.hpp` | All `constexpr std::string_view` HTML/JS blobs: `LIGHTBOX_CONTENT`, `CONFIRM_MODAL_HTML`, `CONFIRM_MODAL_JS`, `FOLDER_PAGE_HEADER`, `FOLDER_PAGE_JS`, `PROGRESS_PAGE` (~lines 404–1880). Header-only, `namespace sphaira::webpages`. This alone removes ~1200 lines. |
 | [x] 3.2 | `source/web_qr.hpp/.cpp` | `class QrCode` (~2507). |
-| 3.3 | `source/web_upload.hpp/.cpp` | `UploadState` (~57) and `SocketStream` (~1296) plus their helpers, if extraction is clean; if they are tightly interleaved with the server loop, skip and note why. |
+| [x] 3.3 | `source/web_upload.hpp/.cpp` | `UploadState` (~57) and `SocketStream` (~1296) plus their helpers, successfully extracted. |
 
 ## Phase 4 — `ui/menus/save_menu.cpp` (2923 lines, heavily diverged fork file)
 
 | Step | New file | What moves there |
 |---|---|---|
-| 4.1 | `ui/menus/save/save_paths.hpp/.cpp` | Backup naming/path builders: `GetSaveFolder`, `GetSaveTypeSubdir`, `GetDbiTypeLetter`, `ParseDbiBackupNameTimestamp`, `ParseBackupNameTimestamp`, `GetSaveTypeLabel`, `SaveTypeIndex`, `SaveEntryKey`, `IsSystemLikeSave`, `DisplayEntryKey`, `BuildSaveName`, `BuildSavePathName`, `BuildSaveBasePathLegacy`, `BuildSaveBasePath`, `BuildDbiGameFolderName`, `BuildDbiSavePath`, `IsDbiBackupName`, `DbiBackupMatchesEntry`, `CollectDbiBackups`, `NormalizeBackupRoot`. |
-| 4.2 | `ui/menus/save/save_locations.hpp/.cpp` | WebDAV/location helpers: `WebdavLocationKey`, `GetWebdavLocations`, `MakeSdCardDumpLocation`, `MakeDumpLocationFromFsEntry`, `MakeLocationLabel`, `MakeSdLocationLabel`, `SerializeRecentBackupDir`, `MakeLocationKey`, `ParseRecentBackupDir`, `RecentBackupDirExists`, `MakeDumpLocationFromRecent`. |
-| 4.3 | leftover check | `save_menu.cpp` keeps `Menu`/UI code. Target: under ~1800 lines. |
+| [x] 4.1 | `ui/menus/save/save_paths.hpp/.cpp` | Backup naming/path builders: `GetSaveFolder`, `GetSaveTypeSubdir`, `GetDbiTypeLetter`, `ParseDbiBackupNameTimestamp`, `ParseBackupNameTimestamp`, `GetSaveTypeLabel`, `SaveTypeIndex`, `SaveEntryKey`, `IsSystemLikeSave`, `DisplayEntryKey`, `BuildSaveName`, `BuildSavePathName`, `BuildSaveBasePathLegacy`, `BuildSaveBasePath`, `BuildDbiGameFolderName`, `BuildDbiSavePath`, `IsDbiBackupName`, `DbiBackupMatchesEntry`, `CollectDbiBackups`, `NormalizeBackupRoot`. |
+| [x] 4.2 | `ui/menus/save/save_locations.hpp/.cpp` | WebDAV/location helpers: `WebdavLocationKey`, `GetWebdavLocations`, `MakeSdCardDumpLocation`, `MakeDumpLocationFromFsEntry`, `MakeLocationLabel`, `MakeSdLocationLabel`, `SerializeRecentBackupDir`, `MakeLocationKey`, `ParseRecentBackupDir`, `RecentBackupDirExists`, `MakeDumpLocationFromRecent`. |
+| [x] 4.3 | leftover check | `save_menu.cpp` keeps `Menu`/UI code. Target: under ~1800 lines. |
 
 ## Phase 5 — `ui/menus/kefir_menu.cpp` (2434 lines, fork-owned)
 
