@@ -1,5 +1,25 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.179 — Декомпозиція меню файлового браузера (Крок 6.1)
+
+### Проблема
+У файлі `filebrowser.cpp` (~2622 рядки) було зосереджено велику кількість глобальних констант розширень файлів, конфігурацій ROM-баз, а також функцій асоціації файлів і перевірки підтримуваних емуляторів (RetroArch, NXMP тощо), що захаращувало UI-код меню.
+
+### Підхід
+1. **Створення хелперів типів файлів та ROM (Крок 6.1)**:
+   - Створено нові файли [filebrowser_assoc.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser_assoc.hpp) та [filebrowser_assoc.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_assoc.cpp).
+   - Туди перенесено структури `ExtDbEntry`, `RomDatabaseEntry`, масив `PATHS`, `DAYBREAK_PATH` та відповідні допоміжні функції: `IsSamePath`, `IsExtension`, `GetRomDatabaseFromPath`, `GetRomIcon`, `GetNxmpPath`, `HasNxmp`.
+   - Всі константи та функції виділено у простір назв `sphaira::ui::menu::filebrowser::detail`.
+2. **Очищення `filebrowser.cpp`**:
+   - Підключено новий заголовочний файл `#include "ui/menus/filebrowser_assoc.hpp"` та додано `using namespace detail;` до простору назв меню.
+   - Вилучено вищезгадані структури, масиви та функції з анонімного простору назв `filebrowser.cpp`, зменшивши розмір файлу на ~330 рядків.
+3. **Оновлення системи збірки**:
+   - Додано `source/ui/menus/filebrowser_assoc.cpp` до списку джерел у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Ітеровано версію програми до `0.13.179`.
+
+### Результати тестування
+* Проект успішно скомпільовано під WSL за допомогою `cmake --build build/ReleaseWithInstall`.
+
 ## v0.13.178 — Декомпозиція меню оновлення Kefir та прошивки (`kefir_menu.cpp`)
 
 ### Проблема

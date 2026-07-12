@@ -86,9 +86,9 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 
 | Step | New file | What moves there |
 |---|---|---|
-| 6.1 | `ui/menus/filebrowser_assoc.hpp/.cpp` | File-type/rom helpers from the anon namespace: extension tables (`AUDIO_EXTENSIONS` … `ZIP_EXTENSIONS`), `IsExtension` (both overloads), `ExtDbEntry`, `RomDatabaseEntry`, `GetRomDatabaseFromPath`, `GetRomIcon`, `GetNxmpPath`, `HasNxmp`. Namespace `sphaira::ui::menu::filebrowser::detail`. |
-| 6.2 | `ui/menus/filebrowser_forwarder.hpp/.cpp` | `struct ForwarderForm` (~55) + `ForwarderForm::LoadNroMeta` (~433) and `FsView::InstallForwarder` if it is only a thin caller — otherwise leave `InstallForwarder` in place. |
-| 6.3 | `ui/menus/filebrowser_ops.cpp` | Heavy `FsView` operation bodies (same class, second TU — this is fine): `InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`. UI/navigation methods (`Update`, `Draw`, `Scan`, `Sort`, selection) stay in `filebrowser.cpp`. |
+| [x] 6.1 | `ui/menus/filebrowser_assoc.hpp/.cpp` | File-type/rom helpers from the anon namespace: extension tables (`AUDIO_EXTENSIONS` … `ZIP_EXTENSIONS`), `IsExtension` (both overloads), `ExtDbEntry`, `RomDatabaseEntry`, `GetRomDatabaseFromPath`, `GetRomIcon`, `GetNxmpPath`, `HasNxmp`. Namespace `sphaira::ui::menu::filebrowser::detail`. |
+| [x] 6.2 | `ui/menus/filebrowser_forwarder.hpp/.cpp` | `struct ForwarderForm` (~55) + `ForwarderForm::LoadNroMeta` (~433) and `FsView::InstallForwarder` if it is only a thin caller — otherwise leave `InstallForwarder` in place. |
+| [ ] 6.3 | `ui/menus/filebrowser_ops.cpp` | Heavy `FsView` operation bodies (same class, second TU — this is fine): `InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`. UI/navigation methods (`Update`, `Draw`, `Scan`, `Sort`, selection) stay in `filebrowser.cpp`. |
 
 ## Phase 7 — `app.cpp` (2366 lines)
 

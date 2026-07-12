@@ -1,4 +1,6 @@
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/filebrowser_assoc.hpp"
+#include "ui/menus/filebrowser_forwarder.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -48,29 +50,13 @@
 #include <algorithm>
 
 namespace sphaira::ui::menu::filebrowser {
+using namespace detail;
+
 namespace {
 
 using RomDatabaseIndexs = std::vector<size_t>;
 
-struct ForwarderForm final : public Sidebar {
-    explicit ForwarderForm(const FileAssocEntry& assoc, const RomDatabaseIndexs& db_indexs, const FileEntry& entry, const fs::FsPath& arg_path);
 
-private:
-    auto LoadNroMeta() -> Result;
-
-private:
-    const FileAssocEntry m_assoc;
-    const RomDatabaseIndexs m_db_indexs;
-    const fs::FsPath m_arg_path;
-
-    NroEntry m_nro{};
-    NacpStruct m_nacp{};
-
-    SidebarEntryTextInput* m_name{};
-    SidebarEntryTextInput* m_author{};
-    SidebarEntryTextInput* m_version{};
-    SidebarEntryFilePicker* m_icon{};
-};
 
 constinit UEvent g_change_uevent;
 
@@ -84,128 +70,7 @@ constexpr FsEntry FS_ENTRIES[]{
     { "Image microSD card", "/", FsType::ImageSd},
 };
 
-struct ExtDbEntry {
-    std::string_view db_name;
-    std::span<const std::string_view> ext;
-};
 
-constexpr std::string_view AUDIO_EXTENSIONS[] = {
-    "mp3", "ogg", "flac", "wav", "aac" "ac3", "aif", "asf", "bfwav",
-    "bfsar", "bfstm",
-};
-constexpr std::string_view VIDEO_EXTENSIONS[] = {
-    "mp4", "mkv", "m3u", "m3u8", "hls", "vob", "avi", "dv", "flv", "m2ts",
-    "m2v", "m4a", "mov", "mpeg", "mpg", "mts", "swf", "ts", "vob", "wma", "wmv",
-};
-constexpr std::string_view IMAGE_EXTENSIONS[] = {
-    "png", "jpg", "jpeg", "bmp", "gif",
-};
-constexpr std::string_view INSTALL_EXTENSIONS[] = {
-    "nsp", "xci", "nsz", "xcz",
-};
-// these are files that are already compressed or encrypted and should
-// be stored raw in a zip file.
-constexpr std::string_view COMPRESSED_EXTENSIONS[] = {
-    "zip", "xz", "7z", "rar", "tar", "nca", "nsp", "xci", "nsz", "xcz"
-};
-constexpr std::string_view ZIP_EXTENSIONS[] = {
-    "zip",
-};
-
-// case insensitive check
-auto IsSamePath(std::string_view a, std::string_view b) -> bool {
-    return a.length() == b.length() && !strncasecmp(a.data(), b.data(), a.length());
-}
-
-struct RomDatabaseEntry {
-    // uses the naming scheme from retropie.
-    std::string_view folder{};
-    // uses the naming scheme from Retroarch.
-    std::string_view database{};
-    // custom alias, to make everyone else happy.
-    std::array<std::string_view, 4> alias{};
-
-    // compares against all of the above strings.
-    auto IsDatabase(std::string_view name) const {
-        if (IsSamePath(name, folder) || IsSamePath(name, database)) {
-            return true;
-        }
-
-        for (const auto& str : alias) {
-            if (!str.empty() && IsSamePath(name, str)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-};
-
-constexpr RomDatabaseEntry PATHS[]{
-    { "3do", "The 3DO Company - 3DO"},
-    { "atari800", "Atari - 8-bit"},
-    { "atari2600", "Atari - 2600"},
-    { "atari5200", "Atari - 5200"},
-    { "atari7800", "Atari - 7800"},
-    { "atarilynx", "Atari - Lynx"},
-    { "atarijaguar", "Atari - Jaguar"},
-    { "atarijaguarcd", ""},
-    { "n3ds", "Nintendo - Nintendo 3DS"},
-    { "n64", "Nintendo - Nintendo 64"},
-    { "nds", "Nintendo - Nintendo DS"},
-    { "fds", "Nintendo - Famicom Disk System"},
-    { "nes", "Nintendo - Nintendo Entertainment System"},
-    { "pokemini", "Nintendo - Pokemon Mini"},
-    { "gb", "Nintendo - Game Boy"},
-    { "gba", "Nintendo - Game Boy Advance"},
-    { "gbc", "Nintendo - Game Boy Color"},
-    { "virtualboy", "Nintendo - Virtual Boy"},
-    { "gameandwatch", ""},
-    { "sega32x", "Sega - 32X"},
-    { "segacd", "Sega - Mega CD - Sega CD"},
-    { "dreamcast", "Sega - Dreamcast"},
-    { "gamegear", "Sega - Game Gear"},
-    { "genesis", "Sega - Mega Drive - Genesis"},
-    { "mastersystem", "Sega - Master System - Mark III"},
-    { "megadrive", "Sega - Mega Drive - Genesis"},
-    { "saturn", "Sega - Saturn"},
-    { "sg-1000", "Sega - SG-1000"},
-    { "psx", "Sony - PlayStation"},
-    { "psp", "Sony - PlayStation Portable"},
-    { "snes", "Nintendo - Super Nintendo Entertainment System"},
-    { "pico8", "Sega - PICO"},
-    { "wonderswan", "Bandai - WonderSwan"},
-    { "wonderswancolor", "Bandai - WonderSwan Color"},
-
-    { "mame", "MAME 2000", { "MAME", "mame-libretro", } },
-    { "mame", "MAME 2003", { "MAME", "mame-libretro", } },
-    { "mame", "MAME 2003-Plus", { "MAME", "mame-libretro", } },
-
-    { "neogeo", "SNK - Neo Geo Pocket" },
-    { "neogeo", "SNK - Neo Geo Pocket Color" },
-    { "neogeo", "SNK - Neo Geo CD" },
-};
-
-constexpr fs::FsPath DAYBREAK_PATH{"/switch/daybreak.nro"};
-
-constexpr const char* NXMP_PATHS[]{
-    "/switch/nxmp/nxmp.nro",
-    "/switch/nxmp.nro",
-};
-
-auto GetNxmpPath() -> const char* {
-    fs::FsNativeSd fs;
-    for (auto& path : NXMP_PATHS) {
-        if (fs.FileExists(path)) {
-            return path;
-        }
-    }
-    return nullptr;
-}
-
-auto HasNxmp() -> bool {
-    return GetNxmpPath() != nullptr;
-}
 
 #ifdef BUILD_SMB2
 static int g_smb_ref_count = 0;
@@ -224,218 +89,9 @@ void ParseSmbUrl(const std::string& url, std::string& server, std::string& share
 }
 #endif
 
-auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool {
-    for (auto e : list) {
-        if (e.length() == ext.length() && !strncasecmp(ext.data(), e.data(), ext.length())) {
-            return true;
-        }
-    }
-    return false;
-}
 
-auto IsExtension(std::string_view ext1, std::string_view ext2) -> bool {
-    return ext1.length() == ext2.length() && !strncasecmp(ext1.data(), ext2.data(), ext1.length());
-}
 
-// tries to find database path using folder name
-// names are taken from retropie
-// retroarch database names can also be used
-auto GetRomDatabaseFromPath(std::string_view path) -> RomDatabaseIndexs {
-    if (path.length() <= 1) {
-        return {};
-    }
 
-    // this won't fail :)
-    RomDatabaseIndexs indexs;
-    const auto db_name = path.substr(path.find_last_of('/') + 1);
-    // log_write("new path: %s\n", db_name.c_str());
-
-    for (int i = 0; i < std::size(PATHS); i++) {
-        const auto& p = PATHS[i];
-        if (p.IsDatabase(db_name)) {
-            log_write("found it :) %.*s\n", (int)p.database.length(), p.database.data());
-            indexs.emplace_back(i);
-        }
-    }
-
-    // if we failed, try again but with the folder about
-    // "/roms/psx/scooby-doo/scooby-doo.bin", this will check psx
-    if (indexs.empty()) {
-        const auto last_off = path.substr(0, path.find_last_of('/'));
-        if (const auto off = last_off.find_last_of('/'); off != std::string_view::npos) {
-            const auto db_name2 = last_off.substr(off + 1);
-            // printf("got db: %s\n", db_name2.c_str());
-            for (int i = 0; i < std::size(PATHS); i++) {
-                const auto& p = PATHS[i];
-                if (p.IsDatabase(db_name2)) {
-                    log_write("found it :) %.*s\n", (int)p.database.length(), p.database.data());
-                    indexs.emplace_back(i);
-                }
-            }
-        }
-    }
-
-    return indexs;
-}
-
-//
-auto GetRomIcon(std::string filename, const RomDatabaseIndexs& db_indexs, const NroEntry& nro) {
-    // if no db entries, use nro icon
-    if (db_indexs.empty()) {
-        log_write("using nro image\n");
-        return nro_get_icon(nro.path, nro.icon_size, nro.icon_offset);
-    }
-
-    // fix path to be url friendly
-    constexpr std::string_view bad_chars{"&*/:`<>?\\|\""};
-    for (auto& c : filename) {
-        for (auto bad_c : bad_chars) {
-            if (c == bad_c) {
-                c = '_';
-                break;
-            }
-        }
-    }
-
-    #define RA_BOXART_NAME "/Named_Boxarts/"
-    #define RA_THUMBNAIL_PATH "/retroarch/thumbnails/"
-    #define RA_BOXART_EXT ".png"
-
-    for (auto db_idx : db_indexs) {
-        const auto system_name = std::string{PATHS[db_idx].database.data(), PATHS[db_idx].database.length()};//GetDatabaseFromExt(database, extension);
-        auto system_name_gh = system_name + "/master";
-        for (auto& c : system_name_gh) {
-            if (c == ' ') {
-                c = '_';
-            }
-        }
-
-        const std::string thumbnail_path = system_name + RA_BOXART_NAME + filename + RA_BOXART_EXT;
-        const std::string ra_thumbnail_path = RA_THUMBNAIL_PATH + thumbnail_path;
-
-        log_write("starting image convert on: %s\n", ra_thumbnail_path.c_str());
-
-        // try and find icon locally
-        std::vector<u8> image_file;
-        if (R_SUCCEEDED(fs::FsNativeSd().read_entire_file(ra_thumbnail_path, image_file))) {
-            return image_file;
-        }
-    }
-
-    // use nro icon
-    log_write("using nro image\n");
-    return nro_get_icon(nro.path, nro.icon_size, nro.icon_offset);
-}
-
-ForwarderForm::ForwarderForm(const FileAssocEntry& assoc, const RomDatabaseIndexs& db_indexs, const FileEntry& entry, const fs::FsPath& arg_path)
-: Sidebar{"Forwarder Creation", Side::RIGHT}
-, m_assoc{assoc}
-, m_db_indexs{db_indexs}
-, m_arg_path{arg_path} {
-    log_write("parsing nro\n");
-    if (R_FAILED(LoadNroMeta())) {
-        App::Notify("Failed to parse nro"_i18n);
-        SetPop();
-        return;
-    }
-
-    log_write("got nro data\n");
-    auto file_name = m_assoc.use_base_name ? entry.GetName() : entry.GetInternalName();
-
-    if (auto pos = file_name.find_last_of('.'); pos != std::string::npos) {
-        log_write("got filename\n");
-        file_name = file_name.substr(0, pos);
-        log_write("got filename2: %s\n\n", file_name.c_str());
-    }
-
-    const auto name = m_nro.nacp.lang.name + std::string{" | "} + file_name;
-    const auto author = nacp_util::GetAuthor(m_nacp);
-    const auto version = m_nacp.display_version;
-    const auto icon = m_assoc.path;
-
-    m_name = this->Add<SidebarEntryTextInput>(
-        "Name", name, "", -1, sizeof(NacpLanguageEntry::name) - 1,
-        "Set the name of the application"_i18n
-    );
-
-    m_author = this->Add<SidebarEntryTextInput>(
-        "Author", author, "", -1, sizeof(NacpLanguageEntry::author) - 1,
-        "Set the author of the application"_i18n
-    );
-
-    m_version = this->Add<SidebarEntryTextInput>(
-        "Version", version, "", -1, sizeof(NacpStruct::display_version) - 1,
-        "Set the display version of the application"_i18n
-    );
-
-    const std::vector<std::string> filters{".nro", ".png", ".jpg"};
-    m_icon = this->Add<SidebarEntryFilePicker>(
-        "Icon", icon, filters,
-        "Set the path to the icon for the forwarder"_i18n
-    );
-
-    auto callback = this->Add<SidebarEntryCallback>("Create", [this, file_name](){
-        OwoConfig config{};
-        config.nro_path = m_assoc.path.toString();
-        config.args = nro_add_arg_file(m_arg_path);
-        config.nacp = m_nacp;
-
-        // patch the name.
-        config.name = m_name->GetValue();
-
-        // patch the author.
-        config.author = m_author->GetValue();
-
-        // patch the display version.
-        std::snprintf(config.nacp.display_version, sizeof(config.nacp.display_version), "%s", m_version->GetValue().c_str());
-
-        // load icon fron nro or image.
-        if (m_icon->GetValue().ends_with(".nro")) {
-            // if path was left as the default, try and load the icon from rom db.
-            if (config.nro_path == m_icon->GetValue()) {
-                config.icon = GetRomIcon(file_name, m_db_indexs, m_nro);
-            } else {
-                config.icon = nro_get_icon(m_icon->GetValue());
-            }
-        } else {
-            // try and read icon file into memory, bail if this fails.
-            const auto rc = fs::FsStdio().read_entire_file(m_icon->GetValue(), config.icon);
-            if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Failed to load icon");
-                return;
-            }
-        }
-
-        // if this is a rom, load intro logo.
-        if (!m_db_indexs.empty()) {
-            fs::FsNativeSd().read_entire_file(paths::LOGO + "/rom/NintendoLogo.png", config.logo);
-            fs::FsNativeSd().read_entire_file(paths::LOGO + "/rom/StartupMovie.gif", config.gif);
-        }
-
-        // try and install.
-        if (R_FAILED(App::Install(config))) {
-            App::Notify("Failed to install forwarder"_i18n);
-        } else {
-            SetPop();
-        }
-    }, "Create the forwarder."_i18n);
-
-    // ensure that all fields are valid.
-    callback->Depends([this](){
-        return
-            !m_name->GetValue().empty() &&
-            !m_author->GetValue().empty() &&
-            !m_version->GetValue().empty() &&
-            !m_icon->GetValue().empty();
-    }, "All fields must be non-empty!"_i18n);
-}
-
-auto ForwarderForm::LoadNroMeta() -> Result {
-    // try and load nro meta data.
-    R_TRY(nro_parse(m_assoc.path, m_nro));
-    R_TRY(nro_get_nacp(m_assoc.path, m_nacp));
-    R_SUCCEED();
-}
 
 } // namespace
 
