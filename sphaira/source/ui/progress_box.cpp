@@ -159,6 +159,10 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto offset = m_offset;
     const auto speed = m_speed;
     const auto last_offset = m_last_offset;
+    // synthetic-unit transfers keep a meaningful ETA (units-left / units-per-sec
+    // is still real seconds) but a bytes-derived "MiB/s" would be nonsense, so
+    // only the speed figure is suppressed, not the time remaining.
+    const auto hide_speed = m_hide_speed.load();
     auto image = m_image;
 
     if (m_is_image_pending) {
@@ -177,7 +181,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     if (m_minimized) {
         std::string speed_str{};
-        if (speed > 0) {
+        if (speed > 0 && !hide_speed) {
             const double speed_mb = (double)speed / (1024.0 * 1024.0);
             char buf[32];
             if (speed_mb >= 0.01) {
@@ -247,7 +251,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
                 std::snprintf(time_str, sizeof(time_str), "%zu seconds remaining"_i18n.c_str(), seconds);
             }
 
-            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
+            if (hide_speed) {
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
+            } else {
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
+            }
         }
     }
 

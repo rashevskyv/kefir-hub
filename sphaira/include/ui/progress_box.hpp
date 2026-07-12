@@ -39,6 +39,12 @@ struct ProgressBox final : Widget, InstallProgress {
     auto UpdateTransfer(s64 offset, s64 size) -> ProgressBox&;
 
     auto Mute(bool mute) -> ProgressBox& { m_muted = mute; return *this; }
+
+    // hide the transfer speed / ETA readout. used when the progress bar is
+    // driven by synthetic units (e.g. WebDAV sync, one budget per file) rather
+    // than real bytes, where a "MiB/s" figure derived from those units would be
+    // meaningless. the percentage and bar keep working.
+    auto SetHideSpeed(bool hide) -> ProgressBox& { m_hide_speed = hide; return *this; }
     auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
     auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
 
@@ -137,6 +143,7 @@ private:
     int m_image{};
     bool m_own_image{};
     std::atomic<bool> m_muted{false};
+    std::atomic<bool> m_hide_speed{false};
     bool m_detached{false};
     bool m_minimized{false};
 };

@@ -6,6 +6,35 @@
 
 namespace sphaira::ui {
 
+namespace {
+
+// a small filled cloud drawn with vector paths so it renders regardless of the
+// loaded font. cx/cy is the centre; s scales the whole shape.
+void DrawCloudIcon(NVGcontext* vg, float cx, float cy, float s, NVGcolor colour) {
+    nvgBeginPath(vg);
+    nvgCircle(vg, cx - 0.9f * s, cy + 0.15f * s, 0.55f * s);
+    nvgCircle(vg, cx - 0.1f * s, cy - 0.35f * s, 0.75f * s);
+    nvgCircle(vg, cx + 0.85f * s, cy + 0.05f * s, 0.6f * s);
+    nvgRect(vg, cx - 0.9f * s, cy + 0.1f * s, 1.75f * s, 0.6f * s);
+    nvgFillColor(vg, colour);
+    nvgFill(vg);
+}
+
+// right-pointing chevron matching SidebarEntryCallback's submenu hint.
+void DrawChevron(NVGcontext* vg, float x, float y, NVGcolor colour) {
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, x - 8.f, y - 8.f);
+    nvgLineTo(vg, x, y);
+    nvgLineTo(vg, x - 8.f, y + 8.f);
+    nvgStrokeColor(vg, colour);
+    nvgStrokeWidth(vg, 3.f);
+    nvgLineCap(vg, NVG_ROUND);
+    nvgLineJoin(vg, NVG_ROUND);
+    nvgStroke(vg);
+}
+
+} // namespace
+
 PopupList::PopupList(std::string title, Items items, std::string& index_str_ref, s64& index_ref)
 : PopupList{std::move(title), std::move(items), Callback{}, index_ref}  {
 
@@ -132,7 +161,10 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawRect(vg, 30.f, m_line_top, m_line_width, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, 30.f, m_line_bottom, m_line_width, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
-    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, auto v, auto i) {
+    const bool has_markers = m_markers.size() == m_items.size();
+    const float gutter = has_markers ? 30.f : 0.f;
+
+    m_list->Draw(vg, theme, m_items.size(), [this, has_markers, gutter](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto colour = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
@@ -144,14 +176,24 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
         }
 
-        if (m_starting_index == i) {
+        const auto mid_y = y + (h / 2.f);
+
+        if (m_menu_style) {
+            // action menu: no value tick, a right chevron per row.
+            DrawChevron(vg, x + w - 24.f, mid_y, theme->GetColour(ThemeEntryID_TEXT));
+        } else if (m_starting_index == i) {
             colour = ThemeEntryID_TEXT_SELECTED;
-            gfx::drawText(vg, x + w - m_text_xoffset, y + (h / 2.f), 20.f, "\uE14B", NULL, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(colour));
+            gfx::drawText(vg, x + w - m_text_xoffset, mid_y, 20.f, "\uE14B", NULL, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(colour));
         }
 
-        const auto text_x = x + m_text_xoffset;
-        const auto text_clip_w = w - 60.f - m_text_xoffset;
-        m_scroll_text.Draw(vg, selected, text_x, y + (h / 2.f), text_clip_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(colour), m_items[i]);
+        // cloud marker sits in the reserved left gutter so text stays aligned.
+        if (has_markers && m_markers[i]) {
+            DrawCloudIcon(vg, x + m_text_xoffset + 8.f, mid_y, 7.f, theme->GetColour(colour));
+        }
+
+        const auto text_x = x + m_text_xoffset + gutter;
+        const auto text_clip_w = w - 60.f - m_text_xoffset - gutter;
+        m_scroll_text.Draw(vg, selected, text_x, mid_y, text_clip_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(colour), m_items[i]);
     });
 
     Widget::Draw(vg, theme);

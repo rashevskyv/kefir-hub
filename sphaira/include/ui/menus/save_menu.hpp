@@ -47,6 +47,17 @@ struct RecentBackupDir {
     fs::FsPath path{};
 };
 
+// one restorable backup archive found for a save, used to build the restore
+// picker. ts is the YYYYMMDDHHMMSS key parsed from the file name (for sorting
+// and display); source is a stable tie-break for equal timestamps (lower
+// wins: dbi format beats sphaira new/legacy, matching the old single-best
+// FindLatestBackupPath behaviour; path is the final tie-break in the sorter).
+struct BackupCandidate {
+    u64 ts{};
+    fs::FsPath path{};
+    int source{};
+};
+
 void SignalChange();
 
 struct Menu final : grid::Menu {
@@ -99,6 +110,21 @@ private:
     void BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    // entry point from "Start Restore": handles the optional remote pre-sync,
+    // and shows the backup picker for a single selected save.
+    void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    // collect (off the UI thread, via ProgressBox) + show the picker for one
+    // save, then restore the chosen archive. remote_names are archive file
+    // names just downloaded from WebDAV (flagged with a cloud marker); empty
+    // when remote restore is off.
+    void ShowRestorePicker(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names);
+    // builds and pushes the "no backups" message or the picker popup itself,
+    // once CollectBackups has already run. UI-thread only.
+    void ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
+    void RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
+    // download every archive that exists on WebDAV for e but not locally, into
+    // the restore location; downloaded file names are appended to out_downloaded.
+    Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
     void PromptSaveAction();
     void PromptSaveTypeOptions(bool restore);
     void SyncSavesRemote();
@@ -108,6 +134,9 @@ private:
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const;
     Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps") const;
     bool FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const;
+    // every restorable archive for e across all backup formats/locations,
+    // newest first. generalises FindLatestBackupPath.
+    auto CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate>;
     auto GetAccountName(const AccountUid& uid) const -> std::string;
     auto GetAccountSummary() const -> std::string;
     auto GetDataTypeSummary() const -> std::string;
@@ -150,6 +179,7 @@ private:
     option::OptionBool m_auto_backup_on_restore{INI_SECTION, "auto_backup_on_restore", true};
     option::OptionBool m_compress_save_backup{INI_SECTION, "compress_save_backup", true};
     option::OptionBool m_save_autosync{INI_SECTION, "save_autosync", true};
+    option::OptionBool m_restore_include_remote{INI_SECTION, "restore_include_remote", false};
 
     // last folders confirmed via "Choose Folder...", newest first.
     static constexpr inline size_t RECENT_BACKUP_DIR_MAX = 5;

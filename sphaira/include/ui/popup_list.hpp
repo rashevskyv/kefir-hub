@@ -24,6 +24,17 @@ public:
     auto OnFocusGained() noexcept -> void override;
     auto OnFocusLost() noexcept -> void override;
 
+    // render as an action menu rather than a value chooser: no "current value"
+    // tick on the starting row, a right chevron on every row hinting it opens a
+    // further step.
+    auto SetMenuStyle(bool menu) -> PopupList& { m_menu_style = menu; return *this; }
+
+    // per-row cloud marker drawn in a reserved left gutter (used to flag
+    // remote-origin backups). the gutter is reserved for ALL rows so the text
+    // stays aligned; the cloud only appears on marked rows. size must match the
+    // item count or it is ignored.
+    auto SetRemoteMarkers(std::vector<bool> markers) -> PopupList& { m_markers = std::move(markers); return *this; }
+
 private:
     void SetIndex(s64 index);
 
@@ -38,6 +49,8 @@ private:
     Callback m_callback{};
     s64 m_index{}; // index in list array
     s64 m_starting_index{};
+    bool m_menu_style{};
+    std::vector<bool> m_markers{};
 
     std::unique_ptr<List> m_list{};
     ScrollingText m_scroll_text{};
