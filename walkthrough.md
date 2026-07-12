@@ -1,5 +1,22 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.171 — рефакторинг settings_menu.cpp (Крок 2.2)
+
+Завершено рефакторинг `settings_menu.cpp` шляхом виділення структур та функцій роботи з перекладами інтерфейсу та DBI в окремий компонент `settings_translations.hpp/.cpp` у просторі імен `sphaira::ui::menu::settings`.
+
+### 1. Виділення settings/settings_translations
+- Створено заголовний файл `sphaira/include/ui/menus/settings/settings_translations.hpp`, який містить структури `DbiTranslationEntry` та `InterfaceTranslationEntry`, а також декларації перенесених функцій у просторі імен `detail` та константи шляхів пакетів.
+- Створено файл реалізації `sphaira/source/ui/menus/settings/settings_translations.cpp`, куди перенесені визначення наступних функцій: `DownloadFile`, `UnzipFile`, `ParseDbiTranslations`, `ParseInterfaceTranslations`, `ReadInterfaceReplacementOptions`, `FileNameFromUrl`, `TranslationExtractFolder`, `InstallDbiTranslation`, `InstallInterfaceTranslation`, `RemoveInterfaceTranslation` (для приховування `TRANSLATION_PATHS` у реалізації), а також функція `RebootAfterSetting` (яку перенесено до `detail` простору імен для спільного використання).
+
+### 2. Очищення settings_menu.cpp
+- Додано підключення `#include "ui/menus/settings/settings_translations.hpp"` у `settings_menu.cpp`.
+- Вилучено дубльовані структури та функції перекладу, а також локальні константи `TRANSLATION_PATHS`, `SPHAIRA_DOWNLOADS` тощо.
+- Прямий цикл видалення перекладів замінено на виклик `RemoveInterfaceTranslation(pbox)`.
+
+### 3. Складальна система та версія
+- Додано `source/ui/menus/settings/settings_translations.cpp` до списку джерел у `sphaira/CMakeLists.txt`.
+- Версію програми оновлено до `0.13.171`.
+
 ## v0.13.170 — рефакторинг settings_menu.cpp (Крок 2.1)
 
 Завершено рефакторинг `settings_menu.cpp` шляхом виділення загальних допоміжних функцій для роботи з файлами та рядками в окремий компонент `settings_fs_utils.hpp/.cpp` у просторі імен `sphaira::ui::menu::settings::detail`.

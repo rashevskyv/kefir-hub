@@ -1,5 +1,6 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
+#include "ui/menus/settings/settings_translations.hpp"
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -63,37 +64,14 @@ constexpr std::array TEXT_SCROLL_SPEED_ITEMS{
     "Fast",
 };
 
-constexpr std::array TRANSLATION_PATHS{
-    "/atmosphere/contents/010000000000080B/",
-    "/atmosphere/contents/010000000000080C/",
-    "/atmosphere/contents/010000000000100D/",
-    "/atmosphere/contents/0100000000000803/",
-    "/atmosphere/contents/0100000000000811/",
-    "/atmosphere/contents/0100000000001000/romfs/message/",
-    "/atmosphere/contents/0100000000001001/",
-    "/atmosphere/contents/0100000000001002/",
-    "/atmosphere/contents/0100000000001003/",
-    "/atmosphere/contents/0100000000001004/",
-    "/atmosphere/contents/0100000000001005/",
-    "/atmosphere/contents/0100000000001006/",
-    "/atmosphere/contents/0100000000001007/",
-    "/atmosphere/contents/0100000000001008/",
-    "/atmosphere/contents/0100000000001009/",
-    "/atmosphere/contents/0100000000001012/",
-    "/atmosphere/contents/0100000000001013/",
-    "/atmosphere/contents/0100000000001015/",
-};
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
 const auto FAN_PRESETS_CONFIG = paths::DATA_ROOT + "/fan_curve_presets.ini";
 constexpr u64 SPHAIRA_FAN_PROGRAM_ID{0x00FF46554E43544CULL};
 constexpr u64 SPHAIRA_OLD_FAN_PROGRAM_ID{0x00FF000053504846ULL};
 constexpr const char* SPHAIRA_FAN_EXEFS_PATH = "/atmosphere/contents/00FF46554E43544C/exefs.nsp";
-const auto SPHAIRA_DOWNLOADS = paths::DOWNLOADS;
 const auto DBI_TRANSLATIONS_PACKAGE = paths::PACKAGES + "/Software/DBI/Fan Translations/package.ini";
-const auto TRANSLATE_PACKAGE_DIR = paths::PACKAGES + "/Translate Interface";
-const auto TRANSLATE_PACKAGE = paths::PACKAGES + "/Translate Interface/package.ini";
-const auto TRANSLATE_PACKAGE_BACKUP = paths::PACKAGES + "/translate_interface.package.ini.bkp";
+
 
 struct KefirSetting {
     std::string label;
@@ -113,16 +91,6 @@ struct PackageAction {
     float hold_seconds{0.5f};
 };
 
-struct DbiTranslationEntry {
-    std::string name;
-    std::string translation_url;
-};
-
-struct InterfaceTranslationEntry {
-    std::string name;
-    std::string json_path;
-    std::string zip_url;
-};
 
 auto ClampIndex(long index, long count) -> long {
     if (count <= 0) {
@@ -155,199 +123,13 @@ auto SettingsValueColour(Theme* theme, const std::string& value, bool selected) 
 
 
 
-auto DownloadFile(ProgressBox* pbox, const std::string& label, const std::string& url, const fs::FsPath& dst) -> Result {
-    R_TRY(EnsureParentDirectory(dst.toString()));
-    pbox->NewTransfer(label);
 
-    const auto result = curl::Api().ToFile(
-        curl::Url{url},
-        curl::Path{dst},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
-    );
-    R_UNLESS(result.success, Result_CurlFailedEasyInit);
-    R_SUCCEED();
-}
-
-auto UnzipFile(ProgressBox* pbox, const fs::FsPath& zip, const fs::FsPath& dst) -> Result {
-    fs::FsNativeSd fs;
-    R_TRY(fs.GetFsOpenResult());
-    R_TRY(fs.CreateDirectoryRecursively(dst));
-    pbox->NewTransfer("Extracting " + dst.toString());
-    R_TRY(thread::TransferUnzipAll(pbox, zip, &fs, dst));
-    R_SUCCEED();
-}
-
-void RebootAfterSetting();
-
-auto ParseDbiTranslations(const std::string& path) -> std::vector<DbiTranslationEntry> {
-    std::vector<DbiTranslationEntry> entries;
-    auto lines = ReadLines(path);
-
-    std::string name;
-    std::string translation_url;
-
-    const auto flush = [&]() {
-        if (!name.empty() && name != "Update list of translations" && !translation_url.empty()) {
-            entries.push_back({name, translation_url});
-        }
-        name.clear();
-        translation_url.clear();
-    };
-
-    for (const auto& line : lines) {
-        if (const auto section = ExtractBracketName(line); !section.empty()) {
-            flush();
-            name = section;
-            continue;
-        }
-
-        const auto cmd = SplitCommand(line);
-        if (cmd.size() >= 3 && cmd[0] == "download" && cmd[2].find("translation_new.bin") != std::string::npos) {
-            translation_url = cmd[1];
-        }
-    }
-    flush();
-
-    return entries;
-}
-
-auto ParseInterfaceTranslations(const std::string& path) -> std::vector<InterfaceTranslationEntry> {
-    std::vector<InterfaceTranslationEntry> entries;
-    auto lines = ReadLines(path);
-
-    InterfaceTranslationEntry current;
-    bool in_language{};
-
-    const auto flush = [&]() {
-        if (in_language && !current.name.empty() && !current.zip_url.empty() && !current.json_path.empty()) {
-            entries.push_back(current);
-        }
-        current = {};
-        in_language = false;
-    };
-
-    for (const auto& line : lines) {
-        if (const auto section = ExtractBracketName(line); !section.empty()) {
-            flush();
-            in_language = line.find("[*") != std::string::npos;
-            if (in_language) {
-                current.name = section;
-                current.json_path = std::string{TRANSLATE_PACKAGE_DIR} + "/langs/" + current.name + ".json";
-            }
-            continue;
-        }
-
-        if (!in_language) {
-            continue;
-        }
-
-        const auto cmd = SplitCommand(Trim(line));
-        if (cmd.size() >= 3 && cmd[0] == "download") {
-            current.zip_url = cmd[1];
-        }
-    }
-    flush();
-
-    return entries;
-}
-
-auto ReadInterfaceReplacementOptions(const InterfaceTranslationEntry& entry) -> std::vector<std::pair<std::string, std::string>> {
-    std::vector<std::pair<std::string, std::string>> out;
-    const auto json = ReadTextFile(entry.json_path);
-    size_t pos{};
-    while (true) {
-        const auto object_start = json.find('{', pos);
-        if (object_start == std::string::npos) {
-            break;
-        }
-        const auto object_end = json.find('}', object_start);
-        if (object_end == std::string::npos) {
-            break;
-        }
-
-        const auto object = json.substr(object_start, object_end - object_start + 1);
-        const auto label = ExtractJsonStringField(object, "lang");
-        const auto dir = ExtractJsonStringField(object, "dir");
-        if (!label.empty() && !dir.empty()) {
-            out.emplace_back(label, dir);
-        }
-        pos = object_end + 1;
-    }
-    return out;
-}
-
-auto FileNameFromUrl(const std::string& url) -> std::string {
-    const auto query = url.find_first_of("?#");
-    auto clean = query == std::string::npos ? url : url.substr(0, query);
-    const auto slash = clean.find_last_of('/');
-    if (slash != std::string::npos) {
-        clean = clean.substr(slash + 1);
-    }
-    return clean.empty() ? "translation.zip" : clean;
-}
-
-auto TranslationExtractFolder(const std::string& zip_name) -> std::string {
-    auto folder = zip_name;
-    if (const auto dot = folder.find_last_of('.'); dot != std::string::npos) {
-        folder = folder.substr(0, dot);
-    }
-    if (StartsWith(folder, "NX-")) {
-        folder = "Nx-" + folder.substr(3);
-    }
-    return folder;
-}
-
-auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) -> Result {
-    R_TRY(DownloadFile(
-        pbox,
-        "Downloading DBI...",
-        "https://github.com/rashevskyv/DBIPatcher/releases/latest/download/DBI.nro",
-        "/switch/DBI/DBI_new.nro"
-    ));
-    R_TRY(DownloadFile(
-        pbox,
-        "Downloading " + entry.name + " translation...",
-        entry.translation_url,
-        "/switch/DBI/translation_new.bin"
-    ));
-    R_TRY(MovePath("/switch/DBI/DBI_new.nro", "/switch/DBI/DBI.nro"));
-    R_TRY(MovePath("/switch/DBI/translation_new.bin", "/switch/DBI/translation.bin"));
-    R_SUCCEED();
-}
-
-auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry entry, std::string replacement_dir) -> Result {
-    const auto zip_name = FileNameFromUrl(entry.zip_url);
-    const auto extract_dir = std::string{SPHAIRA_DOWNLOADS} + "/translations";
-    const auto zip_path = extract_dir + "/" + zip_name;
-
-    R_TRY(DeletePath(extract_dir));
-    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + "...", entry.zip_url, zip_path));
-
-    for (const auto path : TRANSLATION_PATHS) {
-        R_TRY(DeletePath(path));
-    }
-
-    R_TRY(UnzipFile(pbox, zip_path, extract_dir));
-
-    const auto source = extract_dir + "/" + TranslationExtractFolder(zip_name) + "/" + replacement_dir + "/contents";
-    R_TRY(CopyDirectoryContents(source, "/atmosphere/contents"));
-    R_TRY(DeletePath(source));
-    R_TRY(DeletePath(extract_dir));
-    R_TRY(DeletePath(TRANSLATE_PACKAGE));
-    R_TRY(DeletePath(std::string{TRANSLATE_PACKAGE_DIR} + "/langs"));
-    R_TRY(MovePath(TRANSLATE_PACKAGE_BACKUP, TRANSLATE_PACKAGE));
-    RebootAfterSetting();
-    R_SUCCEED();
-}
 
 auto IsEmummcEnabled() -> bool {
     return IniValueEquals("/emummc/emummc.ini", "emummc", "enabled", "1");
 }
 
-void RebootAfterSetting() {
-    fsdevCommitDevice("sdmc");
-    utils::requestForcedReboot();
-}
+
 
 auto ApplyOverclock(bool enabled) -> Result {
     if (enabled) {
@@ -1370,14 +1152,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         "Remove installed translation"_i18n,
         "Delete installed interface translations and reboot."_i18n,
         [](auto pbox) -> Result {
-            pbox->NewTransfer("Removing translations..."_i18n);
-            for (const auto path : TRANSLATION_PATHS) {
-                if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFoundFsDev) {
-                    R_THROW(rc);
-                }
-            }
-            RebootAfterSetting();
-            R_SUCCEED();
+            return RemoveInterfaceTranslation(pbox);
         },
         true,
         "This removes installed system interface translation files and reboots the console."_i18n,
