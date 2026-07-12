@@ -5,8 +5,8 @@
     - [x] Крок 1.2: Виділення cheats/cheats_lookup.hpp/.cpp (InstalledNcaLookupResult, BuildIdLookupResult) <!-- id: r1.2 -->
     - [x] Крок 1.3: Виділення cheats/cheats_db.hpp/.cpp (CachedCheatMetadata, NxDbVersionInfo) <!-- id: r1.3 -->
     - [x] Крок 1.4: Виділення cheats/cheat_files_menu.hpp/.cpp (CheatFilesMenu, CheatContentMenu, CheatCodeViewerMenu) <!-- id: r1.4 -->
-    - [ ] Крок 1.5: Виділення cheats/cheat_game_select_menu.hpp/.cpp (CheatGameSelectMenu, CheatDownloadMenu) <!-- id: r1.5 -->
-    - [ ] Крок 1.6: Фінальне очищення cheats_menu.cpp та верифікація збірки <!-- id: r1.6 -->
+    - [x] Крок 1.5: Виділення cheats/cheat_game_select_menu.hpp/.cpp (CheatGameSelectMenu, CheatDownloadMenu) <!-- id: r1.5 -->
+    - [x] Крок 1.6: Фінальне очищення cheats_menu.cpp та верифікація збірки <!-- id: r1.6 -->
 - [x] Вивчити наявний стан та спланувати синхронізацію сейвів з віддаленим джерелом (WebDAV) <!-- id: 0 -->
 - [x] Реалізувати лістинг віддаленої теки WebDAV (PROPFIND XML парсер / рядковий пошук) <!-- id: 1 -->
 - [x] Додати синхронізацію сейвів (SyncPlan, UI в Save Menu, опція Auto-sync) <!-- id: 2 -->

@@ -16,6 +16,8 @@ every file is fair game — there is no merge-conflict constraint.
    your job is to keep the code structurally sound: every moved function keeps its exact
    signature, every new `.cpp` is added to `sphaira/CMakeLists.txt` (the source list starts
    around line 40), every new header has `#pragma once`.
+   *Примітка:* Збірка проекту виконується користувачем вручну, агенту самостійно збирати
+   програму не потрібно.
 4. **Anonymous-namespace helpers** that end up used from more than one `.cpp` must move to
    a named `detail` namespace inside the new shared header/cpp
    (e.g. `sphaira::ui::menu::hats::detail`). Helpers used by only one new `.cpp` stay in
@@ -44,8 +46,8 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 | [x] 1.2 | `cheats/cheats_lookup.hpp/.cpp` | `InstalledNcaLookupResult` (~229), `BuildIdLookupResult` (~718) and their helper functions (build-id resolution, NCA lookup). |
 | [x] 1.3 | `cheats/cheats_db.hpp/.cpp` | `CachedCheatMetadata` (~1587), `NxDbVersionInfo` (~1902) and helpers for the cheat DB / cache / download-side metadata. |
 | [x] 1.4 | `cheats/cheat_files_menu.cpp` | Classes `CheatFilesMenu`, `CheatContentMenu`, `CheatCodeViewerMenu` (~3515–4130). Their declarations move from `cheats_menu.hpp` into `include/ui/menus/cheats/cheat_files_menu.hpp` if they are declared there; if declared only in the .cpp, keep them local. |
-| 1.5 | `cheats/cheat_game_select_menu.cpp` | Classes `CheatGameSelectMenu`, `CheatDownloadMenu` (~4132–end). Same header rule as 1.4. |
-| 1.6 | leftover check | `cheats_menu.cpp` should now contain only `CheatsMenu` + `CheatViewMenu` and the helpers used exclusively by them. Target: under ~1500 lines. |
+| [x] 1.5 | `cheats/cheat_game_select_menu.cpp` | Classes `CheatGameSelectMenu`, `CheatDownloadMenu` (~4132–end). Same header rule as 1.4. |
+| [x] 1.6 | leftover check | `cheats_menu.cpp` should now contain only `CheatsMenu` + `CheatViewMenu` and the helpers used exclusively by them. Target: under ~1500 lines. |
 
 ## Phase 2 — `ui/menus/settings_menu.cpp` (4062 lines, fork-owned)
 

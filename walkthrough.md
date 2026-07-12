@@ -1,5 +1,25 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.169 — рефакторинг cheats_menu.cpp (Крок 1.5 та 1.6)
+
+Завершено рефакторинг та оптимізацію `cheats_menu.cpp` шляхом виділення класів вибору та завантаження читів, а також очищення залишків коду.
+
+### 1. Виділення cheats/cheat_game_select_menu
+- Створено заголовний файл `sphaira/include/ui/menus/cheats/cheat_game_select_menu.hpp`, який містить оголошення класів `CheatGameSelectMenu` та `CheatDownloadMenu`, а також загальних допоміжних функцій у просторі імен `sphaira::ui::menu::hats::detail`.
+- Створено файл реалізації `sphaira/source/ui/menus/cheats/cheat_game_select_menu.cpp`, куди перенесені визначення вищезазначених класів.
+- Допоміжні функції `GetBuildIdFailureMessage`, `WritePayloadLaunchConfig` та `ShowProdKeysMissingDialog` перенесені до анонімного простору імен у `cheat_game_select_menu.cpp`, оскільки вони використовуються виключно цими меню.
+- Перенесено функції `CleanCheatContent`, `ParseCheatslipsCheats`, `ParseNxDbCheats`, `ExtractNxDbBuildIds`, `IsParenthesizedNoteLine`, `StripInlineCheatComment`, `IsHexCodeLine`, `NormalizeHexCodeLine`, `SanitizeCheatContentForAtmosphere`, `SanitizeManualCheatContent`, `ImportManualCheatFile` та `WriteCheatFile` у простір імен `detail` у `cheat_game_select_menu.cpp`.
+
+### 2. Очищення cheats_menu.cpp
+- Змінено анонімний простір імен у `cheats_menu.cpp` на іменований простір `sphaira::ui::menu::hats::detail` для надання доступу до спільних функцій (таких як `GetTitleVersion`, `GetTitleName`, `AppendGameCardGames`, `EnumerateInstalledGames`, `GetCheatslipsToken`).
+- Вилучено винесені класи `CheatGameSelectMenu`, `CheatDownloadMenu` та всі супутні хелпери з `cheats_menu.cpp` (включаючи `GetBuildIdFailureMessage`, `WritePayloadLaunchConfig` та `ShowProdKeysMissingDialog`), значно скоротивши його обсяг (тепер містить лише ~1305 рядків коду, що повністю відповідає цілі "менше 1500 рядків").
+- Додано підключення `#include "ui/menus/cheats/cheat_game_select_menu.hpp"` у `cheats_menu.cpp`.
+
+### 3. Налаштування збірки
+- Новий файл `source/ui/menus/cheats/cheat_game_select_menu.cpp` додано до списку джерел у `sphaira/CMakeLists.txt`.
+- Додано прямий include `<unordered_set>` у `cheat_game_select_menu.hpp` для усунення залежності від транзитивних підключень.
+- Версію програми оновлено до `0.13.169`.
+
 ## v0.13.168 — рефакторинг cheats_menu.cpp (Крок 1.4)
 
 Завершено перенесення класів `CheatFilesMenu`, `CheatContentMenu` та `CheatCodeViewerMenu` з `cheats_menu.cpp` до окремих файлів `cheat_files_menu.hpp/.cpp`.
