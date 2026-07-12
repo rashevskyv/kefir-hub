@@ -1,5 +1,48 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.174 — виправлення помилок підключення заголовків у settings_menu.hpp (Крок 2.4)
+
+Виправлено помилки компіляції, спричинені некоректним підключенням заголовка та вилученням forward-declaration.
+
+### 1. Переміщення include в settings_menu.hpp
+- Підключення `#include "ui/menus/settings/settings_tweaks.hpp"` переміщено нагору файлу, за межі простору імен `sphaira::ui::menu::settings`, для усунення подвійної вкладеності просторів імен (namespace pollution) та забезпечення коректної видимості `detail::` у TU файлу `settings_menu.cpp`.
+
+### 2. Відновлення forward-declaration
+- Відновлено декларацію `struct FanCurveSensorReader;` перед оголошенням `struct FanCurveMenu`, оскільки цей тип необхідний для поля `m_sensor_reader` і визначається локально у `settings_menu.cpp`.
+
+### 3. Версія
+- Версію програми в `sphaira/CMakeLists.txt` оновлено до `0.13.174`.
+
+## v0.13.173 — фінальне очищення settings_menu.cpp (Крок 2.4)
+
+Завершено Phase 2 рефакторингу `settings_menu.cpp`. Виконано повне очищення файлу `settings_menu.cpp` та перекладено виклики системних функцій на виділений простір імен `detail::` з `settings_tweaks.hpp` та `settings_translations.hpp`.
+
+### 1. Видалення дублікатів та очищення settings_menu.hpp
+- Вилучено дубльовані структури `FanCurvePoint` та `FanCurveApplyMode` із заголовного файлу `settings_menu.hpp` і натомість підключено виділений заголовок `ui/menus/settings/settings_tweaks.hpp`.
+
+### 2. Очищення settings_menu.cpp
+- Замінено локальні виклики функцій `ApplyFanCurves`, `RebootAfterSetting`, `IsSphairaFanSysmoduleRunning`, `IsSphairaFanSysmoduleInstalled`, `RestartSphairaFanSysmodule`, `ReadFanCurve`, `DefaultHandheldFanCurve`, `DefaultDockedFanCurve`, `FAN_BUILTIN_PRESET_COUNT`, `FanPresetCurve`, `ReadCustomFanPreset`, `ReadCustomFanPresetName`, `SanitizeFanPresetName`, `FanCustomPresetDefaultName`, `SaveCustomFanPreset`, `FAN_TEMP_MAX_C`, `FAN_TEMP_MIN_C` та `NormalizeFanCurve` на явні виклики через простір імен `detail::` (з винесених раніше файлів `settings_tweaks.hpp/.cpp` та `settings_translations.hpp/.cpp`).
+- Обсяг `settings_menu.cpp` скоротився, залишаючи в ньому лише класи меню та інтерфейсну логіку (UI wiring), що відповідає вимогам Phase 2.
+
+### 3. Версія
+- Версію програми в `sphaira/CMakeLists.txt` оновлено до `0.13.173`.
+
+## v0.13.172 — рефакторинг settings_menu.cpp (Крок 2.3)
+
+Завершено рефакторинг `settings_menu.cpp` шляхом виділення системних налаштувань, структур `KefirSetting`, `PackageAction` та допоміжних функцій роботи з кривими вентилятора в окремий компонент `settings_tweaks.hpp/.cpp` у просторі імен `sphaira::ui::menu::settings`.
+
+### 1. Виділення settings/settings_tweaks
+- Створено заголовний файл `sphaira/include/ui/menus/settings/settings_tweaks.hpp`, який містить структури `KefirSetting`, `PackageAction` та декларації перенесених функцій системних налаштувань і вентилятора у просторі імен `detail` та пов'язані константи.
+- Створено файл реалізації `sphaira/source/ui/menus/settings/settings_tweaks.cpp`, куди перенесені визначення наступних функцій: `IsEmummcEnabled`, `ApplyOverclock`, `Apply40Mb`, `ApplyRedirectSaves`, `Apply8GbDram`, допоміжні функції кривих вентилятора (`DefaultHandheldFanCurve`, `DefaultDockedFanCurve`, `QuietFanCurve`, `BalancedFanCurve`, `CoolFanCurve`, `FullSpeedFanCurve`, `FanOffCurve`), хелпери пресетів та роботи з рядками Atmosphere (`FanPresetSection`, `FanCustomPresetKey`, `FanCustomPresetNameKey`, `FanCustomPresetDefaultName`, `SanitizeFanPresetName`, `FanBuiltinPresetLabels`, `FanPresetCurve`, `FanByteToPercent`, `FanPercentToByte`, `DecodeAtmosphereString`, `ParseSignedIntegers`, `NormalizeFanCurve`, `ParseFanCurveTable`, `ReadFanCurve`, `ReadCustomFanPreset`, `ReadCustomFanPresetName`, `FanCustomPresetLabel`, `FanPresetLabels`, `FanCustomPresetLabels`, `FormatFanCurveTable`, `FormatAtmosphereFanCurve`, `IsFanCurveEnabled`, `IsSphairaFanSysmoduleInstalled`, `IsSphairaFanSysmoduleRunning`, `EnsureSphairaFanSysmoduleInstalled`, `RestartSphairaFanSysmodule`, `ApplyFanCurves`, `SaveCustomFanPreset`).
+
+### 2. Очищення settings_menu.cpp
+- Додано підключення `#include "ui/menus/settings/settings_tweaks.hpp"` у `settings_menu.cpp`.
+- Вилучено структури `KefirSetting`, `PackageAction`, функції системних налаштувань та вентилятора з `settings_menu.cpp`.
+
+### 3. Складальна система та версія
+- Додано `source/ui/menus/settings/settings_tweaks.cpp` до списку джерел у `sphaira/CMakeLists.txt`.
+- Версію програми оновлено до `0.13.172`.
+
 ## v0.13.171 — рефакторинг settings_menu.cpp (Крок 2.2)
 
 Завершено рефакторинг `settings_menu.cpp` шляхом виділення структур та функцій роботи з перекладами інтерфейсу та DBI в окремий компонент `settings_translations.hpp/.cpp` у просторі імен `sphaira::ui::menu::settings`.

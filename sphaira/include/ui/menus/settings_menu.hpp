@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "ui/menus/settings/settings_tweaks.hpp"
 
 namespace sphaira::ui::menu::settings {
 
@@ -119,17 +120,7 @@ private:
     std::unique_ptr<List> m_list;
 };
 
-struct FanCurvePoint {
-    s32 temp_c{};
-    s32 fan_percent{};
-};
-
 struct FanCurveSensorReader;
-
-enum class FanCurveApplyMode {
-    Live,
-    Reboot,
-};
 
 struct FanCurveMenu final : MenuBase {
     FanCurveMenu();

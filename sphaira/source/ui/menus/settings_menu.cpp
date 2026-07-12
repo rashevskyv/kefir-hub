@@ -1452,9 +1452,9 @@ auto FanCurveListItemRect() -> Vec4 {
 }
 
 auto FanCurveXForTempValue(const Vec4& plot, float temp_c) -> float {
-    const auto span = static_cast<float>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C);
-    const auto value = std::clamp(temp_c, static_cast<float>(FAN_TEMP_MIN_C), static_cast<float>(FAN_TEMP_MAX_C));
-    return plot.x + plot.w * ((value - static_cast<float>(FAN_TEMP_MIN_C)) / span);
+    const auto span = static_cast<float>(detail::FAN_TEMP_MAX_C - detail::FAN_TEMP_MIN_C);
+    const auto value = std::clamp(temp_c, static_cast<float>(detail::FAN_TEMP_MIN_C), static_cast<float>(detail::FAN_TEMP_MAX_C));
+    return plot.x + plot.w * ((value - static_cast<float>(detail::FAN_TEMP_MIN_C)) / span);
 }
 
 auto FanCurveXForTemp(const Vec4& plot, s32 temp_c) -> float {
@@ -1467,7 +1467,7 @@ auto FanCurveYForFan(const Vec4& plot, s32 fan_percent) -> float {
 
 auto FanCurveTempForX(const Vec4& plot, float x) -> s32 {
     const auto ratio = std::clamp((x - plot.x) / plot.w, 0.f, 1.f);
-    return FAN_TEMP_MIN_C + static_cast<s32>(ratio * static_cast<float>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C) + 0.5f);
+    return detail::FAN_TEMP_MIN_C + static_cast<s32>(ratio * static_cast<float>(detail::FAN_TEMP_MAX_C - detail::FAN_TEMP_MIN_C) + 0.5f);
 }
 
 auto FanCurveFanForY(const Vec4& plot, float y) -> s32 {
@@ -1632,7 +1632,7 @@ void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurveP
         gfx::drawTextArgs(vg, plot.x - 10.f, y, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info_colour, "%d%%", fan);
     }
 
-    for (s32 temp = 0; temp <= FAN_TEMP_MAX_C; temp += 15) {
+    for (s32 temp = 0; temp <= detail::FAN_TEMP_MAX_C; temp += 15) {
         const auto x = FanCurveXForTemp(plot, temp);
         nvgBeginPath(vg);
         nvgMoveTo(vg, x, plot.y);
@@ -1713,7 +1713,7 @@ void DrawFanCurveGraph(NVGcontext* vg, Theme* theme, const std::vector<FanCurveP
                         }
                     }
                     const double fan = (1.0 - t) * (1.0 - t) * Y0 + 2.0 * (1.0 - t) * t * Y1 + t * t * Y2;
-                    return std::clamp(fan, static_cast<double>(FAN_PERCENT_MIN), static_cast<double>(FAN_PERCENT_MAX));
+                    return std::clamp(fan, static_cast<double>(detail::FAN_PERCENT_MIN), static_cast<double>(detail::FAN_PERCENT_MAX));
                 };
 
                 const auto x = FanCurveXForTemp(plot, temp);
@@ -1871,23 +1871,23 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
 } // namespace
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
-    if (FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
-        DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
+    if (detail::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
+        detail::DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
     }
 
-    if (!IsSphairaFanSysmoduleRunning() && IsSphairaFanSysmoduleInstalled()) {
-        RestartSphairaFanSysmodule();
+    if (!detail::IsSphairaFanSysmoduleRunning() && detail::IsSphairaFanSysmoduleInstalled()) {
+        detail::RestartSphairaFanSysmodule();
     }
 
-    m_handheld_curve = ReadFanCurve(
+    m_handheld_curve = detail::ReadFanCurve(
         "tskin_rate_table_handheld_on_fwdbg",
         "tskin_rate_table_handheld",
-        DefaultHandheldFanCurve()
+        detail::DefaultHandheldFanCurve()
     );
-    m_docked_curve = ReadFanCurve(
+    m_docked_curve = detail::ReadFanCurve(
         "tskin_rate_table_console_on_fwdbg",
         "tskin_rate_table_console",
-        DefaultDockedFanCurve()
+        detail::DefaultDockedFanCurve()
     );
     m_applied_handheld_curve = m_handheld_curve;
     m_applied_docked_curve = m_docked_curve;
@@ -2002,7 +2002,7 @@ auto FanCurveMenu::EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& co
         }
     }
     const double fan = (1.0 - t) * (1.0 - t) * Y0 + 2.0 * (1.0 - t) * t * Y1 + t * t * Y2;
-    return std::clamp(static_cast<s32>(fan + 0.5), FAN_PERCENT_MIN, FAN_PERCENT_MAX);
+    return std::clamp(static_cast<s32>(fan + 0.5), detail::FAN_PERCENT_MIN, detail::FAN_PERCENT_MAX);
 }
 
 void FanCurveMenu::RegenerateCurveFromControls() {
@@ -2213,9 +2213,9 @@ void FanCurveMenu::DisplayApplyMenu() {
 void FanCurveMenu::ApplyPreset(s64 index) {
     SetEditing(false);
     std::vector<FanCurvePoint> curve;
-    if (index < FAN_BUILTIN_PRESET_COUNT) {
-        curve = FanPresetCurve(index, m_docked);
-    } else if (!ReadCustomFanPreset(index - FAN_BUILTIN_PRESET_COUNT, m_docked, curve)) {
+    if (index < detail::FAN_BUILTIN_PRESET_COUNT) {
+        curve = detail::FanPresetCurve(index, m_docked);
+    } else if (!detail::ReadCustomFanPreset(index - detail::FAN_BUILTIN_PRESET_COUNT, m_docked, curve)) {
         App::Notify("Fan preset is empty"_i18n);
         return;
     }
@@ -2229,16 +2229,16 @@ void FanCurveMenu::ApplyPreset(s64 index) {
 }
 
 void FanCurveMenu::SavePreset(s64 index) {
-    auto name = ReadCustomFanPresetName(index, m_docked);
+    auto name = detail::ReadCustomFanPresetName(index, m_docked);
     if (R_FAILED(swkbd::ShowText(name, "Preset name", name.c_str(), 0, 48))) {
         return;
     }
-    name = SanitizeFanPresetName(std::move(name));
+    name = detail::SanitizeFanPresetName(std::move(name));
     if (name.empty()) {
-        name = FanCustomPresetDefaultName(index);
+        name = detail::FanCustomPresetDefaultName(index);
     }
 
-    const auto rc = SaveCustomFanPreset(index, m_docked, ActiveCurve(), name);
+    const auto rc = detail::SaveCustomFanPreset(index, m_docked, ActiveCurve(), name);
     if (R_FAILED(rc)) {
         App::PushErrorBox(rc, "Failed to save fan preset"_i18n);
         return;
@@ -2256,12 +2256,12 @@ void FanCurveMenu::AddPoint() {
         return;
     }
 
-    if (curve.size() >= static_cast<size_t>(FAN_TEMP_MAX_C - FAN_TEMP_MIN_C + 1)) {
+    if (curve.size() >= static_cast<size_t>(detail::FAN_TEMP_MAX_C - detail::FAN_TEMP_MIN_C + 1)) {
         App::Notify("No room for another fan point"_i18n);
         return;
     }
 
-    NormalizeFanCurve(curve);
+    detail::NormalizeFanCurve(curve);
 
     const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
     s64 insert_index = index + 1;
@@ -2281,15 +2281,15 @@ void FanCurveMenu::AddPoint() {
         point.temp_c = (left.temp_c + right.temp_c) / 2;
         point.fan_percent = (left.fan_percent + right.fan_percent) / 2;
         found = true;
-    } else if (curve[index].temp_c < FAN_TEMP_MAX_C) {
+    } else if (curve[index].temp_c < detail::FAN_TEMP_MAX_C) {
         const auto& base = curve[index];
-        point.temp_c = std::max(base.temp_c + 1, (base.temp_c + FAN_TEMP_MAX_C) / 2);
+        point.temp_c = std::max(base.temp_c + 1, (base.temp_c + detail::FAN_TEMP_MAX_C) / 2);
         point.fan_percent = base.fan_percent;
         found = true;
-    } else if (curve[index].temp_c > FAN_TEMP_MIN_C) {
+    } else if (curve[index].temp_c > detail::FAN_TEMP_MIN_C) {
         const auto& base = curve[index];
         insert_index = index;
-        point.temp_c = std::min(base.temp_c - 1, (FAN_TEMP_MIN_C + base.temp_c) / 2);
+        point.temp_c = std::min(base.temp_c - 1, (detail::FAN_TEMP_MIN_C + base.temp_c) / 2);
         point.fan_percent = base.fan_percent;
         found = true;
     }
@@ -2300,7 +2300,7 @@ void FanCurveMenu::AddPoint() {
     }
 
     curve.insert(curve.begin() + insert_index, point);
-    NormalizeFanCurve(curve);
+    detail::NormalizeFanCurve(curve);
     m_dirty = true;
     if (m_helper_curve_mode) {
         InitializeControlPointsFromCurve();
@@ -2317,7 +2317,7 @@ void FanCurveMenu::RemovePoint() {
 
     const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(curve.size() - 1));
     curve.erase(curve.begin() + index);
-    NormalizeFanCurve(curve);
+    detail::NormalizeFanCurve(curve);
     m_dirty = true;
     if (m_helper_curve_mode) {
         InitializeControlPointsFromCurve();
@@ -2356,21 +2356,21 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
         }
         index = std::clamp<s64>(index, 0, 2);
         
-        s32 min_temp = FAN_TEMP_MIN_C;
-        s32 max_temp = FAN_TEMP_MAX_C;
+        s32 min_temp = detail::FAN_TEMP_MIN_C;
+        s32 max_temp = detail::FAN_TEMP_MAX_C;
         if (index == 0) {
-            min_temp = FAN_TEMP_MIN_C;
+            min_temp = detail::FAN_TEMP_MIN_C;
             max_temp = controls[1].temp_c - 1;
         } else if (index == 1) {
             min_temp = controls[0].temp_c + 1;
             max_temp = controls[2].temp_c - 1;
         } else if (index == 2) {
             min_temp = controls[1].temp_c + 1;
-            max_temp = FAN_TEMP_MAX_C;
+            max_temp = detail::FAN_TEMP_MAX_C;
         }
 
-        s32 min_fan = FAN_PERCENT_MIN;
-        s32 max_fan = FAN_PERCENT_MAX;
+        s32 min_fan = detail::FAN_PERCENT_MIN;
+        s32 max_fan = detail::FAN_PERCENT_MAX;
 
         auto& point = controls[index];
         const auto next_temp = std::clamp<s32>(temp_c, min_temp, max_temp);
@@ -2390,10 +2390,10 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
         }
 
         index = std::clamp<s64>(index, 0, static_cast<s64>(curve.size() - 1));
-        const auto min_value = index ? curve[index - 1].temp_c + 1 : FAN_TEMP_MIN_C;
-        const auto max_value = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].temp_c - 1 : FAN_TEMP_MAX_C;
-        const auto min_fan = index ? curve[index - 1].fan_percent : FAN_PERCENT_MIN;
-        const auto max_fan = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].fan_percent : FAN_PERCENT_MAX;
+        const auto min_value = index ? curve[index - 1].temp_c + 1 : detail::FAN_TEMP_MIN_C;
+        const auto max_value = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].temp_c - 1 : detail::FAN_TEMP_MAX_C;
+        const auto min_fan = index ? curve[index - 1].fan_percent : detail::FAN_PERCENT_MIN;
+        const auto max_fan = index + 1 < static_cast<s64>(curve.size()) ? curve[index + 1].fan_percent : detail::FAN_PERCENT_MAX;
         auto& point = curve[index];
         const auto next_temp = std::clamp<s32>(temp_c, min_value, max_value);
         const auto next_fan = std::clamp<s32>(fan_percent, min_fan, max_fan);
@@ -2485,7 +2485,7 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
         "Fan curve",
         [handheld, docked, mode, live_apply](auto pbox) -> Result {
             pbox->NewTransfer("Writing Atmosphere fan curve and restarting fan module...");
-            return ApplyFanCurves(handheld, docked, mode);
+            return detail::ApplyFanCurves(handheld, docked, mode);
         },
         [this, live_apply, handheld, docked](Result rc){
             if (R_FAILED(rc)) {
@@ -2494,7 +2494,7 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
                     3.f,
                     [](bool confirmed){
                         if (confirmed) {
-                            RebootAfterSetting();
+                            detail::RebootAfterSetting();
                         }
                     }
                 );

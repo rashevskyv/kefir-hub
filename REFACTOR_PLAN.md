@@ -16,8 +16,8 @@ every file is fair game — there is no merge-conflict constraint.
    your job is to keep the code structurally sound: every moved function keeps its exact
    signature, every new `.cpp` is added to `sphaira/CMakeLists.txt` (the source list starts
    around line 40), every new header has `#pragma once`.
-   *Примітка:* Збірка проекту виконується користувачем вручну, агенту самостійно збирати
-   програму не потрібно.
+    *Примітка:* Збірка проекту виконується користувачем вручну, агенту самостійно збирати
+    програму не потрібно. Запитувати користувача про збірку також не потрібно.
 4. **Anonymous-namespace helpers** that end up used from more than one `.cpp` must move to
    a named `detail` namespace inside the new shared header/cpp
    (e.g. `sphaira::ui::menu::hats::detail`). Helpers used by only one new `.cpp` stay in
@@ -55,8 +55,8 @@ Create directory `sphaira/source/ui/menus/cheats/` and matching headers under
 |---|---|---|
 | [x] 2.1 | `ui/menus/settings/settings_fs_utils.hpp/.cpp` | Generic file/string helpers from the anon namespace: `Trim`, `ReadTextFile`, `ReadLines`, `WriteLines`, `StartsWith`, `SplitCommand`, `ExtractBracketName`, `ExtractIniKey`, `ExtractJsonStringField`, `FileExists`, `DirectoryExists`, `ParentPath`, `EnsureParentDirectory`, `CopyFileSimple`, `DeletePath`, `CopyDirectoryContents`, `MovePath`, `IniValueEquals`, `SetIniValue`, `ReadIniRawValue`, `SetIniRawValue`. Namespace `sphaira::ui::menu::settings::detail`. Do NOT try to deduplicate against `utils/utils.cpp` — that is a separate future task. |
 | [x] 2.2 | `ui/menus/settings/settings_translations.hpp/.cpp` | `DbiTranslationEntry`, `InterfaceTranslationEntry`, `ParseDbiTranslations`, `ParseInterfaceTranslations`, `ReadInterfaceReplacementOptions`, `FileNameFromUrl`, `TranslationExtractFolder`, `InstallDbiTranslation`, `InstallInterfaceTranslation`, plus `DownloadFile`/`UnzipFile` wrappers if only used here. |
-| 2.3 | `ui/menus/settings/settings_tweaks.hpp/.cpp` | System-tweak appliers: `IsEmummcEnabled`, `RebootAfterSetting`, `ApplyOverclock`, `Apply40Mb`, `ApplyRedirectSaves`, `Apply8GbDram`, fan-curve functions (`DefaultHandheldFanCurve`, `DefaultDockedFanCurve`, `QuietFanCurve`, and the rest of the fan/OC block), `KefirSetting`, `PackageAction` if they belong to this block. |
-| 2.4 | leftover check | `settings_menu.cpp` keeps the menu classes and UI wiring only. Target: under ~1800 lines. |
+| [x] 2.3 | `ui/menus/settings/settings_tweaks.hpp/.cpp` | System-tweak appliers: `IsEmummcEnabled`, `RebootAfterSetting`, `ApplyOverclock`, `Apply40Mb`, `ApplyRedirectSaves`, `Apply8GbDram`, fan-curve functions (`DefaultHandheldFanCurve`, `DefaultDockedFanCurve`, `QuietFanCurve`, and the rest of the fan/OC block), `KefirSetting`, `PackageAction` if they belong to this block. |
+| [x] 2.4 | leftover check | `settings_menu.cpp` keeps the menu classes and UI wiring only. Target: under ~1800 lines. |
 
 ## Phase 3 — `web.cpp` (3009 lines, rewritten by the fork)
 
