@@ -1,5 +1,46 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.181 — Рефакторинг файлового браузера: винесення операцій FsView у filebrowser_ops.cpp (Крок 6.3)
+
+### Завдання
+Виконати Крок 6.3 плану рефакторингу: перенести "важкі" операції роботи з файловою системою (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`) з класу `FsView` у файлі [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) в окремий файл реалізації [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp). Очистити `filebrowser.cpp` від цих функцій та забезпечити успішну збірку.
+
+### Підхід
+1. **Перенесення методів**:
+   - Створено файл [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp) і перенесено туди важкі методи життєвого циклу файлових операцій `FsView` (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`).
+   - Додано необхідні заголовки (`#include "download.hpp"`, `ui/menus/filebrowser.hpp`, `ui/menus/filebrowser_assoc.hpp` тощо).
+2. **Очищення `filebrowser.cpp`**:
+   - Вилучено перенесені методи з файлу [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp), залишивши в ньому лише методи рендерингу, навігації, сортування та базового оновлення.
+3. **CMakeLists.txt та Версія**:
+   - Додано `source/ui/menus/filebrowser_ops.cpp` до списку збірки у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Збільшено версію програми до `0.13.181` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake.
+* Усі залежності та виклики методів лінкуються без помилок.
+
+---
+
+## v0.13.180 — Декомпозиція меню файлового браузера: створення форвардерів (Крок 6.2)
+
+### Завдання
+Виконати Крок 6.2 плану рефакторингу: виділити складний віджет бічного меню `ForwarderForm` (призначений для конфігурування та встановлення форвардерів NRO-файлів) з [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) в окремий модуль [filebrowser_forwarder.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser_forwarder.hpp) та [filebrowser_forwarder.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_forwarder.cpp).
+
+### Підхід
+1. **Створення файлів**:
+   - Створено [filebrowser_forwarder.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser_forwarder.hpp) та [filebrowser_forwarder.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_forwarder.cpp).
+   - Перенесено туди клас `ForwarderForm` (опис форми введення імені, автора, версії, іконки) та його внутрішній допоміжний метод `LoadNroMeta()`.
+2. **Очищення `filebrowser.cpp`**:
+   - Вилучено визначення `ForwarderForm` з [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp), підключивши натомість новий заголовочний файл.
+3. **CMakeLists.txt та Версія**:
+   - Додано `source/ui/menus/filebrowser_forwarder.cpp` до [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Версію програми оновлено до `0.13.180`.
+
+### Результати тестування
+* Проект успішно скомпільовано під WSL.
+
+---
+
 ## v0.13.179 — Декомпозиція меню файлового браузера (Крок 6.1)
 
 ### Проблема
@@ -1791,25 +1832,4 @@ Filepicker-callback безумовно додавав новий рядок. Т�
 * Код успішно збирається під WSL без помилок лінкера.
 * Додано підтримку Samba-джерел у меню "Mount", а також діалоги для конфігурування нових підключень.
 * Запобігається крашам при роботі зі split-screen та перемиканні джерел.
-
----
-
-## v0.13.181 — Рефакторинг файлового браузера: винесення операцій FsView у filebrowser_ops.cpp (Крок 6.3)
-
-### Завдання
-Виконати Крок 6.3 плану рефакторингу: перенести "важкі" операції роботи з файловою системою (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`) з класу `FsView` у файлі [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) в окремий файл реалізації [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp). Очистити `filebrowser.cpp` від цих функцій та забезпечити успішну збірку.
-
-### Підхід
-1. **Перенесення методів**:
-   - Створено файл [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp) і перенесено туди важкі методи життєвого циклу файлових операцій `FsView` (`InstallFiles`, `UnzipFiles`, `ZipFiles`, `UploadFiles`, `ShareFolder`, `OnDeleteCallback`, `OnPasteCallback`, `CheckIfUpdateFolder`, `IsReadOnly`, `AnySelectedReadOnly`).
-   - Додано необхідні заголовки (`#include "download.hpp"`, `ui/menus/filebrowser.hpp`, `ui/menus/filebrowser_assoc.hpp` тощо).
-2. **Очищення `filebrowser.cpp`**:
-   - Вилучено перенесені методи з файлу [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp), залишивши в ньому лише методи рендерингу, навігації, сортування та базового оновлення.
-3. **CMakeLists.txt та Версія**:
-   - Додано `source/ui/menus/filebrowser_ops.cpp` до списку збірки у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
-   - Збільшено версію програми до `0.13.181` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
-
-### Результати тестування
-* Проект успішно збирається під WSL за допомогою cmake.
-* Усі залежності та виклики методів лінкуються без помилок.
 
