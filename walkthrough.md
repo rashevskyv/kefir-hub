@@ -1,5 +1,17 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.166 — рефакторинг cheats_menu.cpp (Крок 1.2)
+
+Завершено перенесення функцій пошуку Build ID та NCA з `cheats_menu.cpp` до `cheats_lookup.hpp/.cpp`.
+
+### 1. Перенесення функцій пошуку Build ID та NCA
+- Перенесено структури `InstalledNcaLookupResult` та `BuildIdLookupResult` разом із супутніми перерахуваннями помилок до `cheats_lookup.hpp`.
+- Перенесено функції `GetBuildIdFromInstalledNcaDetailed`, `GetBuildIdFromInstalledNca`, `ReadBuildIdFromProgramContent`, `GetBuildIdFromGameCardNca`, `GetBuildIdFromNso`, `HasProdKeys`, `HasApplicationContentMeta` та `LookupBuildIdForCheats` до `cheats_lookup.cpp`.
+- Вилучено ці функції з `cheats_menu.cpp`.
+
+### 2. Інтеграція та сумісність
+- Додано `using namespace detail;` у `sphaira::ui::menu::hats` для прозорого доступу до винесених допоміжних функцій без редагування викликів у `cheats_menu.cpp`.
+
 ## v0.13.165 — рефакторинг cheats_menu.cpp (Крок 1.1)
 
 Виділено допоміжні структури та функції роботи з `dmnt:cht` з великого файлу `cheats_menu.cpp` в окремі модулі компіляції.
