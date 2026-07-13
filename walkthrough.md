@@ -1,5 +1,17 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.199 — Виправлення clean build: підключення utils.hpp у yati.cpp
+
+### Завдання
+Виправити помилку збірки при чистому clean build, викликану відсутністю підключення `#include "utils/utils.hpp"` у файлі `yati.cpp` після перенесення `hexIdToStr` на глобальну реалізацію.
+
+### Підхід
+1. Додано `#include "utils/utils.hpp"` у `yati.cpp` для успішного резолву типу `HashStr` та функції `utils::hexIdToStr`.
+2. Оновлено версію у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) до `0.13.199`.
+
+### Результати тестування
+* Чиста збірка проекту (clean build) у WSL успішно завершена.
+
 ## v0.13.198 — URL/HTML декодування та документування відмінностей (Крок 14.5)
 
 ### Завдання

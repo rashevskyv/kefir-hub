@@ -16,6 +16,7 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "utils/utils.hpp"
 #include <sys/statvfs.h>
 
 #include <zstd.h>
