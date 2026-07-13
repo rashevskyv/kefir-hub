@@ -761,6 +761,7 @@
   "No saves selected for sync.": "Не вибрано жодного збереження для синхронізації.",
   "Sync failed!": "Синхронізація не вдалася!",
   "Sync successfull!": "Синхронізація успішна!",
+  "Sync finished with %zu failed transfers. See log for details.": "Синхронізацію завершено, невдалих передач: %zu. Деталі в лозі.",
   "Auto-syncing saves...": "Автосинхронізація збережень...",
   "Auto-sync failed!": "Автосинхронізація не вдалася!",
   "Auto-sync successfull!": "Автосинхронізація успішна!",

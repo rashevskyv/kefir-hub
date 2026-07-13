@@ -64,6 +64,8 @@
 
 ### Крок S4: Стійкість синхронізації — не обривати весь sync на першому невдалому файлі
 
+**Статус: виконано у v0.13.202.**
+
 **Проблема.** У `SyncSavesRemoteWithLocation()` перший невдалий upload (`R_THROW(Result_SaveSyncFailed)`, [save_menu_ops.cpp:1061–1064](sphaira/source/ui/menus/save/save_menu_ops.cpp:1061)) або download (через `DownloadOneBackupFile`, рядок 1083) миттєво завершує **всю** синхронізацію: решта файлів плану не передається, користувач бачить лише «Sync failed!» без переліку того, що встигло пройти. Пункт 5 розділу 9 `plan.md` («при обриві — продовжити з наступного файлу і в кінці показати список невдалих») ніколи не був реалізований. Захист від битих файлів уже є (download іде в `.temp` + rename — `DownloadOneBackupFile`, рядки 450–465) — його не чіпати.
 
 **Виправлення** (файл [save_menu_ops.cpp](sphaira/source/ui/menus/save/save_menu_ops.cpp)):

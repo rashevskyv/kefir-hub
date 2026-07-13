@@ -756,6 +756,7 @@
   "No saves selected for sync.": "No saves selected for sync.",
   "Sync failed!": "Sync failed!",
   "Sync successfull!": "Sync successfull!",
+  "Sync finished with %zu failed transfers. See log for details.": "Sync finished with %zu failed transfers. See log for details.",
   "Auto-syncing saves...": "Auto-syncing saves...",
   "Auto-sync failed!": "Auto-sync failed!",
   "Auto-sync successfull!": "Auto-sync successfull!",

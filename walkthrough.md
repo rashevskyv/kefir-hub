@@ -1,5 +1,24 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.202 — Стійкість Sync with remote: не обривати на першому невдалому файлі (Крок S4)
+
+### Завдання
+Виконати Крок S4 плану `implementation_plan.md`: перший невдалий upload або download у `SyncSavesRemoteWithLocation()` миттєво завершував усю синхронізацію (`R_THROW(Result_SaveSyncFailed)` / `R_TRY`), решта файлів плану не передавалась, а користувач бачив лише «Sync failed!» без деталей.
+
+### Підхід
+1. У [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp) (`Menu::SyncSavesRemoteWithLocation`):
+   * Фаза upload: при невдачі `curl::FromFile` ім'я архіву додається в локальний `std::vector<std::string> failed;`, пишеться `log_write`, і цикл продовжується. Лічильник прогресу інкрементується в будь-якому разі, щоб бар не завис.
+   * Фаза download: `DownloadOneBackupFile` більше не обгорнутий у `R_TRY` — при `R_FAILED` ім'я додається у `failed` і цикл триває.
+   * Скасування користувачем перериває все одразу: `R_TRY(pbox->ShouldExitResult())` на початку кожної ітерації збережено, а в обох гілках невдачі додано перевірку `pbox->ShouldExit()` (скасування теж «провалює» передачу через progress-колбек, і без цієї перевірки скасування на останньому файлі виглядало б як часткова невдача).
+   * Після обох фаз: порожній `failed` → `R_SUCCEED()` (поведінка без змін); непорожній → усі імена логуються і повертається `Result_SaveSyncFailed`.
+2. Кількість невдалих передається у завершальний колбек через захоплений `std::shared_ptr<size_t>` (без нового поля в `Menu`). При `Result_SaveSyncFailed` з ненульовим лічильником замість голого «Sync failed!» показується `OptionBox` «Sync finished with N failed transfers. See log for details.» (форматування через `std::snprintf` + `_i18n`, як в інших рядках із числами). Інші помилки (скасування, збій `ListWebdav` тощо) зберігають стару поведінку `App::PushErrorBox`.
+3. `DownloadOneBackupFile` (temp + rename) і `DownloadRemoteBackupsForEntry` (download-only перед Restore-пікером) не змінені — там обрив доречний.
+4. i18n: новий ключ `"Sync finished with %zu failed transfers. See log for details."` у [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+5. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.202`.
+
+### Результати тестування
+* Збірку виконує Агент 1 у WSL. Ручна перевірка: вимкнути Wi-Fi посеред sync із ≥3 файлами — решта файлів пробується, в кінці показано «N failed», локально немає `.temp`-сміття; повторний sync докачує лише відсутнє; скасування кнопкою B перериває одразу.
+
 ## v0.13.201 — Auto-sync після Backup використовує вибрану локацію (Крок S1)
 
 ### Завдання

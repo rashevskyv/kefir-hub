@@ -964,12 +964,21 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
         return;
     }
 
-    App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "", [this, seeds, loc](auto pbox) mutable -> Result {
+    // number of failed transfers, shared between the worker and the completion
+    // callback so partial failures can be reported without a field on Menu.
+    auto failed_count = std::make_shared<size_t>(0);
+
+    App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "", [this, seeds, loc, failed_count](auto pbox) mutable -> Result {
         // the bar runs on synthetic per-file units, so a byte-rate readout would
         // be nonsense - show only percentage/ETA.
         pbox->SetHideSpeed(true);
         fs::FsNativeSd sd_fs;
         const fs::FsPath backup_root{"/dumps"};
+
+        // names of archives whose transfer failed. a single failed file no
+        // longer aborts the whole sync - the rest of the plan is still tried
+        // and the failures are summarised at the end.
+        std::vector<std::string> failed;
 
         // full sync plan, built before any transfer starts. uploads run as one
         // phase with its own counter, downloads follow as a second phase.
@@ -1063,10 +1072,16 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
 
             auto res = curl::FromFile(api);
             if (!res.success) {
+                // a user cancel also fails the transfer (the progress callback
+                // returns false) - that must still abort the whole sync.
+                R_TRY(pbox->ShouldExitResult());
+                // otherwise keep going with the next file; the failure is
+                // reported in the final summary.
                 log_write("[SYNC] failed to upload: %s\n", u.name.c_str());
-                R_THROW(Result_SaveSyncFailed);
+                failed.emplace_back(u.name);
             }
 
+            // the file counts as processed either way so the bar can't stall.
             pbox->UpdateTransfer(static_cast<s64>(i + 1) * SYNC_PROGRESS_SCALE, static_cast<s64>(uploads.size()) * SYNC_PROGRESS_SCALE);
         }
 
@@ -1084,16 +1099,43 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
             set_entry_visuals(e);
             pbox->SetActionName("WebDAV → SD"_i18n + ": " + d.name);
 
-            R_TRY(DownloadOneBackupFile(&sd_fs, pbox, loc, e, d.remote_rel, d.name, d.local_path,
-                static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE));
+            const auto rc = DownloadOneBackupFile(&sd_fs, pbox, loc, e, d.remote_rel, d.name, d.local_path,
+                static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE);
+            if (R_FAILED(rc)) {
+                // a user cancel also fails the transfer (the progress callback
+                // returns false) - that must still abort the whole sync.
+                if (pbox->ShouldExit()) {
+                    return rc;
+                }
+                // DownloadOneBackupFile already logged the failure.
+                failed.emplace_back(d.name);
+            }
 
+            // the file counts as processed either way so the bar can't stall.
             pbox->UpdateTransfer(static_cast<s64>(i + 1) * SYNC_PROGRESS_SCALE, static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE);
         }
 
+        if (!failed.empty()) {
+            for (const auto& name : failed) {
+                log_write("[SYNC] failed transfer: %s\n", name.c_str());
+            }
+            *failed_count = failed.size();
+            R_THROW(Result_SaveSyncFailed);
+        }
+
         R_SUCCEED();
-    }, [](Result rc){
+    }, [failed_count](Result rc){
         if (R_FAILED(rc)) {
-            App::PushErrorBox(rc, "Sync failed!"_i18n);
+            // partial failure: everything else was still transferred, so show
+            // a summary instead of the bare error box. any other failure
+            // (cancel, listing error, ...) keeps the old error box.
+            if (rc == Result_SaveSyncFailed && *failed_count) {
+                char buf[128];
+                std::snprintf(buf, sizeof(buf), "Sync finished with %zu failed transfers. See log for details."_i18n.c_str(), *failed_count);
+                App::Push<OptionBox>(buf, "OK"_i18n);
+            } else {
+                App::PushErrorBox(rc, "Sync failed!"_i18n);
+            }
         } else {
             App::Notify("Sync successfull!"_i18n);
         }
