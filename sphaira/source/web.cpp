@@ -70,13 +70,6 @@ auto GetShareFolderRoot() -> fs::FsPath {
     return g_share_folder_root;
 }
 
-auto IsImagePath(std::string_view name) -> bool {
-    const auto ext = PathExtension(name);
-    return ExtensionEquals(ext, "png") || ExtensionEquals(ext, "jpg") || 
-           ExtensionEquals(ext, "jpeg") || ExtensionEquals(ext, "gif") || 
-           ExtensionEquals(ext, "bmp");
-}
-
 auto BuildFolderPage(std::string path_str) -> std::string {
     if (path_str.empty()) {
         path_str = GetShareFolderRoot().toString();
@@ -716,27 +709,6 @@ void HandleDelete(Socket sock, const std::string& query) {
     SendResponse(sock, "200 OK", "text/plain", "Deleted");
 }
 
-
-auto JsonEscape(std::string_view in) -> std::string {
-    std::string out;
-    out.reserve(in.size());
-    for (const auto c : in) {
-        if (c == '"') {
-            out += "\\\"";
-        } else if (c == '\\') {
-            out += "\\\\";
-        } else if (c == '\n') {
-            out += "\\n";
-        } else if (c == '\r') {
-            out += "\\r";
-        } else if (c == '\t') {
-            out += "\\t";
-        } else {
-            out += c;
-        }
-    }
-    return out;
-}
 
 void ScanDirectoryRecursive(fs::FsNativeSd& fs, const std::string& start_path, std::vector<std::pair<std::string, s64>>& out_files) {
     struct StackEntry {
