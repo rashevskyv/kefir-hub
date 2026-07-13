@@ -20,7 +20,7 @@ private:
     void FetchCheats();
     void FetchCheatsFromNxDb();
     void FetchKefirBuildIdFromVersionMap();
-    void FetchCheatsFileAndExtractBuildIds();
+    void FetchCheatsFileAndExtractBuildIds();  // Version not in db, show not found
     void FetchNxDbCheatsFromGithub(const std::string& build_id);
     void FetchKefirCheatsFromGithub(const std::string& build_id);
     void CacheNxDbCheatFile(const std::string& content);
@@ -28,7 +28,7 @@ private:
     void DownloadCheats();
     void DeleteCheat();
     void ShowExistingCheats();
-    void PreviewCheat();
+    void PreviewCheat();  // View cheat content before downloading
     void RunBuildIdDiagnostics(bool fetch_on_success);
 
 private:

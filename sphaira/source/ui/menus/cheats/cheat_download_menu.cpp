@@ -322,7 +322,7 @@ void CheatDownloadMenu::Draw(NVGcontext* vg, Theme* theme) {
         // Adjust text offset based on source type
         float text_offset = (m_source == CheatSource::Cheatslips) ? text_xoffset : text_xoffset + 50.f;
 
-        // Draw cheat name
+        // Draw cheat name (removed source badges - they're only in View Cheats)
         gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 18.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
             theme->GetColour(text_id),
