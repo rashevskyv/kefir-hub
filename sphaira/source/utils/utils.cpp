@@ -616,4 +616,33 @@ bool rebootToPayload(const char* path) {
     return false;
 }
 
+std::string Trim(std::string str) {
+    const auto first = str.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        return {};
+    }
+    const auto last = str.find_last_not_of(" \t\r\n");
+    str = str.substr(first, last - first + 1);
+    if (str.size() >= 2 && ((str.front() == '\'' && str.back() == '\'') || (str.front() == '"' && str.back() == '"'))) {
+        str = str.substr(1, str.size() - 2);
+    }
+    return str;
+}
+
+std::string TrimAsciiWhitespace(std::string value) {
+    while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) {
+        value.pop_back();
+    }
+
+    size_t start{};
+    while (start < value.size() && (value[start] == ' ' || value[start] == '\t' || value[start] == '\r' || value[start] == '\n')) {
+        start++;
+    }
+
+    if (start) {
+        value.erase(0, start);
+    }
+    return value;
+}
+
 } // namespace sphaira::utils

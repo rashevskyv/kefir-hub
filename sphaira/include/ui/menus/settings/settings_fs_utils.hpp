@@ -6,7 +6,7 @@
 
 namespace sphaira::ui::menu::settings::detail {
 
-auto Trim(std::string str) -> std::string;
+
 auto ReadTextFile(const std::string& path) -> std::string;
 auto ReadLines(const std::string& path) -> std::vector<std::string>;
 auto WriteLines(const std::string& path, const std::vector<std::string>& lines) -> Result;

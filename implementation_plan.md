@@ -65,7 +65,7 @@
 - Додати `#include "utils/utils.hpp"`.
 - Замінити виклики `hexIdToStr` на `utils::hexIdToStr`.
 
-### Крок 14.3: Об'єднання функцій `Trim`
+### Крок 14.3: Об'єднання функцій `Trim` [ВИКОНАНО у v0.13.196]
 Винесення спільних утилят обрізання пробілів у `utils/utils.hpp`.
 
 #### [MODIFY] [utils.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/utils.hpp)

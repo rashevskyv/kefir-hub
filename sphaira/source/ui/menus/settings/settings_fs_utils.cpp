@@ -1,5 +1,6 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "fs.hpp"
+#include "utils/utils.hpp"
 #include <minIni.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -12,19 +13,6 @@
 #include <array>
 
 namespace sphaira::ui::menu::settings::detail {
-
-auto Trim(std::string str) -> std::string {
-    const auto first = str.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) {
-        return {};
-    }
-    const auto last = str.find_last_not_of(" \t\r\n");
-    str = str.substr(first, last - first + 1);
-    if (str.size() >= 2 && ((str.front() == '\'' && str.back() == '\'') || (str.front() == '"' && str.back() == '"'))) {
-        str = str.substr(1, str.size() - 2);
-    }
-    return str;
-}
 
 auto ReadTextFile(const std::string& path) -> std::string {
     std::ifstream file{path};
@@ -65,7 +53,7 @@ auto WriteLines(const std::string& path, const std::vector<std::string>& lines) 
 }
 
 auto ExtractBracketName(const std::string& line) -> std::string {
-    const auto trimmed = Trim(line);
+    const auto trimmed = ::sphaira::utils::Trim(line);
     if (trimmed.size() < 3 || trimmed.front() != '[' || trimmed.back() != ']') {
         return {};
     }
@@ -74,11 +62,11 @@ auto ExtractBracketName(const std::string& line) -> std::string {
     if (!name.empty() && name.front() == '*') {
         name.erase(name.begin());
     }
-    return Trim(name);
+    return ::sphaira::utils::Trim(name);
 }
 
 auto ExtractIniKey(const std::string& line) -> std::string {
-    const auto trimmed = Trim(line);
+    const auto trimmed = ::sphaira::utils::Trim(line);
     if (trimmed.empty() || trimmed.front() == ';' || trimmed.front() == '#') {
         return {};
     }
@@ -88,7 +76,7 @@ auto ExtractIniKey(const std::string& line) -> std::string {
         return {};
     }
 
-    return Trim(trimmed.substr(0, pos));
+    return ::sphaira::utils::Trim(trimmed.substr(0, pos));
 }
 
 auto StartsWith(const std::string& str, const char* prefix) -> bool {
@@ -311,7 +299,7 @@ auto ReadIniRawValue(const std::string& path, const std::string& section, const 
             return {};
         }
 
-        return Trim(line.substr(pos + 1));
+        return ::sphaira::utils::Trim(line.substr(pos + 1));
     }
 
     return {};
@@ -341,7 +329,7 @@ auto SetIniRawValue(const std::string& path, const std::string& section, const s
     }
 
     if (section_begin == lines.end()) {
-        if (!lines.empty() && !Trim(lines.back()).empty()) {
+        if (!lines.empty() && !::sphaira::utils::Trim(lines.back()).empty()) {
             lines.emplace_back();
         }
         lines.emplace_back("[" + section + "]");

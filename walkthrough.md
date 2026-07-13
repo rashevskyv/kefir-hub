@@ -1,5 +1,24 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.196 — Об'єднання функцій Trim та TrimAsciiWhitespace (Крок 14.3)
+
+### Завдання
+Виконати Крок 14.3 плану дедуплікації:
+1. Винести спільні утиліти обрізання пробілів `Trim` та `TrimAsciiWhitespace` у загальний модуль `utils/utils.hpp` та `utils/utils.cpp` у просторі назв `sphaira::utils`.
+2. Видалити локальні реалізації та оголошення `Trim` та `TrimAsciiWhitespace` з `settings_fs_utils.hpp`, `settings_fs_utils.cpp`, `kefir_firmware.hpp`, `kefir_firmware.cpp`.
+3. Замінити використання на спільні функції.
+
+### Підхід
+1. **utils.hpp / utils.cpp**: Додано оголошення та реалізації `std::string Trim(std::string str);` та `std::string TrimAsciiWhitespace(std::string str);` у `sphaira::utils`.
+2. **settings_fs_utils.hpp / settings_fs_utils.cpp**: Видалено локальну `Trim` і замінено всі виклики на `::sphaira::utils::Trim`.
+3. **settings_tweaks.cpp / settings_translations.cpp**: Замінено всі виклики `Trim` на `::sphaira::utils::Trim`.
+4. **kefir_firmware.hpp / kefir_firmware.cpp**: Видалено локальні `Trim` та `TrimAsciiWhitespace`, підключено `"utils/utils.hpp"` та замінено виклики на `::sphaira::utils::TrimAsciiWhitespace`.
+5. **kefir_changelog.cpp**: Замінено виклики `Trim` та `TrimAsciiWhitespace` на `::sphaira::utils::TrimAsciiWhitespace`.
+6. **CMake**: Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.196`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою `build.sh`.
+
 ## v0.13.195 — Дедуплікація hexIdToStr та HashStr (Крок 14.2)
 
 ### Завдання

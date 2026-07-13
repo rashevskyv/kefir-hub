@@ -121,7 +121,7 @@ auto ParseInterfaceTranslations(const std::string& path) -> std::vector<Interfac
             continue;
         }
 
-        const auto cmd = SplitCommand(Trim(line));
+        const auto cmd = SplitCommand(::sphaira::utils::Trim(line));
         if (cmd.size() >= 3 && cmd[0] == "download") {
             current.zip_url = cmd[1];
         }

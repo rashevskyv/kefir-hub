@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "download.hpp"
 #include "threaded_file_transfer.hpp"
+#include "utils/utils.hpp"
 #include <yyjson.h>
 #include <algorithm>
 #include <cctype>
@@ -19,23 +20,6 @@ constexpr const char* FIRMWARE_DEST = "/firmware";
 constexpr const char* CACHE_DIR = "/config/kefir-updater";
 constexpr const char* FIRMWARE_ZIP = "/config/kefir-updater/firmware.zip";
 
-
-auto Trim(std::string value) -> std::string {
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back()))) {
-        value.pop_back();
-    }
-
-    size_t start{};
-    while (start < value.size() && std::isspace(static_cast<unsigned char>(value[start]))) {
-        start++;
-    }
-
-    if (start) {
-        value.erase(0, start);
-    }
-    return value;
-}
-
 auto ReadLineNumber(const char* path, size_t line_index) -> std::string {
     FILE* file = std::fopen(path, "r");
     if (!file) {
@@ -50,7 +34,7 @@ auto ReadLineNumber(const char* path, size_t line_index) -> std::string {
         }
     }
 
-    auto value = Trim(line);
+    auto value = ::sphaira::utils::TrimAsciiWhitespace(line);
     return value.empty() ? "Not Found" : value;
 }
 
@@ -206,24 +190,8 @@ auto GetFirmwareTargetName() -> std::string {
     return emummc ? "emuMMC" : "sysMMC";
 }
 
-auto TrimAsciiWhitespace(std::string value) -> std::string {
-    while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) {
-        value.pop_back();
-    }
-
-    size_t start{};
-    while (start < value.size() && (value[start] == ' ' || value[start] == '\t' || value[start] == '\r' || value[start] == '\n')) {
-        start++;
-    }
-
-    if (start) {
-        value.erase(0, start);
-    }
-    return value;
-}
-
 auto IsVersionHeaderLine(const std::string& line) -> bool {
-    const auto trimmed = TrimAsciiWhitespace(line);
+    const auto trimmed = ::sphaira::utils::TrimAsciiWhitespace(line);
     if (!IsFullBoldLine(trimmed)) {
         return false;
     }

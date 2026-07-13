@@ -65,4 +65,10 @@ Result requestForcedReboot();
 // Returns true on success, false on failure
 bool rebootToPayload(const char* path);
 
+// Trims leading/trailing whitespace and removes surrounding quotes if present
+std::string Trim(std::string str);
+
+// Trims leading/trailing whitespace characters (space, tab, CR, LF)
+std::string TrimAsciiWhitespace(std::string str);
+
 } // namespace sphaira::utils

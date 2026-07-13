@@ -135,7 +135,7 @@ auto EntryDisplayName(const UpdaterEntry& entry) -> std::string {
     auto name = entry.name;
     if (name.starts_with("Kefir")) {
         name.erase(0, std::strlen("Kefir"));
-        name = detail::Trim(name);
+        name = ::sphaira::utils::TrimAsciiWhitespace(name);
     }
     return name.empty() ? "Version" : "Version " + name;
 }

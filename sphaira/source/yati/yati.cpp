@@ -433,7 +433,7 @@ auto GetTicketCollection(const nca::Header& header, std::span<TikCollection> tik
 
 Result HasRequiredTicket(const nca::Header& header, TikCollection* ticket) {
     if (isRightsIdValid(header.rights_id)) {
-        log_write("looking for ticket %s\n", utils::hexIdToStr(header.rights_id).str);
+        log_write("looking for ticket %s\n", ::sphaira::utils::hexIdToStr(header.rights_id).str);
         R_UNLESS(ticket, Result_YatiTicketNotFound);
         log_write("ticket found\n");
     }
@@ -1038,7 +1038,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
     NcmContentId content_id{};
     std::memcpy(std::addressof(content_id), nca.hash, sizeof(content_id));
 
-    log_write("old id: %s new id: %s\n", utils::hexIdToStr(nca.content_id).str, utils::hexIdToStr(content_id).str);
+    log_write("old id: %s new id: %s\n", ::sphaira::utils::hexIdToStr(nca.content_id).str, ::sphaira::utils::hexIdToStr(content_id).str);
     if (!config.skip_nca_hash_verify && !nca.modified) {
         if (std::memcmp(&nca.content_id, nca.hash, sizeof(nca.content_id))) {
             log_write("nca hash is invalid!!!!\n");
@@ -1104,8 +1104,8 @@ Result Yati::InstallCnmtNca(std::span<TikCollection> tickets, CnmtCollection& cn
             continue;
         }
 
-        const auto str = utils::hexIdToStr(info.content_id);
-        const auto it = std::ranges::find_if(collections, [&str](auto& e){
+        const auto str = ::sphaira::utils::hexIdToStr(info.content_id);
+        const auto it = std::ranges::find_if(collections, [&str](const auto& e){
             return FindIC(e.name, str.str);
         });
 

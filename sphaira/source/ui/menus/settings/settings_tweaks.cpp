@@ -164,7 +164,7 @@ auto SanitizeFanPresetName(std::string name) -> std::string {
             ch = ' ';
         }
     }
-    return Trim(std::move(name));
+    return ::sphaira::utils::Trim(std::move(name));
 }
 
 auto FanBuiltinPresetLabels() -> std::vector<std::string> {
@@ -200,11 +200,11 @@ auto FanPercentToByte(s32 value) -> s32 {
 }
 
 auto DecodeAtmosphereString(std::string value) -> std::string {
-    value = Trim(std::move(value));
+    value = ::sphaira::utils::Trim(std::move(value));
     if (StartsWith(value, "str!")) {
-        value = Trim(value.substr(4));
+        value = ::sphaira::utils::Trim(value.substr(4));
     }
-    return Trim(std::move(value));
+    return ::sphaira::utils::Trim(std::move(value));
 }
 
 auto ParseSignedIntegers(const std::string& value) -> std::vector<s32> {
@@ -322,7 +322,7 @@ auto ReadCustomFanPresetName(s64 index, bool docked) -> std::string {
         return {};
     }
 
-    auto name = Trim(ReadIniRawValue(FAN_PRESETS_CONFIG, FanPresetSection(docked), FanCustomPresetNameKey(index)));
+    auto name = ::sphaira::utils::Trim(ReadIniRawValue(FAN_PRESETS_CONFIG, FanPresetSection(docked), FanCustomPresetNameKey(index)));
     return name.empty() ? FanCustomPresetDefaultName(index) : name;
 }
 

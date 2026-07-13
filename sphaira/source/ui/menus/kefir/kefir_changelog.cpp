@@ -1,5 +1,6 @@
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
+#include "utils/utils.hpp"
 
 #include "ui/error_box.hpp"
 #include "ui/nvg_util.hpp"
@@ -304,7 +305,7 @@ auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, 
         }
 
         const auto is_header = IsVersionHeaderLine(line);
-        const auto is_blank = TrimAsciiWhitespace(line).empty();
+        const auto is_blank = ::sphaira::utils::TrimAsciiWhitespace(line).empty();
         const auto is_preamble = !reached_version_entries && !is_header && !is_blank;
         const auto font_size = is_header ? header_font_size : (is_preamble ? preamble_font_size : regular_font_size);
         const auto line_height = font_size * (is_header ? 1.35f : line_height_scale);
@@ -426,7 +427,7 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
     }
     result += version_content;
 
-    return Trim(result);
+    return ::sphaira::utils::TrimAsciiWhitespace(result);
 }
 
 auto BuildChangelogDisplayText(const std::string& section, bool add_bullets) -> std::string {

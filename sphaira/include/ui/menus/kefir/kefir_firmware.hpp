@@ -24,7 +24,6 @@ namespace detail {
 
 
 
-auto Trim(std::string value) -> std::string;
 auto ReadLineNumber(const char* path, size_t line_index) -> std::string;
 auto ReadFirstLine(const char* path) -> std::string;
 auto ReadSecondLine(const char* path) -> std::string;
@@ -38,7 +37,7 @@ auto MakeKefirLatestLabel(const UpdaterEntry& entry) -> std::string;
 auto ParseVersion(const std::string& version) -> std::vector<int>;
 auto IsVersionLower(const std::string& target, const std::string& current) -> bool;
 auto GetFirmwareTargetName() -> std::string;
-auto TrimAsciiWhitespace(std::string value) -> std::string;
+
 auto IsVersionHeaderLine(const std::string& line) -> bool;
 auto BuildFirmwareServicePath(const fs::FsPath& path) -> std::string;
 auto FormatFirmwareVersion(u32 version) -> std::string;
