@@ -183,7 +183,9 @@ auto CopyFileSimple(const std::string& src, const std::string& dst) -> Result {
 }
 
 auto DeletePath(const std::string& path) -> Result {
-    if (!fs::FileExists(path)) {
+    // fs::FileExists() is false for directories, so both checks are needed
+    // to keep the old stat()-based "path exists" semantics.
+    if (!fs::FileExists(path) && !fs::DirExists(path)) {
         R_SUCCEED();
     }
 
@@ -237,7 +239,9 @@ auto CopyDirectoryContents(const std::string& src, const std::string& dst) -> Re
 }
 
 auto MovePath(const std::string& src, const std::string& dst) -> Result {
-    if (!fs::FileExists(src)) {
+    // fs::FileExists() is false for directories, so both checks are needed
+    // to keep the old stat()-based "path exists" semantics.
+    if (!fs::FileExists(src) && !fs::DirExists(src)) {
         R_SUCCEED();
     }
 
