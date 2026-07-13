@@ -137,9 +137,9 @@
 
 | Крок | Новий файл | Що переносити |
 |---|---|---|
-| [ ] 11.1 | `ui/menus/cheats/cheat_download_menu.hpp/.cpp` | Клас `CheatDownloadMenu` цілком: оголошення з `cheat_game_select_menu.hpp` + всі визначення (~690–2169): `Update`, `Draw`, `OnFocusGained`, `SetIndex`, `RunBuildIdDiagnostics`, `FetchCheats`, `FetchCheatsFromNxDb`, `FetchKefirBuildIdFromVersionMap`, `FetchCheatsFileAndExtractBuildIds`, `FetchKefirCheatsFromGithub`, `FetchNxDbCheatsFromGithub`, `CacheNxDbCheatFile`, `FetchCheatsFromApi`, `DownloadCheats`, `DeleteCheat`, `ShowExistingCheats`, `PreviewCheat`. |
-| [ ] 11.2 | розбір anon-хелперів | Хелпери початку файлу (~49–275, напр. `LoadGameControlImage`) розкласти: використовується одним класом → anonymous namespace його TU; обома → `hats::detail` (у `cheats_db.hpp` або новий маленький header). |
-| [ ] 11.3 | leftover check | `cheat_game_select_menu.cpp` лишає тільки `CheatGameSelectMenu` (+ `ScanGames`). Очікувано ~700 рядків; `cheat_download_menu.cpp` ~1400. |
+| [x] 11.1 | `ui/menus/cheats/cheat_download_menu.hpp/.cpp` | Клас `CheatDownloadMenu` цілком: оголошення з `cheat_game_select_menu.hpp` + всі визначення (~690–2169): `Update`, `Draw`, `OnFocusGained`, `SetIndex`, `RunBuildIdDiagnostics`, `FetchCheats`, `FetchCheatsFromNxDb`, `FetchKefirBuildIdFromVersionMap`, `FetchCheatsFileAndExtractBuildIds`, `FetchKefirCheatsFromGithub`, `FetchNxDbCheatsFromGithub`, `CacheNxDbCheatFile`, `FetchCheatsFromApi`, `DownloadCheats`, `DeleteCheat`, `ShowExistingCheats`, `PreviewCheat`. |
+| [x] 11.2 | розбір anon-хелперів | Хелпери початку файлу (~49–275, напр. `LoadGameControlImage`) розкласти: використовується одним класом → anonymous namespace його TU; обома → `hats::detail` (у `cheats_db.hpp` або новий маленький header). |
+| [x] 11.3 | leftover check | `cheat_game_select_menu.cpp` лишає тільки `CheatGameSelectMenu` (+ `ScanGames`). Очікувано ~700 рядків; `cheat_download_menu.cpp` ~1400. |
 
 ### Фаза 12 — `web.cpp` (1739 → ціль ~1000)
 
