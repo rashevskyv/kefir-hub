@@ -1,5 +1,18 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.201 — Auto-sync після Backup використовує вибрану локацію (Крок S1)
+
+### Завдання
+Виконати Крок S1 плану `implementation_plan.md`: автосинк після Backup жорстко сканував SD-карту (`fs::FsNativeSd`), ігноруючи локацію, у яку щойно було зроблено бекап. Якщо бекап зроблено у stdio-локацію (USB/HDD чи Recent-папку), автосинк або мовчки нічого не знаходив, або вивантажував на WebDAV старіший бекап з SD і показував «Auto-sync successfull!».
+
+### Підхід
+1. У [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp) (`Menu::BackupSaves` з локацією): лямбда завершення та внутрішня ProgressBox-лямбда автосинку тепер захоплюють `location`.
+2. Жорстке `fs::FsNativeSd sd_fs;` замінено на `const auto fs = MakeFsForLocation(location);` (спільний хелпер із `save_locations.cpp`); `FindLatestBackupPath` викликається з `fs.get()`. `FindLatestBackupPath` → `CollectBackups` → `CollectDbiBackups` вже приймають `fs::Fs*` і будують шляхи від `fs->Root()`, тож жодних інших змін не потрібно.
+3. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.201`.
+
+### Результати тестування
+* Збірку виконує Агент 1 у WSL. Ручна перевірка: Backup у stdio-локацію з увімкненим `Auto-sync after backup` має вивантажити саме щойно створений ZIP; Backup на SD у стандартний `/dumps` — поведінка без змін.
+
 ## v0.13.199 — Виправлення clean build: підключення utils.hpp у yati.cpp
 
 ### Завдання

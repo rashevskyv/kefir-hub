@@ -81,7 +81,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), false, backup_root));
         }
         R_SUCCEED();
-    }, [this, entries, backup_root](Result rc){
+    }, [this, entries, location, backup_root](Result rc){
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
@@ -91,11 +91,15 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                 const auto webdav_locations = GetWebdavLocations();
                 if (!webdav_locations.empty()) {
                     const auto& loc = webdav_locations.front();
-                    App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, backup_root](auto pbox) mutable -> Result {
+                    App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, backup_root](auto pbox) mutable -> Result {
                         // the bar runs on synthetic per-file units, so a byte-rate
                         // readout would be nonsense - show only percentage/ETA.
                         pbox->SetHideSpeed(true);
-                        fs::FsNativeSd sd_fs;
+                        // scan the same fs the backup was just written to - a
+                        // backup made to a stdio location (usb hdd) must not
+                        // fall back to scanning the sd card, as that would
+                        // silently upload a stale (or no) archive.
+                        const auto fs = MakeFsForLocation(location);
                         const auto total_units = static_cast<s64>(entries.size()) * SYNC_PROGRESS_SCALE;
                         if (total_units) {
                             // one transfer for the whole batch: NewTransfer resets the
@@ -110,7 +114,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                             auto& e = entries[i];
                             detail::LoadControlEntry(e);
                             fs::FsPath latest_path;
-                            if (FindLatestBackupPath(&sd_fs, e, backup_root, latest_path)) {
+                            if (FindLatestBackupPath(fs.get(), e, backup_root, latest_path)) {
                                 std::string latest_path_str = latest_path.toString();
                                 size_t last_slash = latest_path_str.find_last_of('/');
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
