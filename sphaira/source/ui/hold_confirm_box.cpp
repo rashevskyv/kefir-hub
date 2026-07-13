@@ -7,9 +7,18 @@
 namespace sphaira::ui {
 
 HoldConfirmBox::HoldConfirmBox(std::string message, Callback callback)
+: HoldConfirmBox(std::move(message), 3.0f, std::move(callback)) {}
+
+HoldConfirmBox::HoldConfirmBox(std::string message, float hold_seconds, Callback callback)
 : m_message{std::move(message)}
+, m_hold_seconds{std::max(0.5f, hold_seconds)}
 , m_callback{std::move(callback)} {
-    m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
+    if (hold_seconds != 3.0f) {
+        m_pos = Vec4{255.f, 168.f, 770.f, 384.f};
+    } else {
+        m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
+    }
+
     SetActions(
         std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
             m_callback(false);
@@ -28,7 +37,7 @@ void HoldConfirmBox::Update(Controller* controller, TouchInfo* touch) {
         }
 
         const auto now = armTicksToNs(armGetSystemTick());
-        m_progress = std::min(1.f, static_cast<float>(now - m_hold_start) / 3'000'000'000.f);
+        m_progress = std::min(1.f, static_cast<float>(now - m_hold_start) / (m_hold_seconds * 1'000'000'000.f));
         if (m_progress >= 1.f) {
             m_callback(true);
             SetPop();
@@ -43,7 +52,7 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     gfx::dimBackground(vg);
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 
-    constexpr float padding = 38.f;
+    const float padding = (m_hold_seconds != 3.0f) ? 34.f : 38.f;
     nvgSave(vg);
     float font_size = 22.f;
     if (m_message.length() < 60) {
@@ -59,10 +68,13 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     
     float bounds[4]{};
     nvgFontSize(vg, font_size);
-    nvgTextBoxBounds(vg, m_pos.x + padding, m_pos.y + 30.f, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+    
+    float text_area_h = (m_hold_seconds != 3.0f) ? (m_pos.h - 82.f) : (m_pos.h - 86.f - 30.f);
+    float text_y_start = (m_hold_seconds != 3.0f) ? m_pos.y : (m_pos.y + 30.f);
+
+    nvgTextBoxBounds(vg, m_pos.x + padding, text_y_start, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
     float text_h = bounds[3] - bounds[1];
-    float text_area_h = m_pos.h - 86.f - 30.f;
-    float text_y = m_pos.y + 30.f + (text_area_h - text_h) / 2.f;
+    float text_y = text_y_start + (text_area_h - text_h) / 2.f;
 
     gfx::drawTextBox(
         vg, m_pos.x + padding, text_y, font_size, m_pos.w - padding * 2.f,
@@ -70,20 +82,35 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     );
     nvgRestore(vg);
 
-    const Vec4 button{m_pos.x, m_pos.y + m_pos.h - 86.f, m_pos.w, 86.f};
+    const float btn_h = (m_hold_seconds != 3.0f) ? 82.f : 86.f;
+    const Vec4 button{m_pos.x, m_pos.y + m_pos.h - btn_h, m_pos.w, btn_h};
     gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-    gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f});
+    
+    if (m_hold_seconds != 3.0f) {
+        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 160.f, button.y + 10.f, button.w - 320.f, button.h - 20.f});
+        const Vec4 bar{button.x + 180.f, button.y + button.h - 22.f, button.w - 360.f, 6.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
 
-    const Vec4 bar{button.x + 178.f, button.y + button.h - 22.f, button.w - 356.f, 6.f};
-    gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
-    gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
+        const auto hold_text = "Hold A to continue"_i18n;
+        gfx::drawText(
+            vg, button.x + button.w / 2.f, button.y + 35.f, 24.f,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED),
+            hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
+        );
+    } else {
+        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f});
+        const Vec4 bar{button.x + 178.f, button.y + button.h - 22.f, button.w - 356.f, 6.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
 
-    const auto hold_text = "Hold A for 3 seconds to continue"_i18n;
-    gfx::drawText(
-        vg, button.x + button.w / 2.f, button.y + 35.f, 22.f,
-        theme->GetColour(ThemeEntryID_TEXT_SELECTED),
-        hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
-    );
+        const auto hold_text = "Hold A for 3 seconds to continue"_i18n;
+        gfx::drawText(
+            vg, button.x + button.w / 2.f, button.y + 35.f, 22.f,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED),
+            hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
+        );
+    }
 }
 
 } // namespace sphaira::ui

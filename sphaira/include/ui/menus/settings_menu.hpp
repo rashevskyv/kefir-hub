@@ -120,64 +120,6 @@ private:
     std::unique_ptr<List> m_list;
 };
 
-struct FanCurveSensorReader;
-
-struct FanCurveMenu final : MenuBase {
-    FanCurveMenu();
-    ~FanCurveMenu();
-
-    auto GetShortTitle() const -> const char* override { return "Fan curve"; }
-    void Update(Controller* controller, TouchInfo* touch) override;
-    void Draw(NVGcontext* vg, Theme* theme) override;
-
-private:
-    void RefreshActions();
-    void SetIndex(s64 index);
-    void SetEditing(bool editing);
-    void SwitchProfile();
-    void DisplayPresets();
-    void DisplaySavePreset();
-    void DisplayApplyMenu();
-    void ApplyPreset(s64 index);
-    void SavePreset(s64 index);
-    void AddPoint();
-    void RemovePoint();
-    void AdjustSelectedFan(s32 delta);
-    void AdjustSelectedTemp(s32 delta);
-    void SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent);
-    auto HandleGraphTouch(TouchInfo* touch) -> bool;
-    void ApplyCurves(FanCurveApplyMode mode);
-    void OnBack();
-    auto ActiveCurve() -> std::vector<FanCurvePoint>&;
-    auto ActiveCurve() const -> const std::vector<FanCurvePoint>&;
-    auto ActiveControlPoints() -> std::vector<FanCurvePoint>&;
-    auto ActiveControlPoints() const -> const std::vector<FanCurvePoint>&;
-    auto ActiveOriginalTemps() -> std::vector<s32>&;
-    auto ActiveOriginalTemps() const -> const std::vector<s32>&;
-    void RegenerateCurveFromControls();
-    void InitializeControlPointsFromCurve();
-    auto EvaluateBezierFanPercent(const std::vector<FanCurvePoint>& controls, s32 temp_c) const -> s32;
-    void RefreshSubHeading();
-
-private:
-    std::vector<FanCurvePoint> m_handheld_curve;
-    std::vector<FanCurvePoint> m_docked_curve;
-    std::vector<FanCurvePoint> m_applied_handheld_curve;
-    std::vector<FanCurvePoint> m_applied_docked_curve;
-    std::vector<FanCurvePoint> m_handheld_control_points;
-    std::vector<FanCurvePoint> m_docked_control_points;
-    std::vector<s32> m_handheld_original_temps;
-    std::vector<s32> m_docked_original_temps;
-    s64 m_index{};
-    bool m_docked{};
-    bool m_dirty{};
-    bool m_editing{};
-    bool m_touch_dragging{};
-    bool m_sysmodule_enabled{};
-    bool m_helper_curve_mode{false}; // disabled by default (auxiliary mode)
-    std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
-    std::unique_ptr<List> m_list;
-};
 
 struct ThemesMenu final : MenuBase {
     ThemesMenu();

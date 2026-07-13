@@ -1,6 +1,34 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.187 — Декомпозиція меню налаштувань: винесення редактора кривої вентилятора у settings_fancurve (Фаза 9)
+
+### Завдання
+Виконати Фазу 9 плану рефакторингу: декомпозиція файлу реалізації [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp) (зменшення розміру з 2604 рядків до цільових ~1400) шляхом виділення редактора кривої вентилятора в окремий модуль:
+1. **Крок 9.1 (Runtime-частина)**: `EvaluateFanPercent`, `FanCurveSensorSample`, `FanCurveSensorReader` та `SphairaFanState`.
+2. **Крок 9.2 (Малювальні хелпери)**: Допоміжні функції малювання кривої вентилятора (`DrawFanCurveGraph`, `DrawFanCurveListItem` тощо).
+3. **Крок 9.3 (Клас FanCurveMenu)**: Перенесення всього класу `FanCurveMenu` разом з його методами в новий модуль.
+4. **Крок 9.4 (Дедуплікація HoldConfirmBox та очищення)**: Очищення `settings_menu.cpp` від винесеного коду, усунення конфлікту локального `HoldConfirmBox` з глобальним шляхом його розширення.
+
+### Підхід
+1. **Створення нового модуля вентилятора**:
+   - Створено [settings_fancurve.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/settings/settings_fancurve.hpp) та [settings_fancurve.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings/settings_fancurve.cpp).
+   - Перенесено структури `FanCurveSensorSample`, `SphairaFanState`, клас `FanCurveSensorReader` та функцію `EvaluateFanPercent`.
+   - Перенесено малювальні хелпери: `FanCurveProfileLabel`, `FanCurveGraphRect`, `FanCurvePlotRect`, `FanCurveListRect`, `FanCurveListItemRect`, `FanCurveXForTemp`, `FanCurveYForFan`, `FanCurveTempForX`, `FanCurveFanForY`, `ExpandRect`, `WithAlpha`, `FormatMilliC`, `DrawHorizontalDashes`, `DrawVerticalDashes`, `DrawFanCurveSensorMarker`, `DrawFanCurveGraph`, `DrawFanCurveListItem`, `DrawFanCurveListHeader`.
+   - Перенесено оголошення та визначення методів класу `FanCurveMenu`.
+2. **Дедуплікація `HoldConfirmBox`**:
+   - Виявлено дублювання класів `HoldConfirmBox` (локальний у `settings_menu.cpp` та глобальний у `ui/hold_confirm_box.hpp`).
+   - Розширено глобальний [HoldConfirmBox](file:///d:/git/dev/sphaira/sphaira/source/ui/hold_confirm_box.cpp): додано конструктор з підтримкою кастомного часу утримання кнопки (`hold_seconds`).
+   - Вилучено локальну реалізацію `HoldConfirmBox` з `settings_menu.cpp` і замінено на використання глобального віджета. Це дозволило вирішити конфлікт лінкінгу в `settings_fancurve.cpp`.
+3. **Очищення та інтеграція**:
+   - Вилучено понад 1200 рядків коду з [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp). Цільовий розмір файлу досягнуто (~1380 рядків).
+   - Додано `settings_fancurve.cpp` до [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Підвищено версію програми до `0.13.187`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake. Бінарний файл `kefir-hub.nro` успішно згенеровано.
+
 ## v0.13.186 — Рефакторинг devoptab_common.cpp (Фаза 8)
+
 
 ### Завдання
 Виконати Фазу 8 плану рефакторингу: декомпозиція занадто великого файлу реалізації [devoptab_common.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_common.cpp) (~1660 рядків) та його заголовка на окремі логічні модулі:

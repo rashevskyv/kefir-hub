@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.186)
+set(sphaira_VERSION 0.13.187)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -52,6 +52,7 @@ add_executable(sphaira
     source/ui/menus/settings/settings_fs_utils.cpp
     source/ui/menus/settings/settings_translations.cpp
     source/ui/menus/settings/settings_tweaks.cpp
+    source/ui/menus/settings/settings_fancurve.cpp
     source/ui/menus/save_menu.cpp
     source/ui/menus/save/save_paths.cpp
     source/ui/menus/save/save_locations.cpp
