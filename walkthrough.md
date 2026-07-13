@@ -1,5 +1,29 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.190 — Декомпозиція меню вибору та завантаження читів: винесення CheatDownloadMenu в новий модуль (Фаза 11)
+
+### Завдання
+Виконати Фазу 11 плану рефакторингу: декомпозиція файлу реалізації [cheat_game_select_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/cheats/cheat_game_select_menu.cpp) (розмір 2538 рядків) шляхом виділення класу `CheatDownloadMenu` та пов'язаних з ним хелперів у новий модуль `cheat_download_menu.hpp/.cpp`:
+1. **Крок 11.1 (Оголошення та структура)**: Створення нового модуля [cheat_download_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/cheats/cheat_download_menu.hpp) та перенесення туди оголошення класу `CheatDownloadMenu` й хелперів `detail::WriteCheatFile`, `detail::ParseNxDbCheats`, `detail::ParseCheatslipsCheats`, `detail::ExtractNxDbBuildIds`.
+2. **Крок 11.2 (Перенесення реалізації та хелперів)**: Створення [cheat_download_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/cheats/cheat_download_menu.cpp) та перенесення методів `CheatDownloadMenu::*` разом із анонімними та `detail` хелперами для завантаження, очищення й парсингу читів.
+3. **Крок 11.3 (Очищення та верифікація)**: Видалення винесеного коду з `cheat_game_select_menu.cpp` (зменшення його обсягу до ~550 рядків), винесення спільних хелперів рядків читів (`IsParenthesizedNoteLine`, `StripInlineCheatComment`, `IsHexCodeLine`, `NormalizeHexCodeLine`) у спільний `cheat_files_menu.hpp/.cpp`, реєстрація нових файлів у `CMakeLists.txt` та успішна збірка проекту.
+
+### Підхід
+1. **Створення модуля `cheat_download_menu`**:
+   - Створено [cheat_download_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/cheats/cheat_download_menu.hpp) та [cheat_download_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/cheats/cheat_download_menu.cpp).
+   - Оголошено та реалізовано методи класу `CheatDownloadMenu`, включаючи логіку виявлення Build ID, завантаження читів з nx-cheats-db, CheatSlips та KefirUpdater, а також попереднього перегляду читів.
+2. **Організація спільних допоміжних функцій**:
+   - Функції `IsParenthesizedNoteLine`, `StripInlineCheatComment`, `IsHexCodeLine`, `NormalizeHexCodeLine` було винесено під простір назв `detail` у [cheat_files_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/cheats/cheat_files_menu.hpp) та [cheat_files_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/cheats/cheat_files_menu.cpp), щоб вони були доступні як для `cheat_game_select_menu.cpp` (під час імпорту читів вручну), так і для `cheat_download_menu.cpp` (під час санітизації).
+   - Оголошення `GetCheatslipsToken` було перенесено з `cheat_game_select_menu.hpp` до `cheat_files_menu.hpp`.
+3. **Очищення та інтеграція**:
+   - Вилучено близько 2000 рядків коду з [cheat_game_select_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/cheats/cheat_game_select_menu.cpp).
+   - Додано `cheat_download_menu.cpp` to [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Вирішено проблему неоднозначності типів для `curl::Header` в ініціалізаторі `FetchCheatsFromApi` шляхом явного вказання типу `std::pair<const std::string, std::string>`.
+   - Ітеровано версію програми до `0.13.190`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою `build.sh` без будь-яких помилок лінкування чи компіляції. LTO та генерація RomFS завершилися успішно.
+
 ## v0.13.189 — Декомпозиція меню резервного копіювання сейвів: винесення операцій у save_menu_ops та save_menu_detail (Фаза 10)
 
 ### Завдання

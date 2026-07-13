@@ -84,6 +84,11 @@ namespace detail {
     auto GetManualCheatImportPath(u64 title_id, const std::string& build_id) -> fs::FsPath;
     auto IsCheatHeaderLine(const std::string& line) -> bool;
     auto GetCheatHeaderName(const std::string& line) -> std::string;
+    auto IsParenthesizedNoteLine(const std::string& line) -> bool;
+    auto StripInlineCheatComment(std::string line) -> std::string;
+    auto IsHexCodeLine(const std::string& line) -> bool;
+    auto NormalizeHexCodeLine(const std::string& line) -> std::string;
+    auto GetCheatslipsToken() -> std::string;
 }
 
 } // namespace sphaira::ui::menu::hats
