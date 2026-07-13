@@ -8,6 +8,7 @@
 
 namespace sphaira::ui::menu::save::detail {
 
+// https://switchbrew.org/wiki/Flash_Filesystem#SystemSaveData
 auto GetSystemSaveName(u64 system_save_data_id) -> const char* {
     switch (system_save_data_id) {
         case 0x8000000000000000: return "fs"; break;
@@ -116,6 +117,8 @@ auto GetSystemSaveName(u64 system_save_data_id) -> const char* {
 
 void FakeNacpEntryForSystem(Entry& e) {
     e.status = title::NacpLoadStatus::Loaded;
+
+    // fake the nacp entry
     std::snprintf(e.lang.name, sizeof(e.lang.name), "%s | %016lX", GetSystemSaveName(e.system_save_data_id), e.system_save_data_id);
     std::strcpy(e.lang.author, "Nintendo");
 }

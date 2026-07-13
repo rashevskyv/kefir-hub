@@ -43,6 +43,7 @@ constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
 constexpr u32 NX_SAVE_META_VERSION = 1;
 constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
 
+// https://github.com/J-D-K/JKSV/issues/264#issuecomment-2618962807
 struct NXSaveMeta {
     u32 magic{}; // NX_SAVE_META_MAGIC
     u32 version{}; // NX_SAVE_META_VERSION
