@@ -10,6 +10,12 @@
 
 namespace sphaira::ui::menu::save {
 
+// default sphaira backup library root on the SD card. system-save backups and
+// legacy-format scans live under it; non-system (game) backups are written in
+// DBI format under DBI_SAVES_PATH instead. note: the default argument of
+// Menu::BackupSaveInternal in save_menu.hpp repeats this literal, as that
+// header cannot include this one (include cycle).
+inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";
 inline constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
 inline constexpr const char* DBI_SAVE_INFO_NAME = ".dbi_save_info.ini";
 inline constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";

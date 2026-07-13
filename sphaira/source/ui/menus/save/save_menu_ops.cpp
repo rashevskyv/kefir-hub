@@ -70,7 +70,7 @@ void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
 }
 
 void Menu::BackupSaves(std::vector<Entry> entries) {
-    BackupSaves(std::move(entries), MakeSdCardDumpLocation(), "/dumps");
+    BackupSaves(std::move(entries), MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
 void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
@@ -227,7 +227,7 @@ bool Menu::FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& ba
 }
 
 void Menu::RestoreSaves(std::vector<Entry> entries) {
-    RestoreSaves(std::move(entries), MakeSdCardDumpLocation(), "/dumps");
+    RestoreSaves(std::move(entries), MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
 void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
@@ -973,7 +973,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
         // be nonsense - show only percentage/ETA.
         pbox->SetHideSpeed(true);
         fs::FsNativeSd sd_fs;
-        const fs::FsPath backup_root{"/dumps"};
+        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
 
         // names of archives whose transfer failed. a single failed file no
         // longer aborts the whole sync - the rest of the plan is still tried

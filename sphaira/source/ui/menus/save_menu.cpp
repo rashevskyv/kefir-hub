@@ -467,7 +467,7 @@ void Menu::DisplaySaveOptions() {
 
     options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
         SyncSavesRemote();
-    }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location. Every archive missing on the other side is copied: new local backups are uploaded to WebDAV, new remote backups are downloaded to the SD card. Files with the same name are never overwritten and are not compared by date or content. After downloading from remote, use Restore to apply a backup."_i18n);
+    }, "Two-way sync of backup ZIPs for the currently selected saves with a WebDAV location. Only the backup library on the microSD card is synced: the standard /dumps folder and the DBI folder /switch/DBI/saves. Backups saved to other folders or storage devices are not covered. Every archive missing on the other side is copied: new local backups are uploaded to WebDAV, new remote backups are downloaded to the SD card. Files with the same name are never overwritten and are not compared by date or content. After downloading from remote, use Restore to apply a backup."_i18n);
 
     options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
@@ -944,7 +944,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
         state->type_enabled[system_index] = true;
     }
 
-    const fs::FsPath default_backup_root{"/dumps"};
+    const fs::FsPath default_backup_root{DEFAULT_BACKUP_ROOT};
     const auto stdio_locations = location::GetStdio(true);
 
     // de-dup key set: the default /dumps entry and every stdio mount are
@@ -1033,7 +1033,7 @@ void Menu::PromptSaveTypeOptions(bool restore) {
     }, restore ? "Begin restoring saves from the selected location."_i18n : "Begin backing up saves to the selected location."_i18n);
 
     options->Add<SidebarEntryHeader>("LOCATION"_i18n);
-    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the folder where backups will be stored or read from."_i18n);
+    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the storage and folder for backups. Game saves are always written in DBI format to /switch/DBI/saves on the selected storage; the chosen folder is used for system save backups and for finding older backups during Restore."_i18n);
     location_entry->SetCallback([this, state, location_entry]() {
         auto items = state->location_items;
         const auto picker_index = static_cast<s64>(items.size());

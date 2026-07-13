@@ -1,5 +1,27 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.203 — Константа /dumps і чесні тексти Location та Sync (Кроки S2+S3)
+
+### Завдання
+Виконати Кроки S2 і S3 плану `implementation_plan.md` одним коммітом:
+1. (S2) Прибрати дубльований жорсткий літерал `"/dumps"` та явно задокументувати в UI, що `Sync with remote` працює лише з бібліотекою бекапів на microSD.
+2. (S3) Виправити оманливий tooltip пункту `Location`, який обіцяв, що всі бекапи потраплять у вибрану теку, хоча ігрові (несистемні) бекапи завжди пишуться у DBI-теку.
+
+### Схема розташування бекапів (довідка для рев'юера)
+* **Ігрові сейви (Account/BCAT/Device/Cache/Temporary):** завжди пишуться у DBI-форматі до `/switch/DBI/saves/<гра>/<дата>/...zip` на **обраному носії** (`fs->Root()`); вибрана в `Location` тека (`backup_root`) на них не впливає. Це усвідомлене рішення id 51 — сумісність із DBI, не змінюється.
+* **Системні сейви:** пишуться у sphaira-форматі під вибрану теку (`backup_root`, стандартно `/dumps`).
+* **Legacy-структури sphaira (обидві):** лише читаються при Restore/скануванні; нові бекапи туди не пишуться.
+* **Sync with remote (SD-only за задумом):** синхронізує лише бібліотеку на microSD — стандартну теку `/dumps` (sphaira-структура) і DBI-теку `/switch/DBI/saves`. Бекапи, зроблені в інші папки (Recent) чи на stdio-носії (USB/HDD), у двобічну синхронізацію не потрапляють; завантаження з хмари лягають лише на SD. Розширення на довільні локації — окрема майбутня задача.
+
+### Підхід
+1. У [save_paths.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/save/save_paths.hpp) додано `inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";` (у стилі сусіднього `DBI_SAVES_PATH`; `fs::FsPath` не constexpr-able, тож обрано `const char*`, який неявно конвертується у `fs::FsPath`). Константою замінено всі жорсткі входження у cpp: `BackupSaves` та `RestoreSaves` (перевантаження за замовчуванням) і `SyncSavesRemoteWithLocation` у [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp), `default_backup_root` у [save_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save_menu.cpp). Літерал лишився тільки у default-аргументі `BackupSaveInternal` у `save_menu.hpp` — той хедер не може підключити `save_paths.hpp` (циклічне включення); біля константи додано коментар про це. Поведінка не змінюється.
+2. Tooltip `Sync with remote` доповнено явним поясненням SD-only-межі (стандартна тека `/dumps` і DBI-тека `/switch/DBI/saves`; інші папки/носії не охоплюються). Старий ключ i18n замінено новим синхронно в en/uk.
+3. Tooltip `Location` переписано: «Choose the storage and folder for backups. Game saves are always written in DBI format to /switch/DBI/saves on the selected storage; the chosen folder is used for system save backups and for finding older backups during Restore.» + український переклад. Старий ключ `"Choose the folder where backups will be stored or read from."` більше ніде не вживається — видалено з uk.json (в en.json його не було).
+4. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.203`.
+
+### Результати тестування
+* Збірку виконує Агент 1 у WSL. Обидва json провалідовано парсером. Поведінка Backup/Restore/Sync не змінена — лише константа і тексти; grep `"/dumps"` у save-модулях знаходить константу та задокументований default-аргумент.
+
 ## v0.13.202 — Стійкість Sync with remote: не обривати на першому невдалому файлі (Крок S4)
 
 ### Завдання

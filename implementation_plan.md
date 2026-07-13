@@ -38,6 +38,8 @@
 
 ### Крок S2: «Sync with remote» жорстко прив'язаний до SD `/dumps` — узгодити поведінку й тексти
 
+**Статус: виконано у v0.13.203 (разом із S3).**
+
 **Факт.** `Menu::SyncSavesRemoteWithLocation()` ([save_menu_ops.cpp:957–1097](sphaira/source/ui/menus/save/save_menu_ops.cpp:957)) завжди використовує `fs::FsNativeSd sd_fs;` та `const fs::FsPath backup_root{"/dumps"};` (рядки 967–968). Тобто ручна синхронізація бачить: (а) DBI-бекапи на SD (`/switch/DBI/saves`, через `CollectDbiBackups`), (б) sphaira-структуру лише під `/dumps` на SD. Бекапи, зроблені у вибрану користувачем папку (Recent) або на stdio-носій, у синхронізацію **не потрапляють**, і завантаження з хмари лягають лише на SD.
 
 **Рішення: лишити SD-only за задумом** (синхронізація визначена як «бібліотека на microSD ↔ WebDAV»; тягнути в неї довільні локації — окрема велика задача без запиту користувача), але прибрати неявність:
@@ -50,6 +52,8 @@
 ---
 
 ### Крок S3: Пікер «Location» обіцяє теку, а несистемні бекапи пишуться в `/switch/DBI/saves`
+
+**Статус: виконано у v0.13.203 (разом із S2).**
 
 **Факт.** `BackupSaveInternal()` ([save_menu_ops.cpp:749–751](sphaira/source/ui/menus/save/save_menu_ops.cpp:749)): для несистемних сейвів (`dbi_format == true`, тобто всі Account/BCAT/Device/Cache/Temporary) шлях будується як `AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm))` — тека `/switch/DBI/saves/...` на **обраному носії**, а `backup_root` (вибрана папка) ігнорується. `backup_root` реально впливає лише на системні сейви та на сканування при Restore. Це усвідомлене рішення id 51 (сумісність із DBI), його **не змінюємо**. Але UI вводить в оману: tooltip пункту `Location` ([save_menu.cpp:1036](sphaira/source/ui/menus/save_menu.cpp:1036)) каже «Choose the folder where backups will be stored or read from» без застережень.
 
