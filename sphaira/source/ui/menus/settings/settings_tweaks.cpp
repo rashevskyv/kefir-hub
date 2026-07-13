@@ -417,7 +417,7 @@ auto IsFanCurveEnabled() -> bool {
 }
 
 auto IsSphairaFanSysmoduleInstalled() -> bool {
-    return FileExists("/atmosphere/contents/00FF46554E43544C/exefs.nsp");
+    return fs::FileExists("/atmosphere/contents/00FF46554E43544C/exefs.nsp");
 }
 
 auto IsSphairaFanSysmoduleRunning() -> bool {
@@ -444,7 +444,7 @@ auto EnsureSphairaFanSysmoduleInstalled() -> Result {
 auto RestartSphairaFanSysmodule() -> Result {
     R_TRY(EnsureSphairaFanSysmoduleInstalled());
 
-    if (FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
+    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
         DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
     }
 

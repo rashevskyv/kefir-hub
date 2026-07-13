@@ -509,7 +509,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
             R_TRY(DeletePath(TRANSLATE_PACKAGE_DIR));
             fs::FsNativeSd fs;
             R_TRY(fs.CreateDirectoryRecursively(TRANSLATE_PACKAGE_DIR));
-            if (FileExists(TRANSLATE_PACKAGE_BACKUP.c_str())) {
+            if (fs::FileExists(TRANSLATE_PACKAGE_BACKUP)) {
                 R_TRY(CopyFileSimple(TRANSLATE_PACKAGE_BACKUP, std::string{TRANSLATE_PACKAGE_DIR} + "/package.ini.bkp"));
             }
             R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/lang_packs.zip", TRANSLATE_PACKAGE_DIR));
@@ -597,7 +597,7 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "Overclock status"_i18n,
         "Enable or disable Kefir overclock files."_i18n,
         [](){
-            return FileExists("/atmosphere/kips/kefir.kip");
+            return fs::FileExists("/atmosphere/kips/kefir.kip");
         },
         ApplyOverclock,
         "",
@@ -631,7 +631,7 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "8GB DRAM status"_i18n,
         "Only for consoles with physically soldered 8GB RAM."_i18n,
         [](){
-            return FileExists("/tegraexplorer/scripts/Remove_8GB-RAM_config.te");
+            return fs::FileExists("/tegraexplorer/scripts/Remove_8GB-RAM_config.te");
         },
         Apply8GbDram,
         "Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n\nTo disable it if the console does not boot:\nhekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te"_i18n,

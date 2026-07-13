@@ -527,7 +527,7 @@ void DrawFanCurveListHeader(NVGcontext* vg, Theme* theme) {
 }
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
-    if (detail::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
+    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
         detail::DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
     }
 

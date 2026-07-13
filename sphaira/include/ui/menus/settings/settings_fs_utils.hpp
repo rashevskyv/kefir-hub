@@ -16,8 +16,7 @@ auto ExtractBracketName(const std::string& line) -> std::string;
 auto ExtractIniKey(const std::string& line) -> std::string;
 auto ExtractJsonStringField(const std::string& json, const std::string& field) -> std::string;
 
-auto FileExists(const char* path) -> bool;
-auto DirectoryExists(const char* path) -> bool;
+
 auto ParentPath(const std::string& path) -> std::string;
 auto EnsureParentDirectory(const std::string& path) -> Result;
 

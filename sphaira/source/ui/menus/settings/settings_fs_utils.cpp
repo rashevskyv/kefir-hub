@@ -137,15 +137,7 @@ auto ExtractJsonStringField(const std::string& json, const std::string& field) -
     return json.substr(first_quote + 1, second_quote - first_quote - 1);
 }
 
-auto FileExists(const char* path) -> bool {
-    struct stat st {};
-    return stat(path, &st) == 0;
-}
 
-auto DirectoryExists(const char* path) -> bool {
-    struct stat st {};
-    return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
-}
 
 auto ParentPath(const std::string& path) -> std::string {
     const auto pos = path.find_last_of('/');
@@ -191,11 +183,11 @@ auto CopyFileSimple(const std::string& src, const std::string& dst) -> Result {
 }
 
 auto DeletePath(const std::string& path) -> Result {
-    if (!FileExists(path.c_str())) {
+    if (!fs::FileExists(path)) {
         R_SUCCEED();
     }
 
-    if (DirectoryExists(path.c_str())) {
+    if (fs::DirExists(path)) {
         DIR* dir = opendir(path.c_str());
         if (!dir) {
             R_THROW(fsdevGetLastResult());
@@ -232,7 +224,7 @@ auto CopyDirectoryContents(const std::string& src, const std::string& dst) -> Re
 
         const auto src_path = src + "/" + ent->d_name;
         const auto dst_path = dst == "/" ? "/" + std::string{ent->d_name} : dst + "/" + ent->d_name;
-        if (DirectoryExists(src_path.c_str())) {
+        if (fs::DirExists(src_path)) {
             fs::FsNativeSd fs;
             R_TRY(fs.CreateDirectoryRecursively(dst_path));
             R_TRY(CopyDirectoryContents(src_path, dst_path));
@@ -245,7 +237,7 @@ auto CopyDirectoryContents(const std::string& src, const std::string& dst) -> Re
 }
 
 auto MovePath(const std::string& src, const std::string& dst) -> Result {
-    if (!FileExists(src.c_str())) {
+    if (!fs::FileExists(src)) {
         R_SUCCEED();
     }
 
@@ -255,7 +247,7 @@ auto MovePath(const std::string& src, const std::string& dst) -> Result {
         R_SUCCEED();
     }
 
-    if (DirectoryExists(src.c_str())) {
+    if (fs::DirExists(src)) {
         fs::FsNativeSd fs;
         R_TRY(fs.CreateDirectoryRecursively(dst));
         R_TRY(CopyDirectoryContents(src, dst));

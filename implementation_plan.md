@@ -89,7 +89,7 @@
 - Додати `#include "utils/utils.hpp"`.
 - Замінити виклики на `sphaira::utils::TrimAsciiWhitespace` та `sphaira::utils::Trim` відповідно.
 
-### Крок 14.4: Порівняння `settings_fs_utils` та `fs.cpp`
+### Крок 14.4: Порівняння `settings_fs_utils` та `fs.cpp` [ВИКОНАНО у v0.13.197]
 > [!NOTE]
 > Локальні функції stdio-копіювання та видалення (`CopyFileSimple`, `DeletePath`, `CopyDirectoryContents`, `MovePath`) вирішено **залишити** в `settings_fs_utils.cpp` для стабільності роботи з конфігами через stdio.
 > Проте, ми замінимо перевірку існування теки:
