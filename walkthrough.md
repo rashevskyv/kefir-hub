@@ -1,5 +1,22 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.195 — Дедуплікація hexIdToStr та HashStr (Крок 14.2)
+
+### Завдання
+Виконати Крок 14.2 плану дедуплікації:
+1. Видалити локальні дубльовані визначення `struct HashStr` та функції `hexIdToStr` з чотирьох файлів коду (`save_menu.cpp`, `gc_menu.cpp`, `game_menu.cpp`, `yati.cpp`).
+2. Замінити виклики локальної `hexIdToStr` на використання спільної функції `utils::hexIdToStr` з `utils/utils.hpp`.
+
+### Підхід
+1. **save_menu.cpp**: Видалено локальну `struct HashStr` та `hexIdToStr` (вони не використовувалися в цьому файлі).
+2. **gc_menu.cpp**: Підключено `"utils/utils.hpp"`, видалено локальні структури/функції, замінено виклик `hexIdToStr(info.content_id)` на `utils::hexIdToStr(info.content_id)`.
+3. **game_menu.cpp**: Підключено `"utils/utils.hpp"`, видалено локальні структури/функції, замінено виклики `hexIdToStr` на `utils::hexIdToStr` для NCAs, квитків та сертифікатів.
+4. **yati.cpp**: Підключено `"utils/utils.hpp"`, видалено локальні структури/функції, замінено три виклики `hexIdToStr` на `utils::hexIdToStr`.
+5. **CMake**: Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.195`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою `build.sh`. Файл `kefir-hub.nro` успішно згенеровано.
+
 ## v0.13.194 — Декомпозиція класу App: виділення налаштувань відображення у новий модуль (Фаза 13)
 
 ### Завдання

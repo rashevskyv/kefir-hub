@@ -6,6 +6,7 @@
 #include "i18n.hpp"
 #include "image.hpp"
 #include "swkbd.hpp"
+#include "utils/utils.hpp"
 
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/save_menu.hpp"
@@ -222,17 +223,7 @@ auto isRightsIdValid(FsRightsId id) -> bool {
     return 0 != std::memcmp(std::addressof(id), std::addressof(empty_id), sizeof(id));
 }
 
-struct HashStr {
-    char str[0x21];
-};
 
-HashStr hexIdToStr(auto id) {
-    HashStr str{};
-    const auto id_lower = std::byteswap(*(u64*)id.c);
-    const auto id_upper = std::byteswap(*(u64*)(id.c + 0x8));
-    std::snprintf(str.str, 0x21, "%016lx%016lx", id_lower, id_upper);
-    return str;
-}
 
 auto BuildNspPath(const Entry& e, const NsApplicationContentMetaStatus& status) -> fs::FsPath {
     fs::FsPath name_buf = e.GetName();
@@ -326,7 +317,7 @@ Result BuildNspEntry(const Entry& e, const ContentInfoEntry& info, const keys::K
 
     for (auto& e : info.content_infos) {
         char nca_name[0x200];
-        std::snprintf(nca_name, sizeof(nca_name), "%s%s", hexIdToStr(e.content_id).str, e.content_type == NcmContentType_Meta ? ".cnmt.nca" : ".nca");
+        std::snprintf(nca_name, sizeof(nca_name), "%s%s", utils::hexIdToStr(e.content_id).str, e.content_type == NcmContentType_Meta ? ".cnmt.nca" : ".nca");
 
         u64 size;
         ncmContentInfoSizeToU64(std::addressof(e), std::addressof(size));
@@ -356,10 +347,10 @@ Result BuildNspEntry(const Entry& e, const ContentInfoEntry& info, const keys::K
         R_TRY(es::PatchTicket(entry.tik_data, entry.cert_data, key_gen, keys, App::GetApp()->m_dump_convert_to_common_ticket.Get()));
 
         char tik_name[0x200];
-        std::snprintf(tik_name, sizeof(tik_name), "%s%s", hexIdToStr(rights_id).str, ".tik");
+        std::snprintf(tik_name, sizeof(tik_name), "%s%s", utils::hexIdToStr(rights_id).str, ".tik");
 
         char cert_name[0x200];
-        std::snprintf(cert_name, sizeof(cert_name), "%s%s", hexIdToStr(rights_id).str, ".cert");
+        std::snprintf(cert_name, sizeof(cert_name), "%s%s", utils::hexIdToStr(rights_id).str, ".cert");
 
         out.collections.emplace_back(tik_name, offset, entry.tik_data.size());
         offset += entry.tik_data.size();

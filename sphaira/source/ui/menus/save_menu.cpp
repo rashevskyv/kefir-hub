@@ -82,17 +82,6 @@ void GetFsSaveAttr(const AccountProfileBase& acc, u8 data_type, FsSaveDataSpaceI
     }
 }
 
-struct HashStr {
-    char str[0x21];
-};
-
-HashStr hexIdToStr(auto id) {
-    HashStr str{};
-    const auto id_lower = std::byteswap(*(u64*)id.c);
-    const auto id_upper = std::byteswap(*(u64*)(id.c + 0x8));
-    std::snprintf(str.str, 0x21, "%016lx%016lx", id_lower, id_upper);
-    return str;
-}
 
 void FreeEntry(NVGcontext* vg, Entry& e) {
     nvgDeleteImage(vg, e.image);

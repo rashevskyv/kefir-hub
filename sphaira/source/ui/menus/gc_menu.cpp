@@ -15,6 +15,7 @@
 #include "dumper.hpp"
 #include "image.hpp"
 #include "title_info.hpp"
+#include "utils/utils.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -214,17 +215,7 @@ private:
     }
 };
 
-struct HashStr {
-    char str[0x21];
-};
 
-HashStr hexIdToStr(auto id) {
-    HashStr str{};
-    const auto id_lower = std::byteswap(*(u64*)id.c);
-    const auto id_upper = std::byteswap(*(u64*)(id.c + 0x8));
-    std::snprintf(str.str, 0x21, "%016lx%016lx", id_lower, id_upper);
-    return str;
-}
 
 // from Gamecard-Installer-NX
 Result fsOpenGameCardStorage(FsStorage* out, const FsGameCardHandle* handle, FsGameCardPartitionRaw partition) {
@@ -583,7 +574,7 @@ Result Menu::GcMount() {
             }
 
             // find the nca file, this will never fail for gamecards, see above comment.
-            const auto str = hexIdToStr(info.content_id);
+            const auto str = utils::hexIdToStr(info.content_id);
             const auto it = std::find_if(buf.cbegin(), buf.cend(), [str](auto& e){
                 return !std::strncmp(str.str, e.name, std::strlen(str.str));
             });
