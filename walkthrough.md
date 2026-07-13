@@ -1,5 +1,29 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.194 — Декомпозиція класу App: виділення налаштувань відображення у новий модуль (Фаза 13)
+
+### Завдання
+Виконати Фазу 13 плану рефакторингу: декомпозиція файлу реалізації [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp) (зменшення розміру файлу з ~1600 рядків) шляхом виділення методів налаштувань відображення в окремий файл реалізації `app_display_options.cpp`:
+1. **Крок 13.1**: Створити новий файл [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp) та перенести туди визначення наступних методів класу `App`:
+   - `DisplayThemeOptions`
+   - `DisplayNetworkOptions`
+   - `DisplayMiscOptions`
+   - `DisplayAdvancedOptions`
+   - `DisplayInstallOptions`
+   - `DisplayDumpOptions`
+   - `ShowEnableInstallPrompt`
+   - `ShowEnableInstallPromptOption`
+2. **Виділення `download_default_music`**: Перенести оголошення `download_default_music()` з anonymous namespace в `app.hpp` (під простором назв `sphaira`), щоб вона була доступна обом файлам.
+
+### Підхід
+1. **Новий модуль**: Створено [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp) та перенесено туди логіку рендерингу бічних панелей налаштувань.
+2. **Очищення**: Вилучено вищезгадані методи з [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp).
+3. **Оголошення**: Функцію `download_default_music()` оголошено в [app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp) та винесено з anonymous namespace в [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp).
+4. **CMake**: Новий файл зареєстровано в [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt). Версію програми оновлено до `0.13.194`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою `build.sh`. Файл `kefir-hub.nro` успішно згенеровано.
+
 ## v0.13.193 — Виправлення дуплікації функцій та відновлення LF закінчень у web.cpp (Фаза 12.5)
 
 ### Завдання

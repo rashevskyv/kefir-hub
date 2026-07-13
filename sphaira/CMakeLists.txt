@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.193)
+set(sphaira_VERSION 0.13.194)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -95,6 +95,7 @@ add_executable(sphaira
     source/app.cpp
     source/app_settings.cpp
     source/app_theme.cpp
+    source/app_display_options.cpp
     source/download.cpp
     source/dumper.cpp
     source/option.cpp

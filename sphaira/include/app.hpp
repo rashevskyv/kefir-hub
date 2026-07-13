@@ -48,6 +48,7 @@ struct AmsEmummcPaths {
 // todo: why is this global???
 void DrawElement(float x, float y, float w, float h, ThemeEntryID id);
 void DrawElement(const Vec4&, ThemeEntryID id);
+void download_default_music();
 
 class App {
 public:
