@@ -1,5 +1,32 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.198 — URL/HTML декодування та документування відмінностей (Крок 14.5)
+
+### Завдання
+Виконати Крок 14.5 плану дедуплікації: задокументувати архітектурні відмінності між ручною реалізацією `UrlDecode` у вбудованому веб-сервері та `MountCurlDevice::url_decode`, яка використовує `curl_unescape`.
+
+### Підхід
+1. Додано детальні пояснювальні коментарі до `UrlDecode` у [web_http.cpp](file:///d:/git/dev/sphaira/sphaira/source/web_http.cpp) та `MountCurlDevice::url_decode` у [devoptab_curl_device.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_curl_device.cpp) щодо уникнення залежностей у веб-сервері та використання специфічних для curl функцій декодування.
+2. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.198`.
+
+### Результати тестування
+* Чиста збірка проекту в середовищі WSL пройшла успішно.
+
+## v0.13.197 — Заміна DirectoryExists на fs::DirExists та FileExists на fs::FileExists (Крок 14.4)
+
+### Завдання
+Виконати Крок 14.4 плану дедуплікації:
+1. Видалити локальні функції `DirectoryExists` та `FileExists` у `settings_fs_utils.hpp` та `settings_fs_utils.cpp`.
+2. Замінити їх виклики на оптимізовані системні функції `fs::DirExists` та `fs::FileExists` з `fs.hpp`.
+
+### Підхід
+1. **settings_fs_utils.hpp / settings_fs_utils.cpp**: Видалено оголошення та реалізації `FileExists` та `DirectoryExists`. Всі виклики в цьому файлі перенаправлено на `fs::FileExists` та `fs::DirExists`.
+2. **settings_menu.cpp / settings_tweaks.cpp / settings_fancurve.cpp**: Замінено локальні виклики `FileExists` на `fs::FileExists`.
+3. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.197`.
+
+### Результати тестування
+* Проект успішно скомпільовано після чистого очищення та запуску збірки.
+
 ## v0.13.196 — Об'єднання функцій Trim та TrimAsciiWhitespace (Крок 14.3)
 
 ### Завдання
