@@ -1,5 +1,28 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.192 — Декомпозиція web.cpp: виділення web_http та web_screenshots (Фаза 12)
+
+### Завдання
+Виконати Фазу 12 плану рефакторингу: декомпозиція занадто великого файлу реалізації [web.cpp](file:///d:/git/dev/sphaira/sphaira/source/web.cpp) (зменшення розміру з ~1700 рядків до ~1270) шляхом виділення допоміжної логіки:
+1. **Крок 12.1 (HTTP та рядкові примітиви)**: Винесення примітивів роботи з HTTP та рядками (`PathExtension`, `ExtensionEquals`, `ContentTypeForPath`, `HtmlEscape`, `UrlEncode`, `HexValue`, `UrlDecode`, `GetQueryValue`, `SplitPathAndQuery`, `CanonicalizeAbsolutePath`, `SanitizeFileName`, `SendAll`, `SendString`, `SendResponse`, `ReadHttpRequest`, `HeaderValue`, `JsonEscape`, `IsImagePath`, `AppendLightbox`, `AppendConfirmModal`) в окремий модуль `web_http.hpp/.cpp` під простором назв `sphaira::web::detail`.
+2. **Крок 12.2 (Альбом та галерея скріншотів)**: Винесення структури `ScreenshotEntry`, допоміжних методів парсингу, сканування та порівняння скріншотів (`TryParseScreenshotEntry`, `CompareScreenshotEntries`, `ScanScreenshots`, `IsValidAlbumPath`, `ScanFolders`, `ScanFolderFiles`) та функції побудови сторінки галереї `BuildScreenshotGalleryPage` в окремий модуль `web_screenshots.hpp/.cpp`.
+3. **Крок 12.3 (Очищення web.cpp)**: Видалення виділених методів із `web.cpp`. Вхідний файл `web.cpp` тепер містить лише маршрутизацію запитів, серверний потік та публічні API методи.
+
+### Підхід
+1. **Створення модуля `web_http`**:
+   - Створено [web_http.hpp](file:///d:/git/dev/sphaira/sphaira/include/web_http.hpp) та [web_http.cpp](file:///d:/git/dev/sphaira/sphaira/source/web_http.cpp).
+   - Всі коментарі та документація примітивів перенесені дослівно.
+2. **Створення модуля `web_screenshots`**:
+   - Створено [web_screenshots.hpp](file:///d:/git/dev/sphaira/sphaira/include/web_screenshots.hpp) та [web_screenshots.cpp](file:///d:/git/dev/sphaira/sphaira/source/web_screenshots.cpp).
+3. **Очищення та інтеграція**:
+   - Зареєстровано нові файли `web_http.cpp` та `web_screenshots.cpp` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Усі посилання на винесені примітиви та функції перенаправлено на нові заголовні файли.
+   - Розмір файлу `web.cpp` успішно зменшено до 1279 рядків.
+   - Версію програми оновлено до `0.13.192`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою cmake. Бінарний файл `kefir-hub.nro` успішно згенеровано.
+
 ## v0.13.191 — Виправлення дефектів Фази 10 та Фази 11 (Відновлення втрачених коментарів)
 
 ### Завдання
