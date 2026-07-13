@@ -97,7 +97,7 @@
 #### [MODIFY] [settings_fs_utils.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings/settings_fs_utils.cpp)
 - Замінити реалізацію `DirectoryExists(const char* path)` на прямий виклик `fs::DirExists(path)` з `fs.hpp`.
 
-### Крок 14.5: URL/HTML декодування
+### Крок 14.5: URL/HTML декодування [ВИКОНАНО у v0.13.198]
 > [!NOTE]
 > Після детального аналізу вирішено **пропустити** цей крок. `UrlDecode` у `web_http.cpp` реалізована вручну для веб-сервера без залежностей, тоді як `MountCurlDevice::url_decode` використовує `curl_unescape` з libcurl. Ми додамо коментарі у код, які пояснюють цю різницю.
 

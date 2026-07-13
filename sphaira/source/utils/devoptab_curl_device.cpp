@@ -353,6 +353,8 @@ std::string MountCurlDevice::html_decode(const std::string_view& str) {
     return output;
 }
 
+// Note: This url_decode uses curl_unescape and html_decode since it runs in the curl devoptab context.
+// It differs from the manual UrlDecode implemented in web_http.cpp for the embedded web server.
 std::string MountCurlDevice::url_decode(const std::string& str) {
     auto unescaped = curl_unescape(str.c_str(), str.length());
     if (!unescaped) {

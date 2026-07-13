@@ -107,6 +107,9 @@ auto HexValue(char c) -> int {
     return -1;
 }
 
+// Note: This UrlDecode is implemented manually for the lightweight embedded web server
+// to avoid introducing libcurl dependency to the web server component.
+// It differs from MountCurlDevice::url_decode, which uses curl_unescape and html_decode.
 auto UrlDecode(std::string_view in) -> std::string {
     std::string out;
     out.reserve(in.size());
