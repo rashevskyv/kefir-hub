@@ -7,17 +7,26 @@
 namespace sphaira::ui {
 
 HoldConfirmBox::HoldConfirmBox(std::string message, Callback callback)
-: HoldConfirmBox(std::move(message), 3.0f, std::move(callback)) {}
+: m_message{std::move(message)}
+, m_hold_seconds{3.0f}
+, m_callback{std::move(callback)}
+, m_compact{false} {
+    m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
+
+    SetActions(
+        std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
+            m_callback(false);
+            SetPop();
+        }})
+    );
+}
 
 HoldConfirmBox::HoldConfirmBox(std::string message, float hold_seconds, Callback callback)
 : m_message{std::move(message)}
 , m_hold_seconds{std::max(0.5f, hold_seconds)}
-, m_callback{std::move(callback)} {
-    if (hold_seconds != 3.0f) {
-        m_pos = Vec4{255.f, 168.f, 770.f, 384.f};
-    } else {
-        m_pos = Vec4{230.f, 126.f, 820.f, 468.f};
-    }
+, m_callback{std::move(callback)}
+, m_compact{true} {
+    m_pos = Vec4{255.f, 168.f, 770.f, 384.f};
 
     SetActions(
         std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
@@ -52,7 +61,7 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     gfx::dimBackground(vg);
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 
-    const float padding = (m_hold_seconds != 3.0f) ? 34.f : 38.f;
+    const float padding = m_compact ? 34.f : 38.f;
     nvgSave(vg);
     float font_size = 22.f;
     if (m_message.length() < 60) {
@@ -69,8 +78,8 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     float bounds[4]{};
     nvgFontSize(vg, font_size);
     
-    float text_area_h = (m_hold_seconds != 3.0f) ? (m_pos.h - 82.f) : (m_pos.h - 86.f - 30.f);
-    float text_y_start = (m_hold_seconds != 3.0f) ? m_pos.y : (m_pos.y + 30.f);
+    float text_area_h = m_compact ? (m_pos.h - 82.f) : (m_pos.h - 86.f - 30.f);
+    float text_y_start = m_compact ? m_pos.y : (m_pos.y + 30.f);
 
     nvgTextBoxBounds(vg, m_pos.x + padding, text_y_start, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
     float text_h = bounds[3] - bounds[1];
@@ -82,11 +91,11 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     );
     nvgRestore(vg);
 
-    const float btn_h = (m_hold_seconds != 3.0f) ? 82.f : 86.f;
+    const float btn_h = m_compact ? 82.f : 86.f;
     const Vec4 button{m_pos.x, m_pos.y + m_pos.h - btn_h, m_pos.w, btn_h};
     gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
     
-    if (m_hold_seconds != 3.0f) {
+    if (m_compact) {
         gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 160.f, button.y + 10.f, button.w - 320.f, button.h - 20.f});
         const Vec4 bar{button.x + 180.f, button.y + button.h - 22.f, button.w - 360.f, 6.f};
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);

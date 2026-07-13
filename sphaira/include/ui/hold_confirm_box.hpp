@@ -24,6 +24,7 @@ private:
     bool m_holding{};
     u64 m_hold_start{};
     float m_progress{};
+    bool m_compact{false};
 };
 
 } // namespace sphaira::ui
