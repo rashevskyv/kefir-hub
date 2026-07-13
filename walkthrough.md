@@ -1,5 +1,28 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.189 — Декомпозиція меню резервного копіювання сейвів: винесення операцій у save_menu_ops та save_menu_detail (Фаза 10)
+
+### Завдання
+Виконати Фазу 10 плану рефакторингу: декомпозиція файлу реалізації [save_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save_menu.cpp) (зменшення розміру з 2243 рядків до цільових ~1100) шляхом виділення логіки резервного копіювання, відновлення та синхронізації сейвів:
+1. **Крок 10.1 (Операційна частина)**: Перенесення тіл методів `Menu::BackupSaves`, `Menu::CollectBackups`, `Menu::FindLatestBackupPath`, `Menu::RestoreSaves`, `Menu::StartRestore`, `Menu::ShowRestorePicker`, `Menu::ShowRestorePickerPopup`, `Menu::RestoreSavesPicked`, `Menu::DownloadRemoteBackupsForEntry`, `Menu::BuildSavePath`, `Menu::RestoreSaveInternal`, `Menu::BackupSaveInternal`, `Menu::SyncSavesRemote`, `Menu::SyncSavesRemoteWithLocation` та анонімного хелпера `DownloadOneBackupFile` в окремий модуль `save_menu_ops.cpp`.
+2. **Крок 10.2 (Спільні хелпери)**: Перенесення спільних хелперів завантаження записів (`LoadControlEntry`, `FakeNacpEntryForSystem`, `LoadControlImage`, `LoadResultIntoEntry`, `GetSystemSaveName`) в окремий модуль `save_menu_detail.hpp/.cpp`, щоб уникнути їх дублювання. Очищення `save_menu.cpp` від винесеного коду.
+
+### Підхід
+1. **Створення модуля спільних хелперів**:
+   - Створено [save_menu_detail.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/save/save_menu_detail.hpp) та [save_menu_detail.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_detail.cpp).
+   - Оголошено та визначено функції `LoadControlEntry`, `FakeNacpEntryForSystem`, `LoadControlImage`, `LoadResultIntoEntry` та `GetSystemSaveName` під простором назв `sphaira::ui::menu::save::detail`.
+2. **Створення модуля операцій сейвів**:
+   - Створено [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp), куди перенесено всі методи класу `Menu`, пов'язані з логікою бекапів, відновлення та WebDAV-синхронізації, а також анонімний хелпер `DownloadOneBackupFile`.
+3. **Очищення та інтеграція**:
+   - Вилучено понад 1000 рядків коду з [save_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save_menu.cpp). Розмір файлу успішно зменшено до 1208 рядків.
+   - Оновлено метод `Menu::Draw` для використання хелперів через префікс `detail::`.
+   - Зареєстровано нові файли `save_menu_detail.cpp` та `save_menu_ops.cpp` в [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+   - Ітеровано версію програми до `0.13.189`.
+
+### Результати тестування
+* Проект успішно збирається під WSL за допомогою `cmake --build --preset ReleaseWithInstall -j16`.
+* Лінкування та створення RomFS образу для `kefir-hub.nro` завершилося без помилок.
+
 ## v0.13.188 — Виправлення стилів HoldConfirmBox та розділення параметрів стилю та часу (Фаза 9.5)
 
 ### Завдання

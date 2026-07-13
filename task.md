@@ -36,11 +36,14 @@
     - [x] Крок 8.1: Винесення BufferedData та LruBufferedData до source/utils/devoptab_buffered.hpp/.cpp <!-- id: r8.1 -->
     - [x] Крок 8.2: Винесення PushPullThreadData, PushThreadData, PullThreadData до source/utils/devoptab_curl_thread.hpp/.cpp <!-- id: r8.2 -->
     - [x] Крок 8.3: Винесення MountCurlDevice до source/utils/devoptab_curl_device.hpp/.cpp <!-- id: r8.3 -->
-- [/] Рефакторинг settings_menu.cpp (Фаза 9):
+- [x] Рефакторинг settings_menu.cpp (Фаза 9):
     - [x] Крок 9.1: Виділення settings/settings_fancurve.hpp/.cpp (Runtime-частина: EvaluateFanPercent, FanCurveSensorSample, FanCurveSensorReader, SphairaFanState) <!-- id: r9.1 -->
     - [x] Крок 9.2: Виділення settings_fancurve.cpp (Малювальні хелпери fan-curve) <!-- id: r9.2 -->
     - [x] Крок 9.3: Винесення FanCurveMenu до settings_fancurve.hpp/.cpp <!-- id: r9.3 -->
     - [x] Крок 9.4: Очищення settings_menu.cpp та верифікація збірки <!-- id: r9.4 -->
+- [x] Рефакторинг save_menu.cpp (Фаза 10):
+    - [x] Крок 10.1: Виділення ui/menus/save/save_menu_ops.cpp (Тіла операційних методів) <!-- id: r10.1 -->
+    - [x] Крок 10.2: Очищення save_menu.cpp та верифікація збірки <!-- id: r10.2 -->
 
 
 
