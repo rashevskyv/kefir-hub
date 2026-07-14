@@ -105,6 +105,7 @@ public:
     static auto GetMtpEnable() -> bool;
     static auto GetMtpShowSd() -> bool;
     static auto GetMtpShowInstall() -> bool;
+    static auto GetMtpShowSaves() -> bool;
     static auto GetMtpNameSd() -> std::string;
     static auto GetMtpNameInstall() -> std::string;
     static auto GetFtpEnable() -> bool;
@@ -135,6 +136,7 @@ public:
     static void SetMtpEnable(bool enable);
     static void SetMtpShowSd(bool enable);
     static void SetMtpShowInstall(bool enable);
+    static void SetMtpShowSaves(bool enable);
     static void SetMtpNameSd(std::string value);
     static void SetMtpNameInstall(std::string value);
     static void SetFtpEnable(bool enable);
@@ -329,6 +331,7 @@ public:
     option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", false};
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
+    option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", false};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
     option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", false};

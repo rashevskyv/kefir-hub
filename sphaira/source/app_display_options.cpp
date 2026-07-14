@@ -404,6 +404,10 @@ void App::DisplayMtpStorageOptions(bool left_side) {
         App::SetMtpShowInstall(enable);
     }, "Enable or disable Install folder in MTP."_i18n);
 
+    options->Add<ui::SidebarEntryBool>("Show Saves (read-only)"_i18n, App::GetMtpShowSaves(), [](bool& enable){
+        App::SetMtpShowSaves(enable);
+    }, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n);
+
     auto sd_name_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("microSD card name"_i18n,
         App::GetMtpNameSd().empty() ? "Default"_i18n : App::GetMtpNameSd(),
         nullptr,

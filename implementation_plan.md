@@ -98,6 +98,8 @@
 
 ### Крок S6 (task.md id 37): Розшифровані сейви як окремий MTP-диск «Saves» (read-only)
 
+**Статус: виконано у v0.13.208.** `FsSaveProxy` у haze_helper.cpp: скан один раз при реєстрації (Account/BCAT/Device/Cache; Cache — у SdUser-просторі, як у `GetFsSaveAttr`), віртуальні рівні 1–2, lazy mount read-only з LRU-кешем на 4 маунти під м'ютексом (хендли тримають shared_ptr — виселений маунт живе до закриття хендлів), усі write-операції → `FsError_NotImplemented`, `MultiThreadTransfer=false`, опція `mtp_show_saves` (off) + тумблер у «MTP storages». Деталі й відхилення — task.md id 37 («Реалізовано»).
+
 Найскладніша задача етапу. Виконувати **лише після S5**. Повний опис — task.md id 37; тут — уточнення до актуального коду, бо task.md посилається на дорефакторингові рядки:
 - Базові класи: `FsProxyBase` — [haze_helper.cpp:143](sphaira/source/haze_helper.cpp:143), `FsProxy` — :180, `FsProxyVfs` (повністю віртуальний зразок) — :584, `FsInstallProxy` — :731.
 - Перелік сейвів: `Menu::ReadSaveEntries` — тепер [save_menu.cpp:622](sphaira/source/ui/menus/save_menu.cpp:622), `GetFsSaveAttr` — :55, `GetAccountName` — :265.

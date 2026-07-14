@@ -878,6 +878,8 @@
   "Enable or disable microSD card storage in MTP.": "Увімкнути або вимкнути сховище карти microSD в MTP.",
   "Show Install folder": "Показувати папку Install",
   "Enable or disable Install folder in MTP.": "Увімкнути або вимкнути папку Install в MTP.",
+  "Show Saves (read-only)": "Показувати Saves (лише читання)",
+  "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Показувати диск лише для читання з розшифрованими сейвами ігор. Файли можна скопіювати на ПК; запис вимкнено.",
   "microSD card name": "Назва карти microSD",
   "Set custom name for microSD card in MTP.": "Встановити власну назву для карти microSD в MTP.",
   "Install folder name": "Назва папки Install",

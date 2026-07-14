@@ -1,5 +1,31 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.208 — Диск «Saves (read-only)» у MTP (Крок S6 / id 37)
+
+### Завдання
+Виконати Крок S6 (id 37 з `task.md`): показувати розшифровані сейви ігор як окремий MTP-диск (по аналогії з microSD/Install), лише для читання, з ієрархією «гра → тип», узгодженою зі структурою бекапів id 38.
+
+### Підхід
+1. **Новий проксі `FsSaveProxy`** у [haze_helper.cpp](file:///d:/git/dev/sphaira/sphaira/source/haze_helper.cpp) (поряд з наявними `FsProxy`/`FsProxyVfs`/`FsInstallProxy`, без нового файлу — менш інвазивний варіант із «Рішення» id 37). Технічний `m_name="saves"` (не порожній — порожній зарезервовано за microSD), стандартна назва диска — `Saves (read-only)`.
+2. **Віртуальна ієрархія** `/<GameName [TitleID]>/<Account <ім'я> | BCAT | Device | Cache>/<файли сейва>`:
+   * Суфікс `[TitleID]` (`%016lX`) додається завжди; якщо назви гри немає (`title::Get` не дав NACP) — папка лише `[TitleID]`. Назва санітизується через `title::utilsReplaceIllegalCharacters` (той самий примітив, що `BuildSaveName`), обрізаються крайні пробіли/крапки; при переповненні `FsDirectoryEntry::name` обрізається лише назва, суфікс — ніколи.
+   * Підпапки типів — через перевикористаний `ui::menu::save::GetSaveTypeSubdir()` ([save_paths.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_paths.cpp)); для Account — `Account <нікнейм>`; однакові нікнейми двох акаунтів розрізняються суфіксом із перших 8 hex-символів uid; невідомий uid (видалений акаунт) — повний hex uid, як у `Menu::GetAccountName`. Кілька Cache-сейвів однієї гри розрізняються індексом (`Cache 1`, …).
+3. **Сканування один раз** при реєстрації (конструктор проксі в `haze::Init()`): `fsOpenSaveDataInfoReaderWithFilter` за типами Account/BCAT/Device/Cache (без System/SystemBcat); Cache — у просторі `FsSaveDataSpaceId_SdUser`, решта — `FsSaveDataSpaceId_User` (дзеркало `GetFsSaveAttr` із save_menu.cpp — у тексті id 37 згадувався лише User-простір, але кеш-сейви реально лежать у SdUser). Результат — незмінна мапа «гра → (тип → FsSaveDataInfo)»; `ReadDirectory` її лише читає. Імена ігор — через ref-counted `title::Init()`/`title::Get()`/`title::Exit()` навколо скану.
+4. **Каталоги рівнів 1–2 повністю віртуальні**: `GetEntryType` → Dir, `OpenDirectory`/`ReadDirectory` генерують списки з мапи (зразок — `FsProxyVfs::ReadDirectory`).
+5. **Lazy mount з LRU-кешем**: перші 2 компоненти шляху (після `FixPath`; подвійні слеші враховано) визначають сейв; `fs::FsNativeSave(..., read_only=true)` (`fsOpenReadOnlySaveDataFileSystem`) кешується у мапі з лімітом 4 і LRU-витісненням за лічильником використання; кеш під м'ютексом (операції йдуть на потоці haze і можуть перемежовуватись). Файлові/каталогові хендли тримають `shared_ptr` на маунт, тож витіснений із кешу маунт живе, доки відкриті його хендли. Сейв, який не відкрився (зайнятий грою), повертає помилку лише для свого піддерева. Деструктор проксі (через `haze::Exit()` → `g_fs_entries.clear()`) закриває всі закешовані маунти.
+6. **Read-only**: усі write-операції (`CreateFile`/`DeleteFile`/`RenameFile`/`CreateDirectory`/`DeleteDirectoryRecursively`/`RenameDirectory`/`SetFileSize`/`WriteFile`, а також відкриття з `FsOpenMode_Write|Append`) → `R_THROW(FsError_NotImplemented)` — той самий Result, яким `FsProxyVfs`/`FsInstallProxy` відмовляють у заборонених операціях. `MultiThreadTransfer` → `false`. `GetFreeSpace` кореня → 0 (нема куди писати).
+7. **Реєстрація й опція**: один запис у таблиці `MtpStorageDef` (`enabled=GetMtpShowSaves()`, без опції кастомної назви); нова опція `mtp_show_saves` (за замовчуванням **вимкнено**) в [app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp), геттер/сеттер у [app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp) за патерном S5 (сеттер перезапускає MTP через `SetMtpEnable(false)/(true)`; логіку відкату при провалі `Init()` не змінювано); тумблер «Show Saves (read-only)» з tooltip у `App::DisplayMtpStorageOptions()` ([app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp)).
+8. **i18n**: ключі «Show Saves (read-only)» і tooltip додано до [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+9. **Версія**: [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) → `0.13.208`.
+
+### Ручна перевірка (Агент 1)
+* Тумблер вимкнено за замовчуванням — диска «Saves» немає.
+* Увімкнути «Show Saves (read-only)» → диск «Saves (read-only)» у Windows поряд із microSD/Install (після перепідключення).
+* Папки ігор мають суфікс `[TitleID]`; всередині — `Account <ім'я>`/`BCAT`/`Device`/`Cache`; файли сейва читаються й копіюються на ПК.
+* Спроба запису/видалення/перейменування з ПК дає помилку без крашу консолі.
+* Сейв запущеної гри дає помилку лише на своїй папці, решта диска працює.
+* Вимкнення тумблера прибирає диск після перепідключення; root-drop install у microSD далі працює.
+
 ## v0.13.207 — Фікс рев'ю S5: чесний стан тумблера MTP при відмові старту
 
 ### Завдання

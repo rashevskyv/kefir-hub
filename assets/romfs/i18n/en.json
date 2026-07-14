@@ -874,6 +874,8 @@
   "Enable or disable microSD card storage in MTP.": "Enable or disable microSD card storage in MTP.",
   "Show Install folder": "Show Install folder",
   "Enable or disable Install folder in MTP.": "Enable or disable Install folder in MTP.",
+  "Show Saves (read-only)": "Show Saves (read-only)",
+  "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.",
   "microSD card name": "microSD card name",
   "Set custom name for microSD card in MTP.": "Set custom name for microSD card in MTP.",
   "Install folder name": "Install folder name",

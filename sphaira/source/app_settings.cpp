@@ -180,6 +180,10 @@ auto App::GetMtpShowInstall() -> bool {
     return g_app->m_mtp_show_install.Get();
 }
 
+auto App::GetMtpShowSaves() -> bool {
+    return g_app->m_mtp_show_saves.Get();
+}
+
 auto App::GetMtpNameSd() -> std::string {
     return g_app->m_mtp_name_sd.Get();
 }
@@ -441,6 +445,16 @@ void App::SetMtpShowSd(bool enable) {
 void App::SetMtpShowInstall(bool enable) {
     if (App::GetMtpShowInstall() != enable) {
         g_app->m_mtp_show_install.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpShowSaves(bool enable) {
+    if (App::GetMtpShowSaves() != enable) {
+        g_app->m_mtp_show_saves.Set(enable);
         if (App::GetMtpEnable()) {
             SetMtpEnable(false);
             SetMtpEnable(true);
