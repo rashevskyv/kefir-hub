@@ -33,7 +33,7 @@ of all configs available](https://github.com/ITotalJustice/ftpsrv/blob/master/as
 
 ## MTP
 
-MTP can be enabled via the Network menu.
+MTP can be enabled via the Network menu. You can configure which MTP storages are visible and set custom display names for them under **Settings -> Network -> MTP storages**. This allows you to toggle the visibility of the microSD card or the Install folder, and customize how they appear on your PC (e.g. setting a custom label instead of the default "microSD card"). If all storages are disabled, the MTP server will refuse to start and notify you.
 
 ### Web File Manager
 

@@ -866,5 +866,18 @@
   "Package target": "Package target",
   "Targets": "Targets",
   "Per package": "Per package",
-  "Speed": "Speed"
+  "Speed": "Speed",
+  "MTP storages": "MTP storages",
+  "Configure which folders are visible over MTP and their names.": "Configure which folders are visible over MTP and their names.",
+  "MTP Storages": "MTP Storages",
+  "Show microSD card": "Show microSD card",
+  "Enable or disable microSD card storage in MTP.": "Enable or disable microSD card storage in MTP.",
+  "Show Install folder": "Show Install folder",
+  "Enable or disable Install folder in MTP.": "Enable or disable Install folder in MTP.",
+  "microSD card name": "microSD card name",
+  "Set custom name for microSD card in MTP.": "Set custom name for microSD card in MTP.",
+  "Install folder name": "Install folder name",
+  "Set custom name for Install folder in MTP.": "Set custom name for Install folder in MTP.",
+  "No MTP storages enabled": "No MTP storages enabled",
+  "Default": "Default"
 }

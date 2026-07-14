@@ -1,5 +1,7 @@
 #include "haze_helper.hpp"
 
+#include "haze_helper.hpp"
+
 #include "app.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -9,6 +11,7 @@
 #include <algorithm>
 #include <set>
 #include <span>
+#include <functional>
 #include <haze.h>
 
 namespace sphaira::haze {
@@ -904,13 +907,50 @@ bool Init() {
         return false;
     }
 
-    g_fs_entries.emplace_back(std::make_shared<FsProxy>(std::make_unique<fs::FsNativeSd>(), "", "microSD card"));
+    struct MtpStorageDef {
+        bool enabled;
+        std::string custom_name;
+        const char* default_name;
+        std::function<std::shared_ptr<::haze::FileSystemProxyImpl>(const char* display_name)> factory;
+    };
+
+    std::vector<MtpStorageDef> storage_defs;
+    storage_defs.push_back({
+        App::GetMtpShowSd(),
+        App::GetMtpNameSd(),
+        "microSD card",
+        [](const char* display_name) {
+            return std::make_shared<FsProxy>(std::make_unique<fs::FsNativeSd>(), "", display_name);
+        }
+    });
+
 #if ENABLE_NETWORK_INSTALL
-    g_fs_entries.emplace_back(std::make_shared<FsInstallProxy>("install", "Install (NSP, XCI, NSZ, XCZ)"));
+    storage_defs.push_back({
+        App::GetMtpShowInstall(),
+        App::GetMtpNameInstall(),
+        "Install (NSP, XCI, NSZ, XCZ)",
+        [](const char* display_name) {
+            return std::make_shared<FsInstallProxy>("install", display_name);
+        }
+    });
 #endif
+
+    for (const auto& def : storage_defs) {
+        if (def.enabled) {
+            const char* name = def.custom_name.empty() ? def.default_name : def.custom_name.c_str();
+            g_fs_entries.emplace_back(def.factory(name));
+        }
+    }
+
+    if (g_fs_entries.empty()) {
+        log_write("[MTP] No MTP storages enabled\n");
+        App::Notify("No MTP storages enabled"_i18n);
+        return false;
+    }
 
     g_should_exit = false;
     if (!::haze::Initialize(haze_callback, THREAD_PRIO, THREAD_CORE, g_fs_entries)) {
+        g_fs_entries.clear();
         return false;
     }
 

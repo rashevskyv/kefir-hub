@@ -870,5 +870,18 @@
   "Package target": "Сховище пакета",
   "Targets": "Сховища",
   "Per package": "Для кожного пакета",
-  "Speed": "Швидкість"
+  "Speed": "Швидкість",
+  "MTP storages": "Сховища MTP",
+  "Configure which folders are visible over MTP and their names.": "Налаштуйте, які папки відображаються через MTP та їхні назви.",
+  "MTP Storages": "Сховища MTP",
+  "Show microSD card": "Показувати карту microSD",
+  "Enable or disable microSD card storage in MTP.": "Увімкнути або вимкнути сховище карти microSD в MTP.",
+  "Show Install folder": "Показувати папку Install",
+  "Enable or disable Install folder in MTP.": "Увімкнути або вимкнути папку Install в MTP.",
+  "microSD card name": "Назва карти microSD",
+  "Set custom name for microSD card in MTP.": "Встановити власну назву для карти microSD в MTP.",
+  "Install folder name": "Назва папки Install",
+  "Set custom name for Install folder in MTP.": "Встановити власну назву для папки Install в MTP.",
+  "No MTP storages enabled": "Не увімкнено жодного сховища MTP",
+  "Default": "За замовчуванням"
 }

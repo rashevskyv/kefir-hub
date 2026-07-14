@@ -103,6 +103,10 @@ public:
     static auto IsHbmenu() -> bool;
 
     static auto GetMtpEnable() -> bool;
+    static auto GetMtpShowSd() -> bool;
+    static auto GetMtpShowInstall() -> bool;
+    static auto GetMtpNameSd() -> std::string;
+    static auto GetMtpNameInstall() -> std::string;
     static auto GetFtpEnable() -> bool;
     static auto GetNxlinkEnable() -> bool;
     static auto GetHddEnable() -> bool;
@@ -129,6 +133,10 @@ public:
     static auto GetProgressActive() -> bool;
 
     static void SetMtpEnable(bool enable);
+    static void SetMtpShowSd(bool enable);
+    static void SetMtpShowInstall(bool enable);
+    static void SetMtpNameSd(std::string value);
+    static void SetMtpNameInstall(std::string value);
     static void SetFtpEnable(bool enable);
     static void SetNxlinkEnable(bool enable);
     static void SetHddEnable(bool enable);
@@ -158,6 +166,7 @@ public:
     static void PlaySoundEffect(SoundEffect effect);
 
     static void DisplayThemeOptions(bool left_side = true);
+    static void DisplayMtpStorageOptions(bool left_side = true);
     // todo:
     static void DisplayNetworkOptions(bool left_side = true);
     static void DisplayMiscOptions(bool left_side = true);
@@ -318,6 +327,10 @@ public:
     // network
     option::OptionBool m_nxlink_enabled{INI_SECTION, "nxlink_enabled", true};
     option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", false};
+    option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
+    option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
+    option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
+    option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
     option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", false};
     option::OptionBool m_hdd_enabled{INI_SECTION, "hdd_enabled", true};
     option::OptionBool m_hdd_write_protect{INI_SECTION, "hdd_write_protect", false};

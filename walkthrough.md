@@ -1,5 +1,36 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.206 — Налаштування сховищ MTP та їх назв (Крок S5 / id 31)
+
+### Завдання
+Виконати Крок S5 (id 31 з `task.md`) плану реалізації: додати можливість налаштовувати, які сховища (диски) відображаються в MTP та з якими назвами.
+
+### Підхід
+1. **Опції в конфігурації (App)**:
+   * У [app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp) додано опції конфігурації:
+     * `m_mtp_show_sd` (OptionBool, за замовчуванням `true`)
+     * `m_mtp_show_install` (OptionBool, за замовчуванням `true`)
+     * `m_mtp_name_sd` (OptionString, за замовчуванням `""` — стандартне ім'я)
+     * `m_mtp_name_install` (OptionString, за замовчуванням `""` — стандартне ім'я)
+   * Додано відповідні статичні геттери й сеттери в [app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp) та реалізовано їх у [app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp). Сеттери при зміні автоматично перезапускають сервер MTP (якщо він працював), щоб застосувати конфігурацію миттєво.
+2. **Динамічний маунт в MTP**:
+   * У [haze_helper.cpp](file:///d:/git/dev/sphaira/sphaira/source/haze_helper.cpp) переписано `Init()` для використання таблиці описів сховищ (`struct MtpStorageDef` з полями `enabled`, `custom_name`, `default_name`, `factory`).
+   * Забезпечено, що реєструються лише увімкнені в опціях сховища.
+   * Якщо користувач вказав кастомну назву, використовується саме вона, інакше — стандартна (`"microSD card"` або `"Install (NSP, XCI, NSZ, XCZ)"`).
+   * Додано перевірку: якщо після фільтрації список сховищ виявисів порожнім, MTP-сервер не запускається, у лог пишеться попередження, а користувачу показується нотифікація "No MTP storages enabled".
+3. **UI Налаштувань**:
+   * У [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp) під розділом "Network" додано новий пункт "MTP storages" типу `SettingsItemKind::Folder`, який відкриває бічне меню.
+   * У [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp) реалізовано `App::DisplayMtpStorageOptions()`, що малює бічне меню:
+     * Перемикачі "Show microSD card" та "Show Install folder".
+     * Рядкові поля "microSD card name" та "Install folder name" на базі `SidebarEntryTextBase` з викликом екранної клавіатури `swkbd::ShowText` (якщо ввести порожній рядок — назва скидається на "Default").
+4. **Локалізація (i18n)**:
+   * Додано нові переклади до [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+5. **Версія**:
+   * Версію у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) піднято до `0.13.206`.
+
+### Результати тестування
+* Збірку успішно проведено в WSL (`kefir-hub.nro` успішно скомпільовано).
+
 ## v0.13.204 — Фолоу-ап рев'ю S1+S4: upload зі stdio-локації та код скасування
 
 ### Завдання

@@ -392,4 +392,47 @@ void App::ShowEnableInstallPromptOption(option::OptionBool& option, bool& enable
     }
 }
 
+void App::DisplayMtpStorageOptions(bool left_side) {
+    auto options = std::make_unique<ui::Sidebar>("MTP Storages"_i18n, left_side ? ui::Sidebar::Side::LEFT : ui::Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<ui::SidebarEntryBool>("Show microSD card"_i18n, App::GetMtpShowSd(), [](bool& enable){
+        App::SetMtpShowSd(enable);
+    }, "Enable or disable microSD card storage in MTP."_i18n);
+
+    options->Add<ui::SidebarEntryBool>("Show Install folder"_i18n, App::GetMtpShowInstall(), [](bool& enable){
+        App::SetMtpShowInstall(enable);
+    }, "Enable or disable Install folder in MTP."_i18n);
+
+    auto sd_name_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("microSD card name"_i18n,
+        App::GetMtpNameSd().empty() ? "Default"_i18n : App::GetMtpNameSd(),
+        nullptr,
+        "Set custom name for microSD card in MTP."_i18n
+    );
+    auto* sd_name_entry = sd_name_entry_ptr.get();
+    sd_name_entry->SetCallback([sd_name_entry]() {
+        std::string value = App::GetMtpNameSd();
+        if (R_SUCCEEDED(swkbd::ShowText(value, "microSD card name"_i18n.c_str(), value.c_str()))) {
+            App::SetMtpNameSd(value);
+            sd_name_entry->SetValue(value.empty() ? "Default"_i18n : value);
+        }
+    });
+    options->Add(std::move(sd_name_entry_ptr));
+
+    auto install_name_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Install folder name"_i18n,
+        App::GetMtpNameInstall().empty() ? "Default"_i18n : App::GetMtpNameInstall(),
+        nullptr,
+        "Set custom name for Install folder in MTP."_i18n
+    );
+    auto* install_name_entry = install_name_entry_ptr.get();
+    install_name_entry->SetCallback([install_name_entry]() {
+        std::string value = App::GetMtpNameInstall();
+        if (R_SUCCEEDED(swkbd::ShowText(value, "Install folder name"_i18n.c_str(), value.c_str()))) {
+            App::SetMtpNameInstall(value);
+            install_name_entry->SetValue(value.empty() ? "Default"_i18n : value);
+        }
+    });
+    options->Add(std::move(install_name_entry_ptr));
+}
+
 } // namespace sphaira

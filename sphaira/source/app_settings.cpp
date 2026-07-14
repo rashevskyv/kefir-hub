@@ -172,6 +172,22 @@ auto App::GetMtpEnable() -> bool {
     return g_app->m_mtp_enabled.Get();
 }
 
+auto App::GetMtpShowSd() -> bool {
+    return g_app->m_mtp_show_sd.Get();
+}
+
+auto App::GetMtpShowInstall() -> bool {
+    return g_app->m_mtp_show_install.Get();
+}
+
+auto App::GetMtpNameSd() -> std::string {
+    return g_app->m_mtp_name_sd.Get();
+}
+
+auto App::GetMtpNameInstall() -> std::string {
+    return g_app->m_mtp_name_install.Get();
+}
+
 auto App::GetFtpEnable() -> bool {
     return g_app->m_ftp_enabled.Get();
 }
@@ -402,6 +418,46 @@ void App::SetMtpEnable(bool enable) {
             ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
         } else {
             haze::Exit();
+        }
+    }
+}
+
+void App::SetMtpShowSd(bool enable) {
+    if (App::GetMtpShowSd() != enable) {
+        g_app->m_mtp_show_sd.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpShowInstall(bool enable) {
+    if (App::GetMtpShowInstall() != enable) {
+        g_app->m_mtp_show_install.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpNameSd(std::string value) {
+    if (App::GetMtpNameSd() != value) {
+        g_app->m_mtp_name_sd.Set(std::move(value));
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpNameInstall(std::string value) {
+    if (App::GetMtpNameInstall() != value) {
+        g_app->m_mtp_name_install.Set(std::move(value));
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
         }
     }
 }

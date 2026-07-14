@@ -1016,6 +1016,9 @@ void Menu::BuildCategories() {
             {
                 MakeBoolItem("FTP"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable),
                 MakeBoolItem("MTP"_i18n, "Run the MTP server in the background."_i18n, App::GetMtpEnable, App::SetMtpEnable),
+                { "MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, [](){ return std::string{}; }, [](){
+                    App::DisplayMtpStorageOptions(false);
+                }, SettingsItemKind::Folder },
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
                 MakeBoolItem("HDD"_i18n, "Mount connected USB/HDD devices."_i18n, App::GetHddEnable, App::SetHddEnable),
                 MakeBoolItem("HDD write protect"_i18n, "Make connected HDD storage read-only."_i18n, App::GetWriteProtect, App::SetWriteProtect),
