@@ -1,7 +1,5 @@
 #include "haze_helper.hpp"
 
-#include "haze_helper.hpp"
-
 #include "app.hpp"
 #include "fs.hpp"
 #include "log.hpp"

@@ -414,8 +414,14 @@ void App::SetMtpEnable(bool enable) {
     if (App::GetMtpEnable() != enable) {
         g_app->m_mtp_enabled.Set(enable);
         if (enable) {
-            haze::Init();
-            ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+            if (haze::Init()) {
+                ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+            } else {
+                // e.g. every storage is disabled in "MTP storages" - keep the
+                // toggle honest, otherwise settings would show a running
+                // server that never started.
+                g_app->m_mtp_enabled.Set(false);
+            }
         } else {
             haze::Exit();
         }

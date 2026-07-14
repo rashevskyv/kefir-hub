@@ -1,5 +1,19 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.207 — Фікс рев'ю S5: чесний стан тумблера MTP при відмові старту
+
+### Завдання
+Рев'ю v0.13.206 виявило дефект стану: `App::SetMtpEnable(true)` ігнорував результат `haze::Init()`. Сценарій: MTP увімкнено, користувач вимикає останнє сховище у «MTP storages» → сеттер робить рестарт `SetMtpEnable(false)/(true)` → `Init()` відмовляє («No MTP storages enabled»), але опція `mtp_enabled` уже виставлена в `true`. У Settings тумблер MTP показує **On** при мертвому сервері, і цей стан зберігається в конфіг.
+
+### Підхід
+1. [app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp): у `SetMtpEnable(true)` результат `haze::Init()` тепер перевіряється — при відмові опція відкочується у `false`, а `RegisterMtpCallbacks()` викликається лише після успішного старту. Побічний ефект: конфіг «mtp_enabled=true + всі сховища вимкнені» більше не може виникнути через UI, тож нотифікація при завантаженні з таким конфігом стає недосяжною у штатних сценаріях.
+2. [haze_helper.cpp](file:///d:/git/dev/sphaira/sphaira/source/haze_helper.cpp): прибрано задубльований `#include "haze_helper.hpp"`.
+
+### Ручна перевірка (Агент 1)
+* MTP On → вимкнути обидва сховища у «MTP storages»: з'являється нотифікація «No MTP storages enabled», тумблер MTP у Network показує **Off**.
+* Увімкнути одне сховище назад → увімкнути MTP: сервер стартує, диск видно у Windows.
+* Звичайний цикл On/Off без змін сховищ — без регресії.
+
 ## v0.13.206 — Налаштування сховищ MTP та їх назв (Крок S5 / id 31)
 
 ### Завдання
