@@ -439,4 +439,82 @@ void App::DisplayMtpStorageOptions(bool left_side) {
     options->Add(std::move(install_name_entry_ptr));
 }
 
+void App::DisplayWebdavOptions(bool left_side) {
+    auto options = std::make_unique<ui::Sidebar>("WebDAV Settings"_i18n, left_side ? ui::Sidebar::Side::LEFT : ui::Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    std::string display_url = App::GetWebdavUrl();
+    if (display_url.starts_with("webdav://")) {
+        display_url = display_url.substr(9);
+    }
+    
+    auto url_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Server address"_i18n,
+        display_url.empty() ? "None"_i18n : display_url,
+        nullptr,
+        "Configure the WebDAV server address."_i18n
+    );
+    auto* url_entry = url_entry_ptr.get();
+    url_entry->SetCallback([url_entry]() {
+        std::string value = App::GetWebdavUrl();
+        if (value.starts_with("webdav://")) {
+            value = value.substr(9);
+        }
+        if (R_SUCCEEDED(swkbd::ShowText(value, "Server address"_i18n.c_str(), value.c_str()))) {
+            if (value.empty()) {
+                App::SetWebdavUrl("");
+                url_entry->SetValue("None"_i18n);
+                return;
+            }
+            if (value.starts_with("http://")) {
+                App::Notify("HTTP protocol is not allowed. Please use HTTPS/WebDAV."_i18n);
+                return;
+            }
+            std::string final_url = value;
+            if (final_url.starts_with("https://")) {
+                final_url = "webdav://" + final_url.substr(8);
+            } else if (!final_url.starts_with("webdav://")) {
+                final_url = "webdav://" + final_url;
+            }
+            App::SetWebdavUrl(final_url);
+            
+            std::string clean_display = final_url;
+            if (clean_display.starts_with("webdav://")) {
+                clean_display = clean_display.substr(9);
+            }
+            url_entry->SetValue(clean_display);
+        }
+    });
+    options->Add(std::move(url_entry_ptr));
+
+    auto user_name_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Username"_i18n,
+        App::GetWebdavUser().empty() ? "None"_i18n : App::GetWebdavUser(),
+        nullptr,
+        "Set the WebDAV server username."_i18n
+    );
+    auto* user_name_entry = user_name_entry_ptr.get();
+    user_name_entry->SetCallback([user_name_entry]() {
+        std::string value = App::GetWebdavUser();
+        if (R_SUCCEEDED(swkbd::ShowText(value, "Username"_i18n.c_str(), value.c_str()))) {
+            App::SetWebdavUser(value);
+            user_name_entry->SetValue(value.empty() ? "None"_i18n : value);
+        }
+    });
+    options->Add(std::move(user_name_entry_ptr));
+
+    auto password_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Password"_i18n,
+        App::GetWebdavPass().empty() ? "None"_i18n : std::string(8, '*'),
+        nullptr,
+        "Set the WebDAV server password."_i18n
+    );
+    auto* password_entry = password_entry_ptr.get();
+    password_entry->SetCallback([password_entry]() {
+        std::string value = "";
+        if (R_SUCCEEDED(swkbd::ShowText(value, "Password"_i18n.c_str()))) {
+            App::SetWebdavPass(value);
+            password_entry->SetValue(value.empty() ? "None"_i18n : std::string(8, '*'));
+        }
+    });
+    options->Add(std::move(password_entry_ptr));
+}
+
 } // namespace sphaira

@@ -1022,29 +1022,9 @@ void Menu::BuildCategories() {
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
                 MakeBoolItem("HDD"_i18n, "Mount connected USB/HDD devices."_i18n, App::GetHddEnable, App::SetHddEnable),
                 MakeBoolItem("HDD write protect"_i18n, "Make connected HDD storage read-only."_i18n, App::GetWriteProtect, App::SetWriteProtect),
-                { "WebDAV URL"_i18n, "Use webdav:// for HTTPS and automatic remote folder creation. Leave empty to disable."_i18n, App::GetWebdavUrl, [](){
-                    auto value = App::GetWebdavUrl();
-                    const auto guide = "WebDAV URL"_i18n;
-                    if (R_SUCCEEDED(swkbd::ShowText(value, guide.c_str(), value.c_str()))) {
-                        App::SetWebdavUrl(std::move(value));
-                    }
-                }},
-                { "WebDAV User"_i18n, "Username for the WebDAV server."_i18n, App::GetWebdavUser, [](){
-                    auto value = App::GetWebdavUser();
-                    const auto guide = "WebDAV User"_i18n;
-                    if (R_SUCCEEDED(swkbd::ShowText(value, guide.c_str(), value.c_str()))) {
-                        App::SetWebdavUser(std::move(value));
-                    }
-                }},
-                { "WebDAV Password"_i18n, "Password for the WebDAV server."_i18n, [](){
-                    return App::GetWebdavPass().empty() ? std::string{} : std::string(8, '*');
-                }, [](){
-                    std::string value;
-                    const auto guide = "WebDAV Password"_i18n;
-                    if (R_SUCCEEDED(swkbd::ShowText(value, guide.c_str()))) {
-                        App::SetWebdavPass(std::move(value));
-                    }
-                }},
+                { "WebDAV"_i18n, "Configure WebDAV server for save synchronization."_i18n, [](){ return std::string{}; }, [](){
+                    App::DisplayWebdavOptions(false);
+                }, SettingsItemKind::Folder },
             }
         },
         {

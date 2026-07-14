@@ -1032,6 +1032,11 @@ void FsView::DisplayOptions() {
         }
     }
 
+    auto source_entry = options->Add<SidebarEntryCallback>("Sources"_i18n, [this](){
+        ShowSourcePicker();
+    }, "Quickly switch this pane's file source."_i18n);
+    source_entry->SetHasSubmenu(true);
+
     auto adv_entry = options->Add<SidebarEntryCallback>("Advanced"_i18n, [this](){
         DisplayAdvancedOptions();
     }, "Access file browser advanced tools."_i18n);
@@ -1042,87 +1047,9 @@ void FsView::DisplayAdvancedOptions() {
     auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    SidebarEntryArray::Items mount_items;
-    std::vector<FsEntry> fs_entries;
-
-    const auto stdio_locations = location::GetStdio(false);
-    for (const auto& e: stdio_locations) {
-        u32 flags{};
-        if (e.flags & FsEntryFlag_ReadOnly) {
-            flags |= FsEntryFlag_ReadOnly;
-        }
-
-        fs_entries.emplace_back(e.name, e.mount, FsType::Stdio, flags);
-        mount_items.push_back(e.name);
-    }
-
-    for (const auto& e: FS_ENTRIES) {
-        fs_entries.emplace_back(e);
-        mount_items.push_back(i18n::get(e.name));
-    }
-
-    const auto network_locations = location::Load();
-    for (const auto& e: network_locations) {
-        if (e.url.rfind("smb://", 0) == 0) {
-            FsEntry entry{
-                .name = e.name,
-                .root = "smb2:/",
-                .type = FsType::Network,
-                .flags = FsEntryFlag_None,
-                .url = e.url,
-                .user = e.user,
-                .pass = e.pass
-            };
-            fs_entries.emplace_back(entry);
-            mount_items.push_back(e.name);
-        }
-    }
-
-    options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
-        App::PopToMenu();
-        const auto& target_entry = fs_entries[index_out];
-        if (target_entry.type == FsType::Network) {
-            FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
-            if (other_view && other_view->m_fs_entry.type == FsType::Network && other_view->m_fs_entry.url != target_entry.url) {
-                other_view->SetFs("/", FS_ENTRY_DEFAULT);
-            }
-            if (m_fs_entry.type == FsType::Network && m_fs_entry.url != target_entry.url) {
-                SetFs("/", FS_ENTRY_DEFAULT);
-            }
-
-            App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
-#ifdef BUILD_SMB2
-                if (g_smb2fs) {
-                    if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
-                        R_SUCCEED();
-                    }
-                    delete g_smb2fs;
-                    g_smb2fs = nullptr;
-                }
-                std::string server, share;
-                ParseSmbUrl(target_entry.url.toString(), server, share);
-                g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
-                if (g_smb2fs->RegisterFilesystem_v2()) {
-                    R_SUCCEED();
-                } else {
-                    delete g_smb2fs;
-                    g_smb2fs = nullptr;
-                    R_THROW(Result_SmbConnectionFailed);
-                }
-#else
-                R_THROW(Result_SmbNotSupported);
-#endif
-            }, [this, target_entry](Result rc) {
-                if (R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
-                } else {
-                    SetFs(target_entry.root, target_entry);
-                }
-            });
-        } else {
-            SetFs(target_entry.root, target_entry);
-        }
-    }, i18n::get(m_fs_entry.name), "Switch the file source to a different storage or mount point."_i18n);
+    options->Add<SidebarEntryCallback>("Mount"_i18n, [this](){
+        ShowSourcePicker();
+    }, "Switch the file source to a different storage or mount point."_i18n);
 
     options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
         std::string name;
@@ -1250,6 +1177,107 @@ void FsView::DisplayAdvancedOptions() {
         m_menu->m_ignore_read_only.Set(v_out);
         m_fs->SetIgnoreReadOnly(v_out);
     }, "Allow modifying files and folders that are marked as read-only."_i18n);
+}
+
+void FsView::ShowSourcePicker() {
+    auto options = std::make_unique<Sidebar>("Sources"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    SidebarEntryArray::Items mount_items;
+    std::vector<FsEntry> fs_entries;
+
+    const auto stdio_locations = location::GetStdio(false);
+    for (const auto& e: stdio_locations) {
+        u32 flags{};
+        if (e.flags & FsEntryFlag_ReadOnly) {
+            flags |= FsEntryFlag_ReadOnly;
+        }
+
+        fs_entries.emplace_back(e.name, e.mount, FsType::Stdio, flags);
+        mount_items.push_back(e.name);
+    }
+
+    for (const auto& e: FS_ENTRIES) {
+        fs_entries.emplace_back(e);
+        mount_items.push_back(i18n::get(e.name));
+    }
+
+    const auto network_locations = location::Load();
+    for (const auto& e: network_locations) {
+        if (e.url.rfind("smb://", 0) == 0) {
+            FsEntry entry{
+                .name = e.name,
+                .root = "smb2:/",
+                .type = FsType::Network,
+                .flags = FsEntryFlag_None,
+                .url = e.url,
+                .user = e.user,
+                .pass = e.pass
+            };
+            fs_entries.emplace_back(entry);
+            mount_items.push_back(e.name);
+        }
+    }
+
+    s64 current_index = 0;
+    for (size_t i = 0; i < fs_entries.size(); ++i) {
+        bool is_current = false;
+        if (m_fs_entry.type == fs_entries[i].type && m_fs_entry.root == fs_entries[i].root) {
+            if (m_fs_entry.type != FsType::Network || m_fs_entry.url == fs_entries[i].url) {
+                is_current = true;
+            }
+        }
+        if (is_current) {
+            mount_items[i] = "-> " + mount_items[i];
+            current_index = i;
+        }
+    }
+
+    options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
+        App::PopToMenu();
+        const auto& target_entry = fs_entries[index_out];
+        if (target_entry.type == FsType::Network) {
+            FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
+            if (other_view && other_view->m_fs_entry.type == FsType::Network && other_view->m_fs_entry.url != target_entry.url) {
+                other_view->SetFs("/", FS_ENTRY_DEFAULT);
+            }
+            if (m_fs_entry.type == FsType::Network && m_fs_entry.url != target_entry.url) {
+                SetFs("/", FS_ENTRY_DEFAULT);
+            }
+
+            App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
+#ifdef BUILD_SMB2
+                if (g_smb2fs) {
+                    if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
+                        R_SUCCEED();
+                    }
+                    delete g_smb2fs;
+                    g_smb2fs = nullptr;
+                }
+                std::string server, share;
+                ParseSmbUrl(target_entry.url.toString(), server, share);
+                g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
+                if (g_smb2fs->RegisterFilesystem_v2()) {
+                    R_SUCCEED();
+                } else {
+                    delete g_smb2fs;
+                    g_smb2fs = nullptr;
+                    R_THROW(Result_SmbConnectionFailed);
+                }
+#else
+                R_THROW(Result_SmbNotSupported);
+#endif
+            }, [this, target_entry](Result rc) {
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
+                } else {
+                    SetFs(target_entry.root, target_entry);
+                }
+            });
+        } else {
+            SetFs(target_entry.root, target_entry);
+        }
+    }, current_index, "Switch the file source to a different storage or mount point."_i18n);
 }
 
 Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {

@@ -7,6 +7,7 @@
 #include "i18n.hpp"
 #include "title_info.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/progress_box.hpp"
 
 #include <algorithm>
 #include <map>
@@ -40,6 +41,13 @@ constexpr int THREAD_CORE = 2;
 std::atomic_bool g_should_exit = false;
 bool g_is_running{false};
 Mutex g_mutex{};
+
+Mutex g_mtp_ui_mutex;
+ui::ProgressBox* g_mtp_pbox{nullptr};
+UEvent g_mtp_done_event;
+bool g_mtp_ui_alive{false};
+std::string g_mtp_current_filename;
+std::atomic<bool> g_mtp_new_transfer{false};
 
 #if ENABLE_NETWORK_INSTALL
 InstallSharedData g_shared_data{};
@@ -1390,13 +1398,110 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_CreateFolder: log_write("[LIBHAZE] Creating Folder: %s\n", e.file.filename); break;
         case ::haze::CallbackType_DeleteFolder: log_write("[LIBHAZE] Deleting Folder: %s\n", e.file.filename); break;
 
-        case ::haze::CallbackType_ReadBegin: log_write("[LIBHAZE] Reading File Begin: %s \n", e.file.filename); break;
-        case ::haze::CallbackType_ReadProgress: log_write("\t[LIBHAZE] Reading File: offset: %lld size: %lld\n", e.progress.offset, e.progress.size); break;
-        case ::haze::CallbackType_ReadEnd: log_write("[LIBHAZE] Reading File Finished: %s\n", e.file.filename); break;
+        case ::haze::CallbackType_ReadBegin:
+        case ::haze::CallbackType_WriteBegin: {
+            log_write("[LIBHAZE] Transfer Begin: %s \n", e.file.filename);
+#if ENABLE_NETWORK_INSTALL
+            {
+                SCOPED_MUTEX(&g_shared_data.mutex);
+                if (g_shared_data.in_progress && !g_shared_data.current_file.empty()) {
+                    if (std::strstr(e.file.filename, g_shared_data.current_file.c_str()) != nullptr) {
+                        break;
+                    }
+                }
+            }
+#endif
+            bool trigger_ui = false;
+            {
+                SCOPED_MUTEX(&g_mtp_ui_mutex);
+                g_mtp_current_filename = e.file.filename;
+                g_mtp_new_transfer = true;
+                if (!g_mtp_ui_alive) {
+                    g_mtp_ui_alive = true;
+                    trigger_ui = true;
+                }
+            }
 
-        case ::haze::CallbackType_WriteBegin: log_write("[LIBHAZE] Writing File Begin: %s \n", e.file.filename); break;
-        case ::haze::CallbackType_WriteProgress: log_write("\t[LIBHAZE] Writing File: offset: %lld size: %lld\n", e.progress.offset, e.progress.size); break;
-        case ::haze::CallbackType_WriteEnd: log_write("[LIBHAZE] Writing File Finished: %s\n", e.file.filename); break;
+            if (trigger_ui) {
+                ueventClear(&g_mtp_done_event);
+                evman::push(evman::FunctionalEventData {
+                    []() {
+                        log_write("[MTP-UI] UI event triggered, creating ProgressBox\n");
+                        std::string init_filename;
+                        {
+                            SCOPED_MUTEX(&g_mtp_ui_mutex);
+                            init_filename = g_mtp_current_filename;
+                        }
+                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, init_filename, [](auto pbox) -> Result {
+                            {
+                                SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                g_mtp_pbox = pbox;
+                            }
+                            
+                            while (!pbox->ShouldExit() && !g_should_exit) {
+                                auto rc = waitSingle(waiterForUEvent(&g_mtp_done_event), 100000000ULL); // 100ms
+                                if (R_SUCCEEDED(rc)) {
+                                    bool has_new = false;
+                                    for (int i = 0; i < 15; i++) {
+                                        if (pbox->ShouldExit() || g_should_exit) break;
+                                        if (g_mtp_new_transfer) {
+                                            has_new = true;
+                                            g_mtp_new_transfer = false;
+                                            break;
+                                        }
+                                        svcSleepThread(100000000ULL); // 100ms
+                                    }
+                                    if (has_new) {
+                                        ueventClear(&g_mtp_done_event);
+                                        std::string next_filename;
+                                        {
+                                            SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                            next_filename = g_mtp_current_filename;
+                                        }
+                                        pbox->NewTransferForce(next_filename);
+                                        continue;
+                                    }
+                                    break;
+                                }
+                                
+                                if (g_mtp_new_transfer) {
+                                    g_mtp_new_transfer = false;
+                                    std::string next_filename;
+                                    {
+                                        SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                        next_filename = g_mtp_current_filename;
+                                    }
+                                    pbox->NewTransferForce(next_filename);
+                                }
+                            }
+                            
+                            R_SUCCEED();
+                        }, [](Result rc) {
+                            SCOPED_MUTEX(&g_mtp_ui_mutex);
+                            g_mtp_pbox = nullptr;
+                            g_mtp_ui_alive = false;
+                        }));
+                    }
+                }, false);
+            }
+            break;
+        }
+
+        case ::haze::CallbackType_ReadProgress:
+        case ::haze::CallbackType_WriteProgress: {
+            SCOPED_MUTEX(&g_mtp_ui_mutex);
+            if (g_mtp_pbox) {
+                g_mtp_pbox->UpdateTransferForce(e.progress.offset, e.progress.size);
+            }
+            break;
+        }
+
+        case ::haze::CallbackType_ReadEnd:
+        case ::haze::CallbackType_WriteEnd: {
+            log_write("[LIBHAZE] Transfer Finished: %s\n", e.file.filename);
+            ueventSignal(&g_mtp_done_event);
+            break;
+        }
     }
 
     App::NotifyFlashLed();
@@ -1461,6 +1566,13 @@ bool Init() {
         return false;
     }
 
+    ueventCreate(&g_mtp_done_event, true);
+    {
+        SCOPED_MUTEX(&g_mtp_ui_mutex);
+        g_mtp_ui_alive = false;
+        g_mtp_pbox = nullptr;
+    }
+
     g_should_exit = false;
     if (!::haze::Initialize(haze_callback, THREAD_PRIO, THREAD_CORE, g_fs_entries)) {
         g_fs_entries.clear();
@@ -1479,6 +1591,13 @@ void Exit() {
 
     g_is_running = false;
     g_should_exit = true;
+    ueventSignal(&g_mtp_done_event);
+    {
+        SCOPED_MUTEX(&g_mtp_ui_mutex);
+        if (g_mtp_pbox) {
+            g_mtp_pbox->RequestExit();
+        }
+    }
     ::haze::Exit();
     g_fs_entries.clear();
 

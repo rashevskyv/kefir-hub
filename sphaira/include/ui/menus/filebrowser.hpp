@@ -296,6 +296,7 @@ private:
 
     void DisplayOptions();
     void DisplayAdvancedOptions();
+    void ShowSourcePicker();
 
 private:
     Menu* m_menu{};

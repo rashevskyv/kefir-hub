@@ -885,5 +885,18 @@
   "Install folder name": "Назва папки Install",
   "Set custom name for Install folder in MTP.": "Встановити власну назву для папки Install в MTP.",
   "No MTP storages enabled": "Не увімкнено жодного сховища MTP",
-  "Default": "За замовчуванням"
+  "Default": "За замовчуванням",
+  "Sources": "Джерела",
+  "Quickly switch this pane's file source.": "Швидко змінити джерело файлів для цієї панелі.",
+  "WebDAV": "WebDAV",
+  "Configure WebDAV server for save synchronization.": "Налаштувати сервер WebDAV для синхронізації збережень.",
+  "Server address": "Адреса сервера",
+  "Configure the WebDAV server address.": "Налаштувати адресу сервера WebDAV.",
+  "Username": "Ім'я користувача",
+  "Set the WebDAV server username.": "Встановити ім'я користувача сервера WebDAV.",
+  "Password": "Пароль",
+  "Set the WebDAV server password.": "Встановити пароль сервера WebDAV.",
+  "HTTP protocol is not allowed. Please use HTTPS/WebDAV.": "HTTP протокол заборонено. Будь ласка, використовуйте HTTPS/WebDAV.",
+  "Copying via MTP": "Копіювання через MTP",
+  "WebDAV Settings": "Налаштування WebDAV"
 }

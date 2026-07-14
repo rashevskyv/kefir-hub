@@ -168,6 +168,7 @@ public:
     static void PlaySoundEffect(SoundEffect effect);
 
     static void DisplayThemeOptions(bool left_side = true);
+    static void DisplayWebdavOptions(bool left_side = true);
     static void DisplayMtpStorageOptions(bool left_side = true);
     // todo:
     static void DisplayNetworkOptions(bool left_side = true);

@@ -881,5 +881,18 @@
   "Install folder name": "Install folder name",
   "Set custom name for Install folder in MTP.": "Set custom name for Install folder in MTP.",
   "No MTP storages enabled": "No MTP storages enabled",
-  "Default": "Default"
+  "Default": "Default",
+  "Sources": "Sources",
+  "Quickly switch this pane's file source.": "Quickly switch this pane's file source.",
+  "WebDAV": "WebDAV",
+  "Configure WebDAV server for save synchronization.": "Configure WebDAV server for save synchronization.",
+  "Server address": "Server address",
+  "Configure the WebDAV server address.": "Configure the WebDAV server address.",
+  "Username": "Username",
+  "Set the WebDAV server username.": "Set the WebDAV server username.",
+  "Password": "Password",
+  "Set the WebDAV server password.": "Set the WebDAV server password.",
+  "HTTP protocol is not allowed. Please use HTTPS/WebDAV.": "HTTP protocol is not allowed. Please use HTTPS/WebDAV.",
+  "Copying via MTP": "Copying via MTP",
+  "WebDAV Settings": "WebDAV Settings"
 }

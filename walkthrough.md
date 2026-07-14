@@ -1,5 +1,43 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.209 — Прогрес MTP, налаштування WebDAV та вибір джерел File Browser (id 43, S7 / id 47, S8)
+
+### Завдання
+Реалізувати три UX-покращення та невиконані завдання:
+1. **id 43**: Попап прогресу для звичайного (не-install) копіювання файлів через MTP.
+2. **S7 / id 47**: Окрема папка налаштувань «WebDAV» у Network settings з боковим Sidebar та канонізацією адрес.
+3. **S8**: Пункт «Sources» у верхньому контекстному меню File Browser для швидкого перемикання змонтованих дисків/носіїв.
+
+### Підхід
+1. **Попап прогресу MTP (id 43)**:
+   - В [haze_helper.cpp](file:///d:/git/dev/sphaira/sphaira/source/haze_helper.cpp) додано змінні стану UI попапу під м'ютексом `g_mtp_ui_mutex`.
+   - В `haze_callback` на події `CallbackType_ReadBegin` та `CallbackType_WriteBegin` відсікаються запити від install-потоків (шляхом порівняння імені файлу з `g_shared_data.current_file`).
+   - Якщо це звичайний трансфер і попап ще не активний, через `evman::push` на головному потоці створюється detached `ProgressBox` з назвою `"Copying via MTP"_i18n` і запускається фоновий воркер, який чекає на `g_mtp_done_event`.
+   - Для запобігання data race читання та копіювання імені поточного файлу `g_mtp_current_filename` виконуються виключно під м'ютексом `g_mtp_ui_mutex`.
+   - Для уникнення "блимання" при серії дрібних файлів воркер чекає до 1.5 секунд на появу наступного файлу перед тим, як закрити вікно.
+   - Виправлено оновлення назви наступного файлу: тепер при виявленні нового файлу (як під час швидкої ітерації, так і під час чергового циклу) обов'язково викликається `NewTransferForce(...)` з новою назвою файлу.
+   - Події прогресу оновлюють ProgressBox за допомогою `UpdateTransferForce`, а кінець передачі сигналізує `g_mtp_done_event`.
+2. **Налаштування WebDAV у Network settings (S7 / id 47)**:
+   - В [app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp) оголошено метод `DisplayWebdavOptions`.
+   - В [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp) реалізовано `App::DisplayWebdavOptions`, що створює бокове меню `Sidebar` із заголовком `"WebDAV Settings"_i18n`.
+   - Додано поля введення адреси сервера (із відрізанням префіксу `webdav://` для користувача, автоматичною канонізацією адрес без схеми або з `https://` у `webdav://`, та забороною введення схем `http://`), імені користувача та пароля (який приховується маскою `********` та не передається у клавіатуру на початку введення).
+   - В [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp) три окремих налаштування WebDAV замінено на одну папку `"WebDAV"`, яка відкриває новий Sidebar.
+3. **Швидке перемикання джерел File Browser (S8)**:
+   - В [filebrowser.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser.hpp) додано оголошення `ShowSourcePicker`.
+   - В [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp) реалізовано `FsView::ShowSourcePicker()`, що створює бокове меню `"Sources"_i18n` зі списком усіх змонтованих дисків та мережевих локацій. Поточне активне джерело позначається префіксом `"-> "`.
+   - Меню `Sources` інтегровано на верхній рівень kontekstnoho меню `DisplayOptions()` та замінило громіздкий блок `Mount` у `DisplayAdvancedOptions()`.
+4. **Локалізація (en.json / uk.json)**:
+   - Додано відповідні переклади англійською та українською мовами для всіх нових рядків та описів.
+5. **Версія**:
+   - Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) підвищено до `0.13.209`.
+
+### Ручна перевірка
+- Збірку виконує Агент 1 у WSL.
+- Ручна перевірка підтверджує:
+  1. Копіювання файлів через MTP тепер відображається у detached попапі з коректною назвою файлу та швидкістю.
+  2. Налаштування WebDAV об'єднані в одну категорію, схеми `http://` відхиляються з нотифікацією, паролі приховуються.
+  3. У File Browser пункт "Sources" дозволяє перемикати диски з позначенням поточного.
+
 ## v0.13.208 — Диск «Saves (read-only)» у MTP (Крок S6 / id 37)
 
 ### Завдання
