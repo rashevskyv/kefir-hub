@@ -23,8 +23,8 @@ DbiUsb::~DbiUsb() {
 
 Result DbiUsb::WaitForConnection(u64 timeout, std::vector<std::string>& out_names) {
     log_write("[DBI USB] Waiting for connection / list request...\n");
-    // Send list request: magic 'DBI0', type REQUEST, id LIST, data_size 0
-    R_TRY(SendCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, 0, timeout));
+    // Send list request: magic 'DBI0', type REQUEST, id LIST, data_size 0x53504841 ('SPHA')
+    R_TRY(SendCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, 0x53504841, timeout));
 
     // Wait for response header: magic 'DBI0', type RESPONSE, id LIST, data_size list_len
     dbi::CmdHeader responseHeader{};
@@ -37,6 +37,7 @@ Result DbiUsb::WaitForConnection(u64 timeout, std::vector<std::string>& out_name
     log_write("[DBI USB] got response, list_len: %u\n", list_len);
 
     out_names.clear();
+    m_file_sizes.clear();
     if (list_len > 0) {
         // Send ACK: magic 'DBI0', type ACK, id LIST, data_size list_len
         R_TRY(SendCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
@@ -45,15 +46,26 @@ Result DbiUsb::WaitForConnection(u64 timeout, std::vector<std::string>& out_name
         std::vector<char> names(list_len);
         R_TRY(m_usb->TransferAll(true, names.data(), names.size(), timeout));
 
-        for (const auto& name : std::views::split(names, '\n')) {
-            if (!name.empty()) {
-                out_names.emplace_back(name.data(), name.size());
+        for (const auto& name_part : std::views::split(names, '\n')) {
+            if (!name_part.empty()) {
+                std::string name_str(name_part.data(), name_part.size());
+                auto pipe_pos = name_str.find('|');
+                if (pipe_pos != std::string::npos) {
+                    std::string clean_name = name_str.substr(0, pipe_pos);
+                    std::string size_str = name_str.substr(pipe_pos + 1);
+                    s64 fsize = std::strtoll(size_str.c_str(), nullptr, 10);
+                    out_names.push_back(clean_name);
+                    m_file_sizes[clean_name] = fsize;
+                } else {
+                    out_names.push_back(name_str);
+                    m_file_sizes[name_str] = 0;
+                }
             }
         }
     }
 
     for (auto& name : out_names) {
-        log_write("[DBI USB] got name: %s\n", name.c_str());
+        log_write("[DBI USB] got name: %s (size: %lld)\n", name.c_str(), m_file_sizes[name]);
     }
 
     R_UNLESS(!out_names.empty(), Result_UsbBadCount);
@@ -63,6 +75,13 @@ Result DbiUsb::WaitForConnection(u64 timeout, std::vector<std::string>& out_name
 
 void DbiUsb::SetFileNameForTranfser(const std::string& name) {
     m_transfer_file_name = name;
+}
+
+s64 DbiUsb::GetFileSize(const std::string& name) const {
+    if (auto it = m_file_sizes.find(name); it != m_file_sizes.end()) {
+        return it->second;
+    }
+    return 0;
 }
 
 Result DbiUsb::SendCmdHeader(dbi::CmdType type, dbi::CmdId id, u32 dataSize, u64 timeout) {

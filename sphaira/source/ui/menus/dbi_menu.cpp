@@ -342,6 +342,10 @@ void Menu::ThreadFunction() {
             entry.file_name = name;
             m_usb_source->SetFileNameForTranfser(name);
             entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
+            s64 pc_size = m_usb_source->GetFileSize(name);
+            if (pc_size > 0) {
+                entry.analysis.source_size = pc_size;
+            }
             entry.selected = R_SUCCEEDED(entry.analysis_result);
             SCOPED_MUTEX(&m_mutex);
             m_queue.emplace_back(std::move(entry));

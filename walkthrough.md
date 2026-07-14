@@ -1,5 +1,28 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.210 — Розширення протоколу DBI Backend (передача розмірів файлів) (Розділ 7)
+
+### Завдання
+Реалізувати розширення протоколу DBI Backend для передачі розмірів файлів від `dbibackend-qt` на ПК до `Sphaira` на Switch (Розділ 7 плану). Це забезпечує відображення розмірів файлів перед початком встановлення та відновлення інформації про розміри для розрахунку вільного місця.
+
+### Підхід
+1. **Зміни на стороні Sphaira (C++)**:
+   - В [usb_dbi.hpp](file:///d:/git/dev/sphaira/sphaira/include/yati/source/usb_dbi.hpp) додано мапу `m_file_sizes` та метод `GetFileSize` до класу `DbiUsb`.
+   - В [usb_dbi.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/source/usb_dbi.cpp) метод `DbiUsb::WaitForConnection` тепер надсилає у полі `data_size` магічне значення `0x53504841` (символи 'SPHA'). При отриманні списку файлів кожен рядок перевіряється на наявність символу `|`. Якщо він є, назва та розмір розділяються, а чиста назва додається у вектор, а розмір — до мапи `m_file_sizes`. Якщо символу немає (старий клієнт), назва додається як є, а розмір стає 0.
+   - Метод `GetFileSize` повертає збережений розмір файлу.
+   - В [dbi_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/dbi_menu.cpp) у циклі аналізу файлів черги перед викликом `yati::AnalyzeSource` розмір файлу отримується з `m_usb_source->GetFileSize(name)` та записується в `entry.analysis.source_size`. Це дозволяє показувати правильний "Package size" у інтерфейсі.
+2. **Зміни на стороні dbibackend-qt (Python)**:
+   - В [usb_handler.py](file:///e:/Switch/dbibackend-qt/src/usb_handler.py) змінено метод `process_list_command`, який тепер приймає `data_size`.
+   - Якщо `data_size == 0x53504841`, список файлів формується у форматі `filename|size_in_bytes
+`.
+   - Якщо `data_size == 0` (запит від оригінального DBI), надсилається звичайний список імен без змін, що зберігає 100% зворотну сумісність.
+3. **Версія**:
+   - Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) підвищено до `0.13.210`.
+
+### Ручна перевірка
+- Збірка виконується автоматично через WSL.
+
+
 ## v0.13.209 — Прогрес MTP, налаштування WebDAV та вибір джерел File Browser (id 43, S7 / id 47, S8)
 
 ### Завдання

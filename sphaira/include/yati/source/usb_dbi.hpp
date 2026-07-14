@@ -7,6 +7,7 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 #include <switch.h>
 
 namespace sphaira::yati::source {
@@ -25,6 +26,7 @@ struct DbiUsb final : Base {
 
     Result WaitForConnection(u64 timeout, std::vector<std::string>& out_names);
     void SetFileNameForTranfser(const std::string& name);
+    s64 GetFileSize(const std::string& name) const;
 
     void SignalCancel() override {
         m_usb->Cancel();
@@ -40,6 +42,7 @@ private:
 private:
     std::unique_ptr<usb::UsbDs> m_usb;
     std::string m_transfer_file_name{};
+    std::unordered_map<std::string, s64> m_file_sizes{};
 };
 
 } // namespace sphaira::yati::source
