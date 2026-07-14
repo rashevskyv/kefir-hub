@@ -19,7 +19,7 @@
 
 ### Крок S1: Auto-sync після Backup ігнорує вибрану локацію бекапу — вантажить не той файл
 
-**Статус: виконано у v0.13.201.**
+**Статус: виконано у v0.13.201. Фолоу-ап у v0.13.204:** рев'ю виявило, що для stdio-локації `latest_path` (шлях виду `ums0:/...`) передавався в `curl::Path`, а upload-шлях у `download.cpp` відкриває такий файл жорстко через `fs::FsNativeSd` — тож auto-sync падав із «Auto-sync failed!» одразу після успішного бекапу на USB-носій. Виправлено в `save_menu_ops.cpp` (download.cpp не чіпали): для stdio-локацій файл стрімиться через callback-варіант `curl::UploadInfo{name, size, cb}` із читанням через fs самої локації (за зразком `DumpToNetwork` у dumper.cpp); для SD-локацій шлях через `curl::Path` — без змін.
 
 **Проблема.** У `Menu::BackupSaves(entries, location, backup_root)` ([save_menu_ops.cpp:76–147](sphaira/source/ui/menus/save/save_menu_ops.cpp:76)) блок автосинку:
 - лямбда завершення захоплює `[this, entries, backup_root]` (рядок 84) — **`location` не захоплюється**;
@@ -68,7 +68,7 @@
 
 ### Крок S4: Стійкість синхронізації — не обривати весь sync на першому невдалому файлі
 
-**Статус: виконано у v0.13.202.**
+**Статус: виконано у v0.13.202. Фолоу-ап у v0.13.204:** у download-фазі гілка скасування повертала `rc` невдалого трансферу (`Result_SaveSyncFailed`) замість коду скасування; замінено на `R_TRY(pbox->ShouldExitResult())`, щоб скасування завжди звітувалось як `Result_TransferCancelled` — консистентно з upload-фазою.
 
 **Проблема.** У `SyncSavesRemoteWithLocation()` перший невдалий upload (`R_THROW(Result_SaveSyncFailed)`, [save_menu_ops.cpp:1061–1064](sphaira/source/ui/menus/save/save_menu_ops.cpp:1061)) або download (через `DownloadOneBackupFile`, рядок 1083) миттєво завершує **всю** синхронізацію: решта файлів плану не передається, користувач бачить лише «Sync failed!» без переліку того, що встигло пройти. Пункт 5 розділу 9 `plan.md` («при обриві — продовжити з наступного файлу і в кінці показати список невдалих») ніколи не був реалізований. Захист від битих файлів уже є (download іде в `.temp` + rename — `DownloadOneBackupFile`, рядки 450–465) — його не чіпати.
 

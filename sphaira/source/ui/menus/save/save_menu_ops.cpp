@@ -119,15 +119,60 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                 size_t last_slash = latest_path_str.find_last_of('/');
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
                                 const auto remote_rel = "sphaira-saves/" + BuildSaveBasePath(e, false, "").toString();
+                                const auto remote_name = remote_rel + "/" + filename;
                                 pbox->SetActionName("Uploading: "_i18n + filename);
 
-                                curl::Api api(CURL_LOCATION_TO_API(loc));
-                                api.SetUpload(true);
-                                api.SetOption(curl::Path{latest_path});
-                                api.SetOption(curl::UploadInfo{remote_rel + "/" + filename});
-                                api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
+                                curl::ApiResult res{};
+                                if (location.entry.type == dump::DumpLocationType_SdCard) {
+                                    curl::Api api(CURL_LOCATION_TO_API(loc));
+                                    api.SetUpload(true);
+                                    api.SetOption(curl::Path{latest_path});
+                                    api.SetOption(curl::UploadInfo{remote_name});
+                                    api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
 
-                                auto res = curl::FromFile(api);
+                                    res = curl::FromFile(api);
+                                } else {
+                                    // stdio location (e.g. usb hdd): curl::Path uploads
+                                    // always open the file via the native sd fs, so a
+                                    // ums0:/ path would fail to open. stream the file
+                                    // through the location's own fs instead.
+                                    fs::File file;
+                                    if (R_FAILED(fs->OpenFile(latest_path, FsOpenMode_Read, &file))) {
+                                        log_write("[SYNC] auto-sync failed to open: %s\n", latest_path.s);
+                                        R_THROW(Result_SaveSyncFailed);
+                                    }
+
+                                    s64 file_size{};
+                                    R_TRY(file.GetSize(&file_size));
+
+                                    // the file (and offset) must outlive the curl call;
+                                    // the call is synchronous, so by-reference capture
+                                    // is safe here.
+                                    s64 offset{};
+                                    curl::Api api(CURL_LOCATION_TO_API(loc));
+                                    api.SetUpload(true);
+                                    api.SetOption(curl::UploadInfo{remote_name, file_size,
+                                        [&](void* ptr, size_t size) -> size_t {
+                                            // curl will request past the end of the file,
+                                            // returning 0 there ends the upload normally.
+                                            if (offset >= file_size) {
+                                                return 0;
+                                            }
+
+                                            u64 bytes_read{};
+                                            if (R_FAILED(file.Read(offset, ptr, size, FsReadOption_None, &bytes_read))) {
+                                                log_write("[SYNC] auto-sync failed to read: %s at offset: %zd\n", latest_path.s, offset);
+                                                return 0;
+                                            }
+
+                                            offset += static_cast<s64>(bytes_read);
+                                            return bytes_read;
+                                        }});
+                                    api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
+
+                                    res = curl::FromMemory(api);
+                                }
+
                                 if (!res.success) {
                                     log_write("[SYNC] auto-sync failed to upload: %s\n", filename.c_str());
                                     R_THROW(Result_SaveSyncFailed);
@@ -1103,10 +1148,10 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 static_cast<s64>(i), static_cast<s64>(downloads.size()) * SYNC_PROGRESS_SCALE);
             if (R_FAILED(rc)) {
                 // a user cancel also fails the transfer (the progress callback
-                // returns false) - that must still abort the whole sync.
-                if (pbox->ShouldExit()) {
-                    return rc;
-                }
+                // returns false) - that must still abort the whole sync, and it
+                // must report Result_TransferCancelled (not the transfer's own
+                // failure code), same as the upload phase above.
+                R_TRY(pbox->ShouldExitResult());
                 // DownloadOneBackupFile already logged the failure.
                 failed.emplace_back(d.name);
             }

@@ -1,5 +1,23 @@
 # Опис змін (Walkthrough) — Аудит Web Sharing / Direct Install
 
+## v0.13.204 — Фолоу-ап рев'ю S1+S4: upload зі stdio-локації та код скасування
+
+### Завдання
+Виправити дві знахідки рев'ю коммітів 9a3b2a3 (S1) та ea83b56 (S4):
+1. (S1) Після фіксу v0.13.201 auto-sync для stdio-локації знаходить правильний `latest_path` (`ums0:/...`), але передає його в `curl::Path` — а upload у `download.cpp` відкриває такий шлях жорстко через `fs::FsNativeSd`. Відкриття провалюється, і auto-sync падає з «Auto-sync failed!» одразу після успішного бекапу на USB-носій.
+2. (S4) У download-фазі `SyncSavesRemoteWithLocation` гілка скасування повертала `rc` невдалого трансферу (`Result_SaveSyncFailed`) замість коду скасування — неконсистентно з upload-фазою (`Result_TransferCancelled`) і з неправильним кодом в ErrorBox.
+
+### Підхід
+1. У [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp) (auto-sync-блок `Menu::BackupSaves`; `download.cpp` не чіпали):
+   * Для SD-локації (`dump::DumpLocationType_SdCard`) — шлях через `curl::Path{latest_path}` + `curl::FromFile`, без змін.
+   * Для stdio-локації файл стрімиться через callback-варіант `curl::UploadInfo{remote_name, file_size, cb}` + `curl::FromMemory` (той самий патерн, що `DumpToNetwork` у [dumper.cpp](file:///d:/git/dev/sphaira/sphaira/source/dumper.cpp)): файл відкривається через `fs->OpenFile` уже наявного `MakeFsForLocation(location)`, розмір — `file.GetSize`, у колбеку `file.Read` з локальним offset; запит curl за межами файлу (offset >= file_size) повертає 0 — штатне завершення. `UploadInternal` при заданому `m_callback` і порожньому `Path` використовує `ReadCustomCallback` і не торкається `FsNativeSd`. `fs::File` та offset оголошені до виклику curl і живуть до його завершення (виклик синхронний). `MakeAggregateProgressCb(pbox, true, i, total_units)` як OnProgress збережено в обох гілках.
+2. Там само, download-фаза `SyncSavesRemoteWithLocation`: `if (pbox->ShouldExit()) { return rc; }` замінено на `R_TRY(pbox->ShouldExitResult());` — скасування завжди звітується як `Result_TransferCancelled`.
+3. Додано примітки-фолоу-апи до Кроків S1 та S4 в `implementation_plan.md`.
+4. Версію програми у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt) оновлено до `0.13.204`.
+
+### Результати тестування
+* Збірку виконує Агент 1 у WSL. Ручна перевірка: (1) Backup у stdio-локацію (USB/HDD) з увімкненим `Auto-sync after backup` → щойно створений ZIP реально з'являється на WebDAV-сервері (звірити ім'я з timestamp), без «Auto-sync failed!»; Backup на SD — поведінка без змін. (2) Скасувати sync кнопкою B посеред download-фази → ErrorBox показує код `Result_TransferCancelled`, а не `Result_SaveSyncFailed`.
+
 ## v0.13.203 — Константа /dumps і чесні тексти Location та Sync (Кроки S2+S3)
 
 ### Завдання
