@@ -278,7 +278,7 @@ auto ErrorBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     // Draw GitHub URL
     next_y += help_h + 15.f;
-    gfx::drawText(vg, center_x, next_y, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://github.com/ITotalJustice/sphaira/issues", NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    gfx::drawText(vg, center_x, next_y, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "t.me/xhrxhrxhr", NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
     // Draw OK button box relative to dynamically calculated height
     const Vec4 box = {

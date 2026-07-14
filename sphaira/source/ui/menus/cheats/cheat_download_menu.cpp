@@ -272,14 +272,16 @@ void CheatDownloadMenu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "Cheats Not Found");
+            "%s", "Cheats Not Found"_i18n.c_str());
         return;
     }
 
     // Save and restore scissor to clip list drawing area
     nvgSave(vg);
-    // Clip area starts below the header text
-    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+    // Clip area starts below the header text; inflated by the selection outline
+    // pad so the highlight of edge rows isn't clipped.
+    const float p = gfx::SELECTION_OUTLINE_PAD;
+    nvgScissor(vg, 75.f - p, GetY() + 40.f - p, 1220.f - 150.f + p * 2, 720.f - GetY() - 40.f + p * 2);
     ON_SCOPE_EXIT(nvgRestore(vg));
 
     constexpr float text_xoffset{15.f};
@@ -580,7 +582,7 @@ void CheatDownloadMenu::FetchCheatsFileAndExtractBuildIds() {
                 m_loaded = true;
                 m_error_message.clear();
                 log_write("[Cheats] nx-cheats-db cheats file not found, HTTP code: %ld\n", result.code);
-                App::Notify("Cheats Not Found");
+                App::Notify("Cheats Not Found"_i18n);
                 SetPop();
                 return true;
             }
@@ -593,7 +595,7 @@ void CheatDownloadMenu::FetchCheatsFileAndExtractBuildIds() {
                 m_loading = false;
                 m_loaded = true;
                 m_error_message.clear();
-                App::Notify("Cheats Not Found");
+                App::Notify("Cheats Not Found"_i18n);
                 SetPop();
                 return true;
             }
@@ -609,7 +611,7 @@ void CheatDownloadMenu::FetchCheatsFileAndExtractBuildIds() {
             m_loaded = true;
             log_write("[Cheats] Multiple candidate Build IDs found, refusing to guess\n");
             m_error_message.clear();
-            App::Notify("Cheats Not Found");
+            App::Notify("Cheats Not Found"_i18n);
             SetPop();
             return true;
         }}
@@ -635,7 +637,7 @@ void CheatDownloadMenu::FetchKefirCheatsFromGithub(const std::string& build_id) 
                 m_cheats.clear();
                 m_error_message.clear();
                 log_write("[Cheats] KefirUpdater cheats file not found, HTTP code: %ld\n", result.code);
-                App::Notify("Cheats Not Found");
+                App::Notify("Cheats Not Found"_i18n);
                 SetPop();
                 return true;
             }
@@ -714,7 +716,7 @@ void CheatDownloadMenu::FetchNxDbCheatsFromGithub(const std::string& build_id) {
                 m_cheats.clear();
                 m_error_message.clear();
                 log_write("[Cheats] Cheats not found in nx-cheats-db (HTTP 404)\n");
-                App::Notify("Cheats Not Found");
+                App::Notify("Cheats Not Found"_i18n);
                 SetPop();
                 return true;
             }
@@ -822,7 +824,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                     m_error_message.clear();
                     log_write("[Cheats] Cheats not found on CheatSlips (HTTP 404)\n");
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (404 case)\n");
-                    App::Notify("Cheats Not Found");
+                    App::Notify("Cheats Not Found"_i18n);
                     m_should_close = true;
                     log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
                     return true;
@@ -856,7 +858,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                     m_error_message.clear();
                     log_write("[Cheats] Empty response from CheatSlips\n");
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (empty response case)\n");
-                    App::Notify("Cheats Not Found");
+                    App::Notify("Cheats Not Found"_i18n);
                     m_should_close = true;
                     log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
                     return true;
@@ -875,7 +877,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                         App::Notify("Daily quota exceeded - Add token for higher limits");
                     } else {
                         m_error_message.clear();
-                        App::Notify("Cheats Not Found");
+                        App::Notify("Cheats Not Found"_i18n);
                     }
                     log_write("[Cheats] No cheats found, error: %s\n", m_error_message.c_str());
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (no cheats case)\n");
@@ -916,7 +918,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                     m_error_message.clear();
                     log_write("[Cheats] Cheats not found on CheatSlips (HTTP 404)\n");
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (404 case)\n");
-                    App::Notify("Cheats Not Found");
+                    App::Notify("Cheats Not Found"_i18n);
                     m_should_close = true;
                     log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
                     return true;
@@ -950,7 +952,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                     m_error_message.clear();
                     log_write("[Cheats] Empty response from CheatSlips\n");
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (empty response case)\n");
-                    App::Notify("Cheats Not Found");
+                    App::Notify("Cheats Not Found"_i18n);
                     m_should_close = true;
                     log_write("[Cheats] DEBUG: m_should_close set to: %d\n", m_should_close);
                     return true;
@@ -969,7 +971,7 @@ void CheatDownloadMenu::FetchCheatsFromApi(const std::string& build_id) {
                         App::Notify("Daily quota exceeded - Add token for higher limits");
                     } else {
                         m_error_message.clear();
-                        App::Notify("Cheats Not Found");
+                        App::Notify("Cheats Not Found"_i18n);
                     }
                     log_write("[Cheats] No cheats found, error: %s\n", m_error_message.c_str());
                     log_write("[Cheats] DEBUG: Setting m_should_close = true (no cheats case)\n");

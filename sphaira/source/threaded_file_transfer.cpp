@@ -489,6 +489,42 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
     }
 }
 
+// the HOS filesystem rejects certain characters in a path component with
+// FsError_InvalidCharacter. some zip packs (e.g. cheat packs organised by
+// human-readable game title) carry entries whose names contain them, which
+// would otherwise abort the entire extraction on the first bad entry. replace
+// the offending characters with '_' per component, leaving '/' separators
+// intact. entries whose names are pure hex (atmosphere cheat paths) are
+// unaffected.
+bool IsInvalidPathChar(char c) {
+    const auto uc = static_cast<unsigned char>(c);
+    if (uc < 0x20) {
+        return true; // control characters
+    }
+    switch (c) {
+        case ':': case '*': case '?': case '"':
+        case '<': case '>': case '|': case '\\':
+            return true;
+        default:
+            return false;
+    }
+}
+
+fs::FsPath SanitizeZipEntryName(const fs::FsPath& name) {
+    fs::FsPath out = name;
+    bool changed = false;
+    for (u32 i = 0; out.s[i] != '\0'; i++) {
+        if (IsInvalidPathChar(out.s[i])) {
+            out.s[i] = '_';
+            changed = true;
+        }
+    }
+    if (changed) {
+        log_write("[Unzip] sanitized invalid entry name '%s' -> '%s'\n", name.s, out.s);
+    }
+    return out;
+}
+
 } // namespace
 
 Result Transfer(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, WriteCallback wfunc, Mode mode) {
@@ -657,6 +693,10 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             log_write("failed to get current info\n");
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
+
+        // replace characters HOS rejects (e.g. ':' in a game-title folder) so a
+        // single bad entry doesn't abort the whole pack with FsError_InvalidCharacter.
+        name = SanitizeZipEntryName(name);
 
         const auto entry_progress_start = progress_offset;
         const s64 entry_progress_size = use_entry_progress ? 1 : static_cast<s64>(info.uncompressed_size);

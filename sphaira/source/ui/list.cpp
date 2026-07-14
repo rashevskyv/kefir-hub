@@ -7,6 +7,10 @@
 
 namespace sphaira::ui {
 
+// extra scissor margin left around the list so the selection highlight
+// (border + drop shadow drawn just outside each item rect) isn't clipped.
+constexpr float SELECTION_PAD = gfx::SELECTION_OUTLINE_PAD;
+
 List::List(s64 row, s64 page, const Vec4& pos, const Vec4& v, const Vec2& pad)
 : m_row{row}
 , m_page{page}
@@ -394,7 +398,11 @@ void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     v.x -= yoff;
 
     nvgSave(vg);
-    nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
+    // the selection highlight (drawRectOutline) draws its border + drop shadow a
+    // few px OUTSIDE each item rect. clipping exactly at the list bounds cut the
+    // highlight of edge items, making it look sunken; pad the scissor so it can
+    // render on top. see drawRectOutlineInternal() in nvg_util.cpp.
+    nvgIntersectScissor(vg, GetX() - SELECTION_PAD, GetY() - SELECTION_PAD, GetW() + SELECTION_PAD * 2, GetH() + SELECTION_PAD * 2);
 
     for (s64 i = 0; i < count; i++, v.x += v.w + m_pad.x) {
         // skip anything not visible
@@ -421,7 +429,9 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     v.y -= yoff;
 
     nvgSave(vg);
-    nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
+    // pad the scissor so the selection highlight of edge items isn't clipped;
+    // see the note in DrawHome().
+    nvgIntersectScissor(vg, GetX() - SELECTION_PAD, GetY() - SELECTION_PAD, GetW() + SELECTION_PAD * 2, GetH() + SELECTION_PAD * 2);
 
     for (s64 i = 0; i < count; v.y += v.h + m_pad.y) {
         if (v.y > GetY() + GetH()) {

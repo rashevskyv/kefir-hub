@@ -231,7 +231,10 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     nvgSave(vg);
-    nvgScissor(vg, 75.f, GetY() + 78.f, 1220.f - 150.f, SCREEN_HEIGHT - (GetY() + 78.f));
+    // inflate the clip by the selection outline pad so the highlight of edge
+    // rows isn't clipped.
+    const float p = gfx::SELECTION_OUTLINE_PAD;
+    nvgScissor(vg, 75.f - p, GetY() + 78.f - p, 1220.f - 150.f + p * 2, SCREEN_HEIGHT - (GetY() + 78.f) + p * 2);
 
     m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;

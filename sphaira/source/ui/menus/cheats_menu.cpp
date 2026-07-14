@@ -824,7 +824,7 @@ auto DownloadAndExtractKefirCheats(ProgressBox* pbox, const char* url) -> Result
         fs.DeleteFile(KEFIR_CHEATS_ZIP);
     }
 
-    pbox->NewTransfer("Downloading cheats pack...");
+    pbox->NewTransfer("Downloading cheats pack..."_i18n);
     const auto result = curl::Api().ToFile(
         curl::Url{url},
         curl::Path{KEFIR_CHEATS_ZIP},
@@ -832,7 +832,7 @@ auto DownloadAndExtractKefirCheats(ProgressBox* pbox, const char* url) -> Result
     );
     R_UNLESS(result.success, Result_CurlFailedEasyInit);
 
-    pbox->NewTransfer("Installing cheats...");
+    pbox->NewTransfer("Installing cheats..."_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, KEFIR_CHEATS_ZIP, &fs, "/atmosphere"));
 
     if (fs.FileExists(KEFIR_CHEATS_ZIP)) {
@@ -845,23 +845,23 @@ auto DownloadAndExtractKefirCheats(ProgressBox* pbox, const char* url) -> Result
 
 void PromptKefirCheatsDownload(const char* title, const char* url) {
     App::Push<OptionBox>(
-        "Download and install this cheats pack?\nExisting matching cheat files may be overwritten.",
+        "Download and install this cheats pack?\nExisting matching cheat files may be overwritten."_i18n,
         "Cancel"_i18n, "Download"_i18n, 1,
         [title, url](auto op_index) {
             if (!op_index || *op_index != 1) {
                 return;
             }
 
-            App::Push<ProgressBox>(0, "Downloading..."_i18n, title,
+            App::Push<ProgressBox>(0, "Downloading..."_i18n, i18n::get(title),
                 [url](auto pbox) -> Result {
                     return DownloadAndExtractKefirCheats(pbox, url);
                 },
                 [](Result rc) {
                     if (R_SUCCEEDED(rc)) {
                         RefreshCheatMetadataCache();
-                        App::Notify("Cheats pack installed");
+                        App::Notify("Cheats pack installed"_i18n);
                     } else {
-                        App::Push<ErrorBox>(rc, "Failed to install cheats pack");
+                        App::Push<ErrorBox>(rc, "Failed to install cheats pack"_i18n);
                     }
                 }
             );
@@ -985,8 +985,8 @@ void CheatsMenu::OnSelect() {
             break;
         case 5: // Delete All Cheats
             App::Push<OptionBox>(
-                "Delete all existing cheat codes?\nThis will remove ALL cheat files\nfor ALL installed games.",
-                "Cancel"_i18n, "Delete", 1,
+                "Delete all existing cheat codes?\nThis will remove ALL cheat files\nfor ALL installed games."_i18n,
+                "Cancel"_i18n, "Delete"_i18n, 1,
                 [](auto op_index) {
                     if (!op_index || *op_index != 1) {
                         return;
@@ -997,9 +997,9 @@ void CheatsMenu::OnSelect() {
                         },
                         [](Result rc) {
                             if (R_SUCCEEDED(rc)) {
-                                App::Notify("Deleted all cheat codes");
+                                App::Notify("Deleted all cheat codes"_i18n);
                             } else {
-                                App::Push<ErrorBox>(rc, "Failed to delete cheats");
+                                App::Push<ErrorBox>(rc, "Failed to delete cheats"_i18n);
                             }
                         }
                     );
@@ -1013,18 +1013,20 @@ void CheatsMenu::OnSelect() {
                 },
                 [](Result rc) {
                     if (rc == 0) {
-                        App::Notify("No orphaned cheats found");
+                        App::Notify("No orphaned cheats found"_i18n);
                     } else if (rc > 0) {
-                        App::Notify("Deleted " + std::to_string(rc) + " orphaned cheats");
+                        char buf[128];
+                        std::snprintf(buf, sizeof(buf), "Deleted %d orphaned cheats"_i18n.c_str(), (int)rc);
+                        App::Notify(buf);
                     } else {
-                        App::Push<ErrorBox>(rc, "Failed to delete orphaned cheats");
+                        App::Push<ErrorBox>(rc, "Failed to delete orphaned cheats"_i18n);
                     }
                 }
             );
             break;
         case 7: // Clear Cheats Cache
             App::Push<OptionBox>(
-                "Clear cached cheats database?",
+                "Clear cached cheats database?"_i18n,
                 "Cancel"_i18n, "Clear"_i18n, 0,
                 [](auto op_index) {
                     if (!op_index || *op_index != 1) {
@@ -1036,9 +1038,9 @@ void CheatsMenu::OnSelect() {
                         },
                         [](Result rc) {
                             if (R_SUCCEEDED(rc)) {
-                                App::Notify("Cheats cache cleared successfully");
+                                App::Notify("Cheats cache cleared successfully"_i18n);
                             } else {
-                                App::Push<ErrorBox>(rc, "Failed to clear cheats cache");
+                                App::Push<ErrorBox>(rc, "Failed to clear cheats cache"_i18n);
                             }
                         }
                     );
@@ -1099,7 +1101,7 @@ void CheatViewMenu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "Scanning for cheats...");
+            "%s", "Scanning for cheats..."_i18n.c_str());
         return;
     }
 
@@ -1107,15 +1109,17 @@ void CheatViewMenu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "No installed cheats found");
+            "%s", "No installed cheats found"_i18n.c_str());
         return;
     }
 
     if (!m_games.empty()) {
         // Save and restore scissor to clip list drawing area
         nvgSave(vg);
-        // Clip area starts below the header text
-        nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+        // Clip area starts below the header text; inflated by the selection
+        // outline pad so the highlight of edge rows isn't clipped.
+        const float p = gfx::SELECTION_OUTLINE_PAD;
+        nvgScissor(vg, 75.f - p, GetY() + 40.f - p, 1220.f - 150.f + p * 2, 720.f - GetY() - 40.f + p * 2);
         ON_SCOPE_EXIT(nvgRestore(vg));
 
         constexpr float text_xoffset{15.f};
@@ -1180,19 +1184,19 @@ void CheatViewMenu::OnDelete() {
 
     const auto& game = m_games[m_index];
     App::Push<OptionBox>(
-        "Delete all cheats for " + game.name + "?",
-        "Cancel"_i18n, "Delete", 1,
+        "Delete all cheats for "_i18n + game.name + "?",
+        "Cancel"_i18n, "Delete"_i18n, 1,
         [this, game](auto op_index) {
             if (!op_index || *op_index != 1) {
                 return;
             }
 
             if (DeleteAllCheatsForTitle(game.title_id)) {
-                App::Notify("Deleted cheats for " + game.name);
+                App::Notify("Deleted cheats for "_i18n + game.name);
                 m_loaded = false; // Rescan
                 ScanGamesWithCheats();
             } else {
-                App::Notify("Failed to delete cheats");
+                App::Notify("Failed to delete cheats"_i18n);
             }
         }
     );
@@ -1340,10 +1344,10 @@ void CheatslipsLoginMenu::ShowPasswordKeyboard() {
 void CheatslipsLoginMenu::Authenticate() {
     auto token = AuthenticateCheatslips(m_email, m_password);
     if (token.empty()) {
-        App::Notify("Login failed. Check your credentials.");
+        App::Notify("Login failed. Check your credentials."_i18n);
     } else {
         SaveCheatslipsToken(token);
-        App::Notify("Logged in successfully!");
+        App::Notify("Logged in successfully!"_i18n);
     }
     SetPop();
 }

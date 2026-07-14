@@ -259,8 +259,6 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         }
     }
 
-    gfx::drawTextArgs(vg, center_x, m_pos.y + 40, 24, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), action.c_str());
-
     const auto draw_text = [&](ScrollingText& scroll, const std::string& txt, float y, float size, float pad, ThemeEntryID id){
         float bounds[4];
         nvgFontSize(vg, size);
@@ -272,6 +270,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         scroll.Draw(vg, true, title_x, y, GetW() - pad * 2, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(id), txt.c_str());
     };
 
+    // route the action line through ScrollingText too: a long action such as
+    // "Uploading: <long filename>.zip" would otherwise be drawn centred with no
+    // width constraint and spill past the popup edges (only hard-clipped by the
+    // outer scissor), which reads as overflow. now it scrolls within the box.
+    draw_text(m_scroll_action, action, m_pos.y + 40, 24, 160, ThemeEntryID_TEXT);
     draw_text(m_scroll_title, title, m_pos.y + 100, 22, 160, ThemeEntryID_TEXT);
     if (!transfer.empty()) {
         draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 30, ThemeEntryID_TEXT_INFO);

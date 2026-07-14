@@ -19,6 +19,11 @@ void drawRect(NVGcontext*, const Vec4& v, const NVGpaint& p, float rounding = 0.
 void drawRectOutline(NVGcontext*, const Theme*, float size, float x, float y, float w, float h, float rounding = 4.0F);
 void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float rounding = 4.0F);
 
+// drawRectOutline draws its border + drop shadow a few px OUTSIDE the given
+// rect. any scissor that clips list/selection content should be inflated by
+// this much so the highlight of an edge item isn't sunken/clipped.
+constexpr float SELECTION_OUTLINE_PAD = 10.f;
+
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);
 

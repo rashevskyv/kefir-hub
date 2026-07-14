@@ -136,6 +136,7 @@ private:
     bool m_is_image_pending{};
     // shared data end.
 
+    ScrollingText m_scroll_action{};
     ScrollingText m_scroll_title{};
     ScrollingText m_scroll_transfer{};
 

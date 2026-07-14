@@ -310,14 +310,16 @@ void CheatFilesMenu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "No cheat files found");
+            "%s", "No cheat files found"_i18n.c_str());
         return;
     }
 
     // Save and restore scissor to clip list drawing area
     nvgSave(vg);
-    // Clip area starts below the header text
-    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, 720.f - GetY() - 40.f);
+    // Clip area starts below the header text; inflated by the selection outline
+    // pad so the highlight of edge rows isn't clipped.
+    const float p = gfx::SELECTION_OUTLINE_PAD;
+    nvgScissor(vg, 75.f - p, GetY() + 40.f - p, 1220.f - 150.f + p * 2, 720.f - GetY() - 40.f + p * 2);
     ON_SCOPE_EXIT(nvgRestore(vg));
 
     constexpr float text_xoffset{15.f};
@@ -651,14 +653,16 @@ void CheatContentMenu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
             NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "Cheats Not Found");
+            "%s", "Cheats Not Found"_i18n.c_str());
         return;
     }
 
     // Save and restore scissor to clip list drawing area
     nvgSave(vg);
-    // Clip area starts below the header text
-    nvgScissor(vg, 75.f, GetY() + 40.f, 1220.f - 150.f, SCREEN_HEIGHT - 100.f - (GetY() + 40.f));
+    // Clip area starts below the header text; inflated by the selection outline
+    // pad so the highlight of edge rows isn't clipped.
+    const float p = gfx::SELECTION_OUTLINE_PAD;
+    nvgScissor(vg, 75.f - p, GetY() + 40.f - p, 1220.f - 150.f + p * 2, SCREEN_HEIGHT - 100.f - (GetY() + 40.f) + p * 2);
     ON_SCOPE_EXIT(nvgRestore(vg));
 
     constexpr float text_xoffset{15.f};
