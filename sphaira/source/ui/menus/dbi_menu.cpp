@@ -171,7 +171,16 @@ void Menu::UpdateActions() {
         );
     } else if (state == State::Installing) {
         SetAction(Button::B, Action{"Cancel remaining"_i18n, [this]() { CancelSession(); }});
-    } else if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
+    } else if (state == State::Summary) {
+        if (m_session_failed) {
+            SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
+        } else {
+            SetAction(Button::B, Action{"Back"_i18n, [this]() {
+                m_state = State::ReviewQueue;
+                m_actions_dirty = true;
+            }});
+        }
+    } else if (state == State::Cancelled || state == State::Failed) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
     } else {
         SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
@@ -199,6 +208,27 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         m_log_list->OnUpdate(controller, touch, m_log_index, m_log.size(), [this](bool, s64 index) {
             m_log_index = index;
         }, this);
+
+        const s64 log_size = static_cast<s64>(m_log.size());
+        if (log_size != m_log_last_seen_size) {
+            const bool follow_tail = (m_log_last_seen_size == 0) || (m_log_index >= m_log_last_seen_size - 1);
+            m_log_last_seen_size = log_size;
+            if (follow_tail) {
+                m_log_index = log_size - 1;
+                const auto page = m_log_list->GetPage();
+                const auto row = m_log_list->GetRow();
+                const auto max_y = m_log_list->GetMaxY();
+                float y_max = 0.f;
+                if (log_size >= page) {
+                    s64 rounded_count = log_size;
+                    if (rounded_count % row) {
+                        rounded_count = rounded_count + (row - rounded_count % row);
+                    }
+                    y_max = static_cast<float>(rounded_count - page) / row * max_y;
+                }
+                m_log_list->SetYoff(y_max);
+            }
+        }
     }
 }
 
@@ -212,8 +242,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             : state == State::WaitingForList
                 ? "PC connected. Select packages and press Start in DBI Backend."_i18n
                 : "Analysing packages (nothing is being installed)..."_i18n;
-        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 30.f,
-            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str());
+        gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, SCREEN_HEIGHT / 2.f - 30.f, 30.f, 1000.f,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
         return;
     }
     if (state == State::Failed) {
@@ -287,8 +317,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     if (!m_current_title.empty()) {
         const auto title = m_current_transfer.empty()
             ? m_current_title : m_current_title + " — " + m_current_transfer;
+        nvgSave(vg);
+        nvgIntersectScissor(vg, 70.f, GetY() + 38.f, 1140.f, 25.f);
         gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
             theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
+        nvgRestore(vg);
     }
     if (m_progress_size > 0) {
         const Vec4 bar{70.f, GetY() + 67.f, 1140.f, 12.f};
@@ -309,6 +342,7 @@ void Menu::ThreadFunction() {
     };
 
     for (;;) {
+        m_session_failed = false;
         if (m_cancel_requested || GetToken().stop_requested()) {
             finish_cancelled();
             return;
@@ -358,77 +392,107 @@ void Menu::ThreadFunction() {
             return;
         }
 
-        m_state = State::ReviewQueue;
-        m_actions_dirty = true;
-        while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) svcSleepThread(1e+6);
-        if (m_cancel_requested || GetToken().stop_requested()) {
-            m_usb_source->Finished(FINISHED_TIMEOUT);
-            m_state = State::Cancelled;
+        // Inner loop for ReviewQueue -> Installing -> Summary/Cancelled cycle
+        for (;;) {
+            if (m_cancel_requested || GetToken().stop_requested()) {
+                break;
+            }
+            m_state = State::ReviewQueue;
             m_actions_dirty = true;
-            return;
-        }
+            m_install_requested = false; // Reset request flag
 
-        m_state = State::Installing;
-        m_actions_dirty = true;
-        bool session_failed{};
-        for (size_t i = 0; i < m_queue.size(); i++) {
-            bool selected{};
-            yati::InstallAnalysis analysis{};
-            InstallTarget target{};
-            std::string name{};
-            {
-                SCOPED_MUTEX(&m_mutex);
-                selected = m_queue[i].install_selected;
-                analysis = m_queue[i].analysis;
-                target = m_queue[i].install_target;
-                name = m_queue[i].file_name;
-                m_current_package = i;
-                m_current_title = name;
-                m_progress_offset = 0;
-                m_progress_size = 0;
-            }
-            if (!selected) continue;
-            if (m_cancel_requested) break;
-
-            AddLog("Starting: "_i18n + name);
-            m_usb_source->SetFileNameForTranfser(name);
-            yati::ConfigOverride override{};
-            override.sd_card_install = target == InstallTarget::Sd ? true
-                : target == InstallTarget::Nand ? false : analysis.suggested_sd;
-            const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
-            const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
-            const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
-            {
-                SCOPED_MUTEX(&m_mutex);
-                m_queue[i].install_result = install_rc;
-                m_queue[i].installed = R_SUCCEEDED(install_rc);
-                if (R_SUCCEEDED(install_rc)) m_success_count++;
-                else if (!cancelled) m_failure_count++;
-            }
-            if (R_SUCCEEDED(install_rc)) AddLog("Installed: "_i18n + name);
-            else if (cancelled) AddLog("Cancelled: "_i18n + name);
-            else AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")");
-            if (cancelled) {
-                m_cancel_requested = true;
+            while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) svcSleepThread(1e+6);
+            if (m_cancel_requested || GetToken().stop_requested()) {
                 break;
             }
-            if (fatal_session_error) {
-                session_failed = true;
-                AddLog("DBI session failed; remaining packages were skipped."_i18n);
+
+            m_state = State::Installing;
+            m_actions_dirty = true;
+            {
+                SCOPED_MUTEX(&m_mutex);
+                m_success_count = 0;
+                m_failure_count = 0;
+            }
+            bool session_failed{};
+            for (size_t i = 0; i < m_queue.size(); i++) {
+                bool selected{};
+                yati::InstallAnalysis analysis{};
+                InstallTarget target{};
+                std::string name{};
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    selected = m_queue[i].install_selected;
+                    analysis = m_queue[i].analysis;
+                    target = m_queue[i].install_target;
+                    name = m_queue[i].file_name;
+                    m_current_package = i;
+                    m_current_title = name;
+                    m_progress_offset = 0;
+                    m_progress_size = 0;
+                }
+                if (!selected) continue;
+                if (m_cancel_requested) break;
+
+                AddLog("Starting: "_i18n + name);
+                m_usb_source->SetFileNameForTranfser(name);
+                yati::ConfigOverride override{};
+                override.sd_card_install = target == InstallTarget::Sd ? true
+                    : target == InstallTarget::Nand ? false : analysis.suggested_sd;
+                const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
+                const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    m_queue[i].install_result = install_rc;
+                    m_queue[i].installed = R_SUCCEEDED(install_rc);
+                    if (R_SUCCEEDED(install_rc)) {
+                        m_queue[i].selected = false; // Uncheck successfully installed package
+                        m_success_count++;
+                    }
+                    else if (!cancelled) m_failure_count++;
+                }
+                if (R_SUCCEEDED(install_rc)) AddLog("Installed: "_i18n + name);
+                else if (cancelled) AddLog("Cancelled: "_i18n + name);
+                else AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")");
+                if (cancelled) {
+                    m_cancel_requested = true;
+                    break;
+                }
+                if (fatal_session_error) {
+                    session_failed = true;
+                    m_session_failed = true;
+                    AddLog("DBI session failed; remaining packages were skipped."_i18n);
+                    break;
+                }
+            }
+
+            if (m_cancel_requested) {
+                AddLog("Session cancelled; completed installs were kept."_i18n);
+                m_state = State::Cancelled;
+            } else if (session_failed) {
+                m_state = State::Summary;
+            } else {
+                AddLog("Queue finished."_i18n);
+                m_state = State::Summary;
+            }
+            m_actions_dirty = true;
+
+            // Wait in Summary/Cancelled state
+            while ((m_state == State::Summary || m_state == State::Cancelled) && !m_cancel_requested && !GetToken().stop_requested()) {
+                svcSleepThread(1e+6);
+            }
+
+            if (m_cancel_requested || GetToken().stop_requested()) {
                 break;
             }
         }
 
-        if (!session_failed) m_usb_source->Finished(FINISHED_TIMEOUT);
+        if (!m_session_failed) {
+            m_usb_source->Finished(FINISHED_TIMEOUT);
+        }
         if (m_cancel_requested) {
-            AddLog("Session cancelled; completed installs were kept."_i18n);
             m_state = State::Cancelled;
-        } else if (session_failed) {
-            // Keep the completed-package history visible even though the USB
-            // session itself cannot safely continue.
-            m_state = State::Summary;
         } else {
-            AddLog("Queue finished."_i18n);
             m_state = State::Summary;
         }
         m_actions_dirty = true;
@@ -478,13 +542,19 @@ void Menu::ConfirmInstallPlan() {
 }
 
 void Menu::CancelSession() {
+    if (m_cancel_requested) {
+        SetPop();
+        return;
+    }
     m_cancel_requested = true;
     ueventSignal(&m_cancel_event);
     const auto state = m_state.load();
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
         m_usb_source->SignalCancel();
     }
-    if (state == State::WaitingForUsb || state == State::WaitingForList) {
+    if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::ReviewQueue) {
+        SetPop();
+    } else {
         m_state = State::Cancelled;
         m_actions_dirty = true;
     }

@@ -81,6 +81,8 @@ private:
     std::vector<std::string> m_log{};
     s64 m_index{};
     s64 m_log_index{};
+    s64 m_log_last_seen_size{};
+    bool m_session_failed{};
     std::string m_current_title{};
     std::string m_current_transfer{};
     s64 m_progress_offset{};
