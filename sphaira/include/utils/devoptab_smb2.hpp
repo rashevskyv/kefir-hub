@@ -70,7 +70,7 @@ public:
 	~CSMB2FS();
 	std::string name, mount_name;
 	
-	CSMB2_PARSER * SMB2_PARSER;
+	CSMB2_PARSER * SMB2_PARSER = nullptr;
 	
 	int unregister_fs() const {
 		return RemoveDevice(this->mount_name.data());

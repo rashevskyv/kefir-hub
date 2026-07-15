@@ -87,7 +87,38 @@ void ParseSmbUrl(const std::string& url, std::string& server, std::string& share
         share = url.substr(slash_pos + 1);
     }
 }
+
+static std::string UrlEncode(const std::string& value, bool keep_slash = false) {
+    constexpr char HEX[] = "0123456789ABCDEF";
+    std::string encoded;
+    encoded.reserve(value.size());
+
+    for (const char c : value) {
+        const auto ch = static_cast<unsigned char>(c);
+        const bool unreserved =
+            (ch >= 'a' && ch <= 'z') ||
+            (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') ||
+            ch == '-' || ch == '_' || ch == '.' || ch == '~';
+        if (unreserved || (keep_slash && ch == '/')) {
+            encoded += static_cast<char>(ch);
+        } else {
+            encoded += '%';
+            encoded += HEX[ch >> 4];
+            encoded += HEX[ch & 0x0F];
+        }
+    }
+
+    return encoded;
+}
 #endif
+
+bool IsSameNetworkLocation(const FsEntry& lhs, const FsEntry& rhs) {
+    return lhs.type == FsType::Network && rhs.type == FsType::Network &&
+        lhs.url.toString() == rhs.url.toString() &&
+        lhs.user.toString() == rhs.user.toString() &&
+        lhs.pass.toString() == rhs.pass.toString();
+}
 
 
 
@@ -712,7 +743,7 @@ void FsView::SetIndexFromLastFile(const LastFile& last_file) {
 
 void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
     if (m_fs && m_fs_entry.root == new_entry.root && m_fs_entry.type == new_entry.type) {
-        if (new_entry.type != FsType::Network || m_fs_entry.url == new_entry.url) {
+        if (new_entry.type != FsType::Network || IsSameNetworkLocation(m_fs_entry, new_entry)) {
             log_write("same fs, ignoring\n");
             return;
         }
@@ -840,6 +871,29 @@ void FsView::DisplayOptions() {
                         std::string raw_url = m_fs_entry.url.toString();
                         std::string user = m_fs_entry.user.toString();
                         std::string pass = m_fs_entry.pass.toString();
+#ifdef BUILD_SMB2
+                        std::string server;
+                        std::string share;
+                        ParseSmbUrl(raw_url, server, share);
+                        raw_url = "smb://";
+                        if (!user.empty()) {
+                            std::string creds = UrlEncode(user);
+                            if (!pass.empty()) {
+                                creds += ":" + UrlEncode(pass);
+                            }
+                            creds += "@";
+                            raw_url += creds;
+                        }
+                        raw_url += server;
+                        if (!share.empty()) {
+                            raw_url += "/" + UrlEncode(share, true);
+                        }
+                        std::string rel_path = GetNewPathCurrent().toString();
+                        if (rel_path.starts_with("smb2:")) {
+                            rel_path = rel_path.substr(5);
+                        }
+                        play_url = raw_url + UrlEncode(rel_path, true);
+#else
                         if (!user.empty()) {
                             std::string creds = user;
                             if (!pass.empty()) {
@@ -849,10 +903,8 @@ void FsView::DisplayOptions() {
                             raw_url.insert(6, creds);
                         }
                         std::string rel_path = GetNewPathCurrent().toString();
-                        if (rel_path.starts_with("smb2:")) {
-                            rel_path = rel_path.substr(5);
-                        }
                         play_url = raw_url + rel_path;
+#endif
                         nro_launch(GetNxmpPath(), nro_add_arg(play_url));
                     } else {
                         play_url = GetNewPathCurrent().toString();
@@ -1204,12 +1256,12 @@ void FsView::ShowSourcePicker() {
 
     const auto network_locations = location::Load();
     for (const auto& e: network_locations) {
-        if (e.url.rfind("smb://", 0) == 0) {
+        if (e.IsSmb()) {
             FsEntry entry{
                 .name = e.name,
                 .root = "smb2:/",
                 .type = FsType::Network,
-                .flags = FsEntryFlag_None,
+                .flags = FsEntryFlag_ReadOnly,
                 .url = e.url,
                 .user = e.user,
                 .pass = e.pass
@@ -1223,7 +1275,7 @@ void FsView::ShowSourcePicker() {
     for (size_t i = 0; i < fs_entries.size(); ++i) {
         bool is_current = false;
         if (m_fs_entry.type == fs_entries[i].type && m_fs_entry.root == fs_entries[i].root) {
-            if (m_fs_entry.type != FsType::Network || m_fs_entry.url == fs_entries[i].url) {
+            if (m_fs_entry.type != FsType::Network || IsSameNetworkLocation(m_fs_entry, fs_entries[i])) {
                 is_current = true;
             }
         }
@@ -1238,10 +1290,10 @@ void FsView::ShowSourcePicker() {
         const auto& target_entry = fs_entries[index_out];
         if (target_entry.type == FsType::Network) {
             FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
-            if (other_view && other_view->m_fs_entry.type == FsType::Network && other_view->m_fs_entry.url != target_entry.url) {
+            if (other_view && other_view->m_fs_entry.type == FsType::Network && !IsSameNetworkLocation(other_view->m_fs_entry, target_entry)) {
                 other_view->SetFs("/", FS_ENTRY_DEFAULT);
             }
-            if (m_fs_entry.type == FsType::Network && m_fs_entry.url != target_entry.url) {
+            if (m_fs_entry.type == FsType::Network && !IsSameNetworkLocation(m_fs_entry, target_entry)) {
                 SetFs("/", FS_ENTRY_DEFAULT);
             }
 

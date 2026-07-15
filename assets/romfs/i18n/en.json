@@ -765,6 +765,7 @@
   "Enter password (optional)": "Enter password (optional)",
   "Configure a new network storage share.": "Configure a new network storage share.",
   "Location added successfully!": "Location added successfully!",
+  "Failed to connect to SMB server!": "Failed to connect to SMB server!",
   "Sync with remote": "Sync with remote",
   "SYNC": "SYNC",
   "Auto-sync after backup": "Auto-sync after backup",

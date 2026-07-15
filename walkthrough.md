@@ -4,6 +4,22 @@
 > **Правило для оновлення Walkthrough:**
 > Після опису кожної нової виконаної задачі обов'язково додавай відповідні пункти тестування на реальній консолі до файлу [tests.md](file:///d:/git/dev/sphaira/tests.md).
 
+## v0.13.219 — Реалізація мережевих джерел Samba (SMB) та виправлення зауважень
+
+### Завдання
+Реалізувати підтримку Samba/SMB у файловому менеджері, вирішити проблеми з витоком ресурсів та ігноруванням результату монтування, заблокувати операції запису на SMB та реалізувати кодування спецсимволів (Percent-Encoding) для NXMP.
+
+### Реалізація
+1. До структури `location::Entry` в [location.hpp](file:///d:/git/dev/sphaira/sphaira/include/location.hpp) додано метод `IsSmb()`.
+2. Активовано devoptab-драйвер `CSMB2FS` (`devoptab_smb2.cpp` та `devoptab_smb2.hpp`), що використовує бібліотеку `libsmb2` та збирається під прапорцем `BUILD_SMB2`.
+3. У методах `RegisterFilesystem()` та `RegisterFilesystem_v2()` додано перевірку результату реєстрації `register_fs()`. При невдачі виконується `disconnect()` і повертається `false`.
+4. Реалізовано безпечний метод `disconnect()` з очищенням контексту `smb2`, URL/parser-ресурсів та обнуленням вказівників при будь-якій невдалій спробі підключення.
+5. У `ShowSourcePicker()` для SMB джерел встановлено прапорець `.flags = FsEntryFlag_ReadOnly`, а ручну перевірку схеми URL замінено на `e.IsSmb()`.
+6. Оновлено `FsView::IsReadOnly` в [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp) з урахуванням `m_fs_entry.IsReadOnly()`. Це надійно блокує операції Paste, Delete, Rename та створення файлів/папок на SMB ресурсах навіть при ввімкненому `Ignore read only`.
+7. Додано статичний метод `UrlEncode` у [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp), який кодує user, password, share та шлях при формуванні URL для NXMP. Порівняння SMB-локацій також враховує регістр user/password, тому зміна облікових даних створює нову сесію.
+8. Додано новий локалізаційний рядок `"Failed to connect to SMB server!"` у [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+9. Версію програми підвищено до `0.13.219`; повна збірка під WSL завершилась успішно. Збірка містить попередження зі сторонньої `libsmb2` та наявного коду проєкту, не зміненого цим релізом.
+
 ## v0.13.217 — Runtime-інтеграція каталогу та штатна локалізація описів
 
 ### Завдання

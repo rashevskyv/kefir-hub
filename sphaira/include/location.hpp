@@ -18,6 +18,10 @@ struct Entry {
     std::string pub_key{};
     std::string priv_key{};
     u16 port{};
+
+    bool IsSmb() const {
+        return url.starts_with("smb://");
+    }
 };
 using Entries = std::vector<Entry>;
 

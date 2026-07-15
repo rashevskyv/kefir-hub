@@ -101,9 +101,13 @@ bool CSMB2FS::CheckConnection(){
 bool CSMB2FS::RegisterFilesystem_v2(){
 	if(connect_v2() == 0){
 		cwd = "/";
-		fs_regisered = true;
-		register_fs();
-		return true;
+		if (register_fs() == 0) {
+			fs_regisered = true;
+			return true;
+		} else {
+			disconnect();
+			return false;
+		}
 	}
 	return false;
 }
@@ -111,9 +115,13 @@ bool CSMB2FS::RegisterFilesystem_v2(){
 bool CSMB2FS::RegisterFilesystem(){
 	if(connect() == 0){
 		cwd = "/";
-		fs_regisered = true;
-		register_fs();
-		return true;
+		if (register_fs() == 0) {
+			fs_regisered = true;
+			return true;
+		} else {
+			disconnect();
+			return false;
+		}
 	}
 	return false;
 }
@@ -121,45 +129,48 @@ bool CSMB2FS::RegisterFilesystem(){
 
 CSMB2FS::~CSMB2FS(){
 	auto lk = std::scoped_lock(this->session_mutex);
-	if (this->is_connected)
-        this->disconnect();
-	
 	if(fs_regisered){
 		unregister_fs();
 	}
+	this->disconnect();
+	delete SMB2_PARSER;
+	SMB2_PARSER = nullptr;
 }
 
 void CSMB2FS::disconnect(){
 	if(smb2!=nullptr){
-		smb2_disconnect_share(smb2);
+		if (is_connected) {
+			smb2_disconnect_share(smb2);
+		}
 	}
-	if(smb2url!=nullptr)
+	if(smb2url!=nullptr) {
 		smb2_destroy_url(smb2url);
-	if(smb2!=nullptr){
-		
-		smb2_destroy_context(smb2);
+		smb2url = nullptr;
 	}
+	if(smb2!=nullptr){
+		smb2_destroy_context(smb2);
+		smb2 = nullptr;
+	}
+	is_connected = false;
 }
 
 
 int CSMB2FS::connect_v2(){
+	disconnect();
 	smb2 = smb2_init_context();
 	if (smb2 == NULL) {
 		printf("SMB2 Failed to init context\n");
 		return -1;
-	
 	}
 	smb2_set_user(smb2,username.c_str()); 
 	smb2_set_password(smb2,password.c_str()); 
 	smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
 	
-	
-	
 	if (smb2_connect_share(smb2, server.c_str(), path.c_str(), username.c_str()) < 0) {
 		printf("smb2_connect_share failed. %s\n", smb2_get_error(smb2));
+		disconnect();
 		return -1;
 	}
-	
 	
 	maxreadsize = smb2_get_max_read_size(smb2);
 	
@@ -169,11 +180,14 @@ int CSMB2FS::connect_v2(){
 }
 
 int CSMB2FS::connect(){
+	if (SMB2_PARSER == nullptr || !SMB2_PARSER->valid) {
+		return -1;
+	}
+	disconnect();
 	smb2 = smb2_init_context();
 	if (smb2 == NULL) {
 		printf("SMB2 Failed to init context\n");
 		return -1;
-	
 	}
 	
 	smb2_set_user(smb2,SMB2_PARSER->user.c_str()); 
@@ -182,9 +196,9 @@ int CSMB2FS::connect(){
 	
 	if (smb2_connect_share(smb2, SMB2_PARSER->server.c_str(), SMB2_PARSER->share.c_str(), SMB2_PARSER->user.c_str()) < 0) {
 		printf("smb2_connect_share failed. %s\n", smb2_get_error(smb2));
+		disconnect();
 		return -1;
 	}
-	
 	
 	maxreadsize = smb2_get_max_read_size(smb2);
 	

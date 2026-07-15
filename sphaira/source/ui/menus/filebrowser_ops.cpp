@@ -721,6 +721,9 @@ static Result DeleteAllCollectionsWithSelected(ProgressBox* pbox, fs::Fs* fs, co
 }
 
 auto FsView::IsReadOnly(const fs::FsPath& path) const -> bool {
+    if (m_fs_entry.IsReadOnly()) {
+        return true;
+    }
     if (m_menu->m_ignore_read_only.Get()) {
         return false;
     }
