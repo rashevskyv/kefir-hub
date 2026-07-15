@@ -87,6 +87,7 @@ python tools/module_catalog/update_module_catalog.py --refresh
    ```
 4. Run `python tools/module_catalog/update_module_catalog.py` to regenerate the catalogs.
 5. Review candidates in `tools/module_catalog/i18n_en_candidates.json` and manually transfer verified strings into `assets/romfs/i18n/en.json`.
+6. Add the same stable keys to translated files such as `assets/romfs/i18n/uk.json`; the catalog tests fail if runtime entries and finished translations drift apart.
 
 ## Generated Output Contract
 

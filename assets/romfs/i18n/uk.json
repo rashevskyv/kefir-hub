@@ -905,5 +905,22 @@
   "After reboot: Disabled": "Після перезапуску: вимкнено",
   " - Applies after reboot": " - Застосовується після перезапуску",
   "This module applies after reboot. Use autostart.": "Цей модуль застосовується після перезапуску. Використайте автозапуск.",
-  "No description provided": "Опис модуля не надано"
+  "No description provided": "Опис модуля не надано",
+  "module.0000000000534C56.description": "Дозволяє підключати сторонні плагіни до ігор Switch під час їх роботи.",
+  "module.00FF0000636C6BFF.description": "Налаштування частот CPU, GPU та пам’яті окремо для кожної гри.",
+  "module.00FF0000A53BB665.description": "Передає аудіо та відео з Nintendo Switch на ПК через USB або мережу.",
+  "module.0100000000000352.description": "Емулює функціональність amiibo на Nintendo Switch.",
+  "module.0100000000000F12.description": "Змінює колірну температуру екрана Nintendo Switch.",
+  "module.010000000000BD00.description": "Дозволяє використовувати контролери від інших консолей на Nintendo Switch через Bluetooth.",
+  "module.010000000000C236.description": "Створює знімки екрана Nintendo Switch без втрат у форматі PNG.",
+  "module.0100000000C0FFEE.description": "Записує та відтворює налаштовувані послідовності натискань кнопок контролера.",
+  "module.420000000000000B.description": "Застосовує патчі перевірки підписів під час роботи системи.",
+  "module.420000000000000E.description": "FTP-сервер, що працює у фоновому режимі на Nintendo Switch.",
+  "module.4200000000000010.description": "Перенаправляє трафік локальної бездротової гри через IP-мережу.",
+  "module.42000000000000A0.description": "Збільшує пропускну здатність відеовиходу в док-режимі для підтримки вищої частоти оновлення.",
+  "module.4200000000000FFF.description": "Фоновий модуль відтворення аудіо для Nintendo Switch.",
+  "module.4200000000003103.description": "Надає автономний батьківський контроль і налаштовувані обмеження часу гри.",
+  "module.420000000007E51A.description": "Завантажує оверлеї NRO у фоновому процесі Nintendo Switch.",
+  "module.420000000007E51B.description": "Перезапускає nx-ovlloader без перезавантаження консолі.",
+  "module.690000000000000D.description": "Додає підтримку USB-контролерів у Nintendo Switch."
 }

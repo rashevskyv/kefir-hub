@@ -3,6 +3,7 @@
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
+#include "download.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -11,6 +12,7 @@
 #include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include <strings.h>
 #include <string_view>
 #include <yyjson.h>
@@ -22,36 +24,15 @@ namespace {
 
 constexpr const char* ATMOSPHERE_CONTENTS_PATH = "/atmosphere/contents";
 constexpr u64 TESLA_MENU_PROGRAM_ID = 0x420000000007E51AULL;
+constexpr const char* MODULE_CATALOG_ROMFS_PATH = "romfs:/modules/homebrew_sysmodules.json";
+constexpr const char* MODULE_INDEX_URL = "https://gist.githubusercontent.com/ndeadly/a4b8c01bb453028cd0008f282098f696/raw/homebrew_sysmodules.txt";
 
-constexpr const char* DEFAULT_MODULES_JSON = R"({
-  "0100000000000352": {
-    "en": "Amiibo emulation utility.",
-    "uk": "Утиліта для емуляції Amiibo."
-  },
-  "0100000000000bd5": {
-    "en": "Use controllers from other consoles on Nintendo Switch.",
-    "uk": "Використання геймпадів від інших консолей на Nintendo Switch."
-  },
-  "4200000000000010": {
-    "en": "System clock configuration for overclocking and underclocking.",
-    "uk": "Налаштування тактової частоти системи для розгону та енергозбереження."
-  },
-  "420000000000000b": {
-    "en": "Redirection of local wireless play over internet.",
-    "uk": "Перенаправлення локальної бездротової гри через інтернет."
-  },
-  "00ffff0000000000": {
-    "en": "Background FTP server.",
-    "uk": "Фоновий FTP-сервер."
-  }
-})";
+struct ModuleCatalogEntry {
+    std::string name;
+    std::string repository;
+};
 
-auto GetLanguageCode() -> std::string {
-    if (App::GetLanguage() == 14) { // Ukrainian
-        return "uk";
-    }
-    return "en";
-}
+using ModuleCatalog = std::unordered_map<std::string, ModuleCatalogEntry>;
 
 auto FormatProgramId(u64 program_id) -> std::string {
     char out[17]{};
@@ -106,6 +87,118 @@ auto ParseProgramId(std::string_view text, u64& out) -> bool {
     char* end{};
     out = std::strtoull(s.c_str(), &end, 16);
     return end && *end == '\0' && out != 0;
+}
+
+auto ParseModuleCatalog(const std::vector<u8>& data, ModuleCatalog& out) -> bool {
+    auto* doc = yyjson_read(reinterpret_cast<const char*>(data.data()), data.size(), YYJSON_READ_NOFLAG);
+    if (!doc) {
+        return false;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    auto* root = yyjson_doc_get_root(doc);
+    auto* modules = root && yyjson_is_obj(root) ? yyjson_obj_get(root, "modules") : nullptr;
+    if (!modules || !yyjson_is_obj(modules)) {
+        return false;
+    }
+
+    ModuleCatalog parsed;
+    yyjson_val* key;
+    yyjson_val* value;
+    size_t index, count;
+    yyjson_obj_foreach(modules, index, count, key, value) {
+        const char* tid = yyjson_get_str(key);
+        u64 program_id{};
+        if (!tid || !yyjson_is_obj(value) || !ParseProgramId(tid, program_id)) {
+            return false;
+        }
+
+        const auto normalized_tid = FormatProgramId(program_id);
+        if (normalized_tid != tid) {
+            return false;
+        }
+
+        ModuleCatalogEntry entry{
+            .name = JsonString(value, "name"),
+            .repository = JsonString(value, "repository"),
+        };
+        if (entry.name.empty() || entry.repository.empty()) {
+            return false;
+        }
+        parsed.emplace(normalized_tid, std::move(entry));
+    }
+
+    if (parsed.empty()) {
+        return false;
+    }
+    out = std::move(parsed);
+    return true;
+}
+
+auto LoadModuleCatalog(fs::Fs& fs, const fs::FsPath& path, ModuleCatalog& out) -> bool {
+    std::vector<u8> data;
+    return R_SUCCEEDED(fs.read_entire_file(path, data)) && ParseModuleCatalog(data, out);
+}
+
+auto ParseModuleIndex(const std::vector<u8>& data, std::unordered_map<std::string, std::string>& out) -> bool {
+    std::istringstream input{std::string{reinterpret_cast<const char*>(data.data()), data.size()}};
+    std::unordered_map<std::string, std::string> parsed;
+    std::string line;
+    while (std::getline(input, line)) {
+        std::istringstream fields{line};
+        std::string tid;
+        std::string name;
+        if (!(fields >> tid >> name)) {
+            continue;
+        }
+        if (tid.starts_with("/*") || tid.starts_with("#")) {
+            continue;
+        }
+
+        u64 program_id{};
+        if (!ParseProgramId(tid, program_id) || FormatProgramId(program_id) != tid || name.empty()) {
+            return false;
+        }
+        parsed.insert_or_assign(tid, name);
+    }
+
+    // Reject empty or obviously truncated responses before replacing a good cache.
+    if (parsed.size() < 50) {
+        return false;
+    }
+    out = std::move(parsed);
+    return true;
+}
+
+auto LoadModuleIndex(fs::Fs& fs, const fs::FsPath& path, std::unordered_map<std::string, std::string>& out) -> bool {
+    std::vector<u8> data;
+    return R_SUCCEEDED(fs.read_entire_file(path, data)) && ParseModuleIndex(data, out);
+}
+
+auto LoadPreferredModuleCatalog() -> ModuleCatalog {
+    ModuleCatalog catalog;
+    fs::FsStdio stdio;
+    if (!LoadModuleCatalog(stdio, MODULE_CATALOG_ROMFS_PATH, catalog)) {
+        log_write("[MODULES] failed to load built-in catalog\n");
+    }
+
+    std::unordered_map<std::string, std::string> online_index;
+    fs::FsNativeSd sd;
+    if (LoadModuleIndex(sd, paths::MODULE_INDEX, online_index)) {
+        for (auto& [tid, name] : online_index) {
+            catalog[tid].name = std::move(name);
+        }
+    }
+    return catalog;
+}
+
+auto ModuleDescription(u64 program_id) -> std::string {
+    const auto key = "module." + FormatProgramId(program_id) + ".description";
+    auto description = i18n::get(key);
+    if (description == key) {
+        description = "No description provided"_i18n;
+    }
+    return description;
 }
 
 auto ParseToolbox(const std::vector<u8>& data, ModuleItem& out) -> bool {
@@ -199,6 +292,7 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
         std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
             m_loaded = false;
             LoadModules();
+            RequestCatalogUpdate(true);
         }})
     );
 
@@ -313,6 +407,7 @@ void UninstallerMenu::OnFocusGained() {
     } else {
         RefreshStatuses();
     }
+    RequestCatalogUpdate();
 }
 
 void UninstallerMenu::SetIndex(s64 index) {
@@ -334,45 +429,7 @@ void UninstallerMenu::LoadModules() {
     m_error_message.clear();
 
     fs::FsNativeSd fs;
-
-    // Load modules.json or create default
-    std::unordered_map<std::string, std::string> descriptions;
-    const std::string modules_json_path = paths::MODULES;
-    if (!fs.FileExists(modules_json_path)) {
-        fs.CreateDirectoryRecursively(paths::DATA_ROOT);
-        std::string default_json = DEFAULT_MODULES_JSON;
-        std::vector<u8> json_data(default_json.begin(), default_json.end());
-        fs.write_entire_file(modules_json_path, json_data);
-    }
-
-    std::vector<u8> modules_data;
-    if (R_SUCCEEDED(fs.read_entire_file(modules_json_path, modules_data))) {
-        auto* doc = yyjson_read(reinterpret_cast<const char*>(modules_data.data()), modules_data.size(), YYJSON_READ_NOFLAG);
-        if (doc) {
-            auto* root = yyjson_doc_get_root(doc);
-            if (root && yyjson_is_obj(root)) {
-                const auto lang_code = GetLanguageCode();
-                yyjson_val* key_val;
-                yyjson_val* val;
-                size_t idx, max;
-                yyjson_obj_foreach(root, idx, max, key_val, val) {
-                    const char* tid_str = yyjson_get_str(key_val);
-                    if (tid_str && yyjson_is_obj(val)) {
-                        std::string desc = JsonString(val, lang_code.c_str());
-                        if (desc.empty()) {
-                            desc = JsonString(val, "en");
-                        }
-                        if (!desc.empty()) {
-                            std::string tid_key = tid_str;
-                            std::transform(tid_key.begin(), tid_key.end(), tid_key.begin(), ::tolower);
-                            descriptions[tid_key] = desc;
-                        }
-                    }
-                }
-            }
-            yyjson_doc_free(doc);
-        }
-    }
+    const auto catalog = LoadPreferredModuleCatalog();
 
     fs::Dir dir;
     Result rc = fs.OpenDirectory(ATMOSPHERE_CONTENTS_PATH, FsDirOpenMode_ReadDirs | FsDirOpenMode_NoFileSize, &dir);
@@ -415,13 +472,10 @@ void UninstallerMenu::LoadModules() {
             continue;
         }
 
-        std::string tid_lower = item.program_id_text;
-        std::transform(tid_lower.begin(), tid_lower.end(), tid_lower.begin(), ::tolower);
-        if (auto it = descriptions.find(tid_lower); it != descriptions.end()) {
-            item.description = it->second;
-        } else {
-            item.description = "No description provided"_i18n;
+        if (const auto it = catalog.find(item.program_id_text); it != catalog.end() && item.name == item.program_id_text) {
+            item.name = it->second.name;
         }
+        item.description = ModuleDescription(item.program_id);
 
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
         item.running = IsRunning(item.program_id);
@@ -438,6 +492,51 @@ void UninstallerMenu::LoadModules() {
     m_loaded = true;
     SetIndex(std::min<s64>(m_index, static_cast<s64>(m_items.size()) - 1));
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
+}
+
+void UninstallerMenu::RequestCatalogUpdate(bool force) {
+    if (m_catalog_update_pending || (m_catalog_update_attempted && !force)) {
+        return;
+    }
+
+    m_catalog_update_attempted = true;
+    m_catalog_update_pending = true;
+    const auto queued = curl::Api().ToFileAsync(
+        curl::Url{MODULE_INDEX_URL},
+        curl::Path{paths::MODULE_INDEX_DOWNLOAD},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this](auto& result) {
+            m_catalog_update_pending = false;
+
+            fs::FsNativeSd fs;
+            if (!result.success) {
+                fs.DeleteFile(paths::MODULE_INDEX_DOWNLOAD);
+                log_write("[MODULES] online catalog unavailable; using cached or built-in catalog\n");
+                return;
+            }
+
+            std::unordered_map<std::string, std::string> downloaded;
+            if (!LoadModuleIndex(fs, paths::MODULE_INDEX_DOWNLOAD, downloaded)) {
+                fs.DeleteFile(paths::MODULE_INDEX_DOWNLOAD);
+                log_write("[MODULES] rejected invalid online module index\n");
+                return;
+            }
+
+            fs.DeleteFile(paths::MODULE_INDEX);
+            if (R_FAILED(fs.RenameFile(paths::MODULE_INDEX_DOWNLOAD, paths::MODULE_INDEX))) {
+                fs.DeleteFile(paths::MODULE_INDEX_DOWNLOAD);
+                log_write("[MODULES] failed to replace cached module index\n");
+                return;
+            }
+
+            log_write("[MODULES] updated online module index (%zu entries)\n", downloaded.size());
+            LoadModules();
+        }}
+    );
+
+    if (!queued) {
+        m_catalog_update_pending = false;
+    }
 }
 
 void UninstallerMenu::RefreshStatuses() {

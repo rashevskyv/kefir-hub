@@ -18,6 +18,10 @@ from merge import (
 
 class TestModuleCatalog(unittest.TestCase):
 
+    @staticmethod
+    def project_root():
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
     def test_normalize_tid(self):
         # Valid TIDs
         self.assertEqual(normalize_tid("00FF0000636C6BFF"), "00FF0000636C6BFF")
@@ -126,6 +130,37 @@ class TestModuleCatalog(unittest.TestCase):
                 self.assertTrue(override.get("repository"), tid)
                 self.assertTrue(override.get("description_en"), tid)
                 self.assertTrue(override.get("tid_evidence"), tid)
+
+    def test_runtime_catalog_and_translations_are_in_sync(self):
+        root = self.project_root()
+        with open(os.path.join(root, "assets", "romfs", "modules", "homebrew_sysmodules.json"), encoding="utf-8") as f:
+            runtime = json.load(f)["modules"]
+        with open(os.path.join(root, "tools", "module_catalog", "i18n_en_candidates.json"), encoding="utf-8") as f:
+            candidates = json.load(f)
+        with open(os.path.join(root, "assets", "romfs", "i18n", "en.json"), encoding="utf-8") as f:
+            en = json.load(f)
+        with open(os.path.join(root, "assets", "romfs", "i18n", "uk.json"), encoding="utf-8") as f:
+            uk = json.load(f)
+
+        expected_keys = {f"module.{tid}.description" for tid in runtime}
+        self.assertEqual(expected_keys, set(candidates))
+        for key in expected_keys:
+            self.assertEqual(en.get(key), candidates[key])
+            self.assertTrue(uk.get(key), key)
+            self.assertNotEqual(uk[key], en[key], key)
+
+    def test_module_manager_uses_runtime_catalog_and_not_legacy_description_json(self):
+        source_path = os.path.join(
+            self.project_root(), "sphaira", "source", "ui", "menus", "uninstaller_menu.cpp"
+        )
+        with open(source_path, encoding="utf-8") as f:
+            source = f.read()
+
+        self.assertIn("romfs:/modules/homebrew_sysmodules.json", source)
+        self.assertIn("gist.githubusercontent.com/ndeadly/a4b8c01bb453028cd0008f282098f696", source)
+        self.assertIn("module.\" + FormatProgramId(program_id) + \".description", source)
+        self.assertNotIn("DEFAULT_MODULES_JSON", source)
+        self.assertNotIn("paths::MODULES", source)
 
 if __name__ == "__main__":
     unittest.main()

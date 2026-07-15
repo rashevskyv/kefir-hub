@@ -11,10 +11,13 @@ namespace {
 
 std::vector<u8> g_sdmc_data;
 std::vector<u8> g_romfs_data;
+std::vector<u8> g_en_data;
 yyjson_doc* sdmc_json = nullptr;
 yyjson_val* sdmc_root = nullptr;
 yyjson_doc* romfs_json = nullptr;
 yyjson_val* romfs_root = nullptr;
+yyjson_doc* en_json = nullptr;
+yyjson_val* en_root = nullptr;
 std::unordered_map<std::string, std::string> g_tr_cache;
 
 std::string get_internal(std::string_view str) {
@@ -44,6 +47,21 @@ std::string get_internal(std::string_view str) {
     // 2. Fall back to romfs if key was not found or invalid in SDMC
     if (romfs_json && romfs_root) {
         auto key = yyjson_obj_getn(romfs_root, str.data(), str.length());
+        if (key) {
+            auto val = yyjson_get_str(key);
+            auto val_len = yyjson_get_len(key);
+            if (val && val_len) {
+                const std::string ret = {val, val_len};
+                g_tr_cache.insert_or_assign(it, kkey, ret);
+                return ret;
+            }
+        }
+    }
+
+    // 3. Stable non-English keys (for example module.<TID>.description)
+    // fall back to the built-in English translation file.
+    if (en_json && en_root) {
+        auto key = yyjson_obj_getn(en_root, str.data(), str.length());
         if (key) {
             auto val = yyjson_get_str(key);
             auto val_len = yyjson_get_len(key);
@@ -119,6 +137,17 @@ bool init(long index) {
         }
     }
 
+    if (lang_name != "en") {
+        const fs::FsPath en_path = "romfs:/i18n/en.json";
+        rc = fs::FsStdio().read_entire_file(en_path, g_en_data);
+        if (R_SUCCEEDED(rc)) {
+            en_json = yyjson_read((const char*)g_en_data.data(), g_en_data.size(), YYJSON_READ_ALLOW_TRAILING_COMMAS|YYJSON_READ_ALLOW_COMMENTS|YYJSON_READ_ALLOW_INVALID_UNICODE);
+            if (en_json) {
+                en_root = yyjson_doc_get_root(en_json);
+            }
+        }
+    }
+
     // Try loading SDMC override translation
     rc = fs::FsNativeSd().read_entire_file(sdmc_path, g_sdmc_data);
     if (R_SUCCEEDED(rc)) {
@@ -128,10 +157,15 @@ bool init(long index) {
         }
     }
 
-    return (romfs_json != nullptr) || (sdmc_json != nullptr);
+    return (romfs_json != nullptr) || (sdmc_json != nullptr) || (en_json != nullptr);
 }
 
 void exit() {
+    if (en_json) {
+        yyjson_doc_free(en_json);
+        en_json = nullptr;
+        en_root = nullptr;
+    }
     if (sdmc_json) {
         yyjson_doc_free(sdmc_json);
         sdmc_json = nullptr;
@@ -144,6 +178,7 @@ void exit() {
     }
     g_sdmc_data.clear();
     g_romfs_data.clear();
+    g_en_data.clear();
 }
 
 std::string get(std::string_view str) {

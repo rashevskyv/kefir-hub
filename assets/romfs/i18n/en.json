@@ -901,5 +901,22 @@
   "After reboot: Disabled": "After reboot: Disabled",
   " - Applies after reboot": " - Applies after reboot",
   "This module applies after reboot. Use autostart.": "This module applies after reboot. Use autostart.",
-  "No description provided": "No description provided"
+  "No description provided": "No description provided",
+  "module.0000000000534C56.description": "Allows injecting third-party plugins into Switch games at runtime.",
+  "module.00FF0000636C6BFF.description": "Controls CPU, GPU, and memory clock speeds per application.",
+  "module.00FF0000A53BB665.description": "Streams Nintendo Switch game audio and video to your PC via USB or network.",
+  "module.0100000000000352.description": "Emulates amiibo functionality on Nintendo Switch.",
+  "module.0100000000000F12.description": "Modifies color temperature of the Nintendo Switch screen.",
+  "module.010000000000BD00.description": "Use controllers from other consoles natively on your Nintendo Switch via Bluetooth.",
+  "module.010000000000C236.description": "Lossless PNG screenshot sysmodule for the Nintendo Switch.",
+  "module.0100000000C0FFEE.description": "Records and plays back configurable controller button sequences.",
+  "module.420000000000000B.description": "Applies signature-check patches at runtime.",
+  "module.420000000000000E.description": "FTP server running in the background of your Switch.",
+  "module.4200000000000010.description": "Redirects local wireless multiplayer traffic over an IP network.",
+  "module.42000000000000A0.description": "Increases docked display bandwidth to support higher refresh rates.",
+  "module.4200000000000FFF.description": "Background audio player sysmodule for Nintendo Switch.",
+  "module.4200000000003103.description": "Provides offline parental controls and configurable play-time limits.",
+  "module.420000000007E51A.description": "Host process for loading overlay NROs on the Nintendo Switch.",
+  "module.420000000007E51B.description": "Restarts nx-ovlloader without requiring a console reboot.",
+  "module.690000000000000D.description": "Nintendo Switch sysmodule for USB controller support."
 }

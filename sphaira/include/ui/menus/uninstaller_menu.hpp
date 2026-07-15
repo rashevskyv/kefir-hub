@@ -34,12 +34,15 @@ private:
     void ToggleSelectedModule();
     void ToggleSelectedAutostart();
     void UpdateSubheading();
+    void RequestCatalogUpdate(bool force = false);
 
 private:
     std::vector<ModuleItem> m_items;
     s64 m_index{};
     std::unique_ptr<List> m_list;
     bool m_loaded{false};
+    bool m_catalog_update_attempted{false};
+    bool m_catalog_update_pending{false};
     std::string m_error_message;
 };
 
