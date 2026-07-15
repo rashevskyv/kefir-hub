@@ -1,0 +1,532 @@
+{
+  "generated_at": "2026-07-15T15:46:14Z",
+  "modules": {
+    "0000000000000123": {
+      "confidence": "unresolved",
+      "name": "sysHaze",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF0000000002AA": {
+      "confidence": "unresolved",
+      "name": "BootSoundNX",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF000053484101": {
+      "confidence": "unresolved",
+      "name": "switch-ha-sysmodule",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF000053484102": {
+      "confidence": "unresolved",
+      "name": "switch-ha-overlay-loader",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF0000636C6BF2": {
+      "confidence": "unresolved",
+      "name": "nx-reader",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF00006D7470FF": {
+      "confidence": "unresolved",
+      "name": "mtp-server-nx",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF0000B378D640": {
+      "confidence": "unresolved",
+      "name": "NX-FanControl",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF007468656D65": {
+      "confidence": "unresolved",
+      "name": "ThemeSysmodule",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "00FF747765616BFF": {
+      "confidence": "unresolved",
+      "name": "switch-sys-tweak",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000052": {
+      "confidence": "unresolved",
+      "name": "switch-nfp-mitm",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000081": {
+      "confidence": "unresolved",
+      "name": "nx-btred",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000464": {
+      "confidence": "unresolved",
+      "name": "SwitchPresence",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000523": {
+      "confidence": "unresolved",
+      "name": "aoc-mitm",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000895": {
+      "confidence": "unresolved",
+      "name": "sys-notif-led",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000901": {
+      "confidence": "unresolved",
+      "name": "OJDS-NX",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000BED": {
+      "confidence": "unresolved",
+      "name": "vax",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000BEF": {
+      "confidence": "unresolved",
+      "name": "fsp-usb",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000CAB": {
+      "confidence": "unresolved",
+      "name": "nx-TAS",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000DAD": {
+      "confidence": "unresolved",
+      "name": "nx_overlay",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000000FAF": {
+      "confidence": "unresolved",
+      "name": "hid-mitm/hid-mitm-plus",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000006480": {
+      "confidence": "unresolved",
+      "name": "twili",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000007200": {
+      "confidence": "unresolved",
+      "name": "ilia",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "010000000000B1C0": {
+      "confidence": "unresolved",
+      "name": "mcp-server",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "010000000000C235": {
+      "confidence": "unresolved",
+      "name": "Freebird",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "010000000000F00F": {
+      "confidence": "unresolved",
+      "name": "dvdnx",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "010000000000FFAB": {
+      "confidence": "unresolved",
+      "name": "usb-mitm",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "01000000001ED1ED": {
+      "confidence": "unresolved",
+      "name": "maydel",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0100000000251020": {
+      "confidence": "unresolved",
+      "name": "sys-Notification",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "010041544D530000": {
+      "confidence": "unresolved",
+      "name": "ams.mitm",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0107330726762000": {
+      "confidence": "unresolved",
+      "name": "sys-rgb",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "0532232232232000": {
+      "confidence": "unresolved",
+      "name": "NX-input-recorder",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "054E4F4558454000": {
+      "confidence": "unresolved",
+      "name": "noexs",
+      "reasons": [
+        "Repository not found"
+      ],
+      "repository": ""
+    },
+    "2200000000000100": {
+      "confidence": "unresolved",
+      "name": "SplitNX",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4100000000000324": {
+      "confidence": "unresolved",
+      "name": "sys-http",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4100000002025924": {
+      "confidence": "unresolved",
+      "name": "sys-KeyX",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000000": {
+      "confidence": "unresolved",
+      "name": "sys-tune/sys-audioplayer",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "420000000000000C": {
+      "confidence": "unresolved",
+      "name": "snapback",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "420000000000000F": {
+      "confidence": "unresolved",
+      "name": "SlideNX",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "420000000000011B": {
+      "confidence": "unresolved",
+      "name": "ftpsrv",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000666": {
+      "confidence": "unresolved",
+      "name": "network_mitm",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000811": {
+      "confidence": "unresolved",
+      "name": "bitmap-printer",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000BA6": {
+      "confidence": "unresolved",
+      "name": "BTSounds",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000BAC": {
+      "confidence": "unresolved",
+      "name": "SwiTAS",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000000FFF": {
+      "confidence": "unresolved",
+      "name": "sys-triplayer",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000003103": {
+      "confidence": "unresolved",
+      "name": "NSParentalControl",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000021371": {
+      "confidence": "unresolved",
+      "name": "displayflipper",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "420000000005C09E": {
+      "confidence": "unresolved",
+      "name": "sys-scope",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "420000000007E51B": {
+      "confidence": "unresolved",
+      "name": "nx-ovlreloader",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000474442": {
+      "confidence": "unresolved",
+      "name": "sys-gdbstub",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000000696969": {
+      "confidence": "unresolved",
+      "name": "sys-logger",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200000AF1E8DA89": {
+      "confidence": "unresolved",
+      "name": "ControllerSaver",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "42000062616B6101": {
+      "confidence": "unresolved",
+      "name": "sys-screenuploader",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4200736372697074": {
+      "confidence": "unresolved",
+      "name": "sys-script",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4206900000000012": {
+      "confidence": "unresolved",
+      "name": "sfdnsres_mitm",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "430000000000000A": {
+      "confidence": "unresolved",
+      "name": "sys-netcheat",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "430000000000000B": {
+      "confidence": "unresolved",
+      "name": "sys-botbase",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "430000000000000C": {
+      "confidence": "unresolved",
+      "name": "sys-botbaseplus",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "43000000000000FF": {
+      "confidence": "unresolved",
+      "name": "nxsh",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "4300000000000909": {
+      "confidence": "unresolved",
+      "name": "NXGallery",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "430000000000ACDB": {
+      "confidence": "unresolved",
+      "name": "sys-padlink",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "5600000000000000": {
+      "confidence": "unresolved",
+      "name": "NXCord",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    },
+    "6900000000000420": {
+      "confidence": "unresolved",
+      "name": "fs-patch",
+      "reasons": [
+        "Repository not found",
+        "Description is empty"
+      ],
+      "repository": ""
+    }
+  },
+  "schema_version": 1
+}

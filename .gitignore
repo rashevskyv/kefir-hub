@@ -32,3 +32,8 @@ build.sh
 walkthrough.md
 task.md
 build_output.txt
+tools/module_catalog/cache/
+__pycache__/
+*.py[cod]
+
+

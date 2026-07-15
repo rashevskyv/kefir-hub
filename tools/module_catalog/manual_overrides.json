@@ -1,0 +1,206 @@
+{
+  "0000000000534C56": {
+    "name": "SaltyNX",
+    "aliases": ["SaltyNX"],
+    "repository": "https://github.com/masagrator/SaltyNX",
+    "description_en": "Allows injecting third-party plugins into Switch games at runtime.",
+    "description_source": "https://github.com/masagrator/SaltyNX",
+    "tid_evidence": [
+      "https://github.com/masagrator/SaltyNX/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified SaltyNX plugins injector."
+  },
+  "00FF0000A53BB665": {
+    "name": "SysDVR",
+    "aliases": ["SysDVR"],
+    "repository": "https://github.com/exelix11/SysDVR",
+    "description_en": "Streams Nintendo Switch game audio and video to your PC via USB or network.",
+    "description_source": "https://github.com/exelix11/SysDVR",
+    "tid_evidence": [
+      "https://github.com/exelix11/SysDVR/blob/master/sysmodule/toolbox.json"
+    ],
+    "confidence": "verified",
+    "notes": "Verified SysDVR streaming module."
+  },
+  "0100000000000F12": {
+    "name": "Fizeau",
+    "aliases": ["Fizeau"],
+    "repository": "https://github.com/averne/Fizeau",
+    "description_en": "Modifies color temperature of the Nintendo Switch screen.",
+    "description_source": "https://github.com/averne/Fizeau",
+    "tid_evidence": [
+      "https://github.com/averne/Fizeau/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified Fizeau color temperature module."
+  },
+  "010000000000C236": {
+    "name": "PNGShot",
+    "aliases": ["PNGShot"],
+    "repository": "https://github.com/J-D-K/PNGShot",
+    "description_en": "Lossless PNG screenshot sysmodule for the Nintendo Switch.",
+    "description_source": "https://github.com/J-D-K/PNGShot",
+    "tid_evidence": [
+      "https://github.com/J-D-K/PNGShot/blob/master/toolbox.json"
+    ],
+    "confidence": "verified",
+    "notes": "Verified PNGShot screenshot module."
+  },
+  "42000000000000A0": {
+    "name": "sys-dock",
+    "aliases": ["sys-dock"],
+    "repository": "https://github.com/masagrator/sys-dock",
+    "description_en": "Allows switching between handheld and docked profiles.",
+    "description_source": "https://github.com/masagrator/sys-dock",
+    "tid_evidence": [
+      "https://github.com/masagrator/sys-dock/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified sys-dock profile switcher."
+  },
+  "0100000000000352": {
+    "name": "emuiibo",
+    "aliases": ["emuiibo"],
+    "repository": "https://github.com/XorTroll/emuiibo",
+    "description_en": "Emulates amiibo functionality on Nintendo Switch.",
+    "description_source": "https://github.com/XorTroll/emuiibo",
+    "tid_evidence": [
+      "https://github.com/XorTroll/emuiibo/blob/master/emuiibo/toolbox.json"
+    ],
+    "confidence": "verified",
+    "notes": "Verified official amiibo emulation module."
+  },
+  "010000000000BD00": {
+    "name": "MissionControl",
+    "aliases": ["MissionControl"],
+    "repository": "https://github.com/ndeadly/MissionControl",
+    "description_en": "Use controllers from other consoles natively on your Nintendo Switch via Bluetooth.",
+    "description_source": "https://github.com/ndeadly/MissionControl",
+    "tid_evidence": [
+      "https://github.com/ndeadly/MissionControl/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified official controller Bluetooth interface module."
+  },
+  "00FF0000636C6BFF": {
+    "name": "sys-clk",
+    "aliases": ["sys-clk"],
+    "repository": "https://github.com/retronx-team/sys-clk",
+    "description_en": "Controls CPU, GPU, and memory clock speeds per application.",
+    "description_source": "https://github.com/retronx-team/sys-clk",
+    "tid_evidence": [
+      "https://github.com/retronx-team/sys-clk/blob/master/sysmodule/src/main.cpp"
+    ],
+    "confidence": "verified",
+    "notes": "Verified official overclock/underclock module."
+  },
+  "4200000000000010": {
+    "name": "ldn_mitm",
+    "aliases": ["ldn_mitm"],
+    "repository": "https://github.com/spacemeowx2/ldn_mitm",
+    "description_en": "Redirects local wireless multiplayer traffic over an IP network.",
+    "description_source": "https://github.com/spacemeowx2/ldn_mitm",
+    "tid_evidence": [
+      "https://github.com/spacemeowx2/ldn_mitm/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified official local network play redirector."
+  },
+  "420000000000000B": {
+    "name": "sys-patch",
+    "aliases": ["sys-patch"],
+    "repository": "https://github.com/impeeza/sys-patch",
+    "description_en": "Applies signature-check patches at runtime.",
+    "description_source": "https://github.com/impeeza/sys-patch",
+    "tid_evidence": [
+      "https://github.com/impeeza/sys-patch/blob/master/README.md"
+    ],
+    "confidence": "verified",
+    "notes": "Verified signature patching module."
+  },
+  "420000000000000E": {
+    "name": "sys-ftpd-light",
+    "aliases": ["sys-ftpd", "sys-ftpd-light"],
+    "repository": "https://github.com/cathery/sys-ftpd",
+    "description_en": "FTP server running in the background of your Switch.",
+    "description_source": "https://github.com/cathery/sys-ftpd",
+    "tid_evidence": [
+      "https://github.com/cathery/sys-ftpd/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified background FTP server."
+  },
+  "420000000007E51A": {
+    "name": "nx-ovlloader",
+    "aliases": ["nx-ovlloader"],
+    "repository": "https://github.com/WerWolv/nx-ovlloader",
+    "description_en": "Host process for loading overlay NROs on the Nintendo Switch.",
+    "description_source": "https://github.com/WerWolv/nx-ovlloader",
+    "tid_evidence": [
+      "https://github.com/WerWolv/nx-ovlloader/blob/master/toolbox.json"
+    ],
+    "confidence": "verified",
+    "notes": "Verified overlay loader host module."
+  },
+  "690000000000000D": {
+    "name": "sys-con",
+    "aliases": ["sys-con"],
+    "repository": "https://github.com/cathery/sys-con",
+    "description_en": "Nintendo Switch sysmodule for USB controller support.",
+    "description_source": "https://github.com/cathery/sys-con",
+    "tid_evidence": [
+      "https://github.com/cathery/sys-con/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified USB controller interface module."
+  },
+  "0100000000C0FFEE": {
+    "name": "pad-macro",
+    "aliases": ["pad-macro"],
+    "repository": "https://github.com/impeeza/pad-macro",
+    "description_en": "Allows macro recording and playback for controller inputs.",
+    "description_source": "https://github.com/impeeza/pad-macro",
+    "tid_evidence": [
+      "https://github.com/impeeza/pad-macro/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified pad-macro controller automation module."
+  },
+  "0100000000000035": {
+    "name": "sys-ftpd-light",
+    "aliases": ["sys-ftpd-light"],
+    "repository": "https://github.com/mrdude2478/sys-ftpd-light",
+    "description_en": "FTP server running in the background of your Switch.",
+    "description_source": "https://github.com/mrdude2478/sys-ftpd-light",
+    "tid_evidence": [
+      "https://github.com/mrdude2478/sys-ftpd-light/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified sys-ftpd-light background FTP server."
+  },
+  "0100000000554443": {
+    "name": "ReverseUX",
+    "aliases": ["ReverseUX"],
+    "repository": "https://github.com/masagrator/ReverseUX-App",
+    "description_en": "Input redirection client for Nintendo Switch.",
+    "description_source": "https://github.com/masagrator/ReverseUX-App",
+    "tid_evidence": [
+      "https://github.com/masagrator/ReverseUX-App/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified ReverseUX app/sysmodule."
+  },
+  "4200000000000FFF": {
+    "name": "triplayer",
+    "aliases": ["sys-triplayer", "triplayer"],
+    "repository": "https://github.com/averne/triplayer",
+    "description_en": "Background audio player sysmodule for Nintendo Switch.",
+    "description_source": "https://github.com/averne/triplayer",
+    "tid_evidence": [
+      "https://github.com/averne/triplayer/blob/master/Makefile"
+    ],
+    "confidence": "verified",
+    "notes": "Verified triplayer background audio player."
+  }
+}

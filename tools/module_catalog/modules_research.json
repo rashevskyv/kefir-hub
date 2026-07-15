@@ -1,0 +1,860 @@
+{
+  "generated_at": "2026-07-15T16:01:29Z",
+  "modules": {
+    "0000000000000123": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'sysHaze' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sysHaze",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0000000000534C56": {
+      "aliases": [
+        "SaltyNX"
+      ],
+      "confidence": "verified",
+      "description_en": "Allows injecting third-party plugins into Switch games at runtime.",
+      "description_source": "https://github.com/masagrator/SaltyNX",
+      "name": "SaltyNX",
+      "notes": "Verified SaltyNX plugins injector.",
+      "repository": "https://github.com/masagrator/SaltyNX",
+      "tid_evidence": [
+        "https://github.com/masagrator/SaltyNX/blob/master/Makefile"
+      ]
+    },
+    "00FF0000000002AA": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Plays a custom sound effect during the Nintendo Switch boot process by loading audio files from the SD card.",
+      "description_source": "gemini-3.5-flash",
+      "name": "BootSoundNX",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF000053484101": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the Nintendo Switch sysmodule 'switch-ha-sysmodule'.",
+      "description_source": "gemini-3.5-flash",
+      "name": "switch-ha-sysmodule",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF000053484102": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Loads custom overlay modules into the Nintendo Switch's HOME menu (qlaunch) process to enable on-screen display functionality for homebrew applications.",
+      "description_source": "gemini-3.5-flash",
+      "name": "switch-ha-overlay-loader",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF0000636C6BF2": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the nx-reader sysmodule for Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "nx-reader",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF0000636C6BFF": {
+      "aliases": [
+        "sys-clk"
+      ],
+      "confidence": "verified",
+      "description_en": "Controls CPU, GPU, and memory clock speeds per application.",
+      "description_source": "https://github.com/retronx-team/sys-clk",
+      "name": "sys-clk",
+      "notes": "Verified official overclock/underclock module.",
+      "repository": "https://github.com/retronx-team/sys-clk",
+      "tid_evidence": [
+        "https://github.com/retronx-team/sys-clk/blob/master/sysmodule/src/main.cpp"
+      ]
+    },
+    "00FF00006D7470FF": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables the Nintendo Switch to function as an MTP device for transferring files between the console and a computer over USB.",
+      "description_source": "gemini-3.5-flash",
+      "name": "mtp-server-nx",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF0000A53BB665": {
+      "aliases": [
+        "SysDVR"
+      ],
+      "confidence": "verified",
+      "description_en": "Streams Nintendo Switch game audio and video to your PC via USB or network.",
+      "description_source": "https://github.com/exelix11/SysDVR",
+      "name": "SysDVR",
+      "notes": "Verified SysDVR streaming module.",
+      "repository": "https://github.com/exelix11/SysDVR",
+      "tid_evidence": [
+        "https://github.com/exelix11/SysDVR/blob/master/sysmodule/toolbox.json"
+      ]
+    },
+    "00FF0000B378D640": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Controls Nintendo Switch fan speed based on system temperature to maintain optimal cooling and reduce noise levels.",
+      "description_source": "gemini-3.5-flash",
+      "name": "NX-FanControl",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF007468656D65": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables custom themes on Nintendo Switch by patching system applets to load user-created layouts and graphics from the SD card.",
+      "description_source": "gemini-3.5-flash",
+      "name": "ThemeSysmodule",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "00FF747765616BFF": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Adjusts system settings like CPU/GPU clock speeds, fan curves, charging limits, and screen color temperature on Nintendo Switch consoles.",
+      "description_source": "gemini-3.5-flash",
+      "name": "switch-sys-tweak",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000035": {
+      "aliases": [
+        "sys-ftpd-light"
+      ],
+      "confidence": "verified",
+      "description_en": "FTP server running in the background of your Switch.",
+      "description_source": "https://github.com/mrdude2478/sys-ftpd-light",
+      "name": "sys-ftpd-light",
+      "notes": "Verified sys-ftpd-light background FTP server.",
+      "repository": "https://github.com/mrdude2478/sys-ftpd-light",
+      "tid_evidence": [
+        "https://github.com/mrdude2478/sys-ftpd-light/blob/master/Makefile"
+      ]
+    },
+    "0100000000000052": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts and modifies amiibo NFC communication to enable custom amiibo data emulation without physical figures.",
+      "description_source": "gemini-3.5-flash",
+      "name": "switch-nfp-mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000081": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Redirects Bluetooth pairing requests from the Switch to an external device for connecting unsupported controllers.",
+      "description_source": "gemini-3.5-flash",
+      "name": "nx-btred",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000352": {
+      "aliases": [
+        "emuiibo"
+      ],
+      "confidence": "verified",
+      "description_en": "Emulates amiibo functionality on Nintendo Switch.",
+      "description_source": "https://github.com/XorTroll/emuiibo",
+      "name": "emuiibo",
+      "notes": "Verified official amiibo emulation module.",
+      "repository": "https://github.com/XorTroll/emuiibo",
+      "tid_evidence": [
+        "https://github.com/XorTroll/emuiibo/blob/master/emuiibo/toolbox.json"
+      ]
+    },
+    "0100000000000464": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Displays your current Nintendo Switch game activity as a Discord Rich Presence status on PC.",
+      "description_source": "gemini-3.5-flash",
+      "name": "SwitchPresence",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000523": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the aoc-mitm sysmodule for Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "aoc-mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000895": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the sys-notif-led Nintendo Switch sysmodule.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-notif-led",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000901": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables Nintendo Switch consoles to communicate with DualShock 4 and DualSense controllers via USB or Bluetooth with full feature support including gyroscope and touchpad.",
+      "description_source": "gemini-3.5-flash",
+      "name": "OJDS-NX",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000BED": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'vax' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "vax",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000BEF": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables USB mass storage devices to be mounted and accessed on Nintendo Switch by extending the filesystem services.",
+      "description_source": "gemini-3.5-flash",
+      "name": "fsp-usb",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000CAB": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables playback of pre-recorded controller inputs on Nintendo Switch for tool-assisted speedruns and gameplay automation.",
+      "description_source": "gemini-3.5-flash",
+      "name": "nx-TAS",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000DAD": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the Nintendo Switch sysmodule 'nxoverlay'.",
+      "description_source": "gemini-3.5-flash",
+      "name": "nx_overlay",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000000F12": {
+      "aliases": [
+        "Fizeau"
+      ],
+      "confidence": "verified",
+      "description_en": "Modifies color temperature of the Nintendo Switch screen.",
+      "description_source": "https://github.com/averne/Fizeau",
+      "name": "Fizeau",
+      "notes": "Verified Fizeau color temperature module.",
+      "repository": "https://github.com/averne/Fizeau",
+      "tid_evidence": [
+        "https://github.com/averne/Fizeau/blob/master/Makefile"
+      ]
+    },
+    "0100000000000FAF": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts and modifies controller input on Nintendo Switch to enable custom button mappings and emulation of different controller types.",
+      "description_source": "gemini-3.5-flash",
+      "name": "hid-mitm/hid-mitm-plus",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000006480": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Provides debug and development capabilities for Nintendo Switch homebrew by enabling GDB debugging, process monitoring, and remote code execution over USB or network.",
+      "description_source": "gemini-3.5-flash",
+      "name": "twili",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000007200": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'ilia' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "ilia",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "010000000000B1C0": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Provides MCP protocol integration for Nintendo Switch homebrew, enabling AI assistants to interact with the console's filesystem and system functions.",
+      "description_source": "gemini-3.5-flash",
+      "name": "mcp-server",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "010000000000BD00": {
+      "aliases": [
+        "MissionControl"
+      ],
+      "confidence": "verified",
+      "description_en": "Use controllers from other consoles natively on your Nintendo Switch via Bluetooth.",
+      "description_source": "https://github.com/ndeadly/MissionControl",
+      "name": "MissionControl",
+      "notes": "Verified official controller Bluetooth interface module.",
+      "repository": "https://github.com/ndeadly/MissionControl",
+      "tid_evidence": [
+        "https://github.com/ndeadly/MissionControl/blob/master/Makefile"
+      ]
+    },
+    "010000000000C235": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Freebird is a Nintendo Switch sysmodule that enables wireless game streaming to a PC by intercepting video output and transmitting it over Wi-Fi.",
+      "description_source": "gemini-3.5-flash",
+      "name": "Freebird",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "010000000000C236": {
+      "aliases": [
+        "PNGShot"
+      ],
+      "confidence": "verified",
+      "description_en": "Lossless PNG screenshot sysmodule for the Nintendo Switch.",
+      "description_source": "https://github.com/J-D-K/PNGShot",
+      "name": "PNGShot",
+      "notes": "Verified PNGShot screenshot module.",
+      "repository": "https://github.com/J-D-K/PNGShot",
+      "tid_evidence": [
+        "https://github.com/J-D-K/PNGShot/blob/master/toolbox.json"
+      ]
+    },
+    "010000000000F00F": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'dvdnx' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "dvdnx",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "010000000000FFAB": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts USB communications on Nintendo Switch to enable custom controller and input device support through emulation and protocol translation.",
+      "description_source": "gemini-3.5-flash",
+      "name": "usb-mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "01000000001ED1ED": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'maydel' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "maydel",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000251020": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'sys-Notification' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-Notification",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0100000000554443": {
+      "aliases": [
+        "ReverseUX"
+      ],
+      "confidence": "verified",
+      "description_en": "Input redirection client for Nintendo Switch.",
+      "description_source": "https://github.com/masagrator/ReverseUX-App",
+      "name": "ReverseUX",
+      "notes": "Verified ReverseUX app/sysmodule.",
+      "repository": "https://github.com/masagrator/ReverseUX-App",
+      "tid_evidence": [
+        "https://github.com/masagrator/ReverseUX-App/blob/master/Makefile"
+      ]
+    },
+    "0100000000C0FFEE": {
+      "aliases": [
+        "pad-macro"
+      ],
+      "confidence": "verified",
+      "description_en": "Allows macro recording and playback for controller inputs.",
+      "description_source": "https://github.com/impeeza/pad-macro",
+      "name": "pad-macro",
+      "notes": "Verified pad-macro controller automation module.",
+      "repository": "https://github.com/impeeza/pad-macro",
+      "tid_evidence": [
+        "https://github.com/impeeza/pad-macro/blob/master/Makefile"
+      ]
+    },
+    "010041544D530000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts and modifies system calls to enable features like custom game mods, save data management, and layered filesystem patches on Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "ams.mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0107330726762000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Allows custom RGB LED control on Nintendo Switch controllers through a background system module that intercepts and modifies controller LED commands.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-rgb",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "0532232232232000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Records controller inputs on Nintendo Switch and can replay them for automated gameplay or testing purposes.",
+      "description_source": "gemini-3.5-flash",
+      "name": "NX-input-recorder",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "054E4F4558454000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the Nintendo Switch sysmodule 'noexs'.",
+      "description_source": "gemini-3.5-flash",
+      "name": "noexs",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "2200000000000100": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables running Nintendo Switch games in docked mode while keeping the console in handheld form by creating a virtual dock state.",
+      "description_source": "gemini-3.5-flash",
+      "name": "SplitNX",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4100000000000324": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Provides HTTP client functionality to other Switch homebrew applications through a background service that handles network requests.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-http",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4100000002025924": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'sys-KeyX' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-KeyX",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Plays custom background music on Nintendo Switch by replacing system audio with user-provided audio files from the SD card.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-tune/sys-audioplayer",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "420000000000000B": {
+      "aliases": [
+        "sys-patch"
+      ],
+      "confidence": "verified",
+      "description_en": "Applies signature-check patches at runtime.",
+      "description_source": "https://github.com/impeeza/sys-patch",
+      "name": "sys-patch",
+      "notes": "Verified signature patching module.",
+      "repository": "https://github.com/impeeza/sys-patch",
+      "tid_evidence": [
+        "https://github.com/impeeza/sys-patch/blob/master/README.md"
+      ]
+    },
+    "420000000000000C": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule called 'snapback' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "snapback",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "420000000000000E": {
+      "aliases": [
+        "sys-ftpd",
+        "sys-ftpd-light"
+      ],
+      "confidence": "verified",
+      "description_en": "FTP server running in the background of your Switch.",
+      "description_source": "https://github.com/cathery/sys-ftpd",
+      "name": "sys-ftpd-light",
+      "notes": "Verified background FTP server.",
+      "repository": "https://github.com/cathery/sys-ftpd",
+      "tid_evidence": [
+        "https://github.com/cathery/sys-ftpd/blob/master/Makefile"
+      ]
+    },
+    "420000000000000F": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables seamless switching between Switch system firmware versions by managing multiple firmware installations on separate SD card partitions.",
+      "description_source": "gemini-3.5-flash",
+      "name": "SlideNX",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000010": {
+      "aliases": [
+        "ldn_mitm"
+      ],
+      "confidence": "verified",
+      "description_en": "Redirects local wireless multiplayer traffic over an IP network.",
+      "description_source": "https://github.com/spacemeowx2/ldn_mitm",
+      "name": "ldn_mitm",
+      "notes": "Verified official local network play redirector.",
+      "repository": "https://github.com/spacemeowx2/ldn_mitm",
+      "tid_evidence": [
+        "https://github.com/spacemeowx2/ldn_mitm/blob/master/Makefile"
+      ]
+    },
+    "42000000000000A0": {
+      "aliases": [
+        "sys-dock"
+      ],
+      "confidence": "verified",
+      "description_en": "Allows switching between handheld and docked profiles.",
+      "description_source": "https://github.com/masagrator/sys-dock",
+      "name": "sys-dock",
+      "notes": "Verified sys-dock profile switcher.",
+      "repository": "https://github.com/masagrator/sys-dock",
+      "tid_evidence": [
+        "https://github.com/masagrator/sys-dock/blob/master/Makefile"
+      ]
+    },
+    "420000000000011B": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Provides FTP server functionality on Nintendo Switch to enable wireless file transfer between the console and other devices over a local network.",
+      "description_source": "gemini-3.5-flash",
+      "name": "ftpsrv",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000666": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts and redirects network requests on Nintendo Switch to enable custom servers and block unwanted connections.",
+      "description_source": "gemini-3.5-flash",
+      "name": "network_mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000811": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I need to search for information about the Nintendo Switch sysmodule 'bitmap-printer' to provide an accurate summary.",
+      "description_source": "gemini-3.5-flash",
+      "name": "bitmap-printer",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000BA6": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the BTSounds sysmodule for Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "BTSounds",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000BAC": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "SwiTAS",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000000FFF": {
+      "aliases": [
+        "sys-triplayer",
+        "triplayer"
+      ],
+      "confidence": "verified",
+      "description_en": "Background audio player sysmodule for Nintendo Switch.",
+      "description_source": "https://github.com/averne/triplayer",
+      "name": "triplayer",
+      "notes": "Verified triplayer background audio player.",
+      "repository": "https://github.com/averne/triplayer",
+      "tid_evidence": [
+        "https://github.com/averne/triplayer/blob/master/Makefile"
+      ]
+    },
+    "4200000000003103": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "NSParentalControl",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000021371": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the Nintendo Switch sysmodule 'displayflipper'.",
+      "description_source": "gemini-3.5-flash",
+      "name": "displayflipper",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "420000000005C09E": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "sys-scope",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "420000000007E51A": {
+      "aliases": [
+        "nx-ovlloader"
+      ],
+      "confidence": "verified",
+      "description_en": "Host process for loading overlay NROs on the Nintendo Switch.",
+      "description_source": "https://github.com/WerWolv/nx-ovlloader",
+      "name": "nx-ovlloader",
+      "notes": "Verified overlay loader host module.",
+      "repository": "https://github.com/WerWolv/nx-ovlloader",
+      "tid_evidence": [
+        "https://github.com/WerWolv/nx-ovlloader/blob/master/toolbox.json"
+      ]
+    },
+    "420000000007E51B": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Automatically reloads Tesla overlays without rebooting when overlay files are modified or updated on the Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "nx-ovlreloader",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000474442": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Enables remote debugging of Nintendo Switch homebrew applications and system processes using the GDB protocol over network or USB connections.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-gdbstub",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000000696969": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Captures and logs system events, crashes, and debug information from the Nintendo Switch's operating system to an SD card for troubleshooting.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-logger",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200000AF1E8DA89": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "ControllerSaver",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "42000062616B6101": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Let me search for information about the sys-screenuploader sysmodule for Nintendo Switch.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-screenuploader",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4200736372697074": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "I'll search for information about the Nintendo Switch sys-script sysmodule.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-script",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4206900000000012": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Intercepts DNS resolution requests on Nintendo Switch to redirect network traffic for purposes like custom servers or content blocking.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sfdnsres_mitm",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "430000000000000A": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "sys-netcheat",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "430000000000000B": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "sys-botbase",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "430000000000000C": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "Provides a socket-based interface for external tools to read and write the Switch's memory and control inputs remotely over the network.",
+      "description_source": "gemini-3.5-flash",
+      "name": "sys-botbaseplus",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "43000000000000FF": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "nxsh",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "4300000000000909": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "NXGallery",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "430000000000ACDB": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "sys-padlink",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "5600000000000000": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "NXCord",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    },
+    "690000000000000D": {
+      "aliases": [
+        "sys-con"
+      ],
+      "confidence": "verified",
+      "description_en": "Nintendo Switch sysmodule for USB controller support.",
+      "description_source": "https://github.com/cathery/sys-con",
+      "name": "sys-con",
+      "notes": "Verified USB controller interface module.",
+      "repository": "https://github.com/cathery/sys-con",
+      "tid_evidence": [
+        "https://github.com/cathery/sys-con/blob/master/Makefile"
+      ]
+    },
+    "6900000000000420": {
+      "aliases": [],
+      "confidence": "unresolved",
+      "description_en": "",
+      "description_source": "",
+      "name": "fs-patch",
+      "notes": "",
+      "repository": "",
+      "tid_evidence": []
+    }
+  },
+  "schema_version": 1,
+  "sources": {
+    "appstore": "https://switch.cdn.fortheusers.org/repo.json",
+    "title_ids": "https://gist.githubusercontent.com/ndeadly/a4b8c01bb453028cd0008f282098f696/raw/homebrew_sysmodules.txt"
+  }
+}
