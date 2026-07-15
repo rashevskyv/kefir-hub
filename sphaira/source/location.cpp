@@ -78,6 +78,25 @@ auto Load() -> Entries {
 
     ini_browse(cb, &out, location_path);
 
+    const auto webdav_url = App::GetWebdavUrl();
+    if (!webdav_url.empty()) {
+        bool exists = false;
+        for (const auto& e : out) {
+            if (e.url == webdav_url) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            Entry e;
+            e.name = "WebDAV (Saves Sync)";
+            e.url = webdav_url;
+            e.user = App::GetWebdavUser();
+            e.pass = App::GetWebdavPass();
+            out.push_back(e);
+        }
+    }
+
     return out;
 }
 

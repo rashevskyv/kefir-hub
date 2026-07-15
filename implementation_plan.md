@@ -113,6 +113,47 @@
 #### [MODIFY] [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)
 - Підвищити версію проекту `sphaira_VERSION` до `0.13.220`.
 
+---
+
+# Спільні джерела та покращення стабільності (v0.13.221)
+
+## Proposed Changes
+
+### [Component: Location Core]
+
+---
+
+#### [MODIFY] [location.cpp](file:///d:/git/dev/sphaira/sphaira/source/location.cpp)
+- У методі `Load()` після зчитування локацій з `locations.ini` перевіряти `App::GetWebdavUrl()`. Якщо налаштування WebDAV для сейвів не порожні, додавати віртуальний запис із назвою `"WebDAV (Saves Sync)"`, якщо такий URL ще не існує в списку джерел.
+
+---
+
+### [Component: File Browser (UI)]
+
+---
+
+#### [MODIFY] [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp)
+- Імпортувати `"evman.hpp"`.
+- У методі `AddNetworkLocationInteractive()` замінити прямі виклики `on_success()` на асинхронні за допомогою `evman::push(evman::FunctionalEventData{[on_success](){ on_success(); }});` для запобігання Use-After-Free крашу `PopupList` на реальній консолі.
+
+---
+
+### [Component: Settings Menu]
+
+---
+
+#### [MODIFY] [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)
+- У методі `BuildSourcesCategoryItems()` при виборі видалення перевіряти, чи дорівнює назва джерела `"WebDAV (Saves Sync)"`. Якщо так, замість виклику `location::Remove(loc.name)` скидати налаштування WebDAV сейвів (`App::SetWebdavUrl("")`, `App::SetWebdavUser("")`, `App::SetWebdavPass("")`), показувати нотифікацію `"Location deleted successfully!"` та оновлювати меню.
+
+---
+
+### [Component: Version]
+
+---
+
+#### [MODIFY] [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)
+- Підвищити версію проекту `sphaira_VERSION` до `0.13.221`.
+
 ## Verification Plan (Виконано)
 
 ### Automated Tests
@@ -120,9 +161,8 @@
 
 ### Manual Verification (Готово до тестування на консолі)
 - **WSL-збірка**: Виконано успішно. Проект скомпільовано без помилок лінкера.
-- **Тестування на консолі** (інструкції перенесені до [tests.md](file:///d:/git/dev/sphaira/tests.md)):
-  - Перевірити статус-бар: годинник та батарея при 100% не зливаються.
-  - Відкрити File Browser, перевірити, що в Advanced меню більше немає "Mount" та "Add network location".
-  - У File Browser -> Sources перевірити наявність пункту "Add network location" з новим описом. Додати Samba, WebDAV, FTP та HTTP джерела, перевірити правильність URL-схеми в ini.
-  - Перевірити пункт "Upload to network location", його опис та повідомлення при відсутності налаштованих локацій.
-  - У Tools -> Settings відкрити нову категорію "Sources", перевірити список джерел, можливість видалення джерела та додавання нового з автооновленням інтерфейсу.
+- **Тестування на консолі**:
+  - У налаштуваннях `Tools -> Settings -> WebDAV` додати WebDAV сервер.
+  - Перевірити, що джерело `"WebDAV (Saves Sync)"` з'явилося у `Tools -> Settings -> Sources` та у списку завантаження файлового менеджера (`Upload to network location`).
+  - У `Tools -> Settings -> Sources` вибрати `"WebDAV (Saves Sync)"`, натиснути `A` та видалити його. Перевірити, що налаштування `WebDAV` у `Tools -> Settings -> WebDAV` очистилися.
+  - Додати WebDAV, FTP або HTTP джерело і переконатися, що програма більше не крашиться (Атмосфера не вилітає після додавання).

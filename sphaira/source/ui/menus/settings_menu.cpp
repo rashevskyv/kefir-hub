@@ -723,7 +723,13 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
                     "Delete this network location?"_i18n,
                     "No"_i18n, "Yes"_i18n, 0, [menu, loc](auto op_index){
                         if (op_index && *op_index) {
-                            location::Remove(loc.name);
+                            if (loc.name == "WebDAV (Saves Sync)") {
+                                App::SetWebdavUrl("");
+                                App::SetWebdavUser("");
+                                App::SetWebdavPass("");
+                            } else {
+                                location::Remove(loc.name);
+                            }
                             App::Notify("Location deleted successfully!"_i18n);
                             menu->OnFocusGained();
                         }

@@ -26,6 +26,7 @@
 #include "i18n.hpp"
 #include "hasher.hpp"
 #include "location.hpp"
+#include "evman.hpp"
 #include "threaded_file_transfer.hpp"
 #include "minizip_helper.hpp"
 #include "web.hpp"
@@ -1655,7 +1656,11 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             e.pass = pass;
             location::Add(e);
             App::Notify("Location added successfully!"_i18n);
-            if (on_success) on_success();
+            if (on_success) {
+                evman::push(evman::FunctionalEventData{[on_success]() {
+                    on_success();
+                }});
+            }
         }
         else if (proto == 1) { // WebDAV
             std::string url;
@@ -1681,7 +1686,11 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             e.pass = pass;
             location::Add(e);
             App::Notify("Location added successfully!"_i18n);
-            if (on_success) on_success();
+            if (on_success) {
+                evman::push(evman::FunctionalEventData{[on_success]() {
+                    on_success();
+                }});
+            }
         }
         else if (proto == 2) { // FTP
             std::string server;
@@ -1708,7 +1717,11 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             e.pass = pass;
             location::Add(e);
             App::Notify("Location added successfully!"_i18n);
-            if (on_success) on_success();
+            if (on_success) {
+                evman::push(evman::FunctionalEventData{[on_success]() {
+                    on_success();
+                }});
+            }
         }
         else if (proto == 3) { // HTTP
             std::string url;
@@ -1726,7 +1739,11 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             e.url = url;
             location::Add(e);
             App::Notify("Location added successfully!"_i18n);
-            if (on_success) on_success();
+            if (on_success) {
+                evman::push(evman::FunctionalEventData{[on_success]() {
+                    on_success();
+                }});
+            }
         }
     });
 }
