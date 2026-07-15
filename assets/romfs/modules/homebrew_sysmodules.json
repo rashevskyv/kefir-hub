@@ -1,88 +1,71 @@
 {
-  "generated_at": "2026-07-15T16:01:29Z",
+  "generated_at": "2026-07-15T16:12:42Z",
   "modules": {
     "0000000000534C56": {
-      "description_en": "Allows injecting third-party plugins into Switch games at runtime.",
       "name": "SaltyNX",
       "repository": "https://github.com/masagrator/SaltyNX"
     },
     "00FF0000636C6BFF": {
-      "description_en": "Controls CPU, GPU, and memory clock speeds per application.",
       "name": "sys-clk",
       "repository": "https://github.com/retronx-team/sys-clk"
     },
     "00FF0000A53BB665": {
-      "description_en": "Streams Nintendo Switch game audio and video to your PC via USB or network.",
       "name": "SysDVR",
       "repository": "https://github.com/exelix11/SysDVR"
     },
-    "0100000000000035": {
-      "description_en": "FTP server running in the background of your Switch.",
-      "name": "sys-ftpd-light",
-      "repository": "https://github.com/mrdude2478/sys-ftpd-light"
-    },
     "0100000000000352": {
-      "description_en": "Emulates amiibo functionality on Nintendo Switch.",
       "name": "emuiibo",
       "repository": "https://github.com/XorTroll/emuiibo"
     },
     "0100000000000F12": {
-      "description_en": "Modifies color temperature of the Nintendo Switch screen.",
       "name": "Fizeau",
       "repository": "https://github.com/averne/Fizeau"
     },
     "010000000000BD00": {
-      "description_en": "Use controllers from other consoles natively on your Nintendo Switch via Bluetooth.",
       "name": "MissionControl",
       "repository": "https://github.com/ndeadly/MissionControl"
     },
     "010000000000C236": {
-      "description_en": "Lossless PNG screenshot sysmodule for the Nintendo Switch.",
       "name": "PNGShot",
       "repository": "https://github.com/J-D-K/PNGShot"
     },
-    "0100000000554443": {
-      "description_en": "Input redirection client for Nintendo Switch.",
-      "name": "ReverseUX",
-      "repository": "https://github.com/masagrator/ReverseUX-App"
-    },
     "0100000000C0FFEE": {
-      "description_en": "Allows macro recording and playback for controller inputs.",
       "name": "pad-macro",
-      "repository": "https://github.com/impeeza/pad-macro"
+      "repository": "https://github.com/FitzQ/pad-macro"
     },
     "420000000000000B": {
-      "description_en": "Applies signature-check patches at runtime.",
       "name": "sys-patch",
       "repository": "https://github.com/impeeza/sys-patch"
     },
     "420000000000000E": {
-      "description_en": "FTP server running in the background of your Switch.",
       "name": "sys-ftpd-light",
       "repository": "https://github.com/cathery/sys-ftpd"
     },
     "4200000000000010": {
-      "description_en": "Redirects local wireless multiplayer traffic over an IP network.",
       "name": "ldn_mitm",
       "repository": "https://github.com/spacemeowx2/ldn_mitm"
     },
     "42000000000000A0": {
-      "description_en": "Allows switching between handheld and docked profiles.",
       "name": "sys-dock",
       "repository": "https://github.com/masagrator/sys-dock"
     },
     "4200000000000FFF": {
-      "description_en": "Background audio player sysmodule for Nintendo Switch.",
-      "name": "triplayer",
-      "repository": "https://github.com/averne/triplayer"
+      "name": "sys-triplayer",
+      "repository": "https://github.com/tallbl0nde/TriPlayer"
+    },
+    "4200000000003103": {
+      "name": "NSParentalControl",
+      "repository": "https://github.com/tristanisrael/NSParentalControl"
     },
     "420000000007E51A": {
-      "description_en": "Host process for loading overlay NROs on the Nintendo Switch.",
       "name": "nx-ovlloader",
-      "repository": "https://github.com/WerWolv/nx-ovlloader"
+      "repository": "https://github.com/ppkantorski/nx-ovlloader"
+    },
+    "420000000007E51B": {
+      "name": "nx-ovlreloader",
+      "repository": "https://github.com/ppkantorski/nx-ovlloader"
     },
     "690000000000000D": {
-      "description_en": "Nintendo Switch sysmodule for USB controller support.",
       "name": "sys-con",
       "repository": "https://github.com/cathery/sys-con"
     }

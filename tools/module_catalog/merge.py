@@ -42,11 +42,11 @@ MANDATORY_TIDS = {
     "420000000000000B": "sys-patch",
     "420000000000000E": "sys-ftpd",
     "420000000007E51A": "nx-ovlloader",
+    "420000000007E51B": "nx-ovlreloader",
+    "4200000000003103": "NSParentalControl",
     "690000000000000D": "sys-con",
     "0100000000C0FFEE": "pad-macro",
-    "0100000000000035": "sys-ftpd-light",
-    "0100000000554443": "ReverseUX",
-    "4200000000000FFF": "triplayer",
+    "4200000000000FFF": "sys-triplayer",
     "0000000000534C56": "SaltyNX",
     "00FF0000A53BB665": "SysDVR",
     "0100000000000F12": "Fizeau",
@@ -115,10 +115,7 @@ def load_manual_overrides() -> Dict[str, Any]:
     if os.path.exists(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
-                res = json.load(f)
-                print("DEBUG merge.py load_manual_overrides keys count:", len(res))
-                print("DEBUG merge.py load_manual_overrides has 0100000000C0FFEE:", "0100000000C0FFEE" in res)
-                return res
+                return json.load(f)
         except Exception as e:
             print(f"Error loading manual overrides: {e}")
     return {}
@@ -167,6 +164,7 @@ def verify_tid_in_repo(
         f"atmosphere/contents/{tid_lower}/toolbox.json",
         "sysmodule/toolbox.json",
         "sysmodules/toolbox.json",
+        "sysmod/toolbox.json",
         f"{repo}/toolbox.json",
         f"{repo.lower()}/toolbox.json"
     ]
@@ -189,8 +187,14 @@ def verify_tid_in_repo(
     text_paths = [
         "Makefile",
         "CMakeLists.txt",
+        "README.md",
+        "Readme.md",
+        "readme.md",
         "config.json",
         "npdm.json",
+        "sysmod/sys-patch.json",
+        "sysmod/sys-dock.json",
+        "Sysmodule/sys-triplayer.json",
         "source/main.cpp",
         "src/main.cpp",
         "source/constants.hpp",
@@ -312,10 +316,14 @@ def merge_catalog(
     appstore_apps = extract_apps_from_repo(appstore_data)
     
     result: Dict[str, ModuleInfo] = {}
-    # Populate result with previous data first to prevent data loss
+    # Keep cached research only for IDs that still belong to the authoritative
+    # homebrew list (plus explicitly curated mandatory IDs). This prevents stale
+    # or misclassified IDs from surviving forever in generated catalogs.
+    allowed_tids = set(ndeadly_modules) | set(MANDATORY_TIDS)
     for k, v in prev_research.items():
         norm_k = normalize_tid(k) or k
-        result[norm_k] = ModuleInfo.from_dict(norm_k, v)
+        if norm_k in allowed_tids:
+            result[norm_k] = ModuleInfo.from_dict(norm_k, v)
 
     
     # Process only the specific TID if specified
@@ -334,7 +342,7 @@ def merge_catalog(
             continue
             
         # Check if already verified in previous run, and we are not in refresh mode
-        if not refresh and norm_tid in prev_research:
+        if not refresh and norm_tid in prev_research and norm_tid not in manual_overrides:
             prev_mod_data = prev_research[norm_tid]
             if prev_mod_data.get("confidence") == "verified":
                 # Ensure it remains verified and trigger callback
@@ -535,4 +543,3 @@ def merge_catalog(
             on_progress_callback(result)
             
     return result
-

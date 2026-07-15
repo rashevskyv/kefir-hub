@@ -12,7 +12,8 @@ from merge import (
     clean_description,
     process_ndeadly_line,
     BLOCKED_MAPPINGS,
-    MANDATORY_TIDS
+    MANDATORY_TIDS,
+    load_manual_overrides,
 )
 
 class TestModuleCatalog(unittest.TestCase):
@@ -107,7 +108,24 @@ class TestModuleCatalog(unittest.TestCase):
         self.assertEqual(MANDATORY_TIDS["420000000000000B"], "sys-patch")
         self.assertEqual(MANDATORY_TIDS["420000000000000E"], "sys-ftpd")
         self.assertEqual(MANDATORY_TIDS["420000000007E51A"], "nx-ovlloader")
+        self.assertEqual(MANDATORY_TIDS["420000000007E51B"], "nx-ovlreloader")
+        self.assertEqual(MANDATORY_TIDS["4200000000003103"], "NSParentalControl")
         self.assertEqual(MANDATORY_TIDS["690000000000000D"], "sys-con")
+        self.assertNotIn("0100000000000035", MANDATORY_TIDS)
+        self.assertNotIn("0100000000554443", MANDATORY_TIDS)
+
+    def test_manual_overrides_do_not_claim_nintendo_system_ids(self):
+        overrides = load_manual_overrides()
+        self.assertNotIn("0100000000000035", overrides)
+        self.assertNotIn("0100000000554443", overrides)
+
+    def test_all_manual_verified_entries_are_complete(self):
+        for tid, override in load_manual_overrides().items():
+            self.assertEqual(normalize_tid(tid), tid)
+            if override.get("confidence") == "verified":
+                self.assertTrue(override.get("repository"), tid)
+                self.assertTrue(override.get("description_en"), tid)
+                self.assertTrue(override.get("tid_evidence"), tid)
 
 if __name__ == "__main__":
     unittest.main()

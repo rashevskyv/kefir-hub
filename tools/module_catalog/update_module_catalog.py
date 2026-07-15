@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import argparse
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
@@ -9,6 +11,10 @@ from typing import Dict, Any, Optional
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from models import ModuleInfo
 from merge import merge_catalog, normalize_tid
+
+FORBIDDEN_HOMEBREW_TIDS = {
+    "0100000000000035",  # Nintendo grc system module, not homebrew sys-ftpd.
+}
 
 def get_current_utc_time() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -28,11 +34,49 @@ def load_json_file(path: str) -> Optional[Any]:
             return None
     return None
 
+def validate_catalog(modules: Dict[str, ModuleInfo]):
+    for tid, mod in modules.items():
+        if normalize_tid(tid) != tid:
+            raise ValueError(f"Invalid normalized Title ID: {tid}")
+        if tid in FORBIDDEN_HOMEBREW_TIDS:
+            raise ValueError(f"Nintendo system Title ID leaked into homebrew catalog: {tid}")
+        if mod.confidence == "verified":
+            if not mod.repository:
+                raise ValueError(f"Verified module has no repository: {tid}")
+            if not mod.tid_evidence:
+                raise ValueError(f"Verified module has no Title ID evidence: {tid}")
+            if not mod.description_en:
+                raise ValueError(f"Verified module has no English description candidate: {tid}")
+
+def validate_evidence_urls(modules: Dict[str, ModuleInfo]):
+    for tid, mod in sorted(modules.items()):
+        if mod.confidence != "verified":
+            continue
+        for url in mod.tid_evidence:
+            request = urllib.request.Request(
+                url,
+                headers={"User-Agent": "sphaira-module-catalog-validator"},
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    content = response.read().decode("utf-8", errors="ignore").upper()
+                    if not 200 <= response.status < 300:
+                        raise ValueError(f"Evidence returned HTTP {response.status}: {url}")
+                    if tid not in content:
+                        raise ValueError(f"Evidence does not contain {tid}: {url}")
+            except urllib.error.URLError as error:
+                raise ValueError(f"Evidence is unavailable for {tid}: {url}: {error}") from error
+
 def main():
     parser = argparse.ArgumentParser(description="Nintendo Switch Homebrew Sysmodule Catalog Generator")
     parser.add_argument("--refresh", action="store_true", help="Ignore HTTP cache and fetch fresh data")
     parser.add_argument("--offline", action="store_true", help="Run in offline mode using only HTTP cache")
     parser.add_argument("--tid", type=str, help="Process only a single Title ID for debugging")
+    parser.add_argument(
+        "--validate-evidence",
+        action="store_true",
+        help="Fetch every verified evidence URL and require its exact Title ID",
+    )
     
     args = parser.parse_args()
     
@@ -109,7 +153,7 @@ def main():
             if not mod.description_en:
                 reasons.append("Description is empty")
                 
-            if mod.confidence != "verified" or not mod.description_en:
+            if mod.confidence != "verified":
                 unresolved_modules[tid] = {
                     "name": mod.name,
                     "confidence": mod.confidence,
@@ -134,6 +178,10 @@ def main():
     except Exception as e:
         print(f"Error generating catalog: {e}", file=sys.stderr)
         sys.exit(1)
+
+    validate_catalog(modules)
+    if args.validate_evidence:
+        validate_evidence_urls(modules)
         
     # Build final research modules dictionary for comparison
     final_research_modules = {}

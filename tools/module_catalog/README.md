@@ -49,6 +49,9 @@ python tools/module_catalog/update_module_catalog.py --offline
 
 # Process only a single Title ID for debugging/testing
 python tools/module_catalog/update_module_catalog.py --tid 00FF0000636C6BFF
+
+# Verify that every evidence URL is reachable and contains its exact Title ID
+python tools/module_catalog/update_module_catalog.py --offline --validate-evidence
 ```
 
 ## Confidence Levels
@@ -84,3 +87,12 @@ python tools/module_catalog/update_module_catalog.py --refresh
    ```
 4. Run `python tools/module_catalog/update_module_catalog.py` to regenerate the catalogs.
 5. Review candidates in `tools/module_catalog/i18n_en_candidates.json` and manually transfer verified strings into `assets/romfs/i18n/en.json`.
+
+## Generated Output Contract
+
+- `modules_research.json` contains the complete research record for every source Title ID.
+- `homebrew_sysmodules.json` contains only verified modules and only the runtime fields `name` and `repository`.
+- `i18n_en_candidates.json` contains every verified English description under `module.<TITLE_ID>.description` keys.
+- `unresolved.json` contains exactly the non-verified entries and never overlaps the runtime catalog.
+- A verified entry must have a repository, a non-empty English description candidate, and Title ID evidence.
+- Cached research entries outside the authoritative homebrew list are discarded during generation.

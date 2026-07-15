@@ -2,7 +2,27 @@
 
 > [!IMPORTANT]
 > **Правило для оновлення Walkthrough:**
-> Після опису кожної нової виконаної задачі обов'язково додавай відповідні пункти тестування на реальній консолі до файлу [tests.md](file:///d:/git/dev/sphaira/tests.md). 
+> Після опису кожної нової виконаної задачі обов'язково додавай відповідні пункти тестування на реальній консолі до файлу [tests.md](file:///d:/git/dev/sphaira/tests.md).
+
+## v0.13.216 — Коригування та валідація каталогу sysmodule
+
+### Завдання
+Виправити помилкові verified-записи й недійсні докази у v0.13.215, відновити контракт runtime/i18n та гарантувати узгодженість усіх згенерованих JSON.
+
+### Виправлення
+1. Вилучено `0100000000000035`, який належить системному модулю Nintendo `grc`, і непідтверджений `0100000000554443` (`ReverseUX`). Research-каталог знову містить рівно 76 Title ID з homebrew-списку.
+2. Виправлено verified-записи:
+   - `pad-macro` → `FitzQ/pad-macro`;
+   - `sys-triplayer` → `tallbl0nde/TriPlayer`;
+   - додано `NSParentalControl` (`4200000000003103`);
+   - додано `nx-ovlreloader` (`420000000007E51B`);
+   - `nx-ovlloader` переведено на актуальний `ppkantorski/nx-ovlloader`.
+3. Усі 17 `tid_evidence` перевірено: посилання повертають HTTP 200, а документи містять відповідний точний Title ID.
+4. Runtime-каталог знову містить лише `name` і `repository`. Усі 17 англійських описів розміщено в `i18n_en_candidates.json`.
+5. `unresolved.json` тепер містить рівно 59 non-verified записів і не перетинається з runtime-каталогом.
+6. Виправлено опис `sys-dock`: *Increases docked display bandwidth to support higher refresh rates.*
+7. Генератор відкидає cached Title ID поза авторитетним списком, забороняє потрапляння Nintendo `grc` до homebrew-каталогу та перевіряє повноту verified-записів.
+8. Версію програми підвищено до `0.13.216`.
 
 ## v0.13.215 — Доопрацювання та повне наповнення каталогу sysmodule (tools/module_catalog)
 

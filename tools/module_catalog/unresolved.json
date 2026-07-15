@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-15T15:46:14Z",
+  "generated_at": "2026-07-15T16:12:42Z",
   "modules": {
     "0000000000000123": {
       "confidence": "unresolved",
@@ -261,8 +261,7 @@
       "confidence": "unresolved",
       "name": "SplitNX",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -270,8 +269,7 @@
       "confidence": "unresolved",
       "name": "sys-http",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -279,8 +277,7 @@
       "confidence": "unresolved",
       "name": "sys-KeyX",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -288,8 +285,7 @@
       "confidence": "unresolved",
       "name": "sys-tune/sys-audioplayer",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -297,8 +293,7 @@
       "confidence": "unresolved",
       "name": "snapback",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -306,8 +301,7 @@
       "confidence": "unresolved",
       "name": "SlideNX",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -315,8 +309,7 @@
       "confidence": "unresolved",
       "name": "ftpsrv",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -324,8 +317,7 @@
       "confidence": "unresolved",
       "name": "network_mitm",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -333,8 +325,7 @@
       "confidence": "unresolved",
       "name": "bitmap-printer",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -342,8 +333,7 @@
       "confidence": "unresolved",
       "name": "BTSounds",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -356,30 +346,11 @@
       ],
       "repository": ""
     },
-    "4200000000000FFF": {
-      "confidence": "unresolved",
-      "name": "sys-triplayer",
-      "reasons": [
-        "Repository not found",
-        "Description is empty"
-      ],
-      "repository": ""
-    },
-    "4200000000003103": {
-      "confidence": "unresolved",
-      "name": "NSParentalControl",
-      "reasons": [
-        "Repository not found",
-        "Description is empty"
-      ],
-      "repository": ""
-    },
     "4200000000021371": {
       "confidence": "unresolved",
       "name": "displayflipper",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -392,21 +363,11 @@
       ],
       "repository": ""
     },
-    "420000000007E51B": {
-      "confidence": "unresolved",
-      "name": "nx-ovlreloader",
-      "reasons": [
-        "Repository not found",
-        "Description is empty"
-      ],
-      "repository": ""
-    },
     "4200000000474442": {
       "confidence": "unresolved",
       "name": "sys-gdbstub",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -414,8 +375,7 @@
       "confidence": "unresolved",
       "name": "sys-logger",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -432,8 +392,7 @@
       "confidence": "unresolved",
       "name": "sys-screenuploader",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -441,8 +400,7 @@
       "confidence": "unresolved",
       "name": "sys-script",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -450,8 +408,7 @@
       "confidence": "unresolved",
       "name": "sfdnsres_mitm",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },
@@ -477,8 +434,7 @@
       "confidence": "unresolved",
       "name": "sys-botbaseplus",
       "reasons": [
-        "Repository not found",
-        "Description is empty"
+        "Repository not found"
       ],
       "repository": ""
     },

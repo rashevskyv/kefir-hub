@@ -51,13 +51,13 @@
     "name": "sys-dock",
     "aliases": ["sys-dock"],
     "repository": "https://github.com/masagrator/sys-dock",
-    "description_en": "Allows switching between handheld and docked profiles.",
+    "description_en": "Increases docked display bandwidth to support higher refresh rates.",
     "description_source": "https://github.com/masagrator/sys-dock",
     "tid_evidence": [
-      "https://github.com/masagrator/sys-dock/blob/master/Makefile"
+      "https://github.com/masagrator/sys-dock/blob/main/sysmod/sys-dock.json"
     ],
     "confidence": "verified",
-    "notes": "Verified sys-dock profile switcher."
+    "notes": "Verified docked display bandwidth module."
   },
   "0100000000000352": {
     "name": "emuiibo",
@@ -90,7 +90,7 @@
     "description_en": "Controls CPU, GPU, and memory clock speeds per application.",
     "description_source": "https://github.com/retronx-team/sys-clk",
     "tid_evidence": [
-      "https://github.com/retronx-team/sys-clk/blob/master/sysmodule/src/main.cpp"
+      "https://github.com/retronx-team/sys-clk/blob/develop/README.md"
     ],
     "confidence": "verified",
     "notes": "Verified official overclock/underclock module."
@@ -114,7 +114,7 @@
     "description_en": "Applies signature-check patches at runtime.",
     "description_source": "https://github.com/impeeza/sys-patch",
     "tid_evidence": [
-      "https://github.com/impeeza/sys-patch/blob/master/README.md"
+      "https://github.com/impeeza/sys-patch/blob/master/sysmod/sys-patch.json"
     ],
     "confidence": "verified",
     "notes": "Verified signature patching module."
@@ -134,11 +134,11 @@
   "420000000007E51A": {
     "name": "nx-ovlloader",
     "aliases": ["nx-ovlloader"],
-    "repository": "https://github.com/WerWolv/nx-ovlloader",
+    "repository": "https://github.com/ppkantorski/nx-ovlloader",
     "description_en": "Host process for loading overlay NROs on the Nintendo Switch.",
-    "description_source": "https://github.com/WerWolv/nx-ovlloader",
+    "description_source": "https://github.com/ppkantorski/nx-ovlloader",
     "tid_evidence": [
-      "https://github.com/WerWolv/nx-ovlloader/blob/master/toolbox.json"
+      "https://github.com/ppkantorski/nx-ovlloader/blob/master/README.md"
     ],
     "confidence": "verified",
     "notes": "Verified overlay loader host module."
@@ -158,49 +158,49 @@
   "0100000000C0FFEE": {
     "name": "pad-macro",
     "aliases": ["pad-macro"],
-    "repository": "https://github.com/impeeza/pad-macro",
-    "description_en": "Allows macro recording and playback for controller inputs.",
-    "description_source": "https://github.com/impeeza/pad-macro",
+    "repository": "https://github.com/FitzQ/pad-macro",
+    "description_en": "Records and plays back configurable controller button sequences.",
+    "description_source": "https://github.com/FitzQ/pad-macro",
     "tid_evidence": [
-      "https://github.com/impeeza/pad-macro/blob/master/Makefile"
+      "https://github.com/FitzQ/pad-macro/blob/master/sysmodule/Makefile"
     ],
     "confidence": "verified",
     "notes": "Verified pad-macro controller automation module."
   },
-  "0100000000000035": {
-    "name": "sys-ftpd-light",
-    "aliases": ["sys-ftpd-light"],
-    "repository": "https://github.com/mrdude2478/sys-ftpd-light",
-    "description_en": "FTP server running in the background of your Switch.",
-    "description_source": "https://github.com/mrdude2478/sys-ftpd-light",
-    "tid_evidence": [
-      "https://github.com/mrdude2478/sys-ftpd-light/blob/master/Makefile"
-    ],
-    "confidence": "verified",
-    "notes": "Verified sys-ftpd-light background FTP server."
-  },
-  "0100000000554443": {
-    "name": "ReverseUX",
-    "aliases": ["ReverseUX"],
-    "repository": "https://github.com/masagrator/ReverseUX-App",
-    "description_en": "Input redirection client for Nintendo Switch.",
-    "description_source": "https://github.com/masagrator/ReverseUX-App",
-    "tid_evidence": [
-      "https://github.com/masagrator/ReverseUX-App/blob/master/Makefile"
-    ],
-    "confidence": "verified",
-    "notes": "Verified ReverseUX app/sysmodule."
-  },
   "4200000000000FFF": {
-    "name": "triplayer",
+    "name": "sys-triplayer",
     "aliases": ["sys-triplayer", "triplayer"],
-    "repository": "https://github.com/averne/triplayer",
+    "repository": "https://github.com/tallbl0nde/TriPlayer",
     "description_en": "Background audio player sysmodule for Nintendo Switch.",
-    "description_source": "https://github.com/averne/triplayer",
+    "description_source": "https://github.com/tallbl0nde/TriPlayer",
     "tid_evidence": [
-      "https://github.com/averne/triplayer/blob/master/Makefile"
+      "https://github.com/tallbl0nde/TriPlayer/blob/master/Sysmodule/sys-triplayer.json"
     ],
     "confidence": "verified",
-    "notes": "Verified triplayer background audio player."
+    "notes": "Verified TriPlayer background audio sysmodule."
+  },
+  "4200000000003103": {
+    "name": "NSParentalControl",
+    "aliases": ["NSParentalControl", "NS Parental Control"],
+    "repository": "https://github.com/tristanisrael/NSParentalControl",
+    "description_en": "Provides offline parental controls and configurable play-time limits.",
+    "description_source": "https://github.com/tristanisrael/NSParentalControl",
+    "tid_evidence": [
+      "https://github.com/tristanisrael/NSParentalControl/blob/main/Readme.md"
+    ],
+    "confidence": "verified",
+    "notes": "Verified offline parental control sysmodule."
+  },
+  "420000000007E51B": {
+    "name": "nx-ovlreloader",
+    "aliases": ["nx-ovlreloader"],
+    "repository": "https://github.com/ppkantorski/nx-ovlloader",
+    "description_en": "Restarts nx-ovlloader without requiring a console reboot.",
+    "description_source": "https://github.com/ppkantorski/nx-ovlloader",
+    "tid_evidence": [
+      "https://github.com/ppkantorski/nx-ovlloader/blob/master/README.md"
+    ],
+    "confidence": "verified",
+    "notes": "Verified on-demand nx-ovlloader restart sysmodule."
   }
 }
