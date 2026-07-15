@@ -17,6 +17,7 @@
 
 
 #include "app.hpp"
+#include "location.hpp"
 #include "download.hpp"
 #include "i18n.hpp"
 #include "swkbd.hpp"
@@ -697,6 +698,45 @@ auto ThemeValue() -> std::string {
     return themes[index].name;
 }
 
+auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(SettingsItem{
+        "+ Add network location"_i18n,
+        "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n,
+        [](){ return std::string{}; },
+        [menu](){
+            sphaira::ui::menu::filebrowser::AddNetworkLocationInteractive([menu](){
+                menu->OnFocusGained();
+            });
+        }
+    });
+
+    const auto network_locations = location::Load();
+    for (const auto& loc : network_locations) {
+        items.emplace_back(SettingsItem{
+            loc.name,
+            loc.url,
+            [](){ return std::string{}; },
+            [menu, loc](){
+                App::Push<OptionBox>(
+                    "Delete this network location?"_i18n,
+                    "No"_i18n, "Yes"_i18n, 0, [menu, loc](auto op_index){
+                        if (op_index && *op_index) {
+                            location::Remove(loc.name);
+                            App::Notify("Location deleted successfully!"_i18n);
+                            menu->OnFocusGained();
+                        }
+                    }
+                );
+            },
+            SettingsItemKind::Folder
+        });
+    }
+
+    return items;
+}
+
 } // namespace
 
 
@@ -1037,6 +1077,11 @@ void Menu::BuildCategories() {
                     App::DisplayWebdavOptions(false);
                 }, SettingsItemKind::Folder },
             }
+        },
+        {
+            "Sources"_i18n,
+            "Manage file sources and network locations."_i18n,
+            BuildSourcesCategoryItems(this)
         },
         {
             "Homebrew"_i18n,

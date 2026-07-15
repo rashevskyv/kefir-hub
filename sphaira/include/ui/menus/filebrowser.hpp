@@ -176,6 +176,7 @@ struct FsDirCollection {
 using FsDirCollections = std::vector<FsDirCollection>;
 
 void SignalChange();
+void AddNetworkLocationInteractive(std::function<void()> on_success = nullptr);
 
 struct Menu;
 

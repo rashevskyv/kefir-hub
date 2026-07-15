@@ -186,10 +186,10 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         // charging: fixed green color, no animation
         const NVGcolor charge_col = nvgRGBA(100, 230, 100, 255);
         gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, charge_col, "%u\uFE6A", pdata.battery_percetange);
-        start_x -= 64;
+        start_x -= 94;
     } else {
         // discharging: normal color percentage
-        draw(ThemeEntryID_TEXT, 64, "%u\uFE6A", pdata.battery_percetange);
+        draw(ThemeEntryID_TEXT, 94, "%u\uFE6A", pdata.battery_percetange);
     }
 
     // Clock

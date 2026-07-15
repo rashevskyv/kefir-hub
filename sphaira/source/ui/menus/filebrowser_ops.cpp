@@ -256,7 +256,7 @@ void FsView::UploadFiles() {
 
     const auto network_locations = location::Load();
     if (network_locations.empty()) {
-        App::Notify("No upload locations set!"_i18n);
+        App::Notify("No network locations configured! Add one in Settings."_i18n);
         return;
     }
 
@@ -266,7 +266,7 @@ void FsView::UploadFiles() {
     }
 
     App::Push<PopupList>(
-        "Select upload location"_i18n, items, [this, network_locations](auto op_index){
+        "Select network location"_i18n, items, [this, network_locations](auto op_index){
             if (!op_index) {
                 return;
             }

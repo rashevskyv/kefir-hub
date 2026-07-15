@@ -919,5 +919,16 @@
   "module.4200000000003103.description": "Provides offline parental controls and configurable play-time limits.",
   "module.420000000007E51A.description": "Host process for loading overlay NROs on the Nintendo Switch.",
   "module.420000000007E51B.description": "Restarts nx-ovlloader without requiring a console reboot.",
-  "module.690000000000000D.description": "Nintendo Switch sysmodule for USB controller support."
+  "module.690000000000000D.description": "Nintendo Switch sysmodule for USB controller support.",
+  "Sources": "Sources",
+  "Manage file sources and network locations.": "Manage file sources and network locations.",
+  "+ Add network location": "+ Add network location",
+  "Delete this network location?": "Delete this network location?",
+  "Location deleted successfully!": "Location deleted successfully!",
+  "Upload to network location": "Upload to network location",
+  "Upload the selected file(s) to a configured network storage.": "Upload the selected file(s) to a configured network storage.",
+  "No network locations configured! Add one in Settings.": "No network locations configured! Add one in Settings.",
+  "Select network location": "Select network location",
+  "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).": "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).",
+  "Select Protocol": "Select Protocol"
 }

@@ -27,6 +27,7 @@ using Entries = std::vector<Entry>;
 
 auto Load() -> Entries;
 void Add(const Entry& e);
+void Remove(const std::string& name);
 
 // helper for hdd devices.
 // this doesn't really belong in this header, however

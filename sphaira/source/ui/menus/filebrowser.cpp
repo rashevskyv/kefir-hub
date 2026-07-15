@@ -1099,38 +1099,6 @@ void FsView::DisplayAdvancedOptions() {
     auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>("Mount"_i18n, [this](){
-        ShowSourcePicker();
-    }, "Switch the file source to a different storage or mount point."_i18n);
-
-    options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
-        std::string name;
-        if (R_FAILED(swkbd::ShowText(name, "Enter location name (e.g. My NAS)"_i18n.c_str(), "")) || name.empty()) return;
-
-        std::string server;
-        if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), "")) || server.empty()) return;
-
-        std::string share;
-        if (R_FAILED(swkbd::ShowText(share, "Enter share name (e.g. shared_folder)"_i18n.c_str(), "")) || share.empty()) return;
-
-        std::string user;
-        if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
-
-        std::string pass;
-        if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
-
-        App::PopToMenu();
-
-        location::Entry e;
-        e.name = name;
-        e.url = "smb://" + server + "/" + share;
-        e.user = user;
-        e.pass = pass;
-
-        location::Add(e);
-        App::Notify("Location added successfully!"_i18n);
-    }, "Configure a new network storage share."_i18n);
-
     if (IsSd()) {
         options->Add<SidebarEntryCallback>("StartWebServer"_i18n, [this](){
             ShareFolder();
@@ -1199,9 +1167,9 @@ void FsView::DisplayAdvancedOptions() {
     }
 
     if (m_entries_current.size()) {
-        options->Add<SidebarEntryCallback>("Upload"_i18n, [this](){
+        options->Add<SidebarEntryCallback>("Upload to network location"_i18n, [this](){
             UploadFiles();
-        }, "Upload the selected file(s) via the web server."_i18n);
+        }, "Upload the selected file(s) to a configured network storage."_i18n);
     }
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
@@ -1330,6 +1298,12 @@ void FsView::ShowSourcePicker() {
             SetFs(target_entry.root, target_entry);
         }
     }, current_index, "Switch the file source to a different storage or mount point."_i18n);
+
+    options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
+        AddNetworkLocationInteractive([this](){
+            ShowSourcePicker();
+        });
+    }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
 }
 
 Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {
@@ -1645,6 +1619,116 @@ void Menu::PromptIfShouldExit() {
             }
         }
     );
+}
+
+void AddNetworkLocationInteractive(std::function<void()> on_success) {
+    PopupList::Items protocols = {"Samba (SMB)", "WebDAV", "FTP", "HTTP"};
+    App::Push<PopupList>("Select Protocol"_i18n, protocols, [on_success](std::optional<s64> op_proto) {
+        if (!op_proto) return;
+        s64 proto = *op_proto;
+
+        std::string name;
+        if (R_FAILED(swkbd::ShowText(name, "Enter location name (e.g. My NAS)"_i18n.c_str(), ""))) return;
+        if (name.empty()) return;
+
+        if (proto == 0) { // SMB
+            std::string server;
+            if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), ""))) return;
+            if (server.empty()) return;
+
+            std::string share;
+            if (R_FAILED(swkbd::ShowText(share, "Enter share name (e.g. shared_folder)"_i18n.c_str(), ""))) return;
+            if (share.empty()) return;
+
+            std::string user;
+            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
+
+            std::string pass;
+            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
+
+            App::PopToMenu();
+
+            location::Entry e;
+            e.name = name;
+            e.url = "smb://" + server + "/" + share;
+            e.user = user;
+            e.pass = pass;
+            location::Add(e);
+            App::Notify("Location added successfully!"_i18n);
+            if (on_success) on_success();
+        }
+        else if (proto == 1) { // WebDAV
+            std::string url;
+            if (R_FAILED(swkbd::ShowText(url, "Enter Server URL (e.g. http://server.com/dav)"_i18n.c_str(), ""))) return;
+            if (url.empty()) return;
+
+            if (!url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("webdav://") && !url.starts_with("webdavs://")) {
+                url = "webdav://" + url;
+            }
+
+            std::string user;
+            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
+
+            std::string pass;
+            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
+
+            App::PopToMenu();
+
+            location::Entry e;
+            e.name = name;
+            e.url = url;
+            e.user = user;
+            e.pass = pass;
+            location::Add(e);
+            App::Notify("Location added successfully!"_i18n);
+            if (on_success) on_success();
+        }
+        else if (proto == 2) { // FTP
+            std::string server;
+            if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), ""))) return;
+            if (server.empty()) return;
+
+            std::string port_str;
+            if (R_FAILED(swkbd::ShowText(port_str, "Enter port (optional, default 21)"_i18n.c_str(), "21"))) return;
+            u16 port = port_str.empty() ? 21 : (u16)std::stoi(port_str);
+
+            std::string user;
+            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
+
+            std::string pass;
+            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
+
+            App::PopToMenu();
+
+            location::Entry e;
+            e.name = name;
+            e.url = "ftp://" + server + "/";
+            e.port = port;
+            e.user = user;
+            e.pass = pass;
+            location::Add(e);
+            App::Notify("Location added successfully!"_i18n);
+            if (on_success) on_success();
+        }
+        else if (proto == 3) { // HTTP
+            std::string url;
+            if (R_FAILED(swkbd::ShowText(url, "Enter Server URL (e.g. http://server.com/files)"_i18n.c_str(), ""))) return;
+            if (url.empty()) return;
+
+            if (!url.starts_with("http://") && !url.starts_with("https://")) {
+                url = "http://" + url;
+            }
+
+            App::PopToMenu();
+
+            location::Entry e;
+            e.name = name;
+            e.url = url;
+            location::Add(e);
+            App::Notify("Location added successfully!"_i18n);
+            if (on_success) on_success();
+        }
+    });
 }
 
 } // namespace sphaira::ui::menu::filebrowser

@@ -39,6 +39,13 @@ void Add(const Entry& e) {
     }
 }
 
+void Remove(const std::string& name) {
+    if (name.empty()) {
+        return;
+    }
+    ini_puts(name.c_str(), nullptr, nullptr, location_path);
+}
+
 auto Load() -> Entries {
     Entries out{};
 

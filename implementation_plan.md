@@ -1,82 +1,128 @@
-# UX-покращення Module Manager (id 44, 46) та виправлення сенсорної навігації Settings (id 48)
+# UX-покращення джерел даних та статус-бару (v0.13.220)
 
-Цей план описує зміни, спрямовані на покращення досвіду користувача (UX) у меню "Керування модулями" (Module Manager) та виправлення поведінки сенсорного керування у двоколонковому меню налаштувань (Settings).
+Цей план описує зміни, спрямовані на покращення досвіду користувача (UX) при роботі з мережевими джерелами даних (Sources) у файловому менеджері та меню налаштувань, а також виправлення злипання годинника та відсотків заряду в статус-барі.
 
 ## Proposed Changes
 
-### [Component: Sphaira (C++)]
+### [Component: Status Bar Layout]
 
 ---
 
-#### [MODIFY] [app_paths.hpp](file:///d:/git/dev/sphaira/sphaira/include/app_paths.hpp)
-- Додати константу для файлу реєстру описів модулів:
+#### [MODIFY] [menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/menu_base.cpp)
+- Збільшити фіксований зсув `start_x` для батареї з `64` до `94` пікселів в обох режимах (зарядка та розрядка):
+  - При заряджанні (`charger_type != 0`): `start_x -= 94;`
+  - При розряджанні (`charger_type == 0`): `draw(ThemeEntryID_TEXT, 94, "%u\uFE6A", pdata.battery_percetange);`
+
+---
+
+### [Component: Location Core]
+
+---
+
+#### [MODIFY] [location.hpp](file:///d:/git/dev/sphaira/sphaira/include/location.hpp)
+- Додати декларацію функції `Remove` для видалення мережевої локації за ім'ям:
   ```cpp
-  inline const std::string MODULES = DATA_ROOT + "/modules.json";
+  void Remove(const std::string& name);
   ```
 
 ---
 
-#### [MODIFY] [uninstaller_menu.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/uninstaller_menu.hpp)
-- Розширити структуру `ModuleItem` полем `description` для збереження локалізованого опису модуля:
+#### [MODIFY] [location.cpp](file:///d:/git/dev/sphaira/sphaira/source/location.cpp)
+- Реалізувати функцію `Remove` за допомогою `minIni` (`ini_puts` з передачею `nullptr` замість імені ключа та значення для видалення всієї секції):
   ```cpp
-  std::string description;
+  void Remove(const std::string& name) {
+      if (name.empty()) return;
+      ini_puts(name.c_str(), nullptr, nullptr, location_path);
+  }
   ```
 
 ---
 
-#### [MODIFY] [uninstaller_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/uninstaller_menu.cpp)
-- **Завантаження описів (`LoadModules`)**:
-  - Перед скануванням каталогів зчитати файл `/config/kefir/modules.json`.
-  - Якщо файл не існує, створити його з дефолтними описами популярних модулів (emuiibo, Mission Control, sys-clk, ldn_mitm, sys-ftpd) англійською та українською мовами.
-  - Розпарсити JSON за допомогою `yyjson`, зчитуючи опис для поточної мови (визначається через `App::GetLanguage() == 14 ? "uk" : "en"`) із фолбеком на `"en"`.
-  - Під час парсингу `toolbox.json` додавати відповідний опис з реєстру за TID (якщо опису немає — `"No description provided"_i18n`).
-- **Візуальні зміни (`Draw` / `UninstallerMenu` constructor)**:
-  - Збільшити висоту рядка списку з `66.f` до `82.f` для комфортного розташування нової інформації.
-  - Зсунути початок списку вгору до `GetY() + 45.f` (замість `GetY() + 79.f`), щоб перший рядок стояв одразу під легендою.
-  - Вирівняти область `nvgScissor` у `Draw()` відповідно до нової геометрії: `list_x = 75.f`, `list_y = GetY() + 45.f`, `list_w = 1070.f`, `list_h = 574.f`, розширивши її на `SELECTION_OUTLINE_PAD` з усіх боків для запобігання обрізанню рамки фокусу.
-  - У `Draw()` прибрати виведення старого статусу `StatusText(item)`. Замість цього вивести два окремих статуси праворуч:
-    - `Now: On` (зелений) / `Now: Off` (сірий)
-    - `After reboot: Enabled` (жовтий) / `After reboot: Disabled` (сірий)
-  - Перейменувати суфікс ` - reboot required` на ` - Applies after reboot` під назвою модуля.
-- **Оновлення дій (`ToggleSelectedModule` та `UpdateSubheading`)**:
-  - У `UpdateSubheading()` встановлювати підзаголовок меню рівним `item.description` вибраного модуля.
-  - У `ToggleSelectedModule()` для модулів з `requires_reboot` показувати повідомлення `"This module applies after reboot. Use autostart."_i18n` замість старого `"Use Autostart for reboot-required modules"`.
+### [Component: File Browser (UI)]
+
+---
+
+#### [MODIFY] [filebrowser.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser.hpp)
+- Додати декларацію інтерактивної функції додавання мережевого джерела:
+  ```cpp
+  void AddNetworkLocationInteractive(std::function<void()> on_success = nullptr);
+  ```
+
+---
+
+#### [MODIFY] [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp)
+- **Прибрати дублювання монтування**:
+  - Видалити пункт `"Mount"` (який викликав `ShowSourcePicker()`) з `DisplayAdvancedOptions()`.
+- **Перенести додавання джерела**:
+  - Видалити пункт `"Add network location"` з `DisplayAdvancedOptions()`.
+  - У `ShowSourcePicker()` додати в кінець списку джерел пункт `"Add network location"_i18n`, який викликає `AddNetworkLocationInteractive` з оновленням меню.
+  - Змінити опис на детальний: `"Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n`.
+- **Оновити пункт Upload**:
+  - У `DisplayAdvancedOptions()` перейменувати `"Upload"_i18n` на `"Upload to network location"_i18n` та змінити опис на `"Upload the selected file(s) to a configured network storage."_i18n`.
+- **Реалізація `AddNetworkLocationInteractive`**:
+  - Реалізувати функцію в кінці файлу з послідовним вибором протоколу (`Samba (SMB)`, `WebDAV`, `FTP`, `HTTP`) та відповідними кроками введення через `swkbd::ShowText` та збереженням через `location::Add`.
+
+---
+
+#### [MODIFY] [filebrowser_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser_ops.cpp)
+- У методі `UploadFiles()` змінити нотифікацію при відсутності локацій:
+  - Було: `App::Notify("No upload locations set!"_i18n);`
+  - Стане: `App::Notify("No network locations configured! Add one in Settings."_i18n);`
+- Змінити заголовок PopupList вибору локації:
+  - Було: `"Select upload location"_i18n`
+  - Стане: `"Select network location"_i18n`
+
+---
+
+### [Component: Settings Menu]
 
 ---
 
 #### [MODIFY] [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)
-- **Геометрія списків**:
-  - Передати списку `m_category_list` його реальний viewport `Vec4{76.f, 138.f, 300.f, 448.f}` замість загального `m_pos`.
-  - Передати списку `m_item_list` його реальний viewport `Vec4{420.f, 132.f, 780.f, 462.f}` замість загального `m_pos`.
-- **Обробка Touch-навігації (`Update`)**:
-  - У `Update()` відстежувати зміну фокусу через локальну змінну `focus_changed`. Якщо відбувся клік у межах viewport іншої колонки, перемкнути `m_focus_pane` та виставити `focus_changed = true`.
-  - У колбеках `OnUpdate` обох списків виконувати `FireAction(Button::A)` лише у випадку, якщо клік здійснено по вже виділеному елементу і при цьому фокус НЕ змінювався у поточному кадрі (`!focus_changed`). Це запобігає випадковій активації параметрів при першому тапі для переходу в праву колонку.
+- Додати нову категорію налаштувань `"Sources"_i18n` (під категорією `"Network"_i18n`) з описом `"Manage file sources and network locations."_i18n`.
+- Реалізувати функцію `BuildSourcesCategoryItems()`, яка генерує:
+  - Пункт `"+ Add network location"_i18n` (опис: `"Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n`), що викликає `AddNetworkLocationInteractive()` з оновленням категорій (`menu->OnFocusGained()`).
+  - Список наявних джерел із `location::Load()`. При натисканні `A` на джерело показується вікно підтвердження видалення: `"Delete this network location?"_i18n` з кнопками `"No"_i18n`/`"Yes"_i18n`. При виборі `"Yes"_i18n` джерело видаляється через `location::Remove()`, показується нотифікація `"Location deleted successfully!"_i18n` та меню оновлюється.
 
 ---
 
-### [Component: i18n (Локалізація)]
+### [Component: Localization]
+
+---
 
 #### [MODIFY] [en.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/en.json) та [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json)
-- Додати переклади для нових рядків:
-  - `"Now: On"`
-  - `"Now: Off"`
-  - `"After reboot: Enabled"`
-  - `"After reboot: Disabled"`
-  - `" - Applies after reboot"`
-  - `"This module applies after reboot. Use autostart."`
-  - `"No description provided"`
+- Додати переклади для всіх нових рядків:
+  - `"Sources"` -> `"Джерела"` / `"Sources"`
+  - `"Manage file sources and network locations."` -> `"Керування джерелами файлів та мережевими локаціями."` / `"Manage file sources and network locations."`
+  - `"+ Add network location"` -> `"+ Додати мережеве джерело"` / `"+ Add network location"`
+  - `"Delete this network location?"` -> `"Видалити це мережеве джерело?"` / `"Delete this network location?"`
+  - `"Location deleted successfully!"` -> `"Джерело успішно видалено!"` / `"Location deleted successfully!"`
+  - `"Upload to network location"` -> `"Завантажити в мережеве джерело"` / `"Upload to network location"`
+  - `"Upload the selected file(s) to a configured network storage."` -> `"Завантажити вибрані файли у налаштоване мережеве джерело."` / `"Upload the selected file(s) to a configured network storage."`
+  - `"No network locations configured! Add one in Settings."` -> `"Не налаштовано жодного мережевого джерела! Додайте його в налаштуваннях."` / `"No network locations configured! Add one in Settings."`
+  - `"Select network location"` -> `"Виберіть мережеве джерело"` / `"Select network location"`
+  - `"Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."` -> `"Додати мережеве джерело. Підтримувані протоколи: SMB, WebDAV, FTP, HTTP."` / `"Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."`
+  - `"Select Protocol"` -> `"Виберіть протокол"` / `"Select Protocol"`
 
 ---
 
-## Verification Plan
+### [Component: Version]
+
+---
+
+#### [MODIFY] [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)
+- Підвищити версію проекту `sphaira_VERSION` до `0.13.220`.
+
+## Verification Plan (Виконано)
 
 ### Automated Tests
 - Автоматизовані тести відсутні.
 
-### Manual Verification
-- **WSL-збірка**: Перевірити успішність компіляції NRO (`make` / `cmake`).
-- **Тестування на консолі**:
-  - Запустити Module Manager. Перевірити, що список починається вище і рамка фокусу не обрізається.
-  - Перевірити наявність файлу `/config/kefir/modules.json` на SD-карті та відображення описів у підзаголовку.
-  - Змінити стан модуля (A) або автозапуск (Y) та перевірити незалежне оновлення рядків `Now` та `After reboot`.
-  - Перевірити тач-навігацію у Settings: кліки по лівій колонці перемикають категорії, перший клік по параметру лише виділяє його, повторний клік — відкриває.
+### Manual Verification (Готово до тестування на консолі)
+- **WSL-збірка**: Виконано успішно. Проект скомпільовано без помилок лінкера.
+- **Тестування на консолі** (інструкції перенесені до [tests.md](file:///d:/git/dev/sphaira/tests.md)):
+  - Перевірити статус-бар: годинник та батарея при 100% не зливаються.
+  - Відкрити File Browser, перевірити, що в Advanced меню більше немає "Mount" та "Add network location".
+  - У File Browser -> Sources перевірити наявність пункту "Add network location" з новим описом. Додати Samba, WebDAV, FTP та HTTP джерела, перевірити правильність URL-схеми в ini.
+  - Перевірити пункт "Upload to network location", його опис та повідомлення при відсутності налаштованих локацій.
+  - У Tools -> Settings відкрити нову категорію "Sources", перевірити список джерел, можливість видалення джерела та додавання нового з автооновленням інтерфейсу.
