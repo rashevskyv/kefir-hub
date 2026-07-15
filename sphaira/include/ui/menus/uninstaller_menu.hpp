@@ -15,6 +15,7 @@ struct ModuleItem {
     bool requires_reboot{};
     bool running{};
     bool autostart{};
+    std::string description;
 };
 
 struct UninstallerMenu final : MenuBase {

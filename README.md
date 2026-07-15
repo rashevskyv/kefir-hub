@@ -90,6 +90,13 @@ Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamical
 - **Live Sysmodule Telemetry:** The background module exports state telemetry (`/switch/sphaira/fan_status.bin`), providing real-time hardware status to Sphaira.
 - **Physical Fan Motor Inertia Modeling:** UI graph markers smoothly model physical motor spin-up and spin-down acceleration/deceleration response.
 
+## Module Manager
+
+Manage installed Atmosphere background sysmodules directly from the console interface under **Tools -> Module Manager**.
+- **Independent State Tracking:** The module states are clearly separated into two metrics: the current running status (**Now: On / Off**) and the boot-time autostart configuration (**After reboot: Enabled / Disabled**).
+- **Module Description Registry:** Shows localized descriptions (supporting English and Ukrainian) in the menu subtitle, loaded from a persistent registry file on the SD card (`/config/kefir/modules.json`). If the registry file does not exist, it is generated with default entries for popular sysmodules (emuiibo, Mission Control, sys-clk, ldn_mitm, sys-ftpd).
+- **Reboot-Required Handling:** Safely detects modules that apply only after system reboot, blocking manual process toggles and prompting the user with a helpful notification.
+
 ## Themes & Translations
 
 Sphaira features customizable theme options and multi-language support:

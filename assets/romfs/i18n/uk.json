@@ -898,5 +898,12 @@
   "Set the WebDAV server password.": "Встановити пароль сервера WebDAV.",
   "HTTP protocol is not allowed. Please use HTTPS/WebDAV.": "HTTP протокол заборонено. Будь ласка, використовуйте HTTPS/WebDAV.",
   "Copying via MTP": "Копіювання через MTP",
-  "WebDAV Settings": "Налаштування WebDAV"
+  "WebDAV Settings": "Налаштування WebDAV",
+  "Now: On": "Зараз: увімкнено",
+  "Now: Off": "Зараз: вимкнено",
+  "After reboot: Enabled": "Після перезапуску: увімкнено",
+  "After reboot: Disabled": "Після перезапуску: вимкнено",
+  " - Applies after reboot": " - Застосовується після перезапуску",
+  "This module applies after reboot. Use autostart.": "Цей модуль застосовується після перезапуску. Використайте автозапуск.",
+  "No description provided": "Опис модуля не надано"
 }

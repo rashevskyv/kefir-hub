@@ -712,12 +712,12 @@ Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
         }})
     );
 
-    m_category_list = std::make_unique<List>(1, 8, m_pos, Vec4{76.f, 138.f, 300.f, 56.f});
+    m_category_list = std::make_unique<List>(1, 8, Vec4{76.f, 138.f, 300.f, 448.f}, Vec4{76.f, 138.f, 300.f, 56.f});
     m_category_list->SetLayout(List::Layout::GRID);
     m_category_list->SetPageJump(false);
     m_category_list->SetFastScroll(false);
 
-    m_item_list = std::make_unique<List>(1, 7, m_pos, Vec4{420.f, 132.f, 780.f, 66.f});
+    m_item_list = std::make_unique<List>(1, 7, Vec4{420.f, 132.f, 780.f, 462.f}, Vec4{420.f, 132.f, 780.f, 66.f});
     m_item_list->SetLayout(List::Layout::GRID);
     m_item_list->SetPageJump(false);
     m_item_list->SetFastScroll(false);
@@ -743,11 +743,18 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
+    bool focus_changed = false;
     if (touch->is_clicked) {
         if (touch->in_range(m_category_list->GetPos())) {
-            SetFocusPane(FocusPane::Categories);
+            if (m_focus_pane != FocusPane::Categories) {
+                SetFocusPane(FocusPane::Categories);
+                focus_changed = true;
+            }
         } else if (touch->in_range(m_item_list->GetPos())) {
-            SetFocusPane(FocusPane::Items);
+            if (m_focus_pane != FocusPane::Items) {
+                SetFocusPane(FocusPane::Items);
+                focus_changed = true;
+            }
         }
     }
 
@@ -766,9 +773,11 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     if (m_focus_pane == FocusPane::Categories) {
-        m_category_list->OnUpdate(controller, touch, m_category_index, m_categories.size(), [this](bool touch, auto i) {
+        m_category_list->OnUpdate(controller, touch, m_category_index, m_categories.size(), [this, focus_changed](bool touch, auto i) {
             if (touch && m_category_index == i) {
-                FireAction(Button::A);
+                if (!focus_changed) {
+                    FireAction(Button::A);
+                }
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetCategoryIndex(i);
@@ -776,9 +785,11 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         }, this);
     } else {
         const auto& category = m_categories[m_category_index];
-        m_item_list->OnUpdate(controller, touch, m_item_index, category.items.size(), [this](bool touch, auto i) {
+        m_item_list->OnUpdate(controller, touch, m_item_index, category.items.size(), [this, focus_changed](bool touch, auto i) {
             if (touch && m_item_index == i) {
-                FireAction(Button::A);
+                if (!focus_changed) {
+                    FireAction(Button::A);
+                }
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 SetItemIndex(i);

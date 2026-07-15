@@ -2,6 +2,7 @@
 
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
+#include "app_paths.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -21,6 +22,36 @@ namespace {
 
 constexpr const char* ATMOSPHERE_CONTENTS_PATH = "/atmosphere/contents";
 constexpr u64 TESLA_MENU_PROGRAM_ID = 0x420000000007E51AULL;
+
+constexpr const char* DEFAULT_MODULES_JSON = R"({
+  "0100000000000352": {
+    "en": "Amiibo emulation utility.",
+    "uk": "Утиліта для емуляції Amiibo."
+  },
+  "0100000000000bd5": {
+    "en": "Use controllers from other consoles on Nintendo Switch.",
+    "uk": "Використання геймпадів від інших консолей на Nintendo Switch."
+  },
+  "4200000000000010": {
+    "en": "System clock configuration for overclocking and underclocking.",
+    "uk": "Налаштування тактової частоти системи для розгону та енергозбереження."
+  },
+  "420000000000000b": {
+    "en": "Redirection of local wireless play over internet.",
+    "uk": "Перенаправлення локальної бездротової гри через інтернет."
+  },
+  "00ffff0000000000": {
+    "en": "Background FTP server.",
+    "uk": "Фоновий FTP-сервер."
+  }
+})";
+
+auto GetLanguageCode() -> std::string {
+    if (App::GetLanguage() == 14) { // Ukrainian
+        return "uk";
+    }
+    return "en";
+}
 
 auto FormatProgramId(u64 program_id) -> std::string {
     char out[17]{};
@@ -152,19 +183,6 @@ auto SetAutostart(fs::FsNativeSd& fs, u64 program_id, bool enabled) -> Result {
     R_SUCCEED();
 }
 
-auto StatusText(const ModuleItem& item) -> std::string {
-    if (item.running && item.autostart) {
-        return "On / Auto"_i18n;
-    }
-    if (item.running) {
-        return "On / Manual"_i18n;
-    }
-    if (item.autostart) {
-        return "Off / Auto"_i18n;
-    }
-    return "Off / Manual"_i18n;
-}
-
 } // namespace
 
 UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_None} {
@@ -184,8 +202,13 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
         }})
     );
 
-    const Vec4 v{75, GetY() + 1.f + 78.f, 1220.f - 150.f, 66.f};
-    m_list = std::make_unique<List>(1, 7, m_pos, v);
+    const float list_x = 75.f;
+    const float list_y = GetY() + 45.f;
+    const float list_w = 1070.f;
+    const float list_h = 574.f;
+    const float row_h = 82.f;
+
+    m_list = std::make_unique<List>(1, 7, Vec4{list_x, list_y, list_w, list_h}, Vec4{list_x, list_y, list_w, row_h});
     m_list->SetLayout(List::Layout::GRID);
 }
 
@@ -231,10 +254,12 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     nvgSave(vg);
-    // inflate the clip by the selection outline pad so the highlight of edge
-    // rows isn't clipped.
+    const float list_x = 75.f;
+    const float list_y = GetY() + 45.f;
+    const float list_w = 1070.f;
+    const float list_h = 574.f;
     const float p = gfx::SELECTION_OUTLINE_PAD;
-    nvgScissor(vg, 75.f - p, GetY() + 78.f - p, 1220.f - 150.f + p * 2, SCREEN_HEIGHT - (GetY() + 78.f) + p * 2);
+    nvgScissor(vg, list_x - p, list_y - p, list_w + p * 2, list_h + p * 2);
 
     m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;
@@ -250,22 +275,31 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto marker_colour = item.running ? nvgRGBA(76, 190, 120, 255) :
             item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
-        gfx::drawRect(vg, x + 15.f, y + 20.f, 14.f, 14.f, marker_colour, 7.f);
+        gfx::drawRect(vg, x + 15.f, y + h / 2.f - 7.f, 14.f, 14.f, marker_colour, 7.f);
 
-        gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f - 9.f, 18.f,
+        gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f - 11.f, 18.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
             theme->GetColour(text_id),
             "%s", item.name.c_str());
 
-        gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f + 12.f, 13.f,
+        gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f + 14.f, 13.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
             theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%s%s", item.program_id_text.c_str(), item.requires_reboot ? " - reboot required"_i18n.c_str() : "");
+            "%s%s", item.program_id_text.c_str(), item.requires_reboot ? " - Applies after reboot"_i18n.c_str() : "");
 
-        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f, 15.f,
+        const auto now_text = item.running ? "Now: On"_i18n : "Now: Off"_i18n;
+        const auto now_colour = item.running ? nvgRGBA(76, 190, 120, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f - 11.f, 14.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
-            theme->GetColour(text_id),
-            "%s", StatusText(item).c_str());
+            now_colour,
+            "%s", now_text.c_str());
+
+        const auto reboot_text = item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
+        const auto reboot_colour = item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f + 14.f, 14.f,
+            NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+            reboot_colour,
+            "%s", reboot_text.c_str());
     });
 
     nvgRestore(vg);
@@ -300,6 +334,45 @@ void UninstallerMenu::LoadModules() {
     m_error_message.clear();
 
     fs::FsNativeSd fs;
+
+    // Load modules.json or create default
+    std::unordered_map<std::string, std::string> descriptions;
+    const std::string modules_json_path = paths::MODULES;
+    if (!fs.FileExists(modules_json_path)) {
+        fs.CreateDirectoryRecursively(paths::DATA_ROOT);
+        std::string default_json = DEFAULT_MODULES_JSON;
+        std::vector<u8> json_data(default_json.begin(), default_json.end());
+        fs.write_entire_file(modules_json_path, json_data);
+    }
+
+    std::vector<u8> modules_data;
+    if (R_SUCCEEDED(fs.read_entire_file(modules_json_path, modules_data))) {
+        auto* doc = yyjson_read(reinterpret_cast<const char*>(modules_data.data()), modules_data.size(), YYJSON_READ_NOFLAG);
+        if (doc) {
+            auto* root = yyjson_doc_get_root(doc);
+            if (root && yyjson_is_obj(root)) {
+                const auto lang_code = GetLanguageCode();
+                yyjson_val* key_val;
+                yyjson_val* val;
+                size_t idx, max;
+                yyjson_obj_foreach(root, idx, max, key_val, val) {
+                    const char* tid_str = yyjson_get_str(key_val);
+                    if (tid_str && yyjson_is_obj(val)) {
+                        std::string desc = JsonString(val, lang_code.c_str());
+                        if (desc.empty()) {
+                            desc = JsonString(val, "en");
+                        }
+                        if (!desc.empty()) {
+                            std::string tid_key = tid_str;
+                            std::transform(tid_key.begin(), tid_key.end(), tid_key.begin(), ::tolower);
+                            descriptions[tid_key] = desc;
+                        }
+                    }
+                }
+            }
+            yyjson_doc_free(doc);
+        }
+    }
 
     fs::Dir dir;
     Result rc = fs.OpenDirectory(ATMOSPHERE_CONTENTS_PATH, FsDirOpenMode_ReadDirs | FsDirOpenMode_NoFileSize, &dir);
@@ -342,6 +415,14 @@ void UninstallerMenu::LoadModules() {
             continue;
         }
 
+        std::string tid_lower = item.program_id_text;
+        std::transform(tid_lower.begin(), tid_lower.end(), tid_lower.begin(), ::tolower);
+        if (auto it = descriptions.find(tid_lower); it != descriptions.end()) {
+            item.description = it->second;
+        } else {
+            item.description = "No description provided"_i18n;
+        }
+
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
         item.running = IsRunning(item.program_id);
         m_items.push_back(std::move(item));
@@ -378,7 +459,7 @@ void UninstallerMenu::ToggleSelectedModule() {
 
     Result rc{};
     if (item.requires_reboot) {
-        App::Notify("Use Autostart for reboot-required modules"_i18n);
+        App::Notify("This module applies after reboot. Use autostart."_i18n);
         RefreshStatuses();
         return;
     } else if (item.running) {
@@ -425,7 +506,7 @@ void UninstallerMenu::UpdateSubheading() {
     }
 
     const auto& item = m_items[m_index];
-    SetSubHeading(item.name + " - " + StatusText(item));
+    SetSubHeading(item.description);
 }
 
 } // namespace sphaira::ui::menu::hats

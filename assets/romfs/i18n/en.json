@@ -894,5 +894,12 @@
   "Set the WebDAV server password.": "Set the WebDAV server password.",
   "HTTP protocol is not allowed. Please use HTTPS/WebDAV.": "HTTP protocol is not allowed. Please use HTTPS/WebDAV.",
   "Copying via MTP": "Copying via MTP",
-  "WebDAV Settings": "WebDAV Settings"
+  "WebDAV Settings": "WebDAV Settings",
+  "Now: On": "Now: On",
+  "Now: Off": "Now: Off",
+  "After reboot: Enabled": "After reboot: Enabled",
+  "After reboot: Disabled": "After reboot: Disabled",
+  " - Applies after reboot": " - Applies after reboot",
+  "This module applies after reboot. Use autostart.": "This module applies after reboot. Use autostart.",
+  "No description provided": "No description provided"
 }
