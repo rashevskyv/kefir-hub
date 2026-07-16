@@ -33,7 +33,15 @@ enum class FsType {
     ImageSd,
     Stdio,
     Network,
+    Root,
 };
+
+enum class ConnectionStatus {
+    Unknown,
+    Connected,
+    Failed,
+};
+
 
 enum class SelectedType {
     None,
@@ -65,6 +73,8 @@ struct FsEntry {
     fs::FsPath url{};
     fs::FsPath user{};
     fs::FsPath pass{};
+    u16 port{};
+    ConnectionStatus status{ConnectionStatus::Unknown};
 
     auto IsReadOnly() const -> bool {
         return flags & FsEntryFlag_ReadOnly;
@@ -98,6 +108,8 @@ struct FileEntry : FsDirectoryEntry {
     bool checked_extension{}; // did we already search for an ext?
     bool checked_internal_extension{}; // did we already search for an ext?
     bool selected{}; // is this file selected?
+    ConnectionStatus connection_status{ConnectionStatus::Unknown};
+    FsEntry virtual_target_entry{};
 
     auto IsFile() const -> bool {
         return type == FsDirEntryType_File;
@@ -194,6 +206,7 @@ struct FsView final : Widget {
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
+    void ConnectToLocation(const FsEntry& target_entry);
 
     static auto GetNewPath(const fs::FsPath& root_path, const fs::FsPath& file_path) -> fs::FsPath {
         return fs::AppendPath(root_path, file_path);

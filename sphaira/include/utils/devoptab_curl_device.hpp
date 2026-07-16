@@ -6,7 +6,30 @@
 #include <switch.h>
 #include <string>
 
+#include <vector>
+#include <sys/stat.h>
+
 namespace sphaira::devoptab::common {
+
+struct CurlFileState {
+    PushThreadData* push_data{};
+    PullThreadData* pull_data{};
+    size_t offset{};
+    size_t size{};
+    std::string url{};
+    bool write_mode{};
+};
+
+struct dircache {
+    std::string name;
+    std::string fullpathname;
+    struct stat st;
+};
+
+struct CurlDirState {
+    std::vector<dircache> entries;
+    size_t index{};
+};
 
 struct MountCurlDevice : MountDevice {
     using MountDevice::MountDevice;
@@ -23,6 +46,22 @@ struct MountCurlDevice : MountDevice {
     static std::string html_decode(const std::string_view& str);
     static std::string url_decode(const std::string& str);
     std::string build_url(const std::string& path, bool is_dir);
+
+    int devoptab_open(void *fileStruct, const char *path, int flags, int mode) override;
+    int devoptab_close(void *fd) override;
+    ssize_t devoptab_read(void *fd, char *ptr, size_t len) override;
+    ssize_t devoptab_write(void *fd, const char *ptr, size_t len) override;
+    ssize_t devoptab_seek(void *fd, off_t pos, int dir) override;
+    int devoptab_fstat(void *fd, struct stat *st) override;
+    int devoptab_diropen(void* fd, const char *path) override;
+    int devoptab_dirreset(void* fd) override;
+    int devoptab_dirnext(void* fd, char *filename, struct stat *filestat) override;
+    int devoptab_dirclose(void* fd) override;
+    int devoptab_lstat(const char *path, struct stat *st) override;
+    int devoptab_unlink(const char *path) override;
+    int devoptab_rmdir(const char *path) override;
+    int devoptab_mkdir(const char *path, int mode) override;
+    int devoptab_rename(const char *oldName, const char *newName) override;
 
 protected:
     CURL* curl{};

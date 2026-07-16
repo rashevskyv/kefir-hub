@@ -11,6 +11,7 @@
 #include "ui/menus/theme_creator.hpp"
 #include "ui/menus/appstore.hpp"
 #include "utils/devoptab_smb2.hpp"
+#include "utils/devoptab_curl_device.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
@@ -158,6 +159,15 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
 
             const auto& entry = GetEntry();
 
+            if (m_fs_entry.type == FsType::Root) {
+                if (entry.virtual_target_entry.type == FsType::Network) {
+                    ConnectToLocation(entry.virtual_target_entry);
+                } else {
+                    SetFs(entry.virtual_target_entry.root, entry.virtual_target_entry);
+                }
+                return;
+            }
+
             if (entry.type == FsDirEntryType_Dir) {
                 Scan(GetNewPathCurrent());
             } else {
@@ -211,7 +221,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
             }
 
             std::string_view view{m_path};
-            if (view != m_fs->Root()) {
+            if (m_fs_entry.type != FsType::Root && view != m_fs->Root()) {
                 const auto end = view.find_last_of('/');
                 assert(end != view.npos);
 
@@ -220,6 +230,13 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 } else {
                     Scan(view.substr(0, end), true);
                 }
+            } else if (m_fs_entry.type != FsType::Root) {
+                FsEntry root_entry{
+                    .name = "System Root",
+                    .root = "root:/",
+                    .type = FsType::Root
+                };
+                SetFs("root:/", root_entry);
             } else {
                 if (!m_menu->IsTab()) {
                     m_menu->PromptIfShouldExit();
@@ -300,6 +317,26 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
 
         if (e.IsDir()) {
             DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
+            if (m_fs_entry.type == FsType::Root && e.virtual_target_entry.type == FsType::Network) {
+                float badge_x = x + x_offset + 42.f;
+                float badge_y = y + 5.f + 42.f;
+                float badge_r = 8.f;
+                nvgBeginPath(vg);
+                nvgCircle(vg, badge_x, badge_y, badge_r);
+                if (e.connection_status == ConnectionStatus::Connected) {
+                    nvgFillColor(vg, nvgRGBA(46, 204, 113, 255));
+                } else if (e.connection_status == ConnectionStatus::Failed) {
+                    nvgFillColor(vg, nvgRGBA(231, 76, 60, 255));
+                } else {
+                    nvgFillColor(vg, nvgRGBA(149, 165, 166, 255));
+                }
+                nvgFill(vg);
+                nvgBeginPath(vg);
+                nvgCircle(vg, badge_x, badge_y, badge_r);
+                nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
+                nvgStrokeWidth(vg, 1.5f);
+                nvgStroke(vg);
+            }
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();
@@ -596,32 +633,116 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_menu->SetTitleSubHeading(m_path);
     m_selected_count = 0;
 
-    fs::Dir d;
-    R_TRY(m_fs->OpenDirectory(new_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d));
-
-    // we won't run out of memory here (tm)
-    std::vector<FsDirectoryEntry> dir_entries;
-    R_TRY(d.ReadAll(dir_entries));
-
-    const auto count = dir_entries.size();
-    m_entries.reserve(count);
-
     m_entries_index.clear();
     m_entries_index_hidden.clear();
     m_entries_index_search.clear();
 
-    m_entries_index.reserve(count);
-    m_entries_index_hidden.reserve(count);
+    if (m_fs_entry.type == FsType::Root) {
+        std::vector<FsDirectoryEntry> dir_entries;
 
-    u32 i = 0;
-    for (const auto& e : dir_entries) {
-        m_entries_index_hidden.emplace_back(i);
-        if ('.' != e.name[0]) {
-            m_entries_index.emplace_back(i);
+        FsDirectoryEntry sd{};
+        std::strcpy(sd.name, "microSD card");
+        sd.type = FsDirEntryType_Dir;
+        dir_entries.push_back(sd);
+
+        if (App::GetGodModeEnabled()) {
+            FsDirectoryEntry nand{};
+            std::strcpy(nand.name, "Image System memory");
+            nand.type = FsDirEntryType_Dir;
+            dir_entries.push_back(nand);
+
+            FsDirectoryEntry sdimag{};
+            std::strcpy(sdimag.name, "Image microSD card");
+            sdimag.type = FsDirEntryType_Dir;
+            dir_entries.push_back(sdimag);
         }
 
-        m_entries.emplace_back(e);
-        i++;
+        const auto network_locations = location::Load();
+        for (const auto& e : network_locations) {
+            FsDirectoryEntry net{};
+            std::strcpy(net.name, e.name.c_str());
+            net.type = FsDirEntryType_Dir;
+            dir_entries.push_back(net);
+        }
+
+        const auto count = dir_entries.size();
+        m_entries.reserve(count);
+        m_entries_index.reserve(count);
+        m_entries_index_hidden.reserve(count);
+
+        u32 i = 0;
+        for (const auto& e : dir_entries) {
+            m_entries_index_hidden.emplace_back(i);
+            m_entries_index.emplace_back(i);
+
+            FileEntry fe{};
+            std::strcpy(fe.name, e.name);
+            fe.type = e.type;
+
+            if (std::strcmp(e.name, "microSD card") == 0) {
+                fe.virtual_target_entry = FS_ENTRY_DEFAULT;
+            } else if (std::strcmp(e.name, "Image System memory") == 0) {
+                fe.virtual_target_entry.type = FsType::ImageNand;
+                std::strcpy(fe.virtual_target_entry.name, "Image System memory");
+                std::strcpy(fe.virtual_target_entry.root, "/");
+            } else if (std::strcmp(e.name, "Image microSD card") == 0) {
+                fe.virtual_target_entry.type = FsType::ImageSd;
+                std::strcpy(fe.virtual_target_entry.name, "Image microSD card");
+                std::strcpy(fe.virtual_target_entry.root, "/");
+            } else {
+                for (const auto& loc : network_locations) {
+                    if (loc.name == e.name) {
+                        std::string root_p = loc.IsSmb() ? "smb2:/" : (loc.protocol + "_" + loc.name + ":/");
+                        fe.virtual_target_entry.type = FsType::Network;
+                        std::strcpy(fe.virtual_target_entry.name, loc.name.c_str());
+                        std::strcpy(fe.virtual_target_entry.root, root_p.c_str());
+                        fe.virtual_target_entry.flags = FsEntryFlag_None;
+                        std::strcpy(fe.virtual_target_entry.url, loc.url.c_str());
+                        std::strcpy(fe.virtual_target_entry.user, loc.user.c_str());
+                        std::strcpy(fe.virtual_target_entry.pass, loc.pass.c_str());
+                        fe.virtual_target_entry.port = loc.port;
+
+                        bool is_mounted = false;
+                        if (loc.IsSmb()) {
+                            is_mounted = (g_smb2fs != nullptr);
+                        } else {
+                            is_mounted = devoptab::common::IsNetworkDeviceMounted(loc.url);
+                        }
+                        fe.connection_status = is_mounted ? ConnectionStatus::Connected : ConnectionStatus::Unknown;
+                        break;
+                    }
+                }
+            }
+
+            m_entries.emplace_back(fe);
+            i++;
+        }
+    } else {
+        fs::Dir d;
+        R_TRY(m_fs->OpenDirectory(new_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d));
+
+        std::vector<FsDirectoryEntry> dir_entries;
+        R_TRY(d.ReadAll(dir_entries));
+
+        const auto count = dir_entries.size();
+        m_entries.reserve(count);
+        m_entries_index.reserve(count);
+        m_entries_index_hidden.reserve(count);
+
+        u32 i = 0;
+        for (const auto& e : dir_entries) {
+            m_entries_index_hidden.emplace_back(i);
+            if ('.' != e.name[0]) {
+                m_entries_index.emplace_back(i);
+            }
+
+            FileEntry fe{};
+            std::strcpy(fe.name, e.name);
+            fe.type = e.type;
+
+            m_entries.emplace_back(fe);
+            i++;
+        }
     }
 
     Sort();
@@ -792,6 +913,9 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
             break;
         case FsType::Network:
             m_fs = std::make_unique<fs::FsStdio>(true, new_entry.root);
+            break;
+        case FsType::Root:
+            m_fs = std::make_unique<fs::FsStdio>(true, "root:/");
             break;
     }
 
@@ -1201,6 +1325,67 @@ void FsView::DisplayAdvancedOptions() {
     }, "Allow modifying files and folders that are marked as read-only."_i18n);
 }
 
+void FsView::ConnectToLocation(const FsEntry& target_entry) {
+    std::string proto = target_entry.url.toString().starts_with("smb://") ? "SMB" : "Network Storage";
+    std::string msg = "Connecting to " + proto + "...";
+
+    App::Push<ProgressBox>(0, msg, target_entry.name, [this, target_entry](auto pbox) -> Result {
+        if (target_entry.url.toString().starts_with("smb://")) {
+#ifdef BUILD_SMB2
+            if (g_smb2fs) {
+                if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
+                    R_SUCCEED();
+                }
+                delete g_smb2fs;
+                g_smb2fs = nullptr;
+            }
+            std::string server, share;
+            ParseSmbUrl(target_entry.url.toString(), server, share);
+            g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
+            if (g_smb2fs->RegisterFilesystem_v2()) {
+                R_SUCCEED();
+            } else {
+                delete g_smb2fs;
+                g_smb2fs = nullptr;
+                R_THROW(Result_SmbConnectionFailed);
+            }
+#else
+            R_THROW(Result_SmbNotSupported);
+#endif
+        } else {
+            if (devoptab::common::IsNetworkDeviceMounted(target_entry.url.toString())) {
+                R_SUCCEED();
+            }
+
+            sphaira::devoptab::common::MountConfig config{
+                .name = target_entry.name.toString(),
+                .url = target_entry.url.toString(),
+                .user = target_entry.user.toString(),
+                .pass = target_entry.pass.toString(),
+                .port = target_entry.port,
+                .read_only = target_entry.IsReadOnly()
+            };
+            auto device = std::make_unique<sphaira::devoptab::common::MountCurlDevice>(config);
+            std::string mount_name = target_entry.root.toString();
+            std::string dev_name = target_entry.name.toString();
+            std::replace(dev_name.begin(), dev_name.end(), ' ', '_');
+
+            if (sphaira::devoptab::common::MountNetworkDevice2(std::move(device), config, sizeof(sphaira::devoptab::common::CurlFileState), sizeof(sphaira::devoptab::common::CurlDirState), dev_name.c_str(), mount_name.c_str())) {
+                R_SUCCEED();
+            } else {
+                R_THROW(0xCCCC);
+            }
+        }
+        R_SUCCEED();
+    }, [this, target_entry](Result rc) {
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Failed to connect to network storage!"_i18n);
+        } else {
+            SetFs(target_entry.root, target_entry);
+        }
+    });
+}
+
 void FsView::ShowSourcePicker() {
     auto options = std::make_unique<Sidebar>("Sources"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -1268,10 +1453,6 @@ void FsView::ShowSourcePicker() {
         App::PopToMenu();
         const auto& target_entry = fs_entries[index_out];
         if (target_entry.type == FsType::Network) {
-            if (!target_entry.url.toString().starts_with("smb://")) {
-                App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
-                return;
-            }
             FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
             if (other_view && other_view->m_fs_entry.type == FsType::Network && !IsSameNetworkLocation(other_view->m_fs_entry, target_entry)) {
                 other_view->SetFs("/", FS_ENTRY_DEFAULT);
@@ -1280,35 +1461,7 @@ void FsView::ShowSourcePicker() {
                 SetFs("/", FS_ENTRY_DEFAULT);
             }
 
-            App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
-#ifdef BUILD_SMB2
-                if (g_smb2fs) {
-                    if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
-                        R_SUCCEED();
-                    }
-                    delete g_smb2fs;
-                    g_smb2fs = nullptr;
-                }
-                std::string server, share;
-                ParseSmbUrl(target_entry.url.toString(), server, share);
-                g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
-                if (g_smb2fs->RegisterFilesystem_v2()) {
-                    R_SUCCEED();
-                } else {
-                    delete g_smb2fs;
-                    g_smb2fs = nullptr;
-                    R_THROW(Result_SmbConnectionFailed);
-                }
-#else
-                R_THROW(Result_SmbNotSupported);
-#endif
-            }, [this, target_entry](Result rc) {
-                if (R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
-                } else {
-                    SetFs(target_entry.root, target_entry);
-                }
-            });
+            ConnectToLocation(target_entry);
         } else {
             SetFs(target_entry.root, target_entry);
         }
@@ -1350,49 +1503,27 @@ Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuB
 }
 
 Menu::~Menu() {
+#ifdef BUILD_SMB2
+    if (g_smb2fs) {
+        delete g_smb2fs;
+        g_smb2fs = nullptr;
+    }
+#endif
+    devoptab::UmountAllNeworkDevices();
 }
 
 void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
-    if (e.IsSmb()) {
-        FsEntry target_entry{
-            .name = e.name,
-            .root = "smb2:/",
-            .type = FsType::Network,
-            .flags = FsEntryFlag_ReadOnly,
-            .url = e.url,
-            .user = e.user,
-            .pass = e.pass
-        };
-        App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
-#ifdef BUILD_SMB2
-            if (g_smb2fs) {
-                if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
-                    R_SUCCEED();
-                }
-                delete g_smb2fs;
-                g_smb2fs = nullptr;
-            }
-            std::string server, share;
-            ParseSmbUrl(target_entry.url.toString(), server, share);
-            g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
-            if (g_smb2fs->RegisterFilesystem_v2()) {
-                R_SUCCEED();
-            } else {
-                delete g_smb2fs;
-                g_smb2fs = nullptr;
-                R_THROW(Result_SmbConnectionFailed);
-            }
-#else
-            R_THROW(Result_SmbNotSupported);
-#endif
-        }, [this, target_entry](Result rc) {
-            if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
-            } else {
-                view->SetFs(target_entry.root, target_entry);
-            }
-        });
-    }
+    std::string root_p = e.IsSmb() ? "smb2:/" : (e.protocol + "_" + e.name + ":/");
+    FsEntry target_entry{};
+    std::strcpy(target_entry.name, e.name.c_str());
+    std::strcpy(target_entry.root, root_p.c_str());
+    target_entry.type = FsType::Network;
+    target_entry.flags = FsEntryFlag_None;
+    std::strcpy(target_entry.url, e.url.c_str());
+    std::strcpy(target_entry.user, e.user.c_str());
+    std::strcpy(target_entry.pass, e.pass.c_str());
+    target_entry.port = e.port;
+    view->ConnectToLocation(target_entry);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {

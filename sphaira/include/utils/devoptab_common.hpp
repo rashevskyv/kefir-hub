@@ -81,4 +81,11 @@ bool MountNetworkDevice2(std::unique_ptr<MountDevice>&& device, const MountConfi
 
 bool MountReadOnlyIndexDevice(const CreateDeviceCallback& create_device, size_t file_size, size_t dir_size, const char* name, fs::FsPath& out_path);
 
+bool IsNetworkDeviceMounted(const std::string& url);
+
 } // namespace sphaira::devoptab::common
+
+namespace sphaira::devoptab {
+void UmountAllNeworkDevices();
+}
+

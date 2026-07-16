@@ -853,7 +853,15 @@ Result MountNetworkDevice(const CreateDeviceCallback& create_device, size_t file
     R_SUCCEED();
 }
 
-
+bool IsNetworkDeviceMounted(const std::string& url) {
+    SCOPED_RWLOCK(&g_rwlock, false);
+    for (const auto& entry : g_entries) {
+        if (entry && entry->device.config.url == url) {
+            return true;
+        }
+    }
+    return false;
+}
 
 } // sphaira::devoptab::common
 

@@ -1,42 +1,38 @@
-# Результати впровадження: Контекстне меню джерел, тестування з'єднання, копіювання URL, відображення всіх джерел, збереження позиції курсору та обробки колізій назв (v0.13.236)
+# Результати впровадження: Повноцінний броузинг WebDAV, FTP, HTTP джерел та навігація через System Root (v0.13.237)
 
-Усі заплановані зміни було успішно реалізовано та верифіковано збіркою в середовищі WSL.
+Усі заплановані зміни для реалізації підтримки мережевих джерел та зручної ієрархічної навігації було успішно впроваджено.
 
 ## Зроблені зміни
 
-### [Component: UI Settings (Sources & Network)]
-- **[settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)**:
-  - Замінено спливаючий `PopupList` (синє меню знизу) для контекстного меню мережевих джерел (викликається кнопкою **Plus** / START) на бічне меню `Sidebar`, яке висувається справа (`Sidebar::Side::RIGHT`).
-  - Додано пункт **"Test Connection"** у бічне меню джерела та у меню редагування джерела `SourceEditMenu::BuildEditItems()`.
-  - **Збереження позиції курсору та скролу в SettingsMenu:** В `Menu::OnFocusGained()` додано логіку, яка перед перезбиранням списку зберігає лейбл виділеного пункту та зсув скролу `Yoff` списку категорій. Після побудови категорій потрібний індекс відновлюється через `SetItemIndex` та відновлюється `saved_yoff`, що запобігає скиданню курсору на самий початок (індекс 0) при отриманні фокусу.
-  - **Збереження позиції курсору та скролу в SourceEditMenu:** В `SourceEditMenu::OnFocusGained()` впроваджено аналогічну схему: перед викликом `BuildEditItems()` зберігаються `item_label` та скрол `Yoff` списку. Після оновлення елементів індекс виділеного пункту і скрол відновлюються, що залишає курсор точно на тому самому місці.
+### [Component: Devoptab Curl Device]
+- **[devoptab_curl_device.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_curl_device.hpp)**:
+  - Додано оголошення віртуальних методів `devoptab_t` для файлових та директорійних операцій.
+- **[devoptab_curl_device.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_curl_device.cpp)**:
+  - Впроваджено структури `CurlFileState` та `CurlDirState` для збереження стану відкритих файлів та кешування лістингу папок.
+  - Реалізовано повний POSIX-сумісний інтерфейс файлових операцій через `CURL` для протоколів WebDAV, FTP та HTTP:
+    - Читання (`devoptab_read`) через `PushThreadData` та запис (`devoptab_write`) через `PullThreadData`.
+    - Лістинг директорій (`devoptab_diropen`, `devoptab_dirnext`) з підтримкою `PROPFIND` (WebDAV/HTTP) та `NLST` (FTP).
+    - Видалення файлів/папок (`devoptab_unlink`, `devoptab_rmdir`) через метод `DELETE`.
+    - Створення директорій (`devoptab_mkdir`) через `MKCOL` (WebDAV) або `MKD` (FTP).
+    - Перейменування (`devoptab_rename`) через `MOVE` з заголовком `Destination`.
 
-#### [MODIFY] [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp):
-- **DisplayWebdavOptions**:
-  - При формуванні списку `items` для вибору "Sync Location" додано тип протоколу джерела в дужках у верхньому регістрі поруч із його назвою, наприклад `My NAS (SMB)`.
+### [Component: Devoptab Common]
+- **[devoptab_common.hpp](file:///d:/git/dev/sphaira/sphaira/include/utils/devoptab_common.hpp)** / **[devoptab_common.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_common.cpp)**:
+  - Додано функцію `IsNetworkDeviceMounted(const std::string& url)`, яка перевіряє, чи примонтований пристрій у devoptab.
 
-### [Component: File Browser Operations]
+### [Component: File Browser UI & Logic]
+- **[filebrowser.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/filebrowser.hpp)**:
+  - Додано тип `FsType::Root` та структури статусів `ConnectionStatus`.
+  - Додано поля статусу підключення та цільового переходу в `FileEntry` та `FsEntry`.
 - **[filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp)**:
-  - Додано допоміжну функцію `IsUrlLike`, яка визначає, чи схожий введений користувачем рядок на URL-адресу.
-  - **Запобігання перезапису джерел при збігу назв:** В `AddNetworkLocationInteractive()` реалізовано перевірку наявності колізій імен. Якщо джерело з введеною назвою вже існує в конфігурації:
-    - Якщо протоколи (типи) джерел однакові, виводиться діалогове вікно `OptionBox` із запитом користувача: перезаписати ("Overwrite") чи зберегти обидва ("Keep Both"). При виборі "Keep Both" автоматично генерується назва з вільним порядковим номером в дужках (наприклад, `My NAS (2)`).
-    - Якщо протоколи (типи) джерел відрізняються (наприклад, старе SMB, а нове HTTP), вони не вважаються за одне й те саме джерело і не мають перезаписувати одне одного. Тому система автоматично без запиту користувача генерує унікальне ім'я з номером в дужках для уникнення колізії ключів в ini-файлі.
-  - **Відображення всіх джерел у списку монтування:** У `ShowSourcePicker()` прибрано фільтрацію за протоколом SMB (`if (e.IsSmb())`), завдяки чому абсолютно всі додані в налаштуваннях мережеві джерела відображаються у загальному списку джерел файлового менеджера при виборі "Mount".
-  - **Відображення типу джерела:** У списку вибору джерел ("Mount") поруч із назвою джерела тепер виводиться його протокол у верхньому регістрі в дужках, наприклад `My NAS (SMB)`, `My Cloud (WEBDAV)`.
-  - У callback-обробці вибору джерела, якщо вибрано не-SMB мережеве джерело (яке не починається з `smb://`), показується інформаційне вікно `OptionBox` із повідомленням "Browsing is not supported for this protocol yet.".
-
-#### [MODIFY] [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp):
-- **StartRestore**:
-  - При виведенні списку доступних локацій WebDAV для синхронізації бекапів також додано вивід типу протоколу в дужках поруч із назвою джерела.
+  - **FsView::Draw**: Додано малювання круглих кольорових позначок (badges) статусу підключення біля мережевих джерел у System Root: зелена (підключено), сіра (розмонтовано), червона (помилка).
+  - **FsView::Scan**: Додано підтримку віртуальної директорії `System Root` (`root:/`), яка містить microSD, системні розділи (якщо увімкнено God Mode) та мережеві джерела з їх статусами.
+  - **Кнопка A (Open)**: При виборі розмонтованого пристрою в System Root автоматично запускається його підключення через `ConnectToLocation`.
+  - **Кнопка B (Back)**: При натисканні назад у корні будь-котрого пристрою користувач переходить у System Root замість виходу з файлового менеджера.
+  - **Деструктор Menu**: Додано автоматичне розмонтування всіх мережевих джерел при закритті вікна.
+- **[settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)**:
+  - Прибрано перевірки на SMB, що дозволило запускати файловий менеджер для будь-яких налаштованих мережевих джерел.
 
 ### [Component: CMake Configuration]
 - **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
-  - Версію програми `sphaira_VERSION` оновлено до `0.13.236`.
-
-### [Component: Documentation]
-- **[README.md](file:///d:/git/dev/sphaira/README.md)**:
-  - Оновлено опис мережевих джерел (Network Storage Sources), додано інформацію про нове бічне меню опцій справа, інструмент тестування з'єднання, автоматичне заповнення URL-адреси, відображення всіх локацій у списку джерел, збереження позиції курсору, сумісність з HTTP серверами, виведення протоколів у дужках та захист від перезапису збігаючих імен.
-
-## Результати перевірки
-- Проект успішно скомпільовано в середовищі WSL (`build.sh`) без жодних помилок чи нових попереджень (warnings).
-- Було успішно згенеровано фінальний виконуваний файл `kefir-hub.nro` у теці збірки.
+  - Ітеровано версію програми `sphaira_VERSION` до `0.13.237`.

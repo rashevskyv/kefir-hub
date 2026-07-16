@@ -842,11 +842,7 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
             [](){ return std::string{}; },
             [loc](){
                 if (loc.IsConfigured()) {
-                    if (loc.IsSmb()) {
-                        App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
-                    } else {
-                        App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
-                    }
+                    App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
                 } else {
                     App::Push<SourceEditMenu>(loc.name);
                 }

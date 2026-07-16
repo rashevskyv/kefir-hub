@@ -3,6 +3,12 @@
 #include "defines.hpp"
 #include <cstring>
 #include <algorithm>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace sphaira::devoptab::common {
 
@@ -400,4 +406,395 @@ std::string MountCurlDevice::build_url(const std::string& _path, bool is_dir) {
     return encoded_url;
 }
 
+
+int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags, int mode) {
+    auto* state = static_cast<CurlFileState*>(fileStruct);
+    *state = {};
+
+    state->url = build_url(path, false);
+    if (state->url.empty()) {
+        return -EINVAL;
+    }
+
+    state->write_mode = (flags & (O_WRONLY | O_RDWR | O_CREAT));
+
+    if (state->write_mode) {
+        state->pull_data = CreatePullData(transfer_curl, state->url, (flags & O_APPEND) != 0);
+        if (!state->pull_data) {
+            return -EIO;
+        }
+    } else {
+        curl_easy_reset(transfer_curl);
+        curl_set_common_options(transfer_curl, state->url);
+        curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
+        if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+            double cl{};
+            curl_easy_getinfo(transfer_curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
+            state->size = (cl > 0) ? (size_t)cl : 0;
+        }
+
+        state->push_data = CreatePushData(transfer_curl, state->url, 0);
+        if (!state->push_data) {
+            return -EIO;
+        }
+    }
+
+    return 0;
+}
+
+int MountCurlDevice::devoptab_close(void *fd) {
+    auto* state = static_cast<CurlFileState*>(fd);
+    if (state->push_data) {
+        delete state->push_data;
+        state->push_data = nullptr;
+    }
+    if (state->pull_data) {
+        delete state->pull_data;
+        state->pull_data = nullptr;
+    }
+    return 0;
+}
+
+ssize_t MountCurlDevice::devoptab_read(void *fd, char *ptr, size_t len) {
+    auto* state = static_cast<CurlFileState*>(fd);
+    if (!state->push_data) {
+        return -EBADF;
+    }
+
+    size_t read = state->push_data->PullData(ptr, len, false);
+    state->offset += read;
+    return read;
+}
+
+ssize_t MountCurlDevice::devoptab_write(void *fd, const char *ptr, size_t len) {
+    auto* state = static_cast<CurlFileState*>(fd);
+    if (!state->pull_data) {
+        return -EBADF;
+    }
+
+    size_t written = state->pull_data->PushData(ptr, len, false);
+    state->offset += written;
+    return written;
+}
+
+ssize_t MountCurlDevice::devoptab_seek(void *fd, off_t pos, int dir) {
+    auto* state = static_cast<CurlFileState*>(fd);
+    if (state->write_mode) {
+        return -ENOSYS;
+    }
+
+    off_t target_offset = state->offset;
+    if (dir == SEEK_SET) {
+        target_offset = pos;
+    } else if (dir == SEEK_CUR) {
+        target_offset += pos;
+    } else if (dir == SEEK_END) {
+        target_offset = state->size + pos;
+    }
+
+    if (target_offset < 0) {
+        return -EINVAL;
+    }
+
+    if ((size_t)target_offset != state->offset) {
+        if (state->push_data) {
+            delete state->push_data;
+        }
+        state->offset = target_offset;
+        state->push_data = CreatePushData(transfer_curl, state->url, state->offset);
+        if (!state->push_data) {
+            return -EIO;
+        }
+    }
+
+    return state->offset;
+}
+
+int MountCurlDevice::devoptab_fstat(void *fd, struct stat *st) {
+    auto* state = static_cast<CurlFileState*>(fd);
+    std::memset(st, 0, sizeof(*st));
+    st->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+    if (!state->write_mode) {
+        st->st_mode |= S_IWUSR;
+    }
+    st->st_nlink = 1;
+    st->st_size = state->size;
+    return 0;
+}
+
+int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
+    auto* state = static_cast<CurlDirState*>(fd);
+    new (state) CurlDirState();
+
+    std::string full_url = build_url(path, true);
+    log_write("[CURL] diropen url: %s\n", full_url.c_str());
+
+    std::vector<char> response_data;
+
+    curl_easy_reset(curl);
+    curl_set_common_options(curl, full_url);
+
+    bool is_ftp = full_url.starts_with("ftp://") || full_url.starts_with("ftps://");
+
+    if (is_ftp) {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "NLST");
+    } else {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
+        struct curl_slist* list = curl_slist_append(nullptr, "Depth: 1");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+        ON_SCOPE_EXIT(curl_slist_free_all(list));
+    }
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        log_write("[CURL] diropen perform failed: %s\n", curl_easy_strerror(res));
+        return -EIO;
+    }
+
+    std::string data_str(response_data.begin(), response_data.end());
+
+    if (is_ftp) {
+        std::string line;
+        std::istringstream stream(data_str);
+        while (std::getline(stream, line)) {
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+            if (line.empty() || line == "." || line == "..") {
+                continue;
+            }
+
+            dircache entry{};
+            entry.name = line;
+            entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + line;
+            entry.st.st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            if (line.find('.') == std::string::npos) {
+                entry.st.st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+            }
+            entry.st.st_nlink = 1;
+            state->entries.push_back(entry);
+        }
+    } else {
+        size_t pos = 0;
+        while (true) {
+            pos = data_str.find("<d:response", pos);
+            if (pos == std::string::npos) {
+                pos = data_str.find("<response", pos);
+            }
+            if (pos == std::string::npos) {
+                break;
+            }
+
+            size_t href_pos = data_str.find("<d:href>", pos);
+            if (href_pos == std::string::npos) href_pos = data_str.find("<href>", pos);
+            if (href_pos == std::string::npos) {
+                pos++;
+                continue;
+            }
+
+            size_t href_start = data_str.find('>', href_pos) + 1;
+            size_t href_end = data_str.find("</", href_start);
+            if (href_end == std::string::npos) {
+                break;
+            }
+
+            std::string href = data_str.substr(href_start, href_end - href_start);
+            std::string decoded_href = url_decode(href);
+
+            if (decoded_href.ends_with('/')) {
+                decoded_href.pop_back();
+            }
+            size_t last_slash = decoded_href.find_last_of('/');
+            std::string name = (last_slash != std::string::npos) ? decoded_href.substr(last_slash + 1) : decoded_href;
+
+            if (name.empty() || name == "." || name == "..") {
+                pos = href_end;
+                continue;
+            }
+
+            dircache entry{};
+            entry.name = name;
+            entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + name;
+
+            size_t rt_pos = data_str.find("<d:resourcetype>", pos);
+            if (rt_pos == std::string::npos) rt_pos = data_str.find("<resourcetype>", pos);
+            bool is_dir = false;
+            if (rt_pos != std::string::npos && rt_pos < data_str.find("</d:response>", pos)) {
+                size_t rt_end = data_str.find("</d:resourcetype>", rt_pos);
+                if (rt_end == std::string::npos) rt_end = data_str.find("</resourcetype>", rt_pos);
+                std::string rt_xml = data_str.substr(rt_pos, rt_end - rt_pos);
+                if (rt_xml.find("collection") != std::string::npos) {
+                    is_dir = true;
+                }
+            }
+
+            entry.st.st_mode = is_dir ? (S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH) : (S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+            entry.st.st_nlink = 1;
+
+            size_t cl_pos = data_str.find("<d:getcontentlength>", pos);
+            if (cl_pos == std::string::npos) cl_pos = data_str.find("<getcontentlength>", pos);
+            if (cl_pos != std::string::npos && cl_pos < data_str.find("</d:response>", pos)) {
+                size_t cl_start = data_str.find('>', cl_pos) + 1;
+                size_t cl_end = data_str.find("</", cl_start);
+                entry.st.st_size = std::strtoll(data_str.substr(cl_start, cl_end - cl_start).c_str(), nullptr, 10);
+            }
+
+            std::string current_dir_url = full_url;
+            if (current_dir_url.ends_with('/')) current_dir_url.pop_back();
+            std::string item_url = build_url(entry.fullpathname, is_dir);
+            if (item_url.ends_with('/')) item_url.pop_back();
+
+            if (item_url != current_dir_url) {
+                state->entries.push_back(entry);
+            }
+
+            pos = href_end;
+        }
+    }
+
+    return 0;
+}
+
+int MountCurlDevice::devoptab_dirnext(void* fd, char *filename, struct stat *filestat) {
+    auto* state = static_cast<CurlDirState*>(fd);
+    if (state->index >= state->entries.size()) {
+        return -1;
+    }
+
+    const auto& entry = state->entries[state->index++];
+    std::strncpy(filename, entry.name.c_str(), NAME_MAX);
+    std::memcpy(filestat, &entry.st, sizeof(struct stat));
+    return 0;
+}
+
+int MountCurlDevice::devoptab_dirclose(void* fd) {
+    auto* state = static_cast<CurlDirState*>(fd);
+    state->~CurlDirState();
+    return 0;
+}
+
+int MountCurlDevice::devoptab_dirreset(void* fd) {
+    auto* state = static_cast<CurlDirState*>(fd);
+    state->index = 0;
+    return 0;
+}
+
+int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
+    std::memset(st, 0, sizeof(*st));
+    std::string url = build_url(path, false);
+    if (url.empty()) {
+        return -EINVAL;
+    }
+
+    bool is_ftp = url.starts_with("ftp://") || url.starts_with("ftps://");
+    if (is_ftp) {
+        std::string p_str = path;
+        if (p_str.ends_with('/') || p_str.find('.') == std::string::npos) {
+            st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+        } else {
+            st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        }
+        st->st_nlink = 1;
+        return 0;
+    }
+
+    curl_easy_reset(transfer_curl);
+    curl_set_common_options(transfer_curl, url);
+    curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
+
+    CURLcode res = curl_easy_perform(transfer_curl);
+    if (res != CURLE_OK) {
+        std::string dir_url = build_url(path, true);
+        curl_easy_reset(transfer_curl);
+        curl_set_common_options(transfer_curl, dir_url);
+        curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
+        struct curl_slist* list = curl_slist_append(nullptr, "Depth: 0");
+        curl_easy_setopt(transfer_curl, CURLOPT_HTTPHEADER, list);
+        ON_SCOPE_EXIT(curl_slist_free_all(list));
+
+        std::vector<char> response_data;
+        curl_easy_setopt(transfer_curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+        curl_easy_setopt(transfer_curl, CURLOPT_WRITEDATA, &response_data);
+
+        res = curl_easy_perform(transfer_curl);
+        if (res == CURLE_OK) {
+            st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+            st->st_nlink = 1;
+            return 0;
+        }
+        return -ENOENT;
+    }
+
+    st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    st->st_nlink = 1;
+    double cl{};
+    curl_easy_getinfo(transfer_curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
+    st->st_size = (cl > 0) ? (size_t)cl : 0;
+    return 0;
+}
+
+int MountCurlDevice::devoptab_unlink(const char *path) {
+    std::string url = build_url(path, false);
+    curl_easy_reset(transfer_curl);
+    curl_set_common_options(transfer_curl, url);
+    curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+        long code{};
+        curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
+        if (code >= 200 && code < 300) {
+            return 0;
+        }
+    }
+    return -EIO;
+}
+
+int MountCurlDevice::devoptab_rmdir(const char *path) {
+    return devoptab_unlink(path);
+}
+
+int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
+    std::string url = build_url(path, true);
+    curl_easy_reset(transfer_curl);
+    curl_set_common_options(transfer_curl, url);
+    bool is_ftp = url.starts_with("ftp://") || url.starts_with("ftps://");
+    if (is_ftp) {
+        struct curl_slist* list = curl_slist_append(nullptr, (std::string("MKD ") + path).c_str());
+        curl_easy_setopt(transfer_curl, CURLOPT_POSTQUOTE, list);
+        ON_SCOPE_EXIT(curl_slist_free_all(list));
+    } else {
+        curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MKCOL");
+    }
+    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+        long code{};
+        curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
+        if (code >= 200 && code < 300) {
+            return 0;
+        }
+    }
+    return -EIO;
+}
+
+int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
+    std::string url = build_url(oldName, false);
+    std::string dst_url = build_url(newName, false);
+    curl_easy_reset(transfer_curl);
+    curl_set_common_options(transfer_curl, url);
+    curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MOVE");
+    struct curl_slist* list = curl_slist_append(nullptr, (std::string("Destination: ") + dst_url).c_str());
+    curl_easy_setopt(transfer_curl, CURLOPT_HTTPHEADER, list);
+    ON_SCOPE_EXIT(curl_slist_free_all(list));
+    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+        long code{};
+        curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
+        if (code >= 200 && code < 300) {
+            return 0;
+        }
+    }
+    return -EIO;
+}
+
 } // namespace sphaira::devoptab::common
+
