@@ -331,6 +331,7 @@ private:
     struct MetadataJob {
         u64 generation{};
         size_t entry_index{};
+        s64 view_index{}; // position in the sorted view, for prioritisation
         fs::FsPath path{};
         bool is_dir{};
     };
@@ -380,6 +381,7 @@ private:
     std::vector<MetadataJob> m_metadata_jobs{};
     std::vector<MetadataUpdate> m_metadata_updates{};
     u64 m_metadata_generation{};
+    s64 m_metadata_focus{}; // guarded by m_metadata_mutex
     bool m_metadata_thread_created{};
     bool m_metadata_thread_exit{};
     bool m_metadata_paused{};

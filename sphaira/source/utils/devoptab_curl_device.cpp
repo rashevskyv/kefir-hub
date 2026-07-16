@@ -246,6 +246,10 @@ void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::stri
     curl_easy_setopt(curl_handle, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_MAXREDIRS, 15L);
+    // keep sending credentials when the server redirects, e.g. an
+    // http:// source that 301s to https://. Without this the redirected
+    // request is sent without auth and the server replies 401.
+    curl_easy_setopt(curl_handle, CURLOPT_UNRESTRICTED_AUTH, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);

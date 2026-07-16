@@ -700,6 +700,10 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
     // in most cases, this will use CURLAUTH_BASIC.
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
 
+    // keep sending credentials when the server redirects, e.g. an
+    // http:// source that 301s to https://.
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_UNRESTRICTED_AUTH, 1L);
+
     // enable TE is server supports it.
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_TRANSFER_ENCODING, 1L);
 

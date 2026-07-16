@@ -54,6 +54,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <limits>
 #include <algorithm>
 
 namespace sphaira::ui::menu::filebrowser {
@@ -564,6 +565,8 @@ void FsView::SetSide(ViewSide side) {
     }
 
     m_list = std::make_unique<List>(1, 8, m_pos, v);
+    // pressing down on the last entry jumps to the first and vice versa.
+    m_list->SetWrap(true);
     m_list_clip = Vec4{GetX(), v.y - gfx::SELECTION_OUTLINE_PAD, GetW(),
         GetY() + GetH() - (v.y - gfx::SELECTION_OUTLINE_PAD)};
     if (m_menu->IsSplitScreen()) {
@@ -578,6 +581,13 @@ void FsView::SetIndex(s64 index) {
     m_index = index;
     if (!m_index) {
         m_list->SetYoff();
+    }
+
+    // let the metadata worker fetch sizes for entries near the cursor first.
+    if (m_metadata_thread_created) {
+        mutexLock(&m_metadata_mutex);
+        m_metadata_focus = m_index;
+        mutexUnlock(&m_metadata_mutex);
     }
 
     if (IsSd() && !m_entries_current.empty() && !GetEntry().checked_internal_extension && IsSamePath(GetEntry().GetExtension(), "zip")) {
@@ -880,33 +890,30 @@ void FsView::QueueRemoteMetadata() {
         return;
     }
 
+    // position of each entry in the sorted view, entries hidden from the
+    // current view are fetched last.
+    std::vector<s64> view_position(m_entries.size(), -1);
+    for (size_t i = 0; i < m_entries_current.size(); i++) {
+        view_position[m_entries_current[i]] = static_cast<s64>(i);
+    }
+
     mutexLock(&m_metadata_mutex);
-    // Directory counts require a complete listing and are generally slower;
-    // put them below file jobs so useful sizes appear first.
-    for (size_t i = m_entries.size(); i-- > 0;) {
+    for (size_t i = 0; i < m_entries.size(); i++) {
         auto& entry = m_entries[i];
-        if (!entry.IsDir()) {
+        const auto wanted = entry.IsDir() || (entry.IsFile() && !entry.metadata_loaded);
+        if (!wanted) {
             continue;
         }
+        const auto pos = view_position[i];
         m_metadata_jobs.push_back(MetadataJob{
             .generation = m_metadata_generation,
             .entry_index = i,
+            .view_index = pos >= 0 ? pos : static_cast<s64>(100000 + i),
             .path = GetNewPath(entry),
             .is_dir = entry.IsDir(),
         });
     }
-    for (size_t i = m_entries.size(); i-- > 0;) {
-        auto& entry = m_entries[i];
-        if (!entry.IsFile() || entry.metadata_loaded) {
-            continue;
-        }
-        m_metadata_jobs.push_back(MetadataJob{
-            .generation = m_metadata_generation,
-            .entry_index = i,
-            .path = GetNewPath(entry),
-            .is_dir = false,
-        });
-    }
+    m_metadata_focus = m_index;
     condvarWakeOne(&m_metadata_cond);
     mutexUnlock(&m_metadata_mutex);
 }
@@ -940,7 +947,21 @@ void FsView::MetadataThreadFunction() {
             mutexUnlock(&m_metadata_mutex);
             return;
         }
-        auto job = std::move(m_metadata_jobs.back());
+        // fetch whatever is nearest the cursor first: the visible screen,
+        // then one screen above/below, then the rest. Directory counts are
+        // slower, so within the same area file sizes win.
+        size_t best = 0;
+        s64 best_score = std::numeric_limits<s64>::max();
+        for (size_t i = 0; i < m_metadata_jobs.size(); i++) {
+            const auto& j = m_metadata_jobs[i];
+            const auto score = std::abs(j.view_index - m_metadata_focus) + (j.is_dir ? 24 : 0);
+            if (score < best_score) {
+                best_score = score;
+                best = i;
+            }
+        }
+        auto job = std::move(m_metadata_jobs[best]);
+        m_metadata_jobs[best] = std::move(m_metadata_jobs.back());
         m_metadata_jobs.pop_back();
         mutexUnlock(&m_metadata_mutex);
 
