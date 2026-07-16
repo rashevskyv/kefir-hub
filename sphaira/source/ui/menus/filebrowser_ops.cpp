@@ -56,6 +56,9 @@ void FsView::InstallFiles() {
         m_fs_entry.type == FsType::Network);
     return;
 #else
+    // stop background metadata requests competing with the installer for
+    // the remote filesystem. Resumed on focus gained.
+    PauseRemoteMetadata();
     auto failures = std::make_shared<std::vector<std::pair<std::string, Result>>>();
 
     App::Push<OptionBox>("Install Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, targets, failures](auto op_index){

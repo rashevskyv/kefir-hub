@@ -95,9 +95,9 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 82.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, row);
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 100.f, 1140.f, 470.f};
+    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 330.f};
     const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
-    m_log_list = std::make_unique<List>(1, 15, log_pos, log_row);
+    m_log_list = std::make_unique<List>(1, 11, log_pos, log_row);
     m_log_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
@@ -138,8 +138,8 @@ Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64
     const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 82.f});
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 100.f, 1140.f, 470.f};
-    m_log_list = std::make_unique<List>(1, 15, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
+    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 330.f};
+    m_log_list = std::make_unique<List>(1, 11, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
     m_log_list->SetLayout(List::Layout::GRID);
     m_state = State::Analysing;
     UpdateActions();
@@ -389,6 +389,69 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
             theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
     }
+
+    // R/W speed graph: red = source read, blue = storage write.
+    {
+        const double graph_elapsed = m_graph_timestamp.GetSecondsD();
+        if (state == State::Installing && graph_elapsed >= 0.5) {
+            m_graph_timestamp.Update();
+            const auto total_read = m_total_read.load();
+            const auto total_write = m_total_write.load();
+            m_read_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_read - m_graph_last_read) / graph_elapsed));
+            m_write_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_write - m_graph_last_write) / graph_elapsed));
+            m_graph_last_read = total_read;
+            m_graph_last_write = total_write;
+            m_history_index = (m_history_index + 1) % SPEED_HISTORY;
+            m_history_count = std::min(m_history_count + 1, SPEED_HISTORY);
+        }
+
+        const auto red = nvgRGBA(231, 76, 60, 255);
+        const auto blue = nvgRGBA(52, 152, 219, 255);
+        const Vec4 plot{110.f, GetY() + 95.f, 930.f, 125.f};
+
+        gfx::drawRect(vg, plot, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+
+        // labels to the left of the plot.
+        gfx::drawTextArgs(vg, plot.x - 14.f, plot.y + plot.h * 0.30f, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, red, "R");
+        gfx::drawTextArgs(vg, plot.x - 14.f, plot.y + plot.h * 0.70f, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, blue, "W");
+
+        // current speeds to the right of the plot.
+        const auto last = (m_history_index + SPEED_HISTORY - 1) % SPEED_HISTORY;
+        const double read_mib = m_history_count ? (double)m_read_history[last] / (1024.0 * 1024.0) : 0.0;
+        const double write_mib = m_history_count ? (double)m_write_history[last] / (1024.0 * 1024.0) : 0.0;
+        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + plot.h * 0.30f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, red, "%.1f MiB/s", read_mib);
+        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + plot.h * 0.70f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, blue, "%.1f MiB/s", write_mib);
+
+        if (m_history_count >= 2) {
+            s64 max_speed = 1;
+            for (size_t i = 0; i < m_history_count; i++) {
+                const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
+                max_speed = std::max({max_speed, m_read_history[idx], m_write_history[idx]});
+            }
+
+            const float pad = 4.f;
+            const auto draw_line = [&](const std::array<s64, SPEED_HISTORY>& history, NVGcolor colour) {
+                nvgSave(vg);
+                nvgBeginPath(vg);
+                for (size_t i = 0; i < m_history_count; i++) {
+                    const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
+                    // newest sample is pinned to the right edge.
+                    const auto slot = SPEED_HISTORY - m_history_count + i;
+                    const float x = plot.x + pad + (plot.w - pad * 2.f) * slot / (SPEED_HISTORY - 1);
+                    const float y = plot.y + plot.h - pad - (plot.h - pad * 2.f) * ((double)history[idx] / max_speed);
+                    if (i == 0) nvgMoveTo(vg, x, y);
+                    else nvgLineTo(vg, x, y);
+                }
+                nvgStrokeColor(vg, colour);
+                nvgStrokeWidth(vg, 2.f);
+                nvgStroke(vg);
+                nvgRestore(vg);
+            };
+            draw_line(m_read_history, red);
+            draw_line(m_write_history, blue);
+        }
+    }
+
     m_log_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
         gfx::drawTextArgs(vg, v.x + 4.f, v.y + 5.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
             theme->GetColour(ThemeEntryID_TEXT), "%s", m_log[index].c_str());
@@ -827,6 +890,22 @@ void Menu::UpdateInstallTransfer(s64 offset, s64 size) {
     SCOPED_MUTEX(&m_mutex);
     m_progress_offset = offset;
     m_progress_size = size;
+}
+
+void Menu::UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {
+    // offsets reset for every nca; fold them into monotonic totals.
+    auto delta_read = read_offset - m_last_file_read;
+    if (delta_read < 0) {
+        delta_read = read_offset;
+    }
+    auto delta_write = write_offset - m_last_file_write;
+    if (delta_write < 0) {
+        delta_write = write_offset;
+    }
+    m_last_file_read = read_offset;
+    m_last_file_write = write_offset;
+    m_total_read += delta_read;
+    m_total_write += delta_write;
 }
 
 void Menu::InstallYield() {

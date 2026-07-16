@@ -67,6 +67,10 @@ struct MountCurlDevice : MountDevice {
 protected:
     CURL* curl{};
     CURL* transfer_curl{};
+    // serialises use of the two shared easy handles above. diropen/lstat and
+    // friends can be called concurrently (ui scan, metadata worker, installer)
+    // and a CURL easy handle must never be used from two threads at once.
+    Mutex m_handle_mutex{};
 
 private:
     // path extracted from the url.

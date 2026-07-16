@@ -624,6 +624,7 @@ size_t find_xml_tag(const std::string& haystack, size_t pos, std::string_view na
 } // namespace
 
 int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
+    SCOPED_MUTEX(&m_handle_mutex);
     auto* state = static_cast<CurlDirState*>(fd);
     new (state) CurlDirState();
 
@@ -1000,6 +1001,7 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
         return 0;
     }
 
+    SCOPED_MUTEX(&m_handle_mutex);
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
     curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
@@ -1046,6 +1048,7 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
 }
 
 int MountCurlDevice::devoptab_unlink(const char *path) {
+    SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(path, false);
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
@@ -1065,6 +1068,7 @@ int MountCurlDevice::devoptab_rmdir(const char *path) {
 }
 
 int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
+    SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(path, true);
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
@@ -1089,6 +1093,7 @@ int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
 }
 
 int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
+    SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(oldName, false);
     std::string dst_url = build_url(newName, false);
     curl_easy_reset(transfer_curl);

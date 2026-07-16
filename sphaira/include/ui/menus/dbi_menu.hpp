@@ -56,6 +56,7 @@ struct Menu final : MenuBase, InstallProgress {
     void SetInstallImage(std::vector<u8>&) override {}
     void SetInstallTransfer(const std::string& transfer) override;
     void UpdateInstallTransfer(s64 offset, s64 size) override;
+    void UpdateInstallReadWrite(s64 read_offset, s64 write_offset) override;
     void InstallYield() override;
 
 private:
@@ -104,6 +105,22 @@ private:
     size_t m_current_package{};
     size_t m_success_count{};
     size_t m_failure_count{};
+
+    // R/W speed graph. Offsets are cumulative within the session: yati
+    // reports per-file offsets, UpdateInstallReadWrite() folds them into
+    // monotonic totals so per-file resets don't produce negative deltas.
+    static constexpr size_t SPEED_HISTORY = 96;
+    std::atomic<s64> m_total_read{};
+    std::atomic<s64> m_total_write{};
+    s64 m_last_file_read{};
+    s64 m_last_file_write{};
+    s64 m_graph_last_read{};
+    s64 m_graph_last_write{};
+    std::array<s64, SPEED_HISTORY> m_read_history{};
+    std::array<s64, SPEED_HISTORY> m_write_history{};
+    size_t m_history_index{};
+    size_t m_history_count{};
+    TimeStamp m_graph_timestamp{};
 };
 
 } // namespace sphaira::ui::menu::dbi

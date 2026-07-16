@@ -173,6 +173,10 @@ struct ThreadData {
         return write_offset;
     }
 
+    auto GetReadOffset() volatile const -> s64 {
+        return read_offset;
+    }
+
     auto GetWriteSize() volatile const -> s64 {
         return write_size;
     }
@@ -1006,6 +1010,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
 
         if (!idx) {
             pbox->UpdateInstallTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
+            pbox->UpdateInstallReadWrite(t_data.GetReadOffset(), t_data.GetWriteOffset());
         } else {
             break;
         }

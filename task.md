@@ -3,7 +3,21 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.252
+## Поточний delivery: v0.13.253
+
+- [x] INSTALL-HANG-253 — спільні curl-хендли devoptab (diropen/lstat/unlink/
+  mkdir/rename) захищені м'ютексом: конкурентний доступ metadata-воркера,
+  UI-скану та інсталятора більше не може завісити передачу; не-черговий шлях
+  інсталяції теж викликає PauseRemoteMetadata
+- [x] BUILD-PRESET-253 — збірка перейшла на пресет ReleaseWithInstall
+  (ENABLE_NETWORK_INSTALL=ON, як у build.sh): черга встановлення з deferred
+  analysis для мережевих джерел активна
+- [x] HIST-54 (частково) — графік швидкостей R/W на екрані Installing: червона
+  лінія читання, синя — запису; ліворуч мітки R/W, праворуч поточні швидкості;
+  дані з нових read/write офсетів yati (UpdateInstallReadWrite)
+- [ ] HW-SMOKE-253 — ручний smoke test на реальній Switch за `tests.md`
+
+## Попередній delivery: v0.13.252
 
 - [x] CURL-REDIRECT-AUTH-252 — devoptab і download.cpp шлють credentials після
   редиректів (`CURLOPT_UNRESTRICTED_AUTH`): джерело `http://`/`webdav://`, яке
