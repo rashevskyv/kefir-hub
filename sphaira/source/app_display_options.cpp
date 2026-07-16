@@ -448,7 +448,14 @@ void App::DisplayWebdavOptions(bool left_side) {
     ui::SidebarEntryArray::Items items;
     items.push_back("None"_i18n);
     for (const auto& loc : webdav_locations) {
-        items.push_back(loc.name);
+        std::string proto = loc.protocol;
+        if (proto.empty()) {
+            if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
+            else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
+        }
+        std::string proto_upper = proto;
+        std::transform(proto_upper.begin(), proto_upper.end(), proto_upper.begin(), ::toupper);
+        items.push_back(loc.name + " (" + proto_upper + ")");
     }
 
     const auto current_active_name = App::GetWebdavUrlName();

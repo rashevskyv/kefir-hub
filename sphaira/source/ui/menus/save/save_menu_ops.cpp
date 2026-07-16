@@ -378,7 +378,14 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
     } else {
         PopupList::Items items;
         for (const auto& loc : webdav_locations) {
-            items.emplace_back(loc.name);
+            std::string proto = loc.protocol;
+            if (proto.empty()) {
+                if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
+                else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
+            }
+            std::string proto_upper = proto;
+            std::transform(proto_upper.begin(), proto_upper.end(), proto_upper.begin(), ::toupper);
+            items.emplace_back(loc.name + " (" + proto_upper + ")");
         }
         App::Push<PopupList>("Select Sync Location"_i18n, items, [webdav_locations, run](auto op_index) {
             if (op_index) {
