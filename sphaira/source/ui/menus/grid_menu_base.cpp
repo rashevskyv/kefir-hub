@@ -47,8 +47,11 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         nvgFillColor(vg, nvgRGB(255, 255, 255));
         nvgFill(vg);
 
-        // Top text
-        gfx::drawText(vg, x + w / 2.f, y + 14.f, 15.f, nvgRGB(32, 32, 32), name, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        // Keep the title inside the banner. The focused card scrolls long names;
+        // unfocused cards show the beginning of the clipped title.
+        constexpr float title_pad = 6.f;
+        m_scroll_name.Draw(vg, selected, x + title_pad, y + 14.f, w - title_pad * 2.f,
+            15.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nvgRGB(32, 32, 32), name);
 
         return v;
     }

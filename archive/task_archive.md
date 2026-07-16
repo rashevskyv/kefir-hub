@@ -451,3 +451,10 @@
 - [x] HIST-GAMES-CONTROLS-245 — `L / R` перемикають вкладки, `ZL / ZR` — ігри.
 - [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
 - [ ] HW-SMOKE-245 — залишено як ручний gate у `tests.md`.
+
+## v0.13.246 — довгі назви у HB Menu layout (2026-07-16)
+
+- [x] HIST-HBMENU-TITLE-246 — спільний renderer картки обрізає нефокусну назву
+  верхньою плашкою та циклічно прокручує довгу назву під фокусом.
+- [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
+- [ ] HW-SMOKE-246 — залишено як ручний gate у `tests.md`.

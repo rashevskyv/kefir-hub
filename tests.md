@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.245**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.246**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.245
+## Автоматичні gates v0.13.246
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.245 на Switch
+## P0 smoke test v0.13.246 на Switch
 
 ### HTTP/WEBDAV-CRASH-243 — регресія мережевих джерел
 
@@ -50,6 +50,10 @@
 
 ### HIST-62 / HIST-GAMES-VIEWPORT / HIST-GAMES-STORAGE
 
+- [ ] У HB Menu layout довга назва нефокусної картки показується від початку й
+  обрізається рівно по межах верхньої плашки; текст не виходить за картку.
+- [ ] Після наведення фокуса довга назва починає циклічно прокручуватися; коротка
+  назва залишається нерухомою. Перевірити Games, Homebrew, Saves та App Store.
 - [ ] У Grid, Grid Detail і HB Menu прокрутити перший/останній рядок: картки,
   badges, focus glow і touch area не заходять вище y=87 або нижче y=646.
 - [ ] Для Base-only, Base+Update, Base+DLC і LayeredFS звірити badges з DBI та
@@ -120,7 +124,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-245` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-246` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 
