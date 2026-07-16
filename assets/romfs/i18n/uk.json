@@ -962,5 +962,8 @@
   "mods folder(s) ready": "папок модів готово",
   "Protocol": "Протокол",
   "Change the network protocol and edit the fields required by the new source type.": "Змінити мережевий протокол і відредагувати поля, потрібні новому типу джерела.",
-  "Source protocol changed.": "Протокол джерела змінено."
+  "Source protocol changed.": "Протокол джерела змінено.",
+  "Show unavailable games": "Показувати недоступні ігри",
+  "Show application records that have no installed content or readable metadata.": "Показувати записи програм без встановленого контенту або доступних для читання метаданих.",
+  "Change display order for games.": "Змінити порядок відображення ігор."
 }

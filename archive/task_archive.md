@@ -427,3 +427,19 @@
   позначається червоною лейбочкою з білим мінусом.
 - [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
 - [ ] HW-SMOKE-242 — залишено як ручний gate у `tests.md`.
+
+## v0.13.243 — стабільність HTTP/WebDAV джерел (2026-07-16)
+
+- [x] HTTP-WEBDAV-CRASH-243 — `curl_slist` для PROPFIND/FTP MKD живе до завершення
+  запиту; mutex device state переведено на безпечний RAII-життєвий цикл.
+- [ ] HW-NETWORK-243 — повторне відкриття HTTP/WebDAV і файлові операції залишено
+  як ручний regression gate у `tests.md`.
+
+## v0.13.244 — недоступні application records у Games (2026-07-16)
+
+- [x] HIST-GAMES-UNAVAILABLE-BADGE — `Corrupted`/metadata-error записи без content-meta
+  отримують червону лейбочку `-`, навіть коли NCM summary повернув помилку.
+- [x] HIST-GAMES-UNAVAILABLE-FILTER — прямий перемикач у Game Options показує або приховує
+  records без встановленого content-meta; Layout і forwarder filter також винесено нагору.
+- [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
+- [ ] HW-SMOKE-244 — залишено як ручний gate у `tests.md`.

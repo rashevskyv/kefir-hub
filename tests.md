@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.242**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.244**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.242
+## Автоматичні gates v0.13.244
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,14 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.242 на Switch
+## P0 smoke test v0.13.244 на Switch
+
+### HTTP/WEBDAV-CRASH-243 — регресія мережевих джерел
+
+- [ ] Кілька разів відкрити, перейти між каталогами, закрити й знову відкрити HTTP та
+  WebDAV джерела: немає crash, зависання чи пошкодження списку.
+- [ ] WebDAV PROPFIND і створення каталогу на FTP завершуються без use-after-free;
+  повторна операція в тій самій сесії також стабільна.
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -50,6 +57,12 @@
   одна під одною, мають синій/фіолетовий/помаранчевий/зелений фон і читабельний білий текст.
 - [ ] Гра без Base, DLC, Update і LayeredFS після завершення scan має одну червону
   лейбочку з білим `-`; для гри лише з LayeredFS мінус не показується.
+- [ ] Application record з назвою `Corrupted`/помилкою читання metadata також отримує
+  червону лейбочку `-`, навіть якщо NCM summary завершився помилкою.
+- [ ] У верхньому рівні `Game Options -> Library` видно Layout, `Показувати недоступні ігри`
+  та `Hide forwarders`; Layout перемикає Icon/Grid/HB Menu так само, як у Homebrew.
+- [ ] Вимкнення `Показувати недоступні ігри` прибирає записи без жодного content-meta;
+  повторне ввімкнення повертає їх після rescan і не приховує встановлені ігри.
 - [ ] Виділяти ігри на NAND, SD і mixed storage: контрастний сегмент з'являється
   лише у відповідному bar і пропорційний сумі фактичних NCM content sizes.
 - [ ] На вкладці Tickets звірити rights ID, key generation і Common/Personalized/
@@ -106,7 +119,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-242` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-244` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 

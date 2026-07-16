@@ -109,6 +109,7 @@ private:
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_Grid};
+    option::OptionBool m_show_unavailable{INI_SECTION, "show_unavailable", true};
     option::OptionBool m_hide_forwarders{INI_SECTION, "hide_forwarders", false};
     option::OptionBool m_title_cache{INI_SECTION, "title_cache", true};
 };

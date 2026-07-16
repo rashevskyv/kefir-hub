@@ -507,7 +507,11 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     if (entry.layeredfs) {
         badges[count++] = {"LayeredFS", nvgRGBA(0, 112, 58, 255)};
     }
-    if (entry.summary_attempted && R_SUCCEEDED(entry.summary_result) && !entry.content_flags && !entry.layeredfs) {
+    const bool metadata_unavailable = entry.status == title::NacpLoadStatus::Error ||
+        title::IsPlaceholderName(entry.GetName());
+    const bool no_installed_content = entry.summary_attempted && R_SUCCEEDED(entry.summary_result) &&
+        !entry.content_flags;
+    if ((metadata_unavailable || no_installed_content) && !entry.content_flags && !entry.layeredfs) {
         badges[count++] = {"-", nvgRGBA(180, 24, 24, 255)};
     }
 
@@ -1193,6 +1197,31 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                 }
 
                 options->Add<SidebarEntryHeader>("LIBRARY"_i18n);
+                SidebarEntryArray::Items layout_items;
+                layout_items.push_back("Icon"_i18n);
+                layout_items.push_back("Grid"_i18n);
+                layout_items.push_back("HB Menu"_i18n);
+
+                auto current_layout = m_layout.Get();
+                if (current_layout == grid::LayoutType_List) {
+                    current_layout = grid::LayoutType_Grid;
+                    m_layout.Set(current_layout);
+                }
+                options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+                    m_layout.Set(index_out + 1);
+                    OnLayoutChange();
+                }, current_layout - 1, "Choose how games are displayed on screen."_i18n);
+
+                options->Add<SidebarEntryBool>("Show unavailable games"_i18n, m_show_unavailable.Get(), [this](bool& v_out){
+                    m_show_unavailable.Set(v_out);
+                    m_dirty = true;
+                }, "Show application records that have no installed content or readable metadata."_i18n);
+
+                options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
+                    m_hide_forwarders.Set(v_out);
+                    m_dirty = true;
+                }, "Hide game forwarder shortcuts from the list."_i18n);
+
                 options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
                     auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -1206,11 +1235,6 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     order_items.push_back("Descending"_i18n);
                     order_items.push_back("Ascending"_i18n);
 
-                    SidebarEntryArray::Items layout_items;
-                    layout_items.push_back("Icon"_i18n);
-                    layout_items.push_back("Grid"_i18n);
-                    layout_items.push_back("HB Menu"_i18n);
-
                     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                         m_sort.Set(index_out);
                         SortAndFindLastFile(false);
@@ -1221,21 +1245,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                         SortAndFindLastFile(false);
                     }, m_order.Get(), "Sort games from newest to oldest or A to Z."_i18n);
 
-                    auto current_layout = m_layout.Get();
-                    if (current_layout == grid::LayoutType_List) {
-                        current_layout = grid::LayoutType_Grid;
-                        m_layout.Set(current_layout);
-                    }
-                    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                        m_layout.Set(index_out + 1);
-                        OnLayoutChange();
-                    }, current_layout - 1, "Choose how games are displayed on screen."_i18n);
-
-                    options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
-                        m_hide_forwarders.Set(v_out);
-                        m_dirty = true;
-                    }, "Hide game forwarder shortcuts from the list."_i18n);
-                }, "Change display order and layout for games."_i18n);
+                }, "Change display order for games."_i18n);
 
                 #if 0
                 options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
@@ -1530,6 +1540,7 @@ void Menu::SetIndex(s64 index) {
 
 void Menu::ScanHomebrew() {
     constexpr auto ENTRY_CHUNK_COUNT = 1000;
+    const auto show_unavailable = m_show_unavailable.Get();
     const auto hide_forwarders = m_hide_forwarders.Get();
     TimeStamp ts;
 
@@ -1557,6 +1568,13 @@ void Menu::ScanHomebrew() {
 
             if (hide_forwarders && (e.application_id & 0x0500000000000000) == 0x0500000000000000) {
                 continue;
+            }
+
+            if (!show_unavailable) {
+                title::MetaEntries installed_content;
+                if (R_FAILED(title::GetMetaEntries(e.application_id, installed_content)) || installed_content.empty()) {
+                    continue;
+                }
             }
 
             m_entries.emplace_back(e.application_id, e.last_event, e.last_updated);

@@ -945,5 +945,8 @@
   "mods folder(s) ready": "mods folder(s) ready",
   "Protocol": "Protocol",
   "Change the network protocol and edit the fields required by the new source type.": "Change the network protocol and edit the fields required by the new source type.",
-  "Source protocol changed.": "Source protocol changed."
+  "Source protocol changed.": "Source protocol changed.",
+  "Show unavailable games": "Show unavailable games",
+  "Show application records that have no installed content or readable metadata.": "Show application records that have no installed content or readable metadata.",
+  "Change display order for games.": "Change display order for games."
 }
