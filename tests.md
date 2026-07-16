@@ -1,13 +1,13 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.248**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.249**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.248
+## Автоматичні gates v0.13.249
 
 - [x] Release build у WSL/devkitPro:
-  `cmake --build --preset Release --parallel 4`.
+  `cmake --build --preset Release --parallel 2`.
 - [x] Створено `build/Release/kefir-hub.nro`.
 - [x] `git diff --check` не знаходить whitespace-помилок.
 - [x] Усі `assets/romfs/i18n/*.json` проходять JSON parsing.
@@ -15,7 +15,22 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.248 на Switch
+## P0 smoke test v0.13.249 на Switch
+
+### SOURCES/WEBDAV-PREFLIGHT-249 — недоступні джерела і backup sync
+
+- [ ] Вимкнути HTTP server і відкрити його джерело з кореня File Browser: probe завершується
+  помилкою, каталог не відкривається як зелений `Empty` і старий mount не маскує збій.
+- [ ] Повторити для WebDAV server; у `Settings -> Sources -> Test Connection` отримати той
+  самий failed result. HTTP 401/404/405/500 не повинні показувати success.
+- [ ] Запустити WebDAV server через HTTP, виконати Test Connection і backup з auto-sync:
+  обидві операції успішні, архів з'являється у `sphaira-saves/...`.
+- [ ] Повторити з HTTPS WebDAV (`webdavs://`): PROPFIND, створення відсутніх каталогів і
+  PUT працюють через HTTPS, без downgrade до HTTP.
+- [ ] Створити окреме explicit HTTP джерело: воно доступне у File Browser, але не з'являється
+  у списку Save Sync Location і не перехоплює активну WebDAV auto-sync ціль.
+- [ ] Після успішного Test Connection зупинити WebDAV server перед backup: auto-sync має
+  завершитися видимою помилкою до upload, а локальна резервна копія залишається цілою.
 
 ### HTTP/WEBDAV-CRASH-243 — регресія мережевих джерел
 

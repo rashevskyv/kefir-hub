@@ -19,7 +19,9 @@ auto WebdavLocationKey(std::string url) -> std::string {
     const auto last = url.find_last_not_of(whitespace);
     url = url.substr(first, last - first + 1);
     if (url.starts_with("webdav://")) {
-        url.replace(0, std::strlen("webdav"), "https");
+        url.replace(0, std::strlen("webdav"), "http");
+    } else if (url.starts_with("webdavs://")) {
+        url.replace(0, std::strlen("webdavs"), "https");
     }
     while (url.ends_with('/')) {
         url.pop_back();
@@ -30,10 +32,19 @@ auto WebdavLocationKey(std::string url) -> std::string {
 auto GetWebdavLocations() -> std::vector<location::Entry> {
     std::vector<location::Entry> locations;
 
-    for (const auto& loc : location::Load()) {
-        const auto is_webdav = loc.url.starts_with("webdav://") ||
-            loc.url.starts_with("http://") || loc.url.starts_with("https://");
+    for (auto loc : location::Load()) {
+        const auto legacy_webdav = loc.protocol.empty() &&
+            (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://") ||
+             loc.url.starts_with("http://") || loc.url.starts_with("https://"));
+        const auto is_webdav = loc.protocol == "webdav" || legacy_webdav;
         if (is_webdav) {
+            // Keep the WebDAV marker in the in-memory sync location. The curl
+            // layer uses it to create missing remote folders before PUT.
+            if (loc.url.starts_with("http://")) {
+                loc.url.replace(0, std::strlen("http"), "webdav");
+            } else if (loc.url.starts_with("https://")) {
+                loc.url.replace(0, std::strlen("https"), "webdavs");
+            }
             locations.push_back(loc);
         }
     }

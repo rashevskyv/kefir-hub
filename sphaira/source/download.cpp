@@ -12,6 +12,7 @@
 #include <deque>
 #include <mutex>
 #include <algorithm>
+#include <cctype>
 #include <ranges>
 #include <curl/curl.h>
 #include <yyjson.h>
@@ -651,7 +652,11 @@ auto EncodeUrl(std::string url) -> std::string {
 
     if (url.starts_with("webdav://")) {
         log_write("[CURL] updating host\n");
-        url.replace(0, std::strlen("webdav"), "https");
+        url.replace(0, std::strlen("webdav"), "http");
+        log_write("[CURL] updated host: %s\n", url.c_str());
+    } else if (url.starts_with("webdavs://")) {
+        log_write("[CURL] updating secure host\n");
+        url.replace(0, std::strlen("webdavs"), "https");
         log_write("[CURL] updated host: %s\n", url.c_str());
     }
 
@@ -937,7 +942,7 @@ auto UploadInternal(CURL* curl, const Api& e) -> ApiResult {
         return {};
     }
 
-    if (e.GetUrl().starts_with("webdav://")) {
+    if (e.GetUrl().starts_with("webdav://") || e.GetUrl().starts_with("webdavs://")) {
         if (!WebdavCreateFolder(curl, e)) {
             log_write("[CURL] failed to create webdav folder, aborting\n");
             return {};
@@ -1066,7 +1071,7 @@ auto UploadInternal(CURL* curl, const Api& e) -> ApiResult {
 auto WebdavCreateFolder(CURL* curl, const Api& e) -> bool {
     // if using webdav, extract the file path and create the directories.
     // https://github.com/WebDAVDevs/webdav-request-samples/blob/master/webdav_curl.md
-    if (e.GetUrl().starts_with("webdav://")) {
+    if (e.GetUrl().starts_with("webdav://") || e.GetUrl().starts_with("webdavs://")) {
         log_write("[CURL] found webdav url\n");
 
         const auto info = e.GetUploadInfo();
@@ -1319,6 +1324,39 @@ auto FromFile(const Api& e) -> ApiResult {
         return {};
     }
     return UploadInternal(g_curl_single, e);
+}
+
+auto Probe(const Api& api, ProbeType type) -> ApiResult {
+    auto request = api;
+    request.SetOption(Path{});
+    request.SetOption(Flags{request.GetFlags() & ~Flag_NoBody});
+    request.SetOption(CustomRequest{});
+    request.SetOption(Header{});
+
+    if (type == ProbeType::Webdav) {
+        request.SetOption(CustomRequest{"PROPFIND"});
+        request.SetOption(Header{{"Depth", "0"}});
+    } else if (type == ProbeType::Ftp) {
+        request.SetOption(CustomRequest{"NLST"});
+    }
+
+    auto result = ToMemory(request);
+    if (!result.success) {
+        return result;
+    }
+
+    if (type == ProbeType::Webdav) {
+        std::string response{result.data.begin(), result.data.end()};
+        std::transform(response.begin(), response.end(), response.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+        result.success = result.code == 207 ||
+            (result.code >= 200 && result.code < 300 && response.find("multistatus") != std::string::npos);
+    } else if (type == ProbeType::Http) {
+        result.success = result.code >= 200 && result.code < 300;
+    }
+
+    return result;
 }
 
 auto ToMemoryAsync(const Api& api) -> bool {

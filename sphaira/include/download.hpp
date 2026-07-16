@@ -28,6 +28,12 @@ enum class Priority {
     High, // gets pushed to the front of the queue
 };
 
+enum class ProbeType {
+    Http,
+    Webdav,
+    Ftp,
+};
+
 struct Api;
 struct ApiResult;
 
@@ -148,6 +154,11 @@ auto ToMemory(const Api& e) -> ApiResult;
 auto ToFile(const Api& e) -> ApiResult;
 auto FromMemory(const Api& e) -> ApiResult;
 auto FromFile(const Api& e) -> ApiResult;
+
+// Performs a real request suitable for the remote source type. Unlike a
+// mounted devoptab, a successful result means the endpoint answered with the
+// protocol response that browsing/sync actually requires.
+auto Probe(const Api& e, ProbeType type) -> ApiResult;
 
 // async functions
 auto ToMemoryAsync(const Api& e) -> bool;

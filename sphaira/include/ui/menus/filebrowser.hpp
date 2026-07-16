@@ -71,6 +71,7 @@ struct FsEntry {
     FsType type{};
     u32 flags{FsEntryFlag_None};
     fs::FsPath url{};
+    fs::FsPath protocol{};
     fs::FsPath user{};
     fs::FsPath pass{};
     u16 port{};

@@ -59,6 +59,16 @@ struct NXSaveMeta {
 };
 static_assert(sizeof(NXSaveMeta) == 128);
 
+auto ProbeWebdavLocation(const location::Entry& loc) -> Result {
+    curl::Api api(CURL_LOCATION_TO_API(loc));
+    const auto result = curl::Probe(api, curl::ProbeType::Webdav);
+    log_write("[SYNC] WebDAV probe for %s: success=%d code=%ld\n", loc.name.c_str(), result.success, result.code);
+    if (!result.success) {
+        R_THROW(Result_SaveSyncFailed);
+    }
+    R_SUCCEED();
+}
+
 } // namespace
 
 void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
@@ -103,6 +113,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                         // the bar runs on synthetic per-file units, so a byte-rate
                         // readout would be nonsense - show only percentage/ETA.
                         pbox->SetHideSpeed(true);
+                        R_TRY(ProbeWebdavLocation(loc));
                         // scan the same fs the backup was just written to - a
                         // backup made to a stdio location (usb hdd) must not
                         // fall back to scanning the sd card, as that would
@@ -182,7 +193,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                                 }
 
                                 if (!res.success) {
-                                    log_write("[SYNC] auto-sync failed to upload: %s\n", filename.c_str());
+                                    log_write("[SYNC] auto-sync failed to upload: %s (HTTP %ld)\n", filename.c_str(), res.code);
                                     R_THROW(Result_SaveSyncFailed);
                                 }
                             }
@@ -531,6 +542,7 @@ auto DownloadOneBackupFile(fs::Fs* fs, ProgressBox* pbox, const location::Entry&
 }
 
 Result Menu::DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const {
+    R_TRY(ProbeWebdavLocation(loc));
     const auto fs = MakeFsForLocation(location);
 
     detail::LoadControlEntry(e);
@@ -1032,6 +1044,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
         // the bar runs on synthetic per-file units, so a byte-rate readout would
         // be nonsense - show only percentage/ETA.
         pbox->SetHideSpeed(true);
+        R_TRY(ProbeWebdavLocation(loc));
         fs::FsNativeSd sd_fs;
         const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
 
@@ -1137,7 +1150,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 R_TRY(pbox->ShouldExitResult());
                 // otherwise keep going with the next file; the failure is
                 // reported in the final summary.
-                log_write("[SYNC] failed to upload: %s\n", u.name.c_str());
+                log_write("[SYNC] failed to upload: %s (HTTP %ld)\n", u.name.c_str(), res.code);
                 failed.emplace_back(u.name);
             }
 

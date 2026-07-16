@@ -712,17 +712,15 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
                         std::strcpy(fe.virtual_target_entry.root, root_p.c_str());
                         fe.virtual_target_entry.flags = FsEntryFlag_None;
                         std::strcpy(fe.virtual_target_entry.url, loc.url.c_str());
+                        std::strcpy(fe.virtual_target_entry.protocol, loc.protocol.c_str());
                         std::strcpy(fe.virtual_target_entry.user, loc.user.c_str());
                         std::strcpy(fe.virtual_target_entry.pass, loc.pass.c_str());
                         fe.virtual_target_entry.port = loc.port;
 
-                        bool is_mounted = false;
-                        if (loc.IsSmb()) {
-                            is_mounted = (g_smb2fs != nullptr);
-                        } else {
-                            is_mounted = devoptab::common::IsNetworkDeviceMounted(loc.url);
-                        }
-                        fe.connection_status = is_mounted ? ConnectionStatus::Connected : ConnectionStatus::Unknown;
+                        // A registered/mounted devoptab does not prove that the
+                        // remote server is currently reachable. Keep the state
+                        // neutral until ConnectToLocation performs a real probe.
+                        fe.connection_status = ConnectionStatus::Unknown;
                         break;
                     }
                 }
@@ -1365,6 +1363,25 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
             R_THROW(Result_SmbNotSupported);
 #endif
         } else {
+            curl::Api api{
+                curl::Url{target_entry.url.toString()},
+                curl::UserPass{target_entry.user.toString(), target_entry.pass.toString()},
+                curl::Port{target_entry.port},
+            };
+            auto probe_type = curl::ProbeType::Http;
+            if (target_entry.protocol.toString() == "webdav" ||
+                target_entry.url.toString().starts_with("webdav://") || target_entry.url.toString().starts_with("webdavs://")) {
+                probe_type = curl::ProbeType::Webdav;
+            } else if (target_entry.url.toString().starts_with("ftp://") || target_entry.url.toString().starts_with("ftps://")) {
+                probe_type = curl::ProbeType::Ftp;
+            }
+
+            const auto probe = curl::Probe(api, probe_type);
+            log_write("[FILEBROWSER] source probe: success=%d code=%ld url=%s\n", probe.success, probe.code, target_entry.url.s);
+            if (!probe.success) {
+                R_THROW(0xCCCC);
+            }
+
             if (devoptab::common::IsNetworkDeviceMounted(target_entry.url.toString())) {
                 R_SUCCEED();
             }
@@ -1428,6 +1445,7 @@ void FsView::ShowSourcePicker() {
             .type = FsType::Network,
             .flags = FsEntryFlag_None,
             .url = e.url,
+            .protocol = e.protocol,
             .user = e.user,
             .pass = e.pass,
             .port = e.port
@@ -1532,6 +1550,7 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     target_entry.type = FsType::Network;
     target_entry.flags = FsEntryFlag_None;
     std::strcpy(target_entry.url, e.url.c_str());
+    std::strcpy(target_entry.protocol, e.protocol.c_str());
     std::strcpy(target_entry.user, e.user.c_str());
     std::strcpy(target_entry.pass, e.pass.c_str());
     target_entry.port = e.port;

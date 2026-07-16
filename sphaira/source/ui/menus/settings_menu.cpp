@@ -94,6 +94,29 @@ auto OnOff(bool enabled) -> std::string {
     return enabled ? "On"_i18n : "Off"_i18n;
 }
 
+auto TestLocationConnection(const location::Entry& loc) -> Result {
+    if (loc.IsSmb()) {
+#ifdef BUILD_SMB2
+        CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
+        return test_smb.CheckConnection() ? 0 : -1;
+#else
+        return -1;
+#endif
+    }
+
+    curl::Api api(CURL_LOCATION_TO_API(loc));
+    curl::ProbeType type = curl::ProbeType::Webdav;
+    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://") || loc.protocol == "ftp") {
+        type = curl::ProbeType::Ftp;
+    } else if (loc.protocol == "http") {
+        type = curl::ProbeType::Http;
+    }
+
+    const auto result = curl::Probe(api, type);
+    log_write("[SOURCE] connection probe for %s: success=%d code=%ld\n", loc.name.c_str(), result.success, result.code);
+    return result.success ? 0 : -1;
+}
+
 using namespace detail;
 
 
@@ -1015,33 +1038,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
                 options->Add<SidebarEntryCallback>("Test Connection"_i18n, [loc](){
                     App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
-                        if (loc.IsSmb()) {
-#ifdef BUILD_SMB2
-                            CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
-                            if (test_smb.CheckConnection()) {
-                                return 0;
-                            } else {
-                                return -1;
-                            }
-#else
-                            return -1;
-#endif
-                        } else {
-                            curl::Api e;
-                            e.SetOption(curl::Url{loc.url});
-                            e.SetOption(curl::UserPass{loc.user, loc.pass});
-                            e.SetOption(curl::Port{loc.port});
-                            e.SetOption(curl::Flags{curl::Flag_NoBody});
-                            if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
-                                e.SetOption(curl::CustomRequest{"NLST"});
-                            }
-                            curl::ApiResult result = curl::ToMemory(e);
-                            if (result.success || (result.code >= 200 && result.code < 600)) {
-                                return 0;
-                            } else {
-                                return -1;
-                            }
-                        }
+                        return TestLocationConnection(loc);
                     }, [](Result rc) {
                         if (R_SUCCEEDED(rc)) {
                             App::Notify("Connection test successful!"_i18n);
@@ -2256,33 +2253,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
         [](){ return std::string{}; },
         [loc]() mutable {
             App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
-                if (loc.IsSmb()) {
-#ifdef BUILD_SMB2
-                    CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
-                    if (test_smb.CheckConnection()) {
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-#else
-                    return -1;
-#endif
-                } else {
-                    curl::Api e;
-                    e.SetOption(curl::Url{loc.url});
-                    e.SetOption(curl::UserPass{loc.user, loc.pass});
-                    e.SetOption(curl::Port{loc.port});
-                    e.SetOption(curl::Flags{curl::Flag_NoBody});
-                    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
-                        e.SetOption(curl::CustomRequest{"NLST"});
-                    }
-                    curl::ApiResult result = curl::ToMemory(e);
-                    if (result.success || (result.code >= 200 && result.code < 600)) {
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-                }
+                return TestLocationConnection(loc);
             }, [](Result rc) {
                 if (R_SUCCEEDED(rc)) {
                     App::Notify("Connection test successful!"_i18n);
