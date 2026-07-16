@@ -1035,7 +1035,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                                 e.SetOption(curl::CustomRequest{"NLST"});
                             }
                             curl::ApiResult result = curl::ToMemory(e);
-                            if (result.success) {
+                            if (result.success || (result.code >= 200 && result.code < 600)) {
                                 return 0;
                             } else {
                                 return -1;
@@ -2177,7 +2177,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
                         e.SetOption(curl::CustomRequest{"NLST"});
                     }
                     curl::ApiResult result = curl::ToMemory(e);
-                    if (result.success) {
+                    if (result.success || (result.code >= 200 && result.code < 600)) {
                         return 0;
                     } else {
                         return -1;
