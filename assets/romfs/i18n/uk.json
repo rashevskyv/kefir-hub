@@ -982,5 +982,7 @@
   "Test connection with current settings.": "Перевірити з'єднання з поточними налаштуваннями.",
   "Rename this network location.": "Перейменувати це мережеве джерело.",
   "View network location properties.": "Переглянути властивості мережевого джерела.",
-  "Delete this network location.": "Видалити це мережеве джерело."
+  "Delete this network location.": "Видалити це мережеве джерело.",
+  "Check that the server is powered on and reachable on your network.": "Перевірте, що сервер увімкнено і він доступний у вашій мережі.",
+  "The server is reachable but the listing failed. Check the credentials and the shared folder path.": "Сервер доступний, але отримати список файлів не вдалося. Перевірте логін/пароль і шлях до спільної папки."
 }

@@ -254,6 +254,11 @@ void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::stri
     // fail on http >= 400: otherwise a 404/500 error page is streamed back
     // as if it were the file contents.
     curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1L);
+    // negotiate the auth scheme with the server. Without this, curl only
+    // sends Basic, and servers requiring Digest reply 401 to every request
+    // (download.cpp does the same for probe/sync, which is why Test
+    // Connection passes while browsing fails).
+    curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
     curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 1024L * 64L);
     curl_easy_setopt(curl_handle, CURLOPT_UPLOAD_BUFFERSIZE, 1024L * 64L);
     curl_easy_setopt(curl_handle, CURLOPT_ACCEPT_ENCODING, "");

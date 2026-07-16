@@ -53,6 +53,7 @@
 #include <expected>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <algorithm>
 
 namespace sphaira::ui::menu::filebrowser {
@@ -154,6 +155,25 @@ void metadata_thread_func(void* user) {
 
 void SignalChange() {
     ueventSignal(&g_change_uevent);
+}
+
+namespace {
+
+// only touched from the main thread (ui callbacks).
+std::unordered_map<std::string, ConnectionStatus> g_source_status;
+
+} // namespace
+
+void SetSourceConnectionStatus(const std::string& url, bool connected) {
+    if (url.empty()) {
+        return;
+    }
+    g_source_status[url] = connected ? ConnectionStatus::Connected : ConnectionStatus::Failed;
+}
+
+auto GetSourceConnectionStatus(const std::string& url) -> ConnectionStatus {
+    const auto it = g_source_status.find(url);
+    return it == g_source_status.end() ? ConnectionStatus::Unknown : it->second;
 }
 
 FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSide side) : m_menu{menu}, m_side{side} {
@@ -498,7 +518,9 @@ void FsView::OnFocusGained() {
     if (m_entries.empty()) {
         const auto rc = Scan(m_path.empty() ? m_fs->Root() : m_path);
         if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
-            App::PushErrorBox(rc, "Failed to list network storage!"_i18n);
+            log_write("[FILEBROWSER] network listing failed: 0x%X\n", rc);
+            App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
+                "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
             const FsEntry root_entry{
                 .name = "System Root",
                 .root = "root:/",
@@ -795,9 +817,9 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
                         fe.virtual_target_entry.port = loc.port;
 
                         // A registered/mounted devoptab does not prove that the
-                        // remote server is currently reachable. Keep the state
-                        // neutral until ConnectToLocation performs a real probe.
-                        fe.connection_status = ConnectionStatus::Unknown;
+                        // remote server is currently reachable. Show the result
+                        // of the last real probe this session, if any.
+                        fe.connection_status = GetSourceConnectionStatus(loc.url);
                         break;
                     }
                 }
@@ -1144,7 +1166,9 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
         // request, unsupported listing format, connection dropped). Without
         // this, the user is left staring at a green "Empty..." screen.
         if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
-            App::PushErrorBox(rc, "Failed to list network storage!"_i18n);
+            log_write("[FILEBROWSER] network listing failed: 0x%X\n", rc);
+            App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
+                "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
             const FsEntry root_entry{
                 .name = "System Root",
                 .root = "root:/",
@@ -1209,7 +1233,8 @@ void FsView::DisplayOptions() {
                 }
                 App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc->name, [loc](auto pbox) -> Result {
                     return settings::TestLocationConnection(*loc);
-                }, [](Result rc) {
+                }, [loc](Result rc) {
+                    SetSourceConnectionStatus(loc->url, R_SUCCEEDED(rc));
                     if (R_SUCCEEDED(rc)) {
                         App::Notify("Connection test successful!"_i18n);
                     } else {
@@ -1729,6 +1754,8 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
         }
         R_SUCCEED();
     }, [this, target_entry](Result rc) {
+        SetSourceConnectionStatus(target_entry.url.toString(), R_SUCCEEDED(rc));
+
         // reflect the outcome on the root view badges, if we are still there.
         if (m_fs_entry.type == FsType::Root) {
             for (auto& e : m_entries) {
@@ -1739,7 +1766,8 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
         }
 
         if (R_FAILED(rc)) {
-            App::PushErrorBox(rc, "Failed to connect to network storage!"_i18n);
+            App::Push<OptionBox>("Failed to connect to network storage!"_i18n + "\n" +
+                "Check that the server is powered on and reachable on your network."_i18n, "OK"_i18n);
         } else {
             SetFs(target_entry.root, target_entry);
         }

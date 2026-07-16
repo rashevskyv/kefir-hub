@@ -197,6 +197,11 @@ using FsDirCollections = std::vector<FsDirCollection>;
 void SignalChange();
 void AddNetworkLocationInteractive(std::function<void()> on_success = nullptr);
 
+// session-wide connection status per source url, shown as the badge on the
+// root view. Updated by connect attempts and Test Connection.
+void SetSourceConnectionStatus(const std::string& url, bool connected);
+auto GetSourceConnectionStatus(const std::string& url) -> ConnectionStatus;
+
 struct Menu;
 
 struct FsView final : Widget {

@@ -1039,7 +1039,8 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 options->Add<SidebarEntryCallback>("Test Connection"_i18n, [loc](){
                     App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
                         return TestLocationConnection(loc);
-                    }, [](Result rc) {
+                    }, [loc](Result rc) {
+                        filebrowser::SetSourceConnectionStatus(loc.url, R_SUCCEEDED(rc));
                         if (R_SUCCEEDED(rc)) {
                             App::Notify("Connection test successful!"_i18n);
                         } else {
@@ -2254,7 +2255,8 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
         [loc]() mutable {
             App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
                 return TestLocationConnection(loc);
-            }, [](Result rc) {
+            }, [loc](Result rc) {
+                filebrowser::SetSourceConnectionStatus(loc.url, R_SUCCEEDED(rc));
                 if (R_SUCCEEDED(rc)) {
                     App::Notify("Connection test successful!"_i18n);
                 } else {
