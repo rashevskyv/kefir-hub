@@ -490,22 +490,25 @@ Result LoadGameSummary(Entry& entry) {
     return entry.summary_result;
 }
 
-void DrawGameBadges(NVGcontext* vg, Theme* theme, const Vec4& image, const Entry& entry) {
-    struct Badge { const char* text; NVGcolor colour; };
-    std::array<Badge, 4> badges{};
+void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entry) {
+    struct Badge { std::string text; NVGcolor colour; };
+    std::array<Badge, 5> badges{};
     size_t count{};
 
     if (entry.content_flags & title::ContentFlag_Application) {
-        badges[count++] = {"Base", nvgRGBA(45, 135, 210, 235)};
+        badges[count++] = {"Base"_i18n, nvgRGBA(0, 82, 190, 255)};
     }
     if (entry.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
-        badges[count++] = {"Update", nvgRGBA(220, 140, 35, 235)};
+        badges[count++] = {"Update"_i18n, nvgRGBA(185, 82, 0, 255)};
     }
     if (entry.content_flags & title::ContentFlag_AddOnContent) {
-        badges[count++] = {"DLC", nvgRGBA(145, 80, 200, 235)};
+        badges[count++] = {"DLC"_i18n, nvgRGBA(105, 35, 175, 255)};
+    }
+    if (entry.summary_attempted && R_SUCCEEDED(entry.summary_result) && !entry.content_flags) {
+        badges[count++] = {"No content"_i18n, nvgRGBA(155, 28, 28, 255)};
     }
     if (entry.layeredfs) {
-        badges[count++] = {"LayeredFS", nvgRGBA(45, 165, 105, 235)};
+        badges[count++] = {"LayeredFS"_i18n, nvgRGBA(0, 112, 66, 255)};
     }
 
     if (!count) {
@@ -519,15 +522,16 @@ void DrawGameBadges(NVGcontext* vg, Theme* theme, const Vec4& image, const Entry
     float bounds[4]{};
     for (size_t i = 0; i < count; i++) {
         nvgFontSize(vg, font);
-        gfx::textBounds(vg, 0, 0, bounds, badges[i].text);
+        gfx::textBounds(vg, 0, 0, bounds, badges[i].text.c_str());
         const float width = bounds[2] - bounds[0] + 10.f;
         if (x + width > image.x + image.w - 4.f) {
             x = image.x + 5.f;
             y += height + 3.f;
         }
+        gfx::drawRect(vg, x - 1.f, y - 1.f, width + 2.f, height + 2.f, nvgRGBA(0, 0, 0, 255), 5.f);
         gfx::drawRect(vg, x, y, width, height, badges[i].colour, 4.f);
         gfx::drawText(vg, x + width * 0.5f, y + height * 0.5f, font,
-            theme->GetColour(ThemeEntryID_TEXT_SELECTED), badges[i].text, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgRGBA(255, 255, 255, 255), badges[i].text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         x += width + 3.f;
     }
 }
@@ -782,7 +786,11 @@ struct DbiDetailsMenu final : MenuBase {
         gfx::drawText(vg, 265, 245, 18.f, text, "Languages", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         m_language_scroll.Draw(vg, true, 370, 245, 415, 16.f, NVG_ALIGN_LEFT, info,
             m_languages.empty() ? "-" : m_languages.c_str());
-        gfx::drawTextArgs(vg, 265, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "LayeredFS  %s", entry.layeredfs ? "Present" : "Absent");
+        gfx::drawTextArgs(vg, 265, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text,
+            "Atmosphere mods folder  %s", entry.layeredfs ? "Found" : "Not found");
+        gfx::drawText(vg, 265, 300, 14.f, info,
+            "LayeredFS loads replacement game files from /atmosphere/contents/<Title ID>",
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         gfx::drawTextArgs(vg, 810, 112, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "NAND       %s", FormatBytes(entry.nand_size).c_str());
         gfx::drawTextArgs(vg, 810, 141, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "SD         %s", FormatBytes(entry.sd_size).c_str());
@@ -792,17 +800,28 @@ struct DbiDetailsMenu final : MenuBase {
         gfx::drawTextArgs(vg, 810, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Save quota %s + %s", FormatBytes(m_save_size).c_str(), FormatBytes(m_save_journal_size).c_str());
 
         const std::array<std::string, 3> tab_names{"Content"_i18n, "Tickets"_i18n, "Saves"_i18n};
-        const float tab_y = 320.f;
-        const float tab_w = 1220.f / tab_names.size();
+        const std::array<size_t, 3> tab_counts{m_components.size(), m_tickets.size(), m_saves.size()};
+        const float tab_y = 312.f;
+        const float tab_gap = 6.f;
+        const float tab_w = (1204.f - tab_gap * 2.f) / tab_names.size();
+        gfx::drawRect(vg, 30.f, tab_y + 4.f, 1220.f, 50.f, nvgRGBA(8, 8, 8, 210), 5.f);
         for (size_t i = 0; i < tab_names.size(); i++) {
             const bool selected = i == static_cast<size_t>(m_tab);
-            const float x = 30.f + i * tab_w;
+            const float x = 38.f + i * (tab_w + tab_gap);
+            const float y = selected ? tab_y - 4.f : tab_y + 4.f;
+            const float h = selected ? 58.f : 50.f;
+            const auto fill = selected ? nvgRGBA(245, 245, 245, 255) : nvgRGBA(30, 30, 30, 255);
+            const auto label_colour = selected ? nvgRGBA(20, 20, 20, 255) : nvgRGBA(255, 255, 255, 255);
+            gfx::drawRect(vg, x - 1.f, y - 1.f, tab_w + 2.f, h + 2.f, nvgRGBA(0, 0, 0, 255), 6.f);
+            gfx::drawRect(vg, x, y, tab_w, h, fill, 5.f);
             if (selected) {
-                gfx::drawRect(vg, x, tab_y, tab_w, 42.f, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+                gfx::drawRect(vg, x + 10.f, y + h - 5.f, tab_w - 20.f, 4.f,
+                    theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
             }
-            gfx::drawText(vg, x + tab_w * 0.5f, tab_y + 21.f, 20.f,
-                selected ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : text,
-                tab_names[i].c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            char label[96];
+            std::snprintf(label, sizeof(label), "%s  [%zu]", tab_names[i].c_str(), tab_counts[i]);
+            gfx::drawText(vg, x + tab_w * 0.5f, y + h * 0.5f, 20.f,
+                label_colour, label, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         }
 
         if (R_FAILED(m_load_result) && !m_components.empty()) {
@@ -1083,7 +1102,7 @@ private:
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);
         }, true, "Export base, updates, DLC and data patches."_i18n);
-        options->Add<SidebarEntryCallback>(CurrentEntry().layeredfs ? "Show contents path"_i18n : "Create contents folder"_i18n, [this](){
+        options->Add<SidebarEntryCallback>(CurrentEntry().layeredfs ? "Show mods folder path"_i18n : "Create mods folder"_i18n, [this](){
             auto& entry = CurrentEntry();
             if (entry.layeredfs) {
                 App::Notify(title::GetContentsPath(entry.app_id).toString());
@@ -1095,7 +1114,7 @@ private:
                 entry.layeredfs = true;
                 App::Notify("Folder created!"_i18n);
             }
-        }, "Inspect or create the Atmosphere contents folder for this title."_i18n);
+        }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n);
     }
 
 private:
@@ -1122,35 +1141,14 @@ private:
 
 Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
     this->SetActions(
-        std::make_pair(Button::L3, Action{[this](){
-            if (m_entries.empty()) {
-                return;
-            }
-
-            m_entries[m_index].selected ^= 1;
-
-            if (m_entries[m_index].selected) {
-                m_selected_count++;
-            } else {
-                m_selected_count--;
-            }
-        }}),
-        std::make_pair(Button::R3, Action{[this](){
-            if (m_entries.empty()) {
-                return;
-            }
-
-            if (m_selected_count == m_entries.size()) {
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){ ToggleCurrentSelection(); }}),
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ InvertSelection(); }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            if (m_selected_count) {
                 ClearSelection();
             } else {
-                m_selected_count = m_entries.size();
-                for (auto& e : m_entries) {
-                    e.selected = true;
-                }
+                SetPop();
             }
-        }}),
-        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
-            SetPop();
         }}),
         std::make_pair(Button::A, Action{"Details"_i18n, [this](){
             if (m_entries.empty()) {
@@ -1171,6 +1169,26 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 
             if (m_entries.size()) {
+                auto targets = GetSelectedEntries();
+                u32 common_flags = title::ContentFlag_All;
+                bool all_have_content = !targets.empty();
+                for (const auto& target : targets) {
+                    const auto entry = std::ranges::find_if(m_entries, [&target](const auto& candidate){
+                        return candidate.app_id == target.app_id;
+                    });
+                    if (entry == m_entries.end()) {
+                        all_have_content = false;
+                        common_flags = 0;
+                        continue;
+                    }
+                    LoadGameSummary(*entry);
+                    if (R_FAILED(entry->summary_result) || !entry->content_flags) {
+                        all_have_content = false;
+                    }
+                    common_flags &= entry->content_flags;
+                }
+
+                options->Add<SidebarEntryHeader>("LIBRARY"_i18n);
                 options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
                     auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -1236,9 +1254,18 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     );
                 }, "Pick and launch a random game from your library."_i18n);
 
-                options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
+                options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
+                    App::DisplayDumpOptions(false);
+                }, "Configure dump output settings such as folder structure and ticket handling."_i18n);
+
+                options->Add<SidebarEntryHeader>("SELECTED GAMES"_i18n,
+                    std::to_string(targets.size()) + " " + "selected"_i18n);
+
+                if (targets.size() == 1) {
+                    options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
                     title::MetaEntries meta_entries;
-                    const auto rc = GetMetaEntries(m_entries[m_index], meta_entries);
+                    const auto target = GetSelectedEntries().front();
+                    const auto rc = GetMetaEntries(target, meta_entries);
                     if (R_FAILED(rc)) {
                         App::Push<ui::ErrorBox>(rc,
                             i18n::get("Failed to list application meta entries")
@@ -1267,64 +1294,43 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             #endif
                         }
                     );
-                }, "Show all installed content meta records for the selected game."_i18n);
+                    }, "Show all installed content meta records for the selected game."_i18n);
+                }
 
-                options->Add<SidebarEntryCallback>("Dump"_i18n, [this](){
+                if (all_have_content) {
+                    options->Add<SidebarEntryCallback>("Dump"_i18n, [this, common_flags](){
                     auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
                     options->Add<SidebarEntryCallback>("Dump All"_i18n, [this](){
                         DumpGames(title::ContentFlag_All);
                     }, true, "Dump all content: base game, updates, and DLC."_i18n);
-                    options->Add<SidebarEntryCallback>("Dump Application"_i18n, [this](){
-                        DumpGames(title::ContentFlag_Application);
-                    }, true, "Dump the base application NSP only."_i18n);
-                    options->Add<SidebarEntryCallback>("Dump Patch"_i18n, [this](){
-                        DumpGames(title::ContentFlag_Patch);
-                    }, true, "Dump the game update/patch NSP only."_i18n);
-                    options->Add<SidebarEntryCallback>("Dump AddOnContent"_i18n, [this](){
-                        DumpGames(title::ContentFlag_AddOnContent);
-                    }, true, "Dump downloadable content (DLC) NSP only."_i18n);
-                    options->Add<SidebarEntryCallback>("Dump DataPatch"_i18n, [this](){
-                        DumpGames(title::ContentFlag_DataPatch);
-                    }, true, "Dump data patch NSP only."_i18n);
-                }, true, "Export the selected game as an NSP file."_i18n);
-
-                options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
-                    App::DisplayDumpOptions(false);
-                }, "Configure dump output settings such as folder structure and ticket handling."_i18n);
-
-                // completely deletes the application record and all data.
-                options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-                    const auto buf = "Are you sure you want to delete "_i18n + m_entries[m_index].GetName() + "?";
-                    App::Push<OptionBox>(
-                        buf,
-                        "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
-                            if (op_index && *op_index) {
-                                DeleteGames();
-                            }
-                        }, m_entries[m_index].image
-                    );
-                }, true, "Permanently delete the selected game and all its data."_i18n);
-            }
-
-            options->Add<SidebarEntryCallback>("Advanced options"_i18n, [this](){
-                auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
-                ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-                options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
-                    m_dirty = true;
-                    App::PopToMenu();
-                }, "Rescan the game library and reload the list."_i18n);
-
-                options->Add<SidebarEntryCallback>("Create contents folder"_i18n, [this](){
-                    const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(m_entries[m_index].app_id));
-                    App::PushErrorBox(rc, "Folder create failed!"_i18n);
-
-                    if (R_SUCCEEDED(rc)) {
-                        App::Notify("Folder created!"_i18n);
+                    if (common_flags & title::ContentFlag_Application) {
+                        options->Add<SidebarEntryCallback>("Dump Application"_i18n, [this](){
+                            DumpGames(title::ContentFlag_Application);
+                        }, true, "Dump the base application NSP only."_i18n);
                     }
-                }, "Create the Atmosphere LayeredFS contents folder for this title."_i18n);
+                    if (common_flags & title::ContentFlag_Patch) {
+                        options->Add<SidebarEntryCallback>("Dump Patch"_i18n, [this](){
+                            DumpGames(title::ContentFlag_Patch);
+                        }, true, "Dump the game update/patch NSP only."_i18n);
+                    }
+                    if (common_flags & title::ContentFlag_AddOnContent) {
+                        options->Add<SidebarEntryCallback>("Dump AddOnContent"_i18n, [this](){
+                            DumpGames(title::ContentFlag_AddOnContent);
+                        }, true, "Dump downloadable content (DLC) NSP only."_i18n);
+                    }
+                    if (common_flags & title::ContentFlag_DataPatch) {
+                        options->Add<SidebarEntryCallback>("Dump DataPatch"_i18n, [this](){
+                            DumpGames(title::ContentFlag_DataPatch);
+                        }, true, "Dump data patch NSP only."_i18n);
+                    }
+                    }, true, "Export content shared by all selected games as NSP files."_i18n);
+                }
+
+                options->Add<SidebarEntryCallback>("Create mods folders"_i18n, [this](){
+                    CreateContentsFolders();
+                }, "Create Atmosphere LayeredFS folders for all selected games."_i18n);
 
                 options->Add<SidebarEntryCallback>("Create save"_i18n, [this](){
                     ui::PopupList::Items items{};
@@ -1340,7 +1346,33 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                         }
                     );
-                }, "Manually create a save data entry for this game."_i18n);
+                }, "Manually create save data entries for all selected games."_i18n);
+
+                // completely deletes the application record and all data.
+                options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+                    const auto targets = GetSelectedEntries();
+                    const auto buf = targets.size() == 1
+                        ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
+                        : "Are you sure you want to delete the selected games?"_i18n;
+                    App::Push<OptionBox>(
+                        buf,
+                        "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
+                            if (op_index && *op_index) {
+                                DeleteGames();
+                            }
+                        }, targets.front().image
+                    );
+                }, true, "Permanently delete all selected games and their data."_i18n);
+            }
+
+            options->Add<SidebarEntryCallback>("Advanced options"_i18n, [this](){
+                auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+                options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
+                    m_dirty = true;
+                    App::PopToMenu();
+                }, "Rescan the game library and reload the list."_i18n);
 
                 options->Add<SidebarEntryBool>("Title cache"_i18n, m_title_cache.Get(), [this](bool& v_out){
                     m_title_cache.Set(v_out);
@@ -1654,6 +1686,53 @@ void Menu::OnLayoutChange() {
     m_index = 0;
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
     SetIndex(0);
+}
+
+void Menu::ToggleCurrentSelection() {
+    if (m_entries.empty()) {
+        return;
+    }
+
+    auto& entry = m_entries[m_index];
+    entry.selected ^= 1;
+    m_selected_count += entry.selected ? 1 : -1;
+}
+
+void Menu::InvertSelection() {
+    m_selected_count = 0;
+    for (auto& entry : m_entries) {
+        entry.selected ^= 1;
+        if (entry.selected) {
+            m_selected_count++;
+        }
+    }
+}
+
+void Menu::CreateContentsFolders() {
+    const auto targets = GetSelectedEntries();
+    size_t created{};
+    for (const auto& target : targets) {
+        const auto path = title::GetContentsPath(target.app_id);
+        auto rc = fs::FsNativeSd().CreateDirectory(path);
+        if (rc == FsError_PathAlreadyExists) {
+            rc = 0;
+        }
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Mods folder create failed!"_i18n);
+            return;
+        }
+
+        const auto entry = std::ranges::find_if(m_entries, [&target](const auto& candidate){
+            return candidate.app_id == target.app_id;
+        });
+        if (entry != m_entries.end()) {
+            entry->layeredfs = true;
+        }
+        created++;
+    }
+
+    ClearSelection();
+    App::Notify(std::to_string(created) + " " + "mods folder(s) ready"_i18n);
 }
 
 void Menu::DeleteGames() {

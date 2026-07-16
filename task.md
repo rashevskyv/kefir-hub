@@ -3,7 +3,7 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.239
+## Поточний delivery: v0.13.240
 
 - [x] AUDIT-HISTORY — аудит останніх 5 комітів і всієї історії plan/task/archive
 - [x] HIST-HTTP-RETRY — GET-only retry/resume, restart без stale tail, final flush check
@@ -13,11 +13,15 @@
 - [x] HIST-62 — Base/Update/DLC/LayeredFS badges із кешованого NCM summary
 - [x] HIST-GAMES-VIEWPORT — Games не малюється поверх header/footer
 - [x] HIST-GAMES-STORAGE — розмір вибраної гри підсвічується у NAND/SD bars
+- [x] HIST-GAMES-SELECTION — X перемикає одну гру, Y інвертує вибір, B спочатку очищає вибір
+- [x] HIST-GAMES-COMMON-ACTIONS — меню показує лише спільно застосовні типи dump для вибраних ігор
+- [x] HIST-GAMES-UX-240 — контрастні badges включно з `Без контенту`, виразні вкладки,
+  пояснення папки модів Atmosphere та об'єднана легенда L/R і ZL/ZR
 - [x] HIST-WEB-APPLET.1 — Runtime Mode UX, Title Mode guide і forwarder installer
 - [x] HIST-WEB-APPLET.2 — Applet worker profile, listener diagnostics і loopback self-test
 - [x] AUDIO-REMOVE — вилучено BGM, UI sounds, audio init, settings та `libpulsar`
-- [x] BUILD-RELEASE — Release NRO v0.13.239 зібрано; `git diff --check` пройдено
-- [ ] HW-SMOKE-239 — ручний smoke test на реальній Switch за `tests.md`
+- [x] BUILD-RELEASE — Release NRO v0.13.240 зібрано; `git diff --check` пройдено
+- [ ] HW-SMOKE-240 — ручний smoke test на реальній Switch за `tests.md`
 
 ## Черга реалізації
 

@@ -399,3 +399,13 @@
 - [x] HIST-GAMES-STORAGE — selected-title segment у NAND/SD bars.
 - [x] AUTO-GATE — Release NRO зібрано, `git diff --check` пройдено.
 - [ ] HW-SMOKE-239 — залишено як ручний gate у `tests.md`.
+
+## v0.13.240 — Games selection і контрастний Details UX (2026-07-16)
+
+- [x] HIST-GAMES-SELECTION — X/Y узгоджено із Saves; B очищає активне виділення.
+- [x] HIST-GAMES-COMMON-ACTIONS — групове меню обмежує dump спільними типами контенту,
+  а save/mod-folder/delete працюють для всього вибору.
+- [x] HIST-GAMES-UX-240 — контрастні badges, стан `Без контенту`, карткові вкладки,
+  пояснення LayeredFS та об'єднані підказки `L/R`, `ZL/ZR`.
+- [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
+- [ ] HW-SMOKE-240 — залишено як ручний gate у `tests.md`.

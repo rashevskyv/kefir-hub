@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.239**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.240**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.239
+## Автоматичні gates v0.13.240
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.239 на Switch
+## P0 smoke test v0.13.240 на Switch
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -50,6 +50,14 @@
   лише у відповідному bar і пропорційний сумі фактичних NCM content sizes.
 - [ ] На вкладці Tickets звірити rights ID, key generation і Common/Personalized/
   Missing з DBI. На Saves звірити користувача, type, save ID та size.
+- [ ] Перевірити контраст badges у світлій і темній темах; гра без Base/Update/DLC має badge
+  `Без контенту`, а наявна папка `/atmosphere/contents/<Title ID>` — окремий `LayeredFS`.
+- [ ] X перемикає поточну гру, Y інвертує весь вибір, B спочатку очищає вибір; лічильник вибраних
+  і рамки оновлюються без повторного входу в Games.
+- [ ] Для двох вибраних ігор `Game Options` показує dump типу лише коли він є в обох;
+  створення сейвів, папок модів і видалення застосовується до обох ігор.
+- [ ] У Details активна вкладка виглядає піднятою світлою карткою, неактивні — темними;
+  легенда показує один пункт `L/R` для гри та один `ZL/ZR` для вкладки.
 
 ### HIST-HTTP-RETRY — контрольоване завантаження
 
@@ -87,7 +95,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-239` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-240` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 

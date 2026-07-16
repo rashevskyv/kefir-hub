@@ -942,5 +942,22 @@
   "Previous tab": "Попередня вкладка",
   "Next tab": "Наступна вкладка",
   "Content": "Контент",
-  "Tickets": "Тікети"
+  "Tickets": "Тікети",
+  "Previous/Next game": "Попередня/наступна гра",
+  "Previous/Next tab": "Попередня/наступна вкладка",
+  "No content": "Без контенту",
+  "LIBRARY": "БІБЛІОТЕКА",
+  "SELECTED GAMES": "ВИБРАНІ ІГРИ",
+  "selected": "вибрано",
+  "Show mods folder path": "Показати шлях до папки модів",
+  "Create mods folder": "Створити папку модів",
+  "Create mods folders": "Створити папки модів",
+  "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod.": "LayeredFS використовує цю папку Atmosphere для заміни файлів гри модами. Створення порожньої папки не встановлює мод.",
+  "Create Atmosphere LayeredFS folders for all selected games.": "Створити папки Atmosphere LayeredFS для всіх вибраних ігор.",
+  "Manually create save data entries for all selected games.": "Створити записи збережень для всіх вибраних ігор.",
+  "Export content shared by all selected games as NSP files.": "Експортувати в NSP типи контенту, спільні для всіх вибраних ігор.",
+  "Are you sure you want to delete the selected games?": "Видалити всі вибрані ігри?",
+  "Permanently delete all selected games and their data.": "Назавжди видалити всі вибрані ігри та їхні дані.",
+  "Mods folder create failed!": "Не вдалося створити папку модів!",
+  "mods folder(s) ready": "папок модів готово"
 }

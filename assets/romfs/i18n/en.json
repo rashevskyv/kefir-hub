@@ -925,5 +925,22 @@
   "Previous tab": "Previous tab",
   "Next tab": "Next tab",
   "Content": "Content",
-  "Tickets": "Tickets"
+  "Tickets": "Tickets",
+  "Previous/Next game": "Previous/Next game",
+  "Previous/Next tab": "Previous/Next tab",
+  "No content": "No content",
+  "LIBRARY": "LIBRARY",
+  "SELECTED GAMES": "SELECTED GAMES",
+  "selected": "selected",
+  "Show mods folder path": "Show mods folder path",
+  "Create mods folder": "Create mods folder",
+  "Create mods folders": "Create mods folders",
+  "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod.": "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod.",
+  "Create Atmosphere LayeredFS folders for all selected games.": "Create Atmosphere LayeredFS folders for all selected games.",
+  "Manually create save data entries for all selected games.": "Manually create save data entries for all selected games.",
+  "Export content shared by all selected games as NSP files.": "Export content shared by all selected games as NSP files.",
+  "Are you sure you want to delete the selected games?": "Are you sure you want to delete the selected games?",
+  "Permanently delete all selected games and their data.": "Permanently delete all selected games and their data.",
+  "Mods folder create failed!": "Mods folder create failed!",
+  "mods folder(s) ready": "mods folder(s) ready"
 }
