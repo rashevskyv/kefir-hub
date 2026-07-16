@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.240**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.241**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.240
+## Автоматичні gates v0.13.241
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.240 на Switch
+## P0 smoke test v0.13.241 на Switch
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -88,6 +88,13 @@
 
 ### Загальна регресія
 
+- [ ] У `Settings -> Sources` відкрити SMB-джерело, змінити `Протокол` на WebDAV:
+  форма одразу показує URL/логін/пароль, URL має WebDAV-схему, а тест використовує WebDAV.
+- [ ] Послідовно змінити те саме джерело WebDAV → FTP → HTTP → SMB; перевірити стандартний
+  FTP-порт 21, очищення прихованих HTTP-реквізитів і появу SMB-полів server/share.
+- [ ] Якщо змінене джерело було активним WebDAV для сейвів, після переходу на інший протокол
+  воно більше не використовується для синхронізації; інші джерела не змінюються.
+
 - [ ] File Browser: SD, System Root, SMB/WebDAV/FTP/HTTP open/read/write/EOF.
 - [ ] Save Manager: ZIP backup/restore і WebDAV sync не змінилися.
 - [ ] Settings та Tools: controller/touch navigation, focus і scrolling.
@@ -95,7 +102,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-240` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-241` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 

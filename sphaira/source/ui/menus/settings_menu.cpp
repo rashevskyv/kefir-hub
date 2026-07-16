@@ -1917,6 +1917,67 @@ void TranslateMenu::OnSelect() {
     }
 }
 
+namespace {
+
+auto GetLocationProtocol(const location::Entry& loc) -> std::string {
+    if (!loc.protocol.empty()) {
+        return loc.protocol;
+    }
+    if (loc.url.starts_with("smb://")) {
+        return "smb";
+    }
+    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
+        return "ftp";
+    }
+    if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) {
+        return "webdav";
+    }
+    return "webdav";
+}
+
+auto GetLocationProtocolLabel(const std::string& protocol) -> std::string {
+    if (protocol == "smb") {
+        return "Samba (SMB)";
+    }
+    if (protocol == "ftp") {
+        return "FTP";
+    }
+    if (protocol == "http") {
+        return "HTTP";
+    }
+    return "WebDAV";
+}
+
+void ChangeLocationProtocol(location::Entry& loc, const std::string& protocol) {
+    std::string address;
+    if (const auto scheme = loc.url.find("://"); scheme != std::string::npos) {
+        address = loc.url.substr(scheme + 3);
+    }
+
+    loc.protocol = protocol;
+    loc.bearer.clear();
+    loc.pub_key.clear();
+    loc.priv_key.clear();
+
+    if (protocol == "smb") {
+        loc.url = "smb://" + address;
+        loc.port = 0;
+    } else if (protocol == "webdav") {
+        loc.url = "webdav://" + address;
+        loc.port = 0;
+    } else if (protocol == "ftp") {
+        loc.url = "ftp://" + address;
+        loc.port = 21;
+    } else {
+        loc.url = "http://" + address;
+        loc.port = 0;
+        loc.user.clear();
+        loc.pass.clear();
+    }
+}
+
+} // namespace
+
 SourceEditMenu::SourceEditMenu(std::string name) : MenuBase{name, MenuFlag_None}, m_loc_name{name} {
     m_items = BuildEditItems();
     this->SetActions(
@@ -2013,13 +2074,46 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
     }
     location::Entry loc = *it;
 
-    std::string proto = loc.protocol;
-    if (proto.empty()) {
-        if (loc.url.starts_with("smb://")) proto = "smb";
-        else if (loc.url.starts_with("ftp://")) proto = "ftp";
-        else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
-        else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
-    }
+    const auto proto = GetLocationProtocol(loc);
+
+    items.emplace_back(SettingsItem{
+        "Protocol"_i18n,
+        "Change the network protocol and edit the fields required by the new source type."_i18n,
+        [proto](){ return GetLocationProtocolLabel(proto); },
+        [this, proto]() {
+            PopupList::Items protocols = {"Samba (SMB)", "WebDAV", "FTP", "HTTP"};
+            App::Push<PopupList>("Select Protocol"_i18n, protocols, [this, proto](auto op_index) {
+                if (!op_index) {
+                    return;
+                }
+
+                constexpr std::array protocol_values{"smb", "webdav", "ftp", "http"};
+                const auto selected = protocol_values[*op_index];
+                if (proto == selected) {
+                    return;
+                }
+
+                auto locations = location::Load();
+                const auto entry = std::ranges::find_if(locations, [this](const auto& candidate) {
+                    return candidate.name == m_loc_name;
+                });
+                if (entry == locations.end()) {
+                    return;
+                }
+
+                auto new_loc = *entry;
+                ChangeLocationProtocol(new_loc, selected);
+                location::Remove(new_loc.name);
+                location::Add(new_loc);
+                if (new_loc.name == App::GetWebdavUrlName() && new_loc.protocol != "webdav") {
+                    App::SetWebdavUrl("");
+                }
+                m_items = BuildEditItems();
+                SetIndex(0);
+                App::Notify("Source protocol changed."_i18n);
+            });
+        }
+    });
 
     if (proto == "smb") {
         std::string server, share;

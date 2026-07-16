@@ -17,27 +17,13 @@ void Add(const Entry& e) {
     }
 
     ini_puts(e.name.c_str(), "url", e.url.c_str(), paths::LOCATIONS.c_str());
-    if (!e.user.empty()) {
-        ini_puts(e.name.c_str(), "user", e.user.c_str(), paths::LOCATIONS.c_str());
-    }
-    if (!e.pass.empty()) {
-        ini_puts(e.name.c_str(), "pass", e.pass.c_str(), paths::LOCATIONS.c_str());
-    }
-    if (!e.bearer.empty()) {
-        ini_puts(e.name.c_str(), "bearer", e.bearer.c_str(), paths::LOCATIONS.c_str());
-    }
-    if (!e.pub_key.empty()) {
-        ini_puts(e.name.c_str(), "pub_key", e.pub_key.c_str(), paths::LOCATIONS.c_str());
-    }
-    if (!e.priv_key.empty()) {
-        ini_puts(e.name.c_str(), "priv_key", e.priv_key.c_str(), paths::LOCATIONS.c_str());
-    }
-    if (e.port) {
-        ini_putl(e.name.c_str(), "port", e.port, paths::LOCATIONS.c_str());
-    }
-    if (!e.protocol.empty()) {
-        ini_puts(e.name.c_str(), "protocol", e.protocol.c_str(), paths::LOCATIONS.c_str());
-    }
+    ini_puts(e.name.c_str(), "user", e.user.c_str(), paths::LOCATIONS.c_str());
+    ini_puts(e.name.c_str(), "pass", e.pass.c_str(), paths::LOCATIONS.c_str());
+    ini_puts(e.name.c_str(), "bearer", e.bearer.c_str(), paths::LOCATIONS.c_str());
+    ini_puts(e.name.c_str(), "pub_key", e.pub_key.c_str(), paths::LOCATIONS.c_str());
+    ini_puts(e.name.c_str(), "priv_key", e.priv_key.c_str(), paths::LOCATIONS.c_str());
+    ini_putl(e.name.c_str(), "port", e.port, paths::LOCATIONS.c_str());
+    ini_puts(e.name.c_str(), "protocol", e.protocol.c_str(), paths::LOCATIONS.c_str());
 }
 
 void Remove(const std::string& name) {

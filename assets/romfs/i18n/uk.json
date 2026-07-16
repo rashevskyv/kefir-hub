@@ -959,5 +959,8 @@
   "Are you sure you want to delete the selected games?": "Видалити всі вибрані ігри?",
   "Permanently delete all selected games and their data.": "Назавжди видалити всі вибрані ігри та їхні дані.",
   "Mods folder create failed!": "Не вдалося створити папку модів!",
-  "mods folder(s) ready": "папок модів готово"
+  "mods folder(s) ready": "папок модів готово",
+  "Protocol": "Протокол",
+  "Change the network protocol and edit the fields required by the new source type.": "Змінити мережевий протокол і відредагувати поля, потрібні новому типу джерела.",
+  "Source protocol changed.": "Протокол джерела змінено."
 }

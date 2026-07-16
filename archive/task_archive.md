@@ -409,3 +409,12 @@
   пояснення LayeredFS та об'єднані підказки `L/R`, `ZL/ZR`.
 - [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
 - [ ] HW-SMOKE-240 — залишено як ручний gate у `tests.md`.
+
+## v0.13.241 — зміна протоколу мережевого джерела (2026-07-16)
+
+- [x] SOURCES-PROTOCOL-EDIT — редактор джерела отримав вибір SMB/WebDAV/FTP/HTTP та
+  динамічний набір полів нового протоколу.
+- [x] SOURCES-CREDENTIAL-CLEANUP — порожні та несумісні порт/credentials більше не
+  залишаються приховано у `locations.ini`; активний WebDAV скидається після зміни типу.
+- [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
+- [ ] HW-SMOKE-241 — залишено як ручний gate у `tests.md`.

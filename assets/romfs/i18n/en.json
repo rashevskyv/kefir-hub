@@ -942,5 +942,8 @@
   "Are you sure you want to delete the selected games?": "Are you sure you want to delete the selected games?",
   "Permanently delete all selected games and their data.": "Permanently delete all selected games and their data.",
   "Mods folder create failed!": "Mods folder create failed!",
-  "mods folder(s) ready": "mods folder(s) ready"
+  "mods folder(s) ready": "mods folder(s) ready",
+  "Protocol": "Protocol",
+  "Change the network protocol and edit the fields required by the new source type.": "Change the network protocol and edit the fields required by the new source type.",
+  "Source protocol changed.": "Source protocol changed."
 }
