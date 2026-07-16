@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.241**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.242**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.241
+## Автоматичні gates v0.13.242
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.241 на Switch
+## P0 smoke test v0.13.242 на Switch
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -45,7 +45,11 @@
 - [ ] У Grid, Grid Detail і HB Menu прокрутити перший/останній рядок: картки,
   badges, focus glow і touch area не заходять вище y=87 або нижче y=646.
 - [ ] Для Base-only, Base+Update, Base+DLC і LayeredFS звірити badges з DBI та
-  `/atmosphere/contents/<title id>`; довгі комбінації переносяться всередині icon.
+  `/atmosphere/contents/<title id>`; усі комбінації залишаються всередині картки гри.
+- [ ] У Grid, Grid Detail і HB Menu лейбочки Base/DLC/Update/LayeredFS стоять строго
+  одна під одною, мають синій/фіолетовий/помаранчевий/зелений фон і читабельний білий текст.
+- [ ] Гра без Base, DLC, Update і LayeredFS після завершення scan має одну червону
+  лейбочку з білим `-`; для гри лише з LayeredFS мінус не показується.
 - [ ] Виділяти ігри на NAND, SD і mixed storage: контрастний сегмент з'являється
   лише у відповідному bar і пропорційний сумі фактичних NCM content sizes.
 - [ ] На вкладці Tickets звірити rights ID, key generation і Common/Personalized/
@@ -102,7 +106,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-241` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-242` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 

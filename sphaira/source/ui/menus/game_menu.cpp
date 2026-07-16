@@ -491,48 +491,52 @@ Result LoadGameSummary(Entry& entry) {
 }
 
 void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entry) {
-    struct Badge { std::string text; NVGcolor colour; };
+    struct Badge { const char* text; NVGcolor colour; };
     std::array<Badge, 5> badges{};
     size_t count{};
 
     if (entry.content_flags & title::ContentFlag_Application) {
-        badges[count++] = {"Base"_i18n, nvgRGBA(0, 82, 190, 255)};
-    }
-    if (entry.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
-        badges[count++] = {"Update"_i18n, nvgRGBA(185, 82, 0, 255)};
+        badges[count++] = {"Base", nvgRGBA(0, 78, 190, 255)};
     }
     if (entry.content_flags & title::ContentFlag_AddOnContent) {
-        badges[count++] = {"DLC"_i18n, nvgRGBA(105, 35, 175, 255)};
+        badges[count++] = {"DLC", nvgRGBA(112, 35, 175, 255)};
     }
-    if (entry.summary_attempted && R_SUCCEEDED(entry.summary_result) && !entry.content_flags) {
-        badges[count++] = {"No content"_i18n, nvgRGBA(155, 28, 28, 255)};
+    if (entry.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
+        badges[count++] = {"Update", nvgRGBA(190, 76, 0, 255)};
     }
     if (entry.layeredfs) {
-        badges[count++] = {"LayeredFS"_i18n, nvgRGBA(0, 112, 66, 255)};
+        badges[count++] = {"LayeredFS", nvgRGBA(0, 112, 58, 255)};
+    }
+    if (entry.summary_attempted && R_SUCCEEDED(entry.summary_result) && !entry.content_flags && !entry.layeredfs) {
+        badges[count++] = {"-", nvgRGBA(180, 24, 24, 255)};
     }
 
     if (!count) {
         return;
     }
 
-    const float font = image.w < 80.f ? 10.f : 13.f;
-    const float height = font + 7.f;
-    float x = image.x + 5.f;
-    float y = image.y + 5.f;
+    const bool compact = image.w < 80.f;
+    const float font = compact ? 8.f : (image.w < 130.f ? 11.f : 13.f);
+    const float height = font + (compact ? 5.f : 7.f);
+    const float margin = compact ? 2.f : 5.f;
+    const float gap = compact ? 1.f : 3.f;
     float bounds[4]{};
+    float width = compact ? 20.f : 26.f;
     for (size_t i = 0; i < count; i++) {
         nvgFontSize(vg, font);
-        gfx::textBounds(vg, 0, 0, bounds, badges[i].text.c_str());
-        const float width = bounds[2] - bounds[0] + 10.f;
-        if (x + width > image.x + image.w - 4.f) {
-            x = image.x + 5.f;
-            y += height + 3.f;
-        }
+        gfx::textBounds(vg, 0, 0, bounds, badges[i].text);
+        width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
+    }
+    width = std::min(width, image.w - margin * 2.f);
+
+    const float x = image.x + margin;
+    float y = image.y + margin;
+    for (size_t i = 0; i < count; i++) {
         gfx::drawRect(vg, x - 1.f, y - 1.f, width + 2.f, height + 2.f, nvgRGBA(0, 0, 0, 255), 5.f);
         gfx::drawRect(vg, x, y, width, height, badges[i].colour, 4.f);
         gfx::drawText(vg, x + width * 0.5f, y + height * 0.5f, font,
-            nvgRGBA(255, 255, 255, 255), badges[i].text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        x += width + 3.f;
+            nvgRGBA(255, 255, 255, 255), badges[i].text, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        y += height + gap;
     }
 }
 
@@ -1478,7 +1482,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto selected = pos == m_index;
         const auto image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), title_id);
-        DrawGameBadges(vg, theme, image_v, e);
+        auto badge_v = image_v;
+        if (m_layout.Get() == grid::LayoutType_HbMenu) {
+            badge_v.y += 28.f;
+            badge_v.h -= 28.f;
+        }
+        DrawGameBadges(vg, theme, badge_v, e);
 
         if (e.selected) {
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_FOCUS), 5);
