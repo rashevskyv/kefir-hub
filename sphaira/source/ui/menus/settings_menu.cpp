@@ -1033,9 +1033,6 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                             e.SetOption(curl::Flags{curl::Flag_NoBody});
                             if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
                                 e.SetOption(curl::CustomRequest{"NLST"});
-                            } else {
-                                e.SetOption(curl::CustomRequest{"PROPFIND"});
-                                e.SetOption(curl::Header{ { "Depth", "0" } });
                             }
                             curl::ApiResult result = curl::ToMemory(e);
                             if (result.success) {
@@ -2178,9 +2175,6 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
                     e.SetOption(curl::Flags{curl::Flag_NoBody});
                     if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
                         e.SetOption(curl::CustomRequest{"NLST"});
-                    } else {
-                        e.SetOption(curl::CustomRequest{"PROPFIND"});
-                        e.SetOption(curl::Header{ { "Depth", "0" } });
                     }
                     curl::ApiResult result = curl::ToMemory(e);
                     if (result.success) {
