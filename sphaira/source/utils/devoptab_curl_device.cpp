@@ -411,30 +411,40 @@ int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags
     auto* state = static_cast<CurlFileState*>(fileStruct);
     *state = {};
 
+    state->curl = curl_easy_init();
+    if (!state->curl) {
+        return -ENOMEM;
+    }
+
     state->url = build_url(path, false);
     if (state->url.empty()) {
+        curl_easy_cleanup(state->curl);
+        state->curl = nullptr;
         return -EINVAL;
     }
 
     state->write_mode = (flags & (O_WRONLY | O_RDWR | O_CREAT));
 
     if (state->write_mode) {
-        state->pull_data = CreatePullData(transfer_curl, state->url, (flags & O_APPEND) != 0);
+        state->pull_data = CreatePullData(state->curl, state->url, (flags & O_APPEND) != 0);
         if (!state->pull_data) {
+            curl_easy_cleanup(state->curl);
+            state->curl = nullptr;
             return -EIO;
         }
     } else {
-        curl_easy_reset(transfer_curl);
-        curl_set_common_options(transfer_curl, state->url);
-        curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
-        if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+        curl_set_common_options(state->curl, state->url);
+        curl_easy_setopt(state->curl, CURLOPT_NOBODY, 1L);
+        if (curl_easy_perform(state->curl) == CURLE_OK) {
             double cl{};
-            curl_easy_getinfo(transfer_curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
+            curl_easy_getinfo(state->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
             state->size = (cl > 0) ? (size_t)cl : 0;
         }
 
-        state->push_data = CreatePushData(transfer_curl, state->url, 0);
+        state->push_data = CreatePushData(state->curl, state->url, 0);
         if (!state->push_data) {
+            curl_easy_cleanup(state->curl);
+            state->curl = nullptr;
             return -EIO;
         }
     }
@@ -451,6 +461,10 @@ int MountCurlDevice::devoptab_close(void *fd) {
     if (state->pull_data) {
         delete state->pull_data;
         state->pull_data = nullptr;
+    }
+    if (state->curl) {
+        curl_easy_cleanup(state->curl);
+        state->curl = nullptr;
     }
     return 0;
 }
@@ -501,7 +515,7 @@ ssize_t MountCurlDevice::devoptab_seek(void *fd, off_t pos, int dir) {
             delete state->push_data;
         }
         state->offset = target_offset;
-        state->push_data = CreatePushData(transfer_curl, state->url, state->offset);
+        state->push_data = CreatePushData(state->curl, state->url, state->offset);
         if (!state->push_data) {
             return -EIO;
         }
@@ -514,7 +528,7 @@ int MountCurlDevice::devoptab_fstat(void *fd, struct stat *st) {
     auto* state = static_cast<CurlFileState*>(fd);
     std::memset(st, 0, sizeof(*st));
     st->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
-    if (!state->write_mode) {
+    if (state->write_mode) {
         st->st_mode |= S_IWUSR;
     }
     st->st_nlink = 1;
@@ -665,7 +679,8 @@ int MountCurlDevice::devoptab_dirnext(void* fd, char *filename, struct stat *fil
     }
 
     const auto& entry = state->entries[state->index++];
-    std::strncpy(filename, entry.name.c_str(), NAME_MAX);
+    std::strncpy(filename, entry.name.c_str(), NAME_MAX - 1);
+    filename[NAME_MAX - 1] = '\0';
     std::memcpy(filestat, &entry.st, sizeof(struct stat));
     return 0;
 }
@@ -797,4 +812,3 @@ int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
 }
 
 } // namespace sphaira::devoptab::common
-

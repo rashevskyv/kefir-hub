@@ -1,5 +1,54 @@
 # Архів виконаних задач (Task Archive)
 
+## Відновлено аудитом історії планів (2026-07-16)
+
+Під час архівації в `ba1442b` ці виконані задачі не потрапили ані до нового
+активного списку, ані до архіву. Статус повторно звірено з кодом:
+
+- [x] HIST-HTTP-RETRY — додано до `download.cpp` до трьох спроб файлового
+  HTTP-завантаження, продовження лише з уже записаного offset, restart при
+  відхиленому Range та збереження cancellation; підтверджено Release-збіркою
+  2026-07-16 (поточна робоча зміна, коміт ще не створено).
+- [x] HIST-44 / старий id 44 — Module Manager показує окремі стани `Now` та
+  `After reboot`, читає власний каталог описів; виконано у `ef5c9ea` (v0.13.213).
+- [x] HIST-46 / старий id 46 — viewport і focus outline Module Manager
+  виправлені у `ef5c9ea` (v0.13.213).
+- [x] HIST-47 / старий id 47 — WebDAV винесено у вкладені налаштування в
+  `24790ba`; після переходу на єдиний реєстр Sources екран відповідає за вибір
+  `Sync Location`, остаточна інтеграція — `14cab30` (v0.13.222).
+- [x] HIST-48 / старий id 48 — окремі touch viewport двох колонок Settings
+  реалізовані у `ef5c9ea` (v0.13.213).
+
+## Виконані роботи після первинного створення архіву
+
+- [x] Background audio removal 2026-07-16 — вилучено BFSTM theme music,
+  завантаження default music, конфіг `theme_music`, UI-перемикачі та весь runtime
+  системних звуків разом із залежністю `libpulsar`. Майбутній аудіоплеєр не входить
+  до поточного обсягу.
+
+- [x] Audit hardening 2026-07-16 — component dump із Game Details більше не
+  успадковує масове виділення; помилки `BuildNspEntries` не ігноруються.
+- [x] Audit hardening 2026-07-16 — HTTP retry обмежено файловим GET; помилка
+  локального запису не повторюється як мережева, а невдале truncation зупиняє
+  операцію без перейменування файла зі старим хвостом; перевіряється також
+  фінальний flush буфера перед перейменуванням.
+- [x] Audit hardening 2026-07-16 — додано централізовану Runtime Mode довідку,
+  видимі Applet fallback-и, listener diagnostics і HTTP loopback self-test.
+  Автентифікацію виключено з обсягу за явним рішенням власника foreground-сервера.
+
+- [x] v0.13.216–217 — перевірено й інтегровано локалізований sysmodule catalog.
+- [x] v0.13.219 — зміцнено SMB network sources.
+- [x] v0.13.220–224 — додано WebDAV/FTP/HTTP sources, єдину модель source для
+  saves, виправлено UAF і crash-поведінку.
+- [x] v0.13.225–230 — wrapping Settings, translation packages, фільтрацію
+  варіантів мови та стабільне оновлення списків.
+- [x] v0.13.231–236 — context sidebar джерел, connection test, URL copy,
+  відновлення focus/scroll, protocol labels і захист колізій назв.
+- [x] v0.13.237 — curl-devoptab browsing, System Root і connection badges.
+
+Повні описи останнього пакета залишаються в `implementation_plan.md` та Git
+історії; вони не вважаються активними задачами.
+
 - [x] Рефакторинг cheats_menu.cpp (Фаза 1):
     - [x] Крок 1.1: Виділення cheats/cheats_dmnt.hpp/.cpp (Helpers dmnt/dmntcht) <!-- id: r1.1 -->
     - [x] Крок 1.2: Виділення cheats/cheats_lookup.hpp/.cpp (InstalledNcaLookupResult, BuildIdLookupResult) <!-- id: r1.2 -->

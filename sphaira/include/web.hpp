@@ -14,6 +14,7 @@ class ProgressBox;
 struct WebShareResult {
     std::string url{};
     int qr_image{};
+    bool listener_self_test{};
 };
 
 struct WebUploadState {

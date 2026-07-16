@@ -100,7 +100,7 @@ Manage installed Atmosphere background sysmodules directly from the console inte
 ## Themes & Translations
 
 Sphaira features customizable theme options and multi-language support:
-- **Theme Options:** Choose interface themes, configure background music, and set time formats under "Settings -> Appearance -> Sphaira theme options".
+- **Theme Options:** Choose interface themes, animated background visuals, and time formats under "Settings -> Appearance -> Sphaira theme options".
 - **Interface Translations:** Manage and download translation files to customize your console interface language under "Kefir Settings -> Translate Interface".
 - **Full Localization & Sync:** Multi-language interface translations (14 supported languages: English, Japanese, French, German, Italian, Spanish, Chinese, Korean, Dutch, Portuguese, Russian, Swedish, Vietnamese, Ukrainian) are fully synchronized and translated, providing seamless native navigation for all interface texts and settings.
 - **Themezer Favorites:** Add any theme pack from Themezer to your favorites list by pressing **R3** (Right Stick click) in the Themezer download menu. Favorites are instantly shown on the main "Themes" tab alongside built-in options, marked with a star icon for easy access and offline viewing.
@@ -208,7 +208,6 @@ Kefir Hub is derived from Sphaira; upstream links and attribution are retained b
 - [nx-hbmenu](https://github.com/switchbrew/nx-hbmenu)
 - [nx-hbloader](https://github.com/switchbrew/nx-hbloader)
 - [deko3d-nanovg](https://github.com/Adubbz/nanovg-deko3d)
-- [libpulsar](https://github.com/p-sam/switch-libpulsar)
 - [minIni](https://github.com/compuphase/minIni)
 - [GBATemp](https://gbatemp.net/threads/sphaira-hbmenu-replacement.664523/)
 - [hb-appstore](https://github.com/fortheusers/hb-appstore)

@@ -37,6 +37,7 @@
 #include <cstring>
 #include <ctime>
 #include <format>
+#include <atomic>
 #include <optional>
 #include <ranges>
 #include <sstream>
@@ -732,6 +733,10 @@ void RefreshCheatMetadataCache() {
     const bool can_scan_nso = App::IsApplication();
     if (!can_scan_nso) {
         log_write("[Cheats] Bulk NSO build ID scan disabled in applet mode; caching title metadata only\n");
+        static std::atomic_bool applet_notice_shown{};
+        if (!applet_notice_shown.exchange(true)) {
+            App::Notify("Applet Mode: bulk NSO scan skipped; installed-content cheat lookup remains available"_i18n);
+        }
     }
 
     const auto games = EnumerateInstalledGames();

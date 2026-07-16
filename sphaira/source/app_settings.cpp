@@ -178,10 +178,6 @@ auto App::GetInstallReserveMb() -> long {
     return g_app->m_install_reserve_mb.Get();
 }
 
-auto App::GetThemeMusicEnable() -> bool {
-    return g_app->m_theme_music.Get();
-}
-
 auto App::GetAnimatedWavesEnable() -> bool {
     return g_app->m_animated_waves.Get();
 }
@@ -425,11 +421,6 @@ void App::SetInstallLocation(long location) {
 
 void App::SetInstallReserveMb(long reserve_mb) {
     g_app->m_install_reserve_mb.Set(reserve_mb);
-}
-
-void App::SetThemeMusicEnable(bool enable) {
-    g_app->m_theme_music.Set(enable);
-    PlaySoundEffect(SoundEffect::SoundEffect_Music);
 }
 
 void App::SetAnimatedWavesEnable(bool enable) {

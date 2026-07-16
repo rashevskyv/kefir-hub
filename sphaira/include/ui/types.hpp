@@ -1,7 +1,6 @@
 #pragma once
 
 #include "nanovg.h"
-#include "pulsar.h"
 #include "fs.hpp"
 
 #include <switch.h>

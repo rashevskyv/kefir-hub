@@ -12,6 +12,7 @@
 namespace sphaira::devoptab::common {
 
 struct CurlFileState {
+    CURL* curl{};
     PushThreadData* push_data{};
     PullThreadData* pull_data{};
     size_t offset{};

@@ -73,6 +73,22 @@ constexpr FsEntry FS_ENTRIES[]{
     { "Image microSD card", "/", FsType::ImageSd},
 };
 
+std::string MakeNetworkDeviceName(std::string_view url) {
+    u32 hash = 2166136261u;
+    for (const auto c : url) {
+        hash ^= static_cast<u8>(c);
+        hash *= 16777619u;
+    }
+
+    char name[16]{};
+    std::snprintf(name, sizeof(name), "net_%08x", hash);
+    return name;
+}
+
+std::string MakeNetworkRoot(std::string_view url) {
+    return MakeNetworkDeviceName(url) + ":/";
+}
+
 
 
 #ifdef BUILD_SMB2
@@ -380,8 +396,6 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
                 float check_x = box_x + box_size / 2.f;
                 float check_y = y + (h / 2.f) - (18.f / 2.f); // center vertically
 
-                const auto bg_col = theme->GetColour(ThemeEntryID_BACKGROUND);
-                float bg_lum = 0.2126f * bg_col.r + 0.7152f * bg_col.g + 0.0722f * bg_col.b;
                 NVGcolor outline_col = nvgRGBA(0, 0, 0, 255);
 
                 gfx::drawText(vg, check_x - 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
@@ -692,7 +706,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             } else {
                 for (const auto& loc : network_locations) {
                     if (loc.name == e.name) {
-                        std::string root_p = loc.IsSmb() ? "smb2:/" : (loc.protocol + "_" + loc.name + ":/");
+                        const auto root_p = loc.IsSmb() ? std::string{"smb2:/"} : MakeNetworkRoot(loc.url);
                         fe.virtual_target_entry.type = FsType::Network;
                         std::strcpy(fe.virtual_target_entry.name, loc.name.c_str());
                         std::strcpy(fe.virtual_target_entry.root, root_p.c_str());
@@ -919,12 +933,10 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
             break;
     }
 
+    m_path = new_path.empty() ? m_fs->Root() : new_path;
+
     if (HasFocus()) {
-        if (m_path.empty()) {
-            Scan(m_fs->Root());
-        } else {
-            Scan(m_path);
-        }
+        Scan(m_path);
     }
 }
 
@@ -1366,9 +1378,8 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
                 .read_only = target_entry.IsReadOnly()
             };
             auto device = std::make_unique<sphaira::devoptab::common::MountCurlDevice>(config);
-            std::string mount_name = target_entry.root.toString();
-            std::string dev_name = target_entry.name.toString();
-            std::replace(dev_name.begin(), dev_name.end(), ' ', '_');
+            const auto dev_name = MakeNetworkDeviceName(target_entry.url.toString());
+            const auto mount_name = MakeNetworkRoot(target_entry.url.toString());
 
             if (sphaira::devoptab::common::MountNetworkDevice2(std::move(device), config, sizeof(sphaira::devoptab::common::CurlFileState), sizeof(sphaira::devoptab::common::CurlDirState), dev_name.c_str(), mount_name.c_str())) {
                 R_SUCCEED();
@@ -1413,12 +1424,13 @@ void FsView::ShowSourcePicker() {
     for (const auto& e: network_locations) {
         FsEntry entry{
             .name = e.name,
-            .root = e.IsSmb() ? "smb2:/" : e.url,
+            .root = e.IsSmb() ? "smb2:/" : MakeNetworkRoot(e.url),
             .type = FsType::Network,
-            .flags = FsEntryFlag_ReadOnly,
+            .flags = FsEntryFlag_None,
             .url = e.url,
             .user = e.user,
-            .pass = e.pass
+            .pass = e.pass,
+            .port = e.port
         };
         fs_entries.emplace_back(entry);
 
@@ -1513,7 +1525,7 @@ Menu::~Menu() {
 }
 
 void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
-    std::string root_p = e.IsSmb() ? "smb2:/" : (e.protocol + "_" + e.name + ":/");
+    const auto root_p = e.IsSmb() ? std::string{"smb2:/"} : MakeNetworkRoot(e.url);
     FsEntry target_entry{};
     std::strcpy(target_entry.name, e.name.c_str());
     std::strcpy(target_entry.root, root_p.c_str());

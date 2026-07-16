@@ -272,8 +272,11 @@ void SendResponse(Socket sock, const char* status, const char* content_type, con
     SendString(sock, body);
 }
 
-auto ReadHttpRequest(Socket sock, std::string& out) -> bool {
+auto ReadHttpRequest(Socket sock, std::string& out, bool* header_too_large) -> bool {
     out.clear();
+    if (header_too_large) {
+        *header_too_large = false;
+    }
 
     for (u32 attempts = 0; attempts < 5000 && out.size() < HTTP_READ_LIMIT; attempts++) {
         char buf[512];
@@ -284,7 +287,7 @@ auto ReadHttpRequest(Socket sock, std::string& out) -> bool {
                 return true;
             }
         } else if (got == 0) {
-            return !out.empty();
+            return false;
         } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
             svcSleepThread(1'000'000);
         } else {
@@ -292,7 +295,12 @@ auto ReadHttpRequest(Socket sock, std::string& out) -> bool {
         }
     }
 
-    return !out.empty();
+    if (out.size() >= HTTP_READ_LIMIT && out.find("\r\n\r\n") == std::string::npos) {
+        if (header_too_large) {
+            *header_too_large = true;
+        }
+    }
+    return false;
 }
 
 auto HeaderValue(const std::string& req, std::string_view name) -> std::string {

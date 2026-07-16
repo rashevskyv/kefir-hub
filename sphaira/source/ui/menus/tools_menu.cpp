@@ -9,6 +9,7 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/sidebar.hpp"
+#include "ui/option_box.hpp"
 
 #include "ui/nvg_util.hpp"
 
@@ -16,6 +17,8 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "nro.hpp"
+#include "nacp_util.hpp"
 #include "stb_image.h"
 
 #include "web.hpp"
@@ -83,7 +86,7 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     return texture;
 }
 
-void StartShareServerFromTools() {
+void StartShareServerNow() {
     WebShareResult result;
     Result rc = WebShareFolder("/", result);
 
@@ -92,7 +95,63 @@ void StartShareServerFromTools() {
         return;
     }
 
+    if (!result.listener_self_test) {
+        App::Notify("Web listener started, but its local self-test failed; check the log or use Title Mode"_i18n);
+    }
+
     WebPushServerProgressBox(result.url, result.qr_image, "Web Sharing Server"_i18n);
+}
+
+void InstallTitleModeForwarder() {
+    OwoConfig config{};
+    config.nro_path = App::GetExePath().toString();
+
+    const auto rc = nro_get_nacp(App::GetExePath(), config.nacp);
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to read the current NRO metadata"_i18n);
+        return;
+    }
+
+    config.icon = nro_get_icon(App::GetExePath());
+    if (config.icon.empty()) {
+        App::PushErrorBox(FsError_PathNotFound, "The current NRO does not contain a forwarder icon"_i18n);
+        return;
+    }
+    config.name = nacp_util::GetName(config.nacp);
+    config.author = nacp_util::GetAuthor(config.nacp);
+
+    App::Push<OptionBox>(
+        "Install a HOME Menu forwarder for Kefir Hub?\n\n"
+        "This creates a Title Mode entry for the current NRO. After installation, "
+        "return to HOME and launch the new icon manually."_i18n,
+        "Back"_i18n, "Install"_i18n, 0, [config = std::move(config)](auto op_index) mutable {
+            if (op_index && *op_index) {
+                App::Install(config);
+            }
+        }
+    );
+}
+
+void StartShareServerFromTools() {
+    if (App::IsApplication()) {
+        StartShareServerNow();
+        return;
+    }
+
+    auto options = std::make_unique<Sidebar>("Web Server — Applet Mode"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>("Start anyway"_i18n, [](){
+        StartShareServerNow();
+    }, "Applet Mode is supported with smaller network buffers, but transfers may be slower or less reliable."_i18n);
+
+    options->Add<SidebarEntryCallback>("Install Title Mode forwarder"_i18n, [](){
+        InstallTitleModeForwarder();
+    }, true, "Install a HOME Menu icon for the current Kefir Hub NRO. Confirmation is required."_i18n);
+
+    options->Add<SidebarEntryCallback>("How to enter Title Mode"_i18n, [](){
+        App::ShowTitleModeHelp();
+    }, "Show the standard title-takeover instructions."_i18n);
 }
 
 } // namespace
@@ -288,6 +347,10 @@ void Menu::DisplayConnectionOptions() {
     options->Add<SidebarEntryCallback>("Web Server"_i18n, [](){
         StartShareServerFromTools();
     }, "Start the web sharing server to transfer files via web browser."_i18n);
+
+    options->Add<SidebarEntryCallback>(App::IsApplication() ? "Runtime Mode: Title"_i18n : "Runtime Mode: Applet"_i18n, [](){
+        App::ShowRuntimeModeInfo();
+    }, "Show which features are available or reduced in the current launch mode."_i18n);
 
 #if ENABLE_NETWORK_INSTALL
     options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){

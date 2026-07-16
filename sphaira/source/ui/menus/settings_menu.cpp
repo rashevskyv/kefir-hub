@@ -910,6 +910,11 @@ void Menu::OnFocusGained() {
 
     if (new_cat_index < m_categories.size()) {
         const auto& new_items = m_categories[new_cat_index].items;
+        if (new_items.empty()) {
+            m_item_index = 0;
+            m_item_list->SetYoff(0.f);
+            return;
+        }
         auto item_it = std::find_if(new_items.cbegin(), new_items.cend(), [&](const auto& item) {
             return item.label == item_label;
         });
@@ -1304,7 +1309,7 @@ void Menu::BuildCategories() {
         },
         {
             "Appearance"_i18n,
-            "Theme and audio options."_i18n,
+            "Theme and visual options."_i18n,
             {
                 { "Theme"_i18n, "Select the active Kefir Hub theme."_i18n, ThemeValue, [](){
                     const auto themes = App::GetThemeMetaList();
@@ -1320,9 +1325,8 @@ void Menu::BuildCategories() {
                         }, App::GetThemeIndex());
                     }
                 }},
-                MakeBoolItem("Music"_i18n, "Enable background music from the current theme."_i18n, App::GetThemeMusicEnable, App::SetThemeMusicEnable),
                 MakeBoolItem("Animated waves"_i18n, "Enable animated background waves in the bottom bar."_i18n, App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
-                { "Kefir Hub theme options"_i18n, "Select the Kefir Hub interface theme and music options."_i18n, [](){ return std::string{}; }, [](){
+                { "Kefir Hub theme options"_i18n, "Select the Kefir Hub interface theme and visual options."_i18n, [](){ return std::string{}; }, [](){
                     App::DisplayThemeOptions(false);
                 }, SettingsItemKind::Folder },
             }
@@ -1951,6 +1955,12 @@ void SourceEditMenu::OnFocusGained() {
     });
 
     s64 new_index = (it == m_items.cend()) ? saved_index : std::distance(m_items.cbegin(), it);
+    if (m_items.empty()) {
+        m_index = 0;
+        m_list->SetYoff(0.f);
+        return;
+    }
+    new_index = std::clamp<s64>(new_index, 0, static_cast<s64>(m_items.size() - 1));
     SetIndex(new_index);
     m_list->SetYoff(saved_yoff);
 }

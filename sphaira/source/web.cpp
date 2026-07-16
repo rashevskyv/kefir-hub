@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -54,6 +55,7 @@ std::atomic_bool g_title_initialized{false};
 Thread g_share_threads[SHARE_WORKER_COUNT]{};
 size_t g_share_thread_count{};
 std::atomic_bool g_share_running{false};
+std::atomic_bool g_share_self_test{false};
 Socket g_share_socket{-1};
 u16 g_share_port{};
 
@@ -828,7 +830,11 @@ void HandleStatus(Socket sock) {
 
 void HandleRequest(Socket sock) {
     std::string req;
-    if (!ReadHttpRequest(sock, req)) {
+    bool header_too_large = false;
+    if (!ReadHttpRequest(sock, req, &header_too_large)) {
+        if (header_too_large) {
+            SendResponse(sock, "431 Request Header Fields Too Large", "text/plain", "Request headers are too large");
+        }
         return;
     }
 
@@ -969,6 +975,40 @@ void ShareThreadFunc(void*) {
     }
 }
 
+auto TestShareServerLoopback(u16 port) -> bool {
+    const auto client = socket(AF_INET, SOCK_STREAM, 0);
+    if (client < 0) {
+        log_write("[WEB] loopback socket() failed: %d %s\n", errno, std::strerror(errno));
+        return false;
+    }
+    ON_SCOPE_EXIT(close(client));
+
+    const timeval timeout{2, 0};
+    setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = htons(port);
+    if (connect(client, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
+        log_write("[WEB] loopback connect() failed on port %u: %d %s\n", port, errno, std::strerror(errno));
+        return false;
+    }
+
+    constexpr std::string_view request{"GET /status HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"};
+    if (!SendAll(client, request.data(), request.size())) {
+        log_write("[WEB] loopback request send failed on port %u\n", port);
+        return false;
+    }
+
+    char response[64]{};
+    const auto received = recv(client, response, sizeof(response) - 1, 0);
+    const bool passed = received > 0 && std::string_view{response, static_cast<size_t>(received)}.starts_with("HTTP/1.1 200");
+    log_write("[WEB] loopback listener self-test %s on port %u\n", passed ? "passed" : "failed", port);
+    return passed;
+}
+
 auto StartShareServer() -> Result {
     if (g_share_running) {
         R_SUCCEED();
@@ -977,6 +1017,7 @@ auto StartShareServer() -> Result {
     for (u16 port = SHARE_PORT_FIRST; port <= SHARE_PORT_LAST; port++) {
         const auto sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) {
+            log_write("[WEB] socket() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
             continue;
         }
 
@@ -993,11 +1034,13 @@ auto StartShareServer() -> Result {
         addr.sin_port = htons(port);
 
         if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
+            log_write("[WEB] bind() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
             close(sock);
             continue;
         }
 
         if (listen(sock, 4) < 0) {
+            log_write("[WEB] listen() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
             close(sock);
             continue;
         }
@@ -1007,8 +1050,9 @@ auto StartShareServer() -> Result {
         g_share_port = port;
         g_share_running = true;
 
+        const size_t target_worker_count = App::IsApplet() ? 2 : SHARE_WORKER_COUNT;
         size_t started = 0;
-        for (; started < SHARE_WORKER_COUNT; started++) {
+        for (; started < target_worker_count; started++) {
             Result rc = utils::CreateThread(&g_share_threads[started], ShareThreadFunc, nullptr, 1024 * 128, PRIO_PREEMPTIVE);
             if (R_SUCCEEDED(rc)) {
                 rc = threadStart(&g_share_threads[started]);
@@ -1017,6 +1061,8 @@ auto StartShareServer() -> Result {
                 }
             }
             if (R_FAILED(rc)) {
+                log_write("[WEB] failed to start worker %u/%u: 0x%X\n",
+                    static_cast<unsigned>(started + 1), static_cast<unsigned>(target_worker_count), rc);
                 break;
             }
         }
@@ -1029,6 +1075,9 @@ auto StartShareServer() -> Result {
         }
 
         g_share_thread_count = started;
+        g_share_self_test = TestShareServerLoopback(port);
+        log_write("[WEB] listening on port %u with %u worker(s), mode=%s\n", port,
+            static_cast<unsigned>(started), App::IsApplet() ? "applet" : "title");
         R_SUCCEED();
     }
 
@@ -1150,6 +1199,7 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
 
     out.url = url;
     out.qr_image = CreateQrImage(out.url);
+    out.listener_self_test = g_share_self_test;
 
     R_SUCCEED();
 }
@@ -1170,6 +1220,7 @@ void WebShareStop() {
         }
         g_share_thread_count = 0;
         g_share_port = 0;
+        g_share_self_test = false;
     }
 
     if (g_title_initialized.exchange(false)) {
@@ -1203,7 +1254,9 @@ ui::ProgressBox* WebGetProgressBox() {
 void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title) {
     App::Push<ui::ProgressBox>(qr_image, title, url,
         [url](ui::ProgressBox* pbox) -> Result {
-            pbox->NewTransferForce("Press B to Stop Server"_i18n);
+            pbox->NewTransferForce(App::IsApplet()
+                ? "Applet Mode: keep this screen open; use the same non-guest Wi-Fi. Press B to stop."_i18n
+                : "Press B to Stop Server"_i18n);
             WebSetProgressBox(pbox);
             ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
             std::string last_name;
@@ -1229,7 +1282,9 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
                         svcSleepThread(100'000'000LL);
                     }
                     if (!WebGetUploadState().active && !pbox->ShouldExit()) {
-                        pbox->NewTransferForce("Press B to Stop Server"_i18n);
+                        pbox->NewTransferForce(App::IsApplet()
+                            ? "Applet Mode: keep this screen open; use the same non-guest Wi-Fi. Press B to stop."_i18n
+                            : "Press B to Stop Server"_i18n);
                     }
                 }
                 svcSleepThread(100'000'000LL);

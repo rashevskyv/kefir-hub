@@ -2,7 +2,6 @@
 
 #include "nanovg.h"
 #include "nanovg/dk_renderer.hpp"
-#include "pulsar.h"
 #include "ui/widget.hpp"
 #include "ui/notification.hpp"
 #include "owo.hpp"
@@ -24,7 +23,6 @@
 namespace sphaira {
 
 enum SoundEffect {
-    SoundEffect_Music,
     SoundEffect_Focus,
     SoundEffect_Scroll,
     SoundEffect_Limit,
@@ -48,8 +46,6 @@ struct AmsEmummcPaths {
 // todo: why is this global???
 void DrawElement(float x, float y, float w, float h, ThemeEntryID id);
 void DrawElement(const Vec4&, ThemeEntryID id);
-void download_default_music();
-
 class App {
 public:
     App(const char* argv0);
@@ -125,7 +121,6 @@ public:
     static auto GetInstallSdEnable() -> bool;
     static auto GetInstallLocation() -> long;
     static auto GetInstallReserveMb() -> long;
-    static auto GetThemeMusicEnable() -> bool;
     static auto GetAnimatedWavesEnable() -> bool;
     static auto GetWaveColorDark() -> std::string;
     static auto GetWaveColorLight() -> std::string;
@@ -156,7 +151,6 @@ public:
     static void SetInstallLocation(long location);
     static void SetInstallReserveMb(long reserve_mb);
     static void SetInstallPrompt(bool enable);
-    static void SetThemeMusicEnable(bool enable);
     static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
     static void SetLanguage(long index, bool prompt_restart = true);
@@ -212,15 +206,8 @@ public:
         return !IsApplication();
     }
 
-    // returns true if launched in applet mode with a title suspended in the background.
-    static auto IsAppletWithSuspendedApp() -> bool {
-        R_UNLESS(IsApplet(), false);
-        R_TRY_RESULT(pmdmntInitialize(), false);
-        ON_SCOPE_EXIT(pmdmntExit());
-
-        u64 pid;
-        return R_SUCCEEDED(pmdmntGetApplicationProcessId(&pid));
-    }
+    static void ShowTitleModeHelp(const std::string& feature = {});
+    static void ShowRuntimeModeInfo();
 
     static auto IsEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;
@@ -347,7 +334,6 @@ public:
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};
     option::OptionString m_theme_path{INI_SECTION, "theme", DEFAULT_THEME_PATH};
-    option::OptionBool m_theme_music{INI_SECTION, "theme_music", true};
     option::OptionBool m_animated_waves{INI_SECTION, "animated_waves", true};
     option::OptionString m_wave_color_dark{INI_SECTION, "wave_color_dark", ""};
     option::OptionString m_wave_color_light{INI_SECTION, "wave_color_light", ""};
@@ -390,8 +376,6 @@ public:
 
     // todo: move this into it's own menu
     option::OptionLong m_text_scroll_speed{"accessibility", "text_scroll_speed", 1}; // normal
-
-    PLSR_PlayerSoundId m_sound_ids[SoundEffect_MAX]{};
 
 #ifdef USE_NVJPG
     nj::Decoder m_decoder;

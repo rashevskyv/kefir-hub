@@ -84,6 +84,7 @@ private:
 
     void DeleteGames();
     void DumpGames(u32 flags);
+    void DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selection);
     void CreateSaves(AccountUid uid);
 
 private:

@@ -24,9 +24,19 @@ namespace {
 
 RwLock g_rwlock{};
 
+void EnsureRwLockInitialized() {
+    static Mutex init_mutex{};
+    static bool initialized{};
+    SCOPED_MUTEX(&init_mutex);
+    if (!initialized) {
+        rwlockInit(&g_rwlock);
+        initialized = true;
+    }
+}
+
 // curl_url_strerror doesn't exist in the switch version of libcurl as its so old.
 // todo: update libcurl and send patches to dkp.
-const char* curl_url_strerror_wrap(CURLUcode code) {
+[[maybe_unused]] const char* curl_url_strerror_wrap(CURLUcode code) {
     switch (code) {
         case CURLUE_OK: return "No error";
         case CURLUE_BAD_HANDLE: return "Invalid handle";
@@ -140,12 +150,12 @@ ssize_t devoptab_read(struct _reent *r, void *fd, char *ptr, size_t len) {
 
     const auto ret = file->device->mount_device->devoptab_read(file->fd, ptr, len);
     if (ret < 0) {
-        log_write("[FILE] read failed: %d\n", -ret);
+        log_write("[FILE] read failed: %zd\n", -ret);
         return set_errno(r, -ret);
     }
 
     if (ret > 0) {
-        log_write("[FILE] read %zu bytes\n", ret);
+        log_write("[FILE] read %zd bytes\n", ret);
     }
     return ret;
 }
@@ -157,12 +167,12 @@ ssize_t devoptab_write(struct _reent *r, void *fd, const char *ptr, size_t len) 
 
     const auto ret = file->device->mount_device->devoptab_write(file->fd, ptr, len);
     if (ret < 0) {
-        log_write("[FILE] write failed: %d\n", -ret);
+        log_write("[FILE] write failed: %zd\n", -ret);
         return set_errno(r, -ret);
     }
 
     if (ret > 0) {
-        log_write("[FILE] write %zu bytes\n", ret);
+        log_write("[FILE] write %zd bytes\n", ret);
     }
     return ret;
 }
@@ -172,10 +182,10 @@ off_t devoptab_seek(struct _reent *r, void *fd, off_t pos, int dir) {
     SCOPED_RWLOCK(&g_rwlock, false);
     SCOPED_MUTEX(&file->device->mutex);
 
-    log_write("[FILE] seek pos: %lld dir: %d\n", pos, dir);
+    log_write("[FILE] seek pos: %lld dir: %d\n", static_cast<long long>(pos), dir);
     const auto ret = file->device->mount_device->devoptab_seek(file->fd, pos, dir);
     if (ret < 0) {
-        log_write("[FILE] seek failed: %d\n", -ret);
+        log_write("[FILE] seek failed: %lld\n", static_cast<long long>(-ret));
         set_errno(r, -ret);
         return 0;
     }
@@ -710,6 +720,9 @@ void LoadConfigsFromIni(const fs::FsPath& path, MountConfigs& out_configs) {
 }
 
 bool MountNetworkDevice2(std::unique_ptr<MountDevice>&& device, const MountConfig& config, size_t file_size, size_t dir_size, const char* name, const char* mount_name) {
+    EnsureRwLockInitialized();
+    SCOPED_RWLOCK(&g_rwlock, true);
+
     if (!device) {
         log_write("[DEVOPTAB] No device for %s\n", mount_name);
         return false;
@@ -804,19 +817,6 @@ bool MountReadOnlyIndexDevice(const CreateDeviceCallback& create_device, size_t 
 }
 
 Result MountNetworkDevice(const CreateDeviceCallback& create_device, size_t file_size, size_t dir_size, const char* name, bool force_read_only) {
-    {
-        static Mutex rw_lock_init_mutex{};
-        SCOPED_MUTEX(&rw_lock_init_mutex);
-
-        static bool rwlock_init{};
-        if (!rwlock_init) {
-            rwlockInit(&g_rwlock);
-            rwlock_init = true;
-        }
-    }
-
-    SCOPED_RWLOCK(&g_rwlock, true);
-
     fs::FsPath config_path{};
     std::snprintf(config_path, sizeof(config_path), "/config/hats-tools/mount/%s.ini", name);
 
@@ -854,6 +854,7 @@ Result MountNetworkDevice(const CreateDeviceCallback& create_device, size_t file
 }
 
 bool IsNetworkDeviceMounted(const std::string& url) {
+    EnsureRwLockInitialized();
     SCOPED_RWLOCK(&g_rwlock, false);
     for (const auto& entry : g_entries) {
         if (entry && entry->device.config.url == url) {
@@ -870,6 +871,7 @@ namespace sphaira::devoptab {
 using namespace sphaira::devoptab::common;
 
 Result GetNetworkDevices(location::StdioEntries& out) {
+    EnsureRwLockInitialized();
     SCOPED_RWLOCK(&g_rwlock, false);
     out.clear();
 
@@ -896,6 +898,7 @@ Result GetNetworkDevices(location::StdioEntries& out) {
 }
 
 void UmountAllNeworkDevices() {
+    EnsureRwLockInitialized();
     SCOPED_RWLOCK(&g_rwlock, true);
 
     for (auto& entry : g_entries) {
@@ -909,6 +912,7 @@ void UmountAllNeworkDevices() {
 }
 
 void UmountNeworkDevice(const fs::FsPath& mount) {
+    EnsureRwLockInitialized();
     SCOPED_RWLOCK(&g_rwlock, true);
 
     auto it = std::ranges::find_if(g_entries, [&](const auto& e){

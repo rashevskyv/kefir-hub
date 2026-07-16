@@ -26,7 +26,7 @@ auto SanitizeFileName(std::string name) -> std::string;
 auto SendAll(Socket sock, const void* buf, size_t size) -> bool;
 auto SendString(Socket sock, const std::string& str) -> bool;
 void SendResponse(Socket sock, const char* status, const char* content_type, const std::string& body);
-auto ReadHttpRequest(Socket sock, std::string& out) -> bool;
+auto ReadHttpRequest(Socket sock, std::string& out, bool* header_too_large = nullptr) -> bool;
 auto HeaderValue(const std::string& req, std::string_view name) -> std::string;
 auto JsonEscape(std::string_view in) -> std::string;
 auto IsImagePath(std::string_view name) -> bool;

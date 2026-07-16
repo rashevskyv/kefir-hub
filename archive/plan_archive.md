@@ -1,5 +1,17 @@
 # Архів плану впровадження (Plan Archive)
 
+> **Аудит цілісності 2026-07-16.** Коміт `ba1442b` створив цей архів, але не
+> переніс сім незавершених задач зі старого `task.md` (54–56, 60–62 і HTTP
+> range-retry), а також записи про виконані 44, 46, 47, 48. Незавершені задачі
+> відновлено в кореневих `plan.md`/`task.md`; виконані — у
+> `archive/task_archive.md`. Посилання нижче на відсутні історичні розділи 6,
+> 8.2, 8.3 і 14 тепер мають канонічні відповідники `HIST-HTTP-RETRY`,
+> `HIST-NFS-SFTP`, `HIST-PLAYER`, `HIST-44` та `HIST-46` у `plan.md`.
+> Повторний аудит реалізації 2026-07-16 також зафіксував hardening точкового
+> game-component dump, HTTP retry/truncation та Applet runtime diagnostics у
+> `archive/task_archive.md`; незавершені вкладки Game Details і ручну перевірку
+> Wi-Fi client isolation залишено активними. Web authentication виключено за рішенням власника.
+
 ## 1. Реорганізація інтерфейсу (UI) — ✅ РЕАЛІЗОВАНО (незакомічено)
 
 **Статус:** Повністю реалізовано у робочому дереві (uncommitted зміни в `sphaira/source/ui/menus/menu_base.cpp`, `sphaira/include/ui/menus/menu_base.hpp`). Залишилось: перевірити збірку, протестувати на консолі, закомітити.

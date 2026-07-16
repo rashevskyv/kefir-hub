@@ -7,7 +7,6 @@
 #include "image.hpp"
 
 #include <minIni.h>
-#include <pulsar.h>
 #include <dirent.h>
 #include <switch.h>
 #include <cstring>
@@ -20,7 +19,6 @@
 namespace sphaira {
 
 extern App* g_app;
-extern const fs::FsPath DEFAULT_MUSIC_PATH;
 
 constexpr const u8 DEFAULT_IMAGE_DATA[]{
     #embed <icons/default.png>
@@ -62,7 +60,6 @@ constexpr ThemeIdPair THEME_ENTRIES[] = {
 };
 
 struct ThemeData {
-    fs::FsPath music_path{DEFAULT_MUSIC_PATH};
     std::string elements[ThemeEntryID_MAX]{};
 };
 
@@ -134,14 +131,10 @@ void LoadThemeInternal(ThemeMeta meta, ThemeData& theme_data, int inherit_level 
         auto theme_data = static_cast<ThemeData*>(UserData);
 
         if (!std::strcmp(Section, "theme")) {
-            if (!std::strcmp(Key, "music")) {
-                theme_data->music_path = Value;
-            } else {
-                for (auto& e : THEME_ENTRIES) {
-                    if (!std::strcmp(Key, e.label)) {
-                        theme_data->elements[e.id] = Value;
-                        break;
-                    }
+            for (auto& e : THEME_ENTRIES) {
+                if (!std::strcmp(Key, e.label)) {
+                    theme_data->elements[e.id] = Value;
+                    break;
                 }
             }
         }
@@ -242,11 +235,6 @@ auto App::LoadElement(std::string_view value, ElementType type) -> ElementEntry 
 }
 
 void App::CloseTheme() {
-    if (m_sound_ids[SoundEffect_Music]) {
-        plsrPlayerFree(m_sound_ids[SoundEffect_Music]);
-        m_sound_ids[SoundEffect_Music] = nullptr;
-    }
-
     for (auto& e : m_theme.elements) {
         if (e.type == ElementType::Texture) {
             nvgDeleteImage(vg, e.texture);
@@ -270,17 +258,6 @@ void App::LoadTheme(const ThemeMeta& meta) {
         // load all assets / colours.
         for (auto& e : THEME_ENTRIES) {
             m_theme.elements[e.id] = LoadElement(theme_data.elements[e.id], e.type);
-        }
-
-        // load music
-        if (!theme_data.music_path.empty()) {
-            PLSR_BFSTM music_stream;
-            if (R_SUCCEEDED(plsrBFSTMOpen(theme_data.music_path, &music_stream))) {
-                if (R_SUCCEEDED(plsrPlayerLoadStream(&music_stream, &m_sound_ids[SoundEffect_Music]))) {
-                    PlaySoundEffect(SoundEffect_Music);
-                }
-                plsrBFSTMClose(&music_stream);
-            }
         }
     }
 }

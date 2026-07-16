@@ -426,6 +426,205 @@ Result CreateSave(u64 app_id, AccountUid uid) {
     R_SUCCEED();
 }
 
+struct GameComponentRow {
+    NsApplicationContentMetaStatus status{};
+    u64 size{};
+    u32 content_count{};
+    u32 rights_count{};
+};
+
+auto ContentFlagFromMetaType(u8 meta_type) -> u32 {
+    return title::ContentMetaTypeToContentFlag(meta_type);
+}
+
+struct DetailsMenu final : MenuBase {
+    DetailsMenu(Entry entry, std::function<void(u32)> dump_callback)
+    : MenuBase{"Game Details"_i18n, MenuFlag_None}
+    , m_entry{std::move(entry)}
+    , m_dump_callback{std::move(dump_callback)} {
+        SetTitleSubHeading(m_entry.GetName());
+
+        auto control = std::make_unique<NsApplicationControlData>();
+        u64 actual_size{};
+        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, m_entry.app_id, control.get(), sizeof(*control), &actual_size))) {
+            std::snprintf(m_display_version, sizeof(m_display_version), "%s", control->nacp.display_version);
+            m_supported_languages = __builtin_popcount(control->nacp.supported_language_flag);
+            m_save_size = control->nacp.user_account_save_data_size;
+            m_save_journal_size = control->nacp.user_account_save_data_journal_size;
+        }
+
+        m_layeredfs = fs::FsNativeSd().DirExists(title::GetContentsPath(m_entry.app_id));
+
+        title::MetaEntries entries;
+        m_load_result = GetMetaEntries(m_entry, entries);
+        if (R_SUCCEEDED(m_load_result)) {
+            for (const auto& status : entries) {
+                ContentInfoEntry info;
+                if (const auto rc = BuildContentEntry(status, info); R_FAILED(rc)) {
+                    if (R_SUCCEEDED(m_partial_load_result)) {
+                        m_partial_load_result = rc;
+                    }
+                    m_component_failures++;
+                    continue;
+                }
+
+                GameComponentRow row{};
+                row.status = status;
+                row.content_count = info.content_infos.size();
+                row.rights_count = info.ncm_rights_id.size();
+                for (const auto& content : info.content_infos) {
+                    u64 size{};
+                    ncmContentInfoSizeToU64(&content, &size);
+                    row.size += size;
+                }
+                m_components.emplace_back(row);
+            }
+        }
+
+        this->SetActions(
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
+            std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){ LaunchEntry(m_entry); }}),
+            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ ShowComponentActions(); }}),
+            std::make_pair(Button::START, Action{"Game actions"_i18n, [this](){ ShowGameActions(); }})
+        );
+
+        const Vec4 row{420, 245, 810, 66};
+        const Vec2 pad{0, 8};
+        m_list = std::make_unique<List>(1, 5, m_pos, row, pad);
+    }
+
+    auto GetShortTitle() const -> const char* override { return "Game Details"; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        m_list->OnUpdate(controller, touch, m_index, m_components.size(), [this](bool touch, auto index){
+            if (touch && m_index == index) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_index = index;
+            }
+        }, this);
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+
+        const auto text = theme->GetColour(ThemeEntryID_TEXT);
+        const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawRect(vg, 30, 90, 350, 555, theme->GetColour(ThemeEntryID_GRID));
+        gfx::drawImage(vg, 77, 115, 256, 256, m_entry.image ? m_entry.image : App::GetDefaultImage());
+
+        gfx::drawTextArgs(vg, 55, 395, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "%s", m_entry.GetName());
+        gfx::drawTextArgs(vg, 55, 428, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", m_entry.GetAuthor());
+        gfx::drawTextArgs(vg, 55, 470, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Title ID  %016lX", m_entry.app_id);
+        gfx::drawTextArgs(vg, 55, 500, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Version   %s", m_display_version[0] ? m_display_version : "—");
+        gfx::drawTextArgs(vg, 55, 530, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Languages %u", m_supported_languages);
+        gfx::drawTextArgs(vg, 55, 560, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Contents folder %s", m_layeredfs ? "Present" : "Absent");
+        gfx::drawTextArgs(vg, 55, 590, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Save quota %.2f MB + %.2f MB journal",
+            static_cast<double>(m_save_size) / 0x100000, static_cast<double>(m_save_journal_size) / 0x100000);
+
+        gfx::drawTextArgs(vg, 420, 105, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Installed components"_i18n.c_str());
+        gfx::drawTextArgs(vg, 420, 145, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info,
+            "Base, updates, DLC and data patches reported by NCM"_i18n.c_str());
+
+        if (R_FAILED(m_load_result)) {
+            gfx::drawTextArgs(vg, 420, 220, 21.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "Failed to load content metadata (0x%X)", m_load_result);
+            return;
+        }
+
+        if (m_components.empty()) {
+            gfx::drawTextArgs(vg, 420, 220, 21.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", "No installed components found"_i18n.c_str());
+            return;
+        }
+
+        if (m_component_failures) {
+            gfx::drawTextArgs(vg, 420, 185, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info,
+                "%u component(s) could not be read (0x%X)", m_component_failures, m_partial_load_result);
+        }
+
+        m_list->Draw(vg, theme, m_components.size(), [this](auto* vg, auto* theme, auto v, auto index){
+            const auto& component = m_components[index];
+            const bool selected = index == m_index;
+            const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+            const auto secondary = theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            }
+
+            gfx::drawTextArgs(vg, v.x + 18, v.y + 13, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+                "%s", ncm::GetMetaTypeStr(component.status.meta_type));
+            gfx::drawTextArgs(vg, v.x + 245, v.y + 14, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                "v%u · %s", component.status.version, ncm::GetStorageIdStr(component.status.storageID));
+            gfx::drawTextArgs(vg, v.x + 18, v.y + 42, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                "%.2f MB · %u contents · %u rights", static_cast<double>(component.size) / 0x100000,
+                component.content_count, component.rights_count);
+        });
+    }
+
+private:
+    void ShowComponentActions() {
+        if (m_components.empty()) {
+            return;
+        }
+
+        const auto component = m_components[m_index];
+        auto options = std::make_unique<Sidebar>("Component Actions"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        options->Add<SidebarEntryCallback>("Dump NSP"_i18n, [this, component](){
+            m_dump_callback(ContentFlagFromMetaType(component.status.meta_type));
+        }, true, "Export only this installed component as an NSP."_i18n);
+
+        options->Add<SidebarEntryCallback>("Content information"_i18n, [component](){
+            char message[512];
+            std::snprintf(message, sizeof(message),
+                "Title ID: %016lX\nType: %s\nVersion: %u\nStorage: %s\nSize: %.2f MB\nContent files: %u\nRights IDs: %u",
+                component.status.application_id, ncm::GetMetaTypeStr(component.status.meta_type), component.status.version,
+                ncm::GetStorageIdStr(component.status.storageID), static_cast<double>(component.size) / 0x100000,
+                component.content_count, component.rights_count);
+            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+        }, "Show the raw installed content metadata."_i18n);
+    }
+
+    void ShowGameActions() {
+        auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(m_entry); }, "Launch this game."_i18n);
+        options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){ m_dump_callback(title::ContentFlag_All); }, true,
+            "Export base, updates, DLC and data patches."_i18n);
+        options->Add<SidebarEntryCallback>(m_layeredfs ? "Show contents path"_i18n : "Create contents folder"_i18n, [this](){
+            if (m_layeredfs) {
+                App::Notify(title::GetContentsPath(m_entry.app_id).toString());
+                return;
+            }
+            const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(m_entry.app_id));
+            App::PushErrorBox(rc, "Folder create failed!"_i18n);
+            if (R_SUCCEEDED(rc)) {
+                m_layeredfs = true;
+                App::Notify("Folder created!"_i18n);
+            }
+        }, "Inspect or create the Atmosphere contents folder for this title."_i18n);
+    }
+
+private:
+    Entry m_entry{};
+    std::vector<GameComponentRow> m_components{};
+    std::unique_ptr<List> m_list{};
+    std::function<void(u32)> m_dump_callback{};
+    s64 m_index{};
+    Result m_load_result{};
+    Result m_partial_load_result{};
+    u32 m_component_failures{};
+    char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
+    u32 m_supported_languages{};
+    u64 m_save_size{};
+    u64 m_save_journal_size{};
+    bool m_layeredfs{};
+};
+
 } // namespace
 
 Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
@@ -460,11 +659,17 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             SetPop();
         }}),
-        std::make_pair(Button::A, Action{"Launch"_i18n, [this](){
+        std::make_pair(Button::A, Action{"Details"_i18n, [this](){
             if (m_entries.empty()) {
                 return;
             }
-            LaunchEntry(m_entries[m_index]);
+            auto& entry = m_entries[m_index];
+            LoadControlEntry(entry, true);
+            App::Push<DetailsMenu>(entry, [this, entry](u32 flags) mutable {
+                std::vector<Entry> targets;
+                targets.emplace_back(entry);
+                DumpEntries(std::move(targets), flags, false);
+            });
         }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             auto options = std::make_unique<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
@@ -958,11 +1163,21 @@ void Menu::DeleteGames() {
 }
 
 void Menu::DumpGames(u32 flags) {
-    auto targets = GetSelectedEntries();
+    DumpEntries(GetSelectedEntries(), flags, true);
+}
 
+void Menu::DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selection) {
     std::vector<NspEntry> nsp_entries;
     for (auto& e : targets) {
-        BuildNspEntries(e, flags, nsp_entries);
+        if (const auto rc = BuildNspEntries(e, flags, nsp_entries); R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Failed to prepare NSP dump"_i18n);
+            return;
+        }
+    }
+
+    if (nsp_entries.empty()) {
+        App::Notify("No matching installed content to dump"_i18n);
+        return;
     }
 
     std::vector<fs::FsPath> paths;
@@ -971,8 +1186,10 @@ void Menu::DumpGames(u32 flags) {
     }
 
     auto source = std::make_shared<NspSource>(nsp_entries);
-    dump::Dump(source, paths, [this](Result rc){
-        ClearSelection();
+    dump::Dump(source, paths, [this, clear_selection](Result rc){
+        if (clear_selection) {
+            ClearSelection();
+        }
     });
 }
 

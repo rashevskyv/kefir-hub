@@ -28,7 +28,6 @@
 
 #include <nanovg_dk.h>
 #include <minIni.h>
-#include <pulsar.h>
 #include <algorithm>
 #include <ranges>
 #include <cassert>
@@ -44,37 +43,7 @@ extern "C" {
 
 namespace sphaira {
 constinit App* g_app{};
-extern const fs::FsPath DEFAULT_MUSIC_PATH = paths::THEMES + "default_music.bfstm";
 bool LoadThemeMeta(const fs::FsPath& path, ThemeMeta& meta);
-
-
-namespace {
-constexpr const char* DEFAULT_MUSIC_URL = "https://files.catbox.moe/1ovji1.bfstm";
-// constexpr const char* DEFAULT_MUSIC_URL = "https://raw.githubusercontent.com/ITotalJustice/sphaira/refs/heads/master/assets/default_music.bfstm";
-} // namespace
-
-void download_default_music() {
-    App::Push<ui::ProgressBox>(0, "Downloading "_i18n, "default_music.bfstm", [](auto pbox) -> Result {
-        const auto result = curl::Api().ToFile(
-            curl::Url{DEFAULT_MUSIC_URL},
-            curl::Path{DEFAULT_MUSIC_PATH},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()}
-        );
-
-        if (!result.success) {
-            R_THROW(Result_AppFailedMusicDownload);
-        }
-
-        R_SUCCEED();
-    }, [](Result rc){
-        App::PushErrorBox(rc, "Failed to download background music"_i18n);
-
-        if (R_SUCCEEDED(rc)) {
-            App::Notify("Downloaded "_i18n + "default_music.bfstm");
-            App::SetTheme(App::GetThemeIndex());
-        }
-    });
-}
 
 namespace {
 
@@ -730,7 +699,6 @@ App::App(const char* argv0) {
             else if (app->m_log_enabled.LoadFrom(Key, Value)) {}
             else if (app->m_replace_hbmenu.LoadFrom(Key, Value)) {}
             else if (app->m_theme_path.LoadFrom(Key, Value)) {}
-            else if (app->m_theme_music.LoadFrom(Key, Value)) {}
             else if (app->m_12hour_time.LoadFrom(Key, Value)) {}
             else if (app->m_language.LoadFrom(Key, Value)) {}
             else if (app->m_left_menu.LoadFrom(Key, Value)) {}
@@ -915,40 +883,6 @@ App::App(const char* argv0) {
         }
     }
 
-    // disable audio in applet mode with a suspended application due to audren fatal.
-    // see: https://github.com/ITotalJustice/sphaira/issues/92
-    if (IsAppletWithSuspendedApp()) {
-        App::Notify("Audio disabled due to suspended game"_i18n);
-    } else {
-        plsrPlayerInit();
-    }
-
-    if (R_SUCCEEDED(romfsMountDataStorageFromProgram(0x0100000000001000, "qlaunch"))) {
-        ON_SCOPE_EXIT(romfsUnmount("qlaunch"));
-        PLSR_BFSAR qlaunch_bfsar;
-        if (R_SUCCEEDED(plsrBFSAROpen("qlaunch:/sound/qlaunch.bfsar", &qlaunch_bfsar))) {
-            ON_SCOPE_EXIT(plsrBFSARClose(&qlaunch_bfsar));
-
-            const auto load_sound = [&](const char* name, u32 id) {
-                if (R_FAILED(plsrPlayerLoadSoundByName(&qlaunch_bfsar, name, &m_sound_ids[id]))) {
-                    log_write("[PLSR] failed to load sound effect: %s\n", name);
-                }
-            };
-
-            load_sound("SeGameIconFocus", SoundEffect_Focus);
-            load_sound("SeGameIconScroll", SoundEffect_Scroll);
-            load_sound("SeGameIconLimit", SoundEffect_Limit);
-            load_sound("StartupMenu_Game", SoundEffect_Startup);
-            load_sound("SeGameIconAdd", SoundEffect_Install);
-            load_sound("SeInsertError", SoundEffect_Error);
-
-            plsrPlayerSetVolume(m_sound_ids[SoundEffect_Limit], 2.0f);
-            plsrPlayerSetVolume(m_sound_ids[SoundEffect_Focus], 0.5f);
-        }
-    } else {
-        log_write("failed to mount romfs 0x0100000000001000\n");
-    }
-
     ScanThemeEntries();
 
     // try and load previous theme, default to previous version otherwise.
@@ -1004,18 +938,7 @@ App::App(const char* argv0) {
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());
 }
 
-void App::PlaySoundEffect(SoundEffect effect) {
-    // Stop and free the last loaded sound
-	const auto id = g_app->m_sound_ids[effect];
-    if (plsrPlayerIsPlaying(id)) {
-        plsrPlayerStop(id);
-        plsrPlayerWaitNextFrame();
-    }
-    if (effect == SoundEffect_Music && !App::GetThemeMusicEnable()) {
-        return;
-    }
-    plsrPlayerPlay(id);
-}
+void App::PlaySoundEffect(SoundEffect) {}
 
 App::~App() {
     // boost mode is disabled in userAppExit().
@@ -1062,16 +985,6 @@ App::~App() {
 
     ini_puts("config", "theme", m_theme.meta.ini_path, CONFIG_PATH);
     CloseTheme();
-
-    // Free any loaded sound from memory
-    for (auto id : m_sound_ids) {
-        if (id) {
-            plsrPlayerFree(id);
-        }
-    }
-
-	// De-initialize our player
-    plsrPlayerExit();
 
     nvgDeleteDk(this->vg);
     this->renderer.reset();

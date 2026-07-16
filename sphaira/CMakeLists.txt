@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.237)
+set(sphaira_VERSION 0.13.238)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -218,11 +218,6 @@ FetchContent_Declare(libhaze
     GIT_TAG 0be1523
 )
 
-FetchContent_Declare(libpulsar
-    GIT_REPOSITORY https://github.com/ITotalJustice/switch-libpulsar.git
-    GIT_TAG de656e4
-)
-
 FetchContent_Declare(nanovg
     GIT_REPOSITORY https://github.com/ITotalJustice/nanovg-deko3d.git
     GIT_TAG 845c9fc
@@ -324,7 +319,6 @@ add_compile_definitions(__SWITCH__)
 FetchContent_MakeAvailable(
     ftpsrv
     libhaze
-    libpulsar
     nanovg
     stb
     minIni
@@ -428,7 +422,6 @@ set_target_properties(sphaira PROPERTIES
 target_link_libraries(sphaira PRIVATE
     ftpsrv_helper
     libhaze
-    libpulsar
     minIni
     nanovg
     stb

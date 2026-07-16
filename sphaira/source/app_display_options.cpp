@@ -18,7 +18,24 @@
 namespace sphaira {
 
 extern App* g_app;
-extern const fs::FsPath DEFAULT_MUSIC_PATH;
+
+void App::ShowTitleModeHelp(const std::string& feature) {
+    std::string message;
+    if (!feature.empty()) {
+        message = feature + " requires Title Mode.\n\n";
+    }
+    message += "Recommended: hold R while launching an installed game and keep holding it "
+        "until hbmenu opens, then launch Kefir Hub. You can also install Kefir Hub's "
+        "HOME Menu forwarder from Tools -> Install & Share -> Web Server.";
+    App::Push<ui::OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+}
+
+void App::ShowRuntimeModeInfo() {
+    const std::string message = App::IsApplication()
+        ? "Current mode: Title Mode\n\nFull memory is available. The built-in browser, bulk NSO scanning and network services can use their normal resource profile."
+        : "Current mode: Applet Mode\n\nAvailable with reduced resources: file browsing, installs, save ZIP backups and the foreground web server. The web server may be slower; keep this screen open and use the same non-guest Wi-Fi.\n\nUnavailable or reduced: the built-in browser requires Title Mode and bulk NSO scanning is skipped. Installed-content cheat lookup still works.";
+    App::Push<ui::OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+}
 
 void App::DisplayThemeOptions(bool left_side) {
     ui::SidebarEntryArray::Items theme_items{};
@@ -34,32 +51,9 @@ void App::DisplayThemeOptions(bool left_side) {
         App::SetTheme(index_out);
     }, App::GetThemeIndex(), "Customise the look of Kefir Hub by changing the theme"_i18n);
 
-    options->Add<ui::SidebarEntryBool>("Music"_i18n, App::GetThemeMusicEnable(), [](bool& enable){
-        App::SetThemeMusicEnable(enable);
-    },  "Enable background music.\n"\
-        "Each theme can have it's own music file. "\
-        "If a theme does not set a music file, the default music is loaded instead (if it exists)."_i18n);
-
     options->Add<ui::SidebarEntryBool>("12 Hour Time"_i18n, App::Get12HourTimeEnable(), [](bool& enable){
         App::Set12HourTimeEnable(enable);
     }, "Changes the clock to 12 hour"_i18n);
-
-    options->Add<ui::SidebarEntryCallback>("Download Default Music"_i18n, [](){
-        // check if we already have music
-        if (fs::FileExists(DEFAULT_MUSIC_PATH)) {
-            App::Push<ui::OptionBox>(
-                "Overwrite current default music?"_i18n,
-                "No"_i18n, "Yes"_i18n, 0, [](auto op_index){
-                    if (op_index && *op_index) {
-                        download_default_music();
-                    }
-                }
-            );
-
-        } else {
-            download_default_music();
-        }
-    },  "Downloads the default background music for Kefir Hub."_i18n);
 }
 
 void App::DisplayNetworkOptions(bool left_side) {
@@ -114,6 +108,10 @@ void App::DisplayMiscOptions(bool left_side) {
         },
         "Launch the built-in web browser.\n\n",
         "NOTE: The browser is very limted, some websites will fail to load and there's a 30 minute timeout which closes the browser"_i18n);
+    } else {
+        options->Add<ui::SidebarEntryCallback>("Web (Title Mode required)"_i18n, [](){
+            App::ShowTitleModeHelp("The built-in browser"_i18n);
+        }, "Applet Mode cannot launch the system web browser. Shows instructions for entering Title Mode."_i18n);
     }
 }
 

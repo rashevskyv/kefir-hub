@@ -33,6 +33,8 @@ namespace {
 constexpr auto API_AGENT = "TotalJustice";
 constexpr u64 CHUNK_SIZE = 1024*1024;
 constexpr auto MAX_THREADS = 4;
+constexpr auto DOWNLOAD_MAX_ATTEMPTS = 3;
+constexpr u64 DOWNLOAD_RETRY_DELAY_NS = 250'000'000;
 constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
 constexpr int THREAD_CORE = 1;
 
@@ -55,6 +57,13 @@ struct DataStruct {
     s64 offset{};
     fs::File f{};
     s64 file_offset{};
+    s64 resume_offset{};
+    bool resume_rejected{};
+};
+
+struct DownloadHeaderContext {
+    Header* header{};
+    DataStruct* chunk{};
 };
 
 struct SeekCustomData {
@@ -513,6 +522,12 @@ auto WriteFileCallback(void *contents, size_t size, size_t num_files, void *user
     auto data_struct = static_cast<DataStruct*>(userp);
     const auto realsize = size * num_files;
 
+    // A server that ignores Range returns the complete file with HTTP 200.
+    // Abort before appending that body to the partial temporary file.
+    if (data_struct->resume_rejected) {
+        return 0;
+    }
+
     // flush data if incomming data would overflow the buffer
     if (data_struct->offset && data_struct->data.size() < data_struct->offset + realsize) {
         if (R_FAILED(data_struct->f.Write(data_struct->file_offset, data_struct->data.data(), data_struct->offset, FsWriteOption_None))) {
@@ -558,6 +573,35 @@ auto header_callback(char* b, size_t size, size_t nitems, void* userdata) -> siz
     }
 
     return numbytes;
+}
+
+auto download_header_callback(char* b, size_t size, size_t nitems, void* userdata) -> size_t {
+    auto context = static_cast<DownloadHeaderContext*>(userdata);
+    const auto numbytes = size * nitems;
+
+    if (context->chunk->resume_offset > 0 && b && numbytes >= 12 && std::memcmp(b, "HTTP/", 5) == 0) {
+        const auto status = static_cast<const char*>(std::memchr(b, ' ', numbytes));
+        if (status && status + 4 <= b + numbytes && std::memcmp(status + 1, "200", 3) == 0) {
+            context->chunk->resume_rejected = true;
+        }
+    }
+
+    return header_callback(b, size, nitems, context->header);
+}
+
+auto IsRetryableDownloadError(CURLcode result) -> bool {
+    switch (result) {
+        case CURLE_COULDNT_CONNECT:
+        case CURLE_PARTIAL_FILE:
+        case CURLE_OPERATION_TIMEDOUT:
+        case CURLE_RECV_ERROR:
+        case CURLE_SEND_ERROR:
+        case CURLE_GOT_NOTHING:
+        case CURLE_RANGE_ERROR:
+            return true;
+        default:
+            return false;
+    }
 }
 
 auto EscapeString(CURL* curl, const std::string& str) -> std::string {
@@ -717,6 +761,7 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     DataStruct chunk;
     Header header_in = e.GetHeader();
     Header header_out;
+    DownloadHeaderContext header_context{&header_out, &chunk};
     fs::FsNativeSd fs;
 
     if (has_file) {
@@ -746,8 +791,8 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     SetCommonCurlOptions(curl, e);
 
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_URL, encoded_url.c_str());
-    CURL_EASY_SETOPT_LOG(curl, CURLOPT_HEADERFUNCTION, header_callback);
-    CURL_EASY_SETOPT_LOG(curl, CURLOPT_HEADERDATA, &header_out);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_HEADERFUNCTION, download_header_callback);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_HEADERDATA, &header_context);
 
     if (has_post) {
         CURL_EASY_SETOPT_LOG(curl, CURLOPT_POSTFIELDS, e.GetFields().c_str());
@@ -783,8 +828,55 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_WRITEFUNCTION, has_file ? WriteFileCallback : WriteMemoryCallback);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_WRITEDATA, &chunk);
 
-    // perform download and cleanup after and report the result.
-    const auto res = curl_easy_perform(curl);
+    // Retry interrupted HTTP file downloads. Only bytes already persisted in the
+    // temporary file are used as the resume point; any in-memory tail is discarded.
+    const bool is_http = e.GetUrl().rfind("http://", 0) == 0 || e.GetUrl().rfind("https://", 0) == 0;
+    const bool is_get = !has_post && e.GetCustomRequest().empty() && !(e.GetFlags() & Flag_NoBody);
+    const bool can_retry_http = has_file && is_http && is_get;
+    const bool can_resume = can_retry_http && !(e.GetFlags() & Flag_Cache);
+    const auto max_attempts = can_retry_http ? DOWNLOAD_MAX_ATTEMPTS : 1;
+    CURLcode res = CURLE_OK;
+
+    for (int attempt = 1; attempt <= max_attempts; ++attempt) {
+        header_out.m_map.clear();
+        chunk.offset = 0;
+        chunk.resume_rejected = false;
+        chunk.resume_offset = can_resume ? chunk.file_offset : 0;
+
+        if (!can_resume && chunk.file_offset > 0) {
+            if (const auto rc = chunk.f.SetSize(0); R_FAILED(rc)) {
+                log_write("[CURL] failed to truncate temporary download before retry: 0x%X\n", rc);
+                res = CURLE_WRITE_ERROR;
+                break;
+            }
+            chunk.file_offset = 0;
+        }
+
+        CURL_EASY_SETOPT_LOG(curl, CURLOPT_RESUME_FROM_LARGE, static_cast<curl_off_t>(chunk.resume_offset));
+        res = curl_easy_perform(curl);
+        if (res == CURLE_OK) {
+            break;
+        }
+
+        if (chunk.resume_rejected) {
+            log_write("[CURL] server rejected resume at %lld; restarting download\n", static_cast<long long>(chunk.resume_offset));
+            if (const auto rc = chunk.f.SetSize(0); R_FAILED(rc)) {
+                log_write("[CURL] failed to truncate rejected partial download: 0x%X\n", rc);
+                res = CURLE_WRITE_ERROR;
+                break;
+            }
+            chunk.file_offset = 0;
+        }
+
+        const bool retryable = chunk.resume_rejected || IsRetryableDownloadError(res);
+        if (!g_running || e.GetToken().stop_requested() || !retryable || attempt == max_attempts) {
+            break;
+        }
+
+        log_write("[CURL] download attempt %d failed: %s; retrying\n", attempt, curl_easy_strerror(res));
+        svcSleepThread(DOWNLOAD_RETRY_DELAY_NS * attempt);
+    }
+
     bool success = res == CURLE_OK;
 
     long http_code = 0;
@@ -793,7 +885,11 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     if (has_file) {
         ON_SCOPE_EXIT( fs.DeleteFile(tmp_buf) );
         if (res == CURLE_OK && chunk.offset) {
-            chunk.f.Write(chunk.file_offset, chunk.data.data(), chunk.offset, FsWriteOption_None);
+            if (const auto rc = chunk.f.Write(chunk.file_offset, chunk.data.data(), chunk.offset, FsWriteOption_None); R_FAILED(rc)) {
+                log_write("[CURL] failed to flush final download chunk: 0x%X\n", rc);
+                res = CURLE_WRITE_ERROR;
+                success = false;
+            }
         }
 
         chunk.f.Close();

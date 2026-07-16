@@ -181,12 +181,10 @@ name) and use it in both.
 **Acceptance criteria.** Exactly one place computes the NAND/SD decision; web and
 container installs of the same file choose the same target.
 
-### P2-6b. Add an install-target strategy setting (feature note, not a bug)
-Per the author's intent, the automatic NAND-first-with-500 MB-reserve behavior
-should later become configurable in Settings — e.g. `Auto (NAND first)`,
-`Always SD`, `Always NAND`. Not part of this audit's fixes; recorded here so it
-isn't lost. When added, it should feed the single helper from P2-6 (the setting
-selects the strategy; the helper stays the one place that applies it).
+### P2-6b. [RESOLVED] Add an install-target strategy setting (feature note, not a bug)
+Settings now exposes SD only, NAND only, NAND→SD, SD→NAND, and Automatic
+strategies plus a configurable free-space reserve. The shared Yati helper from
+P2-6 handles every strategy.
 
 ### P2-7. Single-connection blocking server
 `ShareThreadFunc` (web.cpp:1872) accepts and fully handles one connection at a
@@ -195,19 +193,27 @@ navigation) is blocked. Acceptable for now; document the limitation. A future
 improvement is a small worker pool. No code change required this round unless
 trivial.
 
-### P2-8. ~30 KB of HTML/JS rebuilt per request
+### P2-8. [RESOLVED] ~30 KB of HTML/JS rebuilt per request
 `BuildFolderPage` concatenates a huge CSS+JS blob into a `std::string` on every
 request (web.cpp:539-1122) with hundreds of `body +=` calls. Move the static
 CSS/JS into `constexpr std::string_view` blobs and only interpolate the dynamic
 listing. Cuts per-request CPU/allocations and greatly improves readability.
 
-### P2-9. Minor cleanups
+**Result.** Static folder-page HTML, CSS, JavaScript, modals, and progress UI
+live in `web_pages.hpp` as `constexpr std::string_view` fragments;
+`BuildFolderPage` now builds only the path breadcrumbs and directory entries.
+
+### P2-9. [RESOLVED] Minor cleanups
 - Double semicolon `;;` at web.cpp:1113.
 - Magic numbers: `min_free_nand` (500 MB), `1.6` compression factor, port range,
   `HTTP_READ_LIMIT` — hoist to named constants.
 - `ReadHttpRequest` silently drops requests whose header block exceeds
   `HTTP_READ_LIMIT` (4096). Deep `path=` values can be legitimately long — raise
   the limit or return a clear error instead of a truncated parse.
+
+**Result.** The port range and request limit are named constants, the request
+limit is 16 KiB, oversized incomplete headers receive HTTP 431, and the install
+reserve/compression policy is centralized in Yati.
 
 ---
 

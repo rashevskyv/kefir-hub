@@ -1,6 +1,88 @@
-# Інструкція для тестування змін на реальній консолі (v0.13.198 — v0.13.229)
+# Канонічна матриця перевірок
 
-Цей файл містить перелік живих тестів, які необхідно виконати на реальній консолі Nintendo Switch для підтвердження коректності внесених змін у версіях з **v0.13.198** по поточну **v0.13.229**.
+Поточний пакет: **v0.13.238**, 2026-07-16. Позначення: `[x]` — перевірено в
+цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
+зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
+
+## Автоматичні gates v0.13.238
+
+- [x] Release configure/build:
+  `cmake --preset Release && cmake --build --preset Release --parallel 4`.
+- [x] Створено `build/Release/kefir-hub.nro`.
+- [x] `git diff --check` не знаходить whitespace-помилок.
+- [x] Усі `assets/romfs/i18n/*.json` проходять JSON parsing.
+- [x] У NRO немає `libpulsar`, `PLSR` або `default_music.bfstm`.
+- [x] Graphify-граф оновлено після змін коду.
+
+## P0 smoke test v0.13.238 на Switch
+
+### AUDIO-REMOVE — повністю без аудіо
+
+- [ ] Запустити Kefir Hub у Title Mode і Applet Mode.
+- [ ] Переміщатися списками, відкрити помилку й завершити тестове встановлення:
+  музика та UI-звуки не відтворюються, audio warning не з'являється.
+- [ ] У `Settings -> Appearance` немає `Music` і `Download Default Music`.
+- [ ] Зміна теми не відкриває BFSTM і не змінює стабільність Applet Mode.
+
+### HIST-61A — Game Details
+
+- [ ] Натиснути A на грі: відкривається Details, а не негайний launch.
+- [ ] Перевірити cover, name, author, Title ID, display version, language count,
+  `Contents folder` і `Save quota`.
+- [ ] Для гри з Base + Update + DLC звірити type, version, storage, size,
+  content count і rights count з DBI/NCM.
+- [ ] L3 запускає саме поточну гру; B повертає список без втрати focus.
+- [ ] Створити bulk selection з двох ігор, відкрити Details однієї та виконати
+  component dump: у `/dumps/NSP` потрапляє лише вибрана в Details гра.
+- [ ] Імітувати відсутні keys/помилку NCM: показується error/partial-load message,
+  а не порожній успішний dump.
+
+### HIST-HTTP-RETRY — контрольоване завантаження
+
+- [ ] Сервер підтримує Range: обірвати GET після запису частини файла; наступна
+  спроба надсилає Range і результат побітово збігається з оригіналом.
+- [ ] Сервер ігнорує Range та повертає 200: temp-файл обрізається і download
+  починається з нуля без stale tail.
+- [ ] POST/custom request/HEAD не повторюються автоматично.
+- [ ] Симулювати помилку SD/final flush: destination не перейменовується як success.
+- [ ] Cancel під час retry завершує операцію без наступної спроби.
+
+### HIST-WEB-APPLET — foreground server
+
+- [ ] У Title Mode `Web Server` стартує одразу, QR/URL відкривається з іншого
+  пристрою в тій самій мережі, upload/download/status працюють паралельно.
+- [ ] В Applet Mode спочатку показується chooser: `Start anyway`, forwarder,
+  Title Mode instructions.
+- [ ] Після `Start anyway` екран явно просить не закривати сервер і не
+  використовувати guest Wi-Fi; listener self-test проходить.
+- [ ] Перевірити порти 8080–8090: зайнятий порт пропускається, вибраний порт
+  показаний у URL, socket/bind/listen failure потрапляє в log.
+- [ ] Увімкнути client isolation: локальний self-test успішний, але зовнішнє
+  підключення не працює; після переходу на звичайну Wi-Fi мережу працює.
+- [ ] В Applet Mode пункт системного Web Browser видимий як недоступний і
+  відкриває Title Mode help замість мовчазного зникнення.
+- [ ] Forwarder install завжди просить підтвердження; після install запускається
+  вручну з HOME. Автозапуск не заявляється.
+
+### Загальна регресія
+
+- [ ] File Browser: SD, System Root, SMB/WebDAV/FTP/HTTP open/read/write/EOF.
+- [ ] Save Manager: ZIP backup/restore і WebDAV sync не змінилися.
+- [ ] Settings та Tools: controller/touch navigation, focus і scrolling.
+- [ ] Install/dump: cancel, error dialog і повернення в меню без зависання.
+
+## Hardware gates, що блокують архівацію
+
+- [ ] `HW-SMOKE-238` — повний P0 smoke suite вище.
+- [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
+- [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
+
+---
+
+## Legacy regression suite v0.13.198–v0.13.229
+
+Нижчі сценарії збережено без видалення як історичне покриття. Позначки в них
+не змінюють статус поточного v0.13.238 hardware gate.
 
 ---
 
