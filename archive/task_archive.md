@@ -443,3 +443,11 @@
   records без встановленого content-meta; Layout і forwarder filter також винесено нагору.
 - [x] AUTO-GATE — Release NRO зібрано, JSON і `git diff --check` перевірено.
 - [ ] HW-SMOKE-244 — залишено як ручний gate у `tests.md`.
+
+## v0.13.245 — Base marker і керування Game Details (2026-07-16)
+
+- [x] HIST-GAMES-BASE-245 — червоний `-` показує саме відсутність Base незалежно
+  від наявності DLC, Update або LayeredFS.
+- [x] HIST-GAMES-CONTROLS-245 — `L / R` перемикають вкладки, `ZL / ZR` — ігри.
+- [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
+- [ ] HW-SMOKE-245 — залишено як ручний gate у `tests.md`.

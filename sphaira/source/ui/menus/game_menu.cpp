@@ -507,11 +507,7 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     if (entry.layeredfs) {
         badges[count++] = {"LayeredFS", nvgRGBA(0, 112, 58, 255)};
     }
-    const bool metadata_unavailable = entry.status == title::NacpLoadStatus::Error ||
-        title::IsPlaceholderName(entry.GetName());
-    const bool no_installed_content = entry.summary_attempted && R_SUCCEEDED(entry.summary_result) &&
-        !entry.content_flags;
-    if ((metadata_unavailable || no_installed_content) && !entry.content_flags && !entry.layeredfs) {
+    if (!(entry.content_flags & title::ContentFlag_Application)) {
         badges[count++] = {"-", nvgRGBA(180, 24, 24, 255)};
     }
 
@@ -745,10 +741,10 @@ struct DbiDetailsMenu final : MenuBase {
     , m_selection_callback{std::move(selection_callback)} {
         this->SetActions(
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
-            std::make_pair(Button::L, Action{"Previous game"_i18n, [this](){ ChangeGame(-1); }}),
-            std::make_pair(Button::R, Action{"Next game"_i18n, [this](){ ChangeGame(1); }}),
-            std::make_pair(Button::L2, Action{"Previous tab"_i18n, [this](){ ChangeTab(-1); }}),
-            std::make_pair(Button::R2, Action{"Next tab"_i18n, [this](){ ChangeTab(1); }}),
+            std::make_pair(Button::L, Action{"Previous tab"_i18n, [this](){ ChangeTab(-1); }}),
+            std::make_pair(Button::R, Action{"Next tab"_i18n, [this](){ ChangeTab(1); }}),
+            std::make_pair(Button::L2, Action{"Previous game"_i18n, [this](){ ChangeGame(-1); }}),
+            std::make_pair(Button::R2, Action{"Next game"_i18n, [this](){ ChangeGame(1); }}),
             std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }}),
             std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ ShowCurrentActions(); }}),
             std::make_pair(Button::START, Action{"Game actions"_i18n, [this](){ ShowGameActions(); }})

@@ -3,7 +3,7 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.244
+## Поточний delivery: v0.13.245
 
 - [x] AUDIT-HISTORY — аудит останніх 5 комітів і всієї історії plan/task/archive
 - [x] HIST-HTTP-RETRY — GET-only retry/resume, restart без stale tail, final flush check
@@ -25,11 +25,13 @@
   і небезпечне блокування при повторному перегляді HTTP/WebDAV джерел
 - [x] HIST-GAMES-UNAVAILABLE-244 — metadata-error/application-record без встановленого
   контенту має червоний `-`; Game Options містить прямий show/hide toggle і Layout
+- [x] HIST-GAMES-BASE-245 — кожен запис без Base має червоний `-`; `L / R` перемикають
+  вкладки деталей, а `ZL / ZR` — попередню/наступну гру
 - [x] HIST-WEB-APPLET.1 — Runtime Mode UX, Title Mode guide і forwarder installer
 - [x] HIST-WEB-APPLET.2 — Applet worker profile, listener diagnostics і loopback self-test
 - [x] AUDIO-REMOVE — вилучено BGM, UI sounds, audio init, settings та `libpulsar`
-- [x] BUILD-RELEASE — Release NRO v0.13.244 зібрано; `git diff --check` пройдено
-- [ ] HW-SMOKE-244 — ручний smoke test на реальній Switch за `tests.md`
+- [x] BUILD-RELEASE — Release NRO v0.13.245 зібрано; `git diff --check` пройдено
+- [ ] HW-SMOKE-245 — ручний smoke test на реальній Switch за `tests.md`
 
 ## Черга реалізації
 
