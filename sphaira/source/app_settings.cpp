@@ -519,19 +519,21 @@ void App::SetFtpEnable(bool enable) {
     }
 }
 
-void App::SetLanguage(long index) {
+void App::SetLanguage(long index, bool prompt_restart) {
     if (App::GetLanguage() != index) {
         g_app->m_language.Set(index);
         on_i18n_change();
 
-        App::Push<ui::OptionBox>(
-            "Restart Kefir Hub?"_i18n,
-            "Back"_i18n, "Restart"_i18n, 1, [](auto op_index){
-                if (op_index && *op_index) {
-                    App::ExitRestart();
+        if (prompt_restart) {
+            App::Push<ui::OptionBox>(
+                "Restart Kefir Hub?"_i18n,
+                "Back"_i18n, "Restart"_i18n, 1, [](auto op_index){
+                    if (op_index && *op_index) {
+                        App::ExitRestart();
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 }
 

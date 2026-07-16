@@ -20,6 +20,8 @@
 #include "location.hpp"
 #include "download.hpp"
 #include "i18n.hpp"
+#include "location.hpp"
+
 #include "swkbd.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
@@ -664,9 +666,36 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                                         return InstallInterfaceTranslation(pbox, entry, dir);
                                     },
                                     [](Result rc){
-                                        if (R_FAILED(rc)) {
-                                            App::PushErrorBox(rc, "Failed to install translation"_i18n);
+                                        if (R_SUCCEEDED(rc)) {
+                                            return;
                                         }
+
+                                        if (rc == Result_TranslationRemoveExistingFailed) {
+                                            App::Push<OptionBox>(
+                                                "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again."_i18n,
+                                                "Cancel"_i18n, "Remove and reboot"_i18n, 1,
+                                                [](auto op_index){
+                                                    if (op_index && *op_index) {
+                                                        App::Push<ProgressBox>(
+                                                            0,
+                                                            "Removing"_i18n,
+                                                            "",
+                                                            [](auto pbox) -> Result {
+                                                                return RemoveInterfaceTranslationAndReboot(pbox);
+                                                            },
+                                                            [](Result remove_rc){
+                                                                if (R_FAILED(remove_rc)) {
+                                                                    App::PushErrorBox(remove_rc, "Failed to remove translation"_i18n);
+                                                                }
+                                                            }
+                                                        );
+                                                    }
+                                                }
+                                            );
+                                            return;
+                                        }
+
+                                        App::PushErrorBox(rc, "Failed to install translation"_i18n);
                                     }
                                 );
                             }
@@ -807,20 +836,16 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
             loc.name,
             loc.url,
             [](){ return std::string{}; },
-            [menu, loc](){
-                App::Push<OptionBox>(
-                    "Delete this network location?"_i18n,
-                    "No"_i18n, "Yes"_i18n, 0, [menu, loc](auto op_index){
-                        if (op_index && *op_index) {
-                            if (loc.name == App::GetWebdavUrlName()) {
-                                App::SetWebdavUrl("");
-                            }
-                            location::Remove(loc.name);
-                            App::Notify("Location deleted successfully!"_i18n);
-                            menu->OnFocusGained();
-                        }
+            [loc](){
+                if (loc.IsConfigured()) {
+                    if (loc.IsSmb()) {
+                        App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
+                    } else {
+                        App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
                     }
-                );
+                } else {
+                    App::Push<SourceEditMenu>(loc.name);
+                }
             },
             SettingsItemKind::Folder
         });
@@ -875,6 +900,8 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
+    if (m_categories.empty()) return;
+    const auto& category = m_categories[m_category_index];
     bool focus_changed = false;
     if (touch->is_clicked) {
         if (touch->in_range(m_category_list->GetPos())) {
@@ -916,7 +943,6 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             }
         }, this);
     } else {
-        const auto& category = m_categories[m_category_index];
         m_item_list->OnUpdate(controller, touch, m_item_index, category.items.size(), [this, focus_changed](bool touch, auto i) {
             if (touch && m_item_index == i) {
                 if (!focus_changed) {
@@ -927,6 +953,88 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 SetItemIndex(i);
             }
         }, this);
+    }
+
+    if (m_focus_pane == FocusPane::Items && category.label == "Sources"_i18n && m_item_index > 0) {
+        SetAction(Button::START, Action{"Options"_i18n, [this, category](){
+            const auto& item = category.items[m_item_index];
+            auto network_locations = location::Load();
+            auto it = std::find_if(network_locations.begin(), network_locations.end(), [&](const auto& e) {
+                return e.name == item.label;
+            });
+            if (it != network_locations.end()) {
+                location::Entry loc = *it;
+                PopupList::Items context_items = {"Enter/Connect"_i18n, "Edit"_i18n, "Rename"_i18n, "Properties"_i18n, "Delete"_i18n};
+                App::Push<PopupList>(loc.name, context_items, [this, loc](std::optional<s64> op_idx) {
+                    if (!op_idx) return;
+                    s64 idx = *op_idx;
+                    if (idx == 0) {
+                        // Enter/Connect
+                        if (loc.IsConfigured()) {
+                            if (loc.IsSmb()) {
+                                App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
+                            } else {
+                                App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
+                            }
+                        } else {
+                            App::Push<SourceEditMenu>(loc.name);
+                        }
+                    } else if (idx == 1) {
+                        // Edit
+                        App::Push<SourceEditMenu>(loc.name);
+                    } else if (idx == 2) {
+                        // Rename
+                        std::string out;
+                        if (R_SUCCEEDED(swkbd::ShowText(out, "Rename Network Location"_i18n.c_str(), loc.name.c_str()))) {
+                            if (!out.empty() && out != loc.name) {
+                                location::Remove(loc.name);
+                                location::Entry new_loc = loc;
+                                new_loc.name = out;
+                                location::Add(new_loc);
+                                App::Notify("Location renamed successfully!"_i18n);
+                                OnFocusGained();
+                            }
+                        }
+                    } else if (idx == 3) {
+                        // Properties
+                        std::string props = "Name: "_i18n + loc.name + "\n";
+                        std::string proto = loc.protocol;
+                        if (proto.empty()) {
+                            if (loc.IsSmb()) proto = "smb";
+                            else if (loc.url.starts_with("ftp://")) proto = "ftp";
+                            else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav"; // fallback
+                            else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
+                        }
+                        props += "Protocol: "_i18n + proto + "\n";
+                        props += "URL: "_i18n + loc.url + "\n";
+                        if (!loc.user.empty()) {
+                            props += "Username: "_i18n + loc.user + "\n";
+                        }
+                        if (loc.port) {
+                            props += "Port: "_i18n + std::to_string(loc.port) + "\n";
+                        }
+                        App::Push<OptionBox>(props, "OK"_i18n);
+                    } else if (idx == 4) {
+                        // Delete
+                        App::Push<OptionBox>(
+                            "Delete this network location?"_i18n,
+                            "No"_i18n, "Yes"_i18n, 0, [this, loc](auto op_delete_idx) {
+                                if (op_delete_idx && *op_delete_idx) {
+                                    if (loc.name == App::GetWebdavUrlName()) {
+                                        App::SetWebdavUrl("");
+                                    }
+                                    location::Remove(loc.name);
+                                    App::Notify("Location deleted successfully!"_i18n);
+                                    OnFocusGained();
+                                }
+                            }
+                        );
+                    }
+                });
+            }
+        }});
+    } else {
+        RemoveAction(Button::START);
     }
 }
 
@@ -1390,7 +1498,7 @@ SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     m_list->SetWrap(true);
@@ -1460,7 +1568,7 @@ DbiMenu::DbiMenu() : MenuBase{"DBI", MenuFlag_None} {
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     m_list->SetWrap(true);
@@ -1530,7 +1638,7 @@ KefirSettingsMenu::KefirSettingsMenu() : MenuBase{"Kefir Settings", MenuFlag_Non
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     m_list->SetWrap(true);
@@ -1600,7 +1708,7 @@ ThemesMenu::ThemesMenu() : MenuBase{"Themes", MenuFlag_None} {
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     m_list->SetWrap(true);
@@ -1680,7 +1788,7 @@ TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_N
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, m_pos, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     m_list->SetWrap(true);
@@ -1691,7 +1799,15 @@ TranslateMenu::~TranslateMenu() = default;
 
 void TranslateMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
-    SetIndex(m_index);
+    std::string item_label;
+    if (!m_items.empty()) {
+        item_label = m_items[m_index].label;
+    }
+    m_items = BuildTranslateItems();
+    auto it = std::find_if(m_items.cbegin(), m_items.cend(), [&](const auto& item) {
+        return item.label == item_label;
+    });
+    SetIndex(it == m_items.cend() ? m_index : std::distance(m_items.cbegin(), it));
 }
 
 void TranslateMenu::Update(Controller* controller, TouchInfo* touch) {
@@ -1729,6 +1845,226 @@ void TranslateMenu::OnSelect() {
     if (!m_items.empty() && m_items[m_index].action) {
         m_items[m_index].action();
     }
+}
+
+SourceEditMenu::SourceEditMenu(std::string name) : MenuBase{name, MenuFlag_None}, m_loc_name{name} {
+    m_items = BuildEditItems();
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Select"_i18n, [this](){
+            OnSelect();
+        }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+            SetPop();
+        }})
+    );
+
+    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    m_list->SetWrap(true);
+    SetIndex(0);
+}
+
+SourceEditMenu::~SourceEditMenu() = default;
+
+void SourceEditMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+    m_items = BuildEditItems();
+    SetIndex(m_index);
+}
+
+void SourceEditMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    }, this);
+}
+
+void SourceEditMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
+    });
+}
+
+void SourceEditMenu::SetIndex(s64 index) {
+    if (m_items.empty()) {
+        m_index = 0;
+        return;
+    }
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+    SetSubHeading(m_items[m_index].description);
+}
+
+void SourceEditMenu::OnSelect() {
+    if (!m_items.empty() && m_items[m_index].action) {
+        m_items[m_index].action();
+    }
+}
+
+std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
+    std::vector<SettingsItem> items;
+    auto network_locations = location::Load();
+    auto it = std::find_if(network_locations.begin(), network_locations.end(), [&](const auto& e) {
+        return e.name == m_loc_name;
+    });
+    if (it == network_locations.end()) {
+        return items;
+    }
+    location::Entry loc = *it;
+
+    std::string proto = loc.protocol;
+    if (proto.empty()) {
+        if (loc.url.starts_with("smb://")) proto = "smb";
+        else if (loc.url.starts_with("ftp://")) proto = "ftp";
+        else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
+        else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
+    }
+
+    if (proto == "smb") {
+        std::string server, share;
+        if (loc.url.rfind("smb://", 0) == 0) {
+            size_t host_start = 6;
+            size_t slash_pos = loc.url.find('/', host_start);
+            if (slash_pos == std::string::npos) {
+                server = loc.url.substr(host_start);
+                share = "";
+            } else {
+                server = loc.url.substr(host_start, slash_pos - host_start);
+                share = loc.url.substr(slash_pos + 1);
+            }
+        }
+
+        items.emplace_back(SettingsItem{
+            "Server IP / Hostname"_i18n,
+            "Samba server IP address or hostname."_i18n,
+            [server](){ return server; },
+            [this, loc, server, share]() mutable {
+                std::string out = server;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter server IP or hostname"_i18n.c_str(), server.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.url = "smb://" + out + "/" + share;
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+
+        items.emplace_back(SettingsItem{
+            "Share Name"_i18n,
+            "Samba shared folder name."_i18n,
+            [share](){ return share; },
+            [this, loc, server, share]() mutable {
+                std::string out = share;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter share name"_i18n.c_str(), share.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.url = "smb://" + server + "/" + out;
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+    }
+    else if (proto == "ftp") {
+        std::string server;
+        if (loc.url.rfind("ftp://", 0) == 0) {
+            server = loc.url.substr(6);
+            if (!server.empty() && server.back() == '/') {
+                server.pop_back();
+            }
+        }
+
+        items.emplace_back(SettingsItem{
+            "Server IP / Hostname"_i18n,
+            "FTP server IP address or hostname."_i18n,
+            [server](){ return server; },
+            [this, loc, server]() mutable {
+                std::string out = server;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter server IP or hostname"_i18n.c_str(), server.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.url = "ftp://" + out + "/";
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+
+        items.emplace_back(SettingsItem{
+            "Port"_i18n,
+            "FTP port."_i18n,
+            [loc](){ return std::to_string(loc.port); },
+            [this, loc]() mutable {
+                std::string out = std::to_string(loc.port);
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter port"_i18n.c_str(), std::to_string(loc.port).c_str()))) {
+                    location::Entry new_loc = loc;
+                    const auto parsed = std::strtoul(out.c_str(), nullptr, 10);
+                    if (parsed >= 1 && parsed <= 65535) {
+                        new_loc.port = static_cast<u16>(parsed);
+                        location::Add(new_loc);
+                        m_items = BuildEditItems();
+                    }
+                }
+            }
+        });
+    }
+    else { // webdav / http
+        items.emplace_back(SettingsItem{
+            "Server URL"_i18n,
+            "Server connection URL address."_i18n,
+            [loc](){ return loc.url; },
+            [this, loc]() mutable {
+                std::string out = loc.url;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter Server URL"_i18n.c_str(), loc.url.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.url = out;
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+    }
+
+    if (proto != "http") {
+        items.emplace_back(SettingsItem{
+            "Username"_i18n,
+            "Username for network connection (optional)."_i18n,
+            [loc](){ return loc.user; },
+            [this, loc]() mutable {
+                std::string out = loc.user;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter username"_i18n.c_str(), loc.user.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.user = out;
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+
+        items.emplace_back(SettingsItem{
+            "Password"_i18n,
+            "Password for network connection (optional)."_i18n,
+            [loc](){ return loc.pass.empty() ? "" : "********"; },
+            [this, loc]() mutable {
+                std::string out = loc.pass;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter password"_i18n.c_str(), loc.pass.c_str()))) {
+                    location::Entry new_loc = loc;
+                    new_loc.pass = out;
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
+            }
+        });
+    }
+
+    return items;
 }
 
 } // namespace sphaira::ui::menu::settings

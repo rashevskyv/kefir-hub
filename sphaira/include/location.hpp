@@ -18,9 +18,29 @@ struct Entry {
     std::string pub_key{};
     std::string priv_key{};
     u16 port{};
+    std::string protocol{};
 
     bool IsSmb() const {
-        return url.starts_with("smb://");
+        return url.starts_with("smb://") || protocol == "smb";
+    }
+
+    bool IsConfigured() const {
+        if (url.empty()) return false;
+        if (url == "smb://" || url == "smb:///") return false;
+        if (url == "webdav://" || url == "webdavs://" || url == "ftp://" || url == "ftp:///" || url == "http://" || url == "https://") return false;
+        size_t proto_pos = url.find("://");
+        if (proto_pos == std::string::npos) {
+            return !url.empty();
+        }
+        std::string host_part = url.substr(proto_pos + 3);
+        if (IsSmb()) {
+            size_t slash = host_part.find('/');
+            if (slash == std::string::npos || host_part.substr(slash + 1).empty()) {
+                return false;
+            }
+            return !host_part.substr(0, slash).empty();
+        }
+        return !host_part.empty();
     }
 };
 using Entries = std::vector<Entry>;

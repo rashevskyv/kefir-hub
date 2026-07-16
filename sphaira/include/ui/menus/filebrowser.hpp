@@ -9,6 +9,10 @@
 #include "hasher.hpp"
 #include <span>
 
+namespace sphaira::location {
+struct Entry;
+}
+
 namespace sphaira::ui::menu::filebrowser {
 
 enum FsEntryFlag {
@@ -373,7 +377,7 @@ struct SelectedStash {
 struct Menu final : MenuBase {
     friend class FsView;
 
-    Menu(u32 flags);
+    Menu(u32 flags, const ::sphaira::location::Entry* launch_location = nullptr);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Files"; };
@@ -393,6 +397,7 @@ private:
     void SetSplitScreen(bool enable);
 
     void RefreshViews();
+    void ConnectToLocation(const ::sphaira::location::Entry& e);
 
     void LoadAssocEntriesPath(const fs::FsPath& path);
     void LoadAssocEntries();

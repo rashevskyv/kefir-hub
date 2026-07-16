@@ -37,6 +37,9 @@ auto TranslationExtractFolder(const std::string& zip_name) -> std::string;
 auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) -> Result;
 auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry entry, std::string replacement_dir) -> Result;
 auto RemoveInterfaceTranslation(ProgressBox* pbox) -> Result;
+// best-effort removal that always reboots: used when replacing a translation
+// fails because files are still held open (the reboot releases the locks).
+auto RemoveInterfaceTranslationAndReboot(ProgressBox* pbox) -> Result;
 
 void RebootAfterSetting();
 

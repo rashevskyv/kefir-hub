@@ -12,7 +12,7 @@ namespace {
 } // namespace
 
 void Add(const Entry& e) {
-    if (e.name.empty() || e.url.empty()) {
+    if (e.name.empty()) {
         return;
     }
 
@@ -34,6 +34,9 @@ void Add(const Entry& e) {
     }
     if (e.port) {
         ini_putl(e.name.c_str(), "port", e.port, paths::LOCATIONS.c_str());
+    }
+    if (!e.protocol.empty()) {
+        ini_puts(e.name.c_str(), "protocol", e.protocol.c_str(), paths::LOCATIONS.c_str());
     }
 }
 
@@ -73,6 +76,8 @@ auto Load() -> Entries {
             e->back().priv_key = Value;
         } else if (!std::strcmp(Key, "port")) {
             e->back().port = std::atoi(Value);
+        } else if (!std::strcmp(Key, "protocol")) {
+            e->back().protocol = Value;
         }
 
         return 1;

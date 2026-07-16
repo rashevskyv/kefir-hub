@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.225)
+set(sphaira_VERSION 0.13.230)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -8,6 +8,7 @@ project(sphaira
 )
 
 find_package(Git REQUIRED)
+
 
 execute_process(
     COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD

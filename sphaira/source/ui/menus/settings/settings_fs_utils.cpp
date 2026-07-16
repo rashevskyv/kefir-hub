@@ -183,31 +183,23 @@ auto CopyFileSimple(const std::string& src, const std::string& dst) -> Result {
 }
 
 auto DeletePath(const std::string& path) -> Result {
-    // fs::FileExists() is false for directories, so both checks are needed
-    // to keep the old stat()-based "path exists" semantics.
-    if (!fs::FileExists(path) && !fs::DirExists(path)) {
-        R_SUCCEED();
+    // strip trailing slashes so the native fs calls get a canonical path.
+    auto clean = path;
+    while (clean.size() > 1 && clean.back() == '/') {
+        clean.pop_back();
     }
 
-    if (fs::DirExists(path)) {
-        DIR* dir = opendir(path.c_str());
-        if (!dir) {
-            R_THROW(fsdevGetLastResult());
-        }
-
-        while (auto* ent = readdir(dir)) {
-            if (!std::strcmp(ent->d_name, ".") || !std::strcmp(ent->d_name, "..")) {
-                continue;
-            }
-            R_TRY(DeletePath(path + "/" + ent->d_name));
-        }
-        closedir(dir);
-
-        if (rmdir(path.c_str()) != 0) {
-            R_THROW(fsdevGetLastResult());
-        }
-    } else if (std::remove(path.c_str()) != 0) {
-        R_THROW(fsdevGetLastResult());
+    // deleting entries while iterating readdir() skips neighbouring entries
+    // on fat32, leaving the directory non-empty (2002-0008). let the fs
+    // service do the recursion server-side instead.
+    if (fs::DirExists(clean)) {
+        fs::FsNativeSd fs;
+        R_TRY(fs.GetFsOpenResult());
+        R_TRY(fs.DeleteDirectoryRecursively(clean));
+    } else if (fs::FileExists(clean)) {
+        fs::FsNativeSd fs;
+        R_TRY(fs.GetFsOpenResult());
+        R_TRY(fs.DeleteFile(clean));
     }
 
     R_SUCCEED();

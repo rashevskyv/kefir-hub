@@ -159,4 +159,25 @@ private:
     std::unique_ptr<List> m_list;
 };
 
+struct SourceEditMenu final : MenuBase {
+    SourceEditMenu(std::string name);
+    ~SourceEditMenu();
+
+    auto GetShortTitle() const -> const char* override { return "Edit Source"; }
+    void OnFocusGained() override;
+    void Update(Controller* controller, TouchInfo* touch) override;
+    void Draw(NVGcontext* vg, Theme* theme) override;
+
+private:
+    void SetIndex(s64 index);
+    void OnSelect();
+    std::vector<SettingsItem> BuildEditItems();
+
+private:
+    std::string m_loc_name;
+    std::vector<SettingsItem> m_items;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+};
+
 } // namespace sphaira::ui::menu::settings

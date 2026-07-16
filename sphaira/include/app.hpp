@@ -159,7 +159,7 @@ public:
     static void SetThemeMusicEnable(bool enable);
     static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
-    static void SetLanguage(long index);
+    static void SetLanguage(long index, bool prompt_restart = true);
     static void SetTextScrollSpeed(long index);
     static void SetGodModeEnable(bool enable);
     static void SetProgressActive(bool active);

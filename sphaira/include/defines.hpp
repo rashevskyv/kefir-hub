@@ -658,6 +658,9 @@ enum class SphairaResult : Result {
     // NOTE: new codes must be appended here, inserting mid-enum renumbers
     // every code below the insertion point.
     StreamUnexpectedEof,
+    // failed to delete the currently installed interface translation while
+    // installing a new one; the ui offers remove + reboot instead.
+    TranslationRemoveExistingFailed,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -781,6 +784,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(SmbNotSupported),
     MAKE_SPHAIRA_RESULT_ENUM(SaveSyncFailed),
     MAKE_SPHAIRA_RESULT_ENUM(StreamUnexpectedEof),
+    MAKE_SPHAIRA_RESULT_ENUM(TranslationRemoveExistingFailed),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

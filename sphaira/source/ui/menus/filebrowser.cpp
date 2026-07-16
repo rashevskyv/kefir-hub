@@ -1308,7 +1308,7 @@ void FsView::ShowSourcePicker() {
     }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
 }
 
-Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {
+Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuBase{"FileBrowser"_i18n, flags} {
     SetAction(Button::START, Action{"Options"_i18n, [this](){
         if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
             view->DisplayAdvancedOptions();
@@ -1330,9 +1330,56 @@ Menu::Menu(u32 flags) : MenuBase{"FileBrowser"_i18n, flags} {
     view_left = std::make_unique<FsView>(this, ViewSide::Left);
     view = view_left.get();
     ueventCreate(&g_change_uevent, true);
+
+    if (launch_location) {
+        ConnectToLocation(*launch_location);
+    }
 }
 
 Menu::~Menu() {
+}
+
+void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
+    if (e.IsSmb()) {
+        FsEntry target_entry{
+            .name = e.name,
+            .root = "smb2:/",
+            .type = FsType::Network,
+            .flags = FsEntryFlag_ReadOnly,
+            .url = e.url,
+            .user = e.user,
+            .pass = e.pass
+        };
+        App::Push<ProgressBox>(0, "Connecting to SMB..."_i18n, target_entry.name, [this, target_entry](auto pbox) -> Result {
+#ifdef BUILD_SMB2
+            if (g_smb2fs) {
+                if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
+                    R_SUCCEED();
+                }
+                delete g_smb2fs;
+                g_smb2fs = nullptr;
+            }
+            std::string server, share;
+            ParseSmbUrl(target_entry.url.toString(), server, share);
+            g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
+            if (g_smb2fs->RegisterFilesystem_v2()) {
+                R_SUCCEED();
+            } else {
+                delete g_smb2fs;
+                g_smb2fs = nullptr;
+                R_THROW(Result_SmbConnectionFailed);
+            }
+#else
+            R_THROW(Result_SmbNotSupported);
+#endif
+        }, [this, target_entry](Result rc) {
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to connect to SMB server!"_i18n);
+            } else {
+                view->SetFs(target_entry.root, target_entry);
+            }
+        });
+    }
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -1633,125 +1680,30 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
         if (R_FAILED(swkbd::ShowText(name, "Enter location name (e.g. My NAS)"_i18n.c_str(), ""))) return;
         if (name.empty()) return;
 
-        if (proto == 0) { // SMB
-            std::string server;
-            if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), ""))) return;
-            if (server.empty()) return;
+        App::Pop();
 
-            std::string share;
-            if (R_FAILED(swkbd::ShowText(share, "Enter share name (e.g. shared_folder)"_i18n.c_str(), ""))) return;
-            if (share.empty()) return;
-
-            std::string user;
-            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
-
-            std::string pass;
-            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
-
-            App::Pop();
-
-            location::Entry e;
-            e.name = name;
-            e.url = "smb://" + server + "/" + share;
-            e.user = user;
-            e.pass = pass;
-            location::Add(e);
-            App::Notify("Location added successfully!"_i18n);
-            if (on_success) {
-                evman::push(evman::FunctionalEventData{[on_success]() {
-                    on_success();
-                }});
-            }
+        location::Entry e;
+        e.name = name;
+        if (proto == 0) {
+            e.protocol = "smb";
+            e.url = "smb://";
+        } else if (proto == 1) {
+            e.protocol = "webdav";
+            e.url = "webdav://";
+        } else if (proto == 2) {
+            e.protocol = "ftp";
+            e.url = "ftp://";
+            e.port = 21;
+        } else if (proto == 3) {
+            e.protocol = "http";
+            e.url = "http://";
         }
-        else if (proto == 1) { // WebDAV
-            std::string url;
-            if (R_FAILED(swkbd::ShowText(url, "Enter Server URL (e.g. http://server.com/dav)"_i18n.c_str(), ""))) return;
-            if (url.empty()) return;
-
-            if (!url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("webdav://") && !url.starts_with("webdavs://")) {
-                url = "webdav://" + url;
-            }
-
-            std::string user;
-            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
-
-            std::string pass;
-            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
-
-            App::Pop();
-
-            location::Entry e;
-            e.name = name;
-            e.url = url;
-            e.user = user;
-            e.pass = pass;
-            location::Add(e);
-            App::Notify("Location added successfully!"_i18n);
-            if (on_success) {
-                evman::push(evman::FunctionalEventData{[on_success]() {
-                    on_success();
-                }});
-            }
-        }
-        else if (proto == 2) { // FTP
-            std::string server;
-            if (R_FAILED(swkbd::ShowText(server, "Enter server IP or hostname (e.g. 192.168.1.100)"_i18n.c_str(), ""))) return;
-            if (server.empty()) return;
-
-            std::string port_str;
-            if (R_FAILED(swkbd::ShowText(port_str, "Enter port (optional, default 21)"_i18n.c_str(), "21"))) return;
-            // std::stoi throws on invalid input, which aborts under -fno-exceptions.
-            u16 port = 21;
-            if (!port_str.empty()) {
-                const auto parsed = std::strtoul(port_str.c_str(), nullptr, 10);
-                if (parsed >= 1 && parsed <= 65535) {
-                    port = static_cast<u16>(parsed);
-                }
-            }
-
-            std::string user;
-            if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;
-
-            std::string pass;
-            if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
-
-            App::Pop();
-
-            location::Entry e;
-            e.name = name;
-            e.url = "ftp://" + server + "/";
-            e.port = port;
-            e.user = user;
-            e.pass = pass;
-            location::Add(e);
-            App::Notify("Location added successfully!"_i18n);
-            if (on_success) {
-                evman::push(evman::FunctionalEventData{[on_success]() {
-                    on_success();
-                }});
-            }
-        }
-        else if (proto == 3) { // HTTP
-            std::string url;
-            if (R_FAILED(swkbd::ShowText(url, "Enter Server URL (e.g. http://server.com/files)"_i18n.c_str(), ""))) return;
-            if (url.empty()) return;
-
-            if (!url.starts_with("http://") && !url.starts_with("https://")) {
-                url = "http://" + url;
-            }
-
-            App::Pop();
-
-            location::Entry e;
-            e.name = name;
-            e.url = url;
-            location::Add(e);
-            App::Notify("Location added successfully!"_i18n);
-            if (on_success) {
-                evman::push(evman::FunctionalEventData{[on_success]() {
-                    on_success();
-                }});
-            }
+        location::Add(e);
+        App::Notify("Location added successfully!"_i18n);
+        if (on_success) {
+            evman::push(evman::FunctionalEventData{[on_success]() {
+                on_success();
+            }});
         }
     });
 }
