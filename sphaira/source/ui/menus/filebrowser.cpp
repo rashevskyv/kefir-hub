@@ -1226,19 +1226,17 @@ void FsView::ShowSourcePicker() {
 
     const auto network_locations = location::Load();
     for (const auto& e: network_locations) {
-        if (e.IsSmb()) {
-            FsEntry entry{
-                .name = e.name,
-                .root = "smb2:/",
-                .type = FsType::Network,
-                .flags = FsEntryFlag_ReadOnly,
-                .url = e.url,
-                .user = e.user,
-                .pass = e.pass
-            };
-            fs_entries.emplace_back(entry);
-            mount_items.push_back(e.name);
-        }
+        FsEntry entry{
+            .name = e.name,
+            .root = e.IsSmb() ? "smb2:/" : e.url,
+            .type = FsType::Network,
+            .flags = FsEntryFlag_ReadOnly,
+            .url = e.url,
+            .user = e.user,
+            .pass = e.pass
+        };
+        fs_entries.emplace_back(entry);
+        mount_items.push_back(e.name);
     }
 
     s64 current_index = 0;
@@ -1259,6 +1257,10 @@ void FsView::ShowSourcePicker() {
         App::PopToMenu();
         const auto& target_entry = fs_entries[index_out];
         if (target_entry.type == FsType::Network) {
+            if (!target_entry.url.toString().starts_with("smb://")) {
+                App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
+                return;
+            }
             FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
             if (other_view && other_view->m_fs_entry.type == FsType::Network && !IsSameNetworkLocation(other_view->m_fs_entry, target_entry)) {
                 other_view->SetFs("/", FS_ENTRY_DEFAULT);
