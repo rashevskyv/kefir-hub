@@ -106,29 +106,33 @@ void Menu::OnLayoutChange(std::unique_ptr<List>& list, int layout) {
     m_scroll_author.Reset();
     m_scroll_version.Reset();
 
+    // Keep list touch and clipping bounds between the persistent header/footer.
+    // SELECTION_OUTLINE_PAD expands this to exactly x=30..1250, y=87..646.
+    const Vec4 content_pos{40, 97, 1200, 539};
+
     switch (layout) {
         case LayoutType_List: {
             const Vec2 pad{0, 2};
             const Vec4 v{75, 110, 1130, 70};
-            list = std::make_unique<List>(1, 7, m_pos, v, pad);
+            list = std::make_unique<List>(1, 7, content_pos, v, pad);
         }   break;
 
         case LayoutType_Grid: {
             const Vec2 pad{10, 10};
             const Vec4 v{93, 186, 174, 174};
-            list = std::make_unique<List>(6, 6*2, m_pos, v, pad);
+            list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
         }   break;
 
         case LayoutType_GridDetail: {
             const Vec2 pad{10, 10};
             const Vec4 v{75, 110, 370, 155};
-            list = std::make_unique<List>(3, 3*3, m_pos, v, pad);
+            list = std::make_unique<List>(3, 3*3, content_pos, v, pad);
         }   break;
 
         case LayoutType_HbMenu: {
             const Vec2 pad{16, 0};
             const Vec4 v{80, 450, 140, 168};
-            list = std::make_unique<List>(1, 7, m_pos, v, pad);
+            list = std::make_unique<List>(1, 7, content_pos, v, pad);
             list->SetLayout(List::Layout::HOME);
         }   break;
 

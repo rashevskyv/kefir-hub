@@ -18,6 +18,12 @@ struct Entry {
     NacpLanguageEntry lang{};
     int image{};
     bool selected{};
+    bool summary_attempted{};
+    bool layeredfs{};
+    u32 content_flags{};
+    u64 nand_size{};
+    u64 sd_size{};
+    Result summary_result{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     auto GetName() const -> const char* {

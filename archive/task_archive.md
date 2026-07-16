@@ -389,3 +389,13 @@
 Спільні конвенції для кожної задачі: нові рядки UI → `_i18n` + ключі в `assets/romfs/i18n/en.json` і `uk.json`; після завершення — підняти версію в `sphaira/CMakeLists.txt` і додати розділ у `walkthrough.md`; збірку виконує Агент 1 (WSL), реалізатор збірку сам не запускає.
 
 
+## v0.13.239 — DBI-подібний Games UI (2026-07-16)
+
+- [x] HIST-61A — Game Details перебудовано як Overview + Content/Tickets/Saves;
+  дані читаються з NCM/ES/save readers, L/R змінюють гру, ZL/ZR — вкладку.
+- [x] HIST-62 — Base/Update/DLC/LayeredFS badges на іконках із поступовим
+  кешуванням summary поза постійним `Draw()` hot path.
+- [x] HIST-GAMES-VIEWPORT — clipping/touch bounds обмежені лініями header/footer.
+- [x] HIST-GAMES-STORAGE — selected-title segment у NAND/SD bars.
+- [x] AUTO-GATE — Release NRO зібрано, `git diff --check` пройдено.
+- [ ] HW-SMOKE-239 — залишено як ручний gate у `tests.md`.

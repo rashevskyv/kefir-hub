@@ -919,5 +919,11 @@
   "Update language packs": "Update language packs",
   "Update the UltraHand language package list.": "Update the UltraHand language package list.",
   "Updating language packs...": "Updating language packs...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "To apply this translation, you must select one of the required variations in the console settings:\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "To apply this translation, you must select one of the required variations in the console settings:\n",
+  "Previous game": "Previous game",
+  "Next game": "Next game",
+  "Previous tab": "Previous tab",
+  "Next tab": "Next tab",
+  "Content": "Content",
+  "Tickets": "Tickets"
 }

@@ -936,5 +936,11 @@
   "Update language packs": "Оновити мовні пакети",
   "Update the UltraHand language package list.": "Оновити список мовних пакетів UltraHand.",
   "Updating language packs...": "Оновлення мовних пакетів...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "Для застосування цього перекладу необхідно вибрати один із потрібних варіантів у налаштуваннях консолі:\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Для застосування цього перекладу необхідно вибрати один із потрібних варіантів у налаштуваннях консолі:\n",
+  "Previous game": "Попередня гра",
+  "Next game": "Наступна гра",
+  "Previous tab": "Попередня вкладка",
+  "Next tab": "Наступна вкладка",
+  "Content": "Контент",
+  "Tickets": "Тікети"
 }

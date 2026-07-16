@@ -9,8 +9,18 @@
 > `HIST-NFS-SFTP`, `HIST-PLAYER`, `HIST-44` та `HIST-46` у `plan.md`.
 > Повторний аудит реалізації 2026-07-16 також зафіксував hardening точкового
 > game-component dump, HTTP retry/truncation та Applet runtime diagnostics у
-> `archive/task_archive.md`; незавершені вкладки Game Details і ручну перевірку
-> Wi-Fi client isolation залишено активними. Web authentication виключено за рішенням власника.
+> `archive/task_archive.md`. У v0.13.239 вкладки Game Details, badges, viewport і
+> selected-game NAND/SD segment завершено та перенесено до архіву задач; ручні
+> Switch-перевірки лишаються активними в `tests.md`. Wi-Fi client isolation теж
+> лишається ручним gate. Web authentication виключено за рішенням власника.
+
+## Доповнення v0.13.239 — Games UI
+
+DBI-подібний екран Games тепер має Overview, Content/Tickets/Saves, L/R перехід
+між іграми, повний language list, allocated save-data size та ticket status. У
+бібліотеці додані Base/Update/DLC/LayeredFS badges, clipping між header/footer і
+пропорційний segment вибраної гри у NAND/SD bars. Детальні докази й ручні gates:
+`archive/task_archive.md` та `tests.md`.
 
 ## 1. Реорганізація інтерфейсу (UI) — ✅ РЕАЛІЗОВАНО (незакомічено)
 

@@ -10,6 +10,7 @@
 
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -433,8 +434,102 @@ struct GameComponentRow {
     u32 rights_count{};
 };
 
+struct GameTicketRow {
+    FsRightsId id{};
+    u8 key_generation{};
+    u8 meta_type{};
+    u64 ticket_size{};
+    bool personalized{};
+};
+
+struct GameSaveRow {
+    FsSaveDataInfo info{};
+    std::string account{};
+};
+
 auto ContentFlagFromMetaType(u8 meta_type) -> u32 {
     return title::ContentMetaTypeToContentFlag(meta_type);
+}
+
+Result LoadGameSummary(Entry& entry) {
+    if (entry.summary_attempted) {
+        return entry.summary_result;
+    }
+
+    entry.summary_attempted = true;
+    entry.layeredfs = fs::FsNativeSd().DirExists(title::GetContentsPath(entry.app_id));
+
+    title::MetaEntries entries;
+    entry.summary_result = GetMetaEntries(entry, entries);
+    if (R_FAILED(entry.summary_result)) {
+        return entry.summary_result;
+    }
+
+    for (const auto& status : entries) {
+        ContentInfoEntry info;
+        if (const auto rc = BuildContentEntry(status, info); R_FAILED(rc)) {
+            entry.summary_result = rc;
+            continue;
+        }
+
+        entry.content_flags |= ContentFlagFromMetaType(status.meta_type);
+        u64 size{};
+        for (const auto& content : info.content_infos) {
+            u64 content_size{};
+            ncmContentInfoSizeToU64(&content, &content_size);
+            size += content_size;
+        }
+
+        if (status.storageID == NcmStorageId_SdCard) {
+            entry.sd_size += size;
+        } else if (status.storageID == NcmStorageId_BuiltInUser) {
+            entry.nand_size += size;
+        }
+    }
+
+    return entry.summary_result;
+}
+
+void DrawGameBadges(NVGcontext* vg, Theme* theme, const Vec4& image, const Entry& entry) {
+    struct Badge { const char* text; NVGcolor colour; };
+    std::array<Badge, 4> badges{};
+    size_t count{};
+
+    if (entry.content_flags & title::ContentFlag_Application) {
+        badges[count++] = {"Base", nvgRGBA(45, 135, 210, 235)};
+    }
+    if (entry.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
+        badges[count++] = {"Update", nvgRGBA(220, 140, 35, 235)};
+    }
+    if (entry.content_flags & title::ContentFlag_AddOnContent) {
+        badges[count++] = {"DLC", nvgRGBA(145, 80, 200, 235)};
+    }
+    if (entry.layeredfs) {
+        badges[count++] = {"LayeredFS", nvgRGBA(45, 165, 105, 235)};
+    }
+
+    if (!count) {
+        return;
+    }
+
+    const float font = image.w < 80.f ? 10.f : 13.f;
+    const float height = font + 7.f;
+    float x = image.x + 5.f;
+    float y = image.y + 5.f;
+    float bounds[4]{};
+    for (size_t i = 0; i < count; i++) {
+        nvgFontSize(vg, font);
+        gfx::textBounds(vg, 0, 0, bounds, badges[i].text);
+        const float width = bounds[2] - bounds[0] + 10.f;
+        if (x + width > image.x + image.w - 4.f) {
+            x = image.x + 5.f;
+            y += height + 3.f;
+        }
+        gfx::drawRect(vg, x, y, width, height, badges[i].colour, 4.f);
+        gfx::drawText(vg, x + width * 0.5f, y + height * 0.5f, font,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED), badges[i].text, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        x += width + 3.f;
+    }
 }
 
 struct DetailsMenu final : MenuBase {
@@ -625,6 +720,404 @@ private:
     bool m_layeredfs{};
 };
 
+struct DbiDetailsMenu final : MenuBase {
+    enum class Tab : u8 { Content, Tickets, Saves };
+
+    DbiDetailsMenu(std::vector<Entry>* entries, s64 index,
+        std::function<void(Entry, u32)> dump_callback,
+        std::function<void(s64)> selection_callback)
+    : MenuBase{"Game Details"_i18n, MenuFlag_None}
+    , m_entries{entries}
+    , m_game_index{index}
+    , m_dump_callback{std::move(dump_callback)}
+    , m_selection_callback{std::move(selection_callback)} {
+        this->SetActions(
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
+            std::make_pair(Button::L, Action{"Previous game"_i18n, [this](){ ChangeGame(-1); }}),
+            std::make_pair(Button::R, Action{"Next game"_i18n, [this](){ ChangeGame(1); }}),
+            std::make_pair(Button::L2, Action{"Previous tab"_i18n, [this](){ ChangeTab(-1); }}),
+            std::make_pair(Button::R2, Action{"Next tab"_i18n, [this](){ ChangeTab(1); }}),
+            std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }}),
+            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ ShowCurrentActions(); }}),
+            std::make_pair(Button::START, Action{"Game actions"_i18n, [this](){ ShowGameActions(); }})
+        );
+
+        const Vec4 row{45, 382, 1190, 54};
+        const Vec2 pad{0, 5};
+        m_list = std::make_unique<List>(1, 4, Vec4{40, 97, 1200, 539}, row, pad);
+        LoadGame();
+    }
+
+    auto GetShortTitle() const -> const char* override { return "Game Details"; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        const auto count = CurrentCount();
+        m_list->OnUpdate(controller, touch, m_row_index, count, [this](bool touch, auto index){
+            if (touch && m_row_index == index) {
+                FireAction(Button::A);
+            } else {
+                m_row_index = index;
+            }
+        }, this);
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+
+        const auto& entry = CurrentEntry();
+        const auto text = theme->GetColour(ThemeEntryID_TEXT);
+        const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const auto grid = theme->GetColour(ThemeEntryID_GRID);
+
+        gfx::drawRect(vg, 30, 90, 1220, 550, grid, 5.f);
+        const Vec4 cover{50, 108, 190, 190};
+        gfx::drawImage(vg, cover, entry.image ? entry.image : App::GetDefaultImage(), 7.f);
+        DrawGameBadges(vg, theme, cover, entry);
+
+        gfx::drawTextArgs(vg, 265, 105, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "%s", entry.GetName());
+        gfx::drawTextArgs(vg, 265, 140, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", entry.GetAuthor());
+        gfx::drawTextArgs(vg, 265, 178, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Title ID   %016lX", entry.app_id);
+        gfx::drawTextArgs(vg, 265, 207, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Version    %s", m_display_version[0] ? m_display_version : "-");
+        gfx::drawText(vg, 265, 245, 18.f, text, "Languages", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        m_language_scroll.Draw(vg, true, 370, 245, 415, 16.f, NVG_ALIGN_LEFT, info,
+            m_languages.empty() ? "-" : m_languages.c_str());
+        gfx::drawTextArgs(vg, 265, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "LayeredFS  %s", entry.layeredfs ? "Present" : "Absent");
+
+        gfx::drawTextArgs(vg, 810, 112, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "NAND       %s", FormatBytes(entry.nand_size).c_str());
+        gfx::drawTextArgs(vg, 810, 141, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "SD         %s", FormatBytes(entry.sd_size).c_str());
+        gfx::drawTextArgs(vg, 810, 178, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Components %zu", m_components.size());
+        gfx::drawTextArgs(vg, 810, 207, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Tickets    %zu", m_tickets.size());
+        gfx::drawTextArgs(vg, 810, 236, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Saves      %zu (%s allocated)", m_saves.size(), FormatBytes(m_save_allocated_size).c_str());
+        gfx::drawTextArgs(vg, 810, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Save quota %s + %s", FormatBytes(m_save_size).c_str(), FormatBytes(m_save_journal_size).c_str());
+
+        const std::array<std::string, 3> tab_names{"Content"_i18n, "Tickets"_i18n, "Saves"_i18n};
+        const float tab_y = 320.f;
+        const float tab_w = 1220.f / tab_names.size();
+        for (size_t i = 0; i < tab_names.size(); i++) {
+            const bool selected = i == static_cast<size_t>(m_tab);
+            const float x = 30.f + i * tab_w;
+            if (selected) {
+                gfx::drawRect(vg, x, tab_y, tab_w, 42.f, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+            }
+            gfx::drawText(vg, x + tab_w * 0.5f, tab_y + 21.f, 20.f,
+                selected ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : text,
+                tab_names[i].c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        }
+
+        if (R_FAILED(m_load_result) && !m_components.empty()) {
+            gfx::drawTextArgs(vg, 810, 294, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                theme->GetColour(ThemeEntryID_ERROR), "Partial metadata read (0x%X)", m_load_result);
+        }
+
+        if (R_FAILED(m_load_result) && m_components.empty() && m_tab != Tab::Saves) {
+            gfx::drawTextArgs(vg, 55, 405, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info,
+                "Unable to read installed metadata (0x%X)", m_load_result);
+            return;
+        }
+
+        if (!CurrentCount()) {
+            const char* empty = m_tab == Tab::Content ? "No installed components" :
+                (m_tab == Tab::Tickets ? "No rights IDs or tickets" : "No save data");
+            gfx::drawText(vg, 640, 475, 22.f, info, empty, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            return;
+        }
+
+        m_list->Draw(vg, theme, CurrentCount(), [this](auto* vg, auto* theme, auto v, auto index){
+            const bool selected = index == m_row_index;
+            const auto primary = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+            const auto secondary = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v, 4.f);
+            } else {
+                gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_BACKGROUND), 4.f);
+            }
+
+            if (m_tab == Tab::Content) {
+                const auto& row = m_components[index];
+                gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
+                    "%s", ncm::GetMetaTypeStr(row.status.meta_type));
+                gfx::drawTextArgs(vg, v.x + 300, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "v%u | %s | %s", row.status.version, ncm::GetStorageIdStr(row.status.storageID), FormatBytes(row.size).c_str());
+                gfx::drawTextArgs(vg, v.x + 760, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%u contents | %u rights", row.content_count, row.rights_count);
+            } else if (m_tab == Tab::Tickets) {
+                const auto& row = m_tickets[index];
+                gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
+                    "%s", utils::hexIdToStr(row.id).str);
+                gfx::drawTextArgs(vg, v.x + 530, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%s | key generation %u", ncm::GetMetaTypeStr(row.meta_type), row.key_generation);
+                gfx::drawTextArgs(vg, v.x + 930, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%s", row.ticket_size ? "Common" : (row.personalized ? "Personalized" : "Missing"));
+            } else {
+                const auto& row = m_saves[index];
+                gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
+                    "%s", row.account.c_str());
+                gfx::drawTextArgs(vg, v.x + 350, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%s | %s", save::GetSaveTypeLabel(row.info.save_data_type), FormatBytes(row.info.size).c_str());
+                gfx::drawTextArgs(vg, v.x + 760, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "Save ID %016lX", row.info.save_data_id);
+            }
+        });
+    }
+
+private:
+    auto CurrentEntry() -> Entry& { return (*m_entries)[m_game_index]; }
+    auto CurrentEntry() const -> const Entry& { return (*m_entries)[m_game_index]; }
+
+    static auto FormatBytes(u64 bytes) -> std::string {
+        char out[32];
+        if (bytes >= 1024ULL * 1024ULL * 1024ULL) {
+            std::snprintf(out, sizeof(out), "%.2f GB", static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0));
+        } else if (bytes >= 1024ULL * 1024ULL) {
+            std::snprintf(out, sizeof(out), "%.2f MB", static_cast<double>(bytes) / (1024.0 * 1024.0));
+        } else if (bytes >= 1024ULL) {
+            std::snprintf(out, sizeof(out), "%.2f KB", static_cast<double>(bytes) / 1024.0);
+        } else {
+            std::snprintf(out, sizeof(out), "%lu B", bytes);
+        }
+        return out;
+    }
+
+    auto CurrentCount() const -> size_t {
+        switch (m_tab) {
+            case Tab::Content: return m_components.size();
+            case Tab::Tickets: return m_tickets.size();
+            case Tab::Saves: return m_saves.size();
+        }
+        return 0;
+    }
+
+    void ChangeGame(s64 delta) {
+        if (!m_entries || m_entries->empty()) return;
+        const auto count = static_cast<s64>(m_entries->size());
+        m_game_index = (m_game_index + delta + count) % count;
+        LoadGame();
+        m_selection_callback(m_game_index);
+    }
+
+    void ChangeTab(s64 delta) {
+        constexpr s64 count = 3;
+        m_tab = static_cast<Tab>((static_cast<s64>(m_tab) + delta + count) % count);
+        m_row_index = 0;
+        m_list->SetYoff(0);
+    }
+
+    void LoadGame() {
+        auto& entry = CurrentEntry();
+        LoadControlEntry(entry, true);
+        LoadGameSummary(entry);
+
+        m_components.clear();
+        m_tickets.clear();
+        m_saves.clear();
+        m_save_allocated_size = 0;
+        m_row_index = 0;
+        m_list->SetYoff(0);
+        m_display_version[0] = '\0';
+        m_languages.clear();
+        m_language_scroll.Reset();
+        m_save_size = 0;
+        m_save_journal_size = 0;
+
+        auto control = std::make_unique<NsApplicationControlData>();
+        u64 actual_size{};
+        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, entry.app_id, control.get(), sizeof(*control), &actual_size))) {
+            std::snprintf(m_display_version, sizeof(m_display_version), "%s", control->nacp.display_version);
+            m_save_size = control->nacp.user_account_save_data_size;
+            m_save_journal_size = control->nacp.user_account_save_data_journal_size;
+
+            constexpr std::array<const char*, 16> language_names{
+                "US English", "UK English", "Japanese", "French", "German", "Latin Spanish", "Spanish", "Italian",
+                "Dutch", "Canadian French", "Portuguese", "Russian", "Korean", "Traditional Chinese", "Simplified Chinese", "Brazilian Portuguese"
+            };
+            for (size_t i = 0; i < language_names.size(); i++) {
+                if (control->nacp.supported_language_flag & (1U << i)) {
+                    if (!m_languages.empty()) m_languages += ", ";
+                    m_languages += language_names[i];
+                }
+            }
+        }
+
+        std::vector<FsRightsId> personalized_ids;
+        s32 personalized_count{};
+        if (R_SUCCEEDED(es::CountPersonalizedTicket(&personalized_count)) && personalized_count > 0) {
+            personalized_ids.resize(personalized_count);
+            s32 written{};
+            if (R_FAILED(es::ListPersonalizedTicket(&written, personalized_ids.data(), personalized_ids.size()))) {
+                personalized_ids.clear();
+            } else {
+                personalized_ids.resize(written);
+            }
+        }
+
+        title::MetaEntries entries;
+        m_load_result = GetMetaEntries(entry, entries);
+        if (R_SUCCEEDED(m_load_result)) {
+            for (const auto& status : entries) {
+                ContentInfoEntry info;
+                if (const auto rc = BuildContentEntry(status, info); R_FAILED(rc)) {
+                    m_load_result = rc;
+                    continue;
+                }
+
+                GameComponentRow component{};
+                component.status = status;
+                component.content_count = info.content_infos.size();
+                component.rights_count = info.ncm_rights_id.size();
+                for (const auto& content : info.content_infos) {
+                    u64 size{};
+                    ncmContentInfoSizeToU64(&content, &size);
+                    component.size += size;
+                }
+                m_components.emplace_back(component);
+
+                for (const auto& rights : info.ncm_rights_id) {
+                    const auto duplicate = std::ranges::find_if(m_tickets, [&rights](const auto& ticket){
+                        return !std::memcmp(&ticket.id, &rights.rights_id, sizeof(ticket.id));
+                    });
+                    if (duplicate != m_tickets.end()) continue;
+
+                    GameTicketRow ticket{};
+                    ticket.id = rights.rights_id;
+                    ticket.key_generation = rights.key_generation;
+                    ticket.meta_type = status.meta_type;
+                    es::GetCommonTicketSize(&ticket.ticket_size, &ticket.id);
+                    ticket.personalized = std::ranges::any_of(personalized_ids, [&ticket](const auto& id){
+                        return !std::memcmp(&id, &ticket.id, sizeof(id));
+                    });
+                    m_tickets.emplace_back(ticket);
+                }
+            }
+        }
+
+        LoadSaves(entry.app_id);
+        SetTitleSubHeading(entry.GetName());
+        SetSubHeading(std::to_string(m_game_index + 1) + " / " + std::to_string(m_entries->size()));
+        SetStorageHighlight(entry.nand_size, entry.sd_size);
+    }
+
+    void LoadSaves(u64 app_id) {
+        constexpr std::array<FsSaveDataSpaceId, 4> spaces{
+            FsSaveDataSpaceId_System, FsSaveDataSpaceId_User,
+            FsSaveDataSpaceId_Temporary, FsSaveDataSpaceId_SdUser
+        };
+        const auto accounts = App::GetAccountList();
+
+        for (const auto space : spaces) {
+            FsSaveDataFilter filter{};
+            filter.attr.application_id = app_id;
+            filter.filter_by_application_id = true;
+
+            FsSaveDataInfoReader reader;
+            if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space, &filter))) continue;
+
+            std::array<FsSaveDataInfo, 32> rows{};
+            while (true) {
+                s64 read{};
+                if (R_FAILED(fsSaveDataInfoReaderRead(&reader, rows.data(), rows.size(), &read)) || !read) break;
+                for (s64 i = 0; i < read; i++) {
+                    const auto& save_info = rows[i];
+                    if (save_info.application_id != app_id) continue;
+                    if (std::ranges::any_of(m_saves, [&save_info](const auto& row){
+                        return row.info.save_data_id == save_info.save_data_id;
+                    })) continue;
+
+                    GameSaveRow row{};
+                    row.info = save_info;
+                    row.account = save::GetSaveTypeLabel(save_info.save_data_type);
+                    if (save_info.save_data_type == FsSaveDataType_Account) {
+                        const auto account = std::ranges::find_if(accounts, [&save_info](const auto& candidate){
+                            return !std::memcmp(&candidate.uid, &save_info.uid, sizeof(save_info.uid));
+                        });
+                        if (account != accounts.end()) row.account = account->nickname;
+                    }
+                    m_save_allocated_size += save_info.size;
+                    m_saves.emplace_back(std::move(row));
+                }
+            }
+            fsSaveDataInfoReaderClose(&reader);
+        }
+    }
+
+    void ShowCurrentActions() {
+        if (!CurrentCount()) return;
+        if (m_tab == Tab::Content) {
+            const auto component = m_components[m_row_index];
+            auto options = std::make_unique<Sidebar>("Component Actions"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
+            options->Add<SidebarEntryCallback>("Dump NSP"_i18n, [this, component](){
+                m_dump_callback(CurrentEntry(), ContentFlagFromMetaType(component.status.meta_type));
+            }, true, "Export only this installed component as an NSP."_i18n);
+            options->Add<SidebarEntryCallback>("Content information"_i18n, [component](){
+                char message[512];
+                std::snprintf(message, sizeof(message),
+                    "Title ID: %016lX\nType: %s\nVersion: %u\nStorage: %s\nSize: %s\nContent files: %u\nRights IDs: %u",
+                    component.status.application_id, ncm::GetMetaTypeStr(component.status.meta_type), component.status.version,
+                    ncm::GetStorageIdStr(component.status.storageID), FormatBytes(component.size).c_str(),
+                    component.content_count, component.rights_count);
+                App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+            }, "Show installed content metadata."_i18n);
+        } else if (m_tab == Tab::Tickets) {
+            const auto& ticket = m_tickets[m_row_index];
+            char message[512];
+            std::snprintf(message, sizeof(message), "Rights ID: %s\nComponent: %s\nKey generation: %u\nTicket: %s\nTicket size: %s",
+                utils::hexIdToStr(ticket.id).str, ncm::GetMetaTypeStr(ticket.meta_type), ticket.key_generation,
+                ticket.ticket_size ? "Common" : (ticket.personalized ? "Personalized" : "Missing"),
+                FormatBytes(ticket.ticket_size).c_str());
+            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+        } else {
+            const auto& row = m_saves[m_row_index];
+            char message[512];
+            std::snprintf(message, sizeof(message), "Account: %s\nType: %s\nSave ID: %016lX\nSize: %s\nStorage space: %u",
+                row.account.c_str(), save::GetSaveTypeLabel(row.info.save_data_type), row.info.save_data_id,
+                FormatBytes(row.info.size).c_str(), row.info.save_data_space_id);
+            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+        }
+    }
+
+    void ShowGameActions() {
+        auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n);
+        options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
+            m_dump_callback(CurrentEntry(), title::ContentFlag_All);
+        }, true, "Export base, updates, DLC and data patches."_i18n);
+        options->Add<SidebarEntryCallback>(CurrentEntry().layeredfs ? "Show contents path"_i18n : "Create contents folder"_i18n, [this](){
+            auto& entry = CurrentEntry();
+            if (entry.layeredfs) {
+                App::Notify(title::GetContentsPath(entry.app_id).toString());
+                return;
+            }
+            const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(entry.app_id));
+            App::PushErrorBox(rc, "Folder create failed!"_i18n);
+            if (R_SUCCEEDED(rc)) {
+                entry.layeredfs = true;
+                App::Notify("Folder created!"_i18n);
+            }
+        }, "Inspect or create the Atmosphere contents folder for this title."_i18n);
+    }
+
+private:
+    std::vector<Entry>* m_entries{};
+    s64 m_game_index{};
+    s64 m_row_index{};
+    Tab m_tab{};
+    std::unique_ptr<List> m_list{};
+    std::vector<GameComponentRow> m_components{};
+    std::vector<GameTicketRow> m_tickets{};
+    std::vector<GameSaveRow> m_saves{};
+    std::function<void(Entry, u32)> m_dump_callback{};
+    std::function<void(s64)> m_selection_callback{};
+    Result m_load_result{};
+    char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
+    std::string m_languages{};
+    ScrollingText m_language_scroll{};
+    u64 m_save_size{};
+    u64 m_save_journal_size{};
+    u64 m_save_allocated_size{};
+};
+
 } // namespace
 
 Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
@@ -665,10 +1158,12 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
             }
             auto& entry = m_entries[m_index];
             LoadControlEntry(entry, true);
-            App::Push<DetailsMenu>(entry, [this, entry](u32 flags) mutable {
+            App::Push<DbiDetailsMenu>(&m_entries, m_index, [this](Entry entry, u32 flags) mutable {
                 std::vector<Entry> targets;
                 targets.emplace_back(entry);
                 DumpEntries(std::move(targets), flags, false);
+            }, [this](s64 index) {
+                SetIndex(index);
             });
         }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
@@ -912,13 +1407,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", e.app_id);
         DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, e.GetAuthor());
+        DrawGameBadges(vg, theme, Vec4{80.f, 120.f, 200.f, 200.f}, e);
     }
 
     // max images per frame, in order to not hit io / gpu too hard.
     const int image_load_max = 2;
     int image_load_count = 0;
+    int summary_load_count = 0;
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
+    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[pos];
 
@@ -936,11 +1433,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
+        if (!e.summary_attempted && summary_load_count < 1) {
+            LoadGameSummary(e);
+            summary_load_count++;
+            if (pos == m_index) {
+                SetStorageHighlight(e.nand_size, e.sd_size);
+            }
+        }
+
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", e.app_id);
 
         const auto selected = pos == m_index;
-        DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), title_id);
+        const auto image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), title_id);
+        DrawGameBadges(vg, theme, image_v, e);
 
         if (e.selected) {
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_FOCUS), 5);
@@ -957,6 +1463,15 @@ void Menu::OnFocusGained() {
 }
 
 void Menu::SetIndex(s64 index) {
+    if (m_entries.empty()) {
+        m_index = 0;
+        SetTitleSubHeading("");
+        SetSubHeading("0 / 0");
+        SetStorageHighlight(0, 0);
+        return;
+    }
+
+    index = std::clamp<s64>(index, 0, static_cast<s64>(m_entries.size()) - 1);
     m_index = index;
     if (!m_index) {
         m_list->SetYoff(0);
@@ -966,6 +1481,10 @@ void Menu::SetIndex(s64 index) {
     std::snprintf(title_id, sizeof(title_id), "%016lX", m_entries[m_index].app_id);
     SetTitleSubHeading(title_id);
     this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
+
+    auto& entry = m_entries[m_index];
+    LoadGameSummary(entry);
+    SetStorageHighlight(entry.nand_size, entry.sd_size);
 }
 
 void Menu::ScanHomebrew() {
@@ -1134,6 +1653,7 @@ void Menu::FreeEntries() {
 void Menu::OnLayoutChange() {
     m_index = 0;
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
+    SetIndex(0);
 }
 
 void Menu::DeleteGames() {

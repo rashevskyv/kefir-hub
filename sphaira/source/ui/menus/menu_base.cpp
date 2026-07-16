@@ -246,7 +246,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         label_x_of(pdata.nand_free, pdata.nand_total),
         label_x_of(pdata.sd_free, pdata.sd_total));
 
-    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes) {
+    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes) {
         if (total_bytes <= 0) return;
         const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
         const float fill_w     = bar_w * used_ratio;
@@ -262,6 +262,19 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         else if (used_ratio > 0.75f) fill_col = nvgRGBA(230, 180, 60,  255);
         else                         fill_col = nvgRGBA(90,  200, 120, 255);
         gfx::drawRect(vg, bar_x, bar_y, fill_w, bar_h, fill_col);
+
+        // Games may expose how much of the used region belongs to the current
+        // title. Anchor the highlighted segment at the end of the used region
+        // so it remains proportional without claiming that storage is physically
+        // contiguous on disk.
+        if (highlight_bytes && fill_w > 0.f) {
+            const float highlight_ratio = std::min(
+                used_ratio, static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes));
+            const float highlight_w = std::max(2.f, bar_w * highlight_ratio);
+            const float highlight_x = bar_x + std::max(0.f, fill_w - highlight_w);
+            gfx::drawRect(vg, highlight_x, bar_y, std::min(highlight_w, fill_w), bar_h,
+                theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+        }
 
         // Free space text (right-aligned value next to the bar)
         const float free_gb  = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
@@ -279,8 +292,8 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
     const float storage_mid  = (y_ip + start_y) * 0.5f;
     const float storage_gap  = 15.f;
-    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total);
-    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total);
+    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight);
+    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight);
 
     gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
@@ -307,6 +320,11 @@ void MenuBase::SetTitleSubHeading(std::string sub_heading) {
 
 void MenuBase::SetSubHeading(std::string sub_heading) {
     m_sub_heading = sub_heading;
+}
+
+void MenuBase::SetStorageHighlight(u64 nand_bytes, u64 sd_bytes) {
+    m_nand_highlight = nand_bytes;
+    m_sd_highlight = sd_bytes;
 }
 
 } // namespace sphaira::ui::menu

@@ -1,20 +1,21 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.238**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.239**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.238
+## Автоматичні gates v0.13.239
 
-- [x] Release configure/build:
-  `cmake --preset Release && cmake --build --preset Release --parallel 4`.
+- [x] Release build у WSL/devkitPro:
+  `cmake --build --preset Release --parallel 4`.
 - [x] Створено `build/Release/kefir-hub.nro`.
 - [x] `git diff --check` не знаходить whitespace-помилок.
 - [x] Усі `assets/romfs/i18n/*.json` проходять JSON parsing.
 - [x] У NRO немає `libpulsar`, `PLSR` або `default_music.bfstm`.
-- [x] Graphify-граф оновлено після змін коду.
+- [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
+  повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.238 на Switch
+## P0 smoke test v0.13.239 на Switch
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -27,8 +28,10 @@
 ### HIST-61A — Game Details
 
 - [ ] Натиснути A на грі: відкривається Details, а не негайний launch.
-- [ ] Перевірити cover, name, author, Title ID, display version, language count,
-  `Contents folder` і `Save quota`.
+- [ ] Перевірити cover, name, author, Title ID, display version, прокручуваний
+  повний список мов, LayeredFS, NAND/SD size і save quota/allocated size.
+- [ ] L/R циклічно відкривають попередню/наступну гру без повернення у бібліотеку;
+  B повертає focus на останню переглянуту гру. ZL/ZR перемикають Content/Tickets/Saves.
 - [ ] Для гри з Base + Update + DLC звірити type, version, storage, size,
   content count і rights count з DBI/NCM.
 - [ ] L3 запускає саме поточну гру; B повертає список без втрати focus.
@@ -36,6 +39,17 @@
   component dump: у `/dumps/NSP` потрапляє лише вибрана в Details гра.
 - [ ] Імітувати відсутні keys/помилку NCM: показується error/partial-load message,
   а не порожній успішний dump.
+
+### HIST-62 / HIST-GAMES-VIEWPORT / HIST-GAMES-STORAGE
+
+- [ ] У Grid, Grid Detail і HB Menu прокрутити перший/останній рядок: картки,
+  badges, focus glow і touch area не заходять вище y=87 або нижче y=646.
+- [ ] Для Base-only, Base+Update, Base+DLC і LayeredFS звірити badges з DBI та
+  `/atmosphere/contents/<title id>`; довгі комбінації переносяться всередині icon.
+- [ ] Виділяти ігри на NAND, SD і mixed storage: контрастний сегмент з'являється
+  лише у відповідному bar і пропорційний сумі фактичних NCM content sizes.
+- [ ] На вкладці Tickets звірити rights ID, key generation і Common/Personalized/
+  Missing з DBI. На Saves звірити користувача, type, save ID та size.
 
 ### HIST-HTTP-RETRY — контрольоване завантаження
 
@@ -73,7 +87,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-238` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-239` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 
@@ -82,7 +96,7 @@
 ## Legacy regression suite v0.13.198–v0.13.229
 
 Нижчі сценарії збережено без видалення як історичне покриття. Позначки в них
-не змінюють статус поточного v0.13.238 hardware gate.
+не змінюють статус поточного v0.13.239 hardware gate.
 
 ---
 
