@@ -1647,7 +1647,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             std::string pass;
             if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
 
-            App::PopToMenu();
+            App::Pop();
 
             location::Entry e;
             e.name = name;
@@ -1677,7 +1677,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             std::string pass;
             if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
 
-            App::PopToMenu();
+            App::Pop();
 
             location::Entry e;
             e.name = name;
@@ -1707,7 +1707,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
             std::string pass;
             if (R_FAILED(swkbd::ShowText(pass, "Enter password (optional)"_i18n.c_str(), ""))) return;
 
-            App::PopToMenu();
+            App::Pop();
 
             location::Entry e;
             e.name = name;
@@ -1732,7 +1732,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
                 url = "http://" + url;
             }
 
-            App::PopToMenu();
+            App::Pop();
 
             location::Entry e;
             e.name = name;

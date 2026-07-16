@@ -415,6 +415,12 @@ auto App::PopToMenu() -> void {
     }
 }
 
+auto App::Pop() -> void {
+    if (g_app && !g_app->m_widgets.empty()) {
+        g_app->m_widgets.back()->SetPop();
+    }
+}
+
 void App::Notify(std::string text, ui::NotifEntry::Side side) {
     g_app->m_notif_manager.Push({text, side});
 }

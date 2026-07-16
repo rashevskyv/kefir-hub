@@ -79,6 +79,7 @@ public:
 
     // pops all widgets above a menu
     static void PopToMenu();
+    static void Pop();
 
     // this is thread safe
     static void Notify(std::string text, ui::NotifEntry::Side side = ui::NotifEntry::Side::RIGHT);

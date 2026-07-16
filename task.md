@@ -57,3 +57,14 @@
 
 - [x] **Збірка**:
   - [x] Виконати WSL-збірку `kefir-hub.nro`.
+
+# Список завдань: Виправлення Use-After-Free крашу при додаванні джерел (v0.13.223)
+
+- [x] **Виправлення крашу**:
+  - [x] Замінити `App::PopToMenu()` на `App::Pop()` в `AddNetworkLocationInteractive` у `filebrowser.cpp`, щоб уникнути передчасного знищення `SettingsMenu` та подальшого Use-After-Free при асинхронному виклику `on_success()`.
+
+- [x] **Версія**:
+  - [x] Оновити версію проекту на `0.13.223` у `sphaira/CMakeLists.txt`.
+
+- [x] **Збірка**:
+  - [x] Виконати WSL-збірку `kefir-hub.nro`.

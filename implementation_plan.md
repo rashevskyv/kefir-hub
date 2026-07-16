@@ -228,4 +228,34 @@
   - Натиснути на нього, перевірити, що відкрився PopupList з варіантами `"None"` та `"Nextcloud"`. Вибрати `"Nextcloud"`.
   - Переконатися, що налаштування збереглося.
   - Запустити бекап сейву в меню сейвів при активованій опції `Auto-sync saves after backup`. Переконатися, що сейви успішно автосинхронізуються на джерело `"Nextcloud"`.
-  - Видалити джерело `"Nextcloud"` у `Settings -> Sources` та перевірити, що в `WebDAV Settings` активна локація змінилася на `"None"`.
+  - Видалити джерело `"Nextcloud"` у `Settings -> Sources` та перевірити, що в `WebDAV Settings` active локація змінилася на `"None"`.
+
+# План впровадження: Виправлення Use-After-Free крашу при додаванні джерел (v0.13.223)
+
+## Proposed Changes
+
+### [Component: UI (File Browser / Add Source)]
+
+---
+
+#### [MODIFY] [filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp)
+- У функції `AddNetworkLocationInteractive` замінити всі виклики `App::PopToMenu()` на `App::Pop()`. Це запобігає закриттю та знищенню екрана `SettingsMenu` під час додавання джерела, що усуває Use-After-Free краш при наступному асинхронному виклику `on_success()`.
+
+### [Component: Version]
+
+---
+
+#### [MODIFY] [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)
+- Підвищити версію проекту `sphaira_VERSION` до `0.13.223`.
+
+## Verification Plan (Виконано)
+
+### Automated Tests
+- Автоматизовані тести відсутні.
+
+### Manual Verification (Готово до тестування на консолі)
+- **WSL-збірка**: Виконано успішно. Проект скомпільовано без помилок лінкера.
+- **Тестування на консолі**:
+  - Перейти до `Tools -> Settings -> Sources` та вибрати `+ Add network location`.
+  - Додати WebDAV джерело (наприклад, з назвою `"Nextcloud"` та хостом `dev.customfw.xyz`).
+  - Переконатися, що після введення останнього параметра та закриття системної клавіатури, програма успішно повертається на попередній екран налаштування джерел, показує спливаюче повідомлення про успішне додавання, і **не виникає краш Atmosphere**.
