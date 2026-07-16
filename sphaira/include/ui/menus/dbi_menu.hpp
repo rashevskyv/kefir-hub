@@ -5,6 +5,7 @@
 #include "ui/menus/menu_base.hpp"
 #include "yati/source/usb_dbi.hpp"
 #include "yati/yati.hpp"
+#include <array>
 
 namespace sphaira::ui::menu::dbi {
 
@@ -35,16 +36,19 @@ struct QueueEntry {
     InstallTarget target{InstallTarget::Auto};
     bool install_selected{};
     InstallTarget install_target{InstallTarget::Auto};
+    bool analysis_deferred{};
 };
 
 struct Menu final : MenuBase, InstallProgress {
     Menu(u32 flags);
+    Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "DBI"; }
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void ThreadFunction();
+    void LocalThreadFunction();
 
     Result CheckCancelled() override;
     UEvent* GetInstallCancelEvent() override { return &m_cancel_event; }
@@ -64,6 +68,10 @@ private:
     static auto TargetName(InstallTarget target) -> std::string;
 
     std::unique_ptr<yati::source::DbiUsb> m_usb_source{};
+    fs::Fs* m_local_fs{};
+    std::vector<fs::FsPath> m_local_paths{};
+    std::vector<s64> m_local_source_sizes{};
+    bool m_defer_local_analysis{};
     std::unique_ptr<List> m_list{};
     std::unique_ptr<List> m_log_list{};
     bool m_was_mtp_enabled{};
@@ -89,6 +97,9 @@ private:
     s64 m_progress_size{};
     s64 m_progress_last_offset{};
     s64 m_progress_speed{};
+    std::array<s64, 8> m_progress_speed_samples{};
+    size_t m_progress_speed_sample_count{};
+    size_t m_progress_speed_sample_index{};
     TimeStamp m_progress_timestamp{};
     size_t m_current_package{};
     size_t m_success_count{};

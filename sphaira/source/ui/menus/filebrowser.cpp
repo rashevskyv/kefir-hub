@@ -10,8 +10,10 @@
 #include "ui/menus/file_viewer.hpp"
 #include "ui/menus/theme_creator.hpp"
 #include "ui/menus/appstore.hpp"
+#include "ui/menus/settings_menu.hpp"
 #include "utils/devoptab_smb2.hpp"
 #include "utils/devoptab_curl_device.hpp"
+#include "utils/utils.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
@@ -50,6 +52,7 @@
 #include <ranges>
 #include <expected>
 #include <memory>
+#include <optional>
 #include <algorithm>
 
 namespace sphaira::ui::menu::filebrowser {
@@ -139,6 +142,10 @@ bool IsSameNetworkLocation(const FsEntry& lhs, const FsEntry& rhs) {
         lhs.pass.toString() == rhs.pass.toString();
 }
 
+void metadata_thread_func(void* user) {
+    static_cast<FsView*>(user)->MetadataThreadFunction();
+}
+
 
 
 
@@ -150,6 +157,17 @@ void SignalChange() {
 }
 
 FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSide side) : m_menu{menu}, m_side{side} {
+    mutexInit(&m_metadata_mutex);
+    mutexInit(&m_metadata_io_mutex);
+    condvarInit(&m_metadata_cond);
+    if (R_SUCCEEDED(threadCreate(&m_metadata_thread, metadata_thread_func, this, nullptr, 1024 * 32, PRIO_PREEMPTIVE, 1))) {
+        if (R_SUCCEEDED(threadStart(&m_metadata_thread))) {
+            m_metadata_thread_created = true;
+        } else {
+            threadClose(&m_metadata_thread);
+        }
+    }
+
     this->SetActions(
         std::make_pair(Button::X, Action{"Select"_i18n, [this](){
             ToggleSelection();
@@ -276,6 +294,15 @@ FsView::FsView(Menu* menu, ViewSide side) : FsView{menu, "", FS_ENTRY_DEFAULT, s
 }
 
 FsView::~FsView() {
+    if (m_metadata_thread_created) {
+        mutexLock(&m_metadata_mutex);
+        m_metadata_thread_exit = true;
+        condvarWakeAll(&m_metadata_cond);
+        mutexUnlock(&m_metadata_mutex);
+        threadWaitForExit(&m_metadata_thread);
+        threadClose(&m_metadata_thread);
+    }
+
     // don't store mount points for non-sd card paths.
     if (IsSd()) {
         ini_puts("paths", "last_path", m_path, App::CONFIG_PATH);
@@ -293,6 +320,7 @@ FsView::~FsView() {
 }
 
 void FsView::Update(Controller* controller, TouchInfo* touch) {
+    ApplyRemoteMetadata();
     m_list->OnUpdate(controller, touch, m_index, m_entries_current.size(), [this](bool touch, auto i) {
         if (touch && m_index == i) {
             FireAction(Button::A);
@@ -314,6 +342,8 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
     constexpr float text_xoffset{15.f};
     bool got_dir_count = false;
 
+    nvgSave(vg);
+    nvgScissor(vg, m_list_clip.x, m_list_clip.y, m_list_clip.w, m_list_clip.h);
     m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
@@ -413,7 +443,9 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         if (e.IsDir()) {
             // NOTE: this takes longer than 16ms when opening a new folder due to it
             // checking all 9 folders at once.
-            if (!got_dir_count && e.file_count == -1 && e.dir_count == -1) {
+            // Never perform this synchronous scan for a remote filesystem while
+            // drawing. It blocks controller input on every newly visible row.
+            if (m_fs->IsNative() && !got_dir_count && e.file_count == -1 && e.dir_count == -1) {
                 got_dir_count = true;
                 m_fs->DirGetEntryCount(GetNewPath(e), &e.file_count, &e.dir_count);
             }
@@ -423,38 +455,63 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
             if (e.dir_count != -1) {
                 gfx::drawTextArgs(vg, x + w - text_xoffset, y + (h / 2.f) + 3, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(text_id), "%zd dirs"_i18n.c_str(), e.dir_count);
+            } else if (m_fs_entry.type != FsType::Root && !m_fs->IsNative() && e.metadata_failed) {
+                gfx::drawTextArgs(vg, x + w - text_xoffset, y + h / 2.f, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "-" );
+            } else if (m_fs_entry.type != FsType::Root && !m_fs->IsNative() && !e.metadata_loaded) {
+                gfx::drawTextArgs(vg, x + w - text_xoffset, y + h / 2.f, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "..." );
             }
         } else if (e.IsFile()) {
-            if (!e.time_stamp.is_valid) {
+            // Remote metadata lookups can take hundreds of milliseconds. The
+            // directory listing already supplies the useful size, so do not
+            // stall the UI thread to fetch a timestamp while navigating.
+            if (m_fs->IsNative() && !e.time_stamp.is_valid) {
                 const auto path = GetNewPath(e);
-                if (m_fs->IsNative()) {
-                    m_fs->GetFileTimeStampRaw(path, &e.time_stamp);
-                } else {
-                    m_fs->FileGetSizeAndTimestamp(path, &e.time_stamp, &e.file_size);
-                }
+                m_fs->GetFileTimeStampRaw(path, &e.time_stamp);
             }
 
-            const auto t = (time_t)(e.time_stamp.modified);
-            struct tm tm{};
-            localtime_r(&t, &tm);
-            gfx::drawTextArgs(vg, x + w - text_xoffset, y + (h / 2.f) + 3, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(text_id), "%02u/%02u/%u", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
-            if ((double)e.file_size / 1024.0 / 1024.0 <= 0.009) {
+            if (e.time_stamp.is_valid) {
+                const auto t = (time_t)(e.time_stamp.modified);
+                struct tm tm{};
+                localtime_r(&t, &tm);
+                gfx::drawTextArgs(vg, x + w - text_xoffset, y + (h / 2.f) + 3, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(text_id), "%02u/%02u/%u", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+            }
+            if (!m_fs->IsNative() && e.metadata_failed) {
+                gfx::drawTextArgs(vg, x + w - text_xoffset, y + h / 2.f, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "-" );
+            } else if (!m_fs->IsNative() && !e.metadata_loaded) {
+                gfx::drawTextArgs(vg, x + w - text_xoffset, y + h / 2.f, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "..." );
+            } else if ((double)e.file_size / 1024.0 / 1024.0 <= 0.009) {
                 gfx::drawTextArgs(vg, x + w - text_xoffset, y + (h / 2.f) - 3, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(text_id), "%.2f KiB", (double)e.file_size / 1024.0);
             } else {
                 gfx::drawTextArgs(vg, x + w - text_xoffset, y + (h / 2.f) - 3, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(text_id), "%.2f MiB", (double)e.file_size / 1024.0 / 1024.0);
             }
         }
     });
+    nvgRestore(vg);
 }
 
 void FsView::OnFocusGained() {
     Widget::OnFocusGained();
     if (m_entries.empty()) {
-        if (m_path.empty()) {
-            Scan(m_fs->Root());
-        } else {
-            Scan(m_path);
+        const auto rc = Scan(m_path.empty() ? m_fs->Root() : m_path);
+        if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
+            App::PushErrorBox(rc, "Failed to list network storage!"_i18n);
+            const FsEntry root_entry{
+                .name = "System Root",
+                .root = "root:/",
+                .type = FsType::Root
+            };
+            SetFs("root:/", root_entry);
         }
+    } else if (m_fs_entry.type == FsType::Root) {
+        // sources may have been added, edited or removed while unfocused.
+        SortAndFindLastFile(true);
+    } else if (m_metadata_paused) {
+        m_metadata_paused = false;
+        QueueRemoteMetadata();
     }
 }
 
@@ -485,6 +542,8 @@ void FsView::SetSide(ViewSide side) {
     }
 
     m_list = std::make_unique<List>(1, 8, m_pos, v);
+    m_list_clip = Vec4{GetX(), v.y - gfx::SELECTION_OUTLINE_PAD, GetW(),
+        GetY() + GetH() - (v.y - gfx::SELECTION_OUTLINE_PAD)};
     if (m_menu->IsSplitScreen()) {
         m_list->SetPageJump(false);
     }
@@ -525,7 +584,9 @@ void FsView::ToggleSelection() {
         m_menu->ResetSelection();
     }
 
-    if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
+    const bool current_is_file = GetEntry().IsFile();
+    const bool bulk_select = App::GetApp()->m_controller.GotHeld(Button::R2);
+    if (bulk_select) {
         s64 visible_selected_count{};
         for (u32 i = 0; i < m_entries_current.size(); i++) {
             if (GetEntry(i).selected) {
@@ -548,7 +609,17 @@ void FsView::ToggleSelection() {
         }
     }
 
-    m_menu->UpdateSubheading();
+    s64 next_index = m_index + 1;
+    if (current_is_file) {
+        while (next_index < static_cast<s64>(m_entries_current.size()) && !GetEntry(next_index).IsFile()) {
+            next_index++;
+        }
+    }
+    if (!bulk_select && next_index < static_cast<s64>(m_entries_current.size())) {
+        SetIndex(next_index);
+    } else {
+        m_menu->UpdateSubheading();
+    }
 }
 
 void FsView::InvertSelection() {
@@ -631,6 +702,7 @@ void FsView::OpenImageViewer() {
 
 
 auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
+    SCOPED_MUTEX(&m_metadata_io_mutex);
     App::SetBoostMode(true);
     ON_SCOPE_EXIT(App::SetBoostMode(false));
 
@@ -641,6 +713,11 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     m_path = new_path;
+    mutexLock(&m_metadata_mutex);
+    m_metadata_generation++;
+    m_metadata_jobs.clear();
+    m_metadata_updates.clear();
+    mutexUnlock(&m_metadata_mutex);
     m_entries.clear();
     m_index = 0;
     m_list->SetYoff(0);
@@ -751,6 +828,8 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             FileEntry fe{};
             std::strcpy(fe.name, e.name);
             fe.type = e.type;
+            fe.file_size = e.file_size;
+            fe.metadata_loaded = m_fs->IsNative() || e.file_size > 0;
 
             m_entries.emplace_back(fe);
             i++;
@@ -763,6 +842,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_is_update_folder = R_SUCCEEDED(CheckIfUpdateFolder());
 
     SetIndex(0);
+    QueueRemoteMetadata();
 
     // find previous entry
     if (is_walk_up && !m_previous_highlighted_file.empty()) {
@@ -771,6 +851,128 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     R_SUCCEED();
+}
+
+void FsView::QueueRemoteMetadata() {
+    if (m_metadata_paused || m_fs->IsNative() || m_fs_entry.type == FsType::Root || !m_metadata_thread_created) {
+        return;
+    }
+
+    mutexLock(&m_metadata_mutex);
+    // Directory counts require a complete listing and are generally slower;
+    // put them below file jobs so useful sizes appear first.
+    for (size_t i = m_entries.size(); i-- > 0;) {
+        auto& entry = m_entries[i];
+        if (!entry.IsDir()) {
+            continue;
+        }
+        m_metadata_jobs.push_back(MetadataJob{
+            .generation = m_metadata_generation,
+            .entry_index = i,
+            .path = GetNewPath(entry),
+            .is_dir = entry.IsDir(),
+        });
+    }
+    for (size_t i = m_entries.size(); i-- > 0;) {
+        auto& entry = m_entries[i];
+        if (!entry.IsFile() || entry.metadata_loaded) {
+            continue;
+        }
+        m_metadata_jobs.push_back(MetadataJob{
+            .generation = m_metadata_generation,
+            .entry_index = i,
+            .path = GetNewPath(entry),
+            .is_dir = false,
+        });
+    }
+    condvarWakeOne(&m_metadata_cond);
+    mutexUnlock(&m_metadata_mutex);
+}
+
+void FsView::PauseRemoteMetadata() {
+    if (m_fs->IsNative() || !m_metadata_thread_created) {
+        return;
+    }
+
+    m_metadata_paused = true;
+    mutexLock(&m_metadata_mutex);
+    m_metadata_generation++;
+    m_metadata_jobs.clear();
+    m_metadata_updates.clear();
+    mutexUnlock(&m_metadata_mutex);
+
+    // Wait for at most the one request which was already in flight. Once this
+    // lock is acquired, the worker has no queued work left and the installer
+    // can use the remote filesystem without competing metadata requests.
+    mutexLock(&m_metadata_io_mutex);
+    mutexUnlock(&m_metadata_io_mutex);
+}
+
+void FsView::MetadataThreadFunction() {
+    for (;;) {
+        mutexLock(&m_metadata_mutex);
+        while (m_metadata_jobs.empty() && !m_metadata_thread_exit) {
+            condvarWait(&m_metadata_cond, &m_metadata_mutex);
+        }
+        if (m_metadata_thread_exit) {
+            mutexUnlock(&m_metadata_mutex);
+            return;
+        }
+        auto job = std::move(m_metadata_jobs.back());
+        m_metadata_jobs.pop_back();
+        mutexUnlock(&m_metadata_mutex);
+
+        MetadataUpdate update{
+            .generation = job.generation,
+            .entry_index = job.entry_index,
+        };
+        Result rc{};
+        mutexLock(&m_metadata_io_mutex);
+        if (job.is_dir) {
+            rc = m_fs->DirGetEntryCount(job.path, &update.file_count, &update.dir_count);
+        } else {
+            rc = m_fs->FileGetSizeAndTimestamp(job.path, &update.timestamp, &update.file_size);
+        }
+        mutexUnlock(&m_metadata_io_mutex);
+        update.success = R_SUCCEEDED(rc);
+
+        mutexLock(&m_metadata_mutex);
+        if (job.generation == m_metadata_generation) {
+            m_metadata_updates.emplace_back(std::move(update));
+        }
+        mutexUnlock(&m_metadata_mutex);
+    }
+}
+
+void FsView::ApplyRemoteMetadata() {
+    std::vector<MetadataUpdate> updates;
+    mutexLock(&m_metadata_mutex);
+    std::swap(updates, m_metadata_updates);
+    mutexUnlock(&m_metadata_mutex);
+
+    bool selected_size_changed{};
+    for (const auto& update : updates) {
+        if (update.generation != m_metadata_generation || update.entry_index >= m_entries.size()) {
+            continue;
+        }
+        auto& entry = m_entries[update.entry_index];
+        selected_size_changed |= entry.selected && entry.IsFile();
+        entry.metadata_loaded = true;
+        entry.metadata_failed = !update.success;
+        if (!update.success) {
+            continue;
+        }
+        if (entry.IsDir()) {
+            entry.file_count = update.file_count;
+            entry.dir_count = update.dir_count;
+        } else {
+            entry.file_size = update.file_size;
+            entry.time_stamp = update.timestamp;
+        }
+    }
+    if (selected_size_changed) {
+        m_menu->UpdateSubheading();
+    }
 }
 
 void FsView::Sort() {
@@ -884,6 +1086,8 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
         }
     }
 
+    mutexLock(&m_metadata_io_mutex);
+
 #ifdef BUILD_SMB2
     if (m_fs_entry.type == FsType::Network) {
         g_smb_ref_count--;
@@ -932,9 +1136,22 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
     }
 
     m_path = new_path.empty() ? m_fs->Root() : new_path;
+    mutexUnlock(&m_metadata_io_mutex);
 
     if (HasFocus()) {
-        Scan(m_path);
+        const auto rc = Scan(m_path);
+        // a mounted network share can still fail to list (server rejected the
+        // request, unsupported listing format, connection dropped). Without
+        // this, the user is left staring at a green "Empty..." screen.
+        if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
+            App::PushErrorBox(rc, "Failed to list network storage!"_i18n);
+            const FsEntry root_entry{
+                .name = "System Root",
+                .root = "root:/",
+                .type = FsType::Root
+            };
+            SetFs("root:/", root_entry);
+        }
     }
 }
 
@@ -964,6 +1181,112 @@ void FsView::DisplayHash(hash::Type type) {
 void FsView::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    const auto is_root = m_fs_entry.type == FsType::Root;
+
+    // at the root, sources can be managed in place, with the same options
+    // as Settings -> Sources.
+    if (is_root) {
+        if (m_entries_current.size() && GetEntry().virtual_target_entry.type == FsType::Network) {
+            const auto loc_name = GetEntry().GetName();
+            const auto find_location = [loc_name]() -> std::optional<location::Entry> {
+                const auto locations = location::Load();
+                const auto it = std::ranges::find_if(locations, [&](const auto& e){ return e.name == loc_name; });
+                if (it == locations.end()) {
+                    return std::nullopt;
+                }
+                return *it;
+            };
+
+            options->Add<SidebarEntryCallback>("Edit Source"_i18n, [loc_name](){
+                App::Push<settings::SourceEditMenu>(loc_name);
+            }, true, "Configure connection settings."_i18n);
+
+            options->Add<SidebarEntryCallback>("Test Connection"_i18n, [find_location](){
+                const auto loc = find_location();
+                if (!loc) {
+                    return;
+                }
+                App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc->name, [loc](auto pbox) -> Result {
+                    return settings::TestLocationConnection(*loc);
+                }, [](Result rc) {
+                    if (R_SUCCEEDED(rc)) {
+                        App::Notify("Connection test successful!"_i18n);
+                    } else {
+                        App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                    }
+                });
+            }, true, "Test connection with current settings."_i18n);
+
+            options->Add<SidebarEntryCallback>("Rename Source"_i18n, [this, find_location](){
+                const auto loc = find_location();
+                if (!loc) {
+                    return;
+                }
+                std::string out;
+                if (R_SUCCEEDED(swkbd::ShowText(out, "Rename Network Location"_i18n.c_str(), loc->name.c_str())) && !out.empty() && out != loc->name) {
+                    location::Remove(loc->name);
+                    location::Entry new_loc = *loc;
+                    new_loc.name = out;
+                    location::Add(new_loc);
+                    App::Notify("Location renamed successfully!"_i18n);
+                    App::PopToMenu();
+                    SortAndFindLastFile(true);
+                }
+            }, true, "Rename this network location."_i18n);
+
+            options->Add<SidebarEntryCallback>("Properties"_i18n, [find_location](){
+                const auto loc = find_location();
+                if (!loc) {
+                    return;
+                }
+                std::string props = "Name: "_i18n + loc->name + "\n";
+                std::string proto = loc->protocol;
+                if (proto.empty()) {
+                    if (loc->IsSmb()) proto = "smb";
+                    else if (loc->url.starts_with("ftp://")) proto = "ftp";
+                    else if (loc->url.starts_with("http://") || loc->url.starts_with("https://")) proto = "webdav"; // fallback
+                    else if (loc->url.starts_with("webdav://") || loc->url.starts_with("webdavs://")) proto = "webdav";
+                }
+                props += "Protocol: "_i18n + proto + "\n";
+                props += "URL: "_i18n + loc->url + "\n";
+                if (!loc->user.empty()) {
+                    props += "Username: "_i18n + loc->user + "\n";
+                }
+                if (loc->port) {
+                    props += "Port: "_i18n + std::to_string(loc->port) + "\n";
+                }
+                App::Push<OptionBox>(props, "OK"_i18n);
+            }, true, "View network location properties."_i18n);
+
+            options->Add<SidebarEntryCallback>("Delete Source"_i18n, [this, find_location](){
+                App::Push<OptionBox>(
+                    "Delete this network location?"_i18n,
+                    "No"_i18n, "Yes"_i18n, 0, [this, find_location](auto op_delete_idx) {
+                        if (op_delete_idx && *op_delete_idx) {
+                            const auto loc = find_location();
+                            if (!loc) {
+                                return;
+                            }
+                            if (loc->name == App::GetWebdavUrlName()) {
+                                App::SetWebdavUrl("");
+                            }
+                            location::Remove(loc->name);
+                            App::Notify("Location deleted successfully!"_i18n);
+                            App::PopToMenu();
+                            SortAndFindLastFile(true);
+                        }
+                    }
+                );
+            }, true, "Delete this network location."_i18n);
+        }
+
+        options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
+            AddNetworkLocationInteractive([this](){
+                SortAndFindLastFile(true);
+            });
+        }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
+    }
 
     // returns true if all entries match the ext array.
     const auto check_all_ext = [this](auto& exts){
@@ -1060,7 +1383,7 @@ void FsView::DisplayOptions() {
         }
     }
 
-    if (!m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
+    if (!is_root && !m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
         auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
             const std::string buf = "Paste file(s)?"_i18n;
             App::Push<OptionBox>(
@@ -1074,7 +1397,7 @@ void FsView::DisplayOptions() {
         paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
     }
 
-    if (m_entries_current.size()) {
+    if (!is_root && m_entries_current.size()) {
         auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Cut);
         }, true, "Move the selected files to the clipboard."_i18n);
@@ -1085,7 +1408,7 @@ void FsView::DisplayOptions() {
         }, true, "Copy the selected files to the clipboard."_i18n);
     }
 
-    if (m_entries_current.size()) {
+    if (!is_root && m_entries_current.size()) {
         auto delete_entry = options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Delete);
 
@@ -1103,7 +1426,7 @@ void FsView::DisplayOptions() {
         delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
     }
 
-    if (m_entries_current.size() && !m_selected_count) {
+    if (!is_root && m_entries_current.size() && !m_selected_count) {
         auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
             std::string out;
             const auto& entry = GetEntry();
@@ -1171,7 +1494,7 @@ void FsView::DisplayOptions() {
     }, "Change display order and visibility settings for files."_i18n);
     view_entry->SetHasSubmenu(true);
 
-    if (m_entries_current.size()) {
+    if (!is_root && m_entries_current.size()) {
         if (check_all_ext(ZIP_EXTENSIONS)) {
             auto extract_entry = options->Add<SidebarEntryCallback>("Extract zip"_i18n, [this](){
                 auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
@@ -1406,6 +1729,15 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
         }
         R_SUCCEED();
     }, [this, target_entry](Result rc) {
+        // reflect the outcome on the root view badges, if we are still there.
+        if (m_fs_entry.type == FsType::Root) {
+            for (auto& e : m_entries) {
+                if (e.virtual_target_entry.type == FsType::Network && IsSameNetworkLocation(e.virtual_target_entry, target_entry)) {
+                    e.connection_status = R_FAILED(rc) ? ConnectionStatus::Failed : ConnectionStatus::Connected;
+                }
+            }
+        }
+
         if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Failed to connect to network storage!"_i18n);
         } else {
@@ -1774,7 +2106,35 @@ void Menu::LoadAssocEntries() {
 
 void Menu::UpdateSubheading() {
     const auto index = view->m_entries_current.empty() ? 0 : view->m_index + 1;
-    this->SetSubHeading(std::to_string(index) + " / " + std::to_string(view->m_entries_current.size()));
+    std::string text = std::to_string(index) + " / " + std::to_string(view->m_entries_current.size());
+
+    if (view->m_selected_count) {
+        u64 selected_size{};
+        size_t selected_files{};
+        size_t pending_files{};
+        for (const auto& entry : view->m_entries) {
+            if (!entry.selected || !entry.IsFile()) {
+                continue;
+            }
+            selected_files++;
+            if (!entry.metadata_loaded) {
+                pending_files++;
+                continue;
+            }
+            const auto size = entry.file_size > 0 ? static_cast<u64>(entry.file_size) : 0;
+            selected_size = size > UINT64_MAX - selected_size ? UINT64_MAX : selected_size + size;
+        }
+
+        text += "  |  " + "Selected"_i18n + ": " + std::to_string(view->m_selected_count);
+        if (selected_files) {
+            text += "  |  " + utils::formatSizeStorage(selected_size);
+            if (pending_files) {
+                text += " + ...";
+            }
+        }
+    }
+
+    this->SetSubHeading(std::move(text));
 }
 
 void Menu::SetSplitScreen(bool enable) {

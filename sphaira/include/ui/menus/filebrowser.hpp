@@ -108,6 +108,8 @@ struct FileEntry : FsDirectoryEntry {
     FsTimeStampRaw time_stamp{};
     bool checked_extension{}; // did we already search for an ext?
     bool checked_internal_extension{}; // did we already search for an ext?
+    bool metadata_loaded{}; // remote size/timestamp or child counts are ready
+    bool metadata_failed{};
     bool selected{}; // is this file selected?
     ConnectionStatus connection_status{ConnectionStatus::Unknown};
     FsEntry virtual_target_entry{};
@@ -208,6 +210,8 @@ struct FsView final : Widget {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
     void ConnectToLocation(const FsEntry& target_entry);
+    void MetadataThreadFunction();
+    void PauseRemoteMetadata();
 
     static auto GetNewPath(const fs::FsPath& root_path, const fs::FsPath& file_path) -> fs::FsPath {
         return fs::AppendPath(root_path, file_path);
@@ -316,6 +320,25 @@ private:
     void DisplayOptions();
     void DisplayAdvancedOptions();
     void ShowSourcePicker();
+    void QueueRemoteMetadata();
+    void ApplyRemoteMetadata();
+
+    struct MetadataJob {
+        u64 generation{};
+        size_t entry_index{};
+        fs::FsPath path{};
+        bool is_dir{};
+    };
+
+    struct MetadataUpdate {
+        u64 generation{};
+        size_t entry_index{};
+        s64 file_size{};
+        s64 file_count{-1};
+        s64 dir_count{-1};
+        FsTimeStampRaw timestamp{};
+        bool success{};
+    };
 
 private:
     Menu* m_menu{};
@@ -331,6 +354,7 @@ private:
     std::span<u32> m_entries_current{};
 
     std::unique_ptr<List> m_list{};
+    Vec4 m_list_clip{};
     std::optional<fs::FsPath> m_daybreak_path{};
 
     // this keeps track of the highlighted file before opening a folder
@@ -343,6 +367,17 @@ private:
     ScrollingText m_scroll_name{};
 
     bool m_is_update_folder{};
+
+    Thread m_metadata_thread{};
+    Mutex m_metadata_mutex{};
+    Mutex m_metadata_io_mutex{};
+    CondVar m_metadata_cond{};
+    std::vector<MetadataJob> m_metadata_jobs{};
+    std::vector<MetadataUpdate> m_metadata_updates{};
+    u64 m_metadata_generation{};
+    bool m_metadata_thread_created{};
+    bool m_metadata_thread_exit{};
+    bool m_metadata_paused{};
 };
 
 // contains all selected files for a command, such as copy, delete, cut etc.

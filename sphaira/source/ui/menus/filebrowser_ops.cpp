@@ -5,6 +5,9 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
+#if ENABLE_NETWORK_INSTALL
+#include "ui/menus/dbi_menu.hpp"
+#endif
 #include "ui/error_box.hpp"
 #include "log.hpp"
 #include "app.hpp"
@@ -38,6 +41,21 @@ void FsView::InstallFiles() {
     }
 
     const auto targets = GetSelectedEntries();
+
+#if ENABLE_NETWORK_INSTALL
+    PauseRemoteMetadata();
+    std::vector<fs::FsPath> paths;
+    std::vector<s64> source_sizes;
+    paths.reserve(targets.size());
+    source_sizes.reserve(targets.size());
+    for (const auto& entry : targets) {
+        paths.emplace_back(GetNewPath(entry));
+        source_sizes.emplace_back(entry.file_size);
+    }
+    App::Push<ui::menu::dbi::Menu>(MenuFlag_None, m_fs.get(), std::move(paths), std::move(source_sizes),
+        m_fs_entry.type == FsType::Network);
+    return;
+#else
     auto failures = std::make_shared<std::vector<std::pair<std::string, Result>>>();
 
     App::Push<OptionBox>("Install Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, targets, failures](auto op_index){
@@ -106,6 +124,7 @@ void FsView::InstallFiles() {
             });
         }
     });
+#endif
 }
 
 void FsView::UnzipFiles(fs::FsPath dir_path) {

@@ -3,7 +3,23 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.249
+## Поточний delivery: v0.13.250
+
+- [x] WEBDAV-LIST-250 — PROPFIND-парсер регістро- і namespace-незалежний
+  (`<D:response>`, `<ns0:...>` тощо); не-WebDAV відповіді падають у fallback на
+  HTML index; FTP LIST замість NLST дає типи та розміри записів
+- [x] SCAN-ERROR-250 — невдалий лістинг змонтованого мережевого джерела показує
+  error box і повертає до root замість зеленого стану `Empty...`
+- [x] ROOT-SOURCES-250 — з root файлового браузера доступні ті самі дії, що в
+  Settings -> Sources: Add network location, Edit Source (SourceEditMenu),
+  Test Connection, Rename, Properties, Delete; root-список оновлюється після
+  змін через OnFocusGained, а файлові операції (Cut/Copy/Delete/Rename/Zip)
+  приховані на root
+- [x] ROOT-BADGE-250 — бейдж джерела на root стає зеленим/червоним за
+  результатом реальної спроби підключення
+- [ ] HW-SMOKE-250 — ручний smoke test на реальній Switch за `tests.md`
+
+## Попередній delivery: v0.13.249
 
 - [x] AUDIT-HISTORY — аудит останніх 5 комітів і всієї історії plan/task/archive
 - [x] HIST-HTTP-RETRY — GET-only retry/resume, restart без stale tail, final flush check

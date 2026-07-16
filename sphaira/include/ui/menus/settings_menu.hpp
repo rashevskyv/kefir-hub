@@ -7,8 +7,12 @@
 #include <string>
 #include <vector>
 #include "ui/menus/settings/settings_tweaks.hpp"
+#include "location.hpp"
 
 namespace sphaira::ui::menu::settings {
+
+// probes the given network location, Result 0 on success.
+auto TestLocationConnection(const location::Entry& loc) -> Result;
 
 enum class SettingsItemKind {
     Normal,

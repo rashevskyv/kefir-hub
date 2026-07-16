@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "defines.hpp"
 #include <cstring>
+#include <cctype>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -248,6 +249,11 @@ void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::stri
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, nullptr);
+    curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, CurlShutdownProgressCallback);
+    // fail on http >= 400: otherwise a 404/500 error page is streamed back
+    // as if it were the file contents.
+    curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 1024L * 64L);
     curl_easy_setopt(curl_handle, CURLOPT_UPLOAD_BUFFERSIZE, 1024L * 64L);
     curl_easy_setopt(curl_handle, CURLOPT_ACCEPT_ENCODING, "");
@@ -409,42 +415,56 @@ std::string MountCurlDevice::build_url(const std::string& _path, bool is_dir) {
 
 int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags, int mode) {
     auto* state = static_cast<CurlFileState*>(fileStruct);
-    *state = {};
+    // the memory devoptab hands us is raw: the state (and its std::string)
+    // must be constructed in-place, assignment would crash.
+    new (state) CurlFileState();
 
     state->curl = curl_easy_init();
     if (!state->curl) {
+        state->~CurlFileState();
         return -ENOMEM;
     }
 
     state->url = build_url(path, false);
     if (state->url.empty()) {
         curl_easy_cleanup(state->curl);
-        state->curl = nullptr;
+        state->~CurlFileState();
         return -EINVAL;
     }
 
-    state->write_mode = (flags & (O_WRONLY | O_RDWR | O_CREAT));
+    state->write_mode = (flags & O_ACCMODE) != O_RDONLY;
 
     if (state->write_mode) {
         state->pull_data = CreatePullData(state->curl, state->url, (flags & O_APPEND) != 0);
         if (!state->pull_data) {
             curl_easy_cleanup(state->curl);
-            state->curl = nullptr;
+            state->~CurlFileState();
             return -EIO;
         }
     } else {
         curl_set_common_options(state->curl, state->url);
         curl_easy_setopt(state->curl, CURLOPT_NOBODY, 1L);
-        if (curl_easy_perform(state->curl) == CURLE_OK) {
+        const auto res = curl_easy_perform(state->curl);
+        if (res == CURLE_OK) {
             double cl{};
             curl_easy_getinfo(state->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
             state->size = (cl > 0) ? (size_t)cl : 0;
+        } else {
+            long code{};
+            curl_easy_getinfo(state->curl, CURLINFO_RESPONSE_CODE, &code);
+            if (code == 404 || res == CURLE_REMOTE_FILE_NOT_FOUND) {
+                curl_easy_cleanup(state->curl);
+                state->~CurlFileState();
+                return -ENOENT;
+            }
+            // other failures (eg the server rejects HEAD): size stays
+            // unknown, the GET below may still succeed.
         }
 
         state->push_data = CreatePushData(state->curl, state->url, 0);
         if (!state->push_data) {
             curl_easy_cleanup(state->curl);
-            state->curl = nullptr;
+            state->~CurlFileState();
             return -EIO;
         }
     }
@@ -466,6 +486,7 @@ int MountCurlDevice::devoptab_close(void *fd) {
         curl_easy_cleanup(state->curl);
         state->curl = nullptr;
     }
+    state->~CurlFileState();
     return 0;
 }
 
@@ -476,6 +497,13 @@ ssize_t MountCurlDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     size_t read = state->push_data->PullData(ptr, len, false);
+    // a short/empty read is either a genuine eof or a dropped transfer.
+    // without this check a failed download would look like a smaller file,
+    // silently truncating copies.
+    if (read < len && state->push_data->HasError()) {
+        return -EIO;
+    }
+
     state->offset += read;
     return read;
 }
@@ -487,6 +515,12 @@ ssize_t MountCurlDevice::devoptab_write(void *fd, const char *ptr, size_t len) {
     }
 
     size_t written = state->pull_data->PushData(ptr, len, false);
+    // PushData only returns 0 once the upload thread has died (error or
+    // finished) - report an error instead of letting callers spin on 0.
+    if (!written) {
+        return -EIO;
+    }
+
     state->offset += written;
     return written;
 }
@@ -536,6 +570,50 @@ int MountCurlDevice::devoptab_fstat(void *fd, struct stat *st) {
     return 0;
 }
 
+namespace {
+
+std::string to_lower_copy(const std::string& str) {
+    std::string out = str;
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
+    return out;
+}
+
+// finds the next xml tag with the given local name, ignoring any namespace
+// prefix: "<d:response", "<D:response", "<ns0:response" and "<response" all
+// match "response". haystack and name must be lowercase.
+size_t find_xml_tag(const std::string& haystack, size_t pos, std::string_view name, bool closing = false) {
+    while ((pos = haystack.find('<', pos)) != std::string::npos) {
+        auto p = pos + 1;
+        if (closing) {
+            if (p >= haystack.size() || haystack[p] != '/') {
+                pos = p;
+                continue;
+            }
+            p++;
+        }
+
+        const auto end = haystack.find_first_of(" \t\r\n/>", p);
+        if (end == std::string::npos) {
+            break;
+        }
+
+        std::string_view tag{haystack.data() + p, end - p};
+        if (const auto colon = tag.rfind(':'); colon != std::string_view::npos) {
+            tag = tag.substr(colon + 1);
+        }
+
+        if (tag == name) {
+            return pos;
+        }
+
+        pos = end;
+    }
+
+    return std::string::npos;
+}
+
+} // namespace
+
 int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
     auto* state = static_cast<CurlDirState*>(fd);
     new (state) CurlDirState();
@@ -554,9 +632,9 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
     struct curl_slist* list = nullptr;
     ON_SCOPE_EXIT(curl_slist_free_all(list));
 
-    if (is_ftp) {
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "NLST");
-    } else {
+    if (!is_ftp) {
+        // for ftp, curl issues a LIST for urls with a trailing slash,
+        // which gives us entry types and sizes (unlike NLST).
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
         list = curl_slist_append(nullptr, "Depth: 1");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
@@ -566,12 +644,44 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
     CURLcode res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
+    long code{};
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+
+    if (is_ftp && res != CURLE_OK) {
         log_write("[CURL] diropen perform failed: %s\n", curl_easy_strerror(res));
         return -EIO;
     }
 
     std::string data_str(response_data.begin(), response_data.end());
+    std::string lc = to_lower_copy(data_str);
+
+    bool webdav = false;
+    if (!is_ftp) {
+        webdav = res == CURLE_OK && (code == 207 || (code >= 200 && code < 300 && lc.find("multistatus") != std::string::npos));
+        if (!webdav) {
+            // not a webdav server (or PROPFIND was rejected): fall back to
+            // fetching the plain html directory index.
+            log_write("[CURL] diropen PROPFIND unavailable (res=%d, code=%ld), trying html index\n", res, code);
+
+            response_data.clear();
+            curl_easy_reset(curl);
+            curl_set_common_options(curl, full_url);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+
+            res = curl_easy_perform(curl);
+            if (res == CURLE_OK) {
+                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+            }
+            if (res != CURLE_OK || code < 200 || code >= 300) {
+                log_write("[CURL] diropen html index failed (res=%d, code=%ld)\n", res, code);
+                return -EIO;
+            }
+
+            data_str.assign(response_data.begin(), response_data.end());
+            lc = to_lower_copy(data_str);
+        }
+    }
 
     if (is_ftp) {
         std::string line;
@@ -580,55 +690,108 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
             if (!line.empty() && line.back() == '\r') {
                 line.pop_back();
             }
-            if (line.empty() || line == "." || line == "..") {
+            if (line.empty() || line.starts_with("total ")) {
+                continue;
+            }
+
+            std::string name;
+            bool is_dir = false;
+            s64 size = 0;
+
+            if (line[0] == 'd' || line[0] == '-' || line[0] == 'l') {
+                // unix LIST: "drwxr-xr-x 2 owner group 4096 Jan 16 19:00 name with spaces"
+                is_dir = line[0] == 'd';
+
+                std::istringstream ls(line);
+                std::string tok, size_tok;
+                int field = 0;
+                while (field < 8 && (ls >> tok)) {
+                    if (field == 4) {
+                        size_tok = tok;
+                    }
+                    field++;
+                }
+                if (field != 8) {
+                    continue;
+                }
+
+                std::getline(ls, name);
+                name.erase(0, name.find_first_not_of(' '));
+                size = std::strtoll(size_tok.c_str(), nullptr, 10);
+
+                // symlink: strip the " -> target" part, guess type by extension.
+                if (line[0] == 'l') {
+                    if (const auto arrow = name.find(" -> "); arrow != std::string::npos) {
+                        name.resize(arrow);
+                    }
+                    is_dir = name.find('.') == std::string::npos;
+                }
+            } else if (std::isdigit(static_cast<unsigned char>(line[0]))) {
+                // dos LIST: "01-16-26  07:39PM  <DIR>  name" / "01-16-26 07:39PM 123456 name"
+                std::istringstream ls(line);
+                std::string date, time, third;
+                if (!(ls >> date >> time >> third)) {
+                    continue;
+                }
+
+                if (third == "<DIR>") {
+                    is_dir = true;
+                } else {
+                    size = std::strtoll(third.c_str(), nullptr, 10);
+                }
+
+                std::getline(ls, name);
+                name.erase(0, name.find_first_not_of(' '));
+            } else {
+                // unknown format (likely an NLST-style plain name).
+                name = line;
+                is_dir = name.find('.') == std::string::npos;
+            }
+
+            if (name.empty() || name == "." || name == "..") {
                 continue;
             }
 
             dircache entry{};
-            entry.name = line;
-            entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + line;
-            entry.st.st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-            if (line.find('.') == std::string::npos) {
-                entry.st.st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
-            }
+            entry.name = name;
+            entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + name;
+            entry.st.st_mode = is_dir ? (S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH) : (S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+            entry.st.st_size = size;
             entry.st.st_nlink = 1;
             state->entries.push_back(entry);
         }
-    } else {
+    } else if (webdav) {
         size_t pos = 0;
-        while (true) {
-            pos = data_str.find("<d:response", pos);
-            if (pos == std::string::npos) {
-                pos = data_str.find("<response", pos);
+        while ((pos = find_xml_tag(lc, pos, "response")) != std::string::npos) {
+            auto resp_end = find_xml_tag(lc, pos + 1, "response", true);
+            if (resp_end == std::string::npos) {
+                resp_end = data_str.size();
             }
-            if (pos == std::string::npos) {
-                break;
-            }
+            const auto next_pos = resp_end;
 
-            size_t href_pos = data_str.find("<d:href>", pos);
-            if (href_pos == std::string::npos) href_pos = data_str.find("<href>", pos);
-            if (href_pos == std::string::npos) {
-                pos++;
+            const auto href_pos = find_xml_tag(lc, pos, "href");
+            if (href_pos == std::string::npos || href_pos >= resp_end) {
+                pos = next_pos;
                 continue;
             }
 
-            size_t href_start = data_str.find('>', href_pos) + 1;
-            size_t href_end = data_str.find("</", href_start);
+            const auto href_start = data_str.find('>', href_pos) + 1;
+            const auto href_end = data_str.find('<', href_start);
             if (href_end == std::string::npos) {
                 break;
             }
 
-            std::string href = data_str.substr(href_start, href_end - href_start);
+            const std::string href = data_str.substr(href_start, href_end - href_start);
             std::string decoded_href = url_decode(href);
 
             if (decoded_href.ends_with('/')) {
                 decoded_href.pop_back();
             }
-            size_t last_slash = decoded_href.find_last_of('/');
-            std::string name = (last_slash != std::string::npos) ? decoded_href.substr(last_slash + 1) : decoded_href;
+            const auto last_slash = decoded_href.find_last_of('/');
+            const std::string name = (last_slash != std::string::npos) ? decoded_href.substr(last_slash + 1) : decoded_href;
 
             if (name.empty() || name == "." || name == "..") {
-                pos = href_end;
+                pos = next_pos;
                 continue;
             }
 
@@ -636,14 +799,14 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
             entry.name = name;
             entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + name;
 
-            size_t rt_pos = data_str.find("<d:resourcetype>", pos);
-            if (rt_pos == std::string::npos) rt_pos = data_str.find("<resourcetype>", pos);
-            bool is_dir = false;
-            if (rt_pos != std::string::npos && rt_pos < data_str.find("</d:response>", pos)) {
-                size_t rt_end = data_str.find("</d:resourcetype>", rt_pos);
-                if (rt_end == std::string::npos) rt_end = data_str.find("</resourcetype>", rt_pos);
-                std::string rt_xml = data_str.substr(rt_pos, rt_end - rt_pos);
-                if (rt_xml.find("collection") != std::string::npos) {
+            bool is_dir = href.ends_with('/');
+            const auto rt_pos = find_xml_tag(lc, pos, "resourcetype");
+            if (rt_pos != std::string::npos && rt_pos < resp_end) {
+                auto rt_end = find_xml_tag(lc, rt_pos, "resourcetype", true);
+                if (rt_end == std::string::npos || rt_end > resp_end) {
+                    rt_end = resp_end;
+                }
+                if (lc.find("collection", rt_pos) < rt_end) {
                     is_dir = true;
                 }
             }
@@ -651,12 +814,13 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
             entry.st.st_mode = is_dir ? (S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH) : (S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             entry.st.st_nlink = 1;
 
-            size_t cl_pos = data_str.find("<d:getcontentlength>", pos);
-            if (cl_pos == std::string::npos) cl_pos = data_str.find("<getcontentlength>", pos);
-            if (cl_pos != std::string::npos && cl_pos < data_str.find("</d:response>", pos)) {
-                size_t cl_start = data_str.find('>', cl_pos) + 1;
-                size_t cl_end = data_str.find("</", cl_start);
-                entry.st.st_size = std::strtoll(data_str.substr(cl_start, cl_end - cl_start).c_str(), nullptr, 10);
+            const auto cl_pos = find_xml_tag(lc, pos, "getcontentlength");
+            if (cl_pos != std::string::npos && cl_pos < resp_end) {
+                const auto cl_start = data_str.find('>', cl_pos) + 1;
+                const auto cl_end = data_str.find('<', cl_start);
+                if (cl_end != std::string::npos) {
+                    entry.st.st_size = std::strtoll(data_str.substr(cl_start, cl_end - cl_start).c_str(), nullptr, 10);
+                }
             }
 
             std::string current_dir_url = full_url;
@@ -668,7 +832,115 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
                 state->entries.push_back(entry);
             }
 
-            pos = href_end;
+            pos = next_pos;
+        }
+    } else {
+        // plain http server: parse <a href="..."> links from the index page.
+        // extract the path component of the directory url so that absolute
+        // links ("/Games/") can be matched against it.
+        std::string cur_path = "/";
+        if (const auto scheme_end = full_url.find("://"); scheme_end != std::string::npos) {
+            if (const auto path_start = full_url.find('/', scheme_end + 3); path_start != std::string::npos) {
+                cur_path = full_url.substr(path_start);
+            }
+        }
+        if (!cur_path.ends_with('/')) {
+            cur_path += '/';
+        }
+
+        size_t pos = 0;
+        while ((pos = lc.find("<a", pos)) != std::string::npos) {
+            if (pos + 2 >= lc.size() || !std::isspace(static_cast<unsigned char>(lc[pos + 2]))) {
+                pos += 2;
+                continue;
+            }
+
+            const auto tag_pos = pos;
+            const auto tag_end = data_str.find('>', tag_pos);
+            if (tag_end == std::string::npos) {
+                break;
+            }
+            pos = tag_end;
+
+            const auto href_attr = lc.find("href", tag_pos);
+            if (href_attr == std::string::npos || href_attr > tag_end) {
+                continue;
+            }
+            const auto eq = data_str.find('=', href_attr);
+            if (eq == std::string::npos || eq > tag_end) {
+                continue;
+            }
+            const auto vstart = data_str.find_first_not_of(" \t\r\n", eq + 1);
+            if (vstart == std::string::npos || vstart > tag_end) {
+                continue;
+            }
+
+            std::string href;
+            if (data_str[vstart] == '"' || data_str[vstart] == '\'') {
+                const auto vend = data_str.find(data_str[vstart], vstart + 1);
+                if (vend == std::string::npos || vend > tag_end) {
+                    continue;
+                }
+                href = data_str.substr(vstart + 1, vend - vstart - 1);
+            } else {
+                const auto vend = data_str.find_first_of(" \t\r\n>", vstart);
+                href = data_str.substr(vstart, vend - vstart);
+            }
+
+            // drop sort links ("?C=N;O=D") and fragments.
+            if (const auto cut = href.find_first_of("?#"); cut != std::string::npos) {
+                href.resize(cut);
+            }
+
+            if (href.starts_with("http://") || href.starts_with("https://")) {
+                // absolute link: only accept it if it points inside this directory.
+                if (!href.starts_with(full_url)) {
+                    continue;
+                }
+                href = href.substr(full_url.size());
+            } else if (href.starts_with("//")) {
+                continue;
+            } else if (const auto colon = href.find(':'); colon != std::string::npos && colon < href.find('/')) {
+                // skip other schemes (mailto:, javascript:, ...).
+                continue;
+            }
+
+            if (href.starts_with('/')) {
+                // absolute path: must be inside the current directory.
+                if (!href.starts_with(cur_path)) {
+                    continue;
+                }
+                href = href.substr(cur_path.size());
+            }
+
+            if (href.empty() || href == ".." || href.starts_with("../") || href == "./") {
+                continue;
+            }
+
+            const bool is_dir = href.ends_with('/');
+            if (is_dir) {
+                href.pop_back();
+            }
+
+            const std::string name = url_decode(href);
+            // only direct children of this directory.
+            if (name.empty() || name == "." || name == ".." || name.find('/') != std::string::npos) {
+                continue;
+            }
+
+            const auto exists = std::find_if(state->entries.begin(), state->entries.end(), [&](auto& e) {
+                return e.name == name;
+            }) != state->entries.end();
+            if (exists) {
+                continue;
+            }
+
+            dircache entry{};
+            entry.name = name;
+            entry.fullpathname = std::string(path) + (std::string(path).ends_with('/') ? "" : "/") + name;
+            entry.st.st_mode = is_dir ? (S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH) : (S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+            entry.st.st_nlink = 1;
+            state->entries.push_back(entry);
         }
     }
 
@@ -744,6 +1016,16 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
             return 0;
         }
         return -ENOENT;
+    }
+
+    // plain http servers redirect "/Games" -> "/Games/": if the effective
+    // url after redirects has a trailing slash, this is a directory.
+    char* effective_url{};
+    curl_easy_getinfo(transfer_curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+    if (effective_url && std::string_view{effective_url}.ends_with('/')) {
+        st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+        st->st_nlink = 1;
+        return 0;
     }
 
     st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;

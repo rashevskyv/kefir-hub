@@ -24,6 +24,7 @@
 #include "haze_helper.hpp"
 #include "web.hpp"
 #include "swkbd.hpp"
+#include "utils/devoptab_curl_thread.hpp"
 #include <sys/statvfs.h>
 
 #include <nanovg_dk.h>
@@ -180,6 +181,8 @@ void appplet_hook_calback(AppletHookType type, void *param) {
 
         case AppletHookType_OnExitRequest:
             // App::Notify("AppletHookType_OnExitRequest");
+            devoptab::common::RequestCurlShutdown();
+            App::Exit();
             break;
 
         case AppletHookType_OnResume:
@@ -946,6 +949,10 @@ App::~App() {
 
     log_write("starting to exit\n");
     TimeStamp ts;
+
+    // Wake any remote filesystem reads before widget destructors wait for
+    // their worker threads. The applet keeps exit locked until this finishes.
+    devoptab::common::RequestCurlShutdown();
 
     appletUnhook(&m_appletHookCookie);
 

@@ -94,29 +94,6 @@ auto OnOff(bool enabled) -> std::string {
     return enabled ? "On"_i18n : "Off"_i18n;
 }
 
-auto TestLocationConnection(const location::Entry& loc) -> Result {
-    if (loc.IsSmb()) {
-#ifdef BUILD_SMB2
-        CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
-        return test_smb.CheckConnection() ? 0 : -1;
-#else
-        return -1;
-#endif
-    }
-
-    curl::Api api(CURL_LOCATION_TO_API(loc));
-    curl::ProbeType type = curl::ProbeType::Webdav;
-    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://") || loc.protocol == "ftp") {
-        type = curl::ProbeType::Ftp;
-    } else if (loc.protocol == "http") {
-        type = curl::ProbeType::Http;
-    }
-
-    const auto result = curl::Probe(api, type);
-    log_write("[SOURCE] connection probe for %s: success=%d code=%ld\n", loc.name.c_str(), result.success, result.code);
-    return result.success ? 0 : -1;
-}
-
 using namespace detail;
 
 
@@ -878,6 +855,29 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
 }
 
 } // namespace
+
+auto TestLocationConnection(const location::Entry& loc) -> Result {
+    if (loc.IsSmb()) {
+#ifdef BUILD_SMB2
+        CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
+        return test_smb.CheckConnection() ? 0 : -1;
+#else
+        return -1;
+#endif
+    }
+
+    curl::Api api(CURL_LOCATION_TO_API(loc));
+    curl::ProbeType type = curl::ProbeType::Webdav;
+    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://") || loc.protocol == "ftp") {
+        type = curl::ProbeType::Ftp;
+    } else if (loc.protocol == "http") {
+        type = curl::ProbeType::Http;
+    }
+
+    const auto result = curl::Probe(api, type);
+    log_write("[SOURCE] connection probe for %s: success=%d code=%ld\n", loc.name.c_str(), result.success, result.code);
+    return result.success ? 0 : -1;
+}
 
 
 Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {

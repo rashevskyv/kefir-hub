@@ -7,6 +7,7 @@
 #include <functional>
 #include <span>
 #include <atomic>
+#include <array>
 
 namespace sphaira::ui {
 
@@ -130,6 +131,9 @@ private:
     s64 m_offset{};
     s64 m_last_offset{};
     s64 m_speed{};
+    std::array<s64, 8> m_speed_samples{};
+    size_t m_speed_sample_count{};
+    size_t m_speed_sample_index{};
     TimeStamp m_timestamp{};
     std::vector<u8> m_image_data{};
     int m_image_pending{};

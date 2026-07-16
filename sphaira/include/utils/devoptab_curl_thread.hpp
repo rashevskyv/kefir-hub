@@ -7,6 +7,16 @@
 
 namespace sphaira::devoptab::common {
 
+// Cancels the currently active streaming transfers. This is safe to call from
+// the applet exit hook and wakes readers blocked in PullData immediately.
+void CancelActiveCurlTransfers();
+
+// Marks all curl work as shutting down. Common synchronous requests observe
+// this through their progress callback, while streaming requests are cancelled
+// by CancelActiveCurlTransfers().
+void RequestCurlShutdown();
+int CurlShutdownProgressCallback(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
+
 struct PushPullThreadData {
     static constexpr size_t MAX_BUFFER_SIZE = 1024 * 64; // 64KB max buffer
 
@@ -16,6 +26,7 @@ struct PushPullThreadData {
     Result CreateAndStart();
     void Cancel();
     bool IsRunning();
+    bool HasError();
 
     // only set curl=true if called from a curl callback.
     size_t PullData(char* data, size_t total_size, bool curl = false);
@@ -36,6 +47,7 @@ public:
     long code{};
     bool error{};
     bool finished{};
+    bool cancelled{};
     bool started{};
 
 private:

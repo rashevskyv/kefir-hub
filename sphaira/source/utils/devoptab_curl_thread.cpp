@@ -3,17 +3,68 @@
 #include "log.hpp"
 #include <cstring>
 #include <algorithm>
+#include <atomic>
 
 namespace sphaira::devoptab::common {
+namespace {
+
+struct TransferRegistry {
+    TransferRegistry() {
+        mutexInit(&mutex);
+    }
+
+    Mutex mutex{};
+    std::vector<PushPullThreadData*> transfers{};
+};
+
+auto GetTransferRegistry() -> TransferRegistry& {
+    static TransferRegistry registry;
+    return registry;
+}
+
+std::atomic_bool g_curl_shutdown{};
+
+void RegisterTransfer(PushPullThreadData* transfer) {
+    auto& registry = GetTransferRegistry();
+    SCOPED_MUTEX(&registry.mutex);
+    registry.transfers.push_back(transfer);
+}
+
+void UnregisterTransfer(PushPullThreadData* transfer) {
+    auto& registry = GetTransferRegistry();
+    SCOPED_MUTEX(&registry.mutex);
+    std::erase(registry.transfers, transfer);
+}
+
+} // namespace
+
+void CancelActiveCurlTransfers() {
+    auto& registry = GetTransferRegistry();
+    SCOPED_MUTEX(&registry.mutex);
+    for (auto* transfer : registry.transfers) {
+        transfer->Cancel();
+    }
+}
+
+void RequestCurlShutdown() {
+    g_curl_shutdown = true;
+    CancelActiveCurlTransfers();
+}
+
+int CurlShutdownProgressCallback(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
+    return g_curl_shutdown ? 1 : 0;
+}
 
 PushPullThreadData::PushPullThreadData(CURL* _curl) : curl{_curl} {
     mutexInit(&mutex);
     condvarInit(&can_push);
     condvarInit(&can_pull);
+    RegisterTransfer(this);
 }
 
 PushPullThreadData::~PushPullThreadData() {
     log_write("[PUSH:PULL] Destructor\n");
+    UnregisterTransfer(this);
     Cancel();
 
     if (started) {
@@ -41,6 +92,7 @@ Result PushPullThreadData::CreateAndStart() {
 
 void PushPullThreadData::Cancel() {
     SCOPED_MUTEX(&mutex);
+    cancelled = true;
     finished = true;
     condvarWakeOne(&can_pull);
     condvarWakeOne(&can_push);
@@ -49,6 +101,11 @@ void PushPullThreadData::Cancel() {
 bool PushPullThreadData::IsRunning() {
     SCOPED_MUTEX(&mutex);
     return !finished && !error;
+}
+
+bool PushPullThreadData::HasError() {
+    SCOPED_MUTEX(&mutex);
+    return error;
 }
 
 size_t PushPullThreadData::PullData(char* data, size_t total_size, bool curl_mode) {
@@ -168,6 +225,13 @@ size_t PushPullThreadData::progress_callback(void *clientp, curl_off_t dltotal, 
         // abort early if there was an error.
         if (data->error) {
             log_write("[PUSH:PULL] progress_callback: aborting transfer, error set\n");
+            return 1;
+        }
+
+        // Cancellation must also interrupt connection setup, before curl has
+        // transferred its first byte (dlnow and ulnow are both still zero).
+        if (data->cancelled) {
+            log_write("[PUSH:PULL] progress_callback: aborting cancelled transfer\n");
             return 1;
         }
 

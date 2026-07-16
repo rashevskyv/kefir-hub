@@ -145,11 +145,15 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             current_speed = 0;
         }
 
-        if (m_speed == 0) {
-            m_speed = static_cast<s64>(current_speed);
-        } else {
-            m_speed = static_cast<s64>(0.25 * current_speed + 0.75 * static_cast<double>(m_speed));
+        m_speed_samples[m_speed_sample_index] = static_cast<s64>(current_speed);
+        m_speed_sample_index = (m_speed_sample_index + 1) % m_speed_samples.size();
+        m_speed_sample_count = std::min(m_speed_sample_count + 1, m_speed_samples.size());
+
+        s64 speed_sum{};
+        for (size_t i = 0; i < m_speed_sample_count; i++) {
+            speed_sum += m_speed_samples[i];
         }
+        m_speed = speed_sum / static_cast<s64>(m_speed_sample_count);
     }
 
     const auto action = m_action;
@@ -158,6 +162,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto size = m_size;
     const auto offset = m_offset;
     const auto speed = m_speed;
+    const auto speed_sample_count = m_speed_sample_count;
     const auto last_offset = m_last_offset;
     // synthetic-unit transfers keep a meaningful ETA (units-left / units-per-sec
     // is still real seconds) but a bytes-derived "MiB/s" would be nonsense, so
@@ -181,7 +186,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     if (m_minimized) {
         std::string speed_str{};
-        if (speed > 0 && !hide_speed) {
+        if (speed_sample_count >= 3 && speed > 0 && !hide_speed) {
             const double speed_mb = (double)speed / (1024.0 * 1024.0);
             char buf[32];
             if (speed_mb >= 0.01) {
@@ -225,7 +230,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         gfx::drawRect(vg, prog_bar.x, prog_bar.y, ((float)offset / (float)size) * prog_bar.w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
         gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%u%%", percentage);
 
-        if (speed > 0) {
+        if (speed_sample_count >= 3 && speed > 0) {
             const double speed_mb = (double)speed / (1024.0 * 1024.0);
             const double speed_kb = (double)speed / (1024.0);
 
@@ -335,6 +340,9 @@ auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
     m_offset = 0;
     m_last_offset = 0;
     m_speed = 0;
+    m_speed_samples.fill(0);
+    m_speed_sample_count = 0;
+    m_speed_sample_index = 0;
     m_timestamp.Update();
     mutexUnlock(&m_mutex);
     Yield();
@@ -348,6 +356,9 @@ auto ProgressBox::NewTransferForce(const std::string& transfer)  -> ProgressBox&
     m_offset = 0;
     m_last_offset = 0;
     m_speed = 0;
+    m_speed_samples.fill(0);
+    m_speed_sample_count = 0;
+    m_speed_sample_index = 0;
     m_timestamp.Update();
     mutexUnlock(&m_mutex);
     Yield();
@@ -361,6 +372,9 @@ auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
     m_offset = 0;
     m_last_offset = 0;
     m_speed = 0;
+    m_speed_samples.fill(0);
+    m_speed_sample_count = 0;
+    m_speed_sample_index = 0;
     m_timestamp.Update();
     mutexUnlock(&m_mutex);
     Yield();

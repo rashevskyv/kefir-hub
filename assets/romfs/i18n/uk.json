@@ -965,5 +965,22 @@
   "Source protocol changed.": "Протокол джерела змінено.",
   "Show unavailable games": "Показувати недоступні ігри",
   "Show application records that have no installed content or readable metadata.": "Показувати записи програм без встановленого контенту або доступних для читання метаданих.",
-  "Change display order for games.": "Змінити порядок відображення ігор."
+  "Change display order for games.": "Змінити порядок відображення ігор.",
+  "Failed to connect to network storage!": "Не вдалося під'єднатися до мережевого сховища!",
+  "Failed to list network storage!": "Не вдалося отримати список файлів мережевого сховища!",
+  "Edit Source": "Редагувати джерело",
+  "Rename Source": "Перейменувати джерело",
+  "Delete Source": "Видалити джерело",
+  "Test Connection": "Перевірити з'єднання",
+  "Testing Connection...": "Перевірка з'єднання...",
+  "Connection test successful!": "З'єднання успішне!",
+  "Connection test failed!": "Не вдалося встановити з'єднання!",
+  "Rename Network Location": "Перейменувати мережеве джерело",
+  "Location renamed successfully!": "Мережеве джерело успішно перейменовано!",
+  "Properties": "Властивості",
+  "Configure connection settings.": "Налаштувати параметри з'єднання.",
+  "Test connection with current settings.": "Перевірити з'єднання з поточними налаштуваннями.",
+  "Rename this network location.": "Перейменувати це мережеве джерело.",
+  "View network location properties.": "Переглянути властивості мережевого джерела.",
+  "Delete this network location.": "Видалити це мережеве джерело."
 }

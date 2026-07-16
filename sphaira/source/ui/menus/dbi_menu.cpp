@@ -8,7 +8,9 @@
 #include "log.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
+#include "utils/devoptab_curl_thread.hpp"
 #include "utils/utils.hpp"
+#include "yati/source/file.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -127,10 +129,43 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     }
 }
 
+Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes, bool defer_analysis)
+    : MenuBase{"Install queue"_i18n, flags}, m_local_fs{fs}, m_local_paths{std::move(paths)},
+      m_local_source_sizes{std::move(source_sizes)}, m_defer_local_analysis{defer_analysis} {
+    mutexInit(&m_mutex);
+    ueventCreate(&m_cancel_event, false);
+
+    const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
+    m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 82.f});
+    m_list->SetLayout(List::Layout::GRID);
+    const Vec4 log_pos{70.f, GetY() + 100.f, 1140.f, 470.f};
+    m_log_list = std::make_unique<List>(1, 15, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
+    m_log_list->SetLayout(List::Layout::GRID);
+    m_state = State::Analysing;
+    UpdateActions();
+
+    const auto create_rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1);
+    if (R_SUCCEEDED(create_rc)) {
+        const auto start_rc = threadStart(&m_thread);
+        if (R_SUCCEEDED(start_rc)) {
+            m_thread_created = true;
+        } else {
+            threadClose(&m_thread);
+        }
+    }
+    if (!m_thread_created) {
+        m_state = State::Failed;
+        m_actions_dirty = true;
+    }
+}
+
 Menu::~Menu() {
     m_cancel_requested = true;
     m_stop_source.request_stop();
     ueventSignal(&m_cancel_event);
+    if (m_local_fs && !m_local_fs->IsNative()) {
+        devoptab::common::CancelActiveCurlTransfers();
+    }
     if (m_usb_source) {
         m_usb_source->SignalCancel();
     }
@@ -284,6 +319,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             if (R_FAILED(entry.analysis_result)) {
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
                     "%s: %s", "Analysis failed"_i18n.c_str(), ResultText(entry.analysis_result).c_str());
+            } else if (entry.analysis_deferred) {
+                const auto source_size = entry.analysis.source_size > 0
+                    ? utils::formatSizeStorage(entry.analysis.source_size) : "Unknown"_i18n;
+                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s    %s: %s",
+                    "Package size"_i18n.c_str(), source_size.c_str(),
+                    "Install size"_i18n.c_str(), "Calculated during install"_i18n.c_str(),
+                    "Target"_i18n.c_str(), TargetName(entry.target).c_str());
             } else {
                 const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
                 const auto target = entry.target == InstallTarget::Auto
@@ -305,15 +348,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto bytes = std::max<s64>(0, m_progress_offset - m_progress_last_offset);
         m_progress_last_offset = m_progress_offset;
         const auto current_speed = static_cast<s64>(static_cast<double>(bytes) / elapsed);
-        m_progress_speed = m_progress_speed == 0 ? current_speed
-            : static_cast<s64>(0.25 * current_speed + 0.75 * static_cast<double>(m_progress_speed));
+        m_progress_speed_samples[m_progress_speed_sample_index] = current_speed;
+        m_progress_speed_sample_index = (m_progress_speed_sample_index + 1) % m_progress_speed_samples.size();
+        m_progress_speed_sample_count = std::min(m_progress_speed_sample_count + 1, m_progress_speed_samples.size());
+        s64 speed_sum{};
+        for (size_t i = 0; i < m_progress_speed_sample_count; i++) {
+            speed_sum += m_progress_speed_samples[i];
+        }
+        m_progress_speed = speed_sum / static_cast<s64>(m_progress_speed_sample_count);
     }
     const double speed_mib = static_cast<double>(m_progress_speed) / (1024.0 * 1024.0);
+    std::string eta{};
+    if (m_progress_speed_sample_count >= 3 && m_progress_speed > 0 && m_progress_size > m_progress_offset) {
+        const auto seconds_left = static_cast<size_t>((m_progress_size - m_progress_offset) / m_progress_speed);
+        char eta_buf[64]{};
+        if (seconds_left >= 3600) {
+            std::snprintf(eta_buf, sizeof(eta_buf), "%zuh %zum", seconds_left / 3600, seconds_left % 3600 / 60);
+        } else {
+            std::snprintf(eta_buf, sizeof(eta_buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
+        }
+        eta = std::string{"    "} + "Remaining"_i18n + ": " + eta_buf;
+    }
     gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu    %s: %.2f MiB/s",
+        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu    %s: %.2f MiB/s%s",
         "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
         "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count,
-        "Speed"_i18n.c_str(), speed_mib);
+        "Speed"_i18n.c_str(), speed_mib, eta.c_str());
     if (!m_current_title.empty()) {
         const auto title = m_current_transfer.empty()
             ? m_current_title : m_current_title + " — " + m_current_transfer;
@@ -336,6 +396,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::ThreadFunction() {
+    if (m_local_fs) {
+        LocalThreadFunction();
+        return;
+    }
+
     const auto finish_cancelled = [this]() {
         m_state = State::Cancelled;
         m_actions_dirty = true;
@@ -500,6 +565,149 @@ void Menu::ThreadFunction() {
     }
 }
 
+void Menu::LocalThreadFunction() {
+    m_state = State::Analysing;
+    m_actions_dirty = true;
+
+    for (const auto& path : m_local_paths) {
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            m_state = State::Cancelled;
+            m_actions_dirty = true;
+            return;
+        }
+
+        QueueEntry entry{};
+        if (const auto slash = std::strrchr(path.s, '/')) {
+            entry.file_name = slash + 1;
+        } else {
+            entry.file_name = path.s;
+        }
+        const auto path_index = static_cast<size_t>(&path - m_local_paths.data());
+        if (m_defer_local_analysis) {
+            entry.analysis_deferred = true;
+            entry.analysis_result = 0;
+            if (path_index < m_local_source_sizes.size()) {
+                entry.analysis.source_size = std::max<s64>(0, m_local_source_sizes[path_index]);
+            }
+        } else {
+            yati::source::File source{m_local_fs, path};
+            entry.analysis_result = source.GetOpenResult();
+            if (R_SUCCEEDED(entry.analysis_result)) {
+                entry.analysis_result = yati::AnalyzeSource(&source, path, entry.analysis);
+            }
+            s64 source_size{};
+            if (R_SUCCEEDED(source.GetOpenResult()) && R_SUCCEEDED(source.GetSize(&source_size))) {
+                entry.analysis.source_size = source_size;
+            }
+        }
+        entry.selected = R_SUCCEEDED(entry.analysis_result);
+        SCOPED_MUTEX(&m_mutex);
+        m_queue.emplace_back(std::move(entry));
+    }
+
+    for (;;) {
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            m_state = State::Cancelled;
+            m_actions_dirty = true;
+            return;
+        }
+
+        m_state = State::ReviewQueue;
+        m_actions_dirty = true;
+        m_install_requested = false;
+        while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) {
+            svcSleepThread(1e+6);
+        }
+        if (m_cancel_requested || GetToken().stop_requested()) {
+            m_state = State::Cancelled;
+            m_actions_dirty = true;
+            return;
+        }
+
+        m_state = State::Installing;
+        m_actions_dirty = true;
+        {
+            SCOPED_MUTEX(&m_mutex);
+            m_success_count = 0;
+            m_failure_count = 0;
+        }
+
+        for (size_t i = 0; i < m_queue.size(); i++) {
+            bool selected{};
+            yati::InstallAnalysis analysis{};
+            InstallTarget target{};
+            bool analysis_deferred{};
+            std::string name{};
+            {
+                SCOPED_MUTEX(&m_mutex);
+                selected = m_queue[i].install_selected;
+                analysis = m_queue[i].analysis;
+                target = m_queue[i].install_target;
+                analysis_deferred = m_queue[i].analysis_deferred;
+                name = m_queue[i].file_name;
+                m_current_package = i;
+                m_current_title = name;
+                m_progress_offset = 0;
+                m_progress_size = 0;
+            }
+            if (!selected) continue;
+            if (m_cancel_requested) break;
+
+            AddLog("Starting: "_i18n + name);
+            yati::ConfigOverride override{};
+            if (target == InstallTarget::Sd) {
+                override.sd_card_install = true;
+            } else if (target == InstallTarget::Nand) {
+                override.sd_card_install = false;
+            } else if (!analysis_deferred) {
+                override.sd_card_install = analysis.suggested_sd;
+            }
+
+            Result result{};
+            if (analysis_deferred) {
+                result = yati::InstallFromFile(this, m_local_fs, m_local_paths[i], override);
+            } else {
+                yati::source::File source{m_local_fs, m_local_paths[i]};
+                const auto open_rc = source.GetOpenResult();
+                result = R_SUCCEEDED(open_rc)
+                    ? yati::InstallFromCollections(this, &source, analysis.collections, override)
+                    : open_rc;
+            }
+            const bool cancelled = m_cancel_requested || result == Result_TransferCancelled;
+            {
+                SCOPED_MUTEX(&m_mutex);
+                m_queue[i].install_result = result;
+                m_queue[i].installed = R_SUCCEEDED(result);
+                if (R_SUCCEEDED(result)) {
+                    m_queue[i].selected = false;
+                    m_success_count++;
+                } else if (!cancelled) {
+                    m_failure_count++;
+                }
+            }
+            if (R_SUCCEEDED(result)) AddLog("Installed: "_i18n + name);
+            else if (cancelled) AddLog("Cancelled: "_i18n + name);
+            else AddLog("Failed: "_i18n + name + " (" + ResultText(result) + ")");
+            if (cancelled) break;
+        }
+
+        if (m_cancel_requested) {
+            AddLog("Session cancelled; completed installs were kept."_i18n);
+            m_state = State::Cancelled;
+        } else {
+            AddLog("Queue finished."_i18n);
+            m_state = State::Summary;
+        }
+        m_actions_dirty = true;
+
+        while ((m_state == State::Summary || m_state == State::Cancelled) &&
+               !m_cancel_requested && !GetToken().stop_requested()) {
+            svcSleepThread(1e+6);
+        }
+        if (m_cancel_requested || GetToken().stop_requested()) return;
+    }
+}
+
 void Menu::StartInstall() {
     s64 sd_required{}, nand_required{};
     size_t count{};
@@ -509,7 +717,9 @@ void Menu::StartInstall() {
             if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
             count++;
             const bool sd = entry.target == InstallTarget::Sd || (entry.target == InstallTarget::Auto && entry.analysis.suggested_sd);
-            AddSizeSaturated(sd ? sd_required : nand_required, entry.analysis.install_size);
+            if (!entry.analysis_deferred) {
+                AddSizeSaturated(sd ? sd_required : nand_required, entry.analysis.install_size);
+            }
         }
     }
     if (!count) {
@@ -548,9 +758,12 @@ void Menu::CancelSession() {
     }
     m_cancel_requested = true;
     ueventSignal(&m_cancel_event);
+    if (m_local_fs && !m_local_fs->IsNative()) {
+        devoptab::common::CancelActiveCurlTransfers();
+    }
     const auto state = m_state.load();
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
-        m_usb_source->SignalCancel();
+        if (m_usb_source) m_usb_source->SignalCancel();
     }
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::ReviewQueue) {
         SetPop();
@@ -604,6 +817,9 @@ void Menu::SetInstallTransfer(const std::string& transfer) {
     m_progress_size = 0;
     m_progress_last_offset = 0;
     m_progress_speed = 0;
+    m_progress_speed_samples.fill(0);
+    m_progress_speed_sample_count = 0;
+    m_progress_speed_sample_index = 0;
     m_progress_timestamp.Update();
 }
 
