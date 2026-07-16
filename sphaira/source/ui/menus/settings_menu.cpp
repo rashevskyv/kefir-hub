@@ -892,15 +892,41 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
 
     std::string category_label;
+    std::string item_label;
     if (!m_categories.empty()) {
         category_label = m_categories[m_category_index].label;
+        const auto& items = m_categories[m_category_index].items;
+        if (!items.empty() && m_item_index >= 0 && m_item_index < items.size()) {
+            item_label = items[m_item_index].label;
+        }
     }
 
     BuildCategories();
     auto it = std::find_if(m_categories.cbegin(), m_categories.cend(), [&](const auto& category) {
         return category.label == category_label;
     });
-    SetCategoryIndex(it == m_categories.cend() ? m_category_index : std::distance(m_categories.cbegin(), it));
+
+    s64 new_cat_index = (it == m_categories.cend()) ? m_category_index : std::distance(m_categories.cbegin(), it);
+    float saved_yoff = m_item_list->GetYoff();
+    s64 saved_item_index = m_item_index;
+
+    SetCategoryIndex(new_cat_index);
+
+    if (new_cat_index < m_categories.size()) {
+        const auto& new_items = m_categories[new_cat_index].items;
+        auto item_it = std::find_if(new_items.cbegin(), new_items.cend(), [&](const auto& item) {
+            return item.label == item_label;
+        });
+        if (item_it != new_items.cend()) {
+            SetItemIndex(std::distance(new_items.cbegin(), item_it));
+        } else {
+            SetItemIndex(std::clamp<s64>(saved_item_index, 0, static_cast<s64>(new_items.size() - 1)));
+        }
+
+        if (new_cat_index == m_category_index) {
+            m_item_list->SetYoff(saved_yoff);
+        }
+    }
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -1916,8 +1942,24 @@ SourceEditMenu::~SourceEditMenu() = default;
 
 void SourceEditMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
+
+    std::string item_label;
+    if (!m_items.empty() && m_index >= 0 && m_index < m_items.size()) {
+        item_label = m_items[m_index].label;
+    }
+
+    float saved_yoff = m_list->GetYoff();
+    s64 saved_index = m_index;
+
     m_items = BuildEditItems();
-    SetIndex(m_index);
+
+    auto it = std::find_if(m_items.cbegin(), m_items.cend(), [&](const auto& item) {
+        return item.label == item_label;
+    });
+
+    s64 new_index = (it == m_items.cend()) ? saved_index : std::distance(m_items.cbegin(), it);
+    SetIndex(new_index);
+    m_list->SetYoff(saved_yoff);
 }
 
 void SourceEditMenu::Update(Controller* controller, TouchInfo* touch) {
