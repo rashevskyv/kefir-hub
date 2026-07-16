@@ -855,8 +855,22 @@ private:
     bool const m_write;
 };
 
-#define SCOPED_MUTEX(mutex) \
-    mutexLock(mutex); \
-    ON_SCOPE_EXIT(mutexUnlock(mutex))
+struct ScopedMutex {
+    ScopedMutex(Mutex* mutex) : m_mutex{mutex} {
+        mutexLock(m_mutex);
+    }
+
+    ~ScopedMutex() {
+        mutexUnlock(m_mutex);
+    }
+
+    ScopedMutex(const ScopedMutex&) = delete;
+    void operator=(const ScopedMutex&) = delete;
+
+private:
+    Mutex* const m_mutex;
+};
+
+#define SCOPED_MUTEX(mutex) ScopedMutex ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE_){mutex}
 
 #define SCOPED_RWLOCK(lock, write) ScopedRwLock ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE_){lock, write}

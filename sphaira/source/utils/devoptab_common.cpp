@@ -130,12 +130,15 @@ int devoptab_open(struct _reent *r, void *fileStruct, const char *_path, int fla
 
 int devoptab_close(struct _reent *r, void *fd) {
     auto file = static_cast<File*>(fd);
+    // keep a local copy: the memset below wipes file->device, and the scoped
+    // unlock re-evaluates the expression on scope exit.
+    auto device = file->device;
     SCOPED_RWLOCK(&g_rwlock, false);
-    SCOPED_MUTEX(&file->device->mutex);
+    SCOPED_MUTEX(&device->mutex);
 
     log_write("[FILE] close\n");
     if (file->fd) {
-        file->device->mount_device->devoptab_close(file->fd);
+        device->mount_device->devoptab_close(file->fd);
         free(file->fd);
     }
 
@@ -427,11 +430,14 @@ int devoptab_dirnext(struct _reent *r, DIR_ITER *dirState, char *filename, struc
 
 int devoptab_dirclose(struct _reent *r, DIR_ITER *dirState) {
     auto dir = static_cast<Dir*>(dirState->dirStruct);
+    // keep a local copy: the memset below wipes dir->device, and the scoped
+    // unlock re-evaluates the expression on scope exit.
+    auto device = dir->device;
     SCOPED_RWLOCK(&g_rwlock, false);
-    SCOPED_MUTEX(&dir->device->mutex);
+    SCOPED_MUTEX(&device->mutex);
 
     if (dir->fd) {
-        dir->device->mount_device->devoptab_dirclose(dir->fd);
+        device->mount_device->devoptab_dirclose(dir->fd);
         free(dir->fd);
     }
 

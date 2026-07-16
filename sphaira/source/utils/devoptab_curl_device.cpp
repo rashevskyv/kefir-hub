@@ -550,13 +550,16 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
 
     bool is_ftp = full_url.starts_with("ftp://") || full_url.starts_with("ftps://");
 
+    // the header list must outlive curl_easy_perform() below.
+    struct curl_slist* list = nullptr;
+    ON_SCOPE_EXIT(curl_slist_free_all(list));
+
     if (is_ftp) {
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "NLST");
     } else {
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
-        struct curl_slist* list = curl_slist_append(nullptr, "Depth: 1");
+        list = curl_slist_append(nullptr, "Depth: 1");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
-        ON_SCOPE_EXIT(curl_slist_free_all(list));
     }
 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
@@ -775,10 +778,12 @@ int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
     bool is_ftp = url.starts_with("ftp://") || url.starts_with("ftps://");
+    // the quote list must outlive curl_easy_perform() below.
+    struct curl_slist* list = nullptr;
+    ON_SCOPE_EXIT(curl_slist_free_all(list));
     if (is_ftp) {
-        struct curl_slist* list = curl_slist_append(nullptr, (std::string("MKD ") + path).c_str());
+        list = curl_slist_append(nullptr, (std::string("MKD ") + path).c_str());
         curl_easy_setopt(transfer_curl, CURLOPT_POSTQUOTE, list);
-        ON_SCOPE_EXIT(curl_slist_free_all(list));
     } else {
         curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MKCOL");
     }
