@@ -216,20 +216,43 @@ public:
     static void SetAutoSleepDisabled(bool enable) {
         static Mutex mutex{};
         static int ref_count{};
+        static bool media_playback_fallback{};
 
         mutexLock(&mutex);
         ON_SCOPE_EXIT(mutexUnlock(&mutex));
 
         if (enable) {
-            appletSetAutoSleepDisabled(true);
-            ref_count++;
-        } else {
-            if (ref_count) {
-                ref_count--;
+            if (ref_count++ != 0) {
+                return;
             }
 
-            if (!ref_count) {
-                appletSetAutoSleepDisabled(false);
+            const auto set_rc = appletSetAutoSleepDisabled(true);
+            bool disabled{};
+            const auto check_rc = appletIsAutoSleepDisabled(&disabled);
+            if (R_SUCCEEDED(set_rc) && R_SUCCEEDED(check_rc) && disabled) {
+                log_write("[power] auto sleep disabled and verified\n");
+                return;
+            }
+
+            const auto fallback_rc = appletSetMediaPlaybackState(true);
+            media_playback_fallback = R_SUCCEEDED(fallback_rc);
+            log_write("[power] auto sleep verification failed (set=0x%X check=0x%X value=%u); media fallback=0x%X\n",
+                set_rc, check_rc, disabled, fallback_rc);
+        } else {
+            if (!ref_count || --ref_count != 0) {
+                return;
+            }
+
+            const auto set_rc = appletSetAutoSleepDisabled(false);
+            if (R_FAILED(set_rc)) {
+                log_write("[power] failed to restore auto sleep: 0x%X\n", set_rc);
+            }
+            if (media_playback_fallback) {
+                const auto fallback_rc = appletSetMediaPlaybackState(false);
+                if (R_FAILED(fallback_rc)) {
+                    log_write("[power] failed to release media fallback: 0x%X\n", fallback_rc);
+                }
+                media_playback_fallback = false;
             }
         }
     }

@@ -3,7 +3,7 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.247
+## Поточний delivery: v0.13.248
 
 - [x] AUDIT-HISTORY — аудит останніх 5 комітів і всієї історії plan/task/archive
 - [x] HIST-HTTP-RETRY — GET-only retry/resume, restart без stale tail, final flush check
@@ -32,11 +32,13 @@
 - [x] HIST-GAMES-BADGE-SIZE-247 — мінімальна ширина кожного game badge дорівнює `Base`
 - [x] HIST-GAMES-STORAGE-SUM-247 — NAND/SD показує точні bytes гри під фокусом або
   суму групового X/Y-виділення разом із пропорційним сегментом
+- [x] HIST-INSTALL-NOSLEEP-248 — auto-sleep lock перевіряється через applet service;
+  media-playback fallback утримує консоль активною, якщо перевірка не пройшла
 - [x] HIST-WEB-APPLET.1 — Runtime Mode UX, Title Mode guide і forwarder installer
 - [x] HIST-WEB-APPLET.2 — Applet worker profile, listener diagnostics і loopback self-test
 - [x] AUDIO-REMOVE — вилучено BGM, UI sounds, audio init, settings та `libpulsar`
-- [x] BUILD-RELEASE — Release NRO v0.13.247 зібрано; `git diff --check` пройдено
-- [ ] HW-SMOKE-247 — ручний smoke test на реальній Switch за `tests.md`
+- [x] BUILD-RELEASE — Release NRO v0.13.248 зібрано; `git diff --check` пройдено
+- [ ] HW-SMOKE-248 — ручний smoke test на реальній Switch за `tests.md`
 
 ## Черга реалізації
 

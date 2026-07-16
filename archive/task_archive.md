@@ -466,3 +466,10 @@
   або суму X/Y-виділення; highlight bar використовує ті самі підсумки.
 - [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
 - [ ] HW-SMOKE-247 — залишено як ручний gate у `tests.md`.
+
+## v0.13.248 — verified no-sleep install guard (2026-07-16)
+
+- [x] HIST-INSTALL-NOSLEEP-248 — reference-counted auto-sleep lock тепер перевіряє
+  системний стан і використовує media-playback fail-safe при відмові applet service.
+- [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
+- [ ] HW-SMOKE-248 — реальне гасіння дисплея під час install залишено ручним gate.

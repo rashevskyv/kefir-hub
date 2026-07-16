@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.247**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.248**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.247
+## Автоматичні gates v0.13.248
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.247 на Switch
+## P0 smoke test v0.13.248 на Switch
 
 ### HTTP/WEBDAV-CRASH-243 — регресія мережевих джерел
 
@@ -23,6 +23,14 @@
   WebDAV джерела: немає crash, зависання чи пошкодження списку.
 - [ ] WebDAV PROPFIND і створення каталогу на FTP завершуються без use-after-free;
   повторна операція в тій самій сесії також стабільна.
+
+### HIST-INSTALL-NOSLEEP-248 — дисплей і сон під час встановлення
+
+- [ ] Запустити довге NSP/XCI/NSZ/XCZ встановлення в Title Mode та Applet Mode,
+  дочекатися системного гасіння/затемнення дисплея: інсталяція продовжується, консоль не засинає.
+- [ ] Після успіху, помилки та ручного скасування звичайний auto-sleep знову працює.
+- [ ] У журналі є `[power] auto sleep disabled and verified`; якщо applet service не
+  підтвердив прапорець, є запис про media fallback і консоль залишається активною.
 
 ### AUDIO-REMOVE — повністю без аудіо
 
@@ -130,7 +138,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-247` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-248` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 
