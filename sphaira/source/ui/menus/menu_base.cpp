@@ -3,6 +3,7 @@
 #include "ui/menus/menu_base.hpp"
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
+#include "utils/utils.hpp"
 
 #include <switch.h>
 #include <algorithm>
@@ -229,13 +230,13 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     // storage_right-aligned; label on left of bar
     const float bar_x = storage_right - bar_w;
 
-    auto label_x_of = [&](s64 free_bytes, s64 total_bytes) -> float {
+    auto label_x_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes) -> float {
         if (total_bytes <= 0) return bar_x - 4.f;
-        const float free_gb = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
-        char temp_buf[32];
-        std::snprintf(temp_buf, sizeof(temp_buf), "%.1f GB", free_gb);
+        const auto value = m_storage_highlight_active
+            ? utils::formatSizeStorage(highlight_bytes)
+            : utils::formatSizeStorage(free_bytes);
         nvgFontSize(vg, small_font);
-        gfx::textBounds(vg, 0, 0, bounds, temp_buf);
+        gfx::textBounds(vg, 0, 0, bounds, value.c_str());
         const float value_w = bounds[2] - bounds[0];
         return bar_x - 4.f - value_w - 10.f;
     };
@@ -243,8 +244,8 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     // NAND and SD labels must line up under one another: use whichever row's
     // label position sits further left (i.e. has the wider value text).
     const float label_x = std::min(
-        label_x_of(pdata.nand_free, pdata.nand_total),
-        label_x_of(pdata.sd_free, pdata.sd_total));
+        label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight),
+        label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight));
 
     auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes) {
         if (total_bytes <= 0) return;
@@ -276,13 +277,17 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
                 theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
         }
 
-        // Free space text (right-aligned value next to the bar)
-        const float free_gb  = static_cast<float>(free_bytes) / (1024.f * 1024.f * 1024.f);
-        const auto  text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        // Normally show free space. Games replace it with the exact size of the
+        // focused title or the sum of the current multi-selection.
+        const auto value = m_storage_highlight_active
+            ? utils::formatSizeStorage(highlight_bytes)
+            : utils::formatSizeStorage(free_bytes);
+        const auto text_col = theme->GetColour(m_storage_highlight_active
+            ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
         nvgFontSize(vg, small_font);
         gfx::drawTextArgs(vg, bar_x - 4.f, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
-            "%.1f GB", free_gb);
+            "%s", value.c_str());
 
         // Label shares the same x across both rows so NAND/SD sit one above the other.
         gfx::drawTextArgs(vg, label_x, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
@@ -325,6 +330,13 @@ void MenuBase::SetSubHeading(std::string sub_heading) {
 void MenuBase::SetStorageHighlight(u64 nand_bytes, u64 sd_bytes) {
     m_nand_highlight = nand_bytes;
     m_sd_highlight = sd_bytes;
+    m_storage_highlight_active = true;
+}
+
+void MenuBase::ClearStorageHighlight() {
+    m_nand_highlight = 0;
+    m_sd_highlight = 0;
+    m_storage_highlight_active = false;
 }
 
 } // namespace sphaira::ui::menu

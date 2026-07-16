@@ -86,6 +86,7 @@ private:
         }
 
         m_selected_count = 0;
+        UpdateStorageHighlight();
     }
 
     void DeleteGames();
@@ -94,6 +95,7 @@ private:
     void CreateSaves(AccountUid uid);
     void ToggleCurrentSelection();
     void InvertSelection();
+    void UpdateStorageHighlight();
     void CreateContentsFolders();
 
 private:

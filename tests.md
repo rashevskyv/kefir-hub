@@ -1,10 +1,10 @@
 # Канонічна матриця перевірок
 
-Поточний пакет: **v0.13.246**, 2026-07-16. Позначення: `[x]` — перевірено в
+Поточний пакет: **v0.13.247**, 2026-07-16. Позначення: `[x]` — перевірено в
 цьому коміті, `[ ]` — потрібна реальна Nintendo Switch або контрольоване
 зовнішнє середовище. Старі сценарії збережені нижче як legacy regression suite.
 
-## Автоматичні gates v0.13.246
+## Автоматичні gates v0.13.247
 
 - [x] Release build у WSL/devkitPro:
   `cmake --build --preset Release --parallel 4`.
@@ -15,7 +15,7 @@
 - [x] Перед реалізацією graphify query звірив Games/NCM/ES/Saves/storage зв'язки;
   повний incremental rebuild графа не входить до runtime test gate.
 
-## P0 smoke test v0.13.246 на Switch
+## P0 smoke test v0.13.247 на Switch
 
 ### HTTP/WEBDAV-CRASH-243 — регресія мережевих джерел
 
@@ -60,6 +60,8 @@
   `/atmosphere/contents/<title id>`; усі комбінації залишаються всередині картки гри.
 - [ ] У Grid, Grid Detail і HB Menu лейбочки Base/DLC/Update/LayeredFS стоять строго
   одна під одною, мають синій/фіолетовий/помаранчевий/зелений фон і читабельний білий текст.
+- [ ] Лейбочки `-`, DLC та всі інші мають ширину не меншу за `Base`; червоний мінус
+  візуально такий самий виразний і текст залишається по центру.
 - [ ] Кожна гра без Base має червону лейбочку з білим `-`, зокрема записи з
   DLC/Update/LayeredFS; якщо Base присутня, мінус не показується.
 - [ ] Application record з назвою `Corrupted`/помилкою читання metadata також отримує
@@ -70,6 +72,10 @@
   повторне ввімкнення повертає їх після rescan і не приховує встановлені ігри.
 - [ ] Виділяти ігри на NAND, SD і mixed storage: контрастний сегмент з'являється
   лише у відповідному bar і пропорційний сумі фактичних NCM content sizes.
+- [ ] Без X/Y-виділення значення біля NAND/SD дорівнюють точному розміру гри під
+  фокусом; після X або Y показують суму всіх виділених ігор, а рух курсора її не змінює.
+- [ ] Після зняття останнього виділення NAND/SD знову показують розмір гри під фокусом;
+  для гри без відповідного storage показується `0 B`.
 - [ ] На вкладці Tickets звірити rights ID, key generation і Common/Personalized/
   Missing з DBI. На Saves звірити користувача, type, save ID та size.
 - [ ] Перевірити контраст badges у світлій і темній темах; гра без Base/Update/DLC має badge
@@ -124,7 +130,7 @@
 
 ## Hardware gates, що блокують архівацію
 
-- [ ] `HW-SMOKE-246` — повний P0 smoke suite вище.
+- [ ] `HW-SMOKE-247` — повний P0 smoke suite вище.
 - [ ] `HIST-WEB-APPLET` — реальна Wi-Fi/client-isolation матриця.
 - [ ] `HIST-USB-COMPAT` — ns-usbloader, fluffy, DBI backend і dbibackend-qt.
 

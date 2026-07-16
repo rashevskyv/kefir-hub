@@ -3,7 +3,7 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.246
+## Поточний delivery: v0.13.247
 
 - [x] AUDIT-HISTORY — аудит останніх 5 комітів і всієї історії plan/task/archive
 - [x] HIST-HTTP-RETRY — GET-only retry/resume, restart без stale tail, final flush check
@@ -29,11 +29,14 @@
   вкладки деталей, а `ZL / ZR` — попередню/наступну гру
 - [x] HIST-HBMENU-TITLE-246 — назва у верхній плашці HB Menu card не виходить за
   рамку; довгий текст прокручується лише на картці під фокусом
+- [x] HIST-GAMES-BADGE-SIZE-247 — мінімальна ширина кожного game badge дорівнює `Base`
+- [x] HIST-GAMES-STORAGE-SUM-247 — NAND/SD показує точні bytes гри під фокусом або
+  суму групового X/Y-виділення разом із пропорційним сегментом
 - [x] HIST-WEB-APPLET.1 — Runtime Mode UX, Title Mode guide і forwarder installer
 - [x] HIST-WEB-APPLET.2 — Applet worker profile, listener diagnostics і loopback self-test
 - [x] AUDIO-REMOVE — вилучено BGM, UI sounds, audio init, settings та `libpulsar`
-- [x] BUILD-RELEASE — Release NRO v0.13.246 зібрано; `git diff --check` пройдено
-- [ ] HW-SMOKE-246 — ручний smoke test на реальній Switch за `tests.md`
+- [x] BUILD-RELEASE — Release NRO v0.13.247 зібрано; `git diff --check` пройдено
+- [ ] HW-SMOKE-247 — ручний smoke test на реальній Switch за `tests.md`
 
 ## Черга реалізації
 

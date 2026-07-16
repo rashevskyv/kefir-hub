@@ -522,8 +522,10 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     const float gap = compact ? 1.f : 3.f;
     float bounds[4]{};
     float width = compact ? 20.f : 26.f;
+    nvgFontSize(vg, font);
+    gfx::textBounds(vg, 0, 0, bounds, "Base");
+    width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
     for (size_t i = 0; i < count; i++) {
-        nvgFontSize(vg, font);
         gfx::textBounds(vg, 0, 0, bounds, badges[i].text);
         width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
     }
@@ -1478,7 +1480,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (!e.summary_attempted && summary_load_count < 1) {
             LoadGameSummary(e);
             summary_load_count++;
-            if (pos == m_index) {
+            if (pos == m_index && !m_selected_count) {
                 SetStorageHighlight(e.nand_size, e.sd_size);
             }
         }
@@ -1514,7 +1516,7 @@ void Menu::SetIndex(s64 index) {
         m_index = 0;
         SetTitleSubHeading("");
         SetSubHeading("0 / 0");
-        SetStorageHighlight(0, 0);
+        ClearStorageHighlight();
         return;
     }
 
@@ -1531,7 +1533,7 @@ void Menu::SetIndex(s64 index) {
 
     auto& entry = m_entries[m_index];
     LoadGameSummary(entry);
-    SetStorageHighlight(entry.nand_size, entry.sd_size);
+    UpdateStorageHighlight();
 }
 
 void Menu::ScanHomebrew() {
@@ -1719,6 +1721,7 @@ void Menu::ToggleCurrentSelection() {
     auto& entry = m_entries[m_index];
     entry.selected ^= 1;
     m_selected_count += entry.selected ? 1 : -1;
+    UpdateStorageHighlight();
 }
 
 void Menu::InvertSelection() {
@@ -1729,6 +1732,34 @@ void Menu::InvertSelection() {
             m_selected_count++;
         }
     }
+    UpdateStorageHighlight();
+}
+
+void Menu::UpdateStorageHighlight() {
+    if (m_entries.empty()) {
+        ClearStorageHighlight();
+        return;
+    }
+
+    u64 nand_size{};
+    u64 sd_size{};
+    if (m_selected_count) {
+        for (auto& entry : m_entries) {
+            if (!entry.selected) {
+                continue;
+            }
+            LoadGameSummary(entry);
+            nand_size += entry.nand_size;
+            sd_size += entry.sd_size;
+        }
+    } else {
+        auto& entry = m_entries[m_index];
+        LoadGameSummary(entry);
+        nand_size = entry.nand_size;
+        sd_size = entry.sd_size;
+    }
+
+    SetStorageHighlight(nand_size, sd_size);
 }
 
 void Menu::CreateContentsFolders() {

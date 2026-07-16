@@ -458,3 +458,11 @@
   верхньою плашкою та циклічно прокручує довгу назву під фокусом.
 - [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
 - [ ] HW-SMOKE-246 — залишено як ручний gate у `tests.md`.
+
+## v0.13.247 — badge floor і точний NAND/SD selection size (2026-07-16)
+
+- [x] HIST-GAMES-BADGE-SIZE-247 — `Base` задає мінімальну ширину всієї колонки badges.
+- [x] HIST-GAMES-STORAGE-SUM-247 — header показує точний NAND/SD size поточної гри
+  або суму X/Y-виділення; highlight bar використовує ті самі підсумки.
+- [x] AUTO-GATE — Release NRO зібрано, версію та `git diff --check` перевірено.
+- [ ] HW-SMOKE-247 — залишено як ручний gate у `tests.md`.

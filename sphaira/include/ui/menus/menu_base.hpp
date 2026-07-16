@@ -42,6 +42,7 @@ struct MenuBase : Widget {
     void SetTitleSubHeading(std::string sub_heading);
     void SetSubHeading(std::string sub_heading);
     void SetStorageHighlight(u64 nand_bytes, u64 sd_bytes);
+    void ClearStorageHighlight();
 
     auto GetTitle() const {
         return m_title;
@@ -63,6 +64,7 @@ private:
 
     u64 m_nand_highlight{};
     u64 m_sd_highlight{};
+    bool m_storage_highlight_active{};
 
     u32 m_flags{};
 };
