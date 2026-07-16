@@ -30,24 +30,10 @@ auto WebdavLocationKey(std::string url) -> std::string {
 auto GetWebdavLocations() -> std::vector<location::Entry> {
     std::vector<location::Entry> locations;
 
-    const auto settings_url = App::GetWebdavUrl();
-    if (!settings_url.empty()) {
-        locations.emplace_back(location::Entry{
-            .name = "WebDAV (Settings)"_i18n,
-            .url = settings_url,
-            .user = App::GetWebdavUser(),
-            .pass = App::GetWebdavPass(),
-        });
-    }
-
     for (const auto& loc : location::Load()) {
         const auto is_webdav = loc.url.starts_with("webdav://") ||
             loc.url.starts_with("http://") || loc.url.starts_with("https://");
-        const auto location_key = WebdavLocationKey(loc.url);
-        const auto is_duplicate = std::ranges::any_of(locations, [&location_key](const auto& existing){
-            return WebdavLocationKey(existing.url) == location_key;
-        });
-        if (is_webdav && !is_duplicate) {
+        if (is_webdav) {
             locations.push_back(loc);
         }
     }

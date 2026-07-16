@@ -90,7 +90,15 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             if (m_save_autosync.Get()) {
                 const auto webdav_locations = GetWebdavLocations();
                 if (!webdav_locations.empty()) {
-                    const auto& loc = webdav_locations.front();
+                    location::Entry target_loc = webdav_locations.front();
+                    const auto active_name = App::GetWebdavUrl();
+                    for (const auto& l : webdav_locations) {
+                        if (l.name == active_name) {
+                            target_loc = l;
+                            break;
+                        }
+                    }
+                    const auto loc = target_loc;
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, backup_root](auto pbox) mutable -> Result {
                         // the bar runs on synthetic per-file units, so a byte-rate
                         // readout would be nonsense - show only percentage/ETA.

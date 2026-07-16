@@ -166,3 +166,66 @@
   - Перевірити, що джерело `"WebDAV (Saves Sync)"` з'явилося у `Tools -> Settings -> Sources` та у списку завантаження файлового менеджера (`Upload to network location`).
   - У `Tools -> Settings -> Sources` вибрати `"WebDAV (Saves Sync)"`, натиснути `A` та видалити його. Перевірити, що налаштування `WebDAV` у `Tools -> Settings -> WebDAV` очистилися.
   - Додати WebDAV, FTP або HTTP джерело і переконатися, що програма більше не крашиться (Атмосфера не вилітає після додавання).
+
+---
+
+# Єдине джерело істини для WebDAV сейвів (v0.13.222)
+
+## Proposed Changes
+
+### [Component: Location Core]
+
+---
+
+#### [MODIFY] [location.cpp](file:///d:/git/dev/sphaira/sphaira/source/location.cpp)
+- Відкотити динамічне додавання `"WebDAV (Saves Sync)"` з `App::GetWebdavUrl()`, оскільки джерело істини тепер виключно в `locations.ini`. Метод `Load()` повертає тільки зчитані з файлу локації.
+
+---
+
+### [Component: Saves Sync]
+
+---
+
+#### [MODIFY] [save_locations.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_locations.cpp)
+- Оновити метод `GetWebdavLocations()`: прибрати завантаження `settings_url` з `App::GetWebdavUrl()`. Залишити тільки фільтрацію локацій з `location::Load()`, які починаються зі схем `webdav://`, `http://`, `https://`.
+
+#### [MODIFY] [save_menu_ops.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/save/save_menu_ops.cpp)
+- У методі `BackupSaves()` (під час автосинхронізації) замість безумовного вибору першої локації (`webdav_locations.front()`) шукати локацію за ім'ям, збереженим в `App::GetWebdavUrl()`. Якщо локацію не знайдено, але список не порожній, використовувати `webdav_locations.front()`.
+
+---
+
+### [Component: Settings Menu]
+
+---
+
+#### [MODIFY] [app_display_options.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_display_options.cpp)
+- Імпортувати `"ui/menus/save/save_locations.hpp"`.
+- Переписати `DisplayWebdavOptions()`: замість полів введення сервера, юзера та пароля показувати один вибір `Sync Location`, де користувач вибирає одну з налаштованих у `Sources` WebDAV локацій (або `None`). При виборі зберігати назву локації в `App::SetWebdavUrl(name)`.
+
+#### [MODIFY] [settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)
+- Оновити `BuildSourcesCategoryItems()`: при видаленні джерела, назва якого збігається з поточною вибраною локацією автосинхронізації (`App::GetWebdavUrl()`), очищати її (`App::SetWebdavUrl("")`).
+
+---
+
+### [Component: Version]
+
+---
+
+#### [MODIFY] [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)
+- Підвищити версію проекту `sphaira_VERSION` до `0.13.222`.
+
+## Verification Plan (Виконано)
+
+### Automated Tests
+- Автоматизовані тести відсутні.
+
+### Manual Verification (Готово до тестування на консолі)
+- **WSL-збірка**: Виконано успішно. Проект скомпільовано без помилок лінкера.
+- **Тестування на консолі**:
+  - У `Tools -> Settings -> Sources` додати WebDAV джерело (наприклад, з назвою `"Nextcloud"`).
+  - Перейти в `Tools -> Settings -> WebDAV` (WebDAV Settings).
+  - Переконатися, що замість полів введення там з'явився пункт `"Sync Location"` зі значенням за замовчуванням `"None"`.
+  - Натиснути на нього, перевірити, що відкрився PopupList з варіантами `"None"` та `"Nextcloud"`. Вибрати `"Nextcloud"`.
+  - Переконатися, що налаштування збереглося.
+  - Запустити бекап сейву в меню сейвів при активованій опції `Auto-sync saves after backup`. Переконатися, що сейви успішно автосинхронізуються на джерело `"Nextcloud"`.
+  - Видалити джерело `"Nextcloud"` у `Settings -> Sources` та перевірити, що в `WebDAV Settings` активна локація змінилася на `"None"`.

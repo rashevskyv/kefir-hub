@@ -15,6 +15,7 @@
 #include <ranges>
 #include <curl/curl.h>
 #include <yyjson.h>
+#include <sstream>
 
 namespace sphaira::curl {
 namespace {
@@ -597,6 +598,12 @@ auto UnescapeString(CURL* curl, const std::string& str) -> std::string {
 
 auto EncodeUrl(std::string url) -> std::string {
     log_write("[CURL] encoding url\n");
+
+    if (url.starts_with("sdmc:/")) {
+        url = "file://" + url.substr(5);
+    } else if (url.find("://") == std::string::npos) {
+        url = std::string("file://") + (url.starts_with('/') ? "" : "/") + url;
+    }
 
     if (url.starts_with("webdav://")) {
         log_write("[CURL] updating host\n");
@@ -1245,6 +1252,41 @@ auto UnescapeString(const std::string& str) -> std::string {
 auto ListWebdav(const std::string& url, const std::string& user, const std::string& pass, const std::string& folder, const std::string& bearer, const std::string& pub_key, const std::string& priv_key, u16 port) -> std::vector<std::string> {
     std::vector<std::string> files;
     
+    if (url.starts_with("file://") || url.starts_with("sdmc:/") || url.find("://") == std::string::npos) {
+        std::string local_path_str;
+        if (url.starts_with("file://")) {
+            local_path_str = url.substr(7);
+        } else if (url.starts_with("sdmc:/")) {
+            local_path_str = url.substr(5);
+        } else {
+            local_path_str = url;
+        }
+        
+        if (!folder.empty()) {
+            if (!local_path_str.ends_with("/")) {
+                local_path_str += "/";
+            }
+            local_path_str += folder;
+        }
+        
+        fs::FsNativeSd local_fs;
+        std::vector<std::string> local_files;
+        fs::Dir dir;
+        if (R_SUCCEEDED(local_fs.OpenDirectory(local_path_str, FsDirOpenMode_ReadFiles, &dir))) {
+            std::vector<FsDirectoryEntry> entries;
+            if (R_SUCCEEDED(dir.ReadAll(entries))) {
+                for (const auto& entry : entries) {
+                    std::string entry_name = entry.name;
+                    if (entry_name.ends_with(".zip")) {
+                        local_files.push_back(entry_name);
+                    }
+                }
+            }
+            dir.Close();
+        }
+        return local_files;
+    }
+
     // Construct the full URL
     std::string full_url = url;
     if (!folder.empty()) {
@@ -1254,6 +1296,33 @@ auto ListWebdav(const std::string& url, const std::string& user, const std::stri
         full_url += folder;
     }
     
+    if (url.starts_with("ftp://") || url.starts_with("ftps://")) {
+        Api e;
+        e.SetOption(Url{full_url});
+        e.SetOption(UserPass{user, pass});
+        e.SetOption(Port{port});
+        e.SetOption(CustomRequest{"NLST"});
+        
+        ApiResult result = ToMemory(e);
+        if (!result.success) {
+            log_write("[CURL] NLST failed for listing FTP: %s\n", full_url.c_str());
+            return files;
+        }
+        
+        std::string list_str(result.data.begin(), result.data.end());
+        std::string line;
+        std::istringstream stream(list_str);
+        while (std::getline(stream, line)) {
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+            if (line.ends_with(".zip")) {
+                files.push_back(line);
+            }
+        }
+        return files;
+    }
+
     Api e;
     e.SetOption(Url{full_url});
     e.SetOption(UserPass{user, pass});
