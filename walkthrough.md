@@ -1,26 +1,32 @@
-# Результати впровадження: Виправлення перекладів, фільтрація та автоперемикання мови (v0.13.230)
+# Результати впровадження: Контекстне меню джерел, тестування з'єднання та копіювання URL (v0.13.231)
 
-Усі заплановані зміни було успішно реалізовано.
+Усі заплановані зміни було успішно реалізовано та верифіковано збіркою в середовищі WSL.
 
 ## Зроблені зміни
 
-### [Component: Core Application settings]
-- **[app.hpp](file:///d:/git/dev/sphaira/sphaira/include/app.hpp)**:
-  - Оновлено сигнатуру функції `SetLanguage`: додано параметр `bool prompt_restart = true`, щоб мати можливість перемикати мову інтерфейсу без виведення діалогового вікна із запитом на перезапуск програми.
-- **[app_settings.cpp](file:///d:/git/dev/sphaira/sphaira/source/app_settings.cpp)**:
-  - Оновлено реалізацію `App::SetLanguage` для підтримки прапорця `prompt_restart`. Якщо він встановлений у `false`, запит на перезапуск не показується.
+### [Component: UI Settings (Sources & Network)]
+- **[settings_menu.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings_menu.cpp)**:
+  - Замінено спливаючий `PopupList` (синє меню знизу) для контекстного меню мережевих джерел (викликається кнопкою **Plus** / START) на бічне меню `Sidebar`, яке висувається справа (`Sidebar::Side::RIGHT`).
+  - Додано пункт **"Test Connection"** у бічне меню джерела.
+  - Додано пункт **"Test Connection"** у меню налаштувань конкретного джерела `SourceEditMenu::BuildEditItems()`.
+  - Реалізовано функцію тестування з'єднання:
+    - Для протоколу Samba (SMB) створюється тимчасовий об'єкт `CSMB2FS` і з'єднання тестується за допомогою методу `CheckConnection()`.
+    - Для інших мережевих протоколів (FTP, HTTP, WebDAV) виконується легкий безтілесний запит (`Flag_NoBody` з командою `NLST` для FTP та `PROPFIND` для HTTP) через бібліотеку `curl` (функція `ToMemory`).
+    - Процес тестування відображається через індикатор `ProgressBox` ("Testing Connection..."). Після закінчення користувач отримує системне повідомлення `App::Notify` про успіх або `OptionBox` з описом помилки у разі невдачі.
 
-### [Component: UI Settings (Translations)]
-- **[settings_translations.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/settings/settings_translations.cpp)**:
-  - **RemoveInterfaceTranslation**: Додано ігнорування коду помилки `FsError_TargetLocked`. Це дозволяє уникнути критичної помилки при видаленні заблокованих системою файлів перекладу, оскільки після видалення консоль все одно перезавантажується (що зніме блокування з усіх файлів).
-  - **ParseInterfaceTranslations**: Тепер перед додаванням перекладу до списку доступних виконується перевірка наявності відповідного JSON-файлу за допомогою `fs::FileExists` та його перевірка за допомогою `ReadInterfaceReplacementOptions`. Якщо файл відсутній або не містить опцій заміни, ця мовна папка взагалі не буде виведена в меню.
-  - **TryAutoSwitchLanguage**: Додано нову функцію, яка виконує реєстронезалежний пошук назви перекладу серед підтримуваних мов Sphaira (`LANGUAGE_ITEMS`) і, у разі збігу, викликає `App::SetLanguage(index, false)`.
-  - **InstallInterfaceTranslation**: Додано виклик `TryAutoSwitchLanguage(entry.name)` безпосередньо перед перезавантаженням консолі.
+### [Component: File Browser Operations]
+- **[filebrowser.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/filebrowser.cpp)**:
+  - Додано допоміжну функцію `IsUrlLike`, яка визначає, чи схожий введений користувачем рядок на URL-адресу (наявність `://`, локальних IP-адрес на кшталт `192.168.`, `10.` або символів крапки разом із двокрапкою чи слешем).
+  - В `AddNetworkLocationInteractive`, якщо введена назва джерела є URL-подібною, вона автоматично копіюється та заповнюється у поле `url` нового джерела, додаючи до неї відповідну схему обраного протоколу (наприклад, `smb://`, `webdav://`, `ftp://`, `http://`). Також додано безпечний парсинг порту з URL-назви без використання конструкцій `try-catch`, що запобігає помилкам компіляції за відсутності підтримки виключень (`-fno-exceptions`).
 
 ### [Component: CMake Configuration]
 - **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
-  - Версію проекту оновлено до `0.13.230`.
+  - Версію програми `sphaira_VERSION` оновлено до `0.13.231`.
+
+### [Component: Documentation]
+- **[README.md](file:///d:/git/dev/sphaira/README.md)**:
+  - Оновлено опис мережевих джерел (Network Storage Sources), додано інформацію про нове бічне меню опцій справа, інструмент тестування з'єднання та автоматичне заповнення URL-адреси.
 
 ## Результати перевірки
-
-Код було успішно змінено та підготовлено для компіляції.
+- Проект успішно скомпільовано в середовищі WSL (`build.sh`) без жодних помилок чи нових попереджень (warnings).
+- Було успішно згенеровано фінальний виконуваний файл `kefir-hub.nro` у теці збірки.

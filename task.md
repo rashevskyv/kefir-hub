@@ -1,12 +1,13 @@
-# Список завдань: Виправлення перекладів та автоперемикання мови (v0.13.230)
+# Список завдань: Контекстне меню джерел, тестування з'єднання та копіювання URL (v0.13.231)
 
 - [x] **Підготовка та налаштування**:
-  - [x] Створити план впровадження та список завдань
+  - [x] Створити план впровадження та список завдань у корені проекту
+  - [x] Отримати погодження плану від користувача та відповідь щодо потреби автоматичної збірки NRO
 - [x] **Реалізація змін**:
-  - [x] Оновити `App::SetLanguage` у `app.hpp` та `app_settings.cpp` (додати параметр `prompt_restart = true`)
-  - [x] Оновити `RemoveInterfaceTranslation` у `settings_translations.cpp` (ігнорувати `FsError_TargetLocked`)
-  - [x] Оновити `ParseInterfaceTranslations` у `settings_translations.cpp` (фільтрація відсутніх/порожніх перекладів)
-  - [x] Реалізувати `TryAutoSwitchLanguage` та інтегрувати її в `InstallInterfaceTranslation`
-  - [x] Ітерувати версію програми до `0.13.230` у `sphaira/CMakeLists.txt`
+  - [x] Додати допоміжну функцію `IsUrlLike` у `settings_menu.cpp` та `filebrowser.cpp`
+  - [x] Змінити контекстне меню джерела у `settings_menu.cpp` (замінити `PopupList` на `Sidebar`)
+  - [x] Реалізувати функцію тестування з'єднання `TestConnection` та додати відповідні пункти у контекстне меню та `SourceEditMenu` у `settings_menu.cpp`
+  - [x] Оновити `AddNetworkLocationInteractive` у `filebrowser.cpp` для автоматичного копіювання URL
+  - [x] Ітерувати версію програми до `0.13.231` у `sphaira/CMakeLists.txt`
 - [x] **Верифікація**:
-  - [x] Компіляція проекту за допомогою `make` у WSL
+  - [x] Скомпілювати проект за допомогою `make` / `build.sh` у WSL (або за вказівкою користувача)

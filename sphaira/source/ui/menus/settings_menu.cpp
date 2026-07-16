@@ -14,6 +14,8 @@
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/hold_confirm_box.hpp"
+#include "ui/sidebar.hpp"
+#include "utils/devoptab_smb2.hpp"
 
 
 #include "app.hpp"
@@ -816,6 +818,8 @@ auto ThemeValue() -> std::string {
     return themes[index].name;
 }
 
+
+
 auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -964,73 +968,116 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             });
             if (it != network_locations.end()) {
                 location::Entry loc = *it;
-                PopupList::Items context_items = {"Enter/Connect"_i18n, "Edit"_i18n, "Rename"_i18n, "Properties"_i18n, "Delete"_i18n};
-                App::Push<PopupList>(loc.name, context_items, [this, loc](std::optional<s64> op_idx) {
-                    if (!op_idx) return;
-                    s64 idx = *op_idx;
-                    if (idx == 0) {
-                        // Enter/Connect
-                        if (loc.IsConfigured()) {
-                            if (loc.IsSmb()) {
-                                App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
-                            } else {
-                                App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
-                            }
+                auto options = std::make_unique<Sidebar>(loc.name, Sidebar::Side::RIGHT);
+
+                options->Add<SidebarEntryCallback>("Enter/Connect"_i18n, [this, loc](){
+                    if (loc.IsConfigured()) {
+                        if (loc.IsSmb()) {
+                            App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
                         } else {
-                            App::Push<SourceEditMenu>(loc.name);
+                            App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
                         }
-                    } else if (idx == 1) {
-                        // Edit
+                    } else {
                         App::Push<SourceEditMenu>(loc.name);
-                    } else if (idx == 2) {
-                        // Rename
-                        std::string out;
-                        if (R_SUCCEEDED(swkbd::ShowText(out, "Rename Network Location"_i18n.c_str(), loc.name.c_str()))) {
-                            if (!out.empty() && out != loc.name) {
+                    }
+                }, true, "Connect to this network location."_i18n);
+
+                options->Add<SidebarEntryCallback>("Edit"_i18n, [loc](){
+                    App::Push<SourceEditMenu>(loc.name);
+                }, true, "Configure connection settings."_i18n);
+
+                options->Add<SidebarEntryCallback>("Test Connection"_i18n, [loc](){
+                    App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
+                        if (loc.IsSmb()) {
+#ifdef BUILD_SMB2
+                            CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
+                            if (test_smb.CheckConnection()) {
+                                return 0;
+                            } else {
+                                return -1;
+                            }
+#else
+                            return -1;
+#endif
+                        } else {
+                            curl::Api e;
+                            e.SetOption(curl::Url{loc.url});
+                            e.SetOption(curl::UserPass{loc.user, loc.pass});
+                            e.SetOption(curl::Port{loc.port});
+                            e.SetOption(curl::Flags{curl::Flag_NoBody});
+                            if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
+                                e.SetOption(curl::CustomRequest{"NLST"});
+                            } else {
+                                e.SetOption(curl::CustomRequest{"PROPFIND"});
+                                e.SetOption(curl::Header{ { "Depth", "0" } });
+                            }
+                            curl::ApiResult result = curl::ToMemory(e);
+                            if (result.success) {
+                                return 0;
+                            } else {
+                                return -1;
+                            }
+                        }
+                    }, [](Result rc) {
+                        if (R_SUCCEEDED(rc)) {
+                            App::Notify("Connection test successful!"_i18n);
+                        } else {
+                            App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                        }
+                    });
+                }, true, "Test connection with current settings."_i18n);
+
+                options->Add<SidebarEntryCallback>("Rename"_i18n, [this, loc](){
+                    std::string out;
+                    if (R_SUCCEEDED(swkbd::ShowText(out, "Rename Network Location"_i18n.c_str(), loc.name.c_str()))) {
+                        if (!out.empty() && out != loc.name) {
+                            location::Remove(loc.name);
+                            location::Entry new_loc = loc;
+                            new_loc.name = out;
+                            location::Add(new_loc);
+                            App::Notify("Location renamed successfully!"_i18n);
+                            OnFocusGained();
+                        }
+                    }
+                }, true, "Rename this network location."_i18n);
+
+                options->Add<SidebarEntryCallback>("Properties"_i18n, [loc](){
+                    std::string props = "Name: "_i18n + loc.name + "\n";
+                    std::string proto = loc.protocol;
+                    if (proto.empty()) {
+                        if (loc.IsSmb()) proto = "smb";
+                        else if (loc.url.starts_with("ftp://")) proto = "ftp";
+                        else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav"; // fallback
+                        else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
+                    }
+                    props += "Protocol: "_i18n + proto + "\n";
+                    props += "URL: "_i18n + loc.url + "\n";
+                    if (!loc.user.empty()) {
+                        props += "Username: "_i18n + loc.user + "\n";
+                    }
+                    if (loc.port) {
+                        props += "Port: "_i18n + std::to_string(loc.port) + "\n";
+                    }
+                    App::Push<OptionBox>(props, "OK"_i18n);
+                }, true, "View network location properties."_i18n);
+
+                options->Add<SidebarEntryCallback>("Delete"_i18n, [this, loc](){
+                    App::Push<OptionBox>(
+                        "Delete this network location?"_i18n,
+                        "No"_i18n, "Yes"_i18n, 0, [this, loc](auto op_delete_idx) {
+                            if (op_delete_idx && *op_delete_idx) {
+                                if (loc.name == App::GetWebdavUrlName()) {
+                                    App::SetWebdavUrl("");
+                                }
                                 location::Remove(loc.name);
-                                location::Entry new_loc = loc;
-                                new_loc.name = out;
-                                location::Add(new_loc);
-                                App::Notify("Location renamed successfully!"_i18n);
+                                App::Notify("Location deleted successfully!"_i18n);
                                 OnFocusGained();
                             }
                         }
-                    } else if (idx == 3) {
-                        // Properties
-                        std::string props = "Name: "_i18n + loc.name + "\n";
-                        std::string proto = loc.protocol;
-                        if (proto.empty()) {
-                            if (loc.IsSmb()) proto = "smb";
-                            else if (loc.url.starts_with("ftp://")) proto = "ftp";
-                            else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav"; // fallback
-                            else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
-                        }
-                        props += "Protocol: "_i18n + proto + "\n";
-                        props += "URL: "_i18n + loc.url + "\n";
-                        if (!loc.user.empty()) {
-                            props += "Username: "_i18n + loc.user + "\n";
-                        }
-                        if (loc.port) {
-                            props += "Port: "_i18n + std::to_string(loc.port) + "\n";
-                        }
-                        App::Push<OptionBox>(props, "OK"_i18n);
-                    } else if (idx == 4) {
-                        // Delete
-                        App::Push<OptionBox>(
-                            "Delete this network location?"_i18n,
-                            "No"_i18n, "Yes"_i18n, 0, [this, loc](auto op_delete_idx) {
-                                if (op_delete_idx && *op_delete_idx) {
-                                    if (loc.name == App::GetWebdavUrlName()) {
-                                        App::SetWebdavUrl("");
-                                    }
-                                    location::Remove(loc.name);
-                                    App::Notify("Location deleted successfully!"_i18n);
-                                    OnFocusGained();
-                                }
-                            }
-                        );
-                    }
-                });
+                    );
+                }, true, "Delete this network location."_i18n);
+
+                App::Push(std::move(options));
             }
         }});
     } else {
@@ -2063,6 +2110,52 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             }
         });
     }
+
+    items.emplace_back(SettingsItem{
+        "Test Connection"_i18n,
+        "Test connection with current settings."_i18n,
+        [](){ return std::string{}; },
+        [loc]() mutable {
+            App::Push<ProgressBox>(0, "Testing Connection..."_i18n, loc.name, [loc](auto pbox) -> Result {
+                if (loc.IsSmb()) {
+#ifdef BUILD_SMB2
+                    CSMB2FS test_smb(loc.url, "test_smb", "test_smb");
+                    if (test_smb.CheckConnection()) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+#else
+                    return -1;
+#endif
+                } else {
+                    curl::Api e;
+                    e.SetOption(curl::Url{loc.url});
+                    e.SetOption(curl::UserPass{loc.user, loc.pass});
+                    e.SetOption(curl::Port{loc.port});
+                    e.SetOption(curl::Flags{curl::Flag_NoBody});
+                    if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
+                        e.SetOption(curl::CustomRequest{"NLST"});
+                    } else {
+                        e.SetOption(curl::CustomRequest{"PROPFIND"});
+                        e.SetOption(curl::Header{ { "Depth", "0" } });
+                    }
+                    curl::ApiResult result = curl::ToMemory(e);
+                    if (result.success) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                }
+            }, [](Result rc) {
+                if (R_SUCCEEDED(rc)) {
+                    App::Notify("Connection test successful!"_i18n);
+                } else {
+                    App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                }
+            });
+        }
+    });
 
     return items;
 }
