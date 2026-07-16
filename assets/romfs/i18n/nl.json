@@ -554,5 +554,9 @@
   "Convert titlekey to standard crypto.": "Converteer titelsleutel naar standaardcrypto.",
   "Encrypt key area keys with master key 0.": "Versleutel sleutelgebiedsleutels met hoofdsleutel 0.",
   "Lower the system firmware field in metadata.": "Verlaag het veld systeemfirmware in metadata.",
-  "Browse, download and install theme packs from themezer.net.": "Blader, download en installeer themapakketten van themazer.net."
+  "Browse, download and install theme packs from themezer.net.": "Blader, download en installeer themapakketten van themazer.net.",
+  "Update language packs": "Taalpakketten bijwerken",
+  "Update the UltraHand language package list.": "Werk de UltraHand-taalpakketlijst bij.",
+  "Updating language packs...": "Taalpakketten bijwerken...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Om deze vertaling toe te passen, moet u een van de vereiste variaties selecteren in de console-instellingen:\n"
 }

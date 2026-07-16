@@ -91,7 +91,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                 const auto webdav_locations = GetWebdavLocations();
                 if (!webdav_locations.empty()) {
                     location::Entry target_loc = webdav_locations.front();
-                    const auto active_name = App::GetWebdavUrl();
+                    const auto active_name = App::GetWebdavUrlName();
                     for (const auto& l : webdav_locations) {
                         if (l.name == active_name) {
                             target_loc = l;

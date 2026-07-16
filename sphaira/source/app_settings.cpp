@@ -7,6 +7,7 @@
 #include "evman.hpp"
 #include "nxlink.h"
 #include "fs.hpp"
+#include "location.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "ftpsrv_helper.hpp"
@@ -93,15 +94,40 @@ auto App::GetWriteProtect() -> bool {
     return g_app->m_hdd_write_protect.Get();
 }
 
+auto App::GetWebdavUrlName() -> std::string {
+    return g_app->m_webdav_url.Get();
+}
+
 auto App::GetWebdavUrl() -> std::string {
-    return NormalizeWebdavUrl(g_app->m_webdav_url.Get());
+    const auto raw_val = g_app->m_webdav_url.Get();
+    const auto locations = location::Load();
+    for (const auto& loc : locations) {
+        if (loc.name == raw_val) {
+            return NormalizeWebdavUrl(loc.url);
+        }
+    }
+    return NormalizeWebdavUrl(raw_val);
 }
 
 auto App::GetWebdavUser() -> std::string {
+    const auto raw_val = g_app->m_webdav_url.Get();
+    const auto locations = location::Load();
+    for (const auto& loc : locations) {
+        if (loc.name == raw_val) {
+            return loc.user;
+        }
+    }
     return g_app->m_webdav_user.Get();
 }
 
 auto App::GetWebdavPass() -> std::string {
+    const auto raw_val = g_app->m_webdav_url.Get();
+    const auto locations = location::Load();
+    for (const auto& loc : locations) {
+        if (loc.name == raw_val) {
+            return loc.pass;
+        }
+    }
     return g_app->m_webdav_pass.Get();
 }
 

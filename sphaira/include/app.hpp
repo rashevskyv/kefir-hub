@@ -113,6 +113,7 @@ public:
     static auto GetNxlinkEnable() -> bool;
     static auto GetHddEnable() -> bool;
     static auto GetWriteProtect() -> bool;
+    static auto GetWebdavUrlName() -> std::string;
     static auto GetWebdavUrl() -> std::string;
     static auto GetWebdavUser() -> std::string;
     static auto GetWebdavPass() -> std::string;

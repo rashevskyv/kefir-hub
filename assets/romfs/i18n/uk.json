@@ -924,7 +924,6 @@
   "module.420000000007E51A.description": "Завантажує оверлеї NRO у фоновому процесі Nintendo Switch.",
   "module.420000000007E51B.description": "Перезапускає nx-ovlloader без перезавантаження консолі.",
   "module.690000000000000D.description": "Додає підтримку USB-контролерів у Nintendo Switch.",
-  "Sources": "Джерела",
   "Manage file sources and network locations.": "Керування джерелами файлів та мережевими локаціями.",
   "+ Add network location": "+ Додати мережеве джерело",
   "Delete this network location?": "Видалити це мережеве джерело?",
@@ -934,5 +933,9 @@
   "No network locations configured! Add one in Settings.": "Немає налаштованих мережевих джерел! Додайте їх у налаштуваннях.",
   "Select network location": "Виберіть мережеве джерело",
   "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).": "Налаштувати нове мережеве джерело (підтримувані протоколи: SMB, WebDAV, FTP, HTTP).",
-  "Select Protocol": "Виберіть протокол"
+  "Select Protocol": "Виберіть протокол",
+  "Update language packs": "Оновити мовні пакети",
+  "Update the UltraHand language package list.": "Оновити список мовних пакетів UltraHand.",
+  "Updating language packs...": "Оновлення мовних пакетів...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Для застосування цього перекладу необхідно вибрати один із потрібних варіантів у налаштуваннях консолі:\n"
 }

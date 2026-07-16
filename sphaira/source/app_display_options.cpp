@@ -451,10 +451,10 @@ void App::DisplayWebdavOptions(bool left_side) {
         items.push_back(loc.name);
     }
 
-    const auto current_active = App::GetWebdavUrl();
+    const auto current_active_name = App::GetWebdavUrlName();
     s64 current_index = 0;
     for (size_t i = 0; i < webdav_locations.size(); ++i) {
-        if (webdav_locations[i].name == current_active) {
+        if (webdav_locations[i].name == current_active_name) {
             current_index = i + 1;
             break;
         }

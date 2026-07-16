@@ -529,7 +529,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
+    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](NVGcontext* vg, Theme* theme, Vec4 v, s64 pos) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[pos];
 

@@ -621,5 +621,9 @@
   "Convert titlekey to standard crypto.": "将 titlekey 转换为标准加密货币。",
   "Encrypt key area keys with master key 0.": "使用主密钥 0 加密密钥区域密钥。",
   "Lower the system firmware field in metadata.": "降低元数据中的系统固件字段。",
-  "Browse, download and install theme packs from themezer.net.": "从 themezer.net 浏览、下载并安装主题包。"
+  "Browse, download and install theme packs from themezer.net.": "从 themezer.net 浏览、下载并安装主题包。",
+  "Update language packs": "更新语言包",
+  "Update the UltraHand language package list.": "更新UltraHand语言包列表。",
+  "Updating language packs...": "正在更新语言包...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "要应用此翻译，您必须在控制台设置中选择所需变体之一：\n"
 }

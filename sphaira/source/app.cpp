@@ -701,17 +701,15 @@ App::App(const char* argv0) {
         __nx_applet_exit_mode = 1;
     }
 
+    // migrate legacy config dir if present; if both exist (e.g. a stray
+    // /config/sphaira left by running upstream sphaira once), the kefir dir
+    // wins and the legacy one is ignored. never abort here: a leftover
+    // folder on the sd card must not brick the app at boot.
     fs::FsNativeSd fs;
     const bool has_legacy_data = fs.DirExists(paths::LEGACY_DATA_ROOT);
     const bool has_kefir_data = fs.DirExists(paths::DATA_ROOT);
-    if (has_legacy_data && has_kefir_data) {
-        diagAbortWithResult(FsError_PathAlreadyExists);
-    }
-    if (has_legacy_data) {
-        const auto rc = fs.RenameDirectory(paths::LEGACY_DATA_ROOT, paths::DATA_ROOT);
-        if (R_FAILED(rc)) {
-            diagAbortWithResult(rc);
-        }
+    if (has_legacy_data && !has_kefir_data) {
+        fs.RenameDirectory(paths::LEGACY_DATA_ROOT, paths::DATA_ROOT);
     }
 
     fs.CreateDirectoryRecursively(paths::DATA_ROOT);

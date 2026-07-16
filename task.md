@@ -1,70 +1,26 @@
-# Список завдань: Покращення джерел та зсув статус-бару (v0.13.220)
+# Список завдань: Оновлення мовних пакетів, кругова навігація та фільтрація перекладів (v0.13.225)
 
-- [x] **Статус-бар**:
-  - [x] Збільшити фіксований зсув `start_x` для батареї з 64 до 94 в `menu_base.cpp` при зарядці (`charger_type != 0`).
-  - [x] Збільшити фіксований зсув `start_x` для батареї з 64 до 94 в `menu_base.cpp` при розрядці (`draw(ThemeEntryID_TEXT, 94, ...)`).
+- [x] **Кругова навігація у підменю налаштувань**:
+  - [x] Додати `m_list->SetWrap(true);` у `SoftwareMenu` в `settings_menu.cpp`.
+  - [x] Додати `m_list->SetWrap(true);` у `DbiMenu` в `settings_menu.cpp`.
+  - [x] Додати `m_list->SetWrap(true);` у `KefirSettingsMenu` in `settings_menu.cpp`.
+  - [x] Додати `m_list->SetWrap(true);` у `ThemesMenu` в `settings_menu.cpp`.
+  - [x] Додати `m_list->SetWrap(true);` у `TranslateMenu` в `settings_menu.cpp`.
 
-- [x] **Location Core**:
-  - [x] Додати декларацію `Remove` в `location.hpp`.
-  - [x] Реалізувати `Remove` в `location.cpp`.
+- [x] **Динамічне оновлення тексту мовних пакетів**:
+  - [x] Додати логіку перевірки існування `TRANSLATE_PACKAGE` в `BuildTranslateItems()`.
+  - [x] Використовувати `"Update language packs"_i18n` та `"Update the UltraHand language package list."_i18n` при наявності файлу.
 
-- [x] **File Browser (UI)**:
-  - [x] Додати декларацію `AddNetworkLocationInteractive` в `filebrowser.hpp`.
-  - [x] Реалізувати `AddNetworkLocationInteractive` в `filebrowser.cpp`.
-  - [x] Видалити `"Mount"` та `"Add network location"` з `DisplayAdvancedOptions()` у `filebrowser.cpp`.
-  - [x] Додати пункт `"Add network location"_i18n` в `ShowSourcePicker()` у `filebrowser.cpp`.
-  - [x] Оновити пункт `"Upload"_i18n` на `"Upload to network location"_i18n` в `filebrowser.cpp` та оновити повідомлення/заголовки у `filebrowser_ops.cpp`.
+- [x] **Фільтрація та перевірка варіантів перекладу**:
+  - [x] Реалізувати логіку отримання мови та регіону консолі за допомогою libnx API.
+  - [x] Реалізувати функцію `IsOptionApplicable` для фільтрації варіантів перекладу.
+  - [x] Додати перевірку результатів фільтрації: якщо варіанти є, показати `PopupList` з ними; якщо немає, показати попередження через `OptionBox` із переліком всіх доступних варіантів.
 
-- [x] **Settings Menu (UI)**:
-  - [x] Додати категорію `"Sources"_i18n` та реалізувати `BuildSourcesCategoryItems()` у `settings_menu.cpp`.
-
-- [x] **Локалізація**:
-  - [x] Додати переклади нових рядків в `en.json`.
-  - [x] Додати переклади нових рядків в `uk.json`.
+- [x] **Оновлення локалізації**:
+  - [x] Додати нові ключі локалізації в усі JSON файли у `assets/romfs/i18n/`.
 
 - [x] **Версія**:
-  - [x] Оновити версію проекту на `0.13.220` у `sphaira/CMakeLists.txt`.
-
-- [x] **Збірка**:
-  - [x] Виконати повну WSL-збірка проекту і перевірити успішність компіляції `kefir-hub.nro`.
-
-# Список завдань: Спільні джерела та виправлення стабільності (v0.13.221)
-
-- [x] **Виправлення крашу**:
-  - [x] Усунути Use-After-Free краш в `AddNetworkLocationInteractive` при додаванні локації шляхом перенесення виклику `on_success()` в асинхронну чергу `evman::push`.
-
-- [x] **Спільні джерела (WebDAV saves integration)**:
-  - [x] Динамічно додавати WebDAV джерело з налаштувань сейвів (`App::GetWebdavUrl()`) до результату `location::Load()`.
-  - [x] Інтегрувати підтримку видалення джерела `"WebDAV (Saves Sync)"` у `BuildSourcesCategoryItems()` в `settings_menu.cpp`, щоб воно очищало налаштування WebDAV для сейвів в `config.ini`.
-
-- [x] **Версія**:
-  - [x] Оновити версію проекту на `0.13.221` у `sphaira/CMakeLists.txt`.
-
-- [x] **Збірка**:
-  - [x] Перевірити успішність WSL-збірки `kefir-hub.nro`.
-
-# Список завдань: Єдине джерело істини для WebDAV сейвів (v0.13.222)
-
-- [x] **Спільні джерела (Єдине джерело істини)**:
-  - [x] Відкотити динамічне додавання `"WebDAV (Saves Sync)"` в `location::Load()` у `location.cpp`.
-  - [x] Оновити `GetWebdavLocations()` у `save_locations.cpp`, щоб воно повертало виключно WebDAV джерела, налаштовані користувачем у `locations.ini` (загальні Sources).
-  - [x] Оновити автосинхронізацію сейвів у `save_menu_ops.cpp` для використання активної локації, збереженої за ім'ям у `App::GetWebdavUrl()`.
-  - [x] Перетворити меню `Tools -> Settings -> WebDAV` (`DisplayWebdavOptions` в `app_display_options.cpp`) на вибір активного джерела синхронізації сейвів серед наявних WebDAV-джерел.
-  - [x] Оновити видалення джерела у `settings_menu.cpp`, щоб при видаленні активного джерела скидалося налаштування `App::SetWebdavUrl("")`.
-
-- [x] **Версія**:
-  - [x] Оновити версію проекту на `0.13.222` у `sphaira/CMakeLists.txt`.
-
-- [x] **Збірка**:
-  - [x] Виконати WSL-збірку `kefir-hub.nro`.
-
-# Список завдань: Виправлення Use-After-Free крашу при додаванні джерел (v0.13.223)
-
-- [x] **Виправлення крашу**:
-  - [x] Замінити `App::PopToMenu()` на `App::Pop()` в `AddNetworkLocationInteractive` у `filebrowser.cpp`, щоб уникнути передчасного знищення `SettingsMenu` та подальшого Use-After-Free при асинхронному виклику `on_success()`.
-
-- [x] **Версія**:
-  - [x] Оновити версію проекту на `0.13.223` у `sphaira/CMakeLists.txt`.
+  - [x] Оновити версію проекту на `0.13.225` у `sphaira/CMakeLists.txt`.
 
 - [x] **Збірка**:
   - [x] Виконати WSL-збірку `kefir-hub.nro`.

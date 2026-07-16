@@ -39,6 +39,7 @@
 #include <minizip/unzip.h>
 #include <dirent.h>
 #include <cstring>
+#include <cstdlib>
 #include <cassert>
 #include <string>
 #include <string_view>
@@ -1699,7 +1700,14 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
 
             std::string port_str;
             if (R_FAILED(swkbd::ShowText(port_str, "Enter port (optional, default 21)"_i18n.c_str(), "21"))) return;
-            u16 port = port_str.empty() ? 21 : (u16)std::stoi(port_str);
+            // std::stoi throws on invalid input, which aborts under -fno-exceptions.
+            u16 port = 21;
+            if (!port_str.empty()) {
+                const auto parsed = std::strtoul(port_str.c_str(), nullptr, 10);
+                if (parsed >= 1 && parsed <= 65535) {
+                    port = static_cast<u16>(parsed);
+                }
+            }
 
             std::string user;
             if (R_FAILED(swkbd::ShowText(user, "Enter username (optional)"_i18n.c_str(), ""))) return;

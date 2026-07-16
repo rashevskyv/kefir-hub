@@ -604,5 +604,9 @@
   "Stop Server": "Остановить сервер",
   "Press B to Stop Server": "Нажмите B, чтобы остановить сервер",
   "Installation completed": "Установка завершена",
-  "Upload completed": "Загрузка завершена"
+  "Upload completed": "Загрузка завершена",
+  "Update language packs": "Обновить языковые пакеты",
+  "Update the UltraHand language package list.": "Обновить список языковых пакетов UltraHand.",
+  "Updating language packs...": "Обновление языковых пакетов...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Для применения этого перевода необходимо выбрать один из требуемых вариантов в настройках консоли:\n"
 }

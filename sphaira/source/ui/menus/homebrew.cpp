@@ -518,6 +518,16 @@ void Menu::Sort() {
 }
 
 void Menu::SortAndFindLastFile(bool scan) {
+    if (m_entries_current.empty()) {
+        if (scan) {
+            ScanHomebrew();
+        } else {
+            Sort();
+            SetIndex(0);
+        }
+        return;
+    }
+
     const auto path = GetEntry().path;
 
     if (scan) {

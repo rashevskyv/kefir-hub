@@ -554,5 +554,9 @@
   "Convert titlekey to standard crypto.": "Chuyển đổi khóa tiêu đề thành mật mã tiêu chuẩn.",
   "Encrypt key area keys with master key 0.": "Mã hóa các khóa vùng khóa bằng khóa chính 0.",
   "Lower the system firmware field in metadata.": "Hạ trường chương trình cơ sở hệ thống trong siêu dữ liệu.",
-  "Browse, download and install theme packs from themezer.net.": "Duyệt, tải xuống và cài đặt các gói chủ đề từ themezer.net."
+  "Browse, download and install theme packs from themezer.net.": "Duyệt, tải xuống và cài đặt các gói chủ đề từ themezer.net.",
+  "Update language packs": "Cập nhật gói ngôn ngữ",
+  "Update the UltraHand language package list.": "Cập nhật danh sách gói ngôn ngữ UltraHand.",
+  "Updating language packs...": "Đang cập nhật gói ngôn ngữ...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Để áp dụng bản dịch này, bạn phải chọn một trong các biến thể bắt buộc trong cài đặt bảng điều khiển:\n"
 }

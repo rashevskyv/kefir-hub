@@ -558,5 +558,9 @@
   "Convert titlekey to standard crypto.": "titlekey를 표준 암호화 방식으로 변환합니다.",
   "Encrypt key area keys with master key 0.": "키 영역 키를 마스터 키 0으로 암호화합니다.",
   "Lower the system firmware field in metadata.": "메타데이터의 시스템 펌웨어 필드 버전을 낮춥니다.",
-  "Browse, download and install theme packs from themezer.net.": "themezer.net에서 테마 팩을 탐색, 다운로드 및 설치합니다."
+  "Browse, download and install theme packs from themezer.net.": "themezer.net에서 테마 팩을 탐색, 다운로드 및 설치합니다.",
+  "Update language packs": "언어 팩 업데이트",
+  "Update the UltraHand language package list.": "UltraHand 언어 패키지 목록을 업데이트하세요.",
+  "Updating language packs...": "언어 팩을 업데이트하는 중...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "이 번역을 적용하려면 본체 설정에서 필수 변동 사항 중 하나를 선택해야 합니다.\n"
 }

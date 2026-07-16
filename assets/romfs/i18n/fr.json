@@ -560,5 +560,9 @@
   "Convert titlekey to standard crypto.": "Convertir la titlekey en crypto standard.",
   "Encrypt key area keys with master key 0.": "Chiffrer les clés de la zone de clé avec la clé principale 0.",
   "Lower the system firmware field in metadata.": "Abaisser le champ de la version du micrologiciel système dans les métadonnées.",
-  "Browse, download and install theme packs from themezer.net.": "Parcourir, télécharger et installer des packs de thèmes depuis themezer.net."
+  "Browse, download and install theme packs from themezer.net.": "Parcourir, télécharger et installer des packs de thèmes depuis themezer.net.",
+  "Update language packs": "Mettre à jour les packs de langue",
+  "Update the UltraHand language package list.": "Mettre à jour la liste des packages linguistiques UltraHand.",
+  "Updating language packs...": "Mise à jour des packs de langue...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Pour appliquer cette traduction, vous devez sélectionner l'une des variations requises dans les paramètres de la console :\n"
 }

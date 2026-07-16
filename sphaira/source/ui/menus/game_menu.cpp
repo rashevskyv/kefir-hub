@@ -877,6 +877,16 @@ void Menu::Sort() {
 }
 
 void Menu::SortAndFindLastFile(bool scan) {
+    if (m_entries.empty()) {
+        if (scan) {
+            ScanHomebrew();
+        } else {
+            Sort();
+            SetIndex(0);
+        }
+        return;
+    }
+
     const auto app_id = m_entries[m_index].app_id;
     if (scan) {
         ScanHomebrew();

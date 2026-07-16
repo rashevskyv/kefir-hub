@@ -558,5 +558,9 @@
   "Remove unused data from XCI dumps.": "未使用のデータを XCI ダンプから削除します。",
   "Mark trimmed XCI output names.": "トリミングされた XCI 出力名をマークします。",
   "USB transfer stream": "USB転送ストリーム",
-  "Stream dump output over USB.": "USB 経由のストリーム ダンプ出力。"
+  "Stream dump output over USB.": "USB 経由のストリーム ダンプ出力。",
+  "Update language packs": "言語パックを更新する",
+  "Update the UltraHand language package list.": "UltraHand 言語パッケージ of リストを更新します。",
+  "Updating language packs...": "言語パックを更新しています...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "この翻訳を適用するには、本体設定で必要なバリエーションのいずれかを選択する必要があります。\n"
 }

@@ -554,5 +554,9 @@
   "Convert titlekey to standard crypto.": "Konvertera titelnyckel till standardkrypto.",
   "Encrypt key area keys with master key 0.": "Kryptera nyckelområdesnycklar med huvudnyckel 0.",
   "Lower the system firmware field in metadata.": "Sänk systemets firmware-fält i metadata.",
-  "Browse, download and install theme packs from themezer.net.": "Bläddra, ladda ner och installera temapaket från themezer.net."
+  "Browse, download and install theme packs from themezer.net.": "Bläddra, ladda ner och installera temapaket från themezer.net.",
+  "Update language packs": "Uppdatera språkpaket",
+  "Update the UltraHand language package list.": "Uppdatera språkpaketlistan för UltraHand.",
+  "Updating language packs...": "Uppdaterar språkpaket...",
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "För att använda den här översättningen måste du välja en av de nödvändiga varianterna i konsolinställningarna:\n"
 }

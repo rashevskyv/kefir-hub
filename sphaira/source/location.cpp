@@ -9,8 +9,6 @@
 namespace sphaira::location {
 namespace {
 
-const fs::FsPath location_path{paths::LOCATIONS};
-
 } // namespace
 
 void Add(const Entry& e) {
@@ -18,24 +16,24 @@ void Add(const Entry& e) {
         return;
     }
 
-    ini_puts(e.name.c_str(), "url", e.url.c_str(), location_path);
+    ini_puts(e.name.c_str(), "url", e.url.c_str(), paths::LOCATIONS.c_str());
     if (!e.user.empty()) {
-        ini_puts(e.name.c_str(), "user", e.user.c_str(), location_path);
+        ini_puts(e.name.c_str(), "user", e.user.c_str(), paths::LOCATIONS.c_str());
     }
     if (!e.pass.empty()) {
-        ini_puts(e.name.c_str(), "pass", e.pass.c_str(), location_path);
+        ini_puts(e.name.c_str(), "pass", e.pass.c_str(), paths::LOCATIONS.c_str());
     }
     if (!e.bearer.empty()) {
-        ini_puts(e.name.c_str(), "bearer", e.bearer.c_str(), location_path);
+        ini_puts(e.name.c_str(), "bearer", e.bearer.c_str(), paths::LOCATIONS.c_str());
     }
     if (!e.pub_key.empty()) {
-        ini_puts(e.name.c_str(), "pub_key", e.pub_key.c_str(), location_path);
+        ini_puts(e.name.c_str(), "pub_key", e.pub_key.c_str(), paths::LOCATIONS.c_str());
     }
     if (!e.priv_key.empty()) {
-        ini_puts(e.name.c_str(), "priv_key", e.priv_key.c_str(), location_path);
+        ini_puts(e.name.c_str(), "priv_key", e.priv_key.c_str(), paths::LOCATIONS.c_str());
     }
     if (e.port) {
-        ini_putl(e.name.c_str(), "port", e.port, location_path);
+        ini_putl(e.name.c_str(), "port", e.port, paths::LOCATIONS.c_str());
     }
 }
 
@@ -43,7 +41,7 @@ void Remove(const std::string& name) {
     if (name.empty()) {
         return;
     }
-    ini_puts(name.c_str(), nullptr, nullptr, location_path);
+    ini_puts(name.c_str(), nullptr, nullptr, paths::LOCATIONS.c_str());
 }
 
 auto Load() -> Entries {
@@ -51,6 +49,10 @@ auto Load() -> Entries {
 
     auto cb = [](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
         auto e = static_cast<Entries*>(UserData);
+
+        if (!Section || !Key || !Value) {
+            return 1;
+        }
 
         // add new entry if use section changed.
         if (e->empty() || std::strcmp(Section, e->back().name.c_str())) {
@@ -76,7 +78,7 @@ auto Load() -> Entries {
         return 1;
     };
 
-    ini_browse(cb, &out, location_path);
+    ini_browse(cb, &out, paths::LOCATIONS.c_str());
 
     return out;
 }
