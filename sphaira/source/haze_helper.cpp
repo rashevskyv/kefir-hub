@@ -465,8 +465,9 @@ struct FsProxy final : FsProxyBase {
         std::memcpy(&f, &file->s, sizeof(f));
         return f->SetSize(size);
     }
+    // ReadFile/WriteFile run once per usb packet -- no logging in here, see the
+    // note on Stream::ReadChunk in install_stream_menu_base.cpp.
     Result ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u32 option, u64 *out_bytes_read) override {
-        log_write("[HAZE] ReadFile(%zd, %zu)\n", off, read_size);
 #if ENABLE_NETWORK_INSTALL
         void* ptr;
         std::memcpy(&ptr, &file->s, sizeof(ptr));
@@ -479,7 +480,6 @@ struct FsProxy final : FsProxyBase {
         return f->Read(off, buf, read_size, option, out_bytes_read);
     }
     Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
-        log_write("[HAZE] WriteFile(%zd, %zu)\n", off, write_size);
 #if ENABLE_NETWORK_INSTALL
         void* ptr;
         std::memcpy(&ptr, &file->s, sizeof(ptr));

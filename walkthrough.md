@@ -1,3 +1,36 @@
+# Результати впровадження: Діалогове вікно підтвердження при скасуванні MTP-інсталяції (v0.13.291)
+
+## Опис змін
+
+1. **Діалог підтвердження скасування фонового встановлення MTP:**
+   - **Суть проблеми**: Коли користувач під час встановлення гри через MTP випадково натискав кнопку `B` або тапав по кнопці "Stop" у прогрес-боксі, встановлення переривалося миттєво без будь-яких запитів. Це призводило до втрати прогресу передачі великих файлів.
+   - **Вирішення**:
+     - Впроваджено публічний метод `ProgressBox::ShowCancelConfirmation()` у [progress_box.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/progress_box.cpp). Метод показує стандартний `OptionBox` із запитом підтвердження ("Are you sure you wish to cancel?").
+     - Перевизначено логіку обробки кнопки `B` у конструкторі `ProgressBox` та тачу по кнопці "Stop" в `ProgressBox::Update`, перенаправивши їх на виклик `ShowCancelConfirmation()`.
+     - Оновлено логіку `App::Update` у [app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp): при перехопленні кнопки `B` для фонового `m_active_transfer_pbox` замість негайного `RequestExit()` тепер викликається `ShowCancelConfirmation()`.
+     - Також у `App::Update` змінено логіку блокування введення фонового меню: відтепер введення для `m_active_transfer_pbox` блокується лише тоді, коли верхній віджет у стеку є меню (`m_widgets.back()->IsMenu()`). Якщо на стеку з'являється не-меню віджет (наприклад, спливаючий `OptionBox` підтвердження), то фокус та оновлення переключаються на нього. Це дає користувачеві можливість взаємодіяти з діалогом підтвердження, підтвердивши або відмінивши скасування.
+
+## Зроблені зміни
+
+### [Component: Progress Box UI Widget]
+- **[progress_box.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/progress_box.hpp)**:
+  - Додано декларацію методу `void ShowCancelConfirmation();`.
+- **[progress_box.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/progress_box.cpp)**:
+  - Реалізовано метод `ShowCancelConfirmation()`.
+  - У конструкторі спрощено прив'язку кнопки `B` через делегування до `ShowCancelConfirmation()`.
+  - У методі `Update` змінено тач по кнопці "Stop" на виклик `ShowCancelConfirmation()`.
+
+### [Component: Ядро програми та координація]
+- **[app.cpp](file:///d:/git/dev/sphaira/sphaira/source/app.cpp)**:
+  - У методі `App::Update` змінено реакцію на кнопку `B` при активному фоновому встановленні на виклик `ShowCancelConfirmation()`.
+  - Удосконалено перевірку `IsMenu()` для вибіркового блокування введення та оновлення спливаючих діалогів.
+
+### [Component: CMake Configuration]
+- **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
+  - Збільшено версію програми `sphaira_VERSION` до `0.13.291`.
+
+---
+
 # Результати впровадження: Оптимізація буферизації Stream для MTP та виправлення таймаутів (v0.13.290)
 
 ## Опис змін

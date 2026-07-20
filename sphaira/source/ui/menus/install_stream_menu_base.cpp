@@ -37,8 +37,7 @@ constexpr u64 MAX_BUFFER_RESERVE_SIZE = 1024ULL*1024ULL*32ULL;
 // it seems random, and ive been unable to trigger it personally.
 // for this reason, use condivar rather than trying to work around the issue.
 #define USE_CONDI_VAR 1
- 
-static bool s_forced_log = false;
+
 } // namespace
 
 Stream::Stream(const fs::FsPath& path, std::stop_token token) {
@@ -53,27 +52,23 @@ Stream::Stream(const fs::FsPath& path, std::stop_token token) {
     condvarInit(&m_can_write);
 }
 
+// NOTE: this and Push() below run once per USB packet on the MTP data path.
+// do not add log_write() here -- every call open()s, write()s and close()s
+// log.txt on the sd card while holding a process-wide mutex, which starves the
+// very sd writes the installer is doing and stalls the usb endpoint until the
+// windows mtp host times the transfer out.
 Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
-    log_write("[Stream::ReadChunk] inside\n");
-    ON_SCOPE_EXIT(
-        log_write("[Stream::ReadChunk] exiting\n");
-    );
-
     while (!m_token.stop_requested()) {
         SCOPED_MUTEX(&m_mutex);
         if (m_active && m_buffer.size() == m_read_offset) {
-            log_write("[Stream::ReadChunk] buffer empty, waiting on m_can_read\n");
             R_TRY(condvarWait(std::addressof(m_can_read), std::addressof(m_mutex)));
-            log_write("[Stream::ReadChunk] woke up from m_can_read, size=%zu, offset=%zu, active=%d\n", m_buffer.size(), m_read_offset, m_active.load());
         }
 
         if (m_token.stop_requested()) {
-            log_write("[Stream::ReadChunk] stop requested, breaking\n");
             break;
         }
 
         if (!m_active && m_buffer.size() == m_read_offset) {
-            log_write("[Stream::ReadChunk] inactive and empty buffer, returning EOF\n");
             *bytes_read = 0;
             return 0;
         }
@@ -102,33 +97,23 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
         return condvarWakeOne(&m_can_write);
     }
 
-    log_write("[Stream::ReadChunk] failed to read/cancelled\n");
     R_THROW(Result_TransferCancelled);
 }
 
 bool Stream::Push(const void* buf, s64 size) {
-    log_write("[Stream::Push] inside\n");
-    ON_SCOPE_EXIT(
-        log_write("[Stream::Push] exiting\n");
-    );
-
     while (!m_token.stop_requested()) {
         if (INSTALL_STATE == InstallState_Finished) {
-            log_write("[Stream::Push] install has finished\n");
             return true;
         }
 
         SCOPED_MUTEX(&m_mutex);
         #if USE_CONDI_VAR
         while (m_active && (m_buffer.size() - m_read_offset) >= MAX_BUFFER_SIZE) {
-            log_write("[Stream::Push] buffer full (%zu >= %llu), waiting on m_can_write...\n", m_buffer.size() - m_read_offset, MAX_BUFFER_SIZE);
             R_TRY(condvarWait(std::addressof(m_can_write), std::addressof(m_mutex)));
-            log_write("[Stream::Push] woke up from m_can_write, size=%zu\n", m_buffer.size() - m_read_offset);
         }
         #else
         if (m_active && (m_buffer.size() - m_read_offset) >= MAX_BUFFER_SIZE) {
             // unlock the mutex and wait for 1s to bring transfer speed down to 1MiB/s.
-            log_write("[Stream::Push] buffer is full, delaying\n");
             mutexUnlock(&m_mutex);
             ON_SCOPE_EXIT(mutexLock(&m_mutex));
 
@@ -137,7 +122,6 @@ bool Stream::Push(const void* buf, s64 size) {
         #endif
 
         if (!m_active) {
-            log_write("[Stream::Push] file not active\n");
             break;
         }
 
@@ -148,7 +132,6 @@ bool Stream::Push(const void* buf, s64 size) {
         return true;
     }
 
-    log_write("[Stream::Push] failed to push\n");
     return false;
 }
 
@@ -393,11 +376,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
  
     evman::push(evman::FunctionalEventData {
         [path_str = std::string(path)]() {
-            if (!log_is_init()) {
-                log_file_init();
-                s_forced_log = true;
-                log_write("[BackgroundInstaller] forced logging enabled for MTP install\n");
-            }
             log_write("[BackgroundInstaller] UI event triggered, creating ProgressBox\n");
             App::SetAutoSleepDisabled(true);
             // detached: doesn't block the widget stack, so the user can keep
@@ -436,11 +414,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                     mutexUnlock(&s_mutex);
                 }
                 s_installing = false;
-                if (s_forced_log) {
-                    log_write("[BackgroundInstaller] closing forced logging\n");
-                    log_file_exit();
-                    s_forced_log = false;
-                }
             }));
         }
     }, false);

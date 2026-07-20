@@ -55,6 +55,7 @@ struct ProgressBox final : Widget, InstallProgress {
     auto SetImageDataConst(std::span<const u8> data) -> ProgressBox&;
 
     void RequestExit();
+    void ShowCancelConfirmation();
     auto ShouldExit() -> bool;
     auto ShouldExitResult() -> Result;
 

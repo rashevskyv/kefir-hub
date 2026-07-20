@@ -26,12 +26,7 @@ ProgressBox::ProgressBox(int image, const std::string& action, const std::string
     }
 
     SetAction(Button::B, Action{"Back"_i18n, [this](){
-        App::Push<OptionBox>("Are you sure you wish to cancel?"_i18n, "\uE0E1 " + "No"_i18n, "\uE0EF " + "Yes"_i18n, 1, [this](auto op_index){
-            if (op_index && *op_index) {
-                RequestExit();
-                SetPop();
-            }
-        });
+        ShowCancelConfirmation();
     }});
 
     m_pos.w = 770.f;
@@ -100,8 +95,7 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
         const float btn_y = m_detached ? (m_pos.y + m_pos.h - 95.f) : (m_pos.y + m_pos.h - 65.f);
         if (touch->in_range(btn_x, btn_y, btn_w, btn_h)) {
             App::PlaySoundEffect(SoundEffect_Focus);
-            RequestExit();
-            SetPop();
+            ShowCancelConfirmation();
         }
     }
 }
@@ -459,6 +453,17 @@ auto ProgressBox::SetImageDataConst(std::span<const u8> data) -> ProgressBox& {
 void ProgressBox::RequestExit() {
     m_stop_source.request_stop();
     ueventSignal(GetCancelEvent());
+}
+
+void ProgressBox::ShowCancelConfirmation() {
+    App::Push<OptionBox>("Are you sure you wish to cancel?"_i18n, "\uE0E1 " + "No"_i18n, "\uE0EF " + "Yes"_i18n, 1, [this](auto op_index){
+        if (op_index && *op_index) {
+            RequestExit();
+            if (!m_detached) {
+                SetPop();
+            }
+        }
+    });
 }
 
 auto ProgressBox::ShouldExit() -> bool {
