@@ -39,6 +39,7 @@ Result Stream::Read(void* _buf, s64 off, s64 size, u64* bytes_read_out) {
             off += bytes_read;
             m_offset += bytes_read;
             size -= bytes_read;
+            break; // Return early with whatever chunk size we got to avoid blocking the pipeline
         }
     }
 

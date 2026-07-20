@@ -38,6 +38,7 @@ constexpr u64 MAX_BUFFER_RESERVE_SIZE = 1024ULL*1024ULL*32ULL;
 // for this reason, use condivar rather than trying to work around the issue.
 #define USE_CONDI_VAR 1
  
+static bool s_forced_log = false;
 } // namespace
 
 Stream::Stream(const fs::FsPath& path, std::stop_token token) {
@@ -380,6 +381,11 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
  
     evman::push(evman::FunctionalEventData {
         [path_str = std::string(path)]() {
+            if (!log_is_init()) {
+                log_file_init();
+                s_forced_log = true;
+                log_write("[BackgroundInstaller] forced logging enabled for MTP install\n");
+            }
             log_write("[BackgroundInstaller] UI event triggered, creating ProgressBox\n");
             App::SetAutoSleepDisabled(true);
             // detached: doesn't block the widget stack, so the user can keep
@@ -418,6 +424,11 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                     mutexUnlock(&s_mutex);
                 }
                 s_installing = false;
+                if (s_forced_log) {
+                    log_write("[BackgroundInstaller] closing forced logging\n");
+                    log_file_exit();
+                    s_forced_log = false;
+                }
             }));
         }
     }, false);

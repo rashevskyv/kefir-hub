@@ -3,6 +3,13 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
+## Поточний delivery: v0.13.287
+
+- [x] FIX-MTP-INSTALL-STALL-SHORT-READ-287 — змінено логіку `Stream::Read` у [stream.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/source/stream.cpp): додано швидке повернення (early return) після прочитання першого ж доступного шматка даних. Це запобігає тривалому блокуванню потоку читання в очікуванні повних 4 МБ, що викликало ілюзію зависання та приводило до таймаутів з боку MTP хоста Windows.
+- [x] FEAT-MTP-INSTALL-FORCED-LOGGING-287 — реалізовано автоматичне примусове ввімкнення файлового логування у `/config/kefir/log.txt` на час встановлення через MTP (навіть якщо загальне логування вимкнено у налаштуваннях) та його автоматичне закриття після завершення.
+- [ ] BUILD-NRO-287 — збірка 0.13.287 та верифікація компіляції (WSL).
+- [ ] HW-SMOKE-287 — на Switch+ПК: перевірка встановлення та швидкості MTP без зависань.
+
 ## Поточний delivery: v0.13.286
 
 - [x] FIX-MTP-INSTALL-COMPILATION-286 — виправлено помилку компіляції в `Yati::InstallNcaInternal` у [yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp), де замість `yati->source->SignalCancel()` використано правильне звернення до власного члена класу `source->SignalCancel()`.
