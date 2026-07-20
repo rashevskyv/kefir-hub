@@ -228,7 +228,7 @@ struct ThreadData {
         buf.resize(size);
 
         mutexLock(std::addressof(read_mutex));
-        if (!read_buffers.ringbuf_free()) {
+        while (!read_buffers.ringbuf_free()) {
             if (!write_running) {
                 R_SUCCEED();
             }
@@ -243,7 +243,7 @@ struct ThreadData {
 
     Result GetDecompressBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(read_mutex));
-        if (!read_buffers.ringbuf_size()) {
+        while (!read_buffers.ringbuf_size()) {
             if (!read_running) {
                 buf_out.resize(0);
                 R_SUCCEED();
@@ -264,7 +264,7 @@ struct ThreadData {
         }
 
         mutexLock(std::addressof(write_mutex));
-        if (!write_buffers.ringbuf_free()) {
+        while (!write_buffers.ringbuf_free()) {
             if (!decompress_running) {
                 R_SUCCEED();
             }
@@ -279,7 +279,7 @@ struct ThreadData {
 
     Result GetWriteBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(write_mutex));
-        if (!write_buffers.ringbuf_size()) {
+        while (!write_buffers.ringbuf_size()) {
             if (!decompress_running) {
                 buf_out.resize(0);
                 R_SUCCEED();

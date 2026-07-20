@@ -1,3 +1,31 @@
+# Результати впровадження: Усунення зависання на 3% та безпечне використання condvarWait (v0.13.283)
+
+## Опис змін
+
+1. **Захист від spurious wakeups та передчасної декомпресії/запису (зависання на 3%):**
+   - **Суть проблеми**: В `0.13.282` мы додали обов'язковий виклик `WakeAllThreads()` при успішному завершенні потоків читання/декомпресії. Це коректно вирішило проблему зависання наприкінці першого NCA (на 4%).
+   - Проте методи `SetDecompressBuf`, `GetDecompressBuf`, `SetWriteBuf` та `GetWriteBuf` у `ThreadData` використовували умовні перевірки `if` перед викликом `condvarWait`.
+   - При використанні `if` потік, що прокинувся через `condvarWait` (внаслідок spurious wakeup або виклику `WakeAllThreads()` суміжним потоком, який щойно закінчив роботу), переходив безпосередньо до читання/запису з кільцевого буфера (`ringbuf_pop` / `ringbuf_push`), НЕ перевіряючи повторно, чи є в ньому вільне місце чи готові дані (`ringbuf_free()` / `ringbuf_size()`).
+   - Якщо буфер був порожнім (наприклад, декомпресор прокинувся завдяки `WakeAllThreads` успішно завершеного потоку читання Control NCA), він робив `ringbuf_pop` з порожнього буфера. Це призводило до отримання порожнього вектора `buf`. Декомпресор бачив `buf.empty()`, сприймав це як передчасний кінець файлу, виходив із циклу та завершував роботу завчасно.
+   - Далі запускалося встановлення наступного NCA (наприклад, великого Program NCA). Оскільки попередній крок завершився некоректно або з помилкою стану, потік читання нового NCA намагався виконати довге пропускання (skip) даних у `Stream::Read`, а MTP-потік блокувався через переповнення буфера без споживання з боку декомпресора. Це призводило до зависання на 3% прогресу.
+   - **Вирішення**: Замінено всі умовні конструкції `if` перед `condvarWait` на цикли `while` у методах черги `ThreadData` у [yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp) та в `Stream::Push` у [install_stream_menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/install_stream_menu_base.cpp). Тепер потік, що прокинувся, гарантовано перевіряє стан буфера і засинає знову, якщо умова не виконана (стандартний паттерн роботи з умовними змінними).
+
+## Зроблені зміни
+
+### [Component: Потоковий інсталятор yati]
+- **[yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp)**:
+  - Замінено `if` на `while` перед `condvarWait` у методах `SetDecompressBuf`, `GetDecompressBuf`, `SetWriteBuf`, `GetWriteBuf`.
+
+### [Component: Інтерфейс користувача та потоки]
+- **[install_stream_menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/install_stream_menu_base.cpp)**:
+  - Замінено `if` на `while` перед `condvarWait` у `Stream::Push` для уникнення некоректного додавання при spurious wakeups.
+
+### [Component: CMake Configuration]
+- **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
+  - Збільшено версію програми `sphaira_VERSION` до `0.13.283`.
+
+---
+
 # Результати впровадження: Виправлення зависання на 4%, робота кнопки "Stop" та масштабування міні-вікна (v0.13.282)
 
 ## Опис змін

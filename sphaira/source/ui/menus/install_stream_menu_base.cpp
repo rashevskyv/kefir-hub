@@ -103,7 +103,7 @@ bool Stream::Push(const void* buf, s64 size) {
 
         SCOPED_MUTEX(&m_mutex);
         #if USE_CONDI_VAR
-        if (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
+        while (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
             R_TRY(condvarWait(std::addressof(m_can_write), std::addressof(m_mutex)));
         }
         #else
