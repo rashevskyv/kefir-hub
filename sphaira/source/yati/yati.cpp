@@ -232,6 +232,7 @@ struct ThreadData {
             if (!write_running) {
                 R_SUCCEED();
             }
+            log_write("[YATI] SetDecompressBuf: waiting on can_read\n");
             R_TRY(condvarWait(std::addressof(can_read), std::addressof(read_mutex)));
         }
 
@@ -248,6 +249,7 @@ struct ThreadData {
                 buf_out.resize(0);
                 R_SUCCEED();
             }
+            log_write("[YATI] GetDecompressBuf: waiting on can_decompress\n");
             R_TRY(condvarWait(std::addressof(can_decompress), std::addressof(read_mutex)));
         }
 
@@ -268,6 +270,7 @@ struct ThreadData {
             if (!decompress_running) {
                 R_SUCCEED();
             }
+            log_write("[YATI] SetWriteBuf: waiting on can_decompress_write\n");
             R_TRY(condvarWait(std::addressof(can_decompress_write), std::addressof(write_mutex)));
         }
 
@@ -284,6 +287,7 @@ struct ThreadData {
                 buf_out.resize(0);
                 R_SUCCEED();
             }
+            log_write("[YATI] GetWriteBuf: waiting on can_write\n");
             R_TRY(condvarWait(std::addressof(can_write), std::addressof(write_mutex)));
         }
 
@@ -401,6 +405,9 @@ void ThreadData::WakeAllThreads() {
 Result ThreadData::Read(void* buf, s64 size, u64* bytes_read) {
     size = std::min<s64>(size, nca->size - read_offset);
     const auto rc = yati->source->Read(buf, nca->offset + read_offset, size, bytes_read);
+    if (R_FAILED(rc) || *bytes_read == 0) {
+        log_write("[YATI] ThreadData::Read: off=%lld, size=%lld, read=%lld, rc=0x%X\n", nca->offset + read_offset, size, *bytes_read, rc);
+    }
     R_TRY(rc);
 
     read_offset += *bytes_read;
@@ -1029,6 +1036,9 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
             pbox->UpdateInstallTransfer(t_data.GetWriteOffset(), t_data.GetWriteSize());
             pbox->UpdateInstallReadWrite(t_data.GetReadOffset(), t_data.GetWriteOffset());
         } else {
+            if (idx == 1) {
+                yati->source->SignalCancel();
+            }
             break;
         }
     }

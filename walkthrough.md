@@ -1,3 +1,41 @@
+# Результати впровадження: Виправлення взаємного блокування при скасуванні та детальне логування (v0.13.284)
+
+## Опис змін
+
+1. **Вирішення дедлоку (deadlock) при скасуванні (натискання кнопки B або Stop):**
+   - **Суть проблеми**: При отриманні запиту на скасування (натискання B або Stop) прогрес-бокс сигналізував `waiter_cancel`, оркестратор виходив з основного циклу встановлення та переходив до циклу очікування завершення потоків `while (t_data.IsAnyRunning())`.
+   - Проте потік читання `t_read` у цей час був заблокований на умовній змінній `m_can_read` всередині `Stream::ReadChunk`, оскільки буфер був порожнім і чекав на нові дані від USB/MTP.
+   - Метод `Stream::Disable()`, який звільняє потік `t_read` і змушує його повернути EOF, викликався лише *після* повернення з `InstallFromSource`. Але `InstallFromSource` не міг завершитися, оскільки потік `t_read` був заблокований, і цикл приєднання потоків крутився вічно. Це призводило до повного зависання консолі та інтерфейсу.
+   - **Вирішення**: Додано перевизначення віртуального методу `SignalCancel() override` в `Stream` у [install_stream_menu_base.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/install_stream_menu_base.hpp), який відразу викликає `Disable()`. В `InstallNcaInternal` у [yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp) при спрацьовуванні `waiter_cancel` негайно викликається `yati->source->SignalCancel()`. Це розблоковує потік читання, дозволяючи всім потокам завершити роботу та чисто закрити процес встановлення без зависання.
+
+2. **Діагностичне логування потоків встановлення:**
+   - Для виявлення точного місця зависання пристрою у системний лог-файл додано логування моментів блокування потоків на умовних змінних:
+     - У `Stream::Push` при переповненні буфера (очікування `m_can_write`).
+     - У `Stream::ReadChunk` при порожньому буфері (очікування `m_can_read`).
+     - У чергах `ThreadData::SetDecompressBuf`, `GetDecompressBuf`, `SetWriteBuf`, `GetWriteBuf` при очікуванні відповідних умовних змінних.
+     - У `ThreadData::Read` при нульовому читанні (EOF) або помилках.
+   - Логування розроблено таким чином, що воно спрацьовує виключно у момент блокування потоку (sleep), завдяки чому не створює I/O-навантаження під час активної передачі даних.
+
+## Зроблені зміни
+
+### [Component: Потоковий інсталятор yati]
+- **[yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp)**:
+  - Викликається `SignalCancel()` при виявленні сигналу скасування в `waitMulti`.
+  - Додано логування очікування на умовних змінних у методах `SetDecompressBuf`, `GetDecompressBuf`, `SetWriteBuf`, `GetWriteBuf`.
+  - Додано логування нульового/помилкового читання у `ThreadData::Read`.
+
+### [Component: Інтерфейс користувача та потоки]
+- **[install_stream_menu_base.hpp](file:///d:/git/dev/sphaira/sphaira/include/ui/menus/install_stream_menu_base.hpp)**:
+  - Реалізовано `SignalCancel() override` для `Stream` з викликом `Disable()`.
+- **[install_stream_menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/install_stream_menu_base.cpp)**:
+  - Додано логування очікування та пробудження condvar-змінних у `ReadChunk` та `Push`.
+
+### [Component: CMake Configuration]
+- **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
+  - Збільшено версію програми `sphaira_VERSION` до `0.13.284`.
+
+---
+
 # Результати впровадження: Усунення зависання на 3% та безпечне використання condvarWait (v0.13.283)
 
 ## Опис змін

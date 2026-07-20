@@ -38,6 +38,9 @@ struct Stream final : yati::source::Stream {
     Result ReadChunk(void* buf, s64 size, u64* bytes_read) override;
     bool Push(const void* buf, s64 size);
     void Disable();
+    void SignalCancel() override {
+        Disable();
+    }
     auto& GetPath() const { return m_path; }
 
 private:

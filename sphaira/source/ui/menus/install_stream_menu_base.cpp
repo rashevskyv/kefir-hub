@@ -60,14 +60,18 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
     while (!m_token.stop_requested()) {
         SCOPED_MUTEX(&m_mutex);
         if (m_active && m_buffer.empty()) {
+            log_write("[Stream::ReadChunk] buffer empty, waiting on m_can_read\n");
             R_TRY(condvarWait(std::addressof(m_can_read), std::addressof(m_mutex)));
+            log_write("[Stream::ReadChunk] woke up from m_can_read, size=%zu, active=%d\n", m_buffer.size(), m_active.load());
         }
 
         if (m_token.stop_requested()) {
+            log_write("[Stream::ReadChunk] stop requested, breaking\n");
             break;
         }
 
         if (!m_active && m_buffer.empty()) {
+            log_write("[Stream::ReadChunk] inactive and empty buffer, returning EOF\n");
             *bytes_read = 0;
             return 0;
         }
@@ -85,7 +89,7 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
         return condvarWakeOne(&m_can_write);
     }
 
-    log_write("[Stream::ReadChunk] failed to read\n");
+    log_write("[Stream::ReadChunk] failed to read/cancelled\n");
     R_THROW(Result_TransferCancelled);
 }
 
@@ -104,7 +108,9 @@ bool Stream::Push(const void* buf, s64 size) {
         SCOPED_MUTEX(&m_mutex);
         #if USE_CONDI_VAR
         while (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
+            log_write("[Stream::Push] buffer full (%zu >= %llu), waiting on m_can_write...\n", m_buffer.size(), MAX_BUFFER_SIZE);
             R_TRY(condvarWait(std::addressof(m_can_write), std::addressof(m_mutex)));
+            log_write("[Stream::Push] woke up from m_can_write, size=%zu\n", m_buffer.size());
         }
         #else
         if (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
