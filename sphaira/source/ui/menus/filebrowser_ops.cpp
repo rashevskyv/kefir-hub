@@ -474,7 +474,7 @@ void FsView::OnPasteCallback() {
     } else {
         App::Push<ProgressBox>(0, "Pasting"_i18n, "", [this](auto pbox) -> Result {
             auto& selected = m_menu->m_selected;
-            auto src_fs = selected.m_view->GetFs();
+            auto src_fs = selected.SrcFs();
             const auto is_same_fs = selected.SameFs(this);
 
             if (selected.SameFs(this) && selected.m_type == SelectedType::Cut) {

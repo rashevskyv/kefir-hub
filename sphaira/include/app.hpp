@@ -129,6 +129,7 @@ public:
     static auto GetTextScrollSpeed() -> long;
     static auto GetGodModeEnabled() -> bool;
     static auto GetProgressActive() -> bool;
+    static auto GetSaveSettingsGlobally() -> bool;
 
     static void SetMtpEnable(bool enable);
     static void SetMtpShowSd(bool enable);
@@ -157,6 +158,7 @@ public:
     static void SetTextScrollSpeed(long index);
     static void SetGodModeEnable(bool enable);
     static void SetProgressActive(bool active);
+    static void SetSaveSettingsGlobally(bool enable);
 
     static auto Install(OwoConfig& config) -> Result;
     static auto Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result;
@@ -373,7 +375,8 @@ public:
     option::OptionLong m_install_location{INI_SECTION, "install_location", 4};
     option::OptionLong m_install_reserve_mb{INI_SECTION, "install_reserve_mb", 500};
     option::OptionBool m_allow_downgrade{INI_SECTION, "allow_downgrade", false};
-    option::OptionBool m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", true};
+    option::OptionLong m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", 1};
+    option::OptionBool m_save_settings_globally{INI_SECTION, "save_settings_globally", true};
     option::OptionBool m_ticket_only{INI_SECTION, "ticket_only", false};
     option::OptionBool m_skip_base{INI_SECTION, "skip_base", false};
     option::OptionBool m_skip_patch{INI_SECTION, "skip_patch", false};

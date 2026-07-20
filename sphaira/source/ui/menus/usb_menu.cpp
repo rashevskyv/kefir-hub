@@ -8,6 +8,7 @@
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 #include <cstring>
+#include <usbhsfs.h>
 
 namespace sphaira::ui::menu::usb {
 namespace {
@@ -37,6 +38,10 @@ Menu::Menu(u32 flags) : MenuBase{"USB"_i18n, flags} {
     if (m_was_mtp_enabled) {
         App::Notify("Disable MTP for usb install"_i18n);
         App::SetMtpEnable(false);
+    }
+
+    if (App::GetHddEnable()) {
+        usbHsFsExit();
     }
 
     // 3 second timeout for transfers.
@@ -73,6 +78,13 @@ Menu::~Menu() {
     if (m_was_mtp_enabled) {
         App::Notify("Re-enabled MTP"_i18n);
         App::SetMtpEnable(true);
+    } else {
+        if (App::GetHddEnable()) {
+            if (App::GetWriteProtect()) {
+                usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+            }
+            usbHsFsInitialize(1);
+        }
     }
 }
 

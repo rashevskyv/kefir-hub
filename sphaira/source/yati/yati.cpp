@@ -166,7 +166,11 @@ struct ThreadData {
     void WakeAllThreads();
 
     auto IsAnyRunning() volatile const -> bool {
-        return read_running || decompress_result || write_running;
+        // liveness is the per-thread *_running flags; decompress_result is a
+        // Result and was being read here by mistake (a failed-but-exited
+        // decompress thread would keep this true, a still-running one with a
+        // clean result could read false).
+        return read_running || decompress_running || write_running;
     }
 
     auto GetWriteOffset() volatile const -> s64 {
@@ -189,10 +193,18 @@ struct ThreadData {
         return &m_uevent_progres;
     }
 
+    // NOTE: WakeAllThreads() only signals the condvars (it does not touch the
+    // mutexes), so it is safe to call here without owning read_mutex/write_mutex.
+    // A blocked peer is either parked in condvarWait (released its mutex) and is
+    // woken directly, or it is mid-critical-section and will release the mutex on
+    // its own. Grabbing the mutexes here (as an earlier revision did) races with
+    // the orchestrator thread, which also calls WakeAllThreads() without owning
+    // them, and corrupts HOS mutex ownership -> install deadlock / crash.
     void SetReadResult(Result result) {
         read_result = result;
         if (R_FAILED(result)) {
             ueventSignal(GetDoneEvent());
+            WakeAllThreads();
         }
     }
 
@@ -200,12 +212,14 @@ struct ThreadData {
         decompress_result = result;
         if (R_FAILED(result)) {
             ueventSignal(GetDoneEvent());
+            WakeAllThreads();
         }
     }
 
     void SetWriteResult(Result result) {
         write_result = result;
         ueventSignal(GetDoneEvent());
+        WakeAllThreads();
     }
 
     Result Read(void* buf, s64 size, u64* bytes_read);
@@ -370,14 +384,18 @@ auto ThreadData::GetResults() volatile -> Result {
     R_SUCCEED();
 }
 
+// Wakes every thread parked on one of the pipeline condvars so it re-checks its
+// predicate (typically GetResults(), which surfaces a failure/cancel and lets
+// the thread unwind). This must NOT lock or unlock read_mutex/write_mutex: it is
+// called both by the worker threads (SetReadResult/SetDecompressResult/
+// SetWriteResult) and by the orchestrator's cleanup loop, none of which own the
+// mutexes at that point. libnx condvarWake* does not require the associated mutex
+// to be held, so signalling alone is correct and race-free.
 void ThreadData::WakeAllThreads() {
     condvarWakeAll(std::addressof(can_read));
     condvarWakeAll(std::addressof(can_decompress));
     condvarWakeAll(std::addressof(can_decompress_write));
     condvarWakeAll(std::addressof(can_write));
-
-    mutexUnlock(std::addressof(read_mutex));
-    mutexUnlock(std::addressof(write_mutex));
 }
 
 Result ThreadData::Read(void* buf, s64 size, u64* bytes_read) {
@@ -385,7 +403,6 @@ Result ThreadData::Read(void* buf, s64 size, u64* bytes_read) {
     const auto rc = yati->source->Read(buf, nca->offset + read_offset, size, bytes_read);
     R_TRY(rc);
 
-    R_UNLESS(size == *bytes_read, Result_YatiInvalidNcaReadSize);
     read_offset += *bytes_read;
     return rc;
 }
@@ -913,7 +930,7 @@ Yati::~Yati() {
 Result Yati::Setup(const ConfigOverride& override) {
     config.sd_card_install = override.sd_card_install.value_or(App::GetInstallSdEnable());
     config.allow_downgrade = App::GetApp()->m_allow_downgrade.Get();
-    config.skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
+    config.skip_if_already_installed = override.skip_if_already_installed.value_or(App::GetApp()->m_skip_if_already_installed.Get());
     config.ticket_only = App::GetApp()->m_ticket_only.Get();
     config.skip_base = App::GetApp()->m_skip_base.Get();
     config.skip_patch = App::GetApp()->m_skip_patch.Get();
@@ -949,7 +966,7 @@ Result Yati::Setup(const ConfigOverride& override) {
 }
 
 Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection& nca) {
-    if (config.skip_if_already_installed || config.ticket_only) {
+    if (config.skip_if_already_installed == 1 || config.ticket_only) {
         R_TRY(ncmContentStorageHas(std::addressof(cs), std::addressof(nca.skipped), std::addressof(nca.content_id)));
         if (nca.skipped) {
             log_write("\tskipped nca as it's already installed ncmContentStorageHas()\n");
@@ -1209,9 +1226,20 @@ Result Yati::GetLatestVersion(const CnmtCollection& cnmt, u32& version_out, bool
             for (auto& key : keys) {
                 log_write("found record: %016lX type: %u version: %u\n", key.id, key.type, key.version);
 
-                if (key.id == cnmt.key.id && cnmt.key.version == key.version && config.skip_if_already_installed) {
-                    log_write("skipping as already installed\n");
-                    skip = true;
+                if (key.id == cnmt.key.id && cnmt.key.version == key.version) {
+                    if (config.skip_if_already_installed == 1) {
+                        log_write("skipping as already installed\n");
+                        skip = true;
+                    } else if (config.skip_if_already_installed == 2) {
+                        log_write("prompting for already installed title %016lX\n", key.id);
+                        if (!pbox->PromptReinstall(cnmt.name)) {
+                            log_write("user chose to skip already installed title\n");
+                            skip = true;
+                        } else {
+                            log_write("user chose to reinstall already installed title\n");
+                            skip = false;
+                        }
+                    }
                 }
 
                 // check if we are downgrading
@@ -1235,8 +1263,19 @@ Result Yati::ShouldSkip(const CnmtCollection& cnmt, bool& skip) {
         bool has;
         R_TRY(ncmContentMetaDatabaseHas(std::addressof(db), std::addressof(has), std::addressof(cnmt.key)));
         if (has) {
-            log_write("\tskipping: [ncmContentMetaDatabaseHas()]\n");
-            skip = true;
+            if (config.skip_if_already_installed == 1) {
+                log_write("\tskipping: [ncmContentMetaDatabaseHas()]\n");
+                skip = true;
+            } else if (config.skip_if_already_installed == 2) {
+                log_write("prompting for already installed title %016lX\n", cnmt.key.id);
+                if (!pbox->PromptReinstall(cnmt.name)) {
+                    log_write("user chose to skip already installed title\n");
+                    skip = true;
+                } else {
+                    log_write("user chose to reinstall already installed title\n");
+                    skip = false;
+                }
+            }
         }
     }
 
@@ -1439,6 +1478,7 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
 
         if (skip) {
             log_write("skipping install!\n");
+            pbox->OnInstallSkipped();
             continue;
         }
 
@@ -1540,6 +1580,7 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
 
         if (skip) {
             log_write("skipping install!\n");
+            pbox->OnInstallSkipped();
             continue;
         }
 
@@ -1550,6 +1591,42 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
 
     log_write("success!\n");
     R_SUCCEED();
+}
+
+// exact decompressed size of an ncz entry: the section table at 0x4000
+// stores the decompressed offset+size of every region of the original nca.
+// Returns -1 when the entry is not a valid ncz (or the reads fail), in which
+// case the caller falls back to the x1.6 estimate.
+s64 GetNczDecompressedSize(source::Base* source, s64 offset, s64 size) {
+    if (size < static_cast<s64>(NCZ_SECTION_OFFSET)) {
+        return -1;
+    }
+
+    ncz::Header header{};
+    u64 bytes_read{};
+    if (R_FAILED(source->Read(std::addressof(header), offset + NCZ_NORMAL_SIZE, sizeof(header), std::addressof(bytes_read))) || bytes_read != sizeof(header)) {
+        return -1;
+    }
+    if (header.magic != NCZ_SECTION_MAGIC || !header.total_sections || header.total_sections > 0x100) {
+        return -1;
+    }
+
+    std::vector<ncz::Section> sections(header.total_sections);
+    const auto sections_size = sections.size() * sizeof(ncz::Section);
+    if (R_FAILED(source->Read(sections.data(), offset + NCZ_SECTION_OFFSET, sections_size, std::addressof(bytes_read))) || bytes_read != sections_size) {
+        return -1;
+    }
+
+    s64 total = NCZ_NORMAL_SIZE;
+    for (const auto& section : sections) {
+        const auto section_offset = static_cast<s64>(section.offset);
+        const auto section_size = static_cast<s64>(section.size);
+        if (section_offset < 0 || section_size < 0 || section_offset > INT64_MAX - section_size) {
+            return -1;
+        }
+        total = std::max(total, section_offset + section_size);
+    }
+    return total;
 }
 
 } // namespace
@@ -1571,27 +1648,42 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
     R_TRY(container->GetCollections(out.collections));
     R_UNLESS(!out.collections.empty(), Result_YatiContainerNotFound);
 
+    // ncz entries whose section table could not be read: estimated below.
+    s64 estimated_compressed{};
     for (const auto& entry : out.collections) {
         R_UNLESS(entry.offset >= 0 && entry.size >= 0, Result_YatiContainerNotFound);
         R_UNLESS(entry.offset <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
         out.source_size = std::max(out.source_size, entry.offset + entry.size);
-        if (EndsWithIC(entry.name, ".nca") || EndsWithIC(entry.name, ".ncz")) {
+
+        if (EndsWithIC(entry.name, ".nca")) {
             R_UNLESS(out.install_size <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
             out.install_size += entry.size;
-            out.compressed |= EndsWithIC(entry.name, ".ncz");
+        } else if (EndsWithIC(entry.name, ".ncz")) {
+            out.compressed = true;
+            const auto decompressed = GetNczDecompressedSize(source, entry.offset, entry.size);
+            if (decompressed >= 0) {
+                // exact decompressed size from the ncz section table.
+                R_UNLESS(out.install_size <= INT64_MAX - decompressed, Result_YatiContainerNotFound);
+                out.install_size += decompressed;
+            } else {
+                R_UNLESS(estimated_compressed <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
+                estimated_compressed += entry.size;
+            }
         }
     }
 
-    if (out.compressed) {
+    if (estimated_compressed > 0) {
         // Existing Yati policy is x1.6. Use checked integer arithmetic so a
         // malformed container cannot overflow into a small/negative plan.
         constexpr s64 FACTOR_NUMERATOR = 8;
         constexpr s64 FACTOR_DENOMINATOR = 5;
-        const auto quotient = out.install_size / FACTOR_DENOMINATOR;
-        const auto remainder = out.install_size % FACTOR_DENOMINATOR;
+        const auto quotient = estimated_compressed / FACTOR_DENOMINATOR;
+        const auto remainder = estimated_compressed % FACTOR_DENOMINATOR;
         const auto rounded_remainder = (remainder * FACTOR_NUMERATOR + FACTOR_DENOMINATOR - 1) / FACTOR_DENOMINATOR;
         R_UNLESS(quotient <= (INT64_MAX - rounded_remainder) / FACTOR_NUMERATOR, Result_YatiContainerNotFound);
-        out.install_size = quotient * FACTOR_NUMERATOR + rounded_remainder;
+        const auto estimate = quotient * FACTOR_NUMERATOR + rounded_remainder;
+        R_UNLESS(out.install_size <= INT64_MAX - estimate, Result_YatiContainerNotFound);
+        out.install_size += estimate;
         out.size_kind = AnalysisSizeKind::Estimate;
         out.size_reason = "Compressed content size is estimated (x1.6)";
     }
@@ -1600,9 +1692,12 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
 }
 
 Result InstallFromFile(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override) {
+    log_write("[YATI] InstallFromFile start for %s\n", path.s);
     auto source = std::make_unique<source::File>(fs, path);
-    // auto source = std::make_unique<source::StreamFile>(fs, path, override); // enable for testing.
-    return InstallFromSource(pbox, source.get(), path, override);
+    log_write("[YATI] source::File opened, open result: 0x%X\n", R_VALUE(source->GetOpenResult()));
+    const auto rc = InstallFromSource(pbox, source.get(), path, override);
+    log_write("[YATI] InstallFromFile finished, result: 0x%X\n", R_VALUE(rc));
+    return rc;
 }
 
 Result InstallFromSource(ui::InstallProgress* pbox, source::Base* source, const fs::FsPath& path, const ConfigOverride& override) {
@@ -1617,12 +1712,18 @@ Result InstallFromSource(ui::InstallProgress* pbox, source::Base* source, const 
     }
 
     R_UNLESS(container, Result_YatiContainerNotFound);
-    return InstallFromContainer(pbox, container.get(), override);
+    log_write("[YATI] InstallFromSource: container initialized, calling InstallFromContainer\n");
+    const auto rc = InstallFromContainer(pbox, container.get(), override);
+    log_write("[YATI] InstallFromSource: InstallFromContainer returned 0x%X\n", R_VALUE(rc));
+    return rc;
 }
 
 Result InstallFromContainer(ui::InstallProgress* pbox, container::Base* container, const ConfigOverride& override) {
     container::Collections collections;
-    R_TRY(container->GetCollections(collections));
+    log_write("[YATI] InstallFromContainer: calling GetCollections\n");
+    const auto rc = container->GetCollections(collections);
+    log_write("[YATI] InstallFromContainer: GetCollections returned 0x%X, total entries: %zu\n", R_VALUE(rc), collections.size());
+    R_TRY(rc);
     return InstallFromCollections(pbox, container->GetSource(), collections, override);
 }
 

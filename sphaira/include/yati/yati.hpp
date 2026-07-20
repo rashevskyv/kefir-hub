@@ -24,7 +24,7 @@ struct Config {
 
     // ignores the install if already installed.
     // checks that every nca is available.
-    bool skip_if_already_installed{};
+    long skip_if_already_installed{};
 
     // installs tickets only.
     bool ticket_only{};
@@ -68,6 +68,7 @@ struct Config {
 // overridable options, set to avoid
 struct ConfigOverride {
     std::optional<bool> sd_card_install{};
+    std::optional<long> skip_if_already_installed{};
     std::optional<bool> skip_nca_hash_verify{};
     std::optional<bool> skip_rsa_header_fixed_key_verify{};
     std::optional<bool> skip_rsa_npdm_fixed_key_verify{};

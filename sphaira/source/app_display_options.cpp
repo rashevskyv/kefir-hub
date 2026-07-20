@@ -258,8 +258,17 @@ void App::DisplayInstallOptions(bool left_side) {
     options->Add<ui::SidebarEntryBool>("Allow downgrade"_i18n, App::GetApp()->m_allow_downgrade,
         "Allows for installing title updates that are lower than the currently installed update."_i18n);
 
-    options->Add<ui::SidebarEntryBool>("Skip if already installed"_i18n, App::GetApp()->m_skip_if_already_installed,
-        "Skips installing titles / ncas if they're already installed."_i18n);
+    ui::SidebarEntryArray::Items skip_installed_items;
+    skip_installed_items.push_back("Reinstall"_i18n);
+    skip_installed_items.push_back("Skip"_i18n);
+    skip_installed_items.push_back("Prompt"_i18n);
+    options->Add<ui::SidebarEntryArray>("Skip if already installed"_i18n, skip_installed_items, [](s64& index_out){
+        App::GetApp()->m_skip_if_already_installed.Set(index_out);
+    }, (s64)App::GetApp()->m_skip_if_already_installed.Get(),
+        "For titles / ncas already installed: reinstall, skip, or prompt each time."_i18n);
+
+    options->Add<ui::SidebarEntryBool>("Save options globally"_i18n, App::GetApp()->m_save_settings_globally,
+        "When enabled, changing options in the queue context menu updates global Settings. When disabled, changes only apply to the current install session."_i18n);
 
     options->Add<ui::SidebarEntryBool>("Ticket only"_i18n, App::GetApp()->m_ticket_only,
         "Installs tickets only, useful if the title was already installed however the tickets were missing or corrupted."_i18n);

@@ -41,6 +41,12 @@ struct MountCurlDevice : MountDevice {
 
     virtual bool Mount();
     virtual void curl_set_common_options(CURL* curl,  const std::string& url);
+
+    // curl_easy_perform that aborts when CancelActiveCurlTransfers() or
+    // RequestCurlShutdown() is called. Every synchronous request must go
+    // through this: these can otherwise block forever (timeout defaults to
+    // 0) with no way for the user to cancel or exit.
+    CURLcode curl_perform_cancellable(CURL* curl);
     static size_t write_memory_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
     static size_t write_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
     static size_t read_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
@@ -59,6 +65,11 @@ struct MountCurlDevice : MountDevice {
     int devoptab_dirnext(void* fd, char *filename, struct stat *filestat) override;
     int devoptab_dirclose(void* fd) override;
     int devoptab_lstat(const char *path, struct stat *st) override;
+
+    // determines the size of a remote file with a 1-byte ranged GET, for
+    // servers that do not implement HEAD (eg dbibackend). Returns -1 on
+    // failure. out_is_dir is set when the server redirected to a directory.
+    s64 probe_size_via_range(CURL* handle, const std::string& url, bool* out_is_dir = nullptr);
     int devoptab_unlink(const char *path) override;
     int devoptab_rmdir(const char *path) override;
     int devoptab_mkdir(const char *path, int mode) override;

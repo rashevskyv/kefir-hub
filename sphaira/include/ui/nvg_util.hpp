@@ -16,6 +16,10 @@ void drawRect(NVGcontext*, const Vec4& v, const NVGcolor& c, float rounding = 0.
 void drawRect(NVGcontext*, float x, float y, float w, float h, const NVGpaint& p, float rounding = 0.F);
 void drawRect(NVGcontext*, const Vec4& v, const NVGpaint& p, float rounding = 0.F);
 
+// rounded rect with a per-corner radius (top-left, top-right, bottom-right,
+// bottom-left). used for tab shapes that round only their top corners.
+void drawRectVarying(NVGcontext*, const Vec4& v, const NVGcolor& c, float rTL, float rTR, float rBR, float rBL);
+
 void drawRectOutline(NVGcontext*, const Theme*, float size, float x, float y, float w, float h, float rounding = 4.0F);
 void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float rounding = 4.0F);
 
@@ -32,6 +36,12 @@ void drawText(NVGcontext*, float x, float y, float size, const NVGcolor& c, cons
 void drawText(NVGcontext*, const Vec2& v, float size, const char* str, const char* end, int align, const NVGcolor& c);
 void drawText(NVGcontext*, const Vec2& v, float size, const NVGcolor& c, const char* str, int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP, const char* end = nullptr);
 void drawTextArgs(NVGcontext*, float x, float y, float size, int align, const NVGcolor& c, const char* str, ...) __attribute__ ((format (printf, 7, 8)));
+
+// faux-bold text: over-draws the string with a small horizontal offset because
+// no bold font face is loaded. keep the offset subtle so it thickens rather
+// than blurs the glyphs.
+void drawTextBold(NVGcontext*, float x, float y, float size, const NVGcolor& c, const char* str, int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+void drawTextBoldArgs(NVGcontext*, float x, float y, float size, int align, const NVGcolor& c, const char* str, ...) __attribute__ ((format (printf, 7, 8)));
 
 void drawTextBox(NVGcontext*, float x, float y, float size, float bound, const NVGcolor& c, const char* str, int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP, const char* end = nullptr, float line_height = 1.0f);
 

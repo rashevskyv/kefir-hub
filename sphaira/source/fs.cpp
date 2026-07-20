@@ -505,6 +505,8 @@ Result OpenFile(fs::Fs* fs, const fs::FsPath& path, u32 mode, File* f) {
     if (f->m_fs->IsNative()) {
         auto fs = (fs::FsNative*)f->m_fs;
         R_TRY(fsFsOpenFile(&fs->m_fs, path, mode, &f->m_native));
+    } else if (f->m_fs->IsVirtual()) {
+        R_TRY(f->m_fs->vOpenFile(path, mode, f));
     } else {
         if ((mode & FsOpenMode_Read) && (mode & FsOpenMode_Write)) {
             f->m_stdio = std::fopen(path, "rb+");
@@ -532,6 +534,8 @@ Result File::Read( s64 off, void* buf, u64 read_size, u32 option, u64* bytes_rea
 
     if (m_fs->IsNative()) {
         R_TRY(fsFileRead(&m_native, off, buf, read_size, option, bytes_read));
+    } else if (m_fs->IsVirtual()) {
+        R_TRY(m_fs->vReadFile(this, off, buf, read_size, option, bytes_read));
     } else {
         if (m_stdio_off != off) {
             m_stdio_off = off;
@@ -558,6 +562,8 @@ Result File::Write(s64 off, const void* buf, u64 write_size, u32 option) {
 
     if (m_fs->IsNative()) {
         R_TRY(fsFileWrite(&m_native, off, buf, write_size, option));
+    } else if (m_fs->IsVirtual()) {
+        R_THROW(FsError_NotImplemented); // virtual filesystems are read-only.
     } else {
         if (m_stdio_off != off) {
             log_write("[FS] diff seek\n");
@@ -580,6 +586,8 @@ Result File::SetSize(s64 sz) {
 
     if (m_fs->IsNative()) {
         R_TRY(fsFileSetSize(&m_native, sz));
+    } else if (m_fs->IsVirtual()) {
+        R_THROW(FsError_NotImplemented); // virtual filesystems are read-only.
     } else {
         const auto fd = fileno(m_stdio);
         R_UNLESS(fd > 0, Result_FsUnknownStdioError);
@@ -594,6 +602,8 @@ Result File::GetSize(s64* out) {
 
     if (m_fs->IsNative()) {
         R_TRY(fsFileGetSize(&m_native, out));
+    } else if (m_fs->IsVirtual()) {
+        R_TRY(m_fs->vGetFileSize(this, out));
     } else {
         struct stat st;
         R_UNLESS(!fstat(fileno(m_stdio), &st), Result_FsUnknownStdioError);
@@ -616,6 +626,8 @@ void File::Close() {
             }
             m_native = {};
         }
+    } else if (m_fs->IsVirtual()) {
+        m_fs->vCloseFile(this);
     } else {
         if (m_stdio) {
             std::fclose(m_stdio);
@@ -631,6 +643,8 @@ Result OpenDirectory(fs::Fs* fs, const fs::FsPath& path, u32 mode, Dir* d) {
     if (d->m_fs->IsNative()) {
         auto fs = (fs::FsNative*)d->m_fs;
         R_TRY(fsFsOpenDirectory(&fs->m_fs, path, mode, &d->m_native));
+    } else if (d->m_fs->IsVirtual()) {
+        R_TRY(d->m_fs->vOpenDir(path, mode, d));
     } else {
         d->m_stdio = opendir(path);
         R_UNLESS(d->m_stdio, Result_FsUnknownStdioError);
@@ -649,7 +663,7 @@ Result DirGetEntryCount(fs::Fs* m_fs, const fs::FsPath& path, s64* count, u32 mo
 Result DirGetEntryCount(fs::Fs* m_fs, const fs::FsPath& path, s64* file_count, s64* dir_count, u32 mode) {
     *file_count = *dir_count = 0;
 
-    if (m_fs->IsNative()) {
+    if (m_fs->IsNative() || m_fs->IsVirtual()) {
         if (mode & FsDirOpenMode_ReadDirs){
             fs::Dir dir;
             R_TRY(m_fs->OpenDirectory(path, FsDirOpenMode_ReadDirs|FsDirOpenMode_NoFileSize, &dir));
@@ -696,6 +710,8 @@ Result Dir::GetEntryCount(s64* out) {
 
     if (m_fs->IsNative()) {
         R_TRY(fsDirGetEntryCount(&m_native, out));
+    } else if (m_fs->IsVirtual()) {
+        R_TRY(m_fs->vReadDirCount(this, out));
     } else {
         while (auto d = readdir(m_stdio)) {
             if (!std::strcmp(d->d_name, ".") || !std::strcmp(d->d_name, "..")) {
@@ -717,6 +733,8 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
 
     if (m_fs->IsNative()) {
         R_TRY(fsDirRead(&m_native, total_entries, max_entries, buf));
+    } else if (m_fs->IsVirtual()) {
+        R_TRY(m_fs->vReadDir(this, total_entries, max_entries, buf));
     } else {
         while (auto d = readdir(m_stdio)) {
             if (!std::strcmp(d->d_name, ".") || !std::strcmp(d->d_name, "..")) {
@@ -763,6 +781,15 @@ Result Dir::ReadAll(std::vector<FsDirectoryEntry>& buf) {
         buf.resize(count);
         R_TRY(fsDirRead(&m_native, &count, buf.size(), buf.data()));
         buf.resize(count);
+    } else if (m_fs->IsVirtual()) {
+        s64 count{};
+        R_TRY(m_fs->vReadDirCount(this, &count));
+        buf.resize(count);
+        if (count) {
+            s64 read{};
+            R_TRY(m_fs->vReadDir(this, &read, buf.size(), buf.data()));
+            buf.resize(read);
+        }
     } else {
         buf.reserve(1000);
 
@@ -806,6 +833,8 @@ void Dir::Close() {
             fsDirClose(&m_native);
             m_native = {};
         }
+    } else if (m_fs->IsVirtual()) {
+        m_fs->vCloseDir(this);
     } else {
         if (m_stdio) {
             closedir(m_stdio);
@@ -825,6 +854,8 @@ Result FileGetSizeAndTimestamp(fs::Fs* m_fs, const FsPath& path, FsTimeStampRaw*
         File f;
         R_TRY(m_fs->OpenFile(path, FsOpenMode_Read, &f));
         R_TRY(f.GetSize(size));
+    } else if (m_fs->IsVirtual()) {
+        R_TRY(m_fs->vStat(path, size, ts));
     } else {
         struct stat st;
         R_UNLESS(!lstat(path, &st), Result_FsFailedStdioStat);
@@ -842,11 +873,9 @@ Result FileGetSizeAndTimestamp(fs::Fs* m_fs, const FsPath& path, FsTimeStampRaw*
 Result IsDirEmpty(fs::Fs* m_fs, const fs::FsPath& path, bool* out) {
     *out = true;
 
-    if (m_fs->IsNative()) {
-        auto fs = (fs::FsNative*)m_fs;
-
+    if (m_fs->IsNative() || m_fs->IsVirtual()) {
         s64 count;
-        R_TRY(fs->DirGetEntryCount(path, &count, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles));
+        R_TRY(m_fs->DirGetEntryCount(path, &count, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles));
         *out = !count;
     } else {
         auto dir = opendir(path);

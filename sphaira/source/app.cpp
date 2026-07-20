@@ -252,7 +252,16 @@ void App::Loop() {
     u64 start = armTicksToNs(armGetSystemTick());
     m_delta_time = 1.0;
 
+    bool mtp_initialized = false;
+
     while (!m_quit && appletMainLoop()) {
+        if (!mtp_initialized) {
+            mtp_initialized = true;
+            if (App::GetMtpEnable()) {
+                haze::Init();
+                ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+            }
+        }
         if (m_widgets.empty()) {
             m_quit = true;
             break;
@@ -798,10 +807,7 @@ App::App(const char* argv0) {
         log_write("[emummc] nintendo path: %s\n", m_emummc_paths.nintendo);
     }
 
-    if (App::GetMtpEnable()) {
-        haze::Init();
-        ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
-    }
+
 
     if (App::GetFtpEnable()) {
         ftpsrv::Init();
@@ -815,7 +821,7 @@ App::App(const char* argv0) {
         usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
     }
 
-    if (App::GetHddEnable()) {
+    if (App::GetHddEnable() && !App::GetMtpEnable()) {
         usbHsFsInitialize(1);
     }
 

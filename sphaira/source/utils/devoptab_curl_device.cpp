@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -115,19 +116,15 @@ bool MountCurlDevice::Mount() {
             }
         }
 
-        if (!config.user.empty()) {
-            rc = curl_url_set(curlu, CURLUPART_USER, config.user.c_str(), flags);
-            if (rc != CURLUE_OK) {
-                log_write("[CURL] curl_url_set() user failed: %s\n", curl_url_strerror_wrap(rc));
-            }
-        }
-
-        if (!config.pass.empty()) {
-            rc = curl_url_set(curlu, CURLUPART_PASSWORD, config.pass.c_str(), flags);
-            if (rc != CURLUE_OK) {
-                log_write("[CURL] curl_url_set() pass failed: %s\n", curl_url_strerror_wrap(rc));
-            }
-        }
+        // NOTE: credentials are intentionally NOT embedded in the url. They
+        // are applied per-request via CURLOPT_USERNAME/CURLOPT_PASSWORD in
+        // curl_set_common_options() instead. This mirrors download.cpp, which
+        // is what makes its source probe succeed where browsing used to fail:
+        // when a http:// source 301-redirects to https:// (as the redirected
+        // "Sphaira WebDAV" server does), the device's curl re-sends explicit
+        // credentials across the redirect but drops ones parsed from the url,
+        // replying 401 to every browse. Keeping them out of the url also stops
+        // the password from being written to log.txt.
 
         // try and parse the path from the url, if any.
         // eg, https://example.com/some/path/here
@@ -239,9 +236,25 @@ PullThreadData* MountCurlDevice::CreatePullData(CURL* curl_handle, const std::st
     return data;
 }
 
+namespace {
+
+// abortive close on every socket: without this, closing a connection whose
+// receive queue still holds a fast in-flight stream can block forever inside
+// the bsd sysmodule, freezing the thread in a way no callback can interrupt.
+int curl_sockopt_callback(void*, curl_socket_t fd, curlsocktype) {
+    struct linger sl{};
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
+    setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+    return CURL_SOCKOPT_OK;
+}
+
+} // namespace
+
 void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::string& url) {
     // NOTE: port, user and pass are set in the curl_url.
     curl_easy_reset(curl_handle);
+    curl_easy_setopt(curl_handle, CURLOPT_SOCKOPTFUNCTION, curl_sockopt_callback);
     curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl_handle, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
@@ -263,8 +276,20 @@ void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::stri
     // (download.cpp does the same for probe/sync, which is why Test
     // Connection passes while browsing fails).
     curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
-    curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 1024L * 64L);
-    curl_easy_setopt(curl_handle, CURLOPT_UPLOAD_BUFFERSIZE, 1024L * 64L);
+    // credentials as explicit options (not in the url): the device's curl only
+    // re-sends these across a redirect (eg http->https) when UNRESTRICTED_AUTH
+    // is set, whereas url-embedded creds are dropped, giving 401. See Mount().
+    if (!config.user.empty()) {
+        curl_easy_setopt(curl_handle, CURLOPT_USERNAME, config.user.c_str());
+    }
+    if (!config.pass.empty()) {
+        curl_easy_setopt(curl_handle, CURLOPT_PASSWORD, config.pass.c_str());
+    }
+    // bigger receive buffer: curl reads the socket in larger slices, which
+    // cuts write-callback round-trips and helps the streaming download keep up
+    // with the link instead of dribbling data in 64 KiB pieces.
+    curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 1024L * 256L);
+    curl_easy_setopt(curl_handle, CURLOPT_UPLOAD_BUFFERSIZE, 1024L * 256L);
     curl_easy_setopt(curl_handle, CURLOPT_ACCEPT_ENCODING, "");
 
     if (config.timeout > 0) {
@@ -273,11 +298,27 @@ void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::stri
         // todo: change config to accept seconds rather than ms.
         curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, config.timeout / 1000L);
         curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT_MS, config.timeout);
+    } else {
+        // no timeout configured: still bound connection setup and stalled
+        // transfers, otherwise a dead host/server blocks the calling thread
+        // indefinitely with no way to cancel.
+        curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 10000L);
+        curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
+        curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, 60L);
     }
 
     if (m_curl_share) {
         curl_easy_setopt(curl_handle, CURLOPT_SHARE, m_curl_share);
     }
+}
+
+CURLcode MountCurlDevice::curl_perform_cancellable(CURL* curl_handle) {
+    // stack lifetime is fine: the callback only reads it during this perform,
+    // and every caller re-sets XFERINFODATA before the next request.
+    u64 generation = GetCurlCancelGeneration();
+    curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, &generation);
+    curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, CurlOpCancelProgressCallback);
+    return curl_easy_perform(curl_handle);
 }
 
 size_t MountCurlDevice::write_memory_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
@@ -394,10 +435,19 @@ std::string MountCurlDevice::build_url(const std::string& _path, bool is_dir) {
     }
 
     if (!m_url_path.empty()) {
-        if (path.starts_with('/') || m_url_path.ends_with('/')) {
-            path = m_url_path + path;
+        // join base and path with exactly one slash. A host-only source url
+        // (eg "http://host:8080") parses to a base path of "/", so a browse
+        // path that already starts with "/" would otherwise produce a double
+        // slash ("//games/..."). Some http servers list and HEAD such urls
+        // fine but stall the streaming GET, hanging installs.
+        auto base = m_url_path;
+        if (base.ends_with('/')) {
+            base.pop_back();
+        }
+        if (path.starts_with('/')) {
+            path = base + path;
         } else {
-            path = m_url_path + '/' + path;
+            path = base + '/' + path;
         }
     }
 
@@ -451,31 +501,38 @@ int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags
             return -EIO;
         }
     } else {
+        log_write("[CURL] devoptab_open: performing HEAD request for %s\n", state->url.c_str());
         curl_set_common_options(state->curl, state->url);
         curl_easy_setopt(state->curl, CURLOPT_NOBODY, 1L);
-        const auto res = curl_easy_perform(state->curl);
+        const auto res = curl_perform_cancellable(state->curl);
+        log_write("[CURL] devoptab_open: HEAD returned %d\n", res);
         if (res == CURLE_OK) {
             double cl{};
             curl_easy_getinfo(state->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
             state->size = (cl > 0) ? (size_t)cl : 0;
+            log_write("[CURL] devoptab_open: HEAD success, size: %zu\n", state->size);
         } else {
             long code{};
             curl_easy_getinfo(state->curl, CURLINFO_RESPONSE_CODE, &code);
+            log_write("[CURL] devoptab_open: HEAD failed, response code: %ld\n", code);
             if (code == 404 || res == CURLE_REMOTE_FILE_NOT_FOUND) {
                 curl_easy_cleanup(state->curl);
                 state->~CurlFileState();
                 return -ENOENT;
             }
-            // other failures (eg the server rejects HEAD): size stays
-            // unknown, the GET below may still succeed.
+            // the server rejects HEAD (eg dbibackend replies 501): probe the
+            // size with a 1-byte ranged GET so seeks and fstat keep working.
+            log_write("[CURL] devoptab_open: probing size via range\n");
+            const auto total = probe_size_via_range(state->curl, state->url);
+            log_write("[CURL] devoptab_open: range probe returned: %lld\n", (long long)total);
+            if (total >= 0) {
+                state->size = total;
+            }
         }
 
-        state->push_data = CreatePushData(state->curl, state->url, 0);
-        if (!state->push_data) {
-            curl_easy_cleanup(state->curl);
-            state->~CurlFileState();
-            return -EIO;
-        }
+        // the download transfer is created lazily on the first read: callers
+        // often seek right after opening (container parsing), and starting a
+        // full-file stream here would only be torn down again immediately.
     }
 
     return 0;
@@ -483,16 +540,20 @@ int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags
 
 int MountCurlDevice::devoptab_close(void *fd) {
     auto* state = static_cast<CurlFileState*>(fd);
+    bool curl_leaked{};
     if (state->push_data) {
-        delete state->push_data;
+        curl_leaked |= !DestroyTransfer(state->push_data);
         state->push_data = nullptr;
     }
     if (state->pull_data) {
-        delete state->pull_data;
+        curl_leaked |= !DestroyTransfer(state->pull_data);
         state->pull_data = nullptr;
     }
     if (state->curl) {
-        curl_easy_cleanup(state->curl);
+        // a leaked zombie thread still uses the handle: it must outlive us.
+        if (!curl_leaked) {
+            curl_easy_cleanup(state->curl);
+        }
         state->curl = nullptr;
     }
     state->~CurlFileState();
@@ -501,15 +562,27 @@ int MountCurlDevice::devoptab_close(void *fd) {
 
 ssize_t MountCurlDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     auto* state = static_cast<CurlFileState*>(fd);
-    if (!state->push_data) {
+    if (state->write_mode) {
         return -EBADF;
     }
 
+    if (!state->push_data) {
+        log_write("[CURL] devoptab_read: creating push data for %s at offset %zu\n", state->url.c_str(), state->offset);
+        state->push_data = CreatePushData(state->curl, state->url, state->offset);
+        if (!state->push_data) {
+            log_write("[CURL] devoptab_read: failed to create push data\n");
+            return -EIO;
+        }
+    }
+
+    log_write("[CURL] devoptab_read: calling PullData for %zu bytes\n", len);
     size_t read = state->push_data->PullData(ptr, len, false);
+    log_write("[CURL] devoptab_read: PullData returned %zu bytes\n", read);
     // a short/empty read is either a genuine eof or a dropped transfer.
     // without this check a failed download would look like a smaller file,
     // silently truncating copies.
     if (read < len && state->push_data->HasError()) {
+        log_write("[CURL] devoptab_read: short read detected, error: %d\n", state->push_data->HasError());
         return -EIO;
     }
 
@@ -554,14 +627,20 @@ ssize_t MountCurlDevice::devoptab_seek(void *fd, off_t pos, int dir) {
     }
 
     if ((size_t)target_offset != state->offset) {
+        // only tear down here: the transfer at the new offset is created
+        // lazily by the next read, so back-to-back seeks cost nothing.
         if (state->push_data) {
-            delete state->push_data;
+            if (!DestroyTransfer(state->push_data)) {
+                // the leaked zombie thread still owns the old curl handle:
+                // continue with a fresh one.
+                state->curl = curl_easy_init();
+            }
+            state->push_data = nullptr;
+            if (!state->curl) {
+                return -EIO;
+            }
         }
         state->offset = target_offset;
-        state->push_data = CreatePushData(state->curl, state->url, state->offset);
-        if (!state->push_data) {
-            return -EIO;
-        }
     }
 
     return state->offset;
@@ -653,7 +732,7 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
-    CURLcode res = curl_easy_perform(curl);
+    CURLcode res = curl_perform_cancellable(curl);
     long code{};
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
 
@@ -679,7 +758,7 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
-            res = curl_easy_perform(curl);
+            res = curl_perform_cancellable(curl);
             if (res == CURLE_OK) {
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
             }
@@ -982,6 +1061,79 @@ int MountCurlDevice::devoptab_dirreset(void* fd) {
     return 0;
 }
 
+namespace {
+
+struct RangeProbe {
+    s64 total{-1};
+};
+
+size_t range_probe_header_callback(char* buffer, size_t size, size_t nitems, void* userdata) {
+    auto* probe = static_cast<RangeProbe*>(userdata);
+    std::string line{buffer, size * nitems};
+    std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c){ return (char)std::tolower(c); });
+    // "content-range: bytes 0-0/354008"
+    if (line.starts_with("content-range:")) {
+        if (const auto slash = line.rfind('/'); slash != std::string::npos) {
+            probe->total = std::strtoll(line.c_str() + slash + 1, nullptr, 10);
+        }
+    }
+    return size * nitems;
+}
+
+size_t range_probe_write_callback(char*, size_t, size_t, void*) {
+    // headers are all we need, abort before streaming the body.
+    return 0;
+}
+
+} // namespace
+
+s64 MountCurlDevice::probe_size_via_range(CURL* handle, const std::string& url, bool* out_is_dir) {
+    if (out_is_dir) {
+        *out_is_dir = false;
+    }
+
+    curl_easy_reset(handle);
+    curl_set_common_options(handle, url);
+    curl_easy_setopt(handle, CURLOPT_RANGE, "0-0");
+
+    RangeProbe probe{};
+    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, range_probe_header_callback);
+    curl_easy_setopt(handle, CURLOPT_HEADERDATA, &probe);
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, range_probe_write_callback);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, nullptr);
+
+    const auto res = curl_perform_cancellable(handle);
+    long code{};
+    curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &code);
+
+    if (out_is_dir) {
+        char* effective_url{};
+        curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &effective_url);
+        if (effective_url && std::string_view{effective_url}.ends_with('/')) {
+            *out_is_dir = true;
+        }
+    }
+
+    if (code == 206 && probe.total >= 0) {
+        return probe.total;
+    }
+    if (code == 416) {
+        // range not satisfiable on offset 0: an empty file.
+        return 0;
+    }
+    if (code >= 200 && code < 300) {
+        // server ignored the range, content-length is the full size.
+        curl_off_t cl{-1};
+        curl_easy_getinfo(handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &cl);
+        if (cl >= 0) {
+            return cl;
+        }
+    }
+
+    log_write("[CURL] range size probe failed (res=%d, code=%ld): %s\n", res, code, url.c_str());
+    return -1;
+}
+
 int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
     std::memset(st, 0, sizeof(*st));
     std::string url = build_url(path, false);
@@ -1006,8 +1158,24 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
     curl_set_common_options(transfer_curl, url);
     curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
 
-    CURLcode res = curl_easy_perform(transfer_curl);
+    CURLcode res = curl_perform_cancellable(transfer_curl);
     if (res != CURLE_OK) {
+        // some servers (eg dbibackend) do not implement HEAD at all:
+        // probe with a 1-byte ranged GET instead.
+        bool probe_is_dir{};
+        const auto total = probe_size_via_range(transfer_curl, url, &probe_is_dir);
+        if (probe_is_dir) {
+            st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+            st->st_nlink = 1;
+            return 0;
+        }
+        if (total >= 0) {
+            st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            st->st_nlink = 1;
+            st->st_size = total;
+            return 0;
+        }
+
         std::string dir_url = build_url(path, true);
         curl_easy_reset(transfer_curl);
         curl_set_common_options(transfer_curl, dir_url);
@@ -1020,7 +1188,7 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
         curl_easy_setopt(transfer_curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
         curl_easy_setopt(transfer_curl, CURLOPT_WRITEDATA, &response_data);
 
-        res = curl_easy_perform(transfer_curl);
+        res = curl_perform_cancellable(transfer_curl);
         if (res == CURLE_OK) {
             st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
             st->st_nlink = 1;
@@ -1053,7 +1221,7 @@ int MountCurlDevice::devoptab_unlink(const char *path) {
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
     curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+    if (curl_perform_cancellable(transfer_curl) == CURLE_OK) {
         long code{};
         curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
         if (code >= 200 && code < 300) {
@@ -1082,7 +1250,7 @@ int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
     } else {
         curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MKCOL");
     }
-    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+    if (curl_perform_cancellable(transfer_curl) == CURLE_OK) {
         long code{};
         curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
         if (code >= 200 && code < 300) {
@@ -1102,7 +1270,7 @@ int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
     struct curl_slist* list = curl_slist_append(nullptr, (std::string("Destination: ") + dst_url).c_str());
     curl_easy_setopt(transfer_curl, CURLOPT_HTTPHEADER, list);
     ON_SCOPE_EXIT(curl_slist_free_all(list));
-    if (curl_easy_perform(transfer_curl) == CURLE_OK) {
+    if (curl_perform_cancellable(transfer_curl) == CURLE_OK) {
         long code{};
         curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
         if (code >= 200 && code < 300) {

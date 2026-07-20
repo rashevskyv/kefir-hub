@@ -229,6 +229,14 @@ auto App::GetTextScrollSpeed() -> long {
 auto App::GetGodModeEnabled() -> bool {
     return g_app->m_god_mode.Get();
 }
+
+auto App::GetSaveSettingsGlobally() -> bool {
+    return g_app->m_save_settings_globally.Get();
+}
+
+void App::SetSaveSettingsGlobally(bool enable) {
+    g_app->m_save_settings_globally.Set(enable);
+}
  
 static std::atomic<bool> g_progress_active{false};
  

@@ -235,17 +235,21 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
     bool L_R_merged = false;
     bool L_R_page_merged = false;
     bool L_R_game_merged = false;
+    bool L_R_tab_merged = false;
     bool L2_R2_merged = false;
     bool L2_R2_jump_merged = false;
     bool L2_R2_tab_merged = false;
+    bool L2_R2_game_merged = false;
     bool LEFT_RIGHT_merged = false;
 
     const bool should_merge_L_R = (!l_hint.empty() && l_hint == "Add Point"_i18n) && (!r_hint.empty() && r_hint == "Remove Point"_i18n);
     const bool should_merge_L_R_page = (!l_hint.empty() && l_hint == "Previous Page"_i18n) && (!r_hint.empty() && r_hint == "Next Page"_i18n);
     const bool should_merge_L_R_game = (!l_hint.empty() && l_hint == "Previous game"_i18n) && (!r_hint.empty() && r_hint == "Next game"_i18n);
+    const bool should_merge_L_R_tab = (!l_hint.empty() && l_hint == "Previous tab"_i18n) && (!r_hint.empty() && r_hint == "Next tab"_i18n);
     const bool should_merge_L2_R2 = (!l2_hint.empty() && l2_hint == "Load Preset"_i18n) && (!r2_hint.empty() && r2_hint == "Save Preset"_i18n);
     const bool should_merge_L2_R2_jump = (!l2_hint.empty() && l2_hint == "Jump Backward"_i18n) && (!r2_hint.empty() && r2_hint == "Jump Forward"_i18n);
     const bool should_merge_L2_R2_tab = (!l2_hint.empty() && l2_hint == "Previous tab"_i18n) && (!r2_hint.empty() && r2_hint == "Next tab"_i18n);
+    const bool should_merge_L2_R2_game = (!l2_hint.empty() && l2_hint == "Previous game"_i18n) && (!r2_hint.empty() && r2_hint == "Next game"_i18n);
     const bool should_merge_LEFT_RIGHT = (!left_hint.empty() && (left_hint == "Previous Image"_i18n || left_hint == "Prev Image"_i18n)) &&
                                           (!right_hint.empty() && right_hint == "Next Image"_i18n);
 
@@ -269,6 +273,12 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
                     merged_actions.push_back(combined);
                     L_R_game_merged = true;
                 }
+            } else if (should_merge_L_R_tab) {
+                if (!L_R_tab_merged) {
+                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Previous/Next tab"_i18n};
+                    merged_actions.push_back(combined);
+                    L_R_tab_merged = true;
+                }
             } else {
                 merged_actions.push_back(btn);
             }
@@ -291,6 +301,12 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
                     uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Previous/Next tab"_i18n};
                     merged_actions.push_back(combined);
                     L2_R2_tab_merged = true;
+                }
+            } else if (should_merge_L2_R2_game) {
+                if (!L2_R2_game_merged) {
+                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Previous/Next game"_i18n};
+                    merged_actions.push_back(combined);
+                    L2_R2_game_merged = true;
                 }
             } else {
                 merged_actions.push_back(btn);

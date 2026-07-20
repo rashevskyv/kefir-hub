@@ -35,6 +35,9 @@ of all configs available](https://github.com/ITotalJustice/ftpsrv/blob/master/as
 
 MTP can be enabled via the Network menu. You can configure which MTP storages are visible and set custom display names for them under **Settings -> Network -> MTP storages**. This allows you to toggle the visibility of the microSD card or the Install folder, and customize how they appear on your PC (e.g. setting a custom label instead of the default "microSD card"). If all storages are disabled, the MTP server will refuse to start and notify you.
 
+- **Dynamic MTP Control in Tools:** The context menu in **Tools -> Install & Share** features a dynamic **Mount MTP** button. Once MTP is connected, the label automatically changes to **MTP: Active** (rendered in bold for high visibility). Clicking it again stops the MTP connection and reverts the label dynamically.
+- **Robust Repack Installations:** The installation engine features enhanced error recovery when installing repacked or trimmed NSP/NSZ files via USB MTP. If a file is slightly truncated or missing non-critical padding bytes at the end of a stream (common in repacked titles), the installer automatically handles the EOF condition gracefully instead of failing with `Unexpected EOF` or `Invalid Read Size` errors, completing the installation successfully.
+
 ### Web File Manager
 
 Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled under the file options via the **Start Web Server** action, which is localized across all 14 languages) to browse, download, upload, delete, and view files on the console directly from a web browser:

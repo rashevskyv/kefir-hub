@@ -19,6 +19,8 @@ struct PolledData {
     NifmInternetConnectionStatus status{};
     u32 strength{};
     u32 ip{};
+    // SSID of the connected access point, empty for ethernet / no connection.
+    std::string ssid{};
     // Storage info (NAND built-in + SD card)
     s64 nand_free{};
     s64 nand_total{};
@@ -40,8 +42,15 @@ struct MenuBase : Widget {
 
     void SetTitle(std::string title);
     void SetTitleSubHeading(std::string sub_heading);
+    // two small stacked lines drawn right after the title (top / bottom).
+    // The title sub heading shifts right to make room. Empty strings hide it.
+    void SetTitleStats(std::string top, std::string bottom);
     void SetSubHeading(std::string sub_heading);
     void SetStorageHighlight(u64 nand_bytes, u64 sd_bytes);
+    // like SetStorageHighlight, but the bytes are *planned* usage: the segment
+    // is drawn extending from the used region into the free space (red when it
+    // does not fit) and the label shows "+size". Used by the install queue.
+    void SetStorageProjection(u64 nand_bytes, u64 sd_bytes);
     void ClearStorageHighlight();
 
     auto GetTitle() const {
@@ -58,6 +67,8 @@ private:
     std::string m_title{};
     std::string m_title_sub_heading{};
     std::string m_sub_heading{};
+    std::string m_title_stat_top{};
+    std::string m_title_stat_bottom{};
 
     ScrollingText m_scroll_title_sub_heading{};
     ScrollingText m_scroll_sub_heading{};
@@ -65,6 +76,7 @@ private:
     u64 m_nand_highlight{};
     u64 m_sd_highlight{};
     bool m_storage_highlight_active{};
+    bool m_storage_projection{};
 
     u32 m_flags{};
 };

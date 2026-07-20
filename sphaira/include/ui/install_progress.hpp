@@ -18,6 +18,10 @@ struct InstallProgress {
     // used for the R/W speed graph. Offsets reset per file.
     virtual void UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {}
     virtual void InstallYield() = 0;
+    virtual bool PromptReinstall(const std::string& title_name) { return false; }
+    // called when the current title/content is skipped because it is already
+    // installed (skip_if_already_installed). Lets the UI report it distinctly.
+    virtual void OnInstallSkipped() {}
 };
 
 } // namespace sphaira::ui

@@ -68,7 +68,7 @@ void SidebarEntryBase::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, 
             gfx::drawRect(vg, info_box, theme->GetColour(ThemeEntryID_SIDEBAR), 5);
 
             float y = info_box.y + info_pad;
-            m_scolling_title.Draw(vg, true, x, y, end_w, title_font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
+            m_scolling_title.Draw(vg, true, x, y, end_w, title_font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str(), true);
 
             y += pad_after_title;
             gfx::drawTextBox(vg, x, y, info_font_size, end_w, theme->GetColour(ThemeEntryID_TEXT), info.c_str());
@@ -115,7 +115,7 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
         const float top_y = mid_y - line_gap / 2.f;
         const float bottom_y = mid_y + line_gap / 2.f;
 
-        m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
+        m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
         // each line scrolls on focus if even the full row width isn't enough.
         m_scolling_value.Draw(vg, HasFocus(), m_pos.x + pad, bottom_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
         return;
@@ -139,7 +139,7 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
     const float right_x = m_pos.x + m_pos.w - pad - right_w;
 
     m_scolling_value.Draw(vg, HasFocus(), right_x, mid_y, right_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
-    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, mid_y, left_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left);
+    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, mid_y, left_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
 }
 
 SidebarEntryBool::SidebarEntryBool(const std::string& title, bool option, Callback cb, const std::string& info, const std::string& true_str, const std::string& false_str)
@@ -217,9 +217,9 @@ SidebarEntryHeader::SidebarEntryHeader(const std::string& title, const std::stri
 void SidebarEntryHeader::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) {
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
-    gfx::drawText(
+    gfx::drawTextBold(
         vg,
-        Vec2{m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f) + 10.f},
+        m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f) + 10.f,
         16.f,
         theme->GetColour(ThemeEntryID_TEXT_SELECTED),
         m_title.c_str(),
@@ -271,7 +271,7 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
         nvgStroke(vg);
     }
 
-    m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title);
+    m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title, true);
 }
 
 auto SidebarEntryCallback::OnFocusLost() noexcept -> void {

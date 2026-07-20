@@ -208,6 +208,21 @@ void drawTextArgs(NVGcontext* vg, float x, float y, float size, int align, const
     drawText(vg, x, y, size, buffer, nullptr, align, c);
 }
 
+void drawTextBold(NVGcontext* vg, float x, float y, float size, const NVGcolor& c, const char* str, int align) {
+    // ~0.6px over-draw reads as a heavier weight at the sizes used in menus.
+    drawTextIntenal(vg, {x, y}, size, str, nullptr, align, c);
+    drawTextIntenal(vg, {x + 0.6f, y}, size, str, nullptr, align, c);
+}
+
+void drawTextBoldArgs(NVGcontext* vg, float x, float y, float size, int align, const NVGcolor& c, const char* str, ...) {
+    std::va_list v;
+    va_start(v, str);
+    char buffer[0x100];
+    std::vsnprintf(buffer, sizeof(buffer), str, v);
+    va_end(v);
+    drawTextBold(vg, x, y, size, c, buffer, align);
+}
+
 void drawImage(NVGcontext* vg, const Vec4& v, int texture, float rounded, float alpha) {
     const auto paint = nvgImagePattern(vg, v.x, v.y, v.w, v.h, 0, texture, alpha);
     drawRect(vg, v, paint, rounded);
@@ -264,6 +279,17 @@ void drawRect(NVGcontext* vg, float x, float y, float w, float h, const NVGpaint
 
 void drawRect(NVGcontext* vg, const Vec4& v, const NVGpaint& p, float rounded) {
     drawRectIntenal(vg, v, p, rounded);
+}
+
+void drawRectVarying(NVGcontext* vg, const Vec4& v, const NVGcolor& c, float rTL, float rTR, float rBR, float rBL) {
+    if (ClipRect(v.x, v.y)) {
+        return;
+    }
+
+    nvgBeginPath(vg);
+    nvgRoundedRectVarying(vg, v.x, v.y, v.w, v.h, rTL, rTR, rBR, rBL);
+    nvgFillColor(vg, c);
+    nvgFill(vg);
 }
 
 void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, float x, float y, float w, float h, float rounding) {

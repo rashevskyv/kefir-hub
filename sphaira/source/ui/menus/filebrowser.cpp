@@ -19,6 +19,9 @@
 #include "app.hpp"
 #include "ui/nvg_util.hpp"
 #include "fs.hpp"
+#include "fs_zip.hpp"
+#include "fs_ncm.hpp"
+#include "haze_helper.hpp"
 #include "nacp_util.hpp"
 #include "nro.hpp"
 #include "defines.hpp"
@@ -238,6 +241,30 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                     InstallFiles();
                 } else if (IsSd() && IsExtension(entry.GetExtension(), IMAGE_EXTENSIONS)) {
                     OpenImageViewer();
+                } else if (IsSd() && IsExtension(entry.GetExtension(), ZIP_EXTENSIONS)) {
+                    // browse inside the archive; if the zip is also a ROM (assoc
+                    // match), offer both browsing and launching.
+                    const auto assoc_list = m_menu->FindFileAssocFor();
+                    if (assoc_list.empty()) {
+                        OpenArchive();
+                    } else {
+                        PopupList::Items items;
+                        items.emplace_back("Browse archive"_i18n);
+                        for (const auto& p : assoc_list) {
+                            items.emplace_back(p.name);
+                        }
+                        const auto title = "Open: "_i18n + entry.GetName();
+                        App::Push<PopupList>(title, items, [this, assoc_list](auto op_index){
+                            if (!op_index) {
+                                return;
+                            }
+                            if (*op_index == 0) {
+                                OpenArchive();
+                            } else {
+                                nro_launch(assoc_list[*op_index - 1].path, nro_add_arg_file(GetNewPathCurrent()));
+                            }
+                        });
+                    }
                 } else if (IsSd()) {
                     const auto assoc_list = m_menu->FindFileAssocFor();
                     if (!assoc_list.empty()) {
@@ -285,6 +312,9 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 } else {
                     Scan(view.substr(0, end), true);
                 }
+            } else if (m_fs_entry.type == FsType::Archive) {
+                // at the archive root: unmount and return to the opening view.
+                SetFs(m_archive_return_path, m_archive_return_entry);
             } else if (m_fs_entry.type != FsType::Root) {
                 FsEntry root_entry{
                     .name = "System Root",
@@ -423,6 +453,18 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
 
             DrawElement(x + x_offset, y + 5, 50, 50, icon);
+        }
+
+        // read-only marker: a small red "R" chip on the icon corner for entries
+        // that can't be written/deleted/renamed (archive contents, protected
+        // system paths). Writable entries are left unmarked.
+        if (IsReadOnly(GetNewPath(e))) {
+            const float bw = 18.f, bh = 16.f;
+            const float bx = x + x_offset + 50.f - bw;
+            const float by = y + 5.f;
+            gfx::drawRect(vg, bx - 1.f, by - 1.f, bw + 2.f, bh + 2.f, nvgRGBA(0, 0, 0, 255), 4.f);
+            gfx::drawRect(vg, bx, by, bw, bh, theme->GetColour(ThemeEntryID_ERROR), 3.f);
+            gfx::drawText(vg, bx + bw * 0.5f, by + bh * 0.5f, 13.f, nvgRGBA(255, 255, 255, 255), "R", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         }
 
         if (m_selected_count > 0) {
@@ -727,6 +769,66 @@ void FsView::OpenImageViewer() {
     }
 
     App::Push<fileview::Menu>(GetNewPathCurrent(), std::move(paths), image_index);
+}
+
+void FsView::OpenArchive() {
+    const auto zip_path = GetNewPathCurrent();
+
+    // probe the archive before switching views, so a corrupt zip reports an
+    // error instead of dropping the user into an empty mount.
+    auto probe = std::make_unique<fs::FsZip>(zip_path);
+    if (R_FAILED(probe->GetFsOpenResult())) {
+        App::Push<OptionBox>("Failed to open archive!"_i18n, "OK"_i18n);
+        return;
+    }
+    probe.reset();
+
+    // remember where to return when the user backs out of the archive root.
+    m_archive_return_entry = m_fs_entry;
+    m_archive_return_path = m_path;
+
+    FsEntry archive_entry{};
+    archive_entry.name = GetEntry().name;
+    archive_entry.root = zip_path;
+    archive_entry.type = FsType::Archive;
+    archive_entry.flags = FsEntryFlag_ReadOnly;
+
+    SetFs("/", archive_entry);
+}
+
+void FsView::MountCurrentOverMtp() {
+    // build a factory that recreates this location's fs on demand (MTP restarts
+    // may recreate it), plus the base path to root the storage at.
+    std::function<std::unique_ptr<fs::Fs>()> factory;
+    std::string base;
+    std::string name;
+    const auto& e = m_fs_entry;
+
+    if (e.type == FsType::Content) {
+        const auto app_id = e.content_app_id;
+        const auto meta_type = e.content_meta_type;
+        const auto storage_id = e.content_storage_id;
+        factory = [app_id, meta_type, storage_id]{ return std::make_unique<fs::FsNcm>(app_id, meta_type, storage_id); };
+        name = std::string(e.name) + " (content)";
+    } else if (e.type == FsType::Archive) {
+        const fs::FsPath zip_path = e.root;
+        factory = [zip_path]{ return std::make_unique<fs::FsZip>(zip_path); };
+        name = std::string(e.name) + " (archive)";
+    } else if (IsSd()) {
+        factory = []{ return std::make_unique<fs::FsNativeSd>(true); };
+        base = std::string(m_path.toString());
+        const char* leaf = std::strrchr(m_path.s, '/');
+        name = (leaf && leaf[1]) ? (leaf + 1) : "microSD";
+    } else {
+        App::Notify("This source cannot be shared over MTP"_i18n);
+        return;
+    }
+
+    if (sphaira::haze::MountFs(std::move(factory), name, base)) {
+        App::Notify("Mounted over MTP: "_i18n + name);
+    } else {
+        App::Push<OptionBox>("Failed to start MTP!"_i18n, "OK"_i18n);
+    }
 }
 
 
@@ -1153,7 +1255,11 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
     m_entries_index_search.clear();
     m_entries_current = {};
     m_previous_highlighted_file.clear();
-    m_menu->m_selected.Reset();
+    // keep a copy that owns its own source fs (an archive copy) so it can be
+    // pasted after leaving the archive; otherwise clear the pending selection.
+    if (!m_menu->m_selected.HasOwnedFs()) {
+        m_menu->m_selected.Reset();
+    }
     m_selected_count = 0;
     m_fs_entry = new_entry;
 
@@ -1175,6 +1281,13 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
             break;
         case FsType::Root:
             m_fs = std::make_unique<fs::FsStdio>(true, "root:/");
+            break;
+        case FsType::Archive:
+            // new_entry.root holds the absolute path of the .zip to mount.
+            m_fs = std::make_unique<fs::FsZip>(new_entry.root);
+            break;
+        case FsType::Content:
+            m_fs = std::make_unique<fs::FsNcm>(new_entry.content_app_id, new_entry.content_meta_type, new_entry.content_storage_id);
             break;
     }
 
@@ -1540,7 +1653,71 @@ void FsView::DisplayOptions() {
     }, "Change display order and visibility settings for files."_i18n);
     view_entry->SetHasSubmenu(true);
 
-    if (!is_root && m_entries_current.size()) {
+    if (m_fs_entry.type == FsType::Archive && m_entries_current.size()) {
+        auto extract_sel = options->Add<SidebarEntryCallback>("Extract selection"_i18n, [this](){
+            const auto targets = GetSelectedEntries();
+            const auto src_path = m_path;               // current dir inside the archive
+            const auto dst_dir = m_archive_return_path; // SD folder the .zip lives in
+            App::Push<ProgressBox>(0, "Extracting"_i18n, "", [this, targets, src_path, dst_dir](auto pbox) -> Result {
+                auto src_fs = m_fs.get();
+                auto dst_fs = std::make_unique<fs::FsNativeSd>(true);
+
+                FsDirCollections collections;
+                for (const auto& p : targets) {
+                    pbox->Yield();
+                    R_TRY(pbox->ShouldExitResult());
+                    if (p.IsDir()) {
+                        const auto full = GetNewPath(src_path, p.name);
+                        pbox->NewTransfer("Scanning "_i18n + full);
+                        R_TRY(get_collections(src_fs, full, p.name, collections));
+                    }
+                }
+
+                for (const auto& p : targets) {
+                    pbox->Yield();
+                    R_TRY(pbox->ShouldExitResult());
+                    const auto src = GetNewPath(src_path, p.name);
+                    const auto dst = GetNewPath(dst_dir, p.name);
+                    if (p.IsDir()) {
+                        pbox->SetTitle(p.name);
+                        pbox->NewTransfer("Creating "_i18n + dst);
+                        dst_fs->CreateDirectory(dst);
+                    } else {
+                        pbox->SetTitle(p.name);
+                        pbox->NewTransfer("Extracting "_i18n + src);
+                        R_TRY(pbox->CopyFile(src_fs, dst_fs.get(), src, dst));
+                    }
+                }
+
+                for (const auto& c : collections) {
+                    const auto base_dst = GetNewPath(dst_dir, c.parent_name);
+                    for (const auto& p : c.dirs) {
+                        pbox->Yield();
+                        R_TRY(pbox->ShouldExitResult());
+                        dst_fs->CreateDirectory(GetNewPath(base_dst, p.name));
+                    }
+                    for (const auto& p : c.files) {
+                        pbox->Yield();
+                        R_TRY(pbox->ShouldExitResult());
+                        const auto src = GetNewPath(c.path, p.name);
+                        const auto dst = GetNewPath(base_dst, p.name);
+                        pbox->SetTitle(p.name);
+                        pbox->NewTransfer("Extracting "_i18n + src);
+                        R_TRY(pbox->CopyFile(src_fs, dst_fs.get(), src, dst));
+                    }
+                }
+                R_SUCCEED();
+            }, [this](Result rc){
+                App::PushErrorBox(rc, "Extract failed!"_i18n);
+                if (R_SUCCEEDED(rc)) {
+                    App::Notify("Extract success!"_i18n);
+                }
+            });
+        }, "Copy the selected files and folders out of the archive to where the .zip lives."_i18n);
+        extract_sel->SetHasSubmenu(false);
+    }
+
+    if (!is_root && m_fs_entry.type != FsType::Archive && m_entries_current.size()) {
         if (check_all_ext(ZIP_EXTENSIONS)) {
             auto extract_entry = options->Add<SidebarEntryCallback>("Extract zip"_i18n, [this](){
                 auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
@@ -1587,6 +1764,19 @@ void FsView::DisplayOptions() {
             }, "Compress the selected file(s) into a ZIP archive."_i18n);
             compress_entry->SetHasSubmenu(true);
         }
+    }
+
+    // MTP: expose the current folder or virtual mount (content / archive) to a PC.
+    if (!is_root && (IsSd() || m_fs_entry.type == FsType::Content || m_fs_entry.type == FsType::Archive)) {
+        options->Add<SidebarEntryCallback>("Mount over MTP"_i18n, [this](){
+            MountCurrentOverMtp();
+        }, "Expose this folder or mount to a PC over USB MTP."_i18n);
+    }
+    if (sphaira::haze::HasPinned()) {
+        options->Add<SidebarEntryCallback>("Unmount MTP"_i18n, [](){
+            sphaira::haze::UnmountPinned();
+            App::Notify("MTP unmounted"_i18n);
+        }, "Stop sharing the mounted folder over MTP."_i18n);
     }
 
     auto source_entry = options->Add<SidebarEntryCallback>("Sources"_i18n, [this](){
@@ -1913,6 +2103,13 @@ Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuB
     }
 }
 
+Menu::Menu(u32 flags, const FsEntry& initial_entry, const fs::FsPath& initial_path)
+: Menu{flags, nullptr} {
+    // replace the default SD mount with the requested one (e.g. a component's
+    // content). Scan runs on focus, so this is safe during construction.
+    view->SetFs(initial_path, initial_entry);
+}
+
 Menu::~Menu() {
 #ifdef BUILD_SMB2
     if (g_smb2fs) {
@@ -1936,6 +2133,26 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     std::strcpy(target_entry.pass, e.pass.c_str());
     target_entry.port = e.port;
     view->ConnectToLocation(target_entry);
+}
+
+void Menu::AddSelectedEntries(SelectedType type) {
+    auto entries = view->GetSelectedEntries();
+    if (entries.empty()) {
+        return;
+    }
+
+    // an archive/content copy owns a fresh read-only fs so it survives the
+    // source view being navigated away / unmounted (e.g. leaving the mount to
+    // paste elsewhere).
+    std::shared_ptr<fs::Fs> owned_src_fs;
+    const auto& e = view->GetFsEntry();
+    if (e.type == FsType::Archive) {
+        owned_src_fs = std::make_shared<fs::FsZip>(e.root);
+    } else if (e.type == FsType::Content) {
+        owned_src_fs = std::make_shared<fs::FsNcm>(e.content_app_id, e.content_meta_type, e.content_storage_id);
+    }
+
+    m_selected.Add(view, type, entries, view->m_path, owned_src_fs);
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -2174,13 +2391,19 @@ void Menu::UpdateSubheading() {
             selected_size = size > UINT64_MAX - selected_size ? UINT64_MAX : selected_size + size;
         }
 
-        text += "  |  " + "Selected"_i18n + ": " + std::to_string(view->m_selected_count);
+        // shown at the top next to the title: count above, size below. The
+        // bottom sub heading is left with just the position, as the size was
+        // hidden behind the button hints there.
+        std::string size_text;
         if (selected_files) {
-            text += "  |  " + utils::formatSizeStorage(selected_size);
+            size_text = utils::formatSizeStorage(selected_size);
             if (pending_files) {
-                text += " + ...";
+                size_text += " + ...";
             }
         }
+        this->SetTitleStats("Selected"_i18n + ": " + std::to_string(view->m_selected_count), std::move(size_text));
+    } else {
+        this->SetTitleStats({}, {});
     }
 
     this->SetSubHeading(std::move(text));

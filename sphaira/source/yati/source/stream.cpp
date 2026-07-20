@@ -22,15 +22,17 @@ Result Stream::Read(void* _buf, s64 off, s64 size, u64* bytes_read_out) {
             std::vector<u8> temp_buf(skip_size);
             u64 bytes_read;
             R_TRY(ReadChunk(temp_buf.data(), temp_buf.size(), &bytes_read));
-            // a successful zero-byte read means the underlying stream ended
-            // early (e.g. socket closed) while more data was still expected.
-            R_UNLESS(bytes_read > 0, Result_StreamUnexpectedEof);
+            if (bytes_read == 0) {
+                break;
+            }
 
             m_offset += bytes_read;
         } else {
             u64 bytes_read;
             R_TRY(ReadChunk(buf, size, &bytes_read));
-            R_UNLESS(bytes_read > 0, Result_StreamUnexpectedEof);
+            if (bytes_read == 0) {
+                break;
+            }
 
             *bytes_read_out += bytes_read;
             buf += bytes_read;

@@ -209,6 +209,8 @@ struct File {
     std::FILE* m_stdio{};
     s64 m_stdio_off{};
     u32 m_mode{};
+    // opaque per-handle state for a virtual fs (e.g. a decompressed zip entry).
+    void* m_virtual{};
 };
 
 struct Dir {
@@ -223,6 +225,8 @@ struct Dir {
     FsDir m_native{};
     DIR* m_stdio{};
     u32 m_mode{};
+    // opaque per-handle state for a virtual fs (e.g. a zip directory cursor).
+    void* m_virtual{};
 };
 
 bool is_read_only(std::string_view path);
@@ -309,6 +313,21 @@ struct Fs {
     virtual Result read_entire_file(const FsPath& path, std::vector<u8>& out) = 0;
     virtual Result write_entire_file(const FsPath& path, const std::vector<u8>& in) = 0;
     virtual Result copy_entire_file(const FsPath& dst, const FsPath& src) = 0;
+
+    // A virtual fs is neither native (libnx FsFileSystem) nor stdio; File/Dir
+    // route their handle operations to the v* hooks below instead. Used by the
+    // read-only zip backend so archives browse through the normal fs::Fs path.
+    virtual bool IsVirtual() const { return false; }
+    virtual Result vOpenFile(const FsPath& path, u32 mode, File* f) { R_THROW(FsError_NotImplemented); }
+    virtual Result vReadFile(File* f, s64 off, void* buf, u64 read_size, u32 option, u64* bytes_read) { R_THROW(FsError_NotImplemented); }
+    virtual Result vGetFileSize(File* f, s64* out) { R_THROW(FsError_NotImplemented); }
+    virtual void vCloseFile(File* f) {}
+    virtual Result vOpenDir(const FsPath& path, u32 mode, Dir* d) { R_THROW(FsError_NotImplemented); }
+    virtual Result vReadDir(Dir* d, s64* total_entries, size_t max_entries, FsDirectoryEntry* buf) { R_THROW(FsError_NotImplemented); }
+    virtual Result vReadDirCount(Dir* d, s64* out) { R_THROW(FsError_NotImplemented); }
+    virtual void vCloseDir(Dir* d) {}
+    // path-level stat used by FileGetSizeAndTimestamp for virtual filesystems.
+    virtual Result vStat(const FsPath& path, s64* size, FsTimeStampRaw* ts) { R_THROW(FsError_NotImplemented); }
 
     Result OpenFile(const fs::FsPath& path, u32 mode, File* f) {
         return fs::OpenFile(this, path, mode, f);

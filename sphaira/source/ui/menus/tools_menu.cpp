@@ -10,6 +10,7 @@
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
+#include "haze_helper.hpp"
 
 #include "ui/nvg_util.hpp"
 
@@ -348,9 +349,32 @@ void Menu::DisplayConnectionOptions() {
         StartShareServerFromTools();
     }, "Start the web sharing server to transfer files via web browser."_i18n);
 
-    options->Add<SidebarEntryCallback>(App::IsApplication() ? "Runtime Mode: Title"_i18n : "Runtime Mode: Applet"_i18n, [](){
-        App::ShowRuntimeModeInfo();
-    }, "Show which features are available or reduced in the current launch mode."_i18n);
+    struct MtpState {
+        SidebarEntryCallback* entry{nullptr};
+    };
+    auto mtp_state = std::make_shared<MtpState>();
+
+    const std::string mtp_title = haze::IsRunning() ? "MTP: Active"_i18n : "Mount MTP"_i18n;
+
+    mtp_state->entry = options->Add<SidebarEntryCallback>(mtp_title, [mtp_state](){
+        if (haze::IsRunning()) {
+            App::SetMtpEnable(false);
+            App::Notify("MTP stopped"_i18n);
+            if (mtp_state->entry) {
+                mtp_state->entry->SetTitle("Mount MTP"_i18n);
+            }
+        } else {
+            App::SetMtpEnable(true);
+            if (haze::IsRunning()) {
+                App::Notify("MTP started"_i18n);
+                if (mtp_state->entry) {
+                    mtp_state->entry->SetTitle("MTP: Active"_i18n);
+                }
+            } else {
+                App::Notify("Failed to start MTP"_i18n);
+            }
+        }
+    }, "Toggle the MTP responder to browse SD card files on PC."_i18n);
 
 #if ENABLE_NETWORK_INSTALL
     options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){

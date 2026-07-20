@@ -11,6 +11,7 @@
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/filebrowser.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -689,7 +690,7 @@ private:
                 component.status.application_id, ncm::GetMetaTypeStr(component.status.meta_type), component.status.version,
                 ncm::GetStorageIdStr(component.status.storageID), static_cast<double>(component.size) / 0x100000,
                 component.content_count, component.rights_count);
-            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+            App::Push<OptionBox>(message, "OK"_i18n);
         }, "Show the raw installed content metadata."_i18n);
     }
 
@@ -787,47 +788,95 @@ struct DbiDetailsMenu final : MenuBase {
 
         gfx::drawTextArgs(vg, 265, 105, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "%s", entry.GetName());
         gfx::drawTextArgs(vg, 265, 140, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", entry.GetAuthor());
-        gfx::drawTextArgs(vg, 265, 178, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Title ID   %016lX", entry.app_id);
-        gfx::drawTextArgs(vg, 265, 207, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Version    %s", m_display_version[0] ? m_display_version : "-");
-        gfx::drawText(vg, 265, 245, 18.f, text, "Languages", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        m_language_scroll.Draw(vg, true, 370, 245, 415, 16.f, NVG_ALIGN_LEFT, info,
+
+        // a stat is a bold label (labels have no bold font, so drawTextBold
+        // over-draws them) followed by its value in the normal info weight,
+        // aligned to a fixed value column so the numbers line up.
+        constexpr float kStatSize = 18.f;
+        const auto stat_l = [&](float y, const char* label, const std::string& value) {
+            gfx::drawTextBold(vg, 265, y, kStatSize, text, label);
+            gfx::drawText(vg, 372.f, y, kStatSize, info, value.c_str());
+        };
+        const auto stat_r = [&](float y, const char* label, const std::string& value) {
+            gfx::drawTextBold(vg, 810, y, kStatSize, text, label);
+            gfx::drawText(vg, 918.f, y, kStatSize, info, value.c_str());
+        };
+
+        char id_str[24];
+        std::snprintf(id_str, sizeof(id_str), "%016lX", entry.app_id);
+        stat_l(178, "Title ID", id_str);
+        stat_l(207, "Version", m_display_version[0] ? m_display_version : "-");
+
+        gfx::drawTextBold(vg, 265, 245 - 9.f, kStatSize, text, "Languages");
+        m_language_scroll.Draw(vg, true, 372, 245, 413, 16.f, NVG_ALIGN_LEFT, info,
             m_languages.empty() ? "-" : m_languages.c_str());
-        gfx::drawTextArgs(vg, 265, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text,
-            "Atmosphere mods folder  %s", entry.layeredfs ? "Found" : "Not found");
+
+        {
+            const char* mlabel = "Atmosphere mods folder";
+            gfx::drawTextBold(vg, 265, 265, kStatSize, text, mlabel);
+            float b[4];
+            nvgFontSize(vg, kStatSize);
+            gfx::textBounds(vg, 0, 0, b, mlabel);
+            gfx::drawText(vg, 265 + (b[2] - b[0]) + 12.f, 265, kStatSize, info,
+                entry.layeredfs ? "Found" : "Not found");
+        }
         gfx::drawText(vg, 265, 300, 14.f, info,
             "LayeredFS loads replacement game files from /atmosphere/contents/<Title ID>",
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-        gfx::drawTextArgs(vg, 810, 112, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "NAND       %s", FormatBytes(entry.nand_size).c_str());
-        gfx::drawTextArgs(vg, 810, 141, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "SD         %s", FormatBytes(entry.sd_size).c_str());
-        gfx::drawTextArgs(vg, 810, 178, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Components %zu", m_components.size());
-        gfx::drawTextArgs(vg, 810, 207, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Tickets    %zu", m_tickets.size());
-        gfx::drawTextArgs(vg, 810, 236, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Saves      %zu (%s allocated)", m_saves.size(), FormatBytes(m_save_allocated_size).c_str());
-        gfx::drawTextArgs(vg, 810, 265, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Save quota %s + %s", FormatBytes(m_save_size).c_str(), FormatBytes(m_save_journal_size).c_str());
+        char saves_str[48];
+        std::snprintf(saves_str, sizeof(saves_str), "%zu (%s allocated)", m_saves.size(), FormatBytes(m_save_allocated_size).c_str());
+        stat_r(112, "NAND", FormatBytes(entry.nand_size));
+        stat_r(141, "SD", FormatBytes(entry.sd_size));
+        stat_r(178, "Components", std::to_string(m_components.size()));
+        stat_r(207, "Tickets", std::to_string(m_tickets.size()));
+        stat_r(236, "Saves", saves_str);
+        stat_r(265, "Save quota", FormatBytes(m_save_size) + " + " + FormatBytes(m_save_journal_size));
 
         const std::array<std::string, 3> tab_names{"Content"_i18n, "Tickets"_i18n, "Saves"_i18n};
         const std::array<size_t, 3> tab_counts{m_components.size(), m_tickets.size(), m_saves.size()};
-        const float tab_y = 312.f;
-        const float tab_gap = 6.f;
-        const float tab_w = (1204.f - tab_gap * 2.f) / tab_names.size();
-        gfx::drawRect(vg, 30.f, tab_y + 4.f, 1220.f, 50.f, nvgRGBA(8, 8, 8, 210), 5.f);
+
+        // the tab bar and the content panel share the POPUP surface tone, so the
+        // selected tab reads as one continuous surface with the list below it.
+        // tabs round only their top corners (flat bottom, like a folder tab) and
+        // the panel rounds only its bottom corners; the selected tab flows into
+        // the panel with no seam, while the others sit lower and recessed.
+        const float bar_x = 40.f;
+        const float bar_w = 1200.f;
+        const float tab_top = 306.f;
+        const float tab_h = 46.f;
+        const float tab_gap = 4.f;
+        const float body_top = tab_top + tab_h;
+        const float body_bottom = 634.f;
+        const float radius = 8.f;
+
+        const auto surface = theme->GetColour(ThemeEntryID_POPUP);
+        const auto recessed = theme->GetColour(ThemeEntryID_BACKGROUND);
+        const auto accent = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+        const auto tab_count = static_cast<float>(tab_names.size());
+
+        // content panel (flat top so the selected tab flows into it).
+        gfx::drawRectVarying(vg, Vec4{bar_x, body_top, bar_w, body_bottom - body_top}, surface, 0.f, 0.f, radius, radius);
+
+        const float tab_w = (bar_w - tab_gap * (tab_count - 1.f)) / tab_count;
         for (size_t i = 0; i < tab_names.size(); i++) {
             const bool selected = i == static_cast<size_t>(m_tab);
-            const float x = 38.f + i * (tab_w + tab_gap);
-            const float y = selected ? tab_y - 4.f : tab_y + 4.f;
-            const float h = selected ? 58.f : 50.f;
-            const auto fill = selected ? nvgRGBA(245, 245, 245, 255) : nvgRGBA(30, 30, 30, 255);
-            const auto label_colour = selected ? nvgRGBA(20, 20, 20, 255) : nvgRGBA(255, 255, 255, 255);
-            gfx::drawRect(vg, x - 1.f, y - 1.f, tab_w + 2.f, h + 2.f, nvgRGBA(0, 0, 0, 255), 6.f);
-            gfx::drawRect(vg, x, y, tab_w, h, fill, 5.f);
+            const float x = bar_x + i * (tab_w + tab_gap);
+            const float y = selected ? tab_top : tab_top + 5.f;
+            const float h = body_top - y; // flat bottom always meets the panel edge.
+            gfx::drawRectVarying(vg, Vec4{x, y, tab_w, h}, selected ? surface : recessed, radius, radius, 0.f, 0.f);
             if (selected) {
-                gfx::drawRect(vg, x + 10.f, y + h - 5.f, tab_w - 20.f, 4.f,
-                    theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
+                gfx::drawRectVarying(vg, Vec4{x, y, tab_w, 3.f}, accent, radius, radius, 0.f, 0.f);
             }
+            const auto label_colour = theme->GetColour(selected ? ThemeEntryID_TEXT : ThemeEntryID_TEXT_INFO);
             char label[96];
-            std::snprintf(label, sizeof(label), "%s  [%zu]", tab_names[i].c_str(), tab_counts[i]);
-            gfx::drawText(vg, x + tab_w * 0.5f, y + h * 0.5f, 20.f,
-                label_colour, label, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            std::snprintf(label, sizeof(label), "%s  %zu", tab_names[i].c_str(), tab_counts[i]);
+            const float text_y = (y + body_top) * 0.5f;
+            if (selected) {
+                gfx::drawTextBold(vg, x + tab_w * 0.5f, text_y, 20.f, label_colour, label, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            } else {
+                gfx::drawText(vg, x + tab_w * 0.5f, text_y, 20.f, label_colour, label, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            }
         }
 
         if (R_FAILED(m_load_result) && !m_components.empty()) {
@@ -860,12 +909,30 @@ struct DbiDetailsMenu final : MenuBase {
 
             if (m_tab == Tab::Content) {
                 const auto& row = m_components[index];
-                gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
+                // DBI-style row: [SD]/[NAND] location, type, readable version on
+                // the top line; per-component Title ID, size and content/rights
+                // counts underneath.
+                const bool on_sd = row.status.storageID == NcmStorageId_SdCard;
+                const auto loc_col = theme->GetColour(on_sd ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_HIGHLIGHT_2);
+                gfx::drawTextBold(vg, v.x + 15, v.y + 7, 18.f, loc_col, on_sd ? "[SD]" : "[NAND]");
+
+                gfx::drawTextArgs(vg, v.x + 105, v.y + 6, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
                     "%s", ncm::GetMetaTypeStr(row.status.meta_type));
-                gfx::drawTextArgs(vg, v.x + 300, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                    "v%u | %s | %s", row.status.version, ncm::GetStorageIdStr(row.status.storageID), FormatBytes(row.size).c_str());
-                gfx::drawTextArgs(vg, v.x + 760, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                    "%u contents | %u rights", row.content_count, row.rights_count);
+
+                // the Application row shows the NACP display version (e.g. 1.0.4);
+                // updates/DLC show the raw content-meta version.
+                if (row.status.meta_type == NcmContentMetaType_Application && m_display_version[0]) {
+                    gfx::drawTextArgs(vg, v.x + 430, v.y + 8, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                        "%s (v%u)", m_display_version, row.status.version);
+                } else {
+                    gfx::drawTextArgs(vg, v.x + 430, v.y + 8, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                        "v%u", row.status.version);
+                }
+
+                gfx::drawTextArgs(vg, v.x + 15, v.y + 31, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "Title ID  %016lX", row.status.application_id);
+                gfx::drawTextArgs(vg, v.x + 430, v.y + 31, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%s · %u contents · %u rights", FormatBytes(row.size).c_str(), row.content_count, row.rights_count);
             } else if (m_tab == Tab::Tickets) {
                 const auto& row = m_tickets[index];
                 gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
@@ -1065,12 +1132,30 @@ private:
         }
     }
 
+    // mount this component's NCA files as a read-only fs and open them in the
+    // real file browser, so they can be navigated (and later exposed over
+    // MTP/FTP) - rather than shown in a throwaway popup.
+    void OpenComponentInBrowser(const GameComponentRow& component) {
+        filebrowser::FsEntry entry{};
+        entry.name = ncm::GetMetaTypeStr(component.status.meta_type);
+        entry.root = "/";
+        entry.type = filebrowser::FsType::Content;
+        entry.flags = filebrowser::FsEntryFlag_ReadOnly;
+        entry.content_app_id = component.status.application_id;
+        entry.content_meta_type = component.status.meta_type;
+        entry.content_storage_id = component.status.storageID;
+        App::Push<filebrowser::Menu>(MenuFlag_None, entry, "/");
+    }
+
     void ShowCurrentActions() {
         if (!CurrentCount()) return;
         if (m_tab == Tab::Content) {
             const auto component = m_components[m_row_index];
             auto options = std::make_unique<Sidebar>("Component Actions"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));
+            options->Add<SidebarEntryCallback>("Open in file browser"_i18n, [this, component](){
+                OpenComponentInBrowser(component);
+            }, "Mount this component's NCA files and browse them in the file browser."_i18n);
             options->Add<SidebarEntryCallback>("Dump NSP"_i18n, [this, component](){
                 m_dump_callback(CurrentEntry(), ContentFlagFromMetaType(component.status.meta_type));
             }, true, "Export only this installed component as an NSP."_i18n);
@@ -1081,7 +1166,7 @@ private:
                     component.status.application_id, ncm::GetMetaTypeStr(component.status.meta_type), component.status.version,
                     ncm::GetStorageIdStr(component.status.storageID), FormatBytes(component.size).c_str(),
                     component.content_count, component.rights_count);
-                App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+                App::Push<OptionBox>(message, "OK"_i18n);
             }, "Show installed content metadata."_i18n);
         } else if (m_tab == Tab::Tickets) {
             const auto& ticket = m_tickets[m_row_index];
@@ -1090,14 +1175,14 @@ private:
                 utils::hexIdToStr(ticket.id).str, ncm::GetMetaTypeStr(ticket.meta_type), ticket.key_generation,
                 ticket.ticket_size ? "Common" : (ticket.personalized ? "Personalized" : "Missing"),
                 FormatBytes(ticket.ticket_size).c_str());
-            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+            App::Push<OptionBox>(message, "OK"_i18n);
         } else {
             const auto& row = m_saves[m_row_index];
             char message[512];
             std::snprintf(message, sizeof(message), "Account: %s\nType: %s\nSave ID: %016lX\nSize: %s\nStorage space: %u",
                 row.account.c_str(), save::GetSaveTypeLabel(row.info.save_data_type), row.info.save_data_id,
                 FormatBytes(row.info.size).c_str(), row.info.save_data_space_id);
-            App::Push<OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
+            App::Push<OptionBox>(message, "OK"_i18n);
         }
     }
 

@@ -23,6 +23,7 @@ auto GetTransferRegistry() -> TransferRegistry& {
 }
 
 std::atomic_bool g_curl_shutdown{};
+std::atomic<u64> g_cancel_generation{};
 
 void RegisterTransfer(PushPullThreadData* transfer) {
     auto& registry = GetTransferRegistry();
@@ -39,11 +40,33 @@ void UnregisterTransfer(PushPullThreadData* transfer) {
 } // namespace
 
 void CancelActiveCurlTransfers() {
+    // interrupt synchronous requests (HEAD, range probe, PROPFIND, ...)
+    // blocked in curl_easy_perform without a timeout.
+    g_cancel_generation++;
+
     auto& registry = GetTransferRegistry();
     SCOPED_MUTEX(&registry.mutex);
     for (auto* transfer : registry.transfers) {
         transfer->Cancel();
     }
+}
+
+u64 GetCurlCancelGeneration() {
+    return g_cancel_generation;
+}
+
+int CurlOpCancelProgressCallback(void* clientp, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
+    if (g_curl_shutdown) {
+        return 1;
+    }
+
+    const auto* snapshot = static_cast<const u64*>(clientp);
+    if (snapshot && *snapshot != g_cancel_generation) {
+        log_write("[CURL] aborting synchronous request, transfers were cancelled\n");
+        return 1;
+    }
+
+    return 0;
 }
 
 void RequestCurlShutdown() {
@@ -59,6 +82,10 @@ PushPullThreadData::PushPullThreadData(CURL* _curl) : curl{_curl} {
     mutexInit(&mutex);
     condvarInit(&can_push);
     condvarInit(&can_pull);
+    // reserve upfront: the data callbacks insert into the buffer while
+    // holding the mutex, and a reallocation there would take the global
+    // heap lock under our mutex.
+    buffer.reserve(MAX_BUFFER_SIZE);
     RegisterTransfer(this);
 }
 
@@ -91,20 +118,49 @@ Result PushPullThreadData::CreateAndStart() {
 }
 
 void PushPullThreadData::Cancel() {
-    SCOPED_MUTEX(&mutex);
+    // deliberately lock-free: this is called from the ui thread and from
+    // teardown paths, and must never block behind a wedged transfer thread.
+    // The flags are atomic; the waiters use timed waits, so even a wake that
+    // races a waiter registering is re-checked within 100ms.
     cancelled = true;
     finished = true;
     condvarWakeOne(&can_pull);
     condvarWakeOne(&can_push);
+    log_write("[PUSH:PULL] Cancel: flags set and waiters woken\n");
+}
+
+bool PushPullThreadData::WaitForExitTimeout(u64 timeout_ns) {
+    if (!started) {
+        return true;
+    }
+
+    s32 idx{};
+    return R_SUCCEEDED(svcWaitSynchronization(&idx, &thread.handle, 1, timeout_ns));
+}
+
+bool DestroyTransfer(PushPullThreadData* data) {
+    if (!data) {
+        return true;
+    }
+
+    log_write("[PUSH:PULL] DestroyTransfer: cancelling transfer\n");
+    data->Cancel();
+    if (data->WaitForExitTimeout(200'000'000ULL)) {
+        delete data;
+        return true;
+    }
+
+    // the thread is stuck in a syscall that ignores cancellation: leak the
+    // transfer (thread, buffer and curl handle) instead of freezing the app.
+    log_write("[PUSH:PULL] transfer thread did not exit in time, leaking the transfer!\n");
+    return false;
 }
 
 bool PushPullThreadData::IsRunning() {
-    SCOPED_MUTEX(&mutex);
     return !finished && !error;
 }
 
 bool PushPullThreadData::HasError() {
-    SCOPED_MUTEX(&mutex);
     return error;
 }
 
@@ -117,22 +173,36 @@ size_t PushPullThreadData::PullData(char* data, size_t total_size, bool curl_mod
     ON_SCOPE_EXIT(condvarWakeOne(&can_push));
 
     if (curl_mode) {
-        // this should be handled in the progress function.
-        // however i handle it here as well just in case.
-        if (buffer.empty()) {
+        // block until the producer gives us data. Blocking here (rather
+        // than pausing the transfer) keeps this thread responsive: Cancel()
+        // wakes the condvar and the abort return ends curl_easy_perform().
+        // Pausing was broken: a fully paused easy transfer stops receiving
+        // progress callbacks, so nothing ever unpaused it.
+        while (!error && !cancelled) {
+            if (!buffer.empty()) {
+                // read what we can.
+                const auto rsize = std::min(total_size, buffer.size());
+                std::memcpy(data, buffer.data(), rsize);
+                buffer.erase(buffer.begin(), buffer.begin() + rsize);
+                return rsize;
+            }
+
             if (finished) {
                 log_write("[PUSH:PULL] PullData: finished and no data\n");
                 return 0;
             }
 
-            return CURL_READFUNC_PAUSE;
+            condvarWakeOne(&can_push);
+            // timed wait: a missed wake (or a cancel racing the wait) must
+            // never block this thread forever, the loop re-checks the flags.
+            condvarWaitTimeout(&can_pull, &mutex, WAIT_TIMEOUT_NS);
+
+            if (++wait_ticks % 10 == 0) {
+                log_write("[PUSH:PULL] PullData: waiting for data (cancelled=%d)\n", cancelled.load());
+            }
         }
 
-        // read what we can.
-        const auto rsize = std::min(total_size, buffer.size());
-        std::memcpy(data, buffer.data(), rsize);
-        buffer.erase(buffer.begin(), buffer.begin() + rsize);
-        return rsize;
+        return CURL_READFUNC_ABORT;
     } else {
         // if we are not in a curl callback, then we can block until we have data.
         size_t bytes_read = 0;
@@ -143,7 +213,11 @@ size_t PushPullThreadData::PullData(char* data, size_t total_size, bool curl_mod
                 }
 
                 condvarWakeOne(&can_push);
-                condvarWait(&can_pull, &mutex);
+                condvarWaitTimeout(&can_pull, &mutex, WAIT_TIMEOUT_NS);
+
+                if (++wait_ticks % 10 == 0) {
+                    log_write("[PUSH:PULL] consumer: waiting for data (finished=%d, error=%d)\n", finished.load(), error.load());
+                }
                 continue;
             }
 
@@ -166,17 +240,26 @@ size_t PushPullThreadData::PushData(const char* data, size_t total_size, bool cu
     ON_SCOPE_EXIT(condvarWakeOne(&can_pull));
 
     if (curl_mode) {
-        // this should be handled in the progress function.
-        // however i handle it here as well just in case.
-        if (buffer.size() + total_size > MAX_BUFFER_SIZE) {
-            return CURL_WRITEFUNC_PAUSE;
+        // block until the consumer makes space (see PullData above for why
+        // blocking beats pausing). The short return on cancel/finish makes
+        // curl report a write error, which ends the transfer thread.
+        while (!error && !cancelled && !finished) {
+            if (buffer.size() + total_size <= MAX_BUFFER_SIZE) {
+                buffer.insert(buffer.end(), data, data + total_size);
+                return total_size;
+            }
+
+            condvarWakeOne(&can_pull);
+            // see PullData: the timeout makes a lost wake self-healing.
+            condvarWaitTimeout(&can_push, &mutex, WAIT_TIMEOUT_NS);
+
+            // diagnostic heartbeat roughly once a second while throttled.
+            if (++wait_ticks % 10 == 0) {
+                log_write("[PUSH:PULL] PushData: waiting for space (buffer=%zu, cancelled=%d)\n", buffer.size(), cancelled.load());
+            }
         }
 
-        // blocking / pausing is handled in the progress function.
-        // do NOT block here as curl does not like it and it will deadlock.
-        // the mutex block above is fine as it only blocks to perform a memcpy.
-        buffer.insert(buffer.end(), data, data + total_size);
-        return total_size;
+        return 0;
     } else {
         // if we are not in a curl callback, then we can block until we have space.
         size_t bytes_written = 0;
@@ -184,7 +267,7 @@ size_t PushPullThreadData::PushData(const char* data, size_t total_size, bool cu
             const size_t space_left = MAX_BUFFER_SIZE - buffer.size();
             if (space_left == 0) {
                 condvarWakeOne(&can_pull);
-                condvarWait(&can_push, &mutex);
+                condvarWaitTimeout(&can_push, &mutex, WAIT_TIMEOUT_NS);
                 continue;
             }
 
@@ -203,6 +286,9 @@ size_t PushThreadData::push_thread_callback(const char *ptr, size_t size, size_t
     }
 
     auto* data = static_cast<PushThreadData*>(userdata);
+    if (!data->first_chunk_logged.exchange(true)) {
+        log_write("[PUSH:PULL] first %zu bytes received from server\n", size * nmemb);
+    }
     return data->PushData(ptr, size * nmemb, true);
 }
 
@@ -217,57 +303,40 @@ size_t PullThreadData::pull_thread_callback(char *ptr, size_t size, size_t nmemb
 
 size_t PushPullThreadData::progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
     auto *data = static_cast<PushPullThreadData*>(clientp);
-    bool should_pause;
 
-    {
-        SCOPED_MUTEX(&data->mutex);
-
-        // abort early if there was an error.
-        if (data->error) {
-            log_write("[PUSH:PULL] progress_callback: aborting transfer, error set\n");
-            return 1;
-        }
-
-        // Cancellation must also interrupt connection setup, before curl has
-        // transferred its first byte (dlnow and ulnow are both still zero).
-        if (data->cancelled) {
-            log_write("[PUSH:PULL] progress_callback: aborting cancelled transfer\n");
-            return 1;
-        }
-
-        // nothing yet.
-        if (!dlnow && !ulnow) {
-            return 0;
-        }
-
-        // workout if this is a download or upload.
-        const auto is_download = dlnow > 0;
-
-        if (is_download) {
-            // no more data wanted, usually this is handled by curl using ranges.
-            // however, if we did a seek, then we want to cancel early.
-            if (data->finished) {
-                log_write("[PUSH:PULL] progress_callback: cancelling download, finished set\n");
-                return 1;
-            }
-
-            // pause if the buffer is full, otherwise continue.
-            should_pause = data->buffer.size() >= MAX_BUFFER_SIZE;
-        } else {
-            // pause if we have no data to send, otherwise continue.
-            // do not pause if finished as curl may have internal data pending to send.
-            should_pause = !data->finished && data->buffer.empty();
-        }
+    if (g_curl_shutdown) {
+        return 1;
     }
 
-    // curl_easy_pause(CONT) actually calls the read/write callback again immediately.
-    // so we need to make sure we are not holding the mutex when calling it.
-    // the curl handle is owned by this thread so no need to lock it.
-    const auto res = curl_easy_pause(data->curl, should_pause ? CURLPAUSE_ALL : CURLPAUSE_CONT);
-    if (res != CURLE_OK) {
-        log_write("[PUSH:PULL] progress_callback: curl_easy_pause(%d) failed: %s\n", should_pause, curl_easy_strerror(res));
+    SCOPED_MUTEX(&data->mutex);
+
+    // abort early if there was an error.
+    if (data->error) {
+        log_write("[PUSH:PULL] progress_callback: aborting transfer, error set\n");
+        return 1;
     }
 
+    // Cancellation must also interrupt connection setup, before curl has
+    // transferred its first byte (the data callbacks are not called then).
+    if (data->cancelled) {
+        log_write("[PUSH:PULL] progress_callback: aborting cancelled transfer\n");
+        return 1;
+    }
+
+    // the consumer is done with this download (seek or close): abort early
+    // instead of streaming the rest of the file. Uploads keep running so
+    // the read callback can flush the remaining buffered data.
+    if (data->finished && dlnow > 0) {
+        log_write("[PUSH:PULL] progress_callback: cancelling download, finished set\n");
+        return 1;
+    }
+
+    // diagnostic heartbeat: proves the curl loop is alive at all.
+    if (++data->progress_ticks % 16 == 0) {
+        log_write("[PUSH:PULL] progress tick %u (dlnow=%lld, buffer=%zu)\n", data->progress_ticks, (long long)dlnow, data->buffer.size());
+    }
+
+    // backpressure is handled by blocking inside the data callbacks.
     return 0;
 }
 
@@ -290,7 +359,7 @@ void PushPullThreadData::thread_func(void* arg) {
     data->error = res != CURLE_OK;
     curl_easy_getinfo(data->curl, CURLINFO_RESPONSE_CODE, &data->code);
 
-    log_write("[PUSH:PULL] Read thread finished, code: %ld, error: %d\n", data->code, data->error);
+    log_write("[PUSH:PULL] Read thread finished, code: %ld, error: %d\n", data->code, data->error.load());
 }
 
 } // namespace sphaira::devoptab::common

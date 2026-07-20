@@ -17,6 +17,9 @@ public:
 
 public:
     explicit SidebarEntryBase(const std::string& title, const std::string& info);
+    void SetTitle(const std::string& title) {
+        m_title = title;
+    }
 
     using Widget::Draw;
     virtual void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left);

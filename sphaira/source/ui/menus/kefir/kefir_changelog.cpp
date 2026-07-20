@@ -550,6 +550,39 @@ auto IsUkrainianLanguage() -> bool {
     return App::GetLanguage() == 14;
 }
 
+auto MergeDirectory(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src_dir, const fs::FsPath& dst_dir) -> Result {
+    if (!fs.DirExists(src_dir)) {
+        R_SUCCEED();
+    }
+
+    if (!fs.DirExists(dst_dir)) {
+        R_TRY(fs.CreateDirectoryRecursively(dst_dir));
+    }
+
+    fs::Dir dir;
+    R_TRY(fs.OpenDirectory(src_dir, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir));
+
+    std::vector<FsDirectoryEntry> entries;
+    R_TRY(dir.ReadAll(entries));
+
+    for (const auto& entry : entries) {
+        fs::FsPath src_path{src_dir.toString() + "/" + entry.name};
+        fs::FsPath dst_path{dst_dir.toString() + "/" + entry.name};
+
+        if (entry.type == FsDirEntryType_Dir) {
+            R_TRY(MergeDirectory(pbox, fs, src_path, dst_path));
+        } else {
+            if (fs.FileExists(dst_path)) {
+                R_TRY(fs.DeleteFile(dst_path));
+            }
+            pbox->NewTransfer("Copying " + dst_path.toString());
+            R_TRY(pbox->CopyFile(&fs, src_path, dst_path, true));
+        }
+    }
+
+    R_SUCCEED();
+}
+
 auto CopyIfExists(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src, const fs::FsPath& dst) -> Result {
     if (!fs.FileExists(src)) {
         R_SUCCEED();
@@ -624,6 +657,18 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
     pbox->NewTransfer("Extracting to /kefir...");
     R_TRY(thread::TransferUnzipAll(pbox, AMS_ZIP, &fs, KEFIR_PATH));
     R_TRY(fs.Commit());
+
+    if (fs.FileExists("/kefir/payload.bin")) {
+        if (fs.FileExists("/payload.bin")) {
+            R_TRY(fs.DeleteFile("/payload.bin"));
+        }
+        pbox->NewTransfer("Copying /payload.bin");
+        R_TRY(pbox->CopyFile(&fs, "/kefir/payload.bin", "/payload.bin", true));
+    }
+
+    if (fs.DirExists("/kefir/bootloader")) {
+        R_TRY(MergeDirectory(pbox, fs, "/kefir/bootloader", "/bootloader"));
+    }
 
     R_TRY(CopyIfExists(pbox, fs, "/kefir/bootloader/hekate_ipl.ini", "/bootloader/hekate_ipl.ini"));
     R_TRY(CopyIfExists(pbox, fs, "/kefir/config/kefir-updater/kefir_updater.ini", "/bootloader/ini/!kefir_updater.ini"));

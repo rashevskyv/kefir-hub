@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <unistd.h>
+#include <fcntl.h>
 #include <mutex>
 #include <switch.h>
 
@@ -21,13 +22,14 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
 
     static char buf[512];
     const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u] -> ", tm->tm_hour, tm->tm_min, tm->tm_sec);
-    std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
+    const auto msg_len = std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
+    const auto total_len = len + (msg_len > 0 ? msg_len : 0);
 
     if (g_file_open) {
-        auto file = std::fopen(logpath.c_str(), "a");
-        if (file) {
-            std::fprintf(file, "%s", buf);
-            std::fclose(file);
+        int fd = open(logpath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+        if (fd >= 0) {
+            write(fd, buf, total_len);
+            close(fd);
         }
     }
     if (nxlink_socket) {
@@ -45,10 +47,10 @@ auto log_file_init() -> bool {
         return false;
     }
 
-    auto file = std::fopen(logpath.c_str(), "w");
-    if (file) {
+    int fd = open(logpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (fd >= 0) {
         g_file_open = true;
-        std::fclose(file);
+        close(fd);
         return true;
     }
 

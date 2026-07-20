@@ -39,6 +39,20 @@ struct QueueEntry {
     bool analysis_deferred{};
 };
 
+// how a session-log line is drawn: events are bold, results are coloured.
+enum class LogKind {
+    Normal,   // plain informational line
+    Event,    // start / finish / requested -- drawn bold
+    Success,  // installed or skipped-already-present -- green
+    Warning,  // cancelled -- amber
+    Error,    // failed -- red
+};
+
+struct LogEntry {
+    std::string text{};
+    LogKind kind{LogKind::Normal};
+};
+
 struct Menu final : MenuBase, InstallProgress {
     Menu(u32 flags);
     Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false);
@@ -58,6 +72,8 @@ struct Menu final : MenuBase, InstallProgress {
     void UpdateInstallTransfer(s64 offset, s64 size) override;
     void UpdateInstallReadWrite(s64 read_offset, s64 write_offset) override;
     void InstallYield() override;
+    bool PromptReinstall(const std::string& title_name) override;
+    void OnInstallSkipped() override;
 
 private:
     void UpdateActions();
@@ -65,7 +81,8 @@ private:
     void StartInstall();
     void ConfirmInstallPlan();
     void CycleSelectedTarget();
-    void AddLog(const std::string& text);
+    void DisplayQueueOptions(bool left_side = false);
+    void AddLog(const std::string& text, LogKind kind = LogKind::Normal);
     static auto TargetName(InstallTarget target) -> std::string;
 
     std::unique_ptr<yati::source::DbiUsb> m_usb_source{};
@@ -87,7 +104,7 @@ private:
     std::atomic_bool m_actions_dirty{true};
 
     std::vector<QueueEntry> m_queue{};
-    std::vector<std::string> m_log{};
+    std::vector<LogEntry> m_log{};
     s64 m_index{};
     s64 m_log_index{};
     s64 m_log_last_seen_size{};
@@ -121,6 +138,20 @@ private:
     size_t m_history_index{};
     size_t m_history_count{};
     TimeStamp m_graph_timestamp{};
+    
+    struct PromptData {
+        std::string title;
+        std::atomic<int> choice{-1};
+    };
+    std::shared_ptr<PromptData> m_prompt_data{};
+    std::optional<bool> m_current_file_reinstall_choice{};
+    // set by OnInstallSkipped() while a title is being installed: the queue
+    // logs "skipped (already installed)" instead of "installed" for it.
+    bool m_current_file_skipped{};
+
+    long m_session_skip_if_already_installed{1};
+    long m_session_install_location{4};
+    long m_session_reserve_mb{500};
 };
 
 } // namespace sphaira::ui::menu::dbi

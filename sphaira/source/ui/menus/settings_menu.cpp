@@ -1398,7 +1398,30 @@ void Menu::BuildCategories() {
                     }, App::GetInstallLocation());
                 }},
                 MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
-                MakeOptionItem("Skip if already installed"_i18n, "Skip titles or NCAs that are already installed."_i18n, app->m_skip_if_already_installed),
+                { "Skip if already installed"_i18n, "Skip or prompt for titles or NCAs that are already installed."_i18n, [](){
+                    const auto val = App::GetApp()->m_skip_if_already_installed.Get();
+                    if (val >= 0 && val < 3) {
+                        static constexpr const char* labels[] = {
+                            "Reinstall",
+                            "Skip",
+                            "Prompt"
+                        };
+                        return i18n::get(labels[val]);
+                    }
+                    return std::string{};
+                }, [](){
+                    PopupList::Items items;
+                    items.push_back("Reinstall"_i18n);
+                    items.push_back("Skip"_i18n);
+                    items.push_back("Prompt"_i18n);
+
+                    App::Push<PopupList>("Already installed behaviour"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            App::GetApp()->m_skip_if_already_installed.Set(*op_index);
+                        }
+                    }, App::GetApp()->m_skip_if_already_installed.Get());
+                }},
+                MakeOptionItem("Save options globally"_i18n, "Save install options globally or locally for session."_i18n, app->m_save_settings_globally),
                 MakeOptionItem("Ticket only"_i18n, "Install tickets without title contents."_i18n, app->m_ticket_only),
                 MakeOptionItem("Skip base"_i18n, "Skip installing base applications."_i18n, app->m_skip_base),
                 MakeOptionItem("Skip patch"_i18n, "Skip installing title updates."_i18n, app->m_skip_patch),

@@ -63,8 +63,13 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
             R_TRY(condvarWait(std::addressof(m_can_read), std::addressof(m_mutex)));
         }
 
-        if ((!m_active && m_buffer.empty()) || m_token.stop_requested()) {
+        if (m_token.stop_requested()) {
             break;
+        }
+
+        if (!m_active && m_buffer.empty()) {
+            *bytes_read = 0;
+            return 0;
         }
 
         // spurious wakeup with no data yet, wait again rather than

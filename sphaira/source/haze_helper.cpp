@@ -8,6 +8,7 @@
 #include "title_info.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/progress_box.hpp"
+#include <usbhsfs.h>
 
 #include <algorithm>
 #include <map>
@@ -48,6 +49,13 @@ UEvent g_mtp_done_event;
 bool g_mtp_ui_alive{false};
 std::string g_mtp_current_filename;
 std::atomic<bool> g_mtp_new_transfer{false};
+
+// an optional extra "pinned" storage (a folder or a virtual mount) exposed on
+// top of the configured MTP storages. Set via MountFs(), cleared by
+// UnmountPinned(); Init() includes it when the factory is set.
+std::function<std::unique_ptr<fs::Fs>()> g_pinned_factory{};
+std::string g_pinned_name{};
+std::string g_pinned_base{};
 
 #if ENABLE_NETWORK_INSTALL
 InstallSharedData g_shared_data{};
@@ -155,18 +163,28 @@ const RootDropRule* FindRootDropRule(const char* fixed_path) {
 
 
 struct FsProxyBase : ::haze::FileSystemProxyImpl {
-    FsProxyBase(const char* name, const char* display_name) : m_name{name}, m_display_name{display_name} {
+    FsProxyBase(const char* name, const char* display_name, const char* base_path = "")
+    : m_name{name}, m_display_name{display_name}, m_base_path{base_path} {
 
     }
 
     auto FixPath(const char* path) const {
-        fs::FsPath buf;
+        fs::FsPath stripped;
         const auto len = std::strlen(GetName());
 
         if (len && !strncasecmp(path + 1, GetName(), len)) {
-            std::snprintf(buf, sizeof(buf), "/%s", path + 1 + len);
+            std::snprintf(stripped, sizeof(stripped), "/%s", path + 1 + len);
         } else {
-            std::strcpy(buf, path);
+            std::strcpy(stripped, path);
+        }
+
+        // root the storage at m_base_path when set (e.g. a specific folder):
+        // "/x" becomes "<base>/x".
+        fs::FsPath buf;
+        if (!m_base_path.empty()) {
+            std::snprintf(buf, sizeof(buf), "%s%s", m_base_path.c_str(), stripped.s);
+        } else {
+            std::strcpy(buf, stripped);
         }
 
         // log_write("[FixPath] %s -> %s\n", path, buf.s);
@@ -183,6 +201,7 @@ struct FsProxyBase : ::haze::FileSystemProxyImpl {
 protected:
     const std::string m_name;
     const std::string m_display_name;
+    const std::string m_base_path;
 };
 
 struct VirtualFile {
@@ -192,8 +211,8 @@ struct VirtualFile {
 };
 
 struct FsProxy final : FsProxyBase {
-    FsProxy(std::unique_ptr<fs::Fs>&& fs, const char* name, const char* display_name)
-    : FsProxyBase{name, display_name}
+    FsProxy(std::unique_ptr<fs::Fs>&& fs, const char* name, const char* display_name, const char* base_path = "")
+    : FsProxyBase{name, display_name, base_path}
     , m_fs{std::forward<decltype(fs)>(fs)} {
     }
 
@@ -582,6 +601,10 @@ struct FsProxy final : FsProxyBase {
         std::memset(d, 0, sizeof(*d));
     }
     virtual bool MultiThreadTransfer(s64 size, bool read) override {
+        // virtual backends (zip / ncm) are not safe for concurrent reads.
+        if (m_fs->IsVirtual()) {
+            return false;
+        }
         return !App::IsFileBaseEmummc();
     }
 
@@ -1553,6 +1576,18 @@ bool Init() {
         }
     });
 
+    // pinned mount (a folder or a virtual mount) requested from the file manager.
+    if (g_pinned_factory) {
+        storage_defs.push_back({
+            true,
+            g_pinned_name,
+            "Mounted",
+            [](const char* display_name) {
+                return std::make_shared<FsProxy>(g_pinned_factory(), "mnt", display_name, g_pinned_base.c_str());
+            }
+        });
+    }
+
     for (const auto& def : storage_defs) {
         if (def.enabled) {
             const char* name = def.custom_name.empty() ? def.default_name : def.custom_name.c_str();
@@ -1574,8 +1609,18 @@ bool Init() {
     }
 
     g_should_exit = false;
+    if (App::GetHddEnable()) {
+        usbHsFsExit();
+    }
+
     if (!::haze::Initialize(haze_callback, THREAD_PRIO, THREAD_CORE, g_fs_entries)) {
         g_fs_entries.clear();
+        if (App::GetHddEnable()) {
+            if (App::GetWriteProtect()) {
+                usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+            }
+            usbHsFsInitialize(1);
+        }
         return false;
     }
 
@@ -1602,6 +1647,39 @@ void Exit() {
     g_fs_entries.clear();
 
     log_write("[MTP] exitied\n");
+
+    if (App::GetHddEnable()) {
+        if (App::GetWriteProtect()) {
+            usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+        }
+        usbHsFsInitialize(1);
+    }
+}
+
+bool IsRunning() {
+    SCOPED_MUTEX(&g_mutex);
+    return g_is_running;
+}
+
+bool MountFs(std::function<std::unique_ptr<fs::Fs>()> fs_factory, const std::string& display_name, const std::string& base_path) {
+    // stop any running session, install the pinned storage, then (re)start so
+    // the PC re-enumerates with the new storage present.
+    Exit();
+    g_pinned_factory = std::move(fs_factory);
+    g_pinned_name = display_name;
+    g_pinned_base = base_path;
+    return Init();
+}
+
+void UnmountPinned() {
+    g_pinned_factory = {};
+    g_pinned_name.clear();
+    g_pinned_base.clear();
+    Exit();
+}
+
+bool HasPinned() {
+    return static_cast<bool>(g_pinned_factory);
 }
 
 #if ENABLE_NETWORK_INSTALL

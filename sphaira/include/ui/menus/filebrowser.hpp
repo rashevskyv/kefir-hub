@@ -8,6 +8,7 @@
 #include "option.hpp"
 #include "hasher.hpp"
 #include <span>
+#include <memory>
 
 namespace sphaira::location {
 struct Entry;
@@ -34,6 +35,10 @@ enum class FsType {
     Stdio,
     Network,
     Root,
+    // read-only mount of a .zip archive, entered from within another view.
+    Archive,
+    // read-only mount of one installed content component's NCA files.
+    Content,
 };
 
 enum class ConnectionStatus {
@@ -76,6 +81,11 @@ struct FsEntry {
     fs::FsPath pass{};
     u16 port{};
     ConnectionStatus status{ConnectionStatus::Unknown};
+
+    // identity for FsType::Content (a mounted installed component).
+    u64 content_app_id{};
+    u8 content_meta_type{};
+    u8 content_storage_id{};
 
     auto IsReadOnly() const -> bool {
         return flags & FsEntryFlag_ReadOnly;
@@ -320,6 +330,12 @@ private:
     }
 
     void OpenImageViewer();
+    // mounts the highlighted .zip as a read-only Archive fs, remembering the
+    // current view so B at the archive root returns to it.
+    void OpenArchive();
+    // exposes the current view (an SD folder or a virtual mount) as an MTP
+    // storage so a PC can access it.
+    void MountCurrentOverMtp();
     void DisplayHash(hash::Type type);
 
     void DisplayOptions();
@@ -374,6 +390,10 @@ private:
 
     bool m_is_update_folder{};
 
+    // where to return when leaving an Archive mount (the view that opened it).
+    FsEntry m_archive_return_entry{};
+    fs::FsPath m_archive_return_path{};
+
     Thread m_metadata_thread{};
     Mutex m_metadata_mutex{};
     Mutex m_metadata_io_mutex{};
@@ -389,7 +409,7 @@ private:
 
 // contains all selected files for a command, such as copy, delete, cut etc.
 struct SelectedStash {
-    void Add(FsView* view, SelectedType type, const std::vector<FileEntry>& files, const fs::FsPath& path) {
+    void Add(FsView* view, SelectedType type, const std::vector<FileEntry>& files, const fs::FsPath& path, std::shared_ptr<fs::Fs> owned_src_fs = nullptr) {
         if (files.empty()) {
             Reset();
         } else {
@@ -397,10 +417,28 @@ struct SelectedStash {
             m_type = type;
             m_files = files;
             m_path = path;
+            m_owned_src_fs = std::move(owned_src_fs);
         }
     }
 
+    // the fs the copied files live on. an archive copy owns its own fs so it
+    // survives the source view being navigated away / unmounted; otherwise the
+    // source view's current fs is used.
+    auto SrcFs() const -> fs::Fs* {
+        if (m_owned_src_fs) {
+            return m_owned_src_fs.get();
+        }
+        return m_view ? m_view->GetFs() : nullptr;
+    }
+
+    auto HasOwnedFs() const -> bool {
+        return m_owned_src_fs != nullptr;
+    }
+
     auto SameFs(FsView* view) -> bool {
+        if (m_owned_src_fs) {
+            return false; // independent source fs (e.g. an archive) is never "same".
+        }
         if (m_view && view->GetFsEntry().IsSame(m_view->GetFsEntry())) {
             return true;
         } else {
@@ -421,6 +459,7 @@ struct SelectedStash {
         m_type = {};
         m_files = {};
         m_path = {};
+        m_owned_src_fs.reset();
     }
 
 // private:
@@ -428,12 +467,16 @@ struct SelectedStash {
     std::vector<FileEntry> m_files{};
     fs::FsPath m_path{};
     SelectedType m_type{SelectedType::None};
+    std::shared_ptr<fs::Fs> m_owned_src_fs{};
 };
 
 struct Menu final : MenuBase {
     friend class FsView;
 
     Menu(u32 flags, const ::sphaira::location::Entry* launch_location = nullptr);
+    // launch the browser already mounted on a specific fs (e.g. a component's
+    // content) at initial_path.
+    Menu(u32 flags, const FsEntry& initial_entry, const fs::FsPath& initial_path);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Files"; };
@@ -459,14 +502,7 @@ private:
     void LoadAssocEntries();
     auto FindFileAssocFor() -> std::vector<FileAssocEntry>;
 
-    void AddSelectedEntries(SelectedType type) {
-        auto entries = view->GetSelectedEntries();
-        if (entries.empty()) {
-            return;
-        }
-
-        m_selected.Add(view, type, entries, view->m_path);
-    }
+    void AddSelectedEntries(SelectedType type);
 
     void ResetSelection() {
         m_selected.Reset();

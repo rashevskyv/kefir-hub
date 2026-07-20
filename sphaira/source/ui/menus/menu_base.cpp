@@ -66,6 +66,23 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         timestamp.Update();
     }
 
+    // the access point name changes rarely and the profile fetch is a heavier
+    // ipc than the ones above, poll it on its own slower cadence.
+    static TimeStamp ssid_timestamp{};
+    if (force_refresh || ssid_timestamp.GetSeconds() >= 5) {
+        data.ssid.clear();
+        if (data.ip && data.type == NifmInternetConnectionType_WiFi) {
+            NifmNetworkProfileData profile{};
+            if (R_SUCCEEDED(nifmGetCurrentNetworkProfile(&profile))) {
+                auto& wireless = profile.wireless_setting_data;
+                const auto len = std::min<size_t>(wireless.ssid_len, sizeof(wireless.ssid) - 1);
+                wireless.ssid[len] = '\0';
+                data.ssid = wireless.ssid;
+            }
+        }
+        ssid_timestamp.Update();
+    }
+
     if (force_refresh || storage_timestamp.GetSeconds() >= 15) {
         fs::GetStorageSpaces(&data.nand_free, &data.nand_total, &data.sd_free, &data.sd_total);
         storage_timestamp.Update();
@@ -212,12 +229,22 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     // We add a gap to start_x (which currently sits to the left of the leftmost element in Row 4).
     const float storage_right = start_x - 10.f;
 
-    // ---- Row 1 (y=48): IP address ----
+    // ---- Row 1 (y=48): access point + IP address ----
     {
         const auto ip_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
         if (pdata.ip) {
+            // "MyAP · 192.168.1.5" for wi-fi, "LAN · 192.168.1.5" for ethernet.
+            std::string network;
+            if (pdata.type == NifmInternetConnectionType_Ethernet) {
+                network = "LAN";
+            } else if (!pdata.ssid.empty()) {
+                network = pdata.ssid;
+            }
+            if (!network.empty()) {
+                network += " · ";
+            }
             gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
-                "%u.%u.%u.%u",
+                "%s%u.%u.%u.%u", network.c_str(),
                 pdata.ip & 0xFF, (pdata.ip >> 8) & 0xFF,
                 (pdata.ip >> 16) & 0xFF, (pdata.ip >> 24) & 0xFF);
         } else {
@@ -230,11 +257,19 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     // storage_right-aligned; label on left of bar
     const float bar_x = storage_right - bar_w;
 
+    // value shown next to a bar: free space normally, the highlighted size in
+    // highlight mode, "+size" for a projection (planned install usage).
+    auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes) -> std::string {
+        if (!m_storage_highlight_active || (m_storage_projection && !highlight_bytes)) {
+            return utils::formatSizeStorage(free_bytes);
+        }
+        const auto value = utils::formatSizeStorage(highlight_bytes);
+        return m_storage_projection ? "+" + value : value;
+    };
+
     auto label_x_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes) -> float {
         if (total_bytes <= 0) return bar_x - 4.f;
-        const auto value = m_storage_highlight_active
-            ? utils::formatSizeStorage(highlight_bytes)
-            : utils::formatSizeStorage(free_bytes);
+        const auto value = storage_value_of(free_bytes, highlight_bytes);
         nvgFontSize(vg, small_font);
         gfx::textBounds(vg, 0, 0, bounds, value.c_str());
         const float value_w = bounds[2] - bounds[0];
@@ -268,7 +303,15 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         // title. Anchor the highlighted segment at the end of the used region
         // so it remains proportional without claiming that storage is physically
         // contiguous on disk.
-        if (highlight_bytes && fill_w > 0.f) {
+        if (highlight_bytes && m_storage_projection) {
+            // planned usage: the segment extends from the end of the used
+            // region into the free space. Red when it does not fit.
+            const float ratio = static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes);
+            const float seg_w = std::min(bar_w - fill_w, std::max(2.f, bar_w * ratio));
+            const bool fits = free_bytes > 0 && highlight_bytes <= static_cast<u64>(free_bytes);
+            const auto seg_col = fits ? theme->GetColour(ThemeEntryID_HIGHLIGHT_1) : nvgRGBA(230, 60, 60, 255);
+            gfx::drawRect(vg, bar_x + fill_w, bar_y, seg_w, bar_h, seg_col);
+        } else if (highlight_bytes && fill_w > 0.f) {
             const float highlight_ratio = std::min(
                 used_ratio, static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes));
             const float highlight_w = std::max(2.f, bar_w * highlight_ratio);
@@ -279,10 +322,8 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
 
         // Normally show free space. Games replace it with the exact size of the
         // focused title or the sum of the current multi-selection.
-        const auto value = m_storage_highlight_active
-            ? utils::formatSizeStorage(highlight_bytes)
-            : utils::formatSizeStorage(free_bytes);
-        const auto text_col = theme->GetColour(m_storage_highlight_active
+        const auto value = storage_value_of(free_bytes, highlight_bytes);
+        const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
             ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
         nvgFontSize(vg, small_font);
@@ -307,16 +348,38 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
 
     const auto text_w = SCREEN_WIDTH / 2 - 30;
-    const auto title_sub_x = 80 + (bounds[2] - bounds[0]) + 10;
+    float title_sub_x = 80 + (bounds[2] - bounds[0]) + 10;
 
     gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
     gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
+
+    // optional stat block right after the title: two small stacked lines
+    // (e.g. the file browser's selection count and total size). The sub
+    // heading shifts right so nothing overlaps.
+    if (!m_title_stat_top.empty() || !m_title_stat_bottom.empty()) {
+        const auto stat_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        nvgFontSize(vg, 15.f);
+        float stat_w = 0.f;
+        for (const auto* line : {&m_title_stat_top, &m_title_stat_bottom}) {
+            if (line->empty()) continue;
+            gfx::textBounds(vg, 0, 0, bounds, line->c_str());
+            stat_w = std::max(stat_w, bounds[2] - bounds[0]);
+        }
+        gfx::drawTextArgs(vg, title_sub_x, start_y - 16.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_top.c_str());
+        gfx::drawTextArgs(vg, title_sub_x, start_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_bottom.c_str());
+        title_sub_x += stat_w + 14.f;
+    }
     m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
     m_scroll_sub_heading.Draw(vg, true, 80, 683, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
 }
 
 void MenuBase::SetTitle(std::string title) {
     m_title = title;
+}
+
+void MenuBase::SetTitleStats(std::string top, std::string bottom) {
+    m_title_stat_top = std::move(top);
+    m_title_stat_bottom = std::move(bottom);
 }
 
 void MenuBase::SetTitleSubHeading(std::string sub_heading) {
@@ -331,12 +394,21 @@ void MenuBase::SetStorageHighlight(u64 nand_bytes, u64 sd_bytes) {
     m_nand_highlight = nand_bytes;
     m_sd_highlight = sd_bytes;
     m_storage_highlight_active = true;
+    m_storage_projection = false;
+}
+
+void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes) {
+    m_nand_highlight = nand_bytes;
+    m_sd_highlight = sd_bytes;
+    m_storage_highlight_active = true;
+    m_storage_projection = true;
 }
 
 void MenuBase::ClearStorageHighlight() {
     m_nand_highlight = 0;
     m_sd_highlight = 0;
     m_storage_highlight_active = false;
+    m_storage_projection = false;
 }
 
 } // namespace sphaira::ui::menu
