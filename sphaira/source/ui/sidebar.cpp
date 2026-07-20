@@ -515,6 +515,9 @@ void Sidebar::SetupButtons() {
         // each item has it's own Action, but we take over B
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             SetPop();
+        }}),
+        std::make_pair(Button::START, Action{"", [this](){
+            SetPop();
         }})
     );
 }
