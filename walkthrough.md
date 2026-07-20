@@ -1,3 +1,23 @@
+# Результати впровадження: Виправлення помилки компіляції (v0.13.286)
+
+## Опис змін
+
+1. **Виправлення невірного звернення до об'єкта yati:**
+   - **Суть проблеми**: При збірці проекту виникала помилка компілятора `expected primary-expression before '->' token` на виклику `yati->source->SignalCancel()`. Це сталося через те, що `Yati::InstallNcaInternal` є методом самого класу `Yati`, а не зовнішнього класу `ThreadData` (де є покажчик `yati`). 
+   - **Вирішення**: Виправлено звернення до власного члена класу `source` у [yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp). Замінено `yati->source->SignalCancel()` на `source->SignalCancel()`.
+
+## Зроблені зміни
+
+### [Component: Потоковий інсталятор yati]
+- **[yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp)**:
+  - Виправлено виклик `source->SignalCancel()` в `Yati::InstallNcaInternal`.
+
+### [Component: CMake Configuration]
+- **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
+  - Збільшено версію програми `sphaira_VERSION` до `0.13.286`.
+
+---
+
 # Результати впровадження: Дружнє повідомлення про скасування встановлення (v0.13.285)
 
 ## Опис змін

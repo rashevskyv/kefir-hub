@@ -3,7 +3,13 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.285
+## Поточний delivery: v0.13.286
+
+- [x] FIX-MTP-INSTALL-COMPILATION-286 — виправлено помилку компіляції в `Yati::InstallNcaInternal` у [yati.cpp](file:///d:/git/dev/sphaira/sphaira/source/yati/yati.cpp), де замість `yati->source->SignalCancel()` використано правильне звернення до власного члена класу `source->SignalCancel()`.
+- [ ] BUILD-NRO-286 — збірка 0.13.286 та верифікація компіляції (WSL).
+- [ ] HW-SMOKE-286 — на Switch+ПК: перевірка збірки та працездатності.
+
+## Попередній delivery: v0.13.285
 
 - [x] FIX-MTP-INSTALL-FRIENDLY-CANCEL-285 — виправлено обробку `Result_TransferCancelled` у `done`-колбеку `ProgressBox` при встановленні через MTP. Замість показу страшного діалогового вікна про помилку встановлення тепер програма відтворює тихий звук фокусу та показує дружню спливаючу нотифікацію "Встановлення скасовано" (Install cancelled).
 - [ ] BUILD-NRO-285 — збірка 0.13.285 та верифікація компіляції (WSL).

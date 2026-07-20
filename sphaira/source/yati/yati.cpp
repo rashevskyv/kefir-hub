@@ -1037,7 +1037,7 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
             pbox->UpdateInstallReadWrite(t_data.GetReadOffset(), t_data.GetWriteOffset());
         } else {
             if (idx == 1) {
-                yati->source->SignalCancel();
+                source->SignalCancel();
             }
             break;
         }
