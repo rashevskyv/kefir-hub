@@ -46,6 +46,7 @@ Stream::Stream(const fs::FsPath& path, std::stop_token token) {
     m_token = token;
     m_active = true;
     m_buffer.reserve(MAX_BUFFER_RESERVE_SIZE);
+    m_read_offset = 0;
 
     mutexInit(&m_mutex);
     condvarInit(&m_can_read);
@@ -60,10 +61,10 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
 
     while (!m_token.stop_requested()) {
         SCOPED_MUTEX(&m_mutex);
-        if (m_active && m_buffer.empty()) {
+        if (m_active && m_buffer.size() == m_read_offset) {
             log_write("[Stream::ReadChunk] buffer empty, waiting on m_can_read\n");
             R_TRY(condvarWait(std::addressof(m_can_read), std::addressof(m_mutex)));
-            log_write("[Stream::ReadChunk] woke up from m_can_read, size=%zu, active=%d\n", m_buffer.size(), m_active.load());
+            log_write("[Stream::ReadChunk] woke up from m_can_read, size=%zu, offset=%zu, active=%d\n", m_buffer.size(), m_read_offset, m_active.load());
         }
 
         if (m_token.stop_requested()) {
@@ -71,7 +72,7 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
             break;
         }
 
-        if (!m_active && m_buffer.empty()) {
+        if (!m_active && m_buffer.size() == m_read_offset) {
             log_write("[Stream::ReadChunk] inactive and empty buffer, returning EOF\n");
             *bytes_read = 0;
             return 0;
@@ -79,14 +80,25 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
 
         // spurious wakeup with no data yet, wait again rather than
         // returning a zero-byte read (treated as eof by the caller).
-        if (m_buffer.empty()) {
+        if (m_buffer.size() == m_read_offset) {
             continue;
         }
 
-        size = std::min<s64>(size, m_buffer.size());
-        std::memcpy(buf, m_buffer.data(), size);
-        m_buffer.erase(m_buffer.begin(), m_buffer.begin() + size);
+        const s64 available = m_buffer.size() - m_read_offset;
+        size = std::min<s64>(size, available);
+        std::memcpy(buf, m_buffer.data() + m_read_offset, size);
+        m_read_offset += size;
         *bytes_read = size;
+
+        if (m_read_offset == m_buffer.size()) {
+            m_buffer.clear();
+            m_read_offset = 0;
+        } else if (m_read_offset >= 1024ULL * 1024ULL * 4ULL) {
+            std::memmove(m_buffer.data(), m_buffer.data() + m_read_offset, m_buffer.size() - m_read_offset);
+            m_buffer.resize(m_buffer.size() - m_read_offset);
+            m_read_offset = 0;
+        }
+
         return condvarWakeOne(&m_can_write);
     }
 
@@ -108,13 +120,13 @@ bool Stream::Push(const void* buf, s64 size) {
 
         SCOPED_MUTEX(&m_mutex);
         #if USE_CONDI_VAR
-        while (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
-            log_write("[Stream::Push] buffer full (%zu >= %llu), waiting on m_can_write...\n", m_buffer.size(), MAX_BUFFER_SIZE);
+        while (m_active && (m_buffer.size() - m_read_offset) >= MAX_BUFFER_SIZE) {
+            log_write("[Stream::Push] buffer full (%zu >= %llu), waiting on m_can_write...\n", m_buffer.size() - m_read_offset, MAX_BUFFER_SIZE);
             R_TRY(condvarWait(std::addressof(m_can_write), std::addressof(m_mutex)));
-            log_write("[Stream::Push] woke up from m_can_write, size=%zu\n", m_buffer.size());
+            log_write("[Stream::Push] woke up from m_can_write, size=%zu\n", m_buffer.size() - m_read_offset);
         }
         #else
-        if (m_active && m_buffer.size() >= MAX_BUFFER_SIZE) {
+        if (m_active && (m_buffer.size() - m_read_offset) >= MAX_BUFFER_SIZE) {
             // unlock the mutex and wait for 1s to bring transfer speed down to 1MiB/s.
             log_write("[Stream::Push] buffer is full, delaying\n");
             mutexUnlock(&m_mutex);

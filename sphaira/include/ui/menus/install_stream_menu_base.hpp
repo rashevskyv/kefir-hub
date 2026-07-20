@@ -47,6 +47,7 @@ private:
     fs::FsPath m_path{};
     std::stop_token m_token{};
     std::vector<u8> m_buffer{};
+    size_t m_read_offset{0};
     CondVar m_can_read{};
     CondVar m_can_write{};
 
