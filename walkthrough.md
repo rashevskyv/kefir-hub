@@ -1,3 +1,28 @@
+# Результати впровадження: Дружнє повідомлення про скасування встановлення (v0.13.285)
+
+## Опис змін
+
+1. **Заміна страшного вікна помилки дружнім повідомленням:**
+   - **Суть проблеми**: Коли користувач скасовував встановлення за допомогою кнопки B або Stop, інсталятор повертав код `Result_TransferCancelled`. Колбек `done` у `ProgressBox` сприймав будь-яку помилку (включаючи скасування) як критичний збій та показував велике червоне вікно помилки "Install failed!" з кодом `0x20A56`. Це виглядало лякаюче і не відповідало нормальній поведінці при звичайному скасуванні користувачем.
+   - **Вирішення**: Оновлено колбек завершення встановлення у [install_stream_menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/install_stream_menu_base.cpp). Тепер, якщо код результату дорівнює `Result_TransferCancelled`, замість показу вікна помилки програма відтворює тихий стандартний звук фокусу та показує немодальну спливаючу нотифікацію "Встановлення скасовано" (Install cancelled).
+   - Додано переклад для ключа `"Install cancelled": "Встановлення скасовано"` у файл локалізації [uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json).
+
+## Зроблені зміни
+
+### [Component: UI Install Queue]
+- **[install_stream_menu_base.cpp](file:///d:/git/dev/sphaira/sphaira/source/ui/menus/install_stream_menu_base.cpp)**:
+  - У done-колбеку додано перевірку `rc == Result_TransferCancelled`, яка показує `App::Notify("Install cancelled"_i18n)`.
+
+### [Component: Localization]
+- **[uk.json](file:///d:/git/dev/sphaira/assets/romfs/i18n/uk.json)**:
+  - Додано переклад `"Install cancelled": "Встановлення скасовано"`.
+
+### [Component: CMake Configuration]
+- **[CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt)**:
+  - Збільшено версію програми `sphaira_VERSION` до `0.13.285`.
+
+---
+
 # Результати впровадження: Виправлення взаємного блокування при скасуванні та детальне логування (v0.13.284)
 
 ## Опис змін

@@ -116,6 +116,7 @@
   "Failed to install, press B to exit...": "Не вдалося встановити через FTP, натисніть B для виходу...",
   "Install success!": "Успішно встановлено",
   "Install failed!": "Встановлення не вдалося.",
+  "Install cancelled": "Встановлення скасовано",
   "USB Install": "Встановлення через USB",
   "USB": "USB",
   "Connected, waiting for file list...": "Підключено, очікування списку файлів...",

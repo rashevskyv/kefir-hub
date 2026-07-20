@@ -405,6 +405,9 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                 if (R_SUCCEEDED(rc)) {
                     App::PlaySoundEffect(SoundEffect_Install);
                     App::Notify("Install success!"_i18n);
+                } else if (rc == Result_TransferCancelled) {
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                    App::Notify("Install cancelled"_i18n);
                 } else {
                     App::PlaySoundEffect(SoundEffect_Error);
                     App::PushErrorBox(rc, "Install failed!"_i18n);
