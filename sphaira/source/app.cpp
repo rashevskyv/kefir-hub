@@ -547,19 +547,34 @@ void App::Poll() {
 }
 
 void App::Update() {
+    bool block_background_update = false;
     if (m_active_transfer_pbox) {
         if (m_controller.GotDown(Button::L3)) {
             m_active_transfer_pbox->ToggleMinimized();
             App::PlaySoundEffect(SoundEffect_Focus);
         }
+
+        if (!m_active_transfer_pbox->IsMinimized()) {
+            block_background_update = true;
+            m_active_transfer_pbox->Update(&m_controller, &m_touch_info);
+            
+            if (m_controller.GotDown(Button::B)) {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_active_transfer_pbox->RequestExit();
+            }
+        }
+
         // its worker thread signals exit once the transfer finishes; reclaim
         // it here rather than in the ProgressBox's own (never-called) Update().
         if (m_active_transfer_pbox->ShouldExit()) {
             m_active_transfer_pbox.reset();
+            block_background_update = false;
         }
     }
 
-    m_widgets.back()->Update(&m_controller, &m_touch_info);
+    if (!block_background_update) {
+        m_widgets.back()->Update(&m_controller, &m_touch_info);
+    }
 
     bool popped_at_least1 = false;
     while (true) {

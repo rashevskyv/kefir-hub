@@ -77,6 +77,11 @@ ProgressBox::~ProgressBox() {
 }
 
 auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
+    if (m_detached) {
+        m_pos.h = 360.f;
+        m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
+    }
+
     Widget::Update(controller, touch);
 
     if (ShouldExit()) {
@@ -87,12 +92,12 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
     const auto size = m_size;
     mutexUnlock(&m_mutex);
 
-    if (!size && touch->is_clicked) {
+    if (((!size && !m_detached) || m_detached) && touch->is_clicked) {
         const float center_x = m_pos.x + m_pos.w / 2.f;
         const float btn_w = 200.f;
         const float btn_h = 40.f;
         const float btn_x = center_x - btn_w / 2.f;
-        const float btn_y = m_pos.y + m_pos.h - 65.f;
+        const float btn_y = m_detached ? (m_pos.y + m_pos.h - 95.f) : (m_pos.y + m_pos.h - 65.f);
         if (touch->in_range(btn_x, btn_y, btn_w, btn_h)) {
             App::PlaySoundEffect(SoundEffect_Focus);
             RequestExit();
@@ -106,14 +111,36 @@ namespace {
 // small corner badge shown while a detached transfer is minimised via L3.
 // speed_str may be empty if no sample has landed yet.
 void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 offset, s64 size, const std::string& speed_str) {
-    constexpr float w = 340.f;
+    const u32 percentage = size ? (u32)(((double)offset / (double)size) * 100.0) : 0;
+    
+    char text_buf[512];
+    if (speed_str.empty()) {
+        std::snprintf(text_buf, sizeof(text_buf), "%s (%u%%)", title.c_str(), percentage);
+    } else {
+        std::snprintf(text_buf, sizeof(text_buf), "%s (%u%% - %s)", title.c_str(), percentage, speed_str.c_str());
+    }
+
+    char expand_buf[64];
+    std::snprintf(expand_buf, sizeof(expand_buf), " %s", "Expand"_i18n.c_str());
+
+    float bounds[4];
+    nvgFontSize(vg, 15.f);
+    gfx::textBounds(vg, 0, 0, bounds, text_buf);
+    float text_w = bounds[2] - bounds[0];
+
+    nvgFontSize(vg, 13.f);
+    gfx::textBounds(vg, 0, 0, bounds, expand_buf);
+    float expand_w = bounds[2] - bounds[0];
+
+    float w = std::max(340.f, 15.f + text_w + 20.f + expand_w + 15.f);
+    w = std::min(w, SCREEN_WIDTH - 40.f);
+
     constexpr float h = 64.f;
-    constexpr float x = SCREEN_WIDTH - w - 20.f;
+    const float x = SCREEN_WIDTH - w - 20.f;
     constexpr float y = 20.f;
 
     gfx::drawRect(vg, x, y, w, h, theme->GetColour(ThemeEntryID_POPUP), 6);
 
-    const u32 percentage = size ? (u32)(((double)offset / (double)size) * 100.0) : 0;
     const float bar_x = x + 15.f;
     const float bar_y = y + h - 18.f;
     const float bar_w = w - 30.f;
@@ -122,10 +149,8 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
         gfx::drawRect(vg, bar_x, bar_y, ((float)offset / (float)size) * bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
     }
 
-    gfx::drawTextArgs(vg, x + 15.f, y + 8.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT),
-        speed_str.empty() ? "%s (%u%%)" : "%s (%u%% - %s)", title.c_str(), percentage, speed_str.c_str());
-
-    gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), " " "Expand"_i18n.c_str());
+    gfx::drawTextArgs(vg, x + 15.f, y + 8.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", text_buf);
+    gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", expand_buf);
 }
 
 } // namespace
@@ -200,6 +225,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         return;
     }
 
+    if (m_detached) {
+        m_pos.h = 360.f;
+        m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
+    }
+
     if (!m_detached) {
         gfx::dimBackground(vg);
     }
@@ -210,7 +240,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto center_x = m_pos.x + m_pos.w/2;
     const auto end_y = m_pos.y + m_pos.h;
     const auto progress_bar_w = m_pos.w - 230;
-    const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - 100, progress_bar_w, 12 };
+    const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - (m_detached ? 160.f : 100.f), progress_bar_w, 12 };
 
     nvgSave(vg);
     nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
@@ -257,9 +287,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
 
             if (hide_speed) {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
             } else {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 30, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
             }
         }
     }
@@ -287,11 +317,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     // the stop button relies on Update() detecting the touch, which never runs
     // for a detached box (it isn't on the widget stack), so it'd be a dead click.
-    if (!size && !m_detached) {
+    if ((!size && !m_detached) || m_detached) {
         const float btn_w = 200.f;
         const float btn_h = 40.f;
         const float btn_x = center_x - btn_w / 2.f;
-        const float btn_y = m_pos.y + m_pos.h - 65.f;
+        const float btn_y = m_detached ? (m_pos.y + m_pos.h - 95.f) : (m_pos.y + m_pos.h - 65.f);
 
         gfx::drawRect(vg, btn_x, btn_y, btn_w, btn_h, nvgRGBA(239, 68, 68, 255), 6.f);
 

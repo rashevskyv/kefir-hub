@@ -204,16 +204,16 @@ struct ThreadData {
         read_result = result;
         if (R_FAILED(result)) {
             ueventSignal(GetDoneEvent());
-            WakeAllThreads();
         }
+        WakeAllThreads();
     }
 
     void SetDecompressResult(Result result) {
         decompress_result = result;
         if (R_FAILED(result)) {
             ueventSignal(GetDoneEvent());
-            WakeAllThreads();
         }
+        WakeAllThreads();
     }
 
     void SetWriteResult(Result result) {
