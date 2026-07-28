@@ -683,12 +683,20 @@ Result DirGetEntryCount(fs::Fs* m_fs, const fs::FsPath& path, s64* file_count, s
                 continue;
             }
 
-            if (d->d_type == DT_DIR) {
+            u8 entry_type = d->d_type;
+            if (entry_type != DT_DIR && entry_type != DT_REG) {
+                struct stat st{};
+                if (stat(d->d_name, &st) == 0) {
+                    entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
+                }
+            }
+
+            if (entry_type == DT_DIR) {
                 if (!(mode & FsDirOpenMode_ReadDirs)) {
                     continue;
                 }
                 (*dir_count)++;
-            } else if (d->d_type == DT_REG) {
+            } else if (entry_type == DT_REG) {
                 if (!(mode & FsDirOpenMode_ReadFiles)) {
                     continue;
                 }
@@ -742,19 +750,32 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
             }
 
             FsDirectoryEntry entry{};
+            u8 entry_type = d->d_type;
+            struct stat st{};
+            bool got_stat = false;
 
-            if (d->d_type == DT_DIR) {
+            if (entry_type != DT_DIR && entry_type != DT_REG) {
+                if (stat(d->d_name, &st) == 0) {
+                    entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
+                    got_stat = true;
+                }
+            }
+
+            if (entry_type == DT_DIR) {
                 if (!(m_mode & FsDirOpenMode_ReadDirs)) {
                     continue;
                 }
                 entry.type = FsDirEntryType_Dir;
-            } else if (d->d_type == DT_REG) {
+            } else if (entry_type == DT_REG) {
                 if (!(m_mode & FsDirOpenMode_ReadFiles)) {
                     continue;
                 }
                 entry.type = FsDirEntryType_File;
+                if (got_stat) {
+                    entry.file_size = st.st_size;
+                }
             } else {
-                log_write("[FS] WARNING: unknown type when reading dir: %u\n", d->d_type);
+                log_write("[FS] WARNING: unknown type when reading dir: %u for '%s'\n", d->d_type, d->d_name);
                 continue;
             }
 

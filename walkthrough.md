@@ -1,15 +1,15 @@
-# Результати роботи: Усунення USB DMA переповнення та відображення файлів MTP (v0.13.357)
+# Результати роботи: Додавання stat fallback для DT_UNKNOWN записів у fs.cpp (v0.13.358)
 
-У цій версії виправлено критичний баг апаратного USB DMA контролера Switch при обробці MTP відповідей.
+У цій версії усунуто системну проблему у `fs.cpp`, яка призводила до ігнорування файлів та папок MTP.
 
 ## Внесені зміни
 
-### 1. Вирівнювання DMA буфера читання ([devoptab_mtp.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_mtp.cpp))
-- **Виявлена проблема**: Метод `PostAndWaitMtpTransfer` передавав у `usbHsEpPostBufferAsync` фактичний розмір структури `size` (наприклад 32 байти для `ReceiveMtpResponse`). Оскільки wMaxPacketSize USB High-Speed Bulk IN ендпоінта становить 512 байт, надходження 512-байтового пакета від смартфона викликало помилку переповнення USB контролера (`0x25A8C`). Через це `ReceiveMtpResponse` та `GetObjectInfo` постійно падали, і список файлів залишався порожнім.
-- **Виправлення**: Для всіх IN-трансферів (`!is_write`) у `usbHsEpPostBufferAsync` тепер передається строго 64 КБ буфер (`MTP_XFER_BUF_SIZE`), що гарантує прийом пакетів будь-якого розміру без overflow.
+### 1. `stat()` fallback для `DT_UNKNOWN` ([fs.cpp](file:///d:/git/dev/sphaira/sphaira/source/fs.cpp))
+- **Виявлена проблема**: Метод `Dir::Read` та `DirGetEntryCount` у `fs.cpp` перевіряли `d->d_type == DT_DIR` або `d->d_type == DT_REG`. При будь-якому іншому значенні (включаючи `DT_UNKNOWN = 0`) виводилося `[FS] WARNING: unknown type when reading dir: 0` і викликався `continue`. Драйвери newlib devoptab при виклику `readdir()` часто віддають `DT_UNKNOWN`, через що всі файли та папки мовчки ігнорувалися.
+- **Виправлення**: Якщо `d_type` не `DT_DIR` і не `DT_REG`, викликається `stat()` для визначення `S_ISDIR` / `S_ISREG`. Об'єкти правильно класифікуються та додаються у список файлового менеджера.
 
 ### 2. Версіонування та документація
-- Версію оновлено до `0.13.357` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+- Версію оновлено до `0.13.358` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
 - Оновлено [task.md](file:///d:/git/dev/sphaira/task.md), [plan.md](file:///d:/git/dev/sphaira/plan.md) та [walkthrough.md](file:///d:/git/dev/sphaira/walkthrough.md).
 
 ## Верифікація збірки
