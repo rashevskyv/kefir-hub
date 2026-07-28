@@ -1,15 +1,15 @@
-# Результати роботи: Виправлення розпізнавання префікса пристрою mtp0: у devoptab (v0.13.356)
+# Результати роботи: Усунення USB DMA переповнення та відображення файлів MTP (v0.13.357)
 
-У цій версії знайдено та усунуто фундаментальну проблему, через яку вхід у `mtp0:` відображав "Пусто".
+У цій версії виправлено критичний баг апаратного USB DMA контролера Switch при обробці MTP відповідей.
 
 ## Внесені зміни
 
-### 1. Очищення префікса пристрою у `ResolvePathToHandle` ([devoptab_mtp.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_mtp.cpp))
-- **Виявлена проблема**: Системний виклик devoptab при відкриванні кореня або файлів надсилав у драйвер шлях разом із префіксом точки монтування (наприклад `"mtp0:/"` або `"mtp0:"`). У `ResolvePathToHandle` вираз `std::strcmp(path, "/") == 0` давав `false`, і програма намагалася шукати на смартфоні папку з ім'ям `"mtp0:"`. Оскільки такої папки не існувало, метод повертав `0` (not found), а `devoptab_diropen` віддавав 0 записів (екран "Пусто").
-- **Виправлення**: Впроваджено вилучення префікса пристрою з двокрапкою `*:`. Тепер `"mtp0:/"` і `"mtp0:"` гарантовано трансформуються в корінь (`0xFFFFFFFF`), а підпапки резолвляться без помилок.
+### 1. Вирівнювання DMA буфера читання ([devoptab_mtp.cpp](file:///d:/git/dev/sphaira/sphaira/source/utils/devoptab_mtp.cpp))
+- **Виявлена проблема**: Метод `PostAndWaitMtpTransfer` передавав у `usbHsEpPostBufferAsync` фактичний розмір структури `size` (наприклад 32 байти для `ReceiveMtpResponse`). Оскільки wMaxPacketSize USB High-Speed Bulk IN ендпоінта становить 512 байт, надходження 512-байтового пакета від смартфона викликало помилку переповнення USB контролера (`0x25A8C`). Через це `ReceiveMtpResponse` та `GetObjectInfo` постійно падали, і список файлів залишався порожнім.
+- **Виправлення**: Для всіх IN-трансферів (`!is_write`) у `usbHsEpPostBufferAsync` тепер передається строго 64 КБ буфер (`MTP_XFER_BUF_SIZE`), що гарантує прийом пакетів будь-якого розміру без overflow.
 
 ### 2. Версіонування та документація
-- Версію оновлено до `0.13.356` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
+- Версію оновлено до `0.13.357` у [CMakeLists.txt](file:///d:/git/dev/sphaira/sphaira/CMakeLists.txt).
 - Оновлено [task.md](file:///d:/git/dev/sphaira/task.md), [plan.md](file:///d:/git/dev/sphaira/plan.md) та [walkthrough.md](file:///d:/git/dev/sphaira/walkthrough.md).
 
 ## Верифікація збірки

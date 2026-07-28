@@ -60,12 +60,17 @@ Result PostAndWaitMtpTransfer(UsbHsClientEpSession* ep, void* user_buf, u32 size
     }
 
     // For writes: copy user data into aligned DMA buffer before posting
+    u32 post_size = size;
     if (is_write) {
         std::memcpy(g_mtp_xfer_buf, user_buf, size);
+    } else {
+        // For USB IN reads, host buffer posted to DMA must be aligned to max packet size (512 bytes).
+        // Using full MTP_XFER_BUF_SIZE (64KB) prevents USB hardware packet overflow.
+        post_size = MTP_XFER_BUF_SIZE;
     }
 
     u32 xfer_id = 0;
-    Result rc = usbHsEpPostBufferAsync(ep, g_mtp_xfer_buf, size, 0, &xfer_id);
+    Result rc = usbHsEpPostBufferAsync(ep, g_mtp_xfer_buf, post_size, 0, &xfer_id);
     if (R_FAILED(rc)) {
         log_write("[MTP_HOST] usbHsEpPostBufferAsync failed: 0x%X\n", rc);
         return rc;
