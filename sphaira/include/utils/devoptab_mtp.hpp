@@ -92,6 +92,13 @@ public:
 private:
     u32 ResolvePathToHandle(const char* path, bool* is_dir = nullptr, u64* out_size = nullptr);
     bool FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObject>& out_entries);
+    // Same as FetchDirectoryEntries but assumes g_mtp_mutex is already held.
+    bool FetchDirectoryEntriesLocked(u32 parent_handle, std::vector<MtpObject>& out_entries);
+
+public:
+    // Pre-fetch root directory entries while USB is known to work.
+    // Must be called while g_mtp_mutex is held (e.g. from ScanAndMountMtpDevices).
+    void PreFetchRootEntries();
 
 private:
     u32 m_storage_id{};

@@ -162,7 +162,8 @@ auto GetMtpHostDevices(bool write) -> StdioEntries {
 
     for (const auto& config : mtp_configs) {
         std::string mount_name = config.url;
-        if (mount_name.back() == '/') mount_name.pop_back();
+        // Keep the trailing slash for devoptab paths (e.g. "mtp0:/").
+        // fix_path needs at least one character after ':' to produce a valid path.
 
         std::string display_name = "MTP: " + config.name;
         u32 flags = ui::menu::filebrowser::FsEntryFlag_ReadOnly;

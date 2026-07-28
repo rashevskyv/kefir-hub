@@ -277,14 +277,13 @@ u32 MtpMountDevice::ResolvePathToHandle(const char* path, bool* is_dir, u64* out
     return current_handle;
 }
 
-bool MtpMountDevice::FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObject>& out_entries) {
+bool MtpMountDevice::FetchDirectoryEntriesLocked(u32 parent_handle, std::vector<MtpObject>& out_entries) {
     auto cache_it = m_dir_cache.find(parent_handle);
     if (cache_it != m_dir_cache.end()) {
         out_entries = cache_it->second;
         return true;
     }
 
-    SCOPED_MUTEX(&g_mtp_mutex);
     if (!g_mtp_session.connected) return false;
 
     std::vector<u32> parent_candidates;
@@ -384,6 +383,29 @@ bool MtpMountDevice::FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObj
 
     m_dir_cache[parent_handle] = out_entries;
     return true;
+}
+
+bool MtpMountDevice::FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObject>& out_entries) {
+    // Check cache without lock first
+    auto cache_it = m_dir_cache.find(parent_handle);
+    if (cache_it != m_dir_cache.end()) {
+        out_entries = cache_it->second;
+        return true;
+    }
+
+    SCOPED_MUTEX(&g_mtp_mutex);
+    return FetchDirectoryEntriesLocked(parent_handle, out_entries);
+}
+
+void MtpMountDevice::PreFetchRootEntries() {
+    // Called from ScanAndMountMtpDevices while g_mtp_mutex is held.
+    // Pre-populate root directory cache so devoptab_diropen doesn't need USB later.
+    std::vector<MtpObject> root_entries;
+    if (FetchDirectoryEntriesLocked(0xFFFFFFFF, root_entries)) {
+        log_write("[MTP_HOST] pre-fetched %zu root entries\n", root_entries.size());
+    } else {
+        log_write("[MTP_HOST] pre-fetch root entries failed\n");
+    }
 }
 
 int MtpMountDevice::devoptab_diropen(void* fd, const char *path) {
@@ -805,6 +827,11 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
             config.read_only = true;
 
             auto device = std::make_unique<MtpMountDevice>(config, st_id, label, max_cap, free_sp);
+
+            // Pre-fetch root directory entries while USB is known to work.
+            // Later, devoptab_diropen will find them in cache without needing USB.
+            device->PreFetchRootEntries();
+
             if (common::MountNetworkDevice2(std::move(device), config, sizeof(MtpFileHandle), sizeof(MtpDirHandle), mount_name, mount_name)) {
                 mounted_configs.push_back(config);
                 log_write("[MTP_HOST] successfully mounted %s: as %s\n", mount_name, label.c_str());
