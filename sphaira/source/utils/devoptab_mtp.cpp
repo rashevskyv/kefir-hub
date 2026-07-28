@@ -714,11 +714,11 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
             if_desc.bInterfaceClass, if_desc.bInterfaceSubClass, if_desc.bInterfaceProtocol);
 
         // MTP = Still Image class 0x06, subclass 0x01, protocol 0x01
-        // Android often uses Vendor Specific 0xFF with MTP subclass
-        // Class 0x00 means unspecified (check anyway)
-        // Skip definitely non-MTP classes: Audio(1), HID(3), Printer(7), Hub(9), CDC(2/10)
+        // Only accept class 0x06 (Still Image / MTP). Attempting MTP operations
+        // on other classes (e.g. 0xFF/ADB) leaves USB endpoints in a corrupted
+        // state that can crash the system USB service on subsequent transfers.
         u8 ifc = if_desc.bInterfaceClass;
-        if (ifc == 0x01 || ifc == 0x02 || ifc == 0x03 || ifc == 0x07 || ifc == 0x09 || ifc == 0x0A || ifc == 0x0E) {
+        if (ifc != 0x06) {
             log_write("[MTP_HOST]   skipping interface %d (non-MTP class 0x%02x)\n", idx, ifc);
             usbHsIfClose(&g_mtp_session.s);
             continue;
@@ -827,11 +827,6 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
             config.read_only = true;
 
             auto device = std::make_unique<MtpMountDevice>(config, st_id, label, max_cap, free_sp);
-
-            // Pre-fetch root directory entries while USB is known to work.
-            // Later, devoptab_diropen will find them in cache without needing USB.
-            device->PreFetchRootEntries();
-
             if (common::MountNetworkDevice2(std::move(device), config, sizeof(MtpFileHandle), sizeof(MtpDirHandle), mount_name, mount_name)) {
                 mounted_configs.push_back(config);
                 log_write("[MTP_HOST] successfully mounted %s: as %s\n", mount_name, label.c_str());
