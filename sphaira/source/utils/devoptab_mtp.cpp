@@ -206,20 +206,27 @@ bool MtpMountDevice::Mount() {
 }
 
 u32 MtpMountDevice::ResolvePathToHandle(const char* path, bool* is_dir, u64* out_size) {
-    if (!path || path[0] == '\0' || std::strcmp(path, "/") == 0 || std::strcmp(path, ".") == 0) {
+    if (!path || path[0] == '\0') {
         if (is_dir) *is_dir = true;
         if (out_size) *out_size = 0;
         return 0xFFFFFFFF; // Root parent handle in MTP
     }
 
     std::string path_str = path;
-    if (path_str.front() == '/') path_str.erase(0, 1);
-    if (!path_str.empty() && path_str.back() == '/') path_str.pop_back();
 
-    if (path_str.empty()) {
+    // Strip device name prefix if present (e.g. "mtp0:/", "mtp0:", ":/")
+    size_t colon_pos = path_str.find(':');
+    if (colon_pos != std::string::npos) {
+        path_str.erase(0, colon_pos + 1);
+    }
+
+    while (!path_str.empty() && path_str.front() == '/') path_str.erase(0, 1);
+    while (!path_str.empty() && path_str.back() == '/') path_str.pop_back();
+
+    if (path_str.empty() || path_str == ".") {
         if (is_dir) *is_dir = true;
         if (out_size) *out_size = 0;
-        return 0xFFFFFFFF;
+        return 0xFFFFFFFF; // Root parent handle in MTP
     }
 
     auto cache_it = m_path_cache.find(path_str);
