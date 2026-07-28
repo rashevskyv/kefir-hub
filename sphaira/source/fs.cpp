@@ -648,6 +648,7 @@ Result OpenDirectory(fs::Fs* fs, const fs::FsPath& path, u32 mode, Dir* d) {
     } else {
         d->m_stdio = opendir(path);
         R_UNLESS(d->m_stdio, Result_FsUnknownStdioError);
+        d->m_path = path;
     }
 
     R_SUCCEED();
@@ -685,8 +686,13 @@ Result DirGetEntryCount(fs::Fs* m_fs, const fs::FsPath& path, s64* file_count, s
 
             u8 entry_type = d->d_type;
             if (entry_type != DT_DIR && entry_type != DT_REG) {
+                fs::FsPath full_path;
+                std::snprintf(full_path, sizeof(full_path), "%s%s%s",
+                    path.s,
+                    (path.size() > 0 && path.s[path.size()-1] != '/') ? "/" : "",
+                    d->d_name);
                 struct stat st{};
-                if (stat(d->d_name, &st) == 0) {
+                if (stat(full_path, &st) == 0) {
                     entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
                 }
             }
@@ -755,7 +761,12 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
             bool got_stat = false;
 
             if (entry_type != DT_DIR && entry_type != DT_REG) {
-                if (stat(d->d_name, &st) == 0) {
+                fs::FsPath full_path;
+                std::snprintf(full_path, sizeof(full_path), "%s%s%s",
+                    m_path.s,
+                    (m_path.size() > 0 && m_path.s[m_path.size()-1] != '/') ? "/" : "",
+                    d->d_name);
+                if (stat(full_path, &st) == 0) {
                     entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
                     got_stat = true;
                 }

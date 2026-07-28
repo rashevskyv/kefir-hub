@@ -225,6 +225,8 @@ struct Dir {
     FsDir m_native{};
     DIR* m_stdio{};
     u32 m_mode{};
+    // path used to open this directory (needed for stat fallback on devoptab).
+    FsPath m_path{};
     // opaque per-handle state for a virtual fs (e.g. a zip directory cursor).
     void* m_virtual{};
 };
