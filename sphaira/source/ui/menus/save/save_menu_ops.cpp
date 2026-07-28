@@ -95,7 +95,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Backup successfull!"_i18n);
+            App::Notify("Backup successful!"_i18n);
 
             if (m_save_autosync.Get()) {
                 const auto webdav_locations = GetWebdavLocations();
@@ -205,7 +205,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                         if (R_FAILED(rc)) {
                             App::PushErrorBox(rc, "Auto-sync failed!"_i18n);
                         } else {
-                            App::Notify("Auto-sync successfull!"_i18n);
+                            App::Notify("Auto-sync successful!"_i18n);
                         }
                     });
                 }
@@ -326,7 +326,7 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
 
         if (R_SUCCEEDED(rc)) {
             if (*restored) {
-                App::Notify("Restore successfull!"_i18n);
+                App::Notify("Restore successful!"_i18n);
             } else {
                 App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
             }
@@ -498,7 +498,7 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
         App::PushErrorBox(rc, "Restore failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Restore successfull!"_i18n);
+            App::Notify("Restore successful!"_i18n);
         }
     });
 }
@@ -1210,7 +1210,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 App::PushErrorBox(rc, "Sync failed!"_i18n);
             }
         } else {
-            App::Notify("Sync successfull!"_i18n);
+            App::Notify("Sync successful!"_i18n);
         }
     });
 }

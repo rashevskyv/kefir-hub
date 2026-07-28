@@ -26,6 +26,12 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    // full screen cropper: it never draws the standard menu body and puts its
+    // own bar across the top of the screen, so the shared chrome stays off.
+    auto WantsChrome() const -> bool override {
+        return false;
+    }
+
 private:
     void LoadImageFile();
     void FreeImage();

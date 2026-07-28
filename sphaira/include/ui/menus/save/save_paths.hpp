@@ -26,6 +26,9 @@ auto GetSaveTypeSubdir(u8 data_type) -> fs::FsPath;
 auto GetDbiTypeLetter(u8 data_type) -> char;
 auto ParseDbiBackupNameTimestamp(std::string_view name) -> u64;
 auto ParseBackupNameTimestamp(std::string_view name) -> u64;
+// application id encoded at the start of a DBI backup file name
+// (<016X>_<type>_<ts>_<idx>.zip); 0 if the name is not a DBI backup.
+auto ParseDbiBackupAppId(std::string_view name) -> u64;
 auto GetSaveTypeLabel(u8 data_type) -> const char*;
 auto SaveTypeIndex(u8 data_type) -> size_t;
 auto SaveEntryKey(const FsSaveDataInfo& e) -> std::string;

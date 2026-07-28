@@ -35,6 +35,7 @@ of all configs available](https://github.com/ITotalJustice/ftpsrv/blob/master/as
 
 MTP can be enabled via the Network menu. You can configure which MTP storages are visible and set custom display names for them under **Settings -> Network -> MTP storages**. This allows you to toggle the visibility of the microSD card or the Install folder, and customize how they appear on your PC (e.g. setting a custom label instead of the default "microSD card"). If all storages are disabled, the MTP server will refuse to start and notify you.
 
+- **External MTP Devices (MTP Host Drive Support):** Connecting a smartphone or external media device in MTP mode via a USB OTG cable mounts its internal storage and SD card directly in the root of Sphaira's File Manager (`System Root`), alongside the microSD card and USB Mass Storage drives. You can browse, view, copy files between your phone and the console's SD card, and install games directly from external MTP devices.
 - **Dynamic MTP Control in Tools:** The context menu in **Tools -> Install & Share** features a dynamic **Mount MTP** button. Once MTP is connected, the label automatically changes to **MTP: Active** (rendered in bold for high visibility). Clicking it again stops the MTP connection and reverts the label dynamically.
 - **Robust Repack Installations:** The installation engine features enhanced error recovery when installing repacked or trimmed NSP/NSZ files via USB MTP. If a file is slightly truncated or missing non-critical padding bytes at the end of a stream (common in repacked titles), the installer automatically handles the EOF condition gracefully instead of failing with `Unexpected EOF` or `Invalid Read Size` errors, completing the installation successfully.
 
@@ -74,7 +75,7 @@ For informantion about the install options, [see the wiki](https://github.com/IT
 
 ### Usb (install)
 
-The USB protocol is the same as tinfoil, so tools such as [ns-usbloader](https://github.com/developersu/ns-usbloader) and [fluffy](https://github.com/fourminute/Fluffy) should work with sphaira. You may also use the provided python script found [here](tools/usb_install_pc.py).
+Sphaira supports both **Awoo (TinFoil)** and **GoldLeaf** USB installation protocols out of the box, with automatic header protocol detection upon connection. PC tools such as [ns-usbloader](https://github.com/developersu/ns-usbloader) (in either Awoo or GoldLeaf mode) and [fluffy](https://github.com/fourminute/Fluffy) work seamlessly with Sphaira. You may also use the provided python script found [here](tools/usb_install_pc.py).
 
 ### DBI Backend (install)
 

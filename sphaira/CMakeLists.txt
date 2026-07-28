@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.291)
+set(sphaira_VERSION 0.13.355)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -42,6 +42,7 @@ add_executable(sphaira
     source/ui/menus/filebrowser_ops.cpp
     source/ui/menus/file_picker.cpp
     source/ui/menus/homebrew.cpp
+    source/ui/menus/install_share.cpp
     source/ui/menus/irs_menu.cpp
     source/ui/menus/kefir_menu.cpp
     source/ui/menus/kefir/kefir_changelog.cpp
@@ -108,7 +109,9 @@ add_executable(sphaira
     source/main.cpp
     source/ams_su.c
     source/hats_version.cpp
+    source/net.cpp
     source/nro.cpp
+    source/ntp.cpp
     source/nxlink.cpp
     source/owo.cpp
     source/swkbd.cpp
@@ -134,6 +137,7 @@ add_executable(sphaira
     source/utils/devoptab_romfs.cpp
     source/utils/devoptab_nca.cpp
     source/utils/devoptab_smb2.cpp
+    source/utils/devoptab_mtp.cpp
 
     source/usb/base.cpp
     source/usb/usbds.cpp
@@ -213,6 +217,8 @@ FetchContent_Declare(ftpsrv
     GIT_REPOSITORY https://github.com/ITotalJustice/ftpsrv.git
     GIT_TAG 85b3cf0
     SOURCE_SUBDIR NONE
+    # allow anonymous (no login) FTP access with any/empty username - see script.
+    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_ftpsrv.cmake
 )
 
 FetchContent_Declare(libhaze
@@ -345,11 +351,26 @@ if (EXISTS "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h")
     endif()
 endif()
 
+# PATCH_COMMAND only runs when the dependency is (re)populated, so an existing
+# _deps checkout never picks up a newly added patch. the script is idempotent,
+# so just run it again at configure time.
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_ftpsrv.cmake
+    WORKING_DIRECTORY ${ftpsrv_SOURCE_DIR}
+    RESULT_VARIABLE ftpsrv_patch_result
+)
+if (NOT ftpsrv_patch_result EQUAL 0)
+    message(FATAL_ERROR "failed to patch ftpsrv: ${ftpsrv_patch_result}")
+endif()
+
 set(FTPSRV_LIB_BUILD TRUE)
 set(FTPSRV_LIB_VFS_CUSTOM ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs_nx.h)
 set(FTPSRV_LIB_PATH_SIZE 0x301)
 set(FTPSRV_LIB_SESSIONS 16)
-set(FTPSRV_LIB_BUF_SIZE 1024*64)
+# the transfer loop moves at most one buffer per poll, so a bigger buffer means
+# fewer round trips (and fewer LED/progress callbacks) per megabyte. upstream's
+# sysmod build uses the same 512 KiB.
+set(FTPSRV_LIB_BUF_SIZE 1024*512)
 
 set(FTPSRV_LIB_CUSTOM_DEFINES
     USE_VFS_SAVE=$<BOOL:FALSE>

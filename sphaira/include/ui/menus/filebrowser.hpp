@@ -9,6 +9,7 @@
 #include "hasher.hpp"
 #include <span>
 #include <memory>
+#include <functional>
 
 namespace sphaira::location {
 struct Entry;
@@ -336,11 +337,17 @@ private:
     // exposes the current view (an SD folder or a virtual mount) as an MTP
     // storage so a PC can access it.
     void MountCurrentOverMtp();
+    // lets the user pick how to expose the current folder to a PC (MTP/FTP/HTTP).
+    void ShareCurrentFolder();
+    // turns on the FTP server and reports its address (serves the whole SD card).
+    void ShareCurrentOverFtp();
     void DisplayHash(hash::Type type);
 
     void DisplayOptions();
     void DisplayAdvancedOptions();
     void ShowSourcePicker();
+    // brings up usb host storage on demand and opens the drive it finds.
+    void MountUsbStorage();
     void QueueRemoteMetadata();
     void ApplyRemoteMetadata();
 
@@ -378,6 +385,12 @@ private:
     std::unique_ptr<List> m_list{};
     Vec4 m_list_clip{};
     std::optional<fs::FsPath> m_daybreak_path{};
+
+    // folder-picker mode only: a synthetic "select current folder" row is
+    // pinned to the top of every listing. m_picker_view owns the view indices
+    // (span target) so the synthetic entry can precede the real, sorted ones.
+    std::vector<u32> m_picker_view{};
+    u32 m_picker_entry_index{};
 
     // this keeps track of the highlighted file before opening a folder
     // if the user presses B to go back to the previous dir
@@ -484,6 +497,15 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    // folder-picker mode: run the browser purely to choose a folder (e.g. a
+    // firmware dump). the callback receives the chosen folder path. selection
+    // is by pressing START, or by opening any file inside the target folder.
+    using FolderPickCallback = std::function<void(const fs::FsPath&)>;
+    void SetFolderPicker(FolderPickCallback cb);
+    auto IsFolderPicker() const -> bool { return static_cast<bool>(m_on_folder_picked); }
+    // confirm and commit the chosen folder (asks first, then closes the picker).
+    void ConfirmFolderPick(const fs::FsPath& folder);
+
     static auto GetNewPath(const fs::FsPath& root_path, const fs::FsPath& file_path) -> fs::FsPath {
         return fs::AppendPath(root_path, file_path);
     }
@@ -521,6 +543,7 @@ private:
 
     std::vector<FileAssocEntry> m_assoc_entries{};
     SelectedStash m_selected{};
+    FolderPickCallback m_on_folder_picked{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Alphabetical};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

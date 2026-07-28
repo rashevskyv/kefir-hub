@@ -488,6 +488,16 @@ enum OsError {
     OsError_ResultInternalError = 0x7FE03,
 };
 
+// libnx returns these bare usb-module (140) results out of
+// usbDsParseReportData() when a URB completes with a status other than 0x3
+// (finished). libnx writes them as plain hex constants, so there is no symbol
+// to compare against -- hence the copies here.
+enum UsbError {
+    UsbError_UrbFailed = 0x828C,    // urb_status 0x4
+    UsbError_UrbCancelled = 0x748C, // urb_status 0x5
+    UsbError_UrbBadStatus = 0x108C, // any other urb_status
+};
+
 enum NcmError {
     NcmError_ContentNotFound = 0xA05,
     NcmError_ContentMetaNotFound = 0xE05,
@@ -661,6 +671,28 @@ enum class SphairaResult : Result {
     // failed to delete the currently installed interface translation while
     // installing a new one; the ui offers remove + reboot instead.
     TranslationRemoveExistingFailed,
+    // the mtp/stream host stopped sending data mid-transfer without closing the
+    // file (copy cancelled on the pc, cable pulled, host-side timeout). distinct
+    // from TransferCancelled, which is the user cancelling on the console.
+    TransferInterrupted,
+
+    // background clock sync.
+    NtpNoConnection,
+    NtpResolveFailed,
+    NtpSocketFailed,
+    NtpSendFailed,
+    NtpRecvFailed,
+    // reply was not a well formed server response (wrong mode, kiss-o'-death,
+    // or a timestamp outside any plausible range).
+    NtpBadReply,
+    // the time service refused the write; on most setups this means time:s is
+    // not reachable from where sphaira is running.
+    NtpSetTimeFailed,
+
+    // the console has no network connection and one could not be brought up.
+    // the ui turns this into a plain "your internet is off" message instead of
+    // showing a raw nifm code.
+    NetNoConnection,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -785,6 +817,15 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(SaveSyncFailed),
     MAKE_SPHAIRA_RESULT_ENUM(StreamUnexpectedEof),
     MAKE_SPHAIRA_RESULT_ENUM(TranslationRemoveExistingFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(TransferInterrupted),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpNoConnection),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpResolveFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpSocketFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpSendFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpRecvFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpBadReply),
+    MAKE_SPHAIRA_RESULT_ENUM(NtpSetTimeFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(NetNoConnection),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

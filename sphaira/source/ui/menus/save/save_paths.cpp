@@ -93,6 +93,30 @@ auto ParseBackupNameTimestamp(std::string_view name) -> u64 {
     return 0;
 }
 
+auto ParseDbiBackupAppId(std::string_view name) -> u64 {
+    // must look like "<16 hex>_<letter>_..." (matches ParseDbiBackupNameTimestamp).
+    if (name.size() < 19 || name[16] != '_' || name[18] != '_') {
+        return 0;
+    }
+
+    u64 id{};
+    for (size_t i = 0; i < 16; i++) {
+        const char c = name[i];
+        int nibble;
+        if (c >= '0' && c <= '9') {
+            nibble = c - '0';
+        } else if (c >= 'a' && c <= 'f') {
+            nibble = c - 'a' + 10;
+        } else if (c >= 'A' && c <= 'F') {
+            nibble = c - 'A' + 10;
+        } else {
+            return 0;
+        }
+        id = (id << 4) | static_cast<u64>(nibble);
+    }
+    return id;
+}
+
 auto GetSaveTypeLabel(u8 data_type) -> const char* {
     switch (data_type) {
         case FsSaveDataType_System:     return "System";
@@ -130,7 +154,9 @@ auto IsSystemLikeSave(u8 data_type) -> bool {
 
 auto DisplayEntryKey(const Entry& e) -> std::string {
     char key[0x40];
-    if (IsSystemLikeSave(e.save_data_type)) {
+    if (e.is_backup) {
+        std::snprintf(key, sizeof(key), "backup:%016lX", e.application_id);
+    } else if (IsSystemLikeSave(e.save_data_type)) {
         std::snprintf(key, sizeof(key), "system:%u:%016lX", e.save_data_type, e.system_save_data_id);
     } else {
         std::snprintf(key, sizeof(key), "app:%016lX", e.application_id);

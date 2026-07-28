@@ -74,9 +74,7 @@
   "USB transfer (Switch 2 Switch)": "USBで転送 (Switch 2 Switch)",
   "/dev/null (Speed Test)": "/dev/null (スピードテスト)",
   "Dumping": "吸出し中",
-  "Dump successfull!": "吸出し完了!",
   "Dump failed!": "吸出し失敗!",
-  "Delete successfull!": "削除完了!",
   "Delete failed!": "削除失敗!",
   "Success": "完了",
   "Themezer": "テーマ設定者",
@@ -295,7 +293,6 @@
   "Select upload location": "アップロードの位置を設定",
   "No upload locations set!": "アップロードの位置が設定されていません",
   "Uploading": "アップロード中",
-  "Upload successfull!": "アップロード完了!",
   "Upload failed!": "アップロード失敗!",
   "Hash": "ハッシュ",
   "Hash Options": "ハッシュ設定",
@@ -557,5 +554,8 @@
   "Update language packs": "言語パックを更新する",
   "Update the UltraHand language package list.": "UltraHand 言語パッケージ of リストを更新します。",
   "Updating language packs...": "言語パックを更新しています...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "この翻訳を適用するには、本体設定で必要なバリエーションのいずれかを選択する必要があります。\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "この翻訳を適用するには、本体設定で必要なバリエーションのいずれかを選択する必要があります。\n",
+  "Dump successful!": "吸出し完了!",
+  "Upload successful!": "アップロード完了!",
+  "Delete successful!": "削除完了!"
 }

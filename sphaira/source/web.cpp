@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "ui/progress_box.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "yati/yati.hpp"
 #include "yati/source/stream.hpp"
 
@@ -72,9 +73,50 @@ auto GetShareFolderRoot() -> fs::FsPath {
     return g_share_folder_root;
 }
 
+auto BuildRootSelectionPage() -> std::string {
+    const auto share_root = GetShareFolderRoot().toString();
+    std::string clean = share_root;
+    while (clean.length() > 1 && clean.back() == '/') clean.pop_back();
+    const char* leaf = std::strrchr(clean.c_str(), '/');
+    std::string mounted_name = (leaf && leaf[1]) ? (leaf + 1) : "Mounted Folder";
+
+    std::string body;
+    body.reserve(8192);
+    body += FOLDER_PAGE_HEADER;
+    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div>";
+    body += "<div class=\"crumbs\"><a href=\"/\">Root</a></div></header>";
+    body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
+
+    // Item 1: Mounted folder
+    const auto encoded_mounted = UrlEncode(share_root);
+    body += "<a class=\"item\" href=\"/?path=";
+    body += encoded_mounted;
+    body += "\"><div class=\"thumbnail-box\">"
+            "<svg viewBox=\"0 0 24 24\" fill=\"#38bdf8\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
+            "</div>";
+    body += "<div class=\"info\"><span class=\"name\">";
+    body += HtmlEscape(mounted_name);
+    body += "</span><span class=\"meta\">Mounted Folder (" + HtmlEscape(share_root) + ")</span></div></a>";
+
+    // Item 2: SD Card
+    body += "<a class=\"item\" href=\"/?path=/\"><div class=\"thumbnail-box\">"
+            "<svg viewBox=\"0 0 24 24\" fill=\"#4ade80\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
+            "</div>";
+    body += "<div class=\"info\"><span class=\"name\">sd</span><span class=\"meta\">microSD Card</span></div></a>";
+
+    body += "</main></div></body></html>";
+    return body;
+}
+
 auto BuildFolderPage(std::string path_str) -> std::string {
+    const auto share_root = GetShareFolderRoot().toString();
+    const bool has_share_root = !share_root.empty() && share_root != "/";
+
     if (path_str.empty()) {
-        path_str = GetShareFolderRoot().toString();
+        if (has_share_root) {
+            return BuildRootSelectionPage();
+        }
+        path_str = "/";
     }
     const auto abs_path = CanonicalizeAbsolutePath(path_str);
 
@@ -97,7 +139,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/?path=/\">SD Card</a>";
+    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/\">Root</a>";
 
     std::string crumb_accum;
     size_t start{};
@@ -127,17 +169,25 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"addFilesToUploadQueue(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
-    if (abs_path != "/") {
-        auto parent = abs_path;
-        if (const auto slash = parent.find_last_of('/'); slash != std::string::npos) {
-            parent.resize(slash);
-        }
-        if (parent.empty()) {
-            parent = "/";
+    if (abs_path != "/" || has_share_root) {
+        std::string parent_href = "/";
+        if (abs_path != "/") {
+            auto parent = abs_path;
+            if (const auto slash = parent.find_last_of('/'); slash != std::string::npos) {
+                parent.resize(slash);
+            }
+            if (parent.empty()) {
+                parent = "/";
+            }
+            if (has_share_root && abs_path == share_root) {
+                parent_href = "/";
+            } else {
+                parent_href = "/?path=" + UrlEncode(parent);
+            }
         }
 
-        body += "<a class=\"item\" href=\"/?path=";
-        body += UrlEncode(parent);
+        body += "<a class=\"item\" href=\"";
+        body += parent_href;
         body += "\"><div class=\"thumbnail-box\">"
                 "<svg viewBox=\"0 0 24 24\" fill=\"#ffca28\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
                 "</div>";
@@ -391,9 +441,22 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     ON_SCOPE_EXIT(g_transfer_busy.store(false));
 
     const auto raw_path = GetQueryValue(query, "path");
-    const auto dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
     const auto raw_name = GetQueryValue(query, "name");
     const auto name = SanitizeFileName(raw_name);
+
+    // homebrew (.nro) is routed to /switch/<name>/ so it lands in the homebrew
+    // menu, mirroring the MTP/USB root-drop behaviour.
+    const bool is_nro = ExtensionEquals(PathExtension(name), "nro");
+    std::string dir;
+    if (is_nro) {
+        auto stem = name;
+        if (const auto dot = stem.find_last_of('.'); dot != std::string::npos) {
+            stem.resize(dot);
+        }
+        dir = "/switch/" + stem;
+    } else {
+        dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
+    }
 
     const auto install_param = GetQueryValue(query, "install");
     const bool direct_install = (install_param == "1");
@@ -459,12 +522,20 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     }
 
     fs::FsNativeSd fs;
-    if (!fs.DirExists(dir)) {
+    fs::FsPath out_path;
+    if (is_nro) {
+        fs.CreateDirectoryRecursively(dir); // ensure /switch/<name>/ exists.
+        // replace any previous copy rather than adding a "name (1).nro"
+        // sibling, which would show up as a duplicate homebrew entry.
+        out_path = fs::AppendPath(dir, name);
+        fs.DeleteFile(out_path);
+    } else if (!fs.DirExists(dir)) {
         SendResponse(sock, "404 Not Found", "text/plain", "Upload folder not found");
         return;
+    } else {
+        out_path = UniqueUploadPath(fs, dir, name);
     }
 
-    const auto out_path = UniqueUploadPath(fs, dir, name);
     if (auto rc = fs.CreateFile(out_path, content_length, 0); R_FAILED(rc) && rc != FsError_PathAlreadyExists) {
         SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not create file");
         return;
@@ -674,6 +745,16 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     }
 
     upload_guard.success = true;
+
+    if (is_nro) {
+        fs.Commit();
+        log_write("[WEB] installed homebrew to %s\n", out_path.s);
+        // the homebrew menu rescans /switch on its next frame.
+        ui::menu::homebrew::SignalChange();
+        SendResponse(sock, "200 OK", "text/plain", "Installed");
+        return;
+    }
+
     SendResponse(sock, "200 OK", "text/plain", "Uploaded");
 }
 
@@ -1252,7 +1333,12 @@ ui::ProgressBox* WebGetProgressBox() {
 }
 
 void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title) {
-    App::Push<ui::ProgressBox>(qr_image, title, url,
+    App::PopToMenu();
+    // Route the server box through the detached-transfer path (like MTP) instead
+    // of pushing it as a blocking widget. This grants it the same UX as other
+    // transfers: L3 minimises it to a corner badge (so the menu stays usable
+    // while the server / an install runs) and B / Stop cancels it.
+    App::PushTransfer(std::make_unique<ui::ProgressBox>(qr_image, title, url,
         [url](ui::ProgressBox* pbox) -> Result {
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same non-guest Wi-Fi. Press B to stop."_i18n
@@ -1295,7 +1381,7 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
         [qr_image](Result) {
             nvgDeleteImage(App::GetVg(), qr_image);
         }
-    );
+    ));
 }
 
 bool WebShareIsRunning() {

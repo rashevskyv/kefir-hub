@@ -16,7 +16,22 @@ DEST_CONTENTS_DIR := $(DEST_DIR)/atmosphere/contents
 DEST_SYSMODULE_DIR := $(DEST_CONTENTS_DIR)/$(SPHAIRA_FAN_TITLE_ID)
 
 # Налаштування nxlink
-NXLINK_IP := 192.168.50.69
+NXLINK_IP_DEFAULT := 192.168.50.69
+
+# Адресу консолі можна дописати позиційно: `make nxlink 192.168.50.11`.
+# make сприймає такий аргумент як ще одну ціль, тож усе, що не є відомою
+# ціллю, забираємо як адресу і гасимо порожнім правилом -- інакше збірка
+# впаде на "No rule to make target". Робиться лише для мережевих цілей, щоб
+# не перехопити щось на кшталт `make nxlink clean`.
+KNOWN_GOALS := all build copy nxlink ftp pftp clean help
+NET_GOALS := nxlink ftp pftp
+
+ifneq ($(filter $(NET_GOALS),$(MAKECMDGOALS)),)
+  NET_ADDR_ARG := $(firstword $(filter-out $(KNOWN_GOALS),$(MAKECMDGOALS)))
+endif
+
+# Пріоритет: NXLINK_IP=... у командному рядку > позиційний аргумент > типова.
+NXLINK_IP ?= $(if $(NET_ADDR_ARG),$(NET_ADDR_ARG),$(NXLINK_IP_DEFAULT))
 
 # Налаштування FTP
 FTP_IP ?= $(NXLINK_IP)
@@ -24,6 +39,12 @@ FTP_PORT ?= 5000
 
 # === Targets ===
 .PHONY: all build copy nxlink clean help ftp pftp
+
+ifneq ($(NET_ADDR_ARG),)
+.PHONY: $(NET_ADDR_ARG)
+$(NET_ADDR_ARG):
+	@:
+endif
 
 # Команда за замовчуванням (make або make all)
 all: copy
@@ -81,7 +102,12 @@ help:
 	@echo "  make / make all    - Build Sphaira and copy result to $(DEST_NRO_FILE)"
 	@echo "  make build         - Only build Sphaira (override jobs with SPHAIRA_BUILD_JOBS=N)"
 	@echo "  make copy          - Build (if needed) and copy result"
-	@echo "  make nxlink        - Build (if needed) and send via nxlink to $(NXLINK_IP)"
-	@echo "  make ftp / pftp    - Build (if needed) and send via FTP to $(FTP_IP):$(FTP_PORT)"
+	@echo "  make nxlink        - Send the built NRO via nxlink to $(NXLINK_IP)"
+	@echo "  make nxlink <ip>   - Same, but to the given address (e.g. make nxlink 192.168.50.11)"
+	@echo "  make ftp / pftp    - Send the built NRO and sysmodule via FTP to $(FTP_IP):$(FTP_PORT)"
+	@echo "  make ftp <ip>      - Same, but to the given address"
 	@echo "  make clean         - Remove build artifacts and copied NRO"
 	@echo "  make help          - Show this help message"
+	@echo ""
+	@echo "Default console address: $(NXLINK_IP_DEFAULT)"
+	@echo "Override it positionally as above, or with NXLINK_IP=<ip> / FTP_IP=<ip>."

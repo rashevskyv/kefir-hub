@@ -22,6 +22,7 @@
 #include "fs_zip.hpp"
 #include "fs_ncm.hpp"
 #include "haze_helper.hpp"
+#include "ftpsrv_helper.hpp"
 #include "nacp_util.hpp"
 #include "nro.hpp"
 #include "defines.hpp"
@@ -41,6 +42,7 @@
 #include "yati/source/file.hpp"
 
 #include <minIni.h>
+#include <usbhsfs.h>
 #include <minizip/zip.h>
 #include <minizip/unzip.h>
 #include <dirent.h>
@@ -204,7 +206,17 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 return;
             }
 
-            if (IsSd() && m_is_update_folder && m_daybreak_path.has_value()) {
+            // folder-picker mode: row 0 (the synthetic "select current folder"
+            // action) or opening any file commits the current folder;
+            // directories keep navigating so the user can drill down.
+            if (m_menu->IsFolderPicker()) {
+                if (m_index == 0 || GetEntry().IsFile()) {
+                    m_menu->ConfirmFolderPick(m_path);
+                    return;
+                }
+            }
+
+            if (!m_menu->IsFolderPicker() && IsSd() && m_is_update_folder && m_daybreak_path.has_value()) {
                 App::Push<OptionBox>("Open with DayBreak?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
                     if (op_index && *op_index) {
                         // daybreak uses native fs so do not use nro_add_arg_file
@@ -412,6 +424,16 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
 
         const float x_offset = 15.f;
 
+        // folder-picker mode: row 0 is the synthetic "select current folder"
+        // action; draw it distinctly and skip the normal file/dir rendering.
+        if (m_menu->IsFolderPicker() && i == 0) {
+            DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
+            gfx::drawText(vg, x + x_offset + 65, y + (h / 2.f), 20.f,
+                "Select current folder"_i18n.c_str(), nullptr,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id));
+            return;
+        }
+
         if (e.IsDir()) {
             DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
             if (m_fs_entry.type == FsType::Root && e.virtual_target_entry.type == FsType::Network) {
@@ -572,8 +594,10 @@ void FsView::OnFocusGained() {
             SetFs("root:/", root_entry);
         }
     } else if (m_fs_entry.type == FsType::Root) {
-        // sources may have been added, edited or removed while unfocused.
-        SortAndFindLastFile(true);
+        // sources may have changed while unfocused -- a network location added
+        // or removed, or a usb drive plugged in or pulled. Re-scan so the root
+        // reflects what is currently connected, not just re-sort the old list.
+        Scan(m_path.empty() ? m_fs->Root() : m_path);
     } else if (m_metadata_paused) {
         m_metadata_paused = false;
         QueueRemoteMetadata();
@@ -831,6 +855,68 @@ void FsView::MountCurrentOverMtp() {
     }
 }
 
+void FsView::ShareCurrentFolder() {
+    // MTP can also share virtual mounts (content / archive); FTP and HTTP serve
+    // real microSD folders only.
+    const bool can_mtp = IsSd() || m_fs_entry.type == FsType::Content || m_fs_entry.type == FsType::Archive;
+    const bool can_net = IsSd();
+
+    PopupList::Items items;
+    std::vector<int> actions; // 0 = MTP, 1 = FTP, 2 = HTTP.
+    if (can_mtp) { items.emplace_back("MTP"); actions.push_back(0); }
+    if (can_net) { items.emplace_back("FTP"); actions.push_back(1); }
+    if (can_net) { items.emplace_back("HTTP"); actions.push_back(2); }
+
+    if (items.empty()) {
+        App::Notify("This source cannot be shared"_i18n);
+        return;
+    }
+
+    App::Push<PopupList>("Mount over..."_i18n, items, [this, actions](std::optional<s64> op_index){
+        if (!op_index || *op_index < 0 || *op_index >= (s64)actions.size()) {
+            return;
+        }
+        switch (actions[*op_index]) {
+            case 0: MountCurrentOverMtp(); break;
+            case 1: ShareCurrentOverFtp(); break;
+            case 2: ShareFolder(); break;
+        }
+    });
+}
+
+void FsView::ShareCurrentOverFtp() {
+    if (!IsSd()) {
+        App::Notify("Only microSD folders can be shared over FTP"_i18n);
+        return;
+    }
+
+    ftpsrv::SetFtpMountedFolder(m_path.toString());
+
+    if (!App::GetFtpEnable()) {
+        App::SetFtpEnable(true);
+    }
+
+    if (!App::GetFtpEnable()) {
+        App::Push<OptionBox>("Failed to start FTP!"_i18n, "OK"_i18n);
+        return;
+    }
+
+    u32 ip = 0;
+    nifmGetCurrentIpAddress(&ip);
+    if (ip) {
+        char buf[128];
+        const auto mname = ftpsrv::GetFtpMountedName();
+        if (!mname.empty()) {
+            std::snprintf(buf, sizeof(buf), "ftp://%u.%u.%u.%u:%u (%s)", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, (unsigned)App::GetFtpPort(), mname.c_str());
+        } else {
+            std::snprintf(buf, sizeof(buf), "ftp://%u.%u.%u.%u:%u", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, (unsigned)App::GetFtpPort());
+        }
+        App::Notify(std::string("FTP: ") + buf);
+    } else {
+        App::Notify("FTP enabled (no network connection)"_i18n);
+    }
+}
+
 
 
 
@@ -869,6 +955,36 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         std::strcpy(sd.name, "microSD card");
         sd.type = FsDirEntryType_Dir;
         dir_entries.push_back(sd);
+
+        // connected usb mass storage sits directly under the sd card, so a
+        // plugged in drive turns up where the user is already looking rather
+        // than only in the sources sidebar. Empty when the hdd option is off.
+        const auto stdio_locations = location::GetStdio(false);
+        for (const auto& e : stdio_locations) {
+            FsDirectoryEntry hdd{};
+            std::snprintf(hdd.name, sizeof(hdd.name), "%s", e.name.c_str());
+            hdd.type = FsDirEntryType_Dir;
+            dir_entries.push_back(hdd);
+        }
+
+        const auto mtp_locations = location::GetMtpHostDevices(false);
+        for (const auto& e : mtp_locations) {
+            FsDirectoryEntry mtp_dev{};
+            std::snprintf(mtp_dev.name, sizeof(mtp_dev.name), "%s", e.name.c_str());
+            mtp_dev.type = FsDirEntryType_Dir;
+            dir_entries.push_back(mtp_dev);
+        }
+
+        const u32 phys_devices = usbHsFsGetPhysicalDeviceCount();
+        if (!mtp_locations.empty()) {
+            App::Notify("MTP Host: Connected " + std::to_string(mtp_locations.size()) + " storage(s)");
+        } else if (!stdio_locations.empty()) {
+            App::Notify("USB Host: Mounted " + std::to_string(stdio_locations.size()) + " drive(s)");
+        } else if (phys_devices > 0) {
+            App::Notify("USB Host: Device detected! (No FAT32/exFAT volume mounted)");
+        } else {
+            App::Notify("USB Host: No physical device detected on USB port");
+        }
 
         if (App::GetGodModeEnabled()) {
             FsDirectoryEntry nand{};
@@ -914,6 +1030,18 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
                 fe.virtual_target_entry.type = FsType::ImageSd;
                 std::strcpy(fe.virtual_target_entry.name, "Image microSD card");
                 std::strcpy(fe.virtual_target_entry.root, "/");
+            } else if (const auto hdd = std::ranges::find_if(stdio_locations,
+                [&e](const auto& loc) { return loc.name == e.name; }); hdd != stdio_locations.end()) {
+                fe.virtual_target_entry.type = FsType::Stdio;
+                std::strcpy(fe.virtual_target_entry.name, hdd->name.c_str());
+                std::strcpy(fe.virtual_target_entry.root, hdd->mount.c_str());
+                fe.virtual_target_entry.flags = hdd->flags;
+            } else if (const auto mtp = std::ranges::find_if(mtp_locations,
+                [&e](const auto& loc) { return loc.name == e.name; }); mtp != mtp_locations.end()) {
+                fe.virtual_target_entry.type = FsType::Stdio;
+                std::strcpy(fe.virtual_target_entry.name, mtp->name.c_str());
+                std::strcpy(fe.virtual_target_entry.root, mtp->mount.c_str());
+                fe.virtual_target_entry.flags = mtp->flags;
             } else {
                 for (const auto& loc : network_locations) {
                     if (loc.name == e.name) {
@@ -970,10 +1098,22 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         }
     }
 
+    // folder-picker mode: add a synthetic entry that Sort() pins to the top of
+    // the listing so every folder offers "select current folder" as row 0.
+    if (m_menu->IsFolderPicker()) {
+        FileEntry synth{};
+        synth.type = FsDirEntryType_Dir;
+        synth.metadata_loaded = true;
+        synth.file_count = 0;
+        synth.dir_count = 0;
+        m_picker_entry_index = static_cast<u32>(m_entries.size());
+        m_entries.emplace_back(synth);
+    }
+
     Sort();
 
-    // quick check to see if this is an update folder
-    m_is_update_folder = R_SUCCEEDED(CheckIfUpdateFolder());
+    // quick check to see if this is an update folder (never in picker mode).
+    m_is_update_folder = !m_menu->IsFolderPicker() && R_SUCCEEDED(CheckIfUpdateFolder());
 
     SetIndex(0);
     QueueRemoteMetadata();
@@ -1001,6 +1141,10 @@ void FsView::QueueRemoteMetadata() {
 
     mutexLock(&m_metadata_mutex);
     for (size_t i = 0; i < m_entries.size(); i++) {
+        // never queue metadata for the synthetic picker row.
+        if (m_menu->IsFolderPicker() && i == m_picker_entry_index) {
+            continue;
+        }
         auto& entry = m_entries[i];
         const auto wanted = entry.IsDir() || (entry.IsFile() && !entry.metadata_loaded);
         if (!wanted) {
@@ -1176,6 +1320,14 @@ void FsView::Sort() {
     }
 
     std::sort(m_entries_current.begin(), m_entries_current.end(), sorter);
+
+    // folder-picker mode: prepend the synthetic "select current folder" row so
+    // it is always first, regardless of sort order.
+    if (m_menu->IsFolderPicker() && m_picker_entry_index < m_entries.size()) {
+        m_picker_view.assign(1, m_picker_entry_index);
+        m_picker_view.insert(m_picker_view.end(), m_entries_current.begin(), m_entries_current.end());
+        m_entries_current = m_picker_view;
+    }
 }
 
 void FsView::SortAndFindLastFile(bool scan) {
@@ -1766,11 +1918,12 @@ void FsView::DisplayOptions() {
         }
     }
 
-    // MTP: expose the current folder or virtual mount (content / archive) to a PC.
+    // expose the current folder or virtual mount (content / archive) to a PC
+    // over MTP, FTP or HTTP (chosen from a popup).
     if (!is_root && (IsSd() || m_fs_entry.type == FsType::Content || m_fs_entry.type == FsType::Archive)) {
-        options->Add<SidebarEntryCallback>("Mount over MTP"_i18n, [this](){
-            MountCurrentOverMtp();
-        }, "Expose this folder or mount to a PC over USB MTP."_i18n);
+        options->Add<SidebarEntryCallback>("Mount"_i18n, [this](){
+            ShareCurrentFolder();
+        }, "Expose this folder to a PC over MTP, FTP or HTTP."_i18n);
     }
     if (sphaira::haze::HasPinned()) {
         options->Add<SidebarEntryCallback>("Unmount MTP"_i18n, [](){
@@ -2003,6 +2156,13 @@ void FsView::ShowSourcePicker() {
         mount_items.push_back(e.name);
     }
 
+    const auto mtp_locations = location::GetMtpHostDevices(false);
+    for (const auto& e: mtp_locations) {
+        u32 flags{FsEntryFlag_ReadOnly};
+        fs_entries.emplace_back(e.name, e.mount, FsType::Stdio, flags);
+        mount_items.push_back(e.name);
+    }
+
     for (const auto& e: FS_ENTRIES) {
         fs_entries.emplace_back(e);
         mount_items.push_back(i18n::get(e.name));
@@ -2068,6 +2228,10 @@ void FsView::ShowSourcePicker() {
         }
     }, current_index, "Switch the file source to a different storage or mount point."_i18n);
 
+    options->Add<SidebarEntryCallback>("Mount USB drive"_i18n, [this](){
+        MountUsbStorage();
+    }, "Bring up a connected USB drive and open it."_i18n);
+
     options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
         AddNetworkLocationInteractive([this](){
             ShowSourcePicker();
@@ -2075,8 +2239,49 @@ void FsView::ShowSourcePicker() {
     }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
 }
 
+void FsView::MountUsbStorage() {
+    if (!App::GetHddEnable()) {
+        App::Push<OptionBox>("USB storage is turned off in Settings, under Sources."_i18n, "OK"_i18n);
+        return;
+    }
+
+    // mtp and usb host storage cannot both own the usb port, so at boot
+    // usbhsfs is skipped entirely when mtp is on. Say so instead of reporting
+    // "no drive found", which would send the user looking at the cable.
+    if (haze::IsRunning()) {
+        haze::Exit();
+    }
+
+    usbHsFsSetFileSystemMountFlags(App::GetWriteProtect() ? UsbHsFsMountFlags_ReadOnly : 0);
+    // a no-op when the stack is already up; this is the path that recovers the
+    // case where it was never started at boot.
+    usbHsFsInitialize(1);
+
+    const auto devices = location::GetStdio(false);
+    if (devices.empty()) {
+        App::Push<OptionBox>("No USB drive found.\nCheck that it has power and is formatted as FAT32, exFAT or NTFS."_i18n, "OK"_i18n);
+        return;
+    }
+
+    // open the drive straight away: mounting it was the point.
+    const auto& e = devices.front();
+    FsEntry entry{};
+    std::strcpy(entry.name, e.name.c_str());
+    std::strcpy(entry.root, e.mount.c_str());
+    entry.type = FsType::Stdio;
+    entry.flags = e.flags;
+
+    App::PopToMenu();
+    App::Notify("Mounted"_i18n + ": " + e.name);
+    SetFs(entry.root, entry);
+}
+
 Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuBase{"FileBrowser"_i18n, flags} {
     SetAction(Button::START, Action{"Options"_i18n, [this](){
+        if (IsFolderPicker()) {
+            ConfirmFolderPick(view->m_path);
+            return;
+        }
         if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
             view->DisplayAdvancedOptions();
         } else {
@@ -2135,6 +2340,35 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     view->ConnectToLocation(target_entry);
 }
 
+void Menu::SetFolderPicker(FolderPickCallback cb) {
+    m_on_folder_picked = std::move(cb);
+    SetTitle("Select firmware folder"_i18n);
+    // relabel START so the "select this folder" affordance is visible.
+    SetAction(Button::START, Action{"Select folder"_i18n, [this](){
+        ConfirmFolderPick(view->m_path);
+    }});
+}
+
+void Menu::ConfirmFolderPick(const fs::FsPath& folder) {
+    if (!m_on_folder_picked) {
+        return;
+    }
+
+    const std::string path_str = folder.s[0] ? folder.s : "/";
+    App::Push<OptionBox>(
+        "Install firmware from this folder?"_i18n + "\n\n" + path_str,
+        "Cancel"_i18n, "Select"_i18n, 1,
+        [this, folder](auto op_index) {
+            if (op_index && *op_index == 1 && m_on_folder_picked) {
+                // hand the folder back to the caller, then close the picker.
+                // the caller acts on regaining focus (nothing is pushed over
+                // this soon-to-be-popped browser).
+                m_on_folder_picked(folder);
+                SetPop();
+            }
+        });
+}
+
 void Menu::AddSelectedEntries(SelectedType type) {
     auto entries = view->GetSelectedEntries();
     if (entries.empty()) {
@@ -2156,6 +2390,10 @@ void Menu::AddSelectedEntries(SelectedType type) {
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
+    if (auto* usb_evt = usbHsFsGetStatusChangeUserEvent(); usb_evt && R_SUCCEEDED(waitSingle(waiterForUEvent(usb_evt), 0))) {
+        ueventSignal(&g_change_uevent);
+    }
+
     if (R_SUCCEEDED(waitSingle(waiterForUEvent(&g_change_uevent), 0))) {
         if (IsSplitScreen()) {
             view_left->SortAndFindLastFile(true);

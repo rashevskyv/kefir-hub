@@ -7,6 +7,10 @@
 #include <unordered_map>
 #include <concepts>
 
+namespace sphaira::ui::menu {
+struct MenuBase;
+} // namespace sphaira::ui::menu
+
 namespace sphaira::ui {
 
 struct uiButton final : Object {
@@ -45,6 +49,29 @@ struct Widget : public Object {
 
     virtual auto IsMenu() const -> bool {
         return false;
+    }
+
+    // The widget that owns the footer hint row on this one's behalf. A
+    // container (MainMenu) hands it to the page it is currently showing, which
+    // is what the user actually drives; everything else owns its own row.
+    // Only one widget in the stack draws hints - see App::OwnsFooter().
+    virtual auto GetFooterOwner() -> Widget* {
+        return this;
+    }
+
+    // The menu whose header/footer chrome represents this widget. App draws it
+    // as a top layer once the menu body is down, so no list row can paint over
+    // the header or the footer. Containers forward to the page they show.
+    virtual auto GetChromeOwner() -> menu::MenuBase* {
+        return nullptr;
+    }
+
+    // Region this widget paints over opaquely. The menu underneath skips the
+    // header chrome that falls inside it, so a side panel owns that corner
+    // outright rather than letting the status block ghost through its
+    // background. An empty rect (the default) occludes nothing.
+    virtual auto GetChromeOcclusion() const -> Vec4 {
+        return {};
     }
 
     auto HasAction(Button button) const -> bool;

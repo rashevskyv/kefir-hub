@@ -10,6 +10,11 @@
 
 namespace sphaira::yati::source {
 
+enum class UsbProtocol {
+    Tinfoil,
+    Goldleaf
+};
+
 struct Usb final : Base {
     Usb(u64 transfer_timeout);
     ~Usb();
@@ -37,6 +42,7 @@ private:
     std::unique_ptr<usb::UsbDs> m_usb;
     std::string m_transfer_file_name{};
     u8 m_flags{};
+    UsbProtocol m_protocol{UsbProtocol::Tinfoil};
 };
 
 } // namespace sphaira::yati::source

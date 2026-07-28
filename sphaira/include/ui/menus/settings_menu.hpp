@@ -2,6 +2,7 @@
 
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/scrolling_text.hpp"
 #include <functional>
 #include <memory>
 #include <string>
@@ -19,6 +20,9 @@ enum class SettingsItemKind {
     Folder,
     Download,
     Favorite,
+    // a caption that splits a long category into blocks. Drawn small and
+    // dimmed, and the cursor steps over it -- it is a label, not a row.
+    Header,
 };
 
 struct SettingsItem {
@@ -28,6 +32,11 @@ struct SettingsItem {
     std::function<void()> action;
     SettingsItemKind kind{SettingsItemKind::Normal};
     std::string id{};
+    // set on a Folder row that opens *inside* the settings menu: the right pane
+    // is replaced by these items while the category column stays put, with the
+    // folder listed indented under its category. Built on open so the rows read
+    // current state. When unset, a Folder row just runs its action.
+    std::function<std::vector<SettingsItem>()> folder_items{};
 };
 
 struct SettingsCategory {
@@ -58,6 +67,25 @@ private:
     void OnSelect();
     void OnBack();
 
+    // the left column lists every category plus, while a folder is open, the
+    // folder itself on the row below its category. "row" is an index into that
+    // list, "category index" an index into m_categories.
+    auto CategoryRowCount() const -> s64;
+    auto CategoryRow() const -> s64;
+    void SetCategoryRow(s64 row);
+
+    // the right pane shows the open folder's items when there is one, and the
+    // selected category's items otherwise.
+    auto CurrentItems() const -> const std::vector<SettingsItem>&;
+    auto CurrentItemIndex() const -> s64;
+    void SetCurrentItemIndex(s64 index);
+
+    void OpenFolder(const SettingsItem& item);
+    void CloseFolder();
+    void SetFolderIndex(s64 index);
+
+    void DrawItemRow(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected, bool focused);
+
 private:
     std::vector<SettingsCategory> m_categories;
     s64 m_category_index{};
@@ -65,6 +93,22 @@ private:
     FocusPane m_focus_pane{FocusPane::Categories};
     std::unique_ptr<List> m_category_list;
     std::unique_ptr<List> m_item_list;
+
+    // open folder page, drawn in place of the category's items.
+    bool m_folder_open{};
+    std::string m_folder_label{};
+    std::vector<SettingsItem> m_folder_items{};
+    std::function<std::vector<SettingsItem>()> m_folder_builder{};
+    s64 m_folder_index{};
+    // the category pane's cursor and scroll, restored when the folder closes.
+    s64 m_saved_item_index{};
+    float m_saved_item_yoff{};
+
+    // label and description are each one line: the label must never wrap onto
+    // the second line, because that is where the description lives. Only the
+    // selected row scrolls, the rest are simply clipped.
+    ScrollingText m_scroll_label{};
+    ScrollingText m_scroll_description{};
 };
 
 struct SoftwareMenu final : MenuBase {

@@ -5,6 +5,8 @@
 
 #include "yati/nx/nca.hpp"
 #include "yati/nx/ncm.hpp"
+#include "yati/nx/ns.hpp"
+#include "ui/progress_box.hpp"
 
 #include <cstring>
 #include <atomic>
@@ -631,6 +633,143 @@ auto GetContentsPath(u64 app_id) -> fs::FsPath {
     fs::FsPath path;
     std::snprintf(path, sizeof(path), "/atmosphere/contents/%016lX", app_id);
     return path;
+}
+
+Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox) {
+    const auto src_storage = static_cast<NcmStorageId>(status.storageID);
+    if (src_storage == target_storage) {
+        R_SUCCEED();
+    }
+    if (src_storage != NcmStorageId_SdCard && src_storage != NcmStorageId_BuiltInUser) {
+        return 0x1;
+    }
+    if (target_storage != NcmStorageId_SdCard && target_storage != NcmStorageId_BuiltInUser) {
+        return 0x1;
+    }
+
+    auto& src_db = GetNcmDb(src_storage);
+    auto& src_cs = GetNcmCs(src_storage);
+    auto& dst_db = GetNcmDb(target_storage);
+    auto& dst_cs = GetNcmCs(target_storage);
+
+    const auto app_id = ncm::GetAppId(status.meta_type, status.application_id);
+    auto id_min = status.application_id;
+    auto id_max = status.application_id;
+    if (status.storageID == NcmStorageId_None || status.storageID == NcmStorageId_GameCard) {
+        id_min -= 1;
+        id_max += 1;
+    }
+
+    s32 meta_total = 0;
+    s32 meta_entries_written = 0;
+    NcmContentMetaKey key{};
+    R_TRY(ncmContentMetaDatabaseList(std::addressof(src_db), std::addressof(meta_total), std::addressof(meta_entries_written), std::addressof(key), 1, (NcmContentMetaType)status.meta_type, app_id, id_min, id_max, NcmContentInstallType_Full));
+    R_UNLESS(meta_total == 1 && meta_entries_written == 1, 0x2);
+
+    u64 meta_size = 0;
+    R_TRY(ncmContentMetaDatabaseGetSize(std::addressof(src_db), std::addressof(meta_size), std::addressof(key)));
+    std::vector<u8> meta_buf(meta_size);
+    u64 out_meta_size = 0;
+    R_TRY(ncmContentMetaDatabaseGet(std::addressof(src_db), std::addressof(key), std::addressof(out_meta_size), meta_buf.data(), meta_buf.size()));
+
+    std::vector<NcmContentInfo> infos;
+    R_TRY(ncm::GetContentInfos(std::addressof(src_db), std::addressof(key), infos));
+
+    u64 total_bytes = 0;
+    for (const auto& info : infos) {
+        u64 sz = 0;
+        ncmContentInfoSizeToU64(&info, &sz);
+        total_bytes += sz;
+    }
+
+    if (pbox) {
+        char label[256];
+        std::snprintf(label, sizeof(label), "%s [%s -> %s]",
+            ncm::GetMetaTypeStr(status.meta_type),
+            ncm::GetStorageIdStr(src_storage),
+            ncm::GetStorageIdStr(target_storage));
+        pbox->NewTransfer(label);
+    }
+
+    u64 current_offset = 0;
+    constexpr s64 CHUNK_SIZE = 2ULL * 1024ULL * 1024ULL; // 2 MiB
+    std::vector<u8> chunk_buf(CHUNK_SIZE);
+
+    for (const auto& info : infos) {
+        u64 nca_size = 0;
+        ncmContentInfoSizeToU64(&info, &nca_size);
+
+        bool has = false;
+        ncmContentStorageHas(std::addressof(dst_cs), std::addressof(has), std::addressof(info.content_id));
+        if (!has) {
+            NcmPlaceHolderId placeholder_id{};
+            R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(dst_cs), std::addressof(placeholder_id)));
+            R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id), nca_size));
+
+            u64 nca_offset = 0;
+            while (nca_offset < nca_size) {
+                if (pbox && pbox->ShouldExit()) {
+                    ncmContentStorageDeletePlaceHolder(std::addressof(dst_cs), std::addressof(placeholder_id));
+                    return Result_TransferCancelled;
+                }
+                const u64 to_read = std::min<u64>(CHUNK_SIZE, nca_size - nca_offset);
+                R_TRY(ncmContentStorageReadContentIdFile(std::addressof(src_cs), chunk_buf.data(), to_read, std::addressof(info.content_id), nca_offset));
+
+                R_TRY(ncmContentStorageWritePlaceHolder(std::addressof(dst_cs), std::addressof(placeholder_id), nca_offset, chunk_buf.data(), to_read));
+                nca_offset += to_read;
+                current_offset += to_read;
+                if (pbox) {
+                    pbox->UpdateTransfer(current_offset, total_bytes);
+                }
+            }
+
+            R_TRY(ncmContentStorageRegister(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id)));
+        } else {
+            current_offset += nca_size;
+            if (pbox) {
+                pbox->UpdateTransfer(current_offset, total_bytes);
+            }
+        }
+    }
+
+    R_TRY(ncmContentMetaDatabaseSet(std::addressof(dst_db), std::addressof(key), meta_buf.data(), meta_buf.size()));
+    R_TRY(ncmContentMetaDatabaseCommit(std::addressof(dst_db)));
+
+    // delete from source
+    R_TRY(ncm::DeleteKey(std::addressof(src_cs), std::addressof(src_db), std::addressof(key)));
+
+    // invalidate app control cache in ns
+    Service srv{}, *srv_ptr = &srv;
+    if (hosversionAtLeast(3,0,0)) {
+        if (R_SUCCEEDED(nsGetApplicationManagerInterface(&srv))) {
+            ns::InvalidateApplicationControlCache(srv_ptr, status.application_id);
+            serviceClose(&srv);
+        }
+    } else {
+        srv_ptr = nsGetServiceSession_ApplicationManagerInterface();
+        if (srv_ptr) {
+            ns::InvalidateApplicationControlCache(srv_ptr, status.application_id);
+        }
+    }
+
+    R_SUCCEED();
+}
+
+Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox) {
+    MetaEntries entries;
+    R_TRY(GetMetaEntries(app_id, entries));
+    if (entries.empty()) {
+        R_SUCCEED();
+    }
+    for (const auto& status : entries) {
+        if (pbox && pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
+        if (status.storageID != target_storage && (status.storageID == NcmStorageId_SdCard || status.storageID == NcmStorageId_BuiltInUser)) {
+            R_TRY(MoveComponent(status, target_storage, pbox));
+        }
+    }
+    R_SUCCEED();
 }
 
 } // namespace sphaira::title

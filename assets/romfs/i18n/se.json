@@ -74,9 +74,7 @@
   "USB transfer (Switch 2 Switch)": "",
   "/dev/null (Speed Test)": "",
   "Dumping": "",
-  "Dump successfull!": "",
   "Dump failed!": "",
-  "Delete successfull!": "",
   "Delete failed!": "",
   "Success": "",
   "Themezer": "Themezer",
@@ -215,7 +213,7 @@
   "Convert to standard crypto": "Konvertera till standardkrypto",
   "Lower master key": "Sänk huvudnyckeln",
   "Lower system version": "Lägre systemversion",
-  "Homebrew": "Hembryggt",
+  "Homebrew": "Homebrew",
   "Apps": "Appar",
   "Homebrew Options": "Homebrew-alternativ",
   "Hide Sphaira": "Dölj Sphaira",
@@ -295,7 +293,6 @@
   "Select upload location": "",
   "No upload locations set!": "",
   "Uploading": "",
-  "Upload successfull!": "",
   "Upload failed!": "",
   "Hash": "",
   "Hash Options": "",
@@ -553,5 +550,8 @@
   "Update language packs": "Uppdatera språkpaket",
   "Update the UltraHand language package list.": "Uppdatera språkpaketlistan för UltraHand.",
   "Updating language packs...": "Uppdaterar språkpaket...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "För att använda den här översättningen måste du välja en av de nödvändiga varianterna i konsolinställningarna:\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "För att använda den här översättningen måste du välja en av de nödvändiga varianterna i konsolinställningarna:\n",
+  "Dump successful!": "",
+  "Upload successful!": "",
+  "Delete successful!": ""
 }

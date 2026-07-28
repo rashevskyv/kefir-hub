@@ -53,6 +53,29 @@ struct LogEntry {
     LogKind kind{LogKind::Normal};
 };
 
+// a failure kept for the summary screen. Recorded independently of the rolling
+// session log (which is capped and drops old lines) and of whether file logging
+// is enabled at all, so the list is always complete when the queue ends.
+struct SessionError {
+    std::string name{};      // package the failure belongs to
+    std::string stage{};     // what was being done, e.g. "Install" / "Analysis"
+    Result rc{};
+    std::string code_name{}; // symbolic name, empty when the code is unknown
+    std::string detail{};    // translated explanation, empty when there is none
+};
+
+// totals for the run, shown on the summary panel once the queue ends.
+struct SessionStats {
+    size_t installed{};
+    size_t skipped{};
+    size_t failed{};
+    s64 read_bytes{};   // pulled from the source (over usb / off disk)
+    s64 write_bytes{};  // committed to storage after decompression
+    s64 sd_bytes{};
+    s64 nand_bytes{};
+    u64 elapsed_ns{};
+};
+
 struct Menu final : MenuBase, InstallProgress {
     Menu(u32 flags);
     Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false);
@@ -63,6 +86,9 @@ struct Menu final : MenuBase, InstallProgress {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void ThreadFunction();
     void LocalThreadFunction();
+    // brings the usb session back after the host re-enumerated the device,
+    // so the package that was interrupted can be replayed.
+    Result ReestablishUsbLink();
 
     Result CheckCancelled() override;
     UEvent* GetInstallCancelEvent() override { return &m_cancel_event; }
@@ -83,7 +109,19 @@ private:
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
     void AddLog(const std::string& text, LogKind kind = LogKind::Normal);
+    // records a failure for the summary screen and writes it to the always-on
+    // error log. Call instead of AddLog() for anything that failed.
+    void AddError(const std::string& name, const std::string& stage, Result rc);
+    void BeginSessionStats();
+    void ToggleErrorView();
+    // folds one finished package into the queue entry and the session totals.
+    void RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_sd, s64 read_delta, s64 write_delta);
+    void DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area);
+    // the scrolling list under the header: the session log, or the error list
+    // when the summary has it toggled on.
+    void DrawBottomList(NVGcontext* vg, Theme* theme);
     static auto TargetName(InstallTarget target) -> std::string;
+    static auto FormatDuration(u64 ns) -> std::string;
 
     std::unique_ptr<yati::source::DbiUsb> m_usb_source{};
     fs::Fs* m_local_fs{};
@@ -93,6 +131,18 @@ private:
     std::unique_ptr<List> m_list{};
     std::unique_ptr<List> m_log_list{};
     bool m_was_mtp_enabled{};
+
+    SessionStats m_stats{};
+    std::vector<SessionError> m_errors{};
+    // summary screen swaps the bottom list between the session log and the
+    // error list; the errors survive the log's line cap. The error list gets
+    // its own List because its rows are two lines tall.
+    bool m_show_errors{};
+    std::unique_ptr<List> m_error_list{};
+    s64 m_error_index{};
+    TimeStamp m_session_timestamp{};
+    // peak write rate seen across the whole run, sampled by the graph in Draw().
+    std::atomic<s64> m_peak_write_bps{};
 
     Thread m_thread{};
     bool m_thread_created{};
@@ -120,8 +170,6 @@ private:
     size_t m_progress_speed_sample_index{};
     TimeStamp m_progress_timestamp{};
     size_t m_current_package{};
-    size_t m_success_count{};
-    size_t m_failure_count{};
 
     // R/W speed graph. Offsets are cumulative within the session: yati
     // reports per-file offsets, UpdateInstallReadWrite() folds them into

@@ -7,6 +7,7 @@
 #include "i18n.hpp"
 #include "title_info.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "ui/progress_box.hpp"
 #include <usbhsfs.h>
 
@@ -90,6 +91,16 @@ const char* GetFileName(const char* s) {
         return nullptr;
     }
     return file_name + 1;
+}
+
+// parent directory of an MTP path ("/16.0.3/file.nca" -> "/16.0.3"). used as the
+// progress "address" line so a folder copy shows the folder, not each filename.
+std::string MtpParentDir(const std::string& path) {
+    const auto slash = path.find_last_of('/');
+    if (slash == std::string::npos || slash == 0) {
+        return "/";
+    }
+    return path.substr(0, slash);
 }
 
 // routing rules for files dropped into the root of the microSD card over MTP.
@@ -330,6 +341,9 @@ struct FsProxy final : FsProxyBase {
 
             const auto file_name = GetFileName(path);
             if (file_name) {
+                std::erase_if(m_virtual_entries, [file_name](const auto& e) {
+                    return strcasecmp(file_name, e.name) != 0;
+                });
                 auto it = std::ranges::find_if(m_virtual_entries, [file_name](const auto& e) {
                     return !strcasecmp(file_name, e.name);
                 });
@@ -422,6 +436,9 @@ struct FsProxy final : FsProxyBase {
         if (const auto rule = GetRedirectRule(path); rule && (mode & FsOpenMode_Write)) {
             // make sure the target folder exists before writing into it.
             m_fs->CreateDirectoryRecursively(GetRedirectDir(rule, GetLastComponent(FixPath(path))));
+            // a redirected write lands in /switch, so the homebrew menu needs to
+            // rescan once the host closes the file.
+            m_notify_homebrew = true;
         }
 
         auto fptr = new fs::File();
@@ -533,13 +550,6 @@ struct FsProxy final : FsProxyBase {
             m_virtual_handles.erase(vf);
             delete vf;
 
-            auto it = std::ranges::find_if(m_virtual_entries, [&file_name](const auto& e) {
-                return !strcasecmp(file_name.c_str(), e.name);
-            });
-            if (it != m_virtual_entries.end()) {
-                m_virtual_entries.erase(it);
-            }
-
             std::memset(file, 0, sizeof(*file));
             return;
         }
@@ -550,6 +560,13 @@ struct FsProxy final : FsProxyBase {
             delete f;
         }
         std::memset(file, 0, sizeof(*file));
+
+        if (m_notify_homebrew) {
+            m_notify_homebrew = false;
+            m_fs->Commit();
+            // the homebrew menu rescans /switch on its next frame.
+            ui::menu::homebrew::SignalChange();
+        }
     }
 
     Result CreateDirectory(const char* path) override {
@@ -610,6 +627,9 @@ struct FsProxy final : FsProxyBase {
 
 private:
     std::unique_ptr<fs::Fs> m_fs{};
+    // set when a redirected (.nro -> /switch) write is open, so CloseFile can
+    // tell the homebrew menu to rescan.
+    bool m_notify_homebrew{};
 #if ENABLE_NETWORK_INSTALL
     std::vector<FsDirectoryEntry> m_virtual_entries;
     std::set<VirtualFile*> m_virtual_handles;
@@ -1455,7 +1475,7 @@ void haze_callback(const ::haze::CallbackData *data) {
                             SCOPED_MUTEX(&g_mtp_ui_mutex);
                             init_filename = g_mtp_current_filename;
                         }
-                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, init_filename, [](auto pbox) -> Result {
+                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, MtpParentDir(init_filename), [](auto pbox) -> Result {
                             {
                                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                                 g_mtp_pbox = pbox;
@@ -1481,7 +1501,9 @@ void haze_callback(const ::haze::CallbackData *data) {
                                             SCOPED_MUTEX(&g_mtp_ui_mutex);
                                             next_filename = g_mtp_current_filename;
                                         }
-                                        pbox->NewTransferForce(next_filename);
+                                        // address line = folder, current line = file name.
+                                        pbox->SetTitle(MtpParentDir(next_filename));
+                                        pbox->NewTransferForce(GetLastComponent(next_filename.c_str()));
                                         continue;
                                     }
                                     break;
@@ -1575,6 +1597,26 @@ bool Init() {
             return std::make_shared<FsSaveProxy>("saves", display_name);
         }
     });
+
+    // user-configured extra folders (Settings -> Network -> MTP), each exposed
+    // as its own storage rooted at that folder. names must be unique so libhaze
+    // can address them; display defaults to the folder's leaf name.
+    {
+        int idx = 0;
+        for (const auto& folder : App::GetMtpFolders()) {
+            const char* leaf = std::strrchr(folder.c_str(), '/');
+            std::string display = (leaf && leaf[1]) ? std::string(leaf + 1) : folder;
+            std::string internal = "mntf" + std::to_string(idx++);
+            storage_defs.push_back({
+                true,
+                std::move(display),
+                "Folder",
+                [folder, internal](const char* display_name) {
+                    return std::make_shared<FsProxy>(std::make_unique<fs::FsNativeSd>(), internal.c_str(), display_name, folder.c_str());
+                }
+            });
+        }
+    }
 
     // pinned mount (a folder or a virtual mount) requested from the file manager.
     if (g_pinned_factory) {

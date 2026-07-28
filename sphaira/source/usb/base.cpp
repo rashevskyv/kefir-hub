@@ -34,6 +34,20 @@ static_assert(!(TRANSFER_MAX % TRANSFER_ALIGN));
 
 } // namespace
 
+bool IsLinkError(Result rc) {
+    switch (rc) {
+        case UsbError_UrbFailed:
+        case UsbError_UrbCancelled:
+        case UsbError_UrbBadStatus:
+        // a state change event during a transfer is reported as a timeout by
+        // WaitTransferCompletion(); it means the same thing here.
+        case KERNELRESULT(TimedOut):
+            return true;
+        default:
+            return false;
+    }
+}
+
 Base::Base(u64 transfer_timeout) {
     App::SetAutoSleepDisabled(true);
 

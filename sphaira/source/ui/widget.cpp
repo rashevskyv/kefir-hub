@@ -108,6 +108,14 @@ void Widget::Update(Controller* controller, TouchInfo* touch) {
 }
 
 void Widget::Draw(NVGcontext* vg, Theme* theme) {
+    // the footer belongs to whichever widget is on top of the stack. anything
+    // it covers keeps its actions live (they still fire) but stops drawing
+    // hints, otherwise both rows land on the same right-aligned anchor and
+    // overlap - a menu's hints reading through the panel opened above it.
+    if (!App::OwnsFooter(this)) {
+        return;
+    }
+
     auto draw_actions = GetUiButtons();
 
     for (auto& e : draw_actions) {

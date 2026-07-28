@@ -8,6 +8,10 @@
 #include <functional>
 #include <switch.h>
 
+namespace sphaira::ui {
+    struct ProgressBox;
+}
+
 namespace sphaira::title {
 
 constexpr u32 ContentMetaTypeToContentFlag(u8 meta_type) {
@@ -78,6 +82,10 @@ void utilsReplaceIllegalCharacters(char *str, bool ascii_only);
 
 // /atmosphere/contents/xxx
 auto GetContentsPath(u64 app_id) -> fs::FsPath;
+
+// moves a single component or entire application between storages (NAND <-> SD)
+Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);
+Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);
 
 inline bool IsPlaceholderName(const char* name) {
     return name && (__builtin_strcmp(name, "Corrupted") == 0);

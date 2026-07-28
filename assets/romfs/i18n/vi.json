@@ -74,9 +74,7 @@
   "USB transfer (Switch 2 Switch)": "",
   "/dev/null (Speed Test)": "",
   "Dumping": "",
-  "Dump successfull!": "",
   "Dump failed!": "",
-  "Delete successfull!": "",
   "Delete failed!": "",
   "Success": "",
   "Themezer": "Chủ đề",
@@ -295,7 +293,6 @@
   "Select upload location": "",
   "No upload locations set!": "",
   "Uploading": "",
-  "Upload successfull!": "",
   "Upload failed!": "",
   "Hash": "",
   "Hash Options": "",
@@ -553,5 +550,8 @@
   "Update language packs": "Cập nhật gói ngôn ngữ",
   "Update the UltraHand language package list.": "Cập nhật danh sách gói ngôn ngữ UltraHand.",
   "Updating language packs...": "Đang cập nhật gói ngôn ngữ...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "Để áp dụng bản dịch này, bạn phải chọn một trong các biến thể bắt buộc trong cài đặt bảng điều khiển:\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Để áp dụng bản dịch này, bạn phải chọn một trong các biến thể bắt buộc trong cài đặt bảng điều khiển:\n",
+  "Dump successful!": "",
+  "Upload successful!": "",
+  "Delete successful!": ""
 }

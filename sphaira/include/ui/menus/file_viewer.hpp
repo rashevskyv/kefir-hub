@@ -18,6 +18,12 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    // the image viewer draws its own pared back header (just the file name and
+    // the separators), and none at all in fullscreen.
+    auto WantsChrome() const -> bool override {
+        return !m_is_image_file;
+    }
+
 private:
     void LoadCurrentFile();
     void LoadTextFile();

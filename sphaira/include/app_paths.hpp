@@ -12,6 +12,9 @@ inline const std::string LOCATIONS = DATA_ROOT + "/locations.ini";
 inline const std::string MODULE_INDEX = DATA_ROOT + "/cache/homebrew_sysmodules.txt";
 inline const std::string MODULE_INDEX_DOWNLOAD = MODULE_INDEX + ".download";
 inline const std::string LOG = DATA_ROOT + "/log.txt";
+// failures are recorded here even when normal logging is switched off, so a
+// bad install session can always be looked at after the fact.
+inline const std::string ERROR_LOG = DATA_ROOT + "/errors.txt";
 inline const std::string ASSOC = DATA_ROOT + "/assoc/";
 inline const std::string THEMES = DATA_ROOT + "/themes/";
 inline const std::string GITHUB = DATA_ROOT + "/github/";

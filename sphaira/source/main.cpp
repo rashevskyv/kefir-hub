@@ -2,6 +2,7 @@
 #include <memory>
 #include "app.hpp"
 #include "log.hpp"
+#include "net.hpp"
 #include "web.hpp"
 
 int main(int argc, char** argv) {
@@ -57,8 +58,14 @@ void userAppInit(void) {
         diagAbortWithResult(rc);
     if (R_FAILED(rc = psmInitialize()))
         diagAbortWithResult(rc);
-    if (R_FAILED(rc = nifmInitialize(NifmServiceType_User)))
-        diagAbortWithResult(rc);
+    // nifm:a is what lets sphaira clear airplane mode when something that needs
+    // the network is started offline (see net::TryConnect). it is not granted
+    // everywhere sphaira runs, so nifm:u stays the fallback -- every other nifm
+    // call we make is available on both.
+    if (R_FAILED(nifmInitialize(NifmServiceType_Admin))) {
+        if (R_FAILED(rc = nifmInitialize(NifmServiceType_User)))
+            diagAbortWithResult(rc);
+    }
     if (R_FAILED(rc = accountInitialize(is_application ? AccountServiceType_Application : AccountServiceType_System)))
         diagAbortWithResult(rc);
     if (R_FAILED(rc = setInitialize()))
@@ -76,6 +83,7 @@ void userAppInit(void) {
 
 void userAppExit(void) {
     sphaira::WebShareStop();
+    sphaira::net::Exit();
     log_nxlink_exit();
 
     ncmExit();

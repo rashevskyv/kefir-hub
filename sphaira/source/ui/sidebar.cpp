@@ -1,4 +1,5 @@
 #include "ui/sidebar.hpp"
+#include "ui/layout.hpp"
 #include "ui/menus/file_picker.hpp"
 #include "app.hpp"
 #include "ui/popup_list.hpp"
@@ -10,12 +11,7 @@
 namespace sphaira::ui {
 namespace {
 
-auto DistanceBetweenY(Vec4 va, Vec4 vb) -> Vec4 {
-    return Vec4{
-        va.x, va.y,
-        va.w, vb.y - va.y
-    };
-}
+constexpr float SIDEBAR_TOP_PAD = 10.f;
 
 auto DisabledTextColour() -> NVGcolor {
     return nvgRGBA(135, 138, 148, 255);
@@ -36,13 +32,15 @@ void SidebarEntryBase::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, 
         const auto& info = IsEnabled() ? m_info : m_depends_info;
 
         if (!info.empty()) {
-            // reset clip here as the box will draw oob.
+            // the box is drawn beside the panel, outside the list's clip, so
+            // reset the scissor - but only to the content band: a long info
+            // text must be cut at the footer, not painted across it.
             nvgSave(vg);
-            nvgScissor(vg, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            nvgScissor(vg, 0, layout::CONTENT_TOP + SIDEBAR_TOP_PAD, SCREEN_WIDTH, layout::CONTENT_HEIGHT - SIDEBAR_TOP_PAD);
             ON_SCOPE_EXIT(nvgRestore(vg));
 
             Vec4 info_box{};
-            info_box.y = 86;
+            info_box.y = layout::CONTENT_TOP + SIDEBAR_TOP_PAD;
             info_box.w = 400;
 
             if (left) {
@@ -217,10 +215,12 @@ SidebarEntryHeader::SidebarEntryHeader(const std::string& title, const std::stri
 void SidebarEntryHeader::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) {
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
+    // headers sit a step above the 20px entry titles so the grouping reads
+    // as a section label rather than another option.
     gfx::drawTextBold(
         vg,
         m_pos.x + 15.f, m_pos.y + (m_pos.h / 2.f) + 10.f,
-        16.f,
+        24.f,
         theme->GetColour(ThemeEntryID_TEXT_SELECTED),
         m_title.c_str(),
         NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE
@@ -406,19 +406,26 @@ Sidebar::Sidebar(const std::string& title, const std::string& sub, Side side, It
             break;
     }
 
-    // setup top and bottom bar
-    m_top_bar = Vec4{m_pos.x + 15.f, 86.f, m_pos.w - 30.f, 1.f};
-    m_bottom_bar = Vec4{m_pos.x + 15.f, 646.f, m_pos.w - 30.f, 1.f};
+    // the panel's own separators sit on the shared header/footer lines, so the
+    // bands read as continuous across the panel edge.
+    m_top_bar = Vec4{m_pos.x + 15.f, layout::HEADER_LINE_Y, m_pos.w - 30.f, 1.f};
+    m_bottom_bar = Vec4{m_pos.x + 15.f, layout::FOOTER_LINE_Y, m_pos.w - 30.f, 1.f};
     m_title_pos = Vec2{m_pos.x + 30.f, m_pos.y + 40.f};
-    m_base_pos = Vec4{GetX() + 30.f, GetY() + 170.f, m_pos.w - (30.f * 2.f), 70.f};
+
+    // Rows are anchored to the top of the content band rather than floated
+    // below it. Scrolling moves the list by exactly one row height, so with the
+    // origins aligned a row that scrolls out lands wholly outside the band
+    // instead of leaving its text stranded on the header separator. Anchoring
+    // also reclaims the 34px gap the old +120 origin left, fitting a 7th row.
+    const Vec4 pos{m_pos.x + 15.f, layout::CONTENT_TOP + SIDEBAR_TOP_PAD, m_pos.w - 30.f, layout::CONTENT_HEIGHT - SIDEBAR_TOP_PAD};
+    m_base_pos = Vec4{GetX() + 30.f, pos.y, m_pos.w - (30.f * 2.f), 70.f};
 
     // set button positions
-    SetUiButtonPos({m_pos.x + m_pos.w - 60.f, 675});
+    SetUiButtonPos({m_pos.x + m_pos.w - 60.f, layout::BUTTON_POS.y});
 
-    const Vec4 pos = DistanceBetweenY(m_top_bar, m_bottom_bar);
-    m_list = std::make_unique<List>(1, 6, pos, m_base_pos);
+    m_list = std::make_unique<List>(1, 7, pos, m_base_pos);
     m_list->SetWrap(true);
-    m_list->SetScrollBarPos(GetX() + GetW() - 20, m_base_pos.y - 10, pos.h - m_base_pos.y + 48);
+    m_list->SetScrollBarPos(GetX() + GetW() - 20, pos.y, pos.h);
 }
 
 Sidebar::Sidebar(const std::string& title, const std::string& sub, Side side)
@@ -433,7 +440,40 @@ auto Sidebar::Update(Controller* controller, TouchInfo* touch) -> void {
     if (touch->is_clicked && !touch->in_range(GetPos())) {
         App::PopToMenu();
     } else {
-        m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this, controller](bool touch, auto i) {
+            // a touch on a group header selects nothing.
+            if (touch && !IsFocusable(i)) {
+                return;
+            }
+
+            if (!touch) {
+                // skip past headers in the direction the user actually moved,
+                // taken from the button rather than from where the index
+                // landed: after a wrap the index alone is ambiguous (moving up
+                // off the top focusable lands on index 0, same as moving down
+                // and wrapping there), which used to strand the cursor and
+                // block the top->bottom wrap. SkipUnfocusable wraps too, so a
+                // header at either end carries on around.
+                bool forward;
+                if (controller->GotDown(Button::R2)) {
+                    // jump to the end, then step back onto the last real entry.
+                    forward = false;
+                } else if (controller->GotDown(Button::L2)) {
+                    // jump to the start, then step onto the first real entry.
+                    forward = true;
+                } else if (controller->GotDown(Button::DOWN) || controller->GotDown(Button::RIGHT) || controller->GotDown(Button::R)) {
+                    forward = true;
+                } else if (controller->GotDown(Button::UP) || controller->GotDown(Button::LEFT) || controller->GotDown(Button::L)) {
+                    forward = false;
+                } else {
+                    // touch drag / unknown source: resolve away from the ends.
+                    const s64 last = (s64)m_items.size() - 1;
+                    forward = !i ? true : (i == last ? false : i > m_index);
+                }
+
+                i = SkipUnfocusable(i, forward);
+            }
+
             SetIndex(i);
             if (touch) {
                 FireAction(Button::A);
@@ -483,13 +523,41 @@ auto Sidebar::Add(std::unique_ptr<SidebarEntryBase>&& _entry) -> SidebarEntryBas
     auto& entry = m_items.emplace_back(std::forward<decltype(_entry)>(_entry));
     entry->SetPos(m_base_pos);
 
-    // give focus to first entry.
-    if (m_items.size() == 1) {
+    // give focus to the first selectable entry, which is not necessarily the
+    // first one when the sidebar opens with a group header.
+    if (!m_has_focus && entry->IsFocusable()) {
+        m_has_focus = true;
+        m_index = (s64)m_items.size() - 1;
         entry->OnFocusGained();
         SetupButtons();
     }
 
     return entry.get();
+}
+
+auto Sidebar::IsFocusable(s64 index) const -> bool {
+    if (index < 0 || index >= (s64)m_items.size()) {
+        return false;
+    }
+
+    return m_items[index]->IsFocusable();
+}
+
+auto Sidebar::SkipUnfocusable(s64 index, bool forward) -> s64 {
+    const s64 count = m_items.size();
+
+    // bounded by count so an all-header sidebar cannot spin forever.
+    for (s64 guard = 0; guard < count && !IsFocusable(index); ++guard) {
+        const auto moved = forward
+            ? m_list->ScrollDown(index, 1, count)
+            : m_list->ScrollUp(index, 1, count);
+
+        if (!moved) {
+            break;
+        }
+    }
+
+    return index;
 }
 
 void Sidebar::SetIndex(s64 index) {

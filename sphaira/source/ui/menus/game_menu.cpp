@@ -21,6 +21,7 @@
 
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
+#include "yati/nx/ns.hpp"
 #include "yati/nx/es.hpp"
 #include "yati/container/base.hpp"
 #include "yati/container/nsp.hpp"
@@ -1159,6 +1160,34 @@ private:
             options->Add<SidebarEntryCallback>("Dump NSP"_i18n, [this, component](){
                 m_dump_callback(CurrentEntry(), ContentFlagFromMetaType(component.status.meta_type));
             }, true, "Export only this installed component as an NSP."_i18n);
+            if (component.status.storageID == NcmStorageId_BuiltInUser) {
+                options->Add<SidebarEntryCallback>("Move component to SD"_i18n, [this, component](){
+                    App::Push<ProgressBox>(0, "Moving component..."_i18n, ncm::GetMetaTypeStr(component.status.meta_type), [component](auto pbox) -> Result {
+                        return title::MoveComponent(component.status, NcmStorageId_SdCard, pbox);
+                    }, [this](Result rc){
+                        if (R_SUCCEEDED(rc)) {
+                            App::Notify("Component moved to SD"_i18n);
+                            LoadGame();
+                        } else if (rc != Result_TransferCancelled) {
+                            App::PushErrorBox(rc, "Move failed!"_i18n);
+                        }
+                    });
+                }, "Move this component to SD card."_i18n);
+            } else if (component.status.storageID == NcmStorageId_SdCard) {
+                options->Add<SidebarEntryCallback>("Move component to NAND"_i18n, [this, component](){
+                    App::Push<ProgressBox>(0, "Moving component..."_i18n, ncm::GetMetaTypeStr(component.status.meta_type), [component](auto pbox) -> Result {
+                        return title::MoveComponent(component.status, NcmStorageId_BuiltInUser, pbox);
+                    }, [this](Result rc){
+                        if (R_SUCCEEDED(rc)) {
+                            App::Notify("Component moved to NAND"_i18n);
+                            LoadGame();
+                        } else if (rc != Result_TransferCancelled) {
+                            App::PushErrorBox(rc, "Move failed!"_i18n);
+                        }
+                    });
+                }, "Move this component to NAND system memory."_i18n);
+            }
+
             options->Add<SidebarEntryCallback>("Content information"_i18n, [component](){
                 char message[512];
                 std::snprintf(message, sizeof(message),
@@ -1190,6 +1219,43 @@ private:
         auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
         options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n);
+
+        const auto& entry = CurrentEntry();
+        title::MetaEntries meta_entries;
+        title::GetMetaEntries(entry.app_id, meta_entries);
+        const bool has_nand = std::ranges::any_of(meta_entries, [](const auto& s){ return s.storageID == NcmStorageId_BuiltInUser; });
+        const bool has_sd = std::ranges::any_of(meta_entries, [](const auto& s){ return s.storageID == NcmStorageId_SdCard; });
+
+        if (has_nand) {
+            options->Add<SidebarEntryCallback>("Move to SD"_i18n, [this, app_id = entry.app_id, name = entry.GetName()](){
+                App::Push<ProgressBox>(0, "Moving game..."_i18n, name, [app_id](auto pbox) -> Result {
+                    return title::MoveApplication(app_id, NcmStorageId_SdCard, pbox);
+                }, [this](Result rc){
+                    if (R_SUCCEEDED(rc)) {
+                        App::Notify("Game moved to SD"_i18n);
+                        LoadGame();
+                    } else if (rc != Result_TransferCancelled) {
+                        App::PushErrorBox(rc, "Move failed!"_i18n);
+                    }
+                });
+            }, true, "Move game components from NAND to SD card."_i18n);
+        }
+
+        if (has_sd) {
+            options->Add<SidebarEntryCallback>("Move to NAND"_i18n, [this, app_id = entry.app_id, name = entry.GetName()](){
+                App::Push<ProgressBox>(0, "Moving game..."_i18n, name, [app_id](auto pbox) -> Result {
+                    return title::MoveApplication(app_id, NcmStorageId_BuiltInUser, pbox);
+                }, [this](Result rc){
+                    if (R_SUCCEEDED(rc)) {
+                        App::Notify("Game moved to NAND"_i18n);
+                        LoadGame();
+                    } else if (rc != Result_TransferCancelled) {
+                        App::PushErrorBox(rc, "Move failed!"_i18n);
+                    }
+                });
+            }, true, "Move game components from SD card to NAND system memory."_i18n);
+        }
+
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);
         }, true, "Export base, updates, DLC and data patches."_i18n);
@@ -1227,6 +1293,47 @@ private:
     u64 m_save_journal_size{};
     u64 m_save_allocated_size{};
 };
+
+// Removes a title's installed content and its application record while always
+// preserving user save data. Unlike nsDeleteApplicationCompletely (which also
+// wipes saves and fails outright when any part of the title lives on an inserted
+// gamecard), this deletes only the installed (NAND/SD) content and drops the
+// record so the title leaves the games list. The gamecard and saves are never
+// touched.
+Result DeleteApplicationKeepSave(u64 app_id) {
+    title::MetaEntries entries;
+    // best-effort: an empty/failed listing just means there is no installed
+    // content to remove (e.g. a leftover gamecard record), we still drop the record.
+    title::GetMetaEntries(app_id, entries);
+
+    const bool on_gamecard = std::ranges::any_of(entries, [](const auto& s){
+        return s.storageID == NcmStorageId_GameCard;
+    });
+    const bool has_installed = std::ranges::any_of(entries, [](const auto& s){
+        return s.storageID == NcmStorageId_SdCard || s.storageID == NcmStorageId_BuiltInUser;
+    });
+
+    // delete installed content (base/update/DLC on NAND/SD); saves stay intact.
+    const auto rc = nsDeleteApplicationEntity(app_id);
+    // surface a genuine failure only for fully-installed titles. When any content
+    // lives on the inserted gamecard it can't be removed and ns reports an error
+    // even though the installed portion may be gone — tolerate it and still drop
+    // the record.
+    if (R_FAILED(rc) && has_installed && !on_gamecard) {
+        return rc;
+    }
+
+    // drop the application record so the title leaves the games list.
+    Service srv{}, *srv_ptr = &srv;
+    if (hosversionAtLeast(3,0,0)) {
+        R_TRY(nsGetApplicationManagerInterface(&srv));
+    } else {
+        srv_ptr = nsGetServiceSession_ApplicationManagerInterface();
+    }
+    ON_SCOPE_EXIT(serviceClose(&srv));
+
+    return ns::DeleteApplicationRecord(srv_ptr, app_id);
+}
 
 } // namespace
 
@@ -1313,6 +1420,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     sort_items.push_back("Updated"_i18n);
                     sort_items.push_back("Alphabetical"_i18n);
                     sort_items.push_back("Publisher"_i18n);
+                    sort_items.push_back("Storage"_i18n);
 
                     SidebarEntryArray::Items order_items;
                     order_items.push_back("Descending"_i18n);
@@ -1424,6 +1532,40 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     }
                     }, true, "Export content shared by all selected games as NSP files."_i18n);
                 }
+
+                options->Add<SidebarEntryCallback>("Move to SD"_i18n, [this, targets](){
+                    App::Push<ProgressBox>(0, "Moving selected games..."_i18n, "", [targets](auto pbox) -> Result {
+                        for (const auto& target : targets) {
+                            if (pbox->ShouldExit()) return Result_TransferCancelled;
+                            R_TRY(title::MoveApplication(target.app_id, NcmStorageId_SdCard, pbox));
+                        }
+                        return 0;
+                    }, [this](Result rc){
+                        m_dirty = true;
+                        if (R_SUCCEEDED(rc)) {
+                            App::Notify("Selected games moved to SD"_i18n);
+                        } else if (rc != Result_TransferCancelled) {
+                            App::PushErrorBox(rc, "Move failed!"_i18n);
+                        }
+                    });
+                }, true, "Move all selected games to SD card."_i18n);
+
+                options->Add<SidebarEntryCallback>("Move to NAND"_i18n, [this, targets](){
+                    App::Push<ProgressBox>(0, "Moving selected games..."_i18n, "", [targets](auto pbox) -> Result {
+                        for (const auto& target : targets) {
+                            if (pbox->ShouldExit()) return Result_TransferCancelled;
+                            R_TRY(title::MoveApplication(target.app_id, NcmStorageId_BuiltInUser, pbox));
+                        }
+                        return 0;
+                    }, [this](Result rc){
+                        m_dirty = true;
+                        if (R_SUCCEEDED(rc)) {
+                            App::Notify("Selected games moved to NAND"_i18n);
+                        } else if (rc != Result_TransferCancelled) {
+                            App::PushErrorBox(rc, "Move failed!"_i18n);
+                        }
+                    });
+                }, true, "Move all selected games to NAND system memory."_i18n);
 
                 options->Add<SidebarEntryCallback>("Create mods folders"_i18n, [this](){
                     CreateContentsFolders();
@@ -1734,6 +1876,21 @@ void Menu::Sort() {
             case SortType_Publisher: {
                 return publisher_cmp(lhs, rhs);
             } break;
+
+            case SortType_Storage: {
+                const auto storage_rank = [](const Entry& e) -> int {
+                    if (e.sd_size && e.nand_size) return 1;
+                    if (e.sd_size) return 2;
+                    if (e.nand_size) return 3;
+                    return 4;
+                };
+                const auto rank_lhs = storage_rank(lhs);
+                const auto rank_rhs = storage_rank(rhs);
+                if (rank_lhs != rank_rhs) {
+                    return order == OrderType_Descending ? rank_lhs < rank_rhs : rank_lhs > rank_rhs;
+                }
+                return name_cmp(lhs, rhs);
+            } break;
         }
 
         std::unreachable();
@@ -1884,7 +2041,7 @@ void Menu::DeleteGames() {
             LoadControlEntry(e);
             pbox->SetTitle(e.GetName());
             pbox->UpdateTransfer(i + 1, std::size(targets));
-            R_TRY(nsDeleteApplicationCompletely(e.app_id));
+            R_TRY(DeleteApplicationKeepSave(e.app_id));
         }
 
         R_SUCCEED();
@@ -1895,7 +2052,7 @@ void Menu::DeleteGames() {
         m_dirty = true;
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Delete successfull!"_i18n);
+            App::Notify("Delete successful!"_i18n);
         }
     });
 }
@@ -1957,7 +2114,7 @@ void Menu::CreateSaves(AccountUid uid) {
         save::SignalChange();
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Save create successfull!"_i18n);
+            App::Notify("Save create successful!"_i18n);
         }
     });
 }

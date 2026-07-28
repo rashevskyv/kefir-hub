@@ -1,15 +1,28 @@
 #include "ui/list.hpp"
 #include "ui/widget.hpp"
+#include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "log.hpp"
 #include <algorithm>
 
 namespace sphaira::ui {
+namespace {
 
 // extra scissor margin left around the list so the selection highlight
 // (border + drop shadow drawn just outside each item rect) isn't clipped.
 constexpr float SELECTION_PAD = gfx::SELECTION_OUTLINE_PAD;
+
+// Clips a list to its own bounds, plus the selection margin - but never past
+// the header/footer separators. Without the clamp that margin let the top and
+// bottom rows of a scrolled list paint 10px into the chrome, which is how a
+// half scrolled entry ended up sitting on the separator line.
+void ScissorContent(NVGcontext* vg, const Vec4& pos) {
+    const auto clip = layout::PaddedContentClipY(pos.y, pos.h, SELECTION_PAD);
+    nvgIntersectScissor(vg, pos.x - SELECTION_PAD, clip.y, pos.w + SELECTION_PAD * 2.f, clip.h);
+}
+
+} // namespace
 
 List::List(s64 row, s64 page, const Vec4& pos, const Vec4& v, const Vec2& pad)
 : m_row{row}
@@ -22,7 +35,16 @@ List::List(s64 row, s64 page, const Vec4& pos, const Vec4& v, const Vec2& pad)
 }
 
 auto List::ClampX(float x, s64 count) const -> float {
-    const float x_max = count * GetMaxX();
+    float x_max = 0;
+
+    if (count >= m_page) {
+        // round up
+        if (count % m_row) {
+            count = count + (m_row - count % m_row);
+        }
+        x_max = (count - m_page) / m_row * GetMaxX();
+    }
+
     return std::clamp(x, 0.F, x_max);
 }
 
@@ -242,6 +264,34 @@ auto List::ScrollToStart(s64& index, s64 count) -> bool {
     return false;
 }
 
+void List::EnsureVisible(s64 index, s64 count) {
+    if (count <= 0) {
+        return;
+    }
+
+    const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
+    if (max <= 0.f) {
+        return;
+    }
+
+    index = std::clamp<s64>(index, 0, count - 1);
+
+    // index of the first entry currently on screen, and the one just past the
+    // last. both are rounded down to the start of a row.
+    s64 start = static_cast<s64>((m_yoff + max / 2.f) / max) * m_row;
+
+    if (index < start) {
+        start = (index / m_row) * m_row;
+    } else if (index >= start + m_page) {
+        start = std::max<s64>(0, (index / m_row) * m_row - (m_page - m_row));
+    } else {
+        return;
+    }
+
+    const auto next_yoff = static_cast<float>(start / m_row) * max;
+    m_yoff = m_layout == Layout::GRID ? ClampY(next_yoff, count) : ClampX(next_yoff, count);
+}
+
 void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget) {
     const bool has_r2 = widget && widget->HasAction(Button::R2);
     const bool has_l2 = widget && widget->HasAction(Button::L2);
@@ -402,7 +452,7 @@ void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     // few px OUTSIDE each item rect. clipping exactly at the list bounds cut the
     // highlight of edge items, making it look sunken; pad the scissor so it can
     // render on top. see drawRectOutlineInternal() in nvg_util.cpp.
-    nvgIntersectScissor(vg, GetX() - SELECTION_PAD, GetY() - SELECTION_PAD, GetW() + SELECTION_PAD * 2, GetH() + SELECTION_PAD * 2);
+    ScissorContent(vg, m_pos);
 
     for (s64 i = 0; i < count; i++, v.x += v.w + m_pad.x) {
         // skip anything not visible
@@ -431,7 +481,7 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     nvgSave(vg);
     // pad the scissor so the selection highlight of edge items isn't clipped;
     // see the note in DrawHome().
-    nvgIntersectScissor(vg, GetX() - SELECTION_PAD, GetY() - SELECTION_PAD, GetW() + SELECTION_PAD * 2, GetH() + SELECTION_PAD * 2);
+    ScissorContent(vg, m_pos);
 
     for (s64 i = 0; i < count; v.y += v.h + m_pad.y) {
         if (v.y > GetY() + GetH()) {

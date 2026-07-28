@@ -176,6 +176,7 @@ MainMenu::MainMenu() {
                 m_current_menu->FireAction(Button::START);
             }
         }}),
+        std::make_pair(Button::B, Action{"Exit"_i18n, App::Exit}),
         std::make_pair(Button::SELECT, Action{App::Exit})
     );
 

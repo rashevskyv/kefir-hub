@@ -58,6 +58,17 @@ struct MainMenu final : Widget {
         return true;
     }
 
+    // this is a shell around the page it is showing: that page draws the body,
+    // owns the chrome and owns the hint row (MainMenu copies its own L/R tab
+    // actions into it rather than drawing a second row).
+    auto GetFooterOwner() -> Widget* override {
+        return m_current_menu;
+    }
+
+    auto GetChromeOwner() -> MenuBase* override {
+        return m_current_menu;
+    }
+
 private:
     void SwitchTo(MenuBase* menu);
     void AddOnLRPress();

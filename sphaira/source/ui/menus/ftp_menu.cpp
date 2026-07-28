@@ -17,11 +17,9 @@ Menu::Menu(u32 flags) : stream::Menu{"FTP Install"_i18n, flags} {
         App::SetFtpEnable(true);
     }
 
-    ftpsrv::InitInstallMode(
-        [this](const char* path){ return OnInstallStart(path); },
-        [this](const void *buf, size_t size){ return OnInstallWrite(buf, size); },
-        [this](){ return OnInstallClose(); }
-    );
+    // route install: drops to this menu while it is open (background otherwise).
+    stream::BackgroundInstaller::RegisterMtpCallbacks();
+    stream::BackgroundInstaller::SetActiveMenu(this);
 
     m_port = ftpsrv::GetPort();
     m_anon = ftpsrv::IsAnon();
@@ -32,8 +30,7 @@ Menu::Menu(u32 flags) : stream::Menu{"FTP Install"_i18n, flags} {
 }
 
 Menu::~Menu() {
-    // signal for thread to exit and wait.
-    ftpsrv::DisableInstallMode();
+    stream::BackgroundInstaller::SetActiveMenu(nullptr);
 
     if (!m_was_ftp_enabled) {
         log_write("[FTP] disabling on exit\n");
@@ -99,7 +96,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::OnDisableInstallMode() {
-    ftpsrv::DisableInstallMode();
+    // no-op: install lifecycle is managed by BackgroundInstaller.
 }
 
 } // namespace sphaira::ui::menu::ftp

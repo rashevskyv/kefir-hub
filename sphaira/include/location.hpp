@@ -75,5 +75,6 @@ using StdioEntries = std::vector<StdioEntry>;
 
 // set write=true to filter out write protected devices.
 auto GetStdio(bool write) -> StdioEntries;
+auto GetMtpHostDevices(bool write) -> StdioEntries;
 
 } // namespace sphaira::location

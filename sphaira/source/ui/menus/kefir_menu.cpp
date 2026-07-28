@@ -30,6 +30,7 @@
 #include <utility>
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
+#include "ui/menus/filebrowser.hpp"
 #include "ui/hold_confirm_box.hpp"
 
 
@@ -79,11 +80,15 @@ auto EntryDescription(const UpdaterEntry& entry) -> const char* {
     if (entry.type == UpdaterEntryType::CustomLink) {
         return "Enter a ZIP URL and extract it to the SD card.";
     }
+    if (entry.type == UpdaterEntryType::FirmwareManual) {
+        return "Install a firmware already saved on the SD card.";
+    }
     return entry.url.c_str();
 }
 
 auto EntryIsFolder(const UpdaterEntry& entry) -> bool {
-    return entry.type == UpdaterEntryType::Network;
+    return entry.type == UpdaterEntryType::Network ||
+        entry.type == UpdaterEntryType::FirmwareManual;
 }
 
 auto EntryIsDownload(const UpdaterEntry& entry) -> bool {
@@ -124,6 +129,10 @@ void DrawUpdaterEntryIcon(NVGcontext* vg, Theme* theme, const UpdaterEntry& entr
 }
 
 auto EntryDisplayName(const UpdaterEntry& entry) -> std::string {
+    if (entry.type == UpdaterEntryType::FirmwareManual) {
+        return "Install manually"_i18n;
+    }
+
     if (entry.type != UpdaterEntryType::Kefir) {
         return entry.name;
     }
@@ -234,6 +243,8 @@ auto TileLabel(const UpdaterEntry& entry) -> std::string {
             return EntryDisplayName(entry);
         case UpdaterEntryType::Firmware:
             return entry.name;
+        case UpdaterEntryType::FirmwareManual:
+            return "Install manually"_i18n;
         case UpdaterEntryType::Network:
             return "Network";
         case UpdaterEntryType::CustomLink:
@@ -250,6 +261,7 @@ auto TileGroupLabel(UpdaterEntryType type) -> const char* {
         case UpdaterEntryType::Kefir:
             return "KEFIR";
         case UpdaterEntryType::Firmware:
+        case UpdaterEntryType::FirmwareManual:
             return "FIRMWARE";
         case UpdaterEntryType::Network:
         case UpdaterEntryType::CustomLink:
@@ -304,6 +316,12 @@ void BuildSectionedEntries(std::vector<UpdaterEntry>& out, const std::vector<Upd
 
     AddSectionEntry(out, "FIRMWARE");
     AppendEntriesOfType(out, downloads, UpdaterEntryType::Firmware);
+    out.push_back({
+        .type = UpdaterEntryType::FirmwareManual,
+        .name = "Install manually",
+        .url = {},
+        .pack = false,
+    });
 
     AddSectionEntry(out, "OTHER");
     AddNetworkEntry(out);
@@ -653,6 +671,24 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
     RefreshSystemInfo();
 
+    // a folder was chosen in the manual-install file browser; now that it has
+    // closed and we are the top menu again, kick off validation/installation.
+    if (m_pending_manual_firmware) {
+        const auto folder = *m_pending_manual_firmware;
+        m_pending_manual_firmware.reset();
+
+        std::string name = folder.s;
+        if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
+            name = name.substr(slash + 1);
+        }
+        if (name.empty()) {
+            name = "Firmware";
+        }
+
+        PromptInstallFirmware(name, folder);
+        return;
+    }
+
     if (!m_loaded && !m_loading) {
         FetchLinks();
     }
@@ -671,6 +707,36 @@ void Menu::DisplayOptions() {
         m_view_mode.Set(index_out);
         OnLayoutChange();
     }, m_view_mode.Get(), "Switch between list and grid view for the updater."_i18n);
+
+    // the whole downgrade-fix surface is hidden while it has no working
+    // implementation, so nothing in the ui promises something it cannot do.
+    if (detail::IsDowngradeFixAvailable()) {
+        // policy for the downgrade fix when installing a lower firmware.
+        // items order must match enum DowngradeFixMode.
+        SidebarEntryArray::Items downgrade_items{
+            "Automatic"_i18n,
+            "Optional (ask)"_i18n,
+            "Off"_i18n,
+        };
+        options->Add<SidebarEntryArray>("Downgrade fix"_i18n, downgrade_items, [this](s64& index_out) {
+            m_downgrade_fix_mode.Set(index_out);
+        }, m_downgrade_fix_mode.Get(), "When installing a lower firmware: Automatic deletes the system save 8000000000000073, Optional asks, Off never deletes it."_i18n);
+
+        // run the downgrade fix on its own so it can be tested in isolation.
+        options->Add<SidebarEntryCallback>("Apply downgrade fix"_i18n, [](){
+            App::Push<OptionBox>(
+                "Apply downgrade fix now?\n\nThis deletes the system save 8000000000000073.\n\nExperimental test action - use only if you know what you are doing.",
+                "Cancel"_i18n, "Apply"_i18n, 0,
+                [](auto op_index) {
+                    if (!op_index || *op_index != 1) {
+                        return;
+                    }
+                    DowngradeFixResult fix{};
+                    detail::ApplyDowngradeFix(&fix);
+                    App::Push<OptionBox>(detail::DescribeDowngradeFix(fix), "OK"_i18n);
+                });
+        }, "Delete system save 8000000000000073 (experimental downgrade fix)."_i18n);
+    }
 }
 
 void Menu::OnLayoutChange() {
@@ -828,9 +894,22 @@ void Menu::OpenSelected() {
         case UpdaterEntryType::Firmware:
             DownloadFirmware(entry);
             break;
+        case UpdaterEntryType::FirmwareManual:
+            OpenManualFirmwarePicker();
+            break;
         case UpdaterEntryType::Section:
             break;
     }
+}
+
+void Menu::OpenManualFirmwarePicker() {
+    auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
+    browser->SetFolderPicker([this](const fs::FsPath& folder) {
+        // record the choice; consumed in OnFocusGained once the browser closes,
+        // so nothing is pushed over the soon-to-be-popped file browser.
+        m_pending_manual_firmware = folder;
+    });
+    App::Push(std::move(browser));
 }
 
 void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success) {
@@ -877,22 +956,22 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
         return;
     }
 
-    const auto downgrade = IsDowngrade(entry.name);
+    // a downgrade is fully acknowledged BEFORE anything is downloaded: the
+    // warning and the downgrade-fix choice are both answered up front, so
+    // nothing is fetched until the user has accepted it.
+    const auto downgrade = PromptDowngradeAck(entry.name, "Download"_i18n,
+        [this, entry](bool apply_fix) {
+            StartFirmwareDownload(entry, apply_fix);
+        });
+
+    if (downgrade) {
+        return;
+    }
 
     std::string message = "Download firmware " + entry.name + "?\n\n";
     message += "It will be staged at ";
     message += FIRMWARE_ZIP;
     message += " and extracted to /firmware.";
-
-    if (downgrade) {
-        message = "Firmware downgrade warning\n\n";
-        message += "Current: " + m_current_firmware + "\n";
-        message += "Target: " + entry.name + "\n\n";
-        message += "Downgrading system firmware may prevent the console from booting until a factory reset is performed.\n\n";
-        message += "Fix path: hekate > Payloads > TegraExplorer > DowngradeFix.te\n";
-        message += "Guide: https://bit.ly/fw_downgrade\n\n";
-        message += "Continue?";
-    }
 
     App::Push<OptionBox>(message, "Cancel"_i18n, "Download"_i18n, 1,
         [this, entry](auto op_index) {
@@ -900,32 +979,86 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
                 return;
             }
 
-            App::Push<ProgressBox>(0, "Downloading"_i18n, entry.name,
-                [entry](auto pbox) -> Result {
-                    return detail::DownloadAndExtractFirmware(pbox, entry);
-                },
-                [this, entry](Result rc) {
-                    if (R_FAILED(rc)) {
-                        if (rc == Result_TransferCancelled) {
-                            return;
-                        }
-                        App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
-                        return;
-                    }
-
-                    PromptInstallFirmware(entry.name);
-                });
+            StartFirmwareDownload(entry, std::nullopt);
         });
 }
 
-void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path) {
+void Menu::StartFirmwareDownload(const UpdaterEntry& entry, std::optional<bool> acked_downgrade_fix) {
+    App::Push<ProgressBox>(0, "Downloading"_i18n, entry.name,
+        [entry](auto pbox) -> Result {
+            return detail::DownloadAndExtractFirmware(pbox, entry);
+        },
+        [this, entry, acked_downgrade_fix](Result rc) {
+            if (R_FAILED(rc)) {
+                if (rc == Result_TransferCancelled) {
+                    return;
+                }
+                App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
+                return;
+            }
+
+            PromptInstallFirmware(entry.name, "/firmware", acked_downgrade_fix);
+        });
+}
+
+bool Menu::PromptDowngradeAck(const std::string& target_version, const std::string& confirm_label, std::function<void(bool)> on_ack) {
+    if (!IsDowngrade(target_version)) {
+        return false;
+    }
+
+    std::string warning = "Firmware downgrade warning\n\n";
+    warning += "Current: " + m_current_firmware + "\n";
+    warning += "Target: " + target_version + "\n\n";
+    warning += "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.\n\n";
+    warning += "Fix path: hekate > Payloads > TegraExplorer > DowngradeFix.te\n";
+    warning += "Guide: https://bit.ly/fw_downgrade\n\n";
+    warning += "By continuing, you accept full responsibility.";
+
+    App::Push<OptionBox>(warning, "Cancel"_i18n, confirm_label, 1,
+        [this, on_ack = std::move(on_ack)](auto op_index) {
+            if (!op_index || *op_index != 1) {
+                return;
+            }
+
+            // nothing to ask while the fix has no working implementation.
+            if (!detail::IsDowngradeFixAvailable()) {
+                on_ack(false);
+                return;
+            }
+
+            // apply the configured downgrade-fix policy.
+            switch (m_downgrade_fix_mode.Get()) {
+                case DowngradeFixMode_Off:
+                    on_ack(false);
+                    break;
+                case DowngradeFixMode_Automatic:
+                    on_ack(true);
+                    break;
+                case DowngradeFixMode_Optional:
+                default: {
+                    std::string msg = "Apply downgrade fix?\n\n";
+                    msg += "This deletes the system save 8000000000000073 after installing.\n\n";
+                    msg += "Choose No to install without it.";
+                    App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0,
+                        [on_ack](auto fix_index) {
+                            on_ack(fix_index && *fix_index == 1);
+                        });
+                    break;
+                }
+            }
+        });
+
+    return true;
+}
+
+void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path, std::optional<bool> acked_downgrade_fix) {
     auto validation = std::make_shared<FirmwareValidation>();
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
             pbox->NewTransfer("Validating firmware contents...");
             return detail::ValidateFirmware(validation.get(), path);
         },
-        [this, display_name, path, validation](Result rc) {
+        [this, display_name, path, validation, acked_downgrade_fix](Result rc) {
             if (R_FAILED(rc)) {
                 App::Push<ErrorBox>(rc, "Firmware validation failed");
                 return;
@@ -939,51 +1072,57 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
             message += "Do not power off the console during installation.";
 
             App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-                [this, display_name, path, version](auto op_index) {
+                [this, display_name, path, version, acked_downgrade_fix](auto op_index) {
                     if (!op_index || *op_index != 1) {
                         return;
                     }
 
+                    // the downgrade fix (deleting system save 8000000000000073)
+                    // is only relevant when installing a LOWER firmware.
                     if (!IsDowngrade(version)) {
-                        InstallFirmware(display_name, path);
+                        InstallFirmware(display_name, path, false);
                         return;
                     }
 
-                    std::string warning = "Firmware downgrade warning\n\n";
-                    warning += "Current: " + m_current_firmware + "\n";
-                    warning += "Target: " + version + "\n\n";
-                    warning += "Downgrading firmware can cause boot problems. Make sure you know what you are doing and have a NAND or emuMMC backup.\n\n";
-                    warning += "If you continue, Kefir Hub will install the firmware and automatically apply the downgrade fix after installation.\n\n";
-                    warning += "By continuing, you accept full responsibility.";
+                    // downloaded firmware already asked before fetching it, so
+                    // the warning is not repeated here.
+                    if (acked_downgrade_fix.has_value()) {
+                        InstallFirmware(display_name, path, *acked_downgrade_fix);
+                        return;
+                    }
 
-                    App::Push<sphaira::ui::HoldConfirmBox>(warning,
-                        [this, display_name, path, version](bool accepted) {
-                            if (accepted) {
-                                InstallFirmware(display_name, path, true);
-                            }
-                        });
+                    // manual install: nothing was downloaded, so ask now.
+                    if (!PromptDowngradeAck(version, "Continue"_i18n,
+                            [this, display_name, path](bool apply_fix) {
+                                InstallFirmware(display_name, path, apply_fix);
+                            })) {
+                        InstallFirmware(display_name, path, false);
+                    }
                 });
         });
 }
 
 void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix) {
+    auto fix = std::make_shared<DowngradeFixResult>();
+
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
-        [path, apply_downgrade_fix](auto pbox) -> Result {
+        [path, apply_downgrade_fix, fix](auto pbox) -> Result {
             FirmwareValidation validation{};
             R_TRY(detail::ValidateFirmware(&validation, path));
             const bool use_exfat = validation.info.exfat_supported &&
                                    R_SUCCEEDED(validation.validation.exfat_result);
-            return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix);
+            return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix, fix.get());
         },
-        [apply_downgrade_fix](Result rc) {
+        [fix](Result rc) {
             if (R_FAILED(rc)) {
                 App::Push<ErrorBox>(rc, "Firmware update failed");
                 return;
             }
 
             std::string message = "Firmware update applied successfully.";
-            if (apply_downgrade_fix) {
-                message += "\n\nDowngrade fix applied.";
+            const auto fix_note = detail::DescribeDowngradeFix(*fix);
+            if (!fix_note.empty()) {
+                message += "\n\n" + fix_note;
             }
             message += "\n\nReboot now?";
 

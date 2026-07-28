@@ -7,6 +7,14 @@
 
 namespace sphaira::usb {
 
+// true if rc means the usb link itself went away mid-transfer -- the host
+// re-enumerated the device, the cable was disturbed, the bus was reset -- as
+// opposed to a protocol or filesystem level problem. Once one of these shows
+// up, every following transfer on the same session fails the same way until
+// the link is re-established, so callers must stop and reconnect rather than
+// carry on to the next item.
+bool IsLinkError(Result rc);
+
 struct Base {
     Base(u64 transfer_timeout);
     virtual ~Base();

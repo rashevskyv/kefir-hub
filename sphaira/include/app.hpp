@@ -71,11 +71,26 @@ public:
     // transfers triggered from outside the UI (e.g. MTP installs), where the
     // user should be able to keep navigating while it runs in the background.
     // reclaimed automatically once its worker thread finishes.
-    static void PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox);
+    // returns false if the slot is already taken (the box is then destroyed);
+    // check HasActiveTransfer() first if the caller has state to unwind.
+    static auto PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> bool;
+    static auto HasActiveTransfer() -> bool;
 
     // pops all widgets above a menu
     static void PopToMenu();
     static void Pop();
+
+    // true if this widget owns the footer hint row, i.e. it is the top of the
+    // widget stack (or the page a top-of-stack container delegates to). Every
+    // other widget on the stack is covered and draws no hints. Child objects
+    // that aren't on the stack at all are drawn by their parent and keep
+    // theirs. See ui/layout.hpp for the chrome rules.
+    static auto OwnsFooter(const ui::Widget* widget) -> bool;
+
+    // union of the opaque regions claimed by the widgets stacked above the
+    // active menu. The menu skips the header chrome that falls inside it so a
+    // side panel owns that corner instead of being ghosted through.
+    static auto GetChromeOcclusion() -> Vec4;
 
     // this is thread safe
     static void Notify(std::string text, ui::NotifEntry::Side side = ui::NotifEntry::Side::RIGHT);
@@ -105,8 +120,15 @@ public:
     static auto GetMtpShowSaves() -> bool;
     static auto GetMtpNameSd() -> std::string;
     static auto GetMtpNameInstall() -> std::string;
+    // extra folders exposed as MTP storages (absolute SD paths).
+    static auto GetMtpFolders() -> std::vector<std::string>;
     static auto GetFtpEnable() -> bool;
+    static auto GetFtpAnon() -> bool;
+    static auto GetFtpUser() -> std::string;
+    static auto GetFtpPass() -> std::string;
+    static auto GetFtpPort() -> long;
     static auto GetNxlinkEnable() -> bool;
+    static auto GetNtpEnable() -> bool;
     static auto GetHddEnable() -> bool;
     static auto GetWriteProtect() -> bool;
     static auto GetWebdavUrlName() -> std::string;
@@ -137,8 +159,16 @@ public:
     static void SetMtpShowSaves(bool enable);
     static void SetMtpNameSd(std::string value);
     static void SetMtpNameInstall(std::string value);
+    static void SetMtpFolders(const std::vector<std::string>& folders);
+    static void AddMtpFolder(const std::string& path);
+    static void RemoveMtpFolder(const std::string& path);
     static void SetFtpEnable(bool enable);
+    static void SetFtpAnon(bool enable);
+    static void SetFtpUser(std::string value);
+    static void SetFtpPass(std::string value);
+    static void SetFtpPort(long port);
     static void SetNxlinkEnable(bool enable);
+    static void SetNtpEnable(bool enable);
     static void SetHddEnable(bool enable);
     static void SetWriteProtect(bool enable);
     static void SetWebdavUrl(std::string value);
@@ -214,6 +244,8 @@ public:
     static auto IsEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;
     static auto IsFileBaseEmummc() -> bool;
+    // absolute sd path of the nand folder of the booted emummc, empty if not emummc.
+    static auto GetEmummcNintendoPath() -> std::string;
 
     static void SetAutoSleepDisabled(bool enable) {
         static Mutex mutex{};
@@ -334,6 +366,14 @@ public:
 
     AppletHookCookie m_appletHookCookie{};
 
+    // usb host storage hotplug watch: polled once a second while HDD is on, so
+    // plugging or pulling a drive raises a notification and refreshes the file
+    // browser root without the user having to do anything.
+    void PollUsbStorage();
+    TimeStamp m_usb_poll_ts{};
+    u32 m_usb_device_count{};
+    bool m_usb_poll_primed{};
+
     Theme m_theme{};
     fs::FsPath theme_path{};
     s64 m_theme_index{};
@@ -343,13 +383,20 @@ public:
 
     // network
     option::OptionBool m_nxlink_enabled{INI_SECTION, "nxlink_enabled", true};
+    option::OptionBool m_ntp_enabled{INI_SECTION, "ntp_enabled", true};
     option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", false};
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
     option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", false};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
+    // extra MTP storage folders, '|'-separated absolute paths ('|' is illegal in FAT names).
+    option::OptionString m_mtp_folders{INI_SECTION, "mtp_folders", ""};
     option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", false};
+    option::OptionBool m_ftp_anon{INI_SECTION, "ftp_anon", true};
+    option::OptionString m_ftp_user{INI_SECTION, "ftp_user", ""};
+    option::OptionString m_ftp_pass{INI_SECTION, "ftp_pass", ""};
+    option::OptionLong m_ftp_port{INI_SECTION, "ftp_port", 5000};
     option::OptionBool m_hdd_enabled{INI_SECTION, "hdd_enabled", true};
     option::OptionBool m_hdd_write_protect{INI_SECTION, "hdd_write_protect", false};
     option::OptionString m_webdav_url{INI_SECTION, "webdav_url", ""};

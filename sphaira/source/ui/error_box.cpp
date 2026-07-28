@@ -2,6 +2,7 @@
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
+#include <cstdio>
 
 namespace sphaira::ui {
 namespace {
@@ -35,6 +36,10 @@ auto GetCodeMessage(Result rc) -> const char* {
         case FsError_InvalidCharacter: return "FsError_InvalidCharacter";
         case FsError_InvalidOffset: return "FsError_InvalidOffset";
         case FsError_InvalidSize: return "FsError_InvalidSize";
+
+        case UsbError_UrbFailed: return "UsbError_UrbFailed";
+        case UsbError_UrbCancelled: return "UsbError_UrbCancelled";
+        case UsbError_UrbBadStatus: return "UsbError_UrbBadStatus";
 
         case Result_TransferCancelled: return "SphairaError_TransferCancelled";
         case Result_StreamBadSeek: return "SphairaError_StreamBadSeek";
@@ -152,6 +157,13 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_SmbConnectionFailed: return "SphairaError_SmbConnectionFailed";
         case Result_SmbNotSupported: return "SphairaError_SmbNotSupported";
         case Result_SaveSyncFailed: return "SphairaError_SaveSyncFailed";
+        case Result_NtpNoConnection: return "SphairaError_NtpNoConnection";
+        case Result_NtpResolveFailed: return "SphairaError_NtpResolveFailed";
+        case Result_NtpSocketFailed: return "SphairaError_NtpSocketFailed";
+        case Result_NtpSendFailed: return "SphairaError_NtpSendFailed";
+        case Result_NtpRecvFailed: return "SphairaError_NtpRecvFailed";
+        case Result_NtpBadReply: return "SphairaError_NtpBadReply";
+        case Result_NtpSetTimeFailed: return "SphairaError_NtpSetTimeFailed";
     }
 
     return "";
@@ -171,6 +183,10 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "The name contains invalid characters. Do not use characters like *, ?, :, etc."_i18n;
         case Result_FsReadOnly:
             return "This directory or file is write-protected."_i18n;
+        case UsbError_UrbFailed:
+        case UsbError_UrbCancelled:
+        case UsbError_UrbBadStatus:
+            return "The USB connection dropped mid-transfer. Check the cable and the port, then try again."_i18n;
         case Result_SmbConnectionFailed:
             return "Failed to connect to the SMB server. Please check your network connection, server IP address, share name, and credentials."_i18n;
         case Result_SmbNotSupported:
@@ -183,6 +199,20 @@ auto GetErrorDescription(Result rc) -> std::string {
 }
 
 } // namespace
+
+auto GetResultCodeName(Result rc) -> const char* {
+    return GetCodeMessage(rc);
+}
+
+auto GetResultDescription(Result rc) -> std::string {
+    return GetErrorDescription(rc);
+}
+
+auto FormatResult(Result rc) -> std::string {
+    char out[16]{};
+    std::snprintf(out, sizeof(out), "0x%08X", R_VALUE(rc));
+    return out;
+}
 
 ErrorBox::ErrorBox(const std::string& message) : m_message{message} {
     log_write("[ERROR] %s\n", m_message.c_str());

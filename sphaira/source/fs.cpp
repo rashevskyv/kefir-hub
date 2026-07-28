@@ -811,7 +811,7 @@ Result Dir::ReadAll(std::vector<FsDirectoryEntry>& buf) {
                 }
                 entry.type = FsDirEntryType_File;
             } else {
-                log_write("[FS] WARNING: unknown type when reading dir: %u\n", d->d_type);
+                log_write("[FS] WARNING: unknown d_type when reading dir: %u name='%s'\n", d->d_type, d->d_name);
                 continue;
             }
 

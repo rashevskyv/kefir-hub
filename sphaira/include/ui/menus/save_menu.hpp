@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <span>
+#include <unordered_set>
 
 namespace sphaira::ui::menu::save {
 
@@ -17,6 +18,10 @@ struct Entry final : FsSaveDataInfo {
     NacpLanguageEntry lang{};
     int image{};
     bool selected{};
+    // true for a synthesized tile that stands for a backup archive on disk
+    // rather than live save data on the console. drawn with a yellow inner
+    // border and grouped below the "Backups" divider.
+    bool is_backup{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     auto GetName() const -> const char* {
@@ -79,8 +84,39 @@ private:
     void DisplaySaveOptions();
     void DisplayAccountOptions();
     void DisplayDataTypeOptions();
+    void DisplayShowSavesOptions();
     void ToggleCurrentSelection();
     void InvertSelection();
+
+    // populates m_installed_app_ids from the console's application records, used
+    // to tell installed-game saves apart from orphaned (deleted-game) saves.
+    void BuildInstalledAppIds();
+    // scans the SD card for backup archives and appends one tile per game that
+    // has a backup (deduped by application id). is_backup is set on each.
+    void ReadBackupEntries(std::vector<Entry>& out) const;
+
+    // the saves grid keeps all live saves first, then all backup tiles. a full
+    // empty row is inserted between the two so the "Backups" divider label has
+    // somewhere to live. because List is a uniform grid, that gap is expressed
+    // as extra "display" slots the cursor steps over; the helpers below map
+    // between entry indices (into m_entries) and those display slots.
+    struct GridSections {
+        s64 row{1};
+        s64 live_count{};
+        s64 backup_count{};
+        s64 base_fill{};            // fillers padding the last live row
+        s64 pad{};                  // base_fill + one empty divider row
+        s64 first_backup_display{}; // display index of the first backup tile
+        s64 display_count{};
+        bool has_backups{};
+        bool horizontal{};          // HOME (HbMenu) layout scrolls sideways
+    };
+    auto ComputeGridSections() const -> GridSections;
+    auto EntryToDisplay(s64 entry, const GridSections& g) const -> s64;
+    auto DisplayToEntry(s64 display, const GridSections& g) const -> s64; // -1 == filler
+    auto ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64;
+    void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) const;
+    void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const;
 
     auto GetSelectedEntries() const {
         std::vector<Entry> out;
@@ -163,6 +199,11 @@ private:
     std::vector<Entry> m_entries{};
     s64 m_index{}; // where i am in the array
     s64 m_selected_count{};
+    // index in m_entries where the backup tiles begin; live saves occupy
+    // [0, m_backup_start), backup tiles occupy [m_backup_start, size).
+    s64 m_backup_start{};
+    // application ids currently installed on the console (base title ids).
+    std::unordered_set<u64> m_installed_app_ids{};
     std::unique_ptr<List> m_list{};
     bool m_is_reversed{};
     bool m_dirty{};
@@ -180,6 +221,10 @@ private:
     option::OptionBool m_compress_save_backup{INI_SECTION, "compress_save_backup", true};
     option::OptionBool m_save_autosync{INI_SECTION, "save_autosync", true};
     option::OptionBool m_restore_include_remote{INI_SECTION, "restore_include_remote", false};
+    // "Show saves" filter: which categories of tiles appear in the grid.
+    option::OptionBool m_show_installed{INI_SECTION, "show_installed", true};
+    option::OptionBool m_show_deleted{INI_SECTION, "show_deleted", true};
+    option::OptionBool m_show_backups{INI_SECTION, "show_backups", false};
 
     // last folders confirmed via "Choose Folder...", newest first.
     static constexpr inline size_t RECENT_BACKUP_DIR_MAX = 5;

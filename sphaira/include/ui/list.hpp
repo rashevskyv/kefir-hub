@@ -35,6 +35,12 @@ struct List final : Object {
     auto ScrollToStart(s64& index, s64 count) -> bool;
     auto ScrollStepList(s64& index, s64 count, bool forward) -> bool;
 
+    // scrolls the view the minimum amount needed for index to be on screen.
+    // used when the index is moved by the owner rather than by this list (the
+    // cursor stepping over a caption row, wrapping around the ends, ...), which
+    // would otherwise leave the cursor drawn outside the visible window.
+    void EnsureVisible(s64 index, s64 count);
+
     auto GetYoff() const {
         return m_yoff;
     }

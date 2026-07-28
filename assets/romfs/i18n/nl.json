@@ -74,9 +74,7 @@
   "USB transfer (Switch 2 Switch)": "USB-overdracht (Switch 2 Switch)",
   "/dev/null (Speed Test)": "/dev/null (Snelheidstest)",
   "Dumping": "Bezig met dumpen...",
-  "Dump successfull!": "Dumpen succesvol!",
   "Dump failed!": "Dumpen mislukt!",
-  "Delete successfull!": "Verwijderen succesvol!",
   "Delete failed!": "Verwijderen mislukt!",
   "Success": "Succes",
   "Themezer": "Themamaker",
@@ -215,7 +213,7 @@
   "Convert to standard crypto": "Converteren naar standaardcrypto",
   "Lower master key": "Onderste hoofdsleutel",
   "Lower system version": "Lagere systeemversie",
-  "Homebrew": "Zelf brouwen",
+  "Homebrew": "Homebrew",
   "Apps": "",
   "Homebrew Options": "Homebrew-opties",
   "Hide Sphaira": "Verberg Sphaira",
@@ -295,7 +293,6 @@
   "Select upload location": "",
   "No upload locations set!": "",
   "Uploading": "",
-  "Upload successfull!": "",
   "Upload failed!": "",
   "Hash": "",
   "Hash Options": "",
@@ -553,5 +550,8 @@
   "Update language packs": "Taalpakketten bijwerken",
   "Update the UltraHand language package list.": "Werk de UltraHand-taalpakketlijst bij.",
   "Updating language packs...": "Taalpakketten bijwerken...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "Om deze vertaling toe te passen, moet u een van de vereiste variaties selecteren in de console-instellingen:\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Om deze vertaling toe te passen, moet u een van de vereiste variaties selecteren in de console-instellingen:\n",
+  "Dump successful!": "Dumpen succesvol!",
+  "Upload successful!": "",
+  "Delete successful!": "Verwijderen succesvol!"
 }

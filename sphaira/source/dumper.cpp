@@ -375,7 +375,7 @@ void Dump(const std::shared_ptr<BaseSource>& source, const DumpLocation& locatio
         App::PushErrorBox(rc, "Dump failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Dump successfull!"_i18n);
+            App::Notify("Dump successful!"_i18n);
             log_write("dump successfull!!!\n");
         }
 

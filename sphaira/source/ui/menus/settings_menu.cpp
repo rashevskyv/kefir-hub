@@ -8,6 +8,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/save/save_locations.hpp"
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -21,6 +22,7 @@
 #include "app.hpp"
 #include "location.hpp"
 #include "download.hpp"
+#include "evman.hpp"
 #include "i18n.hpp"
 #include "location.hpp"
 
@@ -112,6 +114,60 @@ auto SettingsValueColour(Theme* theme, const std::string& value, bool selected) 
 
 
 
+// marks a Sources row as a user-added network location, so the per-location
+// options menu is only offered on rows that actually are one.
+constexpr const char* NETWORK_LOCATION_ID = "network_location";
+
+auto MakeHeader(std::string label) -> SettingsItem {
+    return { std::move(label), {}, {}, {}, SettingsItemKind::Header };
+}
+
+// headers are captions, not rows: the cursor steps over them in the direction
+// it was already travelling and wraps around the ends, so a category that
+// starts with a header can still be left by pressing up on its first row.
+auto ResolveItemIndex(const std::vector<SettingsItem>& items, s64 index, s64 from) -> s64 {
+    const auto count = static_cast<s64>(items.size());
+    if (count <= 0) {
+        return 0;
+    }
+
+    auto target = std::clamp<s64>(index, 0, count - 1);
+    from = std::clamp<s64>(from, 0, count - 1);
+
+    // the list wraps the index itself; comparing the two ends would read as a
+    // move in the opposite direction, so name those two cases outright.
+    s64 step;
+    if (from == count - 1 && !target) {
+        step = 1;
+    } else if (!from && target == count - 1) {
+        step = -1;
+    } else {
+        step = target >= from ? 1 : -1;
+    }
+
+    for (s64 i = 0; i < count && items[target].kind == SettingsItemKind::Header; i++) {
+        target = (target + step + count) % count;
+    }
+
+    // all headers: nothing to land on, stay put.
+    return items[target].kind == SettingsItemKind::Header ? from : target;
+}
+
+// a row that opens its own page in the right pane of the settings menu, with
+// the category column left standing. The items are built when the folder is
+// opened, so they always show current state.
+auto MakeFolderItem(std::string label, std::string description, std::function<std::vector<SettingsItem>()> builder) -> SettingsItem {
+    SettingsItem item{
+        std::move(label),
+        std::move(description),
+        [](){ return std::string{}; },
+        {},
+        SettingsItemKind::Folder,
+    };
+    item.folder_items = std::move(builder);
+    return item;
+}
+
 auto MakeBoolItem(std::string label, std::string description, std::function<bool()> get, std::function<void(bool)> set) -> SettingsItem {
     return {
         std::move(label),
@@ -136,6 +192,123 @@ auto MakeOptionItem(std::string label, std::string description, option::OptionBo
             option.Set(enabled);
         }
     );
+}
+
+// items for the "MTP storages" settings page (was a side popup). values read
+// live state, so toggles/names refresh in place without a rebuild.
+auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
+    items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
+    items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
+
+    items.emplace_back(SettingsItem{
+        "microSD card name"_i18n,
+        "Set custom name for microSD card in MTP."_i18n,
+        [](){ const auto n = App::GetMtpNameSd(); return n.empty() ? "Default"_i18n : n; },
+        [](){
+            std::string value = App::GetMtpNameSd();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "microSD card name"_i18n.c_str(), value.c_str()))) {
+                App::SetMtpNameSd(value);
+            }
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Install folder name"_i18n,
+        "Set custom name for Install folder in MTP."_i18n,
+        [](){ const auto n = App::GetMtpNameInstall(); return n.empty() ? "Default"_i18n : n; },
+        [](){
+            std::string value = App::GetMtpNameInstall();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "Install folder name"_i18n.c_str(), value.c_str()))) {
+                App::SetMtpNameInstall(value);
+            }
+        }
+    });
+
+    // one row per user-added folder; selecting it offers to remove it.
+    for (const auto& folder : App::GetMtpFolders()) {
+        items.emplace_back(SettingsItem{
+            folder,
+            "Folder exposed over MTP. Select to remove it."_i18n,
+            [](){ return std::string{}; },
+            [folder](){
+                App::Push<OptionBox>(
+                    "Remove this folder from MTP?"_i18n + "\n" + folder,
+                    "Back"_i18n, "Remove"_i18n, 0, [folder](auto op_index){
+                        if (op_index && *op_index) {
+                            App::RemoveMtpFolder(folder);
+                        }
+                    }
+                );
+            }
+        });
+    }
+
+    items.emplace_back(SettingsItem{
+        "Add folder"_i18n,
+        "Pick a folder on the microSD card to expose as its own MTP storage."_i18n,
+        [](){ return std::string{}; },
+        [](){
+            auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
+            browser->SetFolderPicker([](const fs::FsPath& folder){
+                App::AddMtpFolder(folder.toString());
+                App::Notify("Added MTP folder"_i18n);
+            });
+            App::Push(std::move(browser));
+        },
+        SettingsItemKind::Folder,
+    });
+
+    return items;
+}
+
+// items for the "FTP" settings page: the FTP server toggle plus login/port.
+// folder restriction is not exposed yet - the server serves the whole SD card.
+auto BuildFtpItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(MakeBoolItem("Enable FTP server"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable));
+    items.emplace_back(MakeBoolItem("Anonymous (no login)"_i18n, "Allow connecting without a username or password."_i18n, App::GetFtpAnon, App::SetFtpAnon));
+
+    items.emplace_back(SettingsItem{
+        "Username"_i18n,
+        "FTP username (used when anonymous is off)."_i18n,
+        [](){ const auto n = App::GetFtpUser(); return n.empty() ? "Not set"_i18n : n; },
+        [](){
+            std::string value = App::GetFtpUser();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "FTP username"_i18n.c_str(), value.c_str()))) {
+                App::SetFtpUser(value);
+            }
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Password"_i18n,
+        "FTP password (used when anonymous is off)."_i18n,
+        [](){ return App::GetFtpPass().empty() ? "Not set"_i18n : std::string("********"); },
+        [](){
+            std::string value = App::GetFtpPass();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "FTP password"_i18n.c_str(), value.c_str()))) {
+                App::SetFtpPass(value);
+            }
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Port"_i18n,
+        "TCP port the FTP server listens on (default 5000)."_i18n,
+        [](){ return std::to_string(App::GetFtpPort()); },
+        [](){
+            s64 value = App::GetFtpPort();
+            if (R_SUCCEEDED(swkbd::ShowNumPad(value, "FTP port"_i18n.c_str(), std::to_string(value).c_str())) && value > 0 && value <= 65535) {
+                App::SetFtpPort(value);
+            }
+        }
+    });
+
+    return items;
 }
 
 void ToggleInstallOption(option::OptionBool& option) {
@@ -818,8 +991,118 @@ auto ThemeValue() -> std::string {
     return themes[index].name;
 }
 
+// items for the "Kefir Hub theme options" page (was a side popup).
+auto BuildThemeOptionItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
 
+    items.emplace_back(SettingsItem{
+        "Select Theme"_i18n,
+        "Customise the look of Kefir Hub by changing the theme"_i18n,
+        ThemeValue,
+        [](){
+            const auto themes = App::GetThemeMetaList();
+            if (themes.empty()) {
+                return;
+            }
 
+            PopupList::Items list;
+            for (const auto& theme : themes) {
+                list.push_back(theme.name);
+            }
+            App::Push<PopupList>("Select Theme"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetTheme(*op_index);
+                }
+            }, App::GetThemeIndex());
+        }
+    });
+
+    items.emplace_back(MakeBoolItem("12 Hour Time"_i18n, "Changes the clock to 12 hour"_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable));
+
+    return items;
+}
+
+// adds a location from the sync picker itself, so an empty list is a dead end
+// no longer: the new WebDAV location becomes the sync target and its edit page
+// opens right away, because a fresh location is only a name and "webdav://".
+void AddSaveSyncLocationInteractive() {
+    std::vector<std::string> before;
+    for (const auto& loc : save::GetWebdavLocations()) {
+        before.push_back(loc.name);
+    }
+
+    // deferred by a frame: the picker that started this is still on the widget
+    // stack and about to pop itself, and pushing over it would draw both.
+    evman::push(evman::FunctionalEventData{[before](){
+        filebrowser::AddNetworkLocationInteractive([before](){
+            // any protocol can be added here; only a WebDAV one can be synced
+            // to, so a new SMB/FTP location is added and simply not selected.
+            for (const auto& loc : save::GetWebdavLocations()) {
+                if (std::find(before.cbegin(), before.cend(), loc.name) != before.cend()) {
+                    continue;
+                }
+
+                App::SetWebdavUrl(loc.name);
+                App::Push<SourceEditMenu>(loc.name);
+                return;
+            }
+        });
+    }});
+}
+
+// picks which of the WebDAV locations added above receives save backups. Not a
+// folder: it is a single choice, and a page holding one row is just a detour.
+auto MakeSaveSyncLocationItem() -> SettingsItem {
+    return {
+        "Save sync location"_i18n,
+        "Network location that save backups are uploaded to. Only WebDAV locations can be used."_i18n,
+        [](){
+            const auto name = App::GetWebdavUrlName();
+            return name.empty() ? "None"_i18n : name;
+        },
+        [](){
+            const auto locations = save::GetWebdavLocations();
+
+            // nothing to choose between yet: go straight to adding one.
+            if (locations.empty()) {
+                AddSaveSyncLocationInteractive();
+                return;
+            }
+
+            PopupList::Items list;
+            list.push_back("None"_i18n);
+
+            s64 current = 0;
+            for (size_t i = 0; i < locations.size(); i++) {
+                list.push_back(locations[i].name);
+                if (locations[i].name == App::GetWebdavUrlName()) {
+                    current = static_cast<s64>(i) + 1;
+                }
+            }
+
+            // last row, the way the Sources category offers it.
+            const auto add_index = static_cast<s64>(list.size());
+            list.push_back("+ Add network location"_i18n);
+
+            App::Push<PopupList>("Save sync location"_i18n, std::move(list), [locations, add_index](std::optional<s64> op_index){
+                if (!op_index) {
+                    return;
+                }
+                if (*op_index == add_index) {
+                    AddSaveSyncLocationInteractive();
+                } else if (!*op_index) {
+                    App::SetWebdavUrl("");
+                } else {
+                    App::SetWebdavUrl(locations[*op_index - 1].name);
+                }
+            }, current);
+        }
+    };
+}
+
+// Two blocks: the sources themselves at the top (add one, then the ones you
+// have), and the knobs that govern them below the fold. Opening this category
+// should put "add a source" under the cursor, not a checkbox.
 auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -847,9 +1130,42 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
                     App::Push<SourceEditMenu>(loc.name);
                 }
             },
-            SettingsItemKind::Folder
+            SettingsItemKind::Folder,
+            // tags the row as an editable network location. The category also
+            // holds usb storage toggles and WebDAV, which the per-location
+            // options menu must not offer itself on.
+            NETWORK_LOCATION_ID
         });
     }
+
+    items.emplace_back(MakeHeader("Source settings"_i18n));
+
+    // usb mass storage is a file source like any other, so it is configured
+    // here next to the network locations rather than under "Network".
+    items.emplace_back(MakeBoolItem(
+        "USB storage"_i18n,
+        "Mount connected USB drives next to the microSD card. Shares the USB port with MTP, so turning this on turns MTP off."_i18n,
+        App::GetHddEnable, App::SetHddEnable));
+
+    items.emplace_back(MakeBoolItem(
+        "USB storage read-only"_i18n,
+        "Protect connected USB drives from changes. Turn this off to allow writing, renaming, deleting and installing to them."_i18n,
+        App::GetWriteProtect, App::SetWriteProtect));
+
+    // the drives plugged in right now, so the two toggles above can be seen to
+    // have taken effect without leaving the screen.
+    for (const auto& e : location::GetStdio(false)) {
+        items.emplace_back(SettingsItem{
+            e.name,
+            e.write_protect() ? "Connected, mounted read-only."_i18n : "Connected, writable."_i18n,
+            [](){ return std::string{}; },
+            [](){},
+        });
+    }
+
+    // the save-sync target is a property of the sources above, so it sits with
+    // them rather than under Network.
+    items.emplace_back(MakeSaveSyncLocationItem());
 
     return items;
 }
@@ -894,13 +1210,19 @@ Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
 
     m_category_list = std::make_unique<List>(1, 8, Vec4{76.f, 138.f, 300.f, 448.f}, Vec4{76.f, 138.f, 300.f, 56.f});
     m_category_list->SetLayout(List::Layout::GRID);
+    // up/down wrap around the ends; L/R (page) and ZL/ZR (ends) are driven
+    // manually in Update() instead of via the List flags, because in a
+    // single-column GRID those flags also capture dpad LEFT/RIGHT, which this
+    // menu uses to move between the category and item panes.
     m_category_list->SetPageJump(false);
     m_category_list->SetFastScroll(false);
+    m_category_list->SetWrap(true);
 
     m_item_list = std::make_unique<List>(1, 7, Vec4{420.f, 132.f, 780.f, 462.f}, Vec4{420.f, 132.f, 780.f, 66.f});
     m_item_list->SetLayout(List::Layout::GRID);
     m_item_list->SetPageJump(false);
     m_item_list->SetFastScroll(false);
+    m_item_list->SetWrap(true);
 
     SetCategoryIndex(0);
 }
@@ -909,6 +1231,22 @@ Menu::~Menu() = default;
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+
+    // an open folder owns the right pane: rebuild its rows in place (a popup
+    // may have changed what they read) and leave the category pane alone.
+    if (m_folder_open) {
+        BuildCategories();
+        m_category_index = std::clamp<s64>(m_category_index, 0, static_cast<s64>(m_categories.size()) - 1);
+
+        if (m_folder_builder) {
+            const auto yoff = m_item_list->GetYoff();
+            m_folder_items = m_folder_builder();
+            m_item_list->SetYoff(yoff);
+        }
+
+        SetFolderIndex(m_folder_index);
+        return;
+    }
 
     std::string category_label;
     std::string item_label;
@@ -955,7 +1293,6 @@ void Menu::OnFocusGained() {
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (m_categories.empty()) return;
-    const auto& category = m_categories[m_category_index];
     bool focus_changed = false;
     if (touch->is_clicked) {
         if (touch->in_range(m_category_list->GetPos())) {
@@ -985,36 +1322,73 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
     MenuBase::Update(controller, touch);
 
+    // fast navigation of the focused pane: L/R jump a page, ZL/ZR jump to the
+    // first/last entry. done here (not through List's page-jump/fast-scroll
+    // flags) so it doesn't steal dpad LEFT/RIGHT from the pane switch above.
+    {
+        const bool cats = m_focus_pane == FocusPane::Categories;
+        List* list = cats ? m_category_list.get() : m_item_list.get();
+        s64 idx = cats ? CategoryRow() : CurrentItemIndex();
+        const s64 cnt = cats ? CategoryRowCount() : static_cast<s64>(CurrentItems().size());
+
+        bool moved = false;
+        if (controller->GotDown(Button::R2)) {
+            moved = list->ScrollToEnd(idx, cnt);
+        } else if (controller->GotDown(Button::L2)) {
+            moved = list->ScrollToStart(idx, cnt);
+        } else if (controller->GotDown(Button::R)) {
+            moved = list->ScrollPageDown(idx, cnt);
+        } else if (controller->GotDown(Button::L)) {
+            moved = list->ScrollPageUp(idx, cnt);
+        }
+
+        if (moved) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            if (cats) {
+                SetCategoryRow(idx);
+            } else {
+                SetCurrentItemIndex(idx);
+            }
+        }
+    }
+
     if (m_focus_pane == FocusPane::Categories) {
-        m_category_list->OnUpdate(controller, touch, m_category_index, m_categories.size(), [this, focus_changed](bool touch, auto i) {
-            if (touch && m_category_index == i) {
+        m_category_list->OnUpdate(controller, touch, CategoryRow(), CategoryRowCount(), [this, focus_changed](bool touch, auto i) {
+            if (touch && CategoryRow() == i) {
                 if (!focus_changed) {
                     FireAction(Button::A);
                 }
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
-                SetCategoryIndex(i);
+                SetCategoryRow(i);
             }
         }, this);
     } else {
-        m_item_list->OnUpdate(controller, touch, m_item_index, category.items.size(), [this, focus_changed](bool touch, auto i) {
-            if (touch && m_item_index == i) {
+        m_item_list->OnUpdate(controller, touch, CurrentItemIndex(), CurrentItems().size(), [this, focus_changed](bool touch, auto i) {
+            if (touch && CurrentItemIndex() == i) {
                 if (!focus_changed) {
                     FireAction(Button::A);
                 }
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
-                SetItemIndex(i);
+                SetCurrentItemIndex(i);
             }
         }, this);
     }
 
-    if (m_focus_pane == FocusPane::Items && category.label == "Sources"_i18n && m_item_index > 0) {
-        SetAction(Button::START, Action{"Options"_i18n, [this, category](){
-            const auto& item = category.items[m_item_index];
+    // the pane may have changed category above, so read the live one.
+    const auto& current_items = CurrentItems();
+    const bool on_network_location = !m_folder_open
+        && m_item_index >= 0
+        && m_item_index < static_cast<s64>(current_items.size())
+        && current_items[m_item_index].id == NETWORK_LOCATION_ID;
+
+    if (m_focus_pane == FocusPane::Items && on_network_location) {
+        const auto location_name = current_items[m_item_index].label;
+        SetAction(Button::START, Action{"Options"_i18n, [this, location_name](){
             auto network_locations = location::Load();
             auto it = std::find_if(network_locations.begin(), network_locations.end(), [&](const auto& e) {
-                return e.name == item.label;
+                return e.name == location_name;
             });
             if (it != network_locations.end()) {
                 location::Entry loc = *it;
@@ -1110,11 +1484,17 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 namespace {
 
 auto SettingsItemTextX(const SettingsItem& item, float x) -> float {
-    return item.kind == SettingsItemKind::Normal ? x + 18.f : x + 74.f;
+    switch (item.kind) {
+        case SettingsItemKind::Normal:
+        case SettingsItemKind::Header:
+            return x + 18.f;
+        default:
+            return x + 74.f;
+    }
 }
 
 void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& item, Vec4 v, bool selected) {
-    if (item.kind == SettingsItemKind::Normal) {
+    if (item.kind == SettingsItemKind::Normal || item.kind == SettingsItemKind::Header) {
         return;
     }
 
@@ -1178,10 +1558,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     gfx::drawRect(vg, 392.f, 118.f, 1.f, 504.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
 
-    m_category_list->Draw(vg, theme, m_categories.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
-        const auto selected = m_category_index == i;
+    m_category_list->Draw(vg, theme, CategoryRowCount(), [this](auto* vg, auto* theme, Vec4 v, auto row) {
+        // while a folder is open it sits on its own row under its category,
+        // indented, so the column shows where the right pane came from.
+        const bool folder_row = m_folder_open && row == m_category_index + 1;
+        const s64 category = (m_folder_open && row > m_category_index) ? row - 1 : row;
+        const bool parent_row = m_folder_open && row == m_category_index;
+        const bool selected = m_folder_open ? folder_row : (m_category_index == row);
         const auto focused = selected && m_focus_pane == FocusPane::Categories;
-        const auto text_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+        const auto text_id = (selected || parent_row) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+        const auto& label = folder_row ? m_folder_label : m_categories[category].label;
 
         if (selected) {
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
@@ -1191,17 +1577,35 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         {
-            const float text_x = v.x + 18.f;
-            const float text_w = v.w - 36.f;
-            nvgFontSize(vg, 20.f);
+            const float indent = folder_row ? 30.f : 0.f;
+            const float text_x = v.x + 18.f + indent;
+            const float text_w = v.w - 36.f - indent;
+            const float font_size = folder_row ? 18.f : 20.f;
+            nvgFontSize(vg, font_size);
             nvgTextLineHeight(vg, 1.0f);
             float label_bounds[4];
-            nvgTextBoxBounds(vg, text_x, 0, text_w, m_categories[i].label.c_str(), nullptr, label_bounds);
+            nvgTextBoxBounds(vg, text_x, 0, text_w, label.c_str(), nullptr, label_bounds);
             const float label_h = label_bounds[3] - label_bounds[1];
             const float label_y = v.y + (v.h - label_h) / 2.f;
+
+            // a short elbow tying the indented row back to its category above.
+            if (folder_row) {
+                const float elbow_x = v.x + 26.f;
+                const float mid_y = v.y + v.h / 2.f;
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, elbow_x, v.y + 6.f);
+                nvgLineTo(vg, elbow_x, mid_y);
+                nvgLineTo(vg, elbow_x + 10.f, mid_y);
+                nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
+                nvgStrokeWidth(vg, 2.f);
+                nvgLineCap(vg, NVG_ROUND);
+                nvgLineJoin(vg, NVG_ROUND);
+                nvgStroke(vg);
+            }
+
             gfx::drawTextBox(
-                vg, text_x, label_y, 20.f, text_w,
-                theme->GetColour(text_id), m_categories[i].label.c_str()
+                vg, text_x, label_y, font_size, text_w,
+                theme->GetColour(text_id), label.c_str()
             );
         }
     });
@@ -1210,11 +1614,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    const auto& category = m_categories[m_category_index];
-    m_item_list->Draw(vg, theme, category.items.size(), [this, &category](auto* vg, auto* theme, Vec4 v, auto i) {
-        const auto& item = category.items[i];
-        const auto selected = m_item_index == i;
+    const auto& items = CurrentItems();
+    m_item_list->Draw(vg, theme, items.size(), [this, &items](auto* vg, auto* theme, Vec4 v, auto i) {
+        const auto selected = CurrentItemIndex() == i;
         const auto focused = selected && m_focus_pane == FocusPane::Items;
+        DrawItemRow(vg, theme, v, items[i], selected, focused);
+    });
+}
+
+void Menu::DrawItemRow(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected, bool focused) {
+    {
+        // a section caption: a dimmed label with a rule running off to the
+        // right, never highlighted because the cursor cannot land on it.
+        if (item.kind == SettingsItemKind::Header) {
+            const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const float text_x = v.x + 18.f;
+            const float text_y = v.y + v.h - 22.f;
+            gfx::drawTextArgs(vg, text_x, text_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", item.label.c_str());
+            float bounds[4];
+            nvgFontSize(vg, 15.f);
+            gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+            const float rule_x = text_x + (bounds[2] - bounds[0]) + 12.f;
+            gfx::drawRect(vg, rule_x, text_y + 9.f, std::max(0.f, v.x + v.w - 20.f - rule_x), 1.f,
+                theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            return;
+        }
+
         const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
 
         if (selected) {
@@ -1230,14 +1655,17 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto text_x = SettingsItemTextX(item, v.x);
         const auto text_offset = text_x - v.x;
 
-        gfx::drawTextBox(
-            vg, text_x, v.y + 10.f, 20.f, v.w - 242.f - text_offset,
-            theme->GetColour(label_id), item.label.c_str()
+        // one line each, never wrapped: a wrapped label would land on top of
+        // the description below it. Long text scrolls while the row is
+        // selected and is clipped otherwise.
+        m_scroll_label.Draw(
+            vg, selected, text_x, v.y + 10.f, v.w - 242.f - text_offset, 20.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(label_id), item.label
         );
         if (!item.description.empty()) {
-            gfx::drawTextBox(
-                vg, text_x, v.y + 37.f, 14.f, v.w - 212.f - text_offset,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
+            m_scroll_description.Draw(
+                vg, selected, text_x, v.y + 37.f, v.w - 212.f - text_offset, 14.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), item.description
             );
         }
 
@@ -1263,7 +1691,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             nvgLineJoin(vg, NVG_ROUND);
             nvgStroke(vg);
         }
-    });
+    }
 }
 
 void Menu::BuildCategories() {
@@ -1297,6 +1725,11 @@ void Menu::BuildCategories() {
                     }, App::GetTextScrollSpeed());
                 }},
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
+                // clock sync sits with the other clock settings rather than
+                // under Network: it is an outbound client, not a server.
+                MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
+                MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
+                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
                 { "Restart Kefir Hub"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
                     App::ExitRestart();
                 }},
@@ -1324,50 +1757,31 @@ void Menu::BuildCategories() {
                     }
                 }},
                 MakeBoolItem("Animated waves"_i18n, "Enable animated background waves in the bottom bar."_i18n, App::GetAnimatedWavesEnable, App::SetAnimatedWavesEnable),
-                { "Kefir Hub theme options"_i18n, "Select the Kefir Hub interface theme and visual options."_i18n, [](){ return std::string{}; }, [](){
-                    App::DisplayThemeOptions(false);
-                }, SettingsItemKind::Folder },
+                MakeFolderItem("Kefir Hub theme options"_i18n, "Select the Kefir Hub interface theme and visual options."_i18n, BuildThemeOptionItems),
             }
         },
         {
+            // servers only: things a pc connects *to*. Clients that merely use
+            // the network (clock sync) and file sources (WebDAV) live elsewhere.
             "Network"_i18n,
-            "Background services and network downloads."_i18n,
+            "Servers that let a PC reach this console."_i18n,
             {
-                MakeBoolItem("FTP"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable),
-                MakeBoolItem("MTP"_i18n, "Run the MTP server in the background."_i18n, App::GetMtpEnable, App::SetMtpEnable),
-                { "MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, [](){ return std::string{}; }, [](){
-                    App::DisplayMtpStorageOptions(false);
-                }, SettingsItemKind::Folder },
+                MakeFolderItem("FTP"_i18n, "Configure the FTP server: enable, login and port."_i18n, BuildFtpItems),
+                MakeBoolItem("MTP"_i18n, "Run the MTP server in the background. Shares the USB port with USB storage, so turning this on turns USB storage off."_i18n, App::GetMtpEnable, App::SetMtpEnable),
+                MakeFolderItem("MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, BuildMtpStorageItems),
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
-                MakeBoolItem("HDD"_i18n, "Mount connected USB/HDD devices."_i18n, App::GetHddEnable, App::SetHddEnable),
-                MakeBoolItem("HDD write protect"_i18n, "Make connected HDD storage read-only."_i18n, App::GetWriteProtect, App::SetWriteProtect),
-                { "WebDAV"_i18n, "Configure WebDAV server for save synchronization."_i18n, [](){ return std::string{}; }, [](){
-                    App::DisplayWebdavOptions(false);
-                }, SettingsItemKind::Folder },
             }
         },
         {
             "Sources"_i18n,
-            "Manage file sources and network locations."_i18n,
+            "Storage and network locations to browse and install from."_i18n,
             BuildSourcesCategoryItems(this)
         },
-        {
-            "Homebrew"_i18n,
-            "Shortcuts for core Kefir Hub tools."_i18n,
-            {
-                { "Homebrew App Store"_i18n, "Download and update homebrew apps."_i18n, [](){ return std::string{}; }, [](){
-                    App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
-                }},
-                { "File Browser"_i18n, "Browse and manage files on the SD card."_i18n, [](){ return std::string{}; }, [](){
-                    App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
-                }},
-            }
-        },
-
         {
             "Install"_i18n,
             "Install behavior and safety switches."_i18n,
             {
+                MakeHeader("Where and when"_i18n),
                 MakeInstallToggle("Enable sysMMC"_i18n, "Allow installing while running sysMMC."_i18n, app->m_install_sysmmc),
                 MakeInstallToggle("Enable emuMMC"_i18n, "Allow installing while running emuMMC."_i18n, app->m_install_emummc),
                 { "Install location"_i18n, "Choose system memory or microSD card."_i18n, [](){
@@ -1422,41 +1836,42 @@ void Menu::BuildCategories() {
                     }, App::GetApp()->m_skip_if_already_installed.Get());
                 }},
                 MakeOptionItem("Save options globally"_i18n, "Save install options globally or locally for session."_i18n, app->m_save_settings_globally),
-                MakeOptionItem("Ticket only"_i18n, "Install tickets without title contents."_i18n, app->m_ticket_only),
-                MakeOptionItem("Skip base"_i18n, "Skip installing base applications."_i18n, app->m_skip_base),
-                MakeOptionItem("Skip patch"_i18n, "Skip installing title updates."_i18n, app->m_skip_patch),
+                MakeOptionItem("Boost CPU during transfer"_i18n, "Enable CPU boost during transfers."_i18n, app->m_progress_boost_mode),
+
+                MakeHeader("What to install"_i18n),
+                MakeOptionItem("Install tickets only"_i18n, "Install tickets without any title content."_i18n, app->m_ticket_only),
+                MakeOptionItem("Skip base game"_i18n, "Skip installing base applications."_i18n, app->m_skip_base),
+                MakeOptionItem("Skip game updates"_i18n, "Skip installing title updates."_i18n, app->m_skip_patch),
                 MakeOptionItem("Skip DLC"_i18n, "Skip installing DLC content."_i18n, app->m_skip_addon),
-                MakeOptionItem("Skip data patch"_i18n, "Skip installing DLC updates."_i18n, app->m_skip_data_patch),
-                MakeOptionItem("Skip ticket"_i18n, "Skip installing tickets."_i18n, app->m_skip_ticket),
+                MakeOptionItem("Skip DLC updates"_i18n, "Skip installing updates for DLC (data patches)."_i18n, app->m_skip_data_patch),
+                MakeOptionItem("Skip tickets"_i18n, "Skip installing tickets."_i18n, app->m_skip_ticket),
+
+                // these used to sit under "Advanced", one category away from
+                // everything else that affects an install.
+                MakeHeader("Verification and conversion"_i18n),
+                MakeOptionItem("Skip NCA hash verify"_i18n, "Skip SHA-256 verification over NCA content."_i18n, app->m_skip_nca_hash_verify),
+                MakeOptionItem("Skip RSA header verify"_i18n, "Skip RSA NCA fixed-key header verification."_i18n, app->m_skip_rsa_header_fixed_key_verify),
+                MakeOptionItem("Skip RSA NPDM verify"_i18n, "Skip RSA NPDM fixed-key verification."_i18n, app->m_skip_rsa_npdm_fixed_key_verify),
+                MakeOptionItem("Ignore origin flag"_i18n, "Ignore the NCA distribution bit that marks content as gamecard or digital."_i18n, app->m_ignore_distribution_bit),
+                MakeOptionItem("Convert ticket on install"_i18n, "Convert a personalized ticket to a common one while installing."_i18n, app->m_convert_to_common_ticket),
+                MakeOptionItem("Convert to standard crypto"_i18n, "Convert titlekey to standard crypto."_i18n, app->m_convert_to_standard_crypto),
+                MakeOptionItem("Re-encrypt to master key 0"_i18n, "Encrypt key area keys with master key 0 so older firmware can read them."_i18n, app->m_lower_master_key),
+                MakeOptionItem("Lower required firmware"_i18n, "Lower the required system version recorded in the metadata."_i18n, app->m_lower_system_version),
             }
         },
         {
             "Dump"_i18n,
             "Game dump naming and transfer options."_i18n,
             {
-                MakeOptionItem("Created nested folder"_i18n, "Create a nested folder for each game dump."_i18n, app->m_dump_app_folder),
-                MakeOptionItem("Append folder with .xci"_i18n, "Append .xci to XCI dump folders."_i18n, app->m_dump_append_folder_with_xci),
+                MakeOptionItem("Create nested folder"_i18n, "Create a nested folder for each game dump."_i18n, app->m_dump_app_folder),
+                MakeOptionItem("Name XCI folder like the file"_i18n, "Append .xci to the dump folder name; some devices only read the dump when the folder matches the file exactly."_i18n, app->m_dump_append_folder_with_xci),
                 MakeOptionItem("Trim XCI"_i18n, "Remove unused data from XCI dumps."_i18n, app->m_dump_trim_xci),
                 MakeOptionItem("Label trimmed XCI"_i18n, "Mark trimmed XCI output names."_i18n, app->m_dump_label_trim_xci),
                 MakeOptionItem("USB transfer stream"_i18n, "Stream dump output over USB."_i18n, app->m_dump_usb_transfer_stream),
-                MakeOptionItem("Convert to common ticket"_i18n, "Convert personalized tickets during dump."_i18n, app->m_dump_convert_to_common_ticket),
-            }
-        },
-        {
-            "Advanced"_i18n,
-            "Power-user options and verification controls."_i18n,
-            {
-                MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
-                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
-                MakeOptionItem("Boost CPU during transfer"_i18n, "Enable CPU boost during transfers."_i18n, app->m_progress_boost_mode),
-                MakeOptionItem("Skip NCA hash verify"_i18n, "Skip SHA-256 verification over NCA content."_i18n, app->m_skip_nca_hash_verify),
-                MakeOptionItem("Skip RSA header verify"_i18n, "Skip RSA NCA fixed-key header verification."_i18n, app->m_skip_rsa_header_fixed_key_verify),
-                MakeOptionItem("Skip RSA NPDM verify"_i18n, "Skip RSA NPDM fixed-key verification."_i18n, app->m_skip_rsa_npdm_fixed_key_verify),
-                MakeOptionItem("Ignore distribution bit"_i18n, "Ignore the NCA distribution bit."_i18n, app->m_ignore_distribution_bit),
-                MakeOptionItem("Convert to common ticket"_i18n, "Convert personalized tickets to common tickets."_i18n, app->m_convert_to_common_ticket),
-                MakeOptionItem("Convert to standard crypto"_i18n, "Convert titlekey to standard crypto."_i18n, app->m_convert_to_standard_crypto),
-                MakeOptionItem("Lower master key"_i18n, "Encrypt key area keys with master key 0."_i18n, app->m_lower_master_key),
-                MakeOptionItem("Lower system version"_i18n, "Lower the system firmware field in metadata."_i18n, app->m_lower_system_version),
+                // deliberately not called "Convert to common ticket": the
+                // install category has a separate option with that meaning and
+                // the two used to share a label.
+                MakeOptionItem("Convert ticket on dump"_i18n, "Convert a personalized ticket to a common one while dumping."_i18n, app->m_dump_convert_to_common_ticket),
             }
         },
     };
@@ -1480,6 +1895,9 @@ void Menu::SetCategoryIndex(s64 index) {
         m_category_list->SetYoff(0);
     }
 
+    // a category may open on a section header; step past it.
+    SetItemIndex(0);
+
     SetSubHeading(m_categories[m_category_index].description);
 }
 
@@ -1490,10 +1908,105 @@ void Menu::SetItemIndex(s64 index) {
         return;
     }
 
-    m_item_index = std::clamp<s64>(index, 0, static_cast<s64>(items.size() - 1));
-    if (!m_item_index) {
-        m_item_list->SetYoff(0);
+    m_item_index = ResolveItemIndex(items, index, m_item_index);
+    // the cursor may have stepped over a caption or wrapped around an end,
+    // neither of which the list scrolled for.
+    m_item_list->EnsureVisible(m_item_index, static_cast<s64>(items.size()));
+}
+
+auto Menu::CategoryRowCount() const -> s64 {
+    return static_cast<s64>(m_categories.size()) + (m_folder_open ? 1 : 0);
+}
+
+auto Menu::CategoryRow() const -> s64 {
+    return m_folder_open ? m_category_index + 1 : m_category_index;
+}
+
+void Menu::SetCategoryRow(s64 row) {
+    const auto count = CategoryRowCount();
+    if (count <= 0) {
+        return;
     }
+
+    row = std::clamp<s64>(row, 0, count - 1);
+
+    if (m_folder_open) {
+        // still on the open folder's own row: nothing changes.
+        if (row == m_category_index + 1) {
+            m_category_list->EnsureVisible(row, count);
+            return;
+        }
+
+        // leaving the folder's row closes it, and the rows below it shift back
+        // up by one now that it is gone.
+        const auto category = row <= m_category_index ? row : row - 1;
+        CloseFolder();
+        SetCategoryIndex(category);
+    } else {
+        SetCategoryIndex(row);
+    }
+
+    m_category_list->EnsureVisible(CategoryRow(), CategoryRowCount());
+}
+
+auto Menu::CurrentItems() const -> const std::vector<SettingsItem>& {
+    return m_folder_open ? m_folder_items : m_categories[m_category_index].items;
+}
+
+auto Menu::CurrentItemIndex() const -> s64 {
+    return m_folder_open ? m_folder_index : m_item_index;
+}
+
+void Menu::SetCurrentItemIndex(s64 index) {
+    if (m_folder_open) {
+        SetFolderIndex(index);
+    } else {
+        SetItemIndex(index);
+    }
+}
+
+void Menu::SetFolderIndex(s64 index) {
+    if (m_folder_items.empty()) {
+        m_folder_index = 0;
+        return;
+    }
+
+    m_folder_index = ResolveItemIndex(m_folder_items, index, m_folder_index);
+    m_item_list->EnsureVisible(m_folder_index, static_cast<s64>(m_folder_items.size()));
+}
+
+void Menu::OpenFolder(const SettingsItem& item) {
+    m_saved_item_index = m_item_index;
+    m_saved_item_yoff = m_item_list->GetYoff();
+
+    m_folder_builder = item.folder_items;
+    m_folder_items = m_folder_builder();
+    m_folder_label = item.label;
+    m_folder_open = true;
+    m_folder_index = 0;
+    m_item_list->SetYoff(0);
+
+    SetFolderIndex(0);
+    SetSubHeading(item.description);
+    SetFocusPane(FocusPane::Items);
+    m_category_list->EnsureVisible(CategoryRow(), CategoryRowCount());
+}
+
+void Menu::CloseFolder() {
+    if (!m_folder_open) {
+        return;
+    }
+
+    m_folder_open = false;
+    m_folder_items.clear();
+    m_folder_builder = {};
+    m_folder_label.clear();
+    m_folder_index = 0;
+
+    m_item_index = m_saved_item_index;
+    m_item_list->SetYoff(m_saved_item_yoff);
+    m_item_list->EnsureVisible(m_item_index, static_cast<s64>(m_categories[m_category_index].items.size()));
+    SetSubHeading(m_categories[m_category_index].description);
 }
 
 void Menu::OnSelect() {
@@ -1506,13 +2019,35 @@ void Menu::OnSelect() {
         return;
     }
 
-    const auto& item = m_categories[m_category_index].items[m_item_index];
+    const auto& items = CurrentItems();
+    const auto index = CurrentItemIndex();
+    if (index < 0 || index >= static_cast<s64>(items.size())) {
+        return;
+    }
+
+    // by value: opening a folder replaces the vector this row lives in.
+    const auto item = items[index];
+    if (item.kind == SettingsItemKind::Folder && item.folder_items) {
+        OpenFolder(item);
+        return;
+    }
+
     if (item.action) {
         item.action();
     }
 }
 
 void Menu::OnBack() {
+    // a folder page hands the right pane back to its category, one step at a
+    // time, instead of dropping straight out of the settings menu.
+    if (m_folder_open) {
+        const auto pane = m_focus_pane;
+        CloseFolder();
+        SetFocusPane(pane);
+        m_category_list->EnsureVisible(CategoryRow(), CategoryRowCount());
+        return;
+    }
+
     if (m_focus_pane == FocusPane::Items) {
         SetFocusPane(FocusPane::Categories);
         return;

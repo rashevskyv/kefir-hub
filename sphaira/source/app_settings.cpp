@@ -4,6 +4,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "nro.hpp"
+#include "ntp.hpp"
 #include "evman.hpp"
 #include "nxlink.h"
 #include "fs.hpp"
@@ -17,6 +18,7 @@
 #include "owo.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include <usbhsfs.h>
+#include <minIni.h>
 #include <switch.h>
 #include <cstring>
 #include <atomic>
@@ -84,6 +86,10 @@ auto App::IsHbmenu() -> bool {
 
 auto App::GetNxlinkEnable() -> bool {
     return g_app->m_nxlink_enabled.Get();
+}
+
+auto App::GetNtpEnable() -> bool {
+    return g_app->m_ntp_enabled.Get();
 }
 
 auto App::GetHddEnable() -> bool {
@@ -214,8 +220,42 @@ auto App::GetMtpNameInstall() -> std::string {
     return g_app->m_mtp_name_install.Get();
 }
 
+auto App::GetMtpFolders() -> std::vector<std::string> {
+    std::vector<std::string> out;
+    const auto raw = g_app->m_mtp_folders.Get();
+    size_t start = 0;
+    while (start <= raw.size()) {
+        const auto end = raw.find('|', start);
+        auto part = raw.substr(start, end == std::string::npos ? std::string::npos : end - start);
+        if (!part.empty()) {
+            out.push_back(std::move(part));
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    return out;
+}
+
 auto App::GetFtpEnable() -> bool {
     return g_app->m_ftp_enabled.Get();
+}
+
+auto App::GetFtpAnon() -> bool {
+    return g_app->m_ftp_anon.Get();
+}
+
+auto App::GetFtpUser() -> std::string {
+    return g_app->m_ftp_user.Get();
+}
+
+auto App::GetFtpPass() -> std::string {
+    return g_app->m_ftp_pass.Get();
+}
+
+auto App::GetFtpPort() -> long {
+    return g_app->m_ftp_port.Get();
 }
 
 auto App::GetLanguage() -> long {
@@ -263,8 +303,26 @@ void App::SetNxlinkEnable(bool enable) {
     }
 }
 
+void App::SetNtpEnable(bool enable) {
+    if (App::GetNtpEnable() != enable) {
+        g_app->m_ntp_enabled.Set(enable);
+        // the worker keeps running either way and re-checks the option each
+        // cycle, so turning it back on picks up without a restart.
+        if (enable) {
+            ntp::Start();
+        }
+    }
+}
+
 void App::SetHddEnable(bool enable) {
     if (App::GetHddEnable() != enable) {
+        // MTP and usb host storage both want to own the usb port; only one can.
+        // Turning the drive on turns MTP off so the port is actually free for
+        // usbhsfs to claim, instead of silently doing nothing.
+        if (enable && App::GetMtpEnable()) {
+            App::SetMtpEnable(false);
+            App::Notify("MTP turned off to free the USB port"_i18n);
+        }
         g_app->m_hdd_enabled.Set(enable);
         if (enable) {
             if (App::GetWriteProtect()) {
@@ -441,6 +499,12 @@ void App::Set12HourTimeEnable(bool enable) {
 
 void App::SetMtpEnable(bool enable) {
     if (App::GetMtpEnable() != enable) {
+        // mutually exclusive with usb host storage -- see SetHddEnable. Free
+        // the port before haze grabs it.
+        if (enable && App::GetHddEnable()) {
+            App::SetHddEnable(false);
+            App::Notify("USB storage turned off to free the USB port"_i18n);
+        }
         g_app->m_mtp_enabled.Set(enable);
         if (enable) {
             if (haze::Init()) {
@@ -507,14 +571,91 @@ void App::SetMtpNameInstall(std::string value) {
     }
 }
 
+void App::SetMtpFolders(const std::vector<std::string>& folders) {
+    std::string joined;
+    for (const auto& f : folders) {
+        if (f.empty()) {
+            continue;
+        }
+        if (!joined.empty()) {
+            joined += '|';
+        }
+        joined += f;
+    }
+
+    if (App::GetMtpFolders() != folders) {
+        g_app->m_mtp_folders.Set(joined);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::AddMtpFolder(const std::string& path) {
+    auto folders = App::GetMtpFolders();
+    if (std::find(folders.cbegin(), folders.cend(), path) != folders.cend()) {
+        return;
+    }
+    folders.push_back(path);
+    App::SetMtpFolders(folders);
+}
+
+void App::RemoveMtpFolder(const std::string& path) {
+    auto folders = App::GetMtpFolders();
+    const auto it = std::find(folders.cbegin(), folders.cend(), path);
+    if (it != folders.cend()) {
+        folders.erase(it);
+        App::SetMtpFolders(folders);
+    }
+}
+
+// restarts the FTP server if it is running, so a config change takes effect.
+static void RestartFtpIfRunning() {
+    if (App::GetFtpEnable()) {
+        ftpsrv::Exit();
+        ftpsrv::Init();
+    }
+}
+
 void App::SetFtpEnable(bool enable) {
     if (App::GetFtpEnable() != enable) {
         g_app->m_ftp_enabled.Set(enable);
         if (enable) {
             ftpsrv::Init();
+            // enables background install for files dropped into the FTP "install" folder.
+            ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
         } else {
             ftpsrv::Exit();
         }
+    }
+}
+
+void App::SetFtpAnon(bool enable) {
+    if (App::GetFtpAnon() != enable) {
+        g_app->m_ftp_anon.Set(enable);
+        RestartFtpIfRunning();
+    }
+}
+
+void App::SetFtpUser(std::string value) {
+    if (App::GetFtpUser() != value) {
+        g_app->m_ftp_user.Set(std::move(value));
+        RestartFtpIfRunning();
+    }
+}
+
+void App::SetFtpPass(std::string value) {
+    if (App::GetFtpPass() != value) {
+        g_app->m_ftp_pass.Set(std::move(value));
+        RestartFtpIfRunning();
+    }
+}
+
+void App::SetFtpPort(long port) {
+    if (App::GetFtpPort() != port) {
+        g_app->m_ftp_port.Set(port);
+        RestartFtpIfRunning();
     }
 }
 
@@ -589,6 +730,39 @@ auto App::IsParitionBaseEmummc() -> bool {
 auto App::IsFileBaseEmummc() -> bool {
     const auto& paths = g_app->m_emummc_paths;
     return (paths.file_based_path[0] != '\0') && (paths.nintendo[0] != '\0');
+}
+
+auto App::GetEmummcNintendoPath() -> std::string {
+    // exosphere reports the config of the *booted* nand, so this is empty on sysmmc.
+    if (!IsEmummc()) {
+        return {};
+    }
+
+    // the redirected nand folder of the booted emummc, eg "emuMMC/SD00/Nintendo".
+    const auto& raw = g_app->m_emummc_paths.nintendo;
+    std::string path(raw, strnlen(raw, sizeof(g_app->m_emummc_paths.nintendo)));
+
+    // fallback to the config file in case exosphere gave us nothing.
+    if (path.empty()) {
+        char buf[FS_MAX_PATH]{};
+        if (ini_gets("emummc", "nintendo_path", "", buf, sizeof(buf), "/emummc/emummc.ini") > 0) {
+            path = buf;
+        }
+    }
+
+    // an emummc without a redirect shares /Nintendo with sysmmc.
+    if (path.empty()) {
+        return {};
+    }
+
+    if (path[0] != '/') {
+        path.insert(path.begin(), '/');
+    }
+    while (path.size() > 1 && path.back() == '/') {
+        path.pop_back();
+    }
+
+    return path;
 }
 
 void App::Exit() {

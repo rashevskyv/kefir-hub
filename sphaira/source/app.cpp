@@ -12,7 +12,10 @@
 #include "log.hpp"
 #include "ui/nvg_util.hpp"
 #include "nacp_util.hpp"
+#include "net.hpp"
 #include "nro.hpp"
+#include "ntp.hpp"
+#include "location.hpp"
 #include "evman.hpp"
 #include "owo.hpp"
 #include "image.hpp"
@@ -25,11 +28,13 @@
 #include "web.hpp"
 #include "swkbd.hpp"
 #include "utils/devoptab_curl_thread.hpp"
+#include "utils/devoptab_mtp.hpp"
 #include <sys/statvfs.h>
 
 #include <nanovg_dk.h>
 #include <minIni.h>
 #include <algorithm>
+#include <atomic>
 #include <ranges>
 #include <cassert>
 #include <cstring>
@@ -374,16 +379,22 @@ auto App::Push(std::unique_ptr<ui::Widget>&& widget) -> void {
     log_write("did it\n");
 }
 
-auto App::PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> void {
+auto App::HasActiveTransfer() -> bool {
+    return g_app && g_app->m_active_transfer_pbox != nullptr;
+}
+
+auto App::PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> bool {
     pbox->SetDetached(true);
-    // if one is already running (shouldn't normally happen, callers are
-    // expected to serialise transfers), let the old one keep running in the
-    // background rather than silently destroying (and thus blocking on) it.
+    // if one is already running (shouldn't normally happen, callers are expected
+    // to serialise transfers via HasActiveTransfer()), let the old one keep
+    // running and tell the caller we refused, so it can fail its transfer
+    // instead of leaving a source pushing data into a box nobody owns.
     if (g_app->m_active_transfer_pbox) {
-        log_write("[Mui] PushTransfer called while one is already active, ignoring\n");
-        return;
+        log_write("[Mui] PushTransfer called while one is already active, refusing\n");
+        return false;
     }
     g_app->m_active_transfer_pbox = std::move(pbox);
+    return true;
 }
 
 auto App::PopToMenu() -> void {
@@ -400,6 +411,89 @@ auto App::Pop() -> void {
     if (g_app && !g_app->m_widgets.empty()) {
         g_app->m_widgets.back()->SetPop();
     }
+}
+
+namespace {
+
+// follows a container's delegation down to the page it is actually showing.
+// bounded so a cycle in an override can't hang the draw loop.
+auto ResolveFooterOwner(ui::Widget* widget) -> ui::Widget* {
+    for (int guard = 0; guard < 8 && widget; guard++) {
+        auto* next = widget->GetFooterOwner();
+        if (!next || next == widget) {
+            break;
+        }
+        widget = next;
+    }
+
+    return widget;
+}
+
+} // namespace
+
+auto App::OwnsFooter(const ui::Widget* widget) -> bool {
+    if (!g_app || g_app->m_widgets.empty()) {
+        return true;
+    }
+
+    if (ResolveFooterOwner(g_app->m_widgets.back().get()) == widget) {
+        return true;
+    }
+
+    // on the stack but not the owner: covered by whatever sits above it.
+    for (const auto& p : g_app->m_widgets) {
+        if (p.get() == widget || ResolveFooterOwner(p.get()) == widget) {
+            return false;
+        }
+    }
+
+    // not on the stack at all - a child object drawn by its parent, or the
+    // detached transfer box. those keep their own hints.
+    return true;
+}
+
+auto App::GetChromeOcclusion() -> Vec4 {
+    if (!g_app) {
+        return {};
+    }
+
+    // only what is stacked above the *active* menu can cover its chrome, and
+    // the active menu is the last one on the stack - the same one App::Draw
+    // starts drawing from.
+    auto begin = g_app->m_widgets.begin();
+    for (auto it = g_app->m_widgets.begin(); it != g_app->m_widgets.end(); it++) {
+        if (!(*it)->IsHidden() && (*it)->IsMenu()) {
+            begin = it + 1;
+        }
+    }
+
+    Vec4 out{};
+
+    for (auto it = begin; it != g_app->m_widgets.end(); it++) {
+        const auto& p = *it;
+        if (p->IsHidden()) {
+            continue;
+        }
+
+        const auto v = p->GetChromeOcclusion();
+        if (v.w <= 0.f || v.h <= 0.f) {
+            continue;
+        }
+
+        if (out.w <= 0.f || out.h <= 0.f) {
+            out = v;
+            continue;
+        }
+
+        const auto x2 = std::max(out.x + out.w, v.x + v.w);
+        const auto y2 = std::max(out.y + out.h, v.y + v.h);
+        out.x = std::min(out.x, v.x);
+        out.y = std::min(out.y, v.y);
+        out.w = x2 - out.x;
+        out.h = y2 - out.y;
+    }
+
+    return out;
 }
 
 void App::Notify(std::string text, ui::NotifEntry::Side side) {
@@ -419,6 +513,22 @@ void App::NotifyClear(ui::NotifEntry::Side side) {
 }
 
 void App::NotifyFlashLed() {
+    // ftpsrv calls this from its transfer loop (once per buffer, plus once per
+    // log line), and each call is 2-4 blocking hidsys IPC round trips for a
+    // 12.5ms blink. flashing more often than the blink lasts buys nothing and
+    // taxes every transferred buffer, so rate limit it.
+    static constexpr u64 MIN_INTERVAL_NS = 250ULL*1000ULL*1000ULL;
+    static std::atomic<u64> last_flash_ns{0};
+
+    const auto now = armTicksToNs(armGetSystemTick());
+    auto last = last_flash_ns.load(std::memory_order_relaxed);
+    if (last && now - last < MIN_INTERVAL_NS) {
+        return;
+    }
+    if (!last_flash_ns.compare_exchange_strong(last, now, std::memory_order_relaxed)) {
+        return; // another thread just flashed.
+    }
+
     static constexpr HidsysNotificationLedPattern pattern = {
         .baseMiniCycleDuration = 0x1,             // 12.5ms.
         .totalMiniCycles = 0x1,                   // 1 mini cycle(s).
@@ -450,6 +560,14 @@ void App::NotifyFlashLed() {
 
 Result App::PushErrorBox(Result rc, const std::string& message) {
     if (R_FAILED(rc)) {
+        // a result code tells the user nothing about a console with wi-fi
+        // turned off. say what actually happened instead.
+        if (net::IsOfflineError(rc)) {
+            log_write("[ERROR] %s (0x%X): no network connection\n", message.c_str(), R_VALUE(rc));
+            net::ShowNoConnectionPopup();
+            return rc;
+        }
+
         App::Push<ui::ErrorBox>(rc, message);
     }
     return rc;
@@ -598,6 +716,53 @@ void App::Update() {
     if (!m_widgets.empty() && popped_at_least1) {
         m_widgets.back()->OnFocusGained();
     }
+
+    PollUsbStorage();
+}
+
+void App::PollUsbStorage() {
+    if (!App::GetHddEnable()) {
+        // nothing to watch while the drive stack is down; re-arm so the first
+        // poll after it comes back reports the current set as the baseline
+        // rather than as a fresh insertion.
+        m_usb_poll_primed = false;
+        return;
+    }
+
+    if (m_usb_poll_primed && m_usb_poll_ts.GetSeconds() < 1) {
+        return;
+    }
+    m_usb_poll_ts.Update();
+
+    const auto count = usbHsFsGetMountedDeviceCount();
+    if (!m_usb_poll_primed) {
+        // first poll of a session: record what is already there silently.
+        m_usb_device_count = count;
+        m_usb_poll_primed = true;
+        return;
+    }
+
+    if (count == m_usb_device_count) {
+        return;
+    }
+
+    const bool added = count > m_usb_device_count;
+    m_usb_device_count = count;
+
+    if (added) {
+        // name the drive that just appeared, so the message is concrete.
+        const auto devices = location::GetStdio(false);
+        const auto name = devices.empty() ? std::string{} : devices.back().name;
+        App::Notify(name.empty() ? "USB drive connected"_i18n : "USB drive connected"_i18n + ": " + name);
+    } else {
+        App::Notify("USB drive removed"_i18n);
+    }
+
+    // if the file browser is sitting at its root, make the drive appear (or
+    // vanish) there straight away instead of on the next manual navigation.
+    if (!m_widgets.empty()) {
+        m_widgets.back()->OnFocusGained();
+    }
 }
 
 void App::Draw() {
@@ -617,6 +782,11 @@ void App::Draw() {
         }
     }
 
+    // the detached transfer box belongs directly above the menu, not above the
+    // whole stack: anything pushed on top of it (notably the cancel
+    // confirmation it raises itself) has to draw in front of it, not behind.
+    bool transfer_drawn = false;
+
     // reverse itr so loop backwards to go forwarders.
     if (menu_it != m_widgets.rend()) {
         for (auto it = menu_it; ; it--) {
@@ -627,17 +797,35 @@ void App::Draw() {
                 p->Draw(vg, &m_theme);
             }
 
+            // the header and footer are a chrome layer, drawn straight after
+            // the menu body: a list row that overflows its band is painted
+            // over instead of spilling across the separator. Panels stacked
+            // above clip themselves to the content band (ui/layout.hpp), so
+            // they cannot reach it either; full screen modals are drawn after
+            // and deliberately cover it along with everything else.
+            if (it == menu_it && !p->IsHidden()) {
+                if (auto* chrome = p->GetChromeOwner()) {
+                    chrome->DrawChrome(vg, &m_theme);
+                }
+            }
+
+            if (it == menu_it && m_active_transfer_pbox) {
+                m_active_transfer_pbox->Draw(vg, &m_theme);
+                transfer_drawn = true;
+            }
+
             if (it == m_widgets.rbegin()) {
                 break;
             }
         }
     }
 
-    m_notif_manager.Draw(vg, &m_theme);
-
-    if (m_active_transfer_pbox) {
+    // no menu on the stack to anchor it to, so it just goes on top.
+    if (m_active_transfer_pbox && !transfer_drawn) {
         m_active_transfer_pbox->Draw(vg, &m_theme);
     }
+
+    m_notif_manager.Draw(vg, &m_theme);
 
     nvgResetTransform(vg);
     nvgEndFrame(this->vg);
@@ -828,6 +1016,8 @@ App::App(const char* argv0) {
 
     if (App::GetFtpEnable()) {
         ftpsrv::Init();
+        // enables background install for files dropped into the FTP "install" folder.
+        ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
     }
 
     if (App::GetNxlinkEnable()) {
@@ -838,7 +1028,17 @@ App::App(const char* argv0) {
         usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
     }
 
-    if (App::GetHddEnable() && !App::GetMtpEnable()) {
+    // mtp and usb host storage cannot share the usb port. The setters keep the
+    // two mutually exclusive from now on, but a config written before that rule
+    // could still have both set. Reconcile in favour of the drive -- if the
+    // user turned it on, that is what they are waiting to see -- and write the
+    // corrected state back so the deferred MTP init below skips it too.
+    if (App::GetHddEnable() && App::GetMtpEnable()) {
+        log_write("[USBHSFS] stale config had MTP + HDD both on; keeping HDD\n");
+        m_mtp_enabled.Set(false);
+    }
+
+    if (App::GetHddEnable()) {
         usbHsFsInitialize(1);
     }
 
@@ -956,6 +1156,10 @@ App::App(const char* argv0) {
 
     ini_putl(GetExePath(), "timestamp", m_start_timestamp, App::PLAYLOG_PATH);
 
+    // background clock sync: idles until there is a connection, corrects the
+    // rtc, then goes back to sleep. Never prompts, never blocks startup.
+    ntp::Start();
+
     // load default image
     InitDefaultImage();
 
@@ -979,10 +1183,13 @@ App::~App() {
 
     appletUnhook(&m_appletHookCookie);
 
+    ntp::Stop();
+
     if (App::GetMtpEnable()) {
         log_write("closing mtp\n");
         haze::Exit();
     }
+    sphaira::devoptab::mtp::CloseMtpSession();
 
     if (App::GetFtpEnable()) {
         log_write("closing ftp\n");

@@ -7,6 +7,8 @@
 #include "threaded_file_transfer.hpp"
 #include "i18n.hpp"
 #include <cstring>
+#include <cmath>
+#include <algorithm>
 
 namespace sphaira::ui {
 namespace {
@@ -105,10 +107,30 @@ namespace {
 // small corner badge shown while a detached transfer is minimised via L3.
 // speed_str may be empty if no sample has landed yet.
 void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 offset, s64 size, const std::string& speed_str) {
-    const u32 percentage = size ? (u32)(((double)offset / (double)size) * 100.0) : 0;
+    // clamp the displayed fraction: see the note in ProgressBox::Draw().
+    const s64 draw_offset = std::clamp<s64>(offset, 0, size);
+    const u32 percentage = size ? (u32)(((double)draw_offset / (double)size) * 100.0) : 0;
     
     char text_buf[512];
-    if (speed_str.empty()) {
+    if (!size && offset > 0) {
+        // total unknown (stream install): show what actually arrived instead of
+        // a percentage that can't be computed. see ProgressBox::Draw().
+        char done_str[32];
+        if (offset >= 1024LL*1024LL) {
+            std::snprintf(done_str, sizeof(done_str), "%.1f MiB", (double)offset / (1024.0 * 1024.0));
+        } else {
+            std::snprintf(done_str, sizeof(done_str), "%.1f KiB", (double)offset / 1024.0);
+        }
+        if (speed_str.empty()) {
+            std::snprintf(text_buf, sizeof(text_buf), "%s (%s)", title.c_str(), done_str);
+        } else {
+            std::snprintf(text_buf, sizeof(text_buf), "%s (%s - %s)", title.c_str(), done_str, speed_str.c_str());
+        }
+    } else if (!size) {
+        // idle badge (e.g. web server waiting, or between MTP files): a "0%" here
+        // would just be noise, so show only the label.
+        std::snprintf(text_buf, sizeof(text_buf), "%s", title.c_str());
+    } else if (speed_str.empty()) {
         std::snprintf(text_buf, sizeof(text_buf), "%s (%u%%)", title.c_str(), percentage);
     } else {
         std::snprintf(text_buf, sizeof(text_buf), "%s (%u%% - %s)", title.c_str(), percentage, speed_str.c_str());
@@ -140,7 +162,7 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
     const float bar_w = w - 30.f;
     gfx::drawRect(vg, bar_x, bar_y, bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3);
     if (size) {
-        gfx::drawRect(vg, bar_x, bar_y, ((float)offset / (float)size) * bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
+        gfx::drawRect(vg, bar_x, bar_y, ((float)draw_offset / (float)size) * bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
     }
 
     gfx::drawTextArgs(vg, x + 15.f, y + 8.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", text_buf);
@@ -250,8 +272,13 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         const float rounding = 5;
 
         gfx::drawRect(vg, prog_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
-        const u32 percentage = ((double)offset / (double)size) * 100.0;
-        gfx::drawRect(vg, prog_bar.x, prog_bar.y, ((float)offset / (float)size) * prog_bar.w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+        // some transfer sources (e.g. the MTP copy callback) report a running
+        // byte offset against a per-chunk size rather than the file total, which
+        // would drive the bar/percentage past 100%. clamp the displayed fraction
+        // so the bar never overflows; raw offset is still used for speed/ETA.
+        const s64 draw_offset = std::clamp<s64>(offset, 0, size);
+        const u32 percentage = ((double)draw_offset / (double)size) * 100.0;
+        gfx::drawRect(vg, prog_bar.x, prog_bar.y, ((float)draw_offset / (float)size) * prog_bar.w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
         gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%u%%", percentage);
 
         if (speed_sample_count >= 3 && speed > 0) {
@@ -265,7 +292,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
                 std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", speed_kb);
             }
 
-            const auto left = size - last_offset;
+            const auto left = std::max<s64>(0, size - last_offset);
             const auto left_seconds = left / speed;
             const auto hours = left_seconds / (60 * 60);
             const auto minutes = left_seconds % (60 * 60) / 60;
@@ -285,6 +312,40 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             } else {
                 gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
             }
+        }
+    } else if (offset > 0) {
+        // the total isn't known (a stream install: the transport tells us how
+        // many bytes arrived, never how many are coming). reporting offset
+        // against itself would peg the bar at 100% for the whole transfer, so
+        // show a sliding bar plus the honest numbers we do have.
+        const auto font_size = 18.F;
+        const auto pad = 15.F;
+        const float rounding = 5;
+
+        gfx::drawRect(vg, prog_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
+        const float chase_w = prog_bar.w * 0.25f;
+        const double phase = std::fmod((double)(armTicksToNs(armGetSystemTick()) / 1000000ULL) / 1600.0, 1.0);
+        gfx::drawRect(vg, prog_bar.x + (float)phase * (prog_bar.w - chase_w), prog_bar.y, chase_w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+
+        char done_str[32];
+        if (offset >= 1024LL*1024LL) {
+            std::snprintf(done_str, sizeof(done_str), "%.1f MiB", (double)offset / (1024.0 * 1024.0));
+        } else {
+            std::snprintf(done_str, sizeof(done_str), "%.1f KiB", (double)offset / 1024.0);
+        }
+        gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", done_str);
+
+        if (speed_sample_count >= 3 && speed > 0 && !hide_speed) {
+            const double speed_mb = (double)speed / (1024.0 * 1024.0);
+            char speed_str[32];
+            if (speed_mb >= 0.01) {
+                std::snprintf(speed_str, sizeof(speed_str), "%.2f MiB/s", speed_mb);
+            } else {
+                std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", (double)speed / 1024.0);
+            }
+            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", "Receiving..."_i18n.c_str(), speed_str);
+        } else {
+            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", "Receiving..."_i18n.c_str());
         }
     }
 

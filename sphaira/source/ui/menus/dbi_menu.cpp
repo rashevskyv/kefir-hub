@@ -6,6 +6,7 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "ui/error_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/sidebar.hpp"
@@ -28,6 +29,13 @@ constexpr u64 CONNECTION_TIMEOUT = UINT64_MAX;
 constexpr u64 TRANSFER_TIMEOUT = UINT64_MAX;
 constexpr u64 FINISHED_TIMEOUT = 1e+9 * 3;
 constexpr size_t MAX_LOG_LINES = 128;
+// how long to wait for the host to re-enumerate us and answer the replayed
+// handshake after the link dropped. Bounded, unlike the session timeouts
+// above, so an unplugged cable ends the queue instead of hanging on it.
+constexpr u64 RECONNECT_TIMEOUT = 1e+9 * 15;
+// a blip usually recovers on the first attempt; the cap is there so a link
+// that keeps flapping ends the session rather than looping forever.
+constexpr u32 MAX_LINK_RETRIES = 3;
 
 void thread_func(void* user) {
     static_cast<Menu*>(user)->ThreadFunction();
@@ -40,6 +48,12 @@ auto ResultText(Result rc) -> std::string {
 }
 
 auto IsDbiSessionError(Result rc) -> bool {
+    // a dropped link poisons the whole session: every following package would
+    // fail instantly with the same result, so it has to end the queue too.
+    if (usb::IsLinkError(rc)) {
+        return true;
+    }
+
     switch (rc) {
         case Result_TransferCancelled:
         case Result_UsbCancelled:
@@ -51,7 +65,6 @@ auto IsDbiSessionError(Result rc) -> bool {
         case Result_UsbEmptyTransferSize:
         case Result_UsbOverflowTransferSize:
         case Result_UsbDsBadDeviceSpeed:
-        case KERNELRESULT(TimedOut):
             return true;
         default:
             return false;
@@ -112,6 +125,33 @@ bool IsTitleAlreadyInstalled(u64 title_id) {
     return false;
 }
 
+// one "label: value" cell of a stats row.
+struct StatItem {
+    std::string label{};
+    std::string value{};
+    // value colour; the label is always drawn in the info colour.
+    std::optional<NVGcolor> colour{};
+};
+
+// draws stat cells left to right, with the label faked bold (over-drawn -- no
+// bold font face is loaded) so the labels stand out from the numbers.
+void DrawStatRow(NVGcontext* vg, NVGcolor info_col, float x0, float y, float size, const std::vector<StatItem>& items) {
+    float x = x0;
+    nvgFontSize(vg, size);
+    float b[4];
+    for (const auto& item : items) {
+        const auto lab = item.label + ": ";
+        gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
+        gfx::drawTextArgs(vg, x + 0.7f, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
+        gfx::textBounds(vg, 0, 0, b, lab.c_str());
+        x += b[2] - b[0];
+        const auto value_col = item.colour.value_or(info_col);
+        gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, value_col, "%s", item.value.c_str());
+        gfx::textBounds(vg, 0, 0, b, item.value.c_str());
+        x += (b[2] - b[0]) + 28.f;
+    }
+}
+
 void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected) {
     constexpr float box_size = 20.f;
     const float box_x = row.x + 12.f;
@@ -158,6 +198,8 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
     m_log_list = std::make_unique<List>(1, 11, log_pos, log_row);
     m_log_list->SetLayout(List::Layout::GRID);
+    m_error_list = std::make_unique<List>(1, 6, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
+    m_error_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
     m_was_mtp_enabled = App::GetMtpEnable();
@@ -208,6 +250,8 @@ Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64
     const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 330.f};
     m_log_list = std::make_unique<List>(1, 11, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
     m_log_list->SetLayout(List::Layout::GRID);
+    m_error_list = std::make_unique<List>(1, 6, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
+    m_error_list->SetLayout(List::Layout::GRID);
     m_state = State::Analysing;
     UpdateActions();
 
@@ -281,16 +325,29 @@ void Menu::UpdateActions() {
         );
     } else if (state == State::Installing) {
         SetAction(Button::B, Action{"Cancel queue"_i18n, [this]() { CancelSession(); }});
-    } else if (state == State::Summary) {
-        if (m_session_failed) {
-            SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
-        } else {
+    } else if (state == State::Summary || state == State::Cancelled) {
+        if (state == State::Summary && !m_session_failed) {
             SetAction(Button::B, Action{"Back"_i18n, [this]() {
                 m_state = State::ReviewQueue;
                 m_actions_dirty = true;
             }});
+        } else {
+            SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
         }
-    } else if (state == State::Cancelled || state == State::Failed) {
+        // m_errors is filled by the worker thread; take the lock rather than
+        // racing it for the count.
+        size_t error_count{};
+        {
+            SCOPED_MUTEX(&m_mutex);
+            error_count = m_errors.size();
+        }
+        if (error_count) {
+            const auto label = m_show_errors
+                ? "Session log"_i18n
+                : "Errors"_i18n + " (" + std::to_string(error_count) + ")";
+            SetAction(Button::Y, Action{label, [this]() { ToggleErrorView(); }});
+        }
+    } else if (state == State::Failed) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
     } else {
         SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
@@ -335,6 +392,11 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             }, this);
         }
         if (activate) FireAction(Button::A);
+    } else if (m_show_errors) {
+        SCOPED_MUTEX(&m_mutex);
+        m_error_list->OnUpdate(controller, touch, m_error_index, m_errors.size(), [this](bool, s64 index) {
+            m_error_index = index;
+        }, this);
     } else if ((state == State::Installing || state == State::Summary || state == State::Cancelled) && !m_log.empty()) {
         SCOPED_MUTEX(&m_mutex);
         m_log_list->OnUpdate(controller, touch, m_log_index, m_log.size(), [this](bool, s64 index) {
@@ -410,31 +472,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         SetStorageProjection(nand_required, sd_required);
         const auto spaces = GetPolledData();
         const auto reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
-        // draws a row of "label: value" segments left to right, with the label
-        // faked bold (over-drawn -- no bold font face is loaded) and the value
-        // in normal weight, so the labels stand out from the numbers.
         const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
-        const auto draw_kv_row = [&](float y, float size, const std::vector<std::pair<std::string, std::string>>& pairs) {
-            float x = 70.f;
-            nvgFontSize(vg, size);
-            float b[4];
-            for (const auto& [label, value] : pairs) {
-                const auto lab = label + ": ";
-                gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
-                gfx::drawTextArgs(vg, x + 0.7f, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
-                gfx::textBounds(vg, 0, 0, b, lab.c_str());
-                x += b[2] - b[0];
-                gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", value.c_str());
-                gfx::textBounds(vg, 0, 0, b, value.c_str());
-                x += (b[2] - b[0]) + 28.f;
-            }
-        };
-        draw_kv_row(GetY() + 10.f, 17.f, {
+        DrawStatRow(vg, info_col, 70.f, GetY() + 10.f, 17.f, {
             {"Targets"_i18n, "Per package"_i18n},
             {"Selected"_i18n, std::to_string(selected_count) + " / " + std::to_string(m_queue.size())},
             {"Required"_i18n, utils::formatSizeStorage(selected_size)},
         });
-        draw_kv_row(GetY() + 36.f, 15.f, {
+        DrawStatRow(vg, info_col, 70.f, GetY() + 36.f, 15.f, {
             {"microSD free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.sd_free - reserve))},
             {"NAND free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.nand_free - reserve))},
             {"Reserve"_i18n, utils::formatSizeStorage(reserve)},
@@ -493,6 +537,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         ClearStorageHighlight();
     }
 
+    // once the queue has ended the live header, progress bar and graph have
+    // nothing left to say, so that space goes to the session summary instead.
+    if (state == State::Summary || state == State::Cancelled) {
+        DrawSummaryPanel(vg, theme, Vec4{70.f, GetY() + 8.f, 1140.f, 214.f});
+        DrawBottomList(vg, theme);
+        return;
+    }
+
     // Header speed and ETA use the average write rate over the whole graph
     // history window (~48 s, near a minute), not the instantaneous rate. The
     // moment-to-moment R/W speeds are shown per line on the graph below, so the
@@ -521,7 +573,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu    %s: %.2f MiB/s%s",
         "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
-        "Installed"_i18n.c_str(), m_success_count, "Failed"_i18n.c_str(), m_failure_count,
+        "Installed"_i18n.c_str(), m_stats.installed, "Failed"_i18n.c_str(), m_stats.failed,
         "Speed"_i18n.c_str(), speed_mib, eta.c_str());
     if (!m_current_title.empty()) {
         const auto title = m_current_transfer.empty()
@@ -548,6 +600,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const auto total_write = m_total_write.load();
             m_read_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_read - m_graph_last_read) / graph_elapsed));
             m_write_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_write - m_graph_last_write) / graph_elapsed));
+            // session peak, kept for the summary panel (the history window only
+            // covers the last ~48 s).
+            if (m_write_history[m_history_index] > m_peak_write_bps.load()) {
+                m_peak_write_bps = m_write_history[m_history_index];
+            }
             m_graph_last_read = total_read;
             m_graph_last_write = total_write;
             m_history_index = (m_history_index + 1) % SPEED_HISTORY;
@@ -660,6 +717,36 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
     }
 
+    DrawBottomList(vg, theme);
+}
+
+void Menu::DrawBottomList(NVGcontext* vg, Theme* theme) {
+    // caller holds m_mutex.
+    if (m_show_errors) {
+        const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
+        const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        m_error_list->Draw(vg, theme, m_errors.size(), [this, error_col, info_col](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+            const auto& error = m_errors[index];
+            if (index == m_error_index) {
+                gfx::drawRectOutline(vg, theme, 2.f, v);
+            }
+            gfx::drawTextArgs(vg, v.x + 10.f, v.y + 5.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, error_col,
+                "%ld. %s — %s", index + 1, error.stage.c_str(), error.name.c_str());
+
+            // second line: the raw code, its symbolic name, and the plain
+            // language explanation when sphaira has one for it.
+            auto text = ResultText(error.rc);
+            if (!error.code_name.empty()) {
+                text += "  " + error.code_name;
+            }
+            if (!error.detail.empty()) {
+                text += "  —  " + error.detail;
+            }
+            gfx::drawTextArgs(vg, v.x + 26.f, v.y + 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", text.c_str());
+        });
+        return;
+    }
+
     m_log_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
         const auto& entry = m_log[index];
         NVGcolor colour;
@@ -676,6 +763,78 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, v.x + 4.7f, v.y + 5.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", entry.text.c_str());
         }
     });
+}
+
+void Menu::DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area) {
+    // caller holds m_mutex.
+    gfx::drawRect(vg, area, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+
+    const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto text_col = theme->GetColour(ThemeEntryID_TEXT);
+    const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
+    const auto good_col = nvgRGB(80, 200, 120);
+    const auto warn_col = nvgRGB(230, 170, 50);
+
+    const float x = area.x + 20.f;
+    float y = area.y + 10.f;
+
+    // headline: what the run ended as.
+    const auto outcome = m_state == State::Cancelled ? "Session cancelled"_i18n
+        : m_session_failed ? "Session failed"_i18n : "Queue finished"_i18n;
+    const auto outcome_col = m_state == State::Cancelled ? warn_col
+        : m_session_failed ? error_col : good_col;
+    gfx::drawTextArgs(vg, x, y, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text_col, "%s", "Session summary"_i18n.c_str());
+    gfx::drawTextArgs(vg, x + 0.7f, y, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text_col, "%s", "Session summary"_i18n.c_str());
+    gfx::drawTextArgs(vg, area.x + area.w - 20.f, y, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, outcome_col, "%s", outcome.c_str());
+    y += 32.f;
+
+    const auto seconds = m_stats.elapsed_ns / 1000000000ULL;
+    const double avg_mib = seconds
+        ? (double)m_stats.write_bytes / (double)seconds / (1024.0 * 1024.0) : 0.0;
+    const double peak_mib = (double)m_peak_write_bps.load() / (1024.0 * 1024.0);
+    const auto fmt_speed = [](double mib) {
+        char buf[32]{};
+        std::snprintf(buf, sizeof(buf), "%.2f MiB/s", mib);
+        return std::string{buf};
+    };
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Installed"_i18n, std::to_string(m_stats.installed), m_stats.installed ? std::optional{good_col} : std::nullopt},
+        {"Skipped"_i18n, std::to_string(m_stats.skipped)},
+        {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{error_col} : std::nullopt},
+        {"Packages"_i18n, std::to_string(m_queue.size())},
+    });
+    y += 28.f;
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Duration"_i18n, FormatDuration(m_stats.elapsed_ns)},
+        {"Average speed"_i18n, fmt_speed(avg_mib)},
+        {"Peak speed"_i18n, fmt_speed(peak_mib)},
+    });
+    y += 28.f;
+
+    // read is what came off the source (compressed, over usb); written is what
+    // actually landed in storage after decompression, so the two differ for nsz.
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Received"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.read_bytes))},
+        {"Written"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.write_bytes))},
+    });
+    y += 28.f;
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"microSD"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.sd_bytes))},
+        {"System memory"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.nand_bytes))},
+    });
+    y += 30.f;
+
+    if (!m_errors.empty()) {
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, error_col, "%s — %s",
+            (std::to_string(m_errors.size()) + " " + "error(s) recorded"_i18n).c_str(),
+            "press Y to review them, they are also saved to errors.txt"_i18n.c_str());
+    } else {
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good_col, "%s",
+            "No errors recorded."_i18n.c_str());
+    }
 }
 
 void Menu::ThreadFunction() {
@@ -729,6 +888,9 @@ void Menu::ThreadFunction() {
                 entry.analysis.source_size = pc_size;
             }
             entry.selected = R_SUCCEEDED(entry.analysis_result);
+            if (R_FAILED(entry.analysis_result)) {
+                AddError(name, "Analysis"_i18n, entry.analysis_result);
+            }
             SCOPED_MUTEX(&m_mutex);
             m_queue.emplace_back(std::move(entry));
         }
@@ -756,11 +918,7 @@ void Menu::ThreadFunction() {
 
             m_state = State::Installing;
             m_actions_dirty = true;
-            {
-                SCOPED_MUTEX(&m_mutex);
-                m_success_count = 0;
-                m_failure_count = 0;
-            }
+            BeginSessionStats();
             bool session_failed{};
             for (size_t i = 0; i < m_queue.size(); i++) {
                 bool selected{};
@@ -784,7 +942,6 @@ void Menu::ThreadFunction() {
                 if (m_cancel_requested) break;
 
                 AddLog("Starting: "_i18n + name, LogKind::Event);
-                m_usb_source->SetFileNameForTranfser(name);
                 yati::ConfigOverride override{};
                 override.skip_if_already_installed = App::GetSaveSettingsGlobally()
                     ? App::GetApp()->m_skip_if_already_installed.Get()
@@ -800,19 +957,35 @@ void Menu::ThreadFunction() {
                     else if (loc == 3) override.sd_card_install = true;
                     else override.sd_card_install = analysis.suggested_sd;
                 }
-                const auto install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                const auto read_before = m_total_read.load();
+                const auto write_before = m_total_write.load();
+
+                // The host re-enumerating us mid-package (cable nudged, hub or
+                // port glitch) kills the transfer, and dbi backend restarts its
+                // command loop on its own. Give the link a bounded chance to
+                // come back and replay the package from the start -- yati has
+                // already dropped the half-written placeholders -- instead of
+                // losing the rest of the queue to a one second blip.
+                Result install_rc{};
+                for (u32 attempt = 0; ; attempt++) {
+                    m_usb_source->SetFileNameForTranfser(name);
+                    install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                    if (!usb::IsLinkError(install_rc) || attempt >= MAX_LINK_RETRIES) {
+                        break;
+                    }
+                    if (m_cancel_requested || GetToken().stop_requested()) {
+                        break;
+                    }
+                    AddLog("USB connection lost; reconnecting..."_i18n, LogKind::Warning);
+                    if (R_FAILED(ReestablishUsbLink())) {
+                        break;
+                    }
+                    AddLog("USB connection restored; retrying: "_i18n + name, LogKind::Warning);
+                }
                 const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
                 const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
-                {
-                    SCOPED_MUTEX(&m_mutex);
-                    m_queue[i].install_result = install_rc;
-                    m_queue[i].installed = R_SUCCEEDED(install_rc);
-                    if (R_SUCCEEDED(install_rc)) {
-                        m_queue[i].selected = false; // Uncheck successfully installed package
-                        m_success_count++;
-                    }
-                    else if (!cancelled) m_failure_count++;
-                }
+                RecordPackageResult(i, install_rc, cancelled, override.sd_card_install.value_or(analysis.suggested_sd),
+                    m_total_read.load() - read_before, m_total_write.load() - write_before);
                 if (R_SUCCEEDED(install_rc)) {
                     if (m_current_file_skipped) {
                         AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);
@@ -822,7 +995,10 @@ void Menu::ThreadFunction() {
                     }
                 }
                 else if (cancelled) AddLog("Cancelled: "_i18n + name, LogKind::Warning);
-                else AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")", LogKind::Error);
+                else {
+                    AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")", LogKind::Error);
+                    AddError(name, "Install"_i18n, install_rc);
+                }
                 if (cancelled) {
                     m_cancel_requested = true;
                     break;
@@ -830,11 +1006,18 @@ void Menu::ThreadFunction() {
                 if (fatal_session_error) {
                     session_failed = true;
                     m_session_failed = true;
+                    if (usb::IsLinkError(install_rc)) {
+                        AddLog("The USB connection dropped and could not be restored. Check the cable and the port, then start the queue again."_i18n, LogKind::Error);
+                    }
                     AddLog("DBI session failed; remaining packages were skipped."_i18n, LogKind::Error);
                     break;
                 }
             }
 
+            {
+                SCOPED_MUTEX(&m_mutex);
+                m_stats.elapsed_ns = m_session_timestamp.GetNs();
+            }
             if (m_cancel_requested) {
                 AddLog("Session cancelled; completed installs were kept."_i18n, LogKind::Warning);
                 m_state = State::Cancelled;
@@ -867,6 +1050,20 @@ void Menu::ThreadFunction() {
         m_actions_dirty = true;
         return;
     }
+}
+
+Result Menu::ReestablishUsbLink() {
+    // let the host finish re-enumerating before talking to it again.
+    svcSleepThread(1e+9);
+    R_TRY(m_usb_source->IsUsbConnected(RECONNECT_TIMEOUT));
+
+    // replay the list handshake: one round trip that proves both sides are back
+    // in lockstep before the next file range request goes out. Anything the
+    // host left in the pipe before the drop trips the magic check here, which
+    // ends the session, rather than silently shifting a package's bytes.
+    std::vector<std::string> names;
+    R_TRY(m_usb_source->WaitForConnection(RECONNECT_TIMEOUT, names));
+    R_SUCCEED();
 }
 
 void Menu::LocalThreadFunction() {
@@ -910,6 +1107,9 @@ void Menu::LocalThreadFunction() {
             }
         }
         entry.selected = R_SUCCEEDED(entry.analysis_result);
+        if (R_FAILED(entry.analysis_result)) {
+            AddError(entry.file_name, "Analysis"_i18n, entry.analysis_result);
+        }
         SCOPED_MUTEX(&m_mutex);
         m_queue.emplace_back(std::move(entry));
     }
@@ -935,11 +1135,7 @@ void Menu::LocalThreadFunction() {
 
         m_state = State::Installing;
         m_actions_dirty = true;
-        {
-            SCOPED_MUTEX(&m_mutex);
-            m_success_count = 0;
-            m_failure_count = 0;
-        }
+        BeginSessionStats();
 
         for (size_t i = 0; i < m_queue.size(); i++) {
             bool selected{};
@@ -981,6 +1177,9 @@ void Menu::LocalThreadFunction() {
                 else if (!analysis_deferred) override.sd_card_install = analysis.suggested_sd;
             }
 
+            const auto read_before = m_total_read.load();
+            const auto write_before = m_total_write.load();
+
             Result result{};
             if (analysis_deferred) {
                 result = yati::InstallFromFile(this, m_local_fs, m_local_paths[i], override);
@@ -992,17 +1191,8 @@ void Menu::LocalThreadFunction() {
                     : open_rc;
             }
             const bool cancelled = m_cancel_requested || result == Result_TransferCancelled;
-            {
-                SCOPED_MUTEX(&m_mutex);
-                m_queue[i].install_result = result;
-                m_queue[i].installed = R_SUCCEEDED(result);
-                if (R_SUCCEEDED(result)) {
-                    m_queue[i].selected = false;
-                    m_success_count++;
-                } else if (!cancelled) {
-                    m_failure_count++;
-                }
-            }
+            RecordPackageResult(i, result, cancelled, override.sd_card_install.value_or(analysis.suggested_sd),
+                m_total_read.load() - read_before, m_total_write.load() - write_before);
             if (R_SUCCEEDED(result)) {
                 if (m_current_file_skipped) {
                     AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);
@@ -1012,10 +1202,17 @@ void Menu::LocalThreadFunction() {
                 }
             }
             else if (cancelled) AddLog("Cancelled: "_i18n + name, LogKind::Warning);
-            else AddLog("Failed: "_i18n + name + " (" + ResultText(result) + ")", LogKind::Error);
+            else {
+                AddLog("Failed: "_i18n + name + " (" + ResultText(result) + ")", LogKind::Error);
+                AddError(name, "Install"_i18n, result);
+            }
             if (cancelled) break;
         }
 
+        {
+            SCOPED_MUTEX(&m_mutex);
+            m_stats.elapsed_ns = m_session_timestamp.GetNs();
+        }
         if (m_cancel_requested) {
             AddLog("Session cancelled; completed installs were kept."_i18n, LogKind::Warning);
             m_state = State::Cancelled;
@@ -1172,6 +1369,85 @@ auto Menu::TargetName(InstallTarget target) -> std::string {
     if (target == InstallTarget::Sd) return "microSD"_i18n;
     if (target == InstallTarget::Nand) return "System memory"_i18n;
     return "Auto"_i18n;
+}
+
+void Menu::ToggleErrorView() {
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (m_errors.empty()) {
+            return;
+        }
+        m_show_errors = !m_show_errors;
+        m_error_index = 0;
+        m_error_list->SetYoff(0.f);
+        // the log view follows its tail; make it re-snap when it comes back.
+        m_log_last_seen_size = 0;
+    }
+    m_actions_dirty = true;
+}
+
+void Menu::BeginSessionStats() {
+    SCOPED_MUTEX(&m_mutex);
+    m_stats = {};
+    m_errors.clear();
+    m_error_index = 0;
+    m_show_errors = false;
+    m_peak_write_bps = 0;
+    m_session_timestamp.Update();
+}
+
+void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_sd, s64 read_delta, s64 write_delta) {
+    SCOPED_MUTEX(&m_mutex);
+    m_queue[index].install_result = rc;
+    m_queue[index].installed = R_SUCCEEDED(rc);
+    m_stats.read_bytes += std::max<s64>(0, read_delta);
+    m_stats.write_bytes += std::max<s64>(0, write_delta);
+
+    if (R_SUCCEEDED(rc)) {
+        m_queue[index].selected = false; // uncheck a package that went through
+        if (m_current_file_skipped) {
+            m_stats.skipped++;
+        } else {
+            m_stats.installed++;
+        }
+        // where the payload actually landed, for the summary breakdown.
+        (to_sd ? m_stats.sd_bytes : m_stats.nand_bytes) += std::max<s64>(0, write_delta);
+    } else if (!cancelled) {
+        m_stats.failed++;
+    }
+}
+
+void Menu::AddError(const std::string& name, const std::string& stage, Result rc) {
+    SessionError error{};
+    error.name = name;
+    error.stage = stage;
+    error.rc = rc;
+    if (const auto code_name = GetResultCodeName(rc)) {
+        error.code_name = code_name;
+    }
+    error.detail = GetResultDescription(rc);
+
+    // written unconditionally: the user may have file logging switched off, and
+    // a failed queue is exactly when the trace is needed afterwards.
+    log_write_error("install queue: %s failed for \"%s\" -- %s%s%s",
+        stage.c_str(), name.c_str(), ResultText(rc).c_str(),
+        error.code_name.empty() ? "" : " ", error.code_name.c_str());
+
+    SCOPED_MUTEX(&m_mutex);
+    m_errors.emplace_back(std::move(error));
+}
+
+auto Menu::FormatDuration(u64 ns) -> std::string {
+    const auto total = ns / 1000000000ULL;
+    char buf[32]{};
+    if (total >= 3600) {
+        std::snprintf(buf, sizeof(buf), "%lluh %llum %llus", total / 3600, total % 3600 / 60, total % 60);
+    } else if (total >= 60) {
+        std::snprintf(buf, sizeof(buf), "%llum %llus", total / 60, total % 60);
+    } else {
+        std::snprintf(buf, sizeof(buf), "%llus", total);
+    }
+    return buf;
 }
 
 void Menu::AddLog(const std::string& text, LogKind kind) {

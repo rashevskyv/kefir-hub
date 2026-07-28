@@ -232,7 +232,6 @@ struct ThreadData {
             if (!write_running) {
                 R_SUCCEED();
             }
-            log_write("[YATI] SetDecompressBuf: waiting on can_read\n");
             R_TRY(condvarWait(std::addressof(can_read), std::addressof(read_mutex)));
         }
 
@@ -249,7 +248,6 @@ struct ThreadData {
                 buf_out.resize(0);
                 R_SUCCEED();
             }
-            log_write("[YATI] GetDecompressBuf: waiting on can_decompress\n");
             R_TRY(condvarWait(std::addressof(can_decompress), std::addressof(read_mutex)));
         }
 
@@ -270,7 +268,6 @@ struct ThreadData {
             if (!decompress_running) {
                 R_SUCCEED();
             }
-            log_write("[YATI] SetWriteBuf: waiting on can_decompress_write\n");
             R_TRY(condvarWait(std::addressof(can_decompress_write), std::addressof(write_mutex)));
         }
 
@@ -287,7 +284,6 @@ struct ThreadData {
                 buf_out.resize(0);
                 R_SUCCEED();
             }
-            log_write("[YATI] GetWriteBuf: waiting on can_write\n");
             R_TRY(condvarWait(std::addressof(can_write), std::addressof(write_mutex)));
         }
 
@@ -603,14 +599,12 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
 
         for (s64 off = 0; off < size;) {
             if (!ncz_section || !ncz_section->InRange(written)) {
-                log_write("[NCZ] looking for new section: %zu\n", written);
                 auto it = std::ranges::find_if(t->ncz_sections, [written](auto& e){
                     return e.InRange(written);
                 });
 
                 R_UNLESS(it != t->ncz_sections.cend(), Result_YatiNczSectionNotFound);
                 ncz_section = &(*it);
-                log_write("[NCZ] found new section: %zu\n", written);
 
                 if (ncz_section->crypto_type >= nca::EncryptionType_AesCtr) {
                     const auto swp = std::byteswap(u64(written) >> 4);
@@ -637,7 +631,6 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
 
         // restore remaining data to the swapped buffer.
         if (!temp_vector.empty()) {
-            log_write("[NCZ] storing data size: %zu\n", temp_vector.size());
             inflate_buf = temp_vector;
         }
 
@@ -682,7 +675,12 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
 
                 t->write_size = header.size;
                 log_write("setting placeholder size: %zu\n", t->write_size.load());
+                // same stall concern as CreatePlaceHolder above: this grows the
+                // file to the decompressed size and blocks the pipeline while
+                // it does, so record how long it takes.
+                const auto resize_start = armTicksToNs(armGetSystemTick());
                 R_TRY(ncmContentStorageSetPlaceHolderSize(std::addressof(cs), std::addressof(t->nca->placeholder_id), t->write_size));
+                log_write("placeholder resize took %llu ms\n", (armTicksToNs(armGetSystemTick()) - resize_start) / 1000000ULL);
 
                 if (!config.ignore_distribution_bit && header.distribution_type == nca::DistributionType_GameCard) {
                     header.distribution_type = nca::DistributionType_System;
@@ -748,13 +746,11 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                 if (t->ncz_blocks.size()) {
                     if (!ncz_block || !ncz_block->InRange(decompress_buf_off)) {
                         block_offset = 0;
-                        log_write("[NCZ] looking for new block: %zu\n", decompress_buf_off);
                         auto it = std::ranges::find_if(t->ncz_blocks, [decompress_buf_off](auto& e){
                             return e.InRange(decompress_buf_off);
                         });
 
                         R_UNLESS(it != t->ncz_blocks.cend(), Result_YatiNczBlockNotFound);
-                        log_write("[NCZ] found new block: %zu off: %zd size: %zd\n", decompress_buf_off, it->offset, it->size);
                         ncz_block = &(*it);
                     }
 
@@ -762,7 +758,6 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                     auto decompressedBlockSize = 1 << t->ncz_block_header.block_size_exponent;
                     // special handling for the last block to check it's actually compressed
                     if (ncz_block->offset == t->ncz_blocks.back().offset) {
-                        log_write("[NCZ] last block special handling\n");
                         decompressedBlockSize = t->ncz_block_header.decompressed_size % decompressedBlockSize;
                     }
 
@@ -775,7 +770,6 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                 }
 
                 if (compressed) {
-                    log_write("[NCZ] COMPRESSED block\n");
                     ZSTD_inBuffer input = { buffer.data(), buffer.size(), 0 };
                     while (input.pos < input.size) {
                         R_TRY(t->GetResults());
@@ -791,7 +785,6 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                         t->decompress_offset += output.pos;
                         inflate_offset += output.pos;
                         if (inflate_offset >= INFLATE_BUFFER_MAX) {
-                            log_write("[NCZ] flushing compressed data: %zd vs %zd diff: %zd\n", inflate_offset, INFLATE_BUFFER_MAX, inflate_offset - INFLATE_BUFFER_MAX);
                             R_TRY(ncz_flush(INFLATE_BUFFER_MAX));
                         }
                     }
@@ -802,7 +795,6 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                     t->decompress_offset += buffer.size();
                     inflate_offset += buffer.size();
                     if (inflate_offset >= INFLATE_BUFFER_MAX) {
-                        log_write("[NCZ] flushing copy data\n");
                         R_TRY(ncz_flush(INFLATE_BUFFER_MAX));
                     }
                 }
@@ -987,8 +979,17 @@ Result Yati::InstallNcaInternal(std::span<TikCollection> tickets, NcaCollection&
 
     log_write("generateing placeholder\n");
     R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(cs), std::addressof(nca.placeholder_id)));
+
+    // this preallocates nca.size bytes and runs *before* the pipeline threads
+    // exist, so nothing is draining the stream buffer while it works. on a
+    // multi-gb nca that window is long enough for a streaming source (mtp) to
+    // back up and have its host time the transfer out -- time it so the log
+    // says how much slack the ingest buffer actually needs.
     log_write("creating placeholder\n");
+    const auto placeholder_start = armTicksToNs(armGetSystemTick());
     R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(cs), std::addressof(nca.content_id), std::addressof(nca.placeholder_id), nca.size));
+    const auto placeholder_ns = armTicksToNs(armGetSystemTick()) - placeholder_start;
+    log_write("created placeholder for %lld bytes in %llu ms\n", (long long)nca.size, placeholder_ns / 1000000ULL);
 
     log_write("opening thread\n");
     ThreadData t_data{this, tickets, std::addressof(nca)};

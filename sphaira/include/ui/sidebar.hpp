@@ -26,6 +26,12 @@ public:
     auto OnFocusGained() noexcept -> void override;
     auto OnFocusLost() noexcept -> void override;
 
+    // decorative entries (group headers) cannot be selected; the cursor
+    // scrolls straight past them.
+    virtual auto IsFocusable() const -> bool {
+        return true;
+    }
+
     void DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected);
 
     void Depends(const DependsCallback& callback, const std::string& depends_info, const DependsClickCallback& depends_click = {}) {
@@ -112,6 +118,10 @@ class SidebarEntryHeader final : public SidebarEntryBase {
 public:
     explicit SidebarEntryHeader(const std::string& title, const std::string& info = "");
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
+
+    auto IsFocusable() const -> bool override {
+        return false;
+    }
 };
 
 class SidebarEntryCallback final : public SidebarEntryBase {
@@ -226,6 +236,15 @@ public:
     auto OnFocusGained() noexcept -> void override;
     auto OnFocusLost() noexcept -> void override;
 
+    // the panel spans the full height of its side of the screen and draws its
+    // own title and separators there, so it takes that slice of the header and
+    // footer over from the menu underneath instead of covering it - the
+    // sidebar fill is not quite opaque and the menu's clock, storage bars and
+    // hint row used to read straight through it.
+    auto GetChromeOcclusion() const -> Vec4 override {
+        return m_pos;
+    }
+
     auto Add(std::unique_ptr<SidebarEntryBase>&& entry) -> SidebarEntryBase*;
 
     template<DerivedFromSidebarBase T, typename... Args>
@@ -236,6 +255,10 @@ public:
 private:
     void SetIndex(s64 index);
     void SetupButtons();
+    auto IsFocusable(s64 index) const -> bool;
+    // walks past non-focusable entries (group headers) in the direction of
+    // travel, reusing the list's own scrolling so the view stays in sync.
+    auto SkipUnfocusable(s64 index, bool forward) -> s64;
 
 private:
     std::string m_title;
@@ -243,6 +266,8 @@ private:
     Side m_side;
     Items m_items;
     s64 m_index{};
+    // set once the first selectable entry has been given focus.
+    bool m_has_focus{};
 
     std::unique_ptr<List> m_list;
 

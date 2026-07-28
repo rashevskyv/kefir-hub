@@ -373,6 +373,7 @@ void AppendLightbox(std::string& body) {
 }
 
 void AppendConfirmModal(std::string& body) {
+    body += webpages::CONFIRM_MODAL_CSS;
     body += webpages::CONFIRM_MODAL_HTML;
 }
 

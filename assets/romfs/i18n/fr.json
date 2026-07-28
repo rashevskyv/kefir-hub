@@ -73,7 +73,6 @@
   "USB transfer (Switch 2 Switch)": "Transfert USB (Switch à Switch",
   "/dev/null (Speed Test)": "/dev/null (test de vitesse)",
   "Dumping": "Dump en cours...",
-  "Dump successfull!": "Dump réussi !",
   "Dump failed!": "Échec du dump !",
   "Delete successful!": "Fichier supprimé !",
   "Delete failed!": "Échec de la suppression !",
@@ -294,7 +293,6 @@
   "Select upload location": "Emplacement du téléversement :",
   "No upload locations set!": "Aucun emplacement de téléversement configuré !",
   "Uploading": "Téléversement en cours...",
-  "Upload successfull!": "Téléversement réussi !",
   "Upload failed!": "Téléversement échoué !",
   "Hash": "Hash",
   "Hash Options": "Options du Hash",
@@ -465,7 +463,6 @@
   "The name contains invalid characters. Do not use characters like *, ?, :, etc.": "Le nom contient des caractères non valides. N'utilisez pas de caractères comme *, ?, :, etc.",
   "This directory or file is write-protected.": "Ce répertoire ou fichier est protégé en écriture.",
   "Dump Options": "Options de dump",
-  "Delete successfull!": "Suppression réussie !",
   "Filter: %s | Sort: %s | Order: %s": "Filtrer : %s | Trier : %s | Ordre : %s",
   "Pasting ": "Collage de ",
   "Apply": "Appliquer",
@@ -559,5 +556,7 @@
   "Update language packs": "Mettre à jour les packs de langue",
   "Update the UltraHand language package list.": "Mettre à jour la liste des packages linguistiques UltraHand.",
   "Updating language packs...": "Mise à jour des packs de langue...",
-  "To apply this translation, you must select one of the required variations in the console settings:\n": "Pour appliquer cette traduction, vous devez sélectionner l'une des variations requises dans les paramètres de la console :\n"
+  "To apply this translation, you must select one of the required variations in the console settings:\n": "Pour appliquer cette traduction, vous devez sélectionner l'une des variations requises dans les paramètres de la console :\n",
+  "Dump successful!": "Dump réussi !",
+  "Upload successful!": "Téléversement réussi !"
 }

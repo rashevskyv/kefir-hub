@@ -88,6 +88,23 @@ void FreeEntry(NVGcontext* vg, Entry& e) {
     e.image = 0;
 }
 
+// a thick border drawn *inside* the tile that fades from the given colour at
+// the edge to fully transparent toward the centre, so the category of a save
+// (deleted / backup) reads at a glance without a hard outer frame.
+void DrawInnerBorder(NVGcontext* vg, const Vec4& v, const NVGcolor& col, float thickness, float radius) {
+    const auto transparent = nvgRGBAf(col.r, col.g, col.b, 0.f);
+    // box gradient: inside the inset rectangle -> transparent, blending out to
+    // the solid colour over `thickness` toward the tile edge.
+    const auto paint = nvgBoxGradient(vg,
+        v.x + thickness, v.y + thickness, v.w - thickness * 2.f, v.h - thickness * 2.f,
+        radius, thickness, transparent, col);
+
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, v.x, v.y, v.w, v.h, radius);
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+}
+
 } // namespace
 
 void SignalChange() {
@@ -405,6 +422,29 @@ void Menu::DisplayDataTypeOptions() {
     }
 }
 
+void Menu::DisplayShowSavesOptions() {
+    auto options = std::make_unique<Sidebar>("Show saves"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCheckbox>(
+        "Installed game saves"_i18n,
+        [this](){ return m_show_installed.Get(); },
+        [this](bool enabled){ m_show_installed.Set(enabled); MarkFiltersChanged(); },
+        "Show saves belonging to games that are currently installed."_i18n);
+
+    options->Add<SidebarEntryCheckbox>(
+        "Deleted game saves"_i18n,
+        [this](){ return m_show_deleted.Get(); },
+        [this](bool enabled){ m_show_deleted.Set(enabled); MarkFiltersChanged(); },
+        "Show orphaned saves whose game is no longer installed (marked with a grey border)."_i18n);
+
+    options->Add<SidebarEntryCheckbox>(
+        "Backups"_i18n,
+        [this](){ return m_show_backups.Get(); },
+        [this](bool enabled){ m_show_backups.Set(enabled); MarkFiltersChanged(); },
+        "Show a tile for every game that has a save backup on the SD card, listed below the divider (marked with a yellow border)."_i18n);
+}
+
 void Menu::DisplaySaveOptions() {
     auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -463,6 +503,10 @@ void Menu::DisplaySaveOptions() {
         DisplayDataTypeOptions();
     }, "Choose which save data types to display."_i18n);
 
+    options->Add<SidebarEntryCallback>("Show saves"_i18n, [this](){
+        DisplayShowSavesOptions();
+    }, "Choose which categories of saves are shown: installed games, deleted games and backups."_i18n);
+
     options->Add<SidebarEntryHeader>("SYNC"_i18n);
 
     options->Add<SidebarEntryCallback>("Sync with remote"_i18n, [this](){
@@ -496,14 +540,78 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     MenuBase::Update(controller, touch);
-    m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
-        if (touch && m_index == i) {
+
+    const auto g = ComputeGridSections();
+    const auto start_disp = EntryToDisplay(m_index, g);
+    m_list->OnUpdate(controller, touch, start_disp, g.display_count, [this, g, start_disp](bool touch, s64 disp) {
+        const auto entry = ResolveDisplay(disp, start_disp, g);
+        if (entry < 0) {
+            return; // landed on the empty divider gap; nothing to focus there.
+        }
+
+        if (touch && m_index == entry) {
             FireAction(Button::A);
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);
-            SetIndex(i);
+            SetIndex(entry);
+            // the cursor may have stepped over the divider gap, so nudge the
+            // view to keep the newly focused tile visible.
+            m_list->EnsureVisible(EntryToDisplay(entry, g), g.display_count);
         }
     }, this);
+}
+
+auto Menu::ComputeGridSections() const -> GridSections {
+    GridSections g;
+    g.row = std::max<s64>(1, m_list ? m_list->GetRow() : 1);
+    g.horizontal = m_list && m_list->GetLayout() == List::Layout::HOME;
+
+    const auto total = static_cast<s64>(m_entries.size());
+    g.live_count = std::clamp<s64>(m_backup_start, 0, total);
+    g.backup_count = total - g.live_count;
+
+    if (g.backup_count > 0) {
+        g.has_backups = true;
+        // fill the remainder of the last live row, then add one empty row that
+        // hosts the "Backups" divider label.
+        g.base_fill = g.live_count > 0 ? (g.row - g.live_count % g.row) % g.row : 0;
+        g.pad = g.base_fill + g.row;
+    }
+
+    g.first_backup_display = g.live_count + g.pad;
+    g.display_count = g.live_count + g.pad + g.backup_count;
+    return g;
+}
+
+auto Menu::EntryToDisplay(s64 entry, const GridSections& g) const -> s64 {
+    if (entry < g.live_count) {
+        return entry;
+    }
+    return entry + g.pad;
+}
+
+auto Menu::DisplayToEntry(s64 display, const GridSections& g) const -> s64 {
+    if (display < g.live_count) {
+        return display; // live save
+    }
+    if (display < g.first_backup_display) {
+        return -1; // filler / divider gap
+    }
+    const auto entry = display - g.pad;
+    return (entry >= 0 && entry < static_cast<s64>(m_entries.size())) ? entry : -1;
+}
+
+auto Menu::ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64 {
+    const auto entry = DisplayToEntry(display, g);
+    if (entry >= 0) {
+        return entry;
+    }
+    // filler: hop to the first backup when moving forward, otherwise back to
+    // the last live save (mirrors the settings menu's caption stepping).
+    if (display >= from) {
+        return g.backup_count > 0 ? g.live_count : -1;
+    }
+    return g.live_count > 0 ? g.live_count - 1 : -1;
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
@@ -529,9 +637,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count](NVGcontext* vg, Theme* theme, Vec4 v, s64 pos) {
+    const auto g = ComputeGridSections();
+    m_list->Draw(vg, theme, g.display_count, [this, &image_load_count, g](NVGcontext* vg, Theme* theme, Vec4 v, s64 disp) {
+        const auto entry = DisplayToEntry(disp, g);
+        if (entry < 0) {
+            return; // empty divider gap; the label is drawn with the first backup tile.
+        }
         const auto& [x, y, w, h] = v;
-        auto& e = m_entries[pos];
+        auto& e = m_entries[entry];
 
         if (e.status == title::NacpLoadStatus::None) {
             if (!IsSystemLikeSave(e.save_data_type)) {
@@ -551,7 +664,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        const auto selected = pos == m_index;
+        const auto selected = entry == m_index;
         Vec4 image_v = v;
         if (!IsSystemLikeSave(e.save_data_type)) {
             image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), "");
@@ -561,11 +674,69 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }
 
+        // grey for deleted-game saves, yellow for backups, nothing otherwise.
+        // framed on the whole tile so it reads in every layout.
+        DrawCategoryBorder(vg, theme, v, e);
+
         if (e.selected) {
             gfx::drawRect(vg, image_v, theme->GetColour(ThemeEntryID_FOCUS), 5);
             gfx::drawText(vg, image_v.x + image_v.w / 2, image_v.y + image_v.h / 2, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
         }
+
+        // the "Backups" divider rides above the first backup tile, filling the
+        // empty row reserved for it in ComputeGridSections().
+        if (g.has_backups && disp == g.first_backup_display) {
+            DrawSectionDivider(vg, theme, v, g);
+        }
     });
+}
+
+void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) const {
+    NVGcolor col;
+    if (e.is_backup) {
+        col = nvgRGB(0xF2, 0xC5, 0x22); // yellow: backup archive
+    } else if (IsSystemLikeSave(e.save_data_type)) {
+        return; // system saves are not games; leave them unframed
+    } else if (m_installed_app_ids.contains(e.application_id)) {
+        return; // installed game: ordinary save, no border
+    } else {
+        col = nvgRGB(0x9A, 0x9A, 0x9A); // grey: deleted-game save
+    }
+
+    DrawInnerBorder(vg, v, col, 12.f, 5.f);
+}
+
+void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const {
+    const auto label = "Backups"_i18n;
+    const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto line_col = theme->GetColour(ThemeEntryID_LINE_SEPARATOR);
+
+    if (g.horizontal) {
+        // sideways layout: a vertical rule in the empty column, label on top.
+        const float cx = first_backup_v.x - m_list->GetMaxX() + first_backup_v.w / 2.f;
+        gfx::drawRect(vg, cx - 1.f, first_backup_v.y, 2.f, first_backup_v.h, line_col);
+        gfx::drawText(vg, cx, first_backup_v.y - 8.f, 20.f, text_col, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
+        return;
+    }
+
+    // vertical layout: a full-width rule centred in the empty row above the
+    // first backup tile, with the label sitting in a gap in the middle.
+    const float cy = first_backup_v.y - m_list->GetMaxY() + first_backup_v.h / 2.f;
+    const float dl = m_list->GetX();
+    const float dr = m_list->GetX() + m_list->GetW();
+    const float mid = (dl + dr) / 2.f;
+    constexpr float font = 22.f;
+
+    float bounds[4];
+    nvgFontSize(vg, font);
+    gfx::textBounds(vg, 0, 0, bounds, label.c_str());
+    const float half_w = (bounds[2] - bounds[0]) / 2.f;
+    constexpr float gap = 16.f;
+
+    gfx::drawRect(vg, dl, cy - 1.f, std::max(0.f, (mid - half_w - gap) - dl), 2.f, line_col);
+    const float rx = mid + half_w + gap;
+    gfx::drawRect(vg, rx, cy - 1.f, std::max(0.f, dr - rx), 2.f, line_col);
+    gfx::drawText(vg, mid, cy, font, text_col, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 }
 
 void Menu::OnFocusGained() {
@@ -748,7 +919,38 @@ void Menu::ScanHomebrew() {
             grouped[index] = e;
         }
     }
-    m_entries = std::move(grouped);
+
+    // classify live saves as installed vs deleted-game, and drop whichever the
+    // "Show saves" filter has turned off. system saves are governed by the Data
+    // Types filter instead, so they are always kept here.
+    BuildInstalledAppIds();
+    const bool show_installed = m_show_installed.Get();
+    const bool show_deleted = m_show_deleted.Get();
+
+    m_entries.clear();
+    m_entries.reserve(grouped.size());
+    for (auto& e : grouped) {
+        if (IsSystemLikeSave(e.save_data_type)) {
+            m_entries.emplace_back(e);
+            continue;
+        }
+
+        const bool installed = m_installed_app_ids.contains(e.application_id);
+        if (installed ? show_installed : show_deleted) {
+            m_entries.emplace_back(e);
+        }
+    }
+
+    // backup tiles come after every live save; remember the boundary so the
+    // grid can split the two sections with the "Backups" divider.
+    m_backup_start = static_cast<s64>(m_entries.size());
+    if (m_show_backups.Get()) {
+        std::vector<Entry> backups;
+        ReadBackupEntries(backups);
+        for (auto& b : backups) {
+            m_entries.emplace_back(std::move(b));
+        }
+    }
 
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
@@ -756,20 +958,95 @@ void Menu::ScanHomebrew() {
     ClearSelection();
 }
 
+void Menu::BuildInstalledAppIds() {
+    m_installed_app_ids.clear();
+
+    std::vector<NsApplicationRecord> records(ENTRY_CHUNK_COUNT);
+    s32 offset = 0;
+    while (true) {
+        s32 count = 0;
+        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &count)) || count <= 0) {
+            break;
+        }
+
+        for (s32 i = 0; i < count; i++) {
+            if (records[i].application_id) {
+                m_installed_app_ids.insert(records[i].application_id);
+            }
+        }
+        offset += count;
+    }
+}
+
+void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
+    fs::FsNativeSd fs;
+    std::set<u64> seen;
+
+    const auto add = [&](u64 app_id) {
+        if (app_id && seen.insert(app_id).second) {
+            Entry e{};
+            e.application_id = app_id;
+            e.save_data_type = FsSaveDataType_Account; // drawn like a game save tile
+            e.is_backup = true;
+            out.emplace_back(e);
+        }
+    };
+
+    // DBI-format game backups: /switch/DBI/saves/<game>/<date>/<appid>_<type>_..zip
+    const auto dbi_root = fs::AppendPath(fs.Root(), DBI_SAVES_PATH);
+    filebrowser::FsDirCollection games{};
+    filebrowser::FsView::get_collection(&fs, dbi_root, "", games, false, true, false);
+    for (const auto& game : games.dirs) {
+        const auto game_dir = fs::AppendPath(dbi_root, game.name);
+        filebrowser::FsDirCollection dates{};
+        filebrowser::FsView::get_collection(&fs, game_dir, "", dates, false, true, false);
+        for (const auto& date : dates.dirs) {
+            filebrowser::FsDirCollection files{};
+            filebrowser::FsView::get_collection(&fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
+            for (const auto& file : files.files) {
+                add(ParseDbiBackupAppId(file.name));
+            }
+        }
+    }
+
+    // legacy sphaira backups written under an app-id-named folder in /dumps.
+    const auto parse_hex16 = [](const char* name) -> u64 {
+        if (std::strlen(name) != 16) {
+            return 0;
+        }
+        u64 id{};
+        for (int i = 0; i < 16; i++) {
+            const char c = name[i];
+            int nibble;
+            if (c >= '0' && c <= '9') nibble = c - '0';
+            else if (c >= 'a' && c <= 'f') nibble = c - 'a' + 10;
+            else if (c >= 'A' && c <= 'F') nibble = c - 'A' + 10;
+            else return 0;
+            id = (id << 4) | static_cast<u64>(nibble);
+        }
+        return id;
+    };
+
+    const auto dumps_root = fs::AppendPath(fs.Root(), DEFAULT_BACKUP_ROOT);
+    filebrowser::FsDirCollection dumps{};
+    filebrowser::FsView::get_collection(&fs, dumps_root, "", dumps, false, true, false);
+    for (const auto& dir : dumps.dirs) {
+        add(parse_hex16(dir.name));
+    }
+}
+
 void Menu::Sort() {
     // const auto sort = m_sort.Get();
     const auto order = m_order.Get();
+    const bool want_reversed = order == OrderType_Ascending;
 
-    if (order == OrderType_Ascending) {
-        if (!m_is_reversed) {
-            std::ranges::reverse(m_entries);
-            m_is_reversed = true;
-        }
-    } else {
-        if (m_is_reversed) {
-            std::ranges::reverse(m_entries);
-            m_is_reversed = false;
-        }
+    if (want_reversed != m_is_reversed) {
+        // reverse the live-save and backup sections independently so the two
+        // stay partitioned (live first, backups after) regardless of order.
+        const auto mid = std::clamp<s64>(m_backup_start, 0, static_cast<s64>(m_entries.size()));
+        std::reverse(m_entries.begin(), m_entries.begin() + mid);
+        std::reverse(m_entries.begin() + mid, m_entries.end());
+        m_is_reversed = want_reversed;
     }
 }
 
@@ -801,11 +1078,14 @@ void Menu::SortAndFindLastFile(bool scan) {
     }
 
     if (index >= 0) {
+        const auto g = ComputeGridSections();
+        const auto disp = EntryToDisplay(index, g);
         const auto row = m_list->GetRow();
         const auto page = m_list->GetPage();
-        // guesstimate where the position is
-        if (index >= page) {
-            m_list->SetYoff((((index - page) + row) / row) * m_list->GetMaxY());
+        // guesstimate where the position is (in display slots, which include
+        // the divider gap between live saves and backups).
+        if (disp >= page) {
+            m_list->SetYoff((((disp - page) + row) / row) * m_list->GetMaxY());
         } else {
             m_list->SetYoff(0);
         }
@@ -821,6 +1101,7 @@ void Menu::FreeEntries() {
     }
 
     m_entries.clear();
+    m_backup_start = 0;
 }
 
 void Menu::OnLayoutChange() {

@@ -34,10 +34,28 @@ struct MenuBase : Widget {
 
     virtual auto GetShortTitle() const -> const char* = 0;
     virtual void Update(Controller* controller, TouchInfo* touch);
+    // draws the menu body only (background + waves). Subclasses call this
+    // first, then draw their content on top.
     virtual void Draw(NVGcontext* vg, Theme* theme);
+
+    // draws the header and footer. App calls this once the whole menu body is
+    // down, so the chrome always wins over content that overflows its band.
+    // Parts of the header covered by a panel stacked above are skipped rather
+    // than drawn underneath it - see ui/layout.hpp.
+    void DrawChrome(NVGcontext* vg, Theme* theme);
+
+    // menus that replace the standard chrome with their own (the image viewer)
+    // opt out here.
+    virtual auto WantsChrome() const -> bool {
+        return true;
+    }
 
     auto IsMenu() const -> bool override {
         return true;
+    }
+
+    auto GetChromeOwner() -> MenuBase* override {
+        return this;
     }
 
     void SetTitle(std::string title);

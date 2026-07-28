@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "fs.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/install_share.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -181,7 +182,10 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
                 nro_launch(GetEntry().path);
             }
         }}),
-        std::make_pair(Button::START, Action{"Sort"_i18n, [this](){
+        std::make_pair(Button::B, Action{"Exit"_i18n, [](){
+            App::Exit();
+        }}),
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }})
     );
@@ -589,8 +593,10 @@ Result Menu::InstallHomebrewFromPath(const fs::FsPath& path) {
 }
 
 void Menu::DisplayOptions() {
-    auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
+    auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryHeader>("SORT"_i18n);
 
     SidebarEntryArray::Items sort_items;
     sort_items.push_back("Updated"_i18n);
@@ -633,6 +639,9 @@ void Menu::DisplayOptions() {
         m_show_hidden.Set(enable);
         SortAndFindLastFile();
     }, "Shows all hidden homebrew."_i18n);
+
+    AddInstallShareOptions(options.get());
+    AddSettingsOption(options.get());
 }
 
 } // namespace sphaira::ui::menu::homebrew

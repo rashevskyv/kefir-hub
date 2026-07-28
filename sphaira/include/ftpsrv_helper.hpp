@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 namespace sphaira::ftpsrv {
 
@@ -18,5 +19,9 @@ unsigned GetPort();
 bool IsAnon();
 const char* GetUser();
 const char* GetPass();
+
+void SetFtpMountedFolder(const std::string& path);
+void ClearFtpMountedFolder();
+std::string GetFtpMountedName();
 
 } // namespace sphaira::ftpsrv

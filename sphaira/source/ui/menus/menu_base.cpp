@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 #include "utils/utils.hpp"
@@ -164,6 +165,24 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         draw_wave(695.f, 8.f, 0.005f, 1.6f, col1);
     }
 
+}
+
+void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
+    if (!WantsChrome()) {
+        return;
+    }
+
+    // a panel stacked above claims the region it covers: the chrome that falls
+    // inside is skipped entirely rather than drawn under a background that is
+    // only *almost* opaque, which is what made the clock, the storage bars and
+    // the hint row ghost through an open sidebar.
+    const auto occlusion = App::GetChromeOcclusion();
+    const auto occluded = [&occlusion](const Vec4& v) {
+        return layout::Intersects(v, occlusion);
+    };
+
+    // the hint row is drawn by whoever owns the footer (see App::OwnsFooter),
+    // so a covered menu draws nothing here.
     Widget::Draw(vg, theme);
 
     const auto pdata = GetPolledData();
@@ -187,6 +206,11 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     float bounds[4];
 
     nvgFontSize(vg, font_size);
+
+    // the whole status block lives in the right half of the header band.
+    const bool draw_status = !occluded(Vec4{SCREEN_WIDTH / 2.f, 0.f, SCREEN_WIDTH / 2.f, layout::HEADER_LINE_Y});
+
+    if (draw_status) {
 
     #define draw(colour, fixed, ...) \
         gfx::drawTextArgs(vg, start_x, start_y, font_size, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, theme->GetColour(colour), __VA_ARGS__); \
@@ -341,14 +365,23 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
     draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight);
     draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight);
 
-    gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
-    gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+    } // draw_status
+
+    // the separators fence the content band off; a panel covering part of one
+    // redraws its own at the same y, so the line still reads as continuous.
+    gfx::drawRect(vg, layout::SIDE_X, layout::HEADER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+    gfx::drawRect(vg, layout::SIDE_X, layout::FOOTER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
     nvgFontSize(vg, 28);
     gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
 
     const auto text_w = SCREEN_WIDTH / 2 - 30;
     float title_sub_x = 80 + (bounds[2] - bounds[0]) + 10;
+
+    // title block: left half of the header band, covered by a left side panel.
+    if (occluded(Vec4{0.f, 0.f, SCREEN_WIDTH / 2.f, layout::HEADER_LINE_Y})) {
+        return;
+    }
 
     gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
     gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
@@ -370,7 +403,7 @@ void MenuBase::Draw(NVGcontext* vg, Theme* theme) {
         title_sub_x += stat_w + 14.f;
     }
     m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
-    m_scroll_sub_heading.Draw(vg, true, 80, 683, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+    m_scroll_sub_heading.Draw(vg, true, 80, layout::FOOTER_TEXT_Y, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
 }
 
 void MenuBase::SetTitle(std::string title) {

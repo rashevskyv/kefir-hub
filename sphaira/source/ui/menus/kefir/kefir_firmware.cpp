@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <cstdio>
 #include <cstdlib>
 
 
@@ -232,20 +233,39 @@ auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result
     return out->validation.result;
 }
 
-auto ApplyDowngradeFix(ProgressBox* pbox) -> Result {
-    pbox->NewTransfer("Applying downgrade fix...");
+auto IsDowngradeFixAvailable() -> bool {
+    // deleting /save/8000000000000073 from the BIS System partition fails with
+    // FsError_TargetLocked: nim keeps that save mounted for as long as HOS is
+    // running, so it can never be removed from inside the running system.
+    // stubbed out until it is replaced by a script run after the install.
+    return false;
+}
 
-    fs::FsNativeBis system(FsBisPartitionId_System, "");
-    R_TRY(system.GetFsOpenResult());
+void ApplyDowngradeFix(DowngradeFixResult* out) {
+    *out = {};
+    out->attempted = true;
+    // no-op, see IsDowngradeFixAvailable().
+}
 
-    constexpr const char* DOWNGRADE_FIX_SAVE = "/save/8000000000000073";
-    if (!system.FileExists(DOWNGRADE_FIX_SAVE)) {
-        R_SUCCEED();
+auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
+    if (!fix.attempted) {
+        return {};
     }
 
-    R_TRY(system.DeleteFile(DOWNGRADE_FIX_SAVE));
-    R_TRY(system.Commit());
-    R_SUCCEED();
+    if (fix.deleted) {
+        return "Downgrade fix applied: system save 8000000000000073 deleted.";
+    }
+
+    if (R_FAILED(fix.rc)) {
+        char rc_str[32];
+        std::snprintf(rc_str, sizeof(rc_str), "0x%08X", R_VALUE(fix.rc));
+        std::string out = "Downgrade fix FAILED (";
+        out += rc_str;
+        out += ").";
+        return out;
+    }
+
+    return "Downgrade fix is not available yet.\n\nThe system save 8000000000000073 is locked by the system while the console is running and cannot be deleted from here.\n\nUse hekate > Payloads > TegraExplorer > DowngradeFix.te instead.";
 }
 
 void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
@@ -269,7 +289,7 @@ void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
     fs.Commit();
 }
 
-auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix) -> Result {
+auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix) -> Result {
     Result rc = amssuInitialize();
     if (R_FAILED(rc)) {
         return rc;
@@ -310,8 +330,14 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     pbox->NewTransfer("Applying system update...");
     R_TRY(amssuApplyPreparedUpdate());
 
+    // the update itself is already applied at this point, so the fix must never
+    // be able to report the whole install as failed.
     if (apply_downgrade_fix) {
-        R_TRY(ApplyDowngradeFix(pbox));
+        DowngradeFixResult fix{};
+        ApplyDowngradeFix(&fix);
+        if (out_fix) {
+            *out_fix = fix;
+        }
     }
 
     CleanupFirmwareFiles(pbox, path);
@@ -348,6 +374,8 @@ auto TypeLabel(UpdaterEntryType type) -> const char* {
         case UpdaterEntryType::Kefir:
             return "Kefir";
         case UpdaterEntryType::Firmware:
+            return "Firmware";
+        case UpdaterEntryType::FirmwareManual:
             return "Firmware";
     }
     return "";

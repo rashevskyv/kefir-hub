@@ -370,7 +370,7 @@ void FsView::UploadFiles() {
                 m_menu->ResetSelection();
 
                 if (R_SUCCEEDED(rc)) {
-                    App::Notify("Upload successfull!"_i18n);
+                    App::Notify("Upload successful!"_i18n);
                     log_write("Upload successfull!!!\n");
                 } else {
                     App::Notify("Upload failed!"_i18n);

@@ -2,6 +2,7 @@
 #include "web_http.hpp"
 #include "web_pages.hpp"
 #include "title_info.hpp"
+#include "app.hpp"
 #include "fs.hpp"
 #include <algorithm>
 #include <vector>
@@ -25,6 +26,17 @@ struct ScreenshotEntry {
     std::string raw_timestamp; // YYYYMMDDHHMMSS00 (for sorting)
     bool is_video{};
 };
+
+// screenshots are stored in the album of the *booted* nand, which on emummc is the
+// redirected nintendo folder from emummc.ini, eg /emuMMC/SD00/Nintendo/Album.
+auto GetAlbumRoot() -> const std::string& {
+    static const std::string root = [] {
+        const auto nintendo = App::GetEmummcNintendoPath();
+        return nintendo.empty() ? std::string{"/Nintendo/Album"} : nintendo + "/Album";
+    }();
+
+    return root;
+}
 
 bool TryParseScreenshotEntry(const FsDirectoryEntry& d_entry, const std::string& full_path, ScreenshotEntry& se) {
     std::string ext = d_entry.name;
@@ -97,7 +109,7 @@ bool CompareScreenshotEntries(const ScreenshotEntry& lhs, const ScreenshotEntry&
 
 void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
     fs::FsNativeSd fs;
-    if (!fs.DirExists("/Nintendo/Album")) {
+    if (!fs.DirExists(GetAlbumRoot())) {
         return;
     }
 
@@ -106,7 +118,7 @@ void ScanScreenshots(std::vector<ScreenshotEntry>& out_entries) {
         int depth;
     };
     std::vector<StackEntry> stack;
-    stack.push_back({"/Nintendo/Album", 0});
+    stack.push_back({GetAlbumRoot(), 0});
 
     while (!stack.empty()) {
         auto entry = stack.back();
@@ -201,6 +213,42 @@ void ScanFolderFiles(const std::string& folder_path, std::vector<ScreenshotEntry
     std::sort(out_entries.begin(), out_entries.end(), CompareScreenshotEntries);
 }
 
+void AppendSelectionBar(std::string& body) {
+    body += "<div class=\"bar\">";
+    body += "<button id=\"select-all-btn\" onclick=\"toggleSelectAll()\"><span class=\"icon\">✓</span> <span class=\"text\">Select All</span></button>";
+    body += "<button id=\"delete-selected\" onclick=\"deleteSelected()\" disabled><span class=\"icon\">🗑</span> <span class=\"text\">Delete Selected</span> <span class=\"count\">(0)</span></button>";
+    body += "</div>";
+}
+
+void AppendScreenshotCard(std::string& body, const ScreenshotEntry& entry) {
+    const auto encoded_path = UrlEncode(entry.path);
+    const auto escaped_game = HtmlEscape(entry.game_name);
+    const auto escaped_time = HtmlEscape(entry.timestamp);
+    const auto escaped_filename = HtmlEscape(entry.filename);
+
+    body += "<div class=\"card\">";
+    body += "<input type=\"checkbox\" class=\"file-checkbox\" data-path=\"" + encoded_path + "\" onclick=\"event.stopPropagation(); updateSelectCount();\">";
+    if (entry.is_video) {
+        body += "<video controls preload=\"none\" src=\"/view?path=" + encoded_path + "\"></video>";
+    } else {
+        body += "<a href=\"/view?path=" + encoded_path + "\"><img loading=\"lazy\" src=\"/view?path=" + encoded_path + "\" alt=\"" + escaped_game + "\"></a>";
+    }
+    body += "<div class=\"info\">";
+    body += "<div class=\"game-name\" title=\"" + escaped_game + "\">" + escaped_game + "</div>";
+    body += "<div class=\"timestamp\">" + escaped_time + "</div>";
+
+    char size_buf[32]{};
+    if (entry.file_size >= 1024 * 1024) {
+        std::snprintf(size_buf, sizeof(size_buf), "%.2f MB", static_cast<double>(entry.file_size) / (1024.0 * 1024.0));
+    } else {
+        std::snprintf(size_buf, sizeof(size_buf), "%.1f KB", static_cast<double>(entry.file_size) / 1024.0);
+    }
+    body += "<div class=\"size\">" + std::string(size_buf) + " (" + escaped_filename + ")</div>";
+    body += "<div class=\"actions\">";
+    body += "<button class=\"btn del-btn\" onclick=\"deleteItem(event,'" + encoded_path + "')\">Delete</button>";
+    body += "</div></div></div>";
+}
+
 } // namespace
 
 auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
@@ -236,8 +284,19 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += ".folder-icon{width:48px;height:48px;margin-bottom:12px;color:#ffca28}";
     body += ".folder-name{font-weight:600;font-size:15px}";
     body += ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding:18px}";
-    body += ".card{display:flex;flex-direction:column;background:#1c1c1c;border:1px solid #333;border-radius:10px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:transform 0.15s}";
+    body += ".card{position:relative;display:flex;flex-direction:column;background:#1c1c1c;border:1px solid #333;border-radius:10px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.3);transition:transform 0.15s,border-color 0.15s}";
     body += ".card:hover{transform:translateY(-2px)}";
+    body += ".card.selected{border-color:#38bdf8}";
+    body += ".bar{display:flex;gap:8px;padding:14px 18px 0;flex-wrap:wrap}";
+    body += ".bar button{border:1px solid #4f535c;background:#252a32;color:#fff;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s}";
+    body += ".bar button:hover:not(:disabled){background:#303640;border-color:#656b77}";
+    body += ".bar button:disabled{opacity:0.45;cursor:default}";
+    body += "#delete-selected{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:#f87171}";
+    body += "#delete-selected:hover:not(:disabled){background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.7)}";
+    body += ".file-checkbox{-webkit-appearance:none;appearance:none;position:absolute;top:12px;left:12px;width:20px;height:20px;margin:0;z-index:5;background:rgba(10,12,15,0.65);border:2px solid rgba(255,255,255,0.5);border-radius:4px;outline:none;cursor:pointer;transition:all 0.15s}";
+    body += ".file-checkbox:hover{border-color:#38bdf8;background:rgba(56,189,248,0.25)}";
+    body += ".file-checkbox:checked{background:#38bdf8;border-color:#38bdf8}";
+    body += ".file-checkbox:checked::after{content:'';position:absolute;left:6px;top:2px;width:4px;height:9px;border:solid #0f0f12;border-width:0 2px 2px 0;transform:rotate(45deg)}";
     body += "img,video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#050505;border-bottom:1px solid #2d2d2d}";
     body += ".info{padding:12px;display:flex;flex-direction:column;gap:6px;flex-grow:1}";
     body += ".game-name{font-weight:600;color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
@@ -267,6 +326,9 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "  .folder-card{padding:10px}";
     body += "  .folder-icon{width:32px;height:32px;margin-bottom:6px}";
     body += "  .folder-name{font-size:11px}";
+    body += "  .bar{padding:10px 12px 0;gap:6px}";
+    body += "  .bar button{padding:6px 10px;font-size:12px}";
+    body += "  .file-checkbox{top:6px;left:6px}";
     body += "}";
     body += "</style></head><body><header><div class=\"header-top\"><h1>Kefir Hub Album</h1><a href=\"/files?path=/\" class=\"header-link-btn\" style=\"text-decoration:none;\"><button><span class=\"icon\">📁</span> <span class=\"text\">File Browser</span></button></a></div></header>";
 
@@ -279,36 +341,16 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
         std::vector<ScreenshotEntry> entries;
         ScanScreenshots(entries);
 
+        if (!entries.empty()) {
+            AppendSelectionBar(body);
+        }
+
         body += "<main class=\"grid\">";
         if (entries.empty()) {
-            body += "<div class=\"empty\">No screenshots or videos found in /Nintendo/Album</div>";
+            body += "<div class=\"empty\">No screenshots or videos found in " + HtmlEscape(GetAlbumRoot()) + "</div>";
         } else {
             for (const auto& entry : entries) {
-                const auto encoded_path = UrlEncode(entry.path);
-                const auto escaped_game = HtmlEscape(entry.game_name);
-                const auto escaped_time = HtmlEscape(entry.timestamp);
-                const auto escaped_filename = HtmlEscape(entry.filename);
-
-                body += "<div class=\"card\">";
-                if (entry.is_video) {
-                    body += "<video controls preload=\"none\" src=\"/view?path=" + encoded_path + "\"></video>";
-                } else {
-                    body += "<a href=\"/view?path=" + encoded_path + "\"><img loading=\"lazy\" src=\"/view?path=" + encoded_path + "\" alt=\"" + escaped_game + "\"></a>";
-                }
-                body += "<div class=\"info\">";
-                body += "<div class=\"game-name\" title=\"" + escaped_game + "\">" + escaped_game + "</div>";
-                body += "<div class=\"timestamp\">" + escaped_time + "</div>";
-
-                char size_buf[32]{};
-                if (entry.file_size >= 1024 * 1024) {
-                    std::snprintf(size_buf, sizeof(size_buf), "%.2f MB", static_cast<double>(entry.file_size) / (1024.0 * 1024.0));
-                } else {
-                    std::snprintf(size_buf, sizeof(size_buf), "%.1f KB", static_cast<double>(entry.file_size) / 1024.0);
-                }
-                body += "<div class=\"size\">" + std::string(size_buf) + " (" + escaped_filename + ")</div>";
-                body += "<div class=\"actions\">";
-                body += "<button class=\"btn del-btn\" onclick=\"deleteItem(event,'" + encoded_path + "')\">Delete</button>";
-                body += "</div></div></div>";
+                AppendScreenshotCard(body, entry);
             }
         }
         body += "</main>";
@@ -343,7 +385,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
         }
 
         if (depth < 3) {
-            std::string parent_disk_path = "/Nintendo/Album" + (req_path == "/" ? "" : req_path);
+            std::string parent_disk_path = GetAlbumRoot() + (req_path == "/" ? "" : req_path);
             std::vector<std::string> folders;
             ScanFolders(parent_disk_path, folders);
 
@@ -363,40 +405,20 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
             }
             body += "</main>";
         } else {
-            std::string disk_path = "/Nintendo/Album" + req_path;
+            std::string disk_path = GetAlbumRoot() + req_path;
             std::vector<ScreenshotEntry> entries;
             ScanFolderFiles(disk_path, entries);
+
+            if (!entries.empty()) {
+                AppendSelectionBar(body);
+            }
 
             body += "<main class=\"grid\">";
             if (entries.empty()) {
                 body += "<div class=\"empty\">No screenshots found for this day</div>";
             } else {
                 for (const auto& entry : entries) {
-                    const auto encoded_path = UrlEncode(entry.path);
-                    const auto escaped_game = HtmlEscape(entry.game_name);
-                    const auto escaped_time = HtmlEscape(entry.timestamp);
-                    const auto escaped_filename = HtmlEscape(entry.filename);
-
-                    body += "<div class=\"card\">";
-                    if (entry.is_video) {
-                        body += "<video controls preload=\"none\" src=\"/view?path=" + encoded_path + "\"></video>";
-                    } else {
-                        body += "<a href=\"/view?path=" + encoded_path + "\"><img loading=\"lazy\" src=\"/view?path=" + encoded_path + "\" alt=\"" + escaped_game + "\"></a>";
-                    }
-                    body += "<div class=\"info\">";
-                    body += "<div class=\"game-name\" title=\"" + escaped_game + "\">" + escaped_game + "</div>";
-                    body += "<div class=\"timestamp\">" + escaped_time + "</div>";
-
-                    char size_buf[32]{};
-                    if (entry.file_size >= 1024 * 1024) {
-                        std::snprintf(size_buf, sizeof(size_buf), "%.2f MB", static_cast<double>(entry.file_size) / (1024.0 * 1024.0));
-                    } else {
-                        std::snprintf(size_buf, sizeof(size_buf), "%.1f KB", static_cast<double>(entry.file_size) / 1024.0);
-                    }
-                    body += "<div class=\"size\">" + std::string(size_buf) + " (" + escaped_filename + ")</div>";
-                    body += "<div class=\"actions\">";
-                    body += "<button class=\"btn del-btn\" onclick=\"deleteItem(event,'" + encoded_path + "')\">Delete</button>";
-                    body += "</div></div></div>";
+                    AppendScreenshotCard(body, entry);
                 }
             }
             body += "</main>";
@@ -422,10 +444,58 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "});";
     body += "async function deleteItem(e,path){";
     body += "e.preventDefault();e.stopPropagation();";
-    body += "if(!await showConfirmDialog('Delete '+decodeURIComponent(path.split('/').pop())+'?')) return;";
+    body += "if(!await showConfirmDialog('Delete '+decodeURIComponent(path.replace(/\\+/g,'%20')).split('/').pop()+'?')) return;";
     body += "const res=await fetch('/delete?path='+path,{method:'DELETE'});";
     body += "if(res.ok){ location.reload(); }else{ alert('Delete failed: '+await res.text()); }";
     body += "}";
+
+    body += "function updateSelectCount(){";
+    body += "const all=document.querySelectorAll('.file-checkbox');";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "for(const cb of all){const card=cb.closest('.card');if(card)card.classList.toggle('selected',cb.checked);}";
+    body += "const btn=document.getElementById('delete-selected');";
+    body += "if(btn){btn.disabled=checked.length===0;const c=btn.querySelector('.count');if(c)c.textContent='('+checked.length+')';}";
+    body += "const selectAllBtn=document.getElementById('select-all-btn');";
+    body += "if(selectAllBtn){const txt=selectAllBtn.querySelector('.text');";
+    body += "if(txt)txt.textContent=(all.length&&checked.length===all.length)?'Deselect All':'Select All';}";
+    body += "}";
+    body += "function toggleSelectAll(){";
+    body += "const all=document.querySelectorAll('.file-checkbox');";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "const target=checked.length<all.length;";
+    body += "for(const cb of all)cb.checked=target;";
+    body += "updateSelectCount();";
+    body += "}";
+    body += "async function deleteSelected(){";
+    body += "const checked=Array.from(document.querySelectorAll('.file-checkbox:checked'));";
+    body += "if(!checked.length)return;";
+    body += "if(!await showConfirmDialog('Delete '+checked.length+' selected screenshots?'))return;";
+    body += "const btn=document.getElementById('delete-selected');";
+    body += "const label=btn?btn.querySelector('.text'):null;";
+    body += "if(btn)btn.disabled=true;";
+    body += "let done=0;let failed=0;";
+    body += "for(const cb of checked){";
+    body += "done++;";
+    body += "if(label)label.textContent='Deleting ('+done+'/'+checked.length+')';";
+    body += "const res=await fetch('/delete?path='+cb.getAttribute('data-path'),{method:'DELETE'});";
+    body += "if(!res.ok)failed++;";
+    body += "}";
+    body += "if(failed)alert('Failed to delete '+failed+' of '+checked.length+' items');";
+    body += "location.reload();";
+    body += "}";
+    body += "document.addEventListener('keydown',function(e){";
+    body += "if(typeof isLightboxOpen==='function'&&isLightboxOpen())return;";
+    body += "const m=document.getElementById('confirm-modal');if(m&&m.style.display==='flex')return;";
+    body += "if((e.ctrlKey||e.metaKey)&&(e.key==='a'||e.key==='A')){";
+    body += "if(document.querySelector('.file-checkbox')){e.preventDefault();toggleSelectAll();}";
+    body += "}else if(e.key==='Delete'){";
+    body += "if(document.querySelector('.file-checkbox:checked')){e.preventDefault();deleteSelected();}";
+    body += "}else if(e.key==='Escape'){";
+    body += "const checked=document.querySelectorAll('.file-checkbox:checked');";
+    body += "if(checked.length){e.preventDefault();for(const cb of checked)cb.checked=false;updateSelectCount();}";
+    body += "}";
+    body += "});";
+    body += "document.addEventListener('DOMContentLoaded',updateSelectCount);";
     body += "</script>";
 
     AppendConfirmModal(body);

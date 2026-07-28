@@ -1,13 +1,37 @@
 #include "location.hpp"
 #include "fs.hpp"
 #include "app.hpp"
+#include "i18n.hpp"
+#include "utils/utils.hpp"
+#include "utils/devoptab_mtp.hpp"
+#include "haze_helper.hpp"
 
 #include <cstring>
 #include <minIni.h>
+#include <string>
 #include <usbhsfs.h>
 
 namespace sphaira::location {
 namespace {
+
+void EnsureUsbHsFsInitialized() {
+    static bool initialized = false;
+
+    if (haze::IsRunning()) {
+        log_write("[USB_HOST] haze MTP server running; stopping haze to switch USB port to Host mode\n");
+        haze::Exit();
+        initialized = false;
+    }
+
+    if (!initialized) {
+        usbHsFsSetFileSystemMountFlags(App::GetWriteProtect() ? UsbHsFsMountFlags_ReadOnly : 0);
+        if (R_SUCCEEDED(usbHsFsInitialize(1))) {
+            initialized = true;
+            log_write("[USBHSFS] dynamically initialized usbHsFs Host interface\n");
+            svcSleepThread(300000000ULL);
+        }
+    }
+}
 
 } // namespace
 
@@ -75,10 +99,7 @@ auto Load() -> Entries {
 }
 
 auto GetStdio(bool write) -> StdioEntries {
-    if (!App::GetHddEnable()) {
-        log_write("[USBHSFS] not enabled\n");
-        return {};
-    }
+    EnsureUsbHsFsInitialized();
 
     static UsbHsFsDevice devices[0x20];
     const auto count = usbHsFsListMountedDevices(devices, std::size(devices));
@@ -95,15 +116,58 @@ auto GetStdio(bool write) -> StdioEntries {
             continue;
         }
 
+        // what identifies a drive to the user is the brand, the model and the
+        // size -- the mount point (ums0:) means nothing to them. Some drives
+        // already carry the brand inside the model string, so don't repeat it.
+        const std::string brand = e.manufacturer;
+        const std::string model = e.product_name;
+        std::string label = model;
+        if (!brand.empty() && !model.starts_with(brand)) {
+            label = model.empty() ? brand : brand + " " + model;
+        }
+        if (label.empty()) {
+            label = e.name;
+        }
+
+        const bool read_only = e.write_protect || (e.flags & UsbHsFsMountFlags_ReadOnly);
+
+        const std::string suffix = read_only ? " [" + "read-only"_i18n + "]" : std::string{};
+        const auto capacity = utils::formatSizeStorage(e.capacity);
+
         char display_name[0x100];
-        std::snprintf(display_name, sizeof(display_name), "%s (%s - %s - %zu GB)", e.name, LIBUSBHSFS_FS_TYPE_STR(e.fs_type), e.product_name, e.capacity / 1024 / 1024 / 1024);
+        std::snprintf(display_name, sizeof(display_name), "%s — %s (%s)%s",
+            label.c_str(), capacity.c_str(), LIBUSBHSFS_FS_TYPE_STR(e.fs_type), suffix.c_str());
 
         u32 flags{};
-        if (e.write_protect || (e.flags & UsbHsFsMountFlags_ReadOnly)) {
+        if (read_only) {
             flags |= ui::menu::filebrowser::FsEntryFlag_ReadOnly;
         }
         out.emplace_back(e.name, display_name, flags);
         log_write("\t[USBHSFS] %s name: %s serial: %s man: %s\n", e.name, e.product_name, e.serial_number, e.manufacturer);
+    }
+
+    return out;
+}
+
+auto GetMtpHostDevices(bool write) -> StdioEntries {
+    if (write) {
+        // MTP Host mounts are read-only
+        return {};
+    }
+
+    EnsureUsbHsFsInitialized();
+
+    const auto mtp_configs = devoptab::mtp::ScanAndMountMtpDevices();
+    StdioEntries out{};
+
+    for (const auto& config : mtp_configs) {
+        std::string mount_name = config.url;
+        if (mount_name.back() == '/') mount_name.pop_back();
+
+        std::string display_name = "MTP: " + config.name;
+        u32 flags = ui::menu::filebrowser::FsEntryFlag_ReadOnly;
+
+        out.emplace_back(mount_name, display_name, flags);
     }
 
     return out;

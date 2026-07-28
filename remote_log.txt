@@ -1,0 +1,1577 @@
+[13:08:36] -> hello world v0.13.353 [5f3c5b2]
+[13:08:36] -> [version] platform: NX
+[13:08:36] -> [version] version_hash: c7f472f9b64b7b0cba46a25e6a610f70613a4792
+[13:08:36] -> [version] display_version: 20.5.0
+[13:08:36] -> [version] display_title: NintendoSDK Firmware for NX 20.5.0-1.0
+[13:08:36] -> [ams] version: 1.11.2
+[13:08:36] -> [ams] target version: 20.5.0
+[13:08:36] -> [ams] key gen: 21
+[13:08:36] -> [ams] hash: 1aa50c85340159a8
+[13:08:36] -> [ams] usb 3.0 enabled: 1
+[13:08:36] -> [emummc] enabled: 1
+[13:08:36] -> [emummc] file based path: emuMMC/SD00
+[13:08:36] -> [emummc] nintendo path: emuMMC/SD00/Nintendo
+[13:08:36] -> [FTP] root-drop routing armed
+[13:08:36] -> [FTP] started
+[13:08:36] -> [FTP] loop entered
+[13:08:36] -> in nxlink thread func
+[13:08:36] -> curl_share_setopt(CURLSHOPT_SHARE, CURL_LOCK_DATA_PSL) msg: Feature not enabled in this library
+[13:08:36] -> finished creating threads
+[13:08:36] -> loading old json doc
+[13:08:36] -> loaded meta from: romfs:/themes/abyss_theme.ini
+[13:08:36] -> loaded meta from: romfs:/themes/black_theme.ini
+[13:08:36] -> loaded meta from: romfs:/themes/black_theme_sp_icons.ini
+[13:08:36] -> loaded meta from: romfs:/themes/default_theme.ini
+[13:08:36] -> loaded meta from: romfs:/themes/oled_black_theme.ini
+[13:08:36] -> loaded meta from: romfs:/themes/white_theme.ini
+[13:08:36] -> loaded meta from: romfs:/themes/abyss_theme.ini
+[13:08:36] -> loading theme from: romfs:/themes/abyss_theme.ini
+[13:08:36] -> inherit is not empty: romfs:/themes/base_black_theme.ini
+[13:08:36] -> opened ini: romfs:/themes/base_black_theme.ini
+[13:08:36] -> opened ini: romfs:/themes/abyss_theme.ini
+[13:08:36] -> not launching from forwarder
+[13:08:36] -> [thread queue] woke up
+[13:08:36] -> [power] auto sleep disabled and verified
+[13:08:36] -> [CURL] encoding url
+[13:08:36] -> [CURL] setting url
+[13:08:36] -> [CURL] set url success
+[13:08:36] -> [CURL] encoded url: https://api.github.com/repos/rashevskyv/sphaira/releases/latest [vs]: https://api.github.com/repos/rashevskyv/sphaira/releases/latest
+[13:08:36] -> adding header: if-modified-since: Wed, 08 Jul 2026 12:49:18 GMT
+[13:08:36] -> adding header: if-none-match: W/"4a2be70dead8834b955559b8e12857f39d46a6bad1246638d18abd17bc84a513"
+[13:08:36] -> adding header: Accept: application/vnd.github+json
+[13:08:36] -> [Mui] pushing widget
+[13:08:36] -> doing focus gained
+[13:08:36] -> error when trying to parse /switch/pipensx/pipensx.nro
+[13:08:36] -> nros found: 9 time_taken: 0.03
+[13:08:36] -> did it
+[13:08:36] -> 
+	finished app constructor, time taken: 0.15s 149ms
+
+[13:08:36] -> [ACC] found uid: 0x100000003433BE8D01B8EB40D75F9BBD
+[13:08:36] -> [ACC] base  uid: 0x100000003433BE8D01B8EB40D75F9BBD
+[13:08:36] -> 	ncmOpenContentMetaDatabase() failed. storage_id: 2
+[13:08:36] -> 	ncmOpenContentStorage() failed. storage_id: 2
+[13:08:36] -> 	ncmOpenContentMetaDatabase() success. storage_id: 4
+[13:08:36] -> 	ncmOpenContentStorage() success. storage_id: 4
+[13:08:36] -> 	ncmOpenContentMetaDatabase() success. storage_id: 5
+[13:08:36] -> 	ncmOpenContentStorage() success. storage_id: 5
+[13:08:36] -> [MTP-SAVES] scanned 0 games
+[13:08:36] -> [MTP] started
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> 	[image load] time taken: 0.01s 14ms
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> 	[image load] time taken: 0.01s 6ms
+[13:08:36] -> 	[image load] time taken: 0.00s 2ms
+[13:08:36] -> cached download: https://api.github.com/repos/rashevskyv/sphaira/releases/latest
+[13:08:36] -> Downloaded https://api.github.com/repos/rashevskyv/sphaira/releases/latest code: 304 No error
+[13:08:36] -> [thread queue] woke up
+[13:08:36] -> [DownloadEventData] got event
+[13:08:36] -> inside github download
+[13:08:36] -> update status: 1
+[13:08:51] -> [NTP] pool.ntp.org failed: 0x0000FBF9
+[13:08:51] -> [NTP] clock already accurate (+0 s)
+[13:19:02] -> [Mui] pushing widget
+[13:19:02] -> doing focus gained
+[13:19:02] -> new scan path: /
+[13:19:02] -> found daybreak in: /switch/daybreak/daybreak.nro
+[13:19:02] -> loading assoc entries
+[13:19:02] -> did it
+[13:19:03] -> new scan path: root:/
+[13:19:03] -> [USB_HOST] haze MTP server running; stopping haze to switch USB port to Host mode
+[13:19:03] -> [MTP] exitied
+[13:19:03] -> [USBHSFS] dynamically initialized usbHsFs Host interface
+[13:19:03] -> [USBHSFS] got connected: 0
+[13:19:03] -> [USBHSFS] got count: 0
+[13:19:03] -> [MTP_HOST] scanning USB for MTP devices
+[13:19:03] -> [MTP_HOST] found 1 USB interfaces on bus
+[13:19:03] -> [MTP_HOST] interface[0] VID: 0x22d9 PID: 0x2769 Class: 0x00 SubClass: 0x00
+[13:19:03] -> [MTP_HOST]   ifClass: 0xff ifSubClass: 0x42 ifProtocol: 0x01
+[13:19:03] -> [MTP_HOST]   IN  ep: addr=0x81 maxPkt=512
+[13:19:03] -> [MTP_HOST]   OUT ep: addr=0x01 maxPkt=512
+[13:19:05] -> [MTP_HOST] xfer report res failed: 0x3228C (transferred=0)
+[13:19:05] -> [MTP_HOST] OpenSession response failed on interface 0
+[13:19:06] -> [Mui] pushing widget
+[13:19:06] -> doing focus gained
+[13:19:06] -> did it
+[13:19:06] -> popping widget
+[13:19:06] -> popping widget
+[13:19:12] -> [Mui] pushing widget
+[13:19:12] -> doing focus gained
+[13:19:12] -> new scan path: /
+[13:19:12] -> found daybreak in: /switch/daybreak/daybreak.nro
+[13:19:12] -> loading assoc entries
+[13:19:12] -> did it
+[13:19:13] -> new scan path: root:/
+[13:19:13] -> [USBHSFS] got connected: 0
+[13:19:13] -> [USBHSFS] got count: 0
+[13:19:13] -> [MTP_HOST] scanning USB for MTP devices
+[13:19:13] -> [MTP_HOST] found 2 USB interfaces on bus
+[13:19:13] -> [MTP_HOST] interface[0] VID: 0x22d9 PID: 0x2765 Class: 0x00 SubClass: 0x00
+[13:19:13] -> [MTP_HOST]   ifClass: 0x06 ifSubClass: 0x01 ifProtocol: 0x01
+[13:19:13] -> [MTP_HOST]   IN  ep: addr=0x81 maxPkt=512
+[13:19:13] -> [MTP_HOST]   OUT ep: addr=0x01 maxPkt=512
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] MTP session opened successfully on interface 0!
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [DEVOPTAB] DEVICE SUCCESS mtp0 mtp0
+[13:19:13] -> [DEVOPTAB] Mounted mtp0 at /mtp0
+[13:19:13] -> [MTP_HOST] successfully mounted mtp0: as Phone Storage
+[13:19:13] -> new scan path: mtp0:
+[13:19:13] -> [DEVOPTAB] diropen mtp0:
+[13:19:13] -> [DEVOPTAB] diropen fixed path 
+[13:19:13] -> [DEVOPTAB] diropen mounted
+[13:19:13] -> [DEVOPTAB] diropen allocated dir
+[13:19:13] -> [MTP_HOST] devoptab_diropen path=''
+[13:19:13] -> [MTP_HOST] devoptab_diropen resolved handle=0xFFFFFFFF is_dir=1
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] devoptab_diropen loaded 18 entries
+[13:19:13] -> [DEVOPTAB] diropen opened dir
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:13] -> [DEVOPTAB] diropen mtp0:/Alarms
+[13:19:13] -> [DEVOPTAB] diropen fixed path /Alarms
+[13:19:13] -> [DEVOPTAB] diropen mounted
+[13:19:13] -> [DEVOPTAB] diropen allocated dir
+[13:19:13] -> [MTP_HOST] devoptab_diropen path='/Alarms'
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000005 is_dir=1
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000005) -> count=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0xFFFFFFFF, parent=0x00000005) -> count=0
+[13:19:13] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:13] -> [DEVOPTAB] diropen opened dir
+[13:19:13] -> [DEVOPTAB] diropen mtp0:/Android
+[13:19:13] -> [DEVOPTAB] diropen fixed path /Android
+[13:19:13] -> [DEVOPTAB] diropen mounted
+[13:19:13] -> [DEVOPTAB] diropen allocated dir
+[13:19:13] -> [MTP_HOST] devoptab_diropen path='/Android'
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000001 is_dir=1
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000001) -> count=3
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000013 name='data' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x00000015 name='media' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x00000014 name='obb' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] devoptab_diropen loaded 3 entries
+[13:19:13] -> [DEVOPTAB] diropen opened dir
+[13:19:13] -> [DEVOPTAB] diropen mtp0:/Audiobooks
+[13:19:13] -> [DEVOPTAB] diropen fixed path /Audiobooks
+[13:19:13] -> [DEVOPTAB] diropen mounted
+[13:19:13] -> [DEVOPTAB] diropen allocated dir
+[13:19:13] -> [MTP_HOST] devoptab_diropen path='/Audiobooks'
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:13] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:13] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x0000000C is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x0000000C) -> count=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0xFFFFFFFF, parent=0x0000000C) -> count=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/DCIM
+[13:19:14] -> [DEVOPTAB] diropen fixed path /DCIM
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/DCIM'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x0000000A is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x0000000A) -> count=2
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000017 name='.convert_tmp_files' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x00000016 name='Camera' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 2 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Documents
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Documents
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Documents'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x0000000B is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x0000000B) -> count=5
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x0000001A name='kvytantsiya-18-05-2026.pdf' is_dir=0 size=37075
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x00000019 name='kvytantsiya-06-04-2026 (1).pdf' is_dir=0 size=270101
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000001B name='kvytantsiya-20-05-2026.pdf' is_dir=0 size=269990
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000018 name='kvytantsiya-06-04-2026.pdf' is_dir=0 size=270196
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x0000001C name='kvytantsiya-26-05-2026.pdf' is_dir=0 size=269751
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 5 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Download
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Download
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Download'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000009 is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000009) -> count=109
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x0000001F name='image.webp' is_dir=0 size=96268
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000004A name='grok_video_2025-11-05-22-19-41.mp4' is_dir=0 size=2539290
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x00000055 name='videoplayback (1).mp3' is_dir=0 size=2610726
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x0000003C name='48c2bf36-99e6-45e5-8108-91a9f98541ef.png' is_dir=0 size=1547226
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000041 name='Nekogram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x00000057 name='Memories of Goodbye.mp3' is_dir=0 size=5247494
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x0000002A name='20250401_1455_Задумливий як лінивець_remix_01jqrk9f95faaa09hnn460ct0s.png' is_dir=0 size=3036924
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000069 name='PicoFlyGuideV.6.2.pdf' is_dir=0 size=2660910
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x0000004B name='grok_video_2025-11-05-22-21-38.mp4' is_dir=0 size=2531024
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x00000063 name='.com_coloros_smartsidebar' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000084 name='20400530890345.pdf' is_dir=0 size=189586
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x00000039 name='Generated Image December 08, 2025 - 11_07AM.jpeg' is_dir=0 size=1001153
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000052 name='grok_video_2025-12-31-23-11-04.mp4' is_dir=0 size=2787043
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000002E name='Generated Image August 27, 2025 - 5_48PM.jpeg' is_dir=0 size=267060
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x0000004E name='grok_video_2025-11-07-16-47-30.mp4' is_dir=0 size=3406442
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000028 name='57b4438b-2296-4876-9da1-696dc1faf021.jpg' is_dir=0 size=164334
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x0000004D name='grok_video_2025-11-07-16-47-14.mp4' is_dir=0 size=3406442
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x0000006D name='.exmu-cfg1.data' is_dir=0 size=32
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[18]: handle=0x00000047 name='grok_video_2025-11-05-22-18-13.mp4' is_dir=0 size=2756193
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[19]: handle=0x00000038 name='Generated Image December 02, 2025 - 11_26AM.jpeg' is_dir=0 size=809545
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[20]: handle=0x0000007F name='Mewgenics-config.json' is_dir=0 size=3101
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[21]: handle=0x00000073 name='Microsoft Office 2016 VL RUS-ENG x86-x64 Compact (AIO) [rutracker-5096353].torrent' is_dir=0 size=17632
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[22]: handle=0x0000005A name='Untitled.mp3' is_dir=0 size=9489453
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[23]: handle=0x0000003A name='126177_4831e475.gif' is_dir=0 size=3369
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[24]: handle=0x00000067 name='YouTube_v20.21.37_rvp_v4.0.0-dev.10_settings_2026-03-25.txt' is_dir=0 size=1324
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[25]: handle=0x00000083 name='Telegram_12.8.3.apk' is_dir=0 size=50422374
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[26]: handle=0x00000085 name='app.revanced.android.gms-250932004-hw-signed.apk' is_dir=0 size=105543571
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[27]: handle=0x00000021 name='DwZG7UkuSpayu-605BCZIg.jpeg' is_dir=0 size=184645
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[28]: handle=0x00000035 name='edited-faceswap-1757696507495.png' is_dir=0 size=1759372
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[29]: handle=0x00000020 name='B7mknrv3Qvi7XtsgGN6qug.webp' is_dir=0 size=1194952
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[30]: handle=0x00000081 name='app.revanced.android.gms-250932004-signed.apk' is_dir=0 size=105561934
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[31]: handle=0x0000002B name='c9f09a1783b1e939acdd78a635dcb604.jpg' is_dir=0 size=43597
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[32]: handle=0x00000089 name='X-plore_v.4.49.01(44901)(8.0-16.0)(arm7a,arm64-8a,x86,x86-64).apk' is_dir=0 size=16024255
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[33]: handle=0x0000006A name='20400516537177.pdf' is_dir=0 size=189636
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[34]: handle=0x00000040 name='1000017406__86pct_smaller.mp4' is_dir=0 size=61287345
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[35]: handle=0x00000042 name='300460506131795969.mp4' is_dir=0 size=1068739
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[36]: handle=0x00000059 name='Тарас Петриненко - Україна.mp3' is_dir=0 size=7707095
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[37]: handle=0x0000007B name='gamenative-v0.9.0.apk' is_dir=0 size=551969878
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[38]: handle=0x0000007E name='a8xx-gen8-V22.zip' is_dir=0 size=2826274
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[39]: handle=0x0000005F name='Journey to Silius (NES) Music - Title Theme.mp3' is_dir=0 size=4322879
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[40]: handle=0x00000064 name='image.jpg' is_dir=0 size=338858
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[41]: handle=0x00000082 name='tl-wr740nv4-webflash.bin' is_dir=0 size=4479
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[42]: handle=0x0000003D name='Generated Image March 08, 2026 - 11_00AM.png' is_dir=0 size=2664369
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[43]: handle=0x00000051 name='grok_video_2025-12-31-22-59-10.mp4' is_dir=0 size=3196372
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[44]: handle=0x00000087 name='tcandroid362d(2491)-armeabi-v7a.apk' is_dir=0 size=2968388
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[45]: handle=0x0000005D name='Streets of Rage 1- Remastered Original Soundtrack.mp3' is_dir=0 size=55441586
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[46]: handle=0x0000007A name='dialog_000.asm (4).txt' is_dir=0 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[47]: handle=0x00000086 name='tcandroid362d(2490)-armeabi.apk' is_dir=0 size=2873438
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[48]: handle=0x00000053 name='videoplayback.m4a' is_dir=0 size=2836795
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[49]: handle=0x0000004F name='grok_video_2025-12-31-22-57-30.mp4' is_dir=0 size=2361167
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[50]: handle=0x00000036 name='5efe1af5-7218-4ef7-bf13-83c623182bce.png' is_dir=0 size=1995822
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[51]: handle=0x00000062 name='com_account_usercenter_new' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[52]: handle=0x00000075 name='portativna-igrova-pristavka-nintendo-switch-oled-with-neon-blue-and-neon-red-joy-con_dea658f3-578c-4478-ae7e-c6b972803587-3.png.webp' is_dir=0 size=110440
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[53]: handle=0x00000065 name='microg-6.1.1.apk' is_dir=0 size=13299083
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[54]: handle=0x0000002D name='Generated Image August 27, 2025 - 5_45PM.jpeg' is_dir=0 size=265264
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[55]: handle=0x00000024 name='Снимок экрана 2024-08-27 235225.png' is_dir=0 size=112731
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[56]: handle=0x0000005E name='Nes Journey To Silius Soundtrack.mp3' is_dir=0 size=28691990
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[57]: handle=0x00000068 name='NovaLauncher_8.1.1.apk' is_dir=0 size=11970405
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[58]: handle=0x00000048 name='grok_video_2025-11-05-22-18-40.mp4' is_dir=0 size=2859823
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[59]: handle=0x00000023 name='5V0Mgcl3TMqGaUohhn_qpw.jpeg' is_dir=0 size=265202
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[60]: handle=0x00000054 name='videoplayback.mp3' is_dir=0 size=2610726
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[61]: handle=0x00000022 name='wI3ClmByRvGTU0VE75GNNA.jpeg' is_dir=0 size=147395
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[62]: handle=0x0000005B name='Halls_Of_Helium_KLICKAUD.mp3' is_dir=0 size=4127346
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[63]: handle=0x00000076 name='Telegram+(AyuGram)+v12.2.10+(63429)(20260110)+arm64-v8a.apk' is_dir=0 size=93541223
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[64]: handle=0x00000027 name='karta-pamyati-patriot-pef64gep31mcx-photo-1-1000x1000_afcbeea8-8a58-41c7-8074-5f0ef159fb31.webp' is_dir=0 size=25992
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[65]: handle=0x0000003E name='Generated Image March 08, 2026 - 11_01AM.png' is_dir=0 size=2722961
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[66]: handle=0x00000058 name='audio-editor-output.mp3' is_dir=0 size=3208254
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[67]: handle=0x00000046 name='grok_video_2025-11-05-22-14-42.mp4' is_dir=0 size=2306091
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[68]: handle=0x00000037 name='Generated Image November 27, 2025 - 4_03PM.png' is_dir=0 size=1920033
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[69]: handle=0x00000061 name='SUNO' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[70]: handle=0x00000072 name='YTX-v20.51.39-p4.2.0-dev.7-all.apk' is_dir=0 size=120363215
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[71]: handle=0x0000006B name='dialog_000.asm.txt' is_dir=0 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[72]: handle=0x00000043 name='1000018260__87pct_smaller.mp4' is_dir=0 size=33719535
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[73]: handle=0x00000080 name='20400526309258.pdf' is_dir=0 size=189657
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[74]: handle=0x00000034 name='4909b39c-c239-4200-ae25-6edafed3cf9e.jpeg' is_dir=0 size=286520
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[75]: handle=0x0000006E name='dialog_000.asm (1).txt' is_dir=0 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[76]: handle=0x00000044 name='AyuGram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[77]: handle=0x0000007D name='factory-to-ddwrt.bin' is_dir=0 size=3932160
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[78]: handle=0x00000071 name='tl-wr740nv4-webflash (2).bin' is_dir=0 size=3932188
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[79]: handle=0x00000026 name='a_cool__strong_looking_man_standing_confidently_in_a_vibrant_setting__blending_urban_style_and_energy_in_t_shirt_with_picture_says-a4737d14-a33e-4e14-ad43-b3559f96999a.webp' is_dir=0 size=30198
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[80]: handle=0x0000006F name='20400531052389.pdf' is_dir=0 size=189518
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[81]: handle=0x00000056 name='Обійми ext v1.1.2.2.2.mp3' is_dir=0 size=7847182
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[82]: handle=0x0000007C name='image-1.jpg' is_dir=0 size=312547
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[83]: handle=0x00000029 name='drevnij-perekladach.jpg' is_dir=0 size=90849
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[84]: handle=0x00000077 name='dialog_000.asm (2).txt' is_dir=0 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[85]: handle=0x00000025 name='a_cool__strong_looking_man_standing_confidently_in_a_vibrant_setting__blending_urban_style_and_energy_in_t_shirt_with_picture_says-71c89622-4270-4cf6-9ca1-4fda30dce95b.webp' is_dir=0 size=24836
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[86]: handle=0x00000070 name='SAI-4.5.apk' is_dir=0 size=5130176
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[87]: handle=0x00000049 name='grok_video_2025-11-05-22-18-46.mp4' is_dir=0 size=2859823
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[88]: handle=0x00000078 name='dialog_000.asm (3).txt' is_dir=0 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[89]: handle=0x0000001E name='549796.jpg' is_dir=0 size=172193
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[90]: handle=0x00000060 name='Streets Of Rage 2 - Go Straight.mp3' is_dir=0 size=4626945
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[91]: handle=0x0000001D name='update' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[92]: handle=0x00000045 name='grok_video_2025-11-05-13-39-22.mp4' is_dir=0 size=2619218
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[93]: handle=0x00000079 name='DF8FB8DA-EA79-40EB-BE2F-D61B3886424E.jpg' is_dir=0 size=24675
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[94]: handle=0x0000003F name='Generated Image March 08, 2026 - 11_03AM.png' is_dir=0 size=2686284
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[95]: handle=0x0000002F name='Generated Image August 27, 2025 - 5_50PM.jpeg' is_dir=0 size=351760
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[96]: handle=0x00000030 name='Generated Image August 27, 2025 - 5_51PM.jpeg' is_dir=0 size=345952
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[97]: handle=0x0000003B name='Generated Image January 17, 2026 - 8_53PM.jpeg' is_dir=0 size=897158
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[98]: handle=0x00000066 name='YTX-v20.21.37-p4.0.0-dev.10-all.apk' is_dir=0 size=113735295
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[99]: handle=0x0000002C name='Telegram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[100]: handle=0x0000004C name='grok_video_2025-11-05-22-23-36.mp4' is_dir=0 size=3592671
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[101]: handle=0x00000088 name='X-plore_v4.49.01(44901).apk' is_dir=0 size=18333614
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[102]: handle=0x00000032 name='Generated Image September 02, 2025 - 2_59PM.jpeg' is_dir=0 size=224275
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[103]: handle=0x00000050 name='grok_video_2025-12-31-22-58-52.mp4' is_dir=0 size=3196372
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[104]: handle=0x00000031 name='homm3-ukraine.jpg' is_dir=0 size=369107
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[105]: handle=0x0000006C name='tl-wr740nv4-webflash (1).bin' is_dir=0 size=3932188
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[106]: handle=0x0000005C name='Dominia_-_Melankholiya_(musmore.org).mp3' is_dir=0 size=17408668
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[107]: handle=0x00000074 name='tcandroid362d(2493)-arm64-v8a.apk' is_dir=0 size=3030966
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[108]: handle=0x00000033 name='6d8e56d5-fdfa-4eba-a7e8-456d7033a0ef.jpeg' is_dir=0 size=229650
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 109 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Movies
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Movies
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Movies'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000008 is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000008) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000092 name='screen-20240929-124459.mp4' is_dir=0 size=26266475
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x00000098 name='Telegram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x00000095 name='screen-20250419-095650.mp4' is_dir=0 size=57735490
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000099 name='screen-20250922-153923.mp4' is_dir=0 size=76624477
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x0000008A name='.thumbnails' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000008B name='Nekogram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x0000009B name='screen-20260224-174528.mp4' is_dir=0 size=61470187
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x0000008F name='screen-20240822-174634.mp4' is_dir=0 size=56388537
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x0000008C name='Viber' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000008E name='screen-20231122-210314.mp4' is_dir=0 size=65197763
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000091 name='screen-20240823-200301.mp4' is_dir=0 size=53144203
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x00000090 name='screen-20240822-183539.mp4' is_dir=0 size=23270609
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x0000009A name='screen-20260128-162011.mp4' is_dir=0 size=241290269
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x00000093 name='AyuGram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000096 name='screen-20250507-213348.mp4' is_dir=0 size=69210704
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000094 name='screen-20250330-145954.mp4' is_dir=0 size=175955595
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x0000008D name='Instagram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000097 name='screen-20250525-190828.mp4' is_dir=0 size=100158119
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 18 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Music
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Music
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Music'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000002 is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000002) -> count=4
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x0000009F name='Telegram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000009D name='.thumbnails' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000009E name='Nekogram' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x0000009C name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 4 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/My Documents
+[13:19:14] -> [DEVOPTAB] diropen fixed path /My Documents
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/My Documents'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x0000000F is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x0000000F) -> count=2
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x000000A0 name='2_5336926538103299970.pdf' is_dir=0 size=36986
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x000000A1 name='2_5357159188436920179.pdf' is_dir=0 size=21526
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 2 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Notifications
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Notifications
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Notifications'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000006 is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000006) -> count=6
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x000000A3 name='Abank_credit.wav' is_dir=0 size=627124
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x000000A4 name='Abank_debit.wav' is_dir=0 size=501392
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x000000A7 name='viber_message (1).mp3' is_dir=0 size=25979
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x000000A6 name='Abank_mute.wav' is_dir=0 size=108244
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x000000A5 name='Abank_other.wav' is_dir=0 size=866008
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x000000A2 name='viber_message.mp3' is_dir=0 size=25979
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 6 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/oua_classifier
+[13:19:14] -> [DEVOPTAB] diropen fixed path /oua_classifier
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/oua_classifier'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000011 is_dir=1
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0x00000011) -> count=3
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x000000A9 name='debug' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x000000AA name='aiboost_gpu_cache_11608102567768777780.bin' is_dir=0 size=28104784
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x000000A8 name='.cache.bin' is_dir=0 size=234664
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 3 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Pictures
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Pictures
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Pictures'
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST] GetObjectHandles(storage=0x00010001, parent=0xFFFFFFFF) -> count=18
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[0]: handle=0x00000007 name='Pictures' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[1]: handle=0x0000000F name='My Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[2]: handle=0x0000000C name='Audiobooks' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[3]: handle=0x00000005 name='Alarms' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[4]: handle=0x00000010 name='wrapper' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[5]: handle=0x0000000D name='Recordings' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[6]: handle=0x00000001 name='Android' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[7]: handle=0x00000002 name='Music' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[8]: handle=0x00000011 name='oua_classifier' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[9]: handle=0x0000000B name='Documents' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[10]: handle=0x00000003 name='Podcasts' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[11]: handle=0x0000000E name='.SLOGAN' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[12]: handle=0x00000008 name='Movies' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[13]: handle=0x0000000A name='DCIM' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[14]: handle=0x00000006 name='Notifications' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[15]: handle=0x00000009 name='Download' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[16]: handle=0x00000012 name='12Switch [01000320000CC000][v65536][UKR+REPACK].nsp' is_dir=0 size=1481862360
+[13:19:14] -> [MTP_HOST] response: code=0x2001 type=3 len=12
+[13:19:14] -> [MTP_HOST]   entry[17]: handle=0x00000004 name='Ringtones' is_dir=1 size=0
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000007 is_dir=1
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x3228C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Podcasts
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Podcasts
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Podcasts'
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Recordings
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Recordings
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Recordings'
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/Ringtones
+[13:19:14] -> [DEVOPTAB] diropen fixed path /Ringtones
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/Ringtones'
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/wrapper
+[13:19:14] -> [DEVOPTAB] diropen fixed path /wrapper
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/wrapper'
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:14] -> [DEVOPTAB] diropen mtp0:/.SLOGAN
+[13:19:14] -> [DEVOPTAB] diropen fixed path /.SLOGAN
+[13:19:14] -> [DEVOPTAB] diropen mounted
+[13:19:14] -> [DEVOPTAB] diropen allocated dir
+[13:19:14] -> [MTP_HOST] devoptab_diropen path='/.SLOGAN'
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:14] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:14] -> [DEVOPTAB] diropen opened dir
+[13:19:18] -> [Mui] pushing widget
+[13:19:18] -> [FILE] open mtp0:/12Switch [01000320000CC000][v65536][UKR+REPACK].nsp (flags: 0x10000)
+[13:19:18] -> doing focus gained
+[13:19:18] -> did it
+[13:19:18] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:18] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:18] -> [FILE] open failed: 2
+[13:19:18] -> [ERROR] install queue: Аналіз failed for "12Switch [01000320000CC000][v65536][UKR+REPACK].nsp" -- 0x00001DF9 SphairaError_FsUnknownStdioError
+[13:19:24] -> popping widget
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/wrapper
+[13:19:24] -> [DEVOPTAB] diropen fixed path /wrapper
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/wrapper'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Ringtones
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Ringtones
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Ringtones'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Recordings
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Recordings
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Recordings'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Podcasts
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Podcasts
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Podcasts'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Pictures
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Pictures
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Pictures'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/oua_classifier
+[13:19:24] -> [DEVOPTAB] diropen fixed path /oua_classifier
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/oua_classifier'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Notifications
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Notifications
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Notifications'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/My Documents
+[13:19:24] -> [DEVOPTAB] diropen fixed path /My Documents
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/My Documents'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Music
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Music
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Music'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Movies
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Movies
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Movies'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Download
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Download
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Download'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Documents
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Documents
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Documents'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/DCIM
+[13:19:24] -> [DEVOPTAB] diropen fixed path /DCIM
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/DCIM'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Audiobooks
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Audiobooks
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Audiobooks'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Android
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Android
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Android'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/Alarms
+[13:19:24] -> [DEVOPTAB] diropen fixed path /Alarms
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/Alarms'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:24] -> [DEVOPTAB] diropen mtp0:/.SLOGAN
+[13:19:24] -> [DEVOPTAB] diropen fixed path /.SLOGAN
+[13:19:24] -> [DEVOPTAB] diropen mounted
+[13:19:24] -> [DEVOPTAB] diropen allocated dir
+[13:19:24] -> [MTP_HOST] devoptab_diropen path='/.SLOGAN'
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:24] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:24] -> [DEVOPTAB] diropen opened dir
+[13:19:25] -> [Mui] pushing widget
+[13:19:25] -> [FILE] open mtp0:/12Switch [01000320000CC000][v65536][UKR+REPACK].nsp (flags: 0x10000)
+[13:19:25] -> doing focus gained
+[13:19:25] -> did it
+[13:19:25] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:25] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:25] -> [FILE] open failed: 2
+[13:19:25] -> [ERROR] install queue: Аналіз failed for "12Switch [01000320000CC000][v65536][UKR+REPACK].nsp" -- 0x00001DF9 SphairaError_FsUnknownStdioError
+[13:19:28] -> popping widget
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/wrapper
+[13:19:28] -> [DEVOPTAB] diropen fixed path /wrapper
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/wrapper'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Ringtones
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Ringtones
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Ringtones'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Recordings
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Recordings
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Recordings'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Podcasts
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Podcasts
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Podcasts'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Pictures
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Pictures
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Pictures'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/oua_classifier
+[13:19:28] -> [DEVOPTAB] diropen fixed path /oua_classifier
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/oua_classifier'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Notifications
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Notifications
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Notifications'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/My Documents
+[13:19:28] -> [DEVOPTAB] diropen fixed path /My Documents
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/My Documents'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Music
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Music
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Music'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Movies
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Movies
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Movies'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Download
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Download
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Download'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Documents
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Documents
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Documents'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/DCIM
+[13:19:28] -> [DEVOPTAB] diropen fixed path /DCIM
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/DCIM'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Audiobooks
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Audiobooks
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Audiobooks'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Android
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Android
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Android'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/Alarms
+[13:19:28] -> [DEVOPTAB] diropen fixed path /Alarms
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/Alarms'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir
+[13:19:28] -> [DEVOPTAB] diropen mtp0:/.SLOGAN
+[13:19:28] -> [DEVOPTAB] diropen fixed path /.SLOGAN
+[13:19:28] -> [DEVOPTAB] diropen mounted
+[13:19:28] -> [DEVOPTAB] diropen allocated dir
+[13:19:28] -> [MTP_HOST] devoptab_diropen path='/.SLOGAN'
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen resolved handle=0x00000000 is_dir=0
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] xfer report res failed: 0x25A8C (transferred=0)
+[13:19:28] -> [MTP_HOST] devoptab_diropen loaded 0 entries
+[13:19:28] -> [DEVOPTAB] diropen opened dir

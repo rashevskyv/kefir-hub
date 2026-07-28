@@ -39,6 +39,7 @@ enum SortType {
     SortType_Updated,
     SortType_Alphabetical,
     SortType_Publisher,
+    SortType_Storage,
 };
 
 enum OrderType {

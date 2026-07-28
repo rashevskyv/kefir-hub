@@ -107,7 +107,7 @@ void App::DisplayMiscOptions(bool left_side) {
             );
         },
         "Launch the built-in web browser.\n\n",
-        "NOTE: The browser is very limted, some websites will fail to load and there's a 30 minute timeout which closes the browser"_i18n);
+        "NOTE: The browser is very limited, some websites will fail to load and there's a 30 minute timeout which closes the browser"_i18n);
     } else {
         options->Add<ui::SidebarEntryCallback>("Web (Title Mode required)"_i18n, [](){
             App::ShowTitleModeHelp("The built-in browser"_i18n);
@@ -345,7 +345,7 @@ void App::DisplayDumpOptions(bool left_side) {
         "Append folder with .xci"_i18n, App::GetApp()->m_dump_append_folder_with_xci,
         "XCI dumps will name the folder with the .xci extension.\n"\
         "For example, /dumps/XCI/name.xci/name.xci\n\n"
-        "Some devices only function is the xci folder is named exactly the same as the xci."_i18n
+        "Some devices only function if the xci folder is named exactly the same as the xci."_i18n
     );
     options->Add<ui::SidebarEntryBool>(
         "Trim XCI"_i18n, App::GetApp()->m_dump_trim_xci,
