@@ -144,12 +144,6 @@ struct Session {
     // transaction in between means clearing halts is not getting us anywhere,
     // and we re-enumerate rather than retry into a wedged pipe forever.
     u64 last_recover_tick{};
-
-    // where the previous read ended. A caller that picks up exactly there is
-    // streaming and earns a long data phase; one that jumps elsewhere gets a
-    // request sized to what it asked for, so nothing has to be thrown away.
-    u32 last_read_handle{};
-    u64 last_read_end{};
 };
 
 // defined in the session management section below; usable from the devoptab
@@ -163,16 +157,25 @@ u64 MsSince(u64 tick) {
 Session g_session{};
 Mutex g_mutex{};
 
+// Rough counters, reset on connect and only ever read when something fails.
+// Every failure so far has looked the same from the outside, so the log needs
+// to say which of "too many commands", "too many bytes" and "too long" the
+// responder actually minds.
+struct LinkStats {
+    u64 tick{};
+    u32 commands{};
+    u64 bytes{};
+};
+LinkStats g_stats{};
+
 // -------------------------------------------------------------------------
 // streaming read state
 // -------------------------------------------------------------------------
 
-// The tested phone wedges its MTP responder after ~100 transactions of any
-// size: chunked partial reads (one transaction per 512 KiB) killed it a few
-// dozen MB into every install. File reads therefore run as one long
-// GetPartialObject(64) whose data phase is consumed incrementally across
-// devoptab_read calls -- a whole install costs dozens of transactions instead
-// of thousands.
+// One GetPartialObject(64) data phase, consumed by the read that opened it.
+// The state outlives the call only so the tail of a packet-aligned post can be
+// served to the next one (carry) -- a phase is never deliberately left open,
+// see StartStreamLocked for why.
 struct ReadStream {
     bool active{};
     bool response_done{};   // closing response consumed (carry may remain)
@@ -380,13 +383,15 @@ bool RecoverLinkLocked(const char* why) {
         return false;
     }
 
+    log_write("[MTP_HOST] recovering link: %s (after %u commands, %llu MiB, %llu ms)\n",
+        why, g_stats.commands, (unsigned long long)(g_stats.bytes >> 20),
+        (unsigned long long)MsSince(g_stats.tick));
+
     if (g_session.last_recover_tick > g_session.last_ok_tick) {
         CloseUsbLocked("link did not come back after recovery");
         return false;
     }
     g_session.last_recover_tick = armGetSystemTick();
-
-    log_write("[MTP_HOST] recovering link: %s\n", why);
 
     bool ok = true;
     for (auto* ep : {&g_session.ep_in, &g_session.ep_out}) {
@@ -512,6 +517,7 @@ Result SendCommand(u16 code, std::span<const u32> params, u32* out_transaction_i
     }
 
     *out_transaction_id = hdr.transaction_id;
+    g_stats.commands++;
 
     u32 transferred{};
     R_TRY(PostBuffer(&g_session.ep_out, length, &transferred));
@@ -711,6 +717,7 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
         }
 
         g_stream.remaining -= payload;
+        g_stats.bytes += payload;
 
         // a short transfer with payload still owed means the device ended the
         // container early; trust the wire over the header.
@@ -758,26 +765,22 @@ void AbortStreamLocked() {
     g_stream = {};
 }
 
-// Opens a data phase at `offset`. A caller resuming exactly where the last
-// read stopped is streaming a file and gets a long data phase; anyone landing
-// somewhere else (yati seeks to each nca header, reads a little, moves on)
-// gets exactly what it asked for, because whatever is left over has to be
-// pulled off the bus before the next command can go out.
+// Opens a data phase at `offset` for exactly what the caller asked for (with
+// a small floor, so a header probe does not cost a round trip per field).
+//
+// It used to request far more and feed later reads from the open phase, which
+// is fine while the reader keeps up and fatal once it does not: yati's read
+// thread stalls whenever the nand write side falls behind, and a data phase
+// left half consumed across that stall gets its endpoint stalled by the
+// responder. The 14:16 log shows exactly that -- 68 MiB at full speed, then
+// 2140-0301 the moment the pipeline backed up. A phase that always completes
+// inside one read call cannot be caught mid-transfer; the bus idling *between*
+// transactions is ordinary MTP and the phone is happy to sit there for
+// minutes.
 Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     R_UNLESS(g_session.connected, ResultNoSession);
 
-    const bool sequential = handle == g_session.last_read_handle &&
-        offset == g_session.last_read_end;
-
-    u64 req = file_size - offset;
-    if (!sequential) {
-        req = std::min<u64>(req, std::max<u64>(want, 1024 * 64));
-    }
-    // Cap the transaction: the tested phone (vid 0x22d9) aborts any data
-    // phase exactly 20 MiB in -- one run died at file offset 20 MiB with an
-    // unbounded request, the next at 64+20 MiB with a 32 MiB one. 16 MiB
-    // stays under that, and it also bounds how long an abort spends draining.
-    req = std::min<u64>(req, 16 * 1024 * 1024);
+    u64 req = std::min<u64>(file_size - offset, std::max<u64>(want, 1024 * 64));
 
     u16 op = OP_GET_PARTIAL_OBJECT_64;
     u32 params[4]{handle, static_cast<u32>(offset), static_cast<u32>(offset >> 32), static_cast<u32>(req)};
@@ -1396,8 +1399,12 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
             // after recovery; a second try 100 ms later goes through.
             // RefreshFileLocked re-resolves the handle -- the old one
             // died with the session.
-            if (retries++ < 3) {
-                svcSleepThread(100'000'000); // 100 ms
+            // back off between attempts: a responder that just dropped off
+            // the bus needs time to enumerate again, and the 14:16 log ends
+            // with "no MTP interface on the bus" 100 ms after it vanished.
+            if (retries < 3) {
+                svcSleepThread((retries + 1) * 400'000'000ULL);
+                retries++;
                 if (EnsureSessionLocked() && RefreshFileLocked(file)) {
                     continue;
                 }
@@ -1413,8 +1420,6 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     file->offset += done;
-    g_session.last_read_handle = file->object_handle;
-    g_session.last_read_end = file->offset;
     return static_cast<ssize_t>(done);
 }
 
@@ -1562,6 +1567,7 @@ Result ConnectLocked() {
     for (s32 i = 0; i < total; i++) {
         if (R_SUCCEEDED(OpenSessionOnInterface(interfaces[i]))) {
             g_session.generation++;
+            g_stats = {armGetSystemTick(), 0, 0};
             R_SUCCEED();
         }
     }
