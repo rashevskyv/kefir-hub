@@ -9,6 +9,7 @@
 #include "i18n.hpp"
 #include "defines.hpp"
 #include "title_info.hpp"
+#include "location.hpp"
 #include "utils/thread.hpp"
 #include <algorithm>
 #include <array>
@@ -88,14 +89,74 @@ auto GetMountRoot() -> std::string {
     return clean;
 }
 
-// the landing page when a folder is mounted: the mount and the card, side by
-// side. deliberately script-free, so every link here is a full page load and
-// comes back through the server rather than through the client-side router.
-auto BuildRootSelectionPage() -> std::string {
-    const auto share_root = GetMountRoot();
-    const char* leaf = std::strrchr(share_root.c_str(), '/');
-    std::string mounted_name = (leaf && leaf[1]) ? (leaf + 1) : "Mounted Folder";
+struct RootSource {
+    std::string path; // "/", "/config", "ums0:/"
+    std::string name;
+    std::string meta;
+};
 
+// what the root lists, mirroring the file browser's own root: the card plus
+// whatever is mounted. network locations (WebDAV / SMB) are left out because
+// they are only devoptab-mounted while the browser is sitting inside them --
+// listing them here would be links that fail the moment the user leaves.
+auto GetRootSources() -> std::vector<RootSource> {
+    std::vector<RootSource> out;
+
+    if (const auto mount = GetMountRoot(); !mount.empty()) {
+        const char* leaf = std::strrchr(mount.c_str(), '/');
+        out.push_back({mount, (leaf && leaf[1]) ? leaf + 1 : "Mounted Folder", "Mounted Folder (" + mount + ")"});
+    }
+
+    for (const auto& e : location::GetStdio(false)) {
+        out.push_back({e.mount + "/", e.name, "USB storage"});
+    }
+
+    for (const auto& e : location::GetMtpHostDevices(false)) {
+        out.push_back({e.mount + "/", e.name, "MTP device"});
+    }
+
+    out.push_back({"/", "sd", "microSD Card"});
+    return out;
+}
+
+// which source a path lives in: the longest source root containing it. drives
+// the "up" link, so leaving a source lands on the root page rather than on the
+// card folder that happens to sit above a mount.
+auto SourceRootFor(const std::string& path) -> std::string {
+    std::string best = "/";
+    for (const auto& s : GetRootSources()) {
+        if (s.path == "/" || s.path.size() <= best.size()) {
+            continue;
+        }
+        if (path == s.path || path.starts_with(s.path.back() == '/' ? s.path : s.path + "/")) {
+            best = s.path;
+        }
+    }
+    return best;
+}
+
+auto SourceNameFor(const std::string& root) -> std::string {
+    for (const auto& s : GetRootSources()) {
+        if (s.path == root) {
+            return s.name;
+        }
+    }
+    return root;
+}
+
+// a devoptab prefix ("ums0:/…") names a mounted source and is served through
+// stdio; everything else is a plain microSD path.
+auto OpenFs(std::string_view path) -> std::unique_ptr<fs::Fs> {
+    if (path.find(':') != std::string_view::npos) {
+        return std::make_unique<fs::FsStdio>();
+    }
+    return std::make_unique<fs::FsNativeSd>();
+}
+
+// the landing page when more than the card is mounted. deliberately
+// script-free, so every link here is a full page load and comes back through
+// the server rather than through the client-side router.
+auto BuildRootSelectionPage(const std::vector<RootSource>& sources) -> std::string {
     std::string body;
     body.reserve(8192);
     body += FOLDER_PAGE_HEADER;
@@ -103,40 +164,43 @@ auto BuildRootSelectionPage() -> std::string {
     body += "<div class=\"crumbs\"><a href=\"/\">Root</a></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
-    // Item 1: Mounted folder
-    const auto encoded_mounted = UrlEncode(share_root);
-    body += "<a class=\"item\" href=\"/?path=";
-    body += encoded_mounted;
-    body += "\"><div class=\"thumbnail-box\">"
-            "<svg viewBox=\"0 0 24 24\" fill=\"#38bdf8\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
-            "</div>";
-    body += "<div class=\"info\"><span class=\"name\">";
-    body += HtmlEscape(mounted_name);
-    body += "</span><span class=\"meta\">Mounted Folder (" + HtmlEscape(share_root) + ")</span></div></a>";
-
-    // Item 2: SD Card
-    body += "<a class=\"item\" href=\"/?path=/\"><div class=\"thumbnail-box\">"
-            "<svg viewBox=\"0 0 24 24\" fill=\"#4ade80\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
-            "</div>";
-    body += "<div class=\"info\"><span class=\"name\">sd</span><span class=\"meta\">microSD Card</span></div></a>";
+    for (const auto& s : sources) {
+        const bool is_sd = s.path == "/";
+        body += "<a class=\"item\" href=\"/?path=";
+        body += UrlEncode(s.path);
+        body += "\"><div class=\"thumbnail-box\">"
+                "<svg viewBox=\"0 0 24 24\" fill=\"";
+        body += is_sd ? "#4ade80" : "#38bdf8";
+        body += "\"><path d=\"M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z\"/></svg>"
+                "</div>";
+        body += "<div class=\"info\"><span class=\"name\">";
+        body += HtmlEscape(s.name);
+        body += "</span><span class=\"meta\">";
+        body += HtmlEscape(s.meta);
+        body += "</span></div></a>";
+    }
 
     body += "</main></div></body></html>";
     return body;
 }
 
 auto BuildFolderPage(std::string path_str) -> std::string {
-    const auto share_root = GetMountRoot();
-    const bool has_share_root = !share_root.empty();
+    const auto sources = GetRootSources();
+    // one source is not a choice: with only the card mounted the root page is a
+    // click in the way, so the card *is* the root.
+    const bool has_root = sources.size() > 1;
 
     if (path_str.empty()) {
-        if (has_share_root) {
-            return BuildRootSelectionPage();
+        if (has_root) {
+            return BuildRootSelectionPage(sources);
         }
         path_str = "/";
     }
     const auto abs_path = CanonicalizeAbsolutePath(path_str);
+    const auto source_root = SourceRootFor(abs_path);
 
-    fs::FsNativeSd fs;
+    auto fsp = OpenFs(abs_path);
+    auto& fs = *fsp;
     fs::Dir dir;
     std::vector<FsDirectoryEntry> entries;
     if (R_SUCCEEDED(fs.OpenDirectory(abs_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {
@@ -156,13 +220,26 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += FOLDER_PAGE_HEADER;
     body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/\">Root</a>";
 
-    std::string crumb_accum;
-    size_t start{};
+    // the crumb trail starts at the source root ("ums0:/" / "/config"), then
+    // walks the path inside it, so a device prefix never gets split into a
+    // crumb of its own that links nowhere.
+    std::string crumb_accum = source_root == "/" ? "" : source_root;
+    size_t start = crumb_accum.size();
+    if (!crumb_accum.empty()) {
+        body += " / <a href=\"/?path=";
+        body += UrlEncode(crumb_accum);
+        body += "\">";
+        body += HtmlEscape(SourceNameFor(source_root));
+        body += "</a>";
+    }
     while (start < abs_path.size()) {
         const auto end = abs_path.find('/', start);
         const auto part = abs_path.substr(start, end == std::string::npos ? std::string::npos : end - start);
         if (!part.empty()) {
-            crumb_accum += '/' + part;
+            if (crumb_accum.empty() || crumb_accum.back() != '/') {
+                crumb_accum += '/';
+            }
+            crumb_accum += part;
             body += " / <a href=\"/?path=";
             body += UrlEncode(crumb_accum);
             body += "\">";
@@ -184,21 +261,19 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body += "<input id=\"files\" type=\"file\" multiple onchange=\"addFilesToUploadQueue(this.files)\"><span id=\"status\" class=\"status\"></span></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
-    if (abs_path != "/" || has_share_root) {
+    // "up" out of a source root goes to the root page; there is no "up" at all
+    // when the card is the only source and we are sitting at its top.
+    if (abs_path != source_root || has_root) {
         std::string parent_href = "/";
-        if (abs_path != "/") {
+        if (abs_path != source_root) {
             auto parent = abs_path;
             if (const auto slash = parent.find_last_of('/'); slash != std::string::npos) {
                 parent.resize(slash);
             }
-            if (parent.empty()) {
-                parent = "/";
+            if (parent.size() < source_root.size()) {
+                parent = source_root;
             }
-            if (has_share_root && abs_path == share_root) {
-                parent_href = "/";
-            } else {
-                parent_href = "/?path=" + UrlEncode(parent);
-            }
+            parent_href = "/?path=" + UrlEncode(parent);
         }
 
         body += "<a class=\"item\" href=\"";
@@ -278,11 +353,18 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     // decodeURIComponent() leaves as a literal '+', so any path with a space in
     // it used to come out mangled -- and shareRoot has to compare equal to
     // currentPath for the "up" link out of the mount to be found.
+    // consumed by the client-side router in FOLDER_PAGE_JS: srcRoot is the top
+    // of the source we are in, hasRoot says whether there is a root page above
+    // it. quoted as json rather than url-encoded -- UrlEncode() turns a space
+    // into '+', which decodeURIComponent() leaves as a literal '+', and srcRoot
+    // has to compare equal to currentPath for the "up" link to be found.
     body += "<script>let currentPath=\"";
     body += JsonEscape(abs_path);
-    body += "\";let shareRoot=\"";
-    body += JsonEscape(share_root);
-    body += "\";";
+    body += "\";let srcRoot=\"";
+    body += JsonEscape(source_root);
+    body += "\";let hasRoot=";
+    body += has_root ? "true" : "false";
+    body += ";";
     body += CONFIRM_MODAL_JS;
     body += FOLDER_PAGE_JS;
 
@@ -309,7 +391,8 @@ void SendDownload(Socket sock, const std::string& rel) {
     }
     name = SanitizeFileName(name);
 
-    fs::FsNativeSd fs;
+    auto fsp = OpenFs(path);
+    auto& fs = *fsp;
     fs::File file;
     if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
         SendResponse(sock, "404 Not Found", "text/plain", "Could not open file");
@@ -367,7 +450,8 @@ void SendView(Socket sock, const std::string& rel) {
     }
     name = SanitizeFileName(name);
 
-    fs::FsNativeSd fs;
+    auto fsp = OpenFs(path);
+    auto& fs = *fsp;
     fs::File file;
     if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
         SendResponse(sock, "404 Not Found", "text/plain", "Could not open file");
@@ -415,7 +499,7 @@ void SendView(Socket sock, const std::string& rel) {
 
 
 
-auto UniqueUploadPath(fs::FsNativeSd& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath {
+auto UniqueUploadPath(fs::Fs& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath {
     auto out = fs::AppendPath(dir, name);
     if (!sd.FileExists(out) && !sd.DirExists(out)) {
         return out;
@@ -543,7 +627,10 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         return;
     }
 
-    fs::FsNativeSd fs;
+    // the upload target follows the folder the browser is in, which may be a
+    // mounted source rather than the card.
+    auto fsp = OpenFs(dir);
+    auto& fs = *fsp;
     fs::FsPath out_path;
     if (is_nro) {
         fs.CreateDirectoryRecursively(dir); // ensure /switch/<name>/ exists.
@@ -564,7 +651,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     }
 
     struct UploadGuard {
-        fs::FsNativeSd& fs;
+        fs::Fs& fs;
         const fs::FsPath& path;
         bool success = false;
 
@@ -789,7 +876,8 @@ void HandleDelete(Socket sock, const std::string& query) {
 
     const auto path = CanonicalizeAbsolutePath(raw_path);
 
-    fs::FsNativeSd sd;
+    auto sdp = OpenFs(path);
+    auto& sd = *sdp;
     if (sd.DirExists(path)) {
         log_write("Web UI deleting directory recursively: %s\n", path.c_str());
         if (R_FAILED(sd.DeleteDirectoryRecursively(path))) {
@@ -815,7 +903,7 @@ void HandleDelete(Socket sock, const std::string& query) {
 }
 
 
-void ScanDirectoryRecursive(fs::FsNativeSd& fs, const std::string& start_path, std::vector<std::pair<std::string, s64>>& out_files) {
+void ScanDirectoryRecursive(fs::Fs& fs, const std::string& start_path, std::vector<std::pair<std::string, s64>>& out_files) {
     struct StackEntry {
         std::string path;
         int depth;
@@ -860,7 +948,8 @@ void HandleListRecursive(Socket sock, const std::string& query) {
 
     const auto path = CanonicalizeAbsolutePath(raw_path);
 
-    fs::FsNativeSd fs;
+    auto fsp = OpenFs(path);
+    auto& fs = *fsp;
     std::vector<std::pair<std::string, s64>> files;
     if (fs.DirExists(path)) {
         ScanDirectoryRecursive(fs, path, files);
@@ -889,7 +978,8 @@ void HandleList(Socket sock, const std::string& query) {
     const auto raw_path = GetQueryValue(query, "path");
     const auto path = CanonicalizeAbsolutePath(raw_path.empty() ? GetMountRoot() : raw_path);
 
-    fs::FsNativeSd fs;
+    auto fsp = OpenFs(path);
+    auto& fs = *fsp;
     fs::Dir dir;
     std::vector<FsDirectoryEntry> entries;
     if (R_SUCCEEDED(fs.OpenDirectory(path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir))) {

@@ -153,6 +153,16 @@ void metadata_thread_func(void* user) {
     static_cast<FsView*>(user)->MetadataThreadFunction();
 }
 
+// is there anything in the root besides the microSD card? the root is a source
+// picker, and a picker with one entry is just a keypress in the way -- so with
+// nothing mounted the browser treats the card itself as the top level.
+bool HasExtraRootSources() {
+    return App::GetGodModeEnabled()
+        || !location::GetStdio(false).empty()
+        || !location::GetMtpHostDevices(false).empty()
+        || !location::Load().empty();
+}
+
 
 
 
@@ -327,7 +337,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
             } else if (m_fs_entry.type == FsType::Archive) {
                 // at the archive root: unmount and return to the opening view.
                 SetFs(m_archive_return_path, m_archive_return_entry);
-            } else if (m_fs_entry.type != FsType::Root) {
+            } else if (m_fs_entry.type != FsType::Root && HasExtraRootSources()) {
                 FsEntry root_entry{
                     .name = "System Root",
                     .root = "root:/",
@@ -1007,6 +1017,14 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_entries_index_search.clear();
 
     if (m_fs_entry.type == FsType::Root) {
+        // catches every other way into the root (startup, the sources picker):
+        // with only the card to pick from there is nothing to pick, so drop
+        // straight into it.
+        if (!HasExtraRootSources()) {
+            SetFs("/", FS_ENTRY_DEFAULT);
+            R_SUCCEED();
+        }
+
         std::vector<FsDirectoryEntry> dir_entries;
 
         FsDirectoryEntry sd{};
@@ -2780,14 +2798,7 @@ void Menu::PromptIfShouldExit() {
         return;
     }
 
-    App::Push<ui::OptionBox>(
-        "Close FileBrowser?"_i18n,
-        "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
-            if (op_index && *op_index) {
-                SetPop();
-            }
-        }
-    );
+    SetPop();
 }
 
 bool IsUrlLike(const std::string& str) {

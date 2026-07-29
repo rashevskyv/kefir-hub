@@ -547,13 +547,13 @@ if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='⊞';
 if(typeof initLightbox==='function')initLightbox();
 }catch(err){alert('Failed to load folder: '+err.message);}finally{if(status)status.textContent='';}}
 /* where ".." goes from `path`, or null when there is nowhere up to go.
-   "/" is the root selection page (mounted folder + card) when a folder is
-   mounted, and the card itself otherwise -- it is a plain link, so the click
-   handler below leaves it alone and the server renders whichever applies. */
+   "/" is the root page listing the mounted sources, shown only when there is
+   more than the card to pick from -- it is a plain link, so the click handler
+   below leaves it alone and the server renders it. */
 function parentHrefFor(path){
-if(shareRoot&&path===shareRoot)return '/';
-if(path==='/')return shareRoot?'/':null;
-let parent=path;const lastSlash=parent.lastIndexOf('/');if(lastSlash!==-1)parent=parent.substring(0,lastSlash);if(parent==='')parent='/';
+if(path===srcRoot)return hasRoot?'/':null;
+let parent=path;const lastSlash=parent.lastIndexOf('/');if(lastSlash!==-1)parent=parent.substring(0,lastSlash);
+if(parent.length<srcRoot.length)parent=srcRoot;
 return '/?path='+encodeURIComponent(parent);}
 function goToParent(){
 const href=parentHrefFor(currentPath);if(!href)return;
@@ -562,10 +562,11 @@ navigateTo(new URL(href,window.location.origin).searchParams.get('path')||'/');}
 function renderCrumbs(path){
 const container=document.querySelector('.crumbs');if(!container)return;
 let html='<a href="/">Root</a>';
-if(path!=='/'&&path!==''){
-const parts=path.split('/').filter(Boolean);let accum='';
-for(const part of parts){accum+='/'+part;html+=' / <a href="/?path='+encodeURIComponent(accum)+'">'+escapeHtml(part)+'</a>';}
-}
+let accum=srcRoot==='/'?'':srcRoot;
+if(accum)html+=' / <a href="/?path='+encodeURIComponent(accum)+'">'+escapeHtml(accum)+'</a>';
+for(const part of path.substring(accum.length).split('/').filter(Boolean)){
+if(!accum.endsWith('/'))accum+='/';
+accum+=part;html+=' / <a href="/?path='+encodeURIComponent(accum)+'">'+escapeHtml(part)+'</a>';}
 container.innerHTML=html;}
 function renderItems(path,entries){
 const container=document.getElementById('items-container');if(!container)return;container.innerHTML='';

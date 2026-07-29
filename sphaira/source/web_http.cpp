@@ -167,6 +167,15 @@ auto CanonicalizeAbsolutePath(std::string path) -> std::string {
         }
     }
 
+    // a leading "ums0:" / "mtp0:" names a mounted source and is kept as the
+    // path's root. ':' is illegal in a file name, so anywhere else it is junk
+    // and the loop below drops it.
+    std::string device;
+    if (const auto colon = path.find(':'); colon != std::string::npos && path.find('/') > colon) {
+        device = path.substr(0, colon + 1);
+        path = path.substr(colon + 1);
+    }
+
     std::vector<std::string> parts;
     size_t start = 0;
     while (start <= path.size()) {
@@ -187,7 +196,7 @@ auto CanonicalizeAbsolutePath(std::string path) -> std::string {
         start = end + 1;
     }
 
-    std::string out = "/";
+    std::string out = device + "/";
     for (size_t i = 0; i < parts.size(); ++i) {
         if (i > 0) {
             out += "/";
