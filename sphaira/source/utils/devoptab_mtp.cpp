@@ -100,7 +100,9 @@ alignas(XFER_ALIGN) u8 g_ctrl_buf[XFER_ALIGN];
 constexpr u16 USB_FEATURE_ENDPOINT_HALT = 0;
 // PIMA 15740 D.5.1 class requests on the control pipe.
 constexpr u8 MTP_REQ_CANCEL = 0x64;
+constexpr u8 MTP_REQ_GET_DEVICE_STATUS = 0x67;
 constexpr u16 MTP_CANCELLATION_CODE = 0x4001;
+constexpr u16 RESP_DEVICE_BUSY = 0x2019;
 
 // a response container is at most 12 + 5*4 bytes; one page covers it.
 constexpr u32 RESPONSE_POST_SIZE = XFER_ALIGN;
@@ -362,6 +364,33 @@ Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
         ep->desc.bEndpointAddress, 0, nullptr, &transferred);
 }
 
+// After a Cancel the device keeps reporting Device_Busy on the control pipe
+// until its side of the abort is done; commands posted before that fail, which
+// is exactly what the log showed (recover -> immediate 0/28 on the next
+// command). Wait it out; a device that never settles gets reported back.
+Result AwaitDeviceIdleLocked() {
+    struct Status {
+        u16 length;
+        u16 code;
+    } NX_PACKED;
+
+    for (int i = 0; i < 100; i++) {
+        u32 transferred{};
+        R_TRY(usbHsIfCtrlXfer(&g_session.iface,
+            USB_ENDPOINT_IN | USB_REQUEST_TYPE_CLASS | USB_RECIPIENT_INTERFACE,
+            MTP_REQ_GET_DEVICE_STATUS, 0, g_session.iface.inf.inf.interface_desc.bInterfaceNumber,
+            sizeof(Status), g_ctrl_buf, &transferred));
+
+        Status status{};
+        std::memcpy(&status, g_ctrl_buf, sizeof(status));
+        if (transferred < sizeof(status) || status.code != RESP_DEVICE_BUSY) {
+            R_SUCCEED();
+        }
+        svcSleepThread(20'000'000); // 20 ms
+    }
+    R_THROW(ResultTransport);
+}
+
 // Tells the responder to drop the in-flight transaction, so both sides agree
 // the bus is idle again.
 Result CancelTransactionLocked(u32 transaction_id) {
@@ -395,6 +424,10 @@ bool RecoverLinkLocked(u32 transaction_id, const char* why) {
 
     if (transaction_id) {
         CancelTransactionLocked(transaction_id);
+    }
+    if (R_FAILED(AwaitDeviceIdleLocked())) {
+        CloseUsbLocked("device never settled after cancel");
+        return false;
     }
 
     bool ok = true;
@@ -780,10 +813,12 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     if (want < 1024 * 512) {
         req = std::min<u64>(req, std::max<u64>(want, 1024 * 64));
     }
-    // Cap the transaction: a completed data phase is cleaner than a cancelled
-    // one, and the phone stalls the endpoint if we throttle a huge one to the
-    // speed the nand can absorb. 32 MiB still means ~64 posts per command.
-    req = std::min<u64>(req, 32 * 1024 * 1024);
+    // Cap the transaction: the tested phone (vid 0x22d9) aborts any data
+    // phase exactly 20 MiB in -- one run died at file offset 20 MiB with an
+    // unbounded request, the next at 64+20 MiB with a 32 MiB one. 16 MiB
+    // stays under that and a completed phase needs no cancel handshake; the
+    // extra command round trip per 16 MiB is noise.
+    req = std::min<u64>(req, 16 * 1024 * 1024);
 
     u16 op = OP_GET_PARTIAL_OBJECT_64;
     u32 params[4]{handle, static_cast<u32>(offset), static_cast<u32>(offset >> 32), static_cast<u32>(req)};

@@ -233,8 +233,16 @@ struct ThreadData {
         // functions self-deadlocked on it -- a hang no condvar wake can fix.
         mutexLock(std::addressof(read_mutex));
         ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
+        // every wait loop below checks GetResults() *inside* the loop: a peer
+        // that dies while this ring is full never drains it, so a parked
+        // thread only ever leaves via a wake + failed result check. checking
+        // after the loop only (as before) parked the decompress thread
+        // forever once the write thread exited on a failed read -- the B
+        // button hang. the running-flag escape names the thread that drains
+        // (or fills) *this* ring; two of them named the wrong thread.
         while (!read_buffers.ringbuf_free()) {
-            if (!write_running) {
+            R_TRY(GetResults());
+            if (!decompress_running) {
                 R_SUCCEED();
             }
             R_TRY(condvarWait(std::addressof(can_read), std::addressof(read_mutex)));
@@ -249,6 +257,7 @@ struct ThreadData {
         mutexLock(std::addressof(read_mutex));
         ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
         while (!read_buffers.ringbuf_size()) {
+            R_TRY(GetResults());
             if (!read_running) {
                 buf_out.resize(0);
                 R_SUCCEED();
@@ -270,7 +279,8 @@ struct ThreadData {
         mutexLock(std::addressof(write_mutex));
         ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         while (!write_buffers.ringbuf_free()) {
-            if (!decompress_running) {
+            R_TRY(GetResults());
+            if (!write_running) {
                 R_SUCCEED();
             }
             R_TRY(condvarWait(std::addressof(can_decompress_write), std::addressof(write_mutex)));
@@ -285,6 +295,7 @@ struct ThreadData {
         mutexLock(std::addressof(write_mutex));
         ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         while (!write_buffers.ringbuf_size()) {
+            R_TRY(GetResults());
             if (!decompress_running) {
                 buf_out.resize(0);
                 R_SUCCEED();
