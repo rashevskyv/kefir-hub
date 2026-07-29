@@ -144,6 +144,11 @@ struct Session {
     // transaction in between means clearing halts is not getting us anywhere,
     // and we re-enumerate rather than retry into a wedged pipe forever.
     u64 last_recover_tick{};
+
+    // wMaxPacketSize of the bulk in endpoint. Every IN post has to be a
+    // multiple of it, or the controller has nowhere to put the tail of the
+    // last packet and reports an overflow.
+    u32 packet_size{512};
 };
 
 // defined in the session management section below; usable from the devoptab
@@ -186,7 +191,11 @@ struct ReadStream {
     // served first on the next read. at most one packet.
     u32 carry_len{};
     u32 carry_off{};
-    u8 carry[512];
+    // one packet of overshoot. Sized for a whole page rather than the 512 a
+    // high speed bulk endpoint uses: this console negotiates USB 3.0, where
+    // bulk packets are 1024, and the old 512 byte array was overrun by every
+    // transfer that came back with more than it.
+    u8 carry[XFER_ALIGN];
 };
 ReadStream g_stream{};
 
@@ -690,7 +699,7 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
 
     while (got < want && g_stream.remaining) {
         const u64 n = std::min<u64>(std::min<u64>(want - got, g_stream.remaining), MAX_READ_CHUNK);
-        const u32 post = AlignUp(static_cast<u32>(n), 512);
+        const u32 post = AlignUp(static_cast<u32>(n), g_session.packet_size);
 
         u32 transferred{};
         if (const auto rc = PostBuffer(&g_session.ep_in, post, &transferred); R_FAILED(rc)) {
@@ -711,7 +720,9 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
 
         if (payload > to_caller) {
             // the post was packet aligned, so at most one packet of overshoot.
-            g_stream.carry_len = static_cast<u32>(payload - to_caller);
+            // clamped anyway: a device that returns more than it was asked for
+            // must not be able to write past this buffer.
+            g_stream.carry_len = static_cast<u32>(std::min<u64>(payload - to_caller, sizeof(g_stream.carry)));
             g_stream.carry_off = 0;
             std::memcpy(g_stream.carry, g_xfer_buf + to_caller, g_stream.carry_len);
         }
@@ -806,7 +817,7 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     // bytes; anything past the header goes to the carry buffer.
     ContainerHeader hdr{};
     u32 transferred{};
-    if (const auto rc = ReceiveContainer(512, &hdr, &transferred); R_FAILED(rc)) {
+    if (const auto rc = ReceiveContainer(XFER_ALIGN, &hdr, &transferred); R_FAILED(rc)) {
         RecoverLinkLocked("stream data phase failed");
         R_THROW(rc);
     }
@@ -830,7 +841,8 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     g_stream.carry_len = 0;
 
     if (transferred > sizeof(hdr)) {
-        g_stream.carry_len = std::min<u64>(transferred - sizeof(hdr), g_stream.remaining);
+        g_stream.carry_len = std::min<u64>(std::min<u64>(transferred - sizeof(hdr), g_stream.remaining),
+            sizeof(g_stream.carry));
         std::memcpy(g_stream.carry, g_xfer_buf + sizeof(hdr), g_stream.carry_len);
         g_stream.remaining -= g_stream.carry_len;
     }
@@ -1500,6 +1512,11 @@ Result OpenSessionOnInterface(const UsbHsInterface& iface) {
 
     g_session.connected = true;
     g_session.transaction_id = 1;
+    // 512 at high speed, 1024 once the link comes up as USB 3.0. Posting a
+    // size that is not a multiple of this leaves the controller without room
+    // for the tail of the final packet.
+    g_session.packet_size = in_desc->wMaxPacketSize;
+    log_write("[MTP_HOST] bulk in max packet: %u\n", g_session.packet_size);
 
     const u32 session_id[]{1};
     if (const auto rc = TransactNoData(OP_OPEN_SESSION, session_id); R_FAILED(rc)) {
