@@ -11,17 +11,26 @@ bool Init();
 void Exit();
 bool IsRunning();
 
-// mount an arbitrary fs as an extra, "pinned" MTP storage and (re)start MTP so
-// a PC can see it. fs_factory produces the fs on demand (so it can be recreated
-// across MTP restarts); base_path roots the storage at a subfolder ("" = whole
-// fs). Works for a plain folder (FsNativeSd + base_path) and for virtual mounts
-// (FsNcm / FsZip), because MTP serves through the fs::Fs abstraction.
-bool MountFs(std::function<std::unique_ptr<fs::Fs>()> fs_factory, const std::string& display_name, const std::string& base_path = "");
-// clear the pinned storage and restart MTP (or stop it if nothing else remains).
+// an arbitrary fs exposed as an extra, "pinned" MTP storage. fs_factory
+// produces the fs on demand (so it can be recreated across MTP restarts);
+// base_path roots the storage at a subfolder ("" = whole fs). Works for a plain
+// folder (FsNativeSd + base_path) and for virtual mounts (FsNcm / FsZip),
+// because MTP serves through the fs::Fs abstraction.
+struct PinnedMount {
+    std::function<std::unique_ptr<fs::Fs>()> fs_factory{};
+    std::string display_name{};
+    std::string base_path{};
+    // unique devoptab id, assigned by MountFs.
+    std::string internal{};
+};
+
+// replace the pinned storages and (re)start MTP so a PC re-enumerates.
+bool MountFs(std::vector<PinnedMount> mounts);
+// clear the pinned storages and restart MTP (or stop it if nothing else remains).
 void UnmountPinned();
-// true if a pinned storage is currently mounted.
+// true if any pinned storage is currently mounted.
 bool HasPinned();
-// display name of the pinned storage, empty if there is none.
+// display names of the pinned storages, comma separated. empty if none.
 std::string GetPinnedName();
 
 using OnInstallStart = std::function<bool(const char* path)>;

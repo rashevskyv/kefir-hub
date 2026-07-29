@@ -54,9 +54,7 @@ std::atomic<bool> g_mtp_new_transfer{false};
 // an optional extra "pinned" storage (a folder or a virtual mount) exposed on
 // top of the configured MTP storages. Set via MountFs(), cleared by
 // UnmountPinned(); Init() includes it when the factory is set.
-std::function<std::unique_ptr<fs::Fs>()> g_pinned_factory{};
-std::string g_pinned_name{};
-std::string g_pinned_base{};
+std::vector<PinnedMount> g_pinned{};
 
 #if ENABLE_NETWORK_INSTALL
 InstallSharedData g_shared_data{};
@@ -1618,14 +1616,16 @@ bool Init() {
         }
     }
 
-    // pinned mount (a folder or a virtual mount) requested from the file manager.
-    if (g_pinned_factory) {
+    // pinned mounts (folders or virtual mounts) requested from the file manager.
+    // each needs its own internal id, or two storages would fight over one
+    // devoptab name.
+    for (const auto& pin : g_pinned) {
         storage_defs.push_back({
             true,
-            g_pinned_name,
+            pin.display_name,
             "Mounted",
-            [](const char* display_name) {
-                return std::make_shared<FsProxy>(g_pinned_factory(), "mnt", display_name, g_pinned_base.c_str());
+            [pin](const char* display_name) {
+                return std::make_shared<FsProxy>(pin.fs_factory(), pin.internal.c_str(), display_name, pin.base_path.c_str());
             }
         });
     }
@@ -1703,29 +1703,33 @@ bool IsRunning() {
     return g_is_running;
 }
 
-bool MountFs(std::function<std::unique_ptr<fs::Fs>()> fs_factory, const std::string& display_name, const std::string& base_path) {
-    // stop any running session, install the pinned storage, then (re)start so
-    // the PC re-enumerates with the new storage present.
+bool MountFs(std::vector<PinnedMount> mounts) {
+    // stop any running session, install the pinned storages, then (re)start so
+    // the PC re-enumerates with the new storages present.
     Exit();
-    g_pinned_factory = std::move(fs_factory);
-    g_pinned_name = display_name;
-    g_pinned_base = base_path;
+    g_pinned = std::move(mounts);
+    for (size_t i = 0; i < g_pinned.size(); i++) {
+        g_pinned[i].internal = "mnt" + std::to_string(i);
+    }
     return Init();
 }
 
 void UnmountPinned() {
-    g_pinned_factory = {};
-    g_pinned_name.clear();
-    g_pinned_base.clear();
+    g_pinned.clear();
     Exit();
 }
 
 bool HasPinned() {
-    return static_cast<bool>(g_pinned_factory);
+    return !g_pinned.empty();
 }
 
 std::string GetPinnedName() {
-    return g_pinned_name;
+    std::string out;
+    for (const auto& pin : g_pinned) {
+        if (!out.empty()) out += ", ";
+        out += pin.display_name;
+    }
+    return out;
 }
 
 #if ENABLE_NETWORK_INSTALL

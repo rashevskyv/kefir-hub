@@ -832,42 +832,42 @@ void FsView::OpenArchive() {
 }
 
 void FsView::MountCurrentOverMtp() {
-    // build a factory that recreates this location's fs on demand (MTP restarts
-    // may recreate it), plus the base path to root the storage at.
-    std::function<std::unique_ptr<fs::Fs>()> factory;
-    std::string base;
-    std::string name;
+    // one pinned storage per target, each with a factory that recreates its fs
+    // on demand (MTP restarts may recreate it) and a base path to root it at.
+    std::vector<haze::PinnedMount> mounts;
+    std::vector<fs::FsPath> targets;
     const auto& e = m_fs_entry;
 
     if (e.type == FsType::Content) {
         const auto app_id = e.content_app_id;
         const auto meta_type = e.content_meta_type;
         const auto storage_id = e.content_storage_id;
-        factory = [app_id, meta_type, storage_id]{ return std::make_unique<fs::FsNcm>(app_id, meta_type, storage_id); };
-        name = std::string(e.name) + " (content)";
+        mounts.push_back({[app_id, meta_type, storage_id]{ return std::make_unique<fs::FsNcm>(app_id, meta_type, storage_id); },
+            std::string(e.name) + " (content)", {}, {}});
     } else if (e.type == FsType::Archive) {
         const fs::FsPath zip_path = e.root;
-        factory = [zip_path]{ return std::make_unique<fs::FsZip>(zip_path); };
-        name = std::string(e.name) + " (archive)";
+        mounts.push_back({[zip_path]{ return std::make_unique<fs::FsZip>(zip_path); },
+            std::string(e.name) + " (archive)", {}, {}});
     } else if (IsSd()) {
-        const auto target = GetMountTarget();
-        factory = []{ return std::make_unique<fs::FsNativeSd>(true); };
-        base = target.toString();
-        const char* leaf = std::strrchr(target.s, '/');
-        name = (leaf && leaf[1]) ? (leaf + 1) : "microSD";
+        targets = GetMountTargets();
+        for (const auto& target : targets) {
+            const char* leaf = std::strrchr(target.s, '/');
+            mounts.push_back({[]{ return std::make_unique<fs::FsNativeSd>(true); },
+                (leaf && leaf[1]) ? (leaf + 1) : "microSD", target.toString(), {}});
+        }
     } else {
         App::Notify("This source cannot be shared over MTP"_i18n);
         return;
     }
 
-    if (sphaira::haze::MountFs(std::move(factory), name, base)) {
-        // a real microSD folder becomes *the* mount, so it also shows up over
+    if (sphaira::haze::MountFs(std::move(mounts))) {
+        // real microSD folders become *the* mounts, so they also show up over
         // FTP and HTTP. content / archive mounts are MTP-only (the other two
         // serve the card directly and cannot read a virtual fs).
         if (IsSd()) {
-            App::SetMountedFolder(GetMountTarget());
+            App::SetMountedFolders(targets);
         }
-        App::Notify("Mounted over MTP: "_i18n + name);
+        App::Notify("Mounted over MTP: "_i18n + haze::GetPinnedName());
     } else {
         App::Push<OptionBox>("Failed to start MTP!"_i18n, "OK"_i18n);
     }
@@ -892,13 +892,30 @@ void FsView::ShareCurrentFolder() {
         return (leaf && leaf[1]) ? (leaf + 1) : p.toString();
     };
 
-    // MTP names its own pinned storage (it can also hold a content / archive
-    // mount, which never becomes the global mount); FTP names its root device.
-    // HTTP has no name of its own -- it just lists the global mount.
-    const auto mounted = App::GetMountedFolder();
+    const auto join = [](const auto& parts, auto to_name) -> std::string {
+        std::string out;
+        for (const auto& p : parts) {
+            const auto name = to_name(p);
+            if (name.empty()) {
+                continue;
+            }
+            if (!out.empty()) {
+                out += ", ";
+            }
+            out += name;
+        }
+        return out;
+    };
+
+    // MTP names its own pinned storages (it can also hold a content / archive
+    // mount, which never becomes a global mount); FTP names its root devices.
+    // HTTP has no names of its own -- it just lists the global mounts.
+    const auto mounted = App::GetMountedFolders();
     const std::string mtp_on = haze::GetPinnedName();
-    const std::string ftp_on = ftpsrv::IsRunning() ? ftpsrv::GetFtpMountedName() : std::string{};
-    const std::string http_on = WebShareIsRunning() ? mount_name(mounted) : std::string{};
+    const std::string ftp_on = ftpsrv::IsRunning()
+        ? join(ftpsrv::GetFtpMountedNames(), [](const std::string& n){ return n; })
+        : std::string{};
+    const std::string http_on = WebShareIsRunning() ? join(mounted, mount_name) : std::string{};
 
     PopupList::Items items;
     std::vector<int> actions; // 0 = MTP, 1 = FTP, 2 = HTTP.
@@ -927,7 +944,7 @@ void FsView::ShareCurrentFolder() {
 
     // name the target in the title: "Mount" acts on the highlighted folder, and
     // the popup is the last chance to notice it is not the one you meant.
-    const auto title = "Mount over..."_i18n + " (" + mount_name(GetMountTarget()) + ")";
+    const auto title = "Mount over..."_i18n + " (" + join(GetMountTargets(), mount_name) + ")";
 
     auto popup = std::make_unique<PopupList>(title, items, [this, actions](std::optional<s64> op_index){
         if (!op_index || *op_index < 0 || *op_index >= (s64)actions.size()) {
@@ -953,7 +970,7 @@ void FsView::ShareCurrentOverFtp() {
         return;
     }
 
-    App::SetMountedFolder(GetMountTarget());
+    App::SetMountedFolders(GetMountTargets());
 
     if (!App::GetFtpEnable()) {
         App::SetFtpEnable(true);
@@ -973,7 +990,11 @@ void FsView::ShareCurrentOverFtp() {
     nifmGetCurrentIpAddress(&ip);
     if (ip) {
         char buf[128];
-        const auto mname = ftpsrv::GetFtpMountedName();
+        std::string mname;
+        for (const auto& n : ftpsrv::GetFtpMountedNames()) {
+            if (!mname.empty()) mname += ", ";
+            mname += n;
+        }
         if (!mname.empty()) {
             std::snprintf(buf, sizeof(buf), "ftp://%u.%u.%u.%u:%u (%s)", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, (unsigned)App::GetFtpPort(), mname.c_str());
         } else {
@@ -2076,10 +2097,10 @@ void FsView::DisplayOptions() {
     // the web root page lists next to the card, and what MTP pinned. leaving
     // only "Unmount MTP" here would strand the other two with no way back to a
     // plain card listing.
-    if (sphaira::haze::HasPinned() || !App::GetMountedFolder().empty()) {
+    if (sphaira::haze::HasPinned() || !App::GetMountedFolders().empty()) {
         options->Add<SidebarEntryCallback>("Unmount"_i18n, [](){
             sphaira::haze::UnmountPinned();
-            App::SetMountedFolder({});
+            App::SetMountedFolders({});
             App::Notify("Unmounted"_i18n);
         }, "Stop sharing the mounted folder over MTP, FTP and HTTP."_i18n);
     }

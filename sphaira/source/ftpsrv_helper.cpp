@@ -24,11 +24,19 @@ namespace {
 // own fsdev wrapper (fsdev_wrapTranslatePath) and never touches newlib, so a
 // device registered with AddDevice() shows up in the root listing and then fails
 // to open with ENODEV.
-std::string g_ftp_mounted_name{};
-std::string g_ftp_mounted_path{};
-// the same path in the form the fsdev wrapper wants (no leading slash). held
-// separately because the wrapper stores it as a bare pointer.
-std::string g_ftp_mounted_shortcut{};
+struct Mount {
+    std::string name;
+    std::string path;
+    // the same path in the form the fsdev wrapper wants (no leading slash).
+    // held because the wrapper keeps it as a bare pointer.
+    std::string shortcut;
+
+    bool operator==(const Mount& rhs) const {
+        return name == rhs.name && path == rhs.path;
+    }
+};
+
+std::vector<Mount> g_ftp_mounts{};
 
 // device names live in a char[32] (with the ':') on both sides of the vfs, so a
 // long folder name would be silently truncated into something that no longer
@@ -44,8 +52,8 @@ void UpdateFtpVisibleDevices() {
 #if ENABLE_NETWORK_INSTALL
     visible.push_back("install");
 #endif
-    if (!g_ftp_mounted_name.empty()) {
-        visible.push_back(g_ftp_mounted_name.c_str());
+    for (const auto& m : g_ftp_mounts) {
+        visible.push_back(m.name.c_str());
     }
     vfs_nx_set_visible_devices(visible.data(), visible.size());
 }
@@ -53,36 +61,38 @@ void UpdateFtpVisibleDevices() {
 // adds the mounted folder as its own root device. must run *after* vfs_nx_init:
 // that is what mounts the card (whose FsFileSystem the shortcut borrows) and
 // what hands g_device to the root listing.
-void MountFolderDevice() {
-    if (g_ftp_mounted_name.empty() || g_ftp_mounted_path.empty()) {
+void MountFolderDevices() {
+    if (g_ftp_mounts.empty()) {
         return;
     }
 
     auto* sdmc = fsdev_wrapGetDeviceFileSystem("sdmc");
     if (!sdmc) {
-        log_write("[FTP] cannot mount %s: no sdmc device\n", g_ftp_mounted_name.c_str());
+        log_write("[FTP] cannot mount folders: no sdmc device\n");
         return;
     }
 
-    // the shortcut is pasted into "/%s/%s" by fsdev_wrapTranslatePath(), so it
-    // is stored without its leading slash: "/games/roms" would resolve to
-    // "//games/roms/...", and a path starting with a double separator is the one
-    // shape worth not handing to fs.
-    g_ftp_mounted_shortcut = g_ftp_mounted_path;
-    while (!g_ftp_mounted_shortcut.empty() && g_ftp_mounted_shortcut.front() == '/') {
-        g_ftp_mounted_shortcut.erase(g_ftp_mounted_shortcut.begin());
-    }
+    for (auto& m : g_ftp_mounts) {
+        // the shortcut is pasted into "/%s/%s" by fsdev_wrapTranslatePath(), so
+        // it is stored without its leading slash: "/games/roms" would resolve to
+        // "//games/roms/...", and a path starting with a double separator is the
+        // one shape worth not handing to fs.
+        m.shortcut = m.path;
+        while (!m.shortcut.empty() && m.shortcut.front() == '/') {
+            m.shortcut.erase(m.shortcut.begin());
+        }
 
-    // own = false: the filesystem belongs to the "sdmc" entry, unmounting this
-    // alias must not close it. the shortcut is kept by pointer, hence the
-    // long-lived string.
-    if (fsdev_wrapMountDevice(g_ftp_mounted_name.c_str(), g_ftp_mounted_shortcut.c_str(), *sdmc, false)) {
-        log_write("[FTP] cannot mount %s -> %s\n", g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str());
-        return;
-    }
+        // own = false: the filesystem belongs to the "sdmc" entry, unmounting
+        // this alias must not close it. the shortcut is kept by pointer, hence
+        // the long-lived string.
+        if (fsdev_wrapMountDevice(m.name.c_str(), m.shortcut.c_str(), *sdmc, false)) {
+            log_write("[FTP] cannot mount %s -> %s\n", m.name.c_str(), m.path.c_str());
+            continue;
+        }
 
-    vfs_nx_add_device(g_ftp_mounted_name.c_str(), VFS_TYPE_FS);
-    log_write("[FTP] mounted %s: -> %s\n", g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str());
+        vfs_nx_add_device(m.name.c_str(), VFS_TYPE_FS);
+        log_write("[FTP] mounted %s: -> %s\n", m.name.c_str(), m.path.c_str());
+    }
 }
 
 #if ENABLE_NETWORK_INSTALL
@@ -609,7 +619,7 @@ bool Init() {
     vfs_nx_init(NULL, mount_devices, save_writable, mount_bis, false);
 #endif
 
-    MountFolderDevice();
+    MountFolderDevices();
 
     Result rc;
     if (R_FAILED(rc = threadCreate(&g_thread, loop, nullptr, nullptr, 1024*16, THREAD_PRIO, THREAD_CORE))) {
@@ -693,18 +703,18 @@ const char* GetPass() {
 
 namespace {
 
-// applies a new mount to a server that may already be up. the device list is
-// built once, inside vfs_nx_init(), and ftpsrv offers no way to add or drop a
-// root device afterwards -- so the server is bounced instead of poked at. this
-// also keeps g_ftp_mounted_path (handed to the fsdev wrapper as a bare pointer)
-// from being reassigned while a mount still references it.
-void ApplyMount(std::string name, std::string path) {
+// applies a new set of mounts to a server that may already be up. the device
+// list is built once, inside vfs_nx_init(), and ftpsrv offers no way to add or
+// drop a root device afterwards -- so the server is bounced instead of poked at.
+// this also keeps Mount::shortcut (handed to the fsdev wrapper as a bare
+// pointer) from being reassigned while a mount still references it.
+void ApplyMounts(std::vector<Mount> mounts) {
     {
         SCOPED_MUTEX(&g_mutex);
         // bouncing the server drops every client connection, so never do it for
-        // a mount that changes nothing -- re-selecting the same folder (or the
-        // card root, which is not a mount at all) used to kick the user off.
-        if (g_ftp_mounted_name == name && g_ftp_mounted_path == path) {
+        // a change that is not one -- re-selecting the same folders (or the card
+        // root, which is not a mount at all) used to kick the user off.
+        if (g_ftp_mounts == mounts) {
             return;
         }
     }
@@ -716,8 +726,7 @@ void ApplyMount(std::string name, std::string path) {
 
     {
         SCOPED_MUTEX(&g_mutex);
-        g_ftp_mounted_name = std::move(name);
-        g_ftp_mounted_path = std::move(path);
+        g_ftp_mounts = std::move(mounts);
     }
 
     if (was_running) {
@@ -725,21 +734,8 @@ void ApplyMount(std::string name, std::string path) {
     }
 }
 
-} // namespace
-
-void SetFtpMountedFolder(const std::string& path) {
-    // the card root is what ftp already serves as "sdmc:"; mounting it again
-    // would just be a duplicate device.
-    if (path.empty() || path == "/") {
-        ClearFtpMountedFolder();
-        return;
-    }
-
-    std::string clean = path;
-    while (clean.length() > 1 && clean.back() == '/') {
-        clean.pop_back();
-    }
-
+// device name for a mounted folder: its leaf, made safe and unique.
+auto MakeMountName(const std::string& clean, const std::vector<Mount>& taken) -> std::string {
     const char* leaf = std::strrchr(clean.c_str(), '/');
     std::string name = (leaf && leaf[1]) ? (leaf + 1) : "mounted";
 
@@ -751,22 +747,66 @@ void SetFtpMountedFolder(const std::string& path) {
     // format string, so a folder called "100%" would read off the stack.
     std::replace(name.begin(), name.end(), '%', '_');
 
-    // a device name that collides with one of the built-ins would shadow it in
-    // the root listing (or be shadowed by it, depending on lookup order).
+    // a device name that collides with a built-in would shadow it in the root
+    // listing (or be shadowed by it, depending on lookup order).
     if (name == "sd" || name == "sdmc" || name == "install") {
         name += "_folder";
     }
 
-    ApplyMount(std::move(name), std::move(clean));
+    // two selected folders can share a leaf ("/a/roms" and "/b/roms"); the
+    // second gets a suffix so both are reachable.
+    const auto is_taken = [&taken](const std::string& n) {
+        return std::ranges::any_of(taken, [&n](const Mount& m) { return m.name == n; });
+    };
+
+    if (is_taken(name)) {
+        const auto stem = name;
+        for (int i = 2; ; i++) {
+            name = stem + "_" + std::to_string(i);
+            if (!is_taken(name)) {
+                break;
+            }
+        }
+    }
+
+    return name;
 }
 
-void ClearFtpMountedFolder() {
-    ApplyMount({}, {});
+} // namespace
+
+void SetFtpMountedFolders(const std::vector<std::string>& paths) {
+    std::vector<Mount> mounts;
+
+    for (const auto& path : paths) {
+        // the card root is what ftp already serves as "sdmc:"; mounting it again
+        // would just be a duplicate device.
+        if (path.empty() || path == "/") {
+            continue;
+        }
+
+        std::string clean = path;
+        while (clean.length() > 1 && clean.back() == '/') {
+            clean.pop_back();
+        }
+
+        mounts.push_back(Mount{MakeMountName(clean, mounts), std::move(clean), {}});
+    }
+
+    ApplyMounts(std::move(mounts));
 }
 
-std::string GetFtpMountedName() {
+void ClearFtpMountedFolders() {
+    ApplyMounts({});
+}
+
+std::vector<std::string> GetFtpMountedNames() {
     SCOPED_MUTEX(&g_mutex);
-    return g_ftp_mounted_name;
+    std::vector<std::string> out;
+    out.reserve(g_ftp_mounts.size());
+    for (const auto& m : g_ftp_mounts) {
+        out.push_back(m.name);
+    }
+    return out;
 }
 
 } // namespace sphaira::ftpsrv

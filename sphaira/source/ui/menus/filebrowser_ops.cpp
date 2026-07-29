@@ -387,11 +387,11 @@ void FsView::ShareFolder() {
         return;
     }
 
-    const auto target = GetMountTarget();
-    App::SetMountedFolder(target);
+    const auto targets = GetMountTargets();
+    App::SetMountedFolders(targets);
 
     WebShareResult result;
-    if (const auto rc = WebShareFolder(target, result); R_FAILED(rc)) {
+    if (const auto rc = WebShareFolder(targets.front(), result); R_FAILED(rc)) {
         App::PushErrorBox(rc, "Failed to start folder server"_i18n);
         return;
     }

@@ -67,26 +67,37 @@ u16 g_share_port{};
 std::atomic_bool g_transfer_busy{false};
 
 
-// the mounted folder, canonicalised, or empty when nothing is mounted. read
-// fresh on every request: the mount belongs to the app (App::SetMountedFolder),
-// not to this server, so mounting from the file browser takes effect on a server
-// that is already running -- including one started from Tools, which serves the
-// whole card and never sets a mount of its own.
+// the mounted folders, canonicalised. read fresh on every request: the mounts
+// belong to the app (App::SetMountedFolders), not to this server, so mounting
+// from the file browser takes effect on a server that is already running --
+// including one started from Tools, which serves the whole card and never sets
+// a mount of its own.
 //
 // the card root is not a mount: it is what the server already serves, so
 // mounting it would only produce a second way to reach the same listing.
+auto GetMountRoots() -> std::vector<std::string> {
+    std::vector<std::string> out;
+    for (const auto& p : App::GetMountedFolders()) {
+        const auto raw = p.toString();
+        if (raw.empty()) {
+            continue;
+        }
+
+        auto clean = CanonicalizeAbsolutePath(raw);
+        if (clean == "/") {
+            continue;
+        }
+
+        out.push_back(std::move(clean));
+    }
+    return out;
+}
+
+// the first mount, or empty. only for the one spot that needs a single default:
+// the upload target when the request names no folder.
 auto GetMountRoot() -> std::string {
-    const auto raw = App::GetMountedFolder().toString();
-    if (raw.empty()) {
-        return {};
-    }
-
-    auto clean = CanonicalizeAbsolutePath(raw);
-    if (clean == "/") {
-        return {};
-    }
-
-    return clean;
+    const auto roots = GetMountRoots();
+    return roots.empty() ? std::string{} : roots.front();
 }
 
 struct RootSource {
@@ -102,7 +113,7 @@ struct RootSource {
 auto GetRootSources() -> std::vector<RootSource> {
     std::vector<RootSource> out;
 
-    if (const auto mount = GetMountRoot(); !mount.empty()) {
+    for (const auto& mount : GetMountRoots()) {
         const char* leaf = std::strrchr(mount.c_str(), '/');
         out.push_back({mount, (leaf && leaf[1]) ? leaf + 1 : "Mounted Folder", "Mounted Folder (" + mount + ")"});
     }
@@ -1372,7 +1383,7 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     R_UNLESS(ip != 0, Result_FsNotActive);
 
     // note: this only brings the server up (and is a no-op if it already is).
-    // what the root page shows comes from App::GetMountedFolder(), so stopping
+    // what the root page shows comes from App::GetMountedFolders(), so stopping
     // and starting the server never disturbs a mount, and a mount made while the
     // server runs takes effect on the next request.
     R_TRY(StartShareServer());

@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace sphaira::ftpsrv {
 
@@ -21,8 +22,10 @@ bool IsAnon();
 const char* GetUser();
 const char* GetPass();
 
-void SetFtpMountedFolder(const std::string& path);
-void ClearFtpMountedFolder();
-std::string GetFtpMountedName();
+// the folders exposed as extra root devices next to "sdmc:" and "install:".
+// replaces the whole set; the card root is ignored (it is already "sdmc:").
+void SetFtpMountedFolders(const std::vector<std::string>& paths);
+void ClearFtpMountedFolders();
+std::vector<std::string> GetFtpMountedNames();
 
 } // namespace sphaira::ftpsrv

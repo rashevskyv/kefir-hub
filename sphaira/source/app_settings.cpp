@@ -614,27 +614,36 @@ void App::RemoveMtpFolder(const std::string& path) {
 // state, not a setting -- see the declaration in app.hpp. read by the web
 // server's worker threads on every request, hence the lock: the path is a plain
 // char buffer, so an unguarded read racing a mount would return half of each.
-static fs::FsPath g_mounted_folder{};
+static std::vector<fs::FsPath> g_mounted_folders{};
 static Mutex g_mounted_folder_mutex{};
 
-auto App::GetMountedFolder() -> fs::FsPath {
+auto App::GetMountedFolders() -> std::vector<fs::FsPath> {
     SCOPED_MUTEX(&g_mounted_folder_mutex);
-    return g_mounted_folder;
+    return g_mounted_folders;
 }
 
-void App::SetMountedFolder(const fs::FsPath& path) {
+void App::SetMountedFolders(std::vector<fs::FsPath> paths) {
+    std::vector<std::string> as_strings;
+    as_strings.reserve(paths.size());
+    for (const auto& p : paths) {
+        as_strings.push_back(p.toString());
+        log_write("[MOUNT] mounted folder: '%s'\n", p.s);
+    }
+
+    if (as_strings.empty()) {
+        log_write("[MOUNT] nothing mounted\n");
+    }
+
     {
         SCOPED_MUTEX(&g_mounted_folder_mutex);
-        g_mounted_folder = path;
+        g_mounted_folders = std::move(paths);
     }
 
     // fan out to whichever transports care. ftp rebuilds its root device list
     // from this (bouncing the server if it is already up); the web server reads
     // it fresh on every request, so it needs no poking. mounting over one of
     // them therefore shows up on the others too, which is the whole point.
-    ftpsrv::SetFtpMountedFolder(path.toString());
-
-    log_write("[MOUNT] mounted folder is now '%s'\n", path.s);
+    ftpsrv::SetFtpMountedFolders(as_strings);
 }
 
 // restarts the FTP server if it is running, so a config change takes effect.

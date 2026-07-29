@@ -320,24 +320,33 @@ private:
     }
 
     // what "Mount" acts on:
-    //   a selected folder   -- an explicit pick beats where the cursor happens to sit
+    //   selected folders     -- every one of them, an explicit pick beats the cursor
     //   ".." under the cursor -- the folder being viewed
-    //   any other folder    -- that folder
+    //   any other folder     -- that folder
     // a file under the cursor has nothing to mount, so it falls back to the
-    // folder being viewed.
-    auto GetMountTarget() const -> fs::FsPath {
+    // folder being viewed. selected *files* are ignored: there is nothing to
+    // share about a file that sharing its folder does not already cover.
+    auto GetMountTargets() const -> std::vector<fs::FsPath> {
+        std::vector<fs::FsPath> out;
+
         for (const auto& e : m_entries) {
             if (e.IsSelected() && e.IsDir()) {
-                return GetNewPath(e);
+                out.emplace_back(GetNewPath(e));
             }
+        }
+
+        if (!out.empty()) {
+            return out;
         }
 
         if (m_index >= 0 && m_index < (s64)m_entries_current.size()
             && !IsParentEntry(m_index) && GetEntry().IsDir()) {
-            return GetNewPath(m_index);
+            out.emplace_back(GetNewPath(m_index));
+        } else {
+            out.emplace_back(m_path);
         }
 
-        return m_path;
+        return out;
     }
 
     auto IsReadOnly(const fs::FsPath& path) const -> bool;
