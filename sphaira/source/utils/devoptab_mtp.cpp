@@ -418,16 +418,8 @@ bool RecoverLinkLocked(const char* why) {
     return true;
 }
 
-// Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
-// be <= XFER_BUF_SIZE; for IN transfers it also has to be at least as large as
-// what the device is about to send, otherwise the controller reports babble.
-Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
-    if (out_transferred) {
-        *out_transferred = 0;
-    }
-
-    R_UNLESS(size && size <= XFER_BUF_SIZE, ResultProtocol);
-
+// One attempt at posting g_xfer_buf. See PostBuffer for the retry around it.
+Result PostBufferOnce(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
     u32 xfer_id{};
     if (const auto rc = usbHsEpPostBufferAsync(ep, g_xfer_buf, size, 0, &xfer_id); R_FAILED(rc)) {
         log_write("[MTP_HOST] post %u bytes failed: 0x%X\n", size, rc);
@@ -467,6 +459,35 @@ Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
 
     log_write("[MTP_HOST] no xfer report for id %u (got %u)\n", xfer_id, count);
     R_THROW(ResultTransport);
+}
+
+// Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
+// be <= XFER_BUF_SIZE; for IN transfers it also has to be at least as large as
+// what the device is about to send, otherwise the controller reports babble.
+//
+// A failed transfer clears the endpoint's stall and is tried once more right
+// here, which is what libusbhsfs does and what every log so far has been
+// missing: the caller's only recovery was to drop the session and
+// re-enumerate, so a single stalled post cost a full reconnect plus a root
+// re-listing -- seconds of frozen ui for something the bus recovers from in
+// about a millisecond.
+Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
+    if (out_transferred) {
+        *out_transferred = 0;
+    }
+
+    R_UNLESS(size && size <= XFER_BUF_SIZE, ResultProtocol);
+
+    const auto rc = PostBufferOnce(ep, size, out_transferred);
+    if (R_SUCCEEDED(rc)) {
+        return rc;
+    }
+
+    if (!IsEndpointHaltedLocked(ep) || R_FAILED(ClearEndpointHaltLocked(ep))) {
+        R_THROW(rc);
+    }
+
+    return PostBufferOnce(ep, size, out_transferred);
 }
 
 // -------------------------------------------------------------------------
@@ -1412,10 +1433,11 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
             // RefreshFileLocked re-resolves the handle -- the old one
             // died with the session.
             // back off between attempts: a responder that just dropped off
-            // the bus needs time to enumerate again, and the 14:16 log ends
-            // with "no MTP interface on the bus" 100 ms after it vanished.
+            // the bus needs time to enumerate again. Kept short because this
+            // runs with the mount's lock held -- the file browser behind the
+            // install box blocks on it, which is the ui freeze the user sees.
             if (retries < 3) {
-                svcSleepThread((retries + 1) * 400'000'000ULL);
+                svcSleepThread((retries + 1) * 150'000'000ULL);
                 retries++;
                 if (EnsureSessionLocked() && RefreshFileLocked(file)) {
                     continue;
@@ -1489,11 +1511,15 @@ Result OpenSessionOnInterface(const UsbHsInterface& iface) {
         R_THROW(ResultProtocol);
     }
 
-    // maxXferSize has to cover the biggest post we will ever make, otherwise
-    // usb:hs rejects the transfer.
-    const auto rc_out = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_out, 1, XFER_BUF_SIZE,
+    // maxXferSize is what usb:hs reserves per urb, not a ceiling on a post:
+    // libusbhsfs passes wMaxPacketSize here and then posts 8 MiB buffers
+    // through it all day. Reserving a whole MiB per endpoint instead was this
+    // code's one unexplained deviation from the driver that is known to work
+    // on this hardware -- and usb:hs is shared with libusbhsfs, which this app
+    // also has running.
+    const auto rc_out = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_out, 1, out_desc->wMaxPacketSize,
         const_cast<usb_endpoint_descriptor*>(out_desc));
-    const auto rc_in = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_in, 1, XFER_BUF_SIZE,
+    const auto rc_in = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_in, 1, in_desc->wMaxPacketSize,
         const_cast<usb_endpoint_descriptor*>(in_desc));
 
     if (R_FAILED(rc_out) || R_FAILED(rc_in)) {
