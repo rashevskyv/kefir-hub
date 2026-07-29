@@ -98,11 +98,6 @@ alignas(XFER_ALIGN) u8 g_ctrl_buf[XFER_ALIGN];
 
 // libnx does not name this one: CLEAR_FEATURE(ENDPOINT_HALT) takes feature 0.
 constexpr u16 USB_FEATURE_ENDPOINT_HALT = 0;
-// PIMA 15740 D.5.1 class requests on the control pipe.
-constexpr u8 MTP_REQ_CANCEL = 0x64;
-constexpr u8 MTP_REQ_GET_DEVICE_STATUS = 0x67;
-constexpr u16 MTP_CANCELLATION_CODE = 0x4001;
-constexpr u16 RESP_DEVICE_BUSY = 0x2019;
 
 // a response container is at most 12 + 5*4 bytes; one page covers it.
 constexpr u32 RESPONSE_POST_SIZE = XFER_ALIGN;
@@ -144,6 +139,17 @@ struct Session {
     // were fetched under an older generation must drop them: the phone
     // re-enumerated and the old object handles may no longer exist.
     u32 generation{};
+
+    // tick of the last link recovery. A second recovery with no successful
+    // transaction in between means clearing halts is not getting us anywhere,
+    // and we re-enumerate rather than retry into a wedged pipe forever.
+    u64 last_recover_tick{};
+
+    // where the previous read ended. A caller that picks up exactly there is
+    // streaming and earns a long data phase; one that jumps elsewhere gets a
+    // request sized to what it asked for, so nothing has to be thrown away.
+    u32 last_read_handle{};
+    u64 last_read_end{};
 };
 
 // defined in the session management section below; usable from the devoptab
@@ -171,7 +177,6 @@ struct ReadStream {
     bool active{};
     bool response_done{};   // closing response consumed (carry may remain)
     u32 handle{};
-    u32 transaction_id{};   // needed to cancel the transfer on the control pipe
     u64 next_offset{};      // file offset of the next byte handed to a caller
     u64 remaining{};        // payload bytes still on the bus
     // pulled off the bus past the caller's request (posts are packet sized);
@@ -364,72 +369,24 @@ Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
         ep->desc.bEndpointAddress, 0, nullptr, &transferred);
 }
 
-// After a Cancel the device reports Device_Busy on the control pipe while its
-// side of the abort is in flight. This wait is a bounded courtesy, not a
-// gate: the tested phone keeps saying busy until the *next command* arrives
-// (its f_mtp only clears the state when the daemon reads a new command), so
-// lingering busy is normal. Treating it as fatal stalled every install for
-// 20 s and then killed a perfectly good session.
-void AwaitDeviceIdleLocked() {
-    struct Status {
-        u16 length;
-        u16 code;
-    } NX_PACKED;
-
-    const auto start = armGetSystemTick();
-    do {
-        u32 transferred{};
-        if (R_FAILED(usbHsIfCtrlXfer(&g_session.iface,
-            USB_ENDPOINT_IN | USB_REQUEST_TYPE_CLASS | USB_RECIPIENT_INTERFACE,
-            MTP_REQ_GET_DEVICE_STATUS, 0, g_session.iface.inf.inf.interface_desc.bInterfaceNumber,
-            sizeof(Status), g_ctrl_buf, &transferred))) {
-            return;
-        }
-
-        Status status{};
-        std::memcpy(&status, g_ctrl_buf, sizeof(status));
-        if (transferred < sizeof(status) || status.code != RESP_DEVICE_BUSY) {
-            return;
-        }
-        svcSleepThread(20'000'000); // 20 ms
-    } while (MsSince(start) < 300);
-}
-
-// Tells the responder to drop the in-flight transaction, so both sides agree
-// the bus is idle again.
-Result CancelTransactionLocked(u32 transaction_id) {
-    struct Payload {
-        u16 code;
-        u32 transaction_id;
-    } NX_PACKED;
-
-    const Payload payload{MTP_CANCELLATION_CODE, transaction_id};
-    std::memcpy(g_ctrl_buf, &payload, sizeof(payload));
-
-    u32 transferred{};
-    return usbHsIfCtrlXfer(&g_session.iface,
-        USB_ENDPOINT_OUT | USB_REQUEST_TYPE_CLASS | USB_RECIPIENT_INTERFACE,
-        MTP_REQ_CANCEL, 0, g_session.iface.inf.inf.interface_desc.bInterfaceNumber,
-        sizeof(payload), g_ctrl_buf, &transferred);
-}
-
-// A phone stalls its bulk endpoint whenever it wants out of a transfer -- its
-// MTP daemon hits an internal timeout when we throttle the data phase to
-// whatever the nand can absorb. That is a normal, recoverable USB condition:
-// cancel the transaction, clear the halts, carry on. Tearing the interface
-// down instead (what this used to do) made the phone drop off the bus
-// entirely, which is why every install died a second or two in.
-bool RecoverLinkLocked(u32 transaction_id, const char* why) {
+// Clears a stalled bulk pipe after a transfer error, the standard USB way
+// (this is what libusbhsfs does too). There is deliberately no MTP Cancel
+// Request here: on the tested phone the class-specific cancel wedges the bulk
+// out pipe for good -- every command after one returned 2140-0301 and no
+// amount of halt clearing brought it back. Reconnecting does work, so a
+// recovery that does not take escalates to that instead of retrying forever.
+bool RecoverLinkLocked(const char* why) {
     if (!g_session.connected) {
         return false;
     }
 
-    log_write("[MTP_HOST] recovering link: %s\n", why);
-
-    if (transaction_id) {
-        CancelTransactionLocked(transaction_id);
-        AwaitDeviceIdleLocked();
+    if (g_session.last_recover_tick > g_session.last_ok_tick) {
+        CloseUsbLocked("link did not come back after recovery");
+        return false;
     }
+    g_session.last_recover_tick = armGetSystemTick();
+
+    log_write("[MTP_HOST] recovering link: %s\n", why);
 
     bool ok = true;
     for (auto* ep : {&g_session.ep_in, &g_session.ep_out}) {
@@ -635,7 +592,7 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
 
     u32 transaction_id{};
     if (const auto rc = SendCommand(op, params, &transaction_id); R_FAILED(rc)) {
-        RecoverLinkLocked(transaction_id, "command phase failed");
+        RecoverLinkLocked("command phase failed");
         R_THROW(rc);
     }
 
@@ -645,24 +602,24 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
     // has no data or failed outright, the response straight away. Post the
     // full buffer since the size is not known until the header arrives.
     if (const auto rc = ReceiveContainer(XFER_BUF_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-        RecoverLinkLocked(transaction_id, "data phase failed");
+        RecoverLinkLocked("data phase failed");
         R_THROW(rc);
     }
 
     if (hdr.type == CONTAINER_DATA) {
         if (const auto rc = ReceiveDataPhase(hdr, transferred, sink); R_FAILED(rc)) {
-            RecoverLinkLocked(transaction_id, "truncated data phase");
+            RecoverLinkLocked("truncated data phase");
             R_THROW(rc);
         }
 
         if (const auto rc = ReceiveContainer(RESPONSE_POST_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-            RecoverLinkLocked(transaction_id, "response phase failed");
+            RecoverLinkLocked("response phase failed");
             R_THROW(rc);
         }
     }
 
     if (hdr.type != CONTAINER_RESPONSE) {
-        RecoverLinkLocked(transaction_id, "unexpected container type");
+        RecoverLinkLocked("unexpected container type");
         R_THROW(ResultProtocol);
     }
 
@@ -731,11 +688,11 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
 
         u32 transferred{};
         if (const auto rc = PostBuffer(&g_session.ep_in, post, &transferred); R_FAILED(rc)) {
-            RecoverLinkLocked(g_stream.transaction_id, "stream pull failed");
+            RecoverLinkLocked("stream pull failed");
             R_THROW(rc);
         }
         if (!transferred) {
-            RecoverLinkLocked(g_stream.transaction_id, "stream pull returned nothing");
+            RecoverLinkLocked("stream pull returned nothing");
             R_THROW(ResultTransport);
         }
 
@@ -767,7 +724,7 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
     if (!g_stream.remaining && !g_stream.response_done) {
         g_stream.response_done = true;
         if (const auto rc = FinishStreamLocked(); R_FAILED(rc)) {
-            RecoverLinkLocked(g_stream.transaction_id, "stream response failed");
+            RecoverLinkLocked("stream response failed");
             R_THROW(rc);
         }
     }
@@ -779,20 +736,18 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
     R_SUCCEED();
 }
 
-// Retires the active stream before another command may go out. Cheap when it
-// already drained; a small remainder is pulled and discarded; a large one is
-// cancelled on the control pipe rather than dragged off the bus.
+// Retires the active stream before another command may go out. The leftover
+// payload is always read off the bus and dropped -- never cancelled. A cancel
+// is the one operation this phone does not survive, and reading is something
+// the link demonstrably does at ~20 MB/s, so the wait is bounded by the
+// stream cap. StartStreamLocked keeps that leftover small by not requesting
+// more than a caller has shown it will use.
 void AbortStreamLocked() {
     if (!g_stream.active) {
         return;
     }
 
     if (!g_stream.response_done) {
-        if (g_stream.remaining > STREAM_DRAIN_LIMIT) {
-            RecoverLinkLocked(g_stream.transaction_id, "cancelling large stream");
-            g_stream = {};
-            return;
-        }
         g_stream.carry_len = 0;
         u64 got{};
         if (R_FAILED(PullStreamLocked(nullptr, g_stream.remaining, &got))) {
@@ -803,22 +758,25 @@ void AbortStreamLocked() {
     g_stream = {};
 }
 
-// Opens a data phase at `offset`. Small reads (header and metadata parsing
-// seek around, then never come back) get an exactly sized stream that always
-// completes without an abort; large sequential readers stream the rest of the
-// file in a single transaction.
+// Opens a data phase at `offset`. A caller resuming exactly where the last
+// read stopped is streaming a file and gets a long data phase; anyone landing
+// somewhere else (yati seeks to each nca header, reads a little, moves on)
+// gets exactly what it asked for, because whatever is left over has to be
+// pulled off the bus before the next command can go out.
 Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     R_UNLESS(g_session.connected, ResultNoSession);
 
+    const bool sequential = handle == g_session.last_read_handle &&
+        offset == g_session.last_read_end;
+
     u64 req = file_size - offset;
-    if (want < 1024 * 512) {
+    if (!sequential) {
         req = std::min<u64>(req, std::max<u64>(want, 1024 * 64));
     }
     // Cap the transaction: the tested phone (vid 0x22d9) aborts any data
     // phase exactly 20 MiB in -- one run died at file offset 20 MiB with an
     // unbounded request, the next at 64+20 MiB with a 32 MiB one. 16 MiB
-    // stays under that and a completed phase needs no cancel handshake; the
-    // extra command round trip per 16 MiB is noise.
+    // stays under that, and it also bounds how long an abort spends draining.
     req = std::min<u64>(req, 16 * 1024 * 1024);
 
     u16 op = OP_GET_PARTIAL_OBJECT_64;
@@ -837,7 +795,7 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
 
     u32 transaction_id{};
     if (const auto rc = SendCommand(op, {params, param_count}, &transaction_id); R_FAILED(rc)) {
-        RecoverLinkLocked(transaction_id, "stream command failed");
+        RecoverLinkLocked("stream command failed");
         R_THROW(rc);
     }
 
@@ -846,7 +804,7 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     ContainerHeader hdr{};
     u32 transferred{};
     if (const auto rc = ReceiveContainer(512, &hdr, &transferred); R_FAILED(rc)) {
-        RecoverLinkLocked(transaction_id, "stream data phase failed");
+        RecoverLinkLocked("stream data phase failed");
         R_THROW(rc);
     }
 
@@ -856,14 +814,13 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
         R_THROW(ResultMtpFailed);
     }
     if (hdr.type != CONTAINER_DATA || hdr.length < sizeof(hdr)) {
-        RecoverLinkLocked(transaction_id, "stream got bad container");
+        RecoverLinkLocked("stream got bad container");
         R_THROW(ResultProtocol);
     }
 
     g_stream.active = true;
     g_stream.response_done = false;
     g_stream.handle = handle;
-    g_stream.transaction_id = transaction_id;
     g_stream.next_offset = offset;
     g_stream.remaining = hdr.length - sizeof(hdr); // device may grant less than req
     g_stream.carry_off = 0;
@@ -1456,6 +1413,8 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     file->offset += done;
+    g_session.last_read_handle = file->object_handle;
+    g_session.last_read_end = file->offset;
     return static_cast<ssize_t>(done);
 }
 
