@@ -699,6 +699,16 @@ namespace {
 // also keeps g_ftp_mounted_path (handed to the fsdev wrapper as a bare pointer)
 // from being reassigned while a mount still references it.
 void ApplyMount(std::string name, std::string path) {
+    {
+        SCOPED_MUTEX(&g_mutex);
+        // bouncing the server drops every client connection, so never do it for
+        // a mount that changes nothing -- re-selecting the same folder (or the
+        // card root, which is not a mount at all) used to kick the user off.
+        if (g_ftp_mounted_name == name && g_ftp_mounted_path == path) {
+            return;
+        }
+    }
+
     const bool was_running = IsRunning();
     if (was_running) {
         Exit();

@@ -309,6 +309,16 @@ private:
         return m_fs_entry.type == FsType::Sd;
     }
 
+    // what "Mount" acts on: the highlighted folder if one is highlighted, else
+    // the folder being viewed. picking "config" in the listing and getting the
+    // whole card shared is not what anyone means by mounting it.
+    auto GetMountTarget() const -> fs::FsPath {
+        if (m_index < m_entries_current.size() && GetEntry().IsDir()) {
+            return GetNewPath(m_index);
+        }
+        return m_path;
+    }
+
     auto IsReadOnly(const fs::FsPath& path) const -> bool;
     auto AnySelectedReadOnly() const -> bool;
 

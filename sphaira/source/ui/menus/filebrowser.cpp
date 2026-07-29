@@ -855,9 +855,10 @@ void FsView::MountCurrentOverMtp() {
         factory = [zip_path]{ return std::make_unique<fs::FsZip>(zip_path); };
         name = std::string(e.name) + " (archive)";
     } else if (IsSd()) {
+        const auto target = GetMountTarget();
         factory = []{ return std::make_unique<fs::FsNativeSd>(true); };
-        base = std::string(m_path.toString());
-        const char* leaf = std::strrchr(m_path.s, '/');
+        base = target.toString();
+        const char* leaf = std::strrchr(target.s, '/');
         name = (leaf && leaf[1]) ? (leaf + 1) : "microSD";
     } else {
         App::Notify("This source cannot be shared over MTP"_i18n);
@@ -869,7 +870,7 @@ void FsView::MountCurrentOverMtp() {
         // FTP and HTTP. content / archive mounts are MTP-only (the other two
         // serve the card directly and cannot read a virtual fs).
         if (IsSd()) {
-            App::SetMountedFolder(m_path);
+            App::SetMountedFolder(GetMountTarget());
         }
         App::Notify("Mounted over MTP: "_i18n + name);
     } else {
@@ -929,7 +930,11 @@ void FsView::ShareCurrentFolder() {
         return;
     }
 
-    auto popup = std::make_unique<PopupList>("Mount over..."_i18n, items, [this, actions](std::optional<s64> op_index){
+    // name the target in the title: "Mount" acts on the highlighted folder, and
+    // the popup is the last chance to notice it is not the one you meant.
+    const auto title = "Mount over..."_i18n + " (" + mount_name(GetMountTarget()) + ")";
+
+    auto popup = std::make_unique<PopupList>(title, items, [this, actions](std::optional<s64> op_index){
         if (!op_index || *op_index < 0 || *op_index >= (s64)actions.size()) {
             return;
         }
@@ -953,7 +958,7 @@ void FsView::ShareCurrentOverFtp() {
         return;
     }
 
-    App::SetMountedFolder(m_path);
+    App::SetMountedFolder(GetMountTarget());
 
     if (!App::GetFtpEnable()) {
         App::SetFtpEnable(true);
@@ -2012,7 +2017,7 @@ void FsView::DisplayOptions() {
     if (!is_root && (IsSd() || m_fs_entry.type == FsType::Content || m_fs_entry.type == FsType::Archive)) {
         options->Add<SidebarEntryCallback>("Mount"_i18n, [this](){
             ShareCurrentFolder();
-        }, "Expose this folder to a PC over MTP, FTP or HTTP."_i18n);
+        }, "Expose the selected folder to a PC over MTP, FTP or HTTP."_i18n);
     }
     // one entry for the one mount: it is what FTP exposes as a root device, what
     // the web root page lists next to the card, and what MTP pinned. leaving
