@@ -93,6 +93,15 @@ constexpr u32 XFER_BUF_SIZE = 0x100000;
 constexpr u32 XFER_ALIGN    = 0x1000;
 alignas(XFER_ALIGN) u8 g_xfer_buf[XFER_BUF_SIZE];
 
+// control transfers want their own 0x1000-aligned buffer.
+alignas(XFER_ALIGN) u8 g_ctrl_buf[XFER_ALIGN];
+
+// libnx does not name this one: CLEAR_FEATURE(ENDPOINT_HALT) takes feature 0.
+constexpr u16 USB_FEATURE_ENDPOINT_HALT = 0;
+// PIMA 15740 D.5.1 class requests on the control pipe.
+constexpr u8 MTP_REQ_CANCEL = 0x64;
+constexpr u16 MTP_CANCELLATION_CODE = 0x4001;
+
 // a response container is at most 12 + 5*4 bytes; one page covers it.
 constexpr u32 RESPONSE_POST_SIZE = XFER_ALIGN;
 
@@ -160,6 +169,7 @@ struct ReadStream {
     bool active{};
     bool response_done{};   // closing response consumed (carry may remain)
     u32 handle{};
+    u32 transaction_id{};   // needed to cancel the transfer on the control pipe
     u64 next_offset{};      // file offset of the next byte handed to a caller
     u64 remaining{};        // payload bytes still on the bus
     // pulled off the bus past the caller's request (posts are packet sized);
@@ -327,6 +337,80 @@ void CloseUsbLocked(const char* why) {
     g_session.has_partial64 = false;
     g_session.has_prop_value = false;
     g_stream = {};
+}
+
+bool IsEndpointHaltedLocked(UsbHsClientEpSession* ep) {
+    u32 transferred{};
+    const auto rc = usbHsIfCtrlXfer(&g_session.iface,
+        USB_ENDPOINT_IN | USB_REQUEST_TYPE_STANDARD | USB_RECIPIENT_ENDPOINT,
+        USB_REQUEST_GET_STATUS, 0, ep->desc.bEndpointAddress,
+        sizeof(u16), g_ctrl_buf, &transferred);
+    if (R_FAILED(rc)) {
+        return false;
+    }
+
+    u16 status{};
+    std::memcpy(&status, g_ctrl_buf, sizeof(status));
+    return status & 1;
+}
+
+Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
+    u32 transferred{};
+    return usbHsIfCtrlXfer(&g_session.iface,
+        USB_ENDPOINT_OUT | USB_REQUEST_TYPE_STANDARD | USB_RECIPIENT_ENDPOINT,
+        USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT,
+        ep->desc.bEndpointAddress, 0, nullptr, &transferred);
+}
+
+// Tells the responder to drop the in-flight transaction, so both sides agree
+// the bus is idle again.
+Result CancelTransactionLocked(u32 transaction_id) {
+    struct Payload {
+        u16 code;
+        u32 transaction_id;
+    } NX_PACKED;
+
+    const Payload payload{MTP_CANCELLATION_CODE, transaction_id};
+    std::memcpy(g_ctrl_buf, &payload, sizeof(payload));
+
+    u32 transferred{};
+    return usbHsIfCtrlXfer(&g_session.iface,
+        USB_ENDPOINT_OUT | USB_REQUEST_TYPE_CLASS | USB_RECIPIENT_INTERFACE,
+        MTP_REQ_CANCEL, 0, g_session.iface.inf.inf.interface_desc.bInterfaceNumber,
+        sizeof(payload), g_ctrl_buf, &transferred);
+}
+
+// A phone stalls its bulk endpoint whenever it wants out of a transfer -- its
+// MTP daemon hits an internal timeout when we throttle the data phase to
+// whatever the nand can absorb. That is a normal, recoverable USB condition:
+// cancel the transaction, clear the halts, carry on. Tearing the interface
+// down instead (what this used to do) made the phone drop off the bus
+// entirely, which is why every install died a second or two in.
+bool RecoverLinkLocked(u32 transaction_id, const char* why) {
+    if (!g_session.connected) {
+        return false;
+    }
+
+    log_write("[MTP_HOST] recovering link: %s\n", why);
+
+    if (transaction_id) {
+        CancelTransactionLocked(transaction_id);
+    }
+
+    bool ok = true;
+    for (auto* ep : {&g_session.ep_in, &g_session.ep_out}) {
+        if (IsEndpointHaltedLocked(ep) && R_FAILED(ClearEndpointHaltLocked(ep))) {
+            ok = false;
+        }
+    }
+
+    if (!ok) {
+        CloseUsbLocked("endpoint halt could not be cleared");
+        return false;
+    }
+
+    g_stream = {};
+    return true;
 }
 
 // Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
@@ -517,7 +601,7 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
 
     u32 transaction_id{};
     if (const auto rc = SendCommand(op, params, &transaction_id); R_FAILED(rc)) {
-        CloseUsbLocked("command phase failed");
+        RecoverLinkLocked(transaction_id, "command phase failed");
         R_THROW(rc);
     }
 
@@ -527,24 +611,24 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
     // has no data or failed outright, the response straight away. Post the
     // full buffer since the size is not known until the header arrives.
     if (const auto rc = ReceiveContainer(XFER_BUF_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-        CloseUsbLocked("data phase failed");
+        RecoverLinkLocked(transaction_id, "data phase failed");
         R_THROW(rc);
     }
 
     if (hdr.type == CONTAINER_DATA) {
         if (const auto rc = ReceiveDataPhase(hdr, transferred, sink); R_FAILED(rc)) {
-            CloseUsbLocked("truncated data phase");
+            RecoverLinkLocked(transaction_id, "truncated data phase");
             R_THROW(rc);
         }
 
         if (const auto rc = ReceiveContainer(RESPONSE_POST_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-            CloseUsbLocked("response phase failed");
+            RecoverLinkLocked(transaction_id, "response phase failed");
             R_THROW(rc);
         }
     }
 
     if (hdr.type != CONTAINER_RESPONSE) {
-        CloseUsbLocked("unexpected container type");
+        RecoverLinkLocked(transaction_id, "unexpected container type");
         R_THROW(ResultProtocol);
     }
 
@@ -613,11 +697,11 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
 
         u32 transferred{};
         if (const auto rc = PostBuffer(&g_session.ep_in, post, &transferred); R_FAILED(rc)) {
-            CloseUsbLocked("stream pull failed");
+            RecoverLinkLocked(g_stream.transaction_id, "stream pull failed");
             R_THROW(rc);
         }
         if (!transferred) {
-            CloseUsbLocked("stream pull returned nothing");
+            RecoverLinkLocked(g_stream.transaction_id, "stream pull returned nothing");
             R_THROW(ResultTransport);
         }
 
@@ -649,7 +733,7 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
     if (!g_stream.remaining && !g_stream.response_done) {
         g_stream.response_done = true;
         if (const auto rc = FinishStreamLocked(); R_FAILED(rc)) {
-            CloseUsbLocked("stream response failed");
+            RecoverLinkLocked(g_stream.transaction_id, "stream response failed");
             R_THROW(rc);
         }
     }
@@ -662,9 +746,8 @@ Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
 }
 
 // Retires the active stream before another command may go out. Cheap when it
-// already drained; a small remainder is pulled and discarded to keep the
-// session; a large one is abandoned by dropping the session -- a reconnect
-// hands the phone a fresh responder anyway.
+// already drained; a small remainder is pulled and discarded; a large one is
+// cancelled on the control pipe rather than dragged off the bus.
 void AbortStreamLocked() {
     if (!g_stream.active) {
         return;
@@ -672,13 +755,14 @@ void AbortStreamLocked() {
 
     if (!g_stream.response_done) {
         if (g_stream.remaining > STREAM_DRAIN_LIMIT) {
-            CloseUsbLocked("abandoning large stream");
+            RecoverLinkLocked(g_stream.transaction_id, "cancelling large stream");
+            g_stream = {};
             return;
         }
         g_stream.carry_len = 0;
         u64 got{};
         if (R_FAILED(PullStreamLocked(nullptr, g_stream.remaining, &got))) {
-            return; // the failed pull already dropped the session
+            return; // the failed pull already recovered or dropped the link
         }
     }
 
@@ -690,11 +774,16 @@ void AbortStreamLocked() {
 // completes without an abort; large sequential readers stream the rest of the
 // file in a single transaction.
 Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
+    R_UNLESS(g_session.connected, ResultNoSession);
+
     u64 req = file_size - offset;
     if (want < 1024 * 512) {
         req = std::min<u64>(req, std::max<u64>(want, 1024 * 64));
     }
-    req = std::min<u64>(req, 0xF0000000); // the command's size parameter is u32
+    // Cap the transaction: a completed data phase is cleaner than a cancelled
+    // one, and the phone stalls the endpoint if we throttle a huge one to the
+    // speed the nand can absorb. 32 MiB still means ~64 posts per command.
+    req = std::min<u64>(req, 32 * 1024 * 1024);
 
     u16 op = OP_GET_PARTIAL_OBJECT_64;
     u32 params[4]{handle, static_cast<u32>(offset), static_cast<u32>(offset >> 32), static_cast<u32>(req)};
@@ -712,7 +801,7 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
 
     u32 transaction_id{};
     if (const auto rc = SendCommand(op, {params, param_count}, &transaction_id); R_FAILED(rc)) {
-        CloseUsbLocked("stream command failed");
+        RecoverLinkLocked(transaction_id, "stream command failed");
         R_THROW(rc);
     }
 
@@ -721,7 +810,7 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
     ContainerHeader hdr{};
     u32 transferred{};
     if (const auto rc = ReceiveContainer(512, &hdr, &transferred); R_FAILED(rc)) {
-        CloseUsbLocked("stream data phase failed");
+        RecoverLinkLocked(transaction_id, "stream data phase failed");
         R_THROW(rc);
     }
 
@@ -731,13 +820,14 @@ Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
         R_THROW(ResultMtpFailed);
     }
     if (hdr.type != CONTAINER_DATA || hdr.length < sizeof(hdr)) {
-        CloseUsbLocked("stream got bad container");
+        RecoverLinkLocked(transaction_id, "stream got bad container");
         R_THROW(ResultProtocol);
     }
 
     g_stream.active = true;
     g_stream.response_done = false;
     g_stream.handle = handle;
+    g_stream.transaction_id = transaction_id;
     g_stream.next_offset = offset;
     g_stream.remaining = hdr.length - sizeof(hdr); // device may grant less than req
     g_stream.carry_off = 0;
