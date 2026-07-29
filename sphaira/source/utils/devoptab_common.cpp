@@ -15,11 +15,6 @@
 #include <minIni.h>
 #include <curl/curl.h>
 
-// see FixDkpBug();
-extern "C" {
-    extern const devoptab_t dotab_stdnull;
-}
-
 namespace sphaira::devoptab::common {
 namespace {
 
@@ -604,7 +599,15 @@ struct Entry {
     s32 ref_count{};
 
     ~Entry() {
-        RemoveDevice(mount);
+        // RemoveDevice wants "name:". FindDevice on a string without ':'
+        // returns the DEFAULT device (sdmc), so passing the bare mount name
+        // nulled the sd card's devoptab slot on every unmount -- the data
+        // abort in _open_r that FixDkpBug used to paper over.
+        if (mount.s[0]) {
+            char device_name[sizeof(mount.s) + 2];
+            std::snprintf(device_name, sizeof(device_name), "%s:", mount.s);
+            RemoveDevice(device_name);
+        }
     }
 };
 
@@ -916,10 +919,6 @@ void UmountAllNeworkDevices() {
         log_write("[DEVOPTAB] Unmounting %s URL: %s\n", entry->mount.s, entry->device.config.url.c_str());
         entry.reset();
     }
-
-    // RemoveDevice() inside ~Entry leaves NULL holes in devoptab_list and
-    // newlib data-aborts on them (_open_r / readdir), see FixDkpBug().
-    FixDkpBug();
 }
 
 void UmountNeworkDevice(const fs::FsPath& mount) {
@@ -933,22 +932,14 @@ void UmountNeworkDevice(const fs::FsPath& mount) {
     if (it != g_entries.end()) {
         log_write("[DEVOPTAB] Unmounting %s URL: %s\n", (*it)->mount.s, (*it)->device.config.url.c_str());
         it->reset();
-        // see UmountAllNeworkDevices().
-        FixDkpBug();
     } else {
         log_write("[DEVOPTAB] No such mount %s\n", mount.s);
     }
 }
 
-void FixDkpBug() {
-    const int max = 35;
-
-    for (int i = 0; i < max; i++) {
-        if (!devoptab_list[i]) {
-            devoptab_list[i] = &dotab_stdnull;
-            log_write("[DEVOPTAB] Fixing DKP bug at index: %d\n", i);
-        }
-    }
-}
+// FixDkpBug() is gone: the NULL holes it papered over came from ~Entry
+// passing a colon-less name to RemoveDevice, which resolves to the DEFAULT
+// device and nulled the sdmc slot. Filling every empty slot with
+// dotab_stdnull also left AddDevice with no free slot, so remounts failed.
 
 } // sphaira::devoptab

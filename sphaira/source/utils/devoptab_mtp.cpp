@@ -364,31 +364,35 @@ Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
         ep->desc.bEndpointAddress, 0, nullptr, &transferred);
 }
 
-// After a Cancel the device keeps reporting Device_Busy on the control pipe
-// until its side of the abort is done; commands posted before that fail, which
-// is exactly what the log showed (recover -> immediate 0/28 on the next
-// command). Wait it out; a device that never settles gets reported back.
-Result AwaitDeviceIdleLocked() {
+// After a Cancel the device reports Device_Busy on the control pipe while its
+// side of the abort is in flight. This wait is a bounded courtesy, not a
+// gate: the tested phone keeps saying busy until the *next command* arrives
+// (its f_mtp only clears the state when the daemon reads a new command), so
+// lingering busy is normal. Treating it as fatal stalled every install for
+// 20 s and then killed a perfectly good session.
+void AwaitDeviceIdleLocked() {
     struct Status {
         u16 length;
         u16 code;
     } NX_PACKED;
 
-    for (int i = 0; i < 100; i++) {
+    const auto start = armGetSystemTick();
+    do {
         u32 transferred{};
-        R_TRY(usbHsIfCtrlXfer(&g_session.iface,
+        if (R_FAILED(usbHsIfCtrlXfer(&g_session.iface,
             USB_ENDPOINT_IN | USB_REQUEST_TYPE_CLASS | USB_RECIPIENT_INTERFACE,
             MTP_REQ_GET_DEVICE_STATUS, 0, g_session.iface.inf.inf.interface_desc.bInterfaceNumber,
-            sizeof(Status), g_ctrl_buf, &transferred));
+            sizeof(Status), g_ctrl_buf, &transferred))) {
+            return;
+        }
 
         Status status{};
         std::memcpy(&status, g_ctrl_buf, sizeof(status));
         if (transferred < sizeof(status) || status.code != RESP_DEVICE_BUSY) {
-            R_SUCCEED();
+            return;
         }
         svcSleepThread(20'000'000); // 20 ms
-    }
-    R_THROW(ResultTransport);
+    } while (MsSince(start) < 300);
 }
 
 // Tells the responder to drop the in-flight transaction, so both sides agree
@@ -424,10 +428,7 @@ bool RecoverLinkLocked(u32 transaction_id, const char* why) {
 
     if (transaction_id) {
         CancelTransactionLocked(transaction_id);
-    }
-    if (R_FAILED(AwaitDeviceIdleLocked())) {
-        CloseUsbLocked("device never settled after cancel");
-        return false;
+        AwaitDeviceIdleLocked();
     }
 
     bool ok = true;
@@ -1397,7 +1398,7 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     u64 done = 0;
-    bool retried = false;
+    int retries = 0;
 
     // Callers up the stack (yati's nsp/nca parsers) read headers at exact
     // offsets and cannot cope with a short read, so serve the full request.
@@ -1432,12 +1433,17 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
         }
 
         if (R_FAILED(rc)) {
-            // one reconnect attempt, otherwise a phone that blinked
-            // mid-transfer aborts the whole install. RefreshFileLocked
-            // re-resolves the handle -- the old one died with the session.
-            if (!retried && EnsureSessionLocked() && RefreshFileLocked(file)) {
-                retried = true;
-                continue;
+            // a few attempts with a breather, otherwise a phone that
+            // blinked mid-transfer aborts the whole install. The first
+            // command after a phone-initiated abort tends to fail even
+            // after recovery; a second try 100 ms later goes through.
+            // RefreshFileLocked re-resolves the handle -- the old one
+            // died with the session.
+            if (retries++ < 3) {
+                svcSleepThread(100'000'000); // 100 ms
+                if (EnsureSessionLocked() && RefreshFileLocked(file)) {
+                    continue;
+                }
             }
             file->offset += done;
             return done ? static_cast<ssize_t>(done) : -EIO;

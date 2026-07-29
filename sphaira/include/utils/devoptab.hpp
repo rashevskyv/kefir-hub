@@ -33,10 +33,6 @@ Result GetNetworkDevices(location::StdioEntries& out);
 void UmountAllNeworkDevices();
 void UmountNeworkDevice(const fs::FsPath& mount);
 
-// manually set the array so that we can avoid nullptr access.
-// SEE: https://github.com/devkitPro/newlib/issues/35
-void FixDkpBug();
-
 void DisplayDevoptabSideBar();
 
 } // namespace sphaira::devoptab
