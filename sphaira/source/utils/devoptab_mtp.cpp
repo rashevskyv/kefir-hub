@@ -69,41 +69,67 @@ Result PostAndWaitMtpTransfer(UsbHsClientEpSession* ep, void* user_buf, u32 size
         post_size = MTP_XFER_BUF_SIZE;
     }
 
-    u32 xfer_id = 0;
-    Result rc = usbHsEpPostBufferAsync(ep, g_mtp_xfer_buf, post_size, 0, &xfer_id);
-    if (R_FAILED(rc)) {
-        log_write("[MTP_HOST] usbHsEpPostBufferAsync failed: 0x%X\n", rc);
-        return rc;
-    }
+    // Retry loop: USB IN transfers sometimes fail on first attempt if the
+    // MTP device is still processing the previous command.
+    const int max_attempts = is_write ? 1 : 3;
+    Result last_rc = MAKERESULT(Module_Libnx, LibnxError_NotFound);
 
-    Event* evt = usbHsEpGetXferEvent(ep);
-    eventWait(evt, 5000000000ULL); // 5 second timeout
-
-    u32 count = 0;
-    UsbHsXferReport reports[8]{};
-    eventClear(evt);
-    rc = usbHsEpGetXferReport(ep, reports, 8, &count);
-    if (R_FAILED(rc)) {
-        log_write("[MTP_HOST] usbHsEpGetXferReport failed: 0x%X\n", rc);
-        return rc;
-    }
-
-    for (u32 i = 0; i < count; ++i) {
-        if (reports[i].xferId == xfer_id) {
-            if (out_transferred) *out_transferred = reports[i].transferredSize;
-            // For reads: copy DMA buffer back to user buffer
-            if (!is_write && R_SUCCEEDED(reports[i].res)) {
-                u32 copy_len = std::min(size, reports[i].transferredSize);
-                std::memcpy(user_buf, g_mtp_xfer_buf, copy_len);
-            }
-            if (R_FAILED(reports[i].res)) {
-                log_write("[MTP_HOST] xfer report res failed: 0x%X (transferred=%u)\n", reports[i].res, reports[i].transferredSize);
-            }
-            return reports[i].res;
+    for (int attempt = 0; attempt < max_attempts; ++attempt) {
+        if (attempt > 0) {
+            // Small delay before retry to let MTP device settle
+            svcSleepThread(50000000ULL); // 50ms
+            log_write("[MTP_HOST] retrying IN transfer (attempt %d)\n", attempt + 1);
         }
+
+        u32 xfer_id = 0;
+        Result rc = usbHsEpPostBufferAsync(ep, g_mtp_xfer_buf, post_size, 0, &xfer_id);
+        if (R_FAILED(rc)) {
+            log_write("[MTP_HOST] usbHsEpPostBufferAsync failed: 0x%X\n", rc);
+            last_rc = rc;
+            continue;
+        }
+
+        Event* evt = usbHsEpGetXferEvent(ep);
+        rc = eventWait(evt, 5000000000ULL); // 5 second timeout
+        eventClear(evt);
+
+        if (R_FAILED(rc)) {
+            log_write("[MTP_HOST] eventWait failed/timed out: 0x%X\n", rc);
+            last_rc = rc;
+            continue;
+        }
+
+        u32 count = 0;
+        UsbHsXferReport reports[8]{};
+        rc = usbHsEpGetXferReport(ep, reports, 8, &count);
+        if (R_FAILED(rc)) {
+            log_write("[MTP_HOST] usbHsEpGetXferReport failed: 0x%X\n", rc);
+            last_rc = rc;
+            continue;
+        }
+
+        for (u32 i = 0; i < count; ++i) {
+            if (reports[i].xferId == xfer_id) {
+                if (out_transferred) *out_transferred = reports[i].transferredSize;
+                // For reads: copy DMA buffer back to user buffer (skip if same buffer)
+                if (!is_write && R_SUCCEEDED(reports[i].res) && user_buf != g_mtp_xfer_buf) {
+                    u32 copy_len = std::min(size, reports[i].transferredSize);
+                    std::memcpy(user_buf, g_mtp_xfer_buf, copy_len);
+                }
+                if (R_FAILED(reports[i].res)) {
+                    log_write("[MTP_HOST] xfer report res failed: 0x%X (transferred=%u)\n", reports[i].res, reports[i].transferredSize);
+                    last_rc = reports[i].res;
+                    goto next_attempt;
+                }
+                return reports[i].res;
+            }
+        }
+        log_write("[MTP_HOST] xfer report not found (count=%u)\n", count);
+        last_rc = MAKERESULT(Module_Libnx, LibnxError_NotFound);
+next_attempt:;
     }
-    log_write("[MTP_HOST] xfer report not found (count=%u)\n", count);
-    return MAKERESULT(Module_Libnx, LibnxError_NotFound);
+
+    return last_rc;
 }
 
 Result SendMtpCommand(MtpSession& s, u16 code, const std::vector<u32>& params) {
@@ -827,6 +853,11 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
             config.read_only = true;
 
             auto device = std::make_unique<MtpMountDevice>(config, st_id, label, max_cap, free_sp);
+
+            // Pre-fetch root directory entries while USB is known to work.
+            // With strict interface filter (no ADB corruption) and retry logic, this is safe.
+            device->PreFetchRootEntries();
+
             if (common::MountNetworkDevice2(std::move(device), config, sizeof(MtpFileHandle), sizeof(MtpDirHandle), mount_name, mount_name)) {
                 mounted_configs.push_back(config);
                 log_write("[MTP_HOST] successfully mounted %s: as %s\n", mount_name, label.c_str());
