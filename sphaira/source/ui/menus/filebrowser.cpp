@@ -226,6 +226,11 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 }
             }
 
+            if (IsParentEntry(m_index)) {
+                WalkUp();
+                return;
+            }
+
             if (!m_menu->IsFolderPicker() && IsSd() && m_is_update_folder && m_daybreak_path.has_value()) {
                 App::Push<OptionBox>("Open with DayBreak?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
                     if (op_index && *op_index) {
@@ -324,31 +329,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 return;
             }
 
-            std::string_view view{m_path};
-            if (m_fs_entry.type != FsType::Root && view != m_fs->Root()) {
-                const auto end = view.find_last_of('/');
-                assert(end != view.npos);
-
-                if (end == 0) {
-                    Scan(m_fs->Root(), true);
-                } else {
-                    Scan(view.substr(0, end), true);
-                }
-            } else if (m_fs_entry.type == FsType::Archive) {
-                // at the archive root: unmount and return to the opening view.
-                SetFs(m_archive_return_path, m_archive_return_entry);
-            } else if (m_fs_entry.type != FsType::Root && HasExtraRootSources()) {
-                FsEntry root_entry{
-                    .name = "System Root",
-                    .root = "root:/",
-                    .type = FsType::Root
-                };
-                SetFs("root:/", root_entry);
-            } else {
-                if (!m_menu->IsTab()) {
-                    m_menu->PromptIfShouldExit();
-                }
-            }
+            WalkUp();
         }})
     );
 
@@ -440,6 +421,16 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
             gfx::drawText(vg, x + x_offset + 65, y + (h / 2.f), 20.f,
                 "Select current folder"_i18n.c_str(), nullptr,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id));
+            return;
+        }
+
+        // the ".." row: no size, no read-only chip, no metadata -- it is a
+        // navigation action wearing a folder icon.
+        if (IsParentEntry(i)) {
+            DrawElement(x + x_offset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
+            gfx::drawText(vg, x + x_offset + 65, y + (h / 2.f), 20.f,
+                "..", nullptr,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id));
             return;
         }
@@ -690,7 +681,7 @@ void FsView::SetIndex(s64 index) {
 }
 
 void FsView::ToggleSelection() {
-    if (m_entries_current.empty()) {
+    if (m_entries_current.empty() || IsParentEntry(m_index)) {
         return;
     }
 
@@ -710,7 +701,9 @@ void FsView::ToggleSelection() {
 
         const auto set = visible_selected_count != static_cast<s64>(m_entries_current.size());
         for (u32 i = 0; i < m_entries_current.size(); i++) {
-            GetEntry(i).selected = set;
+            if (!IsParentEntry(i)) {
+                GetEntry(i).selected = set;
+            }
         }
     } else {
         GetEntry().selected ^= 1;
@@ -746,7 +739,9 @@ void FsView::InvertSelection() {
     }
 
     for (u32 i = 0; i < m_entries_current.size(); i++) {
-        GetEntry(i).selected ^= 1;
+        if (!IsParentEntry(i)) {
+            GetEntry(i).selected ^= 1;
+        }
     }
 
     m_selected_count = 0;
@@ -1182,6 +1177,23 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         }
     }
 
+    // a ".." row, so "up" is something the user can see and point at rather
+    // than a button they have to know about. it doubles as the way to say "the
+    // folder I am standing in" to Mount. not at the top of the filesystem,
+    // where there is nothing above to go to.
+    m_has_parent_entry = false;
+    if (!m_menu->IsFolderPicker() && m_fs_entry.type != FsType::Root && m_path != m_fs->Root()) {
+        FileEntry up{};
+        std::strcpy(up.name, "..");
+        up.type = FsDirEntryType_Dir;
+        up.metadata_loaded = true;
+        up.file_count = 0;
+        up.dir_count = 0;
+        m_parent_entry_index = static_cast<u32>(m_entries.size());
+        m_entries.emplace_back(up);
+        m_has_parent_entry = true;
+    }
+
     // folder-picker mode: add a synthetic entry that Sort() pins to the top of
     // the listing so every folder offers "select current folder" as row 0.
     if (m_menu->IsFolderPicker()) {
@@ -1199,7 +1211,9 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     // quick check to see if this is an update folder (never in picker mode).
     m_is_update_folder = !m_menu->IsFolderPicker() && R_SUCCEEDED(CheckIfUpdateFolder());
 
-    SetIndex(0);
+    // start on the first real row, not on ".." -- landing on "go back up" every
+    // time you open a folder makes A into a no-op you have to steer around.
+    SetIndex(m_has_parent_entry && m_entries_current.size() > 1 ? 1 : 0);
     QueueRemoteMetadata();
 
     // find previous entry
@@ -1225,8 +1239,11 @@ void FsView::QueueRemoteMetadata() {
 
     mutexLock(&m_metadata_mutex);
     for (size_t i = 0; i < m_entries.size(); i++) {
-        // never queue metadata for the synthetic picker row.
+        // never queue metadata for a synthetic row -- there is no such path.
         if (m_menu->IsFolderPicker() && i == m_picker_entry_index) {
+            continue;
+        }
+        if (m_has_parent_entry && i == m_parent_entry_index) {
             continue;
         }
         auto& entry = m_entries[i];
@@ -1354,6 +1371,35 @@ void FsView::ApplyRemoteMetadata() {
     }
 }
 
+// one level up, from B or from the ".." row. leaving the top of a filesystem
+// unmounts an archive, drops to the source list when there is more than the
+// card to pick from, and otherwise closes the browser.
+void FsView::WalkUp() {
+    std::string_view view{m_path};
+    if (m_fs_entry.type != FsType::Root && view != m_fs->Root()) {
+        const auto end = view.find_last_of('/');
+        assert(end != view.npos);
+
+        if (end == 0) {
+            Scan(m_fs->Root(), true);
+        } else {
+            Scan(view.substr(0, end), true);
+        }
+    } else if (m_fs_entry.type == FsType::Archive) {
+        // at the archive root: unmount and return to the opening view.
+        SetFs(m_archive_return_path, m_archive_return_entry);
+    } else if (m_fs_entry.type != FsType::Root && HasExtraRootSources()) {
+        FsEntry root_entry{
+            .name = "System Root",
+            .root = "root:/",
+            .type = FsType::Root
+        };
+        SetFs("root:/", root_entry);
+    } else if (!m_menu->IsTab()) {
+        m_menu->PromptIfShouldExit();
+    }
+}
+
 void FsView::Sort() {
     // returns true if lhs should be before rhs
     const auto sort = m_menu->m_sort.Get();
@@ -1411,12 +1457,19 @@ void FsView::Sort() {
 
     std::sort(m_entries_current.begin(), m_entries_current.end(), sorter);
 
-    // folder-picker mode: prepend the synthetic "select current folder" row so
-    // it is always first, regardless of sort order.
+    // prepend the pinned synthetic row so it is always first, whatever the
+    // sort order: "select current folder" in picker mode, ".." otherwise.
+    std::optional<u32> pinned;
     if (m_menu->IsFolderPicker() && m_picker_entry_index < m_entries.size()) {
-        m_picker_view.assign(1, m_picker_entry_index);
-        m_picker_view.insert(m_picker_view.end(), m_entries_current.begin(), m_entries_current.end());
-        m_entries_current = m_picker_view;
+        pinned = m_picker_entry_index;
+    } else if (m_has_parent_entry && m_parent_entry_index < m_entries.size()) {
+        pinned = m_parent_entry_index;
+    }
+
+    if (pinned) {
+        m_pinned_view.assign(1, *pinned);
+        m_pinned_view.insert(m_pinned_view.end(), m_entries_current.begin(), m_entries_current.end());
+        m_entries_current = m_pinned_view;
     }
 }
 

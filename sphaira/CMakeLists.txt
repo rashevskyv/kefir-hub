@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.380)
+set(sphaira_VERSION 0.13.381)
 
 project(sphaira
     VERSION ${sphaira_VERSION}

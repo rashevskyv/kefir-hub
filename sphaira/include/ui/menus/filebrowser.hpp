@@ -277,6 +277,11 @@ private:
         std::vector<FileEntry> out;
 
         if (!m_selected_count) {
+            // ".." is a navigation action, not a file: with the cursor on it
+            // there is nothing for install / delete / copy to act on.
+            if (IsParentEntry(m_index)) {
+                return out;
+            }
             out.emplace_back(GetEntry());
         } else {
             for (auto&e : m_entries) {
@@ -309,19 +314,36 @@ private:
         return m_fs_entry.type == FsType::Sd;
     }
 
-    // what "Mount" acts on: the highlighted folder if one is highlighted, else
-    // the folder being viewed. picking "config" in the listing and getting the
-    // whole card shared is not what anyone means by mounting it.
+    // is the row at this view index the synthetic ".." row?
+    auto IsParentEntry(s64 index) const -> bool {
+        return m_has_parent_entry && index == 0;
+    }
+
+    // what "Mount" acts on:
+    //   a selected folder   -- an explicit pick beats where the cursor happens to sit
+    //   ".." under the cursor -- the folder being viewed
+    //   any other folder    -- that folder
+    // a file under the cursor has nothing to mount, so it falls back to the
+    // folder being viewed.
     auto GetMountTarget() const -> fs::FsPath {
-        if (m_index < m_entries_current.size() && GetEntry().IsDir()) {
+        for (const auto& e : m_entries) {
+            if (e.IsSelected() && e.IsDir()) {
+                return GetNewPath(e);
+            }
+        }
+
+        if (m_index >= 0 && m_index < (s64)m_entries_current.size()
+            && !IsParentEntry(m_index) && GetEntry().IsDir()) {
             return GetNewPath(m_index);
         }
+
         return m_path;
     }
 
     auto IsReadOnly(const fs::FsPath& path) const -> bool;
     auto AnySelectedReadOnly() const -> bool;
 
+    void WalkUp();
     void Sort();
     void SortAndFindLastFile(bool scan = false);
     void SetIndexFromLastFile(const LastFile& last_file);
@@ -396,11 +418,15 @@ private:
     Vec4 m_list_clip{};
     std::optional<fs::FsPath> m_daybreak_path{};
 
-    // folder-picker mode only: a synthetic "select current folder" row is
-    // pinned to the top of every listing. m_picker_view owns the view indices
-    // (span target) so the synthetic entry can precede the real, sorted ones.
-    std::vector<u32> m_picker_view{};
+    // one synthetic row is pinned to the top of the listing: ".." normally, or
+    // "select current folder" in folder-picker mode (where row 0 already means
+    // the current folder, so ".." would be a second name for the same thing).
+    // m_pinned_view owns the view indices (span target) so the synthetic entry
+    // can precede the real, sorted ones.
+    std::vector<u32> m_pinned_view{};
     u32 m_picker_entry_index{};
+    u32 m_parent_entry_index{};
+    bool m_has_parent_entry{};
 
     // this keeps track of the highlighted file before opening a folder
     // if the user presses B to go back to the previous dir
