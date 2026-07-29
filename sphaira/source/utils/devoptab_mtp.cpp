@@ -358,19 +358,17 @@ void CloseUsbLocked(const char* why) {
     g_stream = {};
 }
 
-bool IsEndpointHaltedLocked(UsbHsClientEpSession* ep) {
+Result GetEndpointStatusLocked(UsbHsClientEpSession* ep, bool* out_halted) {
     u32 transferred{};
-    const auto rc = usbHsIfCtrlXfer(&g_session.iface,
+    R_TRY(usbHsIfCtrlXfer(&g_session.iface,
         USB_ENDPOINT_IN | USB_REQUEST_TYPE_STANDARD | USB_RECIPIENT_ENDPOINT,
         USB_REQUEST_GET_STATUS, 0, ep->desc.bEndpointAddress,
-        sizeof(u16), g_ctrl_buf, &transferred);
-    if (R_FAILED(rc)) {
-        return false;
-    }
+        sizeof(u16), g_ctrl_buf, &transferred));
 
     u16 status{};
     std::memcpy(&status, g_ctrl_buf, sizeof(status));
-    return status & 1;
+    *out_halted = status & 1;
+    R_SUCCEED();
 }
 
 Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
@@ -404,7 +402,9 @@ bool RecoverLinkLocked(const char* why) {
 
     bool ok = true;
     for (auto* ep : {&g_session.ep_in, &g_session.ep_out}) {
-        if (IsEndpointHaltedLocked(ep) && R_FAILED(ClearEndpointHaltLocked(ep))) {
+        bool halted{};
+        if (R_FAILED(GetEndpointStatusLocked(ep, &halted)) ||
+            (halted && R_FAILED(ClearEndpointHaltLocked(ep)))) {
             ok = false;
         }
     }
@@ -465,12 +465,13 @@ Result PostBufferOnce(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) 
 // be <= XFER_BUF_SIZE; for IN transfers it also has to be at least as large as
 // what the device is about to send, otherwise the controller reports babble.
 //
-// A failed transfer clears the endpoint's stall and is tried once more right
-// here, which is what libusbhsfs does and what every log so far has been
-// missing: the caller's only recovery was to drop the session and
-// re-enumerate, so a single stalled post cost a full reconnect plus a root
-// re-listing -- seconds of frozen ui for something the bus recovers from in
-// about a millisecond.
+// A failed transfer is retried once, the way libusbhsfs does it: query the
+// endpoint on the control pipe, clear the halt if one is set, then retry
+// EVEN WHEN THE ENDPOINT REPORTS HEALTHY. Every stall in the 16:29 log was
+// the first post after the bus sat idle for a second or two (yati parsing,
+// placeholder creation, the write side backing up), failing 2140-0301 with
+// no halt set -- the .376 retry only fired on a halt, so it never fired at
+// all. The status round trip is itself what brings the idle link back.
 Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
     if (out_transferred) {
         *out_transferred = 0;
@@ -483,7 +484,11 @@ Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
         return rc;
     }
 
-    if (!IsEndpointHaltedLocked(ep) || R_FAILED(ClearEndpointHaltLocked(ep))) {
+    bool halted{};
+    if (R_FAILED(GetEndpointStatusLocked(ep, &halted))) {
+        R_THROW(rc);
+    }
+    if (halted && R_FAILED(ClearEndpointHaltLocked(ep))) {
         R_THROW(rc);
     }
 
