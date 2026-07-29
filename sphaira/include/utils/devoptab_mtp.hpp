@@ -66,8 +66,11 @@ private:
     bool ListLocked(const std::string& path, std::vector<MtpObject>* out);
     int LookupErrno() const;
     void DropCaches();
+    // drops the caches when the session reconnected since they were filled.
+    void SyncGenerationLocked();
 
     u32 m_storage_id{};
+    u32 m_generation{};
     u64 m_capacity{};
     u64 m_free_space{};
 

@@ -128,7 +128,16 @@ struct Session {
 
     // tick of the last completed transaction, used to skip redundant probes.
     u64 last_ok_tick{};
+
+    // bumped on every successful (re)connect. A device whose cached handles
+    // were fetched under an older generation must drop them: the phone
+    // re-enumerated and the old object handles may no longer exist.
+    u32 generation{};
 };
+
+// defined in the session management section below; usable from the devoptab
+// callbacks to bring a dropped link back without waiting for a Root rescan.
+bool EnsureSessionLocked();
 
 u64 MsSince(u64 tick) {
     return (armTicksToNs(armGetSystemTick()) - armTicksToNs(tick)) / 1000000;
@@ -720,6 +729,7 @@ void MtpMountDevice::Rebind(u32 storage_id, u64 capacity, u64 free_space) {
     m_storage_id = storage_id;
     m_capacity = capacity;
     m_free_space = free_space;
+    m_generation = g_session.generation;
     DropCaches();
 }
 
@@ -732,13 +742,22 @@ bool MtpMountDevice::Mount() {
     return true;
 }
 
+void MtpMountDevice::SyncGenerationLocked() {
+    if (m_generation != g_session.generation) {
+        DropCaches();
+        m_generation = g_session.generation;
+    }
+}
+
 bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
     SCOPED_MUTEX(&g_mutex);
+    SyncGenerationLocked();
     return LookupLocked(path, out);
 }
 
 bool MtpMountDevice::List(const std::string& path, std::vector<MtpObject>* out) {
     SCOPED_MUTEX(&g_mutex);
+    SyncGenerationLocked();
     return ListLocked(path, out);
 }
 
@@ -791,14 +810,21 @@ bool MtpMountDevice::ListLocked(const std::string& path, std::vector<MtpObject>*
         return false;
     }
 
-    if (!g_session.connected) {
+    if (!EnsureSessionLocked()) {
         return false;
     }
 
     const u32 handle_params[]{m_storage_id, 0, dir.handle};
     std::vector<u8> data;
     if (R_FAILED(TransactData(OP_GET_OBJECT_HANDLES, handle_params, &data))) {
-        return false;
+        // One shot at bringing a dropped link back: phones renegotiate USB on
+        // screen lock, which kills the session mid-browse. After a real
+        // re-enumeration dir.handle may be stale, in which case this fails
+        // again and the next visit re-resolves from the (dropped) caches.
+        if (!EnsureSessionLocked() ||
+            R_FAILED(TransactData(OP_GET_OBJECT_HANDLES, handle_params, &data))) {
+            return false;
+        }
     }
 
     std::vector<u32> handles;
@@ -977,7 +1003,7 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     SCOPED_MUTEX(&g_mutex);
-    if (!g_session.connected) {
+    if (!EnsureSessionLocked()) {
         return -EIO;
     }
 
@@ -987,6 +1013,7 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
 
     const size_t want = std::min<u64>(len, file->size - file->offset);
     size_t done = 0;
+    bool retried = false;
 
     // Callers up the stack (yati's nsp/nca parsers) read headers at exact
     // offsets and cannot cope with a short read, so keep asking until the
@@ -1024,6 +1051,12 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
         }
 
         if (R_FAILED(rc)) {
+            // one reconnect attempt, otherwise a phone that blinked
+            // mid-transfer aborts the whole install.
+            if (!retried && EnsureSessionLocked()) {
+                retried = true;
+                continue;
+            }
             file->offset += done;
             return done ? static_cast<ssize_t>(done) : -EIO;
         }
@@ -1180,11 +1213,19 @@ Result ConnectLocked() {
 
     for (s32 i = 0; i < total; i++) {
         if (R_SUCCEEDED(OpenSessionOnInterface(interfaces[i]))) {
+            g_session.generation++;
             R_SUCCEED();
         }
     }
 
     R_THROW(ResultMtpFailed);
+}
+
+bool EnsureSessionLocked() {
+    // ponytail: assumes storage ids survive re-enumeration (true on Android:
+    // the id encodes storage type + index). If a device hands out fresh ids,
+    // add a storage re-resolve here.
+    return g_session.connected || R_SUCCEEDED(ConnectLocked());
 }
 
 Result ListStoragesLocked(std::vector<StorageEntry>& out) {

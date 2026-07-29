@@ -582,10 +582,16 @@ void FsView::OnFocusGained() {
     Widget::OnFocusGained();
     if (m_entries.empty()) {
         const auto rc = Scan(m_path.empty() ? m_fs->Root() : m_path);
-        if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
-            log_write("[FILEBROWSER] network listing failed: 0x%X\n", rc);
-            App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
-                "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
+        if (R_FAILED(rc) && (m_fs_entry.type == FsType::Network || m_fs_entry.type == FsType::Stdio)) {
+            log_write("[FILEBROWSER] listing failed: 0x%X\n", rc);
+            if (m_fs_entry.type == FsType::Network) {
+                App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
+                    "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
+            } else {
+                // usb drive / mtp phone stopped answering. Without this the
+                // user is left staring at a fake "Empty..." listing.
+                App::PushErrorBox(rc, "Failed to list storage!"_i18n);
+            }
             const FsEntry root_entry{
                 .name = "System Root",
                 .root = "root:/",
@@ -1509,13 +1515,17 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
 
     if (HasFocus()) {
         const auto rc = Scan(m_path);
-        // a mounted network share can still fail to list (server rejected the
-        // request, unsupported listing format, connection dropped). Without
-        // this, the user is left staring at a green "Empty..." screen.
-        if (R_FAILED(rc) && m_fs_entry.type == FsType::Network) {
-            log_write("[FILEBROWSER] network listing failed: 0x%X\n", rc);
-            App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
-                "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
+        // a mounted network share or usb/mtp device can still fail to list
+        // (server rejected the request, phone dropped the link). Without this,
+        // the user is left staring at a green "Empty..." screen.
+        if (R_FAILED(rc) && (m_fs_entry.type == FsType::Network || m_fs_entry.type == FsType::Stdio)) {
+            log_write("[FILEBROWSER] listing failed: 0x%X\n", rc);
+            if (m_fs_entry.type == FsType::Network) {
+                App::Push<OptionBox>("Failed to list network storage!"_i18n + "\n" +
+                    "The server is reachable but the listing failed. Check the credentials and the shared folder path."_i18n, "OK"_i18n);
+            } else {
+                App::PushErrorBox(rc, "Failed to list storage!"_i18n);
+            }
             const FsEntry root_entry{
                 .name = "System Root",
                 .root = "root:/",

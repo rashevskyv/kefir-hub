@@ -1075,6 +1075,7 @@
   "Change display order for games.": "Змінити порядок відображення ігор.",
   "Failed to connect to network storage!": "Не вдалося під'єднатися до мережевого сховища!",
   "Failed to list network storage!": "Не вдалося отримати список файлів мережевого сховища!",
+  "Failed to list storage!": "Не вдалося прочитати сховище!",
   "Edit Source": "Редагувати джерело",
   "Rename Source": "Перейменувати джерело",
   "Delete Source": "Видалити джерело",

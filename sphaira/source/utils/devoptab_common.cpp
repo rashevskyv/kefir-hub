@@ -1,4 +1,5 @@
 #include "utils/devoptab_common.hpp"
+#include "utils/devoptab.hpp"
 #include "utils/devoptab_buffered.hpp"
 #include "utils/devoptab_curl_thread.hpp"
 #include "utils/devoptab_curl_device.hpp"
@@ -915,6 +916,10 @@ void UmountAllNeworkDevices() {
         log_write("[DEVOPTAB] Unmounting %s URL: %s\n", entry->mount.s, entry->device.config.url.c_str());
         entry.reset();
     }
+
+    // RemoveDevice() inside ~Entry leaves NULL holes in devoptab_list and
+    // newlib data-aborts on them (_open_r / readdir), see FixDkpBug().
+    FixDkpBug();
 }
 
 void UmountNeworkDevice(const fs::FsPath& mount) {
@@ -928,6 +933,8 @@ void UmountNeworkDevice(const fs::FsPath& mount) {
     if (it != g_entries.end()) {
         log_write("[DEVOPTAB] Unmounting %s URL: %s\n", (*it)->mount.s, (*it)->device.config.url.c_str());
         it->reset();
+        // see UmountAllNeworkDevices().
+        FixDkpBug();
     } else {
         log_write("[DEVOPTAB] No such mount %s\n", mount.s);
     }

@@ -1095,6 +1095,7 @@
   "Browse archive": "Browse archive",
   "Open: ": "Open: ",
   "Failed to list network storage!": "Failed to list network storage!",
+  "Failed to list storage!": "Failed to list storage!",
   "The server is reachable but the listing failed. Check the credentials and the shared folder path.": "The server is reachable but the listing failed. Check the credentials and the shared folder path.",
   "Failed to open archive!": "Failed to open archive!",
   "This source cannot be shared over MTP": "This source cannot be shared over MTP",
