@@ -3,7 +3,37 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.358
+## Поточний delivery: v0.13.366–371 (MTP Host: стабілізація за логами з консолі)
+
+- [x] MTP-SHARED-MOUNT-366 — один глобальний mount (App::SetMountedFolder), спільний для FTP/HTTP/MTP.
+- [x] FIX-DEVOPTAB-FIXDKPBUG-367 — краш при закритті файлового браузера: рерайт
+  загубив єдиний виклик `FixDkpBug()`; тепер він в обох Umount-функціях
+  `devoptab_common.cpp` (NULL-дірки в devoptab_list → data abort).
+- [x] FIX-MTP-STALE-HANDLE-368 — 0x1DF9 на ~27 MB: після реконекту retry
+  використовував старий object handle (handle живе лише в межах сесії).
+  `MtpFileHandle` тепер несе generation+path, `RefreshFileLocked()`
+  перерезолвлює його.
+- [x] FIX-YATI-RINGBUF-UNLOCK-369 — early-return у ringbuf-функціях лишав
+  м'ютекс захопленим (ON_SCOPE_EXIT-unlock реєструється до wait-циклу).
+- [x] FIX-MTP-STALL-RECOVERY-370 — 0x25A8C це endpoint STALL, не смерть лінка:
+  `RecoverLinkLocked` (MTP Cancel 0x64 + CLEAR_FEATURE(ENDPOINT_HALT), як у
+  libusbhsfs) замість закриття інтерфейсу; фікс 0xE401 (пост у закритий
+  endpoint після AbortStream).
+- [x] FIX-YATI-SHUTDOWN-DEADLOCK-371 — зависання по B у черзі встановлення:
+  escape-прапорці wait-циклів SetDecompressBuf/SetWriteBuf називали не той
+  потік (свій замість того, що осушує ring), decompress-потік паркувався
+  назавжди після збою читання; тепер прапорці виправлено і кожен wait-цикл
+  перевіряє `GetResults()` зсередини.
+- [x] FIX-MTP-CANCEL-SETTLE-371 — після Cancel телефон відповідає Device_Busy
+  на control pipe, поки не дочистить скасування; команда, надіслана раніше,
+  падає (0/28 у лозі). `AwaitDeviceIdleLocked()` опитує Get Device Status
+  (0x67) до готовності. Кап стріму 32→16 MiB: телефон (vid 0x22d9) рве
+  data phase рівно на 20 MiB — завершена фаза не потребує cancel узагалі.
+- [ ] HW-SMOKE-371 — встановлення NSP з телефону; B у черзі під час/після
+  збою більше не висить; у лозі `recovering link:` супроводжується
+  продовженням читань.
+
+## Попередній delivery: v0.13.358
 
 - [x] FIX-FS-STDIO-STAT-FALLBACK-FOR-DT-UNKNOWN-358 — виправлено критичний системний баг у fs.cpp, через який всі записи devoptab з `d_type == DT_UNKNOWN (0)` відкидалися:
   1. **Усунення ігнорування елементів (`DirGetEntryCount` та `Dir::Read`)**: У системній обробці файлової системи `fs.cpp` при отриманні `d_type` зі значенням `DT_UNKNOWN` (0) запис мовчки відкидався через `continue`. У devoptab драйверах (включаючи MTP) newlib `readdir()` нерідко повертає `DT_UNKNOWN`. Додано авто-фолбек на `stat()` для визначення типу (`S_ISDIR` vs `S_ISREG`), завдяки чому абсолютно всі файли та папки в `mtp0:` стають видимими.
@@ -563,7 +593,8 @@
 
 ## Поточна задача
 
-Перевірка MTP Host на реальній консолі (HW-SMOKE-365).
+Перевірка MTP Host на реальній консолі (HW-SMOKE-371): встановлення NSP з
+телефону після фіксів дедлока yati і settle-логіки MTP Cancel.
 
 ## Правило закриття
 
