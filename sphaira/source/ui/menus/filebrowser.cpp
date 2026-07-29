@@ -1091,7 +1091,10 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             std::strcpy(fe.name, e.name);
             fe.type = e.type;
             fe.file_size = e.file_size;
-            fe.metadata_loaded = m_fs->IsNative() || e.file_size > 0;
+            // a mount that opts out of stat never gets a second pass, so the
+            // listing itself is all the metadata there will ever be.
+            const auto no_stat = e.type == FsDirEntryType_Dir ? m_fs_entry.NoStatDir() : m_fs_entry.NoStatFile();
+            fe.metadata_loaded = m_fs->IsNative() || no_stat || e.file_size > 0;
 
             m_entries.emplace_back(fe);
             i++;
@@ -1146,6 +1149,12 @@ void FsView::QueueRemoteMetadata() {
             continue;
         }
         auto& entry = m_entries[i];
+        // mounts that charge a round trip per stat (MTP) opt out entirely, so
+        // browsing a folder costs one listing rather than one per row.
+        if (entry.IsDir() ? m_fs_entry.NoStatDir() : m_fs_entry.NoStatFile()) {
+            entry.metadata_loaded = true;
+            continue;
+        }
         const auto wanted = entry.IsDir() || (entry.IsFile() && !entry.metadata_loaded);
         if (!wanted) {
             continue;
@@ -2158,8 +2167,7 @@ void FsView::ShowSourcePicker() {
 
     const auto mtp_locations = location::GetMtpHostDevices(false);
     for (const auto& e: mtp_locations) {
-        u32 flags{FsEntryFlag_ReadOnly};
-        fs_entries.emplace_back(e.name, e.mount, FsType::Stdio, flags);
+        fs_entries.emplace_back(e.name, e.mount, FsType::Stdio, e.flags);
         mount_items.push_back(e.name);
     }
 

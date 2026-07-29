@@ -1,13 +1,23 @@
+// MTP host: mounts a connected MTP responder (phone, camera, ...) as a
+// read-only devoptab so the file browser can walk it.
+//
+// Locking: g_mutex is the innermost lock in the process. Every devoptab
+// callback arrives holding the devoptab rwlock (read) and the per-device
+// mutex, so nothing in here may call back into devoptab mount/unmount while
+// holding g_mutex -- that would invert the order against MountNetworkDevice2,
+// which takes the same rwlock for write.
+//
+// Logging: log_write opens, writes and closes a file on the SD card under a
+// global mutex. Keep it out of the per-transfer paths; only session-level
+// events and failures are logged.
+
 #include "utils/devoptab_mtp.hpp"
 #include "utils/devoptab.hpp"
 #include "log.hpp"
 #include "defines.hpp"
-#include "i18n.hpp"
-#include "app.hpp"
-#include "utils/utils.hpp"
 
 #include <new>
-
+#include <span>
 #include <cstring>
 #include <algorithm>
 #include <fcntl.h>
@@ -17,576 +27,988 @@
 namespace sphaira::devoptab::mtp {
 namespace {
 
-struct MtpSession {
-    UsbHsInterface iface{};
-    UsbHsClientIfSession s{};
+// -------------------------------------------------------------------------
+// protocol constants
+// -------------------------------------------------------------------------
+
+constexpr u16 CONTAINER_COMMAND  = 1;
+constexpr u16 CONTAINER_DATA     = 2;
+constexpr u16 CONTAINER_RESPONSE = 3;
+
+constexpr u16 OP_GET_DEVICE_INFO       = 0x1001;
+constexpr u16 OP_OPEN_SESSION          = 0x1002;
+constexpr u16 OP_CLOSE_SESSION         = 0x1003;
+constexpr u16 OP_GET_STORAGE_IDS       = 0x1004;
+constexpr u16 OP_GET_STORAGE_INFO      = 0x1005;
+constexpr u16 OP_GET_OBJECT_HANDLES    = 0x1007;
+constexpr u16 OP_GET_OBJECT_INFO       = 0x1008;
+constexpr u16 OP_GET_OBJECT            = 0x1009;
+constexpr u16 OP_GET_PARTIAL_OBJECT    = 0x101B;
+constexpr u16 OP_GET_OBJECT_PROP_VALUE = 0x9803;
+// android.com vendor extension: same as GetPartialObject but with a 64bit
+// offset, so files larger than 4GiB can be read.
+constexpr u16 OP_GET_PARTIAL_OBJECT_64 = 0x95C1;
+
+constexpr u16 RESP_OK = 0x2001;
+
+constexpr u16 FORMAT_ASSOCIATION = 0x3001;
+constexpr u16 PROP_OBJECT_SIZE   = 0xDC04;
+
+// GetObjectHandles takes the parent handle; 0xFFFFFFFF selects the objects
+// sitting directly in the root of the store.
+constexpr u32 HANDLE_ROOT    = 0xFFFFFFFF;
+constexpr u32 HANDLE_INVALID = 0;
+
+// ObjectInfo carries a 32bit size, so a responder reports this for anything
+// that does not fit and the real size has to be asked for separately.
+constexpr u64 SIZE_NEEDS_64BIT = 0xFFFFFFFF;
+
+constexpr Result ResultTransport  = MAKERESULT(Module_Libnx, LibnxError_IoError);
+constexpr Result ResultProtocol   = MAKERESULT(Module_Libnx, LibnxError_BadInput);
+constexpr Result ResultMtpFailed  = MAKERESULT(Module_Libnx, LibnxError_NotFound);
+constexpr Result ResultNoSession  = MAKERESULT(Module_Libnx, LibnxError_NotInitialized);
+
+#pragma pack(push, 1)
+struct ContainerHeader {
+    u32 length;
+    u16 type;
+    u16 code;
+    u32 transaction_id;
+};
+#pragma pack(pop)
+static_assert(sizeof(ContainerHeader) == 12);
+
+// -------------------------------------------------------------------------
+// transfer buffer
+// -------------------------------------------------------------------------
+
+// usbHsEpPostBufferAsync wants a 0x1000-aligned buffer, and a single post may
+// not exceed the maxXferSize the endpoint was opened with. Both endpoints are
+// opened with exactly this size, so any post up to it is legal.
+//
+// The previous implementation opened the endpoints with maxXferSize =
+// wMaxPacketSize (512) and then posted 64KiB buffers. usb:hs answered with
+// 2140-0301 for anything that did not fit into a single 512 byte urb, which is
+// why listings worked for small directories and died everywhere else.
+constexpr u32 XFER_BUF_SIZE = 0x100000;
+constexpr u32 XFER_ALIGN    = 0x1000;
+alignas(XFER_ALIGN) u8 g_xfer_buf[XFER_BUF_SIZE];
+
+// a response container is at most 12 + 5*4 bytes; one page covers it.
+constexpr u32 RESPONSE_POST_SIZE = XFER_ALIGN;
+
+// biggest payload that still leaves room for the container header.
+constexpr u32 MAX_READ_CHUNK = XFER_BUF_SIZE - XFER_ALIGN;
+
+constexpr u64 XFER_TIMEOUT_NS = 5000000000ULL;
+
+constexpr u32 AlignUp(u32 v, u32 align) {
+    return (v + align - 1) & ~(align - 1);
+}
+
+// -------------------------------------------------------------------------
+// session state
+// -------------------------------------------------------------------------
+
+struct Session {
+    UsbHsClientIfSession iface{};
     UsbHsClientEpSession ep_in{};
     UsbHsClientEpSession ep_out{};
     u32 transaction_id{1};
     bool connected{};
+
+    // advertised in DeviceInfo.OperationsSupported.
+    bool has_partial{};
+    bool has_partial64{};
+    bool has_prop_value{};
+
+    // tick of the last completed transaction, used to skip redundant probes.
+    u64 last_ok_tick{};
 };
 
-static MtpSession g_mtp_session{};
-static Mutex g_mtp_mutex{};
-
-std::string Utf16LeToUtf8(const u8* utf16_bytes, u8 len) {
-    std::string utf8;
-    for (u8 i = 0; i < len; ++i) {
-        u16 ch = static_cast<u16>(utf16_bytes[i * 2]) | (static_cast<u16>(utf16_bytes[i * 2 + 1]) << 8);
-        if (ch == 0) break;
-        if (ch < 0x80) {
-            utf8 += static_cast<char>(ch);
-        } else if (ch < 0x800) {
-            utf8 += static_cast<char>(0xC0 | (ch >> 6));
-            utf8 += static_cast<char>(0x80 | (ch & 0x3F));
-        } else {
-            utf8 += static_cast<char>(0xE0 | (ch >> 12));
-            utf8 += static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            utf8 += static_cast<char>(0x80 | (ch & 0x3F));
-        }
-    }
-    return utf8;
+u64 MsSince(u64 tick) {
+    return (armTicksToNs(armGetSystemTick()) - armTicksToNs(tick)) / 1000000;
 }
 
-// 64KB DMA-aligned transfer buffer required by usbHsEpPostBufferAsync
-// The USB DMA controller on Switch requires 4KB-aligned memory.
-static constexpr u32 MTP_XFER_BUF_SIZE = 0x10000;
-alignas(0x1000) static u8 g_mtp_xfer_buf[MTP_XFER_BUF_SIZE];
+Session g_session{};
+Mutex g_mutex{};
 
-Result PostAndWaitMtpTransfer(UsbHsClientEpSession* ep, void* user_buf, u32 size, bool is_write, u32* out_transferred = nullptr) {
-    if (size > MTP_XFER_BUF_SIZE) {
-        log_write("[MTP_HOST] transfer too large: %u > %u\n", size, MTP_XFER_BUF_SIZE);
-        return MAKERESULT(Module_Libnx, LibnxError_OutOfMemory);
+// -------------------------------------------------------------------------
+// little endian dataset reader
+// -------------------------------------------------------------------------
+
+// MTP datasets are packed little endian with variable length strings, so every
+// field has to be bounds checked. Once a read runs past the end the cursor
+// latches into a failed state and every later read is a no-op.
+class Reader final {
+public:
+    explicit Reader(std::span<const u8> data) : m_data{data} {}
+
+    bool Ok() const { return !m_bad; }
+
+    bool Skip(size_t n) {
+        if (m_bad || m_pos + n > m_data.size()) {
+            m_bad = true;
+            return false;
+        }
+        m_pos += n;
+        return true;
     }
 
-    // For writes: copy user data into aligned DMA buffer before posting
-    u32 post_size = size;
-    if (is_write) {
-        std::memcpy(g_mtp_xfer_buf, user_buf, size);
-    } else {
-        // For USB IN reads, host buffer posted to DMA must be aligned to max packet size (512 bytes).
-        // Using full MTP_XFER_BUF_SIZE (64KB) prevents USB hardware packet overflow.
-        post_size = MTP_XFER_BUF_SIZE;
+    template <typename T>
+    bool Read(T* out) {
+        static_assert(std::is_trivially_copyable_v<T>);
+        if (m_bad || m_pos + sizeof(T) > m_data.size()) {
+            m_bad = true;
+            return false;
+        }
+        std::memcpy(out, m_data.data() + m_pos, sizeof(T));
+        m_pos += sizeof(T);
+        return true;
     }
 
-    // Retry loop: USB IN transfers sometimes fail on first attempt if the
-    // MTP device is still processing the previous command.
-    const int max_attempts = is_write ? 1 : 3;
-    Result last_rc = MAKERESULT(Module_Libnx, LibnxError_NotFound);
-
-    for (int attempt = 0; attempt < max_attempts; ++attempt) {
-        if (attempt > 0) {
-            // Small delay before retry to let MTP device settle
-            svcSleepThread(50000000ULL); // 50ms
-            log_write("[MTP_HOST] retrying IN transfer (attempt %d)\n", attempt + 1);
+    // MTP string: u8 length in characters (including the terminator, 0 means
+    // an empty string) followed by that many utf16-le code units.
+    bool ReadString(std::string* out) {
+        u8 len{};
+        if (!Read(&len)) {
+            return false;
         }
 
-        u32 xfer_id = 0;
-        Result rc = usbHsEpPostBufferAsync(ep, g_mtp_xfer_buf, post_size, 0, &xfer_id);
-        if (R_FAILED(rc)) {
-            log_write("[MTP_HOST] usbHsEpPostBufferAsync failed: 0x%X\n", rc);
-            last_rc = rc;
-            continue;
+        if (out) {
+            out->clear();
+        }
+        if (!len) {
+            return true;
         }
 
-        Event* evt = usbHsEpGetXferEvent(ep);
-        rc = eventWait(evt, 5000000000ULL); // 5 second timeout
-        eventClear(evt);
-
-        if (R_FAILED(rc)) {
-            log_write("[MTP_HOST] eventWait failed/timed out: 0x%X\n", rc);
-            last_rc = rc;
-            continue;
+        if (m_pos + len * sizeof(u16) > m_data.size()) {
+            m_bad = true;
+            return false;
         }
 
-        u32 count = 0;
-        UsbHsXferReport reports[8]{};
-        rc = usbHsEpGetXferReport(ep, reports, 8, &count);
-        if (R_FAILED(rc)) {
-            log_write("[MTP_HOST] usbHsEpGetXferReport failed: 0x%X\n", rc);
-            last_rc = rc;
-            continue;
+        if (out) {
+            AppendUtf16(*out, m_data.subspan(m_pos, len * sizeof(u16)));
+        }
+        m_pos += len * sizeof(u16);
+        return true;
+    }
+
+    // u32 count followed by that many elements of T.
+    template <typename T>
+    bool ReadArray(std::vector<T>* out) {
+        u32 count{};
+        if (!Read(&count)) {
+            return false;
         }
 
-        for (u32 i = 0; i < count; ++i) {
-            if (reports[i].xferId == xfer_id) {
-                if (out_transferred) *out_transferred = reports[i].transferredSize;
-                // For reads: copy DMA buffer back to user buffer (skip if same buffer)
-                if (!is_write && R_SUCCEEDED(reports[i].res) && user_buf != g_mtp_xfer_buf) {
-                    u32 copy_len = std::min(size, reports[i].transferredSize);
-                    std::memcpy(user_buf, g_mtp_xfer_buf, copy_len);
-                }
-                if (R_FAILED(reports[i].res)) {
-                    log_write("[MTP_HOST] xfer report res failed: 0x%X (transferred=%u)\n", reports[i].res, reports[i].transferredSize);
-                    last_rc = reports[i].res;
-                    goto next_attempt;
-                }
-                return reports[i].res;
+        if (m_pos + static_cast<size_t>(count) * sizeof(T) > m_data.size()) {
+            m_bad = true;
+            return false;
+        }
+
+        if (out) {
+            out->resize(count);
+            if (count) {
+                std::memcpy(out->data(), m_data.data() + m_pos, count * sizeof(T));
             }
         }
-        log_write("[MTP_HOST] xfer report not found (count=%u)\n", count);
-        last_rc = MAKERESULT(Module_Libnx, LibnxError_NotFound);
-next_attempt:;
+        m_pos += static_cast<size_t>(count) * sizeof(T);
+        return true;
     }
 
-    return last_rc;
-}
+private:
+    static void AppendUtf16(std::string& out, std::span<const u8> utf16) {
+        for (size_t i = 0; i + 1 < utf16.size(); i += 2) {
+            u32 cp = static_cast<u32>(utf16[i]) | (static_cast<u32>(utf16[i + 1]) << 8);
+            if (!cp) {
+                break;
+            }
 
-Result SendMtpCommand(MtpSession& s, u16 code, const std::vector<u32>& params) {
-    const u32 param_count = static_cast<u32>(params.size());
-    const u32 container_len = static_cast<u32>(sizeof(MtpContainerHeader) + param_count * sizeof(u32));
+            // surrogate pair: phones happily put emoji in file names.
+            if (cp >= 0xD800 && cp <= 0xDBFF && i + 3 < utf16.size()) {
+                const u32 low = static_cast<u32>(utf16[i + 2]) | (static_cast<u32>(utf16[i + 3]) << 8);
+                if (low >= 0xDC00 && low <= 0xDFFF) {
+                    cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+                    i += 2;
+                }
+            }
 
-    u8 cmd_buf[sizeof(MtpContainerHeader) + 5 * sizeof(u32)]{};
-    auto* hdr = reinterpret_cast<MtpContainerHeader*>(cmd_buf);
-    hdr->length = container_len;
-    hdr->type = MTP_CONTAINER_TYPE_COMMAND;
-    hdr->code = code;
-    hdr->transaction_id = s.transaction_id++;
-
-    if (param_count > 0) {
-        std::memcpy(cmd_buf + sizeof(MtpContainerHeader), params.data(), param_count * sizeof(u32));
-    }
-
-    return PostAndWaitMtpTransfer(&s.ep_out, cmd_buf, container_len, true);
-}
-
-Result ReceiveMtpData(MtpSession& s, std::vector<u8>& out_data) {
-    // Read into the global DMA-aligned transfer buffer.
-    // NOTE: PostAndWaitMtpTransfer already reads into g_mtp_xfer_buf and
-    // copies back to user_buf, so we pass g_mtp_xfer_buf as user_buf to
-    // avoid redundant copies (the memcpy becomes src==dst, which is fine).
-    u32 transferred = 0;
-    R_TRY(PostAndWaitMtpTransfer(&s.ep_in, g_mtp_xfer_buf, MTP_XFER_BUF_SIZE, false, &transferred));
-
-    if (transferred < sizeof(MtpContainerHeader)) {
-        log_write("[MTP_HOST] ReceiveMtpData: too small (%u bytes)\n", transferred);
-        return MAKERESULT(Module_Libnx, LibnxError_BadInput);
-    }
-
-    auto* hdr = reinterpret_cast<MtpContainerHeader*>(g_mtp_xfer_buf);
-
-    // If the device sent a Response instead of Data, it means there was no
-    // data phase (e.g. GetObjectHandles on a file handle). We have already
-    // consumed the response from the IN endpoint, so the caller must NOT
-    // call ReceiveMtpResponse separately.
-    if (hdr->type == MTP_CONTAINER_TYPE_RESPONSE) {
-        log_write("[MTP_HOST] ReceiveMtpData: got response instead of data (code=0x%04X)\n", hdr->code);
-        return MAKERESULT(Module_Libnx, LibnxError_BadInput);
-    }
-
-    if (hdr->type != MTP_CONTAINER_TYPE_DATA || hdr->length < sizeof(MtpContainerHeader)) {
-        log_write("[MTP_HOST] ReceiveMtpData: bad type=%u length=%u\n", hdr->type, hdr->length);
-        return MAKERESULT(Module_Libnx, LibnxError_BadInput);
-    }
-
-    const u32 container_len = hdr->length;
-    const u32 payload_len = container_len - sizeof(MtpContainerHeader);
-    out_data.resize(payload_len);
-
-    u32 payload_copied = 0;
-    if (transferred > sizeof(MtpContainerHeader)) {
-        u32 first_copy = std::min(payload_len, transferred - static_cast<u32>(sizeof(MtpContainerHeader)));
-        std::memcpy(out_data.data(), g_mtp_xfer_buf + sizeof(MtpContainerHeader), first_copy);
-        payload_copied = first_copy;
-    }
-
-    while (payload_copied < payload_len) {
-        u32 remaining = payload_len - payload_copied;
-        u32 chunk_len = std::min(remaining, MTP_XFER_BUF_SIZE);
-        u32 chunk_transferred = 0;
-        Result rc = PostAndWaitMtpTransfer(&s.ep_in, g_mtp_xfer_buf, chunk_len, false, &chunk_transferred);
-        if (R_FAILED(rc) || chunk_transferred == 0) {
-            log_write("[MTP_HOST] ReceiveMtpData: failed reading chunk (rc=0x%X, copied=%u/%u)\n", rc, payload_copied, payload_len);
-            return R_FAILED(rc) ? rc : MAKERESULT(Module_Libnx, LibnxError_BadInput);
+            if (cp < 0x80) {
+                out += static_cast<char>(cp);
+            } else if (cp < 0x800) {
+                out += static_cast<char>(0xC0 | (cp >> 6));
+                out += static_cast<char>(0x80 | (cp & 0x3F));
+            } else if (cp < 0x10000) {
+                out += static_cast<char>(0xE0 | (cp >> 12));
+                out += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                out += static_cast<char>(0x80 | (cp & 0x3F));
+            } else {
+                out += static_cast<char>(0xF0 | (cp >> 18));
+                out += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+                out += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                out += static_cast<char>(0x80 | (cp & 0x3F));
+            }
         }
-        u32 copy_len = std::min(remaining, chunk_transferred);
-        std::memcpy(out_data.data() + payload_copied, g_mtp_xfer_buf, copy_len);
-        payload_copied += copy_len;
     }
 
-    return 0;
+    std::span<const u8> m_data;
+    size_t m_pos{};
+    bool m_bad{};
+};
+
+// -------------------------------------------------------------------------
+// transport
+// -------------------------------------------------------------------------
+
+void CloseUsbLocked(const char* why) {
+    if (!g_session.connected) {
+        return;
+    }
+
+    log_write("[MTP_HOST] dropping usb session: %s\n", why);
+    g_session.connected = false;
+
+    usbHsEpClose(&g_session.ep_in);
+    usbHsEpClose(&g_session.ep_out);
+    usbHsIfClose(&g_session.iface);
+
+    g_session.ep_in = {};
+    g_session.ep_out = {};
+    g_session.iface = {};
+    g_session.has_partial = false;
+    g_session.has_partial64 = false;
+    g_session.has_prop_value = false;
 }
 
-Result ReceiveMtpResponse(MtpSession& s, u16* out_response_code = nullptr) {
-    u8 resp_buf[sizeof(MtpContainerHeader) + 5 * sizeof(u32)]{};
-    u32 transferred = 0;
-    R_TRY(PostAndWaitMtpTransfer(&s.ep_in, resp_buf, sizeof(resp_buf), false, &transferred));
+// A failed bulk transfer leaves host and device disagreeing about which phase
+// comes next: the command was accepted but its data/response phases were never
+// drained, so the next command reads the previous one's leftovers. There is no
+// way to resynchronise from userland, so the session is torn down and the
+// caller reports an I/O error. Reporting an empty listing instead is what made
+// a broken link look like an empty phone.
+void KillSession(const char* why) {
+    CloseUsbLocked(why);
+}
 
-    auto* hdr = reinterpret_cast<MtpContainerHeader*>(resp_buf);
-    if (out_response_code) {
-        *out_response_code = hdr->code;
+// Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
+// be <= XFER_BUF_SIZE; for IN transfers it also has to be at least as large as
+// what the device is about to send, otherwise the controller reports babble.
+Result PostBuffer(UsbHsClientEpSession* ep, u32 size, u32* out_transferred) {
+    if (out_transferred) {
+        *out_transferred = 0;
     }
 
-    log_write("[MTP_HOST] response: code=0x%04X type=%u len=%u\n", hdr->code, hdr->type, hdr->length);
-    return (hdr->code == MTP_RESPONSE_OK) ? 0 : MAKERESULT(Module_Libnx, LibnxError_NotFound);
+    R_UNLESS(size && size <= XFER_BUF_SIZE, ResultProtocol);
+
+    u32 xfer_id{};
+    if (const auto rc = usbHsEpPostBufferAsync(ep, g_xfer_buf, size, 0, &xfer_id); R_FAILED(rc)) {
+        log_write("[MTP_HOST] post %u bytes failed: 0x%X\n", size, rc);
+        R_THROW(rc);
+    }
+
+    auto* evt = usbHsEpGetXferEvent(ep);
+    if (const auto rc = eventWait(evt, XFER_TIMEOUT_NS); R_FAILED(rc)) {
+        log_write("[MTP_HOST] transfer timed out: 0x%X\n", rc);
+        R_THROW(rc);
+    }
+    eventClear(evt);
+
+    UsbHsXferReport reports[4]{};
+    u32 count{};
+    if (const auto rc = usbHsEpGetXferReport(ep, reports, std::size(reports), &count); R_FAILED(rc)) {
+        log_write("[MTP_HOST] xfer report failed: 0x%X\n", rc);
+        R_THROW(rc);
+    }
+
+    for (u32 i = 0; i < count; i++) {
+        if (reports[i].xferId != xfer_id) {
+            continue;
+        }
+
+        if (R_FAILED(reports[i].res)) {
+            log_write("[MTP_HOST] transfer failed: 0x%X (%u/%u bytes)\n",
+                reports[i].res, reports[i].transferredSize, size);
+            R_THROW(reports[i].res);
+        }
+
+        if (out_transferred) {
+            *out_transferred = reports[i].transferredSize;
+        }
+        R_SUCCEED();
+    }
+
+    log_write("[MTP_HOST] no xfer report for id %u (got %u)\n", xfer_id, count);
+    R_THROW(ResultTransport);
+}
+
+// -------------------------------------------------------------------------
+// protocol
+// -------------------------------------------------------------------------
+
+// Destination for a data phase. Either grows a vector (datasets) or fills a
+// caller supplied buffer (file reads, which must not take an extra copy).
+class DataSink final {
+public:
+    DataSink() = default;
+    explicit DataSink(std::vector<u8>* vec) : m_vec{vec} {}
+    DataSink(void* raw, size_t capacity) : m_raw{static_cast<u8*>(raw)}, m_capacity{capacity} {}
+
+    void Reset(size_t expected) {
+        m_written = 0;
+        if (m_vec) {
+            m_vec->clear();
+            m_vec->reserve(expected);
+        }
+    }
+
+    // Anything past the sink's capacity is counted but dropped; callers check
+    // Written() against what they asked for.
+    void Append(const void* src, size_t len) {
+        if (m_vec) {
+            const auto* p = static_cast<const u8*>(src);
+            m_vec->insert(m_vec->end(), p, p + len);
+        } else if (m_raw && m_written < m_capacity) {
+            std::memcpy(m_raw + m_written, src, std::min(len, m_capacity - m_written));
+        }
+        m_written += len;
+    }
+
+    size_t Written() const { return m_written; }
+
+private:
+    std::vector<u8>* m_vec{};
+    u8* m_raw{};
+    size_t m_capacity{};
+    size_t m_written{};
+};
+
+Result SendCommand(u16 code, std::span<const u32> params, u32* out_transaction_id) {
+    R_UNLESS(params.size() <= 5, ResultProtocol);
+
+    const u32 length = sizeof(ContainerHeader) + static_cast<u32>(params.size_bytes());
+
+    ContainerHeader hdr{};
+    hdr.length = length;
+    hdr.type = CONTAINER_COMMAND;
+    hdr.code = code;
+    hdr.transaction_id = g_session.transaction_id++;
+    std::memcpy(g_xfer_buf, &hdr, sizeof(hdr));
+    if (!params.empty()) {
+        std::memcpy(g_xfer_buf + sizeof(hdr), params.data(), params.size_bytes());
+    }
+
+    *out_transaction_id = hdr.transaction_id;
+
+    u32 transferred{};
+    R_TRY(PostBuffer(&g_session.ep_out, length, &transferred));
+    R_UNLESS(transferred == length, ResultTransport);
+    R_SUCCEED();
+}
+
+// Reads one container into g_xfer_buf. `post` must cover whatever the device
+// is about to send. A zero length transfer is the terminating packet of the
+// previous phase and is skipped.
+Result ReceiveContainer(u32 post, ContainerHeader* out_hdr, u32* out_transferred) {
+    for (int attempt = 0; attempt < 2; attempt++) {
+        u32 transferred{};
+        R_TRY(PostBuffer(&g_session.ep_in, post, &transferred));
+
+        if (!transferred) {
+            continue;
+        }
+
+        R_UNLESS(transferred >= sizeof(ContainerHeader), ResultProtocol);
+        std::memcpy(out_hdr, g_xfer_buf, sizeof(*out_hdr));
+        *out_transferred = transferred;
+        R_SUCCEED();
+    }
+
+    R_THROW(ResultTransport);
+}
+
+Result ReceiveDataPhase(const ContainerHeader& hdr, u32 first_transferred, DataSink* sink) {
+    R_UNLESS(hdr.length >= sizeof(ContainerHeader), ResultProtocol);
+
+    const u32 payload_len = hdr.length - sizeof(ContainerHeader);
+    if (sink) {
+        sink->Reset(payload_len);
+    }
+
+    u32 copied = 0;
+    if (first_transferred > sizeof(ContainerHeader)) {
+        const u32 n = std::min<u32>(payload_len, first_transferred - sizeof(ContainerHeader));
+        if (sink) {
+            sink->Append(g_xfer_buf + sizeof(ContainerHeader), n);
+        }
+        copied = n;
+    }
+
+    while (copied < payload_len) {
+        const u32 want = std::min<u32>(payload_len - copied, XFER_BUF_SIZE);
+        u32 transferred{};
+        R_TRY(PostBuffer(&g_session.ep_in, AlignUp(want, XFER_ALIGN), &transferred));
+        R_UNLESS(transferred, ResultTransport);
+
+        const u32 n = std::min(want, transferred);
+        if (sink) {
+            sink->Append(g_xfer_buf, n);
+        }
+        copied += n;
+    }
+
+    R_SUCCEED();
+}
+
+// Runs one complete MTP transaction. `out_code` receives the responder's reply
+// code even when it is an error, so callers can tell "no such object" apart
+// from "the link is gone". Any transport level failure kills the session.
+Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_code) {
+    if (out_code) {
+        *out_code = 0;
+    }
+
+    R_UNLESS(g_session.connected, ResultNoSession);
+
+    u32 transaction_id{};
+    if (const auto rc = SendCommand(op, params, &transaction_id); R_FAILED(rc)) {
+        KillSession("command phase failed");
+        R_THROW(rc);
+    }
+
+    ContainerHeader hdr{};
+    u32 transferred{};
+    // The responder answers with either a data phase or, when the operation
+    // has no data or failed outright, the response straight away. Post the
+    // full buffer since the size is not known until the header arrives.
+    if (const auto rc = ReceiveContainer(XFER_BUF_SIZE, &hdr, &transferred); R_FAILED(rc)) {
+        KillSession("data phase failed");
+        R_THROW(rc);
+    }
+
+    if (hdr.type == CONTAINER_DATA) {
+        if (const auto rc = ReceiveDataPhase(hdr, transferred, sink); R_FAILED(rc)) {
+            KillSession("truncated data phase");
+            R_THROW(rc);
+        }
+
+        if (const auto rc = ReceiveContainer(RESPONSE_POST_SIZE, &hdr, &transferred); R_FAILED(rc)) {
+            KillSession("response phase failed");
+            R_THROW(rc);
+        }
+    }
+
+    if (hdr.type != CONTAINER_RESPONSE) {
+        KillSession("unexpected container type");
+        R_THROW(ResultProtocol);
+    }
+
+    // A responder that answers the wrong transaction is one phase out of step
+    // and everything read after this point would be garbage. Some devices
+    // reply with 0, which is tolerated.
+    if (hdr.transaction_id && hdr.transaction_id != transaction_id) {
+        KillSession("response transaction id mismatch");
+        R_THROW(ResultProtocol);
+    }
+
+    g_session.last_ok_tick = armGetSystemTick();
+
+    if (out_code) {
+        *out_code = hdr.code;
+    }
+    R_UNLESS(hdr.code == RESP_OK, ResultMtpFailed);
+    R_SUCCEED();
+}
+
+Result TransactData(u16 op, std::span<const u32> params, std::vector<u8>* out, u16* out_code = nullptr) {
+    DataSink sink{out};
+    return Transact(op, params, &sink, out_code);
+}
+
+Result TransactNoData(u16 op, std::span<const u32> params, u16* out_code = nullptr) {
+    return Transact(op, params, nullptr, out_code);
+}
+
+// -------------------------------------------------------------------------
+// dataset parsing
+// -------------------------------------------------------------------------
+
+bool ParseObjectInfo(std::span<const u8> data, u32 handle, MtpObject* out) {
+    Reader r{data};
+
+    u32 storage_id{};
+    u16 format{};
+    u32 compressed_size{};
+
+    r.Read(&storage_id);
+    r.Read(&format);
+    r.Skip(2);                  // ProtectionStatus
+    r.Read(&compressed_size);
+    r.Skip(2 + 4 + 4 + 4);      // Thumb{Format,CompressedSize,PixWidth,PixHeight}
+    r.Skip(4 + 4 + 4);          // Image{PixWidth,PixHeight,BitDepth}
+    r.Skip(4);                  // ParentObject
+    r.Skip(2 + 4 + 4);          // Association{Type,Desc}, SequenceNumber
+
+    std::string filename;
+    r.ReadString(&filename);
+
+    if (!r.Ok()) {
+        return false;
+    }
+
+    out->handle = handle;
+    out->format = format;
+    out->size = compressed_size;
+    out->is_dir = format == FORMAT_ASSOCIATION;
+    out->filename = std::move(filename);
+
+    if (out->filename.empty()) {
+        char fallback[32];
+        std::snprintf(fallback, sizeof(fallback), "object_%08x", handle);
+        out->filename = fallback;
+    }
+
+    return true;
+}
+
+// ObjectInfo tops out at 4GiB, so anything at the cap needs the real size from
+// the object property. Leaves the size alone when the device cannot answer.
+void ResolveLargeSize(MtpObject* obj) {
+    if (obj->is_dir || obj->size != SIZE_NEEDS_64BIT || !g_session.has_prop_value) {
+        return;
+    }
+
+    const u32 params[]{obj->handle, PROP_OBJECT_SIZE};
+    std::vector<u8> data;
+    if (R_FAILED(TransactData(OP_GET_OBJECT_PROP_VALUE, params, &data))) {
+        return;
+    }
+
+    u64 size{};
+    Reader r{data};
+    if (r.Read(&size) && r.Ok()) {
+        obj->size = size;
+    }
+}
+
+// DeviceInfo tells us which read operation to use. Everything else in the
+// dataset is skipped past; the strings are variable length so they cannot be
+// jumped over by offset.
+Result QueryDeviceCapabilities() {
+    std::vector<u8> data;
+    R_TRY(TransactData(OP_GET_DEVICE_INFO, {}, &data));
+
+    Reader r{data};
+    r.Skip(2);              // StandardVersion
+    r.Skip(4);              // VendorExtensionID
+    r.Skip(2);              // VendorExtensionVersion
+    r.ReadString(nullptr);  // VendorExtensionDesc
+    r.Skip(2);              // FunctionalMode
+
+    std::vector<u16> ops;
+    r.ReadArray(&ops);
+    R_UNLESS(r.Ok(), ResultProtocol);
+
+    const auto has = [&ops](u16 op) {
+        return std::ranges::find(ops, op) != ops.end();
+    };
+
+    g_session.has_partial = has(OP_GET_PARTIAL_OBJECT);
+    g_session.has_partial64 = has(OP_GET_PARTIAL_OBJECT_64);
+    g_session.has_prop_value = has(OP_GET_OBJECT_PROP_VALUE);
+
+    log_write("[MTP_HOST] capabilities: partial=%d partial64=%d prop_value=%d\n",
+        g_session.has_partial, g_session.has_partial64, g_session.has_prop_value);
+
+    R_SUCCEED();
+}
+
+// -------------------------------------------------------------------------
+// mount bookkeeping
+// -------------------------------------------------------------------------
+
+// A devoptab mount outlives the USB session on purpose. The file browser hands
+// raw Device pointers to every open DIR and FILE, so unmounting while the user
+// is inside the phone is a use-after-free -- which is what turned a flaky
+// cable into a crash. On reconnect the existing device is rebound to the new
+// storage instead.
+//
+// The browser does unmount everything when its menu is destroyed, so `device`
+// is only safe to touch while devoptab still knows about `config.url`.
+struct MountRecord {
+    common::MountConfig config{};
+    MtpMountDevice* device{};
+};
+
+std::vector<MountRecord> g_mounts{};
+
+MtpMountDevice* LiveDevice(const MountRecord& rec) {
+    return common::IsNetworkDeviceMounted(rec.config.url) ? rec.device : nullptr;
+}
+
+// -------------------------------------------------------------------------
+// path helpers
+// -------------------------------------------------------------------------
+
+// "mtp0:/Android/data/" -> "Android/data", "mtp0:/" -> "".
+std::string NormalisePath(const char* path) {
+    if (!path) {
+        return {};
+    }
+
+    std::string out = path;
+    if (const auto colon = out.find(':'); colon != std::string::npos) {
+        out.erase(0, colon + 1);
+    }
+
+    // collapse repeated slashes and drop "." components.
+    std::string cleaned;
+    cleaned.reserve(out.size());
+    for (size_t i = 0; i < out.size();) {
+        if (out[i] == '/') {
+            i++;
+            continue;
+        }
+
+        const auto end = out.find('/', i);
+        const auto component = out.substr(i, end == std::string::npos ? std::string::npos : end - i);
+        if (component != ".") {
+            if (!cleaned.empty()) {
+                cleaned += '/';
+            }
+            cleaned += component;
+        }
+
+        if (end == std::string::npos) {
+            break;
+        }
+        i = end + 1;
+    }
+
+    return cleaned;
+}
+
+void SplitPath(const std::string& path, std::string* parent, std::string* name) {
+    const auto slash = path.rfind('/');
+    if (slash == std::string::npos) {
+        parent->clear();
+        *name = path;
+    } else {
+        *parent = path.substr(0, slash);
+        *name = path.substr(slash + 1);
+    }
 }
 
 } // namespace
 
-MtpMountDevice::MtpMountDevice(const common::MountConfig& config, u32 storage_id, const std::string& volume_label, u64 capacity, u64 free_space)
-    : MountDevice(config)
-    , m_storage_id{storage_id}
-    , m_label{volume_label}
-    , m_capacity{capacity}
-    , m_free_space{free_space} {}
+// -------------------------------------------------------------------------
+// MtpMountDevice
+// -------------------------------------------------------------------------
 
-MtpMountDevice::~MtpMountDevice() = default;
+MtpMountDevice::MtpMountDevice(const common::MountConfig& config, u32 storage_id, u64 capacity, u64 free_space)
+: MountDevice{config}
+, m_storage_id{storage_id}
+, m_capacity{capacity}
+, m_free_space{free_space} {
+}
+
+void MtpMountDevice::Rebind(u32 storage_id, u64 capacity, u64 free_space) {
+    SCOPED_MUTEX(&g_mutex);
+    m_storage_id = storage_id;
+    m_capacity = capacity;
+    m_free_space = free_space;
+    DropCaches();
+}
+
+void MtpMountDevice::DropCaches() {
+    m_dir_cache.clear();
+    m_obj_cache.clear();
+}
 
 bool MtpMountDevice::Mount() {
     return true;
 }
 
-u32 MtpMountDevice::ResolvePathToHandle(const char* path, bool* is_dir, u64* out_size) {
-    if (!path || path[0] == '\0') {
-        if (is_dir) *is_dir = true;
-        if (out_size) *out_size = 0;
-        return 0xFFFFFFFF; // Root parent handle in MTP
-    }
-
-    std::string path_str = path;
-
-    // Strip device name prefix if present (e.g. "mtp0:/", "mtp0:", ":/")
-    size_t colon_pos = path_str.find(':');
-    if (colon_pos != std::string::npos) {
-        path_str.erase(0, colon_pos + 1);
-    }
-
-    while (!path_str.empty() && path_str.front() == '/') path_str.erase(0, 1);
-    while (!path_str.empty() && path_str.back() == '/') path_str.pop_back();
-
-    if (path_str.empty() || path_str == ".") {
-        if (is_dir) *is_dir = true;
-        if (out_size) *out_size = 0;
-        return 0xFFFFFFFF; // Root parent handle in MTP
-    }
-
-    auto cache_it = m_path_cache.find(path_str);
-    if (cache_it != m_path_cache.end()) {
-        if (is_dir) *is_dir = cache_it->second.is_dir;
-        if (out_size) *out_size = cache_it->second.size;
-        return cache_it->second.handle;
-    }
-
-    u32 current_handle = 0xFFFFFFFF;
-    size_t pos = 0;
-    std::string current_full_path;
-
-    while (pos < path_str.size()) {
-        size_t next_slash = path_str.find('/', pos);
-        std::string component = path_str.substr(pos, (next_slash == std::string::npos) ? std::string::npos : next_slash - pos);
-        if (!current_full_path.empty()) current_full_path += "/";
-        current_full_path += component;
-
-        std::vector<MtpObject> entries;
-        if (!FetchDirectoryEntries(current_handle, entries)) {
-            return 0;
-        }
-
-        auto it = std::ranges::find_if(entries, [&component](const MtpObject& obj) {
-            return obj.filename == component;
-        });
-
-        if (it == entries.end()) {
-            return 0;
-        }
-
-        m_path_cache[current_full_path] = *it;
-
-        current_handle = it->handle;
-        if (is_dir) *is_dir = it->is_dir;
-        if (out_size) *out_size = it->size;
-
-        if (next_slash == std::string::npos) break;
-        pos = next_slash + 1;
-    }
-
-    return current_handle;
-}
-
-bool MtpMountDevice::FetchDirectoryEntriesLocked(u32 parent_handle, std::vector<MtpObject>& out_entries) {
-    auto cache_it = m_dir_cache.find(parent_handle);
-    if (cache_it != m_dir_cache.end()) {
-        out_entries = cache_it->second;
+bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
+    if (path.empty()) {
+        *out = MtpObject{.handle = HANDLE_ROOT, .is_dir = true};
         return true;
     }
 
-    if (!g_mtp_session.connected) return false;
-
-    std::vector<u32> parent_candidates;
-    if (parent_handle == 0xFFFFFFFF || parent_handle == 0) {
-        // Standard MTP uses 0x00000000 for top-level root objects.
-        // Some servers expect 0xFFFFFFFF, so try 0x00000000 first, then 0xFFFFFFFF.
-        parent_candidates = { 0x00000000, 0xFFFFFFFF };
-    } else {
-        parent_candidates = { parent_handle };
+    if (const auto it = m_obj_cache.find(path); it != m_obj_cache.end()) {
+        *out = it->second;
+        return true;
     }
 
-    std::vector<u32> storage_candidates{m_storage_id, 0xFFFFFFFF};
-
-    std::vector<u8> data;
-    u32 count = 0;
-    bool success = false;
-
-    for (u32 st_id : storage_candidates) {
-        for (u32 p_handle : parent_candidates) {
-            std::vector<u32> params{st_id, 0, p_handle};
-            if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_GET_OBJECT_HANDLES, params))) continue;
-
-            data.clear();
-            if (R_FAILED(ReceiveMtpData(g_mtp_session, data))) continue;
-            if (R_FAILED(ReceiveMtpResponse(g_mtp_session))) continue;
-
-            if (data.size() >= sizeof(u32)) {
-                std::memcpy(&count, data.data(), sizeof(u32));
-                log_write("[MTP_HOST] GetObjectHandles(storage=0x%08X, parent=0x%08X) -> count=%u\n",
-                    st_id, p_handle, count);
-                success = true;
-                if (count > 0) break;
-            }
-        }
-        if (count > 0) break;
-    }
-
-    if (!success) {
+    // Listing the parent caches every sibling, so the entry we want is present
+    // afterwards unless it genuinely does not exist.
+    std::string parent, name;
+    SplitPath(path, &parent, &name);
+    if (!List(parent, nullptr)) {
         return false;
     }
 
-    if (data.size() < sizeof(u32) || count == 0) {
-        m_dir_cache[parent_handle] = out_entries;
-        return true;
+    const auto it = m_obj_cache.find(path);
+    if (it == m_obj_cache.end()) {
+        return false;
     }
 
-    const u32 num_handles = std::min(count, static_cast<u32>((data.size() - sizeof(u32)) / sizeof(u32)));
-
-    out_entries.reserve(num_handles);
-    for (u32 i = 0; i < num_handles; ++i) {
-        u32 handle = 0;
-        std::memcpy(&handle, data.data() + sizeof(u32) + i * sizeof(u32), sizeof(u32));
-
-        // Send GetObjectInfo(handle)
-        std::vector<u32> info_params{handle};
-        if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_GET_OBJECT_INFO, info_params))) continue;
-
-        std::vector<u8> info_data;
-        if (R_FAILED(ReceiveMtpData(g_mtp_session, info_data))) continue;
-        if (R_FAILED(ReceiveMtpResponse(g_mtp_session))) continue;
-
-        if (info_data.size() < 52) continue;
-
-        u32 obj_storage = 0, obj_size = 0, obj_parent = 0;
-        u16 obj_format = 0;
-        std::memcpy(&obj_storage, info_data.data(), sizeof(u32));
-        std::memcpy(&obj_format, info_data.data() + 4, sizeof(u16));
-        std::memcpy(&obj_size, info_data.data() + 8, sizeof(u32));
-        std::memcpy(&obj_parent, info_data.data() + 38, sizeof(u32));
-
-        u8 name_len = info_data[52];
-        std::string filename;
-        if (name_len > 0 && info_data.size() >= 53 + name_len * sizeof(u16)) {
-            filename = Utf16LeToUtf8(info_data.data() + 53, name_len);
-        }
-
-        if (filename.empty()) {
-            char fallback[32];
-            std::snprintf(fallback, sizeof(fallback), "object_%08x", handle);
-            filename = fallback;
-        }
-
-        MtpObject obj{};
-        obj.handle = handle;
-        obj.storage_id = obj_storage;
-        obj.format = obj_format;
-        obj.size = obj_size;
-        obj.parent_handle = obj_parent;
-        obj.filename = filename;
-        obj.is_dir = (obj_format == MTP_FORMAT_FOLDER || obj_format == 0xBA05);
-
-        log_write("[MTP_HOST]   entry[%u]: handle=0x%08X name='%s' is_dir=%d size=%llu\n",
-            i, handle, filename.c_str(), obj.is_dir, static_cast<unsigned long long>(obj.size));
-
-        out_entries.push_back(obj);
-    }
-
-    m_dir_cache[parent_handle] = out_entries;
+    *out = it->second;
     return true;
 }
 
-bool MtpMountDevice::FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObject>& out_entries) {
-    // Check cache without lock first
-    auto cache_it = m_dir_cache.find(parent_handle);
-    if (cache_it != m_dir_cache.end()) {
-        out_entries = cache_it->second;
+bool MtpMountDevice::List(const std::string& path, std::vector<MtpObject>* out) {
+    if (const auto it = m_dir_cache.find(path); it != m_dir_cache.end()) {
+        if (out) {
+            *out = it->second;
+        }
         return true;
     }
 
-    SCOPED_MUTEX(&g_mtp_mutex);
-    return FetchDirectoryEntriesLocked(parent_handle, out_entries);
-}
-
-void MtpMountDevice::PreFetchRootEntries() {
-    // Called from ScanAndMountMtpDevices while g_mtp_mutex is held.
-    // Pre-populate root directory cache so devoptab_diropen doesn't need USB later.
-    std::vector<MtpObject> root_entries;
-    if (FetchDirectoryEntriesLocked(0xFFFFFFFF, root_entries)) {
-        log_write("[MTP_HOST] pre-fetched %zu root entries\n", root_entries.size());
-    } else {
-        log_write("[MTP_HOST] pre-fetch root entries failed\n");
+    MtpObject dir{};
+    if (!Lookup(path, &dir) || !dir.is_dir) {
+        return false;
     }
+
+    SCOPED_MUTEX(&g_mutex);
+    if (!g_session.connected) {
+        return false;
+    }
+
+    const u32 handle_params[]{m_storage_id, 0, dir.handle};
+    std::vector<u8> data;
+    if (R_FAILED(TransactData(OP_GET_OBJECT_HANDLES, handle_params, &data))) {
+        return false;
+    }
+
+    std::vector<u32> handles;
+    Reader r{data};
+    if (!r.ReadArray(&handles) || !r.Ok()) {
+        log_write("[MTP_HOST] malformed GetObjectHandles reply for '%s'\n", path.c_str());
+        return false;
+    }
+
+    std::vector<MtpObject> entries;
+    entries.reserve(handles.size());
+
+    for (const auto handle : handles) {
+        const u32 info_params[]{handle};
+        std::vector<u8> info;
+        if (R_FAILED(TransactData(OP_GET_OBJECT_INFO, info_params, &info))) {
+            // The link is gone; a partial listing would look like a phone that
+            // lost half its files, so give up on the whole directory.
+            if (!g_session.connected) {
+                return false;
+            }
+            continue;
+        }
+
+        MtpObject obj{};
+        if (!ParseObjectInfo(info, handle, &obj)) {
+            continue;
+        }
+
+        ResolveLargeSize(&obj);
+        entries.push_back(std::move(obj));
+    }
+
+    // cap the cache: a deep browse should not grow it without bound.
+    if (m_dir_cache.size() >= 64) {
+        DropCaches();
+    }
+
+    for (const auto& e : entries) {
+        m_obj_cache[path.empty() ? e.filename : path + "/" + e.filename] = e;
+    }
+    const auto& cached = (m_dir_cache[path] = std::move(entries));
+
+    log_write("[MTP_HOST] listed '%s': %zu entries\n", path.c_str(), cached.size());
+
+    if (out) {
+        *out = cached;
+    }
+    return true;
 }
 
 int MtpMountDevice::devoptab_diropen(void* fd, const char *path) {
-    // Construct MtpDirHandle in-place (calloc'd memory has no constructor called)
-    auto* dir_handle = new (fd) MtpDirHandle();
-    dir_handle->entries.clear();
-    dir_handle->index = 0;
+    // devoptab hands us calloc'd storage, so the vector member needs its
+    // constructor run before anything touches it.
+    auto* dir = new (fd) MtpDirHandle();
 
-    log_write("[MTP_HOST] devoptab_diropen path='%s'\n", path ? path : "NULL");
-
-    bool is_dir = false;
-    u32 handle = ResolvePathToHandle(path, &is_dir);
-
-    log_write("[MTP_HOST] devoptab_diropen resolved handle=0x%08X is_dir=%d\n", handle, is_dir);
-
-    if (!FetchDirectoryEntries(handle, dir_handle->entries)) {
-        log_write("[MTP_HOST] FetchDirectoryEntries failed for handle=0x%08X\n", handle);
-        return -ENOENT;
+    if (!List(NormalisePath(path), &dir->entries)) {
+        const auto err = g_session.connected ? ENOENT : EIO;
+        dir->~MtpDirHandle();
+        return -err;
     }
 
-    log_write("[MTP_HOST] devoptab_diropen loaded %zu entries\n", dir_handle->entries.size());
-    dir_handle->index = 0;
+    dir->index = 0;
     return 0;
 }
 
 int MtpMountDevice::devoptab_dirreset(void* fd) {
-    auto* dir_handle = static_cast<MtpDirHandle*>(fd);
-    dir_handle->index = 0;
+    static_cast<MtpDirHandle*>(fd)->index = 0;
     return 0;
 }
 
 int MtpMountDevice::devoptab_dirnext(void* fd, char *filename, struct stat *filestat) {
-    auto* dir_handle = static_cast<MtpDirHandle*>(fd);
-    if (dir_handle->index >= dir_handle->entries.size()) {
+    auto* dir = static_cast<MtpDirHandle*>(fd);
+    if (dir->index >= dir->entries.size()) {
         return -ENOENT;
     }
 
-    const auto& entry = dir_handle->entries[dir_handle->index++];
-    std::strncpy(filename, entry.filename.c_str(), 255);
-    filename[255] = '\0';
+    const auto& entry = dir->entries[dir->index++];
+    std::snprintf(filename, NAME_MAX + 1, "%s", entry.filename.c_str());
 
     if (filestat) {
         std::memset(filestat, 0, sizeof(*filestat));
+        filestat->st_nlink = 1;
         filestat->st_size = entry.size;
-        filestat->st_mode = entry.is_dir ? (S_IFDIR | 0755) : (S_IFREG | 0644);
+        filestat->st_mode = entry.is_dir ? (S_IFDIR | 0555) : (S_IFREG | 0444);
     }
 
     return 0;
 }
 
 int MtpMountDevice::devoptab_dirclose(void* fd) {
-    auto* dir_handle = static_cast<MtpDirHandle*>(fd);
-    // Explicitly destroy to free std::vector and std::string members
-    dir_handle->~MtpDirHandle();
+    static_cast<MtpDirHandle*>(fd)->~MtpDirHandle();
+    return 0;
+}
+
+int MtpMountDevice::devoptab_lstat(const char *path, struct stat *st) {
+    MtpObject obj{};
+    if (!Lookup(NormalisePath(path), &obj)) {
+        return g_session.connected ? -ENOENT : -EIO;
+    }
+
+    std::memset(st, 0, sizeof(*st));
+    st->st_nlink = 1;
+    if (obj.is_dir) {
+        st->st_mode = S_IFDIR | 0555;
+    } else {
+        st->st_mode = S_IFREG | 0444;
+        st->st_size = obj.size;
+    }
+
     return 0;
 }
 
 int MtpMountDevice::devoptab_open(void *fileStruct, const char *path, int flags, int mode) {
-    auto* file_handle = static_cast<MtpFileHandle*>(fileStruct);
-    file_handle->object_handle = 0;
-    file_handle->size = 0;
-    file_handle->offset = 0;
+    auto* file = static_cast<MtpFileHandle*>(fileStruct);
+    *file = {};
 
-    bool is_dir = false;
-    u64 file_size = 0;
-    u32 handle = ResolvePathToHandle(path, &is_dir, &file_size);
-    if (handle == 0 || handle == 0xFFFFFFFF || is_dir) {
-        return -ENOENT;
+    MtpObject obj{};
+    if (!Lookup(NormalisePath(path), &obj)) {
+        return g_session.connected ? -ENOENT : -EIO;
     }
 
-    file_handle->object_handle = handle;
-    file_handle->size = file_size;
-    file_handle->offset = 0;
+    if (obj.is_dir) {
+        return -EISDIR;
+    }
+
+    file->object_handle = obj.handle;
+    file->size = obj.size;
     return 0;
 }
 
 int MtpMountDevice::devoptab_close(void *fd) {
-    auto* file_handle = static_cast<MtpFileHandle*>(fd);
-    file_handle->object_handle = 0;
-    file_handle->offset = 0;
+    *static_cast<MtpFileHandle*>(fd) = {};
     return 0;
-}
-
-ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
-    auto* file_handle = static_cast<MtpFileHandle*>(fd);
-    if (!file_handle->object_handle) return -EIO;
-
-    SCOPED_MUTEX(&g_mtp_mutex);
-    if (!g_mtp_session.connected) return -EIO;
-
-    if (file_handle->offset >= file_handle->size) {
-        return 0; // EOF
-    }
-
-    size_t to_read = std::min(len, static_cast<size_t>(file_handle->size - file_handle->offset));
-    if (to_read == 0) return 0;
-
-    size_t total_bytes_read = 0;
-    constexpr size_t MAX_CHUNK = 0xF000; // 60KB per chunk to fit safely in DMA buffer + MTP header
-
-    while (total_bytes_read < to_read) {
-        u32 chunk_len = static_cast<u32>(std::min(to_read - total_bytes_read, MAX_CHUNK));
-        u64 cur_offset = file_handle->offset + total_bytes_read;
-
-        u32 offset_32 = static_cast<u32>(cur_offset);
-        std::vector<u32> params{file_handle->object_handle, offset_32, chunk_len};
-
-        Result rc = SendMtpCommand(g_mtp_session, MTP_OP_GET_PARTIAL_OBJECT, params);
-        if (R_SUCCEEDED(rc)) {
-            std::vector<u8> data;
-            if (R_SUCCEEDED(ReceiveMtpData(g_mtp_session, data)) && R_SUCCEEDED(ReceiveMtpResponse(g_mtp_session))) {
-                size_t read_bytes = std::min(static_cast<size_t>(chunk_len), data.size());
-                if (read_bytes == 0) break;
-                std::memcpy(ptr + total_bytes_read, data.data(), read_bytes);
-                total_bytes_read += read_bytes;
-                if (read_bytes < chunk_len) break; // Device returned less data than requested
-                continue;
-            }
-        }
-
-        // Fallback: GetObject (0x1009) if GetPartialObject is not supported by device
-        std::vector<u32> full_params{file_handle->object_handle};
-        if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_GET_OBJECT, full_params))) break;
-
-        std::vector<u8> full_data;
-        if (R_FAILED(ReceiveMtpData(g_mtp_session, full_data)) || R_FAILED(ReceiveMtpResponse(g_mtp_session))) break;
-
-        if (cur_offset >= full_data.size()) break;
-
-        size_t read_bytes = std::min(to_read - total_bytes_read, full_data.size() - static_cast<size_t>(cur_offset));
-        std::memcpy(ptr + total_bytes_read, full_data.data() + cur_offset, read_bytes);
-        total_bytes_read += read_bytes;
-        break;
-    }
-
-    file_handle->offset += total_bytes_read;
-    return static_cast<ssize_t>(total_bytes_read);
-}
-
-ssize_t MtpMountDevice::devoptab_seek(void *fd, off_t pos, int dir) {
-    auto* file_handle = static_cast<MtpFileHandle*>(fd);
-    if (dir == SEEK_SET) {
-        file_handle->offset = pos;
-    } else if (dir == SEEK_CUR) {
-        file_handle->offset += pos;
-    }
-    return static_cast<ssize_t>(file_handle->offset);
 }
 
 int MtpMountDevice::devoptab_fstat(void *fd, struct stat *st) {
-    auto* file_handle = static_cast<MtpFileHandle*>(fd);
+    const auto* file = static_cast<MtpFileHandle*>(fd);
     std::memset(st, 0, sizeof(*st));
-    st->st_mode = S_IFREG | 0644;
-    st->st_size = file_handle->size;
+    st->st_nlink = 1;
+    st->st_mode = S_IFREG | 0444;
+    st->st_size = file->size;
     return 0;
+}
+
+ssize_t MtpMountDevice::devoptab_seek(void *fd, off_t pos, int dir) {
+    auto* file = static_cast<MtpFileHandle*>(fd);
+
+    s64 target{};
+    switch (dir) {
+        case SEEK_SET: target = pos; break;
+        case SEEK_CUR: target = static_cast<s64>(file->offset) + pos; break;
+        case SEEK_END: target = static_cast<s64>(file->size) + pos; break;
+        default: return -EINVAL;
+    }
+
+    if (target < 0) {
+        return -EINVAL;
+    }
+
+    file->offset = target;
+    return static_cast<ssize_t>(file->offset);
+}
+
+ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
+    auto* file = static_cast<MtpFileHandle*>(fd);
+    if (!file->object_handle) {
+        return -EBADF;
+    }
+
+    SCOPED_MUTEX(&g_mutex);
+    if (!g_session.connected) {
+        return -EIO;
+    }
+
+    if (file->offset >= file->size) {
+        return 0;
+    }
+
+    const size_t want = std::min<u64>(len, file->size - file->offset);
+    size_t done = 0;
+
+    // Callers up the stack (yati's nsp/nca parsers) read headers at exact
+    // offsets and cannot cope with a short read, so keep asking until the
+    // request is satisfied or the device reports end of data.
+    while (done < want) {
+        const u64 offset = file->offset + done;
+        const u32 chunk = static_cast<u32>(std::min<u64>(want - done, MAX_READ_CHUNK));
+
+        DataSink sink{ptr + done, want - done};
+        Result rc{};
+
+        if (g_session.has_partial64) {
+            const u32 params[]{
+                file->object_handle,
+                static_cast<u32>(offset),
+                static_cast<u32>(offset >> 32),
+                chunk,
+            };
+            rc = Transact(OP_GET_PARTIAL_OBJECT_64, params, &sink, nullptr);
+        } else if (g_session.has_partial && offset + chunk <= SIZE_NEEDS_64BIT) {
+            const u32 params[]{file->object_handle, static_cast<u32>(offset), chunk};
+            rc = Transact(OP_GET_PARTIAL_OBJECT, params, &sink, nullptr);
+        } else if (!offset && file->size <= MAX_READ_CHUNK) {
+            // No partial read support at all. Whole-object reads are only
+            // viable for something that fits in the transfer buffer; the old
+            // code fell back to GetObject unconditionally and tried to
+            // allocate a 1.4GiB vector for an nsp, which took the app down.
+            const u32 params[]{file->object_handle};
+            rc = Transact(OP_GET_OBJECT, params, &sink, nullptr);
+        } else {
+            log_write("[MTP_HOST] device cannot serve partial reads for a %llu byte object\n",
+                static_cast<unsigned long long>(file->size));
+            return -ENOTSUP;
+        }
+
+        if (R_FAILED(rc)) {
+            return done ? static_cast<ssize_t>(done) : -EIO;
+        }
+
+        const auto got = std::min(sink.Written(), want - done);
+        if (!got) {
+            break;
+        }
+
+        done += got;
+    }
+
+    file->offset += done;
+    return static_cast<ssize_t>(done);
 }
 
 int MtpMountDevice::devoptab_statvfs(const char *_path, struct statvfs *buf) {
@@ -599,275 +1021,271 @@ int MtpMountDevice::devoptab_statvfs(const char *_path, struct statvfs *buf) {
     return 0;
 }
 
-int MtpMountDevice::devoptab_lstat(const char *path, struct stat *st) {
-    std::memset(st, 0, sizeof(*st));
+// -------------------------------------------------------------------------
+// session management
+// -------------------------------------------------------------------------
 
-    bool is_dir = false;
-    u64 file_size = 0;
-    u32 handle = ResolvePathToHandle(path, &is_dir, &file_size);
+namespace {
 
-    // handle == 0 means "not found" (ResolvePathToHandle returns 0 on failure)
-    if (handle == 0) {
-        log_write("[MTP_HOST] devoptab_lstat: path '%s' not found\n", path ? path : "NULL");
-        return -ENOENT;
+struct StorageEntry {
+    u32 id{};
+    u64 capacity{};
+    u64 free_space{};
+    std::string label{};
+};
+
+// Picks the first bulk endpoint in each direction. MTP interfaces also expose
+// an interrupt IN endpoint for events, so the descriptors cannot be indexed
+// blindly.
+const usb_endpoint_descriptor* FindBulkEndpoint(const usb_endpoint_descriptor* descs, size_t count) {
+    for (size_t i = 0; i < count; i++) {
+        if (!descs[i].bLength || !descs[i].wMaxPacketSize) {
+            continue;
+        }
+        if ((descs[i].bmAttributes & USB_TRANSFER_TYPE_MASK) == USB_TRANSFER_TYPE_BULK) {
+            return &descs[i];
+        }
     }
-
-    if (is_dir) {
-        st->st_mode = S_IFDIR | 0755;
-    } else {
-        st->st_mode = S_IFREG | 0644;
-        st->st_size = file_size;
-    }
-    st->st_nlink = 1;
-
-    return 0;
+    return nullptr;
 }
 
-static common::MountConfigs g_mounted_mtp_configs{};
+Result OpenSessionOnInterface(const UsbHsInterface& iface) {
+    UsbHsInterface copy = iface;
+    R_TRY(usbHsAcquireUsbIf(&g_session.iface, &copy));
 
-static std::string CleanMountName(const std::string& url) {
-    std::string name = url;
-    while (!name.empty() && (name.back() == '/' || name.back() == ':')) {
-        name.pop_back();
+    auto close_iface = [] { usbHsIfClose(&g_session.iface); g_session.iface = {}; };
+
+    const auto& inf = g_session.iface.inf.inf;
+    const auto* in_desc = FindBulkEndpoint(inf.input_endpoint_descs, std::size(inf.input_endpoint_descs));
+    const auto* out_desc = FindBulkEndpoint(inf.output_endpoint_descs, std::size(inf.output_endpoint_descs));
+
+    if (!in_desc || !out_desc) {
+        log_write("[MTP_HOST] interface has no bulk endpoint pair\n");
+        close_iface();
+        R_THROW(ResultProtocol);
     }
-    return name;
+
+    // maxXferSize has to cover the biggest post we will ever make, otherwise
+    // usb:hs rejects the transfer.
+    const auto rc_out = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_out, 1, XFER_BUF_SIZE,
+        const_cast<usb_endpoint_descriptor*>(out_desc));
+    const auto rc_in = usbHsIfOpenUsbEp(&g_session.iface, &g_session.ep_in, 1, XFER_BUF_SIZE,
+        const_cast<usb_endpoint_descriptor*>(in_desc));
+
+    if (R_FAILED(rc_out) || R_FAILED(rc_in)) {
+        log_write("[MTP_HOST] opening endpoints failed (out=0x%X in=0x%X)\n", rc_out, rc_in);
+        if (R_SUCCEEDED(rc_out)) {
+            usbHsEpClose(&g_session.ep_out);
+        }
+        if (R_SUCCEEDED(rc_in)) {
+            usbHsEpClose(&g_session.ep_in);
+        }
+        g_session.ep_in = {};
+        g_session.ep_out = {};
+        close_iface();
+        R_THROW(R_FAILED(rc_out) ? rc_out : rc_in);
+    }
+
+    g_session.connected = true;
+    g_session.transaction_id = 1;
+
+    const u32 session_id[]{1};
+    if (const auto rc = TransactNoData(OP_OPEN_SESSION, session_id); R_FAILED(rc)) {
+        log_write("[MTP_HOST] OpenSession failed: 0x%X\n", rc);
+        CloseUsbLocked("OpenSession failed");
+        R_THROW(rc);
+    }
+
+    // Not fatal: without DeviceInfo we simply assume the conservative read
+    // path. Every responder worth mounting answers it though.
+    if (R_FAILED(QueryDeviceCapabilities()) && !g_session.connected) {
+        R_THROW(ResultTransport);
+    }
+
+    log_write("[MTP_HOST] session open (vid=0x%04x pid=0x%04x)\n",
+        iface.device_desc.idVendor, iface.device_desc.idProduct);
+    R_SUCCEED();
 }
 
-static void CloseMtpSessionLocked() {
-    if (!g_mtp_session.connected) return;
+// Finds an MTP responder on the bus and opens a session on it. usb:hs filters
+// on the interface descriptor, so the still image / MTP triple is enough to
+// skip past adb, audio and every other interface a phone exposes -- talking
+// MTP to one of those used to leave the endpoints in a state that took the
+// system usb service down with it.
+Result ConnectLocked() {
+    R_TRY(usbHsInitialize());
 
-    log_write("[MTP_HOST] Closing MTP session and unmounting devices\n");
+    UsbHsInterfaceFilter filter{};
+    filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass
+                 | UsbHsInterfaceFilterFlags_bInterfaceSubClass
+                 | UsbHsInterfaceFilterFlags_bInterfaceProtocol;
+    filter.bInterfaceClass = USB_CLASS_IMAGE;
+    filter.bInterfaceSubClass = 0x01; // still image capture
+    filter.bInterfaceProtocol = 0x01; // picture transfer protocol
 
-    // Send CloseSession opcode 0x1003
-    SendMtpCommand(g_mtp_session, MTP_OP_CLOSE_SESSION, {});
+    UsbHsInterface interfaces[4]{};
+    s32 total{};
+    R_TRY(usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &total));
 
-    usbHsEpClose(&g_mtp_session.ep_in);
-    usbHsEpClose(&g_mtp_session.ep_out);
-    usbHsIfClose(&g_mtp_session.s);
-
-    for (const auto& config : g_mounted_mtp_configs) {
-        const std::string mount_name = CleanMountName(config.url);
-        devoptab::UmountNeworkDevice(mount_name);
+    if (total <= 0) {
+        R_THROW(ResultMtpFailed);
     }
-    // RemoveDevice() inside ~Entry sets devoptab_list[i] = NULL.
-    // Re-fill those slots with the stdnull stub so that newlib's
-    // _open_r / readdir don't Data Abort on a NULL entry.
-    devoptab::FixDkpBug();
 
-    g_mounted_mtp_configs.clear();
-    g_mtp_session.connected = false;
-    std::memset(&g_mtp_session.iface, 0, sizeof(g_mtp_session.iface));
-    log_write("[MTP_HOST] MTP session closed completely\n");
+    for (s32 i = 0; i < total; i++) {
+        if (R_SUCCEEDED(OpenSessionOnInterface(interfaces[i]))) {
+            R_SUCCEED();
+        }
+    }
+
+    R_THROW(ResultMtpFailed);
+}
+
+Result ListStoragesLocked(std::vector<StorageEntry>& out) {
+    out.clear();
+
+    std::vector<u8> data;
+    R_TRY(TransactData(OP_GET_STORAGE_IDS, {}, &data));
+
+    std::vector<u32> ids;
+    Reader ids_reader{data};
+    R_UNLESS(ids_reader.ReadArray(&ids) && ids_reader.Ok(), ResultProtocol);
+
+    for (size_t i = 0; i < ids.size(); i++) {
+        const u32 params[]{ids[i]};
+        std::vector<u8> info;
+        if (R_FAILED(TransactData(OP_GET_STORAGE_INFO, params, &info))) {
+            if (!g_session.connected) {
+                R_THROW(ResultTransport);
+            }
+            continue;
+        }
+
+        StorageEntry entry{};
+        entry.id = ids[i];
+
+        Reader r{info};
+        r.Skip(2 + 2 + 2);  // StorageType, FilesystemType, AccessCapability
+        r.Read(&entry.capacity);
+        r.Read(&entry.free_space);
+        r.Skip(4);          // FreeSpaceInObjects
+        r.ReadString(&entry.label);
+
+        if (!r.Ok() || entry.label.empty()) {
+            entry.label = ids.size() > 1
+                ? "Phone Storage " + std::to_string(i + 1)
+                : "Phone Storage";
+        }
+
+        out.push_back(std::move(entry));
+    }
+
+    R_UNLESS(!out.empty(), ResultMtpFailed);
+    R_SUCCEED();
+}
+
+// A cheap "is the phone still there" check. GetStorageIDs returns a handful of
+// bytes, unlike the DeviceInfo dataset the old probe pulled on every listing.
+// Recent successful traffic is taken as proof of life so simply opening the
+// root of the browser does not cost a round trip.
+bool IsSessionAliveLocked() {
+    if (!g_session.connected) {
+        return false;
+    }
+
+    if (MsSince(g_session.last_ok_tick) < 2000) {
+        return true;
+    }
+
+    std::vector<u8> data;
+    return R_SUCCEEDED(TransactData(OP_GET_STORAGE_IDS, {}, &data));
+}
+
+} // namespace
+
+auto ScanAndMountMtpDevices() -> common::MountConfigs {
+    // Phase 1 talks to the device. g_mutex must not be held past this point:
+    // MountNetworkDevice2 takes the devoptab rwlock for write, and devoptab
+    // callbacks take that same lock before reaching g_mutex.
+    std::vector<StorageEntry> storages;
+    {
+        SCOPED_MUTEX(&g_mutex);
+
+        if (!IsSessionAliveLocked()) {
+            CloseUsbLocked("stale session");
+            if (R_FAILED(ConnectLocked())) {
+                return {};
+            }
+        }
+
+        if (R_FAILED(ListStoragesLocked(storages))) {
+            CloseUsbLocked("no usable storage");
+            return {};
+        }
+    }
+
+    // Phase 2 (re)registers the devoptab mounts. A mount that is still alive
+    // is rebound rather than replaced so open handles stay valid.
+    common::MountConfigs out;
+    out.reserve(storages.size());
+
+    for (size_t i = 0; i < storages.size(); i++) {
+        const auto& storage = storages[i];
+
+        char mount_name[16];
+        std::snprintf(mount_name, sizeof(mount_name), "mtp%zu", i);
+
+        common::MountConfig config{};
+        config.name = storage.label;
+        config.url = std::string{mount_name} + ":/";
+        config.read_only = true;
+        // A per file lstat is answered from the listing cache and costs
+        // nothing, but a child count means listing that directory over USB.
+        // Doing that for every visible row is what buried the responder in
+        // hundreds of requests and made the whole mount look empty.
+        config.no_stat_file = false;
+        config.no_stat_dir = true;
+
+        const auto it = std::ranges::find_if(g_mounts, [&config](const auto& rec) {
+            return rec.config.url == config.url;
+        });
+
+        if (it != g_mounts.end()) {
+            if (auto* device = LiveDevice(*it)) {
+                device->Rebind(storage.id, storage.capacity, storage.free_space);
+                it->config = config;
+                out.push_back(config);
+                continue;
+            }
+            g_mounts.erase(it);
+        }
+
+        auto device = std::make_unique<MtpMountDevice>(config, storage.id, storage.capacity, storage.free_space);
+        auto* device_ptr = device.get();
+
+        if (!common::MountNetworkDevice2(std::move(device), config, sizeof(MtpFileHandle), sizeof(MtpDirHandle), mount_name, mount_name)) {
+            log_write("[MTP_HOST] failed to mount %s\n", mount_name);
+            continue;
+        }
+
+        log_write("[MTP_HOST] mounted %s as '%s'\n", mount_name, storage.label.c_str());
+        g_mounts.push_back(MountRecord{.config = config, .device = device_ptr});
+        out.push_back(config);
+    }
+
+    return out;
 }
 
 void CloseMtpSession() {
-    SCOPED_MUTEX(&g_mtp_mutex);
-    CloseMtpSessionLocked();
-}
+    SCOPED_MUTEX(&g_mutex);
 
-auto ScanAndMountMtpDevices() -> common::MountConfigs {
-    SCOPED_MUTEX(&g_mtp_mutex);
-
-    log_write("[MTP_HOST] scanning USB for MTP devices\n");
-
-    if (g_mtp_session.connected) {
-        bool alive = false;
-        if (R_SUCCEEDED(SendMtpCommand(g_mtp_session, MTP_OP_GET_DEVICE_INFO, {}))) {
-            std::vector<u8> dummy;
-            if (R_SUCCEEDED(ReceiveMtpData(g_mtp_session, dummy)) && R_SUCCEEDED(ReceiveMtpResponse(g_mtp_session))) {
-                alive = true;
-            }
-        }
-        if (alive && !g_mounted_mtp_configs.empty()) {
-            log_write("[MTP_HOST] MTP session active and mounted, returning existing mounts\n");
-            return g_mounted_mtp_configs;
-        }
-        log_write("[MTP_HOST] Active MTP session non-responsive or disconnected, closing session...\n");
-        CloseMtpSessionLocked();
+    if (g_session.connected) {
+        TransactNoData(OP_CLOSE_SESSION, {});
+        CloseUsbLocked("shutting down");
     }
 
-    common::MountConfigs mounted_configs{};
-
-    if (R_FAILED(usbHsInitialize())) {
-        log_write("[MTP_HOST] usbHsInitialize failed\n");
-        return {};
-    }
-
-    UsbHsInterfaceFilter filter{};
-    filter.Flags = 0; // Query all available interfaces
-
-    Event evt{};
-    if (R_FAILED(usbHsCreateInterfaceAvailableEvent(&evt, true, 0, &filter))) {
-        log_write("[MTP_HOST] usbHsCreateInterfaceAvailableEvent failed\n");
-        return {};
-    }
-
-    eventWait(&evt, 200000000ULL); // Wait 200ms for interface event
-
-    UsbHsInterface interfaces[8]{};
-    s32 total = 0;
-    Result rc = usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &total);
-    usbHsDestroyInterfaceAvailableEvent(&evt, 0);
-
-    if (R_FAILED(rc) || total <= 0) {
-        log_write("[MTP_HOST] no USB interfaces available (rc=0x%X, total=%d)\n", rc, total);
-        return {};
-    }
-
-    log_write("[MTP_HOST] found %d USB interfaces on bus\n", total);
-
-    for (s32 idx = 0; idx < total; ++idx) {
-        const auto& iface = interfaces[idx];
-        u8 cls = iface.device_desc.bDeviceClass;
-        u8 subcls = iface.device_desc.bDeviceSubClass;
-        log_write("[MTP_HOST] interface[%d] VID: 0x%04x PID: 0x%04x Class: 0x%02x SubClass: 0x%02x\n",
-            idx, iface.device_desc.idVendor, iface.device_desc.idProduct, cls, subcls);
-
-        // Skip non-storage classes (Audio 0x01, HID 0x03, Hub 0x09)
-        if (cls != 0x06 && cls != 0xFF && cls != 0x00) {
-            continue;
-        }
-
-        g_mtp_session.iface = iface;
-        if (R_FAILED(usbHsAcquireUsbIf(&g_mtp_session.s, const_cast<UsbHsInterface*>(&iface)))) {
-            log_write("[MTP_HOST] usbHsAcquireUsbIf failed for interface %d\n", idx);
-            continue;
-        }
-
-        // Log interface-level class info (device class 0x00 means class is per-interface)
-        auto& if_desc = g_mtp_session.s.inf.inf.interface_desc;
-        log_write("[MTP_HOST]   ifClass: 0x%02x ifSubClass: 0x%02x ifProtocol: 0x%02x\n",
-            if_desc.bInterfaceClass, if_desc.bInterfaceSubClass, if_desc.bInterfaceProtocol);
-
-        // MTP = Still Image class 0x06, subclass 0x01, protocol 0x01
-        // Only accept class 0x06 (Still Image / MTP). Attempting MTP operations
-        // on other classes (e.g. 0xFF/ADB) leaves USB endpoints in a corrupted
-        // state that can crash the system USB service on subsequent transfers.
-        u8 ifc = if_desc.bInterfaceClass;
-        if (ifc != 0x06) {
-            log_write("[MTP_HOST]   skipping interface %d (non-MTP class 0x%02x)\n", idx, ifc);
-            usbHsIfClose(&g_mtp_session.s);
-            continue;
-        }
-
-        // Log endpoint descriptors for diagnostics
-        auto& input_desc = g_mtp_session.s.inf.inf.input_endpoint_descs[0];   // IN: device → host (for RECEIVING)
-        auto& output_desc = g_mtp_session.s.inf.inf.output_endpoint_descs[0]; // OUT: host → device (for SENDING)
-        log_write("[MTP_HOST]   IN  ep: addr=0x%02x maxPkt=%u\n", input_desc.bEndpointAddress, input_desc.wMaxPacketSize);
-        log_write("[MTP_HOST]   OUT ep: addr=0x%02x maxPkt=%u\n", output_desc.bEndpointAddress, output_desc.wMaxPacketSize);
-
-        if (input_desc.wMaxPacketSize == 0 || output_desc.wMaxPacketSize == 0) {
-            log_write("[MTP_HOST]   skipping interface %d (endpoint maxPkt is 0)\n", idx);
-            usbHsIfClose(&g_mtp_session.s);
-            continue;
-        }
-
-        // ep_out = OUT endpoint (host → device, for sending commands)
-        // ep_in  = IN  endpoint (device → host, for receiving responses)
-        Result rc_out = usbHsIfOpenUsbEp(&g_mtp_session.s, &g_mtp_session.ep_out, 1, output_desc.wMaxPacketSize, &output_desc);
-        Result rc_in  = usbHsIfOpenUsbEp(&g_mtp_session.s, &g_mtp_session.ep_in,  1, input_desc.wMaxPacketSize,  &input_desc);
-        if (R_FAILED(rc_out) || R_FAILED(rc_in)) {
-            log_write("[MTP_HOST] opening USB endpoints failed for interface %d (rc_out=0x%X, rc_in=0x%X)\n", idx, rc_out, rc_in);
-            usbHsIfClose(&g_mtp_session.s);
-            continue;
-        }
-
-        g_mtp_session.connected = true;
-        g_mtp_session.transaction_id = 1;
-
-        // Open MTP session: OpenSession(session_id = 1)
-        if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_OPEN_SESSION, {1}))) {
-            log_write("[MTP_HOST] OpenSession failed on interface %d (not an MTP responder)\n", idx);
-            usbHsEpClose(&g_mtp_session.ep_in);
-            usbHsEpClose(&g_mtp_session.ep_out);
-            usbHsIfClose(&g_mtp_session.s);
-            g_mtp_session.connected = false;
-            continue;
-        }
-
-        u16 resp = 0;
-        if (R_FAILED(ReceiveMtpResponse(g_mtp_session, &resp)) || resp != MTP_RESPONSE_OK) {
-            log_write("[MTP_HOST] OpenSession response failed on interface %d\n", idx);
-            usbHsEpClose(&g_mtp_session.ep_in);
-            usbHsEpClose(&g_mtp_session.ep_out);
-            usbHsIfClose(&g_mtp_session.s);
-            g_mtp_session.connected = false;
-            continue;
-        }
-
-        log_write("[MTP_HOST] MTP session opened successfully on interface %d!\n", idx);
-
-        // Get Storage IDs: GetStorageIDs()
-        if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_GET_STORAGE_IDS, {}))) {
-            log_write("[MTP_HOST] GetStorageIDs failed\n");
-            continue;
-        }
-
-        std::vector<u8> storage_data;
-        if (R_FAILED(ReceiveMtpData(g_mtp_session, storage_data)) || R_FAILED(ReceiveMtpResponse(g_mtp_session))) {
-            log_write("[MTP_HOST] Receive GetStorageIDs data failed\n");
-            continue;
-        }
-
-        if (storage_data.size() < sizeof(u32)) continue;
-        u32 count = 0;
-        std::memcpy(&count, storage_data.data(), sizeof(u32));
-
-        for (u32 i = 0; i < count; ++i) {
-            u32 st_id = 0;
-            if (storage_data.size() < sizeof(u32) + (i + 1) * sizeof(u32)) break;
-            std::memcpy(&st_id, storage_data.data() + sizeof(u32) + i * sizeof(u32), sizeof(u32));
-
-            // Send GetStorageInfo(st_id)
-            if (R_FAILED(SendMtpCommand(g_mtp_session, MTP_OP_GET_STORAGE_INFO, {st_id}))) continue;
-
-            std::vector<u8> info_data;
-            if (R_FAILED(ReceiveMtpData(g_mtp_session, info_data)) || R_FAILED(ReceiveMtpResponse(g_mtp_session))) continue;
-
-            u64 max_cap = 0, free_sp = 0;
-            std::string label = "Phone Storage";
-            if (count > 1) {
-                label = "Phone Storage " + std::to_string(i + 1);
-            }
-
-            if (info_data.size() >= 22) {
-                std::memcpy(&max_cap, info_data.data() + 6, sizeof(u64));
-                std::memcpy(&free_sp, info_data.data() + 14, sizeof(u64));
-                if (info_data.size() >= 27) {
-                    u8 desc_len = info_data[26];
-                    if (desc_len > 0 && info_data.size() >= 27 + desc_len * sizeof(u16)) {
-                        std::string parsed_desc = Utf16LeToUtf8(info_data.data() + 27, desc_len);
-                        if (!parsed_desc.empty()) {
-                            label = parsed_desc;
-                        }
-                    }
-                }
-            }
-
-            char mount_name[16];
-            std::snprintf(mount_name, sizeof(mount_name), "mtp%u", i);
-
-            common::MountConfig config{};
-            config.name = label;
-            config.url = std::string(mount_name) + ":/";
-            config.read_only = true;
-
-            auto device = std::make_unique<MtpMountDevice>(config, st_id, label, max_cap, free_sp);
-
-            // Pre-fetch root directory entries while USB is known to work.
-            // With strict interface filter (no ADB corruption) and retry logic, this is safe.
-            device->PreFetchRootEntries();
-
-            if (common::MountNetworkDevice2(std::move(device), config, sizeof(MtpFileHandle), sizeof(MtpDirHandle), mount_name, mount_name)) {
-                mounted_configs.push_back(config);
-                log_write("[MTP_HOST] successfully mounted %s: as %s\n", mount_name, label.c_str());
-            }
-        }
-        break;
-    }
-
-    g_mounted_mtp_configs = mounted_configs;
-    return mounted_configs;
+    // The devoptab entries are left alone on purpose; the file browser removes
+    // them from its own destructor, by which point nothing holds a handle.
+    g_mounts.clear();
 }
 
 } // namespace sphaira::devoptab::mtp

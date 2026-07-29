@@ -4,60 +4,17 @@
 #include <switch.h>
 #include <string>
 #include <vector>
-#include <memory>
-
 #include <unordered_map>
 
 namespace sphaira::devoptab::mtp {
 
-constexpr u16 MTP_CONTAINER_TYPE_COMMAND  = 1;
-constexpr u16 MTP_CONTAINER_TYPE_DATA     = 2;
-constexpr u16 MTP_CONTAINER_TYPE_RESPONSE = 3;
-constexpr u16 MTP_CONTAINER_TYPE_EVENT    = 4;
-
-constexpr u16 MTP_OP_GET_DEVICE_INFO    = 0x1001;
-constexpr u16 MTP_OP_OPEN_SESSION         = 0x1002;
-constexpr u16 MTP_OP_CLOSE_SESSION        = 0x1003;
-constexpr u16 MTP_OP_GET_STORAGE_IDS      = 0x1004;
-constexpr u16 MTP_OP_GET_STORAGE_INFO     = 0x1005;
-constexpr u16 MTP_OP_GET_OBJECT_HANDLES   = 0x1007;
-constexpr u16 MTP_OP_GET_OBJECT_INFO      = 0x1008;
-constexpr u16 MTP_OP_GET_OBJECT           = 0x1009;
-constexpr u16 MTP_OP_DELETE_OBJECT        = 0x100B;
-constexpr u16 MTP_OP_SEND_OBJECT_INFO     = 0x100C;
-constexpr u16 MTP_OP_SEND_OBJECT          = 0x100D;
-constexpr u16 MTP_OP_GET_PARTIAL_OBJECT   = 0x101B;
-
-constexpr u16 MTP_RESPONSE_OK             = 0x2001;
-constexpr u16 MTP_FORMAT_FOLDER           = 0x3001;
-
-#pragma pack(push, 1)
-struct MtpContainerHeader {
-    u32 length;
-    u16 type;
-    u16 code;
-    u32 transaction_id;
-};
-#pragma pack(pop)
-
-struct MtpStorageInfo {
-    u32 storage_id;
-    u16 storage_type;
-    u16 filesystem_type;
-    u16 access_capability;
-    u64 max_capacity;
-    u64 free_space;
-    std::string volume_label;
-};
-
+// one entry of an MTP directory listing.
 struct MtpObject {
-    u32 handle;
-    u32 storage_id;
-    u16 format;
-    u64 size;
-    u32 parent_handle;
-    std::string filename;
-    bool is_dir;
+    u32 handle{};
+    u16 format{};
+    u64 size{};
+    bool is_dir{};
+    std::string filename{};
 };
 
 struct MtpFileHandle {
@@ -71,10 +28,13 @@ struct MtpDirHandle {
     size_t index;
 };
 
+// Read-only view of one storage on a connected MTP responder (a phone, a
+// camera, ...). Paths are resolved lazily and cached: listing a directory also
+// caches every child, so walking into a folder the browser already showed
+// costs a single GetObjectHandles round trip instead of a full re-walk.
 class MtpMountDevice final : public common::MountDevice {
 public:
-    MtpMountDevice(const common::MountConfig& config, u32 storage_id, const std::string& volume_label, u64 capacity, u64 free_space);
-    ~MtpMountDevice() override;
+    MtpMountDevice(const common::MountConfig& config, u32 storage_id, u64 capacity, u64 free_space);
 
     bool Mount() override;
     int devoptab_open(void *fileStruct, const char *path, int flags, int mode) override;
@@ -89,27 +49,33 @@ public:
     int devoptab_statvfs(const char *_path, struct statvfs *buf) override;
     int devoptab_lstat(const char *path, struct stat *st) override;
 
-private:
-    u32 ResolvePathToHandle(const char* path, bool* is_dir = nullptr, u64* out_size = nullptr);
-    bool FetchDirectoryEntries(u32 parent_handle, std::vector<MtpObject>& out_entries);
-    // Same as FetchDirectoryEntries but assumes g_mtp_mutex is already held.
-    bool FetchDirectoryEntriesLocked(u32 parent_handle, std::vector<MtpObject>& out_entries);
-
-public:
-    // Pre-fetch root directory entries while USB is known to work.
-    // Must be called while g_mtp_mutex is held (e.g. from ScanAndMountMtpDevices).
-    void PreFetchRootEntries();
+    // Point an already mounted device at the storage of a freshly reconnected
+    // responder. devoptab mounts outlive a USB disconnect (see the comment on
+    // MountRecord in the .cpp), so reconnecting reuses the same object rather
+    // than unmounting one that open handles may still reference.
+    void Rebind(u32 storage_id, u64 capacity, u64 free_space);
 
 private:
+    // Both take the normalised path ("" is the storage root, otherwise
+    // "Android/data" with no leading or trailing slash).
+    bool Lookup(const std::string& path, MtpObject* out);
+    bool List(const std::string& path, std::vector<MtpObject>* out);
+    void DropCaches();
+
     u32 m_storage_id{};
-    std::string m_label{};
     u64 m_capacity{};
     u64 m_free_space{};
-    std::unordered_map<u32, std::vector<MtpObject>> m_dir_cache{};
-    std::unordered_map<std::string, MtpObject> m_path_cache{};
+
+    std::unordered_map<std::string, std::vector<MtpObject>> m_dir_cache{};
+    std::unordered_map<std::string, MtpObject> m_obj_cache{};
 };
 
+// Probes USB for an MTP responder and (re)registers a devoptab mount for each
+// of its storages. Returns the mounts that are usable right now; an empty
+// result means "no phone connected", not an error.
 auto ScanAndMountMtpDevices() -> common::MountConfigs;
+
+// Closes the USB side of the session. Safe to call when nothing is connected.
 void CloseMtpSession();
 
 } // namespace sphaira::devoptab::mtp

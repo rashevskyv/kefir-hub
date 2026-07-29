@@ -636,6 +636,45 @@ void File::Close() {
     }
 }
 
+namespace {
+
+// newlib fills d_type from the st_mode that the devoptab driver reports in its
+// dirnext(), so a driver that leaves st_mode blank hands back DT_UNKNOWN and
+// the entry would be dropped from the listing entirely. Fall back to a stat()
+// on the full device qualified path in that case; the extra call also brings
+// back the size, which readdir() has nowhere to put.
+u8 ClassifyStdioEntry(const fs::FsPath& dir_path, const struct dirent* d, s64* out_size) {
+    if (out_size) {
+        *out_size = 0;
+    }
+
+    if (d->d_type == DT_DIR || d->d_type == DT_REG) {
+        return d->d_type;
+    }
+
+    fs::FsPath full_path;
+    std::snprintf(full_path, sizeof(full_path), "%s%s%s",
+        dir_path.s,
+        (dir_path.size() && dir_path.s[dir_path.size() - 1] != '/') ? "/" : "",
+        d->d_name);
+
+    struct stat st{};
+    if (stat(full_path, &st)) {
+        return DT_UNKNOWN;
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        return DT_DIR;
+    }
+
+    if (out_size) {
+        *out_size = st.st_size;
+    }
+    return DT_REG;
+}
+
+} // namespace
+
 Result OpenDirectory(fs::Fs* fs, const fs::FsPath& path, u32 mode, Dir* d) {
     d->m_fs = fs;
     d->m_mode = mode;
@@ -684,18 +723,7 @@ Result DirGetEntryCount(fs::Fs* m_fs, const fs::FsPath& path, s64* file_count, s
                 continue;
             }
 
-            u8 entry_type = d->d_type;
-            if (entry_type != DT_DIR && entry_type != DT_REG) {
-                fs::FsPath full_path;
-                std::snprintf(full_path, sizeof(full_path), "%s%s%s",
-                    path.s,
-                    (path.size() > 0 && path.s[path.size()-1] != '/') ? "/" : "",
-                    d->d_name);
-                struct stat st{};
-                if (stat(full_path, &st) == 0) {
-                    entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
-                }
-            }
+            const auto entry_type = ClassifyStdioEntry(path, d, nullptr);
 
             if (entry_type == DT_DIR) {
                 if (!(mode & FsDirOpenMode_ReadDirs)) {
@@ -756,21 +784,8 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
             }
 
             FsDirectoryEntry entry{};
-            u8 entry_type = d->d_type;
-            struct stat st{};
-            bool got_stat = false;
-
-            if (entry_type != DT_DIR && entry_type != DT_REG) {
-                fs::FsPath full_path;
-                std::snprintf(full_path, sizeof(full_path), "%s%s%s",
-                    m_path.s,
-                    (m_path.size() > 0 && m_path.s[m_path.size()-1] != '/') ? "/" : "",
-                    d->d_name);
-                if (stat(full_path, &st) == 0) {
-                    entry_type = S_ISDIR(st.st_mode) ? DT_DIR : DT_REG;
-                    got_stat = true;
-                }
-            }
+            s64 stat_size{};
+            const auto entry_type = ClassifyStdioEntry(m_path, d, &stat_size);
 
             if (entry_type == DT_DIR) {
                 if (!(m_mode & FsDirOpenMode_ReadDirs)) {
@@ -782,9 +797,7 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
                     continue;
                 }
                 entry.type = FsDirEntryType_File;
-                if (got_stat) {
-                    entry.file_size = st.st_size;
-                }
+                entry.file_size = stat_size;
             } else {
                 log_write("[FS] WARNING: unknown type when reading dir: %u for '%s'\n", d->d_type, d->d_name);
                 continue;
@@ -831,17 +844,20 @@ Result Dir::ReadAll(std::vector<FsDirectoryEntry>& buf) {
             }
 
             FsDirectoryEntry entry{};
+            s64 stat_size{};
+            const auto entry_type = ClassifyStdioEntry(m_path, d, &stat_size);
 
-            if (d->d_type == DT_DIR) {
+            if (entry_type == DT_DIR) {
                 if (!(m_mode & FsDirOpenMode_ReadDirs)) {
                     continue;
                 }
                 entry.type = FsDirEntryType_Dir;
-            } else if (d->d_type == DT_REG) {
+            } else if (entry_type == DT_REG) {
                 if (!(m_mode & FsDirOpenMode_ReadFiles)) {
                     continue;
                 }
                 entry.type = FsDirEntryType_File;
+                entry.file_size = stat_size;
             } else {
                 log_write("[FS] WARNING: unknown d_type when reading dir: %u name='%s'\n", d->d_type, d->d_name);
                 continue;

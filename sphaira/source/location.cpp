@@ -161,12 +161,20 @@ auto GetMtpHostDevices(bool write) -> StdioEntries {
     StdioEntries out{};
 
     for (const auto& config : mtp_configs) {
-        std::string mount_name = config.url;
         // Keep the trailing slash for devoptab paths (e.g. "mtp0:/").
         // fix_path needs at least one character after ':' to produce a valid path.
+        const std::string mount_name = config.url;
+        const std::string display_name = "MTP: " + config.name;
 
-        std::string display_name = "MTP: " + config.name;
+        // Every stat on an MTP mount is a USB round trip, so the browser must
+        // not walk the listing collecting child counts and time stamps.
         u32 flags = ui::menu::filebrowser::FsEntryFlag_ReadOnly;
+        if (config.no_stat_file) {
+            flags |= ui::menu::filebrowser::FsEntryFlag_NoStatFile;
+        }
+        if (config.no_stat_dir) {
+            flags |= ui::menu::filebrowser::FsEntryFlag_NoStatDir;
+        }
 
         out.emplace_back(mount_name, display_name, flags);
     }
