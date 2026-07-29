@@ -56,10 +56,15 @@ public:
     void Rebind(u32 storage_id, u64 capacity, u64 free_space);
 
 private:
-    // Both take the normalised path ("" is the storage root, otherwise
-    // "Android/data" with no leading or trailing slash).
+    // Every path here is normalised: "" is the storage root, everything else
+    // looks like "Android/data" with no leading or trailing slash. The public
+    // pair takes the session lock; the *Locked pair assumes it is held and may
+    // call each other freely (resolving a path lists its parent).
     bool Lookup(const std::string& path, MtpObject* out);
     bool List(const std::string& path, std::vector<MtpObject>* out);
+    bool LookupLocked(const std::string& path, MtpObject* out);
+    bool ListLocked(const std::string& path, std::vector<MtpObject>* out);
+    int LookupErrno() const;
     void DropCaches();
 
     u32 m_storage_id{};

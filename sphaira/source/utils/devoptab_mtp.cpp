@@ -56,8 +56,7 @@ constexpr u16 PROP_OBJECT_SIZE   = 0xDC04;
 
 // GetObjectHandles takes the parent handle; 0xFFFFFFFF selects the objects
 // sitting directly in the root of the store.
-constexpr u32 HANDLE_ROOT    = 0xFFFFFFFF;
-constexpr u32 HANDLE_INVALID = 0;
+constexpr u32 HANDLE_ROOT = 0xFFFFFFFF;
 
 // ObjectInfo carries a 32bit size, so a responder reports this for anything
 // that does not fit and the real size has to be asked for separately.
@@ -101,6 +100,11 @@ constexpr u32 RESPONSE_POST_SIZE = XFER_ALIGN;
 constexpr u32 MAX_READ_CHUNK = XFER_BUF_SIZE - XFER_ALIGN;
 
 constexpr u64 XFER_TIMEOUT_NS = 5000000000ULL;
+
+// newlib sizes a FILE's stdio buffer from st_blksize and falls back to BUFSIZ
+// (1KiB) when it is zero. Every refill is one MTP round trip, so leaving it
+// unset would turn reading an nsp into over a million of them.
+constexpr blksize_t STDIO_BLOCK_SIZE = 512 * 1024;
 
 constexpr u32 AlignUp(u32 v, u32 align) {
     return (v + align - 1) & ~(align - 1);
@@ -261,6 +265,12 @@ private:
 // transport
 // -------------------------------------------------------------------------
 
+// Also the recovery path for a failed bulk transfer: once one fails, host and
+// device disagree about which phase comes next, because the command was
+// accepted but its data/response phases were never drained. There is no way to
+// resynchronise from userland, so the session goes away and callers report an
+// I/O error. Reporting an empty listing instead is what made a broken link look
+// like an empty phone.
 void CloseUsbLocked(const char* why) {
     if (!g_session.connected) {
         return;
@@ -279,16 +289,6 @@ void CloseUsbLocked(const char* why) {
     g_session.has_partial = false;
     g_session.has_partial64 = false;
     g_session.has_prop_value = false;
-}
-
-// A failed bulk transfer leaves host and device disagreeing about which phase
-// comes next: the command was accepted but its data/response phases were never
-// drained, so the next command reads the previous one's leftovers. There is no
-// way to resynchronise from userland, so the session is torn down and the
-// caller reports an I/O error. Reporting an empty listing instead is what made
-// a broken link look like an empty phone.
-void KillSession(const char* why) {
-    CloseUsbLocked(why);
 }
 
 // Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
@@ -472,7 +472,7 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
 
     u32 transaction_id{};
     if (const auto rc = SendCommand(op, params, &transaction_id); R_FAILED(rc)) {
-        KillSession("command phase failed");
+        CloseUsbLocked("command phase failed");
         R_THROW(rc);
     }
 
@@ -482,24 +482,24 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
     // has no data or failed outright, the response straight away. Post the
     // full buffer since the size is not known until the header arrives.
     if (const auto rc = ReceiveContainer(XFER_BUF_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-        KillSession("data phase failed");
+        CloseUsbLocked("data phase failed");
         R_THROW(rc);
     }
 
     if (hdr.type == CONTAINER_DATA) {
         if (const auto rc = ReceiveDataPhase(hdr, transferred, sink); R_FAILED(rc)) {
-            KillSession("truncated data phase");
+            CloseUsbLocked("truncated data phase");
             R_THROW(rc);
         }
 
         if (const auto rc = ReceiveContainer(RESPONSE_POST_SIZE, &hdr, &transferred); R_FAILED(rc)) {
-            KillSession("response phase failed");
+            CloseUsbLocked("response phase failed");
             R_THROW(rc);
         }
     }
 
     if (hdr.type != CONTAINER_RESPONSE) {
-        KillSession("unexpected container type");
+        CloseUsbLocked("unexpected container type");
         R_THROW(ResultProtocol);
     }
 
@@ -507,7 +507,7 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
     // and everything read after this point would be garbage. Some devices
     // reply with 0, which is tolerated.
     if (hdr.transaction_id && hdr.transaction_id != transaction_id) {
-        KillSession("response transaction id mismatch");
+        CloseUsbLocked("response transaction id mismatch");
         R_THROW(ResultProtocol);
     }
 
@@ -536,11 +536,10 @@ Result TransactNoData(u16 op, std::span<const u32> params, u16* out_code = nullp
 bool ParseObjectInfo(std::span<const u8> data, u32 handle, MtpObject* out) {
     Reader r{data};
 
-    u32 storage_id{};
     u16 format{};
     u32 compressed_size{};
 
-    r.Read(&storage_id);
+    r.Skip(4);                  // StorageID
     r.Read(&format);
     r.Skip(2);                  // ProtectionStatus
     r.Read(&compressed_size);
@@ -640,6 +639,10 @@ struct MountRecord {
     MtpMountDevice* device{};
 };
 
+// Guards g_mounts only. Deliberately not g_mutex: this is held across
+// MountNetworkDevice2, which takes the devoptab rwlock, so it sits outside
+// that lock while g_mutex sits inside it.
+Mutex g_mount_mutex{};
 std::vector<MountRecord> g_mounts{};
 
 MtpMountDevice* LiveDevice(const MountRecord& rec) {
@@ -730,6 +733,24 @@ bool MtpMountDevice::Mount() {
 }
 
 bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
+    SCOPED_MUTEX(&g_mutex);
+    return LookupLocked(path, out);
+}
+
+bool MtpMountDevice::List(const std::string& path, std::vector<MtpObject>* out) {
+    SCOPED_MUTEX(&g_mutex);
+    return ListLocked(path, out);
+}
+
+// EIO tells the browser the phone went away, ENOENT that it simply has no such
+// file. Reporting the latter for a dead link is what made a dropped cable look
+// like an empty device.
+int MtpMountDevice::LookupErrno() const {
+    SCOPED_MUTEX(&g_mutex);
+    return g_session.connected ? ENOENT : EIO;
+}
+
+bool MtpMountDevice::LookupLocked(const std::string& path, MtpObject* out) {
     if (path.empty()) {
         *out = MtpObject{.handle = HANDLE_ROOT, .is_dir = true};
         return true;
@@ -744,7 +765,7 @@ bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
     // afterwards unless it genuinely does not exist.
     std::string parent, name;
     SplitPath(path, &parent, &name);
-    if (!List(parent, nullptr)) {
+    if (!ListLocked(parent, nullptr)) {
         return false;
     }
 
@@ -757,7 +778,7 @@ bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
     return true;
 }
 
-bool MtpMountDevice::List(const std::string& path, std::vector<MtpObject>* out) {
+bool MtpMountDevice::ListLocked(const std::string& path, std::vector<MtpObject>* out) {
     if (const auto it = m_dir_cache.find(path); it != m_dir_cache.end()) {
         if (out) {
             *out = it->second;
@@ -766,11 +787,10 @@ bool MtpMountDevice::List(const std::string& path, std::vector<MtpObject>* out) 
     }
 
     MtpObject dir{};
-    if (!Lookup(path, &dir) || !dir.is_dir) {
+    if (!LookupLocked(path, &dir) || !dir.is_dir) {
         return false;
     }
 
-    SCOPED_MUTEX(&g_mutex);
     if (!g_session.connected) {
         return false;
     }
@@ -836,7 +856,9 @@ int MtpMountDevice::devoptab_diropen(void* fd, const char *path) {
     auto* dir = new (fd) MtpDirHandle();
 
     if (!List(NormalisePath(path), &dir->entries)) {
-        const auto err = g_session.connected ? ENOENT : EIO;
+        // devoptab_common frees this allocation without routing back through
+        // dirclose, so the vector has to be destroyed here or it leaks.
+        const auto err = LookupErrno();
         dir->~MtpDirHandle();
         return -err;
     }
@@ -860,9 +882,12 @@ int MtpMountDevice::devoptab_dirnext(void* fd, char *filename, struct stat *file
     std::snprintf(filename, NAME_MAX + 1, "%s", entry.filename.c_str());
 
     if (filestat) {
+        // newlib turns st_mode into dirent::d_type, so getting this right is
+        // what keeps the browser from dropping every row as DT_UNKNOWN.
         std::memset(filestat, 0, sizeof(*filestat));
         filestat->st_nlink = 1;
         filestat->st_size = entry.size;
+        filestat->st_blksize = STDIO_BLOCK_SIZE;
         filestat->st_mode = entry.is_dir ? (S_IFDIR | 0555) : (S_IFREG | 0444);
     }
 
@@ -877,11 +902,12 @@ int MtpMountDevice::devoptab_dirclose(void* fd) {
 int MtpMountDevice::devoptab_lstat(const char *path, struct stat *st) {
     MtpObject obj{};
     if (!Lookup(NormalisePath(path), &obj)) {
-        return g_session.connected ? -ENOENT : -EIO;
+        return -LookupErrno();
     }
 
     std::memset(st, 0, sizeof(*st));
     st->st_nlink = 1;
+    st->st_blksize = STDIO_BLOCK_SIZE;
     if (obj.is_dir) {
         st->st_mode = S_IFDIR | 0555;
     } else {
@@ -898,7 +924,7 @@ int MtpMountDevice::devoptab_open(void *fileStruct, const char *path, int flags,
 
     MtpObject obj{};
     if (!Lookup(NormalisePath(path), &obj)) {
-        return g_session.connected ? -ENOENT : -EIO;
+        return -LookupErrno();
     }
 
     if (obj.is_dir) {
@@ -921,6 +947,7 @@ int MtpMountDevice::devoptab_fstat(void *fd, struct stat *st) {
     st->st_nlink = 1;
     st->st_mode = S_IFREG | 0444;
     st->st_size = file->size;
+    st->st_blksize = STDIO_BLOCK_SIZE;
     return 0;
 }
 
@@ -992,10 +1019,12 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
         } else {
             log_write("[MTP_HOST] device cannot serve partial reads for a %llu byte object\n",
                 static_cast<unsigned long long>(file->size));
-            return -ENOTSUP;
+            file->offset += done;
+            return done ? static_cast<ssize_t>(done) : -ENOTSUP;
         }
 
         if (R_FAILED(rc)) {
+            file->offset += done;
             return done ? static_cast<ssize_t>(done) : -EIO;
         }
 
@@ -1096,10 +1125,13 @@ Result OpenSessionOnInterface(const UsbHsInterface& iface) {
         R_THROW(rc);
     }
 
-    // Not fatal: without DeviceInfo we simply assume the conservative read
-    // path. Every responder worth mounting answers it though.
-    if (R_FAILED(QueryDeviceCapabilities()) && !g_session.connected) {
-        R_THROW(ResultTransport);
+    if (R_FAILED(QueryDeviceCapabilities())) {
+        // Losing the link here is fatal, but a responder that merely refuses
+        // GetDeviceInfo is still worth mounting: assume the partial read every
+        // real implementation supports and let it fail per request if not.
+        R_UNLESS(g_session.connected, ResultTransport);
+        log_write("[MTP_HOST] DeviceInfo unavailable, assuming GetPartialObject\n");
+        g_session.has_partial = true;
     }
 
     log_write("[MTP_HOST] session open (vid=0x%04x pid=0x%04x)\n",
@@ -1113,7 +1145,14 @@ Result OpenSessionOnInterface(const UsbHsInterface& iface) {
 // MTP to one of those used to leave the endpoints in a state that took the
 // system usb service down with it.
 Result ConnectLocked() {
-    R_TRY(usbHsInitialize());
+    // usbHsInitialize refcounts, and nothing here ever calls usbHsExit -- the
+    // service stays up for the life of the app and libusbhsfs holds it too --
+    // so initialising once keeps the count from creeping up per reconnect.
+    static bool usbhs_ready{};
+    if (!usbhs_ready) {
+        R_TRY(usbHsInitialize());
+        usbhs_ready = true;
+    }
 
     UsbHsInterfaceFilter filter{};
     filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass
@@ -1125,11 +1164,19 @@ Result ConnectLocked() {
 
     UsbHsInterface interfaces[4]{};
     s32 total{};
-    R_TRY(usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &total));
 
-    if (total <= 0) {
-        R_THROW(ResultMtpFailed);
+    // usb:hs only lists interfaces nobody has acquired, so an interface we just
+    // released after a link failure can take a moment to reappear. Without the
+    // second look the phone would vanish from the browser for one refresh and
+    // come back on the next, which is exactly how the flapping looked.
+    for (int attempt = 0; attempt < 2 && total <= 0; attempt++) {
+        if (attempt) {
+            svcSleepThread(100000000ULL);
+        }
+        R_TRY(usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &total));
     }
+
+    R_UNLESS(total > 0, ResultMtpFailed);
 
     for (s32 i = 0; i < total; i++) {
         if (R_SUCCEEDED(OpenSessionOnInterface(interfaces[i]))) {
@@ -1225,6 +1272,8 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
 
     // Phase 2 (re)registers the devoptab mounts. A mount that is still alive
     // is rebound rather than replaced so open handles stay valid.
+    SCOPED_MUTEX(&g_mount_mutex);
+
     common::MountConfigs out;
     out.reserve(storages.size());
 
@@ -1276,12 +1325,15 @@ auto ScanAndMountMtpDevices() -> common::MountConfigs {
 }
 
 void CloseMtpSession() {
-    SCOPED_MUTEX(&g_mutex);
-
-    if (g_session.connected) {
-        TransactNoData(OP_CLOSE_SESSION, {});
-        CloseUsbLocked("shutting down");
+    {
+        SCOPED_MUTEX(&g_mutex);
+        if (g_session.connected) {
+            TransactNoData(OP_CLOSE_SESSION, {});
+            CloseUsbLocked("shutting down");
+        }
     }
+
+    SCOPED_MUTEX(&g_mount_mutex);
 
     // The devoptab entries are left alone on purpose; the file browser removes
     // them from its own destructor, by which point nothing holds a handle.
