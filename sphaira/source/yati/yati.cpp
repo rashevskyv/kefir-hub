@@ -227,7 +227,12 @@ struct ThreadData {
     Result SetDecompressBuf(std::vector<u8>& buf, s64 off, s64 size) {
         buf.resize(size);
 
+        // the unlock must be registered before the wait loop: the early
+        // returns inside it (peer thread died, condvarWait failed) used to
+        // leave the mutex held, and the caller's next trip into one of these
+        // functions self-deadlocked on it -- a hang no condvar wake can fix.
         mutexLock(std::addressof(read_mutex));
+        ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
         while (!read_buffers.ringbuf_free()) {
             if (!write_running) {
                 R_SUCCEED();
@@ -235,7 +240,6 @@ struct ThreadData {
             R_TRY(condvarWait(std::addressof(can_read), std::addressof(read_mutex)));
         }
 
-        ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
         R_TRY(GetResults());
         read_buffers.ringbuf_push(buf, off);
         return condvarWakeOne(std::addressof(can_decompress));
@@ -243,6 +247,7 @@ struct ThreadData {
 
     Result GetDecompressBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(read_mutex));
+        ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
         while (!read_buffers.ringbuf_size()) {
             if (!read_running) {
                 buf_out.resize(0);
@@ -251,7 +256,6 @@ struct ThreadData {
             R_TRY(condvarWait(std::addressof(can_decompress), std::addressof(read_mutex)));
         }
 
-        ON_SCOPE_EXIT(mutexUnlock(std::addressof(read_mutex)));
         R_TRY(GetResults());
         read_buffers.ringbuf_pop(buf_out, off_out);
         return condvarWakeOne(std::addressof(can_read));
@@ -264,6 +268,7 @@ struct ThreadData {
         }
 
         mutexLock(std::addressof(write_mutex));
+        ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         while (!write_buffers.ringbuf_free()) {
             if (!decompress_running) {
                 R_SUCCEED();
@@ -271,7 +276,6 @@ struct ThreadData {
             R_TRY(condvarWait(std::addressof(can_decompress_write), std::addressof(write_mutex)));
         }
 
-        ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         R_TRY(GetResults());
         write_buffers.ringbuf_push(buf, 0);
         return condvarWakeOne(std::addressof(can_write));
@@ -279,6 +283,7 @@ struct ThreadData {
 
     Result GetWriteBuf(std::vector<u8>& buf_out, s64& off_out) {
         mutexLock(std::addressof(write_mutex));
+        ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         while (!write_buffers.ringbuf_size()) {
             if (!decompress_running) {
                 buf_out.resize(0);
@@ -287,7 +292,6 @@ struct ThreadData {
             R_TRY(condvarWait(std::addressof(can_write), std::addressof(write_mutex)));
         }
 
-        ON_SCOPE_EXIT(mutexUnlock(std::addressof(write_mutex)));
         R_TRY(GetResults());
         write_buffers.ringbuf_pop(buf_out, off_out);
         return condvarWakeOne(std::addressof(can_decompress_write));
