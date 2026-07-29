@@ -403,8 +403,11 @@ bool RecoverLinkLocked(const char* why) {
     bool ok = true;
     for (auto* ep : {&g_session.ep_in, &g_session.ep_out}) {
         bool halted{};
-        if (R_FAILED(GetEndpointStatusLocked(ep, &halted)) ||
-            (halted && R_FAILED(ClearEndpointHaltLocked(ep)))) {
+        if (const auto rc = GetEndpointStatusLocked(ep, &halted); R_FAILED(rc)) {
+            log_write("[MTP_HOST] GET_STATUS ep 0x%02X failed: 0x%X\n", ep->desc.bEndpointAddress, rc);
+            ok = false;
+        } else if (halted && R_FAILED(ClearEndpointHaltLocked(ep))) {
+            log_write("[MTP_HOST] CLEAR_HALT ep 0x%02X failed\n", ep->desc.bEndpointAddress);
             ok = false;
         }
     }
@@ -1431,22 +1434,26 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
         }
 
         if (R_FAILED(rc)) {
-            // a few attempts with a breather, otherwise a phone that
-            // blinked mid-transfer aborts the whole install. The first
-            // command after a phone-initiated abort tends to fail even
-            // after recovery; a second try 100 ms later goes through.
-            // RefreshFileLocked re-resolves the handle -- the old one
-            // died with the session.
-            // back off between attempts: a responder that just dropped off
-            // the bus needs time to enumerate again. Kept short because this
-            // runs with the mount's lock held -- the file browser behind the
-            // install box blocks on it, which is the ui freeze the user sees.
-            if (retries < 3) {
-                svcSleepThread((retries + 1) * 150'000'000ULL);
+            // a few reconnect attempts with growing breathers, otherwise a
+            // phone that blinked mid-transfer aborts the whole install. The
+            // loop covers EnsureSession too: one failed reconnect used to
+            // bail out immediately, even though the phone often just needs
+            // another moment to finish enumerating (the 16:43 log died on
+            // exactly that). Kept short overall because this runs with the
+            // mount's lock held -- the file browser behind the install box
+            // blocks on it, which is the ui freeze the user sees.
+            // RefreshFileLocked re-resolves the handle after a reconnect.
+            bool revived = false;
+            while (retries < 3) {
                 retries++;
+                svcSleepThread(retries * 150'000'000ULL);
                 if (EnsureSessionLocked() && RefreshFileLocked(file)) {
-                    continue;
+                    revived = true;
+                    break;
                 }
+            }
+            if (revived) {
+                continue;
             }
             file->offset += done;
             return done ? static_cast<ssize_t>(done) : -EIO;
@@ -1543,6 +1550,11 @@ Result OpenSessionOnInterface(const UsbHsInterface& iface) {
 
     g_session.connected = true;
     g_session.transaction_id = 1;
+    // a fresh session must not inherit the previous one's recovery
+    // bookkeeping: the stale tick made the give-up guard fire on the very
+    // first hiccup of a reconnect (its OpenSession post), killing a link
+    // that had not even had its one allowed recovery yet.
+    g_session.last_recover_tick = 0;
     // 512 at high speed, 1024 once the link comes up as USB 3.0. Posting a
     // size that is not a multiple of this leaves the controller without room
     // for the tail of the final packet.
