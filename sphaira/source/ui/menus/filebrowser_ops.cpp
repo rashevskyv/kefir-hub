@@ -387,9 +387,22 @@ void FsView::ShareFolder() {
         return;
     }
 
+    App::SetMountedFolder(m_path);
+
     WebShareResult result;
     if (const auto rc = WebShareFolder(m_path, result); R_FAILED(rc)) {
         App::PushErrorBox(rc, "Failed to start folder server"_i18n);
+        return;
+    }
+
+    // the server may already be up -- started from Tools, or by an earlier
+    // mount. it now picks the new mount up on its next request, so all that is
+    // left is to say so: pushing a second progress box would give two owners of
+    // one server, and whichever was dismissed first would stop it under the
+    // other.
+    if (WebGetProgressBox()) {
+        nvgDeleteImage(App::GetVg(), result.qr_image);
+        App::Notify("Mounted over HTTP: "_i18n + result.url);
         return;
     }
 

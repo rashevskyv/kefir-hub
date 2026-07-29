@@ -50,8 +50,6 @@ constexpr u16 SHARE_PORT_LAST = 8090;
 // is blocked handling a long upload/install request.
 constexpr size_t SHARE_WORKER_COUNT = 3;
 
-std::mutex g_share_mutex{};
-fs::FsPath g_share_folder_root{};
 std::atomic_bool g_title_initialized{false};
 Thread g_share_threads[SHARE_WORKER_COUNT]{};
 size_t g_share_thread_count{};
@@ -68,16 +66,16 @@ u16 g_share_port{};
 std::atomic_bool g_transfer_busy{false};
 
 
-auto GetShareFolderRoot() -> fs::FsPath {
-    std::scoped_lock lock{g_share_mutex};
-    return g_share_folder_root;
-}
-
-// the mounted folder, canonicalised, or empty when nothing is mounted. the card
-// root is not a mount: it is what the server already serves, so mounting it
-// would only produce a second way to reach the same listing.
+// the mounted folder, canonicalised, or empty when nothing is mounted. read
+// fresh on every request: the mount belongs to the app (App::SetMountedFolder),
+// not to this server, so mounting from the file browser takes effect on a server
+// that is already running -- including one started from Tools, which serves the
+// whole card and never sets a mount of its own.
+//
+// the card root is not a mount: it is what the server already serves, so
+// mounting it would only produce a second way to reach the same listing.
 auto GetMountRoot() -> std::string {
-    const auto raw = GetShareFolderRoot().toString();
+    const auto raw = App::GetMountedFolder().toString();
     if (raw.empty()) {
         return {};
     }
@@ -479,7 +477,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         }
         dir = "/switch/" + stem;
     } else {
-        dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
+        dir = CanonicalizeAbsolutePath(raw_path.empty() ? GetMountRoot() : raw_path);
     }
 
     const auto install_param = GetQueryValue(query, "install");
@@ -889,7 +887,7 @@ void HandleListRecursive(Socket sock, const std::string& query) {
 
 void HandleList(Socket sock, const std::string& query) {
     const auto raw_path = GetQueryValue(query, "path");
-    const auto path = CanonicalizeAbsolutePath(raw_path.empty() ? GetShareFolderRoot().toString() : raw_path);
+    const auto path = CanonicalizeAbsolutePath(raw_path.empty() ? GetMountRoot() : raw_path);
 
     fs::FsNativeSd fs;
     fs::Dir dir;
@@ -1283,16 +1281,11 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     R_TRY(nifmGetCurrentIpAddress(&ip));
     R_UNLESS(ip != 0, Result_FsNotActive);
 
-    {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_folder_root = path;
-    }
-
-    if (const auto rc = StartShareServer(); R_FAILED(rc)) {
-        std::scoped_lock lock{g_share_mutex};
-        g_share_folder_root = {};
-        R_THROW(rc);
-    }
+    // note: this only brings the server up (and is a no-op if it already is).
+    // what the root page shows comes from App::GetMountedFolder(), so stopping
+    // and starting the server never disturbs a mount, and a mount made while the
+    // server runs takes effect on the next request.
+    R_TRY(StartShareServer());
 
     if (!g_title_initialized.exchange(true)) {
         title::Init();
@@ -1331,9 +1324,6 @@ void WebShareStop() {
     if (g_title_initialized.exchange(false)) {
         title::Exit();
     }
-
-    std::scoped_lock lock{g_share_mutex};
-    g_share_folder_root = {};
 }
 
 WebUploadState WebGetUploadState() {

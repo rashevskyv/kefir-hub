@@ -21,6 +21,8 @@ bool MountFs(std::function<std::unique_ptr<fs::Fs>()> fs_factory, const std::str
 void UnmountPinned();
 // true if a pinned storage is currently mounted.
 bool HasPinned();
+// display name of the pinned storage, empty if there is none.
+std::string GetPinnedName();
 
 using OnInstallStart = std::function<bool(const char* path)>;
 using OnInstallWrite = std::function<bool(const void* buf, size_t size)>;

@@ -26,6 +26,9 @@ namespace {
 // to open with ENODEV.
 std::string g_ftp_mounted_name{};
 std::string g_ftp_mounted_path{};
+// the same path in the form the fsdev wrapper wants (no leading slash). held
+// separately because the wrapper stores it as a bare pointer.
+std::string g_ftp_mounted_shortcut{};
 
 // device names live in a char[32] (with the ':') on both sides of the vfs, so a
 // long folder name would be silently truncated into something that no longer
@@ -61,9 +64,19 @@ void MountFolderDevice() {
         return;
     }
 
+    // the shortcut is pasted into "/%s/%s" by fsdev_wrapTranslatePath(), so it
+    // is stored without its leading slash: "/games/roms" would resolve to
+    // "//games/roms/...", and a path starting with a double separator is the one
+    // shape worth not handing to fs.
+    g_ftp_mounted_shortcut = g_ftp_mounted_path;
+    while (!g_ftp_mounted_shortcut.empty() && g_ftp_mounted_shortcut.front() == '/') {
+        g_ftp_mounted_shortcut.erase(g_ftp_mounted_shortcut.begin());
+    }
+
     // own = false: the filesystem belongs to the "sdmc" entry, unmounting this
-    // alias must not close it.
-    if (fsdev_wrapMountDevice(g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str(), *sdmc, false)) {
+    // alias must not close it. the shortcut is kept by pointer, hence the
+    // long-lived string.
+    if (fsdev_wrapMountDevice(g_ftp_mounted_name.c_str(), g_ftp_mounted_shortcut.c_str(), *sdmc, false)) {
         log_write("[FTP] cannot mount %s -> %s\n", g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str());
         return;
     }

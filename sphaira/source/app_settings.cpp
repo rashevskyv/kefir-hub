@@ -610,6 +610,33 @@ void App::RemoveMtpFolder(const std::string& path) {
     }
 }
 
+// the one folder every network share exposes next to the microSD card. session
+// state, not a setting -- see the declaration in app.hpp. read by the web
+// server's worker threads on every request, hence the lock: the path is a plain
+// char buffer, so an unguarded read racing a mount would return half of each.
+static fs::FsPath g_mounted_folder{};
+static Mutex g_mounted_folder_mutex{};
+
+auto App::GetMountedFolder() -> fs::FsPath {
+    SCOPED_MUTEX(&g_mounted_folder_mutex);
+    return g_mounted_folder;
+}
+
+void App::SetMountedFolder(const fs::FsPath& path) {
+    {
+        SCOPED_MUTEX(&g_mounted_folder_mutex);
+        g_mounted_folder = path;
+    }
+
+    // fan out to whichever transports care. ftp rebuilds its root device list
+    // from this (bouncing the server if it is already up); the web server reads
+    // it fresh on every request, so it needs no poking. mounting over one of
+    // them therefore shows up on the others too, which is the whole point.
+    ftpsrv::SetFtpMountedFolder(path.toString());
+
+    log_write("[MOUNT] mounted folder is now '%s'\n", path.s);
+}
+
 // restarts the FTP server if it is running, so a config change takes effect.
 static void RestartFtpIfRunning() {
     if (App::GetFtpEnable()) {

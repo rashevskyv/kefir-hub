@@ -153,6 +153,17 @@ public:
     static auto GetProgressActive() -> bool;
     static auto GetSaveSettingsGlobally() -> bool;
 
+    // the folder the file browser has mounted, exposed by *every* network share
+    // next to the microSD card: as a root device over FTP, as the first entry of
+    // the web server's root page. one mount shared by all transports -- picking
+    // FTP in the "Mount over" popup chooses which server to bring up, not which
+    // server gets to see the folder. empty when nothing is mounted.
+    //
+    // deliberately not persisted: a mount lasts for the session, so a reboot
+    // never leaves a share pointing at a folder the user has forgotten about.
+    static auto GetMountedFolder() -> fs::FsPath;
+    static void SetMountedFolder(const fs::FsPath& path);
+
     static void SetMtpEnable(bool enable);
     static void SetMtpShowSd(bool enable);
     static void SetMtpShowInstall(bool enable);

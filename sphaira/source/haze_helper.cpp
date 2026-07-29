@@ -1724,6 +1724,10 @@ bool HasPinned() {
     return static_cast<bool>(g_pinned_factory);
 }
 
+std::string GetPinnedName() {
+    return g_pinned_name;
+}
+
 #if ENABLE_NETWORK_INSTALL
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close) {
     SCOPED_MUTEX(&g_shared_data.mutex);

@@ -849,6 +849,12 @@ void FsView::MountCurrentOverMtp() {
     }
 
     if (sphaira::haze::MountFs(std::move(factory), name, base)) {
+        // a real microSD folder becomes *the* mount, so it also shows up over
+        // FTP and HTTP. content / archive mounts are MTP-only (the other two
+        // serve the card directly and cannot read a virtual fs).
+        if (IsSd()) {
+            App::SetMountedFolder(m_path);
+        }
         App::Notify("Mounted over MTP: "_i18n + name);
     } else {
         App::Push<OptionBox>("Failed to start MTP!"_i18n, "OK"_i18n);
@@ -861,18 +867,53 @@ void FsView::ShareCurrentFolder() {
     const bool can_mtp = IsSd() || m_fs_entry.type == FsType::Content || m_fs_entry.type == FsType::Archive;
     const bool can_net = IsSd();
 
+    // the popup used to tick its first row unconditionally, which read as
+    // "already mounted over MTP" whatever was actually going on. show the state
+    // instead: each transport is labelled with the folder it is currently
+    // serving, and the tick only lands on a transport that really is serving
+    // one (no tick at all when nothing is, or when several are).
+    const auto mount_name = [](const fs::FsPath& p) -> std::string {
+        if (p.empty()) {
+            return {};
+        }
+        const char* leaf = std::strrchr(p.s, '/');
+        return (leaf && leaf[1]) ? (leaf + 1) : p.toString();
+    };
+
+    // MTP names its own pinned storage (it can also hold a content / archive
+    // mount, which never becomes the global mount); FTP names its root device.
+    // HTTP has no name of its own -- it just lists the global mount.
+    const auto mounted = App::GetMountedFolder();
+    const std::string mtp_on = haze::GetPinnedName();
+    const std::string ftp_on = ftpsrv::IsRunning() ? ftpsrv::GetFtpMountedName() : std::string{};
+    const std::string http_on = WebShareIsRunning() ? mount_name(mounted) : std::string{};
+
     PopupList::Items items;
     std::vector<int> actions; // 0 = MTP, 1 = FTP, 2 = HTTP.
-    if (can_mtp) { items.emplace_back("MTP"); actions.push_back(0); }
-    if (can_net) { items.emplace_back("FTP"); actions.push_back(1); }
-    if (can_net) { items.emplace_back("HTTP"); actions.push_back(2); }
+    s64 active_index = -1;
+    s64 active_count = 0;
+
+    const auto add = [&](const char* label, int action, const std::string& serving) {
+        if (!serving.empty()) {
+            active_index = (s64)items.size();
+            active_count++;
+            items.emplace_back(std::string{label} + ": " + serving);
+        } else {
+            items.emplace_back(label);
+        }
+        actions.push_back(action);
+    };
+
+    if (can_mtp) { add("MTP", 0, mtp_on); }
+    if (can_net) { add("FTP", 1, ftp_on); }
+    if (can_net) { add("HTTP", 2, http_on); }
 
     if (items.empty()) {
         App::Notify("This source cannot be shared"_i18n);
         return;
     }
 
-    App::Push<PopupList>("Mount over..."_i18n, items, [this, actions](std::optional<s64> op_index){
+    auto popup = std::make_unique<PopupList>("Mount over..."_i18n, items, [this, actions](std::optional<s64> op_index){
         if (!op_index || *op_index < 0 || *op_index >= (s64)actions.size()) {
             return;
         }
@@ -881,7 +922,13 @@ void FsView::ShareCurrentFolder() {
             case 1: ShareCurrentOverFtp(); break;
             case 2: ShareFolder(); break;
         }
-    });
+    }, active_count == 1 ? active_index : 0);
+
+    if (active_count != 1) {
+        popup->SetMenuStyle(true);
+    }
+
+    App::Push(std::move(popup));
 }
 
 void FsView::ShareCurrentOverFtp() {
@@ -890,13 +937,18 @@ void FsView::ShareCurrentOverFtp() {
         return;
     }
 
-    ftpsrv::SetFtpMountedFolder(m_path.toString());
+    App::SetMountedFolder(m_path);
 
     if (!App::GetFtpEnable()) {
         App::SetFtpEnable(true);
+    } else if (!ftpsrv::IsRunning()) {
+        // the setting says on but the server is not up (it failed to start at
+        // boot, say). SetFtpEnable() would see no change and do nothing, so the
+        // mount would sit there with nothing serving it.
+        ftpsrv::Init();
     }
 
-    if (!App::GetFtpEnable()) {
+    if (!ftpsrv::IsRunning()) {
         App::Push<OptionBox>("Failed to start FTP!"_i18n, "OK"_i18n);
         return;
     }
@@ -1934,11 +1986,16 @@ void FsView::DisplayOptions() {
             ShareCurrentFolder();
         }, "Expose this folder to a PC over MTP, FTP or HTTP."_i18n);
     }
-    if (sphaira::haze::HasPinned()) {
-        options->Add<SidebarEntryCallback>("Unmount MTP"_i18n, [](){
+    // one entry for the one mount: it is what FTP exposes as a root device, what
+    // the web root page lists next to the card, and what MTP pinned. leaving
+    // only "Unmount MTP" here would strand the other two with no way back to a
+    // plain card listing.
+    if (sphaira::haze::HasPinned() || !App::GetMountedFolder().empty()) {
+        options->Add<SidebarEntryCallback>("Unmount"_i18n, [](){
             sphaira::haze::UnmountPinned();
-            App::Notify("MTP unmounted"_i18n);
-        }, "Stop sharing the mounted folder over MTP."_i18n);
+            App::SetMountedFolder({});
+            App::Notify("Unmounted"_i18n);
+        }, "Stop sharing the mounted folder over MTP, FTP and HTTP."_i18n);
     }
 
     auto source_entry = options->Add<SidebarEntryCallback>("Sources"_i18n, [this](){
