@@ -21,6 +21,11 @@ struct MtpFileHandle {
     u32 object_handle;
     u64 size;
     u64 offset;
+    // session generation the handle was resolved under, and the path to
+    // re-resolve it with: object handles are only valid per session, so a
+    // reconnect mid-read must look the file up again before retrying.
+    u32 generation;
+    std::string path;
 };
 
 struct MtpDirHandle {
@@ -68,6 +73,8 @@ private:
     void DropCaches();
     // drops the caches when the session reconnected since they were filled.
     void SyncGenerationLocked();
+    // re-resolves a file's object handle after a reconnect; no-op otherwise.
+    bool RefreshFileLocked(MtpFileHandle* file);
 
     u32 m_storage_id{};
     u32 m_generation{};

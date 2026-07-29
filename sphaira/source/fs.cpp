@@ -519,6 +519,12 @@ Result OpenFile(fs::Fs* fs, const fs::FsPath& path, u32 mode, File* f) {
         }
 
         R_UNLESS(f->m_stdio, Result_FsUnknownStdioError);
+
+        // stdio mounts here are devoptab-backed (mtp / network / usb drive)
+        // and pay a full round trip per read call. newlib ignores st_blksize
+        // and hands out a 1 KiB buffer, which splits every large read into a
+        // tiny refill plus a direct read -- twice the transactions.
+        std::setvbuf(f->m_stdio, nullptr, _IOFBF, 1024 * 512);
     }
 
     R_SUCCEED();

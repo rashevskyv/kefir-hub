@@ -749,6 +749,24 @@ void MtpMountDevice::SyncGenerationLocked() {
     }
 }
 
+bool MtpMountDevice::RefreshFileLocked(MtpFileHandle* file) {
+    SyncGenerationLocked();
+    if (file->generation == m_generation) {
+        return true;
+    }
+
+    // the session reconnected since this handle was resolved. MTP object
+    // handles are per session, so look the path up again on the new one.
+    MtpObject obj{};
+    if (!LookupLocked(file->path, &obj) || obj.is_dir) {
+        return false;
+    }
+
+    file->object_handle = obj.handle;
+    file->generation = m_generation;
+    return true;
+}
+
 bool MtpMountDevice::Lookup(const std::string& path, MtpObject* out) {
     SCOPED_MUTEX(&g_mutex);
     SyncGenerationLocked();
@@ -945,25 +963,32 @@ int MtpMountDevice::devoptab_lstat(const char *path, struct stat *st) {
 }
 
 int MtpMountDevice::devoptab_open(void *fileStruct, const char *path, int flags, int mode) {
-    auto* file = static_cast<MtpFileHandle*>(fileStruct);
-    *file = {};
+    SCOPED_MUTEX(&g_mutex);
+    SyncGenerationLocked();
 
+    const auto norm = NormalisePath(path);
     MtpObject obj{};
-    if (!Lookup(NormalisePath(path), &obj)) {
-        return -LookupErrno();
+    if (!LookupLocked(norm, &obj)) {
+        // g_mutex is held, so LookupErrno() (which takes it) would deadlock.
+        return g_session.connected ? -ENOENT : -EIO;
     }
 
     if (obj.is_dir) {
         return -EISDIR;
     }
 
+    // calloc'd storage: run the constructor only on the success path, the
+    // common wrapper frees the allocation without calling close on failure.
+    auto* file = new (fileStruct) MtpFileHandle();
     file->object_handle = obj.handle;
     file->size = obj.size;
+    file->generation = m_generation;
+    file->path = norm;
     return 0;
 }
 
 int MtpMountDevice::devoptab_close(void *fd) {
-    *static_cast<MtpFileHandle*>(fd) = {};
+    static_cast<MtpFileHandle*>(fd)->~MtpFileHandle();
     return 0;
 }
 
@@ -1003,7 +1028,7 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
     }
 
     SCOPED_MUTEX(&g_mutex);
-    if (!EnsureSessionLocked()) {
+    if (!EnsureSessionLocked() || !RefreshFileLocked(file)) {
         return -EIO;
     }
 
@@ -1052,8 +1077,9 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
 
         if (R_FAILED(rc)) {
             // one reconnect attempt, otherwise a phone that blinked
-            // mid-transfer aborts the whole install.
-            if (!retried && EnsureSessionLocked()) {
+            // mid-transfer aborts the whole install. RefreshFileLocked
+            // re-resolves the handle -- the old one died with the session.
+            if (!retried && EnsureSessionLocked() && RefreshFileLocked(file)) {
                 retried = true;
                 continue;
             }
