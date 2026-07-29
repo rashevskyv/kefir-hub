@@ -6,8 +6,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <sys/iosupport.h>
-#include <sys/dirent.h>
 #include <minIni.h>
 #include <ftpsrv.h>
 #include <ftpsrv_vfs.h>
@@ -17,155 +15,26 @@
 namespace sphaira::ftpsrv {
 namespace {
 
-static std::string g_ftp_mounted_name{};
-static std::string g_ftp_mounted_path{};
-static devoptab_t g_ftp_devoptab{};
-static bool g_ftp_devoptab_registered = false;
+// the folder shared over ftp alongside "sdmc:" and "install:", if any. held as a
+// plain microSD path ("/games/roms"): ftpsrv exposes it as a root device backed
+// by the card's filesystem with that path as a *shortcut*, which is exactly how
+// its own "switch:" / "atmosphere_contents:" aliases are built.
+//
+// a newlib devoptab is useless here -- ftpsrv resolves every path through its
+// own fsdev wrapper (fsdev_wrapTranslatePath) and never touches newlib, so a
+// device registered with AddDevice() shows up in the root listing and then fails
+// to open with ENODEV.
+std::string g_ftp_mounted_name{};
+std::string g_ftp_mounted_path{};
 
-static std::string FixFtpMountPath(const char* path) {
-    if (!path) return g_ftp_mounted_path;
-    while (*path == '/') path++;
-    if (const char* colon = strchr(path, ':')) path = colon + 1;
-    while (*path == '/') path++;
-    std::string full = g_ftp_mounted_path;
-    if (!full.empty() && full.back() != '/' && path[0] != '\0') full += '/';
-    full += path;
-    return full;
-}
+// device names live in a char[32] (with the ':') on both sides of the vfs, so a
+// long folder name would be silently truncated into something that no longer
+// matches what the listing advertises.
+constexpr size_t MOUNT_NAME_MAX = 24;
 
-static int ftp_mount_open(struct _reent *r, void* fileStruct, const char* path, int flags, int mode) {
-    const auto full = FixFtpMountPath(path);
-    int fd = open(full.c_str(), flags, mode);
-    if (fd < 0) {
-        if (r) r->_errno = errno;
-        return -1;
-    }
-    *static_cast<int*>(fileStruct) = fd;
-    if (r) r->_errno = 0;
-    return 0;
-}
-
-static int ftp_mount_close(struct _reent *r, void* fileStruct) {
-    int fd = *static_cast<int*>(fileStruct);
-    int res = close(fd);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static ssize_t ftp_mount_read(struct _reent *r, void* fileStruct, char* ptr, size_t len) {
-    int fd = *static_cast<int*>(fileStruct);
-    ssize_t res = read(fd, ptr, len);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static ssize_t ftp_mount_write(struct _reent *r, void* fileStruct, const char* ptr, size_t len) {
-    int fd = *static_cast<int*>(fileStruct);
-    ssize_t res = write(fd, ptr, len);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static off_t ftp_mount_seek(struct _reent *r, void* fileStruct, off_t pos, int dir) {
-    int fd = *static_cast<int*>(fileStruct);
-    off_t res = lseek(fd, pos, dir);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_fstat(struct _reent *r, void* fileStruct, struct stat* st) {
-    int fd = *static_cast<int*>(fileStruct);
-    int res = fstat(fd, st);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_stat(struct _reent *r, const char* path, struct stat* st) {
-    const auto full = FixFtpMountPath(path);
-    int res = stat(full.c_str(), st);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_unlink(struct _reent *r, const char* path) {
-    const auto full = FixFtpMountPath(path);
-    int res = unlink(full.c_str());
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_mkdir(struct _reent *r, const char* path, int mode) {
-    const auto full = FixFtpMountPath(path);
-    int res = mkdir(full.c_str(), mode);
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_rmdir(struct _reent *r, const char* path) {
-    const auto full = FixFtpMountPath(path);
-    int res = rmdir(full.c_str());
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-static int ftp_mount_rename(struct _reent *r, const char* old_path, const char* new_path) {
-    const auto old_full = FixFtpMountPath(old_path);
-    const auto new_full = FixFtpMountPath(new_path);
-    int res = rename(old_full.c_str(), new_full.c_str());
-    if (r && res < 0) r->_errno = errno;
-    return res;
-}
-
-struct FtpDirState {
-    DIR* dir;
-};
-
-static DIR_ITER* ftp_mount_diropen(struct _reent *r, DIR_ITER *dirState, const char* path) {
-    const auto full = FixFtpMountPath(path);
-    auto* state = static_cast<FtpDirState*>(dirState->dirStruct);
-    state->dir = opendir(full.c_str());
-    if (!state->dir) {
-        if (r) r->_errno = errno;
-        return nullptr;
-    }
-    if (r) r->_errno = 0;
-    return dirState;
-}
-
-static int ftp_mount_dirreset(struct _reent *r, DIR_ITER *dirState) {
-    auto* state = static_cast<FtpDirState*>(dirState->dirStruct);
-    if (state->dir) rewinddir(state->dir);
-    if (r) r->_errno = 0;
-    return 0;
-}
-
-static int ftp_mount_dirnext(struct _reent *r, DIR_ITER *dirState, char* filename, struct stat* filestat) {
-    auto* state = static_cast<FtpDirState*>(dirState->dirStruct);
-    if (!state->dir) return -1;
-    struct dirent* entry = readdir(state->dir);
-    if (!entry) {
-        if (r) r->_errno = ENOENT;
-        return -1;
-    }
-    std::strncpy(filename, entry->d_name, NAME_MAX);
-    if (filestat) {
-        std::memset(filestat, 0, sizeof(*filestat));
-        filestat->st_mode = (entry->d_type == DT_DIR) ? S_IFDIR : S_IFREG;
-    }
-    if (r) r->_errno = 0;
-    return 0;
-}
-
-static int ftp_mount_dirclose(struct _reent *r, DIR_ITER *dirState) {
-    auto* state = static_cast<FtpDirState*>(dirState->dirStruct);
-    if (state->dir) {
-        closedir(state->dir);
-        state->dir = nullptr;
-    }
-    if (r) r->_errno = 0;
-    return 0;
-}
-
+// the allowlist vfs_nx_add_device() filters against (see patch_ftpsrv.cmake).
+// must be set before vfs_nx_init(), and must already name the mounted folder or
+// its device is dropped on the floor.
 void UpdateFtpVisibleDevices() {
     std::vector<const char*> visible;
     visible.push_back("sdmc");
@@ -174,9 +43,33 @@ void UpdateFtpVisibleDevices() {
 #endif
     if (!g_ftp_mounted_name.empty()) {
         visible.push_back(g_ftp_mounted_name.c_str());
-        vfs_nx_add_device(g_ftp_mounted_name.c_str(), VFS_TYPE_FS);
     }
     vfs_nx_set_visible_devices(visible.data(), visible.size());
+}
+
+// adds the mounted folder as its own root device. must run *after* vfs_nx_init:
+// that is what mounts the card (whose FsFileSystem the shortcut borrows) and
+// what hands g_device to the root listing.
+void MountFolderDevice() {
+    if (g_ftp_mounted_name.empty() || g_ftp_mounted_path.empty()) {
+        return;
+    }
+
+    auto* sdmc = fsdev_wrapGetDeviceFileSystem("sdmc");
+    if (!sdmc) {
+        log_write("[FTP] cannot mount %s: no sdmc device\n", g_ftp_mounted_name.c_str());
+        return;
+    }
+
+    // own = false: the filesystem belongs to the "sdmc" entry, unmounting this
+    // alias must not close it.
+    if (fsdev_wrapMountDevice(g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str(), *sdmc, false)) {
+        log_write("[FTP] cannot mount %s -> %s\n", g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str());
+        return;
+    }
+
+    vfs_nx_add_device(g_ftp_mounted_name.c_str(), VFS_TYPE_FS);
+    log_write("[FTP] mounted %s: -> %s\n", g_ftp_mounted_name.c_str(), g_ftp_mounted_path.c_str());
 }
 
 #if ENABLE_NETWORK_INSTALL
@@ -703,6 +596,8 @@ bool Init() {
     vfs_nx_init(NULL, mount_devices, save_writable, mount_bis, false);
 #endif
 
+    MountFolderDevice();
+
     Result rc;
     if (R_FAILED(rc = threadCreate(&g_thread, loop, nullptr, nullptr, 1024*16, THREAD_PRIO, THREAD_CORE))) {
         log_write("[FTP] failed to create nxlink thread: 0x%X\n", rc);
@@ -758,6 +653,11 @@ void DisableInstallMode() {
 }
 #endif
 
+bool IsRunning() {
+    SCOPED_MUTEX(&g_mutex);
+    return g_is_running;
+}
+
 unsigned GetPort() {
     SCOPED_MUTEX(&g_mutex);
     return g_ftpsrv_config.port;
@@ -778,16 +678,37 @@ const char* GetPass() {
     return g_ftpsrv_config.pass;
 }
 
+namespace {
+
+// applies a new mount to a server that may already be up. the device list is
+// built once, inside vfs_nx_init(), and ftpsrv offers no way to add or drop a
+// root device afterwards -- so the server is bounced instead of poked at. this
+// also keeps g_ftp_mounted_path (handed to the fsdev wrapper as a bare pointer)
+// from being reassigned while a mount still references it.
+void ApplyMount(std::string name, std::string path) {
+    const bool was_running = IsRunning();
+    if (was_running) {
+        Exit();
+    }
+
+    {
+        SCOPED_MUTEX(&g_mutex);
+        g_ftp_mounted_name = std::move(name);
+        g_ftp_mounted_path = std::move(path);
+    }
+
+    if (was_running) {
+        Init();
+    }
+}
+
+} // namespace
+
 void SetFtpMountedFolder(const std::string& path) {
-    SCOPED_MUTEX(&g_mutex);
+    // the card root is what ftp already serves as "sdmc:"; mounting it again
+    // would just be a duplicate device.
     if (path.empty() || path == "/") {
-        if (g_ftp_devoptab_registered && !g_ftp_mounted_name.empty()) {
-            RemoveDevice(g_ftp_mounted_name.c_str());
-            g_ftp_devoptab_registered = false;
-        }
-        g_ftp_mounted_name.clear();
-        g_ftp_mounted_path.clear();
-        UpdateFtpVisibleDevices();
+        ClearFtpMountedFolder();
         return;
     }
 
@@ -799,53 +720,25 @@ void SetFtpMountedFolder(const std::string& path) {
     const char* leaf = std::strrchr(clean.c_str(), '/');
     std::string name = (leaf && leaf[1]) ? (leaf + 1) : "mounted";
 
+    if (name.length() > MOUNT_NAME_MAX) {
+        name.resize(MOUNT_NAME_MAX);
+    }
+
+    // fsdev_wrapMountDevice() passes the name straight to snprintf() as the
+    // format string, so a folder called "100%" would read off the stack.
+    std::replace(name.begin(), name.end(), '%', '_');
+
+    // a device name that collides with one of the built-ins would shadow it in
+    // the root listing (or be shadowed by it, depending on lookup order).
     if (name == "sd" || name == "sdmc" || name == "install") {
         name += "_folder";
     }
 
-    if (g_ftp_devoptab_registered && !g_ftp_mounted_name.empty()) {
-        RemoveDevice(g_ftp_mounted_name.c_str());
-        g_ftp_devoptab_registered = false;
-    }
-
-    g_ftp_mounted_name = name;
-    g_ftp_mounted_path = "sdmc:" + clean;
-
-    std::memset(&g_ftp_devoptab, 0, sizeof(g_ftp_devoptab));
-    g_ftp_devoptab.name = g_ftp_mounted_name.c_str();
-    g_ftp_devoptab.structSize = sizeof(devoptab_t);
-    g_ftp_devoptab.open_r = ftp_mount_open;
-    g_ftp_devoptab.close_r = ftp_mount_close;
-    g_ftp_devoptab.read_r = ftp_mount_read;
-    g_ftp_devoptab.write_r = ftp_mount_write;
-    g_ftp_devoptab.seek_r = ftp_mount_seek;
-    g_ftp_devoptab.fstat_r = ftp_mount_fstat;
-    g_ftp_devoptab.stat_r = ftp_mount_stat;
-    g_ftp_devoptab.unlink_r = ftp_mount_unlink;
-    g_ftp_devoptab.mkdir_r = ftp_mount_mkdir;
-    g_ftp_devoptab.rmdir_r = ftp_mount_rmdir;
-    g_ftp_devoptab.rename_r = ftp_mount_rename;
-    g_ftp_devoptab.dirStateSize = sizeof(FtpDirState);
-    g_ftp_devoptab.diropen_r = ftp_mount_diropen;
-    g_ftp_devoptab.dirreset_r = ftp_mount_dirreset;
-    g_ftp_devoptab.dirnext_r = ftp_mount_dirnext;
-    g_ftp_devoptab.dirclose_r = ftp_mount_dirclose;
-
-    AddDevice(&g_ftp_devoptab);
-    g_ftp_devoptab_registered = true;
-
-    UpdateFtpVisibleDevices();
+    ApplyMount(std::move(name), std::move(clean));
 }
 
 void ClearFtpMountedFolder() {
-    SCOPED_MUTEX(&g_mutex);
-    if (g_ftp_devoptab_registered && !g_ftp_mounted_name.empty()) {
-        RemoveDevice(g_ftp_mounted_name.c_str());
-        g_ftp_devoptab_registered = false;
-    }
-    g_ftp_mounted_name.clear();
-    g_ftp_mounted_path.clear();
-    UpdateFtpVisibleDevices();
+    ApplyMount({}, {});
 }
 
 std::string GetFtpMountedName() {

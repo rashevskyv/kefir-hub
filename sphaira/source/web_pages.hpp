@@ -400,12 +400,7 @@ e.preventDefault();
 current.click();
 }else if(e.key==='Backspace'){
 e.preventDefault();
-if(currentPath!=='/'){
-const parts=currentPath.split('/').filter(Boolean);
-parts.pop();
-const parentPath='/'+parts.join('/');
-navigateTo(parentPath);
-}
+goToParent();
 }
 });
 function makeCRCTable(){
@@ -551,9 +546,22 @@ if(btn.querySelector('.icon'))btn.querySelector('.icon').textContent='⊞';
 }}
 if(typeof initLightbox==='function')initLightbox();
 }catch(err){alert('Failed to load folder: '+err.message);}finally{if(status)status.textContent='';}}
+/* where ".." goes from `path`, or null when there is nowhere up to go.
+   "/" is the root selection page (mounted folder + card) when a folder is
+   mounted, and the card itself otherwise -- it is a plain link, so the click
+   handler below leaves it alone and the server renders whichever applies. */
+function parentHrefFor(path){
+if(shareRoot&&path===shareRoot)return '/';
+if(path==='/')return shareRoot?'/':null;
+let parent=path;const lastSlash=parent.lastIndexOf('/');if(lastSlash!==-1)parent=parent.substring(0,lastSlash);if(parent==='')parent='/';
+return '/?path='+encodeURIComponent(parent);}
+function goToParent(){
+const href=parentHrefFor(currentPath);if(!href)return;
+if(href==='/'){window.location.href='/';return;}
+navigateTo(new URL(href,window.location.origin).searchParams.get('path')||'/');}
 function renderCrumbs(path){
 const container=document.querySelector('.crumbs');if(!container)return;
-let html='<a href="/?path=/">SD Card</a>';
+let html='<a href="/">Root</a>';
 if(path!=='/'&&path!==''){
 const parts=path.split('/').filter(Boolean);let accum='';
 for(const part of parts){accum+='/'+part;html+=' / <a href="/?path='+encodeURIComponent(accum)+'">'+escapeHtml(part)+'</a>';}
@@ -561,9 +569,9 @@ for(const part of parts){accum+='/'+part;html+=' / <a href="/?path='+encodeURICo
 container.innerHTML=html;}
 function renderItems(path,entries){
 const container=document.getElementById('items-container');if(!container)return;container.innerHTML='';
-if(path!=='/'){
-let parent=path;const lastSlash=parent.lastIndexOf('/');if(lastSlash!==-1)parent=parent.substring(0,lastSlash);if(parent==='')parent='/';
-const el=document.createElement('a');el.className='item';el.href='/?path='+encodeURIComponent(parent);
+const parentHref=parentHrefFor(path);
+if(parentHref){
+const el=document.createElement('a');el.className='item';el.href=parentHref;
 el.innerHTML='<div class="thumbnail-box"><svg viewBox="0 0 24 24" fill="#ffca28"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></div><div class="info"><span class="name">..</span><span class="meta">parent folder</span></div>';
 container.appendChild(el);
 }

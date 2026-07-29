@@ -15,6 +15,7 @@ using OnInstallClose = std::function<void()>;
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close);
 void DisableInstallMode();
 
+bool IsRunning();
 unsigned GetPort();
 bool IsAnon();
 const char* GetUser();

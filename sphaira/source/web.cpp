@@ -73,11 +73,29 @@ auto GetShareFolderRoot() -> fs::FsPath {
     return g_share_folder_root;
 }
 
+// the mounted folder, canonicalised, or empty when nothing is mounted. the card
+// root is not a mount: it is what the server already serves, so mounting it
+// would only produce a second way to reach the same listing.
+auto GetMountRoot() -> std::string {
+    const auto raw = GetShareFolderRoot().toString();
+    if (raw.empty()) {
+        return {};
+    }
+
+    auto clean = CanonicalizeAbsolutePath(raw);
+    if (clean == "/") {
+        return {};
+    }
+
+    return clean;
+}
+
+// the landing page when a folder is mounted: the mount and the card, side by
+// side. deliberately script-free, so every link here is a full page load and
+// comes back through the server rather than through the client-side router.
 auto BuildRootSelectionPage() -> std::string {
-    const auto share_root = GetShareFolderRoot().toString();
-    std::string clean = share_root;
-    while (clean.length() > 1 && clean.back() == '/') clean.pop_back();
-    const char* leaf = std::strrchr(clean.c_str(), '/');
+    const auto share_root = GetMountRoot();
+    const char* leaf = std::strrchr(share_root.c_str(), '/');
     std::string mounted_name = (leaf && leaf[1]) ? (leaf + 1) : "Mounted Folder";
 
     std::string body;
@@ -109,8 +127,8 @@ auto BuildRootSelectionPage() -> std::string {
 }
 
 auto BuildFolderPage(std::string path_str) -> std::string {
-    const auto share_root = GetShareFolderRoot().toString();
-    const bool has_share_root = !share_root.empty() && share_root != "/";
+    const auto share_root = GetMountRoot();
+    const bool has_share_root = !share_root.empty();
 
     if (path_str.empty()) {
         if (has_share_root) {
@@ -134,7 +152,6 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         return strcasecmp(lhs.name, rhs.name) < 0;
     });
 
-    const auto encoded_path = UrlEncode(abs_path);
     std::string body;
     body.reserve(24576 + entries.size() * 512);
 
@@ -258,9 +275,16 @@ auto BuildFolderPage(std::string path_str) -> std::string {
         }
     }
 
-    body += "<script>let currentPath=decodeURIComponent('";
-    body += encoded_path;
-    body += "');";
+    // both are consumed by the client-side router in FOLDER_PAGE_JS. quoted as
+    // json rather than url-encoded: UrlEncode() turns a space into '+', which
+    // decodeURIComponent() leaves as a literal '+', so any path with a space in
+    // it used to come out mangled -- and shareRoot has to compare equal to
+    // currentPath for the "up" link out of the mount to be found.
+    body += "<script>let currentPath=\"";
+    body += JsonEscape(abs_path);
+    body += "\";let shareRoot=\"";
+    body += JsonEscape(share_root);
+    body += "\";";
     body += CONFIRM_MODAL_JS;
     body += FOLDER_PAGE_JS;
 
