@@ -147,6 +147,34 @@ Session g_session{};
 Mutex g_mutex{};
 
 // -------------------------------------------------------------------------
+// streaming read state
+// -------------------------------------------------------------------------
+
+// The tested phone wedges its MTP responder after ~100 transactions of any
+// size: chunked partial reads (one transaction per 512 KiB) killed it a few
+// dozen MB into every install. File reads therefore run as one long
+// GetPartialObject(64) whose data phase is consumed incrementally across
+// devoptab_read calls -- a whole install costs dozens of transactions instead
+// of thousands.
+struct ReadStream {
+    bool active{};
+    bool response_done{};   // closing response consumed (carry may remain)
+    u32 handle{};
+    u64 next_offset{};      // file offset of the next byte handed to a caller
+    u64 remaining{};        // payload bytes still on the bus
+    // pulled off the bus past the caller's request (posts are packet sized);
+    // served first on the next read. at most one packet.
+    u32 carry_len{};
+    u32 carry_off{};
+    u8 carry[512];
+};
+ReadStream g_stream{};
+
+// forward seeks up to this are skipped by discarding; anything bigger (or a
+// backward seek) abandons the stream.
+constexpr u64 STREAM_DRAIN_LIMIT = 8 * 1024 * 1024;
+
+// -------------------------------------------------------------------------
 // little endian dataset reader
 // -------------------------------------------------------------------------
 
@@ -298,6 +326,7 @@ void CloseUsbLocked(const char* why) {
     g_session.has_partial = false;
     g_session.has_partial64 = false;
     g_session.has_prop_value = false;
+    g_stream = {};
 }
 
 // Posts g_xfer_buf to the endpoint and waits for it to complete. `size` must
@@ -469,6 +498,8 @@ Result ReceiveDataPhase(const ContainerHeader& hdr, u32 first_transferred, DataS
     R_SUCCEED();
 }
 
+void AbortStreamLocked();
+
 // Runs one complete MTP transaction. `out_code` receives the responder's reply
 // code even when it is an error, so callers can tell "no such object" apart
 // from "the link is gone". Any transport level failure kills the session.
@@ -477,6 +508,11 @@ Result Transact(u16 op, std::span<const u32> params, DataSink* sink, u16* out_co
         *out_code = 0;
     }
 
+    R_UNLESS(g_session.connected, ResultNoSession);
+
+    // a command must not go out while a read stream's data phase is in
+    // flight; retire the stream first (this may drop the session).
+    AbortStreamLocked();
     R_UNLESS(g_session.connected, ResultNoSession);
 
     u32 transaction_id{};
@@ -536,6 +572,184 @@ Result TransactData(u16 op, std::span<const u32> params, std::vector<u8>* out, u
 
 Result TransactNoData(u16 op, std::span<const u32> params, u16* out_code = nullptr) {
     return Transact(op, params, nullptr, out_code);
+}
+
+// -------------------------------------------------------------------------
+// streaming reads (see ReadStream above)
+// -------------------------------------------------------------------------
+
+// Reads the closing response container once a stream's data phase is done.
+Result FinishStreamLocked() {
+    ContainerHeader hdr{};
+    u32 transferred{};
+    R_TRY(ReceiveContainer(RESPONSE_POST_SIZE, &hdr, &transferred));
+    R_UNLESS(hdr.type == CONTAINER_RESPONSE, ResultProtocol);
+    g_session.last_ok_tick = armGetSystemTick();
+    R_UNLESS(hdr.code == RESP_OK, ResultMtpFailed);
+    R_SUCCEED();
+}
+
+// Pulls up to `want` payload bytes from the active stream into dst (nullptr
+// discards). Reads the closing response as soon as the data phase drains, so
+// an inactive stream never leaves anything in flight. A transport failure
+// drops the session.
+Result PullStreamLocked(u8* dst, u64 want, u64* out_got) {
+    u64 got = 0;
+    *out_got = 0;
+
+    if (g_stream.carry_len) {
+        const u64 n = std::min<u64>(want, g_stream.carry_len);
+        if (dst) {
+            std::memcpy(dst, g_stream.carry + g_stream.carry_off, n);
+        }
+        g_stream.carry_off += n;
+        g_stream.carry_len -= n;
+        got += n;
+    }
+
+    while (got < want && g_stream.remaining) {
+        const u64 n = std::min<u64>(std::min<u64>(want - got, g_stream.remaining), MAX_READ_CHUNK);
+        const u32 post = AlignUp(static_cast<u32>(n), 512);
+
+        u32 transferred{};
+        if (const auto rc = PostBuffer(&g_session.ep_in, post, &transferred); R_FAILED(rc)) {
+            CloseUsbLocked("stream pull failed");
+            R_THROW(rc);
+        }
+        if (!transferred) {
+            CloseUsbLocked("stream pull returned nothing");
+            R_THROW(ResultTransport);
+        }
+
+        const u64 payload = std::min<u64>(transferred, g_stream.remaining);
+        const u64 to_caller = std::min<u64>(payload, want - got);
+        if (dst) {
+            std::memcpy(dst + got, g_xfer_buf, to_caller);
+        }
+        got += to_caller;
+
+        if (payload > to_caller) {
+            // the post was packet aligned, so at most one packet of overshoot.
+            g_stream.carry_len = static_cast<u32>(payload - to_caller);
+            g_stream.carry_off = 0;
+            std::memcpy(g_stream.carry, g_xfer_buf + to_caller, g_stream.carry_len);
+        }
+
+        g_stream.remaining -= payload;
+
+        // a short transfer with payload still owed means the device ended the
+        // container early; trust the wire over the header.
+        if (transferred < post && g_stream.remaining) {
+            g_stream.remaining = 0;
+        }
+    }
+
+    g_stream.next_offset += got;
+
+    if (!g_stream.remaining && !g_stream.response_done) {
+        g_stream.response_done = true;
+        if (const auto rc = FinishStreamLocked(); R_FAILED(rc)) {
+            CloseUsbLocked("stream response failed");
+            R_THROW(rc);
+        }
+    }
+    if (!g_stream.remaining && !g_stream.carry_len) {
+        g_stream.active = false;
+    }
+
+    *out_got = got;
+    R_SUCCEED();
+}
+
+// Retires the active stream before another command may go out. Cheap when it
+// already drained; a small remainder is pulled and discarded to keep the
+// session; a large one is abandoned by dropping the session -- a reconnect
+// hands the phone a fresh responder anyway.
+void AbortStreamLocked() {
+    if (!g_stream.active) {
+        return;
+    }
+
+    if (!g_stream.response_done) {
+        if (g_stream.remaining > STREAM_DRAIN_LIMIT) {
+            CloseUsbLocked("abandoning large stream");
+            return;
+        }
+        g_stream.carry_len = 0;
+        u64 got{};
+        if (R_FAILED(PullStreamLocked(nullptr, g_stream.remaining, &got))) {
+            return; // the failed pull already dropped the session
+        }
+    }
+
+    g_stream = {};
+}
+
+// Opens a data phase at `offset`. Small reads (header and metadata parsing
+// seek around, then never come back) get an exactly sized stream that always
+// completes without an abort; large sequential readers stream the rest of the
+// file in a single transaction.
+Result StartStreamLocked(u32 handle, u64 offset, u64 file_size, u64 want) {
+    u64 req = file_size - offset;
+    if (want < 1024 * 512) {
+        req = std::min<u64>(req, std::max<u64>(want, 1024 * 64));
+    }
+    req = std::min<u64>(req, 0xF0000000); // the command's size parameter is u32
+
+    u16 op = OP_GET_PARTIAL_OBJECT_64;
+    u32 params[4]{handle, static_cast<u32>(offset), static_cast<u32>(offset >> 32), static_cast<u32>(req)};
+    size_t param_count = 4;
+
+    if (!g_session.has_partial64) {
+        // 32 bit offsets only; the caller verified some partial op exists.
+        R_UNLESS(offset < SIZE_NEEDS_64BIT, ResultProtocol);
+        req = std::min<u64>(req, SIZE_NEEDS_64BIT - offset);
+        op = OP_GET_PARTIAL_OBJECT;
+        params[1] = static_cast<u32>(offset);
+        params[2] = static_cast<u32>(req);
+        param_count = 3;
+    }
+
+    u32 transaction_id{};
+    if (const auto rc = SendCommand(op, {params, param_count}, &transaction_id); R_FAILED(rc)) {
+        CloseUsbLocked("stream command failed");
+        R_THROW(rc);
+    }
+
+    // the first packet carries the container header plus the first payload
+    // bytes; anything past the header goes to the carry buffer.
+    ContainerHeader hdr{};
+    u32 transferred{};
+    if (const auto rc = ReceiveContainer(512, &hdr, &transferred); R_FAILED(rc)) {
+        CloseUsbLocked("stream data phase failed");
+        R_THROW(rc);
+    }
+
+    if (hdr.type == CONTAINER_RESPONSE) {
+        // no data phase: the device rejected the request (stale handle, ...).
+        g_session.last_ok_tick = armGetSystemTick();
+        R_THROW(ResultMtpFailed);
+    }
+    if (hdr.type != CONTAINER_DATA || hdr.length < sizeof(hdr)) {
+        CloseUsbLocked("stream got bad container");
+        R_THROW(ResultProtocol);
+    }
+
+    g_stream.active = true;
+    g_stream.response_done = false;
+    g_stream.handle = handle;
+    g_stream.next_offset = offset;
+    g_stream.remaining = hdr.length - sizeof(hdr); // device may grant less than req
+    g_stream.carry_off = 0;
+    g_stream.carry_len = 0;
+
+    if (transferred > sizeof(hdr)) {
+        g_stream.carry_len = std::min<u64>(transferred - sizeof(hdr), g_stream.remaining);
+        std::memcpy(g_stream.carry, g_xfer_buf + sizeof(hdr), g_stream.carry_len);
+        g_stream.remaining -= g_stream.carry_len;
+    }
+
+    R_SUCCEED();
 }
 
 // -------------------------------------------------------------------------
@@ -1036,43 +1250,60 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
         return 0;
     }
 
-    const size_t want = std::min<u64>(len, file->size - file->offset);
-    size_t done = 0;
+    const u64 want = std::min<u64>(len, file->size - file->offset);
+
+    if (!g_session.has_partial64 && !g_session.has_partial) {
+        // No partial read support at all. Whole-object reads are only viable
+        // for something that fits in the transfer buffer; anything else has
+        // no sane access path.
+        if (!file->offset && file->size <= MAX_READ_CHUNK) {
+            DataSink sink{ptr, want};
+            const u32 params[]{file->object_handle};
+            if (R_FAILED(Transact(OP_GET_OBJECT, params, &sink, nullptr))) {
+                return -EIO;
+            }
+            const auto got = std::min<u64>(sink.Written(), want);
+            file->offset += got;
+            return static_cast<ssize_t>(got);
+        }
+        log_write("[MTP_HOST] device cannot serve partial reads for a %llu byte object\n",
+            static_cast<unsigned long long>(file->size));
+        return -ENOTSUP;
+    }
+
+    u64 done = 0;
     bool retried = false;
 
     // Callers up the stack (yati's nsp/nca parsers) read headers at exact
-    // offsets and cannot cope with a short read, so keep asking until the
-    // request is satisfied or the device reports end of data.
+    // offsets and cannot cope with a short read, so serve the full request.
     while (done < want) {
         const u64 offset = file->offset + done;
-        const u32 chunk = static_cast<u32>(std::min<u64>(want - done, MAX_READ_CHUNK));
-
-        DataSink sink{ptr + done, want - done};
         Result rc{};
 
-        if (g_session.has_partial64) {
-            const u32 params[]{
-                file->object_handle,
-                static_cast<u32>(offset),
-                static_cast<u32>(offset >> 32),
-                chunk,
-            };
-            rc = Transact(OP_GET_PARTIAL_OBJECT_64, params, &sink, nullptr);
-        } else if (g_session.has_partial && offset + chunk <= SIZE_NEEDS_64BIT) {
-            const u32 params[]{file->object_handle, static_cast<u32>(offset), chunk};
-            rc = Transact(OP_GET_PARTIAL_OBJECT, params, &sink, nullptr);
-        } else if (!offset && file->size <= MAX_READ_CHUNK) {
-            // No partial read support at all. Whole-object reads are only
-            // viable for something that fits in the transfer buffer; the old
-            // code fell back to GetObject unconditionally and tried to
-            // allocate a 1.4GiB vector for an nsp, which took the app down.
-            const u32 params[]{file->object_handle};
-            rc = Transact(OP_GET_OBJECT, params, &sink, nullptr);
-        } else {
-            log_write("[MTP_HOST] device cannot serve partial reads for a %llu byte object\n",
-                static_cast<unsigned long long>(file->size));
-            file->offset += done;
-            return done ? static_cast<ssize_t>(done) : -ENOTSUP;
+        // line the stream up with this read: reuse it when it sits at (or
+        // shortly before) the wanted offset, retire it otherwise.
+        if (g_stream.active) {
+            const u64 avail = g_stream.remaining + g_stream.carry_len;
+            const bool usable = g_stream.handle == file->object_handle &&
+                offset >= g_stream.next_offset &&
+                offset - g_stream.next_offset <= std::min<u64>(avail, STREAM_DRAIN_LIMIT);
+
+            if (!usable) {
+                AbortStreamLocked();
+            } else if (offset > g_stream.next_offset) {
+                u64 skipped{};
+                rc = PullStreamLocked(nullptr, offset - g_stream.next_offset, &skipped);
+            }
+        }
+
+        if (R_SUCCEEDED(rc) && (!g_stream.active || g_stream.next_offset != offset)) {
+            AbortStreamLocked();
+            rc = StartStreamLocked(file->object_handle, offset, file->size, want - done);
+        }
+
+        u64 got{};
+        if (R_SUCCEEDED(rc)) {
+            rc = PullStreamLocked(reinterpret_cast<u8*>(ptr) + done, want - done, &got);
         }
 
         if (R_FAILED(rc)) {
@@ -1087,11 +1318,9 @@ ssize_t MtpMountDevice::devoptab_read(void *fd, char *ptr, size_t len) {
             return done ? static_cast<ssize_t>(done) : -EIO;
         }
 
-        const auto got = std::min(sink.Written(), want - done);
         if (!got) {
-            break;
+            break; // device granted less than requested and the stream ended
         }
-
         done += got;
     }
 
@@ -1235,7 +1464,10 @@ Result ConnectLocked() {
         R_TRY(usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &total));
     }
 
-    R_UNLESS(total > 0, ResultMtpFailed);
+    if (total <= 0) {
+        log_write("[MTP_HOST] no MTP interface on the bus\n");
+        R_THROW(ResultMtpFailed);
+    }
 
     for (s32 i = 0; i < total; i++) {
         if (R_SUCCEEDED(OpenSessionOnInterface(interfaces[i]))) {
