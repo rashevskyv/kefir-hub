@@ -68,8 +68,6 @@ Result GetContentInfos(NcmContentMetaDatabase *db, const NcmContentMetaKey *key,
 // removes key from ncm, including ncas and setting the db.
 Result DeleteKey(NcmContentStorage* cs, NcmContentMetaDatabase *db, const NcmContentMetaKey *key);
 
-// sets the required system version.
-Result SetRequiredSystemVersion(NcmContentMetaDatabase *db, const NcmContentMetaKey *key, u32 version);
 
 // returns true if type is application or update.
 static constexpr inline bool HasRequiredSystemVersion(u8 meta_type) {
@@ -80,8 +78,6 @@ static constexpr inline bool HasRequiredSystemVersion(const NcmContentMetaKey *k
     return HasRequiredSystemVersion(key->type);
 }
 
-// fills program id and out path of the control nca.
-Result GetFsPathFromContentId(NcmContentStorage* cs, const NcmContentMetaKey& key, const NcmContentId& id, u64* out_program_id, fs::FsPath* out_path);
 
 // helper for reading nca from ncm.
 struct NcmSource final : yati::source::Base {

@@ -214,15 +214,6 @@ void drawTextBold(NVGcontext* vg, float x, float y, float size, const NVGcolor& 
     drawTextIntenal(vg, {x + 0.6f, y}, size, str, nullptr, align, c);
 }
 
-void drawTextBoldArgs(NVGcontext* vg, float x, float y, float size, int align, const NVGcolor& c, const char* str, ...) {
-    std::va_list v;
-    va_start(v, str);
-    char buffer[0x100];
-    std::vsnprintf(buffer, sizeof(buffer), str, v);
-    va_end(v);
-    drawTextBold(vg, x, y, size, c, buffer, align);
-}
-
 void drawImage(NVGcontext* vg, const Vec4& v, int texture, float rounded, float alpha) {
     const auto paint = nvgImagePattern(vg, v.x, v.y, v.w, v.h, 0, texture, alpha);
     drawRect(vg, v, paint, rounded);

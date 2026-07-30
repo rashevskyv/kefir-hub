@@ -274,10 +274,6 @@ auto App::GetSaveSettingsGlobally() -> bool {
     return g_app->m_save_settings_globally.Get();
 }
 
-void App::SetSaveSettingsGlobally(bool enable) {
-    g_app->m_save_settings_globally.Set(enable);
-}
- 
 static std::atomic<bool> g_progress_active{false};
  
 auto App::GetProgressActive() -> bool {
@@ -349,14 +345,6 @@ void App::SetWriteProtect(bool enable) {
 
 void App::SetWebdavUrl(std::string value) {
     g_app->m_webdav_url.Set(NormalizeWebdavUrl(std::move(value)));
-}
-
-void App::SetWebdavUser(std::string value) {
-    g_app->m_webdav_user.Set(std::move(value));
-}
-
-void App::SetWebdavPass(std::string value) {
-    g_app->m_webdav_pass.Set(std::move(value));
 }
 
 void App::SetLogEnable(bool enable) {
@@ -467,18 +455,6 @@ void App::SetReplaceHbmenuEnable(bool enable) {
             );
         }
     }
-}
-
-void App::SetInstallSysmmcEnable(bool enable) {
-    g_app->m_install_sysmmc.Set(enable);
-}
-
-void App::SetInstallEmummcEnable(bool enable) {
-    g_app->m_install_emummc.Set(enable);
-}
-
-void App::SetInstallSdEnable(bool enable) {
-    g_app->m_install_location.Set(enable ? 0 : 1);
 }
 
 void App::SetInstallLocation(long location) {
@@ -715,10 +691,6 @@ void App::SetLanguage(long index, bool prompt_restart) {
 
 void App::SetTextScrollSpeed(long index) {
     g_app->m_text_scroll_speed.Set(index);
-}
-
-void App::SetGodModeEnable(bool enable) {
-    g_app->m_god_mode.Set(enable);
 }
 
 auto App::Install(OwoConfig& config) -> Result {

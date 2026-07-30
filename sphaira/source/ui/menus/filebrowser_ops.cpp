@@ -776,8 +776,4 @@ auto FsView::AnySelectedReadOnly() const -> bool {
     return false;
 }
 
-void FsView::OnRenameCallback() {
-    // Stub implementation
-}
-
 } // namespace sphaira::ui::menu::filebrowser

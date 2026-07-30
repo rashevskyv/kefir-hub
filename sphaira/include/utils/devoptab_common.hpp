@@ -74,7 +74,6 @@ struct MountDevice {
 void LoadConfigsFromIni(const fs::FsPath& path, MountConfigs& out_configs);
 
 using CreateDeviceCallback = std::function<std::unique_ptr<MountDevice>(const MountConfig& config)>;
-Result MountNetworkDevice(const CreateDeviceCallback& create_device, size_t file_size, size_t dir_size, const char* name, bool force_read_only = false);
 
 // same as above but takes in the device and expects the mount name to be set.
 bool MountNetworkDevice2(std::unique_ptr<MountDevice>&& device, const MountConfig& config, size_t file_size, size_t dir_size, const char* name, const char* mount_name);

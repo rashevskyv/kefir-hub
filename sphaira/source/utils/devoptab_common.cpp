@@ -826,43 +826,6 @@ bool MountReadOnlyIndexDevice(const CreateDeviceCallback& create_device, size_t 
     return true;
 }
 
-Result MountNetworkDevice(const CreateDeviceCallback& create_device, size_t file_size, size_t dir_size, const char* name, bool force_read_only) {
-    fs::FsPath config_path{};
-    std::snprintf(config_path, sizeof(config_path), "/config/hats-tools/mount/%s.ini", name);
-
-    MountConfigs configs{};
-    LoadConfigsFromIni(config_path, configs);
-
-    for (auto& config : configs) {
-        if (config.name.empty()) {
-            log_write("[DEVOPTAB] Skipping empty name\n");
-            continue;
-        }
-
-        if (config.url.empty()) {
-            log_write("[DEVOPTAB] Skipping empty url for %s\n", config.name.c_str());
-            continue;
-        }
-
-        if (force_read_only) {
-            config.read_only = true;
-        }
-
-        fs::FsPath _name{};
-        std::snprintf(_name, sizeof(_name), "[%s] %s", name, config.name.c_str());
-
-        fs::FsPath _mount{};
-        std::snprintf(_mount, sizeof(_mount), "[%s] %s:/", name, config.name.c_str());
-
-        if (!MountNetworkDevice2(create_device(config), config, file_size, dir_size, _name, _mount)) {
-            log_write("[DEVOPTAB] Failed to mount %s\n", config.name.c_str());
-            continue;
-        }
-    }
-
-    R_SUCCEED();
-}
-
 bool IsNetworkDeviceMounted(const std::string& url) {
     EnsureRwLockInitialized();
     SCOPED_RWLOCK(&g_rwlock, false);
@@ -879,33 +842,6 @@ bool IsNetworkDeviceMounted(const std::string& url) {
 namespace sphaira::devoptab {
 
 using namespace sphaira::devoptab::common;
-
-Result GetNetworkDevices(location::StdioEntries& out) {
-    EnsureRwLockInitialized();
-    SCOPED_RWLOCK(&g_rwlock, false);
-    out.clear();
-
-    for (const auto& entry : g_entries) {
-        if (entry) {
-            const auto& config = entry->device.config;
-
-            u32 flags = 0;
-            if (config.read_only) {
-                flags |= location::FsEntryFlag::FsEntryFlag_ReadOnly;
-            }
-            if (config.no_stat_file) {
-                flags |= location::FsEntryFlag::FsEntryFlag_NoStatFile;
-            }
-            if (config.no_stat_dir) {
-                flags |= location::FsEntryFlag::FsEntryFlag_NoStatDir;
-            }
-
-            out.emplace_back(entry->mount, entry->name, flags, config.dump_path, config.fs_hidden, config.dump_hidden);
-        }
-    }
-
-    R_SUCCEED();
-}
 
 void UmountAllNeworkDevices() {
     EnsureRwLockInitialized();

@@ -362,10 +362,6 @@ void FileFuncStdio(zlib_filefunc64_def* funcs) {
     *funcs = zlib_filefunc_stdio;
 }
 
-void FileFuncNative(zlib_filefunc64_def* funcs) {
-    *funcs = zlib_filefunc_native;
-}
-
 Result PeekFirstFileName(fs::Fs* fs, const fs::FsPath& path, fs::FsPath& name) {
     fs::File file;
     R_TRY(fs->OpenFile(path, FsOpenMode_Read, &file));

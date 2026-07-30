@@ -112,20 +112,6 @@ bool CSMB2FS::RegisterFilesystem_v2(){
 	return false;
 }
 
-bool CSMB2FS::RegisterFilesystem(){
-	if(connect() == 0){
-		cwd = "/";
-		if (register_fs() == 0) {
-			fs_regisered = true;
-			return true;
-		} else {
-			disconnect();
-			return false;
-		}
-	}
-	return false;
-}
-
 
 CSMB2FS::~CSMB2FS(){
 	auto lk = std::scoped_lock(this->session_mutex);

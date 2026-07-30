@@ -21,7 +21,6 @@ struct MzSpan {
 void FileFuncMem(MzMem* mem, zlib_filefunc64_def* funcs);
 void FileFuncSpan(MzSpan* span, zlib_filefunc64_def* funcs);
 void FileFuncStdio(zlib_filefunc64_def* funcs);
-void FileFuncNative(zlib_filefunc64_def* funcs);
 
 // minizip takes 18ms to open a zip and 4ms to parse the first file entry.
 // this results in a dropped frame.

@@ -71,15 +71,6 @@ void ScrollingText::Draw(NVGcontext* vg, bool focus, float x, float y, float w, 
     DrawClipped(vg, clip, x, y, size, align, colour, value_str, bold);
 }
 
-void ScrollingText::DrawArgs(NVGcontext* vg, bool focus, float x, float y, float w, float size, int align, const NVGcolor& colour, const char* s, ...) {
-    std::va_list v{};
-    va_start(v, s);
-    char buffer[0x100];
-    std::vsnprintf(buffer, sizeof(buffer), s, v);
-    va_end(v);
-    Draw(vg, focus, x, y, w, size, align, colour, buffer);
-}
-
 void ScrollingText::Reset(const std::string& text_entry) {
     m_str = text_entry;
     m_tick = 0;

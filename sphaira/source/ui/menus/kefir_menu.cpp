@@ -234,28 +234,6 @@ auto ResolveTileSlotIndex(const std::vector<s64>& slots, s64 index, s64 previous
     return 0;
 }
 
-auto TileLabel(const UpdaterEntry& entry) -> std::string {
-    switch (entry.type) {
-        case UpdaterEntryType::Kefir:
-            if (const auto version = detail::ExtractKefirVersion(entry.name, entry.url); !version.empty()) {
-                return version;
-            }
-            return EntryDisplayName(entry);
-        case UpdaterEntryType::Firmware:
-            return entry.name;
-        case UpdaterEntryType::FirmwareManual:
-            return "Install manually"_i18n;
-        case UpdaterEntryType::Network:
-            return "Network";
-        case UpdaterEntryType::CustomLink:
-            return "Link";
-        case UpdaterEntryType::Section:
-            return {};
-    }
-
-    return {};
-}
-
 auto TileGroupLabel(UpdaterEntryType type) -> const char* {
     switch (type) {
         case UpdaterEntryType::Kefir:

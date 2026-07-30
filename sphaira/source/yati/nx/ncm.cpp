@@ -178,44 +178,6 @@ Result DeleteKey(NcmContentStorage* cs, NcmContentMetaDatabase *db, const NcmCon
     R_SUCCEED();
 }
 
-Result SetRequiredSystemVersion(NcmContentMetaDatabase *db, const NcmContentMetaKey *key, u32 version) {
-    // ensure that we can even reset the sys version.
-    if (!HasRequiredSystemVersion(key)) {
-        R_SUCCEED();
-    }
-
-    // get the old data size.
-    u64 size;
-    R_TRY(ncmContentMetaDatabaseGetSize(db, &size, key));
-
-    // fetch the old data.
-    u64 out_size;
-    std::vector<u8> data;
-    R_TRY(ncmContentMetaDatabaseGet(db, key, &out_size, data.data(), data.size()));
-
-    // ensure that we have enough data.
-    R_UNLESS(data.size() == out_size, 0x1);
-    R_UNLESS(data.size() >= offsetof(ContentMeta, extened.application.required_application_version), 0x1);
-
-    // patch the version.
-    auto content_meta = (ContentMeta*)data.data();
-    content_meta->extened.application.required_system_version = version;
-
-    // write the new data back.
-    return ncmContentMetaDatabaseSet(db, key, data.data(), data.size());
-}
-
-Result GetFsPathFromContentId(NcmContentStorage* cs, const NcmContentMetaKey& key, const NcmContentId& id, u64* out_program_id, fs::FsPath* out_path) {
-    if (out_program_id) {
-        *out_program_id = key.id; // todo: verify.
-        if (hosversionAtLeast(17,0,0)) {
-            R_TRY(ncmContentStorageGetProgramId(cs, out_program_id, &id, FsContentAttributes_All));
-        }
-    }
-
-    return ncmContentStorageGetPath(cs, out_path->s, sizeof(*out_path), &id);
-}
-
 NcmSource::NcmSource(NcmContentStorage* cs, const NcmContentId* id) : m_cs{*cs}, m_id{*id} {
 
 }

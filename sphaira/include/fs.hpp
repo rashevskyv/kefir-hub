@@ -515,23 +515,9 @@ struct FsNative : Fs {
     bool m_own{true};
 };
 
-#if 0
-struct FsNativeSd final : FsNative {
-    FsNativeSd() {
-        m_open_result = fsOpenSdCardFileSystem(&m_fs);
-    }
-};
-#else
 struct FsNativeSd final : FsNative {
     FsNativeSd(bool ignore_read_only = true) : FsNative{fsdevGetDeviceFileSystem("sdmc:"), false, ignore_read_only} {
         m_open_result = 0;
-    }
-};
-#endif
-
-struct FsNativeBis final : FsNative {
-    FsNativeBis(FsBisPartitionId id, const FsPath& string) {
-        m_open_result = fsOpenBisFileSystem(&m_fs, id, string);
     }
 };
 

@@ -95,8 +95,6 @@ public:
     // this is thread safe
     static void Notify(std::string text, ui::NotifEntry::Side side = ui::NotifEntry::Side::RIGHT);
     static void Notify(ui::NotifEntry entry);
-    static void NotifyPop(ui::NotifEntry::Side side = ui::NotifEntry::Side::RIGHT);
-    static void NotifyClear(ui::NotifEntry::Side side = ui::NotifEntry::Side::RIGHT);
     static void NotifyFlashLed();
 
     // if R_FAILED(rc), pushes error box. returns rc passed in.
@@ -183,35 +181,21 @@ public:
     static void SetHddEnable(bool enable);
     static void SetWriteProtect(bool enable);
     static void SetWebdavUrl(std::string value);
-    static void SetWebdavUser(std::string value);
-    static void SetWebdavPass(std::string value);
     static void SetLogEnable(bool enable);
     static void SetReplaceHbmenuEnable(bool enable);
-    static void SetInstallSysmmcEnable(bool enable);
-    static void SetInstallEmummcEnable(bool enable);
-    static void SetInstallSdEnable(bool enable);
     static void SetInstallLocation(long location);
     static void SetInstallReserveMb(long reserve_mb);
-    static void SetInstallPrompt(bool enable);
     static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
     static void SetLanguage(long index, bool prompt_restart = true);
     static void SetTextScrollSpeed(long index);
-    static void SetGodModeEnable(bool enable);
     static void SetProgressActive(bool active);
-    static void SetSaveSettingsGlobally(bool enable);
 
     static auto Install(OwoConfig& config) -> Result;
     static auto Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result;
 
     static void PlaySoundEffect(SoundEffect effect);
 
-    static void DisplayThemeOptions(bool left_side = true);
-    static void DisplayWebdavOptions(bool left_side = true);
-    static void DisplayMtpStorageOptions(bool left_side = true);
-    // todo:
-    static void DisplayNetworkOptions(bool left_side = true);
-    static void DisplayMiscOptions(bool left_side = true);
     static void DisplayAdvancedOptions(bool left_side = true);
     static void DisplayInstallOptions(bool left_side = true);
     static void DisplayDumpOptions(bool left_side = true);
@@ -250,7 +234,6 @@ public:
     }
 
     static void ShowTitleModeHelp(const std::string& feature = {});
-    static void ShowRuntimeModeInfo();
 
     static auto IsEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;

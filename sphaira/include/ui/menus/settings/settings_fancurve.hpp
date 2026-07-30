@@ -79,13 +79,10 @@ private:
     void SwitchProfile();
     void DisplayPresets();
     void DisplaySavePreset();
-    void DisplayApplyMenu();
     void ApplyPreset(s64 index);
     void SavePreset(s64 index);
     void AddPoint();
     void RemovePoint();
-    void AdjustSelectedFan(s32 delta);
-    void AdjustSelectedTemp(s32 delta);
     void SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent);
     auto HandleGraphTouch(TouchInfo* touch) -> bool;
     void ApplyCurves(FanCurveApplyMode mode);

@@ -410,10 +410,6 @@ Result NcaReader::Read(void *_buf, s64 off, s64 size, u64* bytes_read) {
     return ReadInternal(_buf, off, size, bytes_read, true);
 }
 
-Result NcaReader::ReadEncrypted(void *_buf, s64 off, s64 size, u64* bytes_read) {
-    return ReadInternal(_buf, off, size, bytes_read, false);
-}
-
 Result NcaReader::ReadInternal(void *_buf, s64 off, s64 size, u64* bytes_read_out, bool decrypt) {
     *bytes_read_out = 0;
 

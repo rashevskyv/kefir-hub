@@ -172,7 +172,6 @@ static_assert(sizeof(EticketRsaDeviceKey) == 0x240);
 // es functions.
 Result Initialize();
 void Exit();
-Service* GetServiceSession();
 
 // todo: find the ipc that gets personalised tickets.
 // todo: if ipc doesn't exist, manually parse es personalised save.
@@ -180,9 +179,7 @@ Service* GetServiceSession();
 // todo: make the above an option for both dump and install.
 
 Result ImportTicket(const void* tik_buf, u64 tik_size, const void* cert_buf, u64 cert_size);
-Result CountCommonTicket(s32* count);
 Result CountPersonalizedTicket(s32* count);
-Result ListCommonTicket(s32 *out_entries_written, FsRightsId* out_ids, s32 count);
 Result ListPersonalizedTicket(s32 *out_entries_written, FsRightsId* out_ids, s32 count);
 Result ListMissingPersonalizedTicket(s32 *out_entries_written, FsRightsId* out_ids, s32 count); // untested
 Result GetCommonTicketSize(u64 *size_out, const FsRightsId* rightsId);
@@ -197,7 +194,6 @@ Result GetTicketData(std::span<const u8> ticket, es::TicketData* out);
 // gets the title key and performs RSA-2048-OAEP if needed.
 Result GetTitleKey(keys::KeyEntry& out, const TicketData& data, const keys::Keys& keys);
 Result DecryptTitleKey(keys::KeyEntry& out, u8 key_gen, const keys::Keys& keys);
-Result EncryptTitleKey(keys::KeyEntry& out, u8 key_gen, const keys::Keys& keys);
 
 Result ShouldPatchTicket(const TicketData& data, std::span<const u8> ticket, std::span<const u8> cert_chain, bool patch_personalised, bool& should_patch);
 Result ShouldPatchTicket(std::span<const u8> ticket, std::span<const u8> cert_chain, bool patch_personalised, bool& should_patch);

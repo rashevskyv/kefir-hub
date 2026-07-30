@@ -17,7 +17,6 @@ enum ApplicationRecordType {
 };
 
 Result PushApplicationRecord(Service* srv, u64 tid, const ncm::ContentStorageRecord* records, u32 count);
-Result ListApplicationRecordContentMeta(Service* srv, u64 offset, u64 tid, ncm::ContentStorageRecord* out_records, u32 count, s32* entries_read);
 Result DeleteApplicationRecord(Service* srv, u64 tid);
 Result InvalidateApplicationControlCache(Service* srv, u64 tid);
 

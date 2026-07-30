@@ -8,29 +8,6 @@
 
 namespace sphaira::hats {
 
-namespace {
-
-bool isPost019() {
-    u64 version;
-    if (R_SUCCEEDED(splGetConfig((SplConfigItem)65000, &version))) {
-        if (((version >> 56) & ((1 << 8) - 1)) > 0 || ((version >> 48) & ((1 << 8) - 1)) >= 19) {
-            return true;
-        }
-    }
-    return false;
-}
-
-Result smAtmosphereHasService(bool* out, SmServiceName name, bool v019) {
-    u8 tmp = 0;
-    Result rc = v019 ? tipcDispatchInOut(smGetServiceSessionTipc(), 65100, name, tmp)
-                     : serviceDispatchInOut(smGetServiceSession(), 65100, name, tmp);
-    if (R_SUCCEEDED(rc) && out)
-        *out = tmp;
-    return rc;
-}
-
-} // namespace
-
 std::string getHatsVersion() {
     std::string hatsVersion = "Not Found";
 
@@ -119,27 +96,6 @@ std::string getAtmosphereVersion() {
 
     splExit();
     return res;
-}
-
-std::string getAmsInfo() {
-    std::string hatsVer = getHatsVersion();
-    std::string amsVer = getAtmosphereVersion();
-
-    return hatsVer + "; Atmosphere: " + amsVer;
-}
-
-bool isAtmosphere() {
-    bool res = false;
-    bool v019 = isPost019();
-
-    // Try AMS-specific service check
-    if (R_SUCCEEDED(smAtmosphereHasService(&res, smEncodeName("ams"), v019))) {
-        return res;
-    }
-
-    // Fallback: check if we can query AMS version
-    u64 version;
-    return R_SUCCEEDED(splGetConfig((SplConfigItem)65000, &version));
 }
 
 bool isErista() {

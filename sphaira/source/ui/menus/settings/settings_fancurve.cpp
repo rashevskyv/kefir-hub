@@ -840,32 +840,6 @@ void FanCurveMenu::DisplaySavePreset() {
     );
 }
 
-void FanCurveMenu::DisplayApplyMenu() {
-    const bool live_apply_available = detail::IsSphairaFanSysmoduleInstalled();
-    PopupList::Items items;
-    if (live_apply_available) {
-        items.emplace_back("Apply"_i18n);
-    } else {
-        items.emplace_back("Save and Reboot"_i18n);
-    }
-
-    App::Push<PopupList>(
-        "Apply fan curve"_i18n,
-        std::move(items),
-        [this, live_apply_available](auto index){
-            if (!index) {
-                return;
-            }
-            if (live_apply_available && *index == 0) {
-                ApplyCurves(FanCurveApplyMode::Live);
-            } else {
-                ApplyCurves(FanCurveApplyMode::Reboot);
-            }
-        },
-        0
-    );
-}
-
 void FanCurveMenu::ApplyPreset(s64 index) {
     SetEditing(false);
     std::vector<FanCurvePoint> curve;
@@ -980,28 +954,6 @@ void FanCurveMenu::RemovePoint() {
     }
     SetEditing(false);
     SetIndex(std::min<s64>(index, static_cast<s64>(curve.size() - 1)));
-}
-
-void FanCurveMenu::AdjustSelectedFan(s32 delta) {
-    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
-    if (points.empty()) {
-        return;
-    }
-
-    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(points.size() - 1));
-    const auto& point = points[index];
-    SetSelectedPoint(index, point.temp_c, point.fan_percent + delta);
-}
-
-void FanCurveMenu::AdjustSelectedTemp(s32 delta) {
-    const auto& points = m_helper_curve_mode ? ActiveControlPoints() : ActiveCurve();
-    if (points.empty()) {
-        return;
-    }
-
-    const auto index = std::clamp<s64>(m_index, 0, static_cast<s64>(points.size() - 1));
-    const auto& point = points[index];
-    SetSelectedPoint(index, point.temp_c + delta, point.fan_percent);
 }
 
 void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {

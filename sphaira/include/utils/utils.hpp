@@ -27,8 +27,6 @@ constexpr inline T AlignDown(T value, T align) {
 // only uses 32 bytes so its SSO optimised, not need to cache.
 std::string formatSizeStorage(u64 size);
 
-// formats size to 1.23 MB in 1000 base (used for progress bars).
-std::string formatSizeNetwork(u64 size);
 
 // Set hekate_ipl.ini to auto-boot a payload through hekate.
 // Backs up original ini and writes a temporary autoboot entry for payload_path.
@@ -43,8 +41,6 @@ bool findLockpickPayload(fs::FsPath& out);
 // Returns true if restored, false if no backup existed
 bool restoreHekateIni();
 
-// Check if hekate_ipl.ini backup exists (autoboot is active)
-bool isHekateAutobootActive();
 
 // Swap payload.bin with HATS installer (no reboot)
 // Returns true on success, false on failure
@@ -54,8 +50,6 @@ bool swapPayload(const char* path);
 // Returns true if reverted, false if no backup existed
 bool revertPayloadSwap();
 
-// Check if payload swap is currently active (payload.bak exists)
-bool isPayloadSwapped();
 
 // Force reboot with service fallbacks.
 Result requestForcedReboot();

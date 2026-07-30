@@ -339,24 +339,6 @@ size_t MountCurlDevice::write_memory_callback(char *ptr, size_t size, size_t nme
     return realsize;
 }
 
-size_t MountCurlDevice::write_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
-    auto data = static_cast<std::span<char>*>(userdata);
-    const auto rsize = std::min(size * nmemb, data->size());
-
-    std::memcpy(data->data(), ptr, rsize);
-    *data = data->subspan(rsize);
-    return rsize;
-}
-
-size_t MountCurlDevice::read_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
-    auto data = static_cast<std::span<const char>*>(userdata);
-    const auto rsize = std::min(size * nmemb, data->size());
-
-    std::memcpy(ptr, data->data(), rsize);
-    *data = data->subspan(rsize);
-    return rsize;
-}
-
 // libcurl doesn't handle html encodings, so we have to do it manually.
 std::string MountCurlDevice::html_decode(const std::string_view& str) {
     struct Entry {

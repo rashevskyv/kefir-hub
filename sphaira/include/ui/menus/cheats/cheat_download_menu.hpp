@@ -26,10 +26,7 @@ private:
     void CacheNxDbCheatFile(const std::string& content);
     void FetchCheatsFromApi(const std::string& build_id);
     void DownloadCheats();
-    void DeleteCheat();
-    void ShowExistingCheats();
     void PreviewCheat();  // View cheat content before downloading
-    void RunBuildIdDiagnostics(bool fetch_on_success);
 
 private:
     CheatSource m_source;

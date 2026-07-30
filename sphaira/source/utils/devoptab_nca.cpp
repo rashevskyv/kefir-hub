@@ -482,14 +482,6 @@ Result MountNcaInternal(fs::Fs* fs, const std::shared_ptr<yati::source::Base>& s
 
 } // namespace
 
-Result MountNca(fs::Fs* fs, const fs::FsPath& path, fs::FsPath& out_path) {
-    s64 size;
-    auto source = std::make_shared<yati::source::File>(fs, path);
-    R_TRY(source->GetSize(&size));
-
-    return MountNcaInternal(fs, source, size, path, out_path);
-}
-
 Result MountNcaNcm(NcmContentStorage* cs, const NcmContentId* id, fs::FsPath& out_path) {
     s64 size;
     auto source = std::make_shared<ncm::NcmSource>(cs, id);

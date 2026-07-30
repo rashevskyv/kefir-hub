@@ -359,7 +359,6 @@ private:
 
     void OnDeleteCallback();
     void OnPasteCallback();
-    void OnRenameCallback();
     auto CheckIfUpdateFolder() -> Result;
 
     auto get_collection(const fs::FsPath& path, const fs::FsPath& parent_name, FsDirCollection& out, bool inc_file, bool inc_dir, bool inc_size) -> Result;

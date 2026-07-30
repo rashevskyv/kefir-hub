@@ -62,10 +62,6 @@ std::string formatSizeStorage(u64 size) {
     return formatSizeInetrnal(size, 1024.0);
 }
 
-std::string formatSizeNetwork(u64 size) {
-    return formatSizeInetrnal(size, 1000.0);
-}
-
 // Hekate IPL ini manipulation
 namespace {
     constexpr const char* HEKATE_INI_PATH = "/bootloader/hekate_ipl.ini";
@@ -258,16 +254,6 @@ bool restoreHekateIni() {
     return true;
 }
 
-// Check if hekate_ipl.ini backup exists
-bool isHekateAutobootActive() {
-    FILE* f = fopen(HEKATE_INI_BAK_PATH, "rb");
-    if (f) {
-        fclose(f);
-        return true;
-    }
-    return false;
-}
-
 // Swap payload.bin with HATS installer (no reboot)
 // Returns true on success, false on failure
 // NOTE: HATS installer payload handles the actual swapping on boot
@@ -418,26 +404,6 @@ bool revertPayloadSwap() {
 
     log_write("revertPayloadSwap: revert complete\n");
     return true;
-}
-
-// Check if payload swap is currently active (any .bak file exists)
-bool isPayloadSwapped() {
-    constexpr const char* PAYLOAD_BAK = "/payload.bak";
-    constexpr const char* UPDATE_BAK = "/bootloader/update.bak";
-
-    FILE* f = fopen(PAYLOAD_BAK, "rb");
-    if (f) {
-        fclose(f);
-        return true;
-    }
-
-    f = fopen(UPDATE_BAK, "rb");
-    if (f) {
-        fclose(f);
-        return true;
-    }
-
-    return false;
 }
 
 Result requestForcedReboot() {

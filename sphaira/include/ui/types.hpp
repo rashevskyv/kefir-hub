@@ -17,24 +17,6 @@ struct Vec2 {
     constexpr Vec2() = default;
     constexpr Vec2(float _x, float _y) : x{_x}, y{_y} {}
 
-    float& operator[](std::size_t idx) {
-        switch (idx) {
-            case 0: return x;
-            case 1: return y;
-        }
-        __builtin_unreachable();
-        // throw;
-    }
-
-    constexpr const float& operator[](std::size_t idx) const {
-        switch (idx) {
-            case 0: return x;
-            case 1: return y;
-        }
-        __builtin_unreachable();
-        // throw;
-    }
-
     constexpr Vec2 operator+(const Vec2& v) const noexcept {
         return {x + v.x, y + v.y};
     }
@@ -57,28 +39,6 @@ struct Vec4 {
     constexpr Vec4(float _x, float _y, float _w, float _h) : x{_x}, y{_y}, w{_w}, h{_h} {}
     constexpr Vec4(Vec2 vec0, Vec2 vec1) : x{vec0.x}, y{vec0.y}, w{vec1.x}, h{vec1.y} {}
     constexpr Vec4(Vec4 vec0, Vec4 vec1) : x{vec0.x}, y{vec0.y}, w{vec1.w}, h{vec1.h} {}
-
-    float& operator[](std::size_t idx) {
-        switch (idx) {
-            case 0: return x;
-            case 1: return y;
-            case 2: return w;
-            case 3: return h;
-        }
-        __builtin_unreachable();
-        // throw;
-    }
-
-    constexpr const float& operator[](std::size_t idx) const {
-        switch (idx) {
-            case 0: return x;
-            case 1: return y;
-            case 2: return w;
-            case 3: return h;
-        }
-        __builtin_unreachable();
-        // throw;
-    }
 
     constexpr Vec2 operator+(const Vec2& v) const noexcept {
         return {x + v.x, y + v.y};
@@ -133,11 +93,6 @@ struct TimeStamp {
     auto GetSeconds() const -> u64 {
         const auto ns = GetNs();
         return ns/1000/1000/1000;
-    }
-
-    auto GetMsD() const -> double {
-        const double ns = GetNs();
-        return ns/1000.0/1000.0;
     }
 
     auto GetSecondsD() const -> double {

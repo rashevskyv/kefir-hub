@@ -109,7 +109,6 @@ public:
 	uint32_t maxreadsize = 1024*1024;
 	
 	bool CheckConnection();
-	bool RegisterFilesystem();
 	bool RegisterFilesystem_v2();
 	bool fs_regisered = false;
 	std::string GetConnectUrl() const { return connect_url; }
@@ -136,7 +135,6 @@ public:
 		
 		
 		
-		void stat_entry(smb2_stat_64  *entry, struct stat *st);
 		
 		struct CSMB2FSFile {
 				struct smb2fh *fh = nullptr;;

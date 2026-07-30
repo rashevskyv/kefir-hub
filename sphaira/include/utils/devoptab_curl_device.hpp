@@ -48,8 +48,6 @@ struct MountCurlDevice : MountDevice {
     // 0) with no way for the user to cancel or exit.
     CURLcode curl_perform_cancellable(CURL* curl);
     static size_t write_memory_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
-    static size_t write_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
-    static size_t read_data_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
     static std::string html_decode(const std::string_view& str);
     static std::string url_decode(const std::string& str);
     std::string build_url(const std::string& path, bool is_dir);

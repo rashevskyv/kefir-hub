@@ -360,7 +360,6 @@ private:
 struct NcaReader final : yati::source::Base {
     NcaReader(const nca::Header& decrypted_header, const void* key, u64 size, const std::shared_ptr<yati::source::Base>& source);
     Result Read(void *_buf, s64 off, s64 size, u64* bytes_read) override;
-    Result ReadEncrypted(void *_buf, s64 off, s64 size, u64* bytes_read);
 
 private:
     Result ReadInternal(void *_buf, s64 off, s64 size, u64* bytes_read, bool decrypt);

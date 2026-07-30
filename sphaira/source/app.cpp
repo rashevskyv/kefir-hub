@@ -504,14 +504,6 @@ void App::Notify(ui::NotifEntry entry) {
     g_app->m_notif_manager.Push(entry);
 }
 
-void App::NotifyPop(ui::NotifEntry::Side side) {
-    g_app->m_notif_manager.Pop(side);
-}
-
-void App::NotifyClear(ui::NotifEntry::Side side) {
-    g_app->m_notif_manager.Clear(side);
-}
-
 void App::NotifyFlashLed() {
     // ftpsrv calls this from its transfer loop (once per buffer, plus once per
     // log line), and each call is 2-4 blocking hidsys IPC round trips for a
