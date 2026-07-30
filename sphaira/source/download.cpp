@@ -1371,14 +1371,6 @@ auto ToFileAsync(const Api& e) -> bool {
     return g_thread_queue.Add(e);
 }
 
-auto FromMemoryAsync(const Api& api) -> bool {
-    return g_thread_queue.Add(api, true);
-}
-
-auto FromFileAsync(const Api& e) -> bool {
-    return g_thread_queue.Add(e, true);
-}
-
 auto EscapeString(const std::string& str) -> std::string {
     return EscapeString(nullptr, str);
 }

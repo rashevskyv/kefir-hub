@@ -163,8 +163,6 @@ auto Probe(const Api& e, ProbeType type) -> ApiResult;
 // async functions
 auto ToMemoryAsync(const Api& e) -> bool;
 auto ToFileAsync(const Api& e) -> bool;
-auto FromMemoryAsync(const Api& e) -> bool;
-auto FromFileAsync(const Api& e) -> bool;
 
 // uses curl to convert string to their %XX
 auto EscapeString(const std::string& str) -> std::string;
@@ -182,38 +180,11 @@ struct Api {
     }
 
     template <typename... Ts>
-    auto To(Ts&&... ts) {
-        if constexpr(std::disjunction_v<std::is_same<Path, Ts>...>) {
-            return ToFile(std::forward<Ts>(ts)...);
-        } else {
-            return ToMemory(std::forward<Ts>(ts)...);
-        }
-    }
-
-    template <typename... Ts>
-    auto From(Ts&&... ts) {
-        if constexpr(std::disjunction_v<std::is_same<Path, Ts>...>) {
-            return FromFile(std::forward<Ts>(ts)...);
-        } else {
-            return FromMemory(std::forward<Ts>(ts)...);
-        }
-    }
-
-    template <typename... Ts>
     auto ToAsync(Ts&&... ts) {
         if constexpr(std::disjunction_v<std::is_same<Path, Ts>...>) {
             return ToFileAsync(std::forward<Ts>(ts)...);
         } else {
             return ToMemoryAsync(std::forward<Ts>(ts)...);
-        }
-    }
-
-    template <typename... Ts>
-    auto FromAsync(Ts&&... ts) {
-        if constexpr(std::disjunction_v<std::is_same<Path, Ts>...>) {
-            return FromFileAsync(std::forward<Ts>(ts)...);
-        } else {
-            return FromMemoryAsync(std::forward<Ts>(ts)...);
         }
     }
 
@@ -266,17 +237,6 @@ struct Api {
     }
 
     template <typename... Ts>
-    auto FromMemoryAsync(Ts&&... ts) {
-        static_assert(std::disjunction_v<std::is_same<Url, Ts>...>, "Url must be specified");
-        static_assert(std::disjunction_v<std::is_same<UploadInfo, Ts>...>, "UploadInfo must be specified");
-        static_assert(std::disjunction_v<std::is_same<OnComplete, Ts>...>, "OnComplete must be specified");
-        static_assert(!std::disjunction_v<std::is_same<Path, Ts>...>, "Path must not valid for memory");
-        static_assert(std::disjunction_v<std::is_same<StopToken, Ts>...>, "StopToken must be specified");
-        Api::set_option(std::forward<Ts>(ts)...);
-        return curl::FromMemoryAsync(*this);
-    }
-
-    template <typename... Ts>
     auto ToFileAsync(Ts&&... ts) {
         static_assert(std::disjunction_v<std::is_same<Url, Ts>...>, "Url must be specified");
         static_assert(std::disjunction_v<std::is_same<Path, Ts>...>, "Path must be specified");
@@ -284,17 +244,6 @@ struct Api {
         static_assert(std::disjunction_v<std::is_same<StopToken, Ts>...>, "StopToken must be specified");
         Api::set_option(std::forward<Ts>(ts)...);
         return curl::ToFileAsync(*this);
-    }
-
-    template <typename... Ts>
-    auto FromFileAsync(Ts&&... ts) {
-        static_assert(std::disjunction_v<std::is_same<Url, Ts>...>, "Url must be specified");
-        static_assert(std::disjunction_v<std::is_same<Path, Ts>...>, "Path must be specified");
-        static_assert(std::disjunction_v<std::is_same<UploadInfo, Ts>...>, "UploadInfo must be specified");
-        static_assert(std::disjunction_v<std::is_same<OnComplete, Ts>...>, "OnComplete must be specified");
-        static_assert(std::disjunction_v<std::is_same<StopToken, Ts>...>, "StopToken must be specified");
-        Api::set_option(std::forward<Ts>(ts)...);
-        return curl::FromFileAsync(*this);
     }
 
     void SetUpload(bool enable) { m_is_upload = enable; }

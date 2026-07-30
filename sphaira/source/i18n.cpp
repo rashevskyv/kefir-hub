@@ -30,46 +30,27 @@ std::string get_internal(std::string_view str) {
     // add default entry in cache
     const auto it = g_tr_cache.emplace(kkey, kkey).first;
 
-    // 1. Try to find the key in SDMC override file first
-    if (sdmc_json && sdmc_root) {
-        auto key = yyjson_obj_getn(sdmc_root, str.data(), str.length());
-        if (key) {
-            auto val = yyjson_get_str(key);
-            auto val_len = yyjson_get_len(key);
-            if (val && val_len) {
-                const std::string ret = {val, val_len};
-                g_tr_cache.insert_or_assign(it, kkey, ret);
-                return ret;
-            }
+    // First hit wins, in order:
+    //   1. the SDMC override file, so a user translation beats everything.
+    //   2. the romfs file for the selected language.
+    //   3. built-in English, for keys that are stable across languages
+    //      (for example module.<TID>.description).
+    for (const auto root : {sdmc_root, romfs_root, en_root}) {
+        if (!root) {
+            continue;
         }
-    }
 
-    // 2. Fall back to romfs if key was not found or invalid in SDMC
-    if (romfs_json && romfs_root) {
-        auto key = yyjson_obj_getn(romfs_root, str.data(), str.length());
-        if (key) {
-            auto val = yyjson_get_str(key);
-            auto val_len = yyjson_get_len(key);
-            if (val && val_len) {
-                const std::string ret = {val, val_len};
-                g_tr_cache.insert_or_assign(it, kkey, ret);
-                return ret;
-            }
+        const auto key = yyjson_obj_getn(root, str.data(), str.length());
+        if (!key) {
+            continue;
         }
-    }
 
-    // 3. Stable non-English keys (for example module.<TID>.description)
-    // fall back to the built-in English translation file.
-    if (en_json && en_root) {
-        auto key = yyjson_obj_getn(en_root, str.data(), str.length());
-        if (key) {
-            auto val = yyjson_get_str(key);
-            auto val_len = yyjson_get_len(key);
-            if (val && val_len) {
-                const std::string ret = {val, val_len};
-                g_tr_cache.insert_or_assign(it, kkey, ret);
-                return ret;
-            }
+        const auto val = yyjson_get_str(key);
+        const auto val_len = yyjson_get_len(key);
+        if (val && val_len) {
+            const std::string ret = {val, val_len};
+            g_tr_cache.insert_or_assign(it, kkey, ret);
+            return ret;
         }
     }
 
