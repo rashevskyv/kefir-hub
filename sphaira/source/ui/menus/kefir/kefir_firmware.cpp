@@ -1,4 +1,5 @@
 #include "ui/menus/kefir/kefir_firmware.hpp"
+#include "version_compare.hpp"
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "hats_version.hpp"
 #include "app.hpp"
@@ -139,43 +140,11 @@ auto MakeKefirLatestLabel(const UpdaterEntry& entry) -> std::string {
 }
 
 auto ParseVersion(const std::string& version) -> std::vector<int> {
-    std::vector<int> parts;
-    std::stringstream ss(version);
-    std::string segment;
-
-    while (std::getline(ss, segment, '.')) {
-        if (segment.empty()) {
-            continue;
-        }
-
-        char* end = nullptr;
-        const auto part = std::strtol(segment.c_str(), &end, 10);
-        if (end == segment.c_str()) {
-            break;
-        }
-        parts.push_back(static_cast<int>(part));
-    }
-
-    return parts;
+    return version::Parse(version);
 }
 
 auto IsVersionLower(const std::string& target, const std::string& current) -> bool {
-    const auto target_parts = ParseVersion(target);
-    const auto current_parts = ParseVersion(current);
-    const auto max_len = std::max(target_parts.size(), current_parts.size());
-
-    for (size_t i = 0; i < max_len; i++) {
-        const auto t = i < target_parts.size() ? target_parts[i] : 0;
-        const auto c = i < current_parts.size() ? current_parts[i] : 0;
-        if (t < c) {
-            return true;
-        }
-        if (t > c) {
-            return false;
-        }
-    }
-
-    return false;
+    return version::IsLower(target, current);
 }
 
 auto GetFirmwareTargetName() -> std::string {
@@ -215,9 +184,7 @@ auto BuildFirmwareServicePath(const fs::FsPath& path) -> std::string {
 }
 
 auto FormatFirmwareVersion(u32 version) -> std::string {
-    return std::to_string((version >> 26) & 0x1f) + "." +
-           std::to_string((version >> 20) & 0x1f) + "." +
-           std::to_string((version >> 16) & 0xf);
+    return version::FormatPacked(version);
 }
 
 auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result {

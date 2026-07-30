@@ -1,4 +1,5 @@
 #include "ui/menus/firmware_menu.hpp"
+#include "ui/menus/kefir/kefir_firmware.hpp"
 
 #include "ui/error_box.hpp"
 #include "ui/nvg_util.hpp"
@@ -32,11 +33,6 @@ constexpr const char* FIRMWARE_ZIP = "/config/kefir-updater/firmware.zip";
 constexpr const char* FIRMWARE_DEST = "/firmware";
 constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
 
-struct FirmwareValidation {
-    AmsSuUpdateInformation info{};
-    AmsSuUpdateValidationInfo validation{};
-};
-
 auto ParseFirmwareLinks(const fs::FsPath& path, std::vector<FirmwareEntry>& out) -> bool {
     out.clear();
 
@@ -69,36 +65,6 @@ auto ParseFirmwareLinks(const fs::FsPath& path, std::vector<FirmwareEntry>& out)
     return true;
 }
 
-auto FormatFirmwareVersion(u32 version) -> std::string {
-    return std::to_string((version >> 26) & 0x1f) + "." +
-           std::to_string((version >> 20) & 0x1f) + "." +
-           std::to_string((version >> 16) & 0xf);
-}
-
-auto BuildFirmwareServicePath(const fs::FsPath& path) -> std::string {
-    std::string service_path = path.s;
-    if (service_path.empty()) {
-        service_path = FIRMWARE_DEST;
-    }
-    if (service_path.back() != '/') {
-        service_path += '/';
-    }
-    return service_path;
-}
-
-auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result {
-    Result rc = amssuInitialize();
-    if (R_FAILED(rc)) {
-        return rc;
-    }
-    ON_SCOPE_EXIT(amssuExit());
-
-    const auto service_path = BuildFirmwareServicePath(path);
-    R_TRY(amssuGetUpdateInformation(&out->info, service_path.c_str()));
-    R_TRY(amssuValidateUpdate(&out->validation, service_path.c_str()));
-    return out->validation.result;
-}
-
 auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path) -> Result {
     Result rc = amssuInitialize();
     if (R_FAILED(rc)) {
@@ -106,7 +72,7 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     }
     ON_SCOPE_EXIT(amssuExit());
 
-    const auto service_path = BuildFirmwareServicePath(path);
+    const auto service_path = kefir::detail::BuildFirmwareServicePath(path);
     pbox->NewTransfer("Setting up system update...");
     R_TRY(amssuSetupUpdate(nullptr, UPDATE_TASK_BUFFER_SIZE, service_path.c_str(), use_exfat));
 
@@ -138,59 +104,6 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
 
     pbox->NewTransfer("Applying system update...");
     return amssuApplyPreparedUpdate();
-}
-
-auto GetFirmwareTargetName() -> std::string {
-    bool emummc = false;
-    Result rc = splInitialize();
-    if (R_SUCCEEDED(rc)) {
-        u64 value{};
-        if (R_SUCCEEDED(splGetConfig((SplConfigItem)65007, &value))) {
-            emummc = value != 0;
-        }
-        splExit();
-    }
-    return emummc ? "emuMMC" : "sysMMC";
-}
-
-auto ParseVersion(const std::string& version) -> std::vector<int> {
-    std::vector<int> parts;
-    std::stringstream ss(version);
-    std::string segment;
-
-    while (std::getline(ss, segment, '.')) {
-        if (segment.empty()) {
-            continue;
-        }
-
-        char* end = nullptr;
-        const auto part = std::strtol(segment.c_str(), &end, 10);
-        if (end == segment.c_str()) {
-            break;
-        }
-        parts.push_back(static_cast<int>(part));
-    }
-
-    return parts;
-}
-
-auto IsVersionLower(const std::string& target, const std::string& current) -> bool {
-    const auto target_parts = ParseVersion(target);
-    const auto current_parts = ParseVersion(current);
-    const auto max_len = std::max(target_parts.size(), current_parts.size());
-
-    for (size_t i = 0; i < max_len; i++) {
-        const auto t = i < target_parts.size() ? target_parts[i] : 0;
-        const auto c = i < current_parts.size() ? current_parts[i] : 0;
-        if (t < c) {
-            return true;
-        }
-        if (t > c) {
-            return false;
-        }
-    }
-
-    return false;
 }
 
 auto DownloadAndExtract(ProgressBox* pbox, const FirmwareEntry& entry) -> Result {
@@ -416,11 +329,11 @@ void Menu::DownloadSelected() {
 }
 
 void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path) {
-    auto validation = std::make_shared<FirmwareValidation>();
+    auto validation = std::make_shared<kefir::FirmwareValidation>();
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
             pbox->NewTransfer("Validating firmware contents...");
-            return ValidateFirmware(validation.get(), path);
+            return kefir::detail::ValidateFirmware(validation.get(), path);
         },
         [this, display_name, path, validation](Result rc) {
             if (R_FAILED(rc)) {
@@ -428,10 +341,10 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                 return;
             }
 
-            const auto version = FormatFirmwareVersion(validation->info.version);
+            const auto version = kefir::detail::FormatFirmwareVersion(validation->info.version);
             const bool use_exfat = validation->info.exfat_supported &&
                                    R_SUCCEEDED(validation->validation.exfat_result);
-            std::string message = "Install firmware " + version + " on " + GetFirmwareTargetName() + "?\n\n";
+            std::string message = "Install firmware " + version + " on " + kefir::detail::GetFirmwareTargetName() + "?\n\n";
             message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
             message += "Do not power off the console during installation.";
 
@@ -447,8 +360,8 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
 void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path) {
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
         [path](auto pbox) -> Result {
-            FirmwareValidation validation{};
-            R_TRY(ValidateFirmware(&validation, path));
+            kefir::FirmwareValidation validation{};
+            R_TRY(kefir::detail::ValidateFirmware(&validation, path));
             const bool use_exfat = validation.info.exfat_supported &&
                                    R_SUCCEEDED(validation.validation.exfat_result);
             return InstallValidatedFirmware(pbox, use_exfat, path);
@@ -476,7 +389,7 @@ void Menu::UpdateSubheading() {
 }
 
 bool Menu::IsDowngrade(const std::string& target_version) const {
-    return IsVersionLower(target_version, m_current_firmware);
+    return kefir::detail::IsVersionLower(target_version, m_current_firmware);
 }
 
 } // namespace sphaira::ui::menu::firmware
