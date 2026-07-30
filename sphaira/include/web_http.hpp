@@ -12,8 +12,6 @@ constexpr size_t HTTP_READ_LIMIT = 16384;
 constexpr size_t HTTP_FILE_CHUNK = 1024 * 512;
 constexpr u32 IDLE_TIMEOUT_MS = 30000;
 
-auto PathExtension(std::string_view path) -> std::string_view;
-auto ExtensionEquals(std::string_view a, std::string_view b) -> bool;
 auto ContentTypeForPath(std::string_view path) -> const char*;
 auto HtmlEscape(std::string_view in) -> std::string;
 auto UrlEncode(std::string_view in) -> std::string;

@@ -1,4 +1,5 @@
 #include "ui/menus/filebrowser.hpp"
+#include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/filebrowser_forwarder.hpp"
 #include "ui/menus/homebrew.hpp"
@@ -257,18 +258,18 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 Scan(GetNewPathCurrent());
             } else {
                 // special case for nro
-                if (IsSd() && IsSamePath(entry.GetExtension(), "nro")) {
+                if (IsSd() && path::EqualsIC(entry.GetExtension(), "nro")) {
                     App::Push<OptionBox>("Launch "_i18n + entry.GetName() + '?',
                         "No"_i18n, "Launch"_i18n, 1, [this](auto op_index){
                             if (op_index && *op_index) {
                                 nro_launch(GetNewPathCurrent());
                             }
                         });
-                } else if (IsExtension(entry.GetExtension(), INSTALL_EXTENSIONS)) {
+                } else if (path::IsAnyOfIC(entry.GetExtension(), INSTALL_EXTENSIONS)) {
                     InstallFiles();
-                } else if (IsSd() && IsExtension(entry.GetExtension(), IMAGE_EXTENSIONS)) {
+                } else if (IsSd() && path::IsAnyOfIC(entry.GetExtension(), IMAGE_EXTENSIONS)) {
                     OpenImageViewer();
-                } else if (IsSd() && IsExtension(entry.GetExtension(), ZIP_EXTENSIONS)) {
+                } else if (IsSd() && path::IsAnyOfIC(entry.GetExtension(), ZIP_EXTENSIONS)) {
                     // browse inside the archive; if the zip is also a ROM (assoc
                     // match), offer both browsing and launching.
                     const auto assoc_list = m_menu->FindFileAssocFor();
@@ -460,18 +461,18 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();
-            if (IsExtension(ext, AUDIO_EXTENSIONS)) {
+            if (path::IsAnyOfIC(ext, AUDIO_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_AUDIO;
-            } else if (IsExtension(ext, VIDEO_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, VIDEO_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_VIDEO;
-            } else if (IsExtension(ext, IMAGE_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, IMAGE_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_IMAGE;
-            } else if (IsExtension(ext, INSTALL_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, INSTALL_EXTENSIONS)) {
                 // todo: maybe replace this icon with something else?
                 icon = ThemeEntryID_ICON_NRO;
-            } else if (IsExtension(ext, ZIP_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, ZIP_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_ZIP;
-            } else if (IsExtension(ext, "nro")) {
+            } else if (path::EqualsIC(ext, "nro")) {
                 icon = ThemeEntryID_ICON_NRO;
             }
 
@@ -663,7 +664,7 @@ void FsView::SetIndex(s64 index) {
         mutexUnlock(&m_metadata_mutex);
     }
 
-    if (IsSd() && !m_entries_current.empty() && !GetEntry().checked_internal_extension && IsSamePath(GetEntry().GetExtension(), "zip")) {
+    if (IsSd() && !m_entries_current.empty() && !GetEntry().checked_internal_extension && path::EqualsIC(GetEntry().GetExtension(), "zip")) {
         GetEntry().checked_internal_extension = true;
 
         TimeStamp ts;
@@ -755,7 +756,7 @@ void FsView::InvertSelection() {
 }
 
 void FsView::InstallForwarder() {
-    if (IsSamePath(GetEntry().GetExtension(), "nro")) {
+    if (path::EqualsIC(GetEntry().GetExtension(), "nro")) {
         if (R_FAILED(homebrew::Menu::InstallHomebrewFromPath(GetNewPathCurrent()))) {
             log_write("failed to create forwarder\n");
         }
@@ -792,7 +793,7 @@ void FsView::OpenImageViewer() {
 
     for (u32 i = 0; i < m_entries_current.size(); i++) {
         const auto& entry = GetEntry(i);
-        if (!entry.IsFile() || !IsExtension(entry.GetExtension(), IMAGE_EXTENSIONS)) {
+        if (!entry.IsFile() || !path::IsAnyOfIC(entry.GetExtension(), IMAGE_EXTENSIONS)) {
             continue;
         }
 
@@ -1775,7 +1776,7 @@ void FsView::DisplayOptions() {
         }
 
         for (auto&e : entries) {
-            if (!e.IsFile() || !IsExtension(e.GetExtension(), exts)) {
+            if (!e.IsFile() || !path::IsAnyOfIC(e.GetExtension(), exts)) {
                 return false;
             }
         }
@@ -1792,7 +1793,7 @@ void FsView::DisplayOptions() {
     }
 
     if (IsSd() && m_entries_current.size() && !m_selected_count) {
-        if (GetEntry().IsFile() && (IsSamePath(GetEntry().GetExtension(), "nro") || !m_menu->FindFileAssocFor().empty())) {
+        if (GetEntry().IsFile() && (path::EqualsIC(GetEntry().GetExtension(), "nro") || !m_menu->FindFileAssocFor().empty())) {
             auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){;
                 InstallForwarder();
             }, "Install a forwarder shortcut for this file."_i18n);
@@ -2172,7 +2173,7 @@ void FsView::DisplayAdvancedOptions() {
     create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
 
     if (IsSd() && m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
-        if (IsExtension(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
+        if (path::IsAnyOfIC(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();
             }, "Open the selected image in the built-in viewer."_i18n);

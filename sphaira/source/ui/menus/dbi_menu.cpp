@@ -1,6 +1,7 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi_menu.hpp"
+#include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
@@ -75,16 +76,9 @@ void AddSizeSaturated(s64& total, s64 value) {
     total = value > INT64_MAX - total ? INT64_MAX : total + value;
 }
 
-bool EndsWithIC(std::string_view name, std::string_view suffix) {
-    if (name.size() < suffix.size()) return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin(), [](char a, char b){
-        return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-    });
-}
-
 u64 GetQueueEntryTitleId(const QueueEntry& entry) {
     for (const auto& col : entry.analysis.collections) {
-        if (EndsWithIC(col.name, ".cnmt.nca") || EndsWithIC(col.name, ".cnmt.ncz")) {
+        if (path::EndsWithIC(col.name, ".cnmt.nca") || path::EndsWithIC(col.name, ".cnmt.ncz")) {
             size_t pos = col.name.find(".cnmt.");
             if (pos != std::string::npos && pos >= 16) {
                 std::string hex_str = col.name.substr(pos - 16, 16);

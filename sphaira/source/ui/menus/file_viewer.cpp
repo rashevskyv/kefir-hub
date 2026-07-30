@@ -1,4 +1,5 @@
 #include "ui/menus/file_viewer.hpp"
+#include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -24,17 +25,6 @@
 namespace sphaira::ui::menu::fileview {
 namespace {
 
-auto PathExtension(const fs::FsPath& path) -> std::string_view {
-    const std::string_view view{path};
-    const auto slash = view.find_last_of('/');
-    const auto dot = view.find_last_of('.');
-    if (dot == view.npos || (slash != view.npos && dot < slash)) {
-        return {};
-    }
-
-    return view.substr(dot + 1);
-}
-
 auto PathFileName(const fs::FsPath& path) -> std::string {
     const std::string_view view{path};
     const auto slash = view.find_last_of('/');
@@ -55,26 +45,12 @@ auto PathDirectory(const fs::FsPath& path) -> fs::FsPath {
     return std::string{view.substr(0, slash)};
 }
 
-auto ExtensionEquals(std::string_view a, std::string_view b) -> bool {
-    if (a.size() != b.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < a.size(); i++) {
-        if (std::tolower(static_cast<unsigned char>(a[i])) != std::tolower(static_cast<unsigned char>(b[i]))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 auto IsJpegExtension(std::string_view ext) -> bool {
-    return ExtensionEquals(ext, "jpg") || ExtensionEquals(ext, "jpeg");
+    return path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg");
 }
 
 auto IsImageExtension(std::string_view ext) -> bool {
-    return IsJpegExtension(ext) || ExtensionEquals(ext, "png") || ExtensionEquals(ext, "bmp") || ExtensionEquals(ext, "gif");
+    return IsJpegExtension(ext) || path::EqualsIC(ext, "png") || path::EqualsIC(ext, "bmp") || path::EqualsIC(ext, "gif");
 }
 
 auto ImageBounds(bool fullscreen) -> Vec4 {
@@ -129,7 +105,7 @@ void Menu::LoadCurrentFile() {
     m_file.Close();
     m_file_size = 0;
     m_file_offset = 0;
-    m_is_image_file = IsImageExtension(PathExtension(m_path));
+    m_is_image_file = IsImageExtension(path::Extension(m_path));
 
     if (m_is_image_file && m_image_paths.empty()) {
         m_image_paths.emplace_back(m_path);
@@ -197,7 +173,7 @@ void Menu::LoadImageFile() {
         }});
     }
 
-    const auto ext = PathExtension(m_path);
+    const auto ext = path::Extension(m_path);
     const auto data = ImageLoadFromFile(m_path, IsJpegExtension(ext) ? ImageFlag_JPEG : ImageFlag_None);
     if (!data.data.empty()) {
         m_image_w = data.w;

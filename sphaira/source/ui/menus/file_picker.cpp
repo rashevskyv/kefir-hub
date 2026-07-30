@@ -1,4 +1,5 @@
 #include "ui/menus/file_picker.hpp"
+#include "path_util.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -53,23 +54,6 @@ constexpr std::string_view ZIP_EXTENSIONS[] = {
 };
 
 // case insensitive check
-auto IsSamePath(std::string_view a, std::string_view b) -> bool {
-    return a.length() == b.length() && !strncasecmp(a.data(), b.data(), a.length());
-}
-
-auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool {
-    for (auto e : list) {
-        if (e.length() == ext.length() && !strncasecmp(ext.data(), e.data(), ext.length())) {
-            return true;
-        }
-    }
-    return false;
-}
-
-auto IsExtension(std::string_view ext1, std::string_view ext2) -> bool {
-    return ext1.length() == ext2.length() && !strncasecmp(ext1.data(), ext2.data(), ext1.length());
-}
-
 } // namespace
 
 void Menu::SetIndex(s64 index) {
@@ -78,7 +62,7 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff();
     }
 
-    if (IsSd() && !m_entries_current.empty() && !GetEntry().checked_internal_extension && IsSamePath(GetEntry().extension, "zip")) {
+    if (IsSd() && !m_entries_current.empty() && !GetEntry().checked_internal_extension && path::EqualsIC(GetEntry().extension, "zip")) {
         GetEntry().checked_internal_extension = true;
 
         TimeStamp ts;
@@ -137,7 +121,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             hidden = true;
             if (const auto ext = std::strrchr(e.name, '.')) {
                 for (const auto& filter : m_filter) {
-                    if (IsExtension(ext, filter)) {
+                    if (path::EqualsIC(ext, filter)) {
                         hidden = false;
                         break;
                     }
@@ -478,18 +462,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();
-            if (IsExtension(ext, AUDIO_EXTENSIONS)) {
+            if (path::IsAnyOfIC(ext, AUDIO_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_AUDIO;
-            } else if (IsExtension(ext, VIDEO_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, VIDEO_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_VIDEO;
-            } else if (IsExtension(ext, IMAGE_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, IMAGE_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_IMAGE;
-            } else if (IsExtension(ext, INSTALL_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, INSTALL_EXTENSIONS)) {
                 // todo: maybe replace this icon with something else?
                 icon = ThemeEntryID_ICON_NRO;
-            } else if (IsExtension(ext, ZIP_EXTENSIONS)) {
+            } else if (path::IsAnyOfIC(ext, ZIP_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_ZIP;
-            } else if (IsExtension(ext, "nro")) {
+            } else if (path::EqualsIC(ext, "nro")) {
                 icon = ThemeEntryID_ICON_NRO;
             }
 

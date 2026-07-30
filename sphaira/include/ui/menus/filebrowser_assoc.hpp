@@ -99,9 +99,6 @@ inline constexpr RomDatabaseEntry PATHS[]{
 
 constexpr fs::FsPath DAYBREAK_PATH{"/switch/daybreak.nro"};
 
-auto IsSamePath(std::string_view a, std::string_view b) -> bool;
-auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool;
-auto IsExtension(std::string_view ext1, std::string_view ext2) -> bool;
 
 auto GetRomDatabaseFromPath(std::string_view path) -> RomDatabaseIndexs;
 auto GetRomIcon(std::string filename, const RomDatabaseIndexs& db_indexs, const NroEntry& nro) -> std::vector<u8>;

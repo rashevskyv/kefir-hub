@@ -1,4 +1,5 @@
 #include "ui/menus/filebrowser.hpp"
+#include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "download.hpp"
@@ -644,7 +645,7 @@ auto FsView::CheckIfUpdateFolder() -> Result {
         R_UNLESS(e.type == FsDirEntryType_File, Result_FileBrowserDirNotDaybreak);
 
         const auto ext = std::strrchr(e.name, '.');
-        R_UNLESS(ext && IsSamePath(ext, ".nca"), Result_FileBrowserDirNotDaybreak);
+        R_UNLESS(ext && path::EqualsIC(ext, ".nca"), Result_FileBrowserDirNotDaybreak);
     }
 
     R_SUCCEED();

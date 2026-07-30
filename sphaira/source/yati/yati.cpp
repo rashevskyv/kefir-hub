@@ -1,4 +1,5 @@
 #include "yati/yati.hpp"
+#include "path_util.hpp"
 #include "yati/source/file.hpp"
 #include "yati/source/stream_file.hpp"
 #include "yati/container/nsp.hpp"
@@ -435,15 +436,6 @@ auto isRightsIdValid(FsRightsId id) -> bool {
 // nca/tik/cert filenames inside a container may use either case for the
 // hex id and extension (e.g. "1A2B....NCA"), so all name matching below
 // must be case-insensitive.
-auto EndsWithIC(std::string_view name, std::string_view suffix) -> bool {
-    if (name.size() < suffix.size()) {
-        return false;
-    }
-    return std::equal(suffix.rbegin(), suffix.rend(), name.rbegin(), [](unsigned char a, unsigned char b){
-        return std::tolower(a) == std::tolower(b);
-    });
-}
-
 auto FindIC(std::string_view haystack, std::string_view needle) -> bool {
     if (needle.size() > haystack.size()) {
         return false;
@@ -1206,7 +1198,7 @@ Result Yati::InstallCnmtNca(std::span<TikCollection> tickets, CnmtCollection& cn
 
 Result Yati::ParseTicketsIntoCollection(std::vector<TikCollection>& tickets, const container::Collections& collections, bool read_data) {
     for (const auto& collection : collections) {
-        if (EndsWithIC(collection.name, ".tik")) {
+        if (path::EndsWithIC(collection.name, ".tik")) {
             TikCollection entry{};
             keys::parse_hex_key(entry.rights_id.c, collection.name.c_str());
             const auto str = collection.name.substr(0, collection.name.length() - 4) + ".cert";
@@ -1481,7 +1473,7 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
     std::vector<CnmtCollection> cnmts{};
     for (const auto& collection : collections) {
         log_write("found collection: %s\n", collection.name.c_str());
-        if (EndsWithIC(collection.name, ".cnmt.nca") || EndsWithIC(collection.name, ".cnmt.ncz")) {
+        if (path::EndsWithIC(collection.name, ".cnmt.nca") || path::EndsWithIC(collection.name, ".cnmt.ncz")) {
             auto& cnmt = cnmts.emplace_back(NcaCollection{collection});
             cnmt.type = NcmContentType_Meta;
         }
@@ -1556,16 +1548,16 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
     std::ranges::sort(collections, sorter);
 
     for (const auto& collection : collections) {
-        if (EndsWithIC(collection.name, ".nca") || EndsWithIC(collection.name, ".ncz")) {
+        if (path::EndsWithIC(collection.name, ".nca") || path::EndsWithIC(collection.name, ".ncz")) {
             auto& nca = ncas.emplace_back(NcaCollection{collection});
-            if (EndsWithIC(collection.name, ".cnmt.nca") || EndsWithIC(collection.name, ".cnmt.ncz")) {
+            if (path::EndsWithIC(collection.name, ".cnmt.nca") || path::EndsWithIC(collection.name, ".cnmt.ncz")) {
                 auto& cnmt = cnmts.emplace_back(nca);
                 cnmt.type = NcmContentType_Meta;
                 R_TRY(yati->InstallCnmtNca(tickets, cnmt, collections));
             } else {
                 R_TRY(yati->InstallNca(tickets, nca));
             }
-        } else if (EndsWithIC(collection.name, ".tik") || EndsWithIC(collection.name, ".cert")) {
+        } else if (path::EndsWithIC(collection.name, ".tik") || path::EndsWithIC(collection.name, ".cert")) {
             FsRightsId rights_id{};
             keys::parse_hex_key(rights_id.c, collection.name.c_str());
             const auto str = collection.name.substr(0, collection.name.length() - 4) + ".cert";
@@ -1578,7 +1570,7 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
             R_UNLESS(entry != tickets.end(), Result_YatiCertNotFound);
 
             u64 bytes_read;
-            if (EndsWithIC(collection.name, ".tik")) {
+            if (path::EndsWithIC(collection.name, ".tik")) {
                 R_TRY(source->Read(entry->ticket.data(), collection.offset, entry->ticket.size(), &bytes_read));
             } else {
                 R_TRY(source->Read(entry->cert.data(), collection.offset, entry->cert.size(), &bytes_read));
@@ -1681,10 +1673,10 @@ Result AnalyzeSource(source::Base* source, const fs::FsPath& path, InstallAnalys
         R_UNLESS(entry.offset <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
         out.source_size = std::max(out.source_size, entry.offset + entry.size);
 
-        if (EndsWithIC(entry.name, ".nca")) {
+        if (path::EndsWithIC(entry.name, ".nca")) {
             R_UNLESS(out.install_size <= INT64_MAX - entry.size, Result_YatiContainerNotFound);
             out.install_size += entry.size;
-        } else if (EndsWithIC(entry.name, ".ncz")) {
+        } else if (path::EndsWithIC(entry.name, ".ncz")) {
             out.compressed = true;
             const auto decompressed = GetNczDecompressedSize(source, entry.offset, entry.size);
             if (decompressed >= 0) {
@@ -1806,7 +1798,7 @@ Result InstallFromCollections(ui::InstallProgress* pbox, source::Base* source, c
         bool is_compressed = false;
         for (const auto& entry : collections) {
             total_size += entry.size;
-            if (EndsWithIC(entry.name, ".ncz")) {
+            if (path::EndsWithIC(entry.name, ".ncz")) {
                 is_compressed = true;
             }
         }

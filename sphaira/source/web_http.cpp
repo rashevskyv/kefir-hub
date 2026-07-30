@@ -1,4 +1,5 @@
 #include "web_http.hpp"
+#include "path_util.hpp"
 #include "web.hpp"
 #include "web_pages.hpp"
 #include <algorithm>
@@ -12,42 +13,18 @@
 
 namespace sphaira::web::detail {
 
-auto PathExtension(std::string_view path) -> std::string_view {
-    const auto slash = path.find_last_of('/');
-    const auto dot = path.find_last_of('.');
-    if (dot == path.npos || (slash != path.npos && dot < slash)) {
-        return {};
-    }
-
-    return path.substr(dot + 1);
-}
-
-auto ExtensionEquals(std::string_view a, std::string_view b) -> bool {
-    if (a.size() != b.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < a.size(); i++) {
-        if (std::tolower(static_cast<unsigned char>(a[i])) != std::tolower(static_cast<unsigned char>(b[i]))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 auto ContentTypeForPath(std::string_view path) -> const char* {
-    const auto ext = PathExtension(path);
-    if (ExtensionEquals(ext, "png")) {
+    const auto ext = path::Extension(path);
+    if (path::EqualsIC(ext, "png")) {
         return "image/png";
     }
-    if (ExtensionEquals(ext, "jpg") || ExtensionEquals(ext, "jpeg")) {
+    if (path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg")) {
         return "image/jpeg";
     }
-    if (ExtensionEquals(ext, "gif")) {
+    if (path::EqualsIC(ext, "gif")) {
         return "image/gif";
     }
-    if (ExtensionEquals(ext, "bmp")) {
+    if (path::EqualsIC(ext, "bmp")) {
         return "image/bmp";
     }
 
@@ -371,10 +348,10 @@ auto JsonEscape(std::string_view in) -> std::string {
 }
 
 auto IsImagePath(std::string_view name) -> bool {
-    const auto ext = PathExtension(name);
-    return ExtensionEquals(ext, "png") || ExtensionEquals(ext, "jpg") || 
-           ExtensionEquals(ext, "jpeg") || ExtensionEquals(ext, "gif") || 
-           ExtensionEquals(ext, "bmp");
+    const auto ext = path::Extension(name);
+    return path::EqualsIC(ext, "png") || path::EqualsIC(ext, "jpg") || 
+           path::EqualsIC(ext, "jpeg") || path::EqualsIC(ext, "gif") || 
+           path::EqualsIC(ext, "bmp");
 }
 
 void AppendLightbox(std::string& body) {

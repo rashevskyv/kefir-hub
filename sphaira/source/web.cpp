@@ -1,4 +1,5 @@
 #include "web.hpp"
+#include "path_util.hpp"
 #include "web_http.hpp"
 #include "web_screenshots.hpp"
 #include "web_pages.hpp"
@@ -563,7 +564,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
 
     // homebrew (.nro) is routed to /switch/<name>/ so it lands in the homebrew
     // menu, mirroring the MTP/USB root-drop behaviour.
-    const bool is_nro = ExtensionEquals(PathExtension(name), "nro");
+    const bool is_nro = path::EqualsIC(path::Extension(name), "nro");
     std::string dir;
     if (is_nro) {
         auto stem = name;
@@ -598,8 +599,8 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
 
         auto stream_source = std::make_unique<SocketStream>(sock, initial_body, content_length);
         
-        const auto ext = PathExtension(name);
-        const bool is_compressed = ExtensionEquals(ext, "nsz") || ExtensionEquals(ext, "xcz") || ExtensionEquals(ext, "ncz");
+        const auto ext = path::Extension(name);
+        const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
         const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
 
         const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";

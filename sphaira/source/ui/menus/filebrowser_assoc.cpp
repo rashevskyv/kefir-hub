@@ -1,4 +1,5 @@
 #include "ui/menus/filebrowser_assoc.hpp"
+#include "path_util.hpp"
 #include "log.hpp"
 #include "fs.hpp"
 #include "nro.hpp"
@@ -14,34 +15,17 @@ constexpr const char* NXMP_PATHS[]{
 };
 
 auto RomDatabaseEntry::IsDatabase(std::string_view name) const -> bool {
-    if (IsSamePath(name, folder) || IsSamePath(name, database)) {
+    if (path::EqualsIC(name, folder) || path::EqualsIC(name, database)) {
         return true;
     }
 
     for (const auto& str : alias) {
-        if (!str.empty() && IsSamePath(name, str)) {
+        if (!str.empty() && path::EqualsIC(name, str)) {
             return true;
         }
     }
 
     return false;
-}
-
-auto IsSamePath(std::string_view a, std::string_view b) -> bool {
-    return a.length() == b.length() && !strncasecmp(a.data(), b.data(), a.length());
-}
-
-auto IsExtension(std::string_view ext, std::span<const std::string_view> list) -> bool {
-    for (auto e : list) {
-        if (e.length() == ext.length() && !strncasecmp(ext.data(), e.data(), ext.length())) {
-            return true;
-        }
-    }
-    return false;
-}
-
-auto IsExtension(std::string_view ext1, std::string_view ext2) -> bool {
-    return ext1.length() == ext2.length() && !strncasecmp(ext1.data(), ext2.data(), ext1.length());
 }
 
 auto GetRomDatabaseFromPath(std::string_view path) -> RomDatabaseIndexs {
