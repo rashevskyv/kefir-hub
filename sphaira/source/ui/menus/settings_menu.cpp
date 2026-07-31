@@ -1216,13 +1216,11 @@ Menu::Menu() : MenuBase{"Settings"_i18n, MenuFlag_None} {
     // menu uses to move between the category and item panes.
     m_category_list->SetPageJump(false);
     m_category_list->SetFastScroll(false);
-    m_category_list->SetWrap(true);
 
     m_item_list = std::make_unique<List>(1, 7, Vec4{420.f, 132.f, 780.f, 462.f}, Vec4{420.f, 132.f, 780.f, 66.f});
     m_item_list->SetLayout(List::Layout::GRID);
     m_item_list->SetPageJump(false);
     m_item_list->SetFastScroll(false);
-    m_item_list->SetWrap(true);
 
     SetCategoryIndex(0);
 }
@@ -2127,7 +2125,6 @@ SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 
@@ -2197,7 +2194,6 @@ DbiMenu::DbiMenu() : MenuBase{"DBI", MenuFlag_None} {
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 
@@ -2267,7 +2263,6 @@ KefirSettingsMenu::KefirSettingsMenu() : MenuBase{"Kefir Settings", MenuFlag_Non
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 
@@ -2337,7 +2332,6 @@ ThemesMenu::ThemesMenu() : MenuBase{"Themes", MenuFlag_None} {
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 
@@ -2417,7 +2411,6 @@ TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_N
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 
@@ -2548,7 +2541,6 @@ SourceEditMenu::SourceEditMenu(std::string name) : MenuBase{name, MenuFlag_None}
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    m_list->SetWrap(true);
     SetIndex(0);
 }
 

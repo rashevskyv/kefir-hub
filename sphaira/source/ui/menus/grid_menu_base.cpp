@@ -2,7 +2,33 @@
 #include "ui/menus/grid_menu_base.hpp"
 #include "ui/nvg_util.hpp"
 
+#include <string_view>
+#include <utility>
+
 namespace sphaira::ui::menu::grid {
+namespace {
+
+// gap between the "[flags]" column and the size column, and the widest size
+// string the latter has to hold ("1023.99 MB" is as long as FormatBytes gets).
+constexpr float LIST_INFO_COL_GAP = 10.f;
+constexpr const char* LIST_INFO_VALUE_SAMPLE = "1023.99 MB";
+
+// callers build the right column as "[flags]  value" (see FormatListInfo in the
+// game and save menus). Split it back apart so each half gets its own column;
+// a string with no "]  " is all label if it is bracketed, all value otherwise.
+auto SplitListInfo(std::string_view info) -> std::pair<std::string, std::string> {
+    if (const auto sep = info.find("]  "); sep != info.npos) {
+        return {std::string{info.substr(0, sep + 1)}, std::string{info.substr(sep + 3)}};
+    }
+
+    if (info.starts_with('[')) {
+        return {std::string{info}, {}};
+    }
+
+    return {{}, std::string{info}};
+}
+
+} // namespace
 
 auto FormatBytes(u64 bytes) -> std::string {
     char out[32];
@@ -16,6 +42,24 @@ auto FormatBytes(u64 bytes) -> std::string {
         std::snprintf(out, sizeof(out), "%lu B", bytes);
     }
     return out;
+}
+
+void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec4& row, const Vec4& overlay, bool marked, bool any_marked) {
+    // a list row reads like a file browser row, so it marks like one: a
+    // checkbox in the left gutter, drawn on every row while a selection is
+    // under way so the ticked ones can be seen against the empty ones.
+    if (layout == LayoutType_List) {
+        if (any_marked) {
+            gfx::drawCheckbox(vg, theme, row.x - 30.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, marked);
+        }
+        return;
+    }
+
+    // a tile has no gutter to put a checkbox in, so it is tinted instead.
+    if (marked) {
+        gfx::drawRect(vg, overlay, theme->GetColour(ThemeEntryID_FOCUS), 5);
+        gfx::drawText(vg, overlay.x + overlay.w / 2.f, overlay.y + overlay.h / 2.f, 24.f, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+    }
 }
 
 Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
@@ -85,15 +129,34 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         }
         const float text_x = icon_x + icon_size + 14.f;
 
-        // right column, DBI-style: the caller's `version` string (size, flags)
-        // right-aligned; the name/author clip shrinks to keep clear of it.
+        // right column, DBI-style. The caller hands it over as "[flags]  size";
+        // the two halves get their own columns so every "[...]" lands on the
+        // same x instead of being pushed around by the width of its own size.
         float right_w = 0.f;
         if (version && *version) {
+            const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const auto [label, value] = SplitListInfo(version);
+            const float right = x + w - 15.f;
             float bounds[4]{};
+
             nvgFontSize(vg, 18.f);
-            gfx::textBounds(vg, 0, 0, bounds, version);
-            right_w = bounds[2] - bounds[0] + 20.f;
-            gfx::drawText(vg, x + w - 15.f, y + h / 2.f, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), version, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+            // the column is as wide as the widest size string, measured rather
+            // than guessed so a theme with a wider font doesn't clip it.
+            gfx::textBounds(vg, 0, 0, bounds, LIST_INFO_VALUE_SAMPLE);
+            const float value_w = value.empty() && label.empty() ? 0.f : bounds[2] - bounds[0];
+
+            if (!value.empty()) {
+                gfx::drawText(vg, right, y + h / 2.f, 18.f, info_col, value.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+            }
+
+            float label_w = 0.f;
+            if (!label.empty()) {
+                gfx::textBounds(vg, 0, 0, bounds, label.c_str());
+                label_w = bounds[2] - bounds[0];
+                gfx::drawText(vg, right - value_w - LIST_INFO_COL_GAP, y + h / 2.f, 18.f, info_col, label.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+            }
+
+            right_w = value_w + LIST_INFO_COL_GAP + label_w + 20.f;
         }
 
         const float text_clip_w = w - text_x + x - 15.f - right_w;

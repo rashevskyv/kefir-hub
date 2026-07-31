@@ -661,7 +661,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (entry < 0) {
             return; // empty divider gap; the label is drawn with the first backup tile.
         }
-        const auto& [x, y, w, h] = v;
         auto& e = m_entries[entry];
 
         if (e.status == title::NacpLoadStatus::None) {
@@ -697,10 +696,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // framed on the whole tile so it reads in every layout.
         DrawCategoryBorder(vg, theme, v, e);
 
-        if (e.selected) {
-            gfx::drawRect(vg, image_v, theme->GetColour(ThemeEntryID_FOCUS), 5);
-            gfx::drawText(vg, image_v.x + image_v.w / 2, image_v.y + image_v.h / 2, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-        }
+        DrawSelectionMark(vg, theme, m_layout.Get(), v, image_v, e.selected, m_selected_count > 0);
 
         // the "Backups" divider rides above the first backup tile, filling the
         // empty row reserved for it in ComputeGridSections().

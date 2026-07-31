@@ -771,7 +771,10 @@ bool Menu::MoveTileSelection(s64 step) {
     }
 
     const auto old_index = m_tile_index;
-    const auto target = std::clamp<s64>(m_tile_index + step, 0, static_cast<s64>(m_tile_entries.size() - 1));
+    const auto size = static_cast<s64>(m_tile_entries.size());
+    // wraps rather than clamps, so the tile grid scrolls round the same way
+    // every other list in the app does.
+    const auto target = ((m_tile_index + step) % size + size) % size;
     const auto next_index = ResolveTileSlotIndex(m_tile_entries, target, m_tile_index);
     if (next_index == old_index || m_tile_entries[next_index] == TILE_EMPTY) {
         return false;

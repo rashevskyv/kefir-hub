@@ -498,36 +498,7 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         if (m_selected_count > 0) {
-            float box_size = 20.f;
-            float box_x = x - 30.f;
-            float box_y = y + (h / 2.f) - (box_size / 2.f);
-
-            // Draw checkbox outline and background
-            nvgBeginPath(vg);
-            nvgRect(vg, box_x, box_y, box_size, box_size);
-            nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
-            nvgFill(vg);
-
-            nvgBeginPath(vg);
-            nvgRect(vg, box_x, box_y, box_size, box_size);
-            nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-            nvgStrokeWidth(vg, 2.0f);
-            nvgStroke(vg);
-
-            if (e.IsSelected()) {
-                // Draw checkmark inside the checkbox on the left
-                float check_x = box_x + box_size / 2.f;
-                float check_y = y + (h / 2.f) - (18.f / 2.f); // center vertically
-
-                NVGcolor outline_col = nvgRGBA(0, 0, 0, 255);
-
-                gfx::drawText(vg, check_x - 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x + 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y - 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-                gfx::drawText(vg, check_x, check_y + 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline_col);
-
-                gfx::drawText(vg, check_x, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-            }
+            gfx::drawCheckbox(vg, theme, x - 30.f, y + (h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, e.IsSelected());
         }
 
         const auto name_x = x + x_offset + 65;
@@ -655,8 +626,6 @@ void FsView::SetSide(ViewSide side) {
     }
 
     m_list = std::make_unique<List>(1, 8, m_pos, v);
-    // pressing down on the last entry jumps to the first and vice versa.
-    m_list->SetWrap(true);
     m_list_clip = Vec4{GetX(), v.y - gfx::SELECTION_OUTLINE_PAD, GetW(),
         GetY() + GetH() - (v.y - gfx::SELECTION_OUTLINE_PAD)};
     if (m_menu->IsSplitScreen()) {

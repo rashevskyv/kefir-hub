@@ -81,6 +81,8 @@ struct List final : Object {
         return m_page_jump;
     }
 
+    // wrap is on for every list. SetWrap(false) exists for a list that must
+    // not, not as the switch each menu has to remember to flip.
     auto SetWrap(bool enable) {
         m_wrap = enable;
     }
@@ -123,7 +125,7 @@ private:
 
     Layout m_layout{Layout::GRID};
     bool m_page_jump{true};
-    bool m_wrap{false};
+    bool m_wrap{true};
     bool m_fast_scroll{true};
 };
 

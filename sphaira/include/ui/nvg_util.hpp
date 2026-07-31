@@ -28,6 +28,13 @@ void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float
 // this much so the highlight of an edge item isn't sunken/clipped.
 constexpr float SELECTION_OUTLINE_PAD = 10.f;
 
+// The multi-select checkbox drawn in the left gutter of a list row: an empty
+// box while a selection is in progress, a checkmark in it once the row is in
+// the selection. Every list that supports X/Y select uses this one, so the
+// mark sits in the same place and looks the same everywhere.
+constexpr float CHECKBOX_SIZE = 20.f;
+void drawCheckbox(NVGcontext*, const Theme*, float x, float y, float size, bool checked);
+
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);
 

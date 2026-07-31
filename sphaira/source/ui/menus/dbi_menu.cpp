@@ -147,31 +147,7 @@ void DrawStatRow(NVGcontext* vg, NVGcolor info_col, float x0, float y, float siz
 }
 
 void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected) {
-    constexpr float box_size = 20.f;
-    const float box_x = row.x + 12.f;
-    const float box_y = row.y + (row.h - box_size) / 2.f;
-
-    nvgBeginPath(vg);
-    nvgRect(vg, box_x, box_y, box_size, box_size);
-    nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
-    nvgFill(vg);
-    nvgBeginPath(vg);
-    nvgRect(vg, box_x, box_y, box_size, box_size);
-    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-    nvgStrokeWidth(vg, 2.f);
-    nvgStroke(vg);
-
-    if (selected) {
-        const float check_x = box_x + box_size / 2.f;
-        const float check_y = row.y + (row.h - 18.f) / 2.f;
-        const auto outline = nvgRGBA(0, 0, 0, 255);
-        gfx::drawText(vg, check_x - 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-        gfx::drawText(vg, check_x + 1.f, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-        gfx::drawText(vg, check_x, check_y - 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-        gfx::drawText(vg, check_x, check_y + 1.f, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-        gfx::drawText(vg, check_x, check_y, 18.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP,
-            theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-    }
+    gfx::drawCheckbox(vg, theme, row.x + 12.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, selected);
 }
 
 } // namespace

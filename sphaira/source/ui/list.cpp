@@ -92,14 +92,16 @@ auto List::ScrollDown(s64& index, s64 step, s64 count) -> bool {
         return false;
     }
 
+    // only the last row wraps. in a grid whose last row is short, stepping down
+    // off a full row still lands on the last entry, the way it always did.
+    const auto last_row_start = ((count - 1) / m_row) * m_row;
+
     if (index + step < count) {
         index += step;
+    } else if (m_wrap && index >= last_row_start) {
+        index = 0;
     } else {
-        if (m_wrap) {
-            index = 0;
-        } else {
-            index = count - 1;
-        }
+        index = count - 1;
     }
 
     if (index != old_index) {

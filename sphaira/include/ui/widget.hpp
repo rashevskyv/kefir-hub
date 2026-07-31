@@ -24,6 +24,10 @@ struct uiButton final : Object {
     std::string m_action_str;
     Vec4 m_button_pos{};
     Vec4 m_hint_pos{};
+    // font sizes the row was laid out at. The whole row shrinks together when
+    // it would otherwise run off the left of the footer.
+    float m_button_size{26.f};
+    float m_hint_size{20.f};
 };
 
 struct Widget : public Object {

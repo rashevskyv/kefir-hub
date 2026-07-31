@@ -424,7 +424,6 @@ Sidebar::Sidebar(const std::string& title, const std::string& sub, Side side, It
     SetUiButtonPos({m_pos.x + m_pos.w - 60.f, layout::BUTTON_POS.y});
 
     m_list = std::make_unique<List>(1, 7, pos, m_base_pos);
-    m_list->SetWrap(true);
     m_list->SetScrollBarPos(GetX() + GetW() - 20, pos.y, pos.h);
 }
 

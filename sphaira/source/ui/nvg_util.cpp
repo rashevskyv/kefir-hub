@@ -291,6 +291,36 @@ void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, const Vec4&
     drawRectOutlineInternal(vg, theme, size, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), rounding);
 }
 
+void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float size, bool checked) {
+    nvgBeginPath(vg);
+    nvgRect(vg, x, y, size, size);
+    nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
+    nvgFill(vg);
+
+    nvgBeginPath(vg);
+    nvgRect(vg, x, y, size, size);
+    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+    nvgStrokeWidth(vg, 2.f);
+    nvgStroke(vg);
+
+    if (!checked) {
+        return;
+    }
+
+    // the tick is a glyph, not a shape, so it gets a 1px black halo to stay
+    // legible on a light theme where box and tick would otherwise both be pale.
+    constexpr float tick = 18.f;
+    const float cx = x + size / 2.f;
+    const float cy = y + (size - tick) / 2.f;
+    const auto outline = nvgRGBA(0, 0, 0, 255);
+
+    drawText(vg, cx - 1.f, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+    drawText(vg, cx + 1.f, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+    drawText(vg, cx, cy - 1.f, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+    drawText(vg, cx, cy + 1.f, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
+    drawText(vg, cx, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+}
+
 void drawText(NVGcontext* vg, float x, float y, float size, const char* str, const char* end, int align, const NVGcolor& c) {
     drawTextIntenal(vg, {x,y}, size, str, end, align, c);
 }

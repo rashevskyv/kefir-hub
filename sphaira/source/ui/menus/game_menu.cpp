@@ -1736,7 +1736,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     int summary_load_count = 0;
 
     m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
-        const auto& [x, y, w, h] = v;
         auto& e = m_entries[pos];
 
         if (e.status == title::NacpLoadStatus::None) {
@@ -1779,10 +1778,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             DrawGameBadges(vg, theme, badge_v, e);
         }
 
-        if (e.selected) {
-            gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_FOCUS), 5);
-            gfx::drawText(vg, x + w / 2, y + h / 2, 24.f, "\uE14B", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-        }
+        DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
     });
 }
 

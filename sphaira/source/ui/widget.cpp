@@ -1,14 +1,58 @@
 #include "ui/widget.hpp"
 #include "ui/nvg_util.hpp"
+#include "ui/layout.hpp"
 #include "app.hpp"
 #include "log.hpp"
 
 #include <algorithm>
-#include "i18n.hpp"
 
 namespace sphaira::ui {
 
 namespace {
+
+// font sizes of an unscaled hint row, and how far it may be shrunk before the
+// text stops being readable and is simply allowed to overflow.
+constexpr float UI_HINT_SIZE = 20.f;
+constexpr float UI_GLYPH_SIZE = 26.f;
+constexpr float MIN_UI_BUTTON_SCALE = 0.6f;
+
+// Lays the hint row out right to left from pos at the given scale and returns
+// how wide it came out, so the caller can measure before committing.
+auto LayoutUiButtons(NVGcontext* vg, Widget::uiButtons& buttons, const Vec2& pos, float scale) -> float {
+    auto [x, y] = pos;
+    float bounds[4]{};
+
+    const auto hint_size = UI_HINT_SIZE * scale;
+    const auto glyph_size = UI_GLYPH_SIZE * scale;
+
+    for (auto& e : buttons) {
+        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+
+        nvgFontSize(vg, hint_size);
+        nvgTextBounds(vg, x, y, e.m_action_str.c_str(), nullptr, bounds);
+        auto len = bounds[2] - bounds[0];
+        e.m_hint_pos = {x, y, len, hint_size};
+        e.m_hint_size = hint_size;
+
+        x -= len + 8.f * scale;
+        nvgFontSize(vg, glyph_size);
+        nvgTextBounds(vg, x, y - 7.f * scale, e.m_button_str.c_str(), nullptr, bounds);
+        len = bounds[2] - bounds[0];
+        e.m_button_pos = {x, y - 4.f * scale, len, glyph_size};
+        e.m_button_size = glyph_size;
+        x -= len + 16.f * scale;
+
+        // the touch box keeps its full height at any scale: shrinking the text
+        // is a layout fix, shrinking the target the finger has to hit is not.
+        e.SetPos(e.m_button_pos);
+        e.SetX(e.GetX() - 40.f * scale);
+        e.SetW(e.m_hint_pos.x - e.m_button_pos.x + len + 25.f * scale);
+        e.SetY(e.GetY() - 18.f);
+        e.SetH(UI_GLYPH_SIZE + 18.f * 2.f);
+    }
+
+    return pos.x - x;
+}
 
 auto GetUiButtonSortPriority(Button button) -> int {
     switch (button) {
@@ -46,9 +90,9 @@ auto uiButton::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
     nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT));
-    nvgFontSize(vg, 20);
+    nvgFontSize(vg, m_hint_size);
     nvgText(vg, m_hint_pos.x, m_hint_pos.y, m_action_str.c_str(), nullptr);
-    nvgFontSize(vg, 26);
+    nvgFontSize(vg, m_button_size);
     nvgText(vg, m_button_pos.x, m_button_pos.y, m_button_str.c_str(), nullptr);
 }
 
@@ -150,29 +194,15 @@ auto Widget::FireAction(Button b, u8 type) -> bool {
 
 void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
     auto vg = App::GetVg();
-    auto [x, y] = button_pos;
 
-    float bounds[4]{};
-    for (auto& e : buttons) {
-        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+    // measure at full size first. if the row would run off the left of the
+    // footer, shrink the whole row until it fits - a hint that has to be merged
+    // with its neighbour to make room loses its own touch target.
+    const auto avail = button_pos.x - layout::SIDE_X;
+    const auto want = LayoutUiButtons(vg, buttons, button_pos, 1.f);
 
-        nvgFontSize(vg, 20.f);
-        nvgTextBounds(vg, x, y, e.m_action_str.c_str(), nullptr, bounds);
-        auto len = bounds[2] - bounds[0];
-        e.m_hint_pos = {x, y, len, 20};
-
-        x -= len + 8.f;
-        nvgFontSize(vg, 26.f);
-        nvgTextBounds(vg, x, y - 7.f, e.m_button_str.c_str(), nullptr, bounds);
-        len = bounds[2] - bounds[0];
-        e.m_button_pos = {x, y - 4.f, len, 26};
-        x -= len + 16.f;
-
-        e.SetPos(e.m_button_pos);
-        e.SetX(e.GetX() - 40);
-        e.SetW(e.m_hint_pos.x - e.m_button_pos.x + len + 25);
-        e.SetY(e.GetY() - 18);
-        e.SetH(26 + 18 * 2);
+    if (want > avail && avail > 0.f) {
+        LayoutUiButtons(vg, buttons, button_pos, std::max(MIN_UI_BUTTON_SCALE, avail / want));
     }
 }
 
@@ -226,117 +256,6 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
         });
     }
 
-    // --- COMBINING LOGIC ---
-    std::string l_hint, r_hint, l2_hint, r2_hint, left_hint, right_hint;
-    for (const auto& btn : draw_actions) {
-        if (btn.m_button == Button::L) l_hint = btn.m_action_str;
-        if (btn.m_button == Button::R) r_hint = btn.m_action_str;
-        if (btn.m_button == Button::L2) l2_hint = btn.m_action_str;
-        if (btn.m_button == Button::R2) r2_hint = btn.m_action_str;
-        if (btn.m_button == Button::LEFT) left_hint = btn.m_action_str;
-        if (btn.m_button == Button::RIGHT) right_hint = btn.m_action_str;
-    }
-
-    uiButtons merged_actions;
-    merged_actions.reserve(draw_actions.size());
-
-    bool L_R_merged = false;
-    bool L_R_page_merged = false;
-    bool L_R_game_merged = false;
-    bool L_R_tab_merged = false;
-    bool L2_R2_merged = false;
-    bool L2_R2_jump_merged = false;
-    bool L2_R2_tab_merged = false;
-    bool L2_R2_game_merged = false;
-    bool LEFT_RIGHT_merged = false;
-
-    const bool should_merge_L_R = (!l_hint.empty() && l_hint == "Add Point"_i18n) && (!r_hint.empty() && r_hint == "Remove Point"_i18n);
-    const bool should_merge_L_R_page = (!l_hint.empty() && l_hint == "Previous Page"_i18n) && (!r_hint.empty() && r_hint == "Next Page"_i18n);
-    const bool should_merge_L_R_game = (!l_hint.empty() && l_hint == "Previous game"_i18n) && (!r_hint.empty() && r_hint == "Next game"_i18n);
-    const bool should_merge_L_R_tab = (!l_hint.empty() && l_hint == "Previous tab"_i18n) && (!r_hint.empty() && r_hint == "Next tab"_i18n);
-    const bool should_merge_L2_R2 = (!l2_hint.empty() && l2_hint == "Load Preset"_i18n) && (!r2_hint.empty() && r2_hint == "Save Preset"_i18n);
-    const bool should_merge_L2_R2_jump = (!l2_hint.empty() && l2_hint == "Jump Backward"_i18n) && (!r2_hint.empty() && r2_hint == "Jump Forward"_i18n);
-    const bool should_merge_L2_R2_tab = (!l2_hint.empty() && l2_hint == "Previous tab"_i18n) && (!r2_hint.empty() && r2_hint == "Next tab"_i18n);
-    const bool should_merge_L2_R2_game = (!l2_hint.empty() && l2_hint == "Previous game"_i18n) && (!r2_hint.empty() && r2_hint == "Next game"_i18n);
-    const bool should_merge_LEFT_RIGHT = (!left_hint.empty() && (left_hint == "Previous Image"_i18n || left_hint == "Prev Image"_i18n)) &&
-                                          (!right_hint.empty() && right_hint == "Next Image"_i18n);
-
-    for (const auto& btn : draw_actions) {
-        if (btn.m_button == Button::L || btn.m_button == Button::R) {
-            if (should_merge_L_R) {
-                if (!L_R_merged) {
-                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Add/Remove Point"_i18n};
-                    merged_actions.push_back(combined);
-                    L_R_merged = true;
-                }
-            } else if (should_merge_L_R_page) {
-                if (!L_R_page_merged) {
-                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Prev/Next Page"_i18n};
-                    merged_actions.push_back(combined);
-                    L_R_page_merged = true;
-                }
-            } else if (should_merge_L_R_game) {
-                if (!L_R_game_merged) {
-                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Previous/Next game"_i18n};
-                    merged_actions.push_back(combined);
-                    L_R_game_merged = true;
-                }
-            } else if (should_merge_L_R_tab) {
-                if (!L_R_tab_merged) {
-                    uiButton combined{Button::L, "\uE0E4/\uE0E5", "Previous/Next tab"_i18n};
-                    merged_actions.push_back(combined);
-                    L_R_tab_merged = true;
-                }
-            } else {
-                merged_actions.push_back(btn);
-            }
-        }
-        else if (btn.m_button == Button::L2 || btn.m_button == Button::R2) {
-            if (should_merge_L2_R2) {
-                if (!L2_R2_merged) {
-                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Load/Save Preset"_i18n};
-                    merged_actions.push_back(combined);
-                    L2_R2_merged = true;
-                }
-            } else if (should_merge_L2_R2_jump) {
-                if (!L2_R2_jump_merged) {
-                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Jump Back/Forward"_i18n};
-                    merged_actions.push_back(combined);
-                    L2_R2_jump_merged = true;
-                }
-            } else if (should_merge_L2_R2_tab) {
-                if (!L2_R2_tab_merged) {
-                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Previous/Next tab"_i18n};
-                    merged_actions.push_back(combined);
-                    L2_R2_tab_merged = true;
-                }
-            } else if (should_merge_L2_R2_game) {
-                if (!L2_R2_game_merged) {
-                    uiButton combined{Button::L2, "\uE0E6/\uE0E7", "Previous/Next game"_i18n};
-                    merged_actions.push_back(combined);
-                    L2_R2_game_merged = true;
-                }
-            } else {
-                merged_actions.push_back(btn);
-            }
-        }
-        else if (btn.m_button == Button::LEFT || btn.m_button == Button::RIGHT) {
-            if (should_merge_LEFT_RIGHT) {
-                if (!LEFT_RIGHT_merged) {
-                    uiButton combined{Button::LEFT, "\uE0ED/\uE0EE", "Prev / Next Image"_i18n};
-                    merged_actions.push_back(combined);
-                    LEFT_RIGHT_merged = true;
-                }
-            } else {
-                merged_actions.push_back(btn);
-            }
-        }
-        else {
-            merged_actions.push_back(btn);
-        }
-    }
-    draw_actions = std::move(merged_actions);
-    // ----------------------------
 
     // setup positions.
     SetupUiButtons(draw_actions, button_pos);
