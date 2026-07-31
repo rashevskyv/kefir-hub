@@ -19,6 +19,11 @@ struct Entry {
     int image{};
     bool selected{};
     bool summary_attempted{};
+    // /atmosphere/contents/<tid> exists. an empty one is not a mod, so it does
+    // not set layeredfs - it only means there is nothing left to create.
+    bool mods_folder{};
+    // that folder holds something, i.e. LayeredFS actually loads files for
+    // this title.
     bool layeredfs{};
     u32 content_flags{};
     u64 nand_size{};

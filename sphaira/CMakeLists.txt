@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.386)
+set(sphaira_VERSION 0.13.397)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -265,6 +265,8 @@ FetchContent_Declare(libnxtc
 FetchContent_Declare(nvjpg
     GIT_REPOSITORY https://github.com/ITotalJustice/oss-nvjpg.git
     GIT_TAG 45680e7
+    # NvMap::free() frees the decode buffer while it is still marked uncached - see script.
+    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nvjpg.cmake
 )
 
 FetchContent_Declare(libsmb2
@@ -361,6 +363,17 @@ execute_process(
 )
 if (NOT ftpsrv_patch_result EQUAL 0)
     message(FATAL_ERROR "failed to patch ftpsrv: ${ftpsrv_patch_result}")
+endif()
+
+if (USE_NVJPG)
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nvjpg.cmake
+        WORKING_DIRECTORY ${nvjpg_SOURCE_DIR}
+        RESULT_VARIABLE nvjpg_patch_result
+    )
+    if (NOT nvjpg_patch_result EQUAL 0)
+        message(FATAL_ERROR "failed to patch nvjpg: ${nvjpg_patch_result}")
+    endif()
 endif()
 
 set(FTPSRV_LIB_BUILD TRUE)

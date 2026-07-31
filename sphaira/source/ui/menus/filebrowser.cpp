@@ -12,6 +12,8 @@
 #include "ui/menus/theme_creator.hpp"
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/settings_menu.hpp"
+#include "ui/menus/uninstaller_menu.hpp"
+#include "title_info.hpp"
 #include "utils/devoptab_smb2.hpp"
 #include "utils/devoptab_curl_device.hpp"
 #include "utils/utils.hpp"
@@ -349,6 +351,10 @@ FsView::FsView(Menu* menu, ViewSide side) : FsView{menu, "", FS_ENTRY_DEFAULT, s
 }
 
 FsView::~FsView() {
+    if (m_title_service) {
+        title::Exit();
+    }
+
     if (m_metadata_thread_created) {
         mutexLock(&m_metadata_mutex);
         m_metadata_thread_exit = true;
@@ -524,7 +530,17 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        m_scroll_name.Draw(vg, selected, x + x_offset+65, y + (h / 2.f), w-(75+x_offset+65+50), 20, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+        const auto name_x = x + x_offset + 65;
+        const auto name_w = w - (75 + x_offset + 65 + 50);
+
+        // a title id says nothing on its own, so the game/module name goes under
+        // it as a second, smaller, dimmer line -- the id stays the row's name.
+        if (const auto title_label = GetTitleLabel(e); !title_label.empty()) {
+            m_scroll_name.Draw(vg, selected, name_x, y + (h / 2.f) - 3, name_w, 20, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(text_id), e.name);
+            m_scroll_title_label.Draw(vg, selected, name_x, y + (h / 2.f) + 5, name_w, 16, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), title_label);
+        } else {
+            m_scroll_name.Draw(vg, selected, name_x, y + (h / 2.f), name_w, 20, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+        }
 
         // NOTE: make this native only if i disable dir scan from above.
         if (e.IsDir()) {
@@ -655,6 +671,14 @@ void FsView::SetIndex(s64 index) {
     m_index = index;
     if (!m_index) {
         m_list->SetYoff();
+    } else if (!m_entries_current.empty()) {
+        // keep one row of context past the cursor visible, so scrolling starts
+        // at the second-to-last row rather than when the cursor falls off the
+        // edge. also covers the callers that move the index themselves (X
+        // toggling selection), which otherwise never touched the scroll offset.
+        const s64 count = m_entries_current.size();
+        m_list->EnsureVisible(m_index + 1, count);
+        m_list->EnsureVisible(m_index - 1, count);
     }
 
     // let the metadata worker fetch sizes for entries near the cursor first.
@@ -1229,6 +1253,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     Sort();
+    LoadTitleLabels();
 
     // quick check to see if this is an update folder (never in picker mode).
     m_is_update_folder = !m_menu->IsFolderPicker() && R_SUCCEEDED(CheckIfUpdateFolder());
@@ -1245,6 +1270,50 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     R_SUCCEED();
+}
+
+void FsView::LoadTitleLabels() {
+    std::string_view path{m_path.s};
+    if (path.ends_with('/')) {
+        path.remove_suffix(1);
+    }
+
+    if (!IsSd() || !path::EqualsIC(path, "/atmosphere/contents")) {
+        return;
+    }
+
+    for (auto& e : m_entries) {
+        const auto id = e.IsDir() ? path::ParseTitleIdName(e.name) : 0;
+        if (!id) {
+            continue;
+        }
+
+        // sysmodules name themselves; games need the control nacp, which is slow
+        // enough to read that it happens on the title:: thread instead.
+        e.title_label = hats::GetModuleName(id);
+        if (e.title_label.empty()) {
+            if (!m_title_service) {
+                m_title_service = R_SUCCEEDED(title::Init());
+            }
+            if (m_title_service) {
+                title::PushAsync(id);
+                e.title_id = id;
+            }
+        }
+    }
+}
+
+auto FsView::GetTitleLabel(FileEntry& e) -> std::string {
+    if (e.title_id) {
+        if (auto data = title::GetAsync(e.title_id); data && data->status != title::NacpLoadStatus::Progress) {
+            if (data->status == title::NacpLoadStatus::Loaded && data->lang.name[0] && !title::IsPlaceholderName(data->lang.name)) {
+                e.title_label = data->lang.name;
+            }
+            e.title_id = 0; // resolved, or never will be: stop polling
+        }
+    }
+
+    return e.title_label;
 }
 
 void FsView::QueueRemoteMetadata() {
@@ -2486,6 +2555,10 @@ Menu::Menu(u32 flags, const FsEntry& initial_entry, const fs::FsPath& initial_pa
     // replace the default SD mount with the requested one (e.g. a component's
     // content). Scan runs on focus, so this is safe during construction.
     view->SetFs(initial_path, initial_entry);
+    // SetFs is a no-op when the requested mount is the one already open (the
+    // default sd card), which would leave this overload sitting at the root -
+    // it always means "start at initial_path", so set it unconditionally.
+    view->m_path = initial_path;
 }
 
 Menu::~Menu() {

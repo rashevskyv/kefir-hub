@@ -66,7 +66,9 @@ struct BackupCandidate {
 void SignalChange();
 
 struct Menu final : grid::Menu {
-    Menu(u32 flags);
+    // app_id_filter limits the grid to one game's saves (entered from the game
+    // details menu); 0 shows everything, as the standalone menu does.
+    Menu(u32 flags, u64 app_id_filter = 0);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Saves"; };
@@ -197,6 +199,7 @@ private:
     };
 
     std::vector<Entry> m_entries{};
+    const u64 m_app_id_filter{};
     s64 m_index{}; // where i am in the array
     s64 m_selected_count{};
     // index in m_entries where the backup tiles begin; live saves occupy

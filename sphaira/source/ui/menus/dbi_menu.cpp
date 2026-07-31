@@ -562,13 +562,22 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         } else {
             std::snprintf(eta_buf, sizeof(eta_buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
         }
-        eta = std::string{"    "} + "Remaining"_i18n + ": " + eta_buf;
+        eta = eta_buf;
     }
-    gfx::drawTextArgs(vg, 70.f, GetY() + 10.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-        theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %zu/%zu    %s: %zu    %s: %zu    %s: %.2f MiB/s%s",
-        "Package"_i18n.c_str(), std::min(m_current_package + 1, m_queue.size()), m_queue.size(),
-        "Installed"_i18n.c_str(), m_stats.installed, "Failed"_i18n.c_str(), m_stats.failed,
-        "Speed"_i18n.c_str(), speed_mib, eta.c_str());
+    char avg_buf[32]{};
+    std::snprintf(avg_buf, sizeof(avg_buf), "%.2f MiB/s", speed_mib);
+    std::vector<StatItem> header{
+        {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
+        {"Installed"_i18n, std::to_string(m_stats.installed)},
+        {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
+        // the R/W readout beside the graph is the momentary rate and is where the
+        // eye lands; this is the whole-window average, accented so it is not lost.
+        {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+    };
+    if (!eta.empty()) {
+        header.push_back({"Remaining"_i18n, eta});
+    }
+    DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
     if (!m_current_title.empty()) {
         const auto title = m_current_transfer.empty()
             ? m_current_title : m_current_title + " — " + m_current_transfer;
@@ -628,8 +637,17 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
             return (double)sum / (double)n / (1024.0 * 1024.0);
         };
-        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + plot.h * 0.30f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, red, "%.1f MiB/s", avg_mib(m_read_history));
-        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + plot.h * 0.70f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, blue, "%.1f MiB/s", avg_mib(m_write_history));
+        // captioned "now" so it reads as the momentary rate, distinct from the
+        // averaged figure in the header line above.
+        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + 2.f, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", "Now"_i18n.c_str());
+        const auto draw_readout = [&](float ry, NVGcolor colour, double mib) {
+            char buf[32]{};
+            std::snprintf(buf, sizeof(buf), "%.1f MiB/s", mib);
+            gfx::drawTextBold(vg, plot.x + plot.w + 14.f, ry, 18.f, colour, buf, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        };
+        draw_readout(plot.y + plot.h * 0.30f, red, avg_mib(m_read_history));
+        draw_readout(plot.y + plot.h * 0.70f, blue, avg_mib(m_write_history));
 
         if (m_history_count >= 2) {
             s64 peak = 1;

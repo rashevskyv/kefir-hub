@@ -15,6 +15,9 @@ enum LayoutType {
     LayoutType_HbMenu,
 };
 
+// "1.38 GB" / "294 KB", for the right-hand column of a list row.
+auto FormatBytes(u64 bytes) -> std::string;
+
 struct Menu : MenuBase {
     using MenuBase::MenuBase;
 

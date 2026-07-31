@@ -105,13 +105,20 @@ void DrawInnerBorder(NVGcontext* vg, const Vec4& v, const NVGcolor& col, float t
     nvgFill(vg);
 }
 
+// right-hand column of a list row, DBI-style: save category in brackets, then
+// its allocated size (backup tiles are synthesized, so they have no size).
+auto FormatListInfo(const Entry& e) -> std::string {
+    const std::string label = "[" + (e.is_backup ? "Backup"_i18n : i18n::get(GetSaveTypeLabel(e.save_data_type))) + "]";
+    return e.size ? label + "  " + grid::FormatBytes(e.size) : label;
+}
+
 } // namespace
 
 void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
-Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
+Menu::Menu(u32 flags, u64 app_id_filter) : grid::Menu{"Saves"_i18n, flags}, m_app_id_filter{app_id_filter} {
     this->SetActions(
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             if (m_selected_count) {
@@ -162,6 +169,17 @@ Menu::Menu(u32 flags) : grid::Menu{"Saves"_i18n, flags} {
     }
     m_save_type_enabled.fill(false);
     m_save_type_enabled[SaveTypeIndex(FsSaveDataType_Account)] = true;
+
+    // filtered to a single game: the account/type filters would only hide parts
+    // of the very thing the caller asked to see, so open them all up.
+    if (m_app_id_filter) {
+        m_all_accounts = true;
+        m_account_enabled.assign(m_accounts.size(), true);
+        m_save_type_enabled.fill(true);
+        // System is exclusive in GetSelectedSaveTypes and never belongs to a
+        // game anyway.
+        m_save_type_enabled[SaveTypeIndex(FsSaveDataType_System)] = false;
+    }
 
     title::Init();
     ueventCreate(&g_change_uevent, true);
@@ -666,10 +684,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto selected = entry == m_index;
         Vec4 image_v = v;
+        const auto info = m_layout.Get() == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
         if (!IsSystemLikeSave(e.save_data_type)) {
-            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), "");
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), info.c_str());
         } else {
-            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), "");
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), info.c_str());
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }
@@ -930,6 +949,10 @@ void Menu::ScanHomebrew() {
     m_entries.clear();
     m_entries.reserve(grouped.size());
     for (auto& e : grouped) {
+        if (m_app_id_filter && e.application_id != m_app_id_filter) {
+            continue;
+        }
+
         if (IsSystemLikeSave(e.save_data_type)) {
             m_entries.emplace_back(e);
             continue;
@@ -948,6 +971,9 @@ void Menu::ScanHomebrew() {
         std::vector<Entry> backups;
         ReadBackupEntries(backups);
         for (auto& b : backups) {
+            if (m_app_id_filter && b.application_id != m_app_id_filter) {
+                continue;
+            }
             m_entries.emplace_back(std::move(b));
         }
     }

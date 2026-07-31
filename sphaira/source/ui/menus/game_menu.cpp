@@ -453,13 +453,27 @@ auto ContentFlagFromMetaType(u8 meta_type) -> u32 {
     return title::ContentMetaTypeToContentFlag(meta_type);
 }
 
+// an empty /atmosphere/contents/<tid> is just a folder - LayeredFS only loads
+// something when there is something in it, so the badge (and the details stat)
+// distinguish "no folder", "empty folder" and "mods present".
+void ProbeModsFolder(Entry& entry) {
+    fs::FsNativeSd sd;
+    const auto path = title::GetContentsPath(entry.app_id);
+    entry.mods_folder = sd.DirExists(path);
+
+    s64 count{};
+    entry.layeredfs = entry.mods_folder &&
+        R_SUCCEEDED(sd.DirGetEntryCount(path, &count, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles)) &&
+        count > 0;
+}
+
 Result LoadGameSummary(Entry& entry) {
     if (entry.summary_attempted) {
         return entry.summary_result;
     }
 
     entry.summary_attempted = true;
-    entry.layeredfs = fs::FsNativeSd().DirExists(title::GetContentsPath(entry.app_id));
+    ProbeModsFolder(entry);
 
     title::MetaEntries entries;
     entry.summary_result = GetMetaEntries(entry, entries);
@@ -490,6 +504,37 @@ Result LoadGameSummary(Entry& entry) {
     }
 
     return entry.summary_result;
+}
+
+using grid::FormatBytes;
+
+// right-hand column of a list row, DBI's "[S|b]  1.38 GB": storage letters
+// (S = microSD, N = system memory) plus content letters (b/u/d/L), then size.
+auto FormatListInfo(const Entry& e) -> std::string {
+    std::string flags;
+    if (e.sd_size) {
+        flags += 'S';
+    }
+    if (e.nand_size) {
+        flags += 'N';
+    }
+    flags += '|';
+    if (e.content_flags & title::ContentFlag_Application) {
+        flags += 'b';
+    }
+    if (e.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
+        flags += 'u';
+    }
+    if (e.content_flags & title::ContentFlag_AddOnContent) {
+        flags += 'd';
+    }
+    if (e.layeredfs) {
+        flags += 'L';
+    }
+
+    // sizes arrive with the (throttled) summary load; until then show flags only.
+    const auto size = e.nand_size + e.sd_size;
+    return "[" + flags + "]  " + (size ? FormatBytes(size) : "");
 }
 
 void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entry) {
@@ -544,193 +589,47 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     }
 }
 
-struct DetailsMenu final : MenuBase {
-    DetailsMenu(Entry entry, std::function<void(u32)> dump_callback)
-    : MenuBase{"Game Details"_i18n, MenuFlag_None}
-    , m_entry{std::move(entry)}
-    , m_dump_callback{std::move(dump_callback)} {
-        SetTitleSubHeading(m_entry.GetName());
-
-        auto control = std::make_unique<NsApplicationControlData>();
-        u64 actual_size{};
-        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, m_entry.app_id, control.get(), sizeof(*control), &actual_size))) {
-            std::snprintf(m_display_version, sizeof(m_display_version), "%s", control->nacp.display_version);
-            m_supported_languages = __builtin_popcount(control->nacp.supported_language_flag);
-            m_save_size = control->nacp.user_account_save_data_size;
-            m_save_journal_size = control->nacp.user_account_save_data_journal_size;
-        }
-
-        m_layeredfs = fs::FsNativeSd().DirExists(title::GetContentsPath(m_entry.app_id));
-
-        title::MetaEntries entries;
-        m_load_result = GetMetaEntries(m_entry, entries);
-        if (R_SUCCEEDED(m_load_result)) {
-            for (const auto& status : entries) {
-                ContentInfoEntry info;
-                if (const auto rc = BuildContentEntry(status, info); R_FAILED(rc)) {
-                    if (R_SUCCEEDED(m_partial_load_result)) {
-                        m_partial_load_result = rc;
-                    }
-                    m_component_failures++;
-                    continue;
-                }
-
-                GameComponentRow row{};
-                row.status = status;
-                row.content_count = info.content_infos.size();
-                row.rights_count = info.ncm_rights_id.size();
-                for (const auto& content : info.content_infos) {
-                    u64 size{};
-                    ncmContentInfoSizeToU64(&content, &size);
-                    row.size += size;
-                }
-                m_components.emplace_back(row);
-            }
-        }
-
-        this->SetActions(
-            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
-            std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){ LaunchEntry(m_entry); }}),
-            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ ShowComponentActions(); }}),
-            std::make_pair(Button::START, Action{"Game actions"_i18n, [this](){ ShowGameActions(); }})
-        );
-
-        const Vec4 row{420, 245, 810, 66};
-        const Vec2 pad{0, 8};
-        m_list = std::make_unique<List>(1, 5, m_pos, row, pad);
-    }
-
-    auto GetShortTitle() const -> const char* override { return "Game Details"; }
-
-    void Update(Controller* controller, TouchInfo* touch) override {
-        MenuBase::Update(controller, touch);
-        m_list->OnUpdate(controller, touch, m_index, m_components.size(), [this](bool touch, auto index){
-            if (touch && m_index == index) {
-                FireAction(Button::A);
-            } else {
-                App::PlaySoundEffect(SoundEffect_Focus);
-                m_index = index;
-            }
-        }, this);
-    }
-
-    void Draw(NVGcontext* vg, Theme* theme) override {
-        MenuBase::Draw(vg, theme);
-
-        const auto text = theme->GetColour(ThemeEntryID_TEXT);
-        const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
-        gfx::drawRect(vg, 30, 90, 350, 555, theme->GetColour(ThemeEntryID_GRID));
-        gfx::drawImage(vg, 77, 115, 256, 256, m_entry.image ? m_entry.image : App::GetDefaultImage());
-
-        gfx::drawTextArgs(vg, 55, 395, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "%s", m_entry.GetName());
-        gfx::drawTextArgs(vg, 55, 428, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", m_entry.GetAuthor());
-        gfx::drawTextArgs(vg, 55, 470, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Title ID  %016lX", m_entry.app_id);
-        gfx::drawTextArgs(vg, 55, 500, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Version   %s", m_display_version[0] ? m_display_version : "—");
-        gfx::drawTextArgs(vg, 55, 530, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Languages %u", m_supported_languages);
-        gfx::drawTextArgs(vg, 55, 560, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Contents folder %s", m_layeredfs ? "Present" : "Absent");
-        gfx::drawTextArgs(vg, 55, 590, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Save quota %.2f MB + %.2f MB journal",
-            static_cast<double>(m_save_size) / 0x100000, static_cast<double>(m_save_journal_size) / 0x100000);
-
-        gfx::drawTextArgs(vg, 420, 105, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, "Installed components"_i18n.c_str());
-        gfx::drawTextArgs(vg, 420, 145, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info,
-            "Base, updates, DLC and data patches reported by NCM"_i18n.c_str());
-
-        if (R_FAILED(m_load_result)) {
-            gfx::drawTextArgs(vg, 420, 220, 21.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "Failed to load content metadata (0x%X)", m_load_result);
-            return;
-        }
-
-        if (m_components.empty()) {
-            gfx::drawTextArgs(vg, 420, 220, 21.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info, "%s", "No installed components found"_i18n.c_str());
-            return;
-        }
-
-        if (m_component_failures) {
-            gfx::drawTextArgs(vg, 420, 185, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info,
-                "%u component(s) could not be read (0x%X)", m_component_failures, m_partial_load_result);
-        }
-
-        m_list->Draw(vg, theme, m_components.size(), [this](auto* vg, auto* theme, auto v, auto index){
-            const auto& component = m_components[index];
-            const bool selected = index == m_index;
-            const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
-            const auto secondary = theme->GetColour(ThemeEntryID_TEXT_INFO);
-
-            if (selected) {
-                gfx::drawRectOutline(vg, theme, 4.f, v);
-            }
-
-            gfx::drawTextArgs(vg, v.x + 18, v.y + 13, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
-                "%s", ncm::GetMetaTypeStr(component.status.meta_type));
-            gfx::drawTextArgs(vg, v.x + 245, v.y + 14, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                "v%u · %s", component.status.version, ncm::GetStorageIdStr(component.status.storageID));
-            gfx::drawTextArgs(vg, v.x + 18, v.y + 42, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                "%.2f MB · %u contents · %u rights", static_cast<double>(component.size) / 0x100000,
-                component.content_count, component.rights_count);
-        });
-    }
-
-private:
-    void ShowComponentActions() {
-        if (m_components.empty()) {
-            return;
-        }
-
-        const auto component = m_components[m_index];
-        auto options = std::make_unique<Sidebar>("Component Actions"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-        options->Add<SidebarEntryCallback>("Dump NSP"_i18n, [this, component](){
-            m_dump_callback(ContentFlagFromMetaType(component.status.meta_type));
-        }, true, "Export only this installed component as an NSP."_i18n);
-
-        options->Add<SidebarEntryCallback>("Content information"_i18n, [component](){
-            char message[512];
-            std::snprintf(message, sizeof(message),
-                "Title ID: %016lX\nType: %s\nVersion: %u\nStorage: %s\nSize: %.2f MB\nContent files: %u\nRights IDs: %u",
-                component.status.application_id, ncm::GetMetaTypeStr(component.status.meta_type), component.status.version,
-                ncm::GetStorageIdStr(component.status.storageID), static_cast<double>(component.size) / 0x100000,
-                component.content_count, component.rights_count);
-            App::Push<OptionBox>(message, "OK"_i18n);
-        }, "Show the raw installed content metadata."_i18n);
-    }
-
-    void ShowGameActions() {
-        auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(m_entry); }, "Launch this game."_i18n);
-        options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){ m_dump_callback(title::ContentFlag_All); }, true,
-            "Export base, updates, DLC and data patches."_i18n);
-        options->Add<SidebarEntryCallback>(m_layeredfs ? "Show contents path"_i18n : "Create contents folder"_i18n, [this](){
-            if (m_layeredfs) {
-                App::Notify(title::GetContentsPath(m_entry.app_id).toString());
-                return;
-            }
-            const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(m_entry.app_id));
-            App::PushErrorBox(rc, "Folder create failed!"_i18n);
-            if (R_SUCCEEDED(rc)) {
-                m_layeredfs = true;
-                App::Notify("Folder created!"_i18n);
-            }
-        }, "Inspect or create the Atmosphere contents folder for this title."_i18n);
-    }
-
-private:
-    Entry m_entry{};
-    std::vector<GameComponentRow> m_components{};
-    std::unique_ptr<List> m_list{};
-    std::function<void(u32)> m_dump_callback{};
-    s64 m_index{};
-    Result m_load_result{};
-    Result m_partial_load_result{};
-    u32 m_component_failures{};
-    char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
-    u32 m_supported_languages{};
-    u64 m_save_size{};
-    u64 m_save_journal_size{};
-    bool m_layeredfs{};
+// the summary block above the tab bar is a second focus region: these cells are
+// entered with Up from the first list row and opened with A (or a touch).
+// everything else up there is read-only text.
+enum HeaderItem : u8 {
+    HeaderItem_Languages,
+    HeaderItem_Mods,
+    HeaderItem_Components,
+    HeaderItem_Tickets,
+    HeaderItem_Saves,
+    HeaderItem_Count,
 };
+
+// stat rows: left column label at x=265 (value at 372), right column at x=810
+// (value at 917). the cells below wrap those two columns row by row.
+constexpr float STAT_ROW_Y[]{178.f, 207.f, 236.f, 265.f};
+constexpr Vec4 HEADER_CELL[HeaderItem_Count]{
+    {256.f, STAT_ROW_Y[2] - 6.f, 530.f, 28.f}, // languages
+    {256.f, STAT_ROW_Y[3] - 6.f, 530.f, 28.f}, // mods folder
+    {801.f, STAT_ROW_Y[0] - 6.f, 440.f, 28.f}, // components
+    {801.f, STAT_ROW_Y[1] - 6.f, 440.f, 28.f}, // tickets
+    {801.f, STAT_ROW_Y[2] - 6.f, 440.f, 28.f}, // saves
+};
+
+// the tab bar, and the visible rows of the tab body below it. both are tappable,
+// so their geometry is shared between Draw and Update.
+constexpr float BAR_X = 40.f;
+constexpr float BAR_W = 1200.f;
+constexpr float TAB_TOP = 306.f;
+constexpr float TAB_H = 46.f;
+constexpr float TAB_GAP = 4.f;
+constexpr float TAB_COUNT = 3.f;
+constexpr float TAB_W = (BAR_W - TAB_GAP * (TAB_COUNT - 1.f)) / TAB_COUNT;
+constexpr Vec4 TAB_BAR{BAR_X, TAB_TOP, BAR_W, TAB_H};
+constexpr Vec4 LIST_AREA{BAR_X, TAB_TOP + TAB_H, BAR_W, 634.f - (TAB_TOP + TAB_H)};
+
+// neighbour tables indexed by HeaderItem. movement stays inside its column;
+// -1 means "leave the summary and hand focus back to the list".
+constexpr s8 HEADER_UP[]   {  0,  0,  2,  2,  3 };
+constexpr s8 HEADER_DOWN[] {  1, -1,  3,  4, -1 };
+constexpr s8 HEADER_LEFT[] {  0,  1,  0,  1,  1 };
+constexpr s8 HEADER_RIGHT[]{  2,  3,  2,  3,  4 };
 
 struct DbiDetailsMenu final : MenuBase {
     enum class Tab : u8 { Content, Tickets, Saves };
@@ -750,7 +649,7 @@ struct DbiDetailsMenu final : MenuBase {
             std::make_pair(Button::L2, Action{"Previous game"_i18n, [this](){ ChangeGame(-1); }}),
             std::make_pair(Button::R2, Action{"Next game"_i18n, [this](){ ChangeGame(1); }}),
             std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }}),
-            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ ShowCurrentActions(); }}),
+            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ FireA(); }}),
             std::make_pair(Button::START, Action{"Game actions"_i18n, [this](){ ShowGameActions(); }})
         );
 
@@ -762,8 +661,74 @@ struct DbiDetailsMenu final : MenuBase {
 
     auto GetShortTitle() const -> const char* override { return "Game Details"; }
 
+    void OnFocusGained() override {
+        MenuBase::OnFocusGained();
+        // mods may have just been added (or removed) in the file browser this
+        // menu pushed, so the folder state is re-read rather than cached.
+        ProbeModsFolder(CurrentEntry());
+    }
+
     void Update(Controller* controller, TouchInfo* touch) override {
+        SyncActionHint();
         MenuBase::Update(controller, touch);
+
+        // a tap on a summary cell focuses and opens it, from either region.
+        if (touch->is_clicked) {
+            for (u8 i = 0; i < HeaderItem_Count; i++) {
+                if (touch->in_range(HEADER_CELL[i])) {
+                    m_header_index = i;
+                    SetHeaderFocus(true);
+                    ActivateHeaderItem();
+                    return;
+                }
+            }
+
+            if (touch->in_range(TAB_BAR)) {
+                const auto tab = std::clamp<s64>((touch->cur.x - BAR_X) / (TAB_W + TAB_GAP), 0, 2);
+                SetTab(static_cast<Tab>(tab));
+                return;
+            }
+        }
+
+        if (m_header_focus) {
+            s8 next = m_header_index;
+            bool moved = true;
+            if (controller->GotDown(Button::ANY_UP)) {
+                next = HEADER_UP[m_header_index];
+            } else if (controller->GotDown(Button::ANY_DOWN)) {
+                next = HEADER_DOWN[m_header_index];
+            } else if (controller->GotDown(Button::ANY_LEFT)) {
+                next = HEADER_LEFT[m_header_index];
+            } else if (controller->GotDown(Button::ANY_RIGHT)) {
+                next = HEADER_RIGHT[m_header_index];
+            } else {
+                moved = false;
+            }
+
+            if (moved && next >= 0) {
+                if (next != m_header_index) {
+                    m_header_index = next;
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                }
+                return;
+            }
+
+            // leaving the summary: off the bottom of a column, or a tap in the
+            // list below (which then falls through and selects that row).
+            if (!moved && !(touch->is_clicked && touch->in_range(LIST_AREA))) {
+                // everything else (A, L/R, ...) is handled by the actions; the
+                // list stays frozen while the summary has focus.
+                return;
+            }
+            SetHeaderFocus(false);
+        } else if (controller->GotDown(Button::ANY_UP) && !m_row_index) {
+            // up from the first row leaves the list for the summary, landing on
+            // the counter of the tab currently open.
+            m_header_index = TabHeaderItem();
+            SetHeaderFocus(true);
+            return;
+        }
+
         const auto count = CurrentCount();
         m_list->OnUpdate(controller, touch, m_row_index, count, [this](bool touch, auto index){
             if (touch && m_row_index == index) {
@@ -792,47 +757,50 @@ struct DbiDetailsMenu final : MenuBase {
 
         // a stat is a bold label (labels have no bold font, so drawTextBold
         // over-draws them) followed by its value in the normal info weight,
-        // aligned to a fixed value column so the numbers line up.
+        // aligned to a fixed value column so the numbers line up. values that
+        // open something take the accent colour, so what is clickable is
+        // readable at a glance. NAND/SD are not repeated here - the header
+        // storage bars already show this title's usage.
         constexpr float kStatSize = 18.f;
-        const auto stat_l = [&](float y, const char* label, const std::string& value) {
-            gfx::drawTextBold(vg, 265, y, kStatSize, text, label);
-            gfx::drawText(vg, 372.f, y, kStatSize, info, value.c_str());
-        };
-        const auto stat_r = [&](float y, const char* label, const std::string& value) {
-            gfx::drawTextBold(vg, 810, y, kStatSize, text, label);
-            gfx::drawText(vg, 918.f, y, kStatSize, info, value.c_str());
+        const auto accent = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+
+        // the focus highlight fills its rect, so it goes down before the stats.
+        if (m_header_focus) {
+            gfx::drawRectOutline(vg, theme, 4.f, HEADER_CELL[m_header_index], 4.f);
+        }
+
+        const auto stat = [&](float x, float y, const std::string& label, const std::string& value, bool clickable = false) {
+            gfx::drawTextBold(vg, x, y, kStatSize, text, label.c_str());
+            // values share a column so they line up, unless a (translated)
+            // label is too wide for it and would be overdrawn.
+            float b[4];
+            nvgFontSize(vg, kStatSize);
+            gfx::textBounds(vg, 0, 0, b, label.c_str());
+            gfx::drawText(vg, x + std::max(107.f, b[2] - b[0] + 12.f), y, kStatSize, clickable ? accent : info, value.c_str());
         };
 
         char id_str[24];
         std::snprintf(id_str, sizeof(id_str), "%016lX", entry.app_id);
-        stat_l(178, "Title ID", id_str);
-        stat_l(207, "Version", m_display_version[0] ? m_display_version : "-");
+        stat(265, STAT_ROW_Y[0], "Title ID"_i18n, id_str);
+        stat(265, STAT_ROW_Y[1], "Version"_i18n, m_display_version[0] ? m_display_version : "-");
 
-        gfx::drawTextBold(vg, 265, 245 - 9.f, kStatSize, text, "Languages");
-        m_language_scroll.Draw(vg, true, 372, 245, 413, 16.f, NVG_ALIGN_LEFT, info,
+        gfx::drawTextBold(vg, 265, STAT_ROW_Y[2], kStatSize, text, "Languages"_i18n.c_str());
+        m_language_scroll.Draw(vg, true, 372, STAT_ROW_Y[2] + 9.f, 413, 16.f, NVG_ALIGN_LEFT, accent,
             m_languages.empty() ? "-" : m_languages.c_str());
 
-        {
-            const char* mlabel = "Atmosphere mods folder";
-            gfx::drawTextBold(vg, 265, 265, kStatSize, text, mlabel);
-            float b[4];
-            nvgFontSize(vg, kStatSize);
-            gfx::textBounds(vg, 0, 0, b, mlabel);
-            gfx::drawText(vg, 265 + (b[2] - b[0]) + 12.f, 265, kStatSize, info,
-                entry.layeredfs ? "Found" : "Not found");
-        }
-        gfx::drawText(vg, 265, 300, 14.f, info,
-            "LayeredFS loads replacement game files from /atmosphere/contents/<Title ID>",
-            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        stat(265, STAT_ROW_Y[3], "Mods folder"_i18n,
+            !entry.mods_folder ? "Not found"_i18n : (entry.layeredfs ? "Found"_i18n : "Empty"_i18n), true);
 
         char saves_str[48];
         std::snprintf(saves_str, sizeof(saves_str), "%zu (%s allocated)", m_saves.size(), FormatBytes(m_save_allocated_size).c_str());
-        stat_r(112, "NAND", FormatBytes(entry.nand_size));
-        stat_r(141, "SD", FormatBytes(entry.sd_size));
-        stat_r(178, "Components", std::to_string(m_components.size()));
-        stat_r(207, "Tickets", std::to_string(m_tickets.size()));
-        stat_r(236, "Saves", saves_str);
-        stat_r(265, "Save quota", FormatBytes(m_save_size) + " + " + FormatBytes(m_save_journal_size));
+        stat(810, STAT_ROW_Y[0], "Components"_i18n, std::to_string(m_components.size()), true);
+        stat(810, STAT_ROW_Y[1], "Tickets"_i18n, std::to_string(m_tickets.size()), true);
+        stat(810, STAT_ROW_Y[2], "Saves"_i18n, saves_str, true);
+        stat(810, STAT_ROW_Y[3], "Save quota"_i18n, FormatBytes(m_save_size) + " + " + FormatBytes(m_save_journal_size));
+
+        const auto hint = m_header_focus ? HeaderItemHint(m_header_index)
+            : "Press Up on the first row to use the details above"_i18n;
+        gfx::drawText(vg, 265, 289, 14.f, info, hint.c_str());
 
         const std::array<std::string, 3> tab_names{"Content"_i18n, "Tickets"_i18n, "Saves"_i18n};
         const std::array<size_t, 3> tab_counts{m_components.size(), m_tickets.size(), m_saves.size()};
@@ -842,28 +810,20 @@ struct DbiDetailsMenu final : MenuBase {
         // tabs round only their top corners (flat bottom, like a folder tab) and
         // the panel rounds only its bottom corners; the selected tab flows into
         // the panel with no seam, while the others sit lower and recessed.
-        const float bar_x = 40.f;
-        const float bar_w = 1200.f;
-        const float tab_top = 306.f;
-        const float tab_h = 46.f;
-        const float tab_gap = 4.f;
-        const float body_top = tab_top + tab_h;
-        const float body_bottom = 634.f;
+        const float body_top = TAB_TOP + TAB_H;
         const float radius = 8.f;
 
         const auto surface = theme->GetColour(ThemeEntryID_POPUP);
         const auto recessed = theme->GetColour(ThemeEntryID_BACKGROUND);
-        const auto accent = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
-        const auto tab_count = static_cast<float>(tab_names.size());
 
         // content panel (flat top so the selected tab flows into it).
-        gfx::drawRectVarying(vg, Vec4{bar_x, body_top, bar_w, body_bottom - body_top}, surface, 0.f, 0.f, radius, radius);
+        gfx::drawRectVarying(vg, LIST_AREA, surface, 0.f, 0.f, radius, radius);
 
-        const float tab_w = (bar_w - tab_gap * (tab_count - 1.f)) / tab_count;
+        constexpr float tab_w = TAB_W;
         for (size_t i = 0; i < tab_names.size(); i++) {
             const bool selected = i == static_cast<size_t>(m_tab);
-            const float x = bar_x + i * (tab_w + tab_gap);
-            const float y = selected ? tab_top : tab_top + 5.f;
+            const float x = BAR_X + i * (tab_w + TAB_GAP);
+            const float y = selected ? TAB_TOP : TAB_TOP + 5.f;
             const float h = body_top - y; // flat bottom always meets the panel edge.
             gfx::drawRectVarying(vg, Vec4{x, y, tab_w, h}, selected ? surface : recessed, radius, radius, 0.f, 0.f);
             if (selected) {
@@ -958,20 +918,6 @@ private:
     auto CurrentEntry() -> Entry& { return (*m_entries)[m_game_index]; }
     auto CurrentEntry() const -> const Entry& { return (*m_entries)[m_game_index]; }
 
-    static auto FormatBytes(u64 bytes) -> std::string {
-        char out[32];
-        if (bytes >= 1024ULL * 1024ULL * 1024ULL) {
-            std::snprintf(out, sizeof(out), "%.2f GB", static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0));
-        } else if (bytes >= 1024ULL * 1024ULL) {
-            std::snprintf(out, sizeof(out), "%.2f MB", static_cast<double>(bytes) / (1024.0 * 1024.0));
-        } else if (bytes >= 1024ULL) {
-            std::snprintf(out, sizeof(out), "%.2f KB", static_cast<double>(bytes) / 1024.0);
-        } else {
-            std::snprintf(out, sizeof(out), "%lu B", bytes);
-        }
-        return out;
-    }
-
     auto CurrentCount() const -> size_t {
         switch (m_tab) {
             case Tab::Content: return m_components.size();
@@ -991,9 +937,106 @@ private:
 
     void ChangeTab(s64 delta) {
         constexpr s64 count = 3;
-        m_tab = static_cast<Tab>((static_cast<s64>(m_tab) + delta + count) % count);
+        SetTab(static_cast<Tab>((static_cast<s64>(m_tab) + delta + count) % count));
+    }
+
+    void SetTab(Tab tab) {
+        m_tab = tab;
         m_row_index = 0;
         m_list->SetYoff(0);
+        SetHeaderFocus(false);
+    }
+
+    auto TabHeaderItem() const -> u8 {
+        switch (m_tab) {
+            case Tab::Tickets: return HeaderItem_Tickets;
+            case Tab::Saves: return HeaderItem_Saves;
+            default: return HeaderItem_Components;
+        }
+    }
+
+    void SetHeaderFocus(bool focus) {
+        if (m_header_focus != focus) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+        }
+        m_header_focus = focus;
+    }
+
+    void FireA() {
+        if (m_header_focus) {
+            ActivateHeaderItem();
+        } else {
+            ShowCurrentActions();
+        }
+    }
+
+    // A does different things in the two focus regions, so its footer hint
+    // follows the focus. Re-registering the action from inside the action's own
+    // callback would replace the std::function while it is running, so the hint
+    // is synced here instead, before actions are dispatched.
+    void SyncActionHint() {
+        if (m_hint_is_header == m_header_focus) {
+            return;
+        }
+        m_hint_is_header = m_header_focus;
+        SetAction(Button::A, Action{m_header_focus ? "Open"_i18n : "Actions"_i18n, [this](){ FireA(); }});
+    }
+
+    static auto HeaderItemHint(u8 item) -> std::string {
+        switch (item) {
+            case HeaderItem_Languages: return "Show every language this game ships with"_i18n;
+            case HeaderItem_Mods: return "Open /atmosphere/contents/<Title ID>, where LayeredFS loads mods from"_i18n;
+            case HeaderItem_Components: return "Show the installed base, updates and DLC"_i18n;
+            case HeaderItem_Tickets: return "Show the rights IDs and tickets of this game"_i18n;
+            default: return "Show the save data of this game"_i18n;
+        }
+    }
+
+    void ActivateHeaderItem() {
+        switch (m_header_index) {
+            case HeaderItem_Languages: {
+                if (m_language_list.empty()) {
+                    App::Notify("No language data"_i18n);
+                    break;
+                }
+                App::Push<PopupList>("Supported languages"_i18n, m_language_list, [](auto){});
+            }   break;
+            case HeaderItem_Mods: OpenModsFolder(); break;
+            case HeaderItem_Components: SetTab(Tab::Content); break;
+            case HeaderItem_Tickets: SetTab(Tab::Tickets); break;
+            case HeaderItem_Saves: SetTab(Tab::Saves); break;
+        }
+    }
+
+    // the mods folder is what LayeredFS reads replacement game files from;
+    // opening it in the file browser is the only way to see (or add) any.
+    void OpenModsFolder() {
+        const auto path = title::GetContentsPath(CurrentEntry().app_id);
+        if (CurrentEntry().mods_folder) {
+            BrowseSdPath(path);
+            return;
+        }
+
+        App::Push<OptionBox>("This game has no mods folder yet. Create it?"_i18n,
+            "Back"_i18n, "Create"_i18n, 1, [this, path](auto op_index){
+                if (!op_index || !*op_index) {
+                    return;
+                }
+                const auto rc = fs::FsNativeSd().CreateDirectory(path);
+                App::PushErrorBox(rc, "Folder create failed!"_i18n);
+                if (R_SUCCEEDED(rc)) {
+                    // an empty folder is not a mod: layeredfs stays off until
+                    // something is actually copied in (OnFocusGained re-reads
+                    // it when the browser is closed).
+                    CurrentEntry().mods_folder = true;
+                    BrowseSdPath(path);
+                }
+            });
+    }
+
+    static void BrowseSdPath(const fs::FsPath& path) {
+        constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
+        App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
     }
 
     void LoadGame() {
@@ -1009,6 +1052,7 @@ private:
         m_list->SetYoff(0);
         m_display_version[0] = '\0';
         m_languages.clear();
+        m_language_list.clear();
         m_language_scroll.Reset();
         m_save_size = 0;
         m_save_journal_size = 0;
@@ -1028,6 +1072,7 @@ private:
                 if (control->nacp.supported_language_flag & (1U << i)) {
                     if (!m_languages.empty()) m_languages += ", ";
                     m_languages += language_names[i];
+                    m_language_list.emplace_back(language_names[i]);
                 }
             }
         }
@@ -1206,12 +1251,24 @@ private:
                 FormatBytes(ticket.ticket_size).c_str());
             App::Push<OptionBox>(message, "OK"_i18n);
         } else {
-            const auto& row = m_saves[m_row_index];
-            char message[512];
-            std::snprintf(message, sizeof(message), "Account: %s\nType: %s\nSave ID: %016lX\nSize: %s\nStorage space: %u",
-                row.account.c_str(), save::GetSaveTypeLabel(row.info.save_data_type), row.info.save_data_id,
-                FormatBytes(row.info.size).c_str(), row.info.save_data_space_id);
-            App::Push<OptionBox>(message, "OK"_i18n);
+            const auto row = m_saves[m_row_index];
+            auto options = std::make_unique<Sidebar>("Save Actions"_i18n, Sidebar::Side::RIGHT);
+            ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+            // backup/restore live in the saves menu (with its own locations,
+            // compression and WebDAV sync); open it filtered to this game
+            // rather than growing a second copy of that machinery here.
+            options->Add<SidebarEntryCallback>("Backup and restore"_i18n, [app_id = CurrentEntry().app_id](){
+                App::Push<save::Menu>(MenuFlag_None, app_id);
+            }, "Open the saves menu showing only this game."_i18n);
+
+            options->Add<SidebarEntryCallback>("Save information"_i18n, [row](){
+                char message[512];
+                std::snprintf(message, sizeof(message), "Account: %s\nType: %s\nSave ID: %016lX\nSize: %s\nStorage space: %u",
+                    row.account.c_str(), save::GetSaveTypeLabel(row.info.save_data_type), row.info.save_data_id,
+                    FormatBytes(row.info.size).c_str(), row.info.save_data_space_id);
+                App::Push<OptionBox>(message, "OK"_i18n);
+            }, "Show the raw save data metadata."_i18n);
         }
     }
 
@@ -1259,18 +1316,8 @@ private:
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);
         }, true, "Export base, updates, DLC and data patches."_i18n);
-        options->Add<SidebarEntryCallback>(CurrentEntry().layeredfs ? "Show mods folder path"_i18n : "Create mods folder"_i18n, [this](){
-            auto& entry = CurrentEntry();
-            if (entry.layeredfs) {
-                App::Notify(title::GetContentsPath(entry.app_id).toString());
-                return;
-            }
-            const auto rc = fs::FsNativeSd().CreateDirectory(title::GetContentsPath(entry.app_id));
-            App::PushErrorBox(rc, "Folder create failed!"_i18n);
-            if (R_SUCCEEDED(rc)) {
-                entry.layeredfs = true;
-                App::Notify("Folder created!"_i18n);
-            }
+        options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
+            OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n);
     }
 
@@ -1288,7 +1335,12 @@ private:
     Result m_load_result{};
     char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
     std::string m_languages{};
+    PopupList::Items m_language_list{};
     ScrollingText m_language_scroll{};
+    // focus lives either in the summary block (m_header_index) or in the list.
+    bool m_header_focus{};
+    bool m_hint_is_header{};
+    u8 m_header_index{};
     u64 m_save_size{};
     u64 m_save_journal_size{};
     u64 m_save_allocated_size{};
@@ -1387,20 +1439,17 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                 }
 
                 options->Add<SidebarEntryHeader>("LIBRARY"_i18n);
+                // item order matches LayoutType: List, Grid(Icon), GridDetail(Grid), HbMenu.
                 SidebarEntryArray::Items layout_items;
+                layout_items.push_back("List"_i18n);
                 layout_items.push_back("Icon"_i18n);
                 layout_items.push_back("Grid"_i18n);
                 layout_items.push_back("HB Menu"_i18n);
 
-                auto current_layout = m_layout.Get();
-                if (current_layout == grid::LayoutType_List) {
-                    current_layout = grid::LayoutType_Grid;
-                    m_layout.Set(current_layout);
-                }
                 options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-                    m_layout.Set(index_out + 1);
+                    m_layout.Set(index_out);
                     OnLayoutChange();
-                }, current_layout - 1, "Choose how games are displayed on screen."_i18n);
+                }, m_layout.Get(), "Choose how games are displayed on screen."_i18n);
 
                 options->Add<SidebarEntryBool>("Show unavailable games"_i18n, m_show_unavailable.Get(), [this](bool& v_out){
                     m_show_unavailable.Set(v_out);
@@ -1715,14 +1764,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", e.app_id);
 
+        const auto layout = m_layout.Get();
         const auto selected = pos == m_index;
-        const auto image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), title_id);
-        auto badge_v = image_v;
-        if (m_layout.Get() == grid::LayoutType_HbMenu) {
-            badge_v.y += 28.f;
-            badge_v.h -= 28.f;
+        // the list row spends its right column on the DBI-style size/flags text,
+        // which also replaces the badges - they do not fit a 46px row icon.
+        const auto list_info = layout == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
+        const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), layout == grid::LayoutType_List ? list_info.c_str() : title_id);
+        if (layout != grid::LayoutType_List) {
+            auto badge_v = image_v;
+            if (layout == grid::LayoutType_HbMenu) {
+                badge_v.y += 28.f;
+                badge_v.h -= 28.f;
+            }
+            DrawGameBadges(vg, theme, badge_v, e);
         }
-        DrawGameBadges(vg, theme, badge_v, e);
 
         if (e.selected) {
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_FOCUS), 5);
@@ -2022,7 +2077,7 @@ void Menu::CreateContentsFolders() {
             return candidate.app_id == target.app_id;
         });
         if (entry != m_entries.end()) {
-            entry->layeredfs = true;
+            entry->mods_folder = true;
         }
         created++;
     }

@@ -122,6 +122,8 @@ struct FileEntry : FsDirectoryEntry {
     bool metadata_loaded{}; // remote size/timestamp or child counts are ready
     bool metadata_failed{};
     bool selected{}; // is this file selected?
+    std::string title_label{}; // game/module name for a title id folder, if known
+    u64 title_id{}; // non-zero while an async title name lookup is outstanding
     ConnectionStatus connection_status{ConnectionStatus::Unknown};
     FsEntry virtual_target_entry{};
 
@@ -260,6 +262,12 @@ private:
     void ShareFolder();
 
     auto Scan(const fs::FsPath& new_path, bool is_walk_up = false) -> Result;
+
+    // /atmosphere/contents is one folder per title id, which says nothing about
+    // what the mod or sysmodule inside belongs to. Names the rows that we can.
+    void LoadTitleLabels();
+    // the resolved game/module name for a title id row, empty for every other row.
+    auto GetTitleLabel(FileEntry& e) -> std::string;
 
     auto GetNewPath(const FileEntry& entry) const -> fs::FsPath {
         return GetNewPath(m_path, entry.name);
@@ -444,6 +452,7 @@ private:
     s64 m_index{};
     s64 m_selected_count{};
     ScrollingText m_scroll_name{};
+    ScrollingText m_scroll_title_label{};
 
     bool m_is_update_folder{};
 
@@ -459,6 +468,7 @@ private:
     std::vector<MetadataUpdate> m_metadata_updates{};
     u64 m_metadata_generation{};
     s64 m_metadata_focus{}; // guarded by m_metadata_mutex
+    bool m_title_service{}; // title:: background lookup thread is open (ref held)
     bool m_metadata_thread_created{};
     bool m_metadata_thread_exit{};
     bool m_metadata_paused{};

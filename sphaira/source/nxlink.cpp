@@ -116,6 +116,10 @@ auto recvall(int sock, void* buf, int size) -> bool {
                 return false;
             }
             svcSleepThread(1e+6);
+        } else if (!len) {
+            // the peer closed: recv keeps returning 0, so without this the loop
+            // spins on a dead socket forever (no sleep, no progress).
+            return false;
         } else {
             got += len;
             left -= len;
@@ -134,6 +138,8 @@ auto sendall(Socket sock, const void* buf, int size) -> bool {
                 return false;
             }
             svcSleepThread(1e+6);
+            // len is -1: falling through would rewind the offset past the buffer.
+            continue;
         }
         sent += len;
         left -= len;
@@ -156,8 +162,11 @@ auto get_file_data(Socket sock, int max) -> std::vector<u8> {
             return {};
         }
 
+        // clamping instead would leave the rest of the chunk in the stream and
+        // desync every following read.
         if (want > chunk.size()) {
-            want = chunk.size();
+            log_write("nxlink chunk too big: %u\n", want);
+            return {};
         }
 
         if (!recvall(sock, chunk.data(), want)) {
@@ -166,7 +175,23 @@ auto get_file_data(Socket sock, int max) -> std::vector<u8> {
 
         WriteCallbackProgress(NxlinkCallbackType_WriteProgress, want, max);
         zlib.Setup(chunk.data(), want);
-        zlib.Inflate(Z_NO_FLUSH);
+        // the loop only ends on total_out == max, so a stream that ends (or
+        // breaks) early has to be caught here or we ask a finished sender for
+        // more data forever.
+        const auto zlib_rc = zlib.Inflate(Z_NO_FLUSH);
+        if (zlib_rc == Z_STREAM_END) {
+            break;
+        }
+        if (zlib_rc != Z_OK) {
+            log_write("nxlink inflate failed: %d\n", zlib_rc);
+            return {};
+        }
+    }
+
+    // a truncated transfer must not be written out as if it were complete.
+    if (zlib.strm.total_out != buf.size()) {
+        log_write("nxlink short transfer: %lu of %zu\n", zlib.strm.total_out, buf.size());
+        return {};
     }
 
     return buf;

@@ -11,6 +11,8 @@
 // Nothing here includes switch.h, so it is testable on the host. fs::FsPath
 // converts to std::string_view implicitly, so FsPath callers need no change.
 
+#include <charconv>
+#include <cstdint>
 #include <cstring>
 #include <span>
 #include <string_view>
@@ -54,6 +56,20 @@ inline auto IsAnyOfIC(std::string_view value, std::span<const std::string_view> 
         }
     }
     return false;
+}
+
+// A name that is exactly a 16 digit hex title id ("0100000000001000"), as used
+// by the folders under /atmosphere/contents. 0 for anything else, so the id is
+// also the "is this a title id" answer.
+inline auto ParseTitleIdName(std::string_view name) -> std::uint64_t {
+    if (name.length() != 16) {
+        return 0;
+    }
+
+    std::uint64_t id{};
+    const auto end = name.data() + name.length();
+    const auto r = std::from_chars(name.data(), end, id, 16);
+    return r.ec == std::errc{} && r.ptr == end ? id : 0;
 }
 
 } // namespace sphaira::path

@@ -18,6 +18,10 @@ struct ModuleItem {
     std::string description;
 };
 
+// name of a sysmodule / homebrew program id, from its toolbox.json or the
+// module catalog the Module Manager uses. empty when it isn't a known module.
+auto GetModuleName(u64 program_id) -> std::string;
+
 struct UninstallerMenu final : MenuBase {
     UninstallerMenu();
     ~UninstallerMenu();

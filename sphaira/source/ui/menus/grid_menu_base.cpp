@@ -4,6 +4,20 @@
 
 namespace sphaira::ui::menu::grid {
 
+auto FormatBytes(u64 bytes) -> std::string {
+    char out[32];
+    if (bytes >= 1024ULL * 1024ULL * 1024ULL) {
+        std::snprintf(out, sizeof(out), "%.2f GB", static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0));
+    } else if (bytes >= 1024ULL * 1024ULL) {
+        std::snprintf(out, sizeof(out), "%.2f MB", static_cast<double>(bytes) / (1024.0 * 1024.0));
+    } else if (bytes >= 1024ULL) {
+        std::snprintf(out, sizeof(out), "%.2f KB", static_cast<double>(bytes) / 1024.0);
+    } else {
+        std::snprintf(out, sizeof(out), "%lu B", bytes);
+    }
+    return out;
+}
+
 Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
     return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version);
 }
@@ -70,7 +84,19 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
             gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size}, image ?: App::GetDefaultImage(), 4);
         }
         const float text_x = icon_x + icon_size + 14.f;
-        const float text_clip_w = w - text_x + x - 15.f;
+
+        // right column, DBI-style: the caller's `version` string (size, flags)
+        // right-aligned; the name/author clip shrinks to keep clear of it.
+        float right_w = 0.f;
+        if (version && *version) {
+            float bounds[4]{};
+            nvgFontSize(vg, 18.f);
+            gfx::textBounds(vg, 0, 0, bounds, version);
+            right_w = bounds[2] - bounds[0] + 20.f;
+            gfx::drawText(vg, x + w - 15.f, y + h / 2.f, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), version, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+        }
+
+        const float text_clip_w = w - text_x + x - 15.f - right_w;
         m_scroll_name.Draw(vg, selected, text_x, y + h / 2.f - 12.f, text_clip_w, 18.f, NVG_ALIGN_LEFT, theme->GetColour(text_id), name);
         m_scroll_author.Draw(vg, selected, text_x, y + h / 2.f + 12.f, text_clip_w, 15.f, NVG_ALIGN_LEFT, theme->GetColour(ThemeEntryID_TEXT_INFO), author);
         return Vec4{icon_x, icon_y, icon_size, icon_size};

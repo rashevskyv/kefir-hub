@@ -118,8 +118,33 @@ static int test_is_any_of_ic() {
     return 0;
 }
 
+static int test_parse_title_id_name() {
+    CHECK(path::ParseTitleIdName("0100000000001000") == 0x0100000000001000ULL);
+    CHECK(path::ParseTitleIdName("420000000007e51a") == 0x420000000007E51AULL);
+    CHECK(path::ParseTitleIdName("FFFFFFFFFFFFFFFF") == 0xFFFFFFFFFFFFFFFFULL);
+
+    // an all-zero folder name is not a title, and 0 is the "no" answer anyway
+    CHECK(path::ParseTitleIdName("0000000000000000") == 0);
+
+    // wrong length, even when every digit is valid hex
+    CHECK(path::ParseTitleIdName("010000000000100") == 0);
+    CHECK(path::ParseTitleIdName("01000000000010000") == 0);
+    CHECK(path::ParseTitleIdName("") == 0);
+
+    // ordinary folder names of exactly 16 characters must not parse
+    CHECK(path::ParseTitleIdName("contents/atmosp!") == 0);
+    CHECK(path::ParseTitleIdName("0100000000001g00") == 0);
+    CHECK(path::ParseTitleIdName(" 100000000001000") == 0);
+    CHECK(path::ParseTitleIdName("+100000000001000") == 0);
+    CHECK(path::ParseTitleIdName("0x00000000001000") == 0);
+
+    // trailing junk after valid hex is rejected, not silently truncated
+    CHECK(path::ParseTitleIdName("01000000000010 0") == 0);
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic()) {
+    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

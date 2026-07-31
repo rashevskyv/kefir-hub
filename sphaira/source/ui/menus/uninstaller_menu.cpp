@@ -46,9 +46,9 @@ auto ModuleFolder(u64 program_id) -> fs::FsPath {
     return path;
 }
 
-auto ToolboxPath(const FsDirectoryEntry& entry) -> fs::FsPath {
+auto ToolboxPath(const char* folder_name) -> fs::FsPath {
     fs::FsPath path;
-    std::snprintf(path, sizeof(path), "%s/%s/toolbox.json", ATMOSPHERE_CONTENTS_PATH, entry.name);
+    std::snprintf(path, sizeof(path), "%s/%s/toolbox.json", ATMOSPHERE_CONTENTS_PATH, folder_name);
     return path;
 }
 
@@ -278,6 +278,27 @@ auto SetAutostart(fs::FsNativeSd& fs, u64 program_id, bool enabled) -> Result {
 
 } // namespace
 
+auto GetModuleName(u64 program_id) -> std::string {
+    // ponytail: catalog read once per launch, the Module Manager's own refresh
+    // loads its own copy. Reload here too if stale names ever matter.
+    static const auto catalog = LoadPreferredModuleCatalog();
+    const auto program_id_text = FormatProgramId(program_id);
+
+    fs::FsNativeSd fs;
+    std::vector<u8> data;
+    ModuleItem item;
+    if (R_SUCCEEDED(fs.read_entire_file(ToolboxPath(program_id_text.c_str()), data)) &&
+        ParseToolbox(data, item) && item.name != item.program_id_text) {
+        return item.name;
+    }
+
+    if (const auto it = catalog.find(program_id_text); it != catalog.end()) {
+        return it->second.name;
+    }
+
+    return {};
+}
+
 UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_None} {
     this->SetActions(
         std::make_pair(Button::A, Action{"Toggle"_i18n, [this](){
@@ -450,7 +471,7 @@ void UninstallerMenu::LoadModules() {
     }
 
     for (const auto& entry : entries) {
-        const auto toolbox_path = ToolboxPath(entry);
+        const auto toolbox_path = ToolboxPath(entry.name);
         if (!fs.FileExists(toolbox_path)) {
             continue;
         }

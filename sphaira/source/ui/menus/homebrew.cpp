@@ -296,6 +296,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 card_name = e.GetName();
             }
             card_version = e.GetDisplayVersion();
+            if (m_layout.Get() == grid::LayoutType_List) {
+                // right column, DBI-style: version in brackets, then the nro size.
+                card_version = (card_version.empty() ? "" : "[" + card_version + "]  ") + grid::FormatBytes(e.size);
+            }
         }
 
         const auto selected = pos == m_index;
@@ -610,7 +614,9 @@ void Menu::DisplayOptions() {
     order_items.push_back("Descending"_i18n);
     order_items.push_back("Ascending"_i18n);
 
+    // item order matches LayoutType: List, Grid(Icon), GridDetail(Grid), HbMenu.
     SidebarEntryArray::Items layout_items;
+    layout_items.push_back("List"_i18n);
     layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
     layout_items.push_back("HB Menu"_i18n);
@@ -625,15 +631,10 @@ void Menu::DisplayOptions() {
         SortAndFindLastFile();
     }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
 
-    auto current_layout = m_layout.Get();
-    if (current_layout == grid::LayoutType_List) {
-        current_layout = grid::LayoutType_Grid;
-        m_layout.Set(current_layout);
-    }
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-        m_layout.Set(index_out + 1);
+        m_layout.Set(index_out);
         OnLayoutChange();
-    }, current_layout - 1, "Change the layout to Icon, Grid and HB Menu."_i18n);
+    }, m_layout.Get(), "Choose how apps are displayed on screen."_i18n);
 
     options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
         m_show_hidden.Set(enable);
