@@ -306,9 +306,19 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight),
         label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight));
 
-    // left edge of the whole status block, so the sub heading below can be
-    // parked next to it instead of guessing where the bars start.
-    m_status_left_x = label_x;
+    // Left edge of the whole status block, so the header gap can end against
+    // it. label_x is where the labels *end* - they are drawn right aligned -
+    // so the block starts a label's width further left, and the gap has to
+    // stop before the "N" of NAND rather than before the "SD".
+    {
+        nvgFontSize(vg, small_font);
+        float label_w = 0.f;
+        for (const auto* label : {"NAND", "SD"}) {
+            gfx::textBounds(vg, 0, 0, bounds, label);
+            label_w = std::max(label_w, bounds[2] - bounds[0]);
+        }
+        m_status_left_x = label_x - label_w;
+    }
 
     auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes) {
         if (total_bytes <= 0) return;
