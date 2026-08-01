@@ -406,33 +406,42 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, title_sub_x, start_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_bottom.c_str());
         title_sub_x += stat_w + 14.f;
     }
-    m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
+    // The header is four slots: title (+ version above it), this gap, the
+    // storage bars, then the clock (+ access point above it). The last two are
+    // fixed width, so the gap is simply whatever the title leaves - measured
+    // every frame rather than assumed to be half the screen, which is what the
+    // old `text_w` bound did no matter how short the title was.
+    //
+    // Inside the gap: the descriptive sub heading (title id, accounts, path)
+    // from the left, the counter ("12 / 148") against the right. Both scroll
+    // what does not fit. Suppressed with the status block, since a panel over
+    // that corner must not have them ghost through.
+    // same margin on both sides, so the gap reads as its own slot rather than
+    // as text leaning on the storage bars.
+    constexpr float GAP_MARGIN = 30.f;
+    constexpr float GAP_INNER = 20.f;
 
-    // The sub heading ("12 / 148", the selection count, a connection summary)
-    // used to sit at the bottom left, where the button hints ran over it - the
-    // footer is right aligned and knew nothing about it. The header has an
-    // unused gap between the title block and the storage bars, so it goes
-    // there and the footer belongs to the hints alone.
-    // skipped along with the status block: it sits in the same half of the
-    // header, so a panel covering that corner must not have it ghost through.
-    if (!m_sub_heading.empty() && draw_status) {
-        constexpr float gap = 20.f;
-        const float right = m_status_left_x - gap;
-        const float left = text_w + gap;
+    // title_sub_x already carries a 10px lead-out from the title block.
+    const float gap_left = title_sub_x + GAP_MARGIN - 10.f;
+    const float gap_right = (draw_status ? m_status_left_x : text_w) - GAP_MARGIN;
 
-        if (right > left) {
-            // short text hugs the storage block so it reads as part of the
-            // status side; anything too long starts at the left of the gap and
-            // scrolls. ScrollingText clips from its x rightwards, so x is
-            // always the left edge - it cannot be right aligned directly.
-            nvgFontSize(vg, 18.f);
-            gfx::textBounds(vg, 0, 0, bounds, m_sub_heading.c_str());
-            const float text_width = bounds[2] - bounds[0];
-            const float x = text_width < right - left ? right - text_width : left;
+    float counter_w = 0.f;
+    if (!m_sub_heading.empty() && draw_status && gap_right > gap_left) {
+        // ScrollingText clips from its x rightwards, so x is always the left
+        // edge; right alignment is done by measuring and offsetting. A counter
+        // wide enough to fill the gap is left aligned and allowed to scroll.
+        nvgFontSize(vg, 18.f);
+        gfx::textBounds(vg, 0, 0, bounds, m_sub_heading.c_str());
+        counter_w = std::min(bounds[2] - bounds[0], gap_right - gap_left);
 
-            m_scroll_sub_heading.Draw(vg, true, x, start_y, right - x, 18,
-                NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
-        }
+        m_scroll_sub_heading.Draw(vg, true, gap_right - counter_w, start_y, counter_w, 18,
+            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+    }
+
+    const float sub_right = counter_w ? gap_right - counter_w - GAP_INNER : gap_right;
+    if (sub_right > gap_left) {
+        m_scroll_title_sub_heading.Draw(vg, true, gap_left, start_y, sub_right - gap_left, 16,
+            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
     }
 }
 
