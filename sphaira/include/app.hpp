@@ -206,6 +206,8 @@ public:
     static void ShowEnableInstallPrompt();
 
     void Draw();
+    // per frame timing summary + stall reporting into the log.
+    void LogFrame(double delta_ms);
     void Update();
     void Poll();
 
@@ -449,6 +451,11 @@ public:
 #endif
 
     double m_delta_time{};
+
+    // frame accounting, see App::LogFrame().
+    double m_frame_accum_ms{};
+    double m_frame_worst_ms{};
+    u32 m_frame_count{};
 
     static constexpr const char* INSTALL_DEPENDS_STR =
         "Installing is disabled.\n\n"

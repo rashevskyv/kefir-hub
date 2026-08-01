@@ -364,7 +364,49 @@ void App::Loop() {
         m_delta_time = std::clamp(delta, min_delta, max_delta) / target_delta;
         // save timestamp for next frame.
         start = now;
+
+        LogFrame(delta);
     }
+}
+
+// Frame accounting, for "it starts to lag and then recovers".
+//
+// A once a second summary is enough to see a sustained drop, but a stall is a
+// single long frame and an average buries it - so a frame that misses badly is
+// reported on its own, immediately. Whatever caused it logs from the same
+// frame, so the culprit sits right next to the hitch line.
+//
+// Both go through log_write, which only appends to a buffer; a background
+// thread batches it to the sd every 100ms. Nothing here touches the card.
+void App::LogFrame(double delta_ms) {
+    if (!log_is_init()) {
+        return;
+    }
+
+    // a frame this long is a visible stutter, not jitter.
+    constexpr double HITCH_MS = 100.0;
+    constexpr double REPORT_INTERVAL_MS = 1000.0;
+
+    m_frame_count++;
+    m_frame_accum_ms += delta_ms;
+    m_frame_worst_ms = std::max(m_frame_worst_ms, delta_ms);
+
+    if (delta_ms >= HITCH_MS) {
+        log_write("[frame] hitch %.0f ms\n", delta_ms);
+    }
+
+    if (m_frame_accum_ms < REPORT_INTERVAL_MS) {
+        return;
+    }
+
+    log_write("[frame] %.1f fps  avg %.1f ms  worst %.0f ms\n",
+        1000.0 * m_frame_count / m_frame_accum_ms,
+        m_frame_accum_ms / m_frame_count,
+        m_frame_worst_ms);
+
+    m_frame_count = 0;
+    m_frame_accum_ms = 0.0;
+    m_frame_worst_ms = 0.0;
 }
 
 auto App::Push(std::unique_ptr<ui::Widget>&& widget) -> void {
@@ -1203,13 +1245,31 @@ App::~App() {
     log_write("starting to exit\n");
     TimeStamp ts;
 
+    // same phase timing as the constructor: shutdown blocks on the same
+    // servers and mounts, and "sometimes it is slow to close" needs a number
+    // per step, not a total.
+    TimeStamp phase;
+    const auto mark = [&phase](const char* what) {
+        const auto ms = phase.GetMs();
+        if (ms >= 1) {
+            log_write("[exit] %-22s %4zu ms\n", what, ms);
+        }
+        phase.Update();
+    };
+
     // Wake any remote filesystem reads before widget destructors wait for
     // their worker threads. The applet keeps exit locked until this finishes.
     devoptab::common::RequestCurlShutdown();
 
+    mark("curl shutdown");
+
     appletUnhook(&m_appletHookCookie);
 
+    mark("applet unhook");
+
     ntp::Stop();
+
+    mark("ntp");
 
     if (App::GetMtpEnable()) {
         log_write("closing mtp\n");
@@ -1217,20 +1277,28 @@ App::~App() {
     }
     sphaira::devoptab::mtp::CloseMtpSession();
 
+    mark("mtp");
+
     if (App::GetFtpEnable()) {
         log_write("closing ftp\n");
         ftpsrv::Exit();
     }
+
+    mark("ftp");
 
     if (App::GetNxlinkEnable()) {
         log_write("closing nxlink\n");
         nxlinkExit();
     }
 
+    mark("nxlink");
+
     if (App::GetHddEnable()) {
         log_write("closing hdd\n");
         usbHsFsExit();
     }
+
+    mark("usb mass storage");
 
     // destroy this first as it seems to prevent a crash when exiting the appstore
     // when an image that was being drawn is displayed
@@ -1243,11 +1311,15 @@ App::~App() {
     m_widgets.clear();
     nvgDeleteImage(vg, m_default_image);
 
+    mark("widgets + framebuffer");
+
     i18n::exit();
     curl::Exit();
 
     ini_puts("config", "theme", m_theme.meta.ini_path, CONFIG_PATH);
     CloseTheme();
+
+    mark("i18n + curl + theme");
 
     nvgDeleteDk(this->vg);
     this->renderer.reset();
@@ -1256,6 +1328,8 @@ App::~App() {
     m_decoder.finalize();
     nj::finalize();
 #endif
+
+    mark("graphics teardown");
 
     // backup hbmenu if it is not sphaira
     if (App::GetReplaceHbmenuEnable() && !IsHbmenu()) {
@@ -1308,6 +1382,8 @@ App::~App() {
             log_write("no longer hbmenu!\n");
         }
     }
+
+    mark("hbmenu replace");
 
     log_write("\t[EXIT] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
 
