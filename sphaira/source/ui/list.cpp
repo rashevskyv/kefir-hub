@@ -5,6 +5,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include <algorithm>
+#include <cmath>
 
 namespace sphaira::ui {
 namespace {
@@ -21,6 +22,15 @@ void ScissorContent(NVGcontext* vg, const Vec4& pos) {
     const auto clip = layout::PaddedContentClipY(pos.y, pos.h, SELECTION_PAD);
     nvgIntersectScissor(vg, pos.x - SELECTION_PAD, clip.y, pos.w + SELECTION_PAD * 2.f, clip.h);
 }
+
+// How much of the fling speed survives each frame, and the speed below which it
+// is not worth another frame of work. 0.94 at 60fps coasts for roughly a second
+// after a hard flick, which is about what a phone does.
+constexpr float FLING_FRICTION = 0.94f;
+constexpr float FLING_STOP = 0.4f;
+// weight of the newest frame in the smoothed speed. A single frame of finger
+// jitter should not decide where a flick lands.
+constexpr float FLING_SMOOTHING = 0.35f;
 
 } // namespace
 
@@ -65,12 +75,78 @@ auto List::ClampY(float y, s64 count) const -> float {
 void List::OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget) {
     switch (m_layout) {
         case Layout::HOME:
+            StepFling(touch, count, true);
             OnUpdateHome(controller, touch, index, count, callback, widget);
             break;
         case Layout::GRID:
+            StepFling(touch, count, false);
             OnUpdateGrid(controller, touch, index, count, callback, widget);
             break;
     }
+}
+
+void List::OnUpdateTouchOnly(TouchInfo* touch, s64 count) {
+    const bool horizontal = m_layout == Layout::HOME;
+    StepFling(touch, count, horizontal);
+    OnTouchScroll(touch, count, horizontal);
+}
+
+// Coasts the view after the finger leaves. Called every frame, before input, so
+// a fresh touch cancels whatever is still moving.
+void List::StepFling(TouchInfo* touch, s64 count, bool horizontal) {
+    // putting a finger down catches a list that is still coasting, whether the
+    // touch turns out to be a drag or a tap.
+    if (touch->is_touching && !m_was_touching) {
+        m_fling = 0.f;
+        m_y_prog_prev = 0.f;
+    }
+    m_was_touching = touch->is_touching;
+
+    if (touch->is_touching) {
+        return;
+    }
+
+    if (std::abs(m_fling) < FLING_STOP) {
+        m_fling = 0.f;
+        return;
+    }
+
+    const auto next = m_yoff + m_fling;
+    m_yoff = horizontal ? ClampX(next, count) : ClampY(next, count);
+
+    // hit an end: stop dead rather than grinding against the clamp.
+    if (m_yoff != next) {
+        m_fling = 0.f;
+        return;
+    }
+
+    m_fling *= FLING_FRICTION;
+}
+
+auto List::OnTouchScroll(TouchInfo* touch, s64 count, bool horizontal) -> bool {
+    if (touch->is_scroll && touch->in_range(GetPos())) {
+        const auto prog = horizontal
+            ? (float)touch->initial.x - (float)touch->cur.x
+            : (float)touch->initial.y - (float)touch->cur.y;
+
+        // speed over the last frames of the drag, smoothed - one frame of
+        // finger jitter should not decide where the flick ends up.
+        m_fling += ((prog - m_y_prog_prev) - m_fling) * FLING_SMOOTHING;
+        m_y_prog_prev = prog;
+        m_y_prog = prog;
+        return true;
+    }
+
+    if (touch->is_end) {
+        // the drag folds into the offset while its trailing speed stays in
+        // m_fling, so letting go mid-swipe coasts instead of stopping dead.
+        m_yoff = horizontal ? ClampX(m_yoff + m_y_prog, count) : ClampY(m_yoff + m_y_prog, count);
+        m_y_prog = 0;
+        m_y_prog_prev = 0;
+        return true;
+    }
+
+    return false;
 }
 
 void List::Draw(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const {
@@ -343,11 +419,8 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
                 return;
             }
         }
-    } else if (touch->is_scroll && touch->in_range(GetPos())) {
-        m_y_prog = (float)touch->initial.x - (float)touch->cur.x;
-    } else if (touch->is_end) {
-        m_yoff = ClampX(m_yoff + m_y_prog, count);
-        m_y_prog = 0;
+    } else {
+        OnTouchScroll(touch, count, true);
     }
 }
 
@@ -436,11 +509,8 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
 
             v.x = x;
         }
-    } else if (touch->is_scroll && touch->in_range(GetPos())) {
-        m_y_prog = (float)touch->initial.y - (float)touch->cur.y;
-    } else if (touch->is_end) {
-        m_yoff = ClampY(m_yoff + m_y_prog, count);
-        m_y_prog = 0;
+    } else {
+        OnTouchScroll(touch, count, false);
     }
 }
 

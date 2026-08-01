@@ -253,6 +253,13 @@ void Menu::ToggleCurrentSelection() {
     } else {
         m_selected_count--;
     }
+
+    // step onto the next entry, the way the file browser does.
+    if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+        SetIndex(m_index + 1);
+        const auto g = ComputeGridSections();
+        m_list->EnsureVisible(EntryToDisplay(m_index, g), g.display_count);
+    }
 }
 
 void Menu::InvertSelection() {
@@ -473,15 +480,8 @@ void Menu::DisplaySaveOptions() {
     layout_items.push_back("HB Menu"_i18n);
     layout_items.push_back("List"_i18n);
 
-    // Map layout index: Icon=1,Grid=2,HbMenu=3,List=0 -> sidebar index 0,1,2,3
-    // LayoutType: List=0, Grid=1, GridDetail=2, HbMenu=3
-    // We store: 0=Icon(Grid), 1=Grid(Grid), 2=HbMenu, 3=List
-    static const int layout_map[] = {
-        grid::LayoutType_Grid,     // Icon -> same as Grid for saves
-        grid::LayoutType_Grid,     // Grid
-        grid::LayoutType_HbMenu,   // HB Menu
-        grid::LayoutType_List,     // List
-    };
+    // sidebar row -> LayoutType and back. Saves have no separate Icon layout,
+    // so both of the first two rows map onto the grid.
     static const int layout_map_inv[] = {
         3, // LayoutType_List -> index 3
         0, // LayoutType_Grid -> index 0

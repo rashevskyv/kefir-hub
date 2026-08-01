@@ -1374,6 +1374,15 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         }, this);
     }
 
+    // a finger scrolls the pane it is over, not the pane that happens to hold
+    // the cursor: reaching for the right hand list should not need a focus
+    // change first. The cursor stays where it is either way.
+    if (m_focus_pane == FocusPane::Categories) {
+        m_item_list->OnUpdateTouchOnly(touch, CurrentItems().size());
+    } else {
+        m_category_list->OnUpdateTouchOnly(touch, CategoryRowCount());
+    }
+
     // the pane may have changed category above, so read the live one.
     const auto& current_items = CurrentItems();
     const bool on_network_location = !m_folder_open

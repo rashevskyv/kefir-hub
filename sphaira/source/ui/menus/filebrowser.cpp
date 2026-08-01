@@ -411,6 +411,16 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
 
         auto text_id = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
+
+        // ticked rows get a tinted band behind them, so which entries are in
+        // the selection reads at a glance rather than one checkbox at a time.
+        // Drawn under everything else, including the cursor outline.
+        if (e.IsSelected()) {
+            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+            tint.a *= 0.35f;
+            gfx::drawRect(vg, v, tint, 5.f);
+        }
+
         if (selected) {
             text_id = ThemeEntryID_TEXT_SELECTED;
             gfx::drawRectOutline(vg, theme, 4.f, v);

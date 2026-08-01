@@ -19,6 +19,11 @@ struct List final : Object {
 
     void OnUpdate(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget = nullptr);
 
+    // Touch scrolling only, no buttons and no selection. For a list that is on
+    // screen but does not hold the cursor: a finger should scroll the pane it
+    // is over without having to move the focus there first.
+    void OnUpdateTouchOnly(TouchInfo* touch, s64 count);
+
     void Draw(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
 
     auto SetScrollBarPos(float x, float y, float h) {
@@ -106,6 +111,9 @@ private:
 
     void OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget);
     void OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64 count, TouchCallback callback, const Widget* widget);
+    // drag/flick shared by both layouts. returns true if it consumed the touch.
+    auto OnTouchScroll(TouchInfo* touch, s64 count, bool horizontal) -> bool;
+    void StepFling(TouchInfo* touch, s64 count, bool horizontal);
     void DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
     void DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
 
@@ -122,6 +130,12 @@ private:
     float m_yoff{};
     // in progress y offset, used when scrolling.
     float m_y_prog{};
+    // m_y_prog on the previous frame, and the smoothed per-frame speed derived
+    // from it. The speed outlives the touch and decays, so a flick keeps
+    // running after the finger is up.
+    float m_y_prog_prev{};
+    float m_fling{};
+    bool m_was_touching{};
 
     Layout m_layout{Layout::GRID};
     bool m_page_jump{true};

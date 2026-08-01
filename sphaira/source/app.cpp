@@ -576,7 +576,10 @@ void App::Poll() {
 
     HidTouchScreenState state{};
     hidGetTouchScreenStates(&state, 1);
+    // both are single frame events: is_end was never cleared, so it stayed true
+    // for the rest of the session after the first drag.
     m_touch_info.is_clicked = false;
+    m_touch_info.is_end = false;
 
 // todo: replace old touch code with gestures from below
 #if 0

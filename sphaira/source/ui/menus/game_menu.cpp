@@ -2014,6 +2014,15 @@ void Menu::ToggleCurrentSelection() {
     auto& entry = m_entries[m_index];
     entry.selected ^= 1;
     m_selected_count += entry.selected ? 1 : -1;
+
+    // step onto the next row, the way the file browser does, so a run of
+    // entries can be ticked without moving the cursor by hand in between.
+    if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+        SetIndex(m_index + 1);
+        m_list->EnsureVisible(m_index, m_entries.size());
+        return;
+    }
+
     UpdateStorageHighlight();
 }
 

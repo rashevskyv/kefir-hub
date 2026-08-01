@@ -153,26 +153,34 @@ auto IsSelectableEntry(const UpdaterEntry& entry) -> bool {
     return entry.type != UpdaterEntryType::Section;
 }
 
+// Direction the cursor travelled to land on `index`, given where it came from.
+// A wrap reads as a jump across most of the list, but the cursor really moved
+// one step the other way, so the sign is flipped for it.
+auto TravelDirection(s64 index, s64 previous, s64 count) -> s64 {
+    const auto forward = index >= previous;
+    const auto wrapped = std::abs(index - previous) > count / 2;
+    return (forward != wrapped) ? 1 : -1;
+}
+
 auto ResolveSelectableIndex(const std::vector<UpdaterEntry>& entries, s64 index, s64 previous) -> s64 {
-    if (entries.empty()) {
+    const auto count = static_cast<s64>(entries.size());
+    if (!count) {
         return 0;
     }
 
-    index = std::clamp<s64>(index, 0, static_cast<s64>(entries.size() - 1));
+    index = (index % count + count) % count;
     if (IsSelectableEntry(entries[index])) {
         return index;
     }
 
-    const auto direction = index >= previous ? 1 : -1;
-    for (s64 i = index; i >= 0 && i < static_cast<s64>(entries.size()); i += direction) {
-        if (IsSelectableEntry(entries[i])) {
-            return i;
-        }
-    }
-
-    for (s64 i = index; i >= 0 && i < static_cast<s64>(entries.size()); i -= direction) {
-        if (IsSelectableEntry(entries[i])) {
-            return i;
+    // captions are stepped over in the direction of travel, wrapping round the
+    // ends. Entry 0 is the "KEFIR" caption, so without the wrap pressing up on
+    // the first real row bounced off it and the last row was unreachable.
+    const auto direction = TravelDirection(index, previous, count);
+    for (s64 i = 1; i < count; i++) {
+        const auto j = ((index + direction * i) % count + count) % count;
+        if (IsSelectableEntry(entries[j])) {
+            return j;
         }
     }
 
@@ -209,25 +217,21 @@ auto TileSlots(const std::vector<UpdaterEntry>& entries) -> std::vector<s64> {
 }
 
 auto ResolveTileSlotIndex(const std::vector<s64>& slots, s64 index, s64 previous) -> s64 {
-    if (slots.empty()) {
+    const auto count = static_cast<s64>(slots.size());
+    if (!count) {
         return 0;
     }
 
-    index = std::clamp<s64>(index, 0, static_cast<s64>(slots.size() - 1));
+    index = (index % count + count) % count;
     if (slots[index] != TILE_EMPTY) {
         return index;
     }
 
-    const auto direction = index >= previous ? 1 : -1;
-    for (s64 i = index; i >= 0 && i < static_cast<s64>(slots.size()); i += direction) {
-        if (slots[i] != TILE_EMPTY) {
-            return i;
-        }
-    }
-
-    for (s64 i = index; i >= 0 && i < static_cast<s64>(slots.size()); i -= direction) {
-        if (slots[i] != TILE_EMPTY) {
-            return i;
+    const auto direction = TravelDirection(index, previous, count);
+    for (s64 i = 1; i < count; i++) {
+        const auto j = ((index + direction * i) % count + count) % count;
+        if (slots[j] != TILE_EMPTY) {
+            return j;
         }
     }
 
