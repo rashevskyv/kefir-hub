@@ -865,6 +865,19 @@ void DrawElement(const Vec4& v, ThemeEntryID id) {
 App::App(const char* argv0) {
     TimeStamp ts;
 
+    // Startup has a lot of blocking steps (usb mass storage enumeration, ftp,
+    // the sd card scan) and "it takes ten seconds" is not something to guess
+    // at. Each phase reports how long it took, so a slow launch can be read
+    // off the log instead of theorised about. No-ops when logging is off.
+    TimeStamp phase;
+    const auto mark = [&phase](const char* what) {
+        const auto ms = phase.GetMs();
+        if (ms >= 1) {
+            log_write("[boot] %-22s %4zu ms\n", what, ms);
+        }
+        phase.Update();
+    };
+
     // boost mode is enabled in userAppInit().
     ON_SCOPE_EXIT(App::SetBoostMode(false));
 
@@ -1009,11 +1022,15 @@ App::App(const char* argv0) {
 
 
 
+    mark("config + emummc");
+
     if (App::GetFtpEnable()) {
         ftpsrv::Init();
         // enables background install for files dropped into the FTP "install" folder.
         ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
     }
+
+    mark("ftp");
 
     if (App::GetNxlinkEnable()) {
         nxlinkInitialize(nxlink_callback);
@@ -1033,9 +1050,13 @@ App::App(const char* argv0) {
         m_mtp_enabled.Set(false);
     }
 
+    mark("nxlink");
+
     if (App::GetHddEnable()) {
         usbHsFsInitialize(1);
     }
+
+    mark("usb mass storage");
 
     curl::Init();
 
@@ -1044,6 +1065,8 @@ App::App(const char* argv0) {
     nj::initialize();
     m_decoder.initialize();
 #endif
+
+    mark("curl");
 
     // get current size of the framebuffer
     const auto fb = GetFrameBufferSize();
@@ -1104,6 +1127,8 @@ App::App(const char* argv0) {
         }
     }
 
+    mark("deko3d + fonts");
+
     ScanThemeEntries();
 
     // try and load previous theme, default to previous version otherwise.
@@ -1127,6 +1152,8 @@ App::App(const char* argv0) {
             break;
         }
     }
+
+    mark("theme");
 
     appletHook(&m_appletHookCookie, appplet_hook_calback, this);
 
@@ -1153,11 +1180,15 @@ App::App(const char* argv0) {
 
     // background clock sync: idles until there is a connection, corrects the
     // rtc, then goes back to sleep. Never prompts, never blocks startup.
+    mark("hid + loader info");
+
     ntp::Start();
 
     // load default image
     InitDefaultImage();
 
+
+    mark("default image");
 
     App::Push<ui::menu::main::MainMenu>();
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());

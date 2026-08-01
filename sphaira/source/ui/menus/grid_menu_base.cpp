@@ -62,15 +62,15 @@ void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec
     }
 }
 
-Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
-    return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version);
+Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked) {
+    return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version, marked);
 }
 
-Vec4 Menu::DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version) {
-    return DrawEntry(vg, theme, false, layout, v, selected, 0, name, author, version);
+Vec4 Menu::DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version, bool marked) {
+    return DrawEntry(vg, theme, false, layout, v, selected, 0, name, author, version, marked);
 }
 
-Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version) {
+Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked) {
     const auto& [x, y, w, h] = v;
 
     auto text_id = ThemeEntryID_TEXT;
@@ -121,6 +121,15 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         } else {
             gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
         }
+
+        // over the row fill, under the content: which rows are in the selection
+        // reads at a glance rather than one checkbox at a time.
+        if (marked) {
+            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+            tint.a *= 0.35f;
+            gfx::drawRect(vg, v, tint, 5.f);
+        }
+
         const float icon_size = 46.f;
         const float icon_x = x + 10.f;
         const float icon_y = y + (h - icon_size) / 2.f;

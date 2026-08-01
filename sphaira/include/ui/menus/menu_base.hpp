@@ -91,6 +91,10 @@ private:
     ScrollingText m_scroll_title_sub_heading{};
     ScrollingText m_scroll_sub_heading{};
 
+    // left edge of the status block (storage bars), measured while drawing it.
+    // The sub heading parks against it, so it has to survive the frame.
+    float m_status_left_x{SCREEN_WIDTH - 60.f};
+
     u64 m_nand_highlight{};
     u64 m_sd_highlight{};
     bool m_storage_highlight_active{};

@@ -1768,7 +1768,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // the list row spends its right column on the DBI-style size/flags text,
         // which also replaces the badges - they do not fit a 46px row icon.
         const auto list_info = layout == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
-        const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), layout == grid::LayoutType_List ? list_info.c_str() : title_id);
+        const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), layout == grid::LayoutType_List ? list_info.c_str() : title_id, e.selected);
         if (layout != grid::LayoutType_List) {
             auto badge_v = image_v;
             if (layout == grid::LayoutType_HbMenu) {

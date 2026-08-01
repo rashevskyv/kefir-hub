@@ -685,9 +685,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         Vec4 image_v = v;
         const auto info = m_layout.Get() == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
         if (!IsSystemLikeSave(e.save_data_type)) {
-            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), info.c_str());
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), info.c_str(), e.selected);
         } else {
-            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), info.c_str());
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), info.c_str(), e.selected);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }

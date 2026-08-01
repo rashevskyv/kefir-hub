@@ -23,16 +23,18 @@ struct Menu : MenuBase {
 
 protected:
     void OnLayoutChange(std::unique_ptr<List>& list, int layout);
-    Vec4 DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version);
+    // `marked` is multi-select, not the cursor: a list row draws it as a tinted
+    // band, which has to happen here because this is what fills the row.
+    Vec4 DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked = false);
     // same as above but doesn't draw image and returns image dimension.
-    Vec4 DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version);
+    Vec4 DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version, bool marked = false);
     void DrawHbMenuHeader(NVGcontext* vg, Theme* theme, int image, const char* name, const char* author, const char* version, const char* description = nullptr);
     // multi-select mark for one entry. `row` is the whole entry rect, `overlay`
     // the part a tile layout tints (usually its icon).
     void DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec4& row, const Vec4& overlay, bool marked, bool any_marked);
 
 private:
-    Vec4 DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version);
+    Vec4 DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked);
 
 private:
     ScrollingText m_scroll_name{};

@@ -306,6 +306,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight),
         label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight));
 
+    // left edge of the whole status block, so the sub heading below can be
+    // parked next to it instead of guessing where the bars start.
+    m_status_left_x = label_x;
+
     auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes) {
         if (total_bytes <= 0) return;
         const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
@@ -403,7 +407,33 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         title_sub_x += stat_w + 14.f;
     }
     m_scroll_title_sub_heading.Draw(vg, true, title_sub_x, start_y, text_w - title_sub_x, 16, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
-    m_scroll_sub_heading.Draw(vg, true, 80, layout::FOOTER_TEXT_Y, text_w - 160, 18, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+
+    // The sub heading ("12 / 148", the selection count, a connection summary)
+    // used to sit at the bottom left, where the button hints ran over it - the
+    // footer is right aligned and knew nothing about it. The header has an
+    // unused gap between the title block and the storage bars, so it goes
+    // there and the footer belongs to the hints alone.
+    // skipped along with the status block: it sits in the same half of the
+    // header, so a panel covering that corner must not have it ghost through.
+    if (!m_sub_heading.empty() && draw_status) {
+        constexpr float gap = 20.f;
+        const float right = m_status_left_x - gap;
+        const float left = text_w + gap;
+
+        if (right > left) {
+            // short text hugs the storage block so it reads as part of the
+            // status side; anything too long starts at the left of the gap and
+            // scrolls. ScrollingText clips from its x rightwards, so x is
+            // always the left edge - it cannot be right aligned directly.
+            nvgFontSize(vg, 18.f);
+            gfx::textBounds(vg, 0, 0, bounds, m_sub_heading.c_str());
+            const float text_width = bounds[2] - bounds[0];
+            const float x = text_width < right - left ? right - text_width : left;
+
+            m_scroll_sub_heading.Draw(vg, true, x, start_y, right - x, 18,
+                NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+        }
+    }
 }
 
 void MenuBase::SetTitle(std::string title) {
