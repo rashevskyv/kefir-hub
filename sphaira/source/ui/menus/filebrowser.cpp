@@ -2631,8 +2631,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     // workaround the buttons not being display properly.
     // basically, inherit all actions from the view, draw them,
     // then restore state after.
+    // ponytail: the restore erases them again, so the hint row is re-measured
+    // twice a frame here while every other menu caches it. Hoist the inherit to
+    // when the view's action set actually changes if it ever shows up in a
+    // profile.
     const auto view_actions = view->GetActions();
-    m_actions.insert_range(view_actions);
+    SetActions(view_actions);
     ON_SCOPE_EXIT(RemoveActions(view_actions));
 
     MenuBase::Update(controller, touch);
@@ -2642,7 +2646,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     // see Menu::Update().
     const auto view_actions = view->GetActions();
-    m_actions.insert_range(view_actions);
+    SetActions(view_actions);
     ON_SCOPE_EXIT(RemoveActions(view_actions));
 
     MenuBase::Draw(vg, theme);

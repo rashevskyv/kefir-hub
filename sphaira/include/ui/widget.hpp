@@ -87,6 +87,14 @@ struct Widget : public Object {
         }
     }
 
+    // bulk insert. Goes through SetAction rather than touching m_actions, so
+    // the laid out hint row is invalidated with it.
+    void SetActions(const Actions& actions) {
+        for (const auto& [button, action] : actions) {
+            SetAction(button, action);
+        }
+    }
+
     auto GetActions() const {
         return m_actions;
     }
@@ -95,6 +103,7 @@ struct Widget : public Object {
 
     void RemoveActions() {
         m_actions.clear();
+        m_ui_buttons_dirty = true;
     }
 
     void RemoveActions(const Actions& actions) {
@@ -115,17 +124,25 @@ struct Widget : public Object {
 
     auto SetUiButtonPos(Vec2 pos) {
         m_button_pos = pos;
+        m_ui_buttons_dirty = true;
     }
 
     void SetUiButtonSort(bool sort = true) {
         m_sort_ui_buttons = sort;
+        m_ui_buttons_dirty = true;
     }
 
-    auto GetUiButtons() const -> uiButtons;
+    // The laid out hint row. Measuring it costs an nvgTextBounds per label and
+    // per glyph, so it is kept until something that decides the layout changes:
+    // the action set or the anchor. The font is loaded once at startup and the
+    // hints are baked when the Action is built, so nothing else moves it.
+    auto GetUiButtons() -> uiButtons&;
     static void SetupUiButtons(uiButtons& buttons, const Vec2& button_pos = {1220, 675});
     static auto GetUiButtons(const Actions& actions, const Vec2& button_pos = {1220, 675}, bool sort = false) -> uiButtons;
 
     Actions m_actions{};
+    uiButtons m_ui_buttons{};
+    bool m_ui_buttons_dirty{true};
     bool m_sort_ui_buttons{};
     Vec2 m_button_pos{1220, 675};
     bool m_focus{false};

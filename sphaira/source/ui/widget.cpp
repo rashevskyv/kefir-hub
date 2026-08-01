@@ -141,9 +141,12 @@ void Widget::Update(Controller* controller, TouchInfo* touch) {
         m_pending_button = Button::NONE;
     }
 
-    auto draw_actions = GetUiButtons();
-    for (auto& e : draw_actions) {
-        if (touch->is_clicked && touch->in_range(e.GetPos())) {
+    if (!touch->is_clicked) {
+        return;
+    }
+
+    for (auto& e : GetUiButtons()) {
+        if (touch->in_range(e.GetPos())) {
             log_write("got click: %s\n", e.m_action_str.c_str());
             FireAction(e.m_button);
             break;
@@ -160,9 +163,7 @@ void Widget::Draw(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    auto draw_actions = GetUiButtons();
-
-    for (auto& e : draw_actions) {
+    for (auto& e : GetUiButtons()) {
         e.Draw(vg, theme);
     }
 }
@@ -172,12 +173,24 @@ auto Widget::HasAction(Button button) const -> bool {
 }
 
 void Widget::SetAction(Button button, Action action) {
+    // only the label and the glyph decide the layout - swapping the callback
+    // under an unchanged hint must not cost a re-measure. Menus that rebuild
+    // their whole action set every frame (the file browser inherits its view's)
+    // would otherwise never hit the cache.
+    const auto it = m_actions.find(button);
+    if (it == m_actions.end() ||
+        it->second.m_hint != action.m_hint ||
+        it->second.m_button_str != action.m_button_str) {
+        m_ui_buttons_dirty = true;
+    }
+
     m_actions.insert_or_assign(button, action);
 }
 
 void Widget::RemoveAction(Button button) {
     if (auto it = m_actions.find(button); it != m_actions.end()) {
         m_actions.erase(it);
+        m_ui_buttons_dirty = true;
     }
 }
 
@@ -263,8 +276,13 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
     return draw_actions;
 }
 
-auto Widget::GetUiButtons() const -> uiButtons {
-    return GetUiButtons(m_actions, m_button_pos, m_sort_ui_buttons);
+auto Widget::GetUiButtons() -> uiButtons& {
+    if (m_ui_buttons_dirty) {
+        m_ui_buttons = GetUiButtons(m_actions, m_button_pos, m_sort_ui_buttons);
+        m_ui_buttons_dirty = false;
+    }
+
+    return m_ui_buttons;
 }
 
 } // namespace sphaira::ui
