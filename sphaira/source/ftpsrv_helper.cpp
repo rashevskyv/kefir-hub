@@ -3,6 +3,7 @@
 #include "app.hpp"
 #include "fs.hpp"
 #include "log.hpp"
+#include "net.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -523,10 +524,26 @@ void loop(void* arg) {
     log_write("[FTP] loop entered\n");
 
     while (!g_should_exit) {
+        // binding while the interface is down produces a socket that never
+        // receives anything, so wait for an ip rather than spin on a dead
+        // listener (also covers the ftp server being started offline).
+        while (!g_should_exit && !net::IsConnected()) {
+            svcSleepThread(1e+9);
+        }
+
+        auto resume_gen = net::ResumeGeneration();
         ftpsrv_init(&g_ftpsrv_config);
         while (!g_should_exit) {
             if (ftpsrv_loop(100) != FTP_API_LOOP_ERROR_OK) {
                 svcSleepThread(1e+6);
+                break;
+            }
+
+            // a wake from sleep leaves the listening socket bound to an
+            // interface that no longer exists: only a re-init starts listening
+            // again. see net::NotifyResume.
+            if (net::ResumeGeneration() != resume_gen) {
+                log_write("[FTP] resume detected, restarting listener\n");
                 break;
             }
         }
