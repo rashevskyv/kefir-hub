@@ -119,9 +119,9 @@ void on_applet_focus_state(App* app) {
         case AppletFocusState_InFocus:
             log_write("[APPLET] AppletFocusState_InFocus\n");
             // App::Notify("AppletFocusState_InFocus");
-            // coming back from sleep (or from another applet) leaves the web
-            // server's listening socket detached from the interface.
-            WebShareNotifyNetworkChange();
+            // coming back from sleep (or from another applet) leaves a server's
+            // listening socket detached from the interface, see net::NotifyResume.
+            net::NotifyResume();
             break;
 
         case AppletFocusState_OutOfFocus:
@@ -195,7 +195,7 @@ void appplet_hook_calback(AppletHookType type, void *param) {
 
         case AppletHookType_OnResume:
             // App::Notify("AppletHookType_OnResume");
-            WebShareNotifyNetworkChange();
+            net::NotifyResume();
             break;
 
         case AppletHookType_OnCaptureButtonShortPressed:

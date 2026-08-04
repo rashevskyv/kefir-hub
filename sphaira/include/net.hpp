@@ -47,6 +47,15 @@ auto NoConnectionMessage() -> std::string;
 // true when rc is a failure that "the console is offline" fully explains.
 auto IsOfflineError(Result rc) -> bool;
 
+// A sleep takes the network interface down with it, and a socket bound before
+// the sleep survives the wake as a valid fd that no longer receives anything:
+// the server looks healthy from here and is unreachable from the network. This
+// counter is bumped from the applet hooks whenever that may have happened (wake
+// from sleep, switch back from another applet). Servers keep their own copy of
+// it and re-listen when it moves.
+void NotifyResume();
+auto ResumeGeneration() -> u32;
+
 // closes the nifm request held open for the connection, if any.
 void Exit();
 

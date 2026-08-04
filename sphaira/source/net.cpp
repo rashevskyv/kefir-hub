@@ -8,6 +8,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/types.hpp"
 
+#include <atomic>
 #include <mutex>
 
 namespace sphaira::net {
@@ -31,6 +32,9 @@ std::mutex g_mutex{};
 TimeStamp g_cache_ts{};
 bool g_cache_value{};
 bool g_cache_valid{};
+
+// see NotifyResume() in the header.
+std::atomic<u32> g_resume_generation{};
 
 // airplane mode can only be cleared from nifm:a / nifm:s. sphaira asks for
 // nifm:a on boot and falls back to nifm:u (see main.cpp), so on the fallback
@@ -201,6 +205,14 @@ void RequireConnection(std::function<void()> on_connected) {
             }
         }
     );
+}
+
+void NotifyResume() {
+    g_resume_generation++;
+}
+
+auto ResumeGeneration() -> u32 {
+    return g_resume_generation;
 }
 
 void Exit() {
