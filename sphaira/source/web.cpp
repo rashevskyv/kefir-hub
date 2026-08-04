@@ -7,6 +7,7 @@
 #include "web_upload.hpp"
 #include "log.hpp"
 #include "app.hpp"
+#include "net.hpp"
 #include "i18n.hpp"
 #include "defines.hpp"
 #include "title_info.hpp"
@@ -51,6 +52,8 @@ constexpr u16 SHARE_PORT_LAST = 8090;
 // poll (e.g. from a second device) can still be served while another thread
 // is blocked handling a long upload/install request.
 constexpr size_t SHARE_WORKER_COUNT = 3;
+// seconds without an ip before the server gives up and closes itself.
+constexpr unsigned SHARE_OFFLINE_GIVEUP = 30;
 
 std::atomic_bool g_title_initialized{false};
 Thread g_share_threads[SHARE_WORKER_COUNT]{};
@@ -59,10 +62,10 @@ std::atomic_bool g_share_running{false};
 std::atomic_bool g_share_self_test{false};
 std::atomic<Socket> g_share_socket{-1};
 u16 g_share_port{};
-// the ip the listener was bound under, and the "rebind me" flag raised from the
-// applet hooks. see CheckShareNetwork().
+// the ip the listener was bound under, and the applet-hook resume counter it
+// was last checked against. see TickShareNetwork().
 u32 g_share_ip{};
-std::atomic_bool g_share_rebind{false};
+u32 g_share_resume_gen{};
 
 
 
@@ -1193,39 +1196,50 @@ auto CreateShareListener(u16 port) -> Socket {
     return sock;
 }
 
-// Sleep takes the network interface down with it. The listening socket survives
-// the wake as a valid fd but is no longer attached to a live interface, so
-// accept() simply goes quiet: healthy from here, unreachable from the network.
-// Only a fresh bind() brings it back.
+// Called once a second from the server's progress box -- the one thread that
+// owns the server's lifetime -- so it needs no locking of its own. Returns
+// false when the server should be stopped.
 //
-// Rate limited and try_lock'd because every worker calls it from its accept
-// loop; the one that gets in does the rebind, the others keep accepting.
-std::mutex g_share_net_mutex{};
+// A sleep takes the network interface down with it: the listening socket
+// survives the wake as a valid fd that is no longer attached to anything, so
+// accept() just goes quiet and the server is unreachable while looking healthy
+// from here. Same address after the wake means the url and qr on screen still
+// point here and a fresh bind() is enough. A different address (or none at all)
+// means they do not, and there is nothing worth keeping alive.
 TimeStamp g_share_net_ts{};
+unsigned g_share_offline{};
 
-void CheckShareNetwork() {
-    std::unique_lock lock{g_share_net_mutex, std::try_to_lock};
-    if (!lock || g_share_net_ts.GetMs() < 1000) {
-        return;
+auto TickShareNetwork() -> bool {
+    if (g_share_net_ts.GetMs() < 1000) {
+        return true;
     }
     g_share_net_ts.Update();
 
     u32 ip{};
     if (R_FAILED(nifmGetCurrentIpAddress(&ip)) || !ip) {
-        // still associating after the wake: nothing to bind to yet, and the
-        // rebind flag stays raised so the next pass tries again.
-        return;
-    }
+        // wi-fi re-associates a few seconds after a wake, so being offline is
+        // only conclusive once it has had time to come back.
+        if (++g_share_offline < SHARE_OFFLINE_GIVEUP) {
+            return true;
+        }
 
-    // a new dhcp lease is a rebind on its own -- the applet hooks are the
-    // trigger for the (common) case of waking up on the same address.
+        log_write("[WEB] no ip for %us, stopping server\n", g_share_offline);
+        App::Notify("Web server stopped: the console went offline"_i18n);
+        return false;
+    }
+    g_share_offline = 0;
+
     if (ip != g_share_ip) {
-        g_share_rebind = true;
+        log_write("[WEB] ip changed %08X -> %08X, stopping server\n", g_share_ip, ip);
+        App::Notify("Web server stopped: the console's IP address changed"_i18n);
+        return false;
     }
 
-    if (!g_share_rebind.exchange(false)) {
-        return;
+    const auto gen = net::ResumeGeneration();
+    if (gen == g_share_resume_gen) {
+        return true;
     }
+    g_share_resume_gen = gen;
 
     const auto old = g_share_socket.exchange(-1);
     if (old >= 0) {
@@ -1236,14 +1250,13 @@ void CheckShareNetwork() {
     // same port, so the url and qr code already on screen stay valid.
     const auto sock = CreateShareListener(g_share_port);
     if (sock < 0) {
-        g_share_rebind = true;
-        return;
+        log_write("[WEB] rebind failed on port %u, stopping server\n", g_share_port);
+        return false;
     }
 
     g_share_socket = sock;
-    g_share_ip = ip;
-    log_write("[WEB] listener rebound on port %u, ip %u.%u.%u.%u\n", g_share_port,
-        ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+    log_write("[WEB] listener rebound on port %u after resume\n", g_share_port);
+    return true;
 }
 
 // Multiple instances of this run concurrently (see SHARE_WORKER_COUNT), each
@@ -1255,11 +1268,9 @@ void ShareThreadFunc(void*) {
         socklen_t remote_len = sizeof(remote);
         const auto client = accept(g_share_socket, reinterpret_cast<sockaddr*>(&remote), &remote_len);
         if (client < 0) {
-            const auto err = errno;
-            CheckShareNetwork();
-            // EBADF here means a rebind is in flight (or failed); back off like
-            // any other hard error rather than spinning on the closed fd.
-            svcSleepThread(err == EWOULDBLOCK || err == EAGAIN ? 5'000'000 : 50'000'000);
+            // EBADF means a rebind is swapping the listener under us: back off
+            // like any other hard error and pick the new fd up next time round.
+            svcSleepThread(errno == EWOULDBLOCK || errno == EAGAIN ? 5'000'000 : 50'000'000);
             continue;
         }
 
@@ -1318,7 +1329,9 @@ auto StartShareServer() -> Result {
 
         g_share_socket = sock;
         g_share_port = port;
-        g_share_rebind = false;
+        g_share_offline = 0;
+        g_share_resume_gen = net::ResumeGeneration();
+        g_share_net_ts.Update();
         nifmGetCurrentIpAddress(&g_share_ip);
         g_share_running = true;
 
@@ -1529,7 +1542,7 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
             WebSetProgressBox(pbox);
             ON_SCOPE_EXIT(WebSetProgressBox(nullptr));
             std::string last_name;
-            while (!pbox->ShouldExit() && WebShareIsRunning()) {
+            while (!pbox->ShouldExit() && WebShareIsRunning() && TickShareNetwork()) {
                 const auto state = WebGetUploadState();
                 if (state.active) {
                     if (state.name != last_name) {
@@ -1569,12 +1582,6 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
 
 bool WebShareIsRunning() {
     return g_share_running.load();
-}
-
-void WebShareNotifyNetworkChange() {
-    if (g_share_running) {
-        g_share_rebind = true;
-    }
 }
 
 } // namespace sphaira
