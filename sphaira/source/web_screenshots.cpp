@@ -6,6 +6,7 @@
 #include "fs.hpp"
 #include <algorithm>
 #include <vector>
+#include <unordered_map>
 #include <cctype>
 #include <cstring>
 #include <cstdio>
@@ -22,6 +23,7 @@ struct ScreenshotEntry {
     std::string filename;
     std::string timestamp; // YYYY-MM-DD HH:MM:SS
     std::string game_name;
+    std::string title_id; // 016X, empty when unknown
     s64 file_size{};
     std::string raw_timestamp; // YYYYMMDDHHMMSS00 (for sorting)
     bool is_video{};
@@ -36,6 +38,44 @@ auto GetAlbumRoot() -> const std::string& {
     }();
 
     return root;
+}
+
+// the hex after the '-' in an album filename is an obfuscated id, *not* the title id.
+// caps:a is what maps a file back to the application that took it; its datetime is
+// documented as being exactly the "YYYYMMDDHHMMSSII" part of the filename.
+auto GetAlbumTitleIds() -> const std::unordered_map<std::string, u64>& {
+    static const auto map = [] {
+        std::unordered_map<std::string, u64> out;
+        if (R_FAILED(capsaInitialize())) {
+            return out;
+        }
+        ON_SCOPE_EXIT(capsaExit());
+
+        for (const auto storage : {CapsAlbumStorage_Nand, CapsAlbumStorage_Sd}) {
+            u64 count{};
+            if (R_FAILED(capsaGetAlbumFileCount(storage, &count)) || !count) {
+                continue;
+            }
+
+            std::vector<CapsAlbumEntry> entries(count);
+            u64 total{};
+            if (R_FAILED(capsaGetAlbumFileList(storage, &total, entries.data(), count))) {
+                continue;
+            }
+
+            for (u64 i = 0; i < std::min(total, count); i++) {
+                const auto& dt = entries[i].file_id.datetime;
+                char key[17]{};
+                std::snprintf(key, sizeof(key), "%04u%02u%02u%02u%02u%02u%02u",
+                    dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.id);
+                out.emplace(key, entries[i].file_id.application_id);
+            }
+        }
+
+        return out;
+    }();
+
+    return map;
 }
 
 bool TryParseScreenshotEntry(const FsDirectoryEntry& d_entry, const std::string& full_path, ScreenshotEntry& se) {
@@ -72,18 +112,18 @@ bool TryParseScreenshotEntry(const FsDirectoryEntry& d_entry, const std::string&
             se.timestamp = stem.substr(0, 4) + "-" + stem.substr(4, 2) + "-" + stem.substr(6, 2) + " " +
                            stem.substr(8, 2) + ":" + stem.substr(10, 2) + ":" + stem.substr(12, 2);
 
-            std::string title_id_hex = stem.substr(17, 16);
-            char* endptr = nullptr;
-            u64 title_id = std::strtoull(title_id_hex.c_str(), &endptr, 16);
-            if (endptr != nullptr && *endptr == '\0') {
-                if (auto info = title::Get(title_id)) {
-                    if (title::IsPlaceholderName(info->lang.name)) {
-                        se.game_name = "Title: " + title_id_hex;
-                    } else {
-                        se.game_name = info->lang.name;
-                    }
+            const auto& ids = GetAlbumTitleIds();
+            if (const auto it = ids.find(se.raw_timestamp); it != ids.end()) {
+                char id_buf[17]{};
+                std::snprintf(id_buf, sizeof(id_buf), "%016lX", it->second);
+                se.title_id = id_buf;
+
+                auto info = title::Get(it->second);
+                if (info && !title::IsPlaceholderName(info->lang.name)) {
+                    se.game_name = info->lang.name;
                 } else {
-                    se.game_name = "Title: " + title_id_hex;
+                    se.game_name = "Title " + se.title_id;
+                    se.title_id.clear();
                 }
             } else {
                 se.game_name = "Unknown Game";
@@ -235,6 +275,9 @@ void AppendScreenshotCard(std::string& body, const ScreenshotEntry& entry) {
     }
     body += "<div class=\"info\">";
     body += "<div class=\"game-name\" title=\"" + escaped_game + "\">" + escaped_game + "</div>";
+    if (!entry.title_id.empty()) {
+        body += "<div class=\"title-id\">" + entry.title_id + "</div>";
+    }
     body += "<div class=\"timestamp\">" + escaped_time + "</div>";
 
     char size_buf[32]{};
@@ -300,6 +343,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "img,video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#050505;border-bottom:1px solid #2d2d2d}";
     body += ".info{padding:12px;display:flex;flex-direction:column;gap:6px;flex-grow:1}";
     body += ".game-name{font-weight:600;color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+    body += ".title-id{color:#7c8794;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.4px}";
     body += ".timestamp{color:#8a939e;font-size:12px}";
     body += ".size{color:#6c757d;font-size:11px}";
     body += ".actions{display:flex;gap:8px;margin-top:auto;padding-top:10px}";
@@ -321,6 +365,7 @@ auto BuildScreenshotGalleryPage(const std::string& query) -> std::string {
     body += "  .grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:12px}";
     body += "  .grid .info{padding:6px;gap:2px}";
     body += "  .game-name{font-size:11px}";
+    body += "  .title-id{font-size:8px;letter-spacing:0}";
     body += "  .timestamp{font-size:9px}";
     body += "  .size{font-size:8px}";
     body += "  .folder-card{padding:10px}";
