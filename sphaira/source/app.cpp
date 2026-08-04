@@ -119,6 +119,9 @@ void on_applet_focus_state(App* app) {
         case AppletFocusState_InFocus:
             log_write("[APPLET] AppletFocusState_InFocus\n");
             // App::Notify("AppletFocusState_InFocus");
+            // coming back from sleep (or from another applet) leaves the web
+            // server's listening socket detached from the interface.
+            WebShareNotifyNetworkChange();
             break;
 
         case AppletFocusState_OutOfFocus:
@@ -192,6 +195,7 @@ void appplet_hook_calback(AppletHookType type, void *param) {
 
         case AppletHookType_OnResume:
             // App::Notify("AppletHookType_OnResume");
+            WebShareNotifyNetworkChange();
             break;
 
         case AppletHookType_OnCaptureButtonShortPressed:
@@ -975,6 +979,7 @@ App::App(const char* argv0) {
             else if (app->m_install_emummc.LoadFrom(Key, Value)) {}
             else if (app->m_install_location.LoadFrom(Key, Value)) {}
             else if (app->m_install_reserve_mb.LoadFrom(Key, Value)) {}
+            else if (app->m_install_reserve_sd_mb.LoadFrom(Key, Value)) {}
             else if (app->m_progress_boost_mode.LoadFrom(Key, Value)) {}
             else if (app->m_allow_downgrade.LoadFrom(Key, Value)) {}
             else if (app->m_skip_if_already_installed.LoadFrom(Key, Value)) {}

@@ -29,6 +29,9 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result;
 void WebShareStop();
 WebUploadState WebGetUploadState();
 bool WebShareIsRunning();
+// tells a running share server that the network may have moved under it (wake
+// from sleep, applet switch): it rebinds its listener on the next idle pass.
+void WebShareNotifyNetworkChange();
 void WebSetProgressBox(ui::ProgressBox* pbox);
 ui::ProgressBox* WebGetProgressBox();
 void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title);

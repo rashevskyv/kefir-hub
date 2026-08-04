@@ -283,17 +283,24 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     // value shown next to a bar: free space normally, the highlighted size in
     // highlight mode, "+size" for a projection (planned install usage).
-    auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes) -> std::string {
+    auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
         if (!m_storage_highlight_active || (m_storage_projection && !highlight_bytes)) {
             return utils::formatSizeStorage(free_bytes);
         }
         const auto value = utils::formatSizeStorage(highlight_bytes);
-        return m_storage_projection ? "+" + value : value;
+        if (!m_storage_projection) {
+            return value;
+        }
+        // "this package / everything queued" when one package is in focus.
+        if (focus_bytes) {
+            return "+" + utils::formatSizeStorage(focus_bytes) + " / " + value;
+        }
+        return "+" + value;
     };
 
-    auto label_x_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes) -> float {
+    auto label_x_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) -> float {
         if (total_bytes <= 0) return bar_x - 4.f;
-        const auto value = storage_value_of(free_bytes, highlight_bytes);
+        const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
         nvgFontSize(vg, small_font);
         gfx::textBounds(vg, 0, 0, bounds, value.c_str());
         const float value_w = bounds[2] - bounds[0];
@@ -303,8 +310,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // NAND and SD labels must line up under one another: use whichever row's
     // label position sits further left (i.e. has the wider value text).
     const float label_x = std::min(
-        label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight),
-        label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight));
+        label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus),
+        label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight, m_sd_focus));
 
     // Left edge of the whole status block, so the header gap can end against
     // it. label_x is where the labels *end* - they are drawn right aligned -
@@ -320,7 +327,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         m_status_left_x = label_x - label_w;
     }
 
-    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes) {
+    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) {
         if (total_bytes <= 0) return;
         const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
         const float fill_w     = bar_w * used_ratio;
@@ -349,6 +356,14 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             const bool fits = free_bytes > 0 && highlight_bytes <= static_cast<u64>(free_bytes);
             const auto seg_col = fits ? theme->GetColour(ThemeEntryID_HIGHLIGHT_1) : nvgRGBA(230, 60, 60, 255);
             gfx::drawRect(vg, bar_x + fill_w, bar_y, seg_w, bar_h, seg_col);
+
+            // the package in focus takes the head of the segment, so it reads as
+            // "of everything queued here, this much is the one you are looking at".
+            if (focus_bytes) {
+                const float f_ratio = static_cast<float>(focus_bytes) / static_cast<float>(total_bytes);
+                const float f_w = std::min(seg_w, std::max(2.f, bar_w * f_ratio));
+                gfx::drawRect(vg, bar_x + fill_w, bar_y, f_w, bar_h, theme->GetColour(ThemeEntryID_HIGHLIGHT_2));
+            }
         } else if (highlight_bytes && fill_w > 0.f) {
             const float highlight_ratio = std::min(
                 used_ratio, static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes));
@@ -360,7 +375,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
         // Normally show free space. Games replace it with the exact size of the
         // focused title or the sum of the current multi-selection.
-        const auto value = storage_value_of(free_bytes, highlight_bytes);
+        const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
         const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
             ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
@@ -376,8 +391,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
     const float storage_mid  = (y_ip + start_y) * 0.5f;
     const float storage_gap  = 15.f;
-    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight);
-    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight);
+    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
+    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
 
     } // draw_status
 
@@ -475,13 +490,17 @@ void MenuBase::SetSubHeading(std::string sub_heading) {
 void MenuBase::SetStorageHighlight(u64 nand_bytes, u64 sd_bytes) {
     m_nand_highlight = nand_bytes;
     m_sd_highlight = sd_bytes;
+    m_nand_focus = 0;
+    m_sd_focus = 0;
     m_storage_highlight_active = true;
     m_storage_projection = false;
 }
 
-void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes) {
+void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus, u64 sd_focus) {
     m_nand_highlight = nand_bytes;
     m_sd_highlight = sd_bytes;
+    m_nand_focus = std::min(nand_focus, nand_bytes);
+    m_sd_focus = std::min(sd_focus, sd_bytes);
     m_storage_highlight_active = true;
     m_storage_projection = true;
 }
@@ -489,6 +508,8 @@ void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes) {
 void MenuBase::ClearStorageHighlight() {
     m_nand_highlight = 0;
     m_sd_highlight = 0;
+    m_nand_focus = 0;
+    m_sd_focus = 0;
     m_storage_highlight_active = false;
     m_storage_projection = false;
 }

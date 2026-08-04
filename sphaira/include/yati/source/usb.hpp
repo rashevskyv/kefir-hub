@@ -2,8 +2,10 @@
 
 #include "base.hpp"
 #include "fs.hpp"
+#include "usb/goldleaf.hpp"
 #include "usb/usbds.hpp"
 
+#include <array>
 #include <string>
 #include <memory>
 #include <switch.h>
@@ -12,7 +14,7 @@ namespace sphaira::yati::source {
 
 enum class UsbProtocol {
     Tinfoil,
-    Goldleaf
+    Goldleaf,
 };
 
 struct Usb final : Base {
@@ -37,12 +39,23 @@ struct Usb final : Base {
 private:
     Result SendCmdHeader(u32 cmdId, size_t dataSize, u64 timeout);
     Result SendFileRangeCmd(u64 offset, u64 size, u64 timeout);
+    Result TinfoilWaitForConnection(u64 timeout, std::vector<std::string>& out_names);
+
+    Result GoldleafWaitForConnection(u64 timeout, std::vector<std::string>& out_names);
+    Result GoldleafRead(void* buf, s64 off, s64 size, u64* bytes_read);
 
 private:
     std::unique_ptr<usb::UsbDs> m_usb;
     std::string m_transfer_file_name{};
     u8 m_flags{};
     UsbProtocol m_protocol{UsbProtocol::Tinfoil};
+
+    // goldleaf request blocks are built in m_gl_req and replies land in
+    // m_gl_res. Both live here rather than on the stack: Read() runs on
+    // whichever thread yati is installing from, and 0x2000 bytes of locals is
+    // more than those get.
+    std::array<u8, usb::goldleaf::BLOCK_SIZE> m_gl_req{};
+    std::array<u8, usb::goldleaf::BLOCK_SIZE> m_gl_res{};
 };
 
 } // namespace sphaira::yati::source

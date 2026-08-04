@@ -141,6 +141,7 @@ public:
     static auto GetInstallSdEnable() -> bool;
     static auto GetInstallLocation() -> long;
     static auto GetInstallReserveMb() -> long;
+    static auto GetInstallReserveSdMb() -> long;
     static auto GetAnimatedWavesEnable() -> bool;
     static auto GetWaveColorDark() -> std::string;
     static auto GetWaveColorLight() -> std::string;
@@ -185,6 +186,7 @@ public:
     static void SetReplaceHbmenuEnable(bool enable);
     static void SetInstallLocation(long location);
     static void SetInstallReserveMb(long reserve_mb);
+    static void SetInstallReserveSdMb(long reserve_mb);
     static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
     static void SetLanguage(long index, bool prompt_restart = true);
@@ -416,7 +418,9 @@ public:
     option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};
     option::OptionBool m_install_emummc{INI_SECTION, "install_emummc", false};
     option::OptionLong m_install_location{INI_SECTION, "install_location", 4};
+    // free space kept back on each target; NAND and SD are set separately.
     option::OptionLong m_install_reserve_mb{INI_SECTION, "install_reserve_mb", 500};
+    option::OptionLong m_install_reserve_sd_mb{INI_SECTION, "install_reserve_sd_mb", 500};
     option::OptionBool m_allow_downgrade{INI_SECTION, "allow_downgrade", false};
     option::OptionLong m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", 1};
     option::OptionBool m_save_settings_globally{INI_SECTION, "save_settings_globally", true};

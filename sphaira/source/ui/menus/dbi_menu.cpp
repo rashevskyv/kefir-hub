@@ -1,6 +1,7 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -98,6 +99,16 @@ u64 GetQueueEntryTitleId(const QueueEntry& entry) {
     return 0;
 }
 
+// how much a package is expected to write. Deferred entries only know their
+// (possibly compressed) source size, so they get the same 1.6x factor that
+// yati::ChooseInstallTarget uses, otherwise the plan under-books their space.
+s64 PlanSize(const QueueEntry& entry) {
+    if (!entry.analysis_deferred) {
+        return std::max<s64>(0, entry.analysis.install_size);
+    }
+    return static_cast<s64>(std::max<s64>(0, entry.analysis.source_size) * 1.6);
+}
+
 bool IsTitleAlreadyInstalled(u64 title_id) {
     if (!title_id) return false;
     // Check BuiltInUser (NAND)
@@ -159,6 +170,7 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
     m_session_install_location = App::GetInstallLocation();
     m_session_reserve_mb = App::GetInstallReserveMb();
+    m_session_reserve_sd_mb = App::GetInstallReserveSdMb();
 
     const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
     const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 82.f};
@@ -213,6 +225,7 @@ Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
     m_session_install_location = App::GetInstallLocation();
     m_session_reserve_mb = App::GetInstallReserveMb();
+    m_session_reserve_sd_mb = App::GetInstallReserveSdMb();
 
     const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 82.f});
@@ -418,40 +431,48 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     SCOPED_MUTEX(&m_mutex);
     if (state == State::ReviewQueue) {
+        // decide up front where every selected package lands, so the bars, the
+        // per row "Target" text and the install itself all agree.
+        RecomputePlan();
+
         s64 selected_size{};
         size_t selected_count{};
         s64 sd_required{}, nand_required{};
-        for (const auto& entry : m_queue) {
+        s64 sd_focus{}, nand_focus{};
+        for (s64 i = 0; i < static_cast<s64>(m_queue.size()); i++) {
+            const auto& entry = m_queue[i];
             if (entry.selected && R_SUCCEEDED(entry.analysis_result)) {
-                // deferred entries only know the (compressed) file size: use
-                // it as a lower bound so the projection is never empty.
-                const auto size = entry.analysis_deferred
-                    ? entry.analysis.source_size : entry.analysis.install_size;
-                
+                const auto size = PlanSize(entry);
                 const u64 title_id = GetQueueEntryTitleId(entry);
                 if (!IsTitleAlreadyInstalled(title_id)) {
-                    AddSizeSaturated(selected_size, std::max<s64>(0, size));
-                    const bool sd = entry.target == InstallTarget::Sd
-                        || (entry.target == InstallTarget::Auto && entry.analysis.suggested_sd);
-                    AddSizeSaturated(sd ? sd_required : nand_required, std::max<s64>(0, size));
+                    AddSizeSaturated(selected_size, size);
+                    AddSizeSaturated(entry.planned_sd ? sd_required : nand_required, size);
+                    // the row under the cursor gets its own colour inside the bar.
+                    if (i == m_index) {
+                        (entry.planned_sd ? sd_focus : nand_focus) = size;
+                    }
                 }
                 selected_count++;
             }
         }
         // preview the required space on the NAND/SD bars in the status area.
-        SetStorageProjection(nand_required, sd_required);
+        SetStorageProjection(nand_required, sd_required, nand_focus, sd_focus);
         const auto spaces = GetPolledData();
-        const auto reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
+        const bool global = App::GetSaveSettingsGlobally();
+        const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+        const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
         const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
         DrawStatRow(vg, info_col, 70.f, GetY() + 10.f, 17.f, {
             {"Targets"_i18n, "Per package"_i18n},
             {"Selected"_i18n, std::to_string(selected_count) + " / " + std::to_string(m_queue.size())},
             {"Required"_i18n, utils::formatSizeStorage(selected_size)},
+            {"microSD"_i18n, utils::formatSizeStorage(sd_required)},
+            {"NAND"_i18n, utils::formatSizeStorage(nand_required)},
         });
         DrawStatRow(vg, info_col, 70.f, GetY() + 36.f, 15.f, {
-            {"microSD free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.sd_free - reserve))},
-            {"NAND free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.nand_free - reserve))},
-            {"Reserve"_i18n, utils::formatSizeStorage(reserve)},
+            {"microSD free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.sd_free - reserve_sd))},
+            {"NAND free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.nand_free - reserve_nand))},
+            {"Reserve"_i18n, utils::formatSizeStorage(reserve_sd) + " / " + utils::formatSizeStorage(reserve_nand)},
         });
 
         m_list->Draw(vg, theme, m_queue.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
@@ -467,15 +488,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             } else if (entry.analysis_deferred) {
                 const auto source_size = entry.analysis.source_size > 0
                     ? utils::formatSizeStorage(entry.analysis.source_size) : "Unknown"_i18n;
+                const auto target = entry.target == InstallTarget::Auto
+                    ? TargetName(entry.target) + " → " + (entry.planned_sd ? "microSD"_i18n : "System memory"_i18n)
+                    : TargetName(entry.target);
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
                     theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s    %s: %s",
                     "Package size"_i18n.c_str(), source_size.c_str(),
                     "Install size"_i18n.c_str(), "Calculated during install"_i18n.c_str(),
-                    "Target"_i18n.c_str(), TargetName(entry.target).c_str());
+                    "Target"_i18n.c_str(), target.c_str());
             } else {
                 const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
                 const auto target = entry.target == InstallTarget::Auto
-                    ? TargetName(entry.target) + " → " + (entry.analysis.suggested_sd ? "microSD"_i18n : "System memory"_i18n)
+                    ? TargetName(entry.target) + " → " + (entry.planned_sd ? "microSD"_i18n : "System memory"_i18n)
                     : TargetName(entry.target);
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
                     theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s (%s)    %s: %s",
@@ -488,21 +512,23 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (state == State::Installing) {
-        // keep projecting the space still needed by the remaining packages.
+        // keep projecting the space still needed by the remaining packages, with
+        // the package actually being written picked out in its own colour.
         s64 sd_required{}, nand_required{};
-        for (const auto& entry : m_queue) {
+        s64 sd_focus{}, nand_focus{};
+        for (size_t i = 0; i < m_queue.size(); i++) {
+            const auto& entry = m_queue[i];
             if (!entry.install_selected || entry.installed || R_FAILED(entry.analysis_result)) continue;
-            const auto size = entry.analysis_deferred
-                ? entry.analysis.source_size : entry.analysis.install_size;
-            
             const u64 title_id = GetQueueEntryTitleId(entry);
             if (!IsTitleAlreadyInstalled(title_id)) {
-                const bool sd = entry.install_target == InstallTarget::Sd
-                    || (entry.install_target == InstallTarget::Auto && entry.analysis.suggested_sd);
-                AddSizeSaturated(sd ? sd_required : nand_required, std::max<s64>(0, size));
+                const auto size = PlanSize(entry);
+                AddSizeSaturated(entry.install_sd ? sd_required : nand_required, size);
+                if (i == m_current_package) {
+                    (entry.install_sd ? sd_focus : nand_focus) = size;
+                }
             }
         }
-        SetStorageProjection(nand_required, sd_required);
+        SetStorageProjection(nand_required, sd_required, nand_focus, sd_focus);
     } else {
         ClearStorageHighlight();
     }
@@ -529,29 +555,48 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         avg_write_bps = sum / static_cast<s64>(m_history_count);
     }
     const double speed_mib = static_cast<double>(avg_write_bps) / (1024.0 * 1024.0);
-    std::string eta{};
-    if (m_history_count >= 4 && avg_write_bps > 0 && m_progress_size > m_progress_offset) {
-        const auto seconds_left = static_cast<size_t>((m_progress_size - m_progress_offset) / avg_write_bps);
-        char eta_buf[64]{};
-        if (seconds_left >= 3600) {
-            std::snprintf(eta_buf, sizeof(eta_buf), "%zuh %zum", seconds_left / 3600, seconds_left % 3600 / 60);
-        } else {
-            std::snprintf(eta_buf, sizeof(eta_buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
+
+    // whole-run progress: the bytes of the packages already off the queue, plus
+    // what the one in flight has written so far.
+    const s64 current_plan = m_current_package < m_queue.size() ? PlanSize(m_queue[m_current_package]) : 0;
+    const s64 overall_done = m_plan_done_bytes
+        + std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, current_plan);
+    const double overall_ratio = m_plan_total_bytes > 0
+        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+
+    const auto format_eta = [&](s64 bytes_left) -> std::string {
+        if (m_history_count < 4 || avg_write_bps <= 0 || bytes_left <= 0) {
+            return {};
         }
-        eta = eta_buf;
-    }
+        const auto seconds_left = static_cast<size_t>(bytes_left / avg_write_bps);
+        char buf[64]{};
+        if (seconds_left >= 3600) {
+            std::snprintf(buf, sizeof(buf), "%zuh %zum", seconds_left / 3600, seconds_left % 3600 / 60);
+        } else {
+            std::snprintf(buf, sizeof(buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
+        }
+        return buf;
+    };
+    const auto file_eta = format_eta(m_progress_size - m_progress_offset);
+    const auto total_eta = format_eta(m_plan_total_bytes - overall_done);
+
     char avg_buf[32]{};
     std::snprintf(avg_buf, sizeof(avg_buf), "%.2f MiB/s", speed_mib);
+    char overall_buf[16]{};
+    std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
     std::vector<StatItem> header{
         {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
+        {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
         {"Installed"_i18n, std::to_string(m_stats.installed)},
         {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
         // the R/W readout beside the graph is the momentary rate and is where the
         // eye lands; this is the whole-window average, accented so it is not lost.
         {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
     };
-    if (!eta.empty()) {
-        header.push_back({"Remaining"_i18n, eta});
+    // "this file / whole queue", so the second number answers "when am I done".
+    if (!file_eta.empty() || !total_eta.empty()) {
+        header.push_back({"Remaining"_i18n,
+            (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
     }
     DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
     if (!m_current_title.empty()) {
@@ -563,11 +608,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
         nvgRestore(vg);
     }
+    // two bars: the current transfer on top, the whole queue underneath.
     if (m_progress_size > 0) {
-        const Vec4 bar{70.f, GetY() + 67.f, 1140.f, 12.f};
+        const Vec4 bar{70.f, GetY() + 65.f, 1140.f, 10.f};
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
             theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
+    }
+    if (m_plan_total_bytes > 0) {
+        const Vec4 bar{70.f, GetY() + 78.f, 1140.f, 10.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(overall_ratio), bar.h,
+            theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 3.f);
     }
 
     // R/W speed graph: red = source read, blue = storage write.
@@ -911,18 +963,19 @@ void Menu::ThreadFunction() {
             for (size_t i = 0; i < m_queue.size(); i++) {
                 bool selected{};
                 yati::InstallAnalysis analysis{};
-                InstallTarget target{};
+                bool plan_sd{};
                 std::string name{};
                 {
                     SCOPED_MUTEX(&m_mutex);
                     selected = m_queue[i].install_selected;
                     analysis = m_queue[i].analysis;
-                    target = m_queue[i].install_target;
+                    plan_sd = m_queue[i].install_sd;
                     name = m_queue[i].file_name;
                     m_current_package = i;
                     m_current_title = name;
                     m_progress_offset = 0;
                     m_progress_size = 0;
+                    m_package_write_start = m_total_write.load();
                     m_current_file_reinstall_choice = std::nullopt;
                     m_current_file_skipped = false;
                 }
@@ -934,17 +987,9 @@ void Menu::ThreadFunction() {
                 override.skip_if_already_installed = App::GetSaveSettingsGlobally()
                     ? App::GetApp()->m_skip_if_already_installed.Get()
                     : m_session_skip_if_already_installed;
-                if (target == InstallTarget::Sd) {
-                    override.sd_card_install = true;
-                } else if (target == InstallTarget::Nand) {
-                    override.sd_card_install = false;
-                } else {
-                    long loc = App::GetSaveSettingsGlobally() ? App::GetInstallLocation() : m_session_install_location;
-                    if (loc == 0) override.sd_card_install = true;
-                    else if (loc == 1 || loc == 2) override.sd_card_install = false;
-                    else if (loc == 3) override.sd_card_install = true;
-                    else override.sd_card_install = analysis.suggested_sd;
-                }
+                // the plan already resolved location mode, reserves and packing;
+                // the install just obeys it.
+                override.sd_card_install = plan_sd;
                 const auto read_before = m_total_read.load();
                 const auto write_before = m_total_write.load();
 
@@ -972,7 +1017,7 @@ void Menu::ThreadFunction() {
                 }
                 const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
                 const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
-                RecordPackageResult(i, install_rc, cancelled, override.sd_card_install.value_or(analysis.suggested_sd),
+                RecordPackageResult(i, install_rc, cancelled, plan_sd,
                     m_total_read.load() - read_before, m_total_write.load() - write_before);
                 if (R_SUCCEEDED(install_rc)) {
                     if (m_current_file_skipped) {
@@ -1128,20 +1173,21 @@ void Menu::LocalThreadFunction() {
         for (size_t i = 0; i < m_queue.size(); i++) {
             bool selected{};
             yati::InstallAnalysis analysis{};
-            InstallTarget target{};
+            bool plan_sd{};
             bool analysis_deferred{};
             std::string name{};
             {
                 SCOPED_MUTEX(&m_mutex);
                 selected = m_queue[i].install_selected;
                 analysis = m_queue[i].analysis;
-                target = m_queue[i].install_target;
+                plan_sd = m_queue[i].install_sd;
                 analysis_deferred = m_queue[i].analysis_deferred;
                 name = m_queue[i].file_name;
                 m_current_package = i;
                 m_current_title = name;
                 m_progress_offset = 0;
                 m_progress_size = 0;
+                m_package_write_start = m_total_write.load();
                 m_current_file_reinstall_choice = std::nullopt;
                 m_current_file_skipped = false;
             }
@@ -1153,17 +1199,9 @@ void Menu::LocalThreadFunction() {
             override.skip_if_already_installed = App::GetSaveSettingsGlobally()
                 ? App::GetApp()->m_skip_if_already_installed.Get()
                 : m_session_skip_if_already_installed;
-            if (target == InstallTarget::Sd) {
-                override.sd_card_install = true;
-            } else if (target == InstallTarget::Nand) {
-                override.sd_card_install = false;
-            } else {
-                long loc = App::GetSaveSettingsGlobally() ? App::GetInstallLocation() : m_session_install_location;
-                if (loc == 0) override.sd_card_install = true;
-                else if (loc == 1 || loc == 2) override.sd_card_install = false;
-                else if (loc == 3) override.sd_card_install = true;
-                else if (!analysis_deferred) override.sd_card_install = analysis.suggested_sd;
-            }
+            // the plan already resolved location mode, reserves and packing;
+            // the install just obeys it.
+            override.sd_card_install = plan_sd;
 
             const auto read_before = m_total_read.load();
             const auto write_before = m_total_write.load();
@@ -1179,7 +1217,7 @@ void Menu::LocalThreadFunction() {
                     : open_rc;
             }
             const bool cancelled = m_cancel_requested || result == Result_TransferCancelled;
-            RecordPackageResult(i, result, cancelled, override.sd_card_install.value_or(analysis.suggested_sd),
+            RecordPackageResult(i, result, cancelled, plan_sd,
                 m_total_read.load() - read_before, m_total_write.load() - write_before);
             if (R_SUCCEEDED(result)) {
                 if (m_current_file_skipped) {
@@ -1231,13 +1269,13 @@ void Menu::StartInstall() {
             m_queue[m_index].selected = true;
             count = 1;
         }
+        RecomputePlan();
         for (const auto& entry : m_queue) {
             if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
-            const bool sd = entry.target == InstallTarget::Sd || (entry.target == InstallTarget::Auto && entry.analysis.suggested_sd);
             if (!entry.analysis_deferred) {
                 const u64 title_id = GetQueueEntryTitleId(entry);
                 if (!IsTitleAlreadyInstalled(title_id)) {
-                    AddSizeSaturated(sd ? sd_required : nand_required, entry.analysis.install_size);
+                    AddSizeSaturated(entry.planned_sd ? sd_required : nand_required, entry.analysis.install_size);
                 }
             }
         }
@@ -1247,10 +1285,11 @@ void Menu::StartInstall() {
         return;
     }
     const auto spaces = GetPolledData(true);
-    const auto reserve_mb = App::GetSaveSettingsGlobally() ? App::GetInstallReserveMb() : m_session_reserve_mb;
-    const auto reserve = reserve_mb * 1024ULL * 1024ULL;
-    if ((sd_required && spaces.sd_free - sd_required < static_cast<s64>(reserve)) ||
-        (nand_required && spaces.nand_free - nand_required < static_cast<s64>(reserve))) {
+    const bool global = App::GetSaveSettingsGlobally();
+    const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+    const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
+    if ((sd_required && spaces.sd_free - sd_required < reserve_sd) ||
+        (nand_required && spaces.nand_free - nand_required < reserve_nand)) {
         App::Push<OptionBox>("Selected packages may not fit after the configured reserve. Continue?"_i18n,
             "Cancel"_i18n, "Install selected"_i18n, 0, [this](auto choice) {
                 if (choice && *choice == 1) {
@@ -1262,12 +1301,52 @@ void Menu::StartInstall() {
     ConfirmInstallPlan();
 }
 
+void Menu::RecomputePlan() {
+    const auto spaces = GetPolledData();
+    const bool global = App::GetSaveSettingsGlobally();
+    const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+    const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
+    const long loc = global ? App::GetInstallLocation() : m_session_install_location;
+
+    s64 free_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
+    s64 free_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
+
+    auto plannable = [](const QueueEntry& e) {
+        return e.selected && R_SUCCEEDED(e.analysis_result)
+            && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(e));
+    };
+
+    // packages pinned to a target claim their space first, fit or not; the Auto
+    // ones then pack into whatever budget is left.
+    for (auto& e : m_queue) {
+        if (!plannable(e) || e.target == InstallTarget::Auto) continue;
+        e.planned_sd = e.target == InstallTarget::Sd;
+        PlanTake(e.planned_sd ? free_sd : free_nand, PlanSize(e));
+    }
+
+    // ponytail: greedy in queue order, not best-fit -- packing order follows the
+    // list the user is looking at; swap in a decreasing-size pass if it matters.
+    for (auto& e : m_queue) {
+        if (!plannable(e) || e.target != InstallTarget::Auto) continue;
+        const auto size = PlanSize(e);
+        e.planned_sd = PlanPickSd(loc, size, free_sd, free_nand);
+        PlanTake(e.planned_sd ? free_sd : free_nand, size);
+    }
+}
+
 void Menu::ConfirmInstallPlan() {
     SCOPED_MUTEX(&m_mutex);
     if (m_install_requested) return;
+    RecomputePlan();
+    m_plan_total_bytes = 0;
+    m_plan_done_bytes = 0;
+    m_package_write_start = m_total_write.load();
     for (auto& entry : m_queue) {
         entry.install_selected = entry.selected && R_SUCCEEDED(entry.analysis_result);
-        entry.install_target = entry.target;
+        entry.install_sd = entry.planned_sd;
+        if (entry.install_selected) {
+            AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
+        }
     }
     m_install_requested = true;
 }
@@ -1330,27 +1409,35 @@ void Menu::DisplayQueueOptions(bool left_side) {
         }
     }, current_loc);
 
-    s64 current_reserve = global ? App::GetInstallReserveMb() : m_session_reserve_mb;
-    auto reserve_entry_ptr = std::make_unique<SidebarEntryTextBase>("Reserve free space"_i18n,
-        std::to_string(current_reserve) + " MB",
-        nullptr,
-        "Set the threshold of free space to reserve on installation target (MB)."_i18n
-    );
-    auto* reserve_entry = reserve_entry_ptr.get();
-    reserve_entry->SetCallback([this, global, reserve_entry]() {
-        s64 out = global ? App::GetInstallReserveMb() : m_session_reserve_mb;
-        if (R_SUCCEEDED(swkbd::ShowNumPad(out, "Enter Reserve Free Space (MB)"_i18n.c_str(), std::to_string(out).c_str(), 1, 5))) {
-            if (out >= 0 && out <= 32768) {
-                if (global) {
-                    App::SetInstallReserveMb(out);
-                } else {
-                    m_session_reserve_mb = out;
+    // one entry per target: the two media fill at very different rates and want
+    // very different headroom.
+    auto add_reserve = [&](const std::string& title, const std::string& prompt, const std::string& help,
+                           long (*get)(), void (*set)(long), long* session) {
+        auto entry_ptr = std::make_unique<SidebarEntryTextBase>(title,
+            std::to_string(global ? get() : *session) + " MB", nullptr, help);
+        auto* entry = entry_ptr.get();
+        entry->SetCallback([this, global, entry, prompt, get, set, session]() {
+            s64 out = global ? get() : *session;
+            if (R_SUCCEEDED(swkbd::ShowNumPad(out, prompt.c_str(), std::to_string(out).c_str(), 1, 5))) {
+                if (out >= 0 && out <= 32768) {
+                    if (global) {
+                        set(out);
+                    } else {
+                        *session = out;
+                    }
+                    entry->SetValue(std::to_string(out) + " MB");
                 }
-                reserve_entry->SetValue(std::to_string(out) + " MB");
             }
-        }
-    });
-    options->Add(std::move(reserve_entry_ptr));
+        });
+        options->Add(std::move(entry_ptr));
+    };
+
+    add_reserve("Reserve free space (system)"_i18n, "Enter System Reserve Free Space (MB)"_i18n,
+        "Free space to keep on system memory when planning installs (MB)."_i18n,
+        App::GetInstallReserveMb, App::SetInstallReserveMb, &m_session_reserve_mb);
+    add_reserve("Reserve free space (microSD)"_i18n, "Enter microSD Reserve Free Space (MB)"_i18n,
+        "Free space to keep on the microSD card when planning installs (MB)."_i18n,
+        App::GetInstallReserveSdMb, App::SetInstallReserveSdMb, &m_session_reserve_sd_mb);
 }
 
 auto Menu::TargetName(InstallTarget target) -> std::string {
@@ -1390,6 +1477,10 @@ void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_
     m_queue[index].installed = R_SUCCEEDED(rc);
     m_stats.read_bytes += std::max<s64>(0, read_delta);
     m_stats.write_bytes += std::max<s64>(0, write_delta);
+    // the package is off the queue either way; book its whole planned size so
+    // the overall bar advances even when it was skipped or failed.
+    AddSizeSaturated(m_plan_done_bytes, PlanSize(m_queue[index]));
+    m_package_write_start = m_total_write.load();
 
     if (R_SUCCEEDED(rc)) {
         m_queue[index].selected = false; // uncheck a package that went through

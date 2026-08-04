@@ -58,11 +58,19 @@ ForwarderForm::ForwarderForm(const FileAssocEntry& assoc, const RomDatabaseIndex
         "Set the path to the icon for the forwarder"_i18n
     );
 
+    const SidebarEntryArray::Items address_space_items{"36-bit"_i18n, "39-bit"_i18n};
+    this->Add<SidebarEntryArray>(
+        "Address Space"_i18n, address_space_items, [this](s64& index){
+            m_address_space = index == 0 ? ForwarderAddressSpace::Bit36 : ForwarderAddressSpace::Bit39;
+        }, 0, "Virtual address space of the forwarder, 36-bit is the default"_i18n
+    );
+
     auto callback = this->Add<SidebarEntryCallback>("Create", [this, file_name](){
         OwoConfig config{};
         config.nro_path = m_assoc.path.toString();
         config.args = nro_add_arg_file(m_arg_path);
         config.nacp = m_nacp;
+        config.address_space = m_address_space;
 
         // patch the name.
         config.name = m_name->GetValue();

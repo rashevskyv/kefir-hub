@@ -88,6 +88,8 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_GameEmptyMetaEntries: return "SphairaError_GameEmptyMetaEntries";
         case Result_GameMultipleKeysFound: return "SphairaError_GameMultipleKeysFound";
         case Result_GameNoNspEntriesBuilt: return "SphairaError_GameNoNspEntriesBuilt";
+        case Result_GameMoveNoAppManager: return "SphairaError_GameMoveNoAppManager";
+        case Result_GameMoveNotEnoughSpace: return "SphairaError_GameMoveNotEnoughSpace";
         case Result_KeyMissingNcaKeyArea: return "SphairaError_KeyMissingNcaKeyArea";
         case Result_KeyMissingTitleKek: return "SphairaError_KeyMissingTitleKek";
         case Result_KeyMissingMasterKey: return "SphairaError_KeyMissingMasterKey";
@@ -127,6 +129,7 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_UsbBadTransferSize: return "SphairaError_UsbBadTransferSize";
         case Result_UsbEmptyTransferSize: return "SphairaError_UsbEmptyTransferSize";
         case Result_UsbOverflowTransferSize: return "SphairaError_UsbOverflowTransferSize";
+        case Result_UsbGoldleafFailed: return "SphairaError_UsbGoldleafFailed";
         case Result_UsbUploadBadMagic: return "SphairaError_UsbUploadBadMagic";
         case Result_UsbUploadExit: return "SphairaError_UsbUploadExit";
         case Result_UsbUploadBadCount: return "SphairaError_UsbUploadBadCount";

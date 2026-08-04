@@ -35,8 +35,12 @@ struct QueueEntry {
     bool installed{};
     InstallTarget target{InstallTarget::Auto};
     bool install_selected{};
-    InstallTarget install_target{InstallTarget::Auto};
     bool analysis_deferred{};
+    // where the queue plan puts this package. planned_sd is recomputed while the
+    // queue is being reviewed; install_sd is the frozen copy the install thread
+    // obeys, so the run lands exactly where the review screen promised.
+    bool planned_sd{};
+    bool install_sd{};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.
@@ -106,6 +110,9 @@ private:
     void CancelSession();
     void StartInstall();
     void ConfirmInstallPlan();
+    // assigns every selected package to NAND or SD up front, honouring the
+    // per-target reserve and the install-location priority. Call with the mutex.
+    void RecomputePlan();
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
     void AddLog(const std::string& text, LogKind kind = LogKind::Normal);
@@ -197,9 +204,16 @@ private:
     // logs "skipped (already installed)" instead of "installed" for it.
     bool m_current_file_skipped{};
 
+    // whole-run progress: the plan's total write size, how much of it is behind
+    // us, and the session write count when the current package started.
+    s64 m_plan_total_bytes{};
+    s64 m_plan_done_bytes{};
+    s64 m_package_write_start{};
+
     long m_session_skip_if_already_installed{1};
     long m_session_install_location{4};
     long m_session_reserve_mb{500};
+    long m_session_reserve_sd_mb{500};
 };
 
 } // namespace sphaira::ui::menu::dbi

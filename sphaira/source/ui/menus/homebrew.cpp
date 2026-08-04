@@ -350,7 +350,7 @@ void Menu::SetIndex(s64 index) {
 
 void Menu::InstallHomebrew() {
     const auto& nro = GetEntry();
-    InstallHomebrew(nro.path, nro_get_icon(nro.path, nro.icon_size, nro.icon_offset));
+    PromptInstallForwarder(nro.path, nro_get_icon(nro.path, nro.icon_size, nro.icon_offset));
 }
 
 void Menu::ScanHomebrew() {
@@ -584,16 +584,34 @@ void Menu::OnLayoutChange() {
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
 }
 
-Result Menu::InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon) {
+Result Menu::InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon, ForwarderAddressSpace address_space) {
     OwoConfig config{};
     config.nro_path = path.toString();
     R_TRY(nro_get_nacp(path, config.nacp));
     config.icon = icon;
+    config.address_space = address_space;
     return App::Install(config);
 }
 
-Result Menu::InstallHomebrewFromPath(const fs::FsPath& path) {
-    return InstallHomebrew(path, nro_get_icon(path));
+Result Menu::InstallHomebrewFromPath(const fs::FsPath& path, ForwarderAddressSpace address_space) {
+    return InstallHomebrew(path, nro_get_icon(path), address_space);
+}
+
+void Menu::PromptInstallForwarder(const fs::FsPath& path, const std::vector<u8>& icon) {
+    App::Push<OptionBox>(
+        "Select forwarder address space"_i18n,
+        "36-bit"_i18n, "39-bit"_i18n, 0, [path, icon](auto op_index){
+            if (!op_index) {
+                return;
+            }
+
+            const auto address_space = *op_index == 0 ? ForwarderAddressSpace::Bit36 : ForwarderAddressSpace::Bit39;
+            const auto rc = icon.empty() ? InstallHomebrewFromPath(path, address_space) : InstallHomebrew(path, icon, address_space);
+            if (R_FAILED(rc)) {
+                log_write("failed to create forwarder\n");
+            }
+        }
+    );
 }
 
 void Menu::DisplayOptions() {
@@ -640,6 +658,15 @@ void Menu::DisplayOptions() {
         m_show_hidden.Set(enable);
         SortAndFindLastFile();
     }, "Shows all hidden homebrew."_i18n);
+
+    if (!m_entries_current.empty() && !IsKefirUpdaterStub(GetEntry())) {
+        options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
+
+        auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+            InstallHomebrew();
+        }, "Add this homebrew to the HOME menu as its own tile."_i18n);
+        entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+    }
 
     AddInstallShareOptions(options.get());
     AddSettingsOption(options.get());

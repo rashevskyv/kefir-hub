@@ -105,6 +105,8 @@ enum class SphairaResult : Result {
     GameEmptyMetaEntries,
     GameMultipleKeysFound,
     GameNoNspEntriesBuilt,
+    GameMoveNoAppManager,
+    GameMoveNotEnoughSpace,
 
     KeyMissingNcaKeyArea,
     KeyMissingTitleKek,
@@ -159,6 +161,8 @@ enum class SphairaResult : Result {
     UsbEmptyTransferSize,
     UsbOverflowTransferSize,
     UsbBadTotalSize,
+    // the goldleaf host rejected a command; its own code is in the log.
+    UsbGoldleafFailed,
 
     UsbUploadBadMagic,
     UsbUploadExit,
@@ -287,6 +291,8 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(GameEmptyMetaEntries),
     MAKE_SPHAIRA_RESULT_ENUM(GameMultipleKeysFound),
     MAKE_SPHAIRA_RESULT_ENUM(GameNoNspEntriesBuilt),
+    MAKE_SPHAIRA_RESULT_ENUM(GameMoveNoAppManager),
+    MAKE_SPHAIRA_RESULT_ENUM(GameMoveNotEnoughSpace),
     MAKE_SPHAIRA_RESULT_ENUM(KeyMissingNcaKeyArea),
     MAKE_SPHAIRA_RESULT_ENUM(KeyMissingTitleKek),
     MAKE_SPHAIRA_RESULT_ENUM(KeyMissingMasterKey),
@@ -328,6 +334,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(UsbBadTransferSize),
     MAKE_SPHAIRA_RESULT_ENUM(UsbEmptyTransferSize),
     MAKE_SPHAIRA_RESULT_ENUM(UsbOverflowTransferSize),
+    MAKE_SPHAIRA_RESULT_ENUM(UsbGoldleafFailed),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadBadMagic),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadExit),
     MAKE_SPHAIRA_RESULT_ENUM(UsbUploadBadCount),

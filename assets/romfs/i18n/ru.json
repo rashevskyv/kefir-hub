@@ -1,4 +1,9 @@
 {
+  "Select forwarder address space": "Выберите адресное пространство форвардера",
+  "FORWARDER": "ФОРВАРДЕР",
+  "Add this homebrew to the HOME menu as its own tile.": "Добавить эту программу в HOME-меню отдельной плиткой.",
+  "Address Space": "Адресное пространство",
+  "Virtual address space of the forwarder, 36-bit is the default": "Виртуальное адресное пространство форвардера, по умолчанию 36-бит",
   "No Internet": "Нет интернета",
   "Switch-Handheld!": "Режим Портатива",
   "Switch-Docked!": "Режим Дока",

@@ -75,7 +75,10 @@ For informantion about the install options, [see the wiki](https://github.com/IT
 
 ### Usb (install)
 
-Sphaira supports both **Awoo (TinFoil)** and **GoldLeaf** USB installation protocols out of the box, with automatic header protocol detection upon connection. PC tools such as [ns-usbloader](https://github.com/developersu/ns-usbloader) (in either Awoo or GoldLeaf mode) and [fluffy](https://github.com/fourminute/Fluffy) work seamlessly with Sphaira. You may also use the provided python script found [here](tools/usb_install_pc.py).
+Sphaira speaks both **Awoo (TinFoil)** and **GoldLeaf v0.10+ (Quark)**, and works out which one the PC is running when it connects — there is nothing to pick on the console.
+
+- **Awoo/TinFoil**: the PC pushes the file list, Sphaira pulls ranges. Used by [ns-usbloader](https://github.com/developersu/ns-usbloader) in *TinFoil* mode and by [fluffy](https://github.com/fourminute/Fluffy). The python script [here](tools/usb_install_pc.py) also works.
+- **GoldLeaf**: the roles are reversed — Sphaira drives a remote filesystem on the PC. Used by ns-usbloader in *GoldLeaf v0.10+* mode. Sphaira installs everything on the `VIRT:/` drive, i.e. exactly the files queued in the ns-usbloader window; browsing the PC's own filesystem (`HOME:/`) is not supported.
 
 ### DBI Backend (install)
 

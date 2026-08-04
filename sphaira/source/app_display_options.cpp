@@ -153,22 +153,31 @@ void App::DisplayInstallOptions(bool left_side) {
         App::SetInstallLocation(index_out);
     }, (s64)App::GetInstallLocation());
 
-    auto reserve_entry_ptr = std::make_unique<ui::SidebarEntryTextBase>("Reserve free space"_i18n,
-        std::to_string(App::GetInstallReserveMb()) + " MB",
-        nullptr,
-        "Set the threshold of free space to reserve on installation target (MB)."_i18n
-    );
-    auto* reserve_entry = reserve_entry_ptr.get();
-    reserve_entry->SetCallback([reserve_entry](){
-        s64 out = App::GetInstallReserveMb();
-        if (R_SUCCEEDED(swkbd::ShowNumPad(out, "Enter Reserve Free Space (MB)"_i18n.c_str(), std::to_string(out).c_str(), 1, 5))) {
-            if (out >= 0 && out <= 32768) {
-                App::SetInstallReserveMb(out);
-                reserve_entry->SetValue(std::to_string(out) + " MB");
+    // one entry per target: the two media fill at very different rates and want
+    // very different headroom.
+    auto add_reserve = [&](const std::string& title, const std::string& prompt, const std::string& help,
+                           long (*get)(), void (*set)(long)) {
+        auto entry_ptr = std::make_unique<ui::SidebarEntryTextBase>(title,
+            std::to_string(get()) + " MB", nullptr, help);
+        auto* entry = entry_ptr.get();
+        entry->SetCallback([entry, prompt, get, set](){
+            s64 out = get();
+            if (R_SUCCEEDED(swkbd::ShowNumPad(out, prompt.c_str(), std::to_string(out).c_str(), 1, 5))) {
+                if (out >= 0 && out <= 32768) {
+                    set(out);
+                    entry->SetValue(std::to_string(out) + " MB");
+                }
             }
-        }
-    });
-    options->Add(std::move(reserve_entry_ptr));
+        });
+        options->Add(std::move(entry_ptr));
+    };
+
+    add_reserve("Reserve free space (system)"_i18n, "Enter System Reserve Free Space (MB)"_i18n,
+        "Free space to keep on system memory when planning installs (MB)."_i18n,
+        App::GetInstallReserveMb, App::SetInstallReserveMb);
+    add_reserve("Reserve free space (microSD)"_i18n, "Enter microSD Reserve Free Space (MB)"_i18n,
+        "Free space to keep on the microSD card when planning installs (MB)."_i18n,
+        App::GetInstallReserveSdMb, App::SetInstallReserveSdMb);
 
     options->Add<ui::SidebarEntryBool>("Allow downgrade"_i18n, App::GetApp()->m_allow_downgrade,
         "Allows for installing title updates that are lower than the currently installed update."_i18n);

@@ -83,6 +83,25 @@ void utilsReplaceIllegalCharacters(char *str, bool ascii_only);
 // /atmosphere/contents/xxx
 auto GetContentsPath(u64 app_id) -> fs::FsPath;
 
+struct MoveEntry {
+    NsApplicationContentMetaStatus status{};
+    u64 size{};
+};
+
+// what a move of app_id to target_storage would actually do.
+struct MovePlan {
+    // components that would be copied then removed from their current storage.
+    std::vector<MoveEntry> move{};
+    // components already on the target (or on gamecard, which can't be moved).
+    std::vector<MoveEntry> stay{};
+    u64 move_size{};
+    // total bytes this title occupies per storage, before the move.
+    u64 nand_size{};
+    u64 sd_size{};
+};
+
+Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out);
+
 // moves a single component or entire application between storages (NAND <-> SD)
 Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);
 Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);

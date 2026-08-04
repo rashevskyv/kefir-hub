@@ -450,6 +450,15 @@ auto ProgressBox::NewTransferForce(const std::string& transfer)  -> ProgressBox&
     return *this;
 }
 
+auto ProgressBox::SetTransfer(const std::string& transfer) -> ProgressBox& {
+    if (m_muted) return *this;
+    mutexLock(&m_mutex);
+    m_transfer = transfer;
+    mutexUnlock(&m_mutex);
+    Yield();
+    return *this;
+}
+
 auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
     if (m_muted) return *this;
     mutexLock(&m_mutex);

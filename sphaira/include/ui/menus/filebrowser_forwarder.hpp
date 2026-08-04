@@ -5,6 +5,7 @@
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "nro.hpp"
 #include "fs.hpp"
+#include "owo.hpp"
 
 namespace sphaira::ui::menu::filebrowser {
 
@@ -26,6 +27,7 @@ private:
     SidebarEntryTextInput* m_author{};
     SidebarEntryTextInput* m_version{};
     SidebarEntryFilePicker* m_icon{};
+    ForwarderAddressSpace m_address_space{ForwarderAddressSpace::Bit36};
 };
 
 } // namespace sphaira::ui::menu::filebrowser

@@ -57,8 +57,12 @@ Thread g_share_threads[SHARE_WORKER_COUNT]{};
 size_t g_share_thread_count{};
 std::atomic_bool g_share_running{false};
 std::atomic_bool g_share_self_test{false};
-Socket g_share_socket{-1};
+std::atomic<Socket> g_share_socket{-1};
 u16 g_share_port{};
+// the ip the listener was bound under, and the "rebind me" flag raised from the
+// applet hooks. see CheckShareNetwork().
+u32 g_share_ip{};
+std::atomic_bool g_share_rebind{false};
 
 
 
@@ -1154,6 +1158,94 @@ void TuneShareSocket(Socket sock) {
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
 }
 
+auto CreateShareListener(u16 port) -> Socket {
+    const auto sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        log_write("[WEB] socket() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
+        return -1;
+    }
+
+    const int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    // set before listen() so the window scale factor negotiated during the
+    // handshake accounts for the enlarged buffer (inherited by accept()).
+    TuneShareSocket(sock);
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+
+    if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
+        log_write("[WEB] bind() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
+        close(sock);
+        return -1;
+    }
+
+    if (listen(sock, 4) < 0) {
+        log_write("[WEB] listen() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
+        close(sock);
+        return -1;
+    }
+
+    fcntl(sock, F_SETFL, fcntl(sock, F_GETFL) | O_NONBLOCK);
+    return sock;
+}
+
+// Sleep takes the network interface down with it. The listening socket survives
+// the wake as a valid fd but is no longer attached to a live interface, so
+// accept() simply goes quiet: healthy from here, unreachable from the network.
+// Only a fresh bind() brings it back.
+//
+// Rate limited and try_lock'd because every worker calls it from its accept
+// loop; the one that gets in does the rebind, the others keep accepting.
+std::mutex g_share_net_mutex{};
+TimeStamp g_share_net_ts{};
+
+void CheckShareNetwork() {
+    std::unique_lock lock{g_share_net_mutex, std::try_to_lock};
+    if (!lock || g_share_net_ts.GetMs() < 1000) {
+        return;
+    }
+    g_share_net_ts.Update();
+
+    u32 ip{};
+    if (R_FAILED(nifmGetCurrentIpAddress(&ip)) || !ip) {
+        // still associating after the wake: nothing to bind to yet, and the
+        // rebind flag stays raised so the next pass tries again.
+        return;
+    }
+
+    // a new dhcp lease is a rebind on its own -- the applet hooks are the
+    // trigger for the (common) case of waking up on the same address.
+    if (ip != g_share_ip) {
+        g_share_rebind = true;
+    }
+
+    if (!g_share_rebind.exchange(false)) {
+        return;
+    }
+
+    const auto old = g_share_socket.exchange(-1);
+    if (old >= 0) {
+        shutdown(old, SHUT_RDWR);
+        close(old);
+    }
+
+    // same port, so the url and qr code already on screen stay valid.
+    const auto sock = CreateShareListener(g_share_port);
+    if (sock < 0) {
+        g_share_rebind = true;
+        return;
+    }
+
+    g_share_socket = sock;
+    g_share_ip = ip;
+    log_write("[WEB] listener rebound on port %u, ip %u.%u.%u.%u\n", g_share_port,
+        ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+}
+
 // Multiple instances of this run concurrently (see SHARE_WORKER_COUNT), each
 // accept()-ing on the shared listening socket, so one client's long-running
 // request (e.g. install) doesn't block other clients (e.g. a status poll).
@@ -1163,12 +1255,11 @@ void ShareThreadFunc(void*) {
         socklen_t remote_len = sizeof(remote);
         const auto client = accept(g_share_socket, reinterpret_cast<sockaddr*>(&remote), &remote_len);
         if (client < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                svcSleepThread(5'000'000);
-                continue;
-            }
-
-            svcSleepThread(50'000'000);
+            const auto err = errno;
+            CheckShareNetwork();
+            // EBADF here means a rebind is in flight (or failed); back off like
+            // any other hard error rather than spinning on the closed fd.
+            svcSleepThread(err == EWOULDBLOCK || err == EAGAIN ? 5'000'000 : 50'000'000);
             continue;
         }
 
@@ -1220,39 +1311,15 @@ auto StartShareServer() -> Result {
     }
 
     for (u16 port = SHARE_PORT_FIRST; port <= SHARE_PORT_LAST; port++) {
-        const auto sock = socket(AF_INET, SOCK_STREAM, 0);
+        const auto sock = CreateShareListener(port);
         if (sock < 0) {
-            log_write("[WEB] socket() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
             continue;
         }
 
-        const int opt = 1;
-        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-        // set before listen() so the window scale factor negotiated during the
-        // handshake accounts for the enlarged buffer (inherited by accept()).
-        TuneShareSocket(sock);
-
-        sockaddr_in addr{};
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = INADDR_ANY;
-        addr.sin_port = htons(port);
-
-        if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
-            log_write("[WEB] bind() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
-            close(sock);
-            continue;
-        }
-
-        if (listen(sock, 4) < 0) {
-            log_write("[WEB] listen() failed for port %u: %d %s\n", port, errno, std::strerror(errno));
-            close(sock);
-            continue;
-        }
-
-        fcntl(sock, F_SETFL, fcntl(sock, F_GETFL) | O_NONBLOCK);
         g_share_socket = sock;
         g_share_port = port;
+        g_share_rebind = false;
+        nifmGetCurrentIpAddress(&g_share_ip);
         g_share_running = true;
 
         const size_t target_worker_count = App::IsApplet() ? 2 : SHARE_WORKER_COUNT;
@@ -1502,6 +1569,12 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
 
 bool WebShareIsRunning() {
     return g_share_running.load();
+}
+
+void WebShareNotifyNetworkChange() {
+    if (g_share_running) {
+        g_share_rebind = true;
+    }
 }
 
 } // namespace sphaira

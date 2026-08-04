@@ -143,6 +143,7 @@ struct NpdmPatch {
     char title_name[0x10]{"Application"};
     char product_code[0x10]{};
     u64 tid;
+    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit36};
 };
 
 struct NcapPatch {
@@ -441,6 +442,8 @@ void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) {
     // apply patch
     std::memcpy(meta.title_name, &patch.title_name, sizeof(meta.title_name));
     std::memcpy(meta.product_code, &patch.product_code, sizeof(patch.product_code));
+    // ProcessAddressSpace lives in bits 1-3 of the meta flags.
+    meta.flags = (meta.flags & ~0x0E) | (static_cast<u8>(patch.address_space) << 1);
     aci0.program_id = patch.tid;
     acid.program_id_min = patch.tid;
     acid.program_id_max = patch.tid;
@@ -897,6 +900,7 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
 
         NpdmPatch npdm_patch;
         npdm_patch.tid = tid;
+        npdm_patch.address_space = config.address_space;
         patch_npdm(exefs[1].data, npdm_patch);
 
         nca_entries.emplace_back(

@@ -31,8 +31,13 @@ struct Base {
         return TransferPacketImpl(read, page, remaining, size, out_size_transferred, m_transfer_timeout);
     }
 
-    // transfers all data.
-    Result TransferAll(bool read, void *data, u32 size, u64 timeout);
+    // transfers all data. zlt only applies to writes: it decides whether a
+    // size landing exactly on a multiple of the endpoint packet size gets a
+    // zero length packet appended to mark the end. Pass false for protocols
+    // built on fixed size blocks (goldleaf) -- the host asks for exactly that
+    // many bytes, so the terminator would be left in the pipe and come back
+    // as an empty reply on its next read.
+    Result TransferAll(bool read, void *data, u32 size, u64 timeout, bool zlt = true);
     Result TransferAll(bool read, void *data, u32 size) {
         return TransferAll(read, data, size, m_transfer_timeout);
     }

@@ -68,7 +68,10 @@ struct MenuBase : Widget {
     // like SetStorageHighlight, but the bytes are *planned* usage: the segment
     // is drawn extending from the used region into the free space (red when it
     // does not fit) and the label shows "+size". Used by the install queue.
-    void SetStorageProjection(u64 nand_bytes, u64 sd_bytes);
+    // The optional focus bytes are the part of that projection belonging to the
+    // package in focus; they are drawn in a second colour at the head of the
+    // segment and shown as "+focus / +total".
+    void SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus = 0, u64 sd_focus = 0);
     void ClearStorageHighlight();
 
     auto GetTitle() const {
@@ -97,6 +100,10 @@ private:
 
     u64 m_nand_highlight{};
     u64 m_sd_highlight{};
+    // the share of the projection that belongs to the one package in focus
+    // (hovered in the queue, or currently installing). Drawn in its own colour.
+    u64 m_nand_focus{};
+    u64 m_sd_focus{};
     bool m_storage_highlight_active{};
     bool m_storage_projection{};
 

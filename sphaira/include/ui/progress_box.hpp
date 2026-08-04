@@ -36,6 +36,9 @@ struct ProgressBox final : Widget, InstallProgress {
     auto SetActionName(const std::string& action) -> ProgressBox&;
     auto SetTitle(const std::string& title) -> ProgressBox&;
     auto NewTransfer(const std::string& transfer) -> ProgressBox&;
+    // changes only the transfer label, keeping offset/size/speed. used when one
+    // progress bar spans several steps (e.g. a multi-component title move).
+    auto SetTransfer(const std::string& transfer) -> ProgressBox&;
     auto ResetTransferProgress() -> ProgressBox&;
     auto UpdateTransfer(s64 offset, s64 size) -> ProgressBox&;
 

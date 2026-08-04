@@ -762,10 +762,17 @@ Result Yati::decompressFuncInternal(ThreadData* t) {
                     }
 
                     // https://github.com/nicoboss/nsz/issues/79
-                    auto decompressedBlockSize = 1 << t->ncz_block_header.block_size_exponent;
+                    // exponent goes up to 32, so this must not be a 32bit shift.
+                    u64 decompressedBlockSize = 1ULL << t->ncz_block_header.block_size_exponent;
                     // special handling for the last block to check it's actually compressed
                     if (ncz_block->offset == t->ncz_blocks.back().offset) {
-                        decompressedBlockSize = t->ncz_block_header.decompressed_size % decompressedBlockSize;
+                        // https://github.com/nicoboss/nsz/issues/210
+                        // a zero remainder means the last block is a full block,
+                        // not an empty one (nsz PR #211).
+                        const auto remainder = t->ncz_block_header.decompressed_size % decompressedBlockSize;
+                        if (remainder) {
+                            decompressedBlockSize = remainder;
+                        }
                     }
 
                     // check if this block is compressed.
@@ -1756,10 +1763,11 @@ bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
         estimated = static_cast<s64>(total_size * COMPRESSED_SIZE_FACTOR);
     }
 
-    s64 reserve = App::GetInstallReserveMb() * 1024ULL * 1024ULL;
+    const s64 reserve_nand = App::GetInstallReserveMb() * 1024LL * 1024LL;
+    const s64 reserve_sd = App::GetInstallReserveSdMb() * 1024LL * 1024LL;
 
-    bool fits_nand = (free_nand - estimated >= reserve);
-    bool fits_sd = (free_sd - estimated >= reserve);
+    bool fits_nand = (free_nand - estimated >= reserve_nand);
+    bool fits_sd = (free_sd - estimated >= reserve_sd);
 
     long loc = App::GetInstallLocation();
     switch (loc) {

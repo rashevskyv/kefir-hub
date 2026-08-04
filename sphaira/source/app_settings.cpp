@@ -184,6 +184,10 @@ auto App::GetInstallReserveMb() -> long {
     return g_app->m_install_reserve_mb.Get();
 }
 
+auto App::GetInstallReserveSdMb() -> long {
+    return g_app->m_install_reserve_sd_mb.Get();
+}
+
 auto App::GetAnimatedWavesEnable() -> bool {
     return g_app->m_animated_waves.Get();
 }
@@ -463,6 +467,10 @@ void App::SetInstallLocation(long location) {
 
 void App::SetInstallReserveMb(long reserve_mb) {
     g_app->m_install_reserve_mb.Set(reserve_mb);
+}
+
+void App::SetInstallReserveSdMb(long reserve_mb) {
+    g_app->m_install_reserve_sd_mb.Set(reserve_mb);
 }
 
 void App::SetAnimatedWavesEnable(bool enable) {

@@ -85,7 +85,7 @@ Result Base::TransferPacketImpl(bool read, void *page, u32 remaining, u32 size, 
 // an changes are made.
 // yati already goes to great lengths to be zero-copy during installing
 // by swapping buffers and inflating in-place.
-Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout) {
+Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout, bool zlt) {
     auto buf = static_cast<u8*>(data);
     auto transfer_buf = *m_aligned;
 
@@ -97,8 +97,12 @@ Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout) {
             std::memcpy(transfer_buf, buf, size);
         }
 
+        // remaining is only ever read as the zlt knob: TransferAsync() appends
+        // the terminator when it is handing over the whole remainder at once.
+        const u32 remaining = zlt ? size : 0;
+
         u32 out_size_transferred;
-        R_TRY(TransferPacketImpl(read, transfer_buf, size, size, &out_size_transferred, timeout));
+        R_TRY(TransferPacketImpl(read, transfer_buf, remaining, size, &out_size_transferred, timeout));
         R_UNLESS(out_size_transferred > 0, Result_UsbEmptyTransferSize);
         R_UNLESS(out_size_transferred <= size, Result_UsbOverflowTransferSize);
 

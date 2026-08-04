@@ -76,7 +76,9 @@ Result NczBlockReader::Read(void *_buf, s64 off, s64 size, u64* bytes_read_out) 
 
             // new block.
             lru_data = m_lru.GetNextFree();
-            lru_data->offset = block.offset;
+            // the cache is looked up by decompressed offset, so key it by that.
+            // block.offset is the *compressed* offset within the file.
+            lru_data->offset = (s64)block_id * m_block_size;
 
             // check if this block is compressed.
             const auto compressed = block.size < decompressedBlockSize;
@@ -96,6 +98,9 @@ Result NczBlockReader::Read(void *_buf, s64 off, s64 size, u64* bytes_read_out) 
         }
 
         const auto buf_off = off % m_block_size;
+        // the last block is short, so a read past the decompressed end lands
+        // outside of it. don't let that underflow into a huge memcpy.
+        R_UNLESS(buf_off < (s64)lru_data->data.size(), Result_YatiInvalidNczBlockTotal);
         const auto rsize = std::min<s64>(size, lru_data->data.size() - buf_off);
         std::memcpy(buf, lru_data->data.data() + buf_off, rsize);
 

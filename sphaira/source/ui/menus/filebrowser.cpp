@@ -495,16 +495,16 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             DrawElement(x + x_offset, y + 5, 50, 50, icon);
         }
 
-        // read-only marker: a small red "R" chip on the icon corner for entries
+        // read-only marker: a small red "RO" chip on the icon corner for entries
         // that can't be written/deleted/renamed (archive contents, protected
         // system paths). Writable entries are left unmarked.
         if (IsReadOnly(GetNewPath(e))) {
-            const float bw = 18.f, bh = 16.f;
+            const float bw = 26.f, bh = 16.f;
             const float bx = x + x_offset + 50.f - bw;
             const float by = y + 5.f;
             gfx::drawRect(vg, bx - 1.f, by - 1.f, bw + 2.f, bh + 2.f, nvgRGBA(0, 0, 0, 255), 4.f);
             gfx::drawRect(vg, bx, by, bw, bh, theme->GetColour(ThemeEntryID_ERROR), 3.f);
-            gfx::drawText(vg, bx + bw * 0.5f, by + bh * 0.5f, 13.f, nvgRGBA(255, 255, 255, 255), "R", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            gfx::drawText(vg, bx + bw * 0.5f, by + bh * 0.5f, 13.f, nvgRGBA(255, 255, 255, 255), "RO", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         }
 
         if (m_selected_count > 0) {
@@ -760,9 +760,7 @@ void FsView::InvertSelection() {
 
 void FsView::InstallForwarder() {
     if (path::EqualsIC(GetEntry().GetExtension(), "nro")) {
-        if (R_FAILED(homebrew::Menu::InstallHomebrewFromPath(GetNewPathCurrent()))) {
-            log_write("failed to create forwarder\n");
-        }
+        homebrew::Menu::PromptInstallForwarder(GetNewPathCurrent());
         return;
     }
 

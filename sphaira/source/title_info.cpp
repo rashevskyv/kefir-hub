@@ -1,6 +1,7 @@
 #include "title_info.hpp"
 #include "defines.hpp"
 #include "ui/types.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 
 #include "yati/nx/nca.hpp"
@@ -635,22 +636,16 @@ auto GetContentsPath(u64 app_id) -> fs::FsPath {
     return path;
 }
 
-Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox) {
-    const auto src_storage = static_cast<NcmStorageId>(status.storageID);
-    if (src_storage == target_storage) {
-        R_SUCCEED();
-    }
-    if (src_storage != NcmStorageId_SdCard && src_storage != NcmStorageId_BuiltInUser) {
-        return 0x1;
-    }
-    if (target_storage != NcmStorageId_SdCard && target_storage != NcmStorageId_BuiltInUser) {
-        return 0x1;
-    }
+namespace {
 
-    auto& src_db = GetNcmDb(src_storage);
-    auto& src_cs = GetNcmCs(src_storage);
-    auto& dst_db = GetNcmDb(target_storage);
-    auto& dst_cs = GetNcmCs(target_storage);
+constexpr bool IsMovableStorage(u8 storage_id) {
+    return storage_id == NcmStorageId_SdCard || storage_id == NcmStorageId_BuiltInUser;
+}
+
+// resolves the ncm meta key of a component on its own storage, plus the ncas it
+// is made of.
+Result GetComponentContents(const NsApplicationContentMetaStatus& status, NcmContentMetaKey& key, std::vector<NcmContentInfo>& infos) {
+    auto& db = GetNcmDb(status.storageID);
 
     const auto app_id = ncm::GetAppId(status.meta_type, status.application_id);
     auto id_min = status.application_id;
@@ -660,115 +655,289 @@ Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId 
         id_max += 1;
     }
 
-    s32 meta_total = 0;
-    s32 meta_entries_written = 0;
-    NcmContentMetaKey key{};
-    R_TRY(ncmContentMetaDatabaseList(std::addressof(src_db), std::addressof(meta_total), std::addressof(meta_entries_written), std::addressof(key), 1, (NcmContentMetaType)status.meta_type, app_id, id_min, id_max, NcmContentInstallType_Full));
-    R_UNLESS(meta_total == 1 && meta_entries_written == 1, 0x2);
+    s32 meta_total{};
+    s32 meta_written{};
+    key = {};
+    R_TRY(ncmContentMetaDatabaseList(std::addressof(db), std::addressof(meta_total), std::addressof(meta_written), std::addressof(key), 1, (NcmContentMetaType)status.meta_type, app_id, id_min, id_max, NcmContentInstallType_Full));
+    R_UNLESS(meta_written == 1, Result_GameEmptyMetaEntries);
 
-    u64 meta_size = 0;
+    return ncm::GetContentInfos(std::addressof(db), std::addressof(key), infos);
+}
+
+auto SumContentSize(const std::vector<NcmContentInfo>& infos) -> u64 {
+    u64 total{};
+    for (const auto& info : infos) {
+        u64 size{};
+        ncmContentInfoSizeToU64(std::addressof(info), std::addressof(size));
+        total += size;
+    }
+    return total;
+}
+
+// undoes everything a component copy placed on the target storage. armed until
+// Commit(), which is only reached once the application record points at the new
+// storage - up to that moment the source copy is still whole and still the one
+// the system launches from.
+struct MoveRollback {
+    NcmContentStorage* cs{};
+    NcmContentMetaDatabase* db{};
+    std::vector<NcmPlaceHolderId> placeholders{};
+    std::vector<NcmContentId> registered{};
+    NcmContentMetaKey meta_key{};
+    bool has_meta{};
+    bool committed{};
+
+    void Commit() {
+        committed = true;
+    }
+
+    ~MoveRollback() {
+        if (committed) {
+            return;
+        }
+
+        log_write("[MOVE] rolling back %zu placeholders, %zu ncas, meta: %u\n", placeholders.size(), registered.size(), has_meta);
+
+        if (has_meta) {
+            ncmContentMetaDatabaseRemove(db, std::addressof(meta_key));
+            ncmContentMetaDatabaseCommit(db);
+        }
+        for (const auto& id : registered) {
+            ncmContentStorageDelete(cs, std::addressof(id));
+        }
+        for (const auto& id : placeholders) {
+            ncmContentStorageDeletePlaceHolder(cs, std::addressof(id));
+        }
+    }
+};
+
+// rewrites the application record so the moved key resolves to its new storage.
+// ns keeps its own copy of "which storage holds which meta key" and it is that
+// copy - not the ncm databases - which decides whether the title launches, so
+// this is the single commit point of a move.
+Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmStorageId target_storage) {
+    ns::AppManager am;
+    R_UNLESS(am, Result_GameMoveNoAppManager);
+
+    // the whole list is re-pushed below, so a truncated read would silently drop
+    // records (and with them, installed dlc): page until ns runs out.
+    std::vector<ncm::ContentStorageRecord> records;
+    constexpr s32 PAGE = 32;
+    for (;;) {
+        const auto offset = records.size();
+        records.resize(offset + PAGE);
+
+        s32 count{};
+        R_TRY(ns::ListApplicationRecordContentMeta(am.get(), offset, app_id, records.data() + offset, PAGE, std::addressof(count)));
+        records.resize(offset + count);
+
+        if (count < PAGE) {
+            break;
+        }
+    }
+
+    bool found{};
+    for (auto& record : records) {
+        if (record.key.id == key.id && record.key.type == key.type) {
+            record.storage_id = target_storage;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        auto& record = records.emplace_back();
+        record.key = key;
+        record.storage_id = target_storage;
+    }
+
+    // ns has no "update one record" cmd - the list is replaced wholesale.
+    R_TRY(ns::DeleteApplicationRecord(am.get(), app_id));
+    R_TRY(ns::PushApplicationRecord(am.get(), app_id, records.data(), records.size()));
+    R_SUCCEED();
+}
+
+// copy -> register -> repoint the record -> only then delete the source.
+// done/total drive one continuous progress bar across every component of a title.
+Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox, u64& done, u64 total) {
+    const auto src_storage = static_cast<NcmStorageId>(status.storageID);
+    if (src_storage == target_storage) {
+        R_SUCCEED();
+    }
+    R_UNLESS(IsMovableStorage(src_storage), Result_GameEmptyMetaEntries);
+    R_UNLESS(IsMovableStorage(target_storage), Result_GameEmptyMetaEntries);
+
+    auto& src_db = GetNcmDb(src_storage);
+    auto& src_cs = GetNcmCs(src_storage);
+    auto& dst_db = GetNcmDb(target_storage);
+    auto& dst_cs = GetNcmCs(target_storage);
+
+    NcmContentMetaKey key{};
+    std::vector<NcmContentInfo> infos;
+    R_TRY(GetComponentContents(status, key, infos));
+
+    u64 meta_size{};
     R_TRY(ncmContentMetaDatabaseGetSize(std::addressof(src_db), std::addressof(meta_size), std::addressof(key)));
     std::vector<u8> meta_buf(meta_size);
-    u64 out_meta_size = 0;
+    u64 out_meta_size{};
     R_TRY(ncmContentMetaDatabaseGet(std::addressof(src_db), std::addressof(key), std::addressof(out_meta_size), meta_buf.data(), meta_buf.size()));
 
-    std::vector<NcmContentInfo> infos;
-    R_TRY(ncm::GetContentInfos(std::addressof(src_db), std::addressof(key), infos));
+    const auto label = std::string{ncm::GetReadableMetaTypeStr(status.meta_type)} + " " +
+        i18n::get("to") + " " + i18n::get(ncm::GetReadableStorageIdStr(target_storage));
 
-    u64 total_bytes = 0;
-    for (const auto& info : infos) {
-        u64 sz = 0;
-        ncmContentInfoSizeToU64(&info, &sz);
-        total_bytes += sz;
-    }
+    MoveRollback rollback{std::addressof(dst_cs), std::addressof(dst_db)};
 
-    if (pbox) {
-        char label[256];
-        std::snprintf(label, sizeof(label), "%s [%s -> %s]",
-            ncm::GetMetaTypeStr(status.meta_type),
-            ncm::GetStorageIdStr(src_storage),
-            ncm::GetStorageIdStr(target_storage));
-        pbox->NewTransfer(label);
-    }
-
-    u64 current_offset = 0;
-    constexpr s64 CHUNK_SIZE = 2ULL * 1024ULL * 1024ULL; // 2 MiB
+    constexpr u64 CHUNK_SIZE = 2ULL * 1024ULL * 1024ULL;
     std::vector<u8> chunk_buf(CHUNK_SIZE);
 
-    for (const auto& info : infos) {
-        u64 nca_size = 0;
-        ncmContentInfoSizeToU64(&info, &nca_size);
+    for (size_t i = 0; i < infos.size(); i++) {
+        const auto& info = infos[i];
+        u64 nca_size{};
+        ncmContentInfoSizeToU64(std::addressof(info), std::addressof(nca_size));
 
-        bool has = false;
+        if (pbox) {
+            char buf[256];
+            std::snprintf(buf, sizeof(buf), "%s  (%s %zu/%zu)", label.c_str(), ncm::GetContentTypeStr(info.content_type), i + 1, infos.size());
+            pbox->SetTransfer(buf);
+            pbox->UpdateTransfer(done, total);
+        }
+
+        bool has{};
         ncmContentStorageHas(std::addressof(dst_cs), std::addressof(has), std::addressof(info.content_id));
-        if (!has) {
-            NcmPlaceHolderId placeholder_id{};
-            R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(dst_cs), std::addressof(placeholder_id)));
-            R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id), nca_size));
-
-            u64 nca_offset = 0;
-            while (nca_offset < nca_size) {
-                if (pbox && pbox->ShouldExit()) {
-                    ncmContentStorageDeletePlaceHolder(std::addressof(dst_cs), std::addressof(placeholder_id));
-                    return Result_TransferCancelled;
-                }
-                const u64 to_read = std::min<u64>(CHUNK_SIZE, nca_size - nca_offset);
-                R_TRY(ncmContentStorageReadContentIdFile(std::addressof(src_cs), chunk_buf.data(), to_read, std::addressof(info.content_id), nca_offset));
-
-                R_TRY(ncmContentStorageWritePlaceHolder(std::addressof(dst_cs), std::addressof(placeholder_id), nca_offset, chunk_buf.data(), to_read));
-                nca_offset += to_read;
-                current_offset += to_read;
-                if (pbox) {
-                    pbox->UpdateTransfer(current_offset, total_bytes);
-                }
-            }
-
-            R_TRY(ncmContentStorageRegister(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id)));
-        } else {
-            current_offset += nca_size;
+        if (has) {
+            // already present on the target (shared nca), nothing to copy.
+            done += nca_size;
             if (pbox) {
-                pbox->UpdateTransfer(current_offset, total_bytes);
+                pbox->UpdateTransfer(done, total);
+            }
+            continue;
+        }
+
+        NcmPlaceHolderId placeholder_id{};
+        R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(dst_cs), std::addressof(placeholder_id)));
+        R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id), nca_size));
+        rollback.placeholders.emplace_back(placeholder_id);
+
+        u64 nca_offset{};
+        while (nca_offset < nca_size) {
+            R_TRY(pbox ? pbox->ShouldExitResult() : 0);
+
+            const u64 to_read = std::min<u64>(CHUNK_SIZE, nca_size - nca_offset);
+            R_TRY(ncmContentStorageReadContentIdFile(std::addressof(src_cs), chunk_buf.data(), to_read, std::addressof(info.content_id), nca_offset));
+            R_TRY(ncmContentStorageWritePlaceHolder(std::addressof(dst_cs), std::addressof(placeholder_id), nca_offset, chunk_buf.data(), to_read));
+
+            nca_offset += to_read;
+            done += to_read;
+            if (pbox) {
+                pbox->UpdateTransfer(done, total);
             }
         }
+
+        R_TRY(ncmContentStorageRegister(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id)));
+        rollback.placeholders.pop_back();
+        rollback.registered.emplace_back(info.content_id);
     }
 
+    // every nca is on the target now; publish the meta entry there.
+    if (pbox) {
+        pbox->SetTransfer("Updating ncm database"_i18n);
+    }
     R_TRY(ncmContentMetaDatabaseSet(std::addressof(dst_db), std::addressof(key), meta_buf.data(), meta_buf.size()));
     R_TRY(ncmContentMetaDatabaseCommit(std::addressof(dst_db)));
+    rollback.meta_key = key;
+    rollback.has_meta = true;
 
-    // delete from source
+    // point of no return: from here the title launches from the target copy.
+    // cancelling is refused rather than half-applied.
+    if (pbox) {
+        pbox->SetTransfer("Pushing application record"_i18n);
+    }
+    R_TRY(RepointApplicationRecord(ncm::GetAppId(key), key, target_storage));
+    rollback.Commit();
+
+    if (pbox) {
+        pbox->SetTransfer("Removing old copy"_i18n);
+    }
     R_TRY(ncm::DeleteKey(std::addressof(src_cs), std::addressof(src_db), std::addressof(key)));
 
-    // invalidate app control cache in ns
-    Service srv{}, *srv_ptr = &srv;
-    if (hosversionAtLeast(3,0,0)) {
-        if (R_SUCCEEDED(nsGetApplicationManagerInterface(&srv))) {
-            ns::InvalidateApplicationControlCache(srv_ptr, status.application_id);
-            serviceClose(&srv);
+    if (ns::AppManager am; am) {
+        ns::InvalidateApplicationControlCache(am.get(), status.application_id);
+    }
+
+    R_SUCCEED();
+}
+
+} // namespace
+
+Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out) {
+    out = {};
+
+    MetaEntries entries;
+    R_TRY(GetMetaEntries(app_id, entries));
+
+    for (const auto& status : entries) {
+        NcmContentMetaKey key{};
+        std::vector<NcmContentInfo> infos;
+        if (R_FAILED(GetComponentContents(status, key, infos))) {
+            continue;
         }
-    } else {
-        srv_ptr = nsGetServiceSession_ApplicationManagerInterface();
-        if (srv_ptr) {
-            ns::InvalidateApplicationControlCache(srv_ptr, status.application_id);
+
+        const MoveEntry entry{status, SumContentSize(infos)};
+        if (status.storageID == NcmStorageId_SdCard) {
+            out.sd_size += entry.size;
+        } else if (status.storageID == NcmStorageId_BuiltInUser) {
+            out.nand_size += entry.size;
+        }
+
+        if (IsMovableStorage(status.storageID) && status.storageID != target_storage) {
+            out.move_size += entry.size;
+            out.move.emplace_back(entry);
+        } else {
+            out.stay.emplace_back(entry);
         }
     }
 
     R_SUCCEED();
 }
 
+Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox) {
+    NcmContentMetaKey key{};
+    std::vector<NcmContentInfo> infos;
+    R_TRY(GetComponentContents(status, key, infos));
+
+    u64 done{};
+    const auto total = SumContentSize(infos);
+    if (pbox) {
+        pbox->NewTransfer(ncm::GetReadableMetaTypeStr(status.meta_type));
+    }
+
+    return MoveComponentImpl(status, target_storage, pbox, done, total);
+}
+
 Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox) {
-    MetaEntries entries;
-    R_TRY(GetMetaEntries(app_id, entries));
-    if (entries.empty()) {
+    MovePlan plan;
+    R_TRY(GetMovePlan(app_id, target_storage, plan));
+    if (plan.move.empty()) {
         R_SUCCEED();
     }
-    for (const auto& status : entries) {
-        if (pbox && pbox->ShouldExit()) {
-            return Result_TransferCancelled;
-        }
-        if (status.storageID != target_storage && (status.storageID == NcmStorageId_SdCard || status.storageID == NcmStorageId_BuiltInUser)) {
-            R_TRY(MoveComponent(status, target_storage, pbox));
-        }
+
+    // refuse up front rather than filling the target and failing halfway: a
+    // partial move leaves ncas stranded on both storages.
+    s64 nand_free{}, sd_free{};
+    fs::GetStorageSpaces(&nand_free, nullptr, &sd_free, nullptr);
+    const auto free_space = target_storage == NcmStorageId_SdCard ? sd_free : nand_free;
+    R_UNLESS(free_space <= 0 || (u64)free_space > plan.move_size, Result_GameMoveNotEnoughSpace);
+
+    u64 done{};
+    if (pbox) {
+        pbox->NewTransfer(i18n::get(ncm::GetReadableStorageIdStr(target_storage)));
+        pbox->UpdateTransfer(0, plan.move_size);
     }
+
+    for (const auto& entry : plan.move) {
+        R_TRY(pbox ? pbox->ShouldExitResult() : 0);
+        R_TRY(MoveComponentImpl(entry.status, target_storage, pbox, done, plan.move_size));
+    }
+
     R_SUCCEED();
 }
 
