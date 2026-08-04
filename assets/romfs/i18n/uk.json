@@ -1405,6 +1405,8 @@
   "Failed to start web server": "Не вдалося запустити вебсервер",
   "Web listener started, but its local self-test failed; check the log or use Title Mode": "Вебслухач запущено, але локальна самоперевірка не пройшла; перевірте лог або скористайтеся Title Mode",
   "Web Sharing Server": "Сервер вебдоступу",
+  "Web server stopped: the console's IP address changed": "Вебсервер зупинено: IP-адреса консолі змінилася",
+  "Web server stopped: the console went offline": "Вебсервер зупинено: консоль втратила мережу",
   "Failed to read the current NRO metadata": "Не вдалося прочитати метадані поточного NRO",
   "The current NRO does not contain a forwarder icon": "Поточний NRO не містить іконки форвардера",
   "return to HOME and launch the new icon manually.": "поверніться на HOME і запустіть нову іконку вручну.",

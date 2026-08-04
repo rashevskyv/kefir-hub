@@ -510,6 +510,8 @@
   "No replacement languages found": "Языки замены не найдены",
   "Removing translations...": "Удаление переводов...",
   "StartWebServer": "Запустить веб-сервер",
+  "Web server stopped: the console's IP address changed": "Веб-сервер остановлен: IP-адрес консоли изменился",
+  "Web server stopped: the console went offline": "Веб-сервер остановлен: консоль потеряла сеть",
   "Only microSD folders can be shared": "Только папки на microSD можно расшарить",
   "Open this address in a browser:": "Откройте этот адрес в браузере:",
   "Or scan the QR code.": "Или отсканируйте QR-код.",

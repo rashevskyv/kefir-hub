@@ -1396,6 +1396,8 @@
   "Try again": "Try again",
   "Web listener started, but its local self-test failed; check the log or use Title Mode": "Web listener started, but its local self-test failed; check the log or use Title Mode",
   "Web Sharing Server": "Web Sharing Server",
+  "Web server stopped: the console's IP address changed": "Web server stopped: the console's IP address changed",
+  "Web server stopped: the console went offline": "Web server stopped: the console went offline",
   "Failed to read the current NRO metadata": "Failed to read the current NRO metadata",
   "The current NRO does not contain a forwarder icon": "The current NRO does not contain a forwarder icon",
   "return to HOME and launch the new icon manually.": "return to HOME and launch the new icon manually.",
