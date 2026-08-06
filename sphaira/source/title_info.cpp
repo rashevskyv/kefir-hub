@@ -2,6 +2,7 @@
 #include "defines.hpp"
 #include "ui/types.hpp"
 #include "i18n.hpp"
+#include "app.hpp"
 #include "log.hpp"
 
 #include "yati/nx/nca.hpp"
@@ -241,6 +242,17 @@ void ThreadData::Run() {
 
         if (!IsRunning()) {
             return;
+        }
+
+        // a transfer has the card saturated. loading control data now would hold
+        // g_mutex across those slow reads, and the menu drawing underneath the
+        // progress box waits on the same mutex in GetAsync() - which is what
+        // makes the ui judder for the length of a move. leave the ids queued and
+        // come back once the transfer is done.
+        if (App::GetProgressActive()) {
+            ueventSignal(&m_uevent);
+            svcSleepThread(1e+8);
+            continue;
         }
 
         std::vector<u64> ids;
@@ -642,11 +654,29 @@ constexpr bool IsMovableStorage(u8 storage_id) {
     return storage_id == NcmStorageId_SdCard || storage_id == NcmStorageId_BuiltInUser;
 }
 
+// a move runs on a worker thread while the menu underneath keeps issuing ncm
+// requests from its Draw() (icons, per-title sizes). the kernel serialises
+// requests per session, so sharing the global handles would park every frame
+// behind a multi-MiB transfer and freeze the ui - the move gets its own.
+struct NcmSession {
+    NcmContentStorage cs{};
+    NcmContentMetaDatabase db{};
+
+    Result Open(u8 storage_id) {
+        R_TRY(ncmOpenContentStorage(std::addressof(cs), (NcmStorageId)storage_id));
+        R_TRY(ncmOpenContentMetaDatabase(std::addressof(db), (NcmStorageId)storage_id));
+        R_SUCCEED();
+    }
+
+    ~NcmSession() {
+        ncmContentStorageClose(std::addressof(cs));
+        ncmContentMetaDatabaseClose(std::addressof(db));
+    }
+};
+
 // resolves the ncm meta key of a component on its own storage, plus the ncas it
 // is made of.
-Result GetComponentContents(const NsApplicationContentMetaStatus& status, NcmContentMetaKey& key, std::vector<NcmContentInfo>& infos) {
-    auto& db = GetNcmDb(status.storageID);
-
+Result GetComponentContents(NcmContentMetaDatabase& db, const NsApplicationContentMetaStatus& status, NcmContentMetaKey& key, std::vector<NcmContentInfo>& infos) {
     const auto app_id = ncm::GetAppId(status.meta_type, status.application_id);
     auto id_min = status.application_id;
     auto id_max = status.application_id;
@@ -766,14 +796,18 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
     R_UNLESS(IsMovableStorage(src_storage), Result_GameEmptyMetaEntries);
     R_UNLESS(IsMovableStorage(target_storage), Result_GameEmptyMetaEntries);
 
-    auto& src_db = GetNcmDb(src_storage);
-    auto& src_cs = GetNcmCs(src_storage);
-    auto& dst_db = GetNcmDb(target_storage);
-    auto& dst_cs = GetNcmCs(target_storage);
+    NcmSession src{}, dst{};
+    R_TRY(src.Open(src_storage));
+    R_TRY(dst.Open(target_storage));
+
+    auto& src_db = src.db;
+    auto& src_cs = src.cs;
+    auto& dst_db = dst.db;
+    auto& dst_cs = dst.cs;
 
     NcmContentMetaKey key{};
     std::vector<NcmContentInfo> infos;
-    R_TRY(GetComponentContents(status, key, infos));
+    R_TRY(GetComponentContents(src_db, status, key, infos));
 
     u64 meta_size{};
     R_TRY(ncmContentMetaDatabaseGetSize(std::addressof(src_db), std::addressof(meta_size), std::addressof(key)));
@@ -781,12 +815,15 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
     u64 out_meta_size{};
     R_TRY(ncmContentMetaDatabaseGet(std::addressof(src_db), std::addressof(key), std::addressof(out_meta_size), meta_buf.data(), meta_buf.size()));
 
-    const auto label = std::string{ncm::GetReadableMetaTypeStr(status.meta_type)} + " " +
-        i18n::get("to") + " " + i18n::get(ncm::GetReadableStorageIdStr(target_storage));
+    // the progress box action line already says where this is going.
+    const auto label = i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type));
 
     MoveRollback rollback{std::addressof(dst_cs), std::addressof(dst_db)};
 
-    constexpr u64 CHUNK_SIZE = 2ULL * 1024ULL * 1024ULL;
+    // one read+write pair blocks the fs for its duration, and the menu drawing
+    // underneath needs the same card. half a MiB keeps each hitch short enough
+    // to stay invisible without costing meaningful throughput.
+    constexpr u64 CHUNK_SIZE = 512ULL * 1024ULL;
     std::vector<u8> chunk_buf(CHUNK_SIZE);
 
     for (size_t i = 0; i < infos.size(); i++) {
@@ -877,7 +914,9 @@ Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out) {
     for (const auto& status : entries) {
         NcmContentMetaKey key{};
         std::vector<NcmContentInfo> infos;
-        if (R_FAILED(GetComponentContents(status, key, infos))) {
+        // plans are built on the ui thread before any transfer starts, so the
+        // shared sessions are fine here.
+        if (R_FAILED(GetComponentContents(GetNcmDb(status.storageID), status, key, infos))) {
             continue;
         }
 
@@ -902,12 +941,13 @@ Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out) {
 Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox) {
     NcmContentMetaKey key{};
     std::vector<NcmContentInfo> infos;
-    R_TRY(GetComponentContents(status, key, infos));
+    R_TRY(GetComponentContents(GetNcmDb(status.storageID), status, key, infos));
 
     u64 done{};
     const auto total = SumContentSize(infos);
     if (pbox) {
-        pbox->NewTransfer(ncm::GetReadableMetaTypeStr(status.meta_type));
+        pbox->NewTransfer(i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type)));
+        pbox->UpdateTransfer(0, total);
     }
 
     return MoveComponentImpl(status, target_storage, pbox, done, total);
@@ -929,7 +969,7 @@ Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox*
 
     u64 done{};
     if (pbox) {
-        pbox->NewTransfer(i18n::get(ncm::GetReadableStorageIdStr(target_storage)));
+        pbox->NewTransfer(i18n::get(ncm::GetReadableMetaTypeStr(plan.move.front().status.meta_type)));
         pbox->UpdateTransfer(0, plan.move_size);
     }
 

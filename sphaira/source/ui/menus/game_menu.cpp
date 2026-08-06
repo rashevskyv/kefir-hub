@@ -512,6 +512,17 @@ auto StorageName(u8 storage_id) -> std::string {
     return i18n::get(ncm::GetReadableStorageIdStr(storage_id));
 }
 
+// whole sentences per direction rather than "<verb> to " + StorageName(): the
+// inflected languages need the storage in a different case there, and gluing a
+// nominative noun onto a preposition reads broken.
+auto MovingToLabel(u8 target) -> std::string {
+    return target == NcmStorageId_SdCard ? "Moving to SD"_i18n : "Moving to NAND"_i18n;
+}
+
+auto MovedToLabel(u8 target) -> std::string {
+    return target == NcmStorageId_SdCard ? "Moved to SD"_i18n : "Moved to NAND"_i18n;
+}
+
 // a move is never obviously reversible and can shuffle several GB, so spell out
 // what it touches first: which components change storage, which stay where they
 // are, and what both storages look like afterwards.
@@ -1242,14 +1253,14 @@ private:
             if (component.status.storageID == NcmStorageId_BuiltInUser || component.status.storageID == NcmStorageId_SdCard) {
                 const auto target = component.status.storageID == NcmStorageId_BuiltInUser
                     ? NcmStorageId_SdCard : NcmStorageId_BuiltInUser;
-                const auto label = "Move component to"_i18n + " " + StorageName(target);
+                const auto label = (target == NcmStorageId_SdCard ? "Move component to SD"_i18n : "Move component to NAND"_i18n);
 
                 options->Add<SidebarEntryCallback>(label, [this, component, target](){
-                    App::Push<ProgressBox>(0, "Moving to"_i18n + " " + StorageName(target), i18n::get(ncm::GetReadableMetaTypeStr(component.status.meta_type)), [component, target](auto pbox) -> Result {
+                    App::Push<ProgressBox>(0, MovingToLabel(target), i18n::get(ncm::GetReadableMetaTypeStr(component.status.meta_type)), [component, target](auto pbox) -> Result {
                         return title::MoveComponent(component.status, target, pbox);
                     }, [this, target](Result rc){
                         if (R_SUCCEEDED(rc)) {
-                            App::Notify("Moved to"_i18n + " " + StorageName(target));
+                            App::Notify(MovedToLabel(target));
                             LoadGame();
                         } else if (rc != Result_TransferCancelled) {
                             App::PushErrorBox(rc, "Move failed!"_i18n);
@@ -1319,11 +1330,11 @@ private:
                         return;
                     }
 
-                    App::Push<ProgressBox>(0, "Moving to"_i18n + " " + StorageName(target), name, [app_id, target](auto pbox) -> Result {
+                    App::Push<ProgressBox>(0, MovingToLabel(target), name, [app_id, target](auto pbox) -> Result {
                         return title::MoveApplication(app_id, target, pbox);
                     }, [this, target](Result rc){
                         if (R_SUCCEEDED(rc)) {
-                            App::Notify("Moved to"_i18n + " " + StorageName(target));
+                            App::Notify(MovedToLabel(target));
                             LoadGame();
                         } else if (rc != Result_TransferCancelled) {
                             App::PushErrorBox(rc, "Move failed!"_i18n);
@@ -1623,7 +1634,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     }
 
                     options->Add<SidebarEntryCallback>(label, [this, targets, target_storage](){
-                        App::Push<ProgressBox>(0, "Moving to"_i18n + " " + StorageName(target_storage), "", [targets, target_storage](auto pbox) -> Result {
+                        App::Push<ProgressBox>(0, MovingToLabel(target_storage), "", [targets, target_storage](auto pbox) -> Result {
                             for (const auto& target : targets) {
                                 R_TRY(pbox->ShouldExitResult());
                                 pbox->SetTitle(target.GetName());
@@ -1633,7 +1644,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                         }, [this, target_storage](Result rc){
                             m_dirty = true;
                             if (R_SUCCEEDED(rc)) {
-                                App::Notify("Moved to"_i18n + " " + StorageName(target_storage));
+                                App::Notify(MovedToLabel(target_storage));
                             } else if (rc != Result_TransferCancelled) {
                                 App::PushErrorBox(rc, "Move failed!"_i18n);
                             }
