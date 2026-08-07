@@ -85,11 +85,7 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
         SetPop();
     }
 
-    mutexLock(&m_mutex);
-    const auto size = m_size;
-    mutexUnlock(&m_mutex);
-
-    if (((!size && !m_detached) || m_detached) && touch->is_clicked) {
+    if (touch->is_clicked) {
         const float center_x = m_pos.x + m_pos.w / 2.f;
         const float btn_w = 200.f;
         const float btn_h = 40.f;
@@ -308,9 +304,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
 
             if (hide_speed) {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
             } else {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
             }
         }
     } else if (offset > 0) {
@@ -343,9 +339,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             } else {
                 std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", (double)speed / 1024.0);
             }
-            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", "Receiving..."_i18n.c_str(), speed_str);
+            gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", "Receiving..."_i18n.c_str(), speed_str);
         } else {
-            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + (m_detached ? 20.f : 30.f), 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", "Receiving..."_i18n.c_str());
+            gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", "Receiving..."_i18n.c_str());
         }
     }
 
@@ -370,9 +366,12 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 30, ThemeEntryID_TEXT_INFO);
     }
 
-    // the stop button relies on Update() detecting the touch, which never runs
-    // for a detached box (it isn't on the widget stack), so it'd be a dead click.
-    if ((!size && !m_detached) || m_detached) {
+    // every transfer gets a stop button, including one with a known total: a
+    // long copy is exactly the case where the user wants a visible way out, and
+    // B alone is not discoverable. detached boxes never receive Update(), so
+    // there the button is drawn for consistency but B on the owning menu is
+    // what actually cancels.
+    {
         const float btn_w = 200.f;
         const float btn_h = 40.f;
         const float btn_x = center_x - btn_w / 2.f;

@@ -820,10 +820,11 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
 
     MoveRollback rollback{std::addressof(dst_cs), std::addressof(dst_db)};
 
-    // one read+write pair blocks the fs for its duration, and the menu drawing
-    // underneath needs the same card. half a MiB keeps each hitch short enough
-    // to stay invisible without costing meaningful throughput.
-    constexpr u64 CHUNK_SIZE = 512ULL * 1024ULL;
+    // every WritePlaceHolder is its own transaction on a journalled bis
+    // partition, so small chunks cost throughput rather than saving latency -
+    // 512 KiB made a move roughly four times slower, which is what a bar that
+    // "never moves" actually was. same sizing as the installer.
+    const u64 CHUNK_SIZE = App::IsFileBaseEmummc() ? 512ULL * 1024ULL : 4ULL * 1024ULL * 1024ULL;
     std::vector<u8> chunk_buf(CHUNK_SIZE);
 
     for (size_t i = 0; i < infos.size(); i++) {
@@ -855,6 +856,8 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
         rollback.placeholders.emplace_back(placeholder_id);
 
         u64 nca_offset{};
+        TimeStamp log_ts;
+        u64 log_done = done;
         while (nca_offset < nca_size) {
             R_TRY(pbox ? pbox->ShouldExitResult() : 0);
 
@@ -866,6 +869,17 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
             done += to_read;
             if (pbox) {
                 pbox->UpdateTransfer(done, total);
+            }
+
+            // one line a second, so a "the bar never moves" report can be
+            // answered with the actual throughput instead of a guess.
+            if (log_ts.GetSeconds() >= 1) {
+                const auto secs = log_ts.GetSecondsD();
+                log_write("[MOVE] %llu/%llu MiB  %.2f MiB/s\n",
+                    (unsigned long long)(done >> 20), (unsigned long long)(total >> 20),
+                    secs > 0 ? ((double)(done - log_done) / (1024.0 * 1024.0)) / secs : 0.0);
+                log_ts.Update();
+                log_done = done;
             }
         }
 
