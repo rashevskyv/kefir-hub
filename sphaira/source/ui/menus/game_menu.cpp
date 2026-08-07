@@ -523,6 +523,21 @@ auto MovedToLabel(u8 target) -> std::string {
     return target == NcmStorageId_SdCard ? "Moved to SD"_i18n : "Moved to NAND"_i18n;
 }
 
+// ProgressBox turns on ApmCpuBoostMode_FastLoad for every transfer ("Boost CPU
+// during transfer", on by default). FastLoad raises the cpu clock but drops the
+// *gpu* to 76.8 MHz, roughly a sixth of normal. That is a fine trade for a
+// cpu-bound install (ncz/nsz decompression) and a terrible one for a move: the
+// work is ncm reading and writing, there is nothing to boost, while the games
+// grid still rendering behind the box drops to a few frames a second. That is
+// what "the progress bar does not move and the console feels hung" was - the
+// transfer underneath had been running the whole time.
+//
+// Call once per progress box, at the top of its worker: the boost is ref
+// counted, so this hands back only the reference that box took.
+void DropBoostForMove() {
+    App::SetBoostMode(false);
+}
+
 // a move is never obviously reversible and can shuffle several GB, so spell out
 // what it touches first: which components change storage, which stay where they
 // are, and what both storages look like afterwards.
@@ -1257,6 +1272,7 @@ private:
 
                 options->Add<SidebarEntryCallback>(label, [this, component, target](){
                     App::Push<ProgressBox>(0, MovingToLabel(target), i18n::get(ncm::GetReadableMetaTypeStr(component.status.meta_type)), [component, target](auto pbox) -> Result {
+                        DropBoostForMove();
                         return title::MoveComponent(component.status, target, pbox);
                     }, [this, target](Result rc){
                         if (R_SUCCEEDED(rc)) {
@@ -1331,6 +1347,7 @@ private:
                     }
 
                     App::Push<ProgressBox>(0, MovingToLabel(target), name, [app_id, target](auto pbox) -> Result {
+                        DropBoostForMove();
                         return title::MoveApplication(app_id, target, pbox);
                     }, [this, target](Result rc){
                         if (R_SUCCEEDED(rc)) {
@@ -1635,6 +1652,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
 
                     options->Add<SidebarEntryCallback>(label, [this, targets, target_storage](){
                         App::Push<ProgressBox>(0, MovingToLabel(target_storage), "", [targets, target_storage](auto pbox) -> Result {
+                            DropBoostForMove();
                             for (const auto& target : targets) {
                                 R_TRY(pbox->ShouldExitResult());
                                 pbox->SetTitle(target.GetName());
@@ -1774,7 +1792,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     int image_load_count = 0;
     int summary_load_count = 0;
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
+    // LoadGameSummary() is ns/ncm i/o and it runs here, on the render thread,
+    // one entry per frame until every row has been sized. While a transfer has
+    // the storage busy each of those calls queues behind its reads, so a frame
+    // that issues one can take far longer than a frame should. The sizes are
+    // not urgent - they resume once the transfer ends.
+    const bool storage_busy = App::GetProgressActive();
+
+    m_list->Draw(vg, theme, m_entries.size(), [this, storage_busy, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
         auto& e = m_entries[pos];
 
         if (e.status == title::NacpLoadStatus::None) {
@@ -1791,7 +1816,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        if (!e.summary_attempted && summary_load_count < 1) {
+        if (!storage_busy && !e.summary_attempted && summary_load_count < 1) {
             LoadGameSummary(e);
             summary_load_count++;
             if (pos == m_index && !m_selected_count) {
