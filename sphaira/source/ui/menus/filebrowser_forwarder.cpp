@@ -27,7 +27,7 @@ void ShowRomForwarderEditor(const FileAssocEntry& assoc, const RomDatabaseIndexs
     }
 
     forwarder::Config editor{};
-    editor.values.title = nro.nacp.lang.name + std::string{" | "} + file_name;
+    editor.values.title = file_name;
     editor.values.author = nacp_util::GetAuthor(nacp);
     editor.values.version = nacp.display_version;
     editor.values.icon = GetRomIcon(file_name, db_indexs, nro);
@@ -35,16 +35,17 @@ void ShowRomForwarderEditor(const FileAssocEntry& assoc, const RomDatabaseIndexs
     // search steamgriddb for the rom, not for "core | rom".
     editor.steam_query = file_name;
     editor.icon_source = db_indexs.empty() ? assoc.name : "Boxart"_i18n;
+    editor.show_platform_title = true;
     editor.show_author = true;
     editor.show_version = true;
     editor.show_forwarder_options = App::GetForwarderAsk();
 
-    editor.on_create = [assoc, arg_path, nacp, db_indexs](const forwarder::Values& values) {
+    editor.on_create = [assoc, arg_path, nacp, db_indexs, platform = std::string(nro.nacp.lang.name)](const forwarder::Values& values) {
         OwoConfig config{};
         config.nro_path = assoc.path.toString();
         config.args = nro_add_arg_file(arg_path);
         config.nacp = nacp;
-        config.name = values.title;
+        config.name = values.include_platform ? platform + " | " + values.title : values.title;
         config.author = values.author;
         config.icon = values.icon;
         std::snprintf(config.nacp.display_version, sizeof(config.nacp.display_version), "%s", values.version.c_str());

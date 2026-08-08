@@ -14,6 +14,7 @@ struct Values {
     std::string version;
     std::vector<u8> icon;
     ForwarderOptions options{};
+    bool include_platform{false};
 };
 
 // return true to close the editor, false to keep it open (validation failed).
@@ -28,6 +29,7 @@ struct Config {
     std::string submit_label{};
     bool show_author{};
     bool show_version{};
+    bool show_platform_title{};
     bool show_forwarder_options{true};
     CreateCallback on_create;
 };

@@ -24,6 +24,7 @@ namespace {
 
 enum class Row {
     Title,
+    IncludePlatform,
     Author,
     Version,
     ProfileSelection,
@@ -45,6 +46,7 @@ public:
     , m_submit_label{config.submit_label.empty() ? "Create Forwarder"_i18n : std::move(config.submit_label)}
     , m_show_author{config.show_author}
     , m_show_version{config.show_version}
+    , m_show_platform_title{config.show_platform_title}
     , m_show_forwarder_options{config.show_forwarder_options}
     , m_on_create{std::move(config.on_create)} {
         SetActions(
@@ -53,6 +55,9 @@ public:
         );
 
         m_rows.emplace_back(Row::Title);
+        if (m_show_platform_title) {
+            m_rows.emplace_back(Row::IncludePlatform);
+        }
         if (m_show_author) {
             m_rows.emplace_back(Row::Author);
         }
@@ -141,6 +146,7 @@ public:
         gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
         gfx::drawRect(vg, 30.f, 646.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
+        const bool icon_error = m_submitted && m_values.icon.empty();
         const Vec4 icon_panel{55.f, 110.f, 350.f, 510.f};
         DrawElement(icon_panel, ThemeEntryID_GRID);
         if (m_icon_focused) {
@@ -149,7 +155,13 @@ public:
 
         const auto preview = m_preview > 0 ? m_preview : App::GetDefaultImage();
         gfx::drawImage(vg, m_icon_box, preview, 8.f);
-        gfx::drawText(vg, 230.f, 450.f, 22.f, theme->GetColour(m_icon_focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), "App Icon"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        if (icon_error) {
+            gfx::drawRect(vg, m_icon_box, theme->GetColour(ThemeEntryID_ERROR), 8.f);
+        }
+        const auto icon_label_id = icon_error
+            ? ThemeEntryID_ERROR
+            : (m_icon_focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        gfx::drawText(vg, 230.f, 450.f, 22.f, theme->GetColour(icon_label_id), "App Icon"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         gfx::drawText(vg, 230.f, 485.f, 17.f, theme->GetColour(ThemeEntryID_TEXT_INFO), m_icon_source.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         gfx::drawTextBox(vg, 85.f, 525.f, 16.f, 290.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "Press A or tap the icon to change it"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
@@ -188,8 +200,11 @@ public:
                 ? value_right - measured_value_width
                 : value_x;
 
+            const bool row_error = m_submitted && ((row == Row::Title && m_values.title.empty()) || (row == Row::Author && m_show_author && m_values.author.empty()));
+            const auto label_colour = row_error ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+
             m_scroll_row_label.Draw(vg, selected, label_x, pos.y + pos.h / 2.f, label_width, 19.f,
-                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), label);
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, label_colour, label);
             // a row the current state makes unusable is drawn dim, so it reads
             // as unavailable rather than as a setting that simply lost.
             const auto unavailable = row == Row::VideoCapture && !m_values.options.screenshot;
@@ -212,11 +227,14 @@ private:
             case Row::Title:
                 EditText(m_values.title, "App Title"_i18n, 1, sizeof(NacpLanguageEntry::name) - 1);
                 break;
+            case Row::IncludePlatform:
+                m_values.include_platform = !m_values.include_platform;
+                break;
             case Row::Author:
                 EditText(m_values.author, "Author"_i18n, 1, sizeof(NacpLanguageEntry::author) - 1);
                 break;
             case Row::Version:
-                EditText(m_values.version, "Version"_i18n, 1, sizeof(NacpStruct::display_version) - 1);
+                EditText(m_values.version, "Version (optional)"_i18n, 0, sizeof(NacpStruct::display_version) - 1);
                 break;
             case Row::ProfileSelection:
                 m_values.options.profile_selection = !m_values.options.profile_selection;
@@ -251,7 +269,8 @@ private:
 
     void EditText(std::string& value, const std::string& header, s64 min_length, s64 max_length) {
         std::string output;
-        if (R_SUCCEEDED(swkbd::ShowText(output, header.c_str(), value.c_str(), min_length, max_length)) && !output.empty()) {
+        if (R_SUCCEEDED(swkbd::ShowText(output, header.c_str(), value.c_str(), min_length, max_length))
+            && (min_length == 0 || !output.empty())) {
             value = std::move(output);
         }
     }
@@ -343,9 +362,9 @@ private:
     }
 
     void Create() {
+        m_submitted = true;
         if (m_values.title.empty() || m_values.icon.empty()
-            || (m_show_author && m_values.author.empty())
-            || (m_show_version && m_values.version.empty())) {
+            || (m_show_author && m_values.author.empty())) {
             App::Notify("The required fields and icon must be non-empty"_i18n);
             return;
         }
@@ -358,8 +377,9 @@ private:
     auto GetRowLabel(Row row) const -> std::string {
         switch (row) {
             case Row::Title: return m_title_label;
+            case Row::IncludePlatform: return "Include platform in title"_i18n;
             case Row::Author: return "Author"_i18n;
-            case Row::Version: return "Version"_i18n;
+            case Row::Version: return "Version (optional)"_i18n;
             case Row::ProfileSelection: return "Profile Selection"_i18n;
             case Row::AddressSpace: return "Address Space"_i18n;
             case Row::Screenshot: return "Screenshots"_i18n;
@@ -373,6 +393,7 @@ private:
     auto GetRowValue(Row row) const -> std::string {
         switch (row) {
             case Row::Title: return m_values.title;
+            case Row::IncludePlatform: return m_values.include_platform ? "Enabled"_i18n : "Disabled"_i18n;
             case Row::Author: return m_values.author;
             case Row::Version: return m_values.version;
             case Row::ProfileSelection: return m_values.options.profile_selection ? "Enabled"_i18n : "Disabled"_i18n;
@@ -405,6 +426,7 @@ private:
     const std::string m_submit_label;
     const bool m_show_author;
     const bool m_show_version;
+    const bool m_show_platform_title;
     const bool m_show_forwarder_options;
     const CreateCallback m_on_create;
     std::vector<Row> m_rows;
@@ -413,6 +435,7 @@ private:
     int m_preview{};
     s64 m_index{};
     bool m_icon_focused{true};
+    bool m_submitted{false};
     ScrollingText m_scroll_screen_title{};
     ScrollingText m_scroll_app_title{};
     ScrollingText m_scroll_row_label{};
