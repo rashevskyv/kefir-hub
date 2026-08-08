@@ -6,6 +6,7 @@
 #include "i18n.hpp"
 #include "image.hpp"
 #include "swkbd.hpp"
+#include "title_nsp.hpp"
 #include "utils/utils.hpp"
 
 #include "ui/menus/game_menu.hpp"
@@ -20,100 +21,23 @@
 #include "ui/nvg_util.hpp"
 
 #include "yati/nx/ncm.hpp"
-#include "yati/nx/nca.hpp"
 #include "yati/nx/ns.hpp"
 #include "yati/nx/es.hpp"
-#include "yati/container/base.hpp"
-#include "yati/container/nsp.hpp"
 
 #include <utility>
 #include <cstring>
+#include <cctype>
 #include <algorithm>
+#include <ctime>
+#include <ranges>
 #include <minIni.h>
 
 namespace sphaira::ui::menu::game {
 namespace {
 
-struct ContentInfoEntry {
-    NsApplicationContentMetaStatus status{};
-    std::vector<NcmContentInfo> content_infos{};
-    std::vector<NcmRightsId> ncm_rights_id{};
-};
-
-struct TikEntry {
-    FsRightsId id{};
-    u8 key_gen{};
-    std::vector<u8> tik_data{};
-    std::vector<u8> cert_data{};
-};
-
-struct NspEntry {
-    // application name.
-    std::string application_name{};
-    // name of the nsp (name [id][v0][BASE].nsp).
-    fs::FsPath path{};
-    // tickets and cert data, will be empty if title key crypto isn't used.
-    std::vector<TikEntry> tickets{};
-    // all the collections for this nsp, such as nca's and tickets.
-    std::vector<yati::container::CollectionEntry> collections{};
-    // raw nsp data (header, file table and string table).
-    std::vector<u8> nsp_data{};
-    // size of the entier nsp.
-    s64 nsp_size{};
-    // copy of ncm cs, it is not closed.
-    NcmContentStorage cs{};
-    // copy of the icon, if invalid, it will use the default icon.
-    int icon{};
-
-    // todo: benchmark manual sdcard read and decryption vs ncm.
-    Result Read(void* buf, s64 off, s64 size, u64* bytes_read) {
-        if (off < nsp_data.size()) {
-            *bytes_read = size = ClipSize(off, size, nsp_data.size());
-            std::memcpy(buf, nsp_data.data() + off, size);
-            R_SUCCEED();
-        }
-
-        // adjust offset.
-        off -= nsp_data.size();
-
-        for (const auto& collection : collections) {
-            if (InRange(off, collection.offset, collection.size)) {
-                // adjust offset relative to the collection.
-                off -= collection.offset;
-                *bytes_read = size = ClipSize(off, size, collection.size);
-
-                if (collection.name.ends_with(".nca")) {
-                    const auto id = ncm::GetContentIdFromStr(collection.name.c_str());
-                    return ncmContentStorageReadContentIdFile(&cs, buf, size, &id, off);
-                } else if (collection.name.ends_with(".tik") || collection.name.ends_with(".cert")) {
-                    FsRightsId id;
-                    keys::parse_hex_key(&id, collection.name.c_str());
-
-                    const auto it = std::ranges::find_if(tickets, [&id](auto& e){
-                        return !std::memcmp(&id, &e.id, sizeof(id));
-                    });
-                    R_UNLESS(it != tickets.end(), Result_GameBadReadForDump);
-
-                    const auto& data = collection.name.ends_with(".tik") ? it->tik_data : it->cert_data;
-                    std::memcpy(buf, data.data() + off, size);
-                    R_SUCCEED();
-                }
-            }
-        }
-
-        log_write("did not find collection...\n");
-        return 0x1;
-    }
-
-private:
-    static auto InRange(s64 off, s64 offset, s64 size) -> bool {
-        return off < offset + size && off >= offset;
-    }
-
-    static auto ClipSize(s64 off, s64 size, s64 file_size) -> s64 {
-        return std::min(size, file_size - off);
-    }
-};
+using title::NspEntry;
+using title::ContentInfoEntry;
+using title::BuildContentEntry;
 
 struct NspSource final : dump::BaseSource {
     NspSource(const std::vector<NspEntry>& entries) : m_entries{entries} {
@@ -221,174 +145,18 @@ void LoadControlEntry(Entry& e, bool force_image_load = false) {
     }
 }
 
-auto isRightsIdValid(FsRightsId id) -> bool {
-    FsRightsId empty_id{};
-    return 0 != std::memcmp(std::addressof(id), std::addressof(empty_id), sizeof(id));
-}
-
-
-
-auto BuildNspPath(const Entry& e, const NsApplicationContentMetaStatus& status) -> fs::FsPath {
-    fs::FsPath name_buf = e.GetName();
-    title::utilsReplaceIllegalCharacters(name_buf, true);
-
-    char version[sizeof(NacpStruct::display_version) + 1]{};
-    if (status.meta_type == NcmContentMetaType_Patch) {
-        u64 program_id;
-        fs::FsPath path;
-        if (R_SUCCEEDED(title::GetControlPathFromStatus(status, &program_id, &path))) {
-            char display_version[0x10];
-            if (R_SUCCEEDED(nca::ParseControl(path, program_id, display_version, sizeof(display_version), nullptr, offsetof(NacpStruct, display_version)))) {
-                std::snprintf(version, sizeof(version), "%s ", display_version);
-            }
-        }
-    }
-
-    fs::FsPath path;
-    if (App::GetApp()->m_dump_app_folder.Get()) {
-        std::snprintf(path, sizeof(path), "%s/%s %s[%016lX][v%u][%s].nsp", name_buf.s, name_buf.s, version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
-    } else {
-        std::snprintf(path, sizeof(path), "%s %s[%016lX][v%u][%s].nsp", name_buf.s, version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
-    }
-
-    return path;
-}
-
-Result BuildContentEntry(const NsApplicationContentMetaStatus& status, ContentInfoEntry& out) {
-    auto& cs = title::GetNcmCs(status.storageID);
-    auto& db = title::GetNcmDb(status.storageID);
-    const auto app_id = ncm::GetAppId(status.meta_type, status.application_id);
-
-    auto id_min = status.application_id;
-    auto id_max = status.application_id;
-    // workaround N bug where they don't check the full range in the ID filter.
-    // https://github.com/Atmosphere-NX/Atmosphere/blob/1d3f3c6e56b994b544fc8cd330c400205d166159/libraries/libstratosphere/source/ncm/ncm_on_memory_content_meta_database_impl.cpp#L22
-    if (status.storageID == NcmStorageId_None || status.storageID == NcmStorageId_GameCard) {
-        id_min -= 1;
-        id_max += 1;
-    }
-
-    s32 meta_total;
-    s32 meta_entries_written;
-    NcmContentMetaKey key;
-    R_TRY(ncmContentMetaDatabaseList(std::addressof(db), std::addressof(meta_total), std::addressof(meta_entries_written), std::addressof(key), 1, (NcmContentMetaType)status.meta_type, app_id, id_min, id_max, NcmContentInstallType_Full));
-    log_write("ncmContentMetaDatabaseList(): AppId: %016lX Id: %016lX total: %d written: %d storageID: %u key.id %016lX\n", app_id, status.application_id, meta_total, meta_entries_written, status.storageID, key.id);
-    R_UNLESS(meta_total == 1, Result_GameMultipleKeysFound);
-    R_UNLESS(meta_entries_written == 1, Result_GameMultipleKeysFound);
-
-    std::vector<NcmContentInfo> cnmt_infos;
-    for (s32 i = 0; ; i++) {
-        s32 entries_written;
-        NcmContentInfo info_out;
-        R_TRY(ncmContentMetaDatabaseListContentInfo(std::addressof(db), std::addressof(entries_written), std::addressof(info_out), 1, std::addressof(key), i));
-
-        if (!entries_written) {
-            break;
-        }
-
-        // check if we need to fetch tickets.
-        NcmRightsId ncm_rights_id;
-        R_TRY(ncmContentStorageGetRightsIdFromContentId(std::addressof(cs), std::addressof(ncm_rights_id), std::addressof(info_out.content_id), FsContentAttributes_All));
-
-        if (isRightsIdValid(ncm_rights_id.rights_id)) {
-            const auto it = std::ranges::find_if(out.ncm_rights_id, [&ncm_rights_id](auto& e){
-                return !std::memcmp(&e, &ncm_rights_id, sizeof(ncm_rights_id));
-            });
-
-            if (it == out.ncm_rights_id.end()) {
-                out.ncm_rights_id.emplace_back(ncm_rights_id);
-            }
-        }
-
-        if (info_out.content_type == NcmContentType_Meta) {
-            cnmt_infos.emplace_back(info_out);
-        } else {
-            out.content_infos.emplace_back(info_out);
-        }
-    }
-
-    // append cnmt at the end of the list, following StandardNSP spec.
-    out.content_infos.insert_range(out.content_infos.end(), cnmt_infos);
-    out.status = status;
-    R_SUCCEED();
-}
-
-Result BuildNspEntry(const Entry& e, const ContentInfoEntry& info, const keys::Keys& keys, NspEntry& out) {
-    out.application_name = e.GetName();
-    out.path = BuildNspPath(e, info.status);
-    s64 offset{};
-
-    for (auto& e : info.content_infos) {
-        char nca_name[0x200];
-        std::snprintf(nca_name, sizeof(nca_name), "%s%s", utils::hexIdToStr(e.content_id).str, e.content_type == NcmContentType_Meta ? ".cnmt.nca" : ".nca");
-
-        u64 size;
-        ncmContentInfoSizeToU64(std::addressof(e), std::addressof(size));
-
-        out.collections.emplace_back(nca_name, offset, size);
-        offset += size;
-    }
-
-    for (auto& ncm_rights_id : info.ncm_rights_id) {
-        const auto rights_id = ncm_rights_id.rights_id;
-        const auto key_gen = ncm_rights_id.key_generation;
-
-        TikEntry entry{rights_id, key_gen};
-        log_write("rights id is valid, fetching common ticket and cert\n");
-
-        u64 tik_size;
-        u64 cert_size;
-        R_TRY(es::GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &rights_id));
-        log_write("got tik_size: %zu cert_size: %zu\n", tik_size, cert_size);
-
-        entry.tik_data.resize(tik_size);
-        entry.cert_data.resize(cert_size);
-        R_TRY(es::GetCommonTicketAndCertificateData(&tik_size, &cert_size, entry.tik_data.data(), entry.tik_data.size(), entry.cert_data.data(), entry.cert_data.size(), &rights_id));
-        log_write("got tik_data: %zu cert_data: %zu\n", tik_size, cert_size);
-
-        // patch fake ticket / convert personalised to common if needed.
-        R_TRY(es::PatchTicket(entry.tik_data, entry.cert_data, key_gen, keys, App::GetApp()->m_dump_convert_to_common_ticket.Get()));
-
-        char tik_name[0x200];
-        std::snprintf(tik_name, sizeof(tik_name), "%s%s", utils::hexIdToStr(rights_id).str, ".tik");
-
-        char cert_name[0x200];
-        std::snprintf(cert_name, sizeof(cert_name), "%s%s", utils::hexIdToStr(rights_id).str, ".cert");
-
-        out.collections.emplace_back(tik_name, offset, entry.tik_data.size());
-        offset += entry.tik_data.size();
-
-        out.collections.emplace_back(cert_name, offset, entry.cert_data.size());
-        offset += entry.cert_data.size();
-
-        out.tickets.emplace_back(entry);
-    }
-
-    out.nsp_data = yati::container::Nsp::Build(out.collections, out.nsp_size);
-    out.cs = title::GetNcmCs(info.status.storageID);
-
-    R_SUCCEED();
-}
-
+// the nsp itself is built by title::BuildNspEntries (shared with the MTP games
+// drive); this only adds what the dump ui needs - the loaded name and icon.
 Result BuildNspEntries(Entry& e, u32 flags, std::vector<NspEntry>& out) {
     LoadControlEntry(e);
 
-    title::MetaEntries meta_entries;
-    R_TRY(GetMetaEntries(e, meta_entries, flags));
+    const auto first = out.size();
+    R_TRY(title::BuildNspEntries(e.app_id, e.GetName(), flags, App::GetApp()->m_dump_app_folder.Get(), out));
 
-    keys::Keys keys;
-    R_TRY(keys::parse_keys(keys, true));
-
-    for (const auto& status : meta_entries) {
-        ContentInfoEntry info;
-        R_TRY(BuildContentEntry(status, info));
-
-        NspEntry nsp;
-        R_TRY(BuildNspEntry(e, info, keys, nsp));
-        out.emplace_back(nsp).icon = e.image;
+    for (auto i = first; i < out.size(); i++) {
+        out[i].icon = e.image;
     }
 
-    R_UNLESS(!out.empty(), Result_GameNoNspEntriesBuilt);
     R_SUCCEED();
 }
 
@@ -663,6 +431,32 @@ enum HeaderItem : u8 {
 
 // stat rows: left column label at x=265 (value at 372), right column at x=810
 // (value at 917). the cells below wrap those two columns row by row.
+auto FormatPlaytime(u64 nanoseconds) -> std::string {
+    if (!nanoseconds) {
+        return "-";
+    }
+
+    const auto minutes = nanoseconds / 60000000000ULL;
+    if (minutes < 60) {
+        return std::to_string(minutes) + " " + "min"_i18n;
+    }
+    return std::to_string(minutes / 60) + " " + "h"_i18n + " " + std::to_string(minutes % 60) + " " + "min"_i18n;
+}
+
+auto FormatLastPlayed(u64 posix_seconds) -> std::string {
+    if (!posix_seconds) {
+        return "-";
+    }
+
+    const auto t = (time_t)posix_seconds;
+    struct tm tm{};
+    localtime_r(&t, &tm);
+
+    char out[24];
+    std::snprintf(out, sizeof(out), "%02u/%02u/%u", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+    return out;
+}
+
 constexpr float STAT_ROW_Y[]{178.f, 207.f, 236.f, 265.f};
 constexpr Vec4 HEADER_CELL[HeaderItem_Count]{
     {256.f, STAT_ROW_Y[2] - 6.f, 530.f, 28.f}, // languages
@@ -829,34 +623,82 @@ struct DbiDetailsMenu final : MenuBase {
             gfx::drawRectOutline(vg, theme, 4.f, HEADER_CELL[m_header_index], 4.f);
         }
 
-        const auto stat = [&](float x, float y, const std::string& label, const std::string& value, bool clickable = false) {
-            gfx::drawTextBold(vg, x, y, kStatSize, text, label.c_str());
-            // values share a column so they line up, unless a (translated)
-            // label is too wide for it and would be overdrawn.
-            float b[4];
+        struct StatItem {
+            std::string label;
+            std::string value;
+            bool clickable{false};
+            bool is_languages{false};
+            size_t label_scroll_idx{0};
+        };
+
+        const auto draw_stat_block = [&](float x, const std::vector<float>& y_positions, float row_w, const std::vector<StatItem>& items) {
+            float max_label_w = 0.f;
             nvgFontSize(vg, kStatSize);
-            gfx::textBounds(vg, 0, 0, b, label.c_str());
-            gfx::drawText(vg, x + std::max(107.f, b[2] - b[0] + 12.f), y, kStatSize, clickable ? accent : info, value.c_str());
+            for (const auto& item : items) {
+                float b[4];
+                gfx::textBounds(vg, 0, 0, b, item.label.c_str());
+                max_label_w = std::max(max_label_w, b[2] - b[0]);
+            }
+
+            const float max_allowed_label_w = row_w / 3.f;
+            const float label_col_w = std::min(max_label_w, max_allowed_label_w);
+            const float val_x = x + label_col_w + 12.f;
+            const float val_w = (x + row_w) - val_x;
+
+            for (size_t i = 0; i < items.size(); i++) {
+                const auto& item = items[i];
+                const float y = y_positions[i];
+
+                float b[4];
+                nvgFontSize(vg, kStatSize);
+                gfx::textBounds(vg, 0, 0, b, item.label.c_str());
+                const float label_w = b[2] - b[0];
+
+                if (label_w > max_allowed_label_w && item.label_scroll_idx < m_stat_label_scrolls.size()) {
+                    m_stat_label_scrolls[item.label_scroll_idx].Draw(
+                        vg, true, x, y, label_col_w, kStatSize, NVG_ALIGN_LEFT, text, item.label, true);
+                } else {
+                    gfx::drawTextBold(vg, x, y, kStatSize, text, item.label.c_str());
+                }
+
+                if (item.is_languages) {
+                    m_language_scroll.Draw(vg, true, val_x, y + 9.f, val_w, 16.f, NVG_ALIGN_LEFT, accent, item.value);
+                } else {
+                    gfx::drawText(vg, val_x, y, kStatSize, item.clickable ? accent : info, item.value.c_str());
+                }
+            }
         };
 
         char id_str[24];
         std::snprintf(id_str, sizeof(id_str), "%016lX", entry.app_id);
-        stat(265, STAT_ROW_Y[0], "Title ID"_i18n, id_str);
-        stat(265, STAT_ROW_Y[1], "Version"_i18n, m_display_version[0] ? m_display_version : "-");
-
-        gfx::drawTextBold(vg, 265, STAT_ROW_Y[2], kStatSize, text, "Languages"_i18n.c_str());
-        m_language_scroll.Draw(vg, true, 372, STAT_ROW_Y[2] + 9.f, 413, 16.f, NVG_ALIGN_LEFT, accent,
-            m_languages.empty() ? "-" : m_languages.c_str());
-
-        stat(265, STAT_ROW_Y[3], "Mods folder"_i18n,
-            !entry.mods_folder ? "Not found"_i18n : (entry.layeredfs ? "Found"_i18n : "Empty"_i18n), true);
-
         char saves_str[48];
         std::snprintf(saves_str, sizeof(saves_str), "%zu (%s allocated)", m_saves.size(), FormatBytes(m_save_allocated_size).c_str());
-        stat(810, STAT_ROW_Y[0], "Components"_i18n, std::to_string(m_components.size()), true);
-        stat(810, STAT_ROW_Y[1], "Tickets"_i18n, std::to_string(m_tickets.size()), true);
-        stat(810, STAT_ROW_Y[2], "Saves"_i18n, saves_str, true);
-        stat(810, STAT_ROW_Y[3], "Save quota"_i18n, FormatBytes(m_save_size) + " + " + FormatBytes(m_save_journal_size));
+
+        // Block 1: Left column, upper pair (Title ID, Version)
+        draw_stat_block(265.f, {STAT_ROW_Y[0], STAT_ROW_Y[1]}, 530.f, {
+            StatItem{"Title ID"_i18n, id_str, false, false, 0},
+            StatItem{"Version"_i18n, m_display_version[0] ? m_display_version : "-", false, false, 1}
+        });
+
+        // Block 2: Left column, lower pair (Languages, Mods folder)
+        draw_stat_block(265.f, {STAT_ROW_Y[2], STAT_ROW_Y[3]}, 530.f, {
+            StatItem{"Languages"_i18n, m_languages.empty() ? "-" : m_languages, false, true, 2},
+            StatItem{"Mods folder"_i18n, !entry.mods_folder ? "Not found"_i18n : (entry.layeredfs ? "Found"_i18n : "Empty"_i18n), true, false, 3}
+        });
+
+        // Block 3: Right column, upper pair (Play time, Last played)
+        draw_stat_block(810.f, {112.f, 142.f}, 425.f, {
+            StatItem{"Play time"_i18n, FormatPlaytime(entry.playtime), false, false, 4},
+            StatItem{"Last played"_i18n, FormatLastPlayed(entry.last_played), false, false, 5}
+        });
+
+        // Block 4: Right column, lower group (Components, Tickets, Saves, Save quota)
+        draw_stat_block(810.f, {STAT_ROW_Y[0], STAT_ROW_Y[1], STAT_ROW_Y[2], STAT_ROW_Y[3]}, 425.f, {
+            StatItem{"Components"_i18n, std::to_string(m_components.size()), true, false, 6},
+            StatItem{"Tickets"_i18n, std::to_string(m_tickets.size()), true, false, 7},
+            StatItem{"Saves"_i18n, saves_str, true, false, 8},
+            StatItem{"Save quota"_i18n, FormatBytes(m_save_size) + " + " + FormatBytes(m_save_journal_size), false, false, 9}
+        });
 
         const auto hint = m_header_focus ? HeaderItemHint(m_header_index)
             : "Press Up on the first row to use the details above"_i18n;
@@ -1114,6 +956,9 @@ private:
         m_languages.clear();
         m_language_list.clear();
         m_language_scroll.Reset();
+        for (auto& scroll : m_stat_label_scrolls) {
+            scroll.Reset();
+        }
         m_save_size = 0;
         m_save_journal_size = 0;
 
@@ -1388,6 +1233,7 @@ private:
     std::string m_languages{};
     PopupList::Items m_language_list{};
     ScrollingText m_language_scroll{};
+    std::array<ScrollingText, 10> m_stat_label_scrolls{};
     // focus lives either in the summary block (m_header_index) or in the list.
     bool m_header_focus{};
     bool m_hint_is_header{};
@@ -1521,6 +1367,8 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     sort_items.push_back("Alphabetical"_i18n);
                     sort_items.push_back("Publisher"_i18n);
                     sort_items.push_back("Storage"_i18n);
+                    sort_items.push_back("Last played"_i18n);
+                    sort_items.push_back("Play time"_i18n);
 
                     SidebarEntryArray::Items order_items;
                     order_items.push_back("Descending"_i18n);
@@ -1536,7 +1384,24 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                         SortAndFindLastFile(false);
                     }, m_order.Get(), "Sort games from newest to oldest or A to Z."_i18n);
 
+                    options->Add<SidebarEntryCallback>("Update play time"_i18n, [this](){
+                        LoadPlaytime();
+                    }, "Read total play time for every game from the console's play log, then sort by it."_i18n);
+
                 }, "Change display order for games."_i18n);
+
+                options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
+                    SetSearch();
+                }, m_search_query.empty()
+                    ? "Show only games whose name contains what you type."_i18n
+                    : "Searching for: "_i18n + m_search_query);
+
+                if (!m_search_query.empty()) {
+                    options->Add<SidebarEntryCallback>("Clear search"_i18n, [this](){
+                        m_search_query.clear();
+                        m_dirty = true;
+                    }, "Show every game again."_i18n);
+                }
 
                 #if 0
                 options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
@@ -1744,10 +1609,17 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
     nsInitialize();
     es::Initialize();
     title::Init();
+    // play statistics are a nice-to-have: if pdm is unavailable the two
+    // playtime sorts simply have nothing to sort by.
+    m_pdm_initialized = R_SUCCEEDED(pdmqryInitialize());
 }
 
 Menu::~Menu() {
     title::Exit();
+
+    if (m_pdm_initialized) {
+        pdmqryExit();
+    }
 
     FreeEntries();
     nsExit();
@@ -1923,6 +1795,22 @@ void Menu::ScanHomebrew() {
         offset += record_count;
     }
 
+    LoadPlayStats();
+
+    // filtering here rather than keeping a second, filtered copy of the list:
+    // selection, sizes and deletes all index m_entries directly.
+    if (!m_search_query.empty()) {
+        auto query = m_search_query;
+        std::ranges::transform(query, query.begin(), ::tolower);
+
+        std::erase_if(m_entries, [this, &query](Entry& e) {
+            LoadControlEntry(e);
+            std::string name = e.GetName();
+            std::ranges::transform(name, name.begin(), ::tolower);
+            return name.find(query) == std::string::npos;
+        });
+    }
+
     m_dirty = false;
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
@@ -1930,11 +1818,126 @@ void Menu::ScanHomebrew() {
     ClearSelection();
 }
 
+// last-played comes straight from pdm and is cheap enough to read on every
+// scan. total playtime is one service call per title per user, so it is only
+// read from the cache here and refreshed on demand by LoadPlaytime().
+void Menu::LoadPlayStats() {
+    if (m_entries.empty()) {
+        return;
+    }
+
+    for (auto& e : m_entries) {
+        char section[17];
+        std::snprintf(section, sizeof(section), "%016lX", e.app_id);
+        const auto cached = ini_getl(section, "playtime_mins", -1, App::PLAYLOG_PATH);
+        e.playtime = cached < 0 ? 0 : (u64)cached * 60000000000ULL;
+    }
+
+    if (!m_pdm_initialized) {
+        return;
+    }
+
+    std::vector<u64> ids;
+    ids.reserve(m_entries.size());
+    for (const auto& e : m_entries) {
+        ids.push_back(e.app_id);
+    }
+
+    std::vector<PdmLastPlayTime> play_times(ids.size());
+    s32 count{};
+    if (R_FAILED(pdmqryQueryLastPlayTime(true, play_times.data(), ids.data(), ids.size(), &count))) {
+        return;
+    }
+
+    for (s32 i = 0; i < count; i++) {
+        const auto& play_time = play_times[i];
+        if (!play_time.flag) {
+            continue;
+        }
+
+        const auto it = std::ranges::find_if(m_entries, [&play_time](const auto& e){
+            return e.app_id == play_time.application_id;
+        });
+        if (it != m_entries.end()) {
+            it->last_played = pdmPlayTimestampToPosix(play_time.timestamp_user);
+        }
+    }
+}
+
+void Menu::LoadPlaytime() {
+    if (!m_pdm_initialized) {
+        App::Notify("Play statistics are unavailable"_i18n);
+        return;
+    }
+
+    if (m_entries.empty()) {
+        return;
+    }
+
+    const auto accounts = App::GetAccountList();
+
+    App::Push<ProgressBox>(0, "Updating play statistics"_i18n, "", [this, accounts](auto pbox) -> Result {
+        pbox->UpdateTransfer(0, m_entries.size());
+
+        for (size_t i = 0; i < m_entries.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+
+            auto& e = m_entries[i];
+            u64 total{};
+            for (const auto& account : accounts) {
+                PdmPlayStatistics stats{};
+                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId(e.app_id, account.uid, true, &stats))) {
+                    total += stats.playtime;
+                }
+            }
+
+            // no profiles (or none of them ever launched it): fall back to the
+            // console-wide figure so a played title never reads as zero.
+            if (!total) {
+                PdmPlayStatistics stats{};
+                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationId(e.app_id, true, &stats))) {
+                    total = stats.playtime;
+                }
+            }
+
+            e.playtime = total;
+
+            char section[17];
+            std::snprintf(section, sizeof(section), "%016lX", e.app_id);
+            ini_putl(section, "playtime_mins", total / 60000000000ULL, App::PLAYLOG_PATH);
+
+            pbox->UpdateTransfer(i + 1, m_entries.size());
+        }
+
+        R_SUCCEED();
+    }, [this](Result rc){
+        if (R_FAILED(rc)) {
+            return;
+        }
+
+        m_sort.Set(SortType_PlayTime);
+        SortAndFindLastFile(false);
+    });
+}
+
+void Menu::SetSearch() {
+    std::string out;
+    if (R_FAILED(swkbd::ShowText(out, "Search games"_i18n.c_str(), m_search_query.c_str(), 0, 128))) {
+        return;
+    }
+
+    m_search_query = out;
+    m_dirty = true;
+}
+
 void Menu::Sort() {
     const auto sort = m_sort.Get();
     const auto order = m_order.Get();
 
-    if (sort == SortType_Alphabetical || sort == SortType_Publisher) {
+    // every sort below falls back to comparing names on a tie, and ties are the
+    // common case for the play stats (unplayed titles are all zero), so the
+    // control data has to be in before sorting.
+    if (sort != SortType_Updated) {
         for (auto& e : m_entries) {
             LoadControlEntry(e);
         }
@@ -1990,6 +1993,24 @@ void Menu::Sort() {
 
             case SortType_Publisher: {
                 return publisher_cmp(lhs, rhs);
+            } break;
+
+            case SortType_LastPlayed: {
+                if (lhs.last_played == rhs.last_played) {
+                    return name_cmp(lhs, rhs);
+                }
+                return order == OrderType_Descending
+                    ? lhs.last_played > rhs.last_played
+                    : lhs.last_played < rhs.last_played;
+            } break;
+
+            case SortType_PlayTime: {
+                if (lhs.playtime == rhs.playtime) {
+                    return name_cmp(lhs, rhs);
+                }
+                return order == OrderType_Descending
+                    ? lhs.playtime > rhs.playtime
+                    : lhs.playtime < rhs.playtime;
             } break;
 
             case SortType_Storage: {

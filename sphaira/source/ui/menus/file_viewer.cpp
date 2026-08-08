@@ -144,7 +144,307 @@ void Menu::LoadTextFile() {
         buf[m_file_size] = '\0';
     }
 
-    m_scroll_text = std::make_unique<ScrollableText>(buf, 0, 120, 500, 1150-110, 18);
+    m_editable = m_file_size <= EDIT_MAX_SIZE;
+    if (!m_editable) {
+        m_scroll_text = std::make_unique<ScrollableText>(buf, 0, 120, 500, 1150-110, 18);
+        SetSubHeading("Too large to edit"_i18n);
+        return;
+    }
+
+    // drop the trailing nul the read above appended.
+    std::string_view view{buf.data(), (size_t)m_file_size};
+    m_line_break = view.find("\r\n") != std::string_view::npos ? "\r\n" : "\n";
+
+    m_lines.clear();
+    size_t start = 0;
+    while (start <= view.size()) {
+        const auto end = view.find('\n', start);
+        auto line = view.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
+        if (line.ends_with('\r')) {
+            line.remove_suffix(1);
+        }
+        m_lines.emplace_back(line);
+
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+
+    if (m_lines.empty()) {
+        m_lines.emplace_back();
+    }
+
+    m_undo.clear();
+    m_redo.clear();
+    m_line_index = 0;
+    m_text_dirty = false;
+
+    const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
+    const Vec4 item_pos{50.f, 105.f, 1180.f, 30.f};
+    m_text_list = std::make_unique<List>(1, 17, list_pos, item_pos, Vec2{0.f, 2.f});
+
+    SetAction(Button::A, Action{"Edit"_i18n, [this](){
+        ShowLineActions();
+    }});
+    SetAction(Button::START, Action{"Options"_i18n, [this](){
+        DisplayTextOptions();
+    }});
+    SetAction(Button::B, Action{"Back"_i18n, [this](){
+        PromptTextExit();
+    }});
+
+    UpdateTextSubHeading();
+}
+
+void Menu::UpdateTextSubHeading() {
+    auto heading = std::to_string(m_line_index + 1) + " / " + std::to_string(m_lines.size());
+    if (m_text_dirty) {
+        heading += "  *";
+    }
+    SetSubHeading(heading);
+}
+
+auto Menu::BuildText() const -> std::string {
+    std::string out;
+    for (size_t i = 0; i < m_lines.size(); i++) {
+        out += m_lines[i];
+        if (i + 1 < m_lines.size()) {
+            out += m_line_break;
+        }
+    }
+    return out;
+}
+
+void Menu::PushUndo() {
+    // a snapshot per edit is coarse, but a text file that fits the editor is
+    // small enough that storing 32 copies of it is cheaper than tracking diffs.
+    constexpr size_t MAX_UNDO = 32;
+
+    m_undo.emplace_back(m_lines);
+    if (m_undo.size() > MAX_UNDO) {
+        m_undo.erase(m_undo.begin());
+    }
+    m_redo.clear();
+    m_text_dirty = true;
+}
+
+void Menu::Undo() {
+    if (m_undo.empty()) {
+        App::Notify("Nothing to undo"_i18n);
+        return;
+    }
+
+    m_redo.emplace_back(m_lines);
+    m_lines = m_undo.back();
+    m_undo.pop_back();
+    m_text_dirty = true;
+    m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    UpdateTextSubHeading();
+}
+
+void Menu::Redo() {
+    if (m_redo.empty()) {
+        App::Notify("Nothing to redo"_i18n);
+        return;
+    }
+
+    m_undo.emplace_back(m_lines);
+    m_lines = m_redo.back();
+    m_redo.pop_back();
+    m_text_dirty = true;
+    m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    UpdateTextSubHeading();
+}
+
+void Menu::EditLine() {
+    std::string out;
+    if (R_FAILED(swkbd::ShowText(out, "Edit line"_i18n.c_str(), m_lines[m_line_index].c_str(), 0, 1024))) {
+        return;
+    }
+
+    if (out == m_lines[m_line_index]) {
+        return;
+    }
+
+    PushUndo();
+    m_lines[m_line_index] = out;
+    UpdateTextSubHeading();
+}
+
+void Menu::InsertLine() {
+    PushUndo();
+    m_lines.insert(m_lines.begin() + m_line_index + 1, std::string{});
+    m_line_index++;
+    UpdateTextSubHeading();
+}
+
+void Menu::DeleteLine() {
+    PushUndo();
+    m_lines.erase(m_lines.begin() + m_line_index);
+    if (m_lines.empty()) {
+        m_lines.emplace_back();
+    }
+    m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    UpdateTextSubHeading();
+}
+
+void Menu::JoinLine() {
+    if (m_line_index + 1 >= (s64)m_lines.size()) {
+        App::Notify("No line below to join"_i18n);
+        return;
+    }
+
+    PushUndo();
+    m_lines[m_line_index] += m_lines[m_line_index + 1];
+    m_lines.erase(m_lines.begin() + m_line_index + 1);
+    UpdateTextSubHeading();
+}
+
+void Menu::GoToLine() {
+    s64 out = m_line_index + 1;
+    if (R_FAILED(swkbd::ShowNumPad(out, "Go to line"_i18n.c_str(), std::to_string(out).c_str(), 1, 9))) {
+        return;
+    }
+
+    m_line_index = std::clamp<s64>(out - 1, 0, m_lines.size() - 1);
+    m_text_list->SetYoff(0);
+    UpdateTextSubHeading();
+}
+
+void Menu::SaveText() {
+    const auto text = BuildText();
+    const std::vector<u8> data{text.begin(), text.end()};
+
+    m_file.Close();
+    const auto rc = m_fs.write_entire_file(m_path, data);
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to save the file"_i18n);
+        return;
+    }
+
+    m_file_size = data.size();
+    m_text_dirty = false;
+    App::Notify("Saved"_i18n);
+    UpdateTextSubHeading();
+}
+
+void Menu::PromptTextExit() {
+    if (!m_text_dirty) {
+        SetPop();
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "Save changes before leaving?"_i18n,
+        "Discard"_i18n, "Save"_i18n, 1, [this](auto op_index){
+            if (!op_index) {
+                return;
+            }
+            if (*op_index) {
+                SaveText();
+            }
+            SetPop();
+        }
+    );
+}
+
+void Menu::ShowLineActions() {
+    PopupList::Items items;
+    items.emplace_back("Edit line"_i18n);
+    items.emplace_back("Insert line below"_i18n);
+    items.emplace_back("Delete line"_i18n);
+    items.emplace_back("Join with next line"_i18n);
+
+    App::Push<PopupList>("Line "_i18n + std::to_string(m_line_index + 1), items, [this](auto op_index){
+        if (!op_index) {
+            return;
+        }
+
+        switch (*op_index) {
+            case 0: EditLine(); break;
+            case 1: InsertLine(); break;
+            case 2: DeleteLine(); break;
+            case 3: JoinLine(); break;
+        }
+    });
+}
+
+void Menu::DisplayTextOptions() {
+    auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>("Save"_i18n, [this](){
+        SaveText();
+    }, "Write the file back to the microSD card."_i18n);
+
+    options->Add<SidebarEntryCallback>("Undo"_i18n, [this](){
+        Undo();
+    }, "Step back through the last 32 edits."_i18n);
+
+    options->Add<SidebarEntryCallback>("Redo"_i18n, [this](){
+        Redo();
+    }, "Step forward again after an undo."_i18n);
+
+    options->Add<SidebarEntryCallback>("Go to line"_i18n, [this](){
+        GoToLine();
+    }, "Jump straight to a line number."_i18n);
+}
+
+void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
+    if (!m_text_list) {
+        return;
+    }
+
+    m_text_list->OnUpdate(controller, touch, m_line_index, m_lines.size(), [this](bool touched, s64 index){
+        if (touched && m_line_index == index) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            m_line_index = index;
+            UpdateTextSubHeading();
+        }
+    });
+}
+
+void Menu::DrawText(NVGcontext* vg, Theme* theme) {
+    if (!m_text_list) {
+        return;
+    }
+
+    // the gutter is sized off the highest line number so the text column does
+    // not shift as the list scrolls past a power of ten.
+    const auto gutter = std::to_string(m_lines.size());
+    float bounds[4];
+    nvgFontSize(vg, 18.f);
+    gfx::textBounds(vg, 0, 0, bounds, gutter.c_str());
+    const float gutter_w = bounds[2] - bounds[0] + 16.f;
+
+    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w](auto* vg, auto* theme, const Vec4& pos, s64 index){
+        const auto selected = m_line_index == index;
+        if (selected) {
+            gfx::drawRectOutline(vg, theme, 4.f, pos);
+        }
+
+        gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, 16.f,
+            NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%lld", index + 1);
+
+        const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        const auto text_x = pos.x + gutter_w;
+        const auto text_w = pos.w - gutter_w - 10.f;
+
+        if (selected) {
+            m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, 18.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_lines[index]);
+        } else {
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, pos.y, text_w, pos.h);
+            gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", m_lines[index].c_str());
+            nvgRestore(vg);
+        }
+    });
 }
 
 void Menu::LoadImageFile() {
@@ -577,6 +877,8 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         }
     } else if (m_scroll_text) {
         m_scroll_text->Update(controller, touch);
+    } else {
+        UpdateText(controller, touch);
     }
 }
 
@@ -633,6 +935,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     if (m_scroll_text) {
         m_scroll_text->Draw(vg, theme);
+    } else {
+        DrawText(vg, theme);
     }
 }
 

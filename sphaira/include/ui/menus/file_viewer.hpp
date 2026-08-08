@@ -2,7 +2,10 @@
 
 #include "ui/menus/menu_base.hpp"
 #include "ui/scrollable_text.hpp"
+#include "ui/scrolling_text.hpp"
+#include "ui/list.hpp"
 #include "fs.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,6 +31,25 @@ private:
     void LoadCurrentFile();
     void LoadTextFile();
     void LoadImageFile();
+
+    // text editing. only enabled for files small enough to hold in memory as
+    // lines, see EDIT_MAX_SIZE - anything larger stays the read only view.
+    void DrawText(NVGcontext* vg, Theme* theme);
+    void UpdateText(Controller* controller, TouchInfo* touch);
+    void ShowLineActions();
+    void EditLine();
+    void InsertLine();
+    void DeleteLine();
+    void JoinLine();
+    void GoToLine();
+    void DisplayTextOptions();
+    void PushUndo();
+    void Undo();
+    void Redo();
+    void SaveText();
+    void PromptTextExit();
+    void UpdateTextSubHeading();
+    auto BuildText() const -> std::string;
     void FreeImage();
     void ResetImageView();
     void ZoomImage(float factor);
@@ -61,7 +83,23 @@ private:
     s64 m_file_size{};
     s64 m_file_offset{};
 
+    // reading a file in as lines costs roughly its size in ram twice over once
+    // an undo snapshot exists, so past this the viewer stays read only.
+    static constexpr s64 EDIT_MAX_SIZE = 4 * 1024 * 1024;
+
     std::unique_ptr<ScrollableText> m_scroll_text{};
+    std::unique_ptr<List> m_text_list{};
+    ScrollingText m_line_scroll{};
+    std::vector<std::string> m_lines{};
+    std::vector<std::vector<std::string>> m_undo{};
+    std::vector<std::vector<std::string>> m_redo{};
+    // whichever break the file already used, so saving does not rewrite every
+    // line ending of a crlf file.
+    std::string m_line_break{"\n"};
+    s64 m_line_index{};
+    bool m_editable{};
+    bool m_text_dirty{};
+
     bool m_is_image_file{};
     int m_image{};
     int m_image_w{};

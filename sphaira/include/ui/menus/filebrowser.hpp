@@ -254,6 +254,7 @@ private:
     void ToggleSelection();
     void InvertSelection();
     void InstallForwarder();
+    void ShowNoLauncherHint();
 
     void InstallFiles();
     void UnzipFiles(fs::FsPath folder);

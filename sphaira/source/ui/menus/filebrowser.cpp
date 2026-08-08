@@ -758,21 +758,72 @@ void FsView::InvertSelection() {
     m_menu->UpdateSubheading();
 }
 
+// two launchers can ship the same core (Tico and RetroArch both bundle
+// genesis_plus_gx), and the ini name alone is identical for both. tag the row
+// with the folder the nro actually lives in.
+auto MakeLauncherLabel(const FileAssocEntry& assoc) -> std::string {
+    std::string_view path{assoc.path.s};
+    if (path.starts_with('/')) {
+        path.remove_prefix(1);
+    }
+
+    const auto slash = path.find('/');
+    if (slash == std::string_view::npos) {
+        return assoc.name;
+    }
+
+    auto root = std::string{path.substr(0, slash)};
+    // /switch/<launcher>/... is the common layout, the useful name is deeper.
+    if (path::EqualsIC(root, "switch")) {
+        const auto rest = path.substr(slash + 1);
+        const auto next = rest.find('/');
+        if (next == std::string_view::npos) {
+            return assoc.name;
+        }
+        root = std::string{rest.substr(0, next)};
+    }
+
+    return assoc.name + "  (" + root + ")";
+}
+
+// the launcher list is keyed off the folder the rom sits in, which is not
+// obvious from the outside. say so rather than doing nothing.
+void FsView::ShowNoLauncherHint() {
+    const auto ext = GetEntry().GetExtension();
+    auto message = "No launcher is set up for this file"_i18n;
+    if (!ext.empty()) {
+        message += " (." + ext + ")";
+    }
+
+    if (GetRomDatabaseFromPath(m_path).empty()) {
+        message += ".\n\n";
+        message += "Emulator cores are only offered when the file sits in a folder named after its system, for example /roms/snes or /roms/segacd. Rename the folder and try again."_i18n;
+    } else {
+        message += ".\n\n";
+        message += "The folder is recognised, but no installed core claims this extension. Install a core that supports it."_i18n;
+    }
+
+    App::Push<OptionBox>(message, "OK"_i18n);
+}
+
 void FsView::InstallForwarder() {
     if (path::EqualsIC(GetEntry().GetExtension(), "nro")) {
-        homebrew::Menu::PromptInstallForwarder(GetNewPathCurrent());
+        if (R_FAILED(homebrew::Menu::InstallHomebrewFromPath(GetNewPathCurrent()))) {
+            log_write("failed to create forwarder\n");
+        }
         return;
     }
 
     const auto assoc_list = m_menu->FindFileAssocFor();
     if (assoc_list.empty()) {
         log_write("failed to find assoc for: %s ext: %s\n", GetEntry().name, GetEntry().GetExtension().c_str());
+        ShowNoLauncherHint();
         return;
     }
 
     PopupList::Items items;
     for (const auto&p : assoc_list) {
-        items.emplace_back(p.name);
+        items.emplace_back(MakeLauncherLabel(p));
     }
 
     const auto title = std::string{"Select launcher for: "_i18n} + GetEntry().name;
@@ -780,7 +831,7 @@ void FsView::InstallForwarder() {
         title, items, [this, assoc_list](auto op_index){
             if (op_index) {
                 const auto assoc = assoc_list[*op_index];
-                App::Push<ForwarderForm>(assoc, GetRomDatabaseFromPath(m_path), GetEntry(), GetNewPathCurrent());
+                ShowRomForwarderEditor(assoc, GetRomDatabaseFromPath(m_path), GetEntry(), GetNewPathCurrent());
             } else {
                 log_write("pressed B to skip launch...\n");
             }

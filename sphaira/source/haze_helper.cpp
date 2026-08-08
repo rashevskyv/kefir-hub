@@ -6,6 +6,7 @@
 #include "evman.hpp"
 #include "i18n.hpp"
 #include "title_info.hpp"
+#include "title_nsp.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/progress_box.hpp"
@@ -910,13 +911,93 @@ struct FsInstallProxy final : FsProxyVfs {
 };
 #endif
 
-// keys of the virtual save tree are matched case-insensitively, as windows
-// treats paths case-insensitively and may send back a differently-cased path.
-struct SaveCaseInsensitiveLess {
+// keys of a virtual tree are matched case-insensitively, as windows treats
+// paths case-insensitively and may send back a differently-cased path.
+struct CaseInsensitiveLess {
     bool operator()(const std::string& a, const std::string& b) const {
         return strcasecmp(a.c_str(), b.c_str()) < 0;
     }
 };
+
+// strips leading spaces and trailing spaces / dots (invalid in windows
+// folder names).
+auto TrimName(std::string s) -> std::string {
+    while (!s.empty() && s.front() == ' ') {
+        s.erase(s.begin());
+    }
+    while (!s.empty() && (s.back() == ' ' || s.back() == '.')) {
+        s.pop_back();
+    }
+    return s;
+}
+
+auto MakeVirtualDirEntry(const std::string& name) -> FsDirectoryEntry {
+    FsDirectoryEntry e{};
+    std::snprintf(e.name, sizeof(e.name), "%s", name.c_str());
+    e.type = FsDirEntryType_Dir;
+    return e;
+}
+
+// "<Game Name> [TitleID]", or "[TitleID]" when no usable name exists.
+// note: title::Init() must be held by the caller, so title::Get() can load the
+// control data.
+auto BuildGameDirName(u64 application_id) -> std::string {
+    char suffix[0x20];
+    std::snprintf(suffix, sizeof(suffix), "[%016lX]", application_id);
+
+    std::string base;
+    if (const auto data = title::Get(application_id); data && data->status == title::NacpLoadStatus::Loaded) {
+        fs::FsPath buf{};
+        std::snprintf(buf, sizeof(buf), "%s", data->lang.name);
+        title::utilsReplaceIllegalCharacters(buf, true);
+        base = TrimName(buf.s);
+    }
+
+    if (base.empty()) {
+        return suffix;
+    }
+
+    // trim the name, never the [TitleID] suffix - it keeps equal names unique.
+    const auto suffix_len = std::strlen(suffix) + 1; // + separating space.
+    const auto max_len = sizeof(FsDirectoryEntry::name) - 1;
+    if (base.size() + suffix_len > max_len) {
+        base.resize(max_len - suffix_len);
+    }
+    return base + " " + suffix;
+}
+
+// splits an mtp path into its first two components, tolerating the double
+// slashes libhaze produces ("//game"). returns the depth: 0 root, 1 game
+// folder, 2 (or more) a file inside one.
+auto ParseTwoLevels(const char* path, std::string& l1, std::string& l2) -> int {
+    int depth{};
+    const char* p = path;
+
+    for (int level = 0; level < 2; level++) {
+        while (*p == '/') {
+            p++;
+        }
+        if (!*p) {
+            break;
+        }
+
+        const char* start = p;
+        while (*p && *p != '/') {
+            p++;
+        }
+
+        (level == 0 ? l1 : l2).assign(start, p - start);
+        depth = level + 1;
+    }
+
+    while (*p == '/') {
+        p++;
+    }
+    if (*p) {
+        depth = 3;
+    }
+    return depth;
+}
 
 // read-only virtual drive exposing decrypted game saves as
 // /<GameName [TitleID]>/<Account <user> | BCAT | Device | Cache>/<save files>.
@@ -1118,7 +1199,7 @@ struct FsSaveProxy final : FsProxyBase {
 private:
     static constexpr size_t MOUNT_CACHE_MAX = 4;
 
-    using TypeMap = std::map<std::string, FsSaveDataInfo, SaveCaseInsensitiveLess>;
+    using TypeMap = std::map<std::string, FsSaveDataInfo, CaseInsensitiveLess>;
 
     struct CachedMount {
         std::shared_ptr<fs::FsNative> fs;
@@ -1157,25 +1238,6 @@ private:
         char buf[0x30];
         std::snprintf(buf, sizeof(buf), "%016lX%016lX", uid.uid[0], uid.uid[1]);
         return buf;
-    }
-
-    // strips leading spaces and trailing spaces / dots (invalid in windows
-    // folder names).
-    static auto TrimName(std::string s) -> std::string {
-        while (!s.empty() && s.front() == ' ') {
-            s.erase(s.begin());
-        }
-        while (!s.empty() && (s.back() == ' ' || s.back() == '.')) {
-            s.pop_back();
-        }
-        return s;
-    }
-
-    static auto MakeVirtualDirEntry(const std::string& name) -> FsDirectoryEntry {
-        FsDirectoryEntry e{};
-        std::snprintf(e.name, sizeof(e.name), "%s", name.c_str());
-        e.type = FsDirEntryType_Dir;
-        return e;
     }
 
     static auto BuildAccountNames() -> std::vector<AccountName> {
@@ -1219,32 +1281,6 @@ private:
         }
         // account no longer exists - same fallback as save_menu's GetAccountName.
         return UidHex(uid);
-    }
-
-    // "<Game Name> [TitleID]", or "[TitleID]" when no usable name exists.
-    static auto BuildGameDirName(u64 application_id) -> std::string {
-        char suffix[0x20];
-        std::snprintf(suffix, sizeof(suffix), "[%016lX]", application_id);
-
-        std::string base;
-        if (const auto data = title::Get(application_id); data && data->status == title::NacpLoadStatus::Loaded) {
-            fs::FsPath buf{};
-            std::snprintf(buf, sizeof(buf), "%s", data->lang.name);
-            title::utilsReplaceIllegalCharacters(buf, true);
-            base = TrimName(buf.s);
-        }
-
-        if (base.empty()) {
-            return suffix;
-        }
-
-        // trim the name, never the [TitleID] suffix - it keeps equal names unique.
-        const auto suffix_len = std::strlen(suffix) + 1; // + separating space.
-        const auto max_len = sizeof(FsDirectoryEntry::name) - 1;
-        if (base.size() + suffix_len > max_len) {
-            base.resize(max_len - suffix_len);
-        }
-        return base + " " + suffix;
     }
 
     static auto BuildTypeDirName(const FsSaveDataInfo& info, const std::vector<AccountName>& accounts) -> std::string {
@@ -1402,13 +1438,340 @@ private:
 
     // level 1 (game) -> level 2 (type) -> save info. built once in the
     // constructor, immutable afterwards (safe for concurrent reads).
-    std::map<std::string, TypeMap, SaveCaseInsensitiveLess> m_tree{};
+    std::map<std::string, TypeMap, CaseInsensitiveLess> m_tree{};
 
     // lazily mounted saves. cleared by the (default) destructor, which closes
     // every cached save fs when haze::Exit() drops g_fs_entries.
     std::map<std::string, CachedMount> m_mounts{};
     u64 m_mount_tick{};
     Mutex m_mount_mutex{};
+};
+
+// read-only virtual drive exposing every installed title as nsp files:
+// /<GameName [TitleID]>/<Name [id][vN][BASE|UPD|DLC].nsp>, one file per
+// installed component (base game, update, each dlc). the nsp is built out of
+// ncm when its folder is opened and streamed straight from content storage, so
+// copying one to the pc is the same dump the games menu writes to the sd card,
+// without needing the space for it.
+struct FsGameProxy final : FsProxyBase {
+    FsGameProxy(const char* name, const char* display_name) : FsProxyBase{name, display_name} {
+        // holds the ncm storages (and the control loader) open for our
+        // lifetime - every listing and every read goes through them.
+        m_has_title = R_SUCCEEDED(title::Init());
+        m_is_file_based_emummc = App::IsFileBaseEmummc();
+        ScanGames();
+    }
+
+    ~FsGameProxy() {
+        if (m_has_title) {
+            title::Exit();
+        }
+    }
+
+    Result GetTotalSpace(const char *path, s64 *out) override {
+        *out = 1024ULL * 1024ULL * 1024ULL * 256ULL;
+        R_SUCCEED();
+    }
+    Result GetFreeSpace(const char *path, s64 *out) override {
+        // read-only drive: nothing can be written into it.
+        *out = 0;
+        R_SUCCEED();
+    }
+
+    Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override {
+        const auto pp = Parse(path);
+
+        if (pp.depth == 0) {
+            *out_entry_type = FsDirEntryType_Dir;
+            R_SUCCEED();
+        }
+
+        if (pp.depth == 1) {
+            R_UNLESS(m_games.count(pp.game), FsError_PathNotFound);
+            *out_entry_type = FsDirEntryType_Dir;
+            R_SUCCEED();
+        }
+
+        R_UNLESS(pp.depth == 2, FsError_PathNotFound);
+
+        std::shared_ptr<GameNsp> nsp;
+        size_t index{};
+        R_TRY(FindFile(pp, nsp, index));
+
+        *out_entry_type = FsDirEntryType_File;
+        R_SUCCEED();
+    }
+
+    // the drive is a view of installed content: everything that would modify
+    // it is rejected, same as the saves drive.
+    Result CreateFile(const char* path, s64 size, u32 option) override {
+        log_write("[MTP-GAMES] rejecting CreateFile(%s)\n", path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result DeleteFile(const char* path) override {
+        log_write("[MTP-GAMES] rejecting DeleteFile(%s)\n", path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result RenameFile(const char *old_path, const char *new_path) override {
+        log_write("[MTP-GAMES] rejecting RenameFile(%s)\n", old_path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result CreateDirectory(const char* path) override {
+        log_write("[MTP-GAMES] rejecting CreateDirectory(%s)\n", path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result DeleteDirectoryRecursively(const char* path) override {
+        log_write("[MTP-GAMES] rejecting DeleteDirectoryRecursively(%s)\n", path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result RenameDirectory(const char *old_path, const char *new_path) override {
+        log_write("[MTP-GAMES] rejecting RenameDirectory(%s)\n", old_path);
+        R_THROW(FsError_NotImplemented);
+    }
+    Result SetFileSize(FsFile *file, s64 size) override {
+        log_write("[MTP-GAMES] rejecting SetFileSize()\n");
+        R_THROW(FsError_NotImplemented);
+    }
+    Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
+        log_write("[MTP-GAMES] rejecting WriteFile()\n");
+        R_THROW(FsError_NotImplemented);
+    }
+
+    Result OpenFile(const char *path, u32 mode, FsFile *out_file) override {
+        log_write("[MTP-GAMES] OpenFile(%s)\n", path);
+        R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
+
+        const auto pp = Parse(path);
+        R_UNLESS(pp.depth == 2, FsError_PathNotFound);
+
+        auto handle = std::make_unique<FileHandle>();
+        R_TRY(FindFile(pp, handle->nsp, handle->index));
+
+        auto raw = handle.release();
+        std::memcpy(&out_file->s, &raw, sizeof(raw));
+        R_SUCCEED();
+    }
+    Result GetFileSize(FsFile *file, s64 *out_size) override {
+        FileHandle* h;
+        std::memcpy(&h, &file->s, sizeof(h));
+        *out_size = h->nsp->entries[h->index].nsp_size;
+        R_SUCCEED();
+    }
+    Result ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u32 option, u64 *out_bytes_read) override {
+        FileHandle* h;
+        std::memcpy(&h, &file->s, sizeof(h));
+
+        const auto rc = h->nsp->entries[h->index].Read(buf, off, read_size, out_bytes_read);
+        if (m_is_file_based_emummc) {
+            svcSleepThread(2e+6); // 2ms, same throttle the sd card dump uses.
+        }
+        return rc;
+    }
+    void CloseFile(FsFile *file) override {
+        FileHandle* h;
+        std::memcpy(&h, &file->s, sizeof(h));
+        delete h;
+        std::memset(file, 0, sizeof(*file));
+    }
+
+    Result OpenDirectory(const char *path, u32 mode, FsDir *out_dir) override {
+        const auto pp = Parse(path);
+        auto handle = std::make_unique<DirHandle>();
+
+        if (pp.depth == 0) {
+            // the root only holds game folders.
+            if (mode & FsDirOpenMode_ReadDirs) {
+                for (const auto& [name, game] : m_games) {
+                    handle->entries.emplace_back(MakeVirtualDirEntry(name));
+                }
+            }
+        } else if (pp.depth == 1) {
+            // building the nsp headers here (rather than at scan time) keeps
+            // the drive instant to mount: only the opened game is built.
+            std::shared_ptr<GameNsp> nsp;
+            R_TRY(GetNsp(pp.game, nsp));
+            if (mode & FsDirOpenMode_ReadFiles) {
+                handle->entries = nsp->listing;
+            }
+        } else {
+            R_THROW(FsError_PathNotFound);
+        }
+
+        auto raw = handle.release();
+        std::memcpy(&out_dir->s, &raw, sizeof(raw));
+        log_write("[MTP-GAMES] OpenDirectory(%s) depth=%d\n", path, pp.depth);
+        R_SUCCEED();
+    }
+    Result ReadDirectory(FsDir *d, s64 *out_total_entries, size_t max_entries, FsDirectoryEntry *buf) override {
+        DirHandle* h;
+        std::memcpy(&h, &d->s, sizeof(h));
+
+        max_entries = std::min<s64>(h->entries.size() - h->index, max_entries);
+        std::memcpy(buf, h->entries.data() + h->index, max_entries * sizeof(*buf));
+        h->index += max_entries;
+        *out_total_entries = max_entries;
+        R_SUCCEED();
+    }
+    Result GetDirectoryEntryCount(FsDir *d, s64 *out_count) override {
+        DirHandle* h;
+        std::memcpy(&h, &d->s, sizeof(h));
+        *out_count = h->entries.size();
+        R_SUCCEED();
+    }
+    void CloseDirectory(FsDir *d) override {
+        DirHandle* h;
+        std::memcpy(&h, &d->s, sizeof(h));
+        delete h;
+        std::memset(d, 0, sizeof(*d));
+    }
+
+    // ncm reads are not safe to issue concurrently, one reader thread only.
+    bool MultiThreadTransfer(s64 size, bool read) override {
+        return false;
+    }
+
+private:
+    // how many games keep their built nsp headers around.
+    static constexpr size_t CACHE_MAX = 8;
+
+    struct GameRec {
+        u64 app_id{};
+        // display name as it comes from the control data, may be empty.
+        std::string name{};
+    };
+
+    // every installed component of one game, plus the directory listing that
+    // describes them.
+    struct GameNsp {
+        std::vector<title::NspEntry> entries{};
+        std::vector<FsDirectoryEntry> listing{};
+    };
+
+    // open handles hold their own reference, so a cache flush never pulls the
+    // nsp out from under a transfer in progress.
+    struct FileHandle {
+        std::shared_ptr<GameNsp> nsp{};
+        size_t index{};
+    };
+
+    struct DirHandle {
+        std::vector<FsDirectoryEntry> entries{};
+        s64 index{};
+    };
+
+    struct ParsedPath {
+        std::string game{};
+        std::string file{};
+        int depth{};
+    };
+
+    auto Parse(const char* path) const -> ParsedPath {
+        ParsedPath pp{};
+        pp.depth = ParseTwoLevels(FixPath(path), pp.game, pp.file);
+        return pp;
+    }
+
+    // one folder per installed title. archived titles (a record with no
+    // content) are skipped - there would be nothing to dump.
+    void ScanGames() {
+        constexpr auto RECORD_CHUNK = 1000;
+        std::vector<NsApplicationRecord> records(RECORD_CHUNK);
+
+        s32 offset{};
+        while (true) {
+            s32 count{};
+            if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &count)) || !count) {
+                break;
+            }
+
+            for (s32 i = 0; i < count; i++) {
+                const auto app_id = records[i].application_id;
+
+                title::MetaEntries installed;
+                if (R_FAILED(title::GetMetaEntries(app_id, installed)) || installed.empty()) {
+                    continue;
+                }
+
+                GameRec rec{app_id};
+                if (const auto data = title::Get(app_id); data && data->status == title::NacpLoadStatus::Loaded) {
+                    rec.name = data->lang.name;
+                }
+
+                m_games.emplace(BuildGameDirName(app_id), std::move(rec));
+            }
+
+            offset += count;
+        }
+
+        log_write("[MTP-GAMES] scanned %zu games\n", m_games.size());
+    }
+
+    Result GetNsp(const std::string& game, std::shared_ptr<GameNsp>& out) {
+        const auto it = m_games.find(game);
+        R_UNLESS(it != m_games.end(), FsError_PathNotFound);
+
+        // canonical key, so differently-cased requests share one build.
+        const auto& key = it->first;
+
+        // ops run on the haze thread(s) and may interleave, guard the cache.
+        SCOPED_MUTEX(&m_cache_mutex);
+
+        if (const auto cached = m_cache.find(key); cached != m_cache.end()) {
+            out = cached->second;
+            R_SUCCEED();
+        }
+
+        auto nsp = std::make_shared<GameNsp>();
+        const auto rc = title::BuildNspEntries(it->second.app_id, it->second.name.c_str(), title::ContentFlag_All, false, nsp->entries);
+        if (R_FAILED(rc)) {
+            // e.g. missing keys or a corrupt install - only this game fails.
+            log_write("[MTP-GAMES] failed to build nsp for %s 0x%X\n", key.c_str(), rc);
+            return rc;
+        }
+
+        for (const auto& e : nsp->entries) {
+            FsDirectoryEntry fe{};
+            std::snprintf(fe.name, sizeof(fe.name), "%s", e.path.s);
+            fe.type = FsDirEntryType_File;
+            fe.file_size = e.nsp_size;
+            nsp->listing.emplace_back(fe);
+        }
+
+        // a cached game is only its nsp header, file table and tickets (tens of
+        // kb), so the whole cache is dropped at once rather than tracking an
+        // lru - the cost of a miss is one rebuild.
+        if (m_cache.size() >= CACHE_MAX) {
+            m_cache.clear();
+        }
+
+        m_cache.emplace(key, nsp);
+        out = nsp;
+        R_SUCCEED();
+    }
+
+    Result FindFile(const ParsedPath& pp, std::shared_ptr<GameNsp>& nsp, size_t& index) {
+        R_TRY(GetNsp(pp.game, nsp));
+
+        for (size_t i = 0; i < nsp->entries.size(); i++) {
+            if (!strcasecmp(nsp->entries[i].path.s, pp.file.c_str())) {
+                index = i;
+                R_SUCCEED();
+            }
+        }
+
+        R_THROW(FsError_PathNotFound);
+    }
+
+    // game folder name -> title. built once at registration, immutable
+    // afterwards (safe for concurrent reads).
+    std::map<std::string, GameRec, CaseInsensitiveLess> m_games{};
+
+    // built on demand, see GetNsp().
+    std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_cache{};
+    Mutex m_cache_mutex{};
+
+    bool m_has_title{};
+    bool m_is_file_based_emummc{};
 };
 
 ::haze::FsEntries g_fs_entries{};
@@ -1593,6 +1956,15 @@ bool Init() {
         "Saves (read-only)",
         [](const char* display_name) {
             return std::make_shared<FsSaveProxy>("saves", display_name);
+        }
+    });
+
+    storage_defs.push_back({
+        App::GetMtpShowGames(),
+        "", // no custom-name option for the Games drive.
+        "Games (read-only)",
+        [](const char* display_name) {
+            return std::make_shared<FsGameProxy>("games", display_name);
         }
     });
 

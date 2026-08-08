@@ -28,6 +28,10 @@ struct Entry {
     u32 content_flags{};
     u64 nand_size{};
     u64 sd_size{};
+    // posix seconds, from pdm. 0 when never played (or pdm is unavailable).
+    u64 last_played{};
+    // nanoseconds, summed over every user profile. filled by LoadPlaytime().
+    u64 playtime{};
     Result summary_result{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
@@ -40,11 +44,14 @@ struct Entry {
     }
 };
 
+// appended, never reordered: the index is what gets written to the ini.
 enum SortType {
     SortType_Updated,
     SortType_Alphabetical,
     SortType_Publisher,
     SortType_Storage,
+    SortType_LastPlayed,
+    SortType_PlayTime,
 };
 
 enum OrderType {
@@ -66,6 +73,11 @@ struct Menu final : grid::Menu {
 private:
     void SetIndex(s64 index);
     void ScanHomebrew();
+    // fills last_played from pdm and playtime from the cache, on every scan.
+    void LoadPlayStats();
+    // queries pdm for total playtime per title and caches it in playlog.ini.
+    void LoadPlaytime();
+    void SetSearch();
     void Sort();
     void SortAndFindLastFile(bool scan);
     void FreeEntries();
@@ -113,6 +125,10 @@ private:
     s64 m_selected_count{};
     std::unique_ptr<List> m_list{};
     bool m_dirty{};
+    bool m_pdm_initialized{};
+    // applied while scanning, so there is no second copy of the list to keep
+    // in sync with selection, sizes and deletes.
+    std::string m_search_query{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

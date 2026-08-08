@@ -14,22 +14,33 @@
 namespace sphaira::location {
 namespace {
 
+// every caller of GetStdio() runs on the ui thread, so anything blocking in
+// here is a frozen frame.
 void EnsureUsbHsFsInitialized() {
-    static bool initialized = false;
-
+    // MTP and usb host storage both want the usb port; only one can have it.
+    // haze::Exit() hands it back and, when the drive is enabled, re-initializes
+    // usbhsfs on its way out -- so the check below then finds it already up.
     if (haze::IsRunning()) {
         log_write("[USB_HOST] haze MTP server running; stopping haze to switch USB port to Host mode\n");
         haze::Exit();
-        initialized = false;
     }
 
-    if (!initialized) {
-        usbHsFsSetFileSystemMountFlags(App::GetWriteProtect() ? UsbHsFsMountFlags_ReadOnly : 0);
-        if (R_SUCCEEDED(usbHsFsInitialize(1))) {
-            initialized = true;
-            log_write("[USBHSFS] dynamically initialized usbHsFs Host interface\n");
-            svcSleepThread(300000000ULL);
-        }
+    // ask the library rather than keeping a flag of our own: usbHsFsInitialize()
+    // is also called at boot, by the hdd setting and by haze, and a local static
+    // cannot stay in sync with any of them -- it started false every session, so
+    // the first listing always redid an init that had already happened. The
+    // event is NULL only while the interface really is down.
+    if (usbHsFsGetStatusChangeUserEvent()) {
+        return;
+    }
+
+    usbHsFsSetFileSystemMountFlags(App::GetWriteProtect() ? UsbHsFsMountFlags_ReadOnly : 0);
+    if (R_SUCCEEDED(usbHsFsInitialize(1))) {
+        log_write("[USBHSFS] dynamically initialized usbHsFs Host interface\n");
+        // deliberately no settle wait here. Drives mount on the library's own
+        // thread and a listing built a moment too early just misses them --
+        // App::PollUsbStorage() spots the new count within the second and
+        // refreshes the focused menu, which is how hot-plug already works.
     }
 }
 
