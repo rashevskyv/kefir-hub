@@ -526,6 +526,51 @@ void DrawFanCurveListHeader(NVGcontext* vg, Theme* theme) {
     gfx::drawText(vg, v.x + v.w - 22.f, v.y + 34.f, 14.f, column_colour, "Fan", NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
 }
 
+void OpenFanCurveMenu() {
+    if (detail::IsSphairaFanSysmoduleInstalled()) {
+        App::Push<FanCurveMenu>();
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "Fan control can use the Kefir fan module, which applies curves without a reboot and reads the sensors live.\n\nInstall it now?"_i18n,
+        "No"_i18n,
+        "Install"_i18n,
+        1,
+        [](auto op_index){
+            if (!op_index || !*op_index) {
+                App::Push<FanCurveMenu>();
+                return;
+            }
+
+            if (R_FAILED(detail::InstallSphairaFanSysmodule())) {
+                App::Push<OptionBox>("Failed to install the fan module."_i18n, "OK"_i18n);
+                return;
+            }
+
+            if (R_SUCCEEDED(detail::RestartSphairaFanSysmodule())) {
+                App::Notify("Fan module installed"_i18n);
+                App::Push<FanCurveMenu>();
+                return;
+            }
+
+            App::Push<OptionBox>(
+                "Fan module installed, but it needs a reboot before it can start.\n\nReboot now?"_i18n,
+                "Later"_i18n,
+                "Reboot"_i18n,
+                1,
+                [](auto reboot_index){
+                    if (reboot_index && *reboot_index) {
+                        detail::RebootAfterSetting();
+                    } else {
+                        App::Push<FanCurveMenu>();
+                    }
+                }
+            );
+        }
+    );
+}
+
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
     if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
         detail::DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");

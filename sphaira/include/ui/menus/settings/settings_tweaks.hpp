@@ -93,6 +93,7 @@ auto IsFanCurveEnabled() -> bool;
 auto IsSphairaFanSysmoduleInstalled() -> bool;
 auto IsSphairaFanSysmoduleRunning() -> bool;
 auto EnsureSphairaFanSysmoduleInstalled() -> Result;
+auto InstallSphairaFanSysmodule() -> Result;
 auto RestartSphairaFanSysmodule() -> Result;
 auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, FanCurveApplyMode mode) -> Result;
 auto SaveCustomFanPreset(s64 index, bool docked, const std::vector<FanCurvePoint>& curve, const std::string& name) -> Result;

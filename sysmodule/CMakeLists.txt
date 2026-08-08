@@ -61,6 +61,9 @@ add_custom_target(sphaira_fan_exefs ALL
     DEPENDS "${SPHAIRA_FAN_EXEFS_NSP}"
 )
 
+# sphaira embeds this in its romfs so the module can be installed on demand
+set(SPHAIRA_FAN_EXEFS_NSP "${SPHAIRA_FAN_EXEFS_NSP}" PARENT_SCOPE)
+
 add_custom_command(
     TARGET sphaira_fan_exefs POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${SPHAIRA_FAN_CONTENTS_DIR}"

@@ -19,6 +19,9 @@ struct FanCurveSensorSample {
 
 auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -> float;
 
+// installs the romfs-embedded fan sysmodule first, if the user wants it.
+void OpenFanCurveMenu();
+
 #pragma pack(push, 1)
 struct SphairaFanState {
     u32 magic;

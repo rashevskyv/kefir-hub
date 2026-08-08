@@ -441,6 +441,16 @@ auto EnsureSphairaFanSysmoduleInstalled() -> Result {
     R_SUCCEED();
 }
 
+auto InstallSphairaFanSysmodule() -> Result {
+    R_TRY(romfsInit());
+    ON_SCOPE_EXIT(romfsExit());
+
+    R_TRY(CopyFileSimple("romfs:/sysmodule/exefs.nsp", SPHAIRA_FAN_EXEFS_PATH));
+    R_TRY(CopyFileSimple("romfs:/sysmodule/toolbox.json", "/atmosphere/contents/00FF46554E43544C/toolbox.json"));
+    fsdevCommitDevice("sdmc");
+    R_SUCCEED();
+}
+
 auto RestartSphairaFanSysmodule() -> Result {
     R_TRY(EnsureSphairaFanSysmoduleInstalled());
 

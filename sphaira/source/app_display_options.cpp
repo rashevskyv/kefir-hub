@@ -7,6 +7,7 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/menus/main_menu.hpp"
+#include "ui/steamgriddb_icon.hpp"
 #include "fs.hpp"
 #include "log.hpp"
 #include <switch.h>
@@ -179,6 +180,10 @@ void App::DisplayInstallOptions(bool left_side) {
         "Free space to keep on the microSD card when planning installs (MB)."_i18n,
         App::GetInstallReserveSdMb, App::SetInstallReserveSdMb);
 
+    options->Add<ui::SidebarEntryCallback>("Forwarder options"_i18n, [left_side](){
+        App::DisplayForwarderOptions(left_side);
+    }, "Defaults baked into forwarders you create."_i18n);
+
     options->Add<ui::SidebarEntryBool>("Allow downgrade"_i18n, App::GetApp()->m_allow_downgrade,
         "Allows for installing title updates that are lower than the currently installed update."_i18n);
 
@@ -253,6 +258,66 @@ void App::DisplayInstallOptions(bool left_side) {
         "Sets the system_firmware field in the cnmt extended header to 0. "\
         "Note: if the master key is higher than fw version, the game still won't launch as the fw won't have the key to decrypt keak (see above).\n\n"\
         "It is recommended to keep this disabled."_i18n);
+}
+
+// the same defaults as Settings -> Install -> Forwarders, reachable from the
+// install options sidebar so both surfaces agree.
+void App::DisplayForwarderOptions(bool left_side) {
+    auto options = std::make_unique<ui::Sidebar>("Forwarder Options"_i18n, left_side ? ui::Sidebar::Side::LEFT : ui::Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<ui::SidebarEntryBool>("Ask every time"_i18n, g_app->m_forwarder_ask,
+        "Open the forwarder editor when creating a forwarder instead of using the defaults below."_i18n);
+
+    ui::SidebarEntryArray::Items address_space_items;
+    address_space_items.push_back("Automatic"_i18n);
+    address_space_items.push_back("36-bit"_i18n);
+    address_space_items.push_back("39-bit"_i18n);
+    options->Add<ui::SidebarEntryArray>("Address space"_i18n, address_space_items, [](s64& index_out){
+        g_app->m_forwarder_address_space.Set(index_out);
+    }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 2),
+        "Virtual address space given to the forwarder. Automatic uses 36-bit; 39-bit is for homebrew that needs the wider space."_i18n);
+
+    options->Add<ui::SidebarEntryBool>("Profile selection"_i18n, g_app->m_forwarder_profile_select,
+        "Prompt for a user profile when the forwarder is launched."_i18n);
+
+    options->Add<ui::SidebarEntryBool>("Screenshots"_i18n, g_app->m_forwarder_screenshot,
+        "Allow the capture button to take screenshots inside the forwarder."_i18n);
+
+    // recording rides on the capture button: no screenshots, no video.
+    auto video = options->Add<ui::SidebarEntryBool>("Video capture"_i18n, g_app->m_forwarder_video_capture,
+        "Allow holding the capture button to record video inside the forwarder. Requires screenshots."_i18n);
+    video->Depends([](){ return g_app->m_forwarder_screenshot.Get(); }, "Enable screenshots first"_i18n);
+
+    ui::SidebarEntryArray::Items svc_debug_items;
+    svc_debug_items.push_back("Automatic"_i18n);
+    svc_debug_items.push_back("Enabled"_i18n);
+    svc_debug_items.push_back("Disabled"_i18n);
+    options->Add<ui::SidebarEntryArray>("svcDebug"_i18n, svc_debug_items, [](s64& index_out){
+        g_app->m_forwarder_svc_debug.Set(index_out);
+    }, std::clamp<s64>(g_app->m_forwarder_svc_debug.Get(), 0, 2),
+        "Kernel debug permission for the forwarder. Automatic enables it on Atmosphere 1.8.0 and newer."_i18n);
+
+    options->Add<ui::SidebarEntryCallback>("SteamGridDB API key"_i18n, [](){
+        if (ui::steamgriddb::GetApiKey().empty()) {
+            ui::steamgriddb::RequestApiKey();
+            return;
+        }
+
+        App::Push<ui::OptionBox>(
+            "SteamGridDB API key"_i18n, "Remove"_i18n, "Replace"_i18n, 1, [](auto op_index){
+                if (!op_index) {
+                    return;
+                }
+                if (*op_index) {
+                    ui::steamgriddb::RequestApiKey();
+                } else {
+                    ui::steamgriddb::SetApiKey("");
+                    App::Notify("SteamGridDB key removed"_i18n);
+                }
+            }
+        );
+    }, "Personal key used to look up forwarder icons. Set it from a phone: the console shows a QR code and you paste the key there."_i18n);
 }
 
 void App::DisplayDumpOptions(bool left_side) {

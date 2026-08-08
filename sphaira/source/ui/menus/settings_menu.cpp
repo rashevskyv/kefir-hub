@@ -13,9 +13,11 @@
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
+#include "ui/screensaver.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/hold_confirm_box.hpp"
 #include "ui/sidebar.hpp"
+#include "ui/steamgriddb_icon.hpp"
 #include "utils/devoptab_smb2.hpp"
 
 
@@ -194,6 +196,203 @@ auto MakeOptionItem(std::string label, std::string description, option::OptionBo
     );
 }
 
+// defaults baked into every forwarder we build. "Ask every time" swaps them
+// for the forwarder editor, see ui/forwarder_editor.hpp.
+auto BuildForwarderItems() -> std::vector<SettingsItem> {
+    static constexpr const char* ADDRESS_SPACE_LABELS[] = { "Automatic", "36-bit", "39-bit" };
+    static constexpr const char* SVC_DEBUG_LABELS[] = { "Automatic", "Enabled", "Disabled" };
+
+    auto app = App::GetApp();
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(MakeOptionItem("Ask every time"_i18n,
+        "Open the forwarder editor when creating a forwarder instead of using the defaults below."_i18n,
+        app->m_forwarder_ask));
+
+    items.emplace_back(MakeHeader("Defaults"_i18n));
+
+    items.emplace_back(SettingsItem{
+        "Address space"_i18n,
+        "Virtual address space given to the forwarder. Automatic uses 36-bit; 39-bit is for homebrew that needs the wider space."_i18n,
+        [](){ return i18n::get(ADDRESS_SPACE_LABELS[App::GetForwarderAddressSpace()]); },
+        [](){
+            PopupList::Items list;
+            for (const auto& label : ADDRESS_SPACE_LABELS) {
+                list.push_back(i18n::get(label));
+            }
+            App::Push<PopupList>("Address space"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetForwarderAddressSpace(*op_index);
+                }
+            }, App::GetForwarderAddressSpace());
+        }
+    });
+
+    items.emplace_back(MakeOptionItem("Profile selection"_i18n,
+        "Prompt for a user profile when the forwarder is launched."_i18n,
+        app->m_forwarder_profile_select));
+
+    items.emplace_back(MakeOptionItem("Screenshots"_i18n,
+        "Allow the capture button to take screenshots inside the forwarder."_i18n,
+        app->m_forwarder_screenshot));
+
+    // recording rides on the capture button, so denying screenshots kills it
+    // too. say so in the row instead of silently writing a setting that loses.
+    items.emplace_back(SettingsItem{
+        "Video capture"_i18n,
+        "Allow holding the capture button to record video inside the forwarder. Requires screenshots."_i18n,
+        [](){
+            if (!App::GetApp()->m_forwarder_screenshot.Get()) {
+                return "Off (needs screenshots)"_i18n;
+            }
+            return OnOff(App::GetApp()->m_forwarder_video_capture.Get());
+        },
+        [](){
+            if (!App::GetApp()->m_forwarder_screenshot.Get()) {
+                App::Notify("Enable screenshots first"_i18n);
+                return;
+            }
+            auto& option = App::GetApp()->m_forwarder_video_capture;
+            option.Set(!option.Get());
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "svcDebug"_i18n,
+        "Kernel debug permission for the forwarder. Automatic enables it on Atmosphere 1.8.0 and newer."_i18n,
+        [](){ return i18n::get(SVC_DEBUG_LABELS[std::clamp<long>(App::GetApp()->m_forwarder_svc_debug.Get(), 0, 2)]); },
+        [](){
+            PopupList::Items list;
+            for (const auto& label : SVC_DEBUG_LABELS) {
+                list.push_back(i18n::get(label));
+            }
+            App::Push<PopupList>("svcDebug"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::GetApp()->m_forwarder_svc_debug.Set(*op_index);
+                }
+            }, std::clamp<long>(App::GetApp()->m_forwarder_svc_debug.Get(), 0, 2));
+        }
+    });
+
+    items.emplace_back(MakeHeader("Icons"_i18n));
+
+    items.emplace_back(SettingsItem{
+        "SteamGridDB API key"_i18n,
+        "Personal key used to look up forwarder icons. Set it from a phone: the console shows a QR code and you paste the key there."_i18n,
+        [](){ return ui::steamgriddb::GetApiKey().empty() ? "Not set"_i18n : "Set"_i18n; },
+        [](){
+            if (ui::steamgriddb::GetApiKey().empty()) {
+                ui::steamgriddb::RequestApiKey();
+                return;
+            }
+
+            App::Push<OptionBox>(
+                "SteamGridDB API key"_i18n, "Remove"_i18n, "Replace"_i18n, 1, [](auto op_index){
+                    if (!op_index) {
+                        return;
+                    }
+                    if (*op_index) {
+                        ui::steamgriddb::RequestApiKey();
+                    } else {
+                        ui::steamgriddb::SetApiKey("");
+                        App::Notify("SteamGridDB key removed"_i18n);
+                    }
+                }
+            );
+        }
+    });
+
+    return items;
+}
+
+// items for the "Screen off" settings page: what Minus does while the install
+// queue runs, and how the screensaver it can raise is laid out.
+auto BuildScreenOffItems() -> std::vector<SettingsItem> {
+    static constexpr const char* MODE_LABELS[] = {
+        "Lower brightness",
+        "Turn off backlight",
+        "Screensaver",
+    };
+    static constexpr long BRIGHTNESS_STEPS[] = { 1, 5, 10, 20, 30, 50 };
+
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(SettingsItem{
+        "Minus button"_i18n,
+        "What pressing Minus does while the install queue is running."_i18n,
+        [](){ return i18n::get(MODE_LABELS[App::GetBlankMode()]); },
+        [](){
+            PopupList::Items list;
+            for (const auto& label : MODE_LABELS) {
+                list.push_back(i18n::get(label));
+            }
+            App::Push<PopupList>("Minus button"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetBlankMode(*op_index);
+                }
+            }, App::GetBlankMode());
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Brightness"_i18n,
+        "Panel brightness while the screen is lowered. Ignored when the backlight is turned off."_i18n,
+        [](){ return std::to_string(App::GetBlankBrightness()) + "%"; },
+        [](){
+            PopupList::Items list;
+            s64 index = 0;
+            for (size_t i = 0; i < std::size(BRIGHTNESS_STEPS); i++) {
+                list.push_back(std::to_string(BRIGHTNESS_STEPS[i]) + "%");
+                if (BRIGHTNESS_STEPS[i] == App::GetBlankBrightness()) {
+                    index = i;
+                }
+            }
+            App::Push<PopupList>("Brightness"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetBlankBrightness(BRIGHTNESS_STEPS[*op_index]);
+                }
+            }, index);
+        }
+    });
+
+    items.emplace_back(MakeBoolItem("OLED mode"_i18n,
+        "Light only the pixels that carry information: the empty part of the progress bar is left black."_i18n,
+        App::GetSaverOled, App::SetSaverOled));
+
+    items.emplace_back(SettingsItem{
+        "Preview"_i18n,
+        "Show the screensaver at the brightness it will actually run at. Any button exits."_i18n,
+        [](){ return std::string{}; },
+        [](){ App::Push<SaverPreview>(); }
+    });
+
+    // the readout drifts slowly across the panel, so there is nothing to place
+    // by hand -- a pinned layout is exactly what burns into an OLED over a long
+    // queue. ponytail: which rows show, not where; add a drag-to-place editor
+    // (and per-element offsets in the ini) only if the drift proves not enough.
+    items.emplace_back(MakeHeader("Show on screensaver"_i18n));
+
+    const auto field = [&items](SaverField bit, std::string label, std::string description) {
+        items.emplace_back(MakeBoolItem(std::move(label), std::move(description),
+            [bit](){ return (App::GetSaverFields() & bit) != 0; },
+            [bit](bool enable){ App::SetSaverField(bit, enable); }));
+    };
+
+    field(SaverField_Clock, "Clock"_i18n, "Show the current time."_i18n);
+    field(SaverField_Status, "Status"_i18n, "Show what the queue is doing."_i18n);
+    field(SaverField_Counter, "Package counter"_i18n, "Show which package of how many is being installed."_i18n);
+    field(SaverField_File, "Current file"_i18n, "Show the package and file being written."_i18n);
+    field(SaverField_Bar, "Progress bar"_i18n, "Show the whole-queue progress bar and percentage."_i18n);
+    field(SaverField_Speed, "Average speed"_i18n, "Show the average write speed."_i18n);
+    field(SaverField_Eta, "Time remaining"_i18n, "Show the estimated time left for the whole queue."_i18n);
+    field(SaverField_Elapsed, "Elapsed time"_i18n, "Show how long the queue has been running."_i18n);
+    field(SaverField_Battery, "Battery"_i18n, "Show the battery level and whether it is charging."_i18n);
+    field(SaverField_Errors, "Errors"_i18n, "Show the failure count, once anything has failed."_i18n);
+    field(SaverField_Graph, "Speed graph"_i18n, "Show the live installation read/write speed graph."_i18n);
+
+    return items;
+}
+
 // items for the "MTP storages" settings page (was a side popup). values read
 // live state, so toggles/names refresh in place without a rebuild.
 auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
@@ -202,6 +401,7 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
     items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
     items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
+    items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
 
     items.emplace_back(SettingsItem{
         "microSD card name"_i18n,
@@ -939,7 +1139,7 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
             return "";
         },
         [](){
-            App::Push<FanCurveMenu>();
+            OpenFanCurveMenu();
         },
         SettingsItemKind::Folder,
     });
@@ -1818,6 +2018,7 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetInstallLocation());
                 }},
+                MakeFolderItem("Forwarders"_i18n, "Defaults baked into forwarders you create: address space, profile selection, capture and svcDebug."_i18n, BuildForwarderItems),
                 MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
                 { "Skip if already installed"_i18n, "Skip or prompt for titles or NCAs that are already installed."_i18n, [](){
                     const auto val = App::GetApp()->m_skip_if_already_installed.Get();
@@ -1844,6 +2045,7 @@ void Menu::BuildCategories() {
                 }},
                 MakeOptionItem("Save options globally"_i18n, "Save install options globally or locally for session."_i18n, app->m_save_settings_globally),
                 MakeOptionItem("Boost CPU during transfer"_i18n, "Enable CPU boost during transfers."_i18n, app->m_progress_boost_mode),
+                MakeFolderItem("Screen off (Minus)"_i18n, "Blank or dim the panel while a long queue runs, and choose what the screensaver shows."_i18n, BuildScreenOffItems),
 
                 MakeHeader("What to install"_i18n),
                 MakeOptionItem("Install tickets only"_i18n, "Install tickets without any title content."_i18n, app->m_ticket_only),

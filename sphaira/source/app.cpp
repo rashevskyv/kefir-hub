@@ -390,6 +390,22 @@ void App::LogFrame(double delta_ms) {
     // a frame this long is a visible stutter, not jitter.
     constexpr double HITCH_MS = 100.0;
     constexpr double REPORT_INTERVAL_MS = 1000.0;
+    // nothing we do takes seconds; a frame that long is the console having been
+    // asleep or the applet suspended. Saying so beats logging a "hitch" of four
+    // minutes, and leaving it out of the accumulators keeps that second's
+    // averages readable.
+    constexpr double SUSPEND_MS = 2000.0;
+
+    if (delta_ms >= SUSPEND_MS) {
+        log_write("[frame] resumed, suspended for %.0f s\n", delta_ms / 1000.0);
+        // Draw() has already charged the whole suspend to the vsync wait, and
+        // the partial second we fell asleep in is meaningless, so start over.
+        m_frame_count = 0;
+        m_frame_accum_ms = 0.0;
+        m_frame_worst_ms = 0.0;
+        m_frame_wait_accum_ms = 0.0;
+        return;
+    }
 
     m_frame_count++;
     m_frame_accum_ms += delta_ms;
@@ -403,14 +419,19 @@ void App::LogFrame(double delta_ms) {
         return;
     }
 
-    log_write("[frame] %.1f fps  avg %.1f ms  worst %.0f ms\n",
+    // "wait" is the vsync block; subtract it and what is left is the work we
+    // actually control. High wait means headroom, near zero means cpu bound.
+    log_write("[frame] %.1f fps  avg %.1f ms  work %.1f ms  wait %.1f ms  worst %.0f ms\n",
         1000.0 * m_frame_count / m_frame_accum_ms,
         m_frame_accum_ms / m_frame_count,
+        (m_frame_accum_ms - m_frame_wait_accum_ms) / m_frame_count,
+        m_frame_wait_accum_ms / m_frame_count,
         m_frame_worst_ms);
 
     m_frame_count = 0;
     m_frame_accum_ms = 0.0;
     m_frame_worst_ms = 0.0;
+    m_frame_wait_accum_ms = 0.0;
 }
 
 auto App::Push(std::unique_ptr<ui::Widget>&& widget) -> void {
@@ -807,7 +828,9 @@ void App::PollUsbStorage() {
 }
 
 void App::Draw() {
+    const TimeStamp ts_wait;
     const auto slot = this->queue.acquireImage(this->swapchain);
+    m_frame_wait_accum_ms += (double)ts_wait.GetNs() / 1e+6;
     this->queue.submitCommands(this->framebuffer_cmdlists[slot]);
     this->queue.submitCommands(this->render_cmdlist);
     nvgBeginFrame(this->vg, s_width, s_height, 1.f);
@@ -978,9 +1001,19 @@ App::App(const char* argv0) {
             else if (app->m_install_sysmmc.LoadFrom(Key, Value)) {}
             else if (app->m_install_emummc.LoadFrom(Key, Value)) {}
             else if (app->m_install_location.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_address_space.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_profile_select.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_screenshot.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_video_capture.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_svc_debug.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_ask.LoadFrom(Key, Value)) {}
             else if (app->m_install_reserve_mb.LoadFrom(Key, Value)) {}
             else if (app->m_install_reserve_sd_mb.LoadFrom(Key, Value)) {}
             else if (app->m_progress_boost_mode.LoadFrom(Key, Value)) {}
+            else if (app->m_blank_mode.LoadFrom(Key, Value)) {}
+            else if (app->m_blank_brightness.LoadFrom(Key, Value)) {}
+            else if (app->m_saver_oled.LoadFrom(Key, Value)) {}
+            else if (app->m_saver_fields.LoadFrom(Key, Value)) {}
             else if (app->m_allow_downgrade.LoadFrom(Key, Value)) {}
             else if (app->m_skip_if_already_installed.LoadFrom(Key, Value)) {}
             else if (app->m_ticket_only.LoadFrom(Key, Value)) {}

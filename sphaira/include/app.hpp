@@ -4,6 +4,7 @@
 #include "nanovg/dk_renderer.hpp"
 #include "ui/widget.hpp"
 #include "ui/notification.hpp"
+#include "ui/screensaver.hpp"
 #include "owo.hpp"
 #include "option.hpp"
 #include "fs.hpp"
@@ -116,6 +117,7 @@ public:
     static auto GetMtpShowSd() -> bool;
     static auto GetMtpShowInstall() -> bool;
     static auto GetMtpShowSaves() -> bool;
+    static auto GetMtpShowGames() -> bool;
     static auto GetMtpNameSd() -> std::string;
     static auto GetMtpNameInstall() -> std::string;
     // extra folders exposed as MTP storages (absolute SD paths).
@@ -142,6 +144,10 @@ public:
     static auto GetInstallLocation() -> long;
     static auto GetInstallReserveMb() -> long;
     static auto GetInstallReserveSdMb() -> long;
+    static auto GetForwarderOptions() -> ForwarderOptions;
+    static auto GetForwarderAsk() -> bool;
+    static auto GetForwarderAddressSpace() -> long;
+    static void SetForwarderAddressSpace(long mode);
     static auto GetAnimatedWavesEnable() -> bool;
     static auto GetWaveColorDark() -> std::string;
     static auto GetWaveColorLight() -> std::string;
@@ -151,6 +157,16 @@ public:
     static auto GetGodModeEnabled() -> bool;
     static auto GetProgressActive() -> bool;
     static auto GetSaveSettingsGlobally() -> bool;
+
+    // Minus-key screen blanking during the install queue, see ui/screensaver.hpp.
+    static auto GetBlankMode() -> long;
+    static auto GetBlankBrightness() -> long;
+    static auto GetSaverOled() -> bool;
+    static auto GetSaverFields() -> long;
+    static void SetBlankMode(long mode);
+    static void SetBlankBrightness(long percent);
+    static void SetSaverOled(bool enable);
+    static void SetSaverField(long field, bool enable);
 
     // the folders the file browser has mounted, exposed by *every* network share
     // next to the microSD card: as root devices over FTP, as entries of the web
@@ -167,6 +183,7 @@ public:
     static void SetMtpShowSd(bool enable);
     static void SetMtpShowInstall(bool enable);
     static void SetMtpShowSaves(bool enable);
+    static void SetMtpShowGames(bool enable);
     static void SetMtpNameSd(std::string value);
     static void SetMtpNameInstall(std::string value);
     static void SetMtpFolders(const std::vector<std::string>& folders);
@@ -200,6 +217,7 @@ public:
 
     static void DisplayAdvancedOptions(bool left_side = true);
     static void DisplayInstallOptions(bool left_side = true);
+    static void DisplayForwarderOptions(bool left_side = true);
     static void DisplayDumpOptions(bool left_side = true);
 
     // helper for sidebar options to toggle install on/off
@@ -386,6 +404,7 @@ public:
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
     option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", false};
+    option::OptionBool m_mtp_show_games{INI_SECTION, "mtp_show_games", false};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
     // extra MTP storage folders, '|'-separated absolute paths ('|' is illegal in FAT names).
@@ -414,10 +433,26 @@ public:
     option::OptionBool m_progress_boost_mode{INI_SECTION, "progress_boost_mode", true};
     option::OptionBool m_god_mode{INI_SECTION, "god_mode", false};
 
+    // what Minus does while the install queue runs, and how the screensaver
+    // page it can raise is laid out.
+    option::OptionLong m_blank_mode{INI_SECTION, "blank_mode", (long)ui::BlankMode::Screensaver};
+    option::OptionLong m_blank_brightness{INI_SECTION, "blank_brightness", 10}; // percent
+    option::OptionBool m_saver_oled{INI_SECTION, "saver_oled", true};
+    option::OptionLong m_saver_fields{INI_SECTION, "saver_fields", ui::SaverField_ALL};
+
     // install options
     option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};
     option::OptionBool m_install_emummc{INI_SECTION, "install_emummc", false};
     option::OptionLong m_install_location{INI_SECTION, "install_location", 4};
+    // forwarder npdm address space: 0 = auto, 1 = 36-bit, 2 = 39-bit. see owo.cpp.
+    option::OptionLong m_forwarder_address_space{INI_SECTION, "forwarder_address_space", 0};
+    option::OptionBool m_forwarder_profile_select{INI_SECTION, "forwarder_profile_select", false};
+    option::OptionBool m_forwarder_screenshot{INI_SECTION, "forwarder_screenshot", true};
+    option::OptionBool m_forwarder_video_capture{INI_SECTION, "forwarder_video_capture", true};
+    // svcDebug kac bit: 0 = auto (follow the ams version), 1 = on, 2 = off.
+    option::OptionLong m_forwarder_svc_debug{INI_SECTION, "forwarder_svc_debug", 0};
+    // when set, forwarder creation opens the editor instead of using the defaults above.
+    option::OptionBool m_forwarder_ask{INI_SECTION, "forwarder_ask", false};
     // free space kept back on each target; NAND and SD are set separately.
     option::OptionLong m_install_reserve_mb{INI_SECTION, "install_reserve_mb", 500};
     option::OptionLong m_install_reserve_sd_mb{INI_SECTION, "install_reserve_sd_mb", 500};
@@ -460,13 +495,21 @@ public:
     double m_frame_accum_ms{};
     double m_frame_worst_ms{};
     u32 m_frame_count{};
+    // time Draw() spent blocked in acquireImage, ie waiting on the display
+    // rather than doing work. Without it every frame reads as one vsync period
+    // and there is no telling headroom from a cpu bound frame.
+    double m_frame_wait_accum_ms{};
 
     static constexpr const char* INSTALL_DEPENDS_STR =
         "Installing is disabled.\n\n"
         "Enable in the options by selecting Menu (Y) -> Advanced -> Install options -> Enable.";
 
 private: // from nanovg decko3d example by adubbz
-    static constexpr unsigned NumFramebuffers = 2;
+    // triple buffered: with two, acquireImage blocks at the top of Draw() until
+    // the display releases the other buffer, so the cpu can never run ahead and
+    // a frame that overruns by a hair costs a whole vsync period. The third
+    // image is ~8MB at 1080p, which applet mode can spare.
+    static constexpr unsigned NumFramebuffers = 3;
     static constexpr unsigned StaticCmdSize = 0x1000;
     unsigned s_width{1280};
     unsigned s_height{720};

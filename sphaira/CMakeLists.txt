@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.413)
+set(sphaira_VERSION 0.13.429)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -72,7 +72,6 @@ add_executable(sphaira
     source/ui/menus/cheats/cheat_game_select_menu.cpp
     source/ui/menus/cheats/cheat_download_menu.cpp
     source/ui/menus/ghdl.cpp
-    source/ui/menus/usb_menu.cpp
     source/ui/menus/dbi_menu.cpp
     source/ui/menus/ftp_menu.cpp
     source/ui/menus/mtp_menu.cpp
@@ -87,12 +86,15 @@ add_executable(sphaira
     source/ui/option_box.cpp
     source/ui/popup_list.cpp
     source/ui/progress_box.cpp
+    source/ui/screensaver.cpp
     source/ui/scrollable_text.cpp
     source/ui/hold_confirm_box.cpp
     source/ui/sidebar.cpp
     source/ui/widget.cpp
     source/ui/list.cpp
     source/ui/scrolling_text.cpp
+    source/ui/forwarder_editor.cpp
+    source/ui/steamgriddb_icon.cpp
 
     source/app.cpp
     source/app_settings.cpp
@@ -126,6 +128,7 @@ add_executable(sphaira
     source/haze_helper.cpp
     source/threaded_file_transfer.cpp
     source/title_info.cpp
+    source/title_nsp.cpp
     source/minizip_helper.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp
@@ -149,7 +152,6 @@ add_executable(sphaira
     source/yati/container/xci.cpp
     source/yati/source/file.cpp
     source/yati/source/usb.cpp
-    source/yati/source/usb_dbi.cpp
     source/yati/source/stream.cpp
     source/yati/source/stream_file.cpp
 
@@ -498,6 +500,24 @@ file(COPY ${CMAKE_SOURCE_DIR}/assets/romfs DESTINATION ${CMAKE_CURRENT_BINARY_DI
 
 # create assets target
 dkp_add_asset_target(sphaira_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
+
+# embed the fan sysmodule so the fan curve menu can install it on demand
+set(sphaira_fan_romfs_dir ${CMAKE_CURRENT_BINARY_DIR}/romfs/sysmodule)
+add_custom_command(
+    OUTPUT ${sphaira_fan_romfs_dir}/exefs.nsp ${sphaira_fan_romfs_dir}/toolbox.json
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${sphaira_fan_romfs_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SPHAIRA_FAN_EXEFS_NSP} ${sphaira_fan_romfs_dir}/exefs.nsp
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json ${sphaira_fan_romfs_dir}/toolbox.json
+    DEPENDS sphaira_fan_exefs ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json
+    COMMENT "Embedding fan sysmodule into romfs"
+    VERBATIM
+)
+add_custom_target(sphaira_fan_romfs DEPENDS ${sphaira_fan_romfs_dir}/exefs.nsp)
+add_dependencies(sphaira_romfs sphaira_fan_romfs)
+set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES
+    ${sphaira_fan_romfs_dir}/exefs.nsp
+    ${sphaira_fan_romfs_dir}/toolbox.json
+)
 
 # wait until hbl is built first as we need the exefs to embed
 add_dependencies(sphaira hbl_nso hbl_npdm)

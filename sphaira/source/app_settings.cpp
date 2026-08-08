@@ -188,6 +188,71 @@ auto App::GetInstallReserveSdMb() -> long {
     return g_app->m_install_reserve_sd_mb.Get();
 }
 
+auto App::GetForwarderOptions() -> ForwarderOptions {
+    ForwarderOptions out{};
+    out.profile_selection = g_app->m_forwarder_profile_select.Get();
+    // ponytail: 0 = auto, 1 = 36-bit, 2 = 39-bit. auto is identical to 36-bit
+    // until we have a list of nros known to need the wider space; once that
+    // list exists, auto should look up nro_path and pick 39-bit for matches.
+    out.address_space = GetForwarderAddressSpace() == 2
+        ? ForwarderAddressSpace::Bit39 : ForwarderAddressSpace::Bit36;
+    out.screenshot = g_app->m_forwarder_screenshot.Get();
+    out.video_capture = g_app->m_forwarder_video_capture.Get();
+    switch (g_app->m_forwarder_svc_debug.Get()) {
+        case 1: out.svc_debug_mode = ForwarderSvcDebugMode::Enabled; break;
+        case 2: out.svc_debug_mode = ForwarderSvcDebugMode::Disabled; break;
+        default: out.svc_debug_mode = ForwarderSvcDebugMode::Automatic; break;
+    }
+    return out;
+}
+
+auto App::GetForwarderAsk() -> bool {
+    return g_app->m_forwarder_ask.Get();
+}
+
+auto App::GetForwarderAddressSpace() -> long {
+    return std::clamp<long>(g_app->m_forwarder_address_space.Get(), 0, 2);
+}
+
+void App::SetForwarderAddressSpace(long mode) {
+    g_app->m_forwarder_address_space.Set(std::clamp<long>(mode, 0, 2));
+}
+
+auto App::GetBlankMode() -> long {
+    return std::clamp<long>(g_app->m_blank_mode.Get(), 0, (long)ui::BlankMode::MAX - 1);
+}
+
+auto App::GetBlankBrightness() -> long {
+    // 0 would be indistinguishable from the backlight-off mode, and a level the
+    // user cannot see is a level they cannot get out of by looking at it.
+    return std::clamp<long>(g_app->m_blank_brightness.Get(), 1, 100);
+}
+
+auto App::GetSaverOled() -> bool {
+    return g_app->m_saver_oled.Get();
+}
+
+auto App::GetSaverFields() -> long {
+    return g_app->m_saver_fields.Get() & ui::SaverField_ALL;
+}
+
+void App::SetBlankMode(long mode) {
+    g_app->m_blank_mode.Set(std::clamp<long>(mode, 0, (long)ui::BlankMode::MAX - 1));
+}
+
+void App::SetBlankBrightness(long percent) {
+    g_app->m_blank_brightness.Set(std::clamp<long>(percent, 1, 100));
+}
+
+void App::SetSaverOled(bool enable) {
+    g_app->m_saver_oled.Set(enable);
+}
+
+void App::SetSaverField(long field, bool enable) {
+    const auto fields = App::GetSaverFields();
+    g_app->m_saver_fields.Set(enable ? (fields | field) : (fields & ~field));
+}
+
 auto App::GetAnimatedWavesEnable() -> bool {
     return g_app->m_animated_waves.Get();
 }
@@ -214,6 +279,10 @@ auto App::GetMtpShowInstall() -> bool {
 
 auto App::GetMtpShowSaves() -> bool {
     return g_app->m_mtp_show_saves.Get();
+}
+
+auto App::GetMtpShowGames() -> bool {
+    return g_app->m_mtp_show_games.Get();
 }
 
 auto App::GetMtpNameSd() -> std::string {
@@ -535,6 +604,16 @@ void App::SetMtpShowSaves(bool enable) {
     }
 }
 
+void App::SetMtpShowGames(bool enable) {
+    if (App::GetMtpShowGames() != enable) {
+        g_app->m_mtp_show_games.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
 void App::SetMtpNameSd(std::string value) {
     if (App::GetMtpNameSd() != value) {
         g_app->m_mtp_name_sd.Set(std::move(value));
@@ -702,6 +781,7 @@ void App::SetTextScrollSpeed(long index) {
 }
 
 auto App::Install(OwoConfig& config) -> Result {
+    config.options = config.options.value_or(GetForwarderOptions());
     App::Push<ui::ProgressBox>(0, "Installing Forwarder"_i18n, config.name, [config](auto pbox) mutable -> Result {
         return Install(pbox, config);
     }, [](Result rc){
