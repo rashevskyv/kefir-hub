@@ -3,6 +3,7 @@
 #include "evman.hpp"
 #include "app.hpp"
 #include "log.hpp"
+#include "nacp_util.hpp"
 
 #include <switch.h>
 #include <vector>
@@ -236,6 +237,125 @@ auto nro_get_nacp(const fs::FsPath& path, NacpStruct& nacp) -> Result {
     R_UNLESS(asset.magic == NROASSETHEADER_MAGIC, Result_NroBadMagic);
     R_TRY(f.Read(data.header.size + asset.nacp.offset, &nacp, sizeof(nacp), FsReadOption_None, &bytes_read));
 
+    R_SUCCEED();
+}
+
+auto nro_update_info(const fs::FsPath& path, std::string_view name, std::span<const u8> icon) -> Result {
+    R_UNLESS(!name.empty() && name.size() < sizeof(NacpLanguageEntry::name), Result_NroBadSize);
+    R_UNLESS(!icon.empty() && icon.size() <= 1024 * 1024, Result_NroBadSize);
+
+    fs::FsNativeSd fs;
+    std::vector<u8> original;
+    R_TRY(fs.read_entire_file(path, original));
+    R_UNLESS(original.size() >= sizeof(NroData), Result_NroBadSize);
+
+    NroData nro{};
+    std::memcpy(&nro, original.data(), sizeof(nro));
+    R_UNLESS(nro.header.magic == NROHEADER_MAGIC, Result_NroBadMagic);
+
+    const auto asset_base = static_cast<std::size_t>(nro.header.size);
+    R_UNLESS(asset_base <= original.size() && sizeof(NroAssetHeader) <= original.size() - asset_base, Result_NroBadSize);
+
+    NroAssetHeader asset{};
+    std::memcpy(&asset, original.data() + asset_base, sizeof(asset));
+    R_UNLESS(asset.magic == NROASSETHEADER_MAGIC, Result_NroBadMagic);
+
+    const auto section_valid = [&original, asset_base](const NroAssetSection& section) {
+        const auto tail_size = original.size() - asset_base;
+        return section.offset <= tail_size && section.size <= tail_size - section.offset;
+    };
+    R_UNLESS(section_valid(asset.nacp) && asset.nacp.size == sizeof(NacpStruct), Result_NroBadSize);
+    R_UNLESS(section_valid(asset.romfs), Result_NroBadSize);
+
+    NacpStruct nacp{};
+    std::memcpy(&nacp, original.data() + asset_base + asset.nacp.offset, sizeof(nacp));
+    for (std::size_t i = 0; i < 16; i++) {
+        auto& lang = nacp_util::GetLanguageEntry(nacp, i);
+        std::memset(lang.name, 0, sizeof(lang.name));
+        std::memcpy(lang.name, name.data(), name.size());
+    }
+
+    // the asset sections are rebuilt back to back, the icon is the one that resized.
+    NroAssetHeader updated_asset = asset;
+    updated_asset.icon.offset = sizeof(NroAssetHeader);
+    updated_asset.icon.size = icon.size();
+    updated_asset.nacp.offset = updated_asset.icon.offset + updated_asset.icon.size;
+    updated_asset.nacp.size = sizeof(NacpStruct);
+    updated_asset.romfs.offset = updated_asset.nacp.offset + updated_asset.nacp.size;
+
+    const auto updated_size = asset_base + updated_asset.romfs.offset + updated_asset.romfs.size;
+
+    const auto tmp_name = path.toString() + ".sphaira.tmp";
+    const auto bak_name = path.toString() + ".sphaira.bak";
+    R_UNLESS(tmp_name.size() < FS_MAX_PATH && bak_name.size() < FS_MAX_PATH, Result_NroBadSize);
+    const fs::FsPath tmp_path{tmp_name};
+    const fs::FsPath bak_path{bak_name};
+
+    bool success = false;
+    ON_SCOPE_EXIT([&]{
+        if (!success) {
+            fs.DeleteFile(tmp_path);
+        }
+    });
+
+    // Remove any stale backup from a previously crashed run so RenameFile won't fail with 0x402.
+    fs.DeleteFile(bak_path);
+
+    if (auto rc = fs.CreateFile(tmp_path, updated_size, 0); R_FAILED(rc) && rc != FsError_PathAlreadyExists) {
+        return rc;
+    }
+
+    fs::File f;
+    R_TRY(fs.OpenFile(tmp_path, FsOpenMode_Write, &f));
+    R_TRY(f.SetSize(updated_size));
+
+    s64 write_off = 0;
+    R_TRY(f.Write(write_off, original.data(), asset_base, FsWriteOption_None));
+    write_off += asset_base;
+
+    R_TRY(f.Write(write_off, &updated_asset, sizeof(updated_asset), FsWriteOption_None));
+    write_off += sizeof(updated_asset);
+
+    R_TRY(f.Write(write_off, icon.data(), icon.size(), FsWriteOption_None));
+    write_off += icon.size();
+
+    R_TRY(f.Write(write_off, &nacp, sizeof(nacp), FsWriteOption_None));
+    write_off += sizeof(nacp);
+
+    if (updated_asset.romfs.size) {
+        const u8* romfs_src = original.data() + asset_base + asset.romfs.offset;
+        s64 romfs_rem = updated_asset.romfs.size;
+        s64 romfs_off = 0;
+        constexpr s64 CHUNK_SIZE = 64 * 1024;
+        while (romfs_rem > 0) {
+            const s64 chunk = std::min(romfs_rem, CHUNK_SIZE);
+            R_TRY(f.Write(write_off, romfs_src + romfs_off, chunk, FsWriteOption_None));
+            write_off += chunk;
+            romfs_off += chunk;
+            romfs_rem -= chunk;
+        }
+    }
+    f.Close();
+
+    // Verify actual file size on disk before touching the original NRO
+    s64 written_size = 0;
+    fs::File check_f;
+    if (R_SUCCEEDED(fs.OpenFile(tmp_path, FsOpenMode_Read, &check_f))) {
+        check_f.GetSize(&written_size);
+        check_f.Close();
+    }
+    R_UNLESS(written_size == static_cast<s64>(updated_size), Result_NroBadSize);
+
+    R_TRY(fs.RenameFile(path, bak_path));
+    const auto rename_rc = fs.RenameFile(tmp_path, path);
+    if (R_FAILED(rename_rc)) {
+        fs.RenameFile(bak_path, path);
+        log_write("[NRO] Failed to rename temp file to %s (rc: 0x%X), restored backup %s\n", path.toString().c_str(), rename_rc, bak_name.c_str());
+        return rename_rc;
+    }
+
+    fs.DeleteFile(bak_path);
+    success = true;
     R_SUCCEED();
 }
 

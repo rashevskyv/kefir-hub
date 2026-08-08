@@ -47,12 +47,8 @@ struct Menu final : grid::Menu {
         return m_entries;
     }
 
-    static Result InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon, ForwarderAddressSpace address_space = ForwarderAddressSpace::Bit36);
-    static Result InstallHomebrewFromPath(const fs::FsPath& path, ForwarderAddressSpace address_space = ForwarderAddressSpace::Bit36);
-
-    // asks for the address space, then installs. pass an icon if one is
-    // already loaded, otherwise it is read from the nro.
-    static void PromptInstallForwarder(const fs::FsPath& path, const std::vector<u8>& icon = {});
+    static Result InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon);
+    static Result InstallHomebrewFromPath(const fs::FsPath& path);
 
     auto GetEntry(s64 i) -> NroEntry& {
         return m_entries[m_entries_current[i]];
@@ -65,6 +61,7 @@ struct Menu final : grid::Menu {
 private:
     void SetIndex(s64 index);
     void InstallHomebrew();
+    void CustomizeHomebrew();
     void ScanHomebrew();
     void Sort();
     void SortAndFindLastFile(bool scan = false);
@@ -77,6 +74,7 @@ private:
     }
 
 private:
+    std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)};
     static constexpr inline const char* INI_SECTION = "homebrew";
 
     std::vector<NroEntry> m_entries{};

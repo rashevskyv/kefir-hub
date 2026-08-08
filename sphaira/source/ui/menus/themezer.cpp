@@ -874,7 +874,7 @@ Menu::Menu(u32 flags) : MenuBase{"Themezer"_i18n, flags} {
 }
 
 Menu::~Menu() {
-
+    *m_alive = false;
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
@@ -995,7 +995,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                             curl::Priority::Normal,
                             curl::OnComplete{[this, page_generation_for_image, page_index_for_image, entry_index_for_image, use_pack_preview, alive_weak = std::weak_ptr<bool>(m_alive)](auto& result) {
                                 auto alive = alive_weak.lock();
-                                if (!alive) {
+                                if (!alive || !*alive) {
                                     return;
                                 }
                                 if (page_generation_for_image != m_page_generation) {
@@ -1157,7 +1157,7 @@ void Menu::PackListDownload() {
         curl::StopToken{this->GetToken()},
         curl::OnComplete{[this, page_index, page_generation, alive_weak = std::weak_ptr<bool>(m_alive)](auto& result){
             auto alive = alive_weak.lock();
-            if (!alive) {
+            if (!alive || !*alive) {
                 return;
             }
             App::SetBoostMode(true);

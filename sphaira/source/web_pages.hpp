@@ -614,6 +614,54 @@ const url=new URL(window.location.href);const path=url.searchParams.get('path')|
 </script>
 )HTML";
 
+// handoff page for the SteamGridDB api key: the phone signs in on
+// steamgriddb.com (their own Steam login, nothing to do with us), copies the
+// key and posts it back here, so nothing has to be typed on the console.
+constexpr std::string_view APIKEY_PAGE = R"HTML(
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SteamGridDB API key</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box}
+.card{max-width:460px;width:100%}
+h1{font-size:20px;margin:0 0 6px}
+p{color:#94a3b8;font-size:14px;line-height:1.5;margin:0 0 18px}
+ol{color:#94a3b8;font-size:14px;line-height:1.7;padding-left:20px;margin:0 0 18px}
+a{color:#60a5fa}
+input{width:100%;box-sizing:border-box;padding:14px;font-size:16px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0}
+button{width:100%;margin-top:12px;padding:14px;font-size:16px;border:0;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer}
+button:disabled{background:#334155;color:#64748b}
+.msg{margin-top:14px;font-size:14px;min-height:20px}
+.ok{color:#4ade80}
+.err{color:#f87171}
+</style></head><body><div class="card">
+<h1>SteamGridDB API key</h1>
+<p>Kefir Hub needs a personal API key to look up icons.</p>
+<ol>
+<li>Open <a href="https://www.steamgriddb.com/profile/preferences/api" target="_blank" rel="noreferrer noopener">steamgriddb.com API preferences</a> and sign in with Steam.</li>
+<li>Copy the key shown there.</li>
+<li>Paste it below and press Send.</li>
+</ol>
+<input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the API key">
+<button id="send">Send to console</button>
+<div class="msg" id="msg"></div>
+</div>
+<script>
+const key=document.getElementById('key'),send=document.getElementById('send'),msg=document.getElementById('msg');
+send.addEventListener('click',async()=>{
+  const value=key.value.trim();
+  if(!value){msg.className='msg err';msg.textContent='Paste the key first.';return;}
+  send.disabled=true;msg.className='msg';msg.textContent='Sending...';
+  try{
+    const res=await fetch('/apikey',{method:'POST',headers:{'Content-Type':'text/plain'},body:value});
+    if(res.ok){msg.className='msg ok';msg.textContent='Sent. You can close this page.';}
+    else{msg.className='msg err';msg.textContent='The console rejected the key.';send.disabled=false;}
+  }catch(e){msg.className='msg err';msg.textContent='Could not reach the console.';send.disabled=false;}
+});
+</script>
+</body></html>
+)HTML";
+
 constexpr std::string_view PROGRESS_PAGE = R"HTML(
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">

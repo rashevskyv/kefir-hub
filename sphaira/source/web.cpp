@@ -28,6 +28,7 @@
 #include <memory>
 
 #include "ui/progress_box.hpp"
+#include "ui/steamgriddb_icon.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "yati/yati.hpp"
 #include "yati/source/stream.hpp"
@@ -55,7 +56,6 @@ constexpr size_t SHARE_WORKER_COUNT = 3;
 // seconds without an ip before the server gives up and closes itself.
 constexpr unsigned SHARE_OFFLINE_GIVEUP = 30;
 
-std::atomic_bool g_title_initialized{false};
 Thread g_share_threads[SHARE_WORKER_COUNT]{};
 size_t g_share_thread_count{};
 std::atomic_bool g_share_running{false};
@@ -1040,6 +1040,66 @@ void HandleStatus(Socket sock) {
 
 
 
+// the phone posts the SteamGridDB key here as a plain-text body, so nothing has
+// to be typed on the console. the key is short, no streaming needed.
+void HandleApiKeyPost(Socket sock, const std::string& req) {
+    constexpr s64 MAX_KEY_SIZE = 512;
+
+    const auto length_str = HeaderValue(req, "content-length");
+    if (length_str.empty()) {
+        SendResponse(sock, "411 Length Required", "text/plain", "Missing Content-Length");
+        return;
+    }
+
+    const auto content_length = std::strtoll(length_str.c_str(), nullptr, 10);
+    if (content_length <= 0 || content_length > MAX_KEY_SIZE) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Bad Content-Length");
+        return;
+    }
+
+    std::string body;
+    if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
+        body = req.substr(header_end + 4);
+    }
+    body.resize(std::min<size_t>(body.size(), content_length));
+
+    for (u32 attempts = 0; attempts < 5000 && (s64)body.size() < content_length; attempts++) {
+        char buf[128];
+        const auto want = std::min<s64>(sizeof(buf), content_length - body.size());
+        const auto got = recv(sock, buf, want, 0);
+        if (got > 0) {
+            body.append(buf, got);
+        } else if (got == 0) {
+            break;
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            svcSleepThread(1'000'000);
+        } else {
+            break;
+        }
+    }
+
+    // keys are hex-ish tokens; anything with whitespace or control bytes in it
+    // came from a bad paste rather than from steamgriddb.
+    const auto first = body.find_first_not_of(" \t\r\n");
+    const auto last = body.find_last_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Empty key");
+        return;
+    }
+    const auto key = body.substr(first, last - first + 1);
+
+    const auto invalid = std::ranges::any_of(key, [](unsigned char c){
+        return c < 0x21 || c > 0x7E;
+    });
+    if (invalid) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Bad key");
+        return;
+    }
+
+    ui::steamgriddb::SetApiKey(key);
+    SendResponse(sock, "200 OK", "text/plain", "OK");
+}
+
 void HandleRequest(Socket sock) {
     std::string req;
     bool header_too_large = false;
@@ -1089,8 +1149,29 @@ void HandleRequest(Socket sock) {
         return;
     }
 
+    if (path == "/apikey") {
+        if (!ui::steamgriddb::IsApiKeyWebRequestActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+            return;
+        }
+        if (method == "POST") {
+            HandleApiKeyPost(sock, req);
+            return;
+        } else if (method == "GET") {
+            SendResponse(sock, "200 OK", "text/html", std::string{APIKEY_PAGE});
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (method == "POST") {
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
     if (method != "GET") {
-        SendResponse(sock, "405 Method Not Allowed", "text/plain", "Only GET, PUT and DELETE are supported");
+        SendResponse(sock, "405 Method Not Allowed", "text/plain", "Only GET, POST, PUT and DELETE are supported");
         return;
     }
 
@@ -1453,12 +1534,7 @@ auto WebShow(const std::string& url) -> Result {
 
 
 
-auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
-    R_UNLESS(!path.empty(), Result_FsEmpty);
-
-    fs::FsNativeSd fs;
-    R_UNLESS(fs.DirExists(path), Result_FsInvalidType);
-
+auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result {
     u32 ip{};
     R_TRY(nifmGetCurrentIpAddress(&ip));
     R_UNLESS(ip != 0, Result_FsNotActive);
@@ -1469,17 +1545,24 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     // server runs takes effect on the next request.
     R_TRY(StartShareServer());
 
-    if (!g_title_initialized.exchange(true)) {
-        title::Init();
-    }
-
     char url[128]{};
     std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
         ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
 
-    out.url = url;
+    out.url = std::string{url} + page_path;
     out.qr_image = CreateQrImage(out.url);
     out.listener_self_test = g_share_self_test;
+
+    R_SUCCEED();
+}
+
+auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
+    R_UNLESS(!path.empty(), Result_FsEmpty);
+
+    fs::FsNativeSd fs;
+    R_UNLESS(fs.DirExists(path), Result_FsInvalidType);
+
+    R_TRY(WebStartServer({}, out));
 
     R_SUCCEED();
 }
@@ -1501,10 +1584,6 @@ void WebShareStop() {
         g_share_thread_count = 0;
         g_share_port = 0;
         g_share_self_test = false;
-    }
-
-    if (g_title_initialized.exchange(false)) {
-        title::Exit();
     }
 }
 

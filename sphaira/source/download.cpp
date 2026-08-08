@@ -720,6 +720,10 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
 
     // set oath2 bearer.
     if (!e.GetBearer().empty()) {
+        // CURLOPT_XOAUTH2_BEARER only supplies the token. Explicitly selecting
+        // bearer auth makes libcurl send the Authorization header on the first
+        // request instead of waiting for an auth challenge.
+        CURL_EASY_SETOPT_LOG(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_BEARER);
         CURL_EASY_SETOPT_LOG(curl, CURLOPT_XOAUTH2_BEARER, e.GetBearer().c_str());
     }
 
