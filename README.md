@@ -35,6 +35,7 @@ of all configs available](https://github.com/ITotalJustice/ftpsrv/blob/master/as
 
 MTP can be enabled via the Network menu. You can configure which MTP storages are visible and set custom display names for them under **Settings -> Network -> MTP storages**. This allows you to toggle the visibility of the microSD card or the Install folder, and customize how they appear on your PC (e.g. setting a custom label instead of the default "microSD card"). If all storages are disabled, the MTP server will refuse to start and notify you.
 
+- **Games Drive (read-only NSP dumping over USB):** Enabling **Show Games (read-only)** adds a drive that lists every installed title as a folder (`Game Name [TitleID]`), holding one NSP per installed component - the base game, its update and each DLC. The NSP does not exist on the microSD card: it is built from the installed content the moment you open the folder and streamed straight out of content storage, so copying one to the PC dumps that title without needing any free space on the console. Tickets are fetched and patched exactly as the Games menu dump does.
 - **External MTP Devices (MTP Host Drive Support):** Connecting a smartphone or external media device in MTP mode via a USB OTG cable mounts its internal storage and SD card directly in the root of Sphaira's File Manager (`System Root`), alongside the microSD card and USB Mass Storage drives. You can browse, view, copy files between your phone and the console's SD card, and install games directly from external MTP devices.
 - **Dynamic MTP Control in Tools:** The context menu in **Tools -> Install & Share** features a dynamic **Mount MTP** button. Once MTP is connected, the label automatically changes to **MTP: Active** (rendered in bold for high visibility). Clicking it again stops the MTP connection and reverts the label dynamically.
 - **Robust Repack Installations:** The installation engine features enhanced error recovery when installing repacked or trimmed NSP/NSZ files via USB MTP. If a file is slightly truncated or missing non-critical padding bytes at the end of a stream (common in repacked titles), the installer automatically handles the EOF condition gracefully instead of failing with `Unexpected EOF` or `Invalid Read Size` errors, completing the installation successfully.
@@ -75,14 +76,33 @@ For informantion about the install options, [see the wiki](https://github.com/IT
 
 ### Usb (install)
 
-Sphaira speaks both **Awoo (TinFoil)** and **GoldLeaf v0.10+ (Quark)**, and works out which one the PC is running when it connects — there is nothing to pick on the console.
+One screen — **PC Install (USB)** under Install & Share — handles every supported PC app. Sphaira works out which protocol the far end speaks when it connects, so there is nothing to pick on the console; the queue names it in the session log once it knows.
 
-- **Awoo/TinFoil**: the PC pushes the file list, Sphaira pulls ranges. Used by [ns-usbloader](https://github.com/developersu/ns-usbloader) in *TinFoil* mode and by [fluffy](https://github.com/fourminute/Fluffy). The python script [here](tools/usb_install_pc.py) also works.
-- **GoldLeaf**: the roles are reversed — Sphaira drives a remote filesystem on the PC. Used by ns-usbloader in *GoldLeaf v0.10+* mode. Sphaira installs everything on the `VIRT:/` drive, i.e. exactly the files queued in the ns-usbloader window; browsing the PC's own filesystem (`HOME:/`) is not supported.
+- **DBI Backend** (DBI0): the official `dbibackend.py` and its companion executables. Random-access block reads. When the backend understands sphaira's list request it also reports each file's size, which is what lets the queue show real totals before the first byte is written.
+- **Awoo/TinFoil** (TUL0/TUC0): the PC pushes the file list, Sphaira pulls ranges. Used by [ns-usbloader](https://github.com/developersu/ns-usbloader) in *TinFoil* mode and by [fluffy](https://github.com/fourminute/Fluffy).
+- **GoldLeaf** (GLCI/GLCO): the roles are reversed — Sphaira drives a remote filesystem on the PC. Used by ns-usbloader in *GoldLeaf v0.10+* mode. Sphaira installs everything on the `VIRT:/` drive, i.e. exactly the files queued in the ns-usbloader window; browsing the PC's own filesystem (`HOME:/`) is not supported.
 
-### DBI Backend (install)
+The queue reviews every package before it installs any of them, so a host in **stream mode** is refused with a message rather than served — turn stream mode off in the PC app.
 
-Sphaira supports the official **DBI Backend** (DBI0) USB protocol. This allows installing games from your PC using the official Python backend server script `dbibackend.py` (or companion executables). DBI Backend uses custom 16-byte headers and supports on-demand random-access block reading for efficient transfers. Select "DBI Install" from the network/install options to connect.
+Long queues do not need the panel on: **Minus** blanks the screen, and *Settings → Install → Screen off (Minus)* chooses between lowering the brightness, cutting the backlight, and a drifting black-background readout (clock, package counter, progress, speed, ETA, battery, real-time speed graph). Any button brings the screen back.
+
+### Forwarder Editor & SteamGridDB Integration
+
+Sphaira includes a dedicated **Forwarder Editor** (`Tools -> Create Forwarder` or options menu on any NRO / homebrew item) to generate HOME Menu forwarder NSPs:
+- **SteamGridDB Icon Picker:** Search [SteamGridDB](https://www.steamgriddb.com) directly from the console to select high-quality vertical icons. You can paste an API key manually or use the built-in **Web Handoff** (`/apikey` endpoint) by scanning a QR code with a phone on the same Wi-Fi. The API key request endpoint is securely gated (`404 Not Found` when handoff is inactive) and saved to `/config/kefir/config.ini` in plain text (`[steamgriddb] api_key`).
+- **Per-Forwarder Launch Options:** Customize startup settings per forwarder, including user profile selection prompt, screenshot capture, video recording, address space mode (Automatic / 36-bit / 39-bit), and `svcDebug` flags.
+
+### Safe Homebrew NRO Customization
+
+Customize NRO metadata and icons directly from the Homebrew menu via **Customize Homebrew**:
+- **Atomic 4-Step Update & Memory Optimization:** Modifies NRO RomFS assets streaming 64 KiB chunks into a temporary file (`.sphaira.tmp`) without duplicating the NRO vector in RAM (reducing peak heap usage from 2x to 1x NRO size). Uses a 4-step atomic rename algorithm (`tmp -> bak -> path`) with pre-deletion of stale `.bak` files and on-disk size verification before touching original files, protecting against SD write failures.
+- **Asynchronous Worker:** Runs NRO updates asynchronously in a background progress box while synchronously releasing the editor UI.
+
+### Game Details & Header UI Layout
+
+Sphaira provides a DBI-style **Game Details** card and status bar header layout:
+- **Header Storage Bars:** Real-time NAND and SD card storage indicators with expanded bar widths and right-aligned status indicators (clock, battery, IP).
+- **Logical Stat Blocks:** Game details statistics are neatly organized into 4 logical blocks (Title ID & Version, Languages & Mods folder, Play time & Last played, Components/Tickets/Saves & Save quota). All values within each block align strictly to a single vertical column, with long translated labels automatically scrolling when exceeding 1/3 of the row width.
 
 ### Ftp (install)
 

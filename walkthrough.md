@@ -1,3 +1,207 @@
+# Результати: Fix Install Queue Storage Boundary & Add Screensaver Speed Graph (v0.13.429)
+
+## 1. Виправлення межі блоку пам'яті у хедері (Install Queue)
+- **Усунення перекриття елементів:** У `menu_base.cpp` параметр `storage_right` тепер строго обмежений межею `start_x - 10.f` (ліва точка блоку годинника, батареї та аплета `[A]`).
+- **Адаптивна колонка значень `value_col_w`:** При активній проекції пам'яті `m_storage_projection` (в черзі встановлення) резервування ширини колонки значень виконується за розширеним шаблоном `"+000000 WW / 000000 WW"` замість `"000000 WW"`.
+- **Бездоганна геометрія:** Рядки типу `"+26.5 GB / 120.4 GB"` більше не виходять за праворуч встановлену межу `storage_right` і не накладаються на значок `[A]` та годинник. Заголовок та ліві елементи адаптивно звужуються/скроляться завдяки розрахунку `m_status_left_x = label_x`.
+
+## 2. Графік швидкості інсталяції на скрінсейвері (Speed Graph)
+- **Розширення enum `SaverField` та структури `SaverInfo`:** Додано прапорець `SaverField_Graph = 1 << 10` та передачу масивів R/W історії швидкості (`read_history`, `write_history`) з `dbi_menu.cpp::ComputeSaverInfo()`.
+- **Векторне відмалювання графіку:** У `Screensaver::Draw()` (`screensaver.cpp`) додано відмалювання живого графіку R/W швидкості (червона лінія читання R, синя лінія запису W, вимірювання MiB/s та сітка).
+- **Підтримка в налаштуваннях та попередньому перегляді:** В `settings_menu.cpp` зареєстровано пункт `"Speed graph"_i18n`, а `SaverPreview` наповнюється тестовими даними історії для наочної демонстрації графіку.
+
+## 3. Версіонування
+- **Ітерація версії:** Піднято версію проекту в `sphaira/CMakeLists.txt` до `0.13.429`.
+
+---
+
+# Результати: Game Details Stat Alignment & Header Storage Bar Expansion (v0.13.428)
+
+## 1. Зсув та розширення хедера (NAND/SD Storage Bar)
+- **Зсув 3-го блоку хедера:** У `menu_base.cpp` параметр `bar_right` зміщено на 20 пікселів праворуч (з `1220.f` до `1240.f`). Індикатори годинника, батареї та IP-адреси акуратно розміщені біля правої межі екрана.
+- **Розширення смуг пам'яті (NAND/SD):** Ширину смуг пам'яті `bar_w` збільшено з `198.f` до `238.f` (+20px від здвинення 3-го блоку + 10% додаткового розширення).
+
+## 2. Логічне вирівнювання карточки гри (Game Details)
+- **4 логічні блоки вирівнювання:**
+  - **Блок 1 (Ліва колонка, верх):** Title ID, Version.
+  - **Блок 2 (Ліва колонка, низ):** Languages, Mods folder.
+  - **Блок 3 (Права колонка, верх):** Play time, Last played.
+  - **Блок 4 (Права колонка, низ):** Components, Tickets, Saves, Save quota.
+- **Вирівнювання значень:** Для кожного блоку вимірюється ширина найдовшого лейблу у поточному перекладі (`kStatSize = 18.f`), після чого значення всіх елементів цього блоку починаються з єдиної вертикальної лінії.
+- **Обмеження ширини лейблів та автопрокрутка:** Ширина колонки лейблів у блоці обмежена 1/3 ширини відповідного рядка (176.6px для лівої колонки, 141.6px для правої). Перекладені лейбли, що перевищують це значення, автоматично плавно прокручуються за допомогою `ScrollingText` (`m_stat_label_scrolls`).
+- **Синхронізація мов та папки модів:** Початок значення `Languages` (`m_language_scroll`) та `Mods folder` у Блоці 2 вирівняні по одній вертикальній лінії.
+
+## 3. Версіонування
+- **Ітерація версії:** Піднято версію проекту в `sphaira/CMakeLists.txt` до `0.13.428`.
+
+---
+
+# Результати: Audit Clean-up & Documentation Polish (v0.13.425)
+
+## 1. Завершення рекомендацій аудіту та оновлення документації
+
+- **Синхронізація другого колбеку у `themezer.cpp:1160`:** Забезпечено 100% уніфікований ідіом `if (!alive || !*alive)` для обох `curl::OnComplete` колбеків у `themezer.cpp` (`:998` та `:1160`).
+- **Документація зберігання ключа SteamGridDB:** Оновлено [README.md](README.md#L91), додавши явне застереження про зберігання API-ключа SteamGridDB у відкритому текстовому вигляді (`[steamgriddb] api_key`) у налаштуваннях `/config/kefir/config.ini`.
+- **Ітерація версії:** Піднято версію проекту в [sphaira/CMakeLists.txt](sphaira/CMakeLists.txt#L3) до `0.13.425`.
+- **Верифікація артефактів:** Проведено чисте повторне збирання бінарника в WSL (`/home/xhr/dev/sphaira`), перевірено відповідність часових міток `kefir-hub.nro` джерелам та прапорця `APP_VERSION="0.13.425"`.
+
+---
+
+# Результати: WeakPtr Lifetime Guard for Callbacks (v0.13.424)
+
+## 1. Захист життєвого циклу асинхронних колбеків у `Editor`, `IconGrid`, `homebrew::Menu` та `themezer::Menu`
+
+- У класи `Editor` (`forwarder_editor.cpp`), `IconGrid` (`steamgriddb_icon.cpp`), `homebrew::Menu` (`homebrew.cpp`) та `themezer::Menu` (`themezer.cpp`) узгоджено єдиний ідіом: `std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)}` та прапорець `*m_alive = false` у деструкторах.
+- У колбеки входів/асинхронних дій (`ChooseIconSource`, `SelectLocalIcon`, `SearchSteamGridDb` у `forwarder_editor.cpp`, `Activate` у `steamgriddb_icon.cpp`, `CustomizeHomebrew` у `homebrew.cpp` та `OnComplete` у `themezer.cpp`) передається `std::weak_ptr<bool> weak_alive = m_alive`.
+- У `homebrew.cpp:388` перевірку `weak_alive` винесено нижче обробки `R_FAILED(rc)`: статичний виклик `App::PushErrorBox` залишається доступним для користувача навіть якщо меню закрили під час перезапису NRO.
+- Перед створенням чи зверненням до `this` перевіряється стан: `const auto alive = weak_alive.lock(); if (!alive || !*alive) return;`.
+- Піднято версію проекту в [sphaira/CMakeLists.txt](sphaira/CMakeLists.txt#L3) до `0.13.424`.
+- Вилучено сторонню директорію `sphaira/graphify-out` і оновлено канонічний граф знань у корені `graphify-out/`.
+
+## 2. Результати верифікації
+- Проведено повне повторне перезбирання бінарника з `/home/xhr/dev/sphaira` у WSL (`[100%] Built target sphaira_nro`, exit code 0). Сгенерований NRO рапортує версію `0.13.424`.
+
+---
+
+# Результати: Forwarder Editor, SteamGridDB integration, Safe NRO update, Thread safety & API key gating (v0.13.423)
+
+## 1. Безпечний та потоковий запис NRO — `nro.cpp`
+
+- Замість виділення другого повного вектора NRO у RAM (що подвоювало пікове споживання пам'яті), новий NRO пишеться у тимчасовий файл `<path>.sphaira.tmp` потоково шматками по 64 КБ (RomFS) напряму з вихідного вектора `original`. Це знижує пікове використання RAM з 2×NRO до 1×NRO.
+- Вилучено мертву перевірку переповнення `updated_size >= asset_base`.
+- Додано `ON_SCOPE_EXIT` guard, який гарантовано видаляє `<path>.sphaira.tmp` при будь-якій помилці до завершення перейменування.
+- Впроваджено звірку розміру фактично записаного tmp-файла (`GetSize`) з `updated_size` перед торканням оригінального файла NRO.
+- Впроваджено 4-кроковий захищений алгоритм перейменування:
+  1. `DeleteFile(bak_path)` (результат ігнорується) для вилучення можливо застарілого `.bak` після попереднього аварійного виходу, щоб `RenameFile` не падав з помилкою `0x402`.
+  2. Запис у `<path>.sphaira.tmp`.
+  3. `RenameFile(path, bak_path)` (миттєве перейменування метаданих).
+  4. `RenameFile(tmp_path, path)`. При успіху видаляється `.bak`; при збої відновлюється `bak_path -> path`, а тимчасовий файл видаляється з деталізацією у лозі.
+
+## 2. Асинхронна кастомізація NRO — `homebrew.cpp`
+
+- Виклик `nro_update_info` винесено в `ProgressBox` фоновий потік.
+- `on_create` повертає `true` синхронно для негайного закриття віджета редактора.
+- Модифікація списку елементів `SortAndFindLastFile(true)` виконується виключно у `done`-колбеку на UI-потоці, усуваючи race conditions при рендерингу.
+
+## 3. Захист веб-маршруту `/apikey` — `web.cpp` & `steamgriddb_icon.cpp`
+
+- Зареєстровано `std::atomic_bool g_web_request_active`, який встановлюється у `true` тільки на час активності вікна `RequestApiKeyViaWeb`.
+- При спробі доступу до `/apikey` у неактивному стані сервер повертає `404 Not Found`.
+
+## 4. Потокобезпека налаштувань — `app_settings.cpp`, `steamgriddb_icon.cpp`, `owo.cpp`
+
+- `App::Install(OwoConfig& config)` на UI-потоці автоматично резолвить `config.options = config.options.value_or(GetForwarderOptions())` перед відправкою у воркер `owo.cpp`. `App::GetForwarderOptions()` більше не викликається з воркер-потоку.
+- `GetApiKey()` у `steamgriddb_icon.cpp` використовує RAM-кеш `g_api_key_cache` під `g_api_key_mutex` без доступу до `OptionString` у пол-циклі. `g_api_key.Set()` викликається тільки на UI-потоці у колбеку збереження.
+
+## 5. Скасування завантаження іконок — `steamgriddb_icon.cpp`
+
+- `DownloadIconBatch` викидає `Result_TransferCancelled` при `pbox->ShouldExit()`.
+- Колбеки завершення у `FetchIcons` та `IconGrid::Activate` перевіряють `R_FAILED(rc)` і пропускають повідомлення про помилку при скасуванні користувачем.
+
+## 6. Дрібні покращення
+
+- Вилучено паразитні `title::Init()` / `title::Exit()` з `WebShareFolder` та `WebShareStop`.
+- Використано `strnlen` для захисту `nacp.display_version` при передачі в редактор.
+
+---
+
+# Результати: USB protocol unification + screensaver + forwarder setting (v0.13.416)
+
+## 1. USB protocol unification — `yati/source/usb.cpp`
+
+Два окремі source: `DbiUsb` (DBI backend) та `Usb` (Awoo/TinFoil + GoldLeaf)
+обʼєднані в один `yati::source::Usb`. Код DBI-половини порядково перевірено
+проти видаленого `usb_dbi.cpp`: шестифазне рукостискання, `off/size` bounds
+check та exact-size response check — все збережено.
+
+Авторозпізнавання в `WaitForConnection()`:
+1. DBI probe (16 байт) — якщо хост відповідає, це DBI backend.
+2. Awoo/TinFoil — слухає TUL0/TUC0 magic від хоста.
+3. GoldLeaf — GL01/GLC1 handshake.
+
+Гонки «хост почав слати, поки наш probe в польоті» покриваються short-transfer
+detection через `Base::TransferOnce()`.
+
+Видалений мертвий код:
+- `usb_dbi.hpp/cpp` — увесь вміст тепер у `usb.hpp/cpp`.
+- `usb_menu.hpp/cpp` — `ui::menu::usb::Menu` не могло бути відкрито:
+  `app_display_options.cpp:45` пропускав кожен не-shortcut рядок.
+  Awoo/GoldLeaf-підтримка, яку він тримав, тепер вперше доступна через
+  `dbi::Menu`.
+- `MiscMenuEntry::IsInstall()` — жодного виклику.
+
+Точка входу: `dbi::Menu` (dbi_menu.cpp) створює `yati::source::Usb` замість
+`yati::source::DbiUsb`. USB link readout (state + speed) показується під час
+очікування конекту.
+
+## 2. Screensaver (Minus screen blank)
+
+Кнопка Minus під час активної черги інсталяції вмикає один з трьох режимів:
+- **Lower brightness** — знижує яскравість панелі до настроєного мінімуму (1-50%).
+- **Turn off backlight** — повністю вимикає підсвітку.
+- **Screensaver** — малює дрейфуючу зведену інформацію на чорному фоні.
+
+Новий код:
+- `screensaver.hpp` — `Screensaver` (member у `dbi::Menu`), `SaverPreview`
+  (повноекранний preview з Settings), `SaverInfo` (дані від черги),
+  `SaverField` enum (бітова маска вибраних полів).
+- `screensaver.cpp` — реалізація.
+
+Поля screensaver (кожне вмикається окремо): Clock, Status, Package counter,
+Current file, Progress bar, Average speed, Time remaining, Elapsed time,
+Battery, Errors.
+
+OLED mode: порожня частина прогрес-бару лишається чорною замість заповнення
+сірим, щоб зменшити вигоряння.
+
+Коректність:
+- `WantsChrome()` — load-bearing: App малює chrome окремо (app.cpp:849), після
+  `Draw` меню.
+- Яскравість зберігається/відновлюється в `Start()`/`Stop()` з парним `lblExit`.
+- Деструктор покриває pop.
+- `Draw` зупиняє blank, коли меню втрачає footer (діалог не може бути піднятий
+  за темною панеллю).
+- `ComputeSaverInfo()` тримає `m_mutex`, screensaver-гілка сидить вище будь-якого
+  іншого lock у `Draw` — жодної реентрабельності.
+
+Настройки (Settings → Install → «Screen off (Minus)»): `m_blank_mode`,
+`m_blank_brightness`, `m_saver_oled`, `m_saver_fields` — всі зберігаються в ini
+через `app.cpp`.
+
+## 3. Forwarder address space — глобальна настройка
+
+Per-forwarder `SidebarEntryArray` «Address Space» у формі `ForwarderForm`
+видалено. Замість нього — глобальна настройка `m_forwarder_address_space` в
+`app.hpp` з трьома значеннями: Automatic (= 36-bit), 36-bit, 39-bit.
+Читається функцією `resolve_address_space()` у `owo.cpp` при генерації NCA
+форвардера. Параметр `nro_path` зарезервований під майбутній список homebrew,
+що потребують ширшого простору.
+
+UI: Settings → Install → «Forwarder address space».
+
+## 4. Виправлення від рев'юера
+
+- `en.json:235-238` — додано відсутні ключі «Forwarder address space» та
+  його description, «36-bit», «39-bit». Без них `translate.py` ніколи не
+  переклав би ці рядки в жодну мову.
+- `README.md:75-85` — USB-секцію переписано: три протоколи, auto-detect,
+  stream-mode refusal, Minus screen blank. Прибрано посилання на
+  `tools/usb_install_pc.py` (якого немає в репо) та на меню, що більше не існує.
+- `app.hpp:439-441` — `m_forwarder_address_space` переміщено вище коментаря
+  «free space kept back on each target», який описує `m_install_reserve_mb`.
+- **§4.1**: `app_settings.cpp:194-198` — додано маркер `// ponytail:` до коментаря про «Automatic» vs «36-bit», щоб позначити відкладену логіку пошуку `nro_path`.
+- **§4.2**: `app.hpp`, `app_settings.cpp`, `settings_menu.cpp` — додано аксесори `App::GetForwarderAddressSpace()` та `App::SetForwarderAddressSpace(long mode)` з обмеженням діапазону (clamping 0..2) для безпечної обробки ручного редагування INI. Прибрано прямі звернення до `m_forwarder_address_space`.
+- **§4.3**: `dbi_menu.hpp`, `dbi_menu.cpp` — винесено `poll_ts` та `link_buf` зі статиків функції `Draw` у члени класу `m_usb_poll_ts` та `m_usb_link_buf`.
+- **§4.4**: `screensaver.cpp` — додано логування (`log_write`) змін системної яскравості та авто-яскравості під час активації та деактивації Screensaver.
+
+## Збірка
+
+`cmake --build --preset ReleaseWithInstall` у WSL — `[100%] Built target
+sphaira_nro`, exit 0. Нових warnings від цього diff немає. Перевірка на
+залізі — HW-SMOKE-416, поки не проведена.
+
+---
+
 # Результати: аудит і переписування MTP Host (v0.13.364 — v0.13.365)
 
 ## 1. `sphaira/source/utils/devoptab_mtp.cpp` — переписано

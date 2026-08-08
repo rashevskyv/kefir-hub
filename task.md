@@ -3,7 +3,68 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.366–371 (MTP Host: стабілізація за логами з консолі)
+## Поточний delivery: v0.13.429 (Install Queue Storage boundary fix & Screensaver speed graph)
+
+- [x] HEADER-STORAGE-BOUNDARY-FIX-429 — Виправлено позиціонування `storage_right` (`start_x - 10.f`) та адаптивний розрахунок `value_col_w` у режимі `m_storage_projection` для запобігання перекриття тексту об'єму накопичувачів з годинником та значком аплета `[A]`.
+- [x] SCREENSAVER-SPEED-GRAPH-429 — Додано прапорець `SaverField_Graph` та передачу R/W історії графіку швидкості в `Screensaver::Draw()`, а також опцію в налаштуваннях та попередньому перегляді.
+- [x] CMAKELISTS-VERSION-BUMP-429 — Піднято версію в `sphaira/CMakeLists.txt` до `0.13.429`.
+
+## Попередній delivery: v0.13.428 (Game details stat alignment & header NAND/SD expand)
+
+- [x] SHIFT-HEADER-3RD-BLOCK-428 — Зсунуто 3-й блок хедера (годинник, індикатор батареї, IP) вправо на 20px (`bar_right = 1240.f`).
+- [x] EXPAND-STORAGE-BARS-428 — Збільшено ширину 2-го блоку (NAND/SD storage bars) на 20px від зсуву + 10% розширення (`bar_w = 238.f`).
+- [x] STAT-BLOCK-ALIGNMENT-428 — Реалізовано вирівнювання карточки гри (Game Details) за 4 логічними блоками (Title ID/Version, Languages/Mods, Play time/Last played, Components/Tickets/Saves/Quota) з автопрокручуванням лейблів `ScrollingText`, якщо вони перевищують 1/3 ширини рядка.
+- [x] CMAKELISTS-VERSION-BUMP-428 — Піднято версію в `sphaira/CMakeLists.txt` до `0.13.428`.
+
+## Попередній delivery: v0.13.425 (Audit Clean-up & Verification Artifact Alignment)
+
+- [x] UNIFY-THEMEZER-GUARD-425 — Синхронізовано `if (!alive || !*alive)` перевірку у другому `curl::OnComplete` колбеку `themezer.cpp:1160`.
+- [x] README-STEAMGRIDDB-KEY-NOTE-425 — У [README.md](README.md#L91) додано примітку про відкрите текстове зберігання API-ключа SteamGridDB у `/config/kefir/config.ini`.
+- [x] CMAKELISTS-VERSION-BUMP-425 — Піднято версію в `sphaira/CMakeLists.txt` до `0.13.425`.
+- [x] VERIFY-NRO-BUILD-425 — Виконано чистий перезбір у WSL (`/home/xhr/dev/sphaira`) та перевірено актуальність мітки часу бінарника `kefir-hub.nro` і `compile_commands.json`.
+
+## Попередній delivery: v0.13.424 (WeakPtr Lifetime Guard for Callbacks)
+
+- [x] CALLBACK-WEAKPTR-GUARD-424 — Додано `std::weak_ptr<bool>` захист життєвого циклу (`m_alive`) у `Editor` (`forwarder_editor.cpp`) та `IconGrid` (`steamgriddb_icon.cpp`) для усунення ризику виклику асинхронних колбеків (вибір локальної іконки, завантаження іконок SteamGridDB, запит API ключа) після закриття або видалення віджета.
+- [x] CMAKELISTS-VERSION-BUMP-424 — Оновлено версію в `sphaira/CMakeLists.txt` до `0.13.424` для синхронізації з бінарником NRO та документацією.
+- [x] CHOOSE-ICON-SOURCE-GUARD-424 — Додано `weak_alive` гард для колбеку `OptionBox` у `ChooseIconSource()` (`forwarder_editor.cpp:264`).
+- [x] HOMEBREW-MENU-GUARD-424 — Додано token `m_alive` та `weak_alive` гард до `homebrew::Menu` (`homebrew.cpp:373,383`) у `CustomizeHomebrew()`.
+- [x] CLEANUP-GRAPHIFY-DIR-424 — Вилучено побічну папочку `sphaira/graphify-out`, оновлено граф знань у коріння `graphify-out/`.
+
+## Попередній delivery: v0.13.423 (Forwarder Editor, SteamGridDB integration, Safe NRO update, Thread safety & API key gating)
+
+- [x] SAFE-NRO-UPDATE-422 — 4-кроковий безпечний алгоритм оновлення NRO (`nro.cpp`): потоковий запис у `<path>.sphaira.tmp` без 2x RAM узагалі, пре-очищення застарілого `.bak`, перейменування `path -> bak -> path` з відновленням бэкапу при помилці.
+- [x] ASYNC-NRO-UPDATE-422 — виклик `nro_update_info` винесено в `ProgressBox` фоновий потік (`homebrew.cpp`). `on_create` вертає `true` синхронно для закриття редактора, а `SortAndFindLastFile` працює у done-колбеку на UI-потоці.
+- [x] APIKEY-GATE-422 — ендпоінт `/apikey` у `web.cpp` захищено прапорцем `g_web_request_active`. Повертає `404 Not Found`, коли екран очікування ключа не активний.
+- [x] THREAD-SAFE-OPTIONS-422 — розв'язання `config.options` винесено у воронку `App::Install` на UI-потоці, усунувши виклик `OptionBase` з воркера `owo.cpp`. Ключ SteamGridDB кешується у RAM під м'ютексом, а `OptionString::Set` викликається виключно з UI-потоку.
+- [x] STEAMGRIDDB-CANCEL-422 — обробка `Result_TransferCancelled` у `DownloadIconBatch` та перевірка `R_FAILED(rc)` у `IconGrid::Activate` для усунення помилкових нотифікацій про брак іконок при скасуванні.
+- [x] CLEANUP-WEB-TITLE-422 — вилучено паразитні `title::Init()` / `title::Exit()` та `g_title_initialized` з `web.cpp`.
+- [x] NACP-VERSION-BOUNDS-422 — використано `strnlen` для безпечної термінації `nacp.display_version` при передачі у редактор форвардера.
+
+## Попередній delivery: v0.13.416 (USB protocol unification + screensaver + forwarder setting)
+
+- [x] USB-UNIFY-416 — обʼєднання `yati::source::DbiUsb` та `yati::source::Usb`
+  (Awoo/GoldLeaf) в один `yati::source::Usb` з авторозпізнаванням протоколу
+  (DBI → Awoo/TinFoil → GoldLeaf). Видалено мертвий код: `usb_dbi.hpp/cpp`,
+  `usb_menu.hpp/cpp`. `dbi::Menu` тепер єдина точка входу для всіх USB-інсталяцій.
+- [x] SCREENSAVER-416 — кнопка Minus під час черги інсталяції: три режими
+  (Lower brightness / Turn off backlight / Screensaver). Нові файли:
+  `screensaver.hpp/cpp`. Настроювані поля screensaver (годинник, прогрес, ETA,
+  батарея тощо), OLED mode, Preview. Коректне збереження/відновлення яскравості,
+  прокидання натиском будь-якої кнопки.
+- [x] FORWARDER-ADDR-SPACE-416 — per-forwarder вибір address space замінено
+  глобальною настройкою `m_forwarder_address_space` (Automatic/36-bit/39-bit)
+  у Settings → Install. `resolve_address_space()` в `owo.cpp` використовує
+  глобальне значення.
+- [x] REVIEWER-FIXES-416 — виправлення від рев'юера: відсутні ключі en.json
+  (Forwarder address space, 36-bit, 39-bit), оновлення README USB секції,
+  коментар `m_forwarder_address_space` у `app.hpp`.
+- [x] BUILD-416 — збірка `cmake --build --preset ReleaseWithInstall`, exit 0,
+  нових warnings немає.
+- [ ] HW-SMOKE-416 — (a) dbibackend.py; (b) ns-usbloader TinFoil; (c) ns-usbloader
+  GoldLeaf v0.10+; (d) forced re-attach від бута; (e) Minus у 3 blank modes.
+
+## Попередній delivery: v0.13.366–371 (MTP Host: стабілізація за логами з консолі)
 
 - [x] MTP-SHARED-MOUNT-366 — один глобальний mount (App::SetMountedFolder), спільний для FTP/HTTP/MTP.
 - [x] FIX-DEVOPTAB-FIXDKPBUG-367 — краш при закритті файлового браузера: рерайт
