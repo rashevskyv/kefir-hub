@@ -5,11 +5,13 @@
 #include "i18n.hpp"
 #include "image.hpp"
 #include "minizip_helper.hpp"
+#include "swkbd.hpp"
 #include "threaded_file_transfer.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/theme_creator.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/sidebar.hpp"
 #include "web.hpp"
@@ -428,7 +430,7 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
 
         gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, 16.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%lld", index + 1);
+            "%ld", static_cast<long>(index + 1));
 
         const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         const auto text_x = pos.x + gutter_w;
