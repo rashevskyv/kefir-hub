@@ -17,6 +17,8 @@ struct UsbDs final : Base {
     Result GetSpeed(UsbDeviceSpeed* out, u16* max_packet_size);
 
 private:
+    // drops off the bus and comes back, so the host re-enumerates us.
+    void Reattach();
     Result WaitUntilConfigured(u64 timeout);
     Event *GetCompletionEvent(UsbSessionEndpoint ep) override;
     Result WaitTransferCompletion(UsbSessionEndpoint ep, u64 timeout) override;

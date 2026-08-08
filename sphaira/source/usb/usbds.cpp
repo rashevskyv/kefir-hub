@@ -3,6 +3,7 @@
 #include "usb/usbds.hpp"
 #include "log.hpp"
 #include "defines.hpp"
+#include <algorithm>
 #include <ranges>
 #include <cstring>
 
@@ -44,6 +45,14 @@ constexpr u16 DEVICE_SPEED[] = {
     [UsbDeviceSpeed_Super] = 0x400,
 };
 
+// how long the device stays detached during a forced re-attach. The host has
+// to actually notice the disconnect (windows debounces port changes for
+// ~100ms) or it keeps the stale enumeration and never re-enumerates us.
+constexpr u64 DETACH_SETTLE_NS = 1e+9; // 1 second.
+
+// how long to sit on a silent bus before forcing another attach.
+constexpr u64 REATTACH_INTERVAL_NS = 1e+9 * 3; // 3 seconds.
+
 } // namespace
 
 UsbDs::~UsbDs() {
@@ -53,6 +62,14 @@ UsbDs::~UsbDs() {
 Result UsbDs::Init() {
     log_write("doing USB init\n");
     R_TRY(usbDsInitialize());
+
+    // whoever had the port before us (a previous install session, MTP, another
+    // homebrew, or the sysmodule itself after booting with the cable in) may
+    // have left the device attached. usbDsEnable() on an already attached
+    // device is not a transition, so the host would never re-enumerate us --
+    // start from a known detached state instead. Reattach() below handles the
+    // case where this is still not enough for the host to notice.
+    usbDsDisable();
 
     static SetSysSerialNumber serial_number{};
     R_TRY(setsysInitialize());
@@ -195,8 +212,31 @@ Result UsbDs::Init() {
     R_TRY(usbDsInterface_EnableInterface(m_interface));
     R_TRY(usbDsEnable());
 
-    log_write("success USB init\n");
+    // the state right after enabling says whether the console actually went
+    // onto the bus. Detached here means the host never saw the attach, which
+    // is the whole "the pc does not see the console" class of report.
+    UsbState state{UsbState_Detached};
+    usbDsGetState(&state);
+    log_write("success USB init (state: %s)\n", GetUsbDsStateStr(state));
     R_SUCCEED();
+}
+
+// the host only starts enumerating on a fresh attach. If the cable was already
+// plugged in when we enabled the device -- a previous session closed without
+// the cable being pulled, MTP handing the port back, the console booted while
+// connected -- the attach can go unnoticed and the host keeps its stale view of
+// the port: it never talks to us and we sit in Powered/Default forever. That is
+// what "unplug the cable and plug it back in" fixes by hand; this does the same
+// electrically, by dropping the pullup for long enough for the host to see it.
+void UsbDs::Reattach() {
+    usbDsDisable();
+    svcSleepThread(DETACH_SETTLE_NS);
+    // no-op on [11.0.0+], where the device level Enable covers the interface.
+    if (m_interface) {
+        usbDsInterface_EnableInterface(m_interface);
+    }
+    const auto rc = usbDsEnable();
+    log_write("[USBDS] forced re-attach: 0x%X\n", rc);
 }
 
 // the below code is taken from libnx, with the addition of a uevent to cancel.
@@ -225,8 +265,12 @@ Result UsbDs::WaitUntilConfigured(u64 timeout) {
             timeout = remaining > 0 ? armTicksToNs(remaining) : 0;
         }
 
+        // never block for longer than the re-attach interval, so that a bus
+        // the host is ignoring gets kicked instead of hanging here forever.
+        const auto wait = std::min<u64>(timeout, REATTACH_INTERVAL_NS);
+
         s32 idx;
-        rc = waitObjects(&idx, waiters.data(), waiters.size(), timeout);
+        rc = waitObjects(&idx, waiters.data(), waiters.size(), wait);
         eventClear(usbDsGetStateChangeEvent());
 
         // check if we got one of the cancel events.
@@ -238,7 +282,15 @@ Result UsbDs::WaitUntilConfigured(u64 timeout) {
             }
         }
 
+        // nothing at all happened on the bus for a full interval.
+        const bool silent = wait == REATTACH_INTERVAL_NS && rc == KERNELRESULT(TimedOut);
+
         rc = usbDsGetState(&state);
+
+        if (R_SUCCEEDED(rc) && silent && state != UsbState_Configured) {
+            log_write("[USBDS] host has not enumerated us (state: %s)\n", GetUsbDsStateStr(state));
+            Reattach();
+        }
     } while (R_SUCCEEDED(rc) && state != UsbState_Configured && timeout > 0);
 
     if (R_SUCCEEDED(rc) && state != UsbState_Configured && timeout == 0)

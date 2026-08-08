@@ -42,6 +42,13 @@ struct Base {
         return TransferAll(read, data, size, m_transfer_timeout);
     }
 
+    // one transfer, no accumulation: out_transferred is whatever the host sent
+    // in a single urb, which may be less than size. Protocol detection needs
+    // this -- a probe reply and an awoo file list header are told apart by
+    // which one turns up, and TransferAll() would splice the two together
+    // while it waited for the count it was asked for.
+    Result TransferOnce(bool read, void *data, u32 size, u32 *out_transferred, u64 timeout);
+
     // returns the cancel event.
     auto GetCancelEvent() {
         return &m_uevent;

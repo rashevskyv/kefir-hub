@@ -7,7 +7,6 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/ghdl.hpp"
-#include "ui/menus/usb_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/ftp_menu.hpp"
 #include "ui/menus/mtp_menu.hpp"
@@ -76,11 +75,6 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "NOTE: This feature does not always work, use at your own risk. "\
         "If you encounter an issue, do not open an issue, it will not be fixed." },
 
-    { .name = "USB", .title = "USB Install", .func = MiscMenuFuncGenerator<ui::menu::usb::Menu>, .flag = MiscMenuFlag_Install, .info =
-        "Install apps via USB.\n\n"\
-        "A USB client is required on PC, such as ns-usbloader and fluffy.\n\n"\
-        "NOTE: This feature does not always work, use at your own risk. "\
-        "If you encounter an issue, do not open an issue, it will not be fixed." },
 #endif
     { .name = "GameCard", .title = "GameCard", .func = MiscMenuFuncGenerator<ui::menu::gc::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
         "View info on the inserted Game Card (GC). "\

@@ -13,6 +13,7 @@
 #include "ui/option_box.hpp"
 #include "ui/sidebar.hpp"
 #include "swkbd.hpp"
+#include "usb/usbds.hpp"
 #include "utils/devoptab_curl_thread.hpp"
 #include "utils/utils.hpp"
 #include "yati/source/file.hpp"
@@ -157,6 +158,22 @@ void DrawStatRow(NVGcontext* vg, NVGcolor info_col, float x0, float y, float siz
     }
 }
 
+// "how long until those bytes are written at that rate". Empty when either
+// number cannot answer the question.
+auto FormatEta(s64 bytes_left, s64 bps) -> std::string {
+    if (bps <= 0 || bytes_left <= 0) {
+        return {};
+    }
+    const auto seconds_left = static_cast<size_t>(bytes_left / bps);
+    char buf[64]{};
+    if (seconds_left >= 3600) {
+        std::snprintf(buf, sizeof(buf), "%zuh %zum", seconds_left / 3600, seconds_left % 3600 / 60);
+    } else {
+        std::snprintf(buf, sizeof(buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
+    }
+    return buf;
+}
+
 void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected) {
     gfx::drawCheckbox(vg, theme, row.x + 12.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, selected);
 }
@@ -194,7 +211,7 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
         usbHsFsExit();
     }
 
-    m_usb_source = std::make_unique<yati::source::DbiUsb>(TRANSFER_TIMEOUT);
+    m_usb_source = std::make_unique<yati::source::Usb>(TRANSFER_TIMEOUT);
     if (R_FAILED(m_usb_source->GetOpenResult())) {
         m_state = State::Failed;
         m_actions_dirty = true;
@@ -335,6 +352,14 @@ void Menu::UpdateActions() {
     } else {
         SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
     }
+
+    // only while the queue still has something to do: once it has ended there
+    // is nothing left to walk away from.
+    if (state != State::Summary && state != State::Cancelled && state != State::Failed) {
+        SetAction(Button::SELECT, Action{"Screen off"_i18n, [this]() {
+            m_screensaver.Start();
+        }});
+    }
     m_actions_dirty = false;
 }
 
@@ -348,6 +373,22 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             prompt = m_prompt_data;
         }
     }
+
+    if (m_screensaver.IsActive()) {
+        // a question needs an answer, so it wins over a blanked panel: the
+        // option box would otherwise be raised behind a screen nobody can read.
+        if (prompt) {
+            m_screensaver.Stop();
+        } else {
+            // the press that wakes the panel is spent on waking it -- waking
+            // with B must not also cancel the queue behind it.
+            if (m_screensaver.WantsWake(controller, touch)) {
+                m_screensaver.Stop();
+            }
+            return;
+        }
+    }
+
     if (prompt) {
         int expected = -1;
         if (prompt->choice.compare_exchange_strong(expected, -2)) {
@@ -409,7 +450,83 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 }
 
+auto Menu::AvgWriteBps() const -> s64 {
+    // caller holds m_mutex.
+    if (!m_history_count) {
+        return 0;
+    }
+    s64 sum = 0;
+    for (size_t i = 0; i < m_history_count; i++) {
+        const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
+        sum += m_write_history[idx];
+    }
+    return sum / static_cast<s64>(m_history_count);
+}
+
+auto Menu::OverallDone() const -> s64 {
+    // caller holds m_mutex. The bytes of the packages already off the queue,
+    // plus what the one in flight has written so far.
+    const s64 current_plan = m_current_package < m_queue.size() ? PlanSize(m_queue[m_current_package]) : 0;
+    return m_plan_done_bytes + std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, current_plan);
+}
+
+auto Menu::ComputeSaverInfo() -> SaverInfo {
+    SCOPED_MUTEX(&m_mutex);
+
+    SaverInfo info{};
+    switch (m_state.load()) {
+        case State::WaitingForUsb:
+        case State::WaitingForList: info.status = "Waiting for PC"_i18n; break;
+        case State::Analysing:      info.status = "Analysing"_i18n; break;
+        case State::ReviewQueue:    info.status = "Ready to install"_i18n; break;
+        case State::Installing:     info.status = "Installing"_i18n; break;
+        case State::Cancelled:      info.status = "Cancelled"_i18n; break;
+        case State::Failed:         info.status = "Failed"_i18n; break;
+        case State::Summary:
+            info.status = m_session_failed ? "Finished with errors"_i18n : "Finished"_i18n;
+            break;
+    }
+
+    info.file = m_current_title;
+    if (!m_current_transfer.empty()) {
+        info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
+    }
+    info.package = std::min(m_current_package + 1, m_queue.size());
+    info.package_count = m_queue.size();
+    info.installed = m_stats.installed;
+    info.failed = m_stats.failed;
+
+    const auto bps = AvgWriteBps();
+    const auto done = OverallDone();
+    info.ratio = m_plan_total_bytes > 0
+        ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+    info.speed_mib = static_cast<double>(bps) / (1024.0 * 1024.0);
+    if (m_history_count >= 4) {
+        info.eta = FormatEta(m_plan_total_bytes - done, bps);
+    }
+    info.elapsed_ns = m_stats.elapsed_ns ? m_stats.elapsed_ns : m_session_timestamp.GetNs();
+    info.has_graph = (m_history_count >= 2);
+    info.history_count = m_history_count;
+    info.history_index = m_history_index;
+    info.read_history = m_read_history;
+    info.write_history = m_write_history;
+
+    return info;
+}
+
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
+    // anything stacked above this menu takes Update() with it, so the blank
+    // would have no way left to wake: bring the panel back rather than hide a
+    // dialog nobody can read behind it.
+    if (m_screensaver.IsActive() && !App::OwnsFooter(this)) {
+        m_screensaver.Stop();
+    }
+
+    if (m_screensaver.OwnsScreen()) {
+        m_screensaver.Draw(vg, theme, ComputeSaverInfo());
+        return;
+    }
+
     MenuBase::Draw(vg, theme);
     const auto state = m_state.load();
 
@@ -417,15 +534,42 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto text = state == State::WaitingForUsb
             ? "Waiting for PC connection. Connect the USB cable and make sure the console is detected."_i18n
             : state == State::WaitingForList
-                ? "PC connected. Select packages and press Start in DBI Backend."_i18n
+                ? "PC connected. Now pick the packages in your PC app and start the transfer.\n\nDBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy are all understood."_i18n
                 : "Analysing packages (nothing is being installed)..."_i18n;
         gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, SCREEN_HEIGHT / 2.f - 30.f, 30.f, 1000.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        // the raw usb link state, polled once a second. "Detached" means the
+        // console is not on the bus at all -- the host never saw us attach, so
+        // no pc side app can help; anything past it means we are attached and
+        // the problem is further up. Worth seeing while waiting, because the
+        // two look identical from here otherwise.
+        if (state == State::WaitingForUsb) {
+            if (!m_usb_link_buf[0] || m_usb_poll_ts.GetSeconds() >= 1) {
+                m_usb_poll_ts.Update();
+
+                UsbState usb_state{UsbState_Detached};
+                usbDsGetState(&usb_state);
+
+                UsbDeviceSpeed speed{(UsbDeviceSpeed)UsbDeviceSpeed_None};
+                usbDsGetSpeed(&speed);
+
+                std::snprintf(m_usb_link_buf, sizeof(m_usb_link_buf), "USB: %s | %s",
+                    i18n::get(GetUsbDsStateStr(usb_state)).c_str(), i18n::get(GetUsbDsSpeedStr(speed)).c_str());
+            }
+
+            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f + 90.f, 20.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", m_usb_link_buf);
+        }
         return;
     }
     if (state == State::Failed) {
-        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 28.f,
-            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_ERROR), "DBI session failed"_i18n.c_str());
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f - 40.f, 28.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_ERROR), "USB session failed"_i18n.c_str());
+        if (!m_fail_reason.empty()) {
+            gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, SCREEN_HEIGHT / 2.f, 22.f, 1000.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), m_fail_reason.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
+        }
         return;
     }
 
@@ -545,37 +689,17 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     // history window (~48 s, near a minute), not the instantaneous rate. The
     // moment-to-moment R/W speeds are shown per line on the graph below, so the
     // header stays a single stable "how fast is this going overall" number.
-    s64 avg_write_bps = 0;
-    if (m_history_count) {
-        s64 sum = 0;
-        for (size_t i = 0; i < m_history_count; i++) {
-            const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
-            sum += m_write_history[idx];
-        }
-        avg_write_bps = sum / static_cast<s64>(m_history_count);
-    }
+    const s64 avg_write_bps = AvgWriteBps();
     const double speed_mib = static_cast<double>(avg_write_bps) / (1024.0 * 1024.0);
 
-    // whole-run progress: the bytes of the packages already off the queue, plus
-    // what the one in flight has written so far.
-    const s64 current_plan = m_current_package < m_queue.size() ? PlanSize(m_queue[m_current_package]) : 0;
-    const s64 overall_done = m_plan_done_bytes
-        + std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, current_plan);
+    const s64 overall_done = OverallDone();
     const double overall_ratio = m_plan_total_bytes > 0
         ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
 
     const auto format_eta = [&](s64 bytes_left) -> std::string {
-        if (m_history_count < 4 || avg_write_bps <= 0 || bytes_left <= 0) {
-            return {};
-        }
-        const auto seconds_left = static_cast<size_t>(bytes_left / avg_write_bps);
-        char buf[64]{};
-        if (seconds_left >= 3600) {
-            std::snprintf(buf, sizeof(buf), "%zuh %zum", seconds_left / 3600, seconds_left % 3600 / 60);
-        } else {
-            std::snprintf(buf, sizeof(buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
-        }
-        return buf;
+        // under four samples the rate is still settling and the figure jumps
+        // around by minutes between frames.
+        return m_history_count < 4 ? std::string{} : FormatEta(bytes_left, avg_write_bps);
     };
     const auto file_eta = format_eta(m_progress_size - m_progress_offset);
     const auto total_eta = format_eta(m_plan_total_bytes - overall_done);
@@ -915,6 +1039,22 @@ void Menu::ThreadFunction() {
         }
         if (R_FAILED(list_rc)) continue;
 
+        AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
+
+        // ponytail: stream hosts are refused rather than served. The queue
+        // analyses every package before it installs any of them, which needs
+        // random access, and a stream host answers ranges in list order only.
+        // Serving them would mean a second, unanalysed install path -- add it
+        // if a host that sets the flag ever turns up (ns-usbloader does not).
+        if (m_usb_source->IsStream()) {
+            m_fail_reason = "This PC app is in stream mode, which the install queue cannot review. Turn stream mode off and try again."_i18n;
+            AddLog(m_fail_reason, LogKind::Error);
+            m_session_failed = true;
+            m_state = State::Failed;
+            m_actions_dirty = true;
+            return;
+        }
+
         m_state = State::Analysing;
         m_actions_dirty = true;
         for (const auto& name : names) {
@@ -1042,7 +1182,7 @@ void Menu::ThreadFunction() {
                     if (usb::IsLinkError(install_rc)) {
                         AddLog("The USB connection dropped and could not be restored. Check the cable and the port, then start the queue again."_i18n, LogKind::Error);
                     }
-                    AddLog("DBI session failed; remaining packages were skipped."_i18n, LogKind::Error);
+                    AddLog("USB session failed; remaining packages were skipped."_i18n, LogKind::Error);
                     break;
                 }
             }
@@ -1094,8 +1234,21 @@ Result Menu::ReestablishUsbLink() {
     // in lockstep before the next file range request goes out. Anything the
     // host left in the pipe before the drop trips the magic check here, which
     // ends the session, rather than silently shifting a package's bytes.
+    //
+    // Each call is one detection round of a couple of seconds, so keep asking
+    // until the reconnect window is spent: the host may still be restarting
+    // its own command loop when the first round goes out.
     std::vector<std::string> names;
-    R_TRY(m_usb_source->WaitForConnection(RECONNECT_TIMEOUT, names));
+    TimeStamp ts;
+    Result rc;
+    do {
+        rc = m_usb_source->WaitForConnection(RECONNECT_TIMEOUT, names);
+        if (rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
+            break;
+        }
+    } while (R_FAILED(rc) && ts.GetNs() < RECONNECT_TIMEOUT);
+
+    R_TRY(rc);
     R_SUCCEED();
 }
 

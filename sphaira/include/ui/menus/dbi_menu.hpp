@@ -3,7 +3,8 @@
 #include "ui/install_progress.hpp"
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
-#include "yati/source/usb_dbi.hpp"
+#include "ui/screensaver.hpp"
+#include "yati/source/usb.hpp"
 #include "yati/yati.hpp"
 #include <array>
 
@@ -86,6 +87,8 @@ struct Menu final : MenuBase, InstallProgress {
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "DBI"; }
+    // the screensaver page owns the whole panel, header and hint row included.
+    auto WantsChrome() const -> bool override { return !m_screensaver.OwnsScreen(); }
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void ThreadFunction();
@@ -130,7 +133,15 @@ private:
     static auto TargetName(InstallTarget target) -> std::string;
     static auto FormatDuration(u64 ns) -> std::string;
 
-    std::unique_ptr<yati::source::DbiUsb> m_usb_source{};
+    // the two running totals the header line and the screensaver both read off.
+    // Call with the mutex.
+    auto AvgWriteBps() const -> s64;
+    auto OverallDone() const -> s64;
+    // takes the mutex itself: the screensaver draws instead of the queue, not
+    // inside it.
+    auto ComputeSaverInfo() -> SaverInfo;
+
+    std::unique_ptr<yati::source::Usb> m_usb_source{};
     fs::Fs* m_local_fs{};
     std::vector<fs::FsPath> m_local_paths{};
     std::vector<s64> m_local_source_sizes{};
@@ -166,6 +177,9 @@ private:
     s64 m_log_index{};
     s64 m_log_last_seen_size{};
     bool m_session_failed{};
+    // why the session ended on the Failed screen, drawn under its title. Empty
+    // when the failure has no explanation worth showing.
+    std::string m_fail_reason{};
     std::string m_current_title{};
     std::string m_current_transfer{};
     s64 m_progress_offset{};
@@ -209,6 +223,12 @@ private:
     s64 m_plan_total_bytes{};
     s64 m_plan_done_bytes{};
     s64 m_package_write_start{};
+
+    // Minus blanks the panel while a long queue runs; see ui/screensaver.hpp.
+    Screensaver m_screensaver{};
+
+    TimeStamp m_usb_poll_ts{};
+    char m_usb_link_buf[128]{};
 
     long m_session_skip_if_already_installed{1};
     long m_session_install_location{4};

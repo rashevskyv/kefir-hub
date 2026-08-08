@@ -195,10 +195,13 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float start_y   = 70;
     const float font_size = 22;
     const float spacing   = 30;
-    const float bar_right = 1220;
-    const float bar_w     = 172.f;
-    const float bar_h     = 8.f;
+    const float bar_right = 1240.f;
+    const float bar_w     = 262.f;
+    const float bar_h     = 10.f;
     const float small_font = 15.f;
+    // the storage rows have head room above and below, so they run larger than
+    // the ip line they share the block with.
+    const float storage_font = small_font * 1.27f;
     const float y_ip      = 48.f;
 
     // Align clock + battery at the rightmost position (bar_right = 1220)
@@ -249,9 +252,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     #undef draw
 
-    // The storage bars should be shifted to the left of the clock/battery.
-    // We add a gap to start_x (which currently sits to the left of the leftmost element in Row 4).
-    const float storage_right = start_x - 10.f;
+    // The storage rows sit on their own band to the left of the clock/battery/applet block.
+    // Ensure the right edge never encroaches on the left edge of that block (start_x).
+    const float storage_right = std::min(start_x - 10.f, bar_right);
 
     // ---- Row 1 (y=48): access point + IP address ----
     {
@@ -277,9 +280,34 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         }
     }
 
-    // ---- Helper: compute the left-aligned x of a storage row's label ----
-    // storage_right-aligned; label on left of bar
-    const float bar_x = storage_right - bar_w;
+    // ---- Storage row layout: NAND ▓▓▓▓ 4.5 GB ----
+    // Both outer edges are fixed and only the size text inside the reserved
+    // column changes, so nothing shifts as the cursor moves between titles.
+    // The column is sized from six digits plus a space and the two widest
+    // unit letters, measured in the current font so it scales with language.
+    // In projection mode ("+focus / total"), reserve space for both values.
+    const float value_col_w = [&]{
+        nvgFontSize(vg, storage_font);
+        const char* template_str = (m_storage_projection && m_storage_highlight_active)
+            ? "+000000 WW / 000000 WW"
+            : "000000 WW";
+        gfx::textBounds(vg, 0, 0, bounds, template_str);
+        return bounds[2] - bounds[0];
+    }();
+
+    const float label_col_w = [&]{
+        nvgFontSize(vg, storage_font);
+        float out = 0.f;
+        for (const auto* label : {"NAND", "SD"}) {
+            gfx::textBounds(vg, 0, 0, bounds, label);
+            out = std::max(out, bounds[2] - bounds[0]);
+        }
+        return out;
+    }();
+
+    const float value_x = storage_right - value_col_w;
+    const float bar_x   = value_x - 8.f - bar_w;
+    const float label_x = bar_x - 8.f - label_col_w;
 
     // value shown next to a bar: free space normally, the highlighted size in
     // highlight mode, "+size" for a projection (planned install usage).
@@ -298,34 +326,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return "+" + value;
     };
 
-    auto label_x_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) -> float {
-        if (total_bytes <= 0) return bar_x - 4.f;
-        const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
-        nvgFontSize(vg, small_font);
-        gfx::textBounds(vg, 0, 0, bounds, value.c_str());
-        const float value_w = bounds[2] - bounds[0];
-        return bar_x - 4.f - value_w - 10.f;
-    };
-
-    // NAND and SD labels must line up under one another: use whichever row's
-    // label position sits further left (i.e. has the wider value text).
-    const float label_x = std::min(
-        label_x_of(pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus),
-        label_x_of(pdata.sd_free, pdata.sd_total, m_sd_highlight, m_sd_focus));
-
     // Left edge of the whole status block, so the header gap can end against
-    // it. label_x is where the labels *end* - they are drawn right aligned -
-    // so the block starts a label's width further left, and the gap has to
-    // stop before the "N" of NAND rather than before the "SD".
-    {
-        nvgFontSize(vg, small_font);
-        float label_w = 0.f;
-        for (const auto* label : {"NAND", "SD"}) {
-            gfx::textBounds(vg, 0, 0, bounds, label);
-            label_w = std::max(label_w, bounds[2] - bounds[0]);
-        }
-        m_status_left_x = label_x - label_w;
-    }
+    // it. The labels are drawn left aligned from label_x, so that is already
+    // the leftmost pixel of the block.
+    m_status_left_x = label_x;
 
     auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) {
         if (total_bytes <= 0) return;
@@ -359,10 +363,12 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
             // the package in focus takes the head of the segment, so it reads as
             // "of everything queued here, this much is the one you are looking at".
+            // Amber is hardcoded like the red above: the theme highlights are
+            // often two shades of the same colour, which reads as one segment.
             if (focus_bytes) {
                 const float f_ratio = static_cast<float>(focus_bytes) / static_cast<float>(total_bytes);
                 const float f_w = std::min(seg_w, std::max(2.f, bar_w * f_ratio));
-                gfx::drawRect(vg, bar_x + fill_w, bar_y, f_w, bar_h, theme->GetColour(ThemeEntryID_HIGHLIGHT_2));
+                gfx::drawRect(vg, bar_x + fill_w, bar_y, f_w, bar_h, nvgRGBA(255, 200, 60, 255));
             }
         } else if (highlight_bytes && fill_w > 0.f) {
             const float highlight_ratio = std::min(
@@ -379,13 +385,14 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
             ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
-        nvgFontSize(vg, small_font);
-        gfx::drawTextArgs(vg, bar_x - 4.f, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
-            "%s", value.c_str());
-
-        // Label shares the same x across both rows so NAND/SD sit one above the other.
-        gfx::drawTextArgs(vg, label_x, y, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, text_col,
+        nvgFontSize(vg, storage_font);
+        // reading order is label, bar, size: the two outer columns are fixed
+        // and only the size text inside its reserved column changes width.
+        gfx::drawTextArgs(vg, label_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
             "%s", label);
+
+        gfx::drawTextArgs(vg, value_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
+            "%s", value.c_str());
     };
 
     // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----

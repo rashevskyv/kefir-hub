@@ -117,6 +117,29 @@ Result Base::TransferAll(bool read, void *data, u32 size, u64 timeout, bool zlt)
     R_SUCCEED();
 }
 
+Result Base::TransferOnce(bool read, void *data, u32 size, u32 *out_transferred, u64 timeout) {
+    auto transfer_buf = *m_aligned;
+
+    R_UNLESS(!((u64)transfer_buf & 0xFFF), Result_UsbBadBufferAlign);
+    R_UNLESS(size && size <= TRANSFER_MAX, Result_UsbBadTransferSize);
+
+    if (!read) {
+        std::memcpy(transfer_buf, data, size);
+    }
+
+    u32 out_size_transferred;
+    R_TRY(TransferPacketImpl(read, transfer_buf, 0, size, &out_size_transferred, timeout));
+    R_UNLESS(out_size_transferred > 0, Result_UsbEmptyTransferSize);
+    R_UNLESS(out_size_transferred <= size, Result_UsbOverflowTransferSize);
+
+    if (read) {
+        std::memcpy(data, transfer_buf, out_size_transferred);
+    }
+
+    *out_transferred = out_size_transferred;
+    R_SUCCEED();
+}
+
 } // namespace sphaira::usb
 
 #endif
