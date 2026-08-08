@@ -722,6 +722,8 @@ void App::Poll() {
         m_controller.m_kdown = padGetButtonsDown(&m_pad);
         m_controller.m_kheld = padGetButtons(&m_pad);
         m_controller.m_kup = padGetButtonsUp(&m_pad);
+        m_controller.m_stick_l = padGetStickPos(&m_pad, 0);
+        m_controller.m_stick_r = padGetStickPos(&m_pad, 1);
         m_controller.UpdateButtonHeld(static_cast<u64>(Button::ANY_DIRECTION), m_delta_time);
     }
 }

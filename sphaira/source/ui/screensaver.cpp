@@ -51,6 +51,12 @@ void Screensaver::Start() {
     m_active = true;
     m_started.Update();
     m_drift.Update();
+    m_last_update.Update();
+    m_user_offset_x = 0.f;
+    m_user_offset_y = 0.f;
+    m_drift_speed_mult = 1.0f;
+    m_drift_accum = 0.f;
+    m_current_brightness = App::GetBlankBrightness() / 100.f;
 
     m_lbl_ready = R_SUCCEEDED(lblInitialize());
     if (!m_lbl_ready) {
@@ -73,6 +79,7 @@ void Screensaver::Start() {
         lblDisableAutoBrightnessControl();
     }
     const float target_brightness = App::GetBlankBrightness() / 100.f;
+    m_current_brightness = target_brightness;
     lblSetCurrentBrightnessSetting(target_brightness);
     lblApplyCurrentBrightnessSettingToBacklight();
     log_write("[Screensaver] lower brightness: saved=%.2f, auto=%d -> target=%.2f\n", m_saved_brightness, m_saved_auto_brightness ? 1 : 0, target_brightness);
@@ -111,6 +118,55 @@ auto Screensaver::WantsWake(const Controller* controller, const TouchInfo* touch
     return controller->m_kdown || touch->is_touching || touch->is_clicked;
 }
 
+void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
+    if (!m_active) {
+        return;
+    }
+
+    const double dt = std::clamp(m_last_update.GetSecondsD(), 0.001, 0.1);
+    m_last_update.Update();
+
+    if (!controller) {
+        return;
+    }
+
+    // Left stick: freely move screensaver position across the screen
+    constexpr s32 STICK_DEADZONE = 4000;
+    const float lx = std::abs(controller->m_stick_l.x) > STICK_DEADZONE
+        ? (float)controller->m_stick_l.x / 32767.f : 0.f;
+    const float ly = std::abs(controller->m_stick_l.y) > STICK_DEADZONE
+        ? (float)controller->m_stick_l.y / 32767.f : 0.f;
+
+    if (lx != 0.f || ly != 0.f) {
+        constexpr float MOVE_SPEED = 450.f;
+        m_user_offset_x += lx * MOVE_SPEED * (float)dt;
+        m_user_offset_y -= ly * MOVE_SPEED * (float)dt;
+        m_user_offset_x = std::clamp(m_user_offset_x, -450.f, 450.f);
+        m_user_offset_y = std::clamp(m_user_offset_y, -260.f, 260.f);
+    }
+
+    // Right stick: Up/Down to adjust brightness, Left/Right to adjust drift speed
+    const float rx = std::abs(controller->m_stick_r.x) > STICK_DEADZONE
+        ? (float)controller->m_stick_r.x / 32767.f : 0.f;
+    const float ry = std::abs(controller->m_stick_r.y) > STICK_DEADZONE
+        ? (float)controller->m_stick_r.y / 32767.f : 0.f;
+
+    if (ry != 0.f) {
+        m_current_brightness = std::clamp(m_current_brightness + ry * (float)dt * 0.4f, 0.01f, 1.0f);
+        if (m_lbl_ready) {
+            lblSetCurrentBrightnessSetting(m_current_brightness);
+            lblApplyCurrentBrightnessSettingToBacklight();
+        }
+        App::SetBlankBrightness(m_current_brightness * 100.f);
+    }
+
+    if (rx != 0.f) {
+        m_drift_speed_mult = std::clamp(m_drift_speed_mult + rx * (float)dt * 1.5f, 0.1f, 8.0f);
+    }
+
+    m_drift_accum += (float)dt * m_drift_speed_mult;
+}
+
 void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     // the readout is drawn on a black page, so it uses its own palette rather
     // than the theme: a light theme would paint black text onto it.
@@ -125,9 +181,9 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     gfx::drawRect(vg, Vec4{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}, nvgRGB(0, 0, 0));
 
     // two incommensurate periods, so the block never retraces the same path.
-    const auto t = m_drift.GetSecondsD();
-    const float cx = SCREEN_WIDTH / 2.f + std::sin(t * 0.021) * DRIFT_X;
-    const float cy = SCREEN_HEIGHT / 2.f + std::cos(t * 0.013) * DRIFT_Y;
+    const auto t = m_drift_accum > 0.f ? m_drift_accum : (float)m_drift.GetSecondsD();
+    float cx = SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x;
+    float cy = SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y;
     const float left = cx - BLOCK_W / 2.f;
 
     // speed / eta / elapsed / battery share one line, so how many of them are

@@ -84,7 +84,7 @@ One screen — **PC Install (USB)** under Install & Share — handles every supp
 
 The queue reviews every package before it installs any of them, so a host in **stream mode** is refused with a message rather than served — turn stream mode off in the PC app.
 
-Long queues do not need the panel on: **Minus** blanks the screen, and *Settings → Install → Screen off (Minus)* chooses between lowering the brightness, cutting the backlight, and a drifting black-background readout (clock, package counter, progress, speed, ETA, battery, real-time speed graph). Any button brings the screen back.
+Long queues do not need the panel on: **Minus** blanks the screen, and *Settings → Install → Screen off (Minus)* chooses between lowering the brightness, cutting the backlight, and a drifting black-background readout (clock, package counter, progress, speed, ETA, battery, real-time speed graph). While the screensaver is active, you can interactively fly the readout around with the **Left Analog Stick**, adjust screen brightness with the **Right Stick (Up/Down)**, and speed up or slow down drift with the **Right Stick (Left/Right)**. Any button brings the screen back.
 
 ### Forwarder Editor & SteamGridDB Integration
 

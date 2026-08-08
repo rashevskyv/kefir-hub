@@ -325,6 +325,8 @@ struct Controller {
     u64 m_kdown{};
     u64 m_kheld{};
     u64 m_kup{};
+    HidAnalogStickState m_stick_l{};
+    HidAnalogStickState m_stick_r{};
 
     constexpr auto Set(Button button, bool down) noexcept -> void {
         m_kdown = static_cast<u64>(down ? m_kdown | static_cast<u64>(button) : m_kdown & ~static_cast<u64>(button));
@@ -350,6 +352,8 @@ struct Controller {
     constexpr auto Reset() noexcept -> void {
         m_kdown = 0;
         m_kup = 0;
+        m_stick_l = {};
+        m_stick_r = {};
     }
 
     void UpdateButtonHeld(u64 buttons, double delta) {

@@ -73,6 +73,7 @@ struct Screensaver {
     // it -- or a finger still resting on the panel -- does not end it at once.
     auto WantsWake(const Controller* controller, const TouchInfo* touch) const -> bool;
 
+    void Update(const Controller* controller, const TouchInfo* touch);
     void Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info);
 
 private:
@@ -84,6 +85,12 @@ private:
     bool m_saved_auto_brightness{};
     TimeStamp m_started{};
     TimeStamp m_drift{};
+    TimeStamp m_last_update{};
+    float m_user_offset_x{0.f};
+    float m_user_offset_y{0.f};
+    float m_drift_speed_mult{1.0f};
+    float m_drift_accum{0.f};
+    float m_current_brightness{1.0f};
 };
 
 // full screen preview of the current screensaver settings, so the readout can

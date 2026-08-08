@@ -3,7 +3,14 @@
 Порядок відповідає `plan.md`. Завершені рядки переносяться в архів, а не
 видаляються без сліду.
 
-## Поточний delivery: v0.13.429 (Install Queue Storage boundary fix & Screensaver speed graph)
+## Поточний delivery: v0.13.430 (Screensaver Analog Stick Interactive Controls)
+
+- [x] STICK-FREE-MOVE-430 — Реалізовано вільне переміщення блоку скрінсейвера по екрану лівим аналоговим стіком у `Screensaver::Update()`.
+- [x] STICK-BRIGHTNESS-SPEED-430 — Додано інтерактивне керування яскравістю (правий стік вгору/вниз) та швидкістю дрейфу (правий стік вліво/вправо).
+- [x] PAD-STICK-READING-430 — Додано поля `m_stick_l`, `m_stick_r` у `Controller` та зчитування `padGetStickPos` у `App::Poll()`.
+- [x] CMAKELISTS-VERSION-BUMP-430 — Піднято версію в `sphaira/CMakeLists.txt` до `0.13.430`.
+
+## Попередній delivery: v0.13.429 (Install Queue Storage boundary fix & Screensaver speed graph)
 
 - [x] HEADER-STORAGE-BOUNDARY-FIX-429 — Виправлено позиціонування `storage_right` (`start_x - 10.f`) та адаптивний розрахунок `value_col_w` у режимі `m_storage_projection` для запобігання перекриття тексту об'єму накопичувачів з годинником та значком аплета `[A]`.
 - [x] SCREENSAVER-SPEED-GRAPH-429 — Додано прапорець `SaverField_Graph` та передачу R/W історії графіку швидкості в `Screensaver::Draw()`, а також опцію в налаштуваннях та попередньому перегляді.

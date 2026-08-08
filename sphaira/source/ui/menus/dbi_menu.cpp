@@ -380,6 +380,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         if (prompt) {
             m_screensaver.Stop();
         } else {
+            m_screensaver.Update(controller, touch);
             // the press that wakes the panel is spent on waking it -- waking
             // with B must not also cancel the queue behind it.
             if (m_screensaver.WantsWake(controller, touch)) {
