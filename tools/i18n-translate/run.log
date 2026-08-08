@@ -1,0 +1,1004 @@
+1544 source strings | 984 need work | 13 languages | 6 threads
+proxy: http://127.0.0.1:8081/v1/chat/completions (gemini-3.6-flash)
+
+[    1/984] ok   ja fr de it es zh ko nl pt se vi | Moving
+[    2/984] ok   ja fr de it es zh ko nl pt se vi | Move component to NAND
+[    3/984] ok   ja fr de it es zh ko nl pt se vi | Move
+[    4/984] ok   ja fr de it es zh ko nl pt se vi | Move component to SD
+[    5/984] ok   ja fr de it es zh ko nl pt se vi | stays on
+[    6/984] ok   ja fr de it es zh ko nl pt se vi | Removing old copy
+[    7/984] ok   ja fr de it es zh ko nl pt se vi | free
+[    8/984] ok   ja fr de it es zh ko nl pt se vi | DLC
+[    9/984] ok   ja fr de it es zh ko nl pt se vi | Move failed!
+[   10/984] ok   ja fr de it es zh ko nl pt se vi | DLC Update
+[   11/984] ok   ja fr de it es zh ko nl pt se vi | Base game
+[   12/984] ok   zh | microSD card (/dumps/)
+[   13/984] ok   ja fr de it es zh ko nl pt ru se vi | Player Select
+[   14/984] ok   ja fr de it es zh ko nl pt se vi | Lock Screen
+[   15/984] ok   ja fr de it es zh ko nl pt se vi | Target
+[   16/984] ok   ja fr de it es zh ko nl pt se vi | Home Menu
+[   17/984] ok   ja fr de it es zh ko nl pt ru se vi | All Apps
+[   18/984] ok   ja fr de it es zh ko nl pt ru se vi | User Page
+[   19/984] ok   ja fr de it es zh ko nl pt ru se vi | Filter themes by target layout.
+[   20/984] ok   ja fr de it es zh ko nl pt ru se vi | News
+[   21/984] ok   ja fr de it es zh ko nl pt ru se vi | Tags
+[   22/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter tags (separated by spaces or commas)
+[   23/984] ok   ja fr de it es zh ko nl pt ru se vi | Filter themes by tags (e.g. anime, dark). Separate w
+[   24/984] ok   ja fr de it es zh ko nl pt ru se vi | microSD card only
+[   25/984] ok   ja fr de it es zh ko nl pt se vi | Automatic
+[   26/984] ok   ja fr de it es zh ko nl pt se vi | Forwarder address space
+[   27/984] ok   ja fr de it es zh ko nl pt ru se vi uk | 36-bit
+[   28/984] ok   ja fr de it es zh ko nl pt ru se vi | System memory only
+[   29/984] ok   ja fr de it es zh ko nl pt ru se vi | SD first, then system
+[   30/984] ok   ja fr de it es zh ko nl pt se vi | Virtual address space given to new forwarders. Autom
+[   31/984] ok   zh nl pt se vi | Apply
+[   32/984] ok   zh nl pt se vi | Module activated
+[   33/984] ok   ja fr de it es zh ko nl pt ru se vi uk | 39-bit
+[   34/984] ok   ja fr de it es zh ko nl pt ru se vi | System first, then SD
+[   35/984] ok   zh nl pt se vi | Failed to activate module
+[   36/984] ok   ja fr de it es zh ko nl pt ru se vi | Remove and reboot
+[   37/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to remove translation
+[   38/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to run package action
+[   39/984] ok   ja fr de it es zh ko nl pt ru se vi | Fan preset is empty
+[   40/984] ok   ja fr de it es zh ko nl pt ru se vi | The installed translation could not be replaced. Rem
+[   41/984] ok   ja fr de it es zh ko nl pt ru se vi | Removing
+[   42/984] ok   zh nl pt se vi | Failed to activate fan module.  Changes will apply o
+[   43/984] ok   ja fr de it es zh ko nl pt ru se vi | Saved fan preset: 
+[   44/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to save fan preset
+[   45/984] ok   ja fr de it es zh ko nl pt ru se vi | Fan curve needs at least two points
+[   46/984] ok   ja fr de it es zh ko nl pt ru se vi | No room for another fan point
+[   47/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to apply Kefir setting
+[   48/984] ok   ja fr de it es zh ko nl pt ru se vi | Fan curve applied
+[   49/984] ok   ja fr de it es zh ko nl pt ru se vi | Show saves
+[   50/984] ok   ja fr de it es zh ko nl pt ru se vi | Deleted game saves
+[   51/984] ok   ja fr de it es zh ko nl pt ru se vi | Data Types
+[   52/984] ok   ja fr de it es zh ko nl pt ru se vi | Installed game saves
+[   53/984] ok   ja fr de it es zh ko nl pt ru se vi | Accounts
+[   54/984] ok   ja fr de it es zh ko nl pt ru se vi | Choose which categories of saves are shown: installe
+[   55/984] ok   ja fr de it es zh ko nl pt ru se vi | Show saves belonging to games that are currently ins
+[   56/984] ok   ja fr de it es zh ko nl pt ru se vi | Show a tile for every game that has a save backup on
+[   57/984] ok   ja fr de it es zh ko nl pt ru se vi | Show orphaned saves whose game is no longer installe
+[   58/984] ok   ja fr de it es zh ko nl pt ru se vi | Backups
+[   59/984] ok   ja fr de it es zh ko nl pt ru se vi | System is enabled.
+[   60/984] ok   ja fr de it es ko nl se vi | Save Options
+[   61/984] ok   ja fr de it es zh ko nl pt ru se vi | All Accounts is enabled.
+[   62/984] ok   ja fr de it es zh ko nl pt ru se vi | All Accounts
+[   63/984] ok   ja fr de it es zh ko nl pt ru se vi | Toggle
+[   64/984] ok   ja fr de it es zh ko nl pt ru se vi | View, launch and manage installed games.
+[   65/984] ok   ja fr de it es zh ko nl pt ru se vi | HB Menu
+[   66/984] ok   ja fr de it es zh ko nl pt ru se vi | Module Manager
+[   67/984] ok   ja fr de it es zh ko nl pt ru se vi | Autostart
+[   68/984] ok   ja fr de it es zh ko nl pt ru se vi | A: Toggle running    Y: Toggle autostart    X: Refre
+[   69/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to scan sysmodules
+[   70/984] ok   ja fr de it es zh ko nl pt ru se vi | No sysmodules found
+[   71/984] ok   ja fr de it es zh ko nl pt ru se vi | No Atmosphere contents folder found
+[   72/984] ok   ja fr de it es zh ko nl pt ru se vi | Start, stop and configure installed sysmodules.
+[   73/984] ok   ja fr de it es zh ko nl pt ru se vi | On / Manual
+[   74/984] ok   ja fr de it es zh ko nl pt ru se vi | Off / Auto
+[   75/984] ok   ja fr de it es zh ko nl pt ru se vi |  - reboot required
+[   76/984] ok   ja fr de it es zh ko nl pt ru se vi | Module stopped
+[   77/984] ok   ja fr de it es zh ko nl pt ru se vi | Module started
+[   78/984] ok   ja fr de it es zh ko nl pt ru se vi | Off / Manual
+[   79/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to toggle module
+[   80/984] ok   ja fr de it es zh ko nl pt ru se vi | Module autostart enabled
+[   81/984] ok   ja fr de it es zh ko nl pt ru se vi | Use Autostart for reboot-required modules
+[   82/984] ok   ja fr de it es zh ko nl pt ru se vi | On / Auto
+[   83/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to toggle module autostart
+[   84/984] ok   ja fr de it es zh ko nl pt se vi | Stop Server
+[   85/984] ok   ja fr de it es zh ko nl pt se vi | Press B to Stop Server
+[   86/984] ok   ja fr de it es zh ko nl pt se vi | Installation completed
+[   87/984] ok   ja fr de it es zh ko nl pt se vi | Stop
+[   88/984] ok   ja fr de it es zh ko nl pt ru se vi | Module autostart disabled
+[   89/984] ok   ja fr de it es zh ko nl pt se vi | Upload completed
+[   90/984] ok   ja fr de it es zh ko nl pt ru se vi | Target:
+[   91/984] ok   ja fr de it es zh ko nl pt ru se vi | Current:
+[   92/984] ok   ja fr de it es zh ko nl pt ru se vi | Scroll down to select Install.
+[   93/984] ok   ja fr de it es zh ko nl pt ru se vi | Download Kefir Cheats
+[   94/984] ok   ja fr de it es zh ko nl pt ru se vi | Cancel
+[   95/984] ok   ja fr de it es zh ko nl pt ru se vi | KefirUpdater performance/graphics pack
+[   96/984] ok   ja fr de it es zh ko nl pt ru se vi | Download 60FPS/GFX Cheats
+[   97/984] ok   ja fr de it es zh ko nl pt ru se vi | Select game and match Build ID
+[   98/984] ok   ja fr de it es zh ko nl pt ru se vi | Download Exact Cheats
+[   99/984] ok   ja fr de it es zh ko nl pt ru se vi | Import a local cheat .txt file
+[  100/984] ok   ja fr de it es zh ko nl pt ru se vi | Import From File
+[  101/984] ok   ja fr de it es zh ko nl pt ru se vi | View Cheats
+[  102/984] ok   ja fr de it es zh ko nl pt ru se vi | Full KefirUpdater cheats pack
+[  103/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete All Cheats
+[  104/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete Orphaned
+[  105/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete all existing cheat codes
+[  106/984] ok   ja fr de it es zh ko nl pt ru se vi | View installed cheat codes
+[  107/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete cached cheats database
+[  108/984] ok   ja fr de it es zh ko nl pt ru se vi | Clear Cheats Cache
+[  109/984] ok   ja fr de it es zh ko nl pt ru se vi | Deleting...
+[  110/984] ok   ja fr de it es zh ko nl pt ru se vi | Clear
+[  111/984] ok   ja fr de it es zh ko nl pt ru se vi | Clearing Cache
+[  112/984] ok   ja fr de it es zh ko nl pt ru se vi | Downloading cheats pack...
+[  113/984] ok   ja fr de it es zh ko nl pt ru se vi | Downloading...
+[  114/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete cheats for uninstalled games
+[  115/984] ok   ja fr de it es zh ko nl pt ru se vi | Installing cheats...
+[  116/984] ok   ja fr de it es zh ko nl pt ru se vi | Cheats pack installed
+[  117/984] ok   ja fr de it es zh ko nl pt ru se vi | Kefir Cheats
+[  118/984] ok   ja fr de it es zh ko nl pt ru se vi | Download and install this cheats pack? Existing matc
+[  119/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to install cheats pack
+[  120/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to delete cheats
+[  121/984] ok   ja fr de it es zh ko nl pt ru se vi | Deleted all cheat codes
+[  122/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete all existing cheat codes? This will remove AL
+[  123/984] ok   ja fr de it es zh ko nl pt ru se vi | Deleted %d orphaned cheats
+[  124/984] ok   ja fr de it es zh ko nl pt ru se vi | 60FPS/GFX Cheats
+[  125/984] ok   ja fr de it es zh ko nl pt ru se vi | No orphaned cheats found
+[  126/984] ok   ja fr de it es zh ko nl pt ru se vi | Clear cached cheats database?
+[  127/984] ok   ja fr de it es zh ko nl pt ru se vi | Cheats cache cleared successfully
+[  128/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to clear cheats cache
+[  129/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete all cheats for 
+[  130/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to delete orphaned cheats
+[  131/984] ok   ja fr de it es zh ko nl pt ru se vi | Deleted cheats for 
+[  132/984] ok   ja fr de it es zh ko nl pt ru se vi | Logged in successfully!
+[  133/984] ok   ja fr de it es zh ko nl pt ru se vi | Scanning for cheats...
+[  134/984] ok   ja fr de it es zh ko nl pt ru se vi | Login failed. Check your credentials.
+[  135/984] ok   ja fr de it es zh ko nl pt ru se vi | No installed cheats found
+[  136/984] ok   ja fr de it es zh ko nl pt ru se vi | Cheats Not Found
+[  137/984] ok   ja fr de it es zh ko nl pt ru se vi | Press A to Install.
+[  138/984] ok   ja fr de it es zh ko nl pt ru se vi | Scroll to the bottom to unlock Install.
+[  139/984] ok   ja fr de it es zh ko nl pt ru se vi | Close File Picker?
+[  140/984] ok   ja fr de it es zh ko nl pt ru se vi | Save Action
+[  141/984] ok   ja fr de it es ko nl se vi | Backup
+[  142/984] ok   ja fr de it es zh ko nl pt ru se vi | This action changes files on the SD card. Hold A to 
+[  143/984] ok   ja fr de it es zh ko nl pt ru se vi | Replace language
+[  144/984] ok   ja fr de it es zh ko nl pt ru se vi | Hold A to continue
+[  145/984] ok   ja fr de it es zh ko nl pt ru se vi | FilePicker
+[  146/984] ok   ja fr de it es zh ko nl pt ru se vi | Switch between list and grid view for the updater.
+[  147/984] ok   ja fr de it es zh ko nl pt ru se vi | No cheat files found
+[  148/984] ok   ja fr de it es zh ko nl pt ru se vi | Browse all apps published by this author.
+[  149/984] ok   ja fr de it es zh ko nl pt ru se vi | Send feedback or a comment about this application.
+[  150/984] ok   ja fr de it es zh ko nl pt ru se vi | Open the author's website for this application.
+[  151/984] ok   ja fr de it es zh ko nl pt ru se vi | Select which field to sort the app list by.
+[  152/984] ok   ja fr de it es zh ko nl pt ru se vi | Show only apps from a specific category.
+[  153/984] ok   ja fr de it es zh ko nl pt ru se vi | Sort apps from newest to oldest or A to Z.
+[  154/984] ok   ja fr de it es zh ko nl pt ru se vi | Choose how apps are displayed on screen.
+[  155/984] ok   ja fr de it es zh ko nl pt ru se vi | Search for apps by name or keyword.
+[  156/984] ok   ja fr de it es zh ko nl pt ru se vi | Search for themes by name or keyword.
+[  157/984] ok   ja fr de it es zh ko nl pt ru se vi | Jump to a specific page number in the theme list.
+[  158/984] ok   ja fr de it es zh ko nl pt ru se vi | Open the NXthemes Installer to apply downloaded them
+[  159/984] ok   ja fr de it es zh ko nl pt ru se vi | Sort themes in ascending or descending order.
+[  160/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the full XCI and all binary data.
+[  161/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the full XCI image of the game card.
+[  162/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the Card ID Set binary file.
+[  163/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the Card UID binary file.
+[  164/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump all binary files without the XCI.
+[  165/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the game card Certificate binary file.
+[  166/984] ok   ja fr de it es zh ko nl pt ru se vi | Select how themes are sorted in the list.
+[  167/984] ok   ja fr de it es zh ko nl pt ru se vi | Dump the Initial Data binary file.
+[  168/984] ok   ja fr de it es zh ko nl pt ru se vi | Choose the colour palette for the IR image.
+[  169/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure dump output settings and file format optio
+[  170/984] ok   ja fr de it es zh ko nl pt ru se vi | Control which IR LED group is active.
+[  171/984] ok   ja fr de it es zh ko nl pt ru se vi | Select which controller's IR camera to use.
+[  172/984] ok   ja fr de it es zh ko nl pt ru se vi | Adjust the sensitivity of the IR sensor.
+[  173/984] ok   ja fr de it es zh ko nl pt ru se vi | Rotate the IR camera image view.
+[  174/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure installation settings such as skipping con
+[  175/984] ok   ja fr de it es zh ko nl pt ru se vi | Toggle between normal and inverted IR image.
+[  176/984] ok   ja fr de it es zh ko nl pt ru se vi | Reset all IR camera settings to factory defaults.
+[  177/984] ok   ja fr de it es zh ko nl pt ru se vi | Switch the file source to a different storage or mou
+[  178/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the capture resolution of the IR camera.
+[  179/984] ok   ja fr de it es zh ko nl pt ru se vi | Permanently delete the selected image(s) from the SD
+[  180/984] ok   ja fr de it es zh ko nl pt ru se vi | Compress the selected image(s) into a zip archive.
+[  181/984] ok   ja fr de it es zh ko nl pt ru se vi | Use the selected image to create a custom Switch the
+[  182/984] ok   ja fr de it es zh ko nl pt ru se vi | Change display order and visibility settings for fil
+[  183/984] ok   ja fr de it es zh ko nl pt ru se vi | Select which field to sort files and folders by.
+[  184/984] ok   ja fr de it es zh ko nl pt ru se vi | Show files and folders that start with a dot (hidden
+[  185/984] ok   ja fr de it es zh ko nl pt ru se vi | Filter out ambient external light to improve IR accu
+[  186/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the trimmed output resolution (must be <= source
+[  187/984] ok   ja fr de it es zh ko nl pt ru se vi | Share the current folder via the built-in web server
+[  188/984] ok   ja fr de it es zh ko nl pt ru se vi | Move the selected files to the clipboard.
+[  189/984] ok   ja fr de it es zh ko nl pt ru se vi | Place folders before files in the listing.
+[  190/984] ok   ja fr de it es zh ko nl pt ru se vi | Copy the selected files to the clipboard.
+[  191/984] ok   ja fr de it es zh ko nl pt ru se vi | Sort entries from largest to smallest or A to Z.
+[  192/984] ok   ja fr de it es zh ko nl pt ru se vi | Paste the clipboard contents into the current folder
+[  193/984] ok   ja fr de it es zh ko nl pt ru se vi | Install the selected NSP/XCI file(s) to the console.
+[  194/984] ok   ja fr de it es zh ko nl pt ru se vi | Push hidden entries to the bottom of the listing.
+[  195/984] ok   ja fr de it es zh ko nl pt ru se vi | Rename the selected file or folder.
+[  196/984] ok   ja fr de it es zh ko nl pt ru se vi | Install a forwarder shortcut for this file.
+[  197/984] ok   ja fr de it es zh ko nl pt ru se vi | Extract the archive contents into the current folder
+[  198/984] ok   ja fr de it es zh ko nl pt ru se vi | Permanently delete the selected file(s) or folder(s)
+[  199/984] ok   ja fr de it es zh ko nl pt ru se vi | Extract the archive to a custom path you specify.
+[  200/984] ok   ja fr de it es zh ko nl pt ru se vi | Extract the archive contents to the root of this sto
+[  201/984] ok   ja fr de it es zh ko nl pt ru se vi | Compress the selected file(s) into a ZIP archive.
+[  202/984] ok   ja fr de it es zh ko nl pt ru se vi | Compress the selected file(s) into a zip in the curr
+[  203/984] ok   ja fr de it es zh ko nl pt ru se vi | Extract the contents of the selected ZIP archive.
+[  204/984] ok   ja fr de it es zh ko nl pt ru se vi | Access file browser advanced tools.
+[  205/984] ok   ja fr de it es zh ko nl pt ru se vi | Open the selected file as plain text.
+[  206/984] ok   ja fr de it es zh ko nl pt ru se vi | Calculate a checksum hash for the selected file.
+[  207/984] ok   ja fr de it es zh ko nl pt ru se vi | Open the selected image in the built-in viewer.
+[  208/984] ok   ja fr de it es zh ko nl pt ru se vi | Upload the selected file(s) via the web server.
+[  209/984] ok   ja fr de it es zh ko nl pt ru se vi | Calculate and display the MD5 hash of the selected f
+[  210/984] ok   ja fr de it es zh ko nl pt ru se vi | Compress the selected file(s) to a custom output pat
+[  211/984] ok   ja fr de it es zh ko nl pt ru se vi | Calculate and display the SHA256 hash of the selecte
+[  212/984] ok   ja fr de it es zh ko nl pt ru se vi | Calculate and display the CRC32 hash of the selected
+[  213/984] ok   ja fr de it es zh ko nl pt ru se vi | Play with NXMP
+[  214/984] ok   ja fr de it es zh ko nl pt ru se vi | Allow modifying files and folders that are marked as
+[  215/984] ok   ja fr de it es zh ko nl pt ru se vi | Add network location
+[  216/984] ok   ja fr de it es zh ko nl pt ru se vi | Play the selected media file using NXMP player.
+[  217/984] ok   ja fr de it es zh ko nl pt ru se vi | Connecting to SMB...
+[  218/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter server IP or hostname (e.g. 192.168.1.100)
+[  219/984] ok   ja fr de it es zh ko nl pt ru se vi | NXMP not found, open AppStore to install?
+[  220/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter username (optional)
+[  221/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter share name (e.g. shared_folder)
+[  222/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure a new network storage share.
+[  223/984] ok   ja fr de it es zh ko nl pt ru se vi | Calculate and display the SHA1 hash of the selected 
+[  224/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter location name (e.g. My NAS)
+[  225/984] ok   ja fr de it es zh ko nl pt ru se vi | Enter password (optional)
+[  226/984] ok   ja fr de it es zh ko nl pt ru se vi | Location added successfully!
+[  227/984] ok   ja fr de it es zh ko nl pt ru se vi | SYNC
+[  228/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to connect to SMB server!
+[  229/984] ok   ja fr de it es zh ko nl pt ru se vi | SETTINGS
+[  230/984] ok   ja fr de it es zh ko nl pt ru se vi | SORT
+[  231/984] ok   ja fr de it es zh ko nl pt ru se vi | Sync with remote
+[  232/984] ok   ja fr de it es zh ko nl pt ru se vi | INSTALL & SHARE
+[  233/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV URL
+[  234/984] ok   ja fr de it es zh ko nl pt ru se vi | Auto-sync after backup
+[  235/984] ok   ja fr de it es zh ko nl pt ru se vi | Use webdav:// for HTTPS and automatic remote folder 
+[  236/984] ok   ja fr de it es zh ko nl pt ru se vi | Choose the storage and folder for backups. Game save
+[  237/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV User
+[  238/984] ok   ja fr de it es zh ko nl pt ru se vi | Username for the WebDAV server.
+[  239/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV Password
+[  240/984] ok   ja fr de it es zh ko nl pt ru se vi | Password for the WebDAV server.
+[  241/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV (Settings)
+[  242/984] ok   ja fr de it es zh ko nl pt ru se vi | Syncing saves...
+[  243/984] ok   ja fr de it es zh ko nl pt ru se vi | Listing remote files...
+[  244/984] ok   ja fr de it es zh ko nl pt ru se vi | After each Backup, automatically upload only the new
+[  245/984] ok   ja fr de it es zh ko nl pt ru se vi | Uploading: 
+[  246/984] ok   ja fr de it es zh ko nl pt ru se vi | Two-way sync of backup ZIPs for the currently select
+[  247/984] ok   ja fr de it es zh ko nl pt ru se vi | No saves selected for sync.
+[  248/984] ok   ja fr de it es zh ko nl pt ru se vi | No network location configured for sync. Add one in 
+[  249/984] ok   ja fr de it es zh ko nl pt ru se vi | Auto-syncing saves...
+[  250/984] ok   ja fr de it es zh ko nl pt ru se vi | Auto-sync failed!
+[  251/984] ok   ja fr de it es zh ko nl pt ru se vi | No WebDAV network location configured for sync. Add 
+[  252/984] ok   ja fr de it es zh ko nl pt ru se vi | Sync failed!
+[  253/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV → SD
+[  254/984] ok   ja fr de it es zh ko nl pt ru se vi | Local → WebDAV
+[  255/984] ok   ja fr de it es zh ko nl pt ru se vi | Include remote backups
+[  256/984] ok   ja fr de it es zh ko nl pt ru se vi | No backups found for selected saves.
+[  257/984] ok   ja fr de it es zh ko nl pt ru se vi | Select which field to sort homebrew by.
+[  258/984] ok   ja fr de it es zh ko nl pt ru se vi | Sync finished with %zu failed transfers. See log for
+[  259/984] ok   ja fr de it es zh ko nl pt ru se vi | Select backup
+[  260/984] ok   ja fr de it es zh ko nl pt ru se vi | Before showing the backup list, download any backups
+[  261/984] ok   ja fr de it es zh ko nl pt ru se vi | Display entries in Ascending or Descending order.
+[  262/984] ok   ja fr de it es zh ko nl pt ru se vi | Shows all hidden homebrew.
+[  263/984] ok   ja fr de it es zh ko nl pt ru se vi | Install apps via DBI Backend (USB).
+[  264/984] ok   ja fr de it es zh ko nl pt ru se vi | Install & Share
+[  265/984] ok   ja fr de it es zh ko nl pt ru se vi | PC Install (USB)
+[  266/984] ok   ja fr de it es zh ko nl pt ru se vi | Jump Forward
+[  267/984] ok   ja fr de it es zh ko nl pt ru se vi | Next Page
+[  268/984] ok   ja fr de it es zh ko nl pt ru se vi | Prev/Next Page
+[  269/984] ok   ja fr de it es zh ko nl pt ru se vi | Previous Page
+[  270/984] ok   ja fr de it es zh ko nl pt ru se vi | Jump Back/Forward
+[  271/984] ok   ja fr de it es zh ko nl pt ru se vi | Change the layout to Icon, Grid and HB Menu.
+[  272/984] ok   ja fr de it es zh ko nl pt ru se vi | View Options
+[  273/984] ok   ja fr de it es zh ko nl pt ru se vi | Jump Backward
+[  274/984] ok   ja fr de it es zh ko nl pt ru se vi | View
+[  275/984] ok   ja fr de it es zh ko nl pt ru se vi | Screenshot
+[  276/984] ok   ja fr de it es zh ko nl pt ru se vi | Restored hbmenu, closing Kefir Hub
+[  277/984] ok   ja fr de it es zh ko nl pt ru se vi | Restart Kefir Hub?
+[  278/984] ok   ja fr de it es zh ko nl pt ru se vi | Press OK to restart Kefir Hub
+[  279/984] ok   ja fr de it es zh ko nl pt ru se vi | Warning! Logs are enabled, Kefir Hub will run slowly
+[  280/984] ok   ja fr de it es zh ko nl pt ru se vi | Restart Kefir Hub
+[  281/984] ok   ja fr de it es zh ko nl pt ru se vi | Open Kefir Hub application settings.
+[  282/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to restore hbmenu, using Kefir Hub instead
+[  283/984] ok   ja fr de it es zh ko nl pt ru se vi | Kefir Hub theme options
+[  284/984] ok   ja fr de it es zh ko nl pt ru se vi | Select the active Kefir Hub theme.
+[  285/984] ok   ja fr de it es zh ko nl pt ru se vi | Close Kefir Hub.
+[  286/984] ok   ja fr de it es zh ko nl pt ru se vi | Select the Kefir Hub interface theme and music optio
+[  287/984] ok   ja fr de it es zh ko nl pt ru se vi | Install queue
+[  288/984] ok   ja fr de it es zh ko nl pt ru se vi | Shortcuts for core Kefir Hub tools.
+[  289/984] ok   ja fr de it es zh ko nl pt ru se vi | Waiting for DBI package list...
+[  290/984] ok   ja fr de it es zh ko nl pt ru se vi | Replace /hbmenu.nro with Kefir Hub on exit.
+[  291/984] ok   ja fr de it es zh ko nl pt ru se vi | Analysing packages (nothing is being installed)...
+[  292/984] ok   ja fr de it es zh ko nl pt ru se vi | Select all / none
+[  293/984] ok   ja fr de it es zh ko nl pt ru se vi | Select package
+[  294/984] ok   ja fr de it es zh ko nl pt ru se vi | Cancel session
+[  295/984] ok   ja fr de it es zh ko nl pt ru se vi | Install target
+[  296/984] ok   ja fr de it es zh ko nl pt ru se vi | Cancel remaining
+[  297/984] ok   ja fr de it es zh ko nl pt ru se vi | Install selected
+[  298/984] ok   ja fr de it es zh ko nl pt ru se vi | microSD free
+[  299/984] ok   ja fr de it es zh ko nl pt ru se vi | Reserve
+[  300/984] ok   ja fr de it es zh ko nl pt ru se vi | microSD
+[  301/984] ok   ja fr de it es zh ko nl pt ru se vi | Selected
+[  302/984] ok   ja fr de it es zh ko nl pt ru se vi | Required
+[  303/984] ok   ja fr de it es zh ko nl pt ru se vi | Package size
+[  304/984] ok   ja fr de it es zh ko nl pt ru se vi | Install size
+[  305/984] ok   ja fr de it es zh ko nl pt ru se vi | Estimate
+[  306/984] ok   ja fr de it es zh ko nl pt ru se vi | Exact
+[  307/984] ok   ja fr de it es zh ko nl pt ru se vi | Package
+[  308/984] ok   ja fr de it es zh ko nl pt ru se vi | Installed
+[  309/984] ok   ja fr de it es zh ko nl pt ru se vi | System memory free
+[  310/984] ok   ja fr de it es zh ko nl pt ru se vi | Analysis failed
+[  311/984] ok   ja fr de it es zh ko nl pt ru se vi | Installed: 
+[  312/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed
+[  313/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed: 
+[  314/984] ok   ja fr de it es zh ko nl pt ru se vi | Starting: 
+[  315/984] ok   ja fr de it es zh ko nl pt ru se vi | Session cancelled; completed installs were kept.
+[  316/984] ok   ja fr de it es zh ko nl pt ru se vi | Queue finished.
+[  317/984] ok   ja fr de it es zh ko nl pt ru se vi | Cancellation requested.
+[  318/984] ok   ja fr de it es zh ko nl pt ru se vi | Cancelled: 
+[  319/984] ok   ja fr de it es zh ko nl pt ru se vi | Selected packages may not fit after the configured r
+[  320/984] ok   ja fr de it es zh ko nl pt ru se vi | Select at least one package
+[  321/984] ok   ja fr de it es zh ko nl pt ru se vi | Clock sync
+[  322/984] ok   ja fr de it es zh ko nl pt ru se vi | Correct the console clock from an internet time serv
+[  323/984] ok   ja fr de it es zh ko nl pt ru se vi | ahead
+[  324/984] ok   ja fr de it es zh ko nl pt ru se vi | Clock synced
+[  325/984] ok   ja fr de it es zh ko nl pt ru se vi | Session cancelled
+[  326/984] ok   ja fr de it es zh ko nl pt ru se vi | behind
+[  327/984] ok   ja fr de it es zh ko nl pt ru se vi | Session failed
+[  328/984] ok   ja fr de it es zh ko nl pt ru se vi | Session summary
+[  329/984] ok   ja fr de it es zh ko nl pt ru se vi | Packages
+[  330/984] ok   ja fr de it es zh ko nl pt ru se vi | Skipped
+[  331/984] ok   ja fr de it es zh ko nl pt ru se vi | Duration
+[  332/984] ok   ja fr de it es zh ko nl pt ru se vi | Queue finished
+[  333/984] ok   ja fr de it es zh ko nl pt ru se vi | Peak speed
+[  334/984] ok   ja fr de it es zh ko nl pt ru se vi | Average speed
+[  335/984] ok   ja fr de it es zh ko nl pt ru se vi | Written
+[  336/984] ok   ja fr de it es zh ko nl pt ru se vi | Now
+[  337/984] ok   ja fr de it es zh ko nl pt ru se vi | No errors recorded.
+[  338/984] ok   ja fr de it es zh ko nl pt ru se vi | Received
+[  339/984] ok   ja fr de it es zh ko nl pt ru se vi | error(s) recorded
+[  340/984] ok   ja fr de it es zh ko nl pt ru se vi | Analysis
+[  341/984] ok   ja fr de it es zh ko nl pt ru se vi | USB connection lost; reconnecting...
+[  342/984] ok   ja fr de it es zh ko nl pt se vi | Errors
+[  343/984] ok   ja fr de it es zh ko nl pt ru se vi | USB connection restored; retrying: 
+[  344/984] ok   ja fr de it es zh ko nl pt ru se vi | Session log
+[  345/984] ok   ja fr de it es zh ko nl pt ru se vi | press Y to review them, they are also saved to error
+[  346/984] ok   ja fr de it es zh ko nl pt ru se vi | Package target
+[  347/984] ok   ja fr de it es zh ko nl pt ru se vi | The USB connection dropped and could not be restored
+[  348/984] ok   ja fr de it es zh ko nl pt ru se vi | Per package
+[  349/984] ok   ja fr de it es zh ko nl pt ru se vi | Waiting for PC connection. Connect the USB cable and
+[  350/984] ok   ja fr de it es zh ko nl pt ru se vi | MTP storages
+[  351/984] ok   ja fr de it es zh ko nl pt ru se vi | Targets
+[  352/984] ok   ja fr de it es zh ko nl pt ru se vi | MTP Storages
+[  353/984] ok   ja fr de it es zh ko nl pt ru se vi | Speed
+[  354/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure which folders are visible over MTP and the
+[  355/984] ok   ja fr de it es zh ko nl pt ru se vi | Enable or disable microSD card storage in MTP.
+[  356/984] ok   ja fr de it es zh ko nl pt ru se vi | The USB connection dropped mid-transfer. Check the c
+[  357/984] ok   ja fr de it es zh ko nl pt ru se vi | Enable or disable Install folder in MTP.
+[  358/984] ok   ja fr de it es zh ko nl pt ru se vi | Show Install folder
+[  359/984] ok   ja fr de it es zh ko nl pt ru se vi | Show microSD card
+[  360/984] ok   ja fr de it es zh ko nl pt ru se vi | microSD card name
+[  361/984] ok   ja fr de it es zh ko nl pt ru se vi | Show Saves (read-only)
+[  362/984] ok   ja fr de it es zh ko nl pt ru se vi | Set custom name for Install folder in MTP.
+[  363/984] ok   ja fr de it es zh ko nl pt ru se vi | Folder exposed over MTP. Select to remove it.
+[  364/984] ok   ja fr de it es zh ko nl pt ru se vi | Set custom name for microSD card in MTP.
+[  365/984] ok   ja fr de it es zh ko nl pt ru se vi | Install folder name
+[  366/984] ok   ja fr de it es zh ko nl pt ru se vi | Show a read-only drive with decrypted game saves. Fi
+[  367/984] ok   ja fr de it es zh ko nl pt ru se vi | Add folder
+[  368/984] ok   ja fr de it es zh ko nl pt ru se vi | No MTP storages enabled
+[  369/984] ok   ja fr de it es zh ko nl pt ru se vi | Remove this folder from MTP?
+[  370/984] ok   ja fr de it es zh ko nl pt ru se vi | Enable FTP server
+[  371/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure the FTP server: enable, login and port.
+[  372/984] ok   ja fr de it es zh ko nl pt ru se vi | Anonymous (no login)
+[  373/984] ok   ja fr de it es zh ko nl pt ru se vi | Pick a folder on the microSD card to expose as its o
+[  374/984] ok   ja fr de it es zh ko nl pt ru se vi | Username
+[  375/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP username
+[  376/984] ok   ja fr de it es zh ko nl pt ru se vi | Password
+[  377/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP password
+[  378/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP password (used when anonymous is off).
+[  379/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP username (used when anonymous is off).
+[  380/984] ok   ja fr de it es zh ko nl pt ru se vi | Port
+[  381/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP port
+[  382/984] ok   ja fr de it es zh ko nl pt ru se vi | Not set
+[  383/984] ok   ja fr de it es zh ko nl pt ru se vi | Allow connecting without a username or password.
+[  384/984] ok   ja fr de it es zh ko nl pt ru se vi | Mount over...
+[  385/984] ok   ja fr de it es zh ko nl pt ru se vi | This source cannot be shared
+[  386/984] ok   ja fr de it es zh ko nl pt ru se vi | Only microSD folders can be shared over FTP
+[  387/984] ok   ja fr de it es zh ko nl pt ru se vi | Expose this folder to a PC over MTP, FTP or HTTP.
+[  388/984] ok   ja fr de it es ko nl se vi | Default
+[  389/984] ok   ja fr de it es zh ko nl pt ru se vi | Sources
+[  390/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP enabled (no network connection)
+[  391/984] ok   ja fr de it es zh ko nl pt ru se vi | Failed to start FTP!
+[  392/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure WebDAV server for save synchronization.
+[  393/984] ok   ja fr de it es zh ko nl pt ru se vi | Server address
+[  394/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV
+[  395/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the WebDAV server username.
+[  396/984] ok   ja fr de it es zh ko nl pt ru se vi | TCP port the FTP server listens on (default 5000).
+[  397/984] ok   ja fr de it es zh ko nl pt ru se vi | Quickly switch this pane's file source.
+[  398/984] ok   ja fr de it es zh ko nl pt ru se vi | HTTP protocol is not allowed. Please use HTTPS/WebDA
+[  399/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure the WebDAV server address.
+[  400/984] ok   ja fr de it es zh ko nl pt ru se vi | WebDAV Settings
+[  401/984] ok   ja fr de it es zh ko nl pt ru se vi | Copying via MTP
+[  402/984] ok   ja fr de it es zh ko nl pt ru se vi | Now: On
+[  403/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the WebDAV server password.
+[  404/984] ok   ja fr de it es zh ko nl pt ru se vi | Now: Off
+[  405/984] ok   ja fr de it es zh ko nl pt ru se vi |  - Applies after reboot
+[  406/984] ok   ja fr de it es zh ko nl pt ru se vi | After reboot: Enabled
+[  407/984] ok   ja fr de it es zh ko nl pt ru se vi | No description provided
+[  408/984] ok   ja fr de it es zh ko nl pt ru se vi | Controls CPU, GPU, and memory clock speeds per appli
+[  409/984] ok   ja fr de it es zh ko nl pt ru se vi | Streams Nintendo Switch game audio and video to your
+[  410/984] ok   ja fr de it es zh ko nl pt ru se vi | This module applies after reboot. Use autostart.
+[  411/984] ok   ja fr de it es zh ko nl pt ru se vi | Emulates amiibo functionality on Nintendo Switch.
+[  412/984] ok   ja fr de it es zh ko nl pt ru se vi | Use controllers from other consoles natively on your
+[  413/984] ok   ja fr de it es zh ko nl pt ru se vi | Lossless PNG screenshot sysmodule for the Nintendo S
+[  414/984] ok   ja fr de it es zh ko nl pt ru se vi | Modifies color temperature of the Nintendo Switch sc
+[  415/984] ok   ja fr de it es zh ko nl pt ru se vi | FTP server running in the background of your Switch.
+[  416/984] ok   ja fr de it es zh ko nl pt ru se vi | Redirects local wireless multiplayer traffic over an
+[  417/984] ok   ja fr de it es zh ko nl pt ru se vi | Records and plays back configurable controller butto
+[  418/984] ok   ja fr de it es zh ko nl pt ru se vi | Applies signature-check patches at runtime.
+[  419/984] ok   ja fr de it es zh ko nl pt ru se vi | Provides offline parental controls and configurable 
+[  420/984] ok   ja fr de it es zh ko nl pt ru se vi | Increases docked display bandwidth to support higher
+[  421/984] ok   ja fr de it es zh ko nl pt ru se vi | Background audio player sysmodule for Nintendo Switc
+[  422/984] ok   ja fr de it es zh ko nl pt ru se vi | Nintendo Switch sysmodule for USB controller support
+[  423/984] ok   ja fr de it es zh ko nl pt ru se vi | Restarts nx-ovlloader without requiring a console re
+[  424/984] ok   ja fr de it es zh ko nl pt ru se vi | + Add network location
+[  425/984] ok   ja fr de it es zh ko nl pt ru se vi | Delete this network location?
+[  426/984] ok   ja fr de it es zh ko nl pt ru se vi | Manage file sources and network locations.
+[  427/984] ok   ja fr de it es zh ko nl pt ru se vi | Location deleted successfully!
+[  428/984] ok   ja fr de it es zh ko nl pt ru se vi | Upload to network location
+[  429/984] ok   ja fr de it es zh ko nl pt ru se vi | Upload the selected file(s) to a configured network 
+[  430/984] ok   ja fr de it es zh ko nl pt ru se vi | No network locations configured! Add one in Settings
+[  431/984] ok   ja fr de it es zh ko nl pt ru se vi | Select network location
+[  432/984] ok   ja fr de it es zh ko nl pt ru se vi | Select Protocol
+[  433/984] ok   ja fr de it es zh ko nl pt ru se vi | Previous game
+[  434/984] ok   ja fr de it es zh ko nl pt ru se vi | Configure a new network location (supported protocol
+[  435/984] ok   ja fr de it es zh ko nl pt ru se vi | Next game
+[  436/984] ok   ja fr de it es zh ko nl pt ru se vi | Previous tab
+[  437/984] ok   ja fr de it es zh ko nl pt ru se vi | Next tab
+[  438/984] ok   ja fr de it es zh ko nl pt ru se vi | Tickets
+[  439/984] ok   ja fr de it es zh ko nl pt ru se vi | Content
+[  440/984] ok   ja fr de it es zh ko nl pt ru se vi | Previous/Next tab
+[  441/984] ok   ja fr de it es zh ko nl pt ru se vi | No content
+[  442/984] ok   ja fr de it es zh ko nl pt ru se vi | Previous/Next game
+[  443/984] ok   ja fr de it es zh ko nl pt ru se vi | SELECTED GAMES
+[  444/984] ok   ja fr de it es zh ko nl pt ru se vi | selected
+[  445/984] ok   ja fr de it es zh ko nl pt ru se vi | Create mods folder
+[  446/984] ok   ja fr de it es zh ko nl pt ru se vi | Empty
+[  447/984] ok   ja fr de it es zh ko nl pt ru se vi | Open mods folder
+[  448/984] ok   ja fr de it es zh ko nl pt ru se vi | Create mods folders
+[  449/984] ok   ja fr de it es zh ko nl pt ru se vi | Added MTP folder
+[  450/984] ok   ja fr de it es zh ko nl pt ru se vi | LayeredFS uses this Atmosphere folder to replace gam
+[  451/984] ok   ja fr de it es zh ko nl pt ru se vi | Create Atmosphere LayeredFS folders for all selected
+[  452/984] ok   ja fr de it es zh ko nl pt ru se vi | Manually create save data entries for all selected g
+[  453/984] ok   ja fr de it es zh ko nl pt ru se vi | Are you sure you want to delete the selected games?
+[  454/984] ok   ja fr de it es zh ko nl pt ru se vi | Export content shared by all selected games as NSP f
+[  455/984] ok   ja fr de it es zh ko nl pt ru se vi | Permanently delete all selected games and their data
+[  456/984] ok   ja fr de it es zh ko nl pt ru se vi | Mods folder create failed!
+[  457/984] ok   ja fr de it es zh ko nl pt ru se vi | Protocol
+[  458/984] ok   ja fr de it es zh ko nl pt ru se vi | mods folder(s) ready
+[  459/984] ok   ja fr de it es zh ko nl pt ru se vi | Change the network protocol and edit the fields requ
+[  460/984] ok   ja fr de it es zh ko nl pt ru se vi | Show unavailable games
+[  461/984] ok   ja fr de it es zh ko nl pt ru se vi | After reboot: Disabled
+[  462/984] ok   ja fr de it es zh ko nl pt ru se vi | Change display order for games.
+[  463/984] ok   ja fr de it es zh ko nl pt ru se vi | Customise the look of Kefir Hub by changing the them
+[  464/984] ok   ja fr de it es zh ko nl pt ru se vi | Changes the clock to 12 hour
+[  465/984] ok   ja fr de it es zh ko nl pt ru se vi | Allows injecting third-party plugins into Switch gam
+[  466/984] ok   ja fr de it es zh ko nl pt ru se vi | Web (Title Mode required)
+[  467/984] ok   ja fr de it es zh ko nl pt ru se vi | The built-in browser
+[  468/984] ok   ja fr de it es zh ko nl pt ru se vi | Applet Mode cannot launch the system web browser. Sh
+[  469/984] ok   ja fr de it es zh ko nl pt ru se vi | Logs to /config/kefir/log.txt
+[  470/984] ok   ja fr de it es zh ko nl pt ru se vi | This sets the CPU to 1785mhz and lowers the GPU 76mh
+[  471/984] ok   ja fr de it es zh ko nl pt ru se vi | Change how fast the scrolling text updates
+[  472/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the menu that appears on the left tab.
+[  473/984] ok   ja fr de it es zh ko nl pt ru se vi | Set the menu that appears on the right tab.
+[  474/984] ok   ja fr de it es zh ko nl pt ru se vi | You can enable installing from here.
+[  475/984] ok   ja fr de it es zh ko nl pt ru se vi | Host process for loading overlay NROs on the Nintend
+[  476/984] ok   ja fr de it es zh ko nl pt ru se vi | Change the dump options.
+[  477/984] ok   ja fr de it es zh ko nl ru se vi | Disable erpt_reports
+[  478/984] ok   ja fr de it es zh ko nl pt ru se vi | Disables error reports generated in /atmosphere/erpt
+[  479/984] ok   ja fr de it es zh ko nl pt ru se vi | Enables installing whilst in sysMMC mode.
+[  480/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enables installing whilst in emuMMC mode. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  481/984] FAIL ja fr de it es zh ko nl pt ru se vi | Reserve free space -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  482/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set the threshold of free space to reserve on instal -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  483/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter Reserve Free Space (MB) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  484/984] FAIL ja fr de it es zh ko nl pt ru se vi | Allows for installing title updates that are lower t -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  485/984] FAIL ja fr de it es zh ko nl pt ru se vi | Reinstall -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  486/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  487/984] FAIL ja fr de it es zh ko nl pt ru se vi | Prompt -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  488/984] FAIL ja fr de it es zh ko nl pt ru se vi | For titles / ncas already installed: reinstall, skip -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  489/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save options globally -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  490/984] FAIL ja fr de it es zh ko nl pt ru se vi | When enabled, changing options in the queue context  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  491/984] FAIL ja fr de it es zh ko nl pt ru se vi | Installs tickets only, useful if the title was alrea -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  492/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skips installing the base application. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  493/984] FAIL ja fr de it es zh ko nl pt ru se vi | LIBRARY -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  494/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skips installing updates. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  495/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skips installing DLC. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  496/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skips installing DLC update (data patch). -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  497/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skips installing tickets, not recommended. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  498/984] FAIL ja fr de it es zh ko nl pt ru se vi | It is recommended to keep this disabled. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  499/984] FAIL ja fr de it es zh ko nl pt ru se vi | It is recommended to keep this disabled, unless you  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  500/984] FAIL ja fr de it es zh ko nl pt ru se vi | Currently, this option is stubbed (not implemented). -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  501/984] FAIL ja fr de it es zh ko nl pt ru se vi | It is recommended to keep this enabled. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  502/984] FAIL ja fr de it es zh ko nl pt ru se vi | Disabling this would use /dumps/XCI/name.xci -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  503/984] FAIL ja fr de it es zh ko nl pt ru se vi | Removes the unused data at the end of the XCI, makin -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  504/984] FAIL ja fr de it es zh ko nl pt ru se vi | For example, /dumps/XCI/name/name (trimmed).xci -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  505/984] FAIL ja fr de it es zh ko nl pt ru se vi | Converts personalised ticket to a fake common ticket -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  506/984] FAIL ja fr de it es zh ko nl pt ru se vi | Installing is disabled, enable now? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  507/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enable -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  508/984] FAIL ja fr de it es zh ko nl pt ru se vi | WARNING: Installing apps will lead to a ban! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  509/984] FAIL ja fr de it es zh ko nl pt ru se vi | Installing enabled! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  510/984] FAIL ja fr de it es zh ko nl pt ru se vi | Sync Location -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  511/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select which network location to use for save synchr -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  512/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save sync location -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  513/984] FAIL ja fr de it es zh ko nl pt ru se vi | Network location that save backups are uploaded to.  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  514/984] FAIL ja fr de it es zh ko nl pt ru se vi | Use the Appstore to re-install hbmenu -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  515/984] FAIL ja fr de it es zh ko nl pt ru se vi | Please launch MTP install menu before trying to inst -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  516/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP connected -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  517/984] FAIL ja fr de it es zh ko nl pt ru se vi | Source protocol changed. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  518/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP disconnected -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  519/984] FAIL ja fr de it es zh ko nl pt ru se vi | read-only -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  520/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to connect to the SMB server. Please check yo -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  521/984] FAIL ja fr de it es zh ko nl pt ru se vi | Samba support is not enabled in this build of Sphair -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  522/984] FAIL ja fr de it es zh ko nl pt ru se vi | Extracting app files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  523/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show application records that have no installed cont -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  524/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save synchronization failed. Please check your WebDA -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  525/984] FAIL ja fr de it es zh ko nl pt ru se vi | Hold A for 3 seconds to continue -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  526/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to download manifest -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  527/984] FAIL ja fr de it es zh ko nl pt se vi | Visit Website -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  528/984] FAIL ja fr de it es zh ko nl pt ru se vi | Extracting app metadata -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  529/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to download application -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  530/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to uninstall application -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  531/984] FAIL ja fr de it es zh ko nl pt ru se vi | prod.keys not found. Place Lockpick_RCM in /bootload -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  532/984] FAIL ja fr de it es zh ko nl pt ru se vi | prod.keys not found. Launch Lockpick_RCM payload now -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  533/984] FAIL ja fr de it es zh ko nl pt ru se vi | Download All -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  534/984] FAIL ja fr de it es zh ko nl pt se vi | Preview -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  535/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select All -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  536/984] FAIL ja fr de it es zh ko nl pt ru se vi | Downloading -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  537/984] FAIL ja fr de it es zh ko nl pt ru se vi | Fix BID -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  538/984] FAIL ja fr de it es zh ko nl pt ru se vi | View Code -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  539/984] FAIL ja fr de it es ko nl se vi | Account -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  540/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cheats Options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  541/984] FAIL ja fr de it es zh ko nl pt ru se vi | Choose how the cheat game list is displayed on scree -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  542/984] FAIL ja fr de it es zh ko nl pt ru se vi | Applet Mode: bulk NSO scan skipped; installed-conten -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  543/984] FAIL ja fr de it es zh ko nl pt ru se vi | Scanning... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  544/984] FAIL ja fr de it es zh ko nl pt ru se vi | Disabling will give you the option to restore hbmenu -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  545/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cancel queue -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  546/984] FAIL ja fr de it es zh ko nl pt ru se vi | Already installed. Reinstall? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  547/984] FAIL ja fr de it es zh ko nl pt ru se vi | NAND free -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  548/984] FAIL ja fr de it es zh ko nl pt ru se vi | Unknown -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  549/984] FAIL ja fr de it es zh ko nl pt ru se vi | Calculated during install -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  550/984] FAIL ja fr de it es zh ko nl pt ru se vi | Remaining -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  551/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skipped:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  552/984] FAIL ja fr de it es zh ko nl pt ru se vi | already installed -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  553/984] FAIL ja fr de it es zh ko nl pt ru se vi | Change "Skip if already installed" in Settings to re -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  554/984] FAIL ja fr de it es zh ko nl pt ru se vi | Browse archive -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  555/984] FAIL ja fr de it es zh ko nl pt ru se vi | Open:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  556/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to list network storage! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  557/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to list storage! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  558/984] FAIL ja fr de it es zh ko nl pt ru se vi | The server is reachable but the listing failed. Chec -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  559/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to open archive! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  560/984] FAIL ja fr de it es zh ko nl pt ru se vi | This source cannot be shared over MTP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  561/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mounted over MTP:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  562/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to start MTP! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  563/984] FAIL ja fr de it es zh ko nl pt ru se vi | Edit Source -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  564/984] FAIL ja fr de it es zh ko nl pt ru se vi | Configure connection settings. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  565/984] FAIL ja fr de it es zh ko nl pt ru se vi | Test Connection -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  566/984] FAIL ja fr de it es zh ko nl pt ru se vi | Testing Connection... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  567/984] FAIL ja fr de it es zh ko nl pt ru se vi | Connection test successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  568/984] FAIL ja fr de it es zh ko nl pt ru se vi | Connection test failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  569/984] FAIL ja fr de it es zh ko nl pt ru se vi | Test connection with current settings. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  570/984] FAIL ja fr de it es zh ko nl pt ru se vi | Rename Source -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  571/984] FAIL ja fr de it es zh ko nl pt ru se vi | Rename Network Location -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  572/984] FAIL ja fr de it es zh ko nl pt ru se vi | Location renamed successfully! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  573/984] FAIL ja fr de it es zh ko nl pt ru se vi | Rename this network location. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  574/984] FAIL ja fr de it es zh ko nl pt ru se vi | Properties -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  575/984] FAIL ja fr de it es zh ko nl pt ru se vi | Name:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  576/984] FAIL ja fr de it es zh ko nl pt ru se vi | Protocol:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  577/984] FAIL ja fr de it es zh ko nl pt ru se vi | URL:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  578/984] FAIL ja fr de it es zh ko nl pt ru se vi | Username:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  579/984] FAIL ja fr de it es zh ko nl pt ru se vi | Port:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  580/984] FAIL ja fr de it es zh ko nl pt ru se vi | View network location properties. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  581/984] FAIL ja fr de it es zh ko nl pt ru se vi | Delete Source -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  582/984] FAIL ja fr de it es zh ko nl pt ru se vi | Delete this network location. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  583/984] FAIL ja fr de it es zh ko nl pt ru se vi | Destination folder is read-only -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  584/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cannot cut read-only files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  585/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cannot delete read-only files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  586/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cannot rename read-only files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  587/984] FAIL ja fr de it es zh ko nl pt ru se vi | Extract selection -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  588/984] FAIL ja fr de it es zh ko nl pt ru se vi | Extracting -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  589/984] FAIL ja fr de it es zh ko nl pt ru se vi | Copy the selected files and folders out of the archi -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  590/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount over MTP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  591/984] FAIL ja fr de it es zh ko nl pt ru se vi | Expose this folder or mount to a PC over USB MTP. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  592/984] FAIL ja fr de it es zh ko nl pt ru se vi | Unmount MTP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  593/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP unmounted -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  594/984] FAIL ja fr de it es zh ko nl pt ru se vi | Stop sharing the mounted folder over MTP. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  595/984] FAIL ja fr de it es zh ko nl pt ru se vi | Folder is read-only -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  596/984] FAIL ja fr de it es zh ko nl pt ru se vi | View Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  597/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | CRC32 -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  598/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | MD5 -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  599/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | SHA1 -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  600/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | SHA256 -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  601/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to connect to network storage! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  602/984] FAIL ja fr de it es zh ko nl pt ru se vi | Check that the server is powered on and reachable on -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  603/984] FAIL ja fr de it es zh ko nl pt ru se vi | A location with the same name and protocol already e -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  604/984] FAIL ja fr de it es zh ko nl pt ru se vi | Overwrite -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  605/984] FAIL ja fr de it es zh ko nl pt ru se vi | Keep Both -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  606/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to parse nro -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  607/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set the name of the application -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  608/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set the author of the application -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  609/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set the display version of the application -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  610/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set the path to the icon for the forwarder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  611/984] FAIL ja fr de it es zh ko nl pt ru se vi | Create the forwarder. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  612/984] FAIL ja fr de it es zh ko nl pt ru se vi | All fields must be non-empty! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  613/984] FAIL ja fr de it es zh ko nl pt ru se vi | File install failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  614/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install errors -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  615/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to upload files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  616/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to delete files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  617/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to copy or move files -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  618/984] FAIL ja fr de it es zh ko nl pt ru se vi | Use Folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  619/984] FAIL ja fr de it es zh ko nl pt ru se vi | Fit Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  620/984] FAIL ja fr de it es zh ko nl pt ru se vi | Invert Selection -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  621/984] FAIL ja fr de it es zh ko nl pt ru se vi | Zoom Up / Down -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  622/984] FAIL ja fr de it es zh ko nl pt ru se vi | Previous Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  623/984] FAIL ja fr de it es zh ko nl pt ru se vi | Next Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  624/984] FAIL ja fr de it es zh ko nl pt ru se vi | Exit Full Screen -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  625/984] FAIL ja fr de it es zh ko nl pt ru se vi | Full Screen -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  626/984] FAIL ja fr de it es zh ko nl pt ru se vi | Image Options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  627/984] FAIL ja fr de it es zh ko nl pt ru se vi | Delete success! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  628/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to load image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  629/984] FAIL ja fr de it es zh ko nl pt ru se vi | Validating -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  630/984] FAIL ja fr de it es zh ko nl pt ru se vi | Updating Firmware -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  631/984] FAIL ja fr de it es zh ko nl pt ru se vi | Later -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  632/984] FAIL ja fr de it es zh ko nl pt ru se vi | Reboot -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  633/984] FAIL ja fr de it es zh ko nl pt ru se vi | Game Details -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  634/984] FAIL ja fr de it es zh ko nl pt ru se vi | Actions -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  635/984] FAIL ja fr de it es zh ko nl pt ru se vi | Game actions -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  636/984] FAIL ja fr de it es zh ko nl pt ru se vi | Component Actions -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  637/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump NSP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  638/984] FAIL ja fr de it es zh ko nl pt ru se vi | Export only this installed component as an NSP. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  639/984] FAIL ja fr de it es zh ko nl pt ru se vi | Content information -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  640/984] FAIL ja fr de it es zh ko nl pt ru se vi | Game Actions -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  641/984] FAIL ja fr de it es zh ko nl pt ru se vi | Launch this game. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  642/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump all components -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  643/984] FAIL ja fr de it es zh ko nl pt ru se vi | Export base, updates, DLC and data patches. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  644/984] FAIL ja fr de it es zh ko nl pt ru se vi | Folder create failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  645/984] FAIL ja fr de it es zh ko nl pt ru se vi | Folder created! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  646/984] FAIL ja fr de it es zh ko nl pt ru se vi | Open in file browser -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  647/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount this component's NCA files and browse them in  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  648/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show installed content metadata. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  649/984] FAIL ja fr de it es zh ko nl pt ru se vi | Title ID -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  650/984] FAIL ja fr de it es zh ko nl pt ru se vi | Version -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  651/984] FAIL ja fr de it es zh ko nl pt ru se vi | Components -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  652/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save quota -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  653/984] FAIL ja fr de it es zh ko nl pt ru se vi | Found -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  654/984] FAIL ja fr de it es zh ko nl pt ru se vi | Not found -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  655/984] FAIL ja fr de it es zh ko nl pt ru se vi | Press Up on the first row to use the details above -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  656/984] FAIL ja fr de it es zh ko nl pt ru se vi | Languages -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  657/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show every language this game ships with -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  658/984] FAIL ja fr de it es zh ko nl pt ru se vi | Open /atmosphere/contents/<Title ID>, where LayeredF -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  659/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mods folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  660/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show the installed base, updates and DLC -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  661/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show the rights IDs and tickets of this game -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  662/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show the save data of this game -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  663/984] FAIL ja fr de it es zh ko nl pt ru se vi | Supported languages -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  664/984] FAIL ja fr de it es zh ko nl pt ru se vi | No language data -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  665/984] FAIL ja fr de it es zh ko nl pt ru se vi | This game has no mods folder yet. Create it? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  666/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save Actions -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  667/984] FAIL ja fr de it es zh ko nl pt ru se vi | Create -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  668/984] FAIL ja fr de it es zh ko nl pt ru se vi | Backup and restore -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  669/984] FAIL ja fr de it es zh ko nl pt ru se vi | Open the saves menu showing only this game. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  670/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save information -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  671/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show the raw save data metadata. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  672/984] FAIL ja fr de it es zh ko nl pt ru se vi | Choose how games are displayed on screen. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  673/984] FAIL ja fr de it es zh ko nl pt ru se vi | Hide game forwarder shortcuts from the list. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  674/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select which field to sort games by. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  675/984] FAIL ja fr de it es zh ko nl pt ru se vi | Sort games from newest to oldest or A to Z. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  676/984] FAIL ja fr de it es zh ko nl pt ru se vi | Pick and launch a random game from your library. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  677/984] FAIL ja fr de it es zh ko nl pt ru se vi | Configure dump output settings such as folder struct -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  678/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show all installed content meta records for the sele -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  679/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump all content: base game, updates, and DLC. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  680/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump the base application NSP only. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  681/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump the game update/patch NSP only. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  682/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump downloadable content (DLC) NSP only. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  683/984] FAIL ja fr de it es zh ko nl pt ru se vi | Dump data patch NSP only. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  684/984] FAIL ja fr de it es zh ko nl ru se vi | Create save -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  685/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select user to create save for -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  686/984] FAIL ja fr de it es zh ko nl ru se vi | Advanced options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  687/984] FAIL ja fr de it es zh ko nl pt ru se vi | Rescan the game library and reload the list. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  688/984] FAIL ja fr de it es ko nl se vi | Title cache -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  689/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cache game names and icons to speed up loading. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  690/984] FAIL ja fr de it es zh ko nl ru se vi | Delete title cache -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  691/984] FAIL ja fr de it es zh ko nl pt ru se vi | Are you sure you want to delete the title cache? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  692/984] FAIL ja fr de it es zh ko nl pt ru se vi | Clear cached game metadata to force a fresh reload. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  693/984] FAIL ja fr de it es zh ko nl pt ru se vi | Access developer and maintenance tools. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  694/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to prepare NSP dump -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  695/984] FAIL ja fr de it es zh ko nl pt ru se vi | No matching installed content to dump -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  696/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save create failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  697/984] FAIL ja fr de it es zh ko nl pt ru se vi | Creating -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  698/984] FAIL ja fr de it es zh ko nl pt ru se vi | GameCard is trimmed, full dump is not possible! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  699/984] FAIL ja fr de it es zh ko nl pt ru se vi | Extracting... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  700/984] FAIL ja fr de it es zh ko nl pt ru se vi | Download failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  701/984] FAIL ja fr de it es zh ko nl pt ru se vi | Download and extract completed! Delete ZIP file? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  702/984] FAIL ja fr de it es zh ko nl pt ru se vi | Keep -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  703/984] FAIL ja fr de it es zh ko nl pt ru se vi | URL must end with .zip -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  704/984] FAIL ja fr de it es zh ko nl pt ru se vi | Force -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  705/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select release to download for  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  706/984] FAIL ja fr de it es ko nl se vi | Drag'n'Drop (NSP, XCI, NSZ, XCZ) to the install fold -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  707/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install failed: another installation is in progress. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  708/984] FAIL ja fr de it es zh ko nl pt ru se vi | Receiving... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  709/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install cancelled -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  710/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install cancelled: the source stopped sending data -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  711/984] FAIL ja fr de it es zh ko nl pt ru se vi | Transfer interrupted: the PC stopped sending data. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  712/984] FAIL ja fr de it es zh ko nl pt ru se vi | Loading changelog... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  713/984] FAIL ja fr de it es zh ko nl pt ru se vi | Updater Options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  714/984] FAIL ja fr de it es zh ko nl pt ru se vi | Installing -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  715/984] FAIL ja fr de it es zh ko nl pt ru se vi | Update Kefir -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  716/984] FAIL ja fr de it es ko nl se vi | MTP Install -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  717/984] FAIL ja fr de it es ko nl se vi | Backup failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  718/984] FAIL ja fr de it es ko nl se vi | Auto backup -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  719/984] FAIL ja fr de it es ko nl se vi | Restore failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  720/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select Sync Location -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  721/984] FAIL ja fr de it es zh ko nl pt ru se vi | Restoring save... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  722/984] FAIL ja fr de it es ko nl se vi | System -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  723/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show saves from all user accounts. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  724/984] FAIL ja fr de it es zh ko nl pt ru se vi | Filter saves by this user account. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  725/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show or hide saves of this data type. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  726/984] FAIL ja fr de it es zh ko nl pt ru se vi | Choose how saves are displayed on screen. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  727/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select which field to sort saves by. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  728/984] FAIL ja fr de it es zh ko nl pt ru se vi | Sort saves from newest to oldest or oldest to newest -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  729/984] FAIL ja fr de it es zh ko nl pt ru se vi | Filter saves by user account. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  730/984] FAIL ja fr de it es zh ko nl pt ru se vi | Choose which save data types to display. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  731/984] FAIL ja fr de it es zh ko nl pt ru se vi | Automatically create a backup before restoring a sav -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  732/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save backups as compressed ZIP archives to reduce di -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  733/984] FAIL ja fr de it es zh ko nl pt ru se vi | Access advanced backup and restore settings. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  734/984] FAIL ja fr de it es zh ko nl pt ru se vi | No matching saves found. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  735/984] FAIL ja fr de it es zh ko nl pt ru se vi | Restore Options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  736/984] FAIL ja fr de it es zh ko nl pt ru se vi | Backup Options -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  737/984] FAIL ja fr de it es zh ko nl pt ru se vi | Start Restore -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  738/984] FAIL ja fr de it es zh ko nl pt ru se vi | Start Backup -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  739/984] FAIL ja fr de it es zh ko nl pt ru se vi | Begin restoring saves from the selected location. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  740/984] FAIL ja fr de it es zh ko nl pt ru se vi | Begin backing up saves to the selected location. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  741/984] FAIL ja fr de it es zh ko nl pt ru se vi | LOCATION -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  742/984] FAIL ja fr de it es zh ko nl pt ru se vi | Location -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  743/984] FAIL ja fr de it es zh ko nl pt ru se vi | Choose Folder... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  744/984] FAIL ja fr de it es zh ko nl pt ru se vi | ACCOUNTS -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  745/984] FAIL ja fr de it es zh ko nl pt ru se vi | Include saves from all user accounts. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  746/984] FAIL ja fr de it es zh ko nl pt ru se vi | Include saves from this user account. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  747/984] FAIL ja fr de it es zh ko nl pt ru se vi | SAVE TYPES -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  748/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mode -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  749/984] FAIL ja fr de it es zh ko nl pt ru se vi | Edit -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  750/984] FAIL ja fr de it es zh ko nl pt ru se vi | Manual Mode -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  751/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save Preset -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  752/984] FAIL ja fr de it es zh ko nl pt ru se vi | Add Point -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  753/984] FAIL ja fr de it es zh ko nl pt ru se vi | Bezier -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  754/984] FAIL ja fr de it es zh ko nl pt ru se vi | Remove Point -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  755/984] FAIL ja fr de it es zh ko nl pt ru se vi | Load Preset -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  756/984] FAIL ja fr de it es zh ko nl pt ru se vi | Fan preset -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  757/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save fan preset -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  758/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save and Reboot -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  759/984] FAIL ja fr de it es zh ko nl pt ru se vi | Done -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  760/984] FAIL ja fr de it es zh ko nl pt ru se vi | Apply fan curve -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  761/984] FAIL ja fr de it es zh ko nl pt ru se vi | Applying -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  762/984] FAIL ja fr de it es zh ko nl pt ru se vi | Discard unsaved fan curve changes? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  763/984] FAIL ja fr de it es zh ko nl pt ru se vi | Discard -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  764/984] FAIL ja fr de it es zh ko nl pt ru se vi | Cold console -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  765/984] FAIL ja fr de it es zh ko nl pt ru se vi | Quiet -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  766/984] FAIL ja fr de it es zh ko nl pt ru se vi | Balanced -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  767/984] FAIL ja fr de it es zh ko nl pt ru se vi | Fan off -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  768/984] FAIL ja fr de it es zh ko nl pt ru se vi | Fan 100% -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  769/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enabling -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  770/984] FAIL ja fr de it es zh ko nl pt ru se vi | Disabling -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  771/984] FAIL ja fr de it es zh ko nl pt ru se vi | Running -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  772/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to download theme -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  773/984] FAIL ja fr de it es zh ko nl pt ru se vi | Downloading language packs... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  774/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install interface translation. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  775/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB storage -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  776/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount connected USB drives and show them in the file -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  777/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB storage read-only -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  778/984] FAIL ja fr de it es zh ko nl pt ru se vi | Protect connected USB drives from changes. Turn this -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  779/984] FAIL ja fr de it es zh ko nl pt ru se vi | Connected, mounted read-only. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  780/984] FAIL ja fr de it es zh ko nl pt ru se vi | Connected, writable. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  781/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter/Connect -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  782/984] FAIL ja fr de it es zh ko nl pt ru se vi | Browsing is not supported for this protocol yet. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  783/984] FAIL ja fr de it es zh ko nl pt ru se vi | Connect to this network location. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  784/984] FAIL ja fr de it es zh ko nl pt ru se vi | Theme and visual options. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  785/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select the Kefir Hub interface theme and visual opti -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  786/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip or prompt for titles or NCAs that are already i -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  787/984] FAIL ja fr de it es zh ko nl pt ru se vi | Removed from Favorites -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  788/984] FAIL ja fr de it es zh ko nl pt ru se vi | Server IP / Hostname -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  789/984] FAIL ja fr de it es zh ko nl pt ru se vi | Samba server IP address or hostname. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  790/984] FAIL ja fr de it es zh ko nl pt ru se vi | Already installed behaviour -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  791/984] FAIL ja fr de it es zh ko nl pt ru se vi | Share Name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  792/984] FAIL ja fr de it es zh ko nl pt ru se vi | Samba shared folder name. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  793/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save install options globally or locally for session -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  794/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter share name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  795/984] FAIL ja fr de it es zh ko nl pt ru se vi | FTP server IP address or hostname. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  796/984] FAIL ja fr de it es zh ko nl pt ru se vi | FTP port. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  797/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter port -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  798/984] FAIL ja fr de it es zh ko nl pt ru se vi | Server URL -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  799/984] FAIL ja fr de it es zh ko nl pt ru se vi | Server connection URL address. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  800/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter Server URL -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  801/984] FAIL ja fr de it es zh ko nl pt ru se vi | Username for network connection (optional). -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  802/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter server IP or hostname -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  803/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter username -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  804/984] FAIL ja fr de it es zh ko nl pt ru se vi | Password for network connection (optional). -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  805/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter password -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  806/984] FAIL ja fr de it es zh ko nl pt ru se vi | Theme downloaded, install now? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  807/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to launch NXthemes_Installer.nro -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  808/984] FAIL ja fr de it es zh ko nl pt ru se vi | Added to Favorites -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  809/984] FAIL ja fr de it es zh ko nl pt ru se vi | NXthemes_Installer.nro not found, download now? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  810/984] FAIL ja fr de it es zh ko nl pt ru se vi | No screenshots -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  811/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to download screenshot -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  812/984] FAIL ja fr de it es zh ko nl pt ru se vi | Rising -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  813/984] FAIL ja fr de it es zh ko nl pt ru se vi | Trending -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  814/984] FAIL ja fr de it es zh ko nl pt ru se vi | Created -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  815/984] FAIL ja fr de it es zh ko nl pt ru se vi | Launch NXthemes_Installer.nro -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  816/984] FAIL ja fr de it es zh ko nl pt ru se vi | Theme Name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  817/984] FAIL ja fr de it es zh ko nl pt ru se vi | Author -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  818/984] FAIL ja fr de it es zh ko nl pt ru se vi | Generate Theme -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  819/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set Theme Name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  820/984] FAIL ja fr de it es zh ko nl pt ru se vi | Set Author Name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  821/984] FAIL ja fr de it es zh ko nl pt ru se vi | Home Menu (ResidentMenu) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  822/984] FAIL ja fr de it es zh ko nl pt ru se vi | Lock Screen (Entrance) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  823/984] FAIL ja fr de it es zh ko nl pt ru se vi | All Apps (Flaunch) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  824/984] FAIL ja fr de it es zh ko nl pt ru se vi | Settings (Set) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  825/984] FAIL ja fr de it es zh ko nl pt ru se vi | User Page (MyPage) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  826/984] FAIL ja fr de it es zh ko nl pt ru se vi | News (Notification) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  827/984] FAIL ja fr de it es zh ko nl pt ru se vi | Player Select (Psl) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  828/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select Theme Target -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  829/984] FAIL ja fr de it es zh ko nl pt ru se vi | Generating Theme... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  830/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to generate theme! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  831/984] FAIL ja fr de it es zh ko nl pt ru se vi | Theme generated! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  832/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to launch NXThemesInstaller.nro -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  833/984] FAIL ja fr de it es zh ko nl pt ru se vi | Theme Created Successfully! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  834/984] FAIL ja fr de it es zh ko nl pt ru se vi | Hold A (3s): Install Theme -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  835/984] FAIL ja fr de it es zh ko nl pt ru se vi | Hold Y (3s): Install & Reboot -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  836/984] FAIL ja fr de it es zh ko nl pt ru se vi | Press B: Cancel -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  837/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to start web server -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  838/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | There is no internet connection.  Turn on Wi-Fi (or  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  839/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | The console has no internet connection. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  840/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | Connecting... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  841/984] FAIL ja fr de it es zh ko nl pt ru se vi | Web Sharing Server -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  842/984] FAIL ja fr de it es zh ko nl pt se vi | Web server stopped: the console's IP address changed -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  843/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | Waiting for the console to connect... -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  844/984] FAIL ja fr de it es zh ko nl pt ru se vi uk | Try again -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  845/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to read the current NRO metadata -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  846/984] FAIL ja fr de it es zh ko nl pt ru se vi | The current NRO does not contain a forwarder icon -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  847/984] FAIL ja fr de it es zh ko nl pt ru se vi | return to HOME and launch the new icon manually. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  848/984] FAIL ja fr de it es zh ko nl pt ru se vi | Web listener started, but its local self-test failed -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  849/984] FAIL ja fr de it es zh ko nl pt ru se vi | Web Server — Applet Mode -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  850/984] FAIL ja fr de it es zh ko nl pt ru se vi | Start anyway -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  851/984] FAIL ja fr de it es zh ko nl pt ru se vi | Applet Mode is supported with smaller network buffer -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  852/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install Title Mode forwarder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  853/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install a HOME Menu icon for the current Kefir Hub N -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  854/984] FAIL ja fr de it es zh ko nl pt se vi | Web server stopped: the console went offline -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  855/984] FAIL ja fr de it es zh ko nl pt ru se vi | How to enter Title Mode -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  856/984] FAIL ja fr de it es zh ko nl pt ru se vi | Show the standard title-takeover instructions. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  857/984] FAIL ja fr de it es zh ko nl pt ru se vi | Web Server -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  858/984] FAIL ja fr de it es zh ko nl pt ru se vi | Start the web sharing server to transfer files via w -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  859/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP: Active -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  860/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount MTP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  861/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP stopped -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  862/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP started -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  863/984] FAIL ja fr de it es zh ko nl pt ru se vi | Failed to start MTP -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  864/984] FAIL ja fr de it es zh ko nl pt ru se vi | Toggle the MTP responder to browse SD card files on  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  865/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB install failed! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  866/984] FAIL ja fr de it es zh ko nl pt ru se vi | Expand -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  867/984] FAIL ja fr de it es zh ko nl pt ru se vi | Minimize -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  868/984] FAIL ja fr de it es zh ko nl pt ru se vi | Pressing HOME will pause this transfer -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  869/984] FAIL ja fr de it es zh ko nl pt ru se vi | Prev Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  870/984] FAIL ja fr de it es zh ko nl pt ru se vi | Add/Remove Point -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  871/984] FAIL ja fr de it es zh ko nl pt ru se vi | Load/Save Preset -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  872/984] FAIL ja fr de it es zh ko nl pt ru se vi | Prev / Next Image -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  873/984] FAIL ja fr de it es zh ko nl pt ru se vi | Applet Mode: keep this screen open; use the same non -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  874/984] FAIL ja fr de it es zh ko nl pt ru se vi | NOTE: The browser is very limited, some websites wil -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  875/984] FAIL ja fr de it es zh ko nl pt ru se vi | Some devices only function if the xci folder is name -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  876/984] FAIL ja fr de it es zh ko nl pt ru se vi | Save create successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  877/984] FAIL ja fr de it es ko nl se vi | Backup successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  878/984] FAIL ja fr de it es zh ko nl pt ru se vi | Auto-sync successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  879/984] FAIL ja fr de it es ko nl se vi | Restore successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  880/984] FAIL ja fr de it es zh ko nl pt ru se vi | Sync successful! -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  881/984] FAIL ja fr de it es zh ko nl pt ru se vi | Configure the WebDAV server used for save synchroniz -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  882/984] FAIL ja fr de it es zh ko nl pt ru se vi | Servers that let a PC reach this console. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  883/984] FAIL ja fr de it es zh ko nl pt ru se vi | Storage and network locations to browse and install  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  884/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install tickets only -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  885/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install tickets without any title content. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  886/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip base game -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  887/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip game updates -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  888/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip installing updates for DLC (data patches). -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  889/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip DLC updates -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  890/984] FAIL ja fr de it es zh ko nl pt ru se vi | Skip tickets -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  891/984] FAIL ja fr de it es zh ko nl pt ru se vi | Ignore origin flag -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  892/984] FAIL ja fr de it es zh ko nl pt ru se vi | Ignore the NCA distribution bit that marks content a -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  893/984] FAIL ja fr de it es zh ko nl pt ru se vi | Convert ticket on install -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  894/984] FAIL ja fr de it es zh ko nl pt ru se vi | Convert a personalized ticket to a common one while  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  895/984] FAIL ja fr de it es zh ko nl pt ru se vi | Re-encrypt to master key 0 -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  896/984] FAIL ja fr de it es zh ko nl pt ru se vi | Create nested folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  897/984] FAIL ja fr de it es zh ko nl pt ru se vi | Encrypt key area keys with master key 0 so older fir -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  898/984] FAIL ja fr de it es zh ko nl pt ru se vi | Append .xci to the dump folder name; some devices on -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  899/984] FAIL ja fr de it es zh ko nl pt ru se vi | Convert ticket on dump -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  900/984] FAIL ja fr de it es zh ko nl pt ru se vi | Convert a personalized ticket to a common one while  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  901/984] FAIL ja fr de it es zh ko nl pt ru se vi | Source settings -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  902/984] FAIL ja fr de it es zh ko nl pt ru se vi | Name XCI folder like the file -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  903/984] FAIL ja fr de it es zh ko nl pt ru se vi | Lower required firmware -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  904/984] FAIL ja fr de it es zh ko nl pt ru se vi | Where and when -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  905/984] FAIL ja fr de it es zh ko nl pt ru se vi | What to install -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  906/984] FAIL ja fr de it es zh ko nl pt ru se vi | Lower the required system version recorded in the me -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  907/984] FAIL ja fr de it es zh ko nl pt ru se vi | Verification and conversion -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  908/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount USB drive -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  909/984] FAIL ja fr de it es zh ko nl pt ru se vi | Bring up a connected USB drive and open it. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  910/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB storage is turned off in Settings, under Sources -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  911/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP is using the USB port. Turn MTP off in Settings, -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  912/984] FAIL ja fr de it es zh ko nl pt ru se vi | No USB drive found. Check that it has power and is f -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  913/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mounted -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  914/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB drive connected -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  915/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB drive removed -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  916/984] FAIL ja fr de it es zh ko nl pt ru se vi | MTP turned off to free the USB port -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  917/984] FAIL ja fr de it es zh ko nl pt ru se vi | USB storage turned off to free the USB port -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  918/984] FAIL ja fr de it es zh ko nl pt ru se vi | Mount connected USB drives next to the microSD card. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  919/984] FAIL ja fr de it es zh ko nl pt ru se vi | Run the MTP server in the background. Shares the USB -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  920/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install manually -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  921/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select firmware folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  922/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select current folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  923/984] FAIL ja fr de it es zh ko nl pt ru se vi | Install firmware from this folder? -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  924/984] FAIL ja fr de it es zh ko nl pt ru se vi | Select folder -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  925/984] FAIL ja fr de it es zh ko nl pt ru se vi | Apply downgrade fix -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  926/984] FAIL ja fr de it es zh ko nl pt ru se vi | Downgrade fix -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  927/984] FAIL ja fr de it es zh ko nl pt ru se vi | Delete system save 8000000000000073 (experimental do -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  928/984] FAIL ja fr de it es zh ko nl pt ru se vi | Optional (ask) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  929/984] FAIL ja fr de it es zh ko nl pt ru se vi | When installing a lower firmware: Automatic deletes  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  930/984] FAIL ja fr de it es zh ko nl pt ru se vi | Reserve free space (system) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  931/984] FAIL ja fr de it es zh ko nl pt ru se vi | Reserve free space (microSD) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  932/984] FAIL ja fr de it es zh ko nl pt ru se vi | Downgrade fix applied. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  933/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter System Reserve Free Space (MB) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  934/984] FAIL ja fr de it es zh ko nl pt ru se vi | Enter microSD Reserve Free Space (MB) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  935/984] FAIL ja fr de it es zh ko nl pt ru se vi | Free space to keep on system memory when planning in -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  936/984] FAIL ja fr de it es zh ko nl pt ru se vi | Free space to keep on the microSD card when planning -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  937/984] FAIL ja fr de it es zh ko nl pt ru se vi | Overall -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  938/984] FAIL ja fr de it es zh ko nl pt ru se vi | NAND -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  939/984] FAIL ja fr de it es zh ko nl pt se vi | Screen off -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  940/984] FAIL ja fr de it es zh ko nl pt se vi | Screen off (Minus) -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  941/984] FAIL ja fr de it es zh ko nl pt se vi | Blank or dim the panel while a long queue runs, and  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  942/984] FAIL ja fr de it es zh ko nl pt se vi | Minus button -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  943/984] FAIL ja fr de it es zh ko nl pt se vi | What pressing Minus does while the install queue is  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  944/984] FAIL ja fr de it es zh ko nl pt se vi | Lower brightness -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  945/984] FAIL ja fr de it es zh ko nl pt se vi | Turn off backlight -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  946/984] FAIL ja fr de it es zh ko nl pt se vi | Screensaver -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  947/984] FAIL ja fr de it es zh ko nl pt se vi | Brightness -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  948/984] FAIL ja fr de it es zh ko nl pt se vi | Panel brightness while the screen is lowered. Ignore -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  949/984] FAIL ja fr de it es zh ko nl pt se vi | OLED mode -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  950/984] FAIL ja fr de it es zh ko nl pt se vi | Light only the pixels that carry information: the em -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  951/984] FAIL ja fr de it es zh ko nl pt se vi | Show the screensaver at the brightness it will actua -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  952/984] FAIL ja fr de it es zh ko nl pt se vi | Press any button to exit -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  953/984] FAIL ja fr de it es zh ko nl pt se vi | Show on screensaver -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  954/984] FAIL ja fr de it es zh ko nl pt se vi | Clock -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  955/984] FAIL ja fr de it es zh ko nl pt se vi | Show the current time. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  956/984] FAIL ja fr de it es zh ko nl pt se vi | Status -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  957/984] FAIL ja fr de it es zh ko nl pt se vi | Show what the queue is doing. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  958/984] FAIL ja fr de it es zh ko nl pt se vi | Package counter -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  959/984] FAIL ja fr de it es zh ko nl pt se vi | Show which package of how many is being installed. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  960/984] FAIL ja fr de it es zh ko nl pt se vi | Current file -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  961/984] FAIL ja fr de it es zh ko nl pt se vi | Show the package and file being written. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  962/984] FAIL ja fr de it es zh ko nl pt se vi | Progress bar -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  963/984] FAIL ja fr de it es zh ko nl pt se vi | Show the whole-queue progress bar and percentage. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  964/984] FAIL ja fr de it es zh ko nl pt se vi | Show the average write speed. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  965/984] FAIL ja fr de it es zh ko nl pt se vi | Time remaining -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  966/984] FAIL ja fr de it es zh ko nl pt se vi | Show the estimated time left for the whole queue. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  967/984] FAIL ja fr de it es zh ko nl pt se vi | Elapsed time -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  968/984] FAIL ja fr de it es zh ko nl pt se vi | Show how long the queue has been running. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  969/984] FAIL ja fr de it es zh ko nl pt se vi | Battery -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  970/984] FAIL ja fr de it es zh ko nl pt se vi | Show the battery level and whether it is charging. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  971/984] FAIL ja fr de it es zh ko nl pt se vi | Show the failure count, once anything has failed. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  972/984] FAIL ja fr de it es zh ko nl pt se vi | left -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  973/984] FAIL ja fr de it es zh ko nl pt se vi | Waiting for PC -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  974/984] FAIL ja fr de it es zh ko nl pt se vi | Ready to install -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  975/984] FAIL ja fr de it es zh ko nl pt se vi | Finished -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  976/984] FAIL ja fr de it es zh ko nl pt se vi | Finished with errors -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  977/984] FAIL ja fr de it es zh ko nl pt se vi | Analysing -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  978/984] FAIL ja fr de it es zh ko nl pt se vi | Cancelled -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  979/984] FAIL ja fr de it es zh ko nl pt se vi | PC connected. Now pick the packages in your PC app a -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  980/984] FAIL ja fr de it es zh ko nl pt se vi | USB session failed -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  981/984] FAIL ja fr de it es zh ko nl pt se vi | USB session failed; remaining packages were skipped. -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  982/984] FAIL ja fr de it es zh ko nl pt se vi | Connected:  -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  983/984] FAIL ja fr de it es zh ko nl pt se vi | This PC app is in stream mode, which the install que -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+[  984/984] FAIL ja fr de it es zh ko nl pt se vi | Install games from a PC over USB: DBI Backend, ns-us -> 429 Client Error: Too Many Requests for url: http://127.0.0.1:8081/v1/chat/completions
+
+done in 20.7 min | 479 translated, 505 failed
+  ja:  1039 keys, 505 still missing
+  fr:  1040 keys, 505 still missing
+  de:  1040 keys, 505 still missing
+  it:  1039 keys, 505 still missing
+  es:  1039 keys, 505 still missing
+  zh:  1104 keys, 495 still missing
+  ko:  1039 keys, 505 still missing
+  nl:  1039 keys, 505 still missing
+  pt:  1080 keys, 492 still missing
+  ru:  1128 keys, 445 still missing
+  se:  1039 keys, 505 still missing
+  vi:  1039 keys, 505 still missing
+  uk:  1552 keys, 9 still missing
+
+failures logged to D:\git\dev\sphaira\tools\i18n-translate\failures.log - just re-run, missing keys are picked up again

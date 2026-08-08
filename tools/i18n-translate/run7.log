@@ -1,0 +1,126 @@
+en.json: added 101 string(s) the code uses but English lacked
+    'A SteamGridDB API key is required'
+    'Add this homebrew to the HOME menu as its own tile.'
+    'Address Space'
+    'Address space'
+    'Allow holding the capture button to record video inside the forwarder.'
+    ... and 96 more
+1649 source strings | 101 need work | 13 languages | 2 threads
+proxy: http://127.0.0.1:8081/v1/chat/completions (gemini-3.6-flash)
+
+[    1/101] ok   ja fr de it es zh ko nl pt se vi | Add this homebrew to the HOME menu as its own tile.
+[    2/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Address Space
+[    3/101] ok   ja fr de it es zh ko nl pt ru se vi | A SteamGridDB API key is required
+[    4/101] ok   ja fr de it es zh ko nl pt ru se vi | Allow holding the capture button to record video ins
+[    5/101] ok   ja fr de it es zh ko nl pt ru se vi | Allow the capture button to take screenshots inside 
+[    6/101] ok   ja fr de it es zh ko nl pt ru se vi | Address space
+[    7/101] ok   ja fr de it es zh ko nl pt ru se vi | App Icon
+[    8/101] ok   ja fr de it es zh ko nl pt ru se vi | Applet Mode: keep this screen open; use the same non
+[    9/101] ok   ja fr de it es zh ko nl pt ru se vi | Ask every time
+[   10/101] ok   ja fr de it es zh ko nl pt ru se vi | Boxart
+[   11/101] ok   ja fr de it es zh ko nl pt ru se vi | Change the name and icon stored inside the nro file 
+[   12/101] ok   ja fr de it es zh ko nl pt ru se vi | Choose Icon Source
+[   13/101] ok   ja fr de it es zh ko nl pt ru se vi | Choose an Icon
+[   14/101] ok   ja fr de it es zh ko nl pt ru se vi | Clear search
+[   15/101] ok   ja fr de it es zh ko nl pt ru se vi | Could not connect to SteamGridDB
+[   16/101] ok   ja fr de it es zh ko nl pt ru se vi | Could not start the web server
+[   17/101] ok   ja fr de it es zh ko nl pt ru se vi | Create Forwarder
+[   18/101] ok   ja fr de it es zh ko nl pt ru se vi | Defaults
+[   19/101] ok   ja fr de it es zh ko nl pt ru se vi | Defaults baked into forwarders you create.
+[   20/101] ok   ja fr de it es zh ko nl pt ru se vi | Defaults baked into forwarders you create: address s
+[   21/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Disabled
+[   22/101] ok   ja fr de it es zh ko nl pt ru se vi | Downloading icon
+[   23/101] ok   ja fr de it es zh ko nl pt ru se vi | Edit name and icon
+[   24/101] ok   ja fr de it es zh ko nl pt ru se vi | Emulator cores are only offered when the file sits i
+[   25/101] ok   ja fr de it es zh ko nl pt ru se vi | Enable screenshots first
+[   26/101] ok   ja fr de it es zh ko nl pt ru se vi | App Title
+[   27/101] ok   ja fr de it es zh ko nl pt ru se vi | Enter an App Title before searching
+[   28/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Expose the selected folder to a PC over MTP, FTP or 
+[   29/101] ok   ja fr de it es zh ko nl pt se vi | FORWARDER
+[   30/101] ok   ja fr de it es zh ko nl pt ru se vi | Failed to load icon
+[   31/101] ok   ja fr de it es zh ko nl pt ru se vi | Failed to update the homebrew
+[   32/101] ok   ja fr de it es zh ko nl pt ru se vi | Forwarder Creation
+[   33/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Enabled
+[   34/101] ok   ja fr de it es zh ko nl pt ru se vi | Forwarder options
+[   35/101] ok   ja fr de it es zh ko nl pt ru se vi | Forwarders
+[   36/101] ok   ja fr de it es zh ko nl pt ru se vi | Homebrew updated
+[   37/101] ok   ja fr de it es zh ko nl pt ru se vi | Icons
+[   38/101] ok   ja fr de it es zh ko nl pt ru se vi | Kernel debug permission for the forwarder. Automatic
+[   39/101] ok   ja fr de it es zh ko nl pt ru se vi | Last played
+[   40/101] ok   ja fr de it es zh ko nl pt ru se vi | Load 4 More
+[   41/101] ok   ja fr de it es zh ko nl pt ru se vi | Loading available icons
+[   42/101] ok   ja fr de it es zh ko nl pt ru se vi | Loading more SteamGridDB icons
+[   43/101] ok   ja fr de it es zh ko nl pt ru se vi | Local File
+[   44/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Local â WebDAV
+[   45/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Mounted over HTTP: 
+[   46/101] ok   ja fr de it es zh ko nl pt ru se vi | Move all selected games to NAND system memory.
+[   47/101] ok   ja fr de it es zh ko nl pt ru se vi | Move all selected games to SD card.
+[   48/101] ok   ja fr de it es zh ko nl pt ru se vi | Move game components from NAND to SD card.
+[   49/101] ok   ja fr de it es zh ko nl pt ru se vi | Move game components from SD card to NAND system mem
+[   50/101] ok   ja fr de it es zh ko nl pt ru se vi | No launcher is set up for this file
+[   51/101] ok   ja fr de it es zh ko nl pt ru se vi | No matching SteamGridDB icons were found
+[   52/101] ok   ja fr de it es zh ko nl pt ru se vi | No more SteamGridDB icons could be downloaded
+[   53/101] ok   ja fr de it es zh ko nl pt ru se vi | Off (needs screenshots)
+[   54/101] ok   ja fr de it es zh ko nl pt ru se vi | Open the forwarder editor when creating a forwarder 
+[   55/101] ok   ja fr de it es zh ko nl pt ru se vi | Open the forwarder editor when creating a forwarder 
+[   56/101] ok   ja fr de it es zh ko nl pt ru se vi | Forwarder Options
+[   57/101] ok   ja fr de it es zh ko nl pt ru se vi | Play statistics are unavailable
+[   58/101] ok   ja fr de it es zh ko nl pt ru se vi | Play time
+[   59/101] ok   ja fr de it es zh ko nl pt ru se vi | Press A or tap the icon to change it
+[   60/101] ok   ja fr de it es zh ko nl pt ru se vi | Profile Selection
+[   61/101] ok   ja fr de it es zh ko nl pt ru se vi | Profile selection
+[   62/101] ok   ja fr de it es zh ko nl pt ru se vi | Prompt for a user profile when the forwarder is laun
+[   63/101] ok   ja fr de it es zh ko nl pt ru se vi | Read total play time for every game from the console
+[   64/101] ok   ja fr de it es zh ko nl pt ru se vi | Replace
+[   65/101] ok   ja fr de it es zh ko nl pt ru se vi | Save Changes
+[   66/101] ok   ja fr de it es zh ko nl pt ru se vi | Scan the code with a phone on the same Wi-Fi, then p
+[   67/101] ok   ja fr de it es zh ko nl pt ru se vi | Screenshots
+[   68/101] ok   ja fr de it es zh ko nl pt ru se vi | Search games
+[   69/101] ok   ja fr de it es zh ko nl pt ru se vi | Searching SteamGridDB
+[   70/101] ok   ja fr de it es zh ko nl pt ru se vi | Searching for matching titles
+[   71/101] ok   ja fr de it es zh ko nl pt ru se vi | Searching for: 
+[   72/101] ok   ja fr de it es zh ko nl pt ru se vi | Set
+[   73/101] ok   ja fr de it es zh ko nl pt ru se vi | Show every game again.
+[   74/101] ok   ja fr de it es zh ko nl pt ru se vi | Show only games whose name contains what you type.
+[   75/101] ok   ja fr de it es zh ko nl pt ru se vi | SteamGridDB
+[   76/101] ok   ja fr de it es zh ko nl pt ru se vi | SteamGridDB API key
+[   77/101] ok   ja fr de it es zh ko nl pt ru se vi | SteamGridDB key removed
+[   78/101] ok   ja fr de it es zh ko nl pt ru se vi | SteamGridDB key saved
+[   79/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Stop sharing the mounted folder over MTP, FTP and HT
+[   80/101] ok   ja fr de it es zh ko nl pt ru se vi | Storage
+[   81/101] ok   ja fr de it es zh ko nl pt ru se vi | THIS HOMEBREW
+[   82/101] ok   ja fr de it es zh ko nl pt ru se vi | Personal key used to look up forwarder icons. Set it
+[   83/101] ok   ja fr de it es zh ko nl pt ru se vi | The folder is recognised, but no installed core clai
+[   84/101] ok   ja fr de it es zh ko nl pt ru se vi | The required fields and icon must be non-empty
+[   85/101] ok   ja fr de it es zh ko nl pt ru se vi | The selected icon is not a valid image
+[   86/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Turn on Wi-Fi (or plug in a LAN adapter) in the cons
+[   87/101] ok   ja fr de it es zh ko nl pt ru se vi | The SteamGridDB API key was rejected; try again
+[   88/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Unmounted
+[   89/101] ok   ja fr de it es zh ko nl pt ru se vi | Update play time
+[   90/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Updating Homebrew
+[   91/101] ok   ja fr de it es zh ko nl pt ru se vi | Updating play statistics
+[   92/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Unmount
+[   93/101] ok   ja fr de it es zh ko nl pt ru se vi | Video capture
+[   94/101] ok   ja fr de it es zh ko nl pt ru se vi | Virtual address space given to the forwarder. Automa
+[   95/101] ok   ja fr de it es zh ko nl pt ru se vi uk | Web Server â Applet Mode
+[   96/101] ok   ja fr de it es zh ko nl pt ru se vi uk | WebDAV â SD
+[   97/101] ok   ja fr de it es zh ko nl pt ru se vi | Video Capture
+[   98/101] ok   ja fr de it es zh ko nl pt ru se vi | min
+[   99/101] ok   ja fr de it es zh ko nl pt ru se vi | remaining
+[  100/101] ok   ja fr de it es zh ko nl pt ru se vi | svcDebug
+[  101/101] ok   ja fr de it es zh ko nl pt ru se vi | h
+
+done in 17.1 min | 101 translated, 0 failed
+  ja:  1649 keys, 0 still missing
+  fr:  1650 keys, 0 still missing
+  de:  1650 keys, 0 still missing
+  it:  1649 keys, 0 still missing
+  es:  1649 keys, 0 still missing
+  zh:  1704 keys, 0 still missing
+  ko:  1649 keys, 0 still missing
+  nl:  1649 keys, 0 still missing
+  pt:  1677 keys, 0 still missing
+  ru:  1676 keys, 0 still missing
+  se:  1649 keys, 0 still missing
+  vi:  1649 keys, 0 still missing
+  uk:  1665 keys, 0 still missing

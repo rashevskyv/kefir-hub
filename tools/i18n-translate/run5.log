@@ -1,0 +1,233 @@
+1548 source strings | 213 need work | 13 languages | 2 threads
+proxy: http://127.0.0.1:8081/v1/chat/completions (gemini-3.6-flash)
+
+[    1/213] ok   se vi | Dump Initial Data
+[    2/213] ok   se vi | Select dump location
+[    3/213] ok   se vi | microSD card (/dumps/)
+[    4/213] ok   se vi | USB transfer (Switch 2 Switch)
+[    5/213] ok   de se vi | /dev/null (Speed Test)
+[    6/213] ok   se vi | Dumping
+[    7/213] ok   se vi | Dump Certificate
+[    8/213] ok   se vi | Delete failed!
+[    9/213] ok   se vi | Success
+[   10/213] ok   se vi | Dump failed!
+[   11/213] ok   nl | Nsfw
+[   12/213] ok   nl | Page
+[   13/213] ok   nl | Bad Page
+[   14/213] ok   nl | Enter Page Number
+[   15/213] ok   nl | Download theme?
+[   16/213] ok   nl | Downloading json
+[   17/213] ok   nl | GitHub
+[   18/213] ok   nl | Select asset to download for 
+[   19/213] ok   nl se vi | Failed to download app!
+[   20/213] ok   nl se vi | Failed to download json
+[   21/213] ok   nl se vi | FTP Install
+[   22/213] ok   nl se vi | Connection Type: Ethernet
+[   23/213] ok   nl se vi | Connection Type: WiFi | Strength: 
+[   24/213] ok   nl se vi | Host:
+[   25/213] ok   nl se vi | Connection Type: None
+[   26/213] ok   nl se vi | Username:
+[   27/213] ok   nl se vi | Password:
+[   28/213] ok   nl se vi | Port:
+[   29/213] ok   nl se vi | SSID:
+[   30/213] ok   nl se vi | Failed to install, press  to exit...
+[   31/213] ok   nl se vi | Passphrase
+[   32/213] ok   nl se vi | Install success!
+[   33/213] ok   nl se vi | USB Install
+[   34/213] ok   nl se vi | Install failed!
+[   35/213] ok   nl se vi | USB
+[   36/213] ok   nl se vi | Connected, starting transfer...
+[   37/213] ok   nl se vi | Connected, waiting for file list...
+[   38/213] ok   nl se vi | Failed to init usb, press  to exit...
+[   39/213] ok   nl se vi | Waiting for connection...
+[   40/213] ok   nl se vi | Transferring data...
+[   41/213] ok   nl se vi | USB connected, sending file list
+[   42/213] ok   nl se vi | waiting for usb connection...
+[   43/213] ok   nl se vi | Disable MTP for usb install
+[   44/213] ok   nl se vi | Re-enabled MTP
+[   45/213] ok   nl se vi | Installed via usb
+[   46/213] ok   nl se vi | Sent file list, waiting for command...
+[   47/213] ok   nl se vi | Usb install success!
+[   48/213] ok   nl se vi | Usb install failed!
+[   49/213] ok   nl se vi | Press  to exit...
+[   50/213] ok   nl se vi | GameCard Install
+[   51/213] ok   nl se vi | GameCard
+[   52/213] ok   nl se vi | GC
+[   53/213] ok   nl se vi | microSD card %.1f GB
+[   54/213] ok   nl se vi | System memory %.1f GB
+[   55/213] ok   nl se vi | Install disabled... Please enable installing via the
+[   56/213] ok   nl se vi | No GameCard inserted
+[   57/213] ok   nl se vi | GameCard is already trimmed!
+[   58/213] ok   nl se vi | WARNING: GameCard is already trimmed!
+[   59/213] ok   nl se vi | Continue
+[   60/213] ok   nl se vi | Gc install failed!
+[   61/213] ok   nl se vi | Gc install success!
+[   62/213] ok   nl se vi | IRS (Infrared Joycon Camera)
+[   63/213] ok   nl | Ambient Noise Level: 
+[   64/213] ok   nl se vi | IRS
+[   65/213] ok   nl |  (Unsupported)
+[   66/213] ok   nl se vi | Select URL
+[   67/213] ok   nl se vi | Web
+[   68/213] ok   nl se vi | Enter custom URL
+[   69/213] ok   nl | Restore hbmenu?
+[   70/213] ok   nl se vi | Enter URL
+[   71/213] ok   nl | Restore
+[   72/213] ok   nl | Failed to find /switch/hbmenu.nro Use the Appstore t
+[   73/213] ok   nl | Failed to restore hbmenu, please re-download hbmenu
+[   74/213] ok   nl | Restored hbmenu, closing sphaira
+[   75/213] ok   nl | Restored hbmenu
+[   76/213] ok   nl | Failed to restore hbmenu, using sphaira instead
+[   77/213] ok   nl se vi | Press OK to restart Sphaira
+[   78/213] ok   nl se vi | Slow
+[   79/213] ok   nl | Restart Sphaira?
+[   80/213] ok   nl se vi | Fast
+[   81/213] ok   nl se vi | Set left-side menu
+[   82/213] ok   nl se vi | Normal
+[   83/213] ok   nl se vi | Install options
+[   84/213] ok   nl se vi | Install Options
+[   85/213] ok   nl se vi | Set right-side menu
+[   86/213] ok   nl se vi | Enable emummc
+[   87/213] ok   nl | Show install warning
+[   88/213] ok   nl se vi | Enable sysmmc
+[   89/213] ok   nl | microSD card
+[   90/213] ok   nl | System memory
+[   91/213] ok   nl se vi | Skip dlc
+[   92/213] ok   nl | Installing Forwarder
+[   93/213] ok   nl | Apps
+[   94/213] ok   nl | Creating Program
+[   95/213] ok   nl | Creating Meta
+[   96/213] ok   nl | Writing Nca
+[   97/213] ok   nl | Creating Control
+[   98/213] ok   nl | Updating ncm database
+[   99/213] ok   nl | Failed to install forwarder
+[  100/213] ok   nl | Pushing application record
+[  101/213] ok   nl | Unstar
+[  102/213] ok   nl | Unstarred 
+[  103/213] ok   nl | Star
+[  104/213] ok   nl se vi | Failed to remove old forwarder, please manually remo
+[  105/213] ok   nl | Starred 
+[  106/213] ok   nl | AppStore
+[  107/213] ok   nl se vi | AppStore
+[  108/213] ok   nl | Changelog
+[  109/213] ok   nl | Details
+[  110/213] ok   nl | More by Author
+[  111/213] ok   nl | Leave Feedback
+[  112/213] ok   nl | Store
+[  113/213] ok   nl | Files
+[  114/213] ok   nl | Copying 
+[  115/213] ok   nl | Paste
+[  116/213] ok   nl se vi | Paste file(s)?
+[  117/213] ok   nl | Pasting
+[  118/213] ok   nl | Pasting 
+[  119/213] ok   nl | Set New File Name
+[  120/213] ok   nl se vi | Failed to delete file
+[  121/213] ok   nl se vi | Failed to delete directory
+[  122/213] ok   nl se vi | Extract zip
+[  123/213] ok   nl se vi | Extract Options
+[  124/213] ok   nl se vi | Extract here
+[  125/213] ok   nl se vi | Are you sure you want to extract to root?
+[  126/213] ok   nl se vi | Extract to root
+[  127/213] ok   nl se vi | Extract to...
+[  128/213] ok   nl se vi | Enter the path to the folder to extract into
+[  129/213] ok   nl se vi | Extracting 
+[  130/213] ok   nl se vi | Extract success!
+[  131/213] ok   nl se vi | Extract failed!
+[  132/213] ok   nl se vi | Compress Options
+[  133/213] ok   nl se vi | Compress
+[  134/213] ok   nl se vi | Compress to...
+[  135/213] ok   nl se vi | Compressing 
+[  136/213] ok   nl se vi | Compress success!
+[  137/213] ok   nl se vi | Compress to zip
+[  138/213] ok   nl se vi | Compress failed!
+[  139/213] ok   nl | Set Folder Name
+[  140/213] ok   nl | Set File Name
+[  141/213] ok   nl se vi | Upload
+[  142/213] ok   nl se vi | Select upload location
+[  143/213] ok   nl | Creating 
+[  144/213] ok   nl se vi | Uploading
+[  145/213] ok   nl se vi | Upload failed!
+[  146/213] ok   nl se vi | No upload locations set!
+[  147/213] ok   nl se vi | Hash
+[  148/213] ok   nl se vi | Hashing
+[  149/213] ok   nl se vi | Hash Options
+[  150/213] ok   nl se vi | Failed to hash file...
+[  151/213] ok   nl | Ignore read only
+[  152/213] ok   nl | Mount
+[  153/213] ok   nl | Sd
+[  154/213] ok   nl | Image System memory
+[  155/213] ok   nl | Image microSD card
+[  156/213] ok   nl | Empty...
+[  157/213] ok   nl | Open with DayBreak?
+[  158/213] ok   nl | Launch 
+[  159/213] ok   nl | Select launcher for: 
+[  160/213] ok   nl se vi | Close FileBrowser?
+[  161/213] ok   nl | Launch option for: 
+[  162/213] ok   nl | Alphabetical (Star)
+[  163/213] ok   nl | Updated (Star)
+[  164/213] ok   nl | Size (Star)
+[  165/213] ok   nl | ID
+[  166/213] ok   nl se vi | Layout
+[  167/213] ok   nl | Likes
+[  168/213] ok   nl se vi | Icon
+[  169/213] ok   nl se vi | Grid
+[  170/213] ok   nl se vi | List
+[  171/213] ok   nl | OK
+[  172/213] ok   nl | Select
+[  173/213] ok   nl se vi | Close
+[  174/213] ok   nl | Restart
+[  175/213] ok   nl se vi | Next
+[  176/213] ok   nl se vi | Prev
+[  177/213] ok   nl se vi | Split
+[  178/213] ok   nl se vi | Off
+[  179/213] ok   nl se vi | Install Selected files?
+[  180/213] ok   nl | Installing 
+[  181/213] ok   nl se vi | Installed 
+[  182/213] ok   nl se vi | On
+[  183/213] ok   nl | Trying to load 
+[  184/213] ok   nl | Checking MD5
+[  185/213] ok   nl | Delete Selected files?
+[  186/213] ok   nl | Scanning 
+[  187/213] ok   nl | Deleting 
+[  188/213] ok   nl | Deleting
+[  189/213] ok   nl | Installed!
+[  190/213] ok   nl | Remove
+[  191/213] ok   nl | Removing 
+[  192/213] ok   nl | Uninstalling 
+[  193/213] ok   nl | Removed 
+[  194/213] ok   nl | Downloading 
+[  195/213] ok   nl | Downloaded 
+[  196/213] ok   nl se vi | Download via the Network options!
+[  197/213] ok   nl | Update
+[  198/213] ok   nl | Update avaliable: 
+[  199/213] ok   nl | Download update: 
+[  200/213] ok   nl | Updated to 
+[  201/213] ok   nl | Failed to download update
+[  202/213] ok   nl se vi | %zu hours %zu minutes remaining
+[  203/213] ok   nl se vi | %zu minutes %zu seconds remaining
+[  204/213] FAIL nl | Completely remove  -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  205/213] FAIL nl se vi | %zu seconds remaining -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  206/213] FAIL nl | Loading... -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  207/213] FAIL nl | Loading -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  208/213] FAIL nl | Empty! -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  209/213] FAIL nl | Not Ready... -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  210/213] FAIL nl | Error loading page! -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=240)
+[  211/213] ok   nl se vi | Upload successful!
+[  212/213] ok   se vi | Dump successful!
+[  213/213] ok   se vi | Delete successful!
+
+done in 90.2 min | 206 translated, 7 failed
+  ja:  1548 keys, 0 still missing
+  fr:  1549 keys, 0 still missing
+  de:  1549 keys, 0 still missing
+  it:  1548 keys, 0 still missing
+  es:  1548 keys, 0 still missing
+  zh:  1603 keys, 0 still missing
+  ko:  1548 keys, 0 still missing
+  nl:  1548 keys, 0 still missing
+  pt:  1576 keys, 0 still missing
+  ru:  1577 keys, 0 still missing
+  se:  1548 keys, 0 still missing
+  vi:  1548 keys, 0 still missing
+  uk:  1635 keys, 0 still missing
+
+failures logged to D:\git\dev\sphaira\tools\i18n-translate\failures.log - just re-run, missing keys are picked up again

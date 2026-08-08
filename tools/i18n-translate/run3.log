@@ -1,0 +1,30 @@
+1548 source strings | 12 need work | 13 languages | 1 threads
+proxy: http://127.0.0.1:8081/v1/chat/completions (gemini-3.6-flash)
+
+[    1/12] ok   uk | Forwarder address space
+[    2/12] ok   uk | Virtual address space given to new forwarders. Autom
+[    3/12] ok   ja fr de it es zh ko nl pt ru se vi uk | Fan control can use the Kefir fan module, which appl
+[    4/12] ok   ja fr de it es zh ko nl pt ru se vi uk | Failed to install the fan module.
+[    5/12] ok   ja fr de it es zh ko nl pt ru se vi uk | Fan module installed
+[    6/12] ok   ja fr de it es zh ko nl pt ru se vi uk | Fan module installed, but it needs a reboot before i
+[    7/12] ok   ja fr de it es zh ko nl pt se vi | PC connected. Now pick the packages in your PC app a
+[    8/12] ok   ja fr de it es zh ko nl pt se vi | USB session failed
+[    9/12] ok   ja fr de it es zh ko nl pt se vi | USB session failed; remaining packages were skipped.
+[   10/12] ok   ja fr de it es zh ko nl pt se vi | Connected: 
+[   11/12] ok   ja fr de it es zh ko nl pt se vi | This PC app is in stream mode, which the install que
+[   12/12] ok   ja fr de it es zh ko nl pt se vi | Install games from a PC over USB: DBI Backend, ns-us
+
+done in 34.5 min | 12 translated, 0 failed
+  ja:  1548 keys, 0 still missing
+  fr:  1549 keys, 0 still missing
+  de:  1549 keys, 0 still missing
+  it:  1548 keys, 0 still missing
+  es:  1548 keys, 0 still missing
+  zh:  1603 keys, 0 still missing
+  ko:  1548 keys, 0 still missing
+  nl:  1548 keys, 0 still missing
+  pt:  1576 keys, 0 still missing
+  ru:  1577 keys, 0 still missing
+  se:  1548 keys, 0 still missing
+  vi:  1548 keys, 0 still missing
+  uk:  1628 keys, 0 still missing

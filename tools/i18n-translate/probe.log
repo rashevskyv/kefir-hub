@@ -1,0 +1,6 @@
+1548 source strings | 12 need work | 13 languages | 1 threads
+proxy: http://127.0.0.1:8081/v1/chat/completions (gemini-3.6-flash)
+
+[    1/12] FAIL uk | Forwarder address space -> HTTPConnectionPool(host='127.0.0.1', port=8081): Read timed out. (read timeout=100)
+[    2/12] ok   uk | Virtual address space given to new forwarders. Autom
+[    3/12] ok   ja fr de it es zh ko nl pt ru se vi uk | Fan control can use the Kefir fan module, which appl
