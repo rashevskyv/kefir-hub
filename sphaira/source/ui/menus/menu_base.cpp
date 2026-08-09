@@ -306,7 +306,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     }();
 
     const float value_x = storage_right - value_col_w;
-    const float bar_x   = value_x - 8.f - bar_w;
+    const float bar_x   = value_x - 15.f - bar_w;
     const float label_x = bar_x - 8.f - label_col_w;
 
     // value shown next to a bar: free space normally, the highlighted size in

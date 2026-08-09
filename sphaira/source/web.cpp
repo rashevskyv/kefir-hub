@@ -179,7 +179,7 @@ auto BuildRootSelectionPage(const std::vector<RootSource>& sources) -> std::stri
     std::string body;
     body.reserve(8192);
     body += FOLDER_PAGE_HEADER;
-    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div>";
+    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div>";
     body += "<div class=\"crumbs\"><a href=\"/\">Root</a></div></header>";
     body += "<div class=\"container\"><main id=\"items-container\" class=\"list\">";
 
@@ -237,7 +237,7 @@ auto BuildFolderPage(std::string path_str) -> std::string {
     body.reserve(24576 + entries.size() * 512);
 
     body += FOLDER_PAGE_HEADER;
-    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/progress\" style=\"text-decoration:none;\"><button><span class=\"icon\">⏳</span> <span class=\"text\">Progress</span></button></a><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/\">Root</a>";
+    body += "<div class=\"header-top\"><h1>Kefir Hub Files</h1><a href=\"/album\" style=\"text-decoration:none;\"><button><span class=\"icon\">📸</span> <span class=\"text\">Screenshots</span></button></a></div><div class=\"crumbs\"><a href=\"/\">Root</a>";
 
     // the crumb trail starts at the source root ("ums0:/" / "/config"), then
     // walks the path inside it, so a device prefix never gets split into a

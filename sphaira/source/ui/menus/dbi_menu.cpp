@@ -532,17 +532,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const auto state = m_state.load();
 
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing) {
-        auto text = state == State::WaitingForUsb
-            ? "Waiting for PC connection. Connect the USB cable and make sure the console is detected."_i18n
-            : state == State::WaitingForList
-                ? "PC connected. Now pick the packages in your PC app and start the transfer.\n\nDBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy are all understood."_i18n
-                : "Analysing packages (nothing is being installed)..."_i18n;
-        if (!m_local_fs && App::IsApplet()) {
-            text += "\n\n" + "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n;
-        }
-        gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, SCREEN_HEIGHT / 2.f - 30.f, 30.f, 1000.f,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
-
         // the raw usb link state, polled once a second. "Detached" means the
         // console is not on the bus at all -- the host never saw us attach, so
         // no pc side app can help; anything past it means we are attached and
@@ -562,8 +551,22 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                     i18n::get(GetUsbDsStateStr(usb_state)).c_str(), i18n::get(GetUsbDsSpeedStr(speed)).c_str());
             }
 
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f + 90.f, 20.f,
+            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, 240.f, 20.f,
                 NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", m_usb_link_buf);
+        }
+
+        const auto text = state == State::WaitingForUsb
+            ? "Waiting for PC connection. Connect the USB cable and make sure the console is detected."_i18n
+            : state == State::WaitingForList
+                ? "PC connected. Now pick the packages in your PC app and start the transfer.\n\nDBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy are all understood."_i18n
+                : "Analysing packages (nothing is being installed)..."_i18n;
+        gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, 290.f, 26.f, 1000.f,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        if (!m_local_fs && App::IsApplet()) {
+            const auto warning = "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n;
+            gfx::drawTextBox(vg, (SCREEN_WIDTH - 850.f) / 2.f, 440.f, 20.f, 850.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), warning.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
         }
         return;
     }
