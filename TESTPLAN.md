@@ -3,7 +3,9 @@
 Чек-лист усього, що вміє програма. Проходити зверху вниз або блоками.
 Позначення: `[ ]` не перевірено, `[x]` ОК, `[!]` баг (додати опис поруч), `[-]` пропущено.
 
-**Поточний прохід: v0.13.397 → виправлення у v0.13.398**
+**Правило супроводу:** кожне завдання з новою функцією має додати сюди кроки перевірки й зафіксувати їхній результат до завершення роботи.
+
+**Поточний прохід: v0.13.433; базовий прохід v0.13.397 → виправлення у v0.13.398**
 
 ---
 
@@ -56,6 +58,13 @@
 - [ ] Settings → General → **Exit**
 - [ ] "Replace hbmenu on exit" увімкнено → `/hbmenu.nro` замінюється при виході
 
+### 1.1 Навігація й шапка (v0.13.399–0.13.404)
+- [ ] Різкий свайп продовжує прокрутку після відпускання у горизонтальному Homebrew та вертикальних List/Grid; новий дотик одразу зупиняє рух
+- [ ] Updater у List і Grid пропускає заголовки секцій/порожні клітинки та переходить по колу з першого доступного запису на останній і назад
+- [ ] `X` у Games і Saves позначає поточний рядок, переводить курсор на наступний і тримає його видимим
+- [ ] У Settings свайп прокручує саме ту панель, над якою рухається палець
+- [ ] Довгі шлях/опис і лічильник у шапці не перекривають один одного, NAND/SD або футер; текст, що не влазить, прокручується
+
 ---
 
 ## 2. Вкладка Apps (Homebrew)
@@ -68,6 +77,12 @@
 - [ ] `START` → Show Hidden
 - [ ] Пошкоджений/нульовий NRO — не крашить
 - [ ] Старий пункт "Kefir Updater" показує підказку про перехід у Tools → Updater
+
+### 2.1 NRO і форвардери
+- [ ] **Edit name and icon** змінює метадані самого NRO; після повторного сканування нові назва й іконка лишаються, а `.sphaira.tmp`/`.sphaira.bak` не залишаються
+- [ ] **Install Forwarder** без `Ask every time` використовує збережені типові параметри; з `Ask every time` відкриває редактор перед встановленням
+- [ ] Редактор приймає локальну іконку або SteamGridDB, дає змінити title/author/version і параметри запуску; порожні обов'язкові поля/іконка підсвічуються й блокують створення
+- [ ] Отримання SteamGridDB API key через QR і телефон зберігає ключ; невалідний ключ та відсутній результат дають зрозуміле повідомлення
 
 ---
 
@@ -144,6 +159,8 @@
 - [ ] Add Point / Remove Point / перетягування точки
 - [ ] Load Preset / Save Preset
 - [ ] Запис у конфіг Atmosphere tskin, перевірити файл
+- [ ] Без модуля fan control вхід у Fan curve пропонує встановлення; відмова все одно відкриває редактор
+- [ ] Встановлення створює bundled sysmodule і або запускає його одразу, або чесно пропонує reboot; після цього зміни кривої застосовуються наживо
 
 ### 5.2 Module Manager (uninstaller)
 - [ ] Список встановлених sysmodules
@@ -202,8 +219,11 @@
 
 ### 7.4 Перегляд
 - [ ] View Image (jpg/png), Fit Image, Zoom Up/Down, Previous/Next Image
-- [ ] View as text (unfinished) — великі файли, UTF-8
+- [ ] View as text — великі файли, UTF-8
 - [ ] Create Switch Theme з картинки (theme creator: Target, Zoom, Theme Name, Author, Generate)
+- [ ] Текстовий файл до 4 MiB відкривається як список рядків: Edit / Insert below / Delete / Join with next, Save, Undo, Redo, Go to line
+- [ ] Після змін є `*`; вихід пропонує Save/Discard, а збереження не міняє наявні LF/CRLF без потреби
+- [ ] Текстовий файл понад 4 MiB лишається read-only і показує `Too large to edit`
 
 ### 7.5 Хеші
 - [ ] Hash → CRC32 / MD5 / SHA1 / SHA256, результат збігається з PC
@@ -227,6 +247,9 @@
 - [ ] Play with NXMP (відео)
 - [ ] Асоціації файлів (`assets/romfs/assoc`) — відкриття у відповідному homebrew
 - [ ] Split-файли (`.nsp.00`, `.xci.00`) — `Split` дія
+- [ ] Для ROM з кількома асоціаціями launcher picker групує `RetroArch — …`, `TICO — …`, інші; вибраний core запускається з правильним шляхом і додатковим аргументом
+- [ ] TICO-асоціації відкривають підтримувані 3DS/GC/Wii/PS1/PSP/GB/GBC/GBA/N64/SNES/Saturn/Dreamcast та Sega ROM; Gambatte/Genesis Plus GX отримують свій mode-аргумент
+- [ ] ROM forwarder має редаговану назву, необов'язкову version та `Include platform in title`; порожні обов'язкові поля/іконка не дають створити форвардер
 
 ### 7.8 Web
 - [ ] StartWebServer з файлового браузера
@@ -271,6 +294,9 @@
 - [ ] **Refresh**
 - [ ] `A` Details → сторінка гри
 - [ ] `X` Select / `Y` Invert → масові дії
+- [ ] **Search** фільтрує ігри без втрати виділення; **Clear search** повертає повний список
+- [ ] Sort By → **Last played** / **Play time** дає стабільний порядок, а недоступна статистика показує повідомлення без крашу
+- [ ] Details показує Languages, Mods folder, Play time, Last played, Components, Tickets, Saves і Save quota без накладання довгих значень
 
 ### 9.1 Дії над грою
 - [ ] Launch
@@ -280,6 +306,10 @@
 - [ ] Save information
 - [ ] **Move to SD** / **Move to NAND** (весь тайтл)
 - [ ] **Move component to SD** / **to NAND** (окремий компонент)
+- [ ] Для split-title показуються лише напрямки, де є що переносити; перед Move є точний список компонентів, які буде перенесено/пропущено
+- [ ] Під час Move інтерфейс і анімації лишаються плавними, прогрес реально рухається, а червона **Stop** реагує на touch і просить підтвердження
+- [ ] Скасування Move до точки перемикання не лишає частковий тайтл на цільовому носії; успішний Move оновлює NAND/SD та запускає гру
+- [ ] Масовий Move послідовно показує назву кожної гри й зупиняється по скасуванню без пошкодження вже завершених переносів
 - [ ] **Create save**
 - [ ] **Create mods folders**
 - [ ] **Delete** (гра, оновлення, DLC — окремо і разом)
@@ -346,6 +376,7 @@
 - [ ] Зміна порту застосовується без перезапуску
 - [ ] **MTP** тумблер — вмикання вимикає USB storage (і навпаки)
 - [ ] **MTP storages** (підпапка): Show microSD / Show Install folder / Show Saves (read-only)
+- [ ] **Show Games (read-only)** перемонтовує активний MTP і додає/прибирає Games drive без перезапуску програми
 - [ ] Кастомні імена microSD і Install folder видно на PC
 - [ ] **Add folder** — додавання довільної папки як окремого MTP-стораджу
 - [ ] Видалення доданої папки
@@ -363,6 +394,7 @@
 ### 12.5 Install
 - [ ] Enable sysMMC / Enable emuMMC (з попередженням про бан)
 - [ ] Install location: SD only / System only / System→SD / SD→System / Automatic
+- [ ] Окремі **Reserve NAND** і **Reserve SD** зберігаються після перезапуску та реально виключають носій, якщо після інсталяції резерв буде порушено
 - [ ] Allow downgrade
 - [ ] Skip if already installed: Reinstall / Skip / Prompt — всі три поведінки
 - [ ] Save options globally
@@ -382,6 +414,16 @@
 - [ ] USB transfer stream
 - [ ] Convert ticket on dump
 
+### 12.7 Forwarders
+- [ ] `Ask every time`, Address space (Automatic/36-bit/39-bit), Profile selection, Screenshots, Video capture і svcDebug зберігаються та потрапляють у новий форвардер
+- [ ] Video capture недоступний без Screenshots; Automatic svcDebug відповідає версії Atmosphere
+- [ ] SteamGridDB API key: Set / Replace / Remove, QR-сторінка недоступна поза активним запитом
+
+### 12.8 Screen off (Minus)
+- [ ] Minus в Install queue виконує вибраний режим: Lower brightness / Turn off backlight / Screensaver; пробудження відновлює попередню яскравість/auto-brightness і не скасовує чергу
+- [ ] Preview показує реальні Brightness/OLED/вибрані поля; clock, status, package, file, progress, speed, ETA, elapsed, battery, errors і R/W graph вмикаються незалежно
+- [ ] У screensaver лівий stick рухає блок, правий Up/Down змінює й зберігає яскравість, правий Left/Right змінює drift speed; stick не закриває screensaver, кнопка або touch закриває
+
 ---
 
 ## 13. Install & Share (Tools → START)
@@ -399,9 +441,12 @@
 - [ ] `/delete` (DELETE) — видалення
 - [ ] `/list` та `/list-recursive` — JSON
 - [ ] `/album` — галерея скріншотів, навігація по папках, скачування
+- [ ] `/album` визначає реальну гру через album service, показує правильні назву й Title ID для screenshot/video; невідомий файл лишається `Unknown Game`
 - [ ] `/status`, `/progress`
 - [ ] Вибір shareRoot (сторінка вибору папки) — обмежує доступ
 - [ ] Зупинка сервера, повторний старт
+- [ ] Після sleep/applet switch з тим самим IP сервер знову приймає запити за старим URL; при зміні IP або 30 с offline сам зупиняється з правильною причиною
+- [ ] Web File Manager має один Root breadcrumb і перехід до Screenshots без дубльованої навігації
 - [ ] Некоректний запит (405/404/431) — сервер не падає
 
 ### 13.2 MTP
@@ -410,6 +455,9 @@
 - [ ] Копіювання файлів PC ↔ консоль
 - [ ] ⚠️ Файли в корені microSD (шляхи виду `//file.nsz`) обробляються правильно
 - [ ] Read-only Saves-драйв: читається, запис заборонений
+- [ ] Read-only Games-драйв містить по папці на встановлену гру та окремі NSP для base/update/DLC; копія на PC перевстановлюється й не займає місце на microSD
+- [ ] Games-драйв відхиляє create/write/delete/rename, коректно читає файли великими й довільними range-запитами та не показує archived title без контенту
+- [ ] Запуск MTP в applet mode показує попередження про обмежену пам'ять і ризик NSZ, але дозволяє продовжити
 
 ### 13.3 PC Install (USB) — DBI backend
 - [ ] Підключення PC-клієнта, поява черги
@@ -420,6 +468,9 @@
 - [ ] `B` Cancel session / Cancel queue посеред встановлення
 - [ ] Summary: лог сесії, `Y` Errors ↔ Session log
 - [ ] Після сесії MTP/USB storage повертаються в попередній стан
+- [ ] Один пункт PC Install автоматично розпізнає **DBI Backend**, **Awoo/Tinfoil** і **GoldLeaf v0.10+**; для кожного протоколу та сама review/install/summary черга
+- [ ] Екран очікування показує USB state і speed; stream mode відхиляється з підказкою вимкнути його, а обрив дає retry/зрозумілу причину замість зависання
+- [ ] В applet mode до старту USB-інсталяції постійно видно попередження про NSZ і рекомендацію Title Mode
 
 ---
 
@@ -453,6 +504,12 @@
 - [ ] Помилка ключів / пошкоджений файл → зрозуміла помилка, не краш
 - [ ] Мало місця на носії → зрозуміла помилка
 - [ ] Встановлений тайтл запускається
+
+### 14.4 Планування черги
+- [ ] Review змішаної черги з pinned SD/NAND та Automatic заздалегідь розкладає пакети в порядку черги, враховує окремі резерви й переносить Auto на другий носій лише коли треба
+- [ ] NAND/SD у review показують `+this / +all` для поточного пакета; фактична інсталяція використовує саме зафіксований при підтвердженні план
+- [ ] Під час інсталяції є прогрес поточного файла й всієї черги, `Overall %`, швидкість та `this file / whole queue` remaining; значення не перевищують 100%
+- [ ] GoldLeaf, Awoo/Tinfoil, DBI, local і network шляхи однаково виконують Install location, Reserve NAND/SD та Skip/Reinstall/Prompt
 
 ---
 
