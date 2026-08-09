@@ -532,11 +532,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const auto state = m_state.load();
 
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing) {
-        const auto text = state == State::WaitingForUsb
+        auto text = state == State::WaitingForUsb
             ? "Waiting for PC connection. Connect the USB cable and make sure the console is detected."_i18n
             : state == State::WaitingForList
                 ? "PC connected. Now pick the packages in your PC app and start the transfer.\n\nDBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy are all understood."_i18n
                 : "Analysing packages (nothing is being installed)..."_i18n;
+        if (!m_local_fs && App::IsApplet()) {
+            text += "\n\n" + "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n;
+        }
         gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, SCREEN_HEIGHT / 2.f - 30.f, 30.f, 1000.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
 

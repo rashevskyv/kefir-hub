@@ -1787,6 +1787,9 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_OpenSession:
             log_write("[LIBHAZE] Opening Session\n");
             App::Notify("MTP connected"_i18n);
+            if (App::IsApplet()) {
+                App::Notify("Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n);
+            }
             break;
         case ::haze::CallbackType_CloseSession:
             log_write("[LIBHAZE] Closing Session\n");
@@ -2038,7 +2041,7 @@ bool Init() {
         return false;
     }
 
-    log_write("[MTP] started\n");
+    log_write("[MTP] started in %s mode\n", App::IsApplet() ? "applet" : "title");
     return g_is_running = true;
 }
 

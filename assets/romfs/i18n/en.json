@@ -1651,5 +1651,6 @@
   "remaining": "remaining",
   "svcDebug": "svcDebug",
   "Include platform in title": "Include platform in title",
-  "Version (optional)": "Version (optional)"
+  "Version (optional)": "Version (optional)",
+  "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.": "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."
 }
