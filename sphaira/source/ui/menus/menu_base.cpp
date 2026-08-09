@@ -397,7 +397,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
     const float storage_mid  = (y_ip + start_y) * 0.5f;
-    const float storage_gap  = 15.f;
+    const float storage_gap  = 20.f;
     draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
     draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
 
