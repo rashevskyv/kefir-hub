@@ -43,7 +43,7 @@ void ShowRomForwarderEditor(const FileAssocEntry& assoc, const RomDatabaseIndexs
     editor.on_create = [assoc, arg_path, nacp, db_indexs, platform = std::string(nro.nacp.lang.name)](const forwarder::Values& values) {
         OwoConfig config{};
         config.nro_path = assoc.path.toString();
-        config.args = nro_add_arg_file(arg_path);
+        config.args = assoc.GetRomArgs(arg_path);
         config.nacp = nacp;
         config.name = values.include_platform ? platform + " | " + values.title : values.title;
         config.author = values.author;

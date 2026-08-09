@@ -23,7 +23,7 @@ struct RomDatabaseEntry {
     // uses the naming scheme from Retroarch.
     std::string_view database{};
     // custom alias, to make everyone else happy.
-    std::array<std::string_view, 4> alias{};
+    std::array<std::string_view, 5> alias{};
 
     // compares against all of the above strings.
     auto IsDatabase(std::string_view name) const -> bool;
@@ -75,7 +75,7 @@ inline constexpr RomDatabaseEntry PATHS[]{
     { "virtualboy", "Nintendo - Virtual Boy"},
     { "gameandwatch", ""},
     { "sega32x", "Sega - 32X", { "32x", } },
-    { "segacd", "Sega - Mega CD - Sega CD", { "megacd", "mega-cd", "sega cd", "scd", } },
+    { "segacd", "Sega - Mega CD - Sega CD", { "megacd", "mega-cd", "sega cd", "scd", "sega-cd", } },
     { "dreamcast", "Sega - Dreamcast", { "dc", } },
     { "gamegear", "Sega - Game Gear", { "gg", } },
     { "genesis", "Sega - Mega Drive - Genesis", { "md", } },
@@ -105,6 +105,11 @@ inline constexpr RomDatabaseEntry PATHS[]{
     { "neogeo", "SNK - Neo Geo Pocket" },
     { "neogeo", "SNK - Neo Geo Pocket Color" },
     { "neogeo", "SNK - Neo Geo CD" },
+
+    { "fbneo", "FBNeo - Arcade Games", { "fbneo", } },
+    { "naomi", "Sega - Naomi", { "naomi", } },
+    { "naomi2", "Sega - Naomi 2", { "naomi2", } },
+    { "atomiswave", "Atomiswave", { "atomiswave", } },
 };
 
 constexpr fs::FsPath DAYBREAK_PATH{"/switch/daybreak.nro"};

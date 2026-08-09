@@ -7,6 +7,7 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include "hasher.hpp"
+#include "nro.hpp"
 #include <span>
 #include <memory>
 #include <functional>
@@ -174,6 +175,7 @@ struct FileEntry : FsDirectoryEntry {
 struct FileAssocEntry {
     fs::FsPath path{}; // ini name
     std::string name{}; // ini name
+    std::string argument{}; // optional fixed argument
     std::vector<std::string> ext{}; // list of ext
     std::vector<std::string> database{}; // list of systems
     bool use_base_name{}; // if set, uses base name (rom.zip) otherwise uses internal name (rom.gba)
@@ -188,6 +190,14 @@ struct FileAssocEntry {
             }
         }
         return false;
+    }
+
+    auto GetRomArgs(const fs::FsPath& rom_path) const -> std::string {
+        const auto file_arg = nro_add_arg_file(rom_path);
+        if (argument.empty()) {
+            return file_arg;
+        }
+        return nro_add_arg(argument) + " " + file_arg;
     }
 };
 

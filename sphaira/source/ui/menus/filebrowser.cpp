@@ -68,6 +68,8 @@
 namespace sphaira::ui::menu::filebrowser {
 using namespace detail;
 
+auto MakeLauncherLabel(const FileAssocEntry& assoc) -> std::string;
+
 namespace {
 
 using RomDatabaseIndexs = std::vector<size_t>;
@@ -281,7 +283,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                         PopupList::Items items;
                         items.emplace_back("Browse archive"_i18n);
                         for (const auto& p : assoc_list) {
-                            items.emplace_back(p.name);
+                            items.emplace_back(MakeLauncherLabel(p));
                         }
                         const auto title = "Open: "_i18n + entry.GetName();
                         App::Push<PopupList>(title, items, [this, assoc_list](auto op_index){
@@ -291,7 +293,8 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                             if (*op_index == 0) {
                                 OpenArchive();
                             } else {
-                                nro_launch(assoc_list[*op_index - 1].path, nro_add_arg_file(GetNewPathCurrent()));
+                                const auto& assoc = assoc_list[*op_index - 1];
+                                nro_launch(assoc.path, assoc.GetRomArgs(GetNewPathCurrent()));
                             }
                         });
                     }
@@ -304,7 +307,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
 
                         PopupList::Items items;
                         for (const auto&p : assoc_list) {
-                            items.emplace_back(p.name);
+                            items.emplace_back(MakeLauncherLabel(p));
                         }
 
                         const auto title = "Launch option for: "_i18n + GetEntry().name;
@@ -312,12 +315,12 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                             title, items, [this, assoc_list](auto op_index){
                                 if (op_index) {
                                     log_write("selected: %s\n", assoc_list[*op_index].name.c_str());
-                                    nro_launch(assoc_list[*op_index].path, nro_add_arg_file(GetNewPathCurrent()));
+                                    const auto& assoc = assoc_list[*op_index];
+                                    nro_launch(assoc.path, assoc.GetRomArgs(GetNewPathCurrent()));
                                 } else {
                                     log_write("pressed B to skip launch...\n");
                                 }
                             }
-
                         );
                     } else {
                         log_write("assoc list is empty\n");
@@ -773,6 +776,13 @@ auto MakeLauncherLabel(const FileAssocEntry& assoc) -> std::string {
     }
 
     auto root = std::string{path.substr(0, slash)};
+    if (path::EqualsIC(root, "retroarch")) {
+        return "RetroArch \u2014 " + assoc.name;
+    }
+    if (path::EqualsIC(root, "tico")) {
+        return "TICO \u2014 " + assoc.name;
+    }
+
     // /switch/<launcher>/... is the common layout, the useful name is deeper.
     if (path::EqualsIC(root, "switch")) {
         const auto rest = path.substr(slash + 1);
@@ -2779,6 +2789,36 @@ auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
         }
     }
 
+    enum class LauncherGroup {
+        RetroArch = 0,
+        TICO = 1,
+        Other = 2,
+    };
+
+    auto GetLauncherGroup = [](std::string_view path) -> LauncherGroup {
+        if (path.starts_with('/')) {
+            path.remove_prefix(1);
+        }
+        const auto slash = path.find('/');
+        const auto root = (slash != std::string_view::npos) ? path.substr(0, slash) : path;
+        if (path::EqualsIC(root, "retroarch")) {
+            return LauncherGroup::RetroArch;
+        }
+        if (path::EqualsIC(root, "tico")) {
+            return LauncherGroup::TICO;
+        }
+        return LauncherGroup::Other;
+    };
+
+    std::ranges::stable_sort(out_entries, [&](const FileAssocEntry& a, const FileAssocEntry& b) {
+        const auto group_a = GetLauncherGroup(a.path.s);
+        const auto group_b = GetLauncherGroup(b.path.s);
+        if (group_a != group_b) {
+            return group_a < group_b;
+        }
+        return strcasecmp(a.name.c_str(), b.name.c_str()) < 0;
+    });
+
     return out_entries;
 }
 
@@ -2810,7 +2850,11 @@ void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
             auto assoc = static_cast<FileAssocEntry*>(UserData);
             if (!std::strcmp(Key, "path")) {
                 assoc->path = Value;
-            } else if (!std::strcmp(Key, "supported_extensions")) {
+            } else if (!std::strcmp(Key, "name")) {
+                assoc->name = Value;
+            } else if (!std::strcmp(Key, "argument")) {
+                assoc->argument = Value;
+            } else if (!std::strcmp(Key, "supported_extensions") || !std::strcmp(Key, "extensions")) {
                 for (const auto& p : std::views::split(std::string_view{Value}, '|')) {
                     if (p.empty()) {
                         continue;
@@ -2836,7 +2880,9 @@ void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
             continue;
         }
 
-        assoc.name.assign(d->d_name, ext - d->d_name);
+        if (assoc.name.empty()) {
+            assoc.name.assign(d->d_name, ext - d->d_name);
+        }
 
         // if path isn't empty, check if the file exists
         bool file_exists{};
