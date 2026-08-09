@@ -115,7 +115,11 @@ auto Screensaver::WantsWake(const Controller* controller, const TouchInfo* touch
     if (!m_active || m_started.GetMs() < WAKE_GRACE_MS) {
         return false;
     }
-    return controller->m_kdown || touch->is_touching || touch->is_clicked;
+    const auto stick_directions = static_cast<u64>(Button::LS_LEFT) | static_cast<u64>(Button::LS_RIGHT) |
+        static_cast<u64>(Button::LS_UP) | static_cast<u64>(Button::LS_DOWN) |
+        static_cast<u64>(Button::RS_LEFT) | static_cast<u64>(Button::RS_RIGHT) |
+        static_cast<u64>(Button::RS_UP) | static_cast<u64>(Button::RS_DOWN);
+    return (controller->m_kdown & ~stick_directions) || touch->is_touching || touch->is_clicked;
 }
 
 void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
