@@ -374,6 +374,25 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         }
     }
 
+    const double graph_elapsed = m_graph_timestamp.GetSecondsD();
+    if (m_state.load() == State::Installing && graph_elapsed >= 0.5) {
+        SCOPED_MUTEX(&m_mutex);
+        m_graph_timestamp.Update();
+        const auto total_read = m_total_read.load();
+        const auto total_write = m_total_write.load();
+        m_read_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_read - m_graph_last_read) / graph_elapsed));
+        m_write_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_write - m_graph_last_write) / graph_elapsed));
+        // session peak, kept for the summary panel (the history window only
+        // covers the last ~48 s).
+        if (m_write_history[m_history_index] > m_peak_write_bps.load()) {
+            m_peak_write_bps = m_write_history[m_history_index];
+        }
+        m_graph_last_read = total_read;
+        m_graph_last_write = total_write;
+        m_history_index = (m_history_index + 1) % SPEED_HISTORY;
+        m_history_count = std::min(m_history_count + 1, SPEED_HISTORY);
+    }
+
     if (m_screensaver.IsActive()) {
         // a question needs an answer, so it wins over a blanked panel: the
         // option box would otherwise be raised behind a screen nobody can read.
@@ -755,23 +774,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     // R/W speed graph: red = source read, blue = storage write.
     {
-        const double graph_elapsed = m_graph_timestamp.GetSecondsD();
-        if (state == State::Installing && graph_elapsed >= 0.5) {
-            m_graph_timestamp.Update();
-            const auto total_read = m_total_read.load();
-            const auto total_write = m_total_write.load();
-            m_read_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_read - m_graph_last_read) / graph_elapsed));
-            m_write_history[m_history_index] = static_cast<s64>(std::max(0.0, (double)(total_write - m_graph_last_write) / graph_elapsed));
-            // session peak, kept for the summary panel (the history window only
-            // covers the last ~48 s).
-            if (m_write_history[m_history_index] > m_peak_write_bps.load()) {
-                m_peak_write_bps = m_write_history[m_history_index];
-            }
-            m_graph_last_read = total_read;
-            m_graph_last_write = total_write;
-            m_history_index = (m_history_index + 1) % SPEED_HISTORY;
-            m_history_count = std::min(m_history_count + 1, SPEED_HISTORY);
-        }
 
         const auto red = nvgRGBA(231, 76, 60, 255);
         const auto blue = nvgRGBA(52, 152, 219, 255);
