@@ -295,6 +295,8 @@ void Menu::SetupViewActions() {
 }
 
 void Menu::SetupEditActions() {
+    RemoveAction(Button::R2);
+
     SetAction(Button::A, Action{"Edit line"_i18n, [this](){
         EditLine();
     }});
