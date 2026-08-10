@@ -161,10 +161,12 @@ public:
     // Minus-key screen blanking during the install queue, see ui/screensaver.hpp.
     static auto GetBlankMode() -> long;
     static auto GetBlankBrightness() -> long;
+    static auto GetBlankTimeout() -> long;
     static auto GetSaverOled() -> bool;
     static auto GetSaverFields() -> long;
     static void SetBlankMode(long mode);
     static void SetBlankBrightness(long percent);
+    static void SetBlankTimeout(long timeout_sec);
     static void SetSaverOled(bool enable);
     static void SetSaverField(long field, bool enable);
 
@@ -437,6 +439,7 @@ public:
     // page it can raise is laid out.
     option::OptionLong m_blank_mode{INI_SECTION, "blank_mode", (long)ui::BlankMode::Screensaver};
     option::OptionLong m_blank_brightness{INI_SECTION, "blank_brightness", 10}; // percent
+    option::OptionLong m_blank_timeout{INI_SECTION, "blank_timeout", 0}; // seconds (0 = off)
     option::OptionBool m_saver_oled{INI_SECTION, "saver_oled", true};
     option::OptionLong m_saver_fields{INI_SECTION, "saver_fields", ui::SaverField_ALL};
 

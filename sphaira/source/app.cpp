@@ -1014,6 +1014,7 @@ App::App(const char* argv0) {
             else if (app->m_progress_boost_mode.LoadFrom(Key, Value)) {}
             else if (app->m_blank_mode.LoadFrom(Key, Value)) {}
             else if (app->m_blank_brightness.LoadFrom(Key, Value)) {}
+            else if (app->m_blank_timeout.LoadFrom(Key, Value)) {}
             else if (app->m_saver_oled.LoadFrom(Key, Value)) {}
             else if (app->m_saver_fields.LoadFrom(Key, Value)) {}
             else if (app->m_allow_downgrade.LoadFrom(Key, Value)) {}
@@ -1042,6 +1043,7 @@ App::App(const char* argv0) {
     // load all configs ahead of time, as this is actually faster than
     // loading each config one by one as it avoids re-opening the file multiple times.
     ini_browse(cb, this, CONFIG_PATH);
+    m_blank_timeout.Get();
  
     // Migration: if install_location is not in ini, but install_sd is, migrate it.
     if (ini_getl(INI_SECTION, "install_location", -1, CONFIG_PATH) == -1) {

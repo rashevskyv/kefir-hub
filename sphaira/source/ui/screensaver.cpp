@@ -56,7 +56,9 @@ void Screensaver::Start() {
     m_user_offset_y = 0.f;
     m_drift_speed_mult = 1.0f;
     m_drift_accum = 0.f;
-    m_current_brightness = App::GetBlankBrightness() / 100.f;
+    if (!m_brightness_dirty) {
+        m_current_brightness = App::GetBlankBrightness() / 100.f;
+    }
 
     m_lbl_ready = R_SUCCEEDED(lblInitialize());
     if (!m_lbl_ready) {
@@ -78,8 +80,7 @@ void Screensaver::Start() {
     if (m_saved_auto_brightness) {
         lblDisableAutoBrightnessControl();
     }
-    const float target_brightness = App::GetBlankBrightness() / 100.f;
-    m_current_brightness = target_brightness;
+    const float target_brightness = m_current_brightness;
     lblSetCurrentBrightnessSetting(target_brightness);
     lblApplyCurrentBrightnessSettingToBacklight();
     log_write("[Screensaver] lower brightness: saved=%.2f, auto=%d -> target=%.2f\n", m_saved_brightness, m_saved_auto_brightness ? 1 : 0, target_brightness);
@@ -156,12 +157,15 @@ void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
         ? (float)controller->m_stick_r.y / 32767.f : 0.f;
 
     if (ry != 0.f) {
-        m_current_brightness = std::clamp(m_current_brightness + ry * (float)dt * 0.4f, 0.01f, 1.0f);
-        if (m_lbl_ready) {
-            lblSetCurrentBrightnessSetting(m_current_brightness);
-            lblApplyCurrentBrightnessSettingToBacklight();
+        const float new_brightness = std::clamp(m_current_brightness + ry * (float)dt * 0.4f, 0.01f, 1.0f);
+        if (new_brightness != m_current_brightness) {
+            m_current_brightness = new_brightness;
+            if (m_lbl_ready) {
+                lblSetCurrentBrightnessSetting(m_current_brightness);
+                lblApplyCurrentBrightnessSettingToBacklight();
+            }
+            m_brightness_dirty = true;
         }
-        App::SetBlankBrightness(m_current_brightness * 100.f);
     }
 
     if (rx != 0.f) {
@@ -169,6 +173,14 @@ void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
     }
 
     m_drift_accum += (float)dt * m_drift_speed_mult;
+}
+
+void Screensaver::FlushPendingBrightness() {
+    if (m_brightness_dirty) {
+        m_brightness_dirty = false;
+        const long val = std::clamp(static_cast<long>(std::round(m_current_brightness * 100.f)), 1L, 100L);
+        App::SetBlankBrightness(val);
+    }
 }
 
 void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
@@ -218,17 +230,18 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     }
 
     const bool show_clock = FieldEnabled(SaverField_Clock);
-    const bool show_status = FieldEnabled(SaverField_Status) && !info.status.empty();
+    const bool show_completion = info.is_complete;
+    const bool show_status = FieldEnabled(SaverField_Status) && !info.status.empty() && !show_completion;
     const bool show_counter = FieldEnabled(SaverField_Counter) && info.package_count;
     const bool show_file = FieldEnabled(SaverField_File) && !info.file.empty();
     const bool show_bar = FieldEnabled(SaverField_Bar);
     const bool show_stats = !stats.empty();
     const bool show_errors = FieldEnabled(SaverField_Errors) && info.failed;
-    const bool show_graph = FieldEnabled(SaverField_Graph) && info.has_graph && info.history_count >= 2;
+    const bool show_graph = FieldEnabled(SaverField_Graph) && info.has_graph && info.history_count >= 2 && !show_completion;
 
     const float clock_h = 86.f, status_h = 32.f, counter_h = 34.f;
     const float file_h = 32.f, bar_h = 52.f, stats_h = 32.f, errors_h = 30.f;
-    const float graph_h = 115.f;
+    const float graph_h = 115.f, completion_h = 50.f;
 
     float total = 0.f;
     total += show_clock ? clock_h : 0.f;
@@ -239,6 +252,7 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     total += show_stats ? stats_h : 0.f;
     total += show_errors ? errors_h : 0.f;
     total += show_graph ? graph_h + 10.f : 0.f;
+    total += show_completion ? completion_h + 10.f : 0.f;
 
     float y = cy - total / 2.f;
 
@@ -300,6 +314,14 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
         gfx::drawTextArgs(vg, cx, y, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, bad_col, "%s: %zu",
             "Failed"_i18n.c_str(), info.failed);
         y += errors_h;
+    }
+
+    if (show_completion) {
+        y += 10.f;
+        const auto comp_col = info.is_failed ? bad_col : accent_col;
+        const auto& comp_text = !info.status.empty() ? info.status : (info.is_failed ? "Finished with errors"_i18n : "Finished"_i18n);
+        gfx::drawTextArgs(vg, cx, y, 32.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, comp_col, "%s", comp_text.c_str());
+        y += completion_h;
     }
 
     if (show_graph) {
@@ -388,6 +410,7 @@ SaverPreview::SaverPreview() {
 void SaverPreview::Update(Controller* controller, TouchInfo* touch) {
     if (m_saver.WantsWake(controller, touch)) {
         m_saver.Stop();
+        m_saver.FlushPendingBrightness();
         SetPop();
     }
 }

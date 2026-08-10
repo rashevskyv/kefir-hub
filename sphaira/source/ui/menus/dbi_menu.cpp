@@ -284,6 +284,7 @@ Menu::~Menu() {
         threadWaitForExit(&m_thread);
         threadClose(&m_thread);
     }
+    m_screensaver.FlushPendingBrightness();
     m_usb_source.reset();
 
     if (m_was_mtp_enabled) {
@@ -366,17 +367,20 @@ void Menu::UpdateActions() {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (m_actions_dirty) UpdateActions();
 
+    if (m_state.load() != State::Installing) {
+        m_screensaver.FlushPendingBrightness();
+    }
+
     std::shared_ptr<PromptData> prompt{};
-    {
-        SCOPED_MUTEX(&m_mutex);
+    if (mutexTryLock(&m_mutex)) {
         if (m_prompt_data && m_prompt_data->choice == -1) {
             prompt = m_prompt_data;
         }
+        mutexUnlock(&m_mutex);
     }
 
     const double graph_elapsed = m_graph_timestamp.GetSecondsD();
     if (m_state.load() == State::Installing && graph_elapsed >= 0.5) {
-        SCOPED_MUTEX(&m_mutex);
         m_graph_timestamp.Update();
         const auto total_read = m_total_read.load();
         const auto total_write = m_total_write.load();
@@ -393,17 +397,43 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         m_history_count = std::min(m_history_count + 1, SPEED_HISTORY);
     }
 
+    const bool is_installing = (m_state.load() == State::Installing);
+    const bool is_saver_active = m_screensaver.IsActive();
+    const double now_sec = m_inactivity_timestamp.GetSecondsD();
+    const long timeout_sec = App::GetBlankTimeout();
+
+    TimeoutInput timeout_input{};
+    if (controller) {
+        timeout_input.kdown = controller->m_kdown;
+        timeout_input.kheld = controller->m_kheld;
+        timeout_input.stick_l_x = controller->m_stick_l.x;
+        timeout_input.stick_l_y = controller->m_stick_l.y;
+        timeout_input.stick_r_x = controller->m_stick_r.x;
+        timeout_input.stick_r_y = controller->m_stick_r.y;
+    }
+    if (touch) {
+        timeout_input.is_touching = touch->is_touching;
+        timeout_input.is_clicked = touch->is_clicked;
+    }
+
+    if (m_inactivity_tracker.Update(is_installing, is_saver_active, timeout_sec, timeout_input, now_sec)) {
+        m_screensaver.Start();
+        m_inactivity_tracker.Reset(now_sec);
+    }
+
     if (m_screensaver.IsActive()) {
         // a question needs an answer, so it wins over a blanked panel: the
         // option box would otherwise be raised behind a screen nobody can read.
         if (prompt) {
             m_screensaver.Stop();
+            m_inactivity_tracker.Reset(now_sec);
         } else {
             m_screensaver.Update(controller, touch);
             // the press that wakes the panel is spent on waking it -- waking
             // with B must not also cancel the queue behind it.
             if (m_screensaver.WantsWake(controller, touch)) {
                 m_screensaver.Stop();
+                m_inactivity_tracker.Reset(now_sec);
             }
             return;
         }
@@ -491,47 +521,55 @@ auto Menu::OverallDone() const -> s64 {
 }
 
 auto Menu::ComputeSaverInfo() -> SaverInfo {
-    SCOPED_MUTEX(&m_mutex);
+    if (mutexTryLock(&m_mutex)) {
+        ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 
-    SaverInfo info{};
-    switch (m_state.load()) {
-        case State::WaitingForUsb:
-        case State::WaitingForList: info.status = "Waiting for PC"_i18n; break;
-        case State::Analysing:      info.status = "Analysing"_i18n; break;
-        case State::ReviewQueue:    info.status = "Ready to install"_i18n; break;
-        case State::Installing:     info.status = "Installing"_i18n; break;
-        case State::Cancelled:      info.status = "Cancelled"_i18n; break;
-        case State::Failed:         info.status = "Failed"_i18n; break;
-        case State::Summary:
-            info.status = m_session_failed ? "Finished with errors"_i18n : "Finished"_i18n;
-            break;
+        SaverInfo info{};
+        const auto state = m_state.load();
+        switch (state) {
+            case State::WaitingForUsb:
+            case State::WaitingForList: info.status = "Waiting for PC"_i18n; break;
+            case State::Analysing:      info.status = "Analysing"_i18n; break;
+            case State::ReviewQueue:    info.status = "Ready to install"_i18n; break;
+            case State::Installing:     info.status = "Installing"_i18n; break;
+            case State::Cancelled:      info.status = "Cancelled"_i18n; break;
+            case State::Failed:         info.status = "Failed"_i18n; break;
+            case State::Summary:
+                info.status = m_session_failed ? "Finished with errors"_i18n : "Finished"_i18n;
+                break;
+        }
+
+        info.file = m_current_title;
+        if (!m_current_transfer.empty()) {
+            info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
+        }
+        info.package = std::min(m_current_package + 1, m_queue.size());
+        info.package_count = m_queue.size();
+        info.installed = m_stats.installed;
+        info.failed = m_stats.failed;
+        info.is_complete = (state == State::Summary);
+        info.is_failed = m_session_failed || (m_stats.failed > 0);
+
+        const auto bps = AvgWriteBps();
+        const auto done = OverallDone();
+        info.ratio = m_plan_total_bytes > 0
+            ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+        info.speed_mib = static_cast<double>(bps) / (1024.0 * 1024.0);
+        if (m_history_count >= 4) {
+            info.eta = FormatEta(m_plan_total_bytes - done, bps);
+        }
+        info.elapsed_ns = m_stats.elapsed_ns ? m_stats.elapsed_ns : m_session_timestamp.GetNs();
+
+        m_cached_saver_info = info;
     }
 
-    info.file = m_current_title;
-    if (!m_current_transfer.empty()) {
-        info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
-    }
-    info.package = std::min(m_current_package + 1, m_queue.size());
-    info.package_count = m_queue.size();
-    info.installed = m_stats.installed;
-    info.failed = m_stats.failed;
+    m_cached_saver_info.has_graph = (m_history_count >= 2);
+    m_cached_saver_info.history_count = m_history_count;
+    m_cached_saver_info.history_index = m_history_index;
+    m_cached_saver_info.read_history = m_read_history;
+    m_cached_saver_info.write_history = m_write_history;
 
-    const auto bps = AvgWriteBps();
-    const auto done = OverallDone();
-    info.ratio = m_plan_total_bytes > 0
-        ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
-    info.speed_mib = static_cast<double>(bps) / (1024.0 * 1024.0);
-    if (m_history_count >= 4) {
-        info.eta = FormatEta(m_plan_total_bytes - done, bps);
-    }
-    info.elapsed_ns = m_stats.elapsed_ns ? m_stats.elapsed_ns : m_session_timestamp.GetNs();
-    info.has_graph = (m_history_count >= 2);
-    info.history_count = m_history_count;
-    info.history_index = m_history_index;
-    info.read_history = m_read_history;
-    info.write_history = m_write_history;
-
-    return info;
+    return m_cached_saver_info;
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {

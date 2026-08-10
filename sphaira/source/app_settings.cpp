@@ -228,6 +228,10 @@ auto App::GetBlankBrightness() -> long {
     return std::clamp<long>(g_app->m_blank_brightness.Get(), 1, 100);
 }
 
+auto App::GetBlankTimeout() -> long {
+    return std::max<long>(0, g_app->m_blank_timeout.Get());
+}
+
 auto App::GetSaverOled() -> bool {
     return g_app->m_saver_oled.Get();
 }
@@ -242,6 +246,10 @@ void App::SetBlankMode(long mode) {
 
 void App::SetBlankBrightness(long percent) {
     g_app->m_blank_brightness.Set(std::clamp<long>(percent, 1, 100));
+}
+
+void App::SetBlankTimeout(long timeout_sec) {
+    g_app->m_blank_timeout.Set(std::max<long>(0, timeout_sec));
 }
 
 void App::SetSaverOled(bool enable) {

@@ -1,10 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.431**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.436**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
+
+## Поточний delivery: v0.13.436 (незалежний скрінсейвер)
+
+- [x] SAVER-NONBLOCKING-436 — Прибрано блокувальні операції SD та очікування mutex із кадру скрінсейвера; керування і графік не залежать від нульової швидкості запису.
+- [x] SAVER-BRIGHTNESS-436 — Яскравість застосовується до підсвітки одразу, а в конфігурацію записується один раз після завершення встановлення.
+- [x] SAVER-FINISHED-436 — Після завершення замість графіка показується `Finished` або `Finished with errors`.
+- [x] SAVER-TIMEOUT-436 — Додано налаштування автозапуску після бездіяльності: Off, 30 с, 1/2/5/10 хв.
+- [x] VERIFY-SAVER-436 — Host-тести, `git diff --check` і збірка `ReleaseWithInstall` у WSL пройшли успішно.
 
 ## Поточний delivery: v0.13.431 (File Viewer Build Fix & NxLink Deployment)
 

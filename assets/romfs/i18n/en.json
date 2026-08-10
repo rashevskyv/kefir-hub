@@ -1652,5 +1652,12 @@
   "svcDebug": "svcDebug",
   "Include platform in title": "Include platform in title",
   "Version (optional)": "Version (optional)",
-  "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.": "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."
+  "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.": "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.",
+  "Inactivity timeout": "Inactivity timeout",
+  "Automatically start the screen off mode after a period of inactivity during installation.": "Automatically start the screen off mode after a period of inactivity during installation.",
+  "30 s": "30 s",
+  "1 min": "1 min",
+  "2 min": "2 min",
+  "5 min": "5 min",
+  "10 min": "10 min"
 }

@@ -4,6 +4,7 @@
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/screensaver.hpp"
+#include "ui/screensaver_timeout.hpp"
 #include "yati/source/usb.hpp"
 #include "yati/yati.hpp"
 #include <array>
@@ -226,6 +227,9 @@ private:
 
     // Minus blanks the panel while a long queue runs; see ui/screensaver.hpp.
     Screensaver m_screensaver{};
+    SaverInfo m_cached_saver_info{};
+    InactivityTracker m_inactivity_tracker{};
+    TimeStamp m_inactivity_timestamp{};
 
     TimeStamp m_usb_poll_ts{};
     char m_usb_link_buf[128]{};

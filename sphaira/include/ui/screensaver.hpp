@@ -46,6 +46,9 @@ struct SaverInfo {
     std::string eta{};         // empty until there are enough samples
     u64 elapsed_ns{};
 
+    bool is_complete{false};
+    bool is_failed{false};
+
     // Live R/W speed graph history
     bool has_graph{false};
     size_t history_count{0};
@@ -57,7 +60,10 @@ struct SaverInfo {
 // The Minus-key screen blank. Owns the console brightness while it is on, so
 // it has to be Stop()ped before the owner goes away -- the destructor does it.
 struct Screensaver {
-    ~Screensaver() { Stop(); }
+    ~Screensaver() {
+        Stop();
+        FlushPendingBrightness();
+    }
 
     // starts whichever mode the settings ask for. no-op if already running.
     void Start();
@@ -76,6 +82,8 @@ struct Screensaver {
     void Update(const Controller* controller, const TouchInfo* touch);
     void Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info);
 
+    void FlushPendingBrightness();
+
 private:
     bool m_active{};
     BlankMode m_mode{};
@@ -91,6 +99,7 @@ private:
     float m_drift_speed_mult{1.0f};
     float m_drift_accum{0.f};
     float m_current_brightness{1.0f};
+    bool m_brightness_dirty{false};
 };
 
 // full screen preview of the current screensaver settings, so the readout can

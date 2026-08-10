@@ -314,6 +314,15 @@ auto BuildScreenOffItems() -> std::vector<SettingsItem> {
         "Screensaver",
     };
     static constexpr long BRIGHTNESS_STEPS[] = { 1, 5, 10, 20, 30, 50 };
+    static constexpr const char* TIMEOUT_LABELS[] = {
+        "Off",
+        "30 s",
+        "1 min",
+        "2 min",
+        "5 min",
+        "10 min",
+    };
+    static constexpr long TIMEOUT_STEPS[] = { 0, 30, 60, 120, 300, 600 };
 
     std::vector<SettingsItem> items;
 
@@ -331,6 +340,36 @@ auto BuildScreenOffItems() -> std::vector<SettingsItem> {
                     App::SetBlankMode(*op_index);
                 }
             }, App::GetBlankMode());
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Inactivity timeout"_i18n,
+        "Automatically start the screen off mode after a period of inactivity during installation."_i18n,
+        [](){
+            const long timeout = App::GetBlankTimeout();
+            for (size_t i = 0; i < std::size(TIMEOUT_STEPS); i++) {
+                if (TIMEOUT_STEPS[i] == timeout) {
+                    return i18n::get(TIMEOUT_LABELS[i]);
+                }
+            }
+            return i18n::get("Off");
+        },
+        [](){
+            PopupList::Items list;
+            s64 index = 0;
+            const long timeout = App::GetBlankTimeout();
+            for (size_t i = 0; i < std::size(TIMEOUT_STEPS); i++) {
+                list.push_back(i18n::get(TIMEOUT_LABELS[i]));
+                if (TIMEOUT_STEPS[i] == timeout) {
+                    index = i;
+                }
+            }
+            App::Push<PopupList>("Inactivity timeout"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetBlankTimeout(TIMEOUT_STEPS[*op_index]);
+                }
+            }, index);
         }
     });
 
