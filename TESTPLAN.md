@@ -219,11 +219,22 @@
 
 ### 7.4 Перегляд
 - [ ] View Image (jpg/png), Fit Image, Zoom Up/Down, Previous/Next Image
-- [ ] View as text — великі файли, UTF-8
+- [ ] Кнопка `A` відкриває `.txt`, `.ini`, `.json`, `.md`, `.log` та інші відомі текстові формати у View; image/ZIP/NRO/install-дії зберігають пріоритет
 - [ ] Create Switch Theme з картинки (theme creator: Target, Zoom, Theme Name, Author, Generate)
-- [ ] Текстовий файл до 4 MiB відкривається як список рядків: Edit / Insert below / Delete / Join with next, Save, Undo, Redo, Go to line
-- [ ] Після змін є `*`; вихід пропонує Save/Discard, а збереження не міняє наявні LF/CRLF без потреби
-- [ ] Текстовий файл понад 4 MiB лишається read-only і показує `Too large to edit`
+- [ ] У контекстному меню текстового файла є `View` і `Edit`; `Edit` недоступний для read-only джерела та файла понад 4 MiB
+- [ ] У View footer показує `RS → Scroll` і `B → Back`; для writable-файла також `A → Edit`, яке переходить у Edit без повторного читання
+- [ ] У View правий стік прокручує viewport без курсора, wrap і затримки при зміні напрямку на межі
+- [ ] У Edit footer показує `LS/RS → Cursor / Scroll`, `A → Edit line`, `X → Actions`, `+ → Options`, `B → Back` без дубльованого `Scroll`
+- [ ] У Edit лівий стік/D-pad рухає курсор, правий стік незалежно прокручує viewport, `A` відкриває keyboard із повним поточним рядком
+- [ ] Edit / Insert line below / Delete / Join with next, включно з видаленням єдиного рядка; Cancel keyboard не змінює модель
+- [ ] Undo/Redo повертають точний saved state: `*` з'являється після зміни, зникає після Undo до baseline та після успішного Save
+- [ ] Go to line для `1`, середнього, останнього й завеликого номера затискає номер до діапазону та одразу показує рядок
+- [ ] Save і повторне відкриття зберігають UTF-8, кирилицю, emoji, порожні/довгі рядки та наявний LF або CRLF
+- [ ] Вихід із dirty Edit показує Save / Discard / Cancel; контрольована помилка Save лишає редактор відкритим, dirty і зі змінами в пам'яті
+- [ ] `.ini` контрастно підсвічує секції/коментарі/ключі/значення; подвійний tap за 500 ms перемикає лише окремий RHS `true` / `false` або `u8!0x0` / `u8!0x1`, а Undo повертає значення
+- [ ] Файл понад 4 MiB відкривається як обмежений read-only preview із `Preview truncated`; Edit не доступний
+- [ ] Writable USB/SMB джерело дозволяє Edit/Save; read-only ZIP/HTTP/MTP джерело дозволяє лише View
+- [ ] JPG/PNG/BMP/GIF як і раніше відкриваються в image-viewer: gallery, zoom, pan, fullscreen і theme creation без регресій
 
 ### 7.5 Хеші
 - [ ] Hash → CRC32 / MD5 / SHA1 / SHA256, результат збігається з PC

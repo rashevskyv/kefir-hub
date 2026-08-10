@@ -1,20 +1,115 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.436**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.437**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.436 (незалежний скрінсейвер)
+## Попередній delivery: v0.13.436 (незалежний скрінсейвер)
 
-- [x] SAVER-NONBLOCKING-436 — Прибрано блокувальні операції SD та очікування mutex із кадру скрінсейвера; керування і графік не залежать від нульової швидкості запису.
-- [x] SAVER-BRIGHTNESS-436 — Яскравість застосовується до підсвітки одразу, а в конфігурацію записується один раз після завершення встановлення.
-- [x] SAVER-FINISHED-436 — Після завершення замість графіка показується `Finished` або `Finished with errors`.
-- [x] SAVER-TIMEOUT-436 — Додано налаштування автозапуску після бездіяльності: Off, 30 с, 1/2/5/10 хв.
-- [x] VERIFY-SAVER-436 — Host-тести, `git diff --check` і збірка `ReleaseWithInstall` у WSL пройшли успішно.
+- [x] `SAVER-NONBLOCK-436` — прибрати синхронний запис INI та очікування
+  `m_mutex` з активного UI-шляху скрінсейвера; рух, яскравість і кадри мають
+  залишатися чутливими під час блокуючого запису на SD.
+- [x] `SAVER-GRAPH-436` — семплувати R/W-графік кожні 0,5 с без mutex
+  інсталятора; за відсутності приросту додавати нульовий семпл, не зупиняючи
+  прокрутку графіка.
+- [x] `SAVER-FINISHED-436` — після завершення черги ховати графік і показувати
+  `Finished` або `Finished with errors` незалежно від маски полів.
+- [x] `SAVER-AUTO-436` — додати в налаштування скрінсейвера автозапуск під час
+  інсталяції після вибраного періоду бездіяльності; будь-яке введення скидає
+  таймер, `Off` лишається типовим значенням.
+- [x] `SAVER-PERSIST-436` — зміну яскравості тримати в пам'яті під час запису й
+  зберігати один раз лише після завершення/cancel інсталяційного I/O.
+- [x] `SAVER-VERIFY-436` — додати одну мінімальну host-перевірку таймера,
+  прогнати `tests/run.sh` і WSL `ReleaseWithInstall`.
+- [x] `SAVER-DELIVERY-436` — після прийняття підняти версію, оновити living
+  docs і створити focused commit без сторонніх змін delivery 0.13.435.
 
-## Поточний delivery: v0.13.431 (File Viewer Build Fix & NxLink Deployment)
+## Поточний delivery: v0.13.437 (Text Viewer / Editor UX)
+
+- [x] `TEXT-OPEN-A-437` — відкривати відомі текстові формати кнопкою `A` у
+  read-only viewer до пошуку зовнішніх асоціацій.
+- [x] `TEXT-CONTEXT-437` — показувати для текстового файла окремі дії `View` і
+  `Edit`, не обмежуючи viewer старим порогом 64 KiB.
+- [x] `TEXT-FS-437` — передавати text viewer поточний `fs::Fs*`, дозволити
+  перегляд на всіх підтримуваних джерелах і запис лише на реально writable FS;
+  image-viewer залишити на чинному незалежному шляху.
+- [x] `TEXT-IO-437` — не створювати порожній документ після помилки
+  Open/GetSize/Read; показувати фактичний Result і не дозволяти редагування.
+- [x] `TEXT-SAVED-STATE-437` — визначати `*` порівнянням із останнім успішно
+  збереженим текстом, щоб Undo міг повернути чистий стан, а Save оновлював
+  baseline і передбачувано завершував історію.
+- [x] `TEXT-SAFE-SAVE-437` — записувати через sibling temp із перевіреним
+  rename/restore; після невдалого Save залишати editor відкритим, dirty і з
+  усіма змінами в пам'яті.
+- [x] `TEXT-GOTO-INSERT-437` — після Go to line одразу показувати затиснутий до
+  діапазону рядок; Insert створює рядок тільки після підтвердження keyboard.
+- [x] `TEXT-CONTROLS-437` — у View прокручувати текст правим стіком; у Edit
+  рухати курсор лівим стіком, правим незалежно прокручувати viewport, а `A`
+  відкривати Switch keyboard із повним поточним рядком.
+- [x] `INI-UX-437` — підсвічувати секції, коментарі, ключі та значення INI;
+  подвійним дотиком до boolean-рядка перемикати `true` / `false` з undo.
+- [x] `TEXT-VERIFY-437` — додати мінімальну host-перевірку розпізнавання тексту
+  й INI boolean toggle, прогнати host-тести та WSL `ReleaseWithInstall`.
+- [x] `TEXT-LEGEND-437` — показати в footer керування для View/Edit: стіки,
+  редагування рядка, Actions, Options і Back без перевантаження легенди.
+- [x] `TEXT-VIEW-LABEL-437` — не називати writable-файл read-only лише через
+  режим View; справжній read-only показувати тільки для protected/source FS.
+- [x] `INI-TYPED-FLAG-437` — подвійним tap перемикати також Atmosphère-прапорці
+  `u8!0x0` / `u8!0x1` із підтримкою Undo та host-тестом.
+- [x] `INI-CONTRAST-437` — малювати назви INI-секцій контрастним текстовим
+  кольором, а не темним `focus` чорної теми.
+- [x] `STABILITY-TRANSFER-437` — звільняти активний transfer progress box до
+  очищення UI/NanoVG, щоб вихід із Home не лишав відкладені image destruction.
+- [x] `STABILITY-ICONS-437` — ініціалізувати розміри stb image load і визначати
+  формат HB-іконки за даними, а не примусово як JPEG.
+- [x] `STABILITY-USB-437` — перед `usbDsExit()` вимкнути USBDS і дочекатися
+  `Detached`, що прибирає teardown race на HOS 22.5.
+- [x] `TEXT-DELIVERY-437` — після прийняття підняти версію, оновити living docs
+  і створити focused commit без сторонніх змін delivery 0.13.435.
+
+## Попередній delivery: v0.13.435 (MTP Games і Create repack)
+
+- [x] `NSP-MERGED-CORE-435` — додати спільний потоковий NSP-builder, який
+  об'єднує встановлені BASE, UPD і DLC та читає NCA з їхніх фактичних
+  NAND/SD/GameCard storage.
+- [x] `NSP-MERGED-NAME-435` — називати пакет
+  `Назва [TitleID][B+U<version>+<count>DLC].nsp`, опускаючи відсутні частини.
+- [x] `MTP-GAMES-LAYOUT-435` — змінити read-only диск на корінь `Merged` і
+  `Separate`; у `Separate/<Game [TitleID]>` залишити окремі BASE/UPD/DLC NSP.
+- [x] `HOST-VERIFY-435` — додати мінімальні host-тести для імені merged NSP і
+  MTP path routing та прогнати `tests/run.sh`.
+- [x] `BUILD-VERIFY-435` — послідовно зібрати `sphaira` і `sphaira_nro` у
+  чистому WSL verification-каталозі.
+- [x] `CMAKELISTS-VERSION-BUMP-435` — підняти версію до `0.13.435` після
+  прийняття реалізації.
+- [x] `REPACK-SELECT-435` — додати `Create repack` з вибором лише наявних BASE, UPD і DLC.
+- [x] `REPACK-BUILD-435` — записувати вибрані незмінені компоненти одним потоковим NSP у `/games`.
+- [x] `REPACK-VERIFY-435` — прогнати host-тести та послідовно зібрати `sphaira` і `sphaira_nro`.
+- [x] `UI-COSMETICS-435` — прибрати порожній Progress з вебсервера, розвести USB/Applet Mode на DBI-екрані та збільшити відступ перед NAND/SD-розмірами; host-тести й WSL-збірка пройшли.
+- [ ] `REPACK-LAYERFS-LATER` — додати LayeredFS лише разом із коректною перебудовою Program NCA,
+  хешів і CNMT; не показувати недієву опцію в поточному UI.
+- [ ] `HW-MTPGAMES-435` — на Switch перевірити лістинг обох каталогів і
+  копіювання merged та separate NSP на ПК.
+- [ ] `HW-REPACK-435` — на Switch створити репак з різними комбінаціями BASE/UPD/DLC,
+  перевірити файл у `/games` та його встановлення.
+
+## Паралельний запит: TICO launchers
+
+- [x] `TICO-ASSOC` — додати асоціації лише для фактично встановлених
+  `/tico/cores/tico-*.nro`, включно з каталогами `sega-cd`, `fbneo`, `naomi`
+  та `atomiswave`.
+- [x] `TICO-ARGS` — передавати системний slug для Gambatte і Genesis Plus GX
+  під час звичайного запуску та у створеному форвардері; іншим ядрам передавати
+  ROM першим аргументом.
+- [x] `TICO-CHOOSER` — в обох списках вибору показувати й групувати варіанти як
+  `RetroArch — <core>` та `TICO — <core>`.
+- [x] `TICO-VERIFY` — прогнати host-тести й WSL-збірку.
+- [ ] `HW-TICO-433` — на реальній Switch перевірити прямий запуск і форвардер
+  для звичайного ядра та ядра із системним аргументом.
+
+## Попередній delivery: v0.13.431 (File Viewer Build Fix & NxLink Deployment)
 
 - [x] BUILD-FIX-FILE-VIEWER-431 — Додано пропущені заголовні файли `swkbd.hpp` та `ui/popup_list.hpp` у `file_viewer.cpp`, виправлено специфікатор форматування `%ld` для `s64` номера рядка.
 - [x] CMAKELISTS-VERSION-BUMP-431 — Піднято версію в `sphaira/CMakeLists.txt` до `0.13.431`.
