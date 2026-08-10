@@ -110,6 +110,7 @@ private:
     void DeleteGames();
     void DumpGames(u32 flags);
     void DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selection);
+    void CreateRepack(Entry entry, u32 flags);
     void CreateSaves(AccountUid uid);
     void ToggleCurrentSelection();
     void InvertSelection();

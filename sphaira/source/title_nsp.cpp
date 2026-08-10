@@ -1,4 +1,5 @@
 #include "title_nsp.hpp"
+#include "merged_nsp_tag.hpp"
 #include "title_info.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <cstring>
 #include <ranges>
+#include <span>
 
 namespace sphaira::title {
 namespace {
@@ -61,6 +63,85 @@ auto BuildNspPath(const char* name, const NsApplicationContentMetaStatus& status
     }
 
     return path;
+}
+
+Result BuildNspEntryFromInfoEntries(const char* name, const fs::FsPath& path, std::span<const ContentInfoEntry> content_entries, const keys::Keys& keys, NspEntry& out) {
+    out = {};
+    out.application_name = name;
+    out.path = path;
+    s64 offset{};
+
+    std::vector<NcmContentId> added_content_ids;
+    for (const auto& info : content_entries) {
+        for (const auto& e : info.content_infos) {
+            const auto it = std::ranges::find_if(added_content_ids, [&e](const auto& id) {
+                return 0 == std::memcmp(&id, &e.content_id, sizeof(id));
+            });
+            if (it != added_content_ids.end()) {
+                continue;
+            }
+            added_content_ids.push_back(e.content_id);
+
+            char nca_name[0x200];
+            std::snprintf(nca_name, sizeof(nca_name), "%s%s", utils::hexIdToStr(e.content_id).str, e.content_type == NcmContentType_Meta ? ".cnmt.nca" : ".nca");
+
+            u64 size;
+            ncmContentInfoSizeToU64(std::addressof(e), std::addressof(size));
+
+            out.collections.emplace_back(nca_name, offset, size);
+            out.nca_storage.push_back({e.content_id, info.status.storageID});
+            offset += size;
+        }
+    }
+
+    std::vector<FsRightsId> added_rights_ids;
+    for (const auto& info : content_entries) {
+        for (const auto& ncm_rights_id : info.ncm_rights_id) {
+            const auto rights_id = ncm_rights_id.rights_id;
+            const auto key_gen = ncm_rights_id.key_generation;
+
+            const auto it = std::ranges::find_if(added_rights_ids, [&rights_id](const auto& id) {
+                return 0 == std::memcmp(&id, &rights_id, sizeof(id));
+            });
+            if (it != added_rights_ids.end()) {
+                continue;
+            }
+            added_rights_ids.push_back(rights_id);
+
+            TikEntry entry{rights_id, key_gen};
+            log_write("rights id is valid, fetching common ticket and cert\n");
+
+            u64 tik_size;
+            u64 cert_size;
+            R_TRY(es::GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &rights_id));
+            log_write("got tik_size: %zu cert_size: %zu\n", tik_size, cert_size);
+
+            entry.tik_data.resize(tik_size);
+            entry.cert_data.resize(cert_size);
+            R_TRY(es::GetCommonTicketAndCertificateData(&tik_size, &cert_size, entry.tik_data.data(), entry.tik_data.size(), entry.cert_data.data(), entry.cert_data.size(), &rights_id));
+            log_write("got tik_data: %zu cert_data: %zu\n", tik_size, cert_size);
+
+            // patch fake ticket / convert personalised to common if needed.
+            R_TRY(es::PatchTicket(entry.tik_data, entry.cert_data, key_gen, keys, App::GetApp()->m_dump_convert_to_common_ticket.Get()));
+
+            char tik_name[0x200];
+            std::snprintf(tik_name, sizeof(tik_name), "%s%s", utils::hexIdToStr(rights_id).str, ".tik");
+
+            char cert_name[0x200];
+            std::snprintf(cert_name, sizeof(cert_name), "%s%s", utils::hexIdToStr(rights_id).str, ".cert");
+
+            out.collections.emplace_back(tik_name, offset, entry.tik_data.size());
+            offset += entry.tik_data.size();
+
+            out.collections.emplace_back(cert_name, offset, entry.cert_data.size());
+            offset += entry.cert_data.size();
+
+            out.tickets.emplace_back(entry);
+        }
+    }
+
+    out.nsp_data = yati::container::Nsp::Build(out.collections, out.nsp_size);
+    R_SUCCEED();
 }
 
 } // namespace
@@ -124,67 +205,6 @@ Result BuildContentEntry(const NsApplicationContentMetaStatus& status, ContentIn
     R_SUCCEED();
 }
 
-namespace {
-
-Result BuildNspEntry(const char* name, const ContentInfoEntry& info, const keys::Keys& keys, bool app_folder, NspEntry& out) {
-    out.application_name = name;
-    out.path = BuildNspPath(name, info.status, app_folder);
-    s64 offset{};
-
-    for (auto& e : info.content_infos) {
-        char nca_name[0x200];
-        std::snprintf(nca_name, sizeof(nca_name), "%s%s", utils::hexIdToStr(e.content_id).str, e.content_type == NcmContentType_Meta ? ".cnmt.nca" : ".nca");
-
-        u64 size;
-        ncmContentInfoSizeToU64(std::addressof(e), std::addressof(size));
-
-        out.collections.emplace_back(nca_name, offset, size);
-        offset += size;
-    }
-
-    for (auto& ncm_rights_id : info.ncm_rights_id) {
-        const auto rights_id = ncm_rights_id.rights_id;
-        const auto key_gen = ncm_rights_id.key_generation;
-
-        TikEntry entry{rights_id, key_gen};
-        log_write("rights id is valid, fetching common ticket and cert\n");
-
-        u64 tik_size;
-        u64 cert_size;
-        R_TRY(es::GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &rights_id));
-        log_write("got tik_size: %zu cert_size: %zu\n", tik_size, cert_size);
-
-        entry.tik_data.resize(tik_size);
-        entry.cert_data.resize(cert_size);
-        R_TRY(es::GetCommonTicketAndCertificateData(&tik_size, &cert_size, entry.tik_data.data(), entry.tik_data.size(), entry.cert_data.data(), entry.cert_data.size(), &rights_id));
-        log_write("got tik_data: %zu cert_data: %zu\n", tik_size, cert_size);
-
-        // patch fake ticket / convert personalised to common if needed.
-        R_TRY(es::PatchTicket(entry.tik_data, entry.cert_data, key_gen, keys, App::GetApp()->m_dump_convert_to_common_ticket.Get()));
-
-        char tik_name[0x200];
-        std::snprintf(tik_name, sizeof(tik_name), "%s%s", utils::hexIdToStr(rights_id).str, ".tik");
-
-        char cert_name[0x200];
-        std::snprintf(cert_name, sizeof(cert_name), "%s%s", utils::hexIdToStr(rights_id).str, ".cert");
-
-        out.collections.emplace_back(tik_name, offset, entry.tik_data.size());
-        offset += entry.tik_data.size();
-
-        out.collections.emplace_back(cert_name, offset, entry.cert_data.size());
-        offset += entry.cert_data.size();
-
-        out.tickets.emplace_back(entry);
-    }
-
-    out.nsp_data = yati::container::Nsp::Build(out.collections, out.nsp_size);
-    out.cs = GetNcmCs(info.status.storageID);
-
-    R_SUCCEED();
-}
-
-} // namespace
-
 // todo: benchmark manual sdcard read and decryption vs ncm.
 Result NspEntry::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
     *bytes_read = 0;
@@ -211,6 +231,11 @@ Result NspEntry::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
 
             if (collection.name.ends_with(".nca")) {
                 const auto id = ncm::GetContentIdFromStr(collection.name.c_str());
+                const auto it = std::ranges::find_if(nca_storage, [&id](const auto& entry) {
+                    return 0 == std::memcmp(&entry.content_id, &id, sizeof(id));
+                });
+                R_UNLESS(it != nca_storage.end(), Result_GameBadReadForDump);
+                auto& cs = GetNcmCs(it->storage_id);
                 return ncmContentStorageReadContentIdFile(&cs, buf, size, &id, off);
             } else if (collection.name.ends_with(".tik") || collection.name.ends_with(".cert")) {
                 FsRightsId id;
@@ -244,13 +269,88 @@ Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder,
         ContentInfoEntry info;
         R_TRY(BuildContentEntry(status, info));
 
+        const fs::FsPath path = BuildNspPath(name, info.status, app_folder);
+
         NspEntry nsp;
-        R_TRY(BuildNspEntry(name, info, keys, app_folder, nsp));
+        R_TRY(BuildNspEntryFromInfoEntries(name, path, std::span(&info, 1), keys, nsp));
         out.emplace_back(std::move(nsp));
     }
 
     R_UNLESS(!out.empty(), Result_GameNoNspEntriesBuilt);
     R_SUCCEED();
+}
+
+Result BuildMergedNspEntry(u64 app_id, const char* name, NspEntry& out) {
+    constexpr u32 default_flags = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent;
+    return BuildMergedNspEntry(app_id, name, default_flags, out);
+}
+
+Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out) {
+    constexpr u32 supported_flags = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent;
+    flags &= supported_flags;
+    R_UNLESS(flags, Result_GameNoNspEntriesBuilt);
+
+    MetaEntries meta_entries;
+    R_TRY(GetMetaEntries(app_id, meta_entries, flags));
+
+    const NsApplicationContentMetaStatus* base_status = nullptr;
+    const NsApplicationContentMetaStatus* highest_patch_status = nullptr;
+    std::vector<const NsApplicationContentMetaStatus*> dlc_statuses;
+
+    for (const auto& status : meta_entries) {
+        if ((flags & ContentFlag_Application) && status.meta_type == NcmContentMetaType_Application) {
+            base_status = &status;
+        } else if ((flags & ContentFlag_Patch) && status.meta_type == NcmContentMetaType_Patch) {
+            if (!highest_patch_status || status.version > highest_patch_status->version) {
+                highest_patch_status = &status;
+            }
+        } else if ((flags & ContentFlag_AddOnContent) && status.meta_type == NcmContentMetaType_AddOnContent) {
+            dlc_statuses.push_back(&status);
+        }
+    }
+
+    std::vector<NsApplicationContentMetaStatus> selected_metas;
+    bool has_base = false;
+    bool has_patch = false;
+    u32 patch_version = 0;
+    u32 dlc_count = 0;
+
+    if (base_status) {
+        selected_metas.push_back(*base_status);
+        has_base = true;
+    }
+    if (highest_patch_status) {
+        selected_metas.push_back(*highest_patch_status);
+        has_patch = true;
+        patch_version = highest_patch_status->version;
+    }
+    for (const auto* dlc : dlc_statuses) {
+        selected_metas.push_back(*dlc);
+        dlc_count++;
+    }
+
+    R_UNLESS(!selected_metas.empty(), Result_GameNoNspEntriesBuilt);
+
+    std::vector<ContentInfoEntry> content_entries;
+    for (const auto& status : selected_metas) {
+        ContentInfoEntry info;
+        R_TRY(BuildContentEntry(status, info));
+        content_entries.push_back(std::move(info));
+    }
+
+    keys::Keys keys;
+    R_TRY(keys::parse_keys(keys, true));
+
+    fs::FsPath name_buf = name;
+    utilsReplaceIllegalCharacters(name_buf, true);
+    if (name_buf.empty()) {
+        std::snprintf(name_buf, sizeof(name_buf), "%016lX", app_id);
+    }
+
+    const std::string filename = FormatMergedNspFilename(name_buf.s, app_id, has_base, has_patch, patch_version, dlc_count);
+    fs::FsPath path = filename.c_str();
+
+    return BuildNspEntryFromInfoEntries(name, path, content_entries, keys, out);
 }
 
 } // namespace sphaira::title

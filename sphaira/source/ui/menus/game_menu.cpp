@@ -490,11 +490,13 @@ struct DbiDetailsMenu final : MenuBase {
 
     DbiDetailsMenu(std::vector<Entry>* entries, s64 index,
         std::function<void(Entry, u32)> dump_callback,
+        std::function<void(Entry, u32)> repack_callback,
         std::function<void(s64)> selection_callback)
     : MenuBase{"Game Details"_i18n, MenuFlag_None}
     , m_entries{entries}
     , m_game_index{index}
     , m_dump_callback{std::move(dump_callback)}
+    , m_repack_callback{std::move(repack_callback)}
     , m_selection_callback{std::move(selection_callback)} {
         this->SetActions(
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
@@ -1212,9 +1214,66 @@ private:
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);
         }, true, "Export base, updates, DLC and data patches."_i18n);
+        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this](){
+            ShowCreateRepackSidebar();
+        }, true, "Export selected installed components as one merged NSP."_i18n);
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n);
+    }
+
+    void ShowCreateRepackSidebar() {
+        const auto& entry = CurrentEntry();
+        const auto flags = entry.content_flags;
+
+        const bool has_base = flags & title::ContentFlag_Application;
+        const bool has_patch = flags & title::ContentFlag_Patch;
+        const bool has_dlc = flags & title::ContentFlag_AddOnContent;
+
+        if (!has_base && !has_patch && !has_dlc) {
+            App::Notify("No repackable content available"_i18n);
+            return;
+        }
+
+        struct State {
+            bool base{true};
+            bool patch{true};
+            bool dlc{true};
+        };
+        auto state = std::make_shared<State>();
+
+        auto options = std::make_unique<Sidebar>("Create repack"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        if (has_base) {
+            options->Add<SidebarEntryCheckbox>("Application/BASE"_i18n, [state](){ return state->base; }, [state](bool val){ state->base = val; }, "Include base application."_i18n);
+        }
+        if (has_patch) {
+            options->Add<SidebarEntryCheckbox>("Patch/Update"_i18n, [state](){ return state->patch; }, [state](bool val){ state->patch = val; }, "Include highest installed update."_i18n);
+        }
+        if (has_dlc) {
+            options->Add<SidebarEntryCheckbox>("AddOnContent/DLC"_i18n, [state](){ return state->dlc; }, [state](bool val){ state->dlc = val; }, "Include all installed DLC."_i18n);
+        }
+
+        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this, entry, state, has_base, has_patch, has_dlc](){
+            u32 selected_flags = 0;
+            if (has_base && state->base) {
+                selected_flags |= title::ContentFlag_Application;
+            }
+            if (has_patch && state->patch) {
+                selected_flags |= title::ContentFlag_Patch;
+            }
+            if (has_dlc && state->dlc) {
+                selected_flags |= title::ContentFlag_AddOnContent;
+            }
+
+            if (selected_flags == 0) {
+                App::Notify("No components selected"_i18n);
+                return;
+            }
+
+            m_repack_callback(entry, selected_flags);
+        }, "Start creating the merged NSP."_i18n);
     }
 
 private:
@@ -1227,6 +1286,7 @@ private:
     std::vector<GameTicketRow> m_tickets{};
     std::vector<GameSaveRow> m_saves{};
     std::function<void(Entry, u32)> m_dump_callback{};
+    std::function<void(Entry, u32)> m_repack_callback{};
     std::function<void(s64)> m_selection_callback{};
     Result m_load_result{};
     char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
@@ -1307,6 +1367,8 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                 std::vector<Entry> targets;
                 targets.emplace_back(entry);
                 DumpEntries(std::move(targets), flags, false);
+            }, [this](Entry entry, u32 flags) {
+                CreateRepack(entry, flags);
             }, [this](s64 index) {
                 SetIndex(index);
             });
@@ -2231,6 +2293,31 @@ void Menu::DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selecti
             ClearSelection();
         }
     });
+}
+
+void Menu::CreateRepack(Entry entry, u32 flags) {
+    LoadControlEntry(entry);
+
+    title::NspEntry nsp_entry;
+    if (const auto rc = title::BuildMergedNspEntry(entry.app_id, entry.GetName(), flags, nsp_entry); R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to prepare repack NSP"_i18n);
+        return;
+    }
+
+    nsp_entry.icon = entry.image;
+
+    std::vector<title::NspEntry> entries;
+    entries.emplace_back(std::move(nsp_entry));
+
+    std::vector<fs::FsPath> paths;
+    paths.emplace_back(fs::AppendPath("/games", entries[0].path));
+
+    auto source = std::make_shared<NspSource>(entries);
+
+    dump::DumpLocation location{};
+    location.entry = {dump::DumpLocationType_SdCard, 0};
+
+    dump::Dump(source, location, paths, [](Result){});
 }
 
 void Menu::CreateSaves(AccountUid uid) {

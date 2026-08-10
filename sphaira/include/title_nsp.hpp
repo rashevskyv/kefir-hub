@@ -28,6 +28,11 @@ struct TikEntry {
 // are read straight out of NcmContentStorage at the requested offset, so the
 // nsp only ever exists as a stream - nothing is written to disk.
 struct NspEntry {
+    struct NcaStorage {
+        NcmContentId content_id{};
+        u8 storage_id{};
+    };
+
     // application name.
     std::string application_name{};
     // name of the nsp (name [id][v0][BASE].nsp).
@@ -40,8 +45,8 @@ struct NspEntry {
     std::vector<u8> nsp_data{};
     // size of the entier nsp.
     s64 nsp_size{};
-    // copy of ncm cs, it is not closed.
-    NcmContentStorage cs{};
+    // mapping from each NCA content ID to its original NCM storage ID.
+    std::vector<NcaStorage> nca_storage{};
     // copy of the icon, if invalid, it will use the default icon.
     int icon{};
 
@@ -59,5 +64,11 @@ Result BuildContentEntry(const NsApplicationContentMetaStatus& status, ContentIn
 // app_folder puts each nsp inside its own "<name>/" folder (dump layout).
 // entries are appended, so several titles can share one list.
 Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder, std::vector<NspEntry>& out);
+
+// builds one streamed NSP containing BASE, latest UPD, and all DLC for app_id.
+Result BuildMergedNspEntry(u64 app_id, const char* name, NspEntry& out);
+
+// builds one streamed NSP containing selected installed components (BASE, latest UPD, DLC) for app_id.
+Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out);
 
 } // namespace sphaira::title

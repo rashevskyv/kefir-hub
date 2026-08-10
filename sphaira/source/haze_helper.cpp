@@ -7,6 +7,7 @@
 #include "i18n.hpp"
 #include "title_info.hpp"
 #include "title_nsp.hpp"
+#include "mtp_games_path.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/progress_box.hpp"
@@ -966,38 +967,6 @@ auto BuildGameDirName(u64 application_id) -> std::string {
     return base + " " + suffix;
 }
 
-// splits an mtp path into its first two components, tolerating the double
-// slashes libhaze produces ("//game"). returns the depth: 0 root, 1 game
-// folder, 2 (or more) a file inside one.
-auto ParseTwoLevels(const char* path, std::string& l1, std::string& l2) -> int {
-    int depth{};
-    const char* p = path;
-
-    for (int level = 0; level < 2; level++) {
-        while (*p == '/') {
-            p++;
-        }
-        if (!*p) {
-            break;
-        }
-
-        const char* start = p;
-        while (*p && *p != '/') {
-            p++;
-        }
-
-        (level == 0 ? l1 : l2).assign(start, p - start);
-        depth = level + 1;
-    }
-
-    while (*p == '/') {
-        p++;
-    }
-    if (*p) {
-        depth = 3;
-    }
-    return depth;
-}
 
 // read-only virtual drive exposing decrypted game saves as
 // /<GameName [TitleID]>/<Account <user> | BCAT | Device | Cache>/<save files>.
@@ -1479,27 +1448,40 @@ struct FsGameProxy final : FsProxyBase {
     }
 
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override {
-        const auto pp = Parse(path);
+        const auto pp = sphaira::mtp::ParseGamesPath(path);
 
-        if (pp.depth == 0) {
-            *out_entry_type = FsDirEntryType_Dir;
-            R_SUCCEED();
+        switch (pp.kind) {
+            case sphaira::mtp::PathKind::Root:
+            case sphaira::mtp::PathKind::MergedDir:
+            case sphaira::mtp::PathKind::SeparateDir:
+                *out_entry_type = FsDirEntryType_Dir;
+                R_SUCCEED();
+
+            case sphaira::mtp::PathKind::SeparateGameDir: {
+                R_UNLESS(m_games.count(pp.game), FsError_PathNotFound);
+                *out_entry_type = FsDirEntryType_Dir;
+                R_SUCCEED();
+            }
+
+            case sphaira::mtp::PathKind::MergedFile: {
+                std::shared_ptr<GameNsp> nsp;
+                size_t index{};
+                R_TRY(FindMergedFile(pp.filename, nsp, index));
+                *out_entry_type = FsDirEntryType_File;
+                R_SUCCEED();
+            }
+
+            case sphaira::mtp::PathKind::SeparateFile: {
+                std::shared_ptr<GameNsp> nsp;
+                size_t index{};
+                R_TRY(FindFile(pp.game, pp.filename, nsp, index));
+                *out_entry_type = FsDirEntryType_File;
+                R_SUCCEED();
+            }
+
+            default:
+                R_THROW(FsError_PathNotFound);
         }
-
-        if (pp.depth == 1) {
-            R_UNLESS(m_games.count(pp.game), FsError_PathNotFound);
-            *out_entry_type = FsDirEntryType_Dir;
-            R_SUCCEED();
-        }
-
-        R_UNLESS(pp.depth == 2, FsError_PathNotFound);
-
-        std::shared_ptr<GameNsp> nsp;
-        size_t index{};
-        R_TRY(FindFile(pp, nsp, index));
-
-        *out_entry_type = FsDirEntryType_File;
-        R_SUCCEED();
     }
 
     // the drive is a view of installed content: everything that would modify
@@ -1541,11 +1523,16 @@ struct FsGameProxy final : FsProxyBase {
         log_write("[MTP-GAMES] OpenFile(%s)\n", path);
         R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
 
-        const auto pp = Parse(path);
-        R_UNLESS(pp.depth == 2, FsError_PathNotFound);
-
+        const auto pp = sphaira::mtp::ParseGamesPath(path);
         auto handle = std::make_unique<FileHandle>();
-        R_TRY(FindFile(pp, handle->nsp, handle->index));
+
+        if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
+            R_TRY(FindMergedFile(pp.filename, handle->nsp, handle->index));
+        } else if (pp.kind == sphaira::mtp::PathKind::SeparateFile) {
+            R_TRY(FindFile(pp.game, pp.filename, handle->nsp, handle->index));
+        } else {
+            R_THROW(FsError_PathNotFound);
+        }
 
         auto raw = handle.release();
         std::memcpy(&out_file->s, &raw, sizeof(raw));
@@ -1575,31 +1562,56 @@ struct FsGameProxy final : FsProxyBase {
     }
 
     Result OpenDirectory(const char *path, u32 mode, FsDir *out_dir) override {
-        const auto pp = Parse(path);
+        const auto pp = sphaira::mtp::ParseGamesPath(path);
         auto handle = std::make_unique<DirHandle>();
 
-        if (pp.depth == 0) {
-            // the root only holds game folders.
-            if (mode & FsDirOpenMode_ReadDirs) {
-                for (const auto& [name, game] : m_games) {
-                    handle->entries.emplace_back(MakeVirtualDirEntry(name));
+        switch (pp.kind) {
+            case sphaira::mtp::PathKind::Root: {
+                if (mode & FsDirOpenMode_ReadDirs) {
+                    handle->entries.emplace_back(MakeVirtualDirEntry("Merged"));
+                    handle->entries.emplace_back(MakeVirtualDirEntry("Separate"));
                 }
+                break;
             }
-        } else if (pp.depth == 1) {
-            // building the nsp headers here (rather than at scan time) keeps
-            // the drive instant to mount: only the opened game is built.
-            std::shared_ptr<GameNsp> nsp;
-            R_TRY(GetNsp(pp.game, nsp));
-            if (mode & FsDirOpenMode_ReadFiles) {
-                handle->entries = nsp->listing;
+
+            case sphaira::mtp::PathKind::MergedDir: {
+                if (mode & FsDirOpenMode_ReadFiles) {
+                    R_TRY(BuildMergedCacheIfNeeded());
+                    SCOPED_MUTEX(&m_cache_mutex);
+                    for (const auto& [name, nsp] : m_merged_cache) {
+                        if (!nsp->listing.empty()) {
+                            handle->entries.emplace_back(nsp->listing[0]);
+                        }
+                    }
+                }
+                break;
             }
-        } else {
-            R_THROW(FsError_PathNotFound);
+
+            case sphaira::mtp::PathKind::SeparateDir: {
+                if (mode & FsDirOpenMode_ReadDirs) {
+                    for (const auto& [name, game] : m_games) {
+                        handle->entries.emplace_back(MakeVirtualDirEntry(name));
+                    }
+                }
+                break;
+            }
+
+            case sphaira::mtp::PathKind::SeparateGameDir: {
+                std::shared_ptr<GameNsp> nsp;
+                R_TRY(GetNsp(pp.game, nsp));
+                if (mode & FsDirOpenMode_ReadFiles) {
+                    handle->entries = nsp->listing;
+                }
+                break;
+            }
+
+            default:
+                R_THROW(FsError_PathNotFound);
         }
 
         auto raw = handle.release();
         std::memcpy(&out_dir->s, &raw, sizeof(raw));
-        log_write("[MTP-GAMES] OpenDirectory(%s) depth=%d\n", path, pp.depth);
+        log_write("[MTP-GAMES] OpenDirectory(%s) kind=%d\n", path, static_cast<int>(pp.kind));
         R_SUCCEED();
     }
     Result ReadDirectory(FsDir *d, s64 *out_total_entries, size_t max_entries, FsDirectoryEntry *buf) override {
@@ -1658,18 +1670,6 @@ private:
         std::vector<FsDirectoryEntry> entries{};
         s64 index{};
     };
-
-    struct ParsedPath {
-        std::string game{};
-        std::string file{};
-        int depth{};
-    };
-
-    auto Parse(const char* path) const -> ParsedPath {
-        ParsedPath pp{};
-        pp.depth = ParseTwoLevels(FixPath(path), pp.game, pp.file);
-        return pp;
-    }
 
     // one folder per installed title. archived titles (a record with no
     // content) are skipped - there would be nothing to dump.
@@ -1749,11 +1749,56 @@ private:
         R_SUCCEED();
     }
 
-    Result FindFile(const ParsedPath& pp, std::shared_ptr<GameNsp>& nsp, size_t& index) {
-        R_TRY(GetNsp(pp.game, nsp));
+    Result BuildMergedCacheIfNeeded() {
+        SCOPED_MUTEX(&m_cache_mutex);
+        if (m_merged_built) {
+            R_SUCCEED();
+        }
+
+        // ponytail: Merged listing needs exact sizes, so headers/tickets stay cached
+        // for this MTP session; add lightweight sizing only if hardware measurements
+        // show memory or listing latency is a problem.
+        for (const auto& [dir_name, rec] : m_games) {
+            title::NspEntry entry;
+            const auto rc = title::BuildMergedNspEntry(rec.app_id, rec.name.c_str(), entry);
+            if (R_FAILED(rc)) {
+                log_write("[MTP-GAMES] failed to build merged nsp for %s 0x%X\n", dir_name.c_str(), rc);
+                continue;
+            }
+
+            auto nsp = std::make_shared<GameNsp>();
+            FsDirectoryEntry fe{};
+            std::snprintf(fe.name, sizeof(fe.name), "%s", entry.path.s);
+            fe.type = FsDirEntryType_File;
+            fe.file_size = entry.nsp_size;
+
+            nsp->entries.emplace_back(std::move(entry));
+            nsp->listing.emplace_back(fe);
+
+            m_merged_cache.emplace(fe.name, std::move(nsp));
+        }
+
+        m_merged_built = true;
+        R_SUCCEED();
+    }
+
+    Result FindMergedFile(const std::string& filename, std::shared_ptr<GameNsp>& nsp, size_t& index) {
+        R_TRY(BuildMergedCacheIfNeeded());
+
+        SCOPED_MUTEX(&m_cache_mutex);
+        const auto it = m_merged_cache.find(filename);
+        R_UNLESS(it != m_merged_cache.end(), FsError_PathNotFound);
+
+        nsp = it->second;
+        index = 0;
+        R_SUCCEED();
+    }
+
+    Result FindFile(const std::string& game, const std::string& file, std::shared_ptr<GameNsp>& nsp, size_t& index) {
+        R_TRY(GetNsp(game, nsp));
 
         for (size_t i = 0; i < nsp->entries.size(); i++) {
-            if (!strcasecmp(nsp->entries[i].path.s, pp.file.c_str())) {
+            if (!strcasecmp(nsp->entries[i].path.s, file.c_str())) {
                 index = i;
                 R_SUCCEED();
             }
@@ -1768,6 +1813,8 @@ private:
 
     // built on demand, see GetNsp().
     std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_cache{};
+    std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_merged_cache{};
+    bool m_merged_built{false};
     Mutex m_cache_mutex{};
 
     bool m_has_title{};
