@@ -1350,6 +1350,7 @@ App::~App() {
 
     // this has to be called before any cleanup to ensure the lifetime of
     // nvg is still active as some widgets may need to free images.
+    m_active_transfer_pbox.reset();
     m_widgets.clear();
     nvgDeleteImage(vg, m_default_image);
 
