@@ -1722,5 +1722,8 @@
   "Undo": "Скасувати",
   "View": "Перегляд",
   "Cursor / Scroll": "Курсор / Прокрутка",
-  "Scroll": "Прокрутка"
+  "Scroll": "Прокрутка",
+  "USB 3.0": "USB 3.0",
+  "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Примусово увімкнути USB 3.0 в Atmosphère. Зміни набудуть чинності лише після перезавантаження.",
+  "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Налаштування USB 3.0 збережено.\n\nЗміни не набудуть чинності до перезавантаження консолі.\n\nПерезавантажити зараз?"
 }

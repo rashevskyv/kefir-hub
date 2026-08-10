@@ -1146,6 +1146,36 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "",
         0.5f,
     }));
+    items.emplace_back(SettingsItem{
+        "USB 3.0"_i18n,
+        "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot."_i18n,
+        [](){
+            return OnOff(!IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x0"));
+        },
+        [](){
+            const bool currently_enabled = !IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x0");
+            const bool next_enabled = !currently_enabled;
+            const auto rc = SetIniValue(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", next_enabled ? "u8!0x1" : "u8!0x0");
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to apply Kefir setting"_i18n);
+                return;
+            }
+
+            fsdevCommitDevice("sdmc");
+
+            App::Push<OptionBox>(
+                "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"_i18n,
+                "Later"_i18n,
+                "Reboot"_i18n,
+                0,
+                [](auto op_index){
+                    if (op_index && *op_index == 1) {
+                        detail::RebootAfterSetting();
+                    }
+                }
+            );
+        }
+    });
 
     if (IsEmummcEnabled()) {
         items.emplace_back(MakeKefirToggle({
