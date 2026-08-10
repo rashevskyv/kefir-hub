@@ -1,4 +1,5 @@
 #include "ui/menus/filebrowser.hpp"
+#include "text_helper.hpp"
 #include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/filebrowser_forwarder.hpp"
@@ -298,6 +299,8 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                             }
                         });
                     }
+                } else if (text_helper::IsTextFile(entry.name)) {
+                    App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
                 } else if (IsSd()) {
                     const auto assoc_list = m_menu->FindFileAssocFor();
                     if (!assoc_list.empty()) {
@@ -2279,8 +2282,8 @@ void FsView::DisplayAdvancedOptions() {
     });
     create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
 
-    if (IsSd() && m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
-        if (path::IsAnyOfIC(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
+    if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
+        if (IsSd() && path::IsAnyOfIC(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();
             }, "Open the selected image in the built-in viewer."_i18n);
@@ -2288,10 +2291,17 @@ void FsView::DisplayAdvancedOptions() {
                 App::Push<theme_creator::Menu>(GetNewPathCurrent());
             }, "Use the selected image to create a custom Switch theme."_i18n);
             theme_entry->SetHasSubmenu(true);
-        } else if (GetEntry().file_size < 1024*64) {
-            options->Add<SidebarEntryCallback>("View as text (unfinished)"_i18n, [this](){
-                App::Push<fileview::Menu>(GetNewPathCurrent());
-            }, "Open the selected file as plain text."_i18n);
+        } else if (text_helper::IsTextFile(GetEntry().GetName())) {
+            options->Add<SidebarEntryCallback>("View"_i18n, [this](){
+                App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
+            }, "Open the selected file in read-only view mode."_i18n);
+
+            auto edit_entry = options->Add<SidebarEntryCallback>("Edit"_i18n, [this](){
+                App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
+            }, "Open the selected file in text editor mode."_i18n);
+            edit_entry->Depends([this](){
+                return !IsReadOnly(GetNewPathCurrent()) && GetEntry().file_size <= 4 * 1024 * 1024;
+            }, IsReadOnly(GetNewPathCurrent()) ? "File is read-only"_i18n : "File is too large to edit"_i18n);
         }
     }
 

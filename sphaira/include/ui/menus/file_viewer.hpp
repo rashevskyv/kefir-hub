@@ -11,8 +11,14 @@
 
 namespace sphaira::ui::menu::fileview {
 
+enum class TextMode {
+    View,
+    Edit,
+};
+
 struct Menu final : MenuBase {
     Menu(const fs::FsPath& path);
+    Menu(fs::Fs* fs, const fs::FsPath& path, TextMode mode = TextMode::View, bool writable = false);
     Menu(const fs::FsPath& path, std::vector<fs::FsPath> image_paths, s64 image_index, std::vector<std::string> image_titles = {});
     ~Menu();
 
@@ -42,11 +48,14 @@ private:
     void DeleteLine();
     void JoinLine();
     void GoToLine();
+    void SetupViewActions();
+    void SetupEditActions();
+    void SwitchToEditMode();
     void DisplayTextOptions();
     void PushUndo();
     void Undo();
     void Redo();
-    void SaveText();
+    auto SaveText() -> bool;
     void PromptTextExit();
     void UpdateTextSubHeading();
     auto BuildText() const -> std::string;
@@ -78,10 +87,21 @@ private:
     std::vector<std::string> m_image_titles{};
     std::vector<bool> m_image_selected{};
     s64 m_image_index{};
-    fs::FsNativeSd m_fs{};
+    fs::FsNativeSd m_sd_fs{};
+    fs::Fs* m_fs{&m_sd_fs};
     fs::File m_file{};
     s64 m_file_size{};
     s64 m_file_offset{};
+
+    TextMode m_mode{TextMode::View};
+    bool m_writable{false};
+    Result m_load_result{0};
+    bool m_load_failed{false};
+    std::string m_saved_text{};
+    bool m_is_truncated_preview{false};
+
+    s64 m_last_tapped_row{-1};
+    u64 m_last_tap_time{0};
 
     // reading a file in as lines costs roughly its size in ram twice over once
     // an undo snapshot exists, so past this the viewer stays read only.

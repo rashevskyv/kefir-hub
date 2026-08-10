@@ -1,4 +1,5 @@
 #include "ui/menus/file_viewer.hpp"
+#include "text_helper.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -19,6 +20,7 @@
 #include <minizip/zip.h>
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cstdio>
 #include <ctime>
 #include <cstring>
@@ -26,6 +28,11 @@
 
 namespace sphaira::ui::menu::fileview {
 namespace {
+
+auto GetCurrentTimeMs() -> u64 {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
 
 auto PathFileName(const fs::FsPath& path) -> std::string {
     const std::string_view view{path};
@@ -65,9 +72,31 @@ auto ImageBounds(bool fullscreen) -> Vec4 {
 
 } // namespace
 
-Menu::Menu(const fs::FsPath& path) : MenuBase{path, MenuFlag_None}, m_path{path} {
+Menu::Menu(const fs::FsPath& path)
+: MenuBase{path, MenuFlag_None}
+, m_path{path}
+, m_mode{TextMode::View}
+, m_writable{false} {
+    m_fs = &m_sd_fs;
     SetAction(Button::B, Action{"Back"_i18n, [this](){
         SetPop();
+    }});
+
+    LoadCurrentFile();
+}
+
+Menu::Menu(fs::Fs* fs, const fs::FsPath& path, TextMode mode, bool writable)
+: MenuBase{path, MenuFlag_None}
+, m_path{path}
+, m_mode{mode}
+, m_writable{writable} {
+    m_fs = fs ? fs : &m_sd_fs;
+    SetAction(Button::B, Action{"Back"_i18n, [this](){
+        if (m_mode == TextMode::Edit) {
+            PromptTextExit();
+        } else {
+            SetPop();
+        }
     }});
 
     LoadCurrentFile();
@@ -78,7 +107,10 @@ Menu::Menu(const fs::FsPath& path, std::vector<fs::FsPath> image_paths, s64 imag
 , m_path{path}
 , m_image_paths{std::move(image_paths)}
 , m_image_titles{std::move(image_titles)}
-, m_image_index{image_index} {
+, m_image_index{image_index}
+, m_mode{TextMode::View}
+, m_writable{false} {
+    m_fs = &m_sd_fs;
     SetAction(Button::B, Action{"Back"_i18n, [this](){
         SetPop();
     }});
@@ -104,10 +136,17 @@ Menu::~Menu() {
 void Menu::LoadCurrentFile() {
     FreeImage();
     m_scroll_text.reset();
+    m_text_list.reset();
     m_file.Close();
     m_file_size = 0;
     m_file_offset = 0;
+    m_load_result = 0;
+    m_load_failed = false;
     m_is_image_file = IsImageExtension(path::Extension(m_path));
+
+    if (!m_fs) {
+        m_fs = &m_sd_fs;
+    }
 
     if (m_is_image_file && m_image_paths.empty()) {
         m_image_paths.emplace_back(m_path);
@@ -127,6 +166,7 @@ void Menu::LoadCurrentFile() {
     RemoveAction(Button::R2);
     RemoveAction(Button::LEFT);
     RemoveAction(Button::RIGHT);
+    RemoveAction(Button::START);
 
     if (m_is_image_file) {
         LoadImageFile();
@@ -136,28 +176,69 @@ void Menu::LoadCurrentFile() {
 }
 
 void Menu::LoadTextFile() {
-    std::string buf;
-    if (R_SUCCEEDED(m_fs.OpenFile(m_path, FsOpenMode_Read, &m_file))) {
-        m_file.GetSize(&m_file_size);
-        buf.resize(m_file_size + 1);
+    m_lines.clear();
+    m_undo.clear();
+    m_redo.clear();
+    m_saved_text.clear();
+    m_text_dirty = false;
+    m_line_index = 0;
+    m_load_failed = false;
+    m_load_result = 0;
+    m_is_truncated_preview = false;
 
-        u64 read_bytes;
-        m_file.Read(m_file_offset, buf.data(), buf.size(), 0, &read_bytes);
-        buf[m_file_size] = '\0';
+    if (!m_fs) {
+        m_fs = &m_sd_fs;
     }
 
-    m_editable = m_file_size <= EDIT_MAX_SIZE;
-    if (!m_editable) {
-        m_scroll_text = std::make_unique<ScrollableText>(buf, 0, 120, 500, 1150-110, 18);
-        SetSubHeading("Too large to edit"_i18n);
+    Result rc = m_fs->OpenFile(m_path, FsOpenMode_Read, &m_file);
+    if (R_FAILED(rc)) {
+        m_load_result = rc;
+        m_load_failed = true;
         return;
     }
 
-    // drop the trailing nul the read above appended.
-    std::string_view view{buf.data(), (size_t)m_file_size};
-    m_line_break = view.find("\r\n") != std::string_view::npos ? "\r\n" : "\n";
+    rc = m_file.GetSize(&m_file_size);
+    if (R_FAILED(rc)) {
+        m_file.Close();
+        m_load_result = rc;
+        m_load_failed = true;
+        return;
+    }
 
-    m_lines.clear();
+    const s64 read_size = std::min<s64>(m_file_size, EDIT_MAX_SIZE);
+    std::string buf;
+    buf.resize(read_size);
+
+    u64 bytes_read = 0;
+    if (read_size > 0) {
+        rc = m_file.Read(0, buf.data(), read_size, 0, &bytes_read);
+        if (R_FAILED(rc)) {
+            m_file.Close();
+            m_load_result = rc;
+            m_load_failed = true;
+            return;
+        }
+
+        if (bytes_read != static_cast<u64>(read_size)) {
+            m_file.Close();
+            m_load_result = FsError_InvalidSize;
+            m_load_failed = true;
+            return;
+        }
+    }
+    m_file.Close();
+
+    buf.resize(bytes_read);
+    m_is_truncated_preview = (m_file_size > EDIT_MAX_SIZE);
+
+    if (m_mode == TextMode::Edit && (!m_writable || m_is_truncated_preview)) {
+        m_mode = TextMode::View;
+    }
+    m_editable = (m_mode == TextMode::Edit);
+
+    std::string_view view{buf};
+    m_line_break = (view.find("\r\n") != std::string_view::npos) ? "\r\n" : "\n";
+
     size_t start = 0;
     while (start <= view.size()) {
         const auto end = view.find('\n', start);
@@ -177,16 +258,47 @@ void Menu::LoadTextFile() {
         m_lines.emplace_back();
     }
 
-    m_undo.clear();
-    m_redo.clear();
-    m_line_index = 0;
+    m_saved_text = BuildText();
     m_text_dirty = false;
+    m_line_index = 0;
 
     const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
     const Vec4 item_pos{50.f, 105.f, 1180.f, 30.f};
     m_text_list = std::make_unique<List>(1, 17, list_pos, item_pos, Vec2{0.f, 2.f});
 
-    SetAction(Button::A, Action{"Edit"_i18n, [this](){
+    if (m_editable) {
+        SetupEditActions();
+    } else {
+        SetupViewActions();
+    }
+
+    UpdateTextSubHeading();
+}
+
+void Menu::SetupViewActions() {
+    RemoveAction(Button::A);
+    RemoveAction(Button::X);
+    RemoveAction(Button::START);
+    RemoveAction(Button::L2);
+
+    SetAction(Button::B, Action{"Back"_i18n, [this](){
+        SetPop();
+    }});
+
+    SetAction(Button::R2, Action{"Scroll"_i18n, "\uE102", [](){}});
+
+    if (m_writable && !m_is_truncated_preview && m_file_size <= EDIT_MAX_SIZE) {
+        SetAction(Button::A, Action{"Edit"_i18n, [this](){
+            SwitchToEditMode();
+        }});
+    }
+}
+
+void Menu::SetupEditActions() {
+    SetAction(Button::A, Action{"Edit line"_i18n, [this](){
+        EditLine();
+    }});
+    SetAction(Button::X, Action{"Actions"_i18n, [this](){
         ShowLineActions();
     }});
     SetAction(Button::START, Action{"Options"_i18n, [this](){
@@ -195,12 +307,40 @@ void Menu::LoadTextFile() {
     SetAction(Button::B, Action{"Back"_i18n, [this](){
         PromptTextExit();
     }});
+    SetAction(Button::L2, Action{"Cursor / Scroll"_i18n, "\uE101 / \uE102", [](){}});
+}
 
+void Menu::SwitchToEditMode() {
+    if (!m_writable || m_is_truncated_preview || m_file_size > EDIT_MAX_SIZE) {
+        return;
+    }
+
+    m_mode = TextMode::Edit;
+    m_editable = true;
+
+    if (m_text_list) {
+        const float item_h = m_text_list->GetMaxY();
+        const s64 first_visible = (item_h > 0.f) ? static_cast<s64>(m_text_list->GetYoff() / item_h) : 0;
+        const s64 total = static_cast<s64>(m_lines.size());
+        m_line_index = std::clamp<s64>(first_visible, 0, total > 0 ? total - 1 : 0);
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+
+    SetupEditActions();
     UpdateTextSubHeading();
 }
 
 void Menu::UpdateTextSubHeading() {
     auto heading = std::to_string(m_line_index + 1) + " / " + std::to_string(m_lines.size());
+    if (m_is_truncated_preview) {
+        heading += "  (" + "Preview truncated"_i18n + ")";
+    } else if (m_mode == TextMode::View) {
+        if (!m_writable) {
+            heading += "  (" + "Read-only"_i18n + ")";
+        } else {
+            heading += "  (" + "View"_i18n + ")";
+        }
+    }
     if (m_text_dirty) {
         heading += "  *";
     }
@@ -219,8 +359,6 @@ auto Menu::BuildText() const -> std::string {
 }
 
 void Menu::PushUndo() {
-    // a snapshot per edit is coarse, but a text file that fits the editor is
-    // small enough that storing 32 copies of it is cheaper than tracking diffs.
     constexpr size_t MAX_UNDO = 32;
 
     m_undo.emplace_back(m_lines);
@@ -228,7 +366,6 @@ void Menu::PushUndo() {
         m_undo.erase(m_undo.begin());
     }
     m_redo.clear();
-    m_text_dirty = true;
 }
 
 void Menu::Undo() {
@@ -240,8 +377,12 @@ void Menu::Undo() {
     m_redo.emplace_back(m_lines);
     m_lines = m_undo.back();
     m_undo.pop_back();
-    m_text_dirty = true;
+    m_text_dirty = (BuildText() != m_saved_text);
     m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
 
@@ -254,12 +395,17 @@ void Menu::Redo() {
     m_undo.emplace_back(m_lines);
     m_lines = m_redo.back();
     m_redo.pop_back();
-    m_text_dirty = true;
+    m_text_dirty = (BuildText() != m_saved_text);
     m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
 
 void Menu::EditLine() {
+    if (!m_editable) return;
     std::string out;
     if (R_FAILED(swkbd::ShowText(out, "Edit line"_i18n.c_str(), m_lines[m_line_index].c_str(), 0, 1024))) {
         return;
@@ -271,28 +417,47 @@ void Menu::EditLine() {
 
     PushUndo();
     m_lines[m_line_index] = out;
+    m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
 
 void Menu::InsertLine() {
+    if (!m_editable) return;
+    std::string new_line;
+    if (R_FAILED(swkbd::ShowText(new_line, "Insert line"_i18n.c_str(), "", 0, 1024))) {
+        return;
+    }
+
     PushUndo();
-    m_lines.insert(m_lines.begin() + m_line_index + 1, std::string{});
+    m_lines.insert(m_lines.begin() + m_line_index + 1, new_line);
     m_line_index++;
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
 
 void Menu::DeleteLine() {
+    if (!m_editable) return;
     PushUndo();
     m_lines.erase(m_lines.begin() + m_line_index);
     if (m_lines.empty()) {
         m_lines.emplace_back();
     }
-    m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    m_line_index = std::clamp<s64>(m_line_index, 0, m_lines.size() - 1);
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
 
 void Menu::JoinLine() {
-    if (m_line_index + 1 >= (s64)m_lines.size()) {
+    if (!m_editable) return;
+    if (m_line_index + 1 >= static_cast<s64>(m_lines.size())) {
         App::Notify("No line below to join"_i18n);
         return;
     }
@@ -300,6 +465,7 @@ void Menu::JoinLine() {
     PushUndo();
     m_lines[m_line_index] += m_lines[m_line_index + 1];
     m_lines.erase(m_lines.begin() + m_line_index + 1);
+    m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
 
@@ -309,46 +475,133 @@ void Menu::GoToLine() {
         return;
     }
 
-    m_line_index = std::clamp<s64>(out - 1, 0, m_lines.size() - 1);
-    m_text_list->SetYoff(0);
+    const s64 clamped = std::clamp<s64>(out, 1, m_lines.size());
+    m_line_index = clamped - 1;
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
 
-void Menu::SaveText() {
+auto Menu::SaveText() -> bool {
+    if (!m_editable || m_is_truncated_preview || !m_fs) {
+        return false;
+    }
+
     const auto text = BuildText();
     const std::vector<u8> data{text.begin(), text.end()};
 
-    m_file.Close();
-    const auto rc = m_fs.write_entire_file(m_path, data);
-    if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to save the file"_i18n);
-        return;
+    fs::FsPath tmp_path{};
+    fs::FsPath bak_path{};
+
+    if (std::snprintf(tmp_path, sizeof(tmp_path), "%s.tmp.editor", m_path.s) >= static_cast<int>(sizeof(tmp_path)) ||
+        std::snprintf(bak_path, sizeof(bak_path), "%s.bak.editor", m_path.s) >= static_cast<int>(sizeof(bak_path))) {
+        App::PushErrorBox(FsError_TooLongPath, "Path too long for temporary save files"_i18n);
+        return false;
     }
 
-    m_file_size = data.size();
+    if (m_fs->FileExists(m_path)) {
+        if (m_fs->FileExists(tmp_path)) {
+            m_fs->DeleteFile(tmp_path);
+        }
+        if (m_fs->FileExists(bak_path)) {
+            m_fs->DeleteFile(bak_path);
+        }
+    }
+
+    Result primary_rc = m_fs->write_entire_file(tmp_path, data);
+    if (R_FAILED(primary_rc)) {
+        log_write("[SaveText] write_entire_file failed for %s: 0x%x\n", tmp_path.s, primary_rc);
+        if (m_fs->FileExists(tmp_path)) {
+            m_fs->DeleteFile(tmp_path);
+        }
+        App::PushErrorBox(primary_rc, "Failed to write temporary file"_i18n);
+        return false;
+    }
+
+    bool renamed_orig = false;
+    if (m_fs->FileExists(m_path)) {
+        primary_rc = m_fs->RenameFile(m_path, bak_path);
+        if (R_FAILED(primary_rc)) {
+            log_write("[SaveText] Rename original -> backup failed for %s: 0x%x\n", m_path.s, primary_rc);
+            if (m_fs->FileExists(tmp_path)) {
+                m_fs->DeleteFile(tmp_path);
+            }
+            App::PushErrorBox(primary_rc, "Failed to create backup file"_i18n);
+            return false;
+        }
+        renamed_orig = true;
+    }
+
+    primary_rc = m_fs->RenameFile(tmp_path, m_path);
+    if (R_FAILED(primary_rc)) {
+        log_write("[SaveText] Rename tmp -> original failed for %s: 0x%x\n", m_path.s, primary_rc);
+
+        if (renamed_orig) {
+            Result rollback_rc = m_fs->RenameFile(bak_path, m_path);
+            if (R_FAILED(rollback_rc)) {
+                log_write("[SaveText] CRITICAL: Rollback backup -> original failed for %s: 0x%x. Preserving %s and %s\n",
+                          m_path.s, rollback_rc, tmp_path.s, bak_path.s);
+                App::PushErrorBox(rollback_rc, "Failed to restore original file from backup during save recovery. Preserved temporary and backup files."_i18n);
+                return false;
+            }
+        }
+
+        if (m_fs->FileExists(tmp_path)) {
+            m_fs->DeleteFile(tmp_path);
+        }
+        App::PushErrorBox(primary_rc, "Failed to update original file"_i18n);
+        return false;
+    }
+
+    if (!m_fs->FileExists(m_path)) {
+        log_write("[SaveText] Original file missing after rename: %s\n", m_path.s);
+        App::PushErrorBox(FsError_FileNotFound, "Saved file is missing after update"_i18n);
+        return false;
+    }
+
+    if (renamed_orig && m_fs->FileExists(bak_path)) {
+        Result del_rc = m_fs->DeleteFile(bak_path);
+        if (R_FAILED(del_rc)) {
+            log_write("[SaveText] Warning: failed to remove backup file %s: 0x%x\n", bak_path.s, del_rc);
+        }
+    }
+
+    m_saved_text = text;
+    m_file_size = static_cast<s64>(data.size());
+    m_undo.clear();
+    m_redo.clear();
     m_text_dirty = false;
     App::Notify("Saved"_i18n);
     UpdateTextSubHeading();
+    return true;
 }
 
 void Menu::PromptTextExit() {
-    if (!m_text_dirty) {
+    if (!m_editable || !m_text_dirty) {
         SetPop();
         return;
     }
 
-    App::Push<OptionBox>(
-        "Save changes before leaving?"_i18n,
-        "Discard"_i18n, "Save"_i18n, 1, [this](auto op_index){
-            if (!op_index) {
-                return;
+    PopupList::Items items;
+    items.emplace_back("Save"_i18n);
+    items.emplace_back("Discard"_i18n);
+    items.emplace_back("Cancel"_i18n);
+
+    App::Push<PopupList>("Unsaved changes"_i18n, items, [this](auto op_index){
+        if (!op_index || *op_index == 2) {
+            return;
+        }
+
+        if (*op_index == 0) {
+            if (SaveText()) {
+                SetPop();
             }
-            if (*op_index) {
-                SaveText();
-            }
+        } else if (*op_index == 1) {
             SetPop();
         }
-    );
+    });
 }
 
 void Menu::ShowLineActions() {
@@ -378,7 +631,7 @@ void Menu::DisplayTextOptions() {
 
     options->Add<SidebarEntryCallback>("Save"_i18n, [this](){
         SaveText();
-    }, "Write the file back to the microSD card."_i18n);
+    }, "Save changes to the file."_i18n);
 
     options->Add<SidebarEntryCallback>("Undo"_i18n, [this](){
         Undo();
@@ -398,12 +651,64 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
         return;
     }
 
-    m_text_list->OnUpdate(controller, touch, m_line_index, m_lines.size(), [this](bool touched, s64 index){
-        if (touched && m_line_index == index) {
-            FireAction(Button::A);
+    const s64 count = static_cast<s64>(m_lines.size());
+    const s64 page = m_text_list->GetPage();
+    const float step = m_text_list->GetMaxY();
+    const float y_max = (count > page) ? static_cast<float>(count - page) * step : 0.f;
+
+    if (controller->GotDown(Button::RS_UP) || controller->GotHeld(Button::RS_UP)) {
+        const float next_y = std::clamp(m_text_list->GetYoff() - step, 0.f, y_max);
+        m_text_list->SetYoff(next_y);
+    } else if (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)) {
+        const float next_y = std::clamp(m_text_list->GetYoff() + step, 0.f, y_max);
+        m_text_list->SetYoff(next_y);
+    }
+
+    if (!m_editable) {
+        m_text_list->OnUpdateTouchOnly(touch, count);
+        return;
+    }
+
+    Controller local_ctrl = *controller;
+    const u64 rs_mask = static_cast<u64>(Button::RS_UP) | static_cast<u64>(Button::RS_DOWN) | static_cast<u64>(Button::RS_LEFT) | static_cast<u64>(Button::RS_RIGHT);
+    local_ctrl.m_kdown &= ~rs_mask;
+    local_ctrl.m_kheld &= ~rs_mask;
+    local_ctrl.m_kup &= ~rs_mask;
+
+    m_text_list->OnUpdate(&local_ctrl, touch, m_line_index, m_lines.size(), [this](bool touched, s64 index){
+        if (touched) {
+            if (index != m_line_index) {
+                m_line_index = index;
+                m_last_tapped_row = index;
+                m_last_tap_time = GetCurrentTimeMs();
+                m_line_scroll.Reset();
+                UpdateTextSubHeading();
+                App::PlaySoundEffect(SoundEffect_Focus);
+            } else {
+                const auto now = GetCurrentTimeMs();
+                if (m_last_tapped_row == index && (now - m_last_tap_time) <= 500) {
+                    m_last_tap_time = 0;
+                    if (text_helper::IsIniFile(m_path)) {
+                        const auto toggle = text_helper::ToggleIniBoolean(m_lines[index]);
+                        if (toggle.toggled) {
+                            PushUndo();
+                            m_lines[index] = toggle.new_line;
+                            m_text_dirty = (BuildText() != m_saved_text);
+                            UpdateTextSubHeading();
+                            App::PlaySoundEffect(SoundEffect_Focus);
+                            return;
+                        }
+                    }
+                    EditLine();
+                } else {
+                    m_last_tapped_row = index;
+                    m_last_tap_time = now;
+                }
+            }
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);
             m_line_index = index;
+            m_line_scroll.Reset();
             UpdateTextSubHeading();
         }
     });
@@ -414,17 +719,16 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    // the gutter is sized off the highest line number so the text column does
-    // not shift as the list scrolls past a power of ten.
     const auto gutter = std::to_string(m_lines.size());
     float bounds[4];
     nvgFontSize(vg, 18.f);
     gfx::textBounds(vg, 0, 0, bounds, gutter.c_str());
     const float gutter_w = bounds[2] - bounds[0] + 16.f;
+    const bool is_ini = text_helper::IsIniFile(m_path);
 
-    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w](auto* vg, auto* theme, const Vec4& pos, s64 index){
-        const auto selected = m_line_index == index;
-        if (selected) {
+    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini](auto* vg, auto* theme, const Vec4& pos, s64 index){
+        const auto selected = (m_line_index == index);
+        if (selected && m_editable) {
             gfx::drawRectOutline(vg, theme, 4.f, pos);
         }
 
@@ -432,13 +736,50 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%ld", static_cast<long>(index + 1));
 
-        const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        const auto colour = theme->GetColour((selected && m_editable) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         const auto text_x = pos.x + gutter_w;
         const auto text_w = pos.w - gutter_w - 10.f;
 
-        if (selected) {
+        if (selected && m_editable) {
             m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, 18.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_lines[index]);
+        } else if (is_ini) {
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, pos.y, text_w, pos.h);
+
+            const auto info = text_helper::ParseIniLine(m_lines[index]);
+            if (info.type == text_helper::IniLineType::Comment) {
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", m_lines[index].c_str());
+            } else if (info.type == text_helper::IniLineType::Section) {
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", m_lines[index].c_str());
+            } else if (info.type == text_helper::IniLineType::KeyValue) {
+                const std::string key_str(info.key);
+                const std::string eq_str(info.eq);
+                const std::string val_str(info.val);
+
+                float key_bounds[4];
+                gfx::textBounds(vg, text_x, pos.y + pos.h / 2.f, key_bounds, key_str.c_str());
+                const float key_w = key_bounds[2] - key_bounds[0];
+
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), "%s", key_str.c_str());
+
+                float eq_bounds[4];
+                gfx::textBounds(vg, text_x + key_w, pos.y + pos.h / 2.f, eq_bounds, eq_str.c_str());
+                const float eq_w = eq_bounds[2] - eq_bounds[0];
+
+                gfx::drawTextArgs(vg, text_x + key_w, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", eq_str.c_str());
+
+                gfx::drawTextArgs(vg, text_x + key_w + eq_w, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", val_str.c_str());
+            } else {
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", m_lines[index].c_str());
+            }
+            nvgRestore(vg);
         } else {
             nvgSave(vg);
             nvgIntersectScissor(vg, text_x, pos.y, text_w, pos.h);
@@ -690,7 +1031,7 @@ void Menu::ZipImages(fs::FsPath zip_out) {
                 }
 
                 zip_out = fs::AppendPath(parent, file_path);
-                if (!m_fs.FileExists(zip_out)) {
+                if (!m_fs->FileExists(zip_out)) {
                     break;
                 }
             }
@@ -844,6 +1185,13 @@ auto Menu::CurrentImageSelected() const -> bool {
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+
+    if (m_load_failed) {
+        m_load_failed = false;
+        App::PushErrorBox(m_load_result, "Failed to read file"_i18n);
+        SetPop();
+        return;
+    }
 
     if (m_is_image_file) {
         const auto zoom_modifier = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
