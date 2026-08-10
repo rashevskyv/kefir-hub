@@ -56,6 +56,34 @@ constexpr u64 REATTACH_INTERVAL_NS = 1e+9 * 3; // 3 seconds.
 } // namespace
 
 UsbDs::~UsbDs() {
+    UsbState state = UsbState_Detached;
+    Result state_rc = usbDsGetState(&state);
+    if (R_SUCCEEDED(state_rc)) {
+        eventClear(usbDsGetStateChangeEvent());
+        const auto disable_rc = usbDsDisable();
+        if (R_SUCCEEDED(disable_rc)) {
+            state_rc = usbDsGetState(&state);
+
+            const u64 deadline = armGetSystemTick() + armNsToTicks(DETACH_SETTLE_NS);
+            u64 timeout = DETACH_SETTLE_NS;
+
+            while (R_SUCCEEDED(state_rc) && state != UsbState_Detached && timeout > 0) {
+                const auto waiter = waiterForEvent(usbDsGetStateChangeEvent());
+                s32 idx;
+                waitObjects(&idx, &waiter, 1, timeout);
+                eventClear(usbDsGetStateChangeEvent());
+
+                state_rc = usbDsGetState(&state);
+
+                const u64 current_tick = armGetSystemTick();
+                timeout = (deadline > current_tick) ? armTicksToNs(deadline - current_tick) : 0;
+            }
+        }
+
+        log_write("[USBDS] teardown disable: 0x%X get_state: 0x%X state: %s\n",
+                  disable_rc, state_rc, R_SUCCEEDED(state_rc) ? GetUsbDsStateStr(state) : "Unknown");
+    }
+
     usbDsExit();
 }
 
