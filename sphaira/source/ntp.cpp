@@ -1,6 +1,8 @@
 #include "ntp.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "evman.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 
 #include <arpa/inet.h>
@@ -12,6 +14,8 @@
 #include <cstdio>
 #include <sys/time.h>
 #include <unistd.h>
+
+extern "C" void __libnx_init_time(void);
 
 namespace sphaira::ntp {
 namespace {
@@ -191,26 +195,35 @@ Result SetSystemTime(u64 timestamp) {
     // user clock is what the ui and posix time() read; the network clock is
     // what the os treats as authoritative, so both are set to keep them from
     // drifting apart and having hos "correct" ours back.
+    Result user_rc = 0;
     Result last_rc = 0;
-    bool any_set = false;
+    bool user_set = false;
     for (const u32 cmd_id : {0u, 1u}) {
         Service clock{};
         if (const auto get_rc = GetClockSession(&time_srv, cmd_id, &clock); R_FAILED(get_rc)) {
+            if (cmd_id == 0u) {
+                user_rc = get_rc;
+            }
             last_rc = get_rc;
             continue;
         }
         ON_SCOPE_EXIT(serviceClose(&clock));
         if (const auto set_rc = SetClockTime(&clock, timestamp); R_FAILED(set_rc)) {
+            if (cmd_id == 0u) {
+                user_rc = set_rc;
+            }
             last_rc = set_rc;
             continue;
         }
-        any_set = true;
+        if (cmd_id == 0u) {
+            user_set = true;
+        }
     }
 
-    if (!any_set) {
-        log_write_error("ntp: time service refused the clock write (0x%08X)", R_VALUE(last_rc));
+    if (!user_set) {
+        log_write_error("ntp: time service refused the clock write (0x%08X)", R_VALUE(user_rc ? user_rc : last_rc));
     }
-    R_UNLESS(any_set, last_rc ? last_rc : Result_NtpSetTimeFailed);
+    R_UNLESS(user_set, user_rc ? user_rc : (last_rc ? last_rc : Result_NtpSetTimeFailed));
     R_SUCCEED();
 }
 
@@ -238,16 +251,17 @@ Result RunSync() {
     }
 
     R_TRY(SetSystemTime(network_time));
-    // silent by design: correct the clock in the background and say nothing.
-    // The correction only ever shows up in the log.
+    evman::push(evman::FunctionalEventData{[]() {
+        __libnx_init_time();
+        App::Notify("Clock synced"_i18n);
+    }}, false);
     log_write("[NTP] clock corrected by %+lld seconds\n", (long long)offset);
     R_SUCCEED();
 }
 
 void ThreadFunc(void*) {
-    // wait for the network stack and any dhcp lease to settle before the first
-    // attempt; syncing is never urgent.
-    u64 wait_ns = POLL_INTERVAL_NS;
+    // start the first synchronization attempt immediately upon launch.
+    u64 wait_ns = 0;
 
     while (!g_stop) {
         // waitSingle on the wake event so Stop() interrupts the sleep instead
@@ -276,11 +290,12 @@ void ThreadFunc(void*) {
 
 void Start() {
     if (g_thread_running) {
+        ueventSignal(&g_wake_event);
         return;
     }
 
     g_stop = false;
-    ueventCreate(&g_wake_event, false);
+    ueventCreate(&g_wake_event, true);
 
     // lowest priority homebrew may create, no core affinity: this must never
     // compete with the ui or an install.

@@ -1,10 +1,29 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.438**. Завершені плани збережено в
+Поточний delivery — **v0.13.439**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.438 — перемикач USB 3.0
+## 0. v0.13.439 — миттєва NTP-синхронізація
+
+Статус: реалізацію та senior-review завершено; WSL ReleaseWithInstall пройшов 2026-08-10, версію піднято до v0.13.439. Залишилася ручна перевірка на Switch.
+
+1. Залишити один фоновий worker і чинні NTP fallback-сервери. Першу спробу
+   виконувати без стартової 10-секундної паузи; `Start()` для вже активного
+   worker має лише розбудити його, а не створювати другий thread.
+2. Після отримання NTP часу нічого не робити при різниці меншій за чинні 2 с.
+   Якщо корекція потрібна, вимкнути live automatic-correction flag і записати
+   user clock; успіх network clock не може маскувати помилку user clock.
+3. Після успішного запису через чинний thread-safe `evman::FunctionalEventData`
+   перейти на UI-потік, повторно ініціалізувати часову базу libnx і показати
+   локалізований `Clock synced`. Це має одразу оновити всі чинні виклики
+   `std::time()` без окремого offset-cache або змін у кожному caller.
+4. Не показувати toast для вже точного годинника, відсутньої мережі чи помилки;
+   зберегти чинний retry/backoff і діагностичні логи.
+5. Перевірити WSL `ReleaseWithInstall`, підняти версію до `0.13.439`, оновити
+   living docs і створити focused commit.
+
+## 0.1. v0.13.438 — перемикач USB 3.0
 
 Статус: реалізацію та senior-review завершено; EN/UK JSON і WSL
 `ReleaseWithInstall` пройшли 2026-08-10, версію піднято до `v0.13.438`.
@@ -19,7 +38,7 @@
 4. Перевірити EN/UK JSON, WSL `ReleaseWithInstall`, підняти версію до
    `0.13.438`, оновити living docs і створити focused commit.
 
-## 0.1. v0.13.436 — незалежний скрінсейвер
+## 0.2. v0.13.436 — незалежний скрінсейвер
 
 Статус: реалізацію та senior-review завершено; host-тести й WSL
 `ReleaseWithInstall` пройшли 2026-08-10. Відкрита лише ручна перевірка на Switch.
@@ -49,7 +68,7 @@
    `task.md`/`plan.md`/`walkthrough.md` і створити focused commit лише з
    screensaver delivery, зберігши всі наявні незакомічені зміни інших задач.
 
-## 0.2. v0.13.437 — Text Viewer / Editor UX
+## 0.3. v0.13.437 — Text Viewer / Editor UX
 
 Статус: реалізацію та corrective senior-review завершено; host-тести й WSL
 `ReleaseWithInstall` пройшли 2026-08-10, версію піднято до `v0.13.437`.
