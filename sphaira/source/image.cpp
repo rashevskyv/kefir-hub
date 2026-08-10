@@ -105,8 +105,9 @@ auto ImageLoadFromMemory(std::span<const u8> data, u32 flags) -> ImageResult {
     else
 #endif
     {
-        int x, y, channels;
-        return ImageLoadInternal(stbi_load_from_memory(data.data(), data.size(), &x, &y, &channels, BPP), x, y);
+        int x = 0, y = 0, channels = 0;
+        stbi_uc* img_data = stbi_load_from_memory(data.data(), data.size(), &x, &y, &channels, BPP);
+        return ImageLoadInternal(img_data, x, y);
     }
 }
 
@@ -121,8 +122,9 @@ auto ImageLoadFromFile(const fs::FsPath& file, u32 flags) -> ImageResult {
     else
 #endif
     {
-        int x, y, channels;
-        return ImageLoadInternal(stbi_load(file, &x, &y, &channels, BPP), x, y);
+        int x = 0, y = 0, channels = 0;
+        stbi_uc* img_data = stbi_load(file, &x, &y, &channels, BPP);
+        return ImageLoadInternal(img_data, x, y);
     }
 }
 

@@ -261,7 +261,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 const auto icon = nro_get_icon(e.path, e.icon_size, e.icon_offset);
                 TimeStamp ts;
                 if (!icon.empty()) {
-                    const auto image = ImageLoadFromMemory(icon, ImageFlag_JPEG);
+                    const auto image = ImageLoadFromMemory(icon);
                     if (!image.data.empty()) {
                         e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
                         log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
