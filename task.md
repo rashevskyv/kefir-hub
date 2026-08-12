@@ -1,12 +1,22 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.439**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.440**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.439 (миттєва NTP-синхронізація)
+## Поточний delivery: v0.13.440 (інтерактивне керування чергою інсталяції)
+
+- [x] `QUEUE-SKIP-440` — кнопка `B` під час активної інсталяції запитує підтвердження, перериває поточний пакет через `m_skip_requested` / `m_cancel_event` і скидає прапор для продовження черги.
+- [x] `QUEUE-CANCEL-440` — кнопка `X` під час активної інсталяції запитує підтвердження та перериває весь сеанс через спільний `CancelSession()` зі збереженням завершених встановлень.
+- [x] `QUEUE-STATS-440` — пропущений користувачем пакет враховується як `Skipped` у статистиці та підсумку без створення запису помилки та без скасування всієї сесії.
+- [x] `QUEUE-UNIFY-440` — уніфіковано поведінку для обох потоків черги: USB (`ThreadFunction`) та локальних файлів (`LocalThreadFunction`).
+- [x] `QUEUE-I18N-440` — додано EN та UK локалізації для нових дій та діалогів підтвердження (`Skip package`, `Skip this package?`, `Cancel installation queue?`).
+- [x] `QUEUE-VERIFY-440` — додано host-тест `test_queue_outcome.cpp`, успішно виконано `tests/run.sh`, WSL `ReleaseWithInstall` та `git diff --check`.
+- [x] `QUEUE-DELIVERY-440` — оновлено `README.md`, піднято версію до `0.13.440`, оновлено living docs та створено focused commit.
+
+## Попередній delivery: v0.13.439 (миттєва NTP-синхронізація)
 
 - [x] `NTP-IMMEDIATE-439` — першу фонову NTP-спробу запускати одразу після
   входу в Sphaira/Kefir Hub; повторне ввімкнення опції має будити чинний worker.

@@ -112,6 +112,7 @@ struct Menu final : MenuBase, InstallProgress {
 private:
     void UpdateActions();
     void CancelSession();
+    void SkipCurrentPackage(size_t expected_package);
     void StartInstall();
     void ConfirmInstallPlan();
     // assigns every selected package to NAND or SD up front, honouring the
@@ -126,7 +127,7 @@ private:
     void BeginSessionStats();
     void ToggleErrorView();
     // folds one finished package into the queue entry and the session totals.
-    void RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_sd, s64 read_delta, s64 write_delta);
+    void RecordPackageResult(size_t index, Result rc, bool cancelled, bool user_skipped, bool to_sd, s64 read_delta, s64 write_delta);
     void DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area);
     // the scrolling list under the header: the session log, or the error list
     // when the summary has it toggled on.
@@ -170,6 +171,7 @@ private:
     std::atomic<State> m_state{State::WaitingForUsb};
     std::atomic_bool m_install_requested{};
     std::atomic_bool m_cancel_requested{};
+    std::atomic_bool m_skip_requested{};
     std::atomic_bool m_actions_dirty{true};
 
     std::vector<QueueEntry> m_queue{};

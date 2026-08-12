@@ -325,7 +325,27 @@ void Menu::UpdateActions() {
             std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );
     } else if (state == State::Installing) {
-        SetAction(Button::B, Action{"Cancel queue"_i18n, [this]() { CancelSession(); }});
+        SetActions(
+            std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
+                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+                    if (choice && *choice == 1) {
+                        CancelSession();
+                    }
+                });
+            }}),
+            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
+                size_t active_pkg{};
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    active_pkg = m_current_package;
+                }
+                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, active_pkg](auto choice) {
+                    if (choice && *choice == 1) {
+                        SkipCurrentPackage(active_pkg);
+                    }
+                });
+            }})
+        );
     } else if (state == State::Summary || state == State::Cancelled) {
         if (state == State::Summary && !m_session_failed) {
             SetAction(Button::B, Action{"Back"_i18n, [this]() {
@@ -1158,13 +1178,17 @@ void Menu::ThreadFunction() {
                     analysis = m_queue[i].analysis;
                     plan_sd = m_queue[i].install_sd;
                     name = m_queue[i].file_name;
-                    m_current_package = i;
-                    m_current_title = name;
-                    m_progress_offset = 0;
-                    m_progress_size = 0;
-                    m_package_write_start = m_total_write.load();
-                    m_current_file_reinstall_choice = std::nullopt;
-                    m_current_file_skipped = false;
+                    if (selected) {
+                        m_skip_requested = false;
+                        ueventClear(&m_cancel_event);
+                        m_current_package = i;
+                        m_current_title = name;
+                        m_progress_offset = 0;
+                        m_progress_size = 0;
+                        m_package_write_start = m_total_write.load();
+                        m_current_file_reinstall_choice = std::nullopt;
+                        m_current_file_skipped = false;
+                    }
                 }
                 if (!selected) continue;
                 if (m_cancel_requested) break;
@@ -1193,7 +1217,7 @@ void Menu::ThreadFunction() {
                     if (!usb::IsLinkError(install_rc) || attempt >= MAX_LINK_RETRIES) {
                         break;
                     }
-                    if (m_cancel_requested || GetToken().stop_requested()) {
+                    if (m_cancel_requested || m_skip_requested || GetToken().stop_requested()) {
                         break;
                     }
                     AddLog("USB connection lost; reconnecting..."_i18n, LogKind::Warning);
@@ -1202,11 +1226,14 @@ void Menu::ThreadFunction() {
                     }
                     AddLog("USB connection restored; retrying: "_i18n + name, LogKind::Warning);
                 }
-                const bool cancelled = m_cancel_requested || install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled;
-                const bool fatal_session_error = R_FAILED(install_rc) && IsDbiSessionError(install_rc);
-                RecordPackageResult(i, install_rc, cancelled, plan_sd,
+                const bool user_skipped = m_skip_requested.load();
+                const bool cancelled = m_cancel_requested || (!user_skipped && (install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled));
+                const bool fatal_session_error = !user_skipped && R_FAILED(install_rc) && IsDbiSessionError(install_rc);
+                RecordPackageResult(i, install_rc, cancelled, user_skipped, plan_sd,
                     m_total_read.load() - read_before, m_total_write.load() - write_before);
-                if (R_SUCCEEDED(install_rc)) {
+                if (user_skipped) {
+                    AddLog("Skipped: "_i18n + name, LogKind::Success);
+                } else if (R_SUCCEEDED(install_rc)) {
                     if (m_current_file_skipped) {
                         AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);
                         AddLog("Change \"Skip if already installed\" in Settings to reinstall."_i18n, LogKind::Normal);
@@ -1383,13 +1410,17 @@ void Menu::LocalThreadFunction() {
                 plan_sd = m_queue[i].install_sd;
                 analysis_deferred = m_queue[i].analysis_deferred;
                 name = m_queue[i].file_name;
-                m_current_package = i;
-                m_current_title = name;
-                m_progress_offset = 0;
-                m_progress_size = 0;
-                m_package_write_start = m_total_write.load();
-                m_current_file_reinstall_choice = std::nullopt;
-                m_current_file_skipped = false;
+                if (selected) {
+                    m_skip_requested = false;
+                    ueventClear(&m_cancel_event);
+                    m_current_package = i;
+                    m_current_title = name;
+                    m_progress_offset = 0;
+                    m_progress_size = 0;
+                    m_package_write_start = m_total_write.load();
+                    m_current_file_reinstall_choice = std::nullopt;
+                    m_current_file_skipped = false;
+                }
             }
             if (!selected) continue;
             if (m_cancel_requested) break;
@@ -1416,10 +1447,13 @@ void Menu::LocalThreadFunction() {
                     ? yati::InstallFromCollections(this, &source, analysis.collections, override)
                     : open_rc;
             }
-            const bool cancelled = m_cancel_requested || result == Result_TransferCancelled;
-            RecordPackageResult(i, result, cancelled, plan_sd,
+            const bool user_skipped = m_skip_requested.load();
+            const bool cancelled = m_cancel_requested || (!user_skipped && result == Result_TransferCancelled);
+            RecordPackageResult(i, result, cancelled, user_skipped, plan_sd,
                 m_total_read.load() - read_before, m_total_write.load() - write_before);
-            if (R_SUCCEEDED(result)) {
+            if (user_skipped) {
+                AddLog("Skipped: "_i18n + name, LogKind::Success);
+            } else if (R_SUCCEEDED(result)) {
                 if (m_current_file_skipped) {
                     AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);
                     AddLog("Change \"Skip if already installed\" in Settings to reinstall."_i18n, LogKind::Normal);
@@ -1548,6 +1582,7 @@ void Menu::ConfirmInstallPlan() {
             AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
         }
     }
+    m_skip_requested = false;
     m_install_requested = true;
 }
 
@@ -1562,6 +1597,24 @@ void Menu::CancelSession() {
         if (m_usb_source) m_usb_source->SignalCancel();
     }
     SetPop();
+}
+
+void Menu::SkipCurrentPackage(size_t expected_package) {
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (m_state.load() != State::Installing || m_current_package != expected_package) {
+            return;
+        }
+        m_skip_requested = true;
+    }
+    ueventSignal(&m_cancel_event);
+    if (m_local_fs && !m_local_fs->IsNative()) {
+        devoptab::common::CancelActiveCurlTransfers();
+    }
+    const auto state = m_state.load();
+    if (state == State::Installing) {
+        if (m_usb_source) m_usb_source->SignalCancel();
+    }
 }
 
 void Menu::CycleSelectedTarget() {
@@ -1671,10 +1724,10 @@ void Menu::BeginSessionStats() {
     m_session_timestamp.Update();
 }
 
-void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_sd, s64 read_delta, s64 write_delta) {
+void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool user_skipped, bool to_sd, s64 read_delta, s64 write_delta) {
     SCOPED_MUTEX(&m_mutex);
     m_queue[index].install_result = rc;
-    m_queue[index].installed = R_SUCCEEDED(rc);
+    m_queue[index].installed = !user_skipped && R_SUCCEEDED(rc);
     m_stats.read_bytes += std::max<s64>(0, read_delta);
     m_stats.write_bytes += std::max<s64>(0, write_delta);
     // the package is off the queue either way; book its whole planned size so
@@ -1682,7 +1735,9 @@ void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool to_
     AddSizeSaturated(m_plan_done_bytes, PlanSize(m_queue[index]));
     m_package_write_start = m_total_write.load();
 
-    if (R_SUCCEEDED(rc)) {
+    if (user_skipped) {
+        m_stats.skipped++;
+    } else if (R_SUCCEEDED(rc)) {
         m_queue[index].selected = false; // uncheck a package that went through
         if (m_current_file_skipped) {
             m_stats.skipped++;
@@ -1747,7 +1802,7 @@ void Menu::OnInstallSkipped() {
 }
 
 Result Menu::CheckCancelled() {
-    R_UNLESS(!m_cancel_requested && !GetToken().stop_requested(), Result_TransferCancelled);
+    R_UNLESS(!m_cancel_requested && !m_skip_requested && !GetToken().stop_requested(), Result_TransferCancelled);
     R_SUCCEED();
 }
 
@@ -1816,11 +1871,11 @@ bool Menu::PromptReinstall(const std::string& title_name) {
         m_prompt_data = data;
     }
 
-    while (data->choice == -1 && !m_cancel_requested && !GetToken().stop_requested()) {
+    while (data->choice == -1 && !m_cancel_requested && !m_skip_requested && !GetToken().stop_requested()) {
         svcSleepThread(10'000'000ULL); // 10ms
     }
 
-    if (m_cancel_requested || GetToken().stop_requested()) {
+    if (m_cancel_requested || m_skip_requested || GetToken().stop_requested()) {
         return false;
     }
 
