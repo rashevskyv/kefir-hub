@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <cstdio>
+#include <string>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -48,6 +49,10 @@ constexpr u64 RESYNC_INTERVAL_NS = 6ULL * 3600ULL * 1000000000ULL;
 // after a failure, wait longer than the idle poll before hammering dns again.
 constexpr u64 RETRY_INTERVAL_NS = 120ULL * 1000000000ULL;
 
+// Temporary hardware diagnostics. Set false after the failing time-service
+// command has been identified on a physical console.
+constexpr bool SHOW_NTP_PROGRESS_TOOLTIPS = true;
+
 // SNTPv4 packet, RFC 4330. All fields are big endian on the wire.
 struct NtpPacket {
     u8 li_vn_mode;
@@ -73,6 +78,19 @@ std::atomic_bool g_thread_running{};
 std::atomic_bool g_stop{};
 UEvent g_wake_event{};
 
+void ReportSyncStage(std::string stage) {
+    log_write("[NTP] %s\n", stage.c_str());
+    if constexpr (SHOW_NTP_PROGRESS_TOOLTIPS) {
+        App::Notify("NTP: " + std::move(stage), ui::NotifEntry::Side::LEFT);
+    }
+}
+
+void ReportSyncFailure(std::string stage, Result rc) {
+    char result[16];
+    std::snprintf(result, sizeof(result), "0x%08X", R_VALUE(rc));
+    ReportSyncStage(std::move(stage) + " failed " + result);
+}
+
 auto HasInternet() -> bool {
     // "do we have an ip" is what the rest of the app calls connected -- see the
     // status header in MenuBase. nifmGetInternetConnectionStatus is stricter:
@@ -88,6 +106,7 @@ auto HasInternet() -> bool {
 
 // asks one server for the time. out is a posix timestamp.
 Result QueryServer(const char* host, u64* out) {
+    ReportSyncStage(std::string("DNS ") + host);
     addrinfo hints{};
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
@@ -95,12 +114,15 @@ Result QueryServer(const char* host, u64* out) {
 
     addrinfo* result{};
     if (getaddrinfo(host, "123", &hints, &result) || !result) {
+        ReportSyncStage(std::string("DNS ") + host + " failed");
         R_THROW(Result_NtpResolveFailed);
     }
     ON_SCOPE_EXIT(freeaddrinfo(result));
 
+    ReportSyncStage(std::string("opening UDP ") + host);
     const auto fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
+        ReportSyncStage(std::string("opening UDP ") + host + " failed");
         R_THROW(Result_NtpSocketFailed);
     }
     ON_SCOPE_EXIT(close(fd));
@@ -115,12 +137,16 @@ Result QueryServer(const char* host, u64* out) {
     NtpPacket packet{};
     packet.li_vn_mode = 0x23;
 
+    ReportSyncStage(std::string("sending request to ") + host);
     if (sendto(fd, &packet, sizeof(packet), 0, result->ai_addr, result->ai_addrlen) != sizeof(packet)) {
+        ReportSyncStage(std::string("sending request to ") + host + " failed");
         R_THROW(Result_NtpSendFailed);
     }
 
+    ReportSyncStage(std::string("waiting for ") + host);
     NtpPacket reply{};
     if (recv(fd, &reply, sizeof(reply), 0) != sizeof(reply)) {
+        ReportSyncStage(std::string("waiting for ") + host + " failed");
         R_THROW(Result_NtpRecvFailed);
     }
 
@@ -136,6 +162,7 @@ Result QueryServer(const char* host, u64* out) {
     R_UNLESS(posix >= PLAUSIBLE_MIN && posix <= PLAUSIBLE_MAX, Result_NtpBadReply);
 
     *out = posix;
+    ReportSyncStage(std::string("valid reply from ") + host);
     R_SUCCEED();
 }
 
@@ -168,15 +195,24 @@ Result DisableAutomaticCorrection(Service* time_srv) {
 }
 
 Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
+    const std::string service{service_name};
     Service time_srv{};
-    R_TRY(smGetService(&time_srv, service_name));
+    ReportSyncStage("opening " + service);
+    const auto open_rc = smGetService(&time_srv, service_name);
+    if (R_FAILED(open_rc)) {
+        ReportSyncFailure("opening " + service, open_rc);
+        R_THROW(open_rc);
+    }
     ON_SCOPE_EXIT(serviceClose(&time_srv));
 
     // must precede the clock writes: see DisableAutomaticCorrection. Best effort
     // -- on a console that already has the setting off this is a no-op, so a
     // failure here only matters as a permission signal, not a hard stop.
+    ReportSyncStage(service + " disabling automatic correction");
     if (const auto rc = DisableAutomaticCorrection(&time_srv); R_FAILED(rc)) {
-        log_write("[NTP] could not disable automatic clock correction (0x%08X); the write may not stick\n", R_VALUE(rc));
+        ReportSyncFailure(service + " disabling automatic correction", rc);
+    } else {
+        ReportSyncStage(service + " automatic correction disabled");
     }
 
     // 0 = GetStandardUserSystemClock, 1 = GetStandardNetworkSystemClock. The
@@ -187,8 +223,12 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
     Result last_rc = 0;
     bool user_set = false;
     for (const u32 cmd_id : {0u, 1u}) {
+        const char* clock_name = cmd_id == 0u ? "User Clock" : "Network Clock";
         Service clock{};
-        if (const auto get_rc = GetClockSession(&time_srv, cmd_id, &clock); R_FAILED(get_rc)) {
+        ReportSyncStage(service + " opening " + clock_name);
+        const auto get_rc = GetClockSession(&time_srv, cmd_id, &clock);
+        if (R_FAILED(get_rc)) {
+            ReportSyncFailure(service + " opening " + clock_name, get_rc);
             if (cmd_id == 0u) {
                 user_rc = get_rc;
             }
@@ -196,7 +236,10 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
             continue;
         }
         ON_SCOPE_EXIT(serviceClose(&clock));
-        if (const auto set_rc = SetClockTime(&clock, timestamp); R_FAILED(set_rc)) {
+        ReportSyncStage(service + " setting " + clock_name);
+        const auto set_rc = SetClockTime(&clock, timestamp);
+        if (R_FAILED(set_rc)) {
+            ReportSyncFailure(service + " setting " + clock_name, set_rc);
             if (cmd_id == 0u) {
                 user_rc = set_rc;
             }
@@ -206,6 +249,7 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
         if (cmd_id == 0u) {
             user_set = true;
         }
+        ReportSyncStage(service + " updated " + clock_name);
     }
 
     R_UNLESS(user_set, user_rc ? user_rc : (last_rc ? last_rc : Result_NtpSetTimeFailed));
@@ -215,11 +259,14 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
 Result SetSystemTime(u64 timestamp) {
     // time:su is the supported writable service for user-mode system tools on
     // 9.0.0+. time:s remains a fallback for older or custom HOS setups.
+    ReportSyncStage("trying time:su");
     const auto system_user_rc = SetSystemTimeWithService("time:su", timestamp);
     if (R_SUCCEEDED(system_user_rc)) {
         R_SUCCEED();
     }
 
+    ReportSyncFailure("time:su user-clock update", system_user_rc);
+    ReportSyncStage("trying time:s fallback");
     const auto system_rc = SetSystemTimeWithService("time:s", timestamp);
     if (R_SUCCEEDED(system_rc)) {
         R_SUCCEED();
@@ -229,11 +276,17 @@ Result SetSystemTime(u64 timestamp) {
     // same write for different reasons, and this path cannot be reproduced on
     // the build host.
     log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X)", R_VALUE(system_user_rc), R_VALUE(system_rc));
+    ReportSyncFailure("time:s user-clock update", system_rc);
     R_THROW(system_rc ? system_rc : system_user_rc);
 }
 
 Result RunSync() {
-    R_UNLESS(HasInternet(), Result_NtpNoConnection);
+    ReportSyncStage("checking network connection");
+    if (!HasInternet()) {
+        ReportSyncStage("no network connection");
+        R_THROW(Result_NtpNoConnection);
+    }
+    ReportSyncStage("network connection ready");
 
     u64 network_time{};
     Result rc = Result_NtpResolveFailed;
@@ -242,25 +295,37 @@ Result RunSync() {
         if (R_SUCCEEDED(rc)) {
             break;
         }
-        log_write("[NTP] %s failed: 0x%08X\n", server, R_VALUE(rc));
+        ReportSyncFailure(std::string("querying ") + server, rc);
     }
     R_TRY(rc);
 
     u64 current_time{};
-    R_TRY(timeGetCurrentTime(TimeType_UserSystemClock, &current_time));
+    ReportSyncStage("reading User Clock");
+    const auto current_time_rc = timeGetCurrentTime(TimeType_UserSystemClock, &current_time);
+    if (R_FAILED(current_time_rc)) {
+        ReportSyncFailure("reading User Clock", current_time_rc);
+        R_THROW(current_time_rc);
+    }
 
     const auto offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
+    ReportSyncStage("clock offset " + std::to_string(offset) + " seconds");
     if (offset > -MIN_CORRECTION_SECONDS && offset < MIN_CORRECTION_SECONDS) {
-        log_write("[NTP] clock already accurate (%+lld s)\n", (long long)offset);
+        ReportSyncStage("clock already synchronized");
         R_SUCCEED();
     }
 
-    R_TRY(SetSystemTime(network_time));
+    ReportSyncStage("writing corrected clock");
+    const auto set_time_rc = SetSystemTime(network_time);
+    if (R_FAILED(set_time_rc)) {
+        ReportSyncFailure("synchronization", set_time_rc);
+        R_THROW(set_time_rc);
+    }
+    ReportSyncStage("clock updated; refreshing UI");
     evman::push(evman::FunctionalEventData{[]() {
         __libnx_init_time();
+        App::Notify("NTP: UI clock refreshed", ui::NotifEntry::Side::LEFT);
         App::Notify("Clock synced"_i18n);
     }}, false);
-    log_write("[NTP] clock corrected by %+lld seconds\n", (long long)offset);
     R_SUCCEED();
 }
 
@@ -283,7 +348,11 @@ void ThreadFunc(void*) {
             continue;
         }
 
+        ReportSyncStage("background synchronization started");
         const auto rc = RunSync();
+        if (R_SUCCEEDED(rc)) {
+            ReportSyncStage("background synchronization complete");
+        }
         // no connection yet is the normal case on boot, so keep the fast poll
         // for it and back off only for real failures.
         wait_ns = R_SUCCEEDED(rc) ? RESYNC_INTERVAL_NS

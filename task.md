@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.443**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.444**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.443 (запис NTP-часу через `time:su`)
+## Поточний delivery: v0.13.444 (видимий NTP diagnostic trace)
+
+- [x] `NTP-TRACE-444` — на лівій стороні екрана тимчасово показуються tooltip-и кожного етапу: мережа, DNS, UDP, відповідь NTP, offset, усі операції `time:su`/`time:s`, UI refresh та підсумок.
+- [x] `NTP-TRACE-LOG-444` — кожен видимий етап дублюється як `[NTP] ...` у `log.txt`; відмова містить точний Horizon Result.
+- [x] `NTP-TRACE-VERIFY-444` — успішно виконано WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), перевірено `git diff --check`, піднято версію до `0.13.444`.
+
+## Попередній delivery: v0.13.443 (запис NTP-часу через `time:su`)
 
 - [x] `NTP-TIME-SU-443` — `SetSystemTime()` спершу виконує повний запис через `time:su`; `time:s` лишається fallback лише після невдачі запису User system clock.
 - [x] `NTP-TIME-LOG-443` — якщо обидва сервіси відмовляють, `errors.txt` містить окремі Result для `time:su` та `time:s`.

@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.443**. Завершені плани збережено в
+Поточний delivery — **v0.13.444**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.443 — запис NTP-часу через `time:su`
+## 0. v0.13.444 — видимий NTP diagnostic trace
+
+Статус: реалізацію завершено; WSL ReleaseWithInstall пройшов 2026-08-13, версію піднято до v0.13.444. Потрібна ручна перевірка на Switch.
+
+1. Лог v0.13.443 показав, що NTP-відповідь отримано, але обидва шляхи `time:su` та `time:s` відхилили User system clock з `0x00000274`.
+2. Додати тимчасовий `ReportSyncStage`: він записує `[NTP]`-рядок і thread-safe tooltip зліва. Прапор `SHOW_NTP_PROGRESS_TOOLTIPS` залишити `true` до завершення апаратної діагностики.
+3. Покрити tooltip-ами кожен етап: мережу, DNS, socket/send/receive, валідну відповідь, читання й offset User Clock, кожну операцію `time:su` і `time:s`, fallback, UI refresh і фінальний Result.
+4. Пройдено WSL `ReleaseWithInstall` та `git diff --check`; версію піднято до `0.13.444`.
+
+## 0.1. v0.13.443 — запис NTP-часу через `time:su`
 
 Статус: реалізацію завершено; WSL ReleaseWithInstall пройшов 2026-08-13, версію піднято до v0.13.443. Потрібна ручна перевірка на Switch.
 

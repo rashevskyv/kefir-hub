@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.443** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.444** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.444 — видимий NTP diagnostic trace
+
+- Лог з v0.13.443 підтвердив, що `time:su` також повертає `0x00000274`, як і `time:s`; вибір сервісу більше не є невідомою змінною.
+- Додано тимчасовий `SHOW_NTP_PROGRESS_TOOLTIPS = true`. `ReportSyncStage` одночасно пише `[NTP]`-рядок у `log.txt` та показує tooltip зліва; `ReportSyncFailure` додає точний Result.
+- Трейс охоплює мережу, DNS, UDP socket/send/receive, перевірену NTP-відповідь, читання User Clock й offset, відкриття сервісу та clock-сеансів, вимкнення automatic correction, обидва clock writes, fallback, UI refresh і завершення.
+- Збірку WSL `ReleaseWithInstall` успішно пройдено (`[100%] Built target sphaira_nro`); версію застосунку піднято до `0.13.444`. Після апаратного тесту достатньо встановити `SHOW_NTP_PROGRESS_TOOLTIPS` у `false`, щоб вимкнути tooltip-и без зміни логування.
 
 ## v0.13.443 — запис NTP-часу через `time:su`
 
