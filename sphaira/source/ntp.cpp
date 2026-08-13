@@ -139,8 +139,8 @@ Result QueryServer(const char* host, u64* out) {
     R_SUCCEED();
 }
 
-// ISystemClock is a subservice of time:s; libnx's own session is time:u, whose
-// clocks are not writable, so the write path opens its own.
+// ISystemClock is a subservice of the privileged time services; libnx's own
+// session is time:u, whose clocks are not writable, so the write path opens its own.
 Result GetClockSession(Service* srv, u32 cmd_id, Service* out) {
     return serviceDispatch(srv, cmd_id,
         .out_num_objects = 1,
@@ -159,7 +159,7 @@ Result SetClockTime(Service* clock, u64 timestamp) {
 // setting the time from here did nothing until the setting was toggled by hand.
 // The system-settings "set clock manually" flow turns this flag off first; we
 // mirror that so our write actually sticks, regardless of the setting's state.
-// This changes the live flag only (time:s cmd 101); it does not rewrite the
+// This changes the live flag only (ITimeService cmd 101); it does not rewrite the
 // persisted system setting, and hos re-reads it on the next boot where this
 // runs again.
 Result DisableAutomaticCorrection(Service* time_srv) {
@@ -167,21 +167,9 @@ Result DisableAutomaticCorrection(Service* time_srv) {
     return serviceDispatchIn(time_srv, 101, enabled);
 }
 
-Result SetSystemTime(u64 timestamp) {
+Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
     Service time_srv{};
-    // time:s is the settings-side manager and is the one that hands out
-    // writable clocks. time:su exists from 9.0.0 and works the same way.
-    auto rc = smGetService(&time_srv, "time:s");
-    if (R_FAILED(rc)) {
-        rc = smGetService(&time_srv, "time:su");
-    }
-    if (R_FAILED(rc)) {
-        // a dead end rather than a transient: record it where it can be read
-        // even with logging switched off, otherwise the feature just looks
-        // like it does nothing.
-        log_write_error("ntp: cannot open time:s / time:su (0x%08X); the clock cannot be set from here", R_VALUE(rc));
-        R_THROW(rc);
-    }
+    R_TRY(smGetService(&time_srv, service_name));
     ON_SCOPE_EXIT(serviceClose(&time_srv));
 
     // must precede the clock writes: see DisableAutomaticCorrection. Best effort
@@ -220,11 +208,28 @@ Result SetSystemTime(u64 timestamp) {
         }
     }
 
-    if (!user_set) {
-        log_write_error("ntp: time service refused the clock write (0x%08X)", R_VALUE(user_rc ? user_rc : last_rc));
-    }
     R_UNLESS(user_set, user_rc ? user_rc : (last_rc ? last_rc : Result_NtpSetTimeFailed));
     R_SUCCEED();
+}
+
+Result SetSystemTime(u64 timestamp) {
+    // time:su is the supported writable service for user-mode system tools on
+    // 9.0.0+. time:s remains a fallback for older or custom HOS setups.
+    const auto system_user_rc = SetSystemTimeWithService("time:su", timestamp);
+    if (R_SUCCEEDED(system_user_rc)) {
+        R_SUCCEED();
+    }
+
+    const auto system_rc = SetSystemTimeWithService("time:s", timestamp);
+    if (R_SUCCEEDED(system_rc)) {
+        R_SUCCEED();
+    }
+
+    // A permanent record is essential here: the two services can reject the
+    // same write for different reasons, and this path cannot be reproduced on
+    // the build host.
+    log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X)", R_VALUE(system_user_rc), R_VALUE(system_rc));
+    R_THROW(system_rc ? system_rc : system_user_rc);
 }
 
 Result RunSync() {

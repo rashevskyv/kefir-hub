@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.442**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.443**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.442 (усунення крашу File Browser при завантаженні асоціацій)
+## Поточний delivery: v0.13.443 (запис NTP-часу через `time:su`)
+
+- [x] `NTP-TIME-SU-443` — `SetSystemTime()` спершу виконує повний запис через `time:su`; `time:s` лишається fallback лише після невдачі запису User system clock.
+- [x] `NTP-TIME-LOG-443` — якщо обидва сервіси відмовляють, `errors.txt` містить окремі Result для `time:su` та `time:s`.
+- [x] `NTP-TIME-VERIFY-443` — успішно виконано WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), перевірено `git diff --check`, піднято версію до `0.13.443`.
+
+## Попередній delivery: v0.13.442 (усунення крашу File Browser при завантаженні асоціацій)
 
 - [x] `ASSOC-CRASH-442` — виправлено краш File Browser при завантаженні асоціацій (причина: реалокація `std::vector<FileAssocEntry>` під час `emplace_back` копіювала великі об'єкти `FileAssocEntry` з `fs::FsPath`).
 - [x] `ASSOC-RESERVE-442` — додано `CountAssocEntriesPath` та попереднє резервування ємності вектора `m_assoc_entries.reserve()` на сумарну кількість кандидатних `.ini` файлів із `romfs:/assoc/` та `paths::ASSOC` перед завантаженням.

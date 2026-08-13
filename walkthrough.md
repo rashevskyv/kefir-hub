@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.442** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.443** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.443 — запис NTP-часу через `time:su`
+
+- Лог з фізичної Switch підтвердив: NTP-сервер відповідає, але `time:s` відхиляє запис системного годинника з `0x00000274`; отже, це не мережевий або UI-збій.
+- `SetSystemTime()` тепер спочатку використовує `time:su`, призначений для system-user операцій на HOS 9.0.0+, і переходить на `time:s` лише коли User system clock через перший сервіс не записано.
+- Вимкнення automatic correction та запис Network system clock залишені best-effort. Успіх синхронізації все ще вимагає запису User system clock, після чого чинний UI callback одразу оновлює базу часу libnx і показує `Clock synced`.
+- Якщо обидва сервісні шляхи відмовляють, `errors.txt` зберігає окремі Result для `time:su` і `time:s`.
+- `hbl` у поточному Kefirosphere вже має `service_access: ["*"]`; тому патч Atmosphère/Kefirosphere для ACL не потрібен і не додавався.
+- Збірку WSL `ReleaseWithInstall` успішно пройдено (`[100%] Built target sphaira_nro`); версію застосунку піднято до `0.13.443`. Потрібна ручна перевірка на Switch.
 
 ## v0.13.442 — усунення крашу File Browser при завантаженні асоціацій
 

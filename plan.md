@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.442**. Завершені плани збережено в
+Поточний delivery — **v0.13.443**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.442 — усунення крашу File Browser при завантаженні асоціацій
+## 0. v0.13.443 — запис NTP-часу через `time:su`
+
+Статус: реалізацію завершено; WSL ReleaseWithInstall пройшов 2026-08-13, версію піднято до v0.13.443. Потрібна ручна перевірка на Switch.
+
+1. Логи з HOS 20.5.0 показали, що NTP-відповідь надходить, але `time:s` відхиляє і вимкнення automatic correction, і запис User system clock з `0x00000274`.
+2. `SetSystemTimeWithService` виконує чинну спробу запису для одного сервісу; `SetSystemTime` спершу викликає її для `time:su`, а потім для `time:s` лише якщо User system clock не було записано.
+3. Невдале вимкнення automatic correction лишається best-effort. Успіх визначає лише запис User system clock; Network system clock лишається best-effort.
+4. За повної невдачі в `errors.txt` записуються Result обох сервісів, що робить наступний апаратний тест діагностичним.
+5. Пройдено WSL `ReleaseWithInstall` та `git diff --check`; версію піднято до `0.13.443`.
+
+## 0.1. v0.13.442 — усунення крашу File Browser при завантаженні асоціацій
 
 Статус: реалізацію завершено; WSL ReleaseWithInstall пройшов 2026-08-13, версію піднято до v0.13.442.
 

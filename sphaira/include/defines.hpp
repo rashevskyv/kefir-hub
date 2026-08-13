@@ -232,8 +232,7 @@ enum class SphairaResult : Result {
     // reply was not a well formed server response (wrong mode, kiss-o'-death,
     // or a timestamp outside any plausible range).
     NtpBadReply,
-    // the time service refused the write; on most setups this means time:s is
-    // not reachable from where sphaira is running.
+    // neither writable time service accepted the user-clock update.
     NtpSetTimeFailed,
 
     // the console has no network connection and one could not be brought up.
