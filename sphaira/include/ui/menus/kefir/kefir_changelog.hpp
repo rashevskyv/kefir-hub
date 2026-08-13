@@ -67,6 +67,7 @@ public:
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
+    auto IsModal() const -> bool override { return true; }
 
 private:
     static constexpr float CHANGELOG_FONT_SIZE = 20.f;

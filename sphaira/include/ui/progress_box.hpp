@@ -32,6 +32,7 @@ struct ProgressBox final : Widget, InstallProgress {
 
     auto Update(Controller* controller, TouchInfo* touch) -> void override;
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
+    auto IsModal() const -> bool override { return true; }
 
     auto SetActionName(const std::string& action) -> ProgressBox&;
     auto SetTitle(const std::string& title) -> ProgressBox&;

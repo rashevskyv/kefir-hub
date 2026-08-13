@@ -27,10 +27,9 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
-    // the image viewer draws its own pared back header (just the file name and
-    // the separators), and none at all in fullscreen.
+    // standard chrome is drawn in normal (non-fullscreen) mode, and hidden in fullscreen.
     auto WantsChrome() const -> bool override {
-        return !m_is_image_file;
+        return !m_fullscreen;
     }
 
 private:

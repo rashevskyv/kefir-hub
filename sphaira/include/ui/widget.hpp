@@ -55,6 +55,14 @@ struct Widget : public Object {
         return false;
     }
 
+    virtual auto IsModal() const -> bool {
+        return false;
+    }
+
+    virtual auto WantsChrome() const -> bool {
+        return true;
+    }
+
     // The widget that owns the footer hint row on this one's behalf. A
     // container (MainMenu) hands it to the page it is currently showing, which
     // is what the user actually drives; everything else owns its own row.

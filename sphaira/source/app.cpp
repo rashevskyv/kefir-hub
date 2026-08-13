@@ -858,26 +858,46 @@ void App::Draw() {
         for (auto it = menu_it; ; it--) {
             const auto& p = *it;
 
-            // draw everything not hidden on top of the menu.
-            if (!p->IsHidden()) {
+            // draw all normal (non-modal) content/widgets on top of the menu first.
+            if (!p->IsHidden() && !p->IsModal()) {
                 p->Draw(vg, &m_theme);
             }
 
-            // the header and footer are a chrome layer, drawn straight after
-            // the menu body: a list row that overflows its band is painted
-            // over instead of spilling across the separator. Panels stacked
-            // above clip themselves to the content band (ui/layout.hpp), so
-            // they cannot reach it either; full screen modals are drawn after
-            // and deliberately cover it along with everything else.
-            if (it == menu_it && !p->IsHidden()) {
-                if (auto* chrome = p->GetChromeOwner()) {
-                    chrome->DrawChrome(vg, &m_theme);
-                }
+            if (it == m_widgets.rbegin()) {
+                break;
             }
+        }
 
-            if (it == menu_it && m_active_transfer_pbox) {
-                m_active_transfer_pbox->Draw(vg, &m_theme);
-                transfer_drawn = true;
+        // draw standard header/footer chrome after normal content/widgets if no stacked widget opts out.
+        bool allow_chrome = true;
+        for (auto it = menu_it; ; it--) {
+            const auto& p = *it;
+            if (!p->IsHidden() && !p->WantsChrome()) {
+                allow_chrome = false;
+                break;
+            }
+            if (it == m_widgets.rbegin()) {
+                break;
+            }
+        }
+
+        if (allow_chrome && !(*menu_it)->IsHidden()) {
+            if (auto* chrome = (*menu_it)->GetChromeOwner()) {
+                chrome->DrawChrome(vg, &m_theme);
+            }
+        }
+
+        if (m_active_transfer_pbox) {
+            m_active_transfer_pbox->Draw(vg, &m_theme);
+            transfer_drawn = true;
+        }
+
+        // draw full-screen modal overlays on top.
+        for (auto it = menu_it; ; it--) {
+            const auto& p = *it;
+
+            if (!p->IsHidden() && p->IsModal()) {
+                p->Draw(vg, &m_theme);
             }
 
             if (it == m_widgets.rbegin()) {

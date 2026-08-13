@@ -130,6 +130,8 @@ public:
         });
     }
 
+    auto WantsChrome() const -> bool override { return false; }
+
     void Draw(NVGcontext* vg, Theme* theme) override {
         DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
         m_scroll_screen_title.Draw(vg, true, 70.f, 55.f, 520.f, 30.f,

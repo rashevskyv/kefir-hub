@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.440** (2026-08-12). Попередні
+Актуальний delivery — **v0.13.441** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.441 — захист звичайного хрому UI Sphaira
+
+- Змінено порядок малювання віджетів у `App::Draw()` (`sphaira/source/app.cpp`): спочатку малюються активне меню та всі немодальні віджети/панелі/переглядачі, після чого малюється стандартний хром `DrawChrome()` (розділювальні лінії заголовка та футера, статус-бар, заголовок та підказки кнопок).
+- Додано метод `IsModal()` до базового класу `Widget` (`sphaira/include/ui/widget.hpp`), який перевизначено у значення `true` для модальних вікон/діалогів (`OptionBox`, `PopupList`, `ProgressBox`, `ErrorBox`, `HoldConfirmBox`, `HoldOkBox`, `KefirChangelogBox`). Модальні діалоги малюються після хрому, зберігаючи затемнення всього екрана через `gfx::dimBackground()`.
+- У переглядачі файлів `fileview::Menu` (`sphaira/include/ui/menus/file_viewer.hpp`) змінено `WantsChrome()` на повернення `!m_fullscreen`, що дозволяє звичайному перегляду зображень/файлів використовувати стандартний хром `MenuBase`, при цьому повністю зберігаючи вимкнення хрому в повноекранному режимі.
+- Обчислення меж зображення `ImageBounds()` у `sphaira/source/ui/menus/file_viewer.cpp` переведено на константи `layout::ContentBand()`.
+- Перевірено збереження поведінки оклюзії бокових панелей `Sidebar`.
+- Збірку WSL `ReleaseWithInstall` та перевірку `git diff --check` пройдено успішно. Версію застосунку піднято до `0.13.441`.
 
 ## v0.13.440 — інтерактивне керування чергою інсталяції (Skip / Cancel)
 

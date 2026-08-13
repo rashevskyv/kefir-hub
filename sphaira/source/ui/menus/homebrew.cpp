@@ -79,6 +79,8 @@ public:
         );
     }
 
+    auto IsModal() const -> bool override { return true; }
+
     void Update(Controller* controller, TouchInfo* touch) override {
         Widget::Update(controller, touch);
 

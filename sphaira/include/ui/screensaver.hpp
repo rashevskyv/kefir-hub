@@ -109,6 +109,7 @@ struct SaverPreview final : Widget {
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
+    auto WantsChrome() const -> bool override { return !m_saver.OwnsScreen(); }
 
 private:
     Screensaver m_saver{};

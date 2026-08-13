@@ -141,7 +141,7 @@ Sphaira features customizable theme options and multi-language support:
 ## Image Viewer
 
 Sphaira provides an integrated image viewer with dedicated legend and controls:
-- **Custom Legend:** Clear bottom-bar indicators (`Prev / Next Image` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR).
+- **Custom Legend & Standard Chrome:** Clear bottom-bar indicators (`Prev / Next Image` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR). Normal view preserves standard screen header/footer chrome above image content, while Full Screen mode expands to full display without chrome.
 - **Zoom & Navigation:** Holding ZL with Analog Stick / D-Pad Up or Down zooms in or out without accidentally changing images.
 - **Stick Panning:** Releasing ZL while zoomed in enables smooth pan/scroll across the zoomed image using analog sticks or D-Pad without scale changes or switching files.
 

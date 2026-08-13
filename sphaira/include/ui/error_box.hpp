@@ -19,6 +19,7 @@ public:
 
     auto Update(Controller* controller, TouchInfo* touch) -> void override;
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
+    auto IsModal() const -> bool override { return true; }
 
 private:
     std::optional<Result> m_code{};

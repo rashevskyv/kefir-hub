@@ -46,7 +46,7 @@ struct MenuBase : Widget {
 
     // menus that replace the standard chrome with their own (the image viewer)
     // opt out here.
-    virtual auto WantsChrome() const -> bool {
+    auto WantsChrome() const -> bool override {
         return true;
     }
 

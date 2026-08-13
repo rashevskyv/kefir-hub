@@ -37,6 +37,7 @@ public:
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
     auto OnFocusGained() noexcept -> void override;
     auto OnFocusLost() noexcept -> void override;
+    auto IsModal() const -> bool override { return true; }
 
 private:
     auto Setup(s64 index) -> void; // common setup values

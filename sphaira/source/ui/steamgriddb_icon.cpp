@@ -90,6 +90,8 @@ public:
         });
     }
 
+    auto WantsChrome() const -> bool override { return false; }
+
     void Draw(NVGcontext* vg, Theme* theme) override {
         DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
         gfx::drawText(vg, 70.f, 55.f, 28.f, theme->GetColour(ThemeEntryID_TEXT), "Choose an Icon"_i18n.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

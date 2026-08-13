@@ -23,6 +23,7 @@ public:
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
     auto OnFocusGained() noexcept -> void override;
     auto OnFocusLost() noexcept -> void override;
+    auto IsModal() const -> bool override { return true; }
 
     // render as an action menu rather than a value chooser: no "current value"
     // tick on the starting row, a right chevron on every row hinting it opens a

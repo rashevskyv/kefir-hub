@@ -10,6 +10,7 @@
 #include "threaded_file_transfer.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/theme_creator.hpp"
+#include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -67,7 +68,10 @@ auto ImageBounds(bool fullscreen) -> Vec4 {
         return {0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
     }
 
-    return {60.f, 110.f, SCREEN_WIDTH - 120.f, 500.f};
+    const auto band = layout::ContentBand();
+    constexpr float pad_x = 30.f;
+    constexpr float pad_y = 20.f;
+    return {band.x + pad_x, band.y + pad_y, band.w - pad_x * 2.f, band.h - pad_y * 2.f};
 }
 
 } // namespace
@@ -1238,18 +1242,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     if (m_is_image_file) {
         DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
 
-        if (!m_fullscreen) {
-            const auto title = GetDisplayName();
-            gfx::drawText(vg, 80, 70, 28.f, theme->GetColour(ThemeEntryID_TEXT), title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
-            gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
-            gfx::drawRect(vg, 30.f, 646.0f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
-        }
-
         if (!m_image || !m_image_w || !m_image_h) {
             gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to load image"_i18n.c_str());
-            if (!m_fullscreen) {
-                Widget::Draw(vg, theme);
-            }
             return;
         }
 
@@ -1275,10 +1269,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const Vec4 badge{bounds.x + bounds.w - 184.f, bounds.y + 14.f, 170.f, 44.f};
             gfx::drawRect(vg, badge, theme->GetColour(ThemeEntryID_POPUP), 5);
             gfx::drawTextArgs(vg, badge.x + badge.w / 2.f, badge.y + badge.h / 2.f, 18.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), "%zu selected", selected);
-        }
-
-        if (!m_fullscreen) {
-            Widget::Draw(vg, theme);
         }
         return;
     }
