@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.441** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.442** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.442 — усунення крашу File Browser при завантаженні асоціацій
+
+- Виправлено краш у `filebrowser::Menu::LoadAssocEntries`, який виникав під час завантаження асоціацій запусків (наприклад, `xrick_libretro_libnx.ini`).
+- Причина: при додаванні багатьох елементів у `m_assoc_entries` (`std::vector<FileAssocEntry>`) автоматична реалокація вектора виконувала копіювання великих об'єктів `FileAssocEntry` (із буфером `fs::FsPath` розміром 0x301 байт), викликаючи переповнення / краш у `memset`.
+- Рішення: створено функцію `CountAssocEntriesPath`, яка попередньо підраховує кількість валідних `.ini` файлів у каталогах `romfs:/assoc/` та `paths::ASSOC`. Перед додаванням записів викликається `m_assoc_entries.reserve(...)`, що запобігає реалокації вектора під час завантаження.
+- Збірку WSL `ReleaseWithInstall` та перевірку `git diff --check` пройдено успішно. Версію застосунку піднято до `0.13.442`.
 
 ## v0.13.441 — захист звичайного хрому UI Sphaira
 

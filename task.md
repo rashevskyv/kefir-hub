@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.441**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.442**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.441 (захист звичайного хрому UI Sphaira)
+## Поточний delivery: v0.13.442 (усунення крашу File Browser при завантаженні асоціацій)
+
+- [x] `ASSOC-CRASH-442` — виправлено краш File Browser при завантаженні асоціацій (причина: реалокація `std::vector<FileAssocEntry>` під час `emplace_back` копіювала великі об'єкти `FileAssocEntry` з `fs::FsPath`).
+- [x] `ASSOC-RESERVE-442` — додано `CountAssocEntriesPath` та попереднє резервування ємності вектора `m_assoc_entries.reserve()` на сумарну кількість кандидатних `.ini` файлів із `romfs:/assoc/` та `paths::ASSOC` перед завантаженням.
+- [x] `ASSOC-VERIFY-442` — успішно виконано збірку WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), перевірено `git diff --check`, піднято версію до `0.13.442`.
+
+## Попередній delivery: v0.13.441 (захист звичайного хрому UI Sphaira)
 
 - [x] `CHROME-ORDER-441` — змінено порядок малювання в `App::Draw()` (`sphaira/source/app.cpp`), щоб стандартний хром заголовка та футера малювався після немодальних віджетів і контенту, гарантуючи, що елементи контенту не перекривають розділювачі та статус-бар.
 - [x] `CHROME-MODAL-441` — додано властивість `IsModal()` до класу `Widget` та перевизначено її для модальних вікон (`OptionBox`, `PopupList`, `ProgressBox`, `ErrorBox`, `HoldConfirmBox`, `HoldOkBox`, `KefirChangelogBox`), зберегши їх малювання та затемнення поверху хрому.

@@ -2932,9 +2932,46 @@ void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
     }
 }
 
+static size_t CountAssocEntriesPath(const fs::FsPath& path) {
+    auto dir = opendir(path);
+    if (!dir) {
+        return 0;
+    }
+    ON_SCOPE_EXIT(closedir(dir));
+
+    size_t count = 0;
+    while (auto d = readdir(dir)) {
+        if (d->d_name[0] == '.') {
+            continue;
+        }
+
+        if (d->d_type != DT_REG) {
+            continue;
+        }
+
+        const auto ext = std::strrchr(d->d_name, '.');
+        if (!ext || strcasecmp(ext, ".ini")) {
+            continue;
+        }
+
+        count++;
+    }
+
+    return count;
+}
+
 void Menu::LoadAssocEntries() {
+    size_t count = 0;
+    const bool romfs_ok = R_SUCCEEDED(romfsInit());
+    if (romfs_ok) {
+        count += CountAssocEntriesPath("romfs:/assoc/");
+    }
+    count += CountAssocEntriesPath(paths::ASSOC);
+
+    m_assoc_entries.reserve(count);
+
     // load from romfs first
-    if (R_SUCCEEDED(romfsInit())) {
+    if (romfs_ok) {
         LoadAssocEntriesPath("romfs:/assoc/");
         romfsExit();
     }
