@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.445** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.446** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.446 — NTP через системну automatic correction
+
+- Вилучено виклик `DisableAutomaticCorrection()`, який вимикав автоматичну системну корекцію годинника HOS і перешкоджав перенесенню Network Clock у User Clock.
+- Збережено спроби запису User Clock та Network Clock через `time:su` і `time:s`. Після спроби оновлення Network Clock виконується повторне зчитування User Clock: якщо воно вже збігається з NTP (до 2 с), система вважає це негайним live-синхроном (очищається процесний offset Sphaira, оновлюється база часу libnx `__libnx_init_time()` і показується локалізоване "Clock synced").
+- Якщо User Clock все ще відхиляється (через те, що automatic correction була вимкнена під час завантаження HOS), через `set:sys` зберігається `NetworkSystemClockContext` і вмикається `setsysSetUserSystemClockAutomaticCorrectionEnabled(true)`. При цьому не виводиться "Clock synced" і не стверджується live-зміна системного годинника HOS, а в tooltip/log додається повідомлення: `automatic correction enabled; reboot required to update HOS User Clock`.
+- Збережено процесний offset `g_display_offset` Sphaira для негайного показу точного NTP-часу в UI Sphaira до перезавантаження консолі.
+- Збірку WSL `ReleaseWithInstall` та `git diff --check` пройдено успішно (`[100%] Built target sphaira_nro`), версію піднято до `0.13.446`. Апаратна перевірка на реальній Switch залишається відкритою.
 
 ## v0.13.445 — NTP User Clock через set:sys
 

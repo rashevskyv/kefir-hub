@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.445**. Завершені плани збережено в
+Поточний delivery — **v0.13.446**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.445 — NTP User Clock через set:sys
+## 0. v0.13.446 — NTP через системну automatic correction
+
+Статус: реалізацію та програмні перевірки завершено (WSL `ReleaseWithInstall` та `git diff --check` успішно пройдено 2026-08-13, версію піднято до v0.13.446). Апаратна перевірка на реальній Switch залишається відкритою.
+
+1. Вилучено некоректний виклик `DisableAutomaticCorrection()`.
+2. Залишено спроби запису User Clock та Network Clock через `time:su` і `time:s`. Після спроб запису виконується повторне зчитування User Clock: якщо час збігається з NTP (до 2 с), це вважається негайним live-синхроном (скидається process offset, оновлюється libnx time, виводиться "Clock synced").
+3. Якщо User Clock все ще відхиляється, через `set:sys` зберігається `NetworkSystemClockContext` та вмикається `setsysSetUserSystemClockAutomaticCorrectionEnabled(true)`.
+4. У tooltip/log для fallback шляху виводиться `automatic correction enabled; reboot required to update HOS User Clock`, при цьому не показується "Clock synced" і не стверджується live-зміна HOS User Clock. Process offset Sphaira зберігається для миттєвого відображення часу в додатку.
+5. Пройдено WSL `ReleaseWithInstall`, `git diff --check`, піднято версію до `0.13.446`, оновлено living docs.
+
+## 0.1. v0.13.445 — NTP User Clock через set:sys
 
 Статус: реалізацію та програмні перевірки завершено (WSL `ReleaseWithInstall` та `git diff --check` успішно пройдено 2026-08-13, версію піднято до v0.13.445). Апаратна перевірка на реальній Switch залишається відкритою (hardware verification remains pending: миттєве оновлення годинника Sphaira, NTP trace та збереження часу після перезапуску).
 

@@ -180,21 +180,6 @@ Result SetClockTime(Service* clock, u64 timestamp) {
     return serviceDispatchIn(clock, 1, timestamp);
 }
 
-// The system setting "Synchronise Clock via Internet" is, under the hood,
-// StandardUserSystemClockAutomaticCorrectionEnabled. While it is on, hos owns
-// the user clock and keeps re-deriving it from the network clock, so a direct
-// write to the user clock below is silently reverted -- which is exactly why
-// setting the time from here did nothing until the setting was toggled by hand.
-// The system-settings "set clock manually" flow turns this flag off first; we
-// mirror that so our write actually sticks, regardless of the setting's state.
-// This changes the live flag only (ITimeService cmd 101); it does not rewrite the
-// persisted system setting, and hos re-reads it on the next boot where this
-// runs again.
-Result DisableAutomaticCorrection(Service* time_srv) {
-    const u8 enabled = 0;
-    return serviceDispatchIn(time_srv, 101, enabled);
-}
-
 Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
     const std::string service{service_name};
     Service time_srv{};
@@ -205,16 +190,6 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
         R_THROW(open_rc);
     }
     ON_SCOPE_EXIT(serviceClose(&time_srv));
-
-    // must precede the clock writes: see DisableAutomaticCorrection. Best effort
-    // -- on a console that already has the setting off this is a no-op, so a
-    // failure here only matters as a permission signal, not a hard stop.
-    ReportSyncStage(service + " disabling automatic correction");
-    if (const auto rc = DisableAutomaticCorrection(&time_srv); R_FAILED(rc)) {
-        ReportSyncFailure(service + " disabling automatic correction", rc);
-    } else {
-        ReportSyncStage(service + " automatic correction disabled");
-    }
 
     // 0 = GetStandardUserSystemClock, 1 = GetStandardNetworkSystemClock. The
     // user clock is what the ui and posix time() read; the network clock is
@@ -277,6 +252,19 @@ Result SetSystemTime(u64 timestamp, bool& out_used_fallback) {
 
     ReportSyncFailure("time:s user-clock update", system_rc);
 
+    u64 user_clock_after = 0;
+    ReportSyncStage("re-reading User Clock");
+    const auto re_read_rc = timeGetCurrentTime(TimeType_UserSystemClock, &user_clock_after);
+    if (R_SUCCEEDED(re_read_rc)) {
+        const s64 diff = static_cast<s64>(timestamp) - static_cast<s64>(user_clock_after);
+        if (diff > -MIN_CORRECTION_SECONDS && diff < MIN_CORRECTION_SECONDS) {
+            ReportSyncStage("User Clock updated live via automatic correction");
+            R_SUCCEED();
+        }
+    } else {
+        ReportSyncFailure("re-reading User Clock", re_read_rc);
+    }
+
     ReportSyncStage("trying set:sys fallback");
     ReportSyncStage("opening set:sys");
     const auto setsys_init_rc = setsysInitialize();
@@ -302,31 +290,23 @@ Result SetSystemTime(u64 timestamp, bool& out_used_fallback) {
     context.timestamp = steady;
     context.offset = static_cast<s64>(timestamp) - steady.time_point;
 
-    ReportSyncStage("set:sys setting UserSystemClockContext");
-    const auto user_ctx_rc = setsysSetUserSystemClockContext(&context);
-    if (R_FAILED(user_ctx_rc)) {
-        log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X); set:sys user context (0x%08X)",
-            R_VALUE(system_user_rc), R_VALUE(system_rc), R_VALUE(user_ctx_rc));
-        ReportSyncFailure("set:sys setting UserSystemClockContext", user_ctx_rc);
-        R_THROW(user_ctx_rc);
-    }
-    ReportSyncStage("set:sys UserSystemClockContext updated");
-
     ReportSyncStage("set:sys setting NetworkSystemClockContext");
     const auto net_ctx_rc = setsysSetNetworkSystemClockContext(&context);
     if (R_FAILED(net_ctx_rc)) {
+        log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X); set:sys net context (0x%08X)",
+            R_VALUE(system_user_rc), R_VALUE(system_rc), R_VALUE(net_ctx_rc));
         ReportSyncFailure("set:sys setting NetworkSystemClockContext", net_ctx_rc);
-    } else {
-        ReportSyncStage("set:sys NetworkSystemClockContext updated");
+        R_THROW(net_ctx_rc);
     }
+    ReportSyncStage("set:sys NetworkSystemClockContext updated");
 
-    ReportSyncStage("set:sys disabling automatic correction");
-    const auto auto_corr_rc = setsysSetUserSystemClockAutomaticCorrectionEnabled(false);
+    ReportSyncStage("set:sys enabling automatic correction");
+    const auto auto_corr_rc = setsysSetUserSystemClockAutomaticCorrectionEnabled(true);
     if (R_FAILED(auto_corr_rc)) {
-        ReportSyncFailure("set:sys disabling automatic correction", auto_corr_rc);
-    } else {
-        ReportSyncStage("set:sys automatic correction disabled");
+        ReportSyncFailure("set:sys enabling automatic correction", auto_corr_rc);
+        R_THROW(auto_corr_rc);
     }
+    ReportSyncStage("set:sys automatic correction enabled");
 
     out_used_fallback = true;
     R_SUCCEED();
@@ -378,10 +358,7 @@ Result RunSync() {
     if (used_fallback) {
         const s64 new_offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
         g_display_offset.store(new_offset, std::memory_order_relaxed);
-        ReportSyncStage("set:sys clock persisted; process offset updated");
-        evman::push(evman::FunctionalEventData{[]() {
-            App::Notify("Clock synced"_i18n);
-        }}, false);
+        ReportSyncStage("automatic correction enabled; reboot required to update HOS User Clock");
     } else {
         g_display_offset.store(0, std::memory_order_relaxed);
         ReportSyncStage("clock updated; refreshing UI");

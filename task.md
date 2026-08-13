@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.445**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.446**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.445 (NTP User Clock через set:sys)
+## Поточний delivery: v0.13.446 (NTP через системну automatic correction)
+
+- [x] `NTP-AUTOCORRECT-446` — після NTP-запису Network Clock увімкнути `UserSystemClockAutomaticCorrectionEnabled` через `set:sys`, а не вимикати його; це єдиний штатний шлях HOS для перенесення Network Clock у User Clock.
+- [x] `NTP-AUTOCORRECT-TRACE-446` — tooltip/log однозначно вказує ввімкнення automatic correction та те, що якщо воно було вимкнене на старті HOS, системний User Clock застосує його після reboot; повторно зчитує User Clock після оновлення Network Clock для виявлення негайного live-синхрону.
+- [x] `NTP-AUTOCORRECT-VERIFY-446` — успішно виконано WSL `ReleaseWithInstall`, `git diff --check`, піднято версію до `0.13.446`.
+- [ ] `HW-NTP-AUTOCORRECT-446` — перевірити на Switch негайний результат за вже ввімкненої опції automatic correction та збереження часу після reboot, коли опція була вимкнена на старті.
+
+## Попередній delivery: v0.13.445 (NTP User Clock через set:sys)
 
 - [x] `NTP-SETSYS-445` — після відмови запису live User Clock через `time:su` та `time:s` (як-от з `time::ResultNoCapability` / `0x00000274`) виконувати fallback та записувати `UserSystemClockContext` через `set:sys`, обчислений від поточного standard steady clock і NTP timestamp.
 - [x] `NTP-SETSYS-RUNTIME-445` — одразу показувати коригований час у Sphaira через процесний offset; запис у `errors.txt` виконувати лише при відмові `set:sys`, щоб успішний fallback не залишав хибних записів про помилки.
