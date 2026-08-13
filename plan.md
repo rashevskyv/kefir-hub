@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.444**. Завершені плани збережено в
+Поточний delivery — **v0.13.445**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.444 — видимий NTP diagnostic trace
+## 0. v0.13.445 — NTP User Clock через set:sys
+
+Статус: реалізацію та програмні перевірки завершено (WSL `ReleaseWithInstall` та `git diff --check` успішно пройдено 2026-08-13, версію піднято до v0.13.445). Апаратна перевірка на реальній Switch залишається відкритою (hardware verification remains pending: миттєве оновлення годинника Sphaira, NTP trace та збереження часу після перезапуску).
+
+1. У `SetSystemTime()` зберегти чинні спроби `time:su` і `time:s` для live User Clock; після їхньої відмови спробувати штатний `set:sys` IPC: отримати standard steady-clock time point, утворити `TimeSystemClockContext { NTP - steady, steady }`, записати User і Network context та вимкнути automatic correction у `set:sys`. Запис у `errors.txt` виконувати лише при відмові `set:sys`, щоб успішний fallback не залишав хибних записів про помилки.
+2. Не вважати `set:sys` live-успіхом без перевірки: оновити часовий display Sphaira на NTP offset одразу в поточному процесі, а persisted context лишити джерелом правильного часу після перезавантаження HOS.
+3. Залишити `SHOW_NTP_PROGRESS_TOOLTIPS = true` і показати відкриття `set:sys`, зчитування steady clock, запис кожного context, результат automatic-correction та підсумок.
+4. Пройти WSL `ReleaseWithInstall` і `git diff --check`, підняти версію до `0.13.445`, оновити living docs і виконати ручну перевірку на Switch.
+
+## 0.1. v0.13.444 — видимий NTP diagnostic trace
 
 Статус: реалізацію завершено; WSL ReleaseWithInstall пройшов 2026-08-13, версію піднято до v0.13.444. Потрібна ручна перевірка на Switch.
 

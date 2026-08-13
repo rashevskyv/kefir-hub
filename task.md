@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.444**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.445**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.444 (видимий NTP diagnostic trace)
+## Поточний delivery: v0.13.445 (NTP User Clock через set:sys)
+
+- [x] `NTP-SETSYS-445` — після відмови запису live User Clock через `time:su` та `time:s` (як-от з `time::ResultNoCapability` / `0x00000274`) виконувати fallback та записувати `UserSystemClockContext` через `set:sys`, обчислений від поточного standard steady clock і NTP timestamp.
+- [x] `NTP-SETSYS-RUNTIME-445` — одразу показувати коригований час у Sphaira через процесний offset; запис у `errors.txt` виконувати лише при відмові `set:sys`, щоб успішний fallback не залишав хибних записів про помилки.
+- [x] `NTP-SETSYS-TRACE-445` — залишити ввімкнені diagnostic tooltip-и й додати до них усі `set:sys` етапи та точні Result.
+- [x] `NTP-SETSYS-VERIFY-445` — виконати WSL `ReleaseWithInstall`, `git diff --check` та підняти версію до `0.13.445`.
+- [ ] `HW-NTP-SETSYS-445` — перевірити на реальній Switch: миттєве оновлення годинника Sphaira, результати NTP trace та збереження часу після перезапуску консолі.
+
+## Попередній delivery: v0.13.444 (видимий NTP diagnostic trace)
 
 - [x] `NTP-TRACE-444` — на лівій стороні екрана тимчасово показуються tooltip-и кожного етапу: мережа, DNS, UDP, відповідь NTP, offset, усі операції `time:su`/`time:s`, UI refresh та підсумок.
 - [x] `NTP-TRACE-LOG-444` — кожен видимий етап дублюється як `[NTP] ...` у `log.txt`; відмова містить точний Horizon Result.
@@ -179,6 +187,7 @@
 
 ## Поточні перевірки
 
+- [ ] `HW-NTP-SETSYS-445` — миттєве оновлення годинника Sphaira, результати NTP trace та збереження часу після перезапуску консолі.
 - [ ] `HW-SMOKE-430` — обидва стіки у скрінсейвері, межі руху, яскравість,
   швидкість дрейфу та пробудження.
 - [ ] `HW-SMOKE-429` — межі storage-блоку, R/W-графік і preview скрінсейвера.

@@ -77,6 +77,7 @@ Thread g_thread{};
 std::atomic_bool g_thread_running{};
 std::atomic_bool g_stop{};
 UEvent g_wake_event{};
+std::atomic<s64> g_display_offset{0};
 
 void ReportSyncStage(std::string stage) {
     log_write("[NTP] %s\n", stage.c_str());
@@ -256,7 +257,9 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
     R_SUCCEED();
 }
 
-Result SetSystemTime(u64 timestamp) {
+Result SetSystemTime(u64 timestamp, bool& out_used_fallback) {
+    out_used_fallback = false;
+
     // time:su is the supported writable service for user-mode system tools on
     // 9.0.0+. time:s remains a fallback for older or custom HOS setups.
     ReportSyncStage("trying time:su");
@@ -272,12 +275,61 @@ Result SetSystemTime(u64 timestamp) {
         R_SUCCEED();
     }
 
-    // A permanent record is essential here: the two services can reject the
-    // same write for different reasons, and this path cannot be reproduced on
-    // the build host.
-    log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X)", R_VALUE(system_user_rc), R_VALUE(system_rc));
     ReportSyncFailure("time:s user-clock update", system_rc);
-    R_THROW(system_rc ? system_rc : system_user_rc);
+
+    ReportSyncStage("trying set:sys fallback");
+    ReportSyncStage("opening set:sys");
+    const auto setsys_init_rc = setsysInitialize();
+    if (R_FAILED(setsys_init_rc)) {
+        log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X); set:sys (0x%08X)",
+            R_VALUE(system_user_rc), R_VALUE(system_rc), R_VALUE(setsys_init_rc));
+        ReportSyncFailure("opening set:sys", setsys_init_rc);
+        R_THROW(setsys_init_rc);
+    }
+    ON_SCOPE_EXIT(setsysExit());
+
+    TimeSteadyClockTimePoint steady{};
+    ReportSyncStage("set:sys reading steady clock");
+    const auto steady_rc = timeGetStandardSteadyClockTimePoint(&steady);
+    if (R_FAILED(steady_rc)) {
+        log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X); steady clock (0x%08X)",
+            R_VALUE(system_user_rc), R_VALUE(system_rc), R_VALUE(steady_rc));
+        ReportSyncFailure("set:sys reading steady clock", steady_rc);
+        R_THROW(steady_rc);
+    }
+
+    TimeSystemClockContext context{};
+    context.timestamp = steady;
+    context.offset = static_cast<s64>(timestamp) - steady.time_point;
+
+    ReportSyncStage("set:sys setting UserSystemClockContext");
+    const auto user_ctx_rc = setsysSetUserSystemClockContext(&context);
+    if (R_FAILED(user_ctx_rc)) {
+        log_write_error("ntp: user clock write failed via time:su (0x%08X); time:s (0x%08X); set:sys user context (0x%08X)",
+            R_VALUE(system_user_rc), R_VALUE(system_rc), R_VALUE(user_ctx_rc));
+        ReportSyncFailure("set:sys setting UserSystemClockContext", user_ctx_rc);
+        R_THROW(user_ctx_rc);
+    }
+    ReportSyncStage("set:sys UserSystemClockContext updated");
+
+    ReportSyncStage("set:sys setting NetworkSystemClockContext");
+    const auto net_ctx_rc = setsysSetNetworkSystemClockContext(&context);
+    if (R_FAILED(net_ctx_rc)) {
+        ReportSyncFailure("set:sys setting NetworkSystemClockContext", net_ctx_rc);
+    } else {
+        ReportSyncStage("set:sys NetworkSystemClockContext updated");
+    }
+
+    ReportSyncStage("set:sys disabling automatic correction");
+    const auto auto_corr_rc = setsysSetUserSystemClockAutomaticCorrectionEnabled(false);
+    if (R_FAILED(auto_corr_rc)) {
+        ReportSyncFailure("set:sys disabling automatic correction", auto_corr_rc);
+    } else {
+        ReportSyncStage("set:sys automatic correction disabled");
+    }
+
+    out_used_fallback = true;
+    R_SUCCEED();
 }
 
 Result RunSync() {
@@ -307,25 +359,39 @@ Result RunSync() {
         R_THROW(current_time_rc);
     }
 
-    const auto offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
+    const s64 displayed_time = static_cast<s64>(current_time) + g_display_offset.load(std::memory_order_relaxed);
+    const auto offset = static_cast<s64>(network_time) - displayed_time;
     ReportSyncStage("clock offset " + std::to_string(offset) + " seconds");
     if (offset > -MIN_CORRECTION_SECONDS && offset < MIN_CORRECTION_SECONDS) {
         ReportSyncStage("clock already synchronized");
         R_SUCCEED();
     }
 
+    bool used_fallback = false;
     ReportSyncStage("writing corrected clock");
-    const auto set_time_rc = SetSystemTime(network_time);
+    const auto set_time_rc = SetSystemTime(network_time, used_fallback);
     if (R_FAILED(set_time_rc)) {
         ReportSyncFailure("synchronization", set_time_rc);
         R_THROW(set_time_rc);
     }
-    ReportSyncStage("clock updated; refreshing UI");
-    evman::push(evman::FunctionalEventData{[]() {
-        __libnx_init_time();
-        App::Notify("NTP: UI clock refreshed", ui::NotifEntry::Side::LEFT);
-        App::Notify("Clock synced"_i18n);
-    }}, false);
+
+    if (used_fallback) {
+        const s64 new_offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
+        g_display_offset.store(new_offset, std::memory_order_relaxed);
+        ReportSyncStage("set:sys clock persisted; process offset updated");
+        evman::push(evman::FunctionalEventData{[]() {
+            App::Notify("Clock synced"_i18n);
+        }}, false);
+    } else {
+        g_display_offset.store(0, std::memory_order_relaxed);
+        ReportSyncStage("clock updated; refreshing UI");
+        evman::push(evman::FunctionalEventData{[]() {
+            __libnx_init_time();
+            App::Notify("NTP: UI clock refreshed", ui::NotifEntry::Side::LEFT);
+            App::Notify("Clock synced"_i18n);
+        }}, false);
+    }
+
     R_SUCCEED();
 }
 
@@ -394,6 +460,10 @@ void Stop() {
     threadWaitForExit(&g_thread);
     threadClose(&g_thread);
     g_thread_running = false;
+}
+
+s64 GetDisplayOffset() {
+    return g_display_offset.load(std::memory_order_relaxed);
 }
 
 } // namespace sphaira::ntp

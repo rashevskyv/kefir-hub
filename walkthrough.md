@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.444** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.445** (2026-08-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.445 — NTP User Clock через set:sys
+
+- Додано fallback на IPC-сервіс `set:sys`, який виконується після відмови обох live-шляхів `time:su` та `time:s` (як-от з `0x00000274` / `time::ResultNoCapability`).
+- При fallback отримується `TimeSteadyClockTimePoint`, обчислюється `TimeSystemClockContext` (`offset = NTP - steady.time_point`), записуються `UserSystemClockContext` та `NetworkSystemClockContext`, а також вимикається automatic correction в `set:sys`.
+- Кожен етап `set:sys` та точні помилки `Result` відображаються через тимчасові diagnostic tooltip-и та дублюються у `log.txt`; запис до `errors.txt` виконується лише у разі відмови `set:sys`, що запобігає появі хибних записів про помилки при успішній синхронізації.
+- Додано процесний offset `g_display_offset` у `ntp`: при використанні fallback `set:sys` він оновлюється на різницю часу і додається до `std::time(NULL)` у `MenuBase::GetPolledData`, завдяки чому годинник Sphaira і скрінсейвер миттєво показують правильний NTP-час без виклику `__libnx_init_time()` та без зміни файлових/ігрових таймстемпів.
+- Після успішного set:sys fallback показується сповіщення `Clock synced`.
+- Збірку WSL `ReleaseWithInstall` та `git diff --check` пройдено успішно (`[100%] Built target sphaira_nro`), версію піднято до `0.13.445`. Апаратна перевірка на реальній Switch залишається відкритою (pending hardware verification: миттєве оновлення годинника Sphaira, NTP trace та збереження часу після перезапуску).
 
 ## v0.13.444 — видимий NTP diagnostic trace
 
@@ -154,6 +163,7 @@ walkthrough збережено в
 ## Стан перевірки
 
 - [x] Зміни зібрані та зафіксовані в Git.
+- [ ] На реальній Switch перевірити v0.13.445: миттєве оновлення годинника Sphaira, результати NTP trace та збереження часу після перезапуску консолі.
 - [ ] На реальній Switch перевірити USB 3.0 On → Off → Later і Off → On →
   Reboot, значення в `system_settings.ini` та фактичну швидкість після reboot.
 - [ ] На реальній Switch перевірити `Merged`/`Separate`, копіювання NSP через MTP,

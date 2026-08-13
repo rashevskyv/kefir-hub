@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "log.hpp"
+#include "ntp.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
@@ -57,7 +58,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.strength = {};
         data.ip = {};
 
-        const auto t = std::time(NULL);
+        const auto t = std::time(NULL) + ntp::GetDisplayOffset();
         localtime_r(&t, &data.tm);
         psmGetBatteryChargePercentage(&data.battery_percetange);
         psmGetChargerType(&data.charger_type);
