@@ -143,8 +143,82 @@ static int test_parse_title_id_name() {
     return 0;
 }
 
+static int test_is_safe_archive_entry() {
+    // Normal relative paths
+    CHECK(path::IsSafeArchiveEntry("switch/app/app.nro"));
+    CHECK(path::IsSafeArchiveEntry("atmosphere/contents/0100000000001000/flags/boot2.flag"));
+    CHECK(path::IsSafeArchiveEntry("readme.txt"));
+    CHECK(path::IsSafeArchiveEntry("a/b/c/d.bin"));
+
+    // Directory entries
+    CHECK(path::IsSafeArchiveEntry("switch/app/"));
+    CHECK(path::IsSafeArchiveEntry("atmosphere/"));
+    CHECK(path::IsSafeArchiveEntry("a/b/c/"));
+
+    // Empty names rejected
+    CHECK(!path::IsSafeArchiveEntry(""));
+
+    // Absolute / leading slash rejected
+    CHECK(!path::IsSafeArchiveEntry("/"));
+    CHECK(!path::IsSafeArchiveEntry("/switch/app/app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("/readme.txt"));
+
+    // Backslashes rejected
+    CHECK(!path::IsSafeArchiveEntry("switch\\app\\app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("\\"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app\\nested"));
+
+    // Control characters and DEL rejected
+    CHECK(!path::IsSafeArchiveEntry("switch/\x01/app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/\x1f/app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app\n.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app\r.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app\t.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/\x7f/app.nro"));
+
+    // Colon / device-like paths rejected
+    CHECK(!path::IsSafeArchiveEntry("sdmc:/switch/app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("c:/windows/system32"));
+    CHECK(!path::IsSafeArchiveEntry("http://evil.com"));
+    CHECK(!path::IsSafeArchiveEntry(":bad"));
+    CHECK(!path::IsSafeArchiveEntry("bad:"));
+    CHECK(!path::IsSafeArchiveEntry("a/b:c/d"));
+
+    // Dot / DotDot path traversal components rejected
+    CHECK(!path::IsSafeArchiveEntry("."));
+    CHECK(!path::IsSafeArchiveEntry(".."));
+    CHECK(!path::IsSafeArchiveEntry("./"));
+    CHECK(!path::IsSafeArchiveEntry("../"));
+    CHECK(!path::IsSafeArchiveEntry("./app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("../app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/./app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/../app.nro"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app/."));
+    CHECK(!path::IsSafeArchiveEntry("switch/app/.."));
+    CHECK(!path::IsSafeArchiveEntry("switch/app/./"));
+    CHECK(!path::IsSafeArchiveEntry("switch/app/../"));
+    CHECK(!path::IsSafeArchiveEntry("a/b/c/../../d"));
+
+    // Ordinary names with dots accepted
+    CHECK(path::IsSafeArchiveEntry(".config"));
+    CHECK(path::IsSafeArchiveEntry("..data"));
+    CHECK(path::IsSafeArchiveEntry("file.name"));
+    CHECK(path::IsSafeArchiveEntry(".../foo"));
+    CHECK(path::IsSafeArchiveEntry("switch/.config/app.nro"));
+    CHECK(path::IsSafeArchiveEntry("switch/..data/app.nro"));
+    CHECK(path::IsSafeArchiveEntry(".gitignore"));
+    CHECK(path::IsSafeArchiveEntry("a...b"));
+
+    // Non-structural characters handled by SanitizeZipEntryName accepted here
+    CHECK(path::IsSafeArchiveEntry("Super*Mario"));
+    CHECK(path::IsSafeArchiveEntry("games/Zelda? (v1.0)"));
+    CHECK(path::IsSafeArchiveEntry("title<1>|test\"name"));
+
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name()) {
+    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

@@ -1,10 +1,21 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.446**. Завершені плани збережено в
+Поточний delivery — **v0.13.447**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.446 — NTP через системну automatic correction
+## 0. v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
+
+Статус: реалізацію, валідатор і тести завершено; пройдено `tests/run.sh` (106 checks у `path_util`), WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), `git diff --check`, враховано senior review (захист `number_entry` overflow та оновлення коментаря санітизації), піднято версію до `0.13.447` і створено сфокусований коміт.
+
+1. Досліджено всі 11 викликів `thread::TransferUnzipAll()` та виправлено root cause у спільній функції, захистивши всі операції розпакування (Appstore, direct-link/GitHub downloads, cheats, firmware, File Browser, save restore, translations).
+2. Додано inline helper `path::IsSafeArchiveEntry(std::string_view)` у `sphaira/include/path_util.hpp`, який валідує відносні шляхи й каталоги, відхиляє порожні імена, початковий `/`, backslash `\`, керуючі символи (< 0x20, DEL 0x7F), `:` (захист від device/scheme) та `.`/`..` компоненти шляху, зберігаючи валідні файли з крапками (`.config`, `..data`, `file.name`).
+3. У першому проході `thread::TransferUnzipAll()` додано перевірку `info.size_filename` на відповідність буферу та `strlen`, валідацію `path::IsSafeArchiveEntry()`, перевірку сумарної довжини шляху призначення з `base_path` на ліміт `sizeof(fs::FsPath)`, а також захист від переповнення `s64` для сумарного `uncompressed_size` та `ginfo.number_entry`.
+4. Збережено чинну HOS character sanitization для безпечних неструктурних символів (`*`, `?`, `"`, `<`, `>`, `|`), чинні filter callbacks і progress semantics; не додавалося SD-специфічних перевірок вільного місця у спільний helper.
+5. Розширено host-тести `tests/test_path_util.cpp`, пройдено `tests/run.sh`, WSL `ReleaseWithInstall` та `git diff --check`.
+6. Піднято `sphaira_VERSION` з `0.13.446` до `0.13.447`, оновлено `task.md`, `plan.md`, `walkthrough.md`, `upstream_audit.md` і створено один сфокусований коміт.
+
+## 0.1. v0.13.446 — NTP через системну automatic correction
 
 Статус: реалізацію та програмні перевірки завершено (WSL `ReleaseWithInstall` та `git diff --check` успішно пройдено 2026-08-13, версію піднято до v0.13.446). Апаратна перевірка на реальній Switch залишається відкритою.
 

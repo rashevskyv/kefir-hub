@@ -3,11 +3,13 @@
 #include "defines.hpp"
 #include "app.hpp"
 #include "minizip_helper.hpp"
+#include "path_util.hpp"
 
 #include <vector>
 #include <algorithm>
 #include <cstring>
 #include <atomic>
+#include <limits>
 #include <minizip/unzip.h>
 #include <minizip/zip.h>
 
@@ -636,11 +638,17 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
         R_THROW(Result_UnzGetGlobalInfo64);
     }
 
+    if (ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+        R_THROW(FsError_InvalidSize);
+    }
     const auto entry_count = static_cast<s64>(ginfo.number_entry);
 
     if (UNZ_OK != unzGoToFirstFile(zfile)) {
         R_THROW(Result_UnzGoToFirstFile);
     }
+
+    const auto base_len = base_path.length();
+    const bool base_needs_slash = (base_len > 0 && base_path[base_len - 1] != '/');
 
     s64 total_size = 0;
     for (s64 i = 0; i < entry_count; i++) {
@@ -652,9 +660,42 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
         }
 
         unz_file_info64 info;
-        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, nullptr, 0, 0, 0, 0, 0)) {
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
             log_write("failed to get current info while sizing archive\n");
             R_THROW(Result_UnzGetCurrentFileInfo64);
+        }
+
+        if (info.size_filename == 0) {
+            log_write("archive entry has empty name\n");
+            R_THROW(FsError_InvalidCharacter);
+        }
+
+        if (info.size_filename >= sizeof(name_buf)) {
+            log_write("archive entry name too long (%lu bytes)\n", static_cast<unsigned long>(info.size_filename));
+            R_THROW(FsError_TooLongPath);
+        }
+
+        if (std::strlen(name_buf) != info.size_filename) {
+            log_write("archive entry name length mismatch (%zu != %lu)\n", std::strlen(name_buf), static_cast<unsigned long>(info.size_filename));
+            R_THROW(FsError_TooLongPath);
+        }
+
+        if (!path::IsSafeArchiveEntry(std::string_view{name_buf, info.size_filename})) {
+            log_write("unsafe archive entry path: %s\n", name_buf);
+            R_THROW(FsError_InvalidCharacter);
+        }
+
+        const auto full_path_len = base_len + (base_needs_slash ? 1 : 0) + info.size_filename;
+        if (full_path_len + 1 > sizeof(fs::FsPath)) {
+            log_write("archive entry output path exceeds buffer (%zu bytes)\n", full_path_len + 1);
+            R_THROW(FsError_TooLongPath);
+        }
+
+        if (info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max()) ||
+            static_cast<u64>(std::numeric_limits<s64>::max()) - static_cast<u64>(total_size) < info.uncompressed_size) {
+            log_write("archive uncompressed size exceeds s64 maximum\n");
+            R_THROW(FsError_InvalidSize);
         }
 
         total_size += static_cast<s64>(info.uncompressed_size);
@@ -694,7 +735,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
 
-        // replace characters HOS rejects (e.g. ':' in a game-title folder) so a
+        // replace characters HOS rejects (e.g. '*', '?', '"', '<', '>', '|') so a
         // single bad entry doesn't abort the whole pack with FsError_InvalidCharacter.
         name = SanitizeZipEntryName(name);
 

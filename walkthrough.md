@@ -1,9 +1,32 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.446** (2026-08-13). Попередні
+Актуальний delivery — **v0.13.447** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
+
+- **Спільна валідація на першому проході архіву:** у `thread::TransferUnzipAll()` (`sphaira/source/threaded_file_transfer.cpp`) додано повну валідацію структури імен, буферних лімітів та розмірів на етапі sizing pass до створення будь-якого каталогу чи файла на диску.
+- **Inline path validator:** у `sphaira/include/path_util.hpp` додано helper `path::IsSafeArchiveEntry(std::string_view)`:
+  - дозволяє нормальні відносні шляхи (`switch/app/app.nro`) та записи каталогів (`switch/app/`);
+  - відхиляє порожні імена (`""`), початковий слеш (`/`), зворотні слеші (`\`), керуючі символи (< 0x20 та DEL 0x7F) і двокрапки (`:`, блокуючи схеми й пристрої на зразок `sdmc:/`);
+  - відхиляє компоненти шляху, що точно дорівнюють `.` або `..` на початку, всередині чи наприкінці шляху (запобігаючи directory traversal), зберігаючи валідні файли з крапками (`.config`, `..data`, `file.name`, `.gitignore`).
+- **Перевірка довжини та обрізання імен:**
+  - перед створенням `fs::FsPath` перевіряється, що `info.size_filename` вміщується в буфер і точно збігається з `std::strlen(name_buf)`; у разі обрізання або невідповідності повертається `FsError_TooLongPath`;
+  - перед `fs::AppendPath()` перевіряється сумарна довжина вихідного шляху (`base_path` + розділювач при потребі + `info.size_filename` + NUL) щодо ліміту `sizeof(fs::FsPath)` (0x301 байт) із поверненням `FsError_TooLongPath`.
+- **Захист від цілочисельного переповнення:**
+  - `ginfo.number_entry` перевіряється перед приведенням до `s64` (значення більше за `std::numeric_limits<s64>::max()` відхиляються з `FsError_InvalidSize`);
+  - накопичення `total_size` для `uncompressed_size` контролюється на переповнення `s64` (при перевищенні повертається `FsError_InvalidSize`).
+- **Збереження санітизації та поведінки:**
+  - збережено чинну роботу `SanitizeZipEntryName()` для безпечних неструктурних символів, що не підтримуються HOS (`*`, `?`, `"`, `<`, `>`, `|`);
+  - збережено семантику фільтрів `UnzipAllFilter`, облік прогресу `pbox` і відмову від SD-специфічного free-space check (оскільки helper працює також із save data та іншими ФС).
+- **Охоплені виклики:** захист автоматично діє для всіх 11 call sites `TransferUnzipAll` (Appstore, direct-link / GitHub downloads, cheats, firmware, File Browser extraction, save restore, translations).
+- **Верифікація:**
+  - розширено host unit-тести `tests/test_path_util.cpp` (106 checks passed);
+  - успішно пройдено `tests/run.sh` (всі тести зелені, dead-symbol guard 730/730);
+  - збірку WSL `ReleaseWithInstall` виконано успішно (`[100%] Built target sphaira_nro`);
+  - перевірено `git diff --check`, піднято версію до `0.13.447`.
 
 ## v0.13.446 — NTP через системну automatic correction
 

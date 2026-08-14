@@ -1,10 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.446**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.447**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
+
+## Поточний delivery: v0.13.447 (upstream-equivalence hardening)
+
+- [x] `UPSTREAM-AUDIT-DOC-447` — зберегти живий аудит змін після upstream `1.0.2` у [`upstream_audit.md`](upstream_audit.md).
+- [x] `ZIP-PATH-SAFETY-447` — у спільному `thread::TransferUnzipAll()` до створення будь-якого output path відхиляти абсолютні, traversal, керуючі, обрізані та наддовгі archive entry names; не допустити overflow сумарного uncompressed size та entry count.
+- [x] `ZIP-PATH-CHECK-447` — додати host unit-тести для `path::IsSafeArchiveEntry()`, успішно пройти `tests/run.sh`, WSL `ReleaseWithInstall` та `git diff --check`.
+- [x] `VERSION-DOC-COMMIT-447` — підняти версію до `0.13.447`, оновити living docs і створити сфокусований коміт після senior review.
+
+Наступний незалежний крок після цього delivery: default icon для iconless NRO forwarder.
 
 ## Поточний delivery: v0.13.446 (NTP через системну automatic correction)
 
