@@ -3,6 +3,9 @@
 Це живий документ для постійного посилання під час перенесення корисних змін з
 upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 
+> Політика локалізації: upstream-зміни перекладів не переносимо. Локалі ведуться
+> окремим локальним i18n pipeline; функціональні задачі не змінюють i18n-файли.
+
 - Базовий upstream-коміт: `eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba` (`1.0.2`).
 - Перевірений upstream HEAD: `ff87305cc01f35f2afe692898cc9c3e7dd05ad85` (`1.0.5`, 2026-08-14).
 - Локальний стан під час первинного аудиту: `5b4c34deede4a85182c7ee2698ff59b851974d93` (`0.13.446`).
@@ -109,7 +112,12 @@ Upstream додає UI add/remove, нормалізацію URL, deduplication �
 Локально `SignalChange()` викликається після GitHub/Appstore/Web/MTP/background
 install. Raw FTP upload/delete у `/switch/*.nro` не має completion callback, тому
 відкритий Homebrew список може лишитися застарілим. Upstream callback корисний, але
-його треба адаптувати до нашого patched `ftpsrv`, а не cherry-pick. Середній пріоритет.
+наша вимога ширша: це має бути **один спільний completion path** для кожного
+зовнішнього джерела. Після успішного create/delete/rename/move `.nro` у
+спостережуваному Homebrew-каталозі він має сигналізувати про зміну каталогу незалежно
+від того, чи операція прийшла з FTP, Web, MTP, SMB/NFS/WebDAV або іншого source.
+Не переносити FTP-специфічний callback; знайти централізовану точку мутації та
+додавати сигнал лише після успішного завершення операції. Високий пріоритет.
 
 ### Required system version (`9e4c46a`)
 
@@ -161,9 +169,8 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 - `fac197d`: version bump `1.0.4`.
 - `c19e5a3`: merge, функціонально дублює play-stats patch.
 - Частина `05279db`: потрібна лише для відсутнього локально affinity relaunch.
-- `f4efedf`: корекція трьох іспанських Homebrew-рядків. У локальному `es.json` цих
-  ключів немає, тому переносити нічого; якщо ключі буде додано, використовувати
-  `homebrew`, а не буквальне `cerveza casera`.
+- `f4efedf`: корекція трьох іспанських Homebrew-рядків. Не переносити згідно з
+  політикою окремого локального i18n pipeline.
 - `ff87305`: лише upstream version bump до `1.0.5`.
 
 ## Оновлення upstream `1.0.5` (2026-08-14)
@@ -193,7 +200,8 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 ### Після цього
 
-5. FTP completion callback для оновлення Homebrew list.
+5. Спільний Homebrew catalog mutation callback для всіх зовнішніх джерел; FTP
+   (`af4c64c`) — лише один із callers.
 6. Англійський fallback для export filename.
 7. [x] Custom NRO search paths — завершено у `0.13.451`.
 8. Update/DLC checker.
