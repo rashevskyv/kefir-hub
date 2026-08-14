@@ -4,23 +4,23 @@
 upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 
 - Базовий upstream-коміт: `eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba` (`1.0.2`).
-- Перевірений upstream HEAD: `c19e5a3ac893b3aafe3f229cc2bffe70493ae111` (2026-08-14).
+- Перевірений upstream HEAD: `ff87305cc01f35f2afe692898cc9c3e7dd05ad85` (`1.0.5`, 2026-08-14).
 - Локальний стан під час первинного аудиту: `5b4c34deede4a85182c7ee2698ff59b851974d93` (`0.13.446`).
-- Upstream-діапазон: 25 комітів, 81 змінений файл, приблизно `+4172/-455`.
+- Upstream-діапазон: 29 комітів після базового `1.0.2`.
 - Прямих patch-equivalent комітів у нашій історії немає: наявні збіги реалізовано незалежно.
 
 Посилання: [baseline](https://github.com/NaGaa95/sphaira/commit/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba),
-[upstream HEAD](https://github.com/NaGaa95/sphaira/commit/c19e5a3ac893b3aafe3f229cc2bffe70493ae111),
-[повне порівняння](https://github.com/NaGaa95/sphaira/compare/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba...c19e5a3ac893b3aafe3f229cc2bffe70493ae111).
+[upstream HEAD](https://github.com/NaGaa95/sphaira/commit/ff87305cc01f35f2afe692898cc9c3e7dd05ad85),
+[повне порівняння](https://github.com/NaGaa95/sphaira/compare/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba...ff87305cc01f35f2afe692898cc9c3e7dd05ad85).
 
 ## Підсумок
 
-| Стан | Кількість | Значення |
-|---|---:|---|
-| Є у власній реалізації | 4 | Функціонал уже покрито; пряме перенесення не потрібне |
-| Частковий перетин | 11 | База є, але upstream має окремі корисні деталі або іншу UX-модель |
-| Відсутнє | 4 | Це справді нові для нас функції |
-| Не застосовується / службове | 6 | Версії, typo/docs, merge або код для відсутньої підсистеми |
+| Стан | Актуальний зміст |
+|---|---|
+| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths |
+| Частковий перетин | Наявна локальна база є, але upstream має окрему поведінку або іншу UX-модель |
+| Залишилося запланувати | loader thread affinity, PFS0/NSP hardening, FTP refresh, English export fallback, Update/DLC checker |
+| Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX |
 
 ## Уже є у власній реалізації
 
@@ -88,13 +88,14 @@ SD-специфічну перевірку вільного місця пере�
 спільній функції, оскільки `TransferUnzipAll` працює не лише з SD, а й зі сховищами
 сейвів та іншими не-SD файловими системами.
 
-### Iconless NRO (`2e27148`) — UI покрито, forwarder ні
+### Iconless/oversized NRO icon (`2e27148`, `5b0779d`) — завершено у `v0.13.450`
 
-Homebrew UI уже показує `App::GetDefaultImage()` замість порожнього texture handle.
-Але `App::Install()` нормалізує лише непорожню `config.icon`, а forwarder editor
-вважає порожню іконку помилкою. Upstream правильно підставляє
-`App::GetDefaultImageData()` перед нормалізацією. Це мале і корисне перенесення;
-виконати після ZIP hardening.
+`v0.13.450` централізував безпечну нормалізацію NRO-іконок: обмежив decoded
+dimensions/pixels, перевірив множення розмірів і буфери resize/JPEG conversion,
+приймає до `1024×1024` і downscale-ить до `256×256`. Homebrew, forwarder і
+SteamGridDB використовують ту саму policy; порожня або невалідна іконка тепер
+fallback-иться до default image. Це одночасно закриває upstream `2e27148` і
+`5b0779d`.
 
 ### Custom repositories (`2d8b9ba`)
 
@@ -139,12 +140,15 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 ## Нові функції, яких локально немає
 
 1. [x] Custom NRO search paths (`5b02f65`) — завершено у `v0.13.451` з повною адаптацією під локальний File Browser (`IsParentEntry`), збереженням `/switch` як незмінного першого кореня, глибиною сканування 2, дедуплікацією `NroEntry`, захистом від розіменування порожнього списку, 13 мовними файлами (без `ru.json` до окремого i18n pipeline) та таргет `sphaira_romfs_sync`.
-2. Повний oversized NRO icon hardening (`5b0779d`) — compressed blob обмежено 1 MiB,
-   але decoded dimensions/pixel multiplication не мають upstream-лімітів і downscale.
+2. [x] Повний oversized NRO icon hardening/default fallback (`2e27148`, `5b0779d`) —
+   завершено у `v0.13.450`.
 3. Update/DLC checker (`bc90664`) — немає каталогу `nx-versions` і порівняння
    встановлених base/update/DLC версій.
 4. MSP mod packages (`400c514`) — немає `.msp`, manifest/staging/rollback та
    Atmosphère payload install.
+5. Loader thread affinity before NRO launch (`87c855a`) — локальний `hbl/source/main.c`
+   не відновлює main-thread core mask перед trampoline. Це малий незалежний bug fix;
+   переносити з урахуванням нашого дозволеного `highest_cpu_id = 3`.
 
 Окремо від MSP корисне parser hardening з `400c514`: поточний PFS0/NSP parser треба
 перевірити на exact reads, container bounds, overflow, string table і name offsets.
@@ -153,18 +157,38 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 - `dadce0f`: лише typo.
 - `81f8b4b`: лише README/Discord.
-- [x] `e00ac7c`: NFS URL parsing відновлено у `v0.13.449` через `nfs_parse_url_dir()` з regression coverage для nested export path.
+- [x] `e00ac7c`: NFS URL parsing відновлено у `v0.13.449` через `nfs_parse_url_dir()` з regression coverage для nested export path; NFS додано як read-only source.
 - `fac197d`: version bump `1.0.4`.
 - `c19e5a3`: merge, функціонально дублює play-stats patch.
 - Частина `05279db`: потрібна лише для відсутнього локально affinity relaunch.
+- `f4efedf`: корекція трьох іспанських Homebrew-рядків. У локальному `es.json` цих
+  ключів немає, тому переносити нічого; якщо ключі буде додано, використовувати
+  `homebrew`, а не буквальне `cerveza casera`.
+- `ff87305`: лише upstream version bump до `1.0.5`.
+
+## Оновлення upstream `1.0.5` (2026-08-14)
+
+Після попередньо перевіреного `c19e5a3` upstream додав чотири commits:
+
+1. `a55b54e` — ручне `Screen Off` у `ProgressBox` для file install, USB install,
+   stream install, GameCard install і dump. Локально вже є багаторежимний
+   `Screensaver`/backlight-off, ручне керування кнопкою Minus та inactivity timeout,
+   але вони прив'язані до install queue. Це **частковий перетин**: не переносити
+   upstream global LBL lifecycle поруч із наявним `Screensaver`; за окремою потребою
+   розширити існуючий механізм на ці long-running `ProgressBox` flows.
+2. `f4efedf` — іспанські рядки; див. вище, **не застосовується**.
+3. `87c855a` — відновлює main-thread process core mask безпосередньо перед NRO
+   trampoline. Локально цього немає, хоча `hbl.json` дозволяє ядра `0..3`; це
+   **відсутній малий bug fix** і найкращий наступний технічний пункт.
+4. `ff87305` — лише version bump, **не застосовується**.
 
 ## Черга перенесення
 
 ### Негайно, малими незалежними кроками
 
 1. [x] Спільний ZIP path/size hardening у `thread::TransferUnzipAll()` — завершено у `0.13.447`.
-2. Default icon для iconless NRO під час створення forwarder.
-3. Decoded-size hardening для NRO icons.
+2. [x] Default icon для iconless NRO та decoded-size hardening — завершено у `0.13.450`.
+3. Loader thread affinity before NRO launch (`87c855a`).
 4. PFS0/NSP parser bounds/exact-read hardening.
 
 ### Після цього
@@ -173,6 +197,8 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 6. Англійський fallback для export filename.
 7. [x] Custom NRO search paths — завершено у `0.13.451`.
 8. Update/DLC checker.
+9. Розширення наявного screensaver/backlight-off на інші довгі `ProgressBox` flows
+   (за потребою; не прямий перенос `a55b54e`).
 
 ### Лише за окремою потребою
 
