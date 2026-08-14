@@ -1728,5 +1728,12 @@
   "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Налаштування USB 3.0 збережено.\n\nЗміни не набудуть чинності до перезавантаження консолі.\n\nПерезавантажити зараз?",
   "Skip package": "Пропустити пакет",
   "Skip this package?": "Пропустити цей пакет?",
-  "Cancel installation queue?": "Скасувати чергу встановлення?"
+  "Cancel installation queue?": "Скасувати чергу встановлення?",
+  "Add to Homebrew Search Paths": "Додати до шляхів пошуку Homebrew",
+  "Delete Homebrew Search Paths": "Видалити шляхи пошуку Homebrew",
+  "Remove Homebrew Search Path?": "Видалити шлях пошуку Homebrew?",
+  "Homebrew search path added.": "Шлях пошуку Homebrew додано.",
+  "Homebrew search path removed.": "Шлях пошуку Homebrew видалено.",
+  "Failed to add Homebrew search path": "Не вдалося додати шлях пошуку Homebrew",
+  "Failed to remove Homebrew search path": "Не вдалося видалити шлях пошуку Homebrew"
 }

@@ -138,7 +138,7 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 ## Нові функції, яких локально немає
 
-1. Custom NRO search paths (`5b02f65`) — локально сканується лише `/switch`.
+1. [x] Custom NRO search paths (`5b02f65`) — завершено у `v0.13.451` з повною адаптацією під локальний File Browser (`IsParentEntry`), збереженням `/switch` як незмінного першого кореня, глибиною сканування 2, дедуплікацією `NroEntry`, захистом від розіменування порожнього списку, 13 мовними файлами (без `ru.json` до окремого i18n pipeline) та таргет `sphaira_romfs_sync`.
 2. Повний oversized NRO icon hardening (`5b0779d`) — compressed blob обмежено 1 MiB,
    але decoded dimensions/pixel multiplication не мають upstream-лімітів і downscale.
 3. Update/DLC checker (`bc90664`) — немає каталогу `nx-versions` і порівняння
@@ -171,7 +171,7 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 5. FTP completion callback для оновлення Homebrew list.
 6. Англійський fallback для export filename.
-7. Custom NRO search paths.
+7. [x] Custom NRO search paths — завершено у `0.13.451`.
 8. Update/DLC checker.
 
 ### Лише за окремою потребою

@@ -1649,5 +1649,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "ゲームを表示（読み取り専用）",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "インストール済みのゲーム、更新データ、DLCをNSPファイルとして読み取り専用ドライブで表示します。PCにコピーするとダンプされます。microSDカードへは何も書き込まれません。"
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "インストール済みのゲーム、更新データ、DLCをNSPファイルとして読み取り専用ドライブで表示します。PCにコピーするとダンプされます。microSDカードへは何も書き込まれません。",
+  "Add to Homebrew Search Paths": "Homebrewの検索パスに追加",
+  "Delete Homebrew Search Paths": "Homebrewの検索パスを削除",
+  "Remove Homebrew Search Path?": "Homebrewの検索パスを削除しますか？",
+  "Homebrew search path added.": "Homebrewの検索パスを追加しました。",
+  "Homebrew search path removed.": "Homebrewの検索パスを削除しました。",
+  "Failed to add Homebrew search path": "Homebrewの検索パスの追加に失敗しました",
+  "Failed to remove Homebrew search path": "Homebrewの検索パスの削除に失敗しました"
 }

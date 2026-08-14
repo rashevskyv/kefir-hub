@@ -1649,5 +1649,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "Mostrar juegos (solo lectura)",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Muestra una unidad de solo lectura con los juegos, actualizaciones y DLC instalados como archivos NSP. Copiar uno al PC lo dumpea; no se escribe nada en la tarjeta microSD."
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Muestra una unidad de solo lectura con los juegos, actualizaciones y DLC instalados como archivos NSP. Copiar uno al PC lo dumpea; no se escribe nada en la tarjeta microSD.",
+  "Add to Homebrew Search Paths": "Añadir a rutas de búsqueda de Homebrew",
+  "Delete Homebrew Search Paths": "Eliminar rutas de búsqueda de Homebrew",
+  "Remove Homebrew Search Path?": "¿Eliminar ruta de búsqueda de Homebrew?",
+  "Homebrew search path added.": "Ruta de búsqueda de Homebrew añadida.",
+  "Homebrew search path removed.": "Ruta de búsqueda de Homebrew eliminada.",
+  "Failed to add Homebrew search path": "Error al añadir la ruta de búsqueda de Homebrew",
+  "Failed to remove Homebrew search path": "Error al eliminar la ruta de búsqueda de Homebrew"
 }

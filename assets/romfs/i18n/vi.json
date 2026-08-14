@@ -1649,5 +1649,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "Hiển thị trò chơi (chỉ đọc)",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Hiển thị ổ đĩa chỉ đọc chứa các trò chơi, bản cập nhật và DLC đã cài đặt dưới dạng tệp NSP. Sao chép vào PC sẽ dump tệp; không có gì được ghi vào thẻ microSD."
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Hiển thị ổ đĩa chỉ đọc chứa các trò chơi, bản cập nhật và DLC đã cài đặt dưới dạng tệp NSP. Sao chép vào PC sẽ dump tệp; không có gì được ghi vào thẻ microSD.",
+  "Add to Homebrew Search Paths": "Thêm vào đường dẫn tìm kiếm Homebrew",
+  "Delete Homebrew Search Paths": "Xóa đường dẫn tìm kiếm Homebrew",
+  "Remove Homebrew Search Path?": "Xóa đường dẫn tìm kiếm Homebrew?",
+  "Homebrew search path added.": "Đã thêm đường dẫn tìm kiếm Homebrew.",
+  "Homebrew search path removed.": "Đã xóa đường dẫn tìm kiếm Homebrew.",
+  "Failed to add Homebrew search path": "Không thể thêm đường dẫn tìm kiếm Homebrew",
+  "Failed to remove Homebrew search path": "Không thể xóa đường dẫn tìm kiếm Homebrew"
 }

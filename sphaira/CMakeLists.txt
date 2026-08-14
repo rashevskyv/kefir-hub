@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.450)
+set(sphaira_VERSION 0.13.451)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -513,6 +513,19 @@ file(COPY ${CMAKE_SOURCE_DIR}/assets/romfs DESTINATION ${CMAKE_CURRENT_BINARY_DI
 
 # create assets target
 dkp_add_asset_target(sphaira_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
+
+file(GLOB_RECURSE sphaira_romfs_source_files CONFIGURE_DEPENDS
+    LIST_DIRECTORIES false
+    ${CMAKE_SOURCE_DIR}/assets/romfs/*
+)
+add_custom_target(sphaira_romfs_sync
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets/romfs
+        ${CMAKE_CURRENT_BINARY_DIR}/romfs
+    DEPENDS ${sphaira_romfs_source_files}
+)
+add_dependencies(sphaira_romfs sphaira_romfs_sync)
+set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES ${sphaira_romfs_source_files})
 
 # embed the fan sysmodule so the fan curve menu can install it on demand
 set(sphaira_fan_romfs_dir ${CMAKE_CURRENT_BINARY_DIR}/romfs/sysmodule)

@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "fs.hpp"
+#include "path_util.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/install_share.hpp"
 #include "ui/sidebar.hpp"
@@ -17,6 +18,7 @@
 
 #include <minIni.h>
 #include <cstdio>
+#include <optional>
 #include <utility>
 #include <algorithm>
 #include <functional>
@@ -24,10 +26,80 @@
 namespace sphaira::ui::menu::homebrew {
 namespace {
 
+constexpr const char* SEARCH_PATHS_INI_SECTION = "homebrew_paths";
+constexpr const char* DEFAULT_SEARCH_PATH = "/switch";
+
 Menu* g_menu{};
 constinit UEvent g_change_uevent;
 constexpr const char* KEFIR_UPDATER_STUB_PATH = "/switch/kefir-updater/kefir-updater.nro";
 option::OptionBool g_kefir_updater_notice_ack{"homebrew", "kefir_updater_notice_ack", false};
+
+auto NormalizeSearchPath(std::string_view path) -> std::optional<std::string> {
+    const auto normalized = path::NormalizeAbsoluteSdPath(path);
+    if (!normalized) {
+        return std::nullopt;
+    }
+    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_SEARCH_PATH)) {
+        return std::nullopt;
+    }
+    if (normalized->size() >= FS_MAX_PATH) {
+        return std::nullopt;
+    }
+    return normalized;
+}
+
+auto LoadSearchPaths() -> std::vector<std::string> {
+    std::vector<std::string> search_paths;
+
+    ini_browse([](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
+        if (Section && Value && path::EqualsIC(Section, SEARCH_PATHS_INI_SECTION)) {
+            auto* paths = static_cast<std::vector<std::string>*>(UserData);
+            const auto normalized = NormalizeSearchPath(Value);
+            if (normalized) {
+                const bool duplicate = std::any_of(paths->begin(), paths->end(), [&](const std::string& existing) {
+                    return path::EqualsIC(existing, *normalized);
+                });
+                if (!duplicate) {
+                    paths->push_back(*normalized);
+                }
+            }
+        }
+        return 1;
+    }, &search_paths, App::CONFIG_PATH);
+
+    return search_paths;
+}
+
+auto SaveSearchPaths(const std::vector<std::string>& search_paths) -> bool {
+    if (!ini_puts(SEARCH_PATHS_INI_SECTION, nullptr, nullptr, App::CONFIG_PATH)) {
+        return false;
+    }
+
+    char key[32];
+    for (size_t i = 0; i < search_paths.size(); i++) {
+        std::snprintf(key, sizeof(key), "path_%zu", i);
+        if (!ini_puts(SEARCH_PATHS_INI_SECTION, key, search_paths[i].c_str(), App::CONFIG_PATH)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void AppendUniqueEntries(std::vector<NroEntry>& dest, std::vector<NroEntry>& src) {
+    for (auto& entry : src) {
+        bool duplicate = false;
+        for (const auto& existing : dest) {
+            if (path::EqualsIC(existing.path.s, entry.path.s)) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate) {
+            dest.push_back(std::move(entry));
+        }
+    }
+}
 
 auto GetNroFilename(const NroEntry& e) -> std::string {
     std::string filename = e.path.s;
@@ -323,8 +395,80 @@ void Menu::OnFocusGained() {
     }
 }
 
+auto IsSearchPath(const fs::FsPath& path) -> bool {
+    const auto normalized = NormalizeSearchPath(path.s);
+    if (!normalized) {
+        return false;
+    }
+
+    const auto paths = LoadSearchPaths();
+    return std::any_of(paths.begin(), paths.end(), [&](const std::string& existing) {
+        return path::EqualsIC(existing, *normalized);
+    });
+}
+
+auto AddSearchPath(const fs::FsPath& path) -> bool {
+    const auto normalized = NormalizeSearchPath(path.s);
+    if (!normalized) {
+        return false;
+    }
+
+    const fs::FsPath norm_path{*normalized};
+    if (!fs::DirExists(norm_path)) {
+        return false;
+    }
+
+    auto paths = LoadSearchPaths();
+    const bool duplicate = std::any_of(paths.begin(), paths.end(), [&](const std::string& existing) {
+        return path::EqualsIC(existing, *normalized);
+    });
+    if (duplicate) {
+        return false;
+    }
+
+    paths.push_back(*normalized);
+    if (!SaveSearchPaths(paths)) {
+        return false;
+    }
+
+    SignalChange();
+    return true;
+}
+
+auto RemoveSearchPath(const fs::FsPath& path) -> bool {
+    const auto normalized = NormalizeSearchPath(path.s);
+    if (!normalized) {
+        return false;
+    }
+
+    auto paths = LoadSearchPaths();
+    const auto it = std::find_if(paths.begin(), paths.end(), [&](const std::string& existing) {
+        return path::EqualsIC(existing, *normalized);
+    });
+    if (it == paths.end()) {
+        return false;
+    }
+
+    paths.erase(it);
+    if (!SaveSearchPaths(paths)) {
+        return false;
+    }
+
+    SignalChange();
+    return true;
+}
+
 void Menu::SetIndex(s64 index) {
-    m_index = index;
+    if (m_entries_current.empty()) {
+        m_index = 0;
+        m_list->SetYoff(0);
+        RemoveAction(Button::R3);
+        SetTitleSubHeading("");
+        this->SetSubHeading("0 / 0");
+        return;
+    }
+
+    m_index = std::clamp<s64>(index, 0, m_entries_current.size() - 1);
     if (!m_index) {
         m_list->SetYoff(0);
     }
@@ -412,7 +556,20 @@ void Menu::CustomizeHomebrew() {
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
-    nro_scan("/switch", m_entries);
+    nro_scan(DEFAULT_SEARCH_PATH, m_entries);
+
+    const auto search_paths = LoadSearchPaths();
+    for (const auto& path_str : search_paths) {
+        const fs::FsPath path{path_str};
+        if (!fs::DirExists(path)) {
+            continue;
+        }
+
+        std::vector<NroEntry> custom_entries;
+        if (R_SUCCEEDED(nro_scan_depth(path, custom_entries, 2))) {
+            AppendUniqueEntries(m_entries, custom_entries);
+        }
+    }
 
     if (!g_kefir_updater_notice_ack.Get() && std::ranges::none_of(m_entries, [](const auto& entry) {
         return IsKefirUpdaterEntry(entry);
@@ -582,17 +739,10 @@ void Menu::Sort() {
 }
 
 void Menu::SortAndFindLastFile(bool scan) {
-    if (m_entries_current.empty()) {
-        if (scan) {
-            ScanHomebrew();
-        } else {
-            Sort();
-            SetIndex(0);
-        }
-        return;
+    fs::FsPath path;
+    if (!m_entries_current.empty()) {
+        path = GetEntry().path;
     }
-
-    const auto path = GetEntry().path;
 
     if (scan) {
         ScanHomebrew();
@@ -600,6 +750,10 @@ void Menu::SortAndFindLastFile(bool scan) {
         Sort();
     }
     SetIndex(0);
+
+    if (path.empty()) {
+        return;
+    }
 
     s64 index = -1;
     for (u64 i = 0; i < m_entries_current.size(); i++) {

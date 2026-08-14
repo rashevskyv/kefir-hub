@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.449** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.451** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.451 — користувацькі шляхи пошуку NRO (custom NRO search paths)
+
+- **Нормалізація та збереження:** `path::NormalizeAbsoluteSdPath` приймає лише безпечні absolute SD paths; `[homebrew_paths]` читається через `ini_browse`, а `/switch` лишається незмінним default root і не зберігається в конфігурації. Перед створенням `fs::FsPath` відхиляються path length `>= FS_MAX_PATH`, traversal, control bytes, `\\`, `:`, root і `/switch`.
+- **Сканування:** `nro_scan_depth(path, entries, 2)` обходить custom root, його дітей та grandchildren, пропускає hidden entries і розпізнає `.nro` без залежності від регістру. NRO results дедуплікуються за canonical path, а порожній Homebrew list безпечний.
+- **UI:** File Browser показує add/remove тільки для дозволеного SD-каталогу; видалення має `OptionBox` confirmation, а успішна зміна зберігає конфіг і надсилає `SignalChange()`.
+- **Ресурси й перевірка:** `sphaira_romfs_sync` синхронізує змінені ROMFS assets; додано переклади до всіх locale-файлів, крім `ru.json`, який свідомо відкладено до окремого i18n pipeline. Пройдено host tests (`path_util`: 154 checks), JSON validation, WSL `ReleaseWithInstall` і `git diff --check`.
 
 ## v0.13.449 — NFS phase 1 (read-only source)
 

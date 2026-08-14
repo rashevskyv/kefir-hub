@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "nacp_util.hpp"
+#include "path_util.hpp"
 
 #include <switch.h>
 #include <vector>
@@ -140,6 +141,46 @@ auto nro_scan_internal(const fs::FsPath& path, std::vector<NroEntry>& nros, bool
     return nro_scan_internal(&fs, path, nros, nested, scan_all_dir, root);
 }
 
+auto nro_scan_depth_internal(fs::Fs* fs, const fs::FsPath& path, std::vector<NroEntry>& nros, u32 current_depth, u32 max_depth) -> Result {
+    u32 dir_open_type = FsDirOpenMode_ReadFiles | FsDirOpenMode_NoFileSize;
+    if (current_depth < max_depth) {
+        dir_open_type |= FsDirOpenMode_ReadDirs;
+    }
+
+    fs::Dir d;
+    R_TRY(fs->OpenDirectory(path, dir_open_type, &d));
+
+    std::vector<FsDirectoryEntry> entries;
+    R_TRY(d.ReadAll(entries));
+
+    for (const auto& e : entries) {
+        // skip hidden files / folders
+        if ('.' == e.name[0]) {
+            continue;
+        }
+
+        if (e.type == FsDirEntryType_Dir) {
+            if (current_depth < max_depth) {
+                fs::FsPath fullpath;
+                std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
+                nro_scan_depth_internal(fs, fullpath, nros, current_depth + 1, max_depth);
+            }
+        } else if (e.type == FsDirEntryType_File && path::EndsWithIC(e.name, ".nro")) {
+            fs::FsPath fullpath;
+            std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
+
+            NroEntry entry;
+            if (R_SUCCEEDED(nro_parse_internal(fs, fullpath, entry))) {
+                nros.emplace_back(entry);
+            } else {
+                log_write("error when trying to parse %s\n", fullpath.s);
+            }
+        }
+    }
+
+    R_SUCCEED();
+}
+
 auto nro_get_icon_internal(fs::File* f, u64 size, u64 offset) -> std::vector<u8> {
     // protect again really messed up sizes.
     if (size > 1024 * 1024) {
@@ -196,6 +237,11 @@ auto nro_parse(const fs::FsPath& path, NroEntry& entry) -> Result {
 
 auto nro_scan(const fs::FsPath& path, std::vector<NroEntry>& nros, bool nested, bool scan_all_dir) -> Result {
     return nro_scan_internal(path, nros, nested, scan_all_dir, true);
+}
+
+auto nro_scan_depth(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result {
+    fs::FsNativeSd fs;
+    return nro_scan_depth_internal(&fs, path, nros, 0, max_depth);
 }
 
 auto nro_get_icon(const fs::FsPath& path, u64 size, u64 offset) -> std::vector<u8> {

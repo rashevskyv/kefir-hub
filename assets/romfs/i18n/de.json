@@ -1650,5 +1650,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "Spiele anzeigen (schreibgeschützt)",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Zeigt ein schreibgeschütztes Laufwerk mit installierten Spielen, Updates und DLCs als NSP-Dateien an. Das Kopieren auf den PC dumpt diese; es wird nichts auf die microSD-Karte geschrieben."
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Zeigt ein schreibgeschütztes Laufwerk mit installierten Spielen, Updates und DLCs als NSP-Dateien an. Das Kopieren auf den PC dumpt diese; es wird nichts auf die microSD-Karte geschrieben.",
+  "Add to Homebrew Search Paths": "Zu Homebrew-Suchpfaden hinzufügen",
+  "Delete Homebrew Search Paths": "Homebrew-Suchpfade löschen",
+  "Remove Homebrew Search Path?": "Homebrew-Suchpfad entfernen?",
+  "Homebrew search path added.": "Homebrew-Suchpfad hinzugefügt.",
+  "Homebrew search path removed.": "Homebrew-Suchpfad entfernt.",
+  "Failed to add Homebrew search path": "Homebrew-Suchpfad konnte nicht hinzugefügt werden",
+  "Failed to remove Homebrew search path": "Homebrew-Suchpfad konnte nicht entfernt werden"
 }

@@ -1704,5 +1704,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "显示游戏（仅读）",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "将已安装的游戏、更新和 DLC 显示为 NSP 文件的只读盘符。将其复制到电脑即可进行转储；不会向 microSD 卡写入任何内容。"
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "将已安装的游戏、更新和 DLC 显示为 NSP 文件的只读盘符。将其复制到电脑即可进行转储；不会向 microSD 卡写入任何内容。",
+  "Add to Homebrew Search Paths": "添加到 Homebrew 搜索路径",
+  "Delete Homebrew Search Paths": "删除 Homebrew 搜索路径",
+  "Remove Homebrew Search Path?": "移除 Homebrew 搜索路径？",
+  "Homebrew search path added.": "已添加 Homebrew 搜索路径。",
+  "Homebrew search path removed.": "已移除 Homebrew 搜索路径。",
+  "Failed to add Homebrew search path": "无法添加 Homebrew 搜索路径",
+  "Failed to remove Homebrew search path": "无法移除 Homebrew 搜索路径"
 }

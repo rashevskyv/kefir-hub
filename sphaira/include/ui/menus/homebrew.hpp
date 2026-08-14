@@ -33,6 +33,9 @@ using LayoutType = grid::LayoutType;
 
 auto GetNroEntries() -> std::span<const NroEntry>;
 void SignalChange();
+auto IsSearchPath(const fs::FsPath& path) -> bool;
+auto AddSearchPath(const fs::FsPath& path) -> bool;
+auto RemoveSearchPath(const fs::FsPath& path) -> bool;
 
 struct Menu final : grid::Menu {
     Menu();

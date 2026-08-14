@@ -63,6 +63,7 @@ auto nro_parse(const fs::FsPath& path, NroEntry& entry) -> Result;
  *                     this does nothing if nested=false.
  */
 auto nro_scan(const fs::FsPath& path, std::vector<NroEntry>& nros, bool nested = true, bool scan_all_dir = true) -> Result;
+auto nro_scan_depth(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result;
 
 auto nro_get_icon(const fs::FsPath& path, u64 size, u64 offset) -> std::vector<u8>;
 auto nro_get_icon(const fs::FsPath& path) -> std::vector<u8>;

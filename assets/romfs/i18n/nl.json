@@ -1649,5 +1649,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "Toon games (alleen-lezen)",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Toont een alleen-lezen station met geïnstalleerde games, updates en DLC als NSP-bestanden. Als je er een naar de pc kopieert, wordt deze gedumpt; er wordt niets naar de microSD-kaart geschreven."
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Toont een alleen-lezen station met geïnstalleerde games, updates en DLC als NSP-bestanden. Als je er een naar de pc kopieert, wordt deze gedumpt; er wordt niets naar de microSD-kaart geschreven.",
+  "Add to Homebrew Search Paths": "Toevoegen aan Homebrew-zoekpaden",
+  "Delete Homebrew Search Paths": "Homebrew-zoekpaden verwijderen",
+  "Remove Homebrew Search Path?": "Homebrew-zoekpad verwijderen?",
+  "Homebrew search path added.": "Homebrew-zoekpad toegevoegd.",
+  "Homebrew search path removed.": "Homebrew-zoekpad verwijderd.",
+  "Failed to add Homebrew search path": "Toevoegen van Homebrew-zoekpad mislukt",
+  "Failed to remove Homebrew search path": "Verwijderen van Homebrew-zoekpad mislukt"
 }

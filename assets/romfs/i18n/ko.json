@@ -1649,5 +1649,12 @@
   "svcDebug": "svcDebug",
   "h": "h",
   "Show Games (read-only)": "게임 표시 (읽기 전용)",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "설치된 게임, 업데이트 및 DLC를 NSP 파일 형태의 읽기 전용 드라이브로 표시합니다. PC로 복사하면 덤프되며, microSD 카드에는 아무것도 기록되지 않습니다."
+  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "설치된 게임, 업데이트 및 DLC를 NSP 파일 형태의 읽기 전용 드라이브로 표시합니다. PC로 복사하면 덤프되며, microSD 카드에는 아무것도 기록되지 않습니다.",
+  "Add to Homebrew Search Paths": "Homebrew 검색 경로에 추가",
+  "Delete Homebrew Search Paths": "Homebrew 검색 경로 삭제",
+  "Remove Homebrew Search Path?": "Homebrew 검색 경로를 삭제하시겠습니까?",
+  "Homebrew search path added.": "Homebrew 검색 경로가 추가되었습니다.",
+  "Homebrew search path removed.": "Homebrew 검색 경로가 삭제되었습니다.",
+  "Failed to add Homebrew search path": "Homebrew 검색 경로 추가 실패",
+  "Failed to remove Homebrew search path": "Homebrew 검색 경로 삭제 실패"
 }

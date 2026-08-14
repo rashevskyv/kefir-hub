@@ -1712,5 +1712,12 @@
   "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?",
   "Skip package": "Skip package",
   "Skip this package?": "Skip this package?",
-  "Cancel installation queue?": "Cancel installation queue?"
+  "Cancel installation queue?": "Cancel installation queue?",
+  "Add to Homebrew Search Paths": "Add to Homebrew Search Paths",
+  "Delete Homebrew Search Paths": "Delete Homebrew Search Paths",
+  "Remove Homebrew Search Path?": "Remove Homebrew Search Path?",
+  "Homebrew search path added.": "Homebrew search path added.",
+  "Homebrew search path removed.": "Homebrew search path removed.",
+  "Failed to add Homebrew search path": "Failed to add Homebrew search path",
+  "Failed to remove Homebrew search path": "Failed to remove Homebrew search path"
 }

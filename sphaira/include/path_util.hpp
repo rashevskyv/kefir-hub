@@ -14,7 +14,9 @@
 #include <charconv>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 
 #include <strings.h> // strncasecmp
@@ -106,6 +108,61 @@ inline auto IsSafeArchiveEntry(std::string_view path) -> bool {
     }
 
     return true;
+}
+
+// Normalizes an absolute SD card path:
+// - Must start with '/'
+// - Rejects '\', ':', control characters (< 0x20, 0x7F)
+// - Collapses repeated slashes
+// - Trims trailing slashes (except root "/")
+// - Rejects '.' and '..' components (allows dotfiles/dotfolders like .config, ..data)
+inline auto NormalizeAbsoluteSdPath(std::string_view path) -> std::optional<std::string> {
+    if (path.empty() || path.front() != '/') {
+        return std::nullopt;
+    }
+
+    for (const char c : path) {
+        const auto uc = static_cast<unsigned char>(c);
+        if (uc < 0x20 || uc == 0x7F || c == '\\' || c == ':') {
+            return std::nullopt;
+        }
+    }
+
+    std::string normalized;
+    normalized.reserve(path.size());
+
+    std::size_t start = 0;
+    while (start < path.size()) {
+        while (start < path.size() && path[start] == '/') {
+            start++;
+        }
+        if (start >= path.size()) {
+            break;
+        }
+
+        const auto end = path.find('/', start);
+        const auto comp = (end == std::string_view::npos)
+            ? path.substr(start)
+            : path.substr(start, end - start);
+
+        if (comp == "." || comp == "..") {
+            return std::nullopt;
+        }
+
+        normalized.push_back('/');
+        normalized.append(comp.data(), comp.size());
+
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+
+    if (normalized.empty()) {
+        return "/";
+    }
+
+    return normalized;
 }
 
 } // namespace sphaira::path

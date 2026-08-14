@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.449**. Завершені плани збережено в
+Поточний delivery — **v0.13.451**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.449 — NFS phase 1 (read-only source)
+## 0. v0.13.451 — custom NRO search paths
+
+Статус: реалізацію та всі перевірки завершено. `/switch` лишається незмінним default root; додаткові native-SD roots зберігаються в `[homebrew_paths]`, валідні absolute paths нормалізуються та дедуплікуються, а сканування custom roots має глибину 2. Пройдено `tests/run.sh` (154 checks у `path_util`), JSON validation, WSL `ReleaseWithInstall` і `git diff --check`. Російську локаль свідомо виключено з цього delivery до окремого i18n pipeline.
+
+1. Повторно використано `minIni`, event-based Homebrew refresh і `path_util.hpp`; не додано subsystem, dependency, network filesystem або конфігурацію для `/switch`.
+2. `NormalizeSearchPath` відхиляє не-absolute, `.`/`..`, backslash, `:`, control bytes, root, `/switch` і довжину `>= FS_MAX_PATH` до будь-якого створення `fs::FsPath`; неіснуючі roots пропускаються під час scan.
+3. File Browser дозволяє add/remove лише для дозволеного SD-каталогу; remove має підтвердження, а успішна зміна конфігу надсилає `homebrew::SignalChange()`.
+4. `/switch` сканується чинним `nro_scan`, кожен custom root — `nro_scan_depth(..., 2)`; NRO entries дедуплікуються за canonical path, а empty Homebrew list безпечний.
+
+## 0.1. v0.13.449 — NFS phase 1 (read-only source)
 
 Статус: програмну реалізацію та senior review завершено; host suite (`nfs_url`: 194 checks), dead-symbol guard, WSL `ReleaseWithInstall` і `git diff --check` пройдено 2026-08-14. Апаратна перевірка на реальній Switch залишається відкритою.
 
@@ -14,7 +23,7 @@
 4. NFS підключено до File Browser, source picker і Settings; на кожному маршруті збережено read-only flag, а невалідні saved URLs відсіюються до копіювання у фіксовані `FsPath`.
 5. Оновлено англійську та українську локалізації, додано 194 host checks і завершено software verification. Наступний крок — browse/read/copy-from-NFS smoke test на Switch.
 
-## 0.1. v0.13.448 — очищення екранних NTP-сповіщень
+## 0.2. v0.13.448 — очищення екранних NTP-сповіщень
 
 Статус: реалізацію завершено; прибрано тимчасові діагностичні tooltip-и та нелокалізоване сповіщення UI refresh; збережено повне логування `[NTP]` та єдине локалізоване сповіщення "Clock synced" для фактично оновленого User Clock; пройдено WSL `ReleaseWithInstall`, `git diff --check`, оновлено living docs.
 
@@ -24,7 +33,7 @@
 4. Гарантовано відсутність сповіщень на шляху, коли зміщення менше за `MIN_CORRECTION_SECONDS` (час уже точний), та на fallback-шляху `used_fallback` (коли увімкнено automatic correction і діє процесний offset).
 5. Піднято `sphaira_VERSION` до `0.13.448`, оновлено `task.md`, `plan.md`, `walkthrough.md`.
 
-## 0.1. v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
+## 0.3. v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
 
 Статус: реалізацію, валідатор і тести завершено; пройдено `tests/run.sh` (106 checks у `path_util`), WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), `git diff --check`, враховано senior review (захист `number_entry` overflow та оновлення коментаря санітизації), піднято версію до `0.13.447` і створено сфокусований коміт.
 

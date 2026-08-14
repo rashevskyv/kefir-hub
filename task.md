@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.449**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.451**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.449 (NFS phase 1 — read-only source)
+## Поточний delivery: v0.13.451 (custom NRO search paths)
+
+- [x] `NRO-SEARCH-PATHS-451` — зберігати лише нормалізовані додаткові абсолютні SD-каталоги в `[homebrew_paths]`; `/switch` лишається незмінним default root і не записується.
+- [x] `NRO-SEARCH-PATHS-UI-451` — у File Browser для вибраного SD-каталогу (крім `/` і `/switch`) показати add/remove, підтвердити remove, а після успішної зміни надіслати `homebrew::SignalChange()`.
+- [x] `NRO-SEARCH-PATHS-SCAN-451` — сканувати `/switch` без зміни чинної семантики й кожен custom root на фіксовану глибину 2; не додавати дублікати NRO за канонічним шляхом.
+- [x] `NRO-SEARCH-PATHS-VERIFY-451` — додати найменші host-тести нормалізації/валідації, пройти `tests/run.sh`, WSL `ReleaseWithInstall` і `git diff --check`.
+- [x] `VERSION-DOC-COMMIT-451` — піднято версію до `0.13.451`, оновлено living docs і створено сфокусований коміт після senior review.
+
+## Попередній delivery: v0.13.449 (NFS phase 1 — read-only source)
 
 - [x] `NFS-LIBNFS-449` — додати pinned static dependency `ITotalJustice/libnfs@65f3e11` без документації, прикладів і dependency tests.
 - [x] `NFS-READONLY-449` — реалізувати NFS devoptab через `MountNetworkDevice2()` з RAII cleanup, `nfs_parse_url_dir()`, серіалізованими операціями та жорсткою read-only семантикою.

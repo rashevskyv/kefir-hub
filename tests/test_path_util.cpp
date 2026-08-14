@@ -43,6 +43,12 @@ static int test_equals_ic() {
 
     // digits and punctuation are unaffected by case folding
     CHECK(path::EqualsIC("v1.2", "V1.2"));
+
+    // path and section comparisons for search paths
+    CHECK(path::EqualsIC("/switch", "/SWITCH"));
+    CHECK(path::EqualsIC("/Switch", "/switch"));
+    CHECK(path::EqualsIC("/Games/NRO", "/games/nro"));
+    CHECK(path::EqualsIC("homebrew_paths", "HOMEBREW_PATHS"));
     return 0;
 }
 
@@ -51,6 +57,13 @@ static int test_ends_with_ic() {
     CHECK(path::EndsWithIC("game.NSP", ".nsp"));
     CHECK(path::EndsWithIC("GAME.nsp", ".NSP"));
     CHECK(!path::EndsWithIC("game.nsz", ".nsp"));
+
+    // nro extension case variants
+    CHECK(path::EndsWithIC("app.nro", ".nro"));
+    CHECK(path::EndsWithIC("app.NRO", ".nro"));
+    CHECK(path::EndsWithIC("app.nRo", ".nro"));
+    CHECK(path::EndsWithIC("APP.NRO", ".NRO"));
+    CHECK(!path::EndsWithIC("app.nro.bak", ".nro"));
 
     // suffix longer than the string
     CHECK(!path::EndsWithIC("nsp", "game.nsp"));
@@ -217,8 +230,61 @@ static int test_is_safe_archive_entry() {
     return 0;
 }
 
+static int test_normalize_absolute_sd_path() {
+    // Valid absolute paths
+    CHECK(path::NormalizeAbsoluteSdPath("/") == "/");
+    CHECK(path::NormalizeAbsoluteSdPath("///") == "/");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch") == "/switch");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch/") == "/switch");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch/apps") == "/switch/apps");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch/apps/") == "/switch/apps");
+    CHECK(path::NormalizeAbsoluteSdPath("///switch///apps///") == "/switch/apps");
+    CHECK(path::NormalizeAbsoluteSdPath("/Switch") == "/Switch");
+    CHECK(path::NormalizeAbsoluteSdPath("/SWITCH/APPS/") == "/SWITCH/APPS");
+    CHECK(path::NormalizeAbsoluteSdPath("/retroarch/cores") == "/retroarch/cores");
+    CHECK(path::NormalizeAbsoluteSdPath("/Games/NRO") == "/Games/NRO");
+
+    // Ordinary names with dots
+    CHECK(path::NormalizeAbsoluteSdPath("/.config") == "/.config");
+    CHECK(path::NormalizeAbsoluteSdPath("/..data") == "/..data");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch/.hidden/app.nro") == "/switch/.hidden/app.nro");
+    CHECK(path::NormalizeAbsoluteSdPath("/switch/.../app") == "/switch/.../app");
+
+    // Relative paths rejected
+    CHECK(!path::NormalizeAbsoluteSdPath("").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("switch").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("switch/apps").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("app.nro").has_value());
+
+    // Backslashes, colons, control chars rejected
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch\\apps").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("\\switch").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/sdmc:/switch").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("sdmc:/switch").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/c:/games").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/\x01").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/\x1f/app").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/\x7f").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch\n/app").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch\t").has_value());
+
+    // Dot and double-dot traversal rejected
+    CHECK(!path::NormalizeAbsoluteSdPath("/.").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/..").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/./").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/../").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/.").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/..").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/./apps").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/../apps").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/apps/.").has_value());
+    CHECK(!path::NormalizeAbsoluteSdPath("/switch/apps/..").has_value());
+
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry()) {
+    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

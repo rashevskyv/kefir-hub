@@ -2249,6 +2249,38 @@ void FsView::DisplayAdvancedOptions() {
         }, "Share the current folder via the built-in web server."_i18n);
     }
 
+    if (IsSd() && !m_selected_count && !m_entries_current.empty() && !IsParentEntry(m_index) && GetEntry().IsDir()) {
+        const auto path = GetNewPathCurrent();
+        if (path != "/" && path != "/switch") {
+            if (homebrew::IsSearchPath(path)) {
+                options->Add<SidebarEntryCallback>("Delete Homebrew Search Paths"_i18n, [path](){
+                    const auto prompt = "Remove Homebrew Search Path?"_i18n + "\n\n" + path.toString();
+                    App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [path](auto index){
+                        if (!index || *index != 1) {
+                            return;
+                        }
+
+                        if (homebrew::RemoveSearchPath(path)) {
+                            App::PopToMenu();
+                            App::Notify("Homebrew search path removed."_i18n);
+                        } else {
+                            App::Notify("Failed to remove Homebrew search path"_i18n);
+                        }
+                    });
+                });
+            } else {
+                options->Add<SidebarEntryCallback>("Add to Homebrew Search Paths"_i18n, [path](){
+                    if (homebrew::AddSearchPath(path)) {
+                        App::PopToMenu();
+                        App::Notify("Homebrew search path added."_i18n);
+                    } else {
+                        App::Notify("Failed to add Homebrew search path"_i18n);
+                    }
+                });
+            }
+        }
+    }
+
     auto create_file_entry = options->Add<SidebarEntryCallback>("Create File"_i18n, [this](){
         std::string out;
         if (R_SUCCEEDED(swkbd::ShowText(out, "Set File Name"_i18n.c_str(), fs::AppendPath(m_path, ""))) && !out.empty()) {
