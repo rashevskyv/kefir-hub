@@ -20,9 +20,9 @@ upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 
 | Стан | Актуальний зміст |
 |---|---|
-| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths |
+| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening |
 | Частковий перетин | Наявна локальна база є, але upstream має окрему поведінку або іншу UX-модель |
-| Залишилося запланувати | loader thread affinity, PFS0/NSP hardening, FTP refresh, English export fallback, Update/DLC checker |
+| Залишилося запланувати | FTP refresh, English export fallback, Update/DLC checker |
 | Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX |
 
 ## Уже є у власній реалізації
@@ -159,8 +159,10 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
    і відновлює її для main thread через `svcSetThreadCoreMask(..., -1, core_mask)` прямо
    перед trampoline. `highest_cpu_id = 3` лишається лише NPDM-дозволом, без hard-coded mask.
 
-Окремо від MSP корисне parser hardening з `400c514`: поточний PFS0/NSP parser треба
-перевірити на exact reads, container bounds, overflow, string table і name offsets.
+Окремо від MSP parser lessons з `400c514` адаптовано у `v0.13.453`: спільний
+PFS0/NSP parser отримав exact reads, container bounds для known-size readers,
+checked arithmetic, allocation limits, string-table/name validation і host
+negative coverage. Продуктова MSP частина не переносилася.
 
 ## Не застосовується або службове
 
@@ -197,7 +199,7 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 1. [x] Спільний ZIP path/size hardening у `thread::TransferUnzipAll()` — завершено у `0.13.447`.
 2. [x] Default icon для iconless NRO та decoded-size hardening — завершено у `0.13.450`.
 3. [x] Loader thread affinity before NRO launch (`87c855a`) — завершено у `0.13.452`.
-4. PFS0/NSP parser bounds/exact-read hardening.
+4. [x] PFS0/NSP parser bounds/exact-read hardening — завершено у `v0.13.453`.
 
 ### Після цього
 

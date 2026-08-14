@@ -1,9 +1,28 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.452** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.453** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.453 — PFS0/NSP parser hardening
+
+- Спільний `yati::container::Nsp` тепер вимагає exact reads для PFS0 header,
+  file table і string table; short input відхиляється до parsing metadata.
+- `pfs0.hpp` централізує валідацію on-disk PFS0 metadata: pinned binary layouts,
+  caps 65,535 files / 4 MiB string table, checked unsigned arithmetic, safe
+  `s64` conversion, bounded NUL-name search і end-of-container checks.
+- Найближча `source::Base::GetSize()` abstraction повідомляє відомі bounds для
+  file/NCA/buffer readers. Лише `FsError_NotImplemented` означає unknown-size
+  stream; помилки size query коректно доходять до caller.
+- Додано `tests/test_pfs0_nsp.cpp` з valid case і негативними межами: short
+  metadata, hostile allocation fields, invalid/missing-NUL name, offset/size
+  overflow і known-size overrun. MSP installer, manifest/staging/rollback, UI,
+  web/MTP transport та i18n не змінювалися.
+- Gemini фактично пройшов focused parser test (41 checks), `tests/run.sh`
+  (`all green`; dead symbols 731/731), WSL `ReleaseWithInstall`
+  (`[100%] Built target sphaira_nro`) і `git diff --check`. Версію піднято до
+  `0.13.453`; hardware smoke-test не потрібний, бо runtime UI/transport не змінено.
 
 ## v0.13.452 — відновлення loader thread affinity перед NRO
 

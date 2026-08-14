@@ -1,5 +1,6 @@
 #pragma once
 
+#include "defines.hpp"
 #include <vector>
 #include <switch.h>
 
@@ -13,6 +14,11 @@ struct Base {
     Result Read2(void* buf, s64 off, s64 size) {
         u64 bytes_read{};
         return Read(buf, off, size, &bytes_read);
+    }
+
+    virtual Result GetSize(s64* out) {
+        (void)out;
+        return FsError_NotImplemented;
     }
 
     virtual bool IsStream() const {

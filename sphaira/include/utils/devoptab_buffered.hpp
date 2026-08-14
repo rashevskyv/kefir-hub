@@ -4,6 +4,7 @@
 #include "utils/lru.hpp"
 #include <memory>
 #include <vector>
+#include <limits>
 
 namespace sphaira::devoptab::common {
 
@@ -16,6 +17,17 @@ struct BufferedDataBase : yati::source::Base {
 
     virtual Result Read(void* buf, s64 off, s64 size, u64* bytes_read) override {
         return source->Read(buf, off, size, bytes_read);
+    }
+
+    Result GetSize(s64* out) override {
+        if (!out) {
+            return FsError_InvalidOffset;
+        }
+        if (capacity > static_cast<u64>(std::numeric_limits<s64>::max())) {
+            return FsError_InvalidSize;
+        }
+        *out = static_cast<s64>(capacity);
+        return 0;
     }
 
 protected:

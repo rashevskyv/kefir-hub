@@ -83,7 +83,7 @@ static constexpr inline bool HasRequiredSystemVersion(const NcmContentMetaKey *k
 struct NcmSource final : yati::source::Base {
     NcmSource(NcmContentStorage* cs, const NcmContentId* id);
     Result Read(void* buf, s64 off, s64 size, u64* bytes_read) override;
-    Result GetSize(s64* size);
+    Result GetSize(s64* size) override;
 
 private:
     NcmContentStorage m_cs;

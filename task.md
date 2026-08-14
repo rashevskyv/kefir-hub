@@ -1,12 +1,28 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.452**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.453**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.452 (відновлення loader thread affinity)
+## Поточний delivery: v0.13.453 (PFS0/NSP parser hardening)
+
+- [x] `PFS0-EXACT-453` — у спільному `yati::container::Nsp` відхиляти short
+  PFS0 header/file-table/string-table read до парсингу.
+- [x] `PFS0-BOUNDS-453` — до allocation, pointer arithmetic або seek перевіряти
+  parser limits, table/string/data/file arithmetic, name offsets/NUL і відомі
+  file/container bounds; не дублювати guards у callers.
+- [x] `PFS0-NEGATIVE-453` — додати найменшу host-negative boundary coverage для
+  malformed PFS0/NSP metadata без MSP, UI, transport або i18n змін.
+- [x] `PFS0-VERIFY-453` — Gemini підтвердив 41 focused check, `tests/run.sh`
+  (`all green`, 731/731 dead symbols), WSL `ReleaseWithInstall`
+  (`[100%] Built target sphaira_nro`) і `git diff --check`; версію піднято до
+  `0.13.453`. Hardware check не потрібний: прийнятий diff не торкається runtime UI/transport.
+
+Доказовий baseline-аудит: [`pfs0_nsp_hardening_audit.md`](pfs0_nsp_hardening_audit.md).
+
+## Попередній delivery: v0.13.452 (відновлення loader thread affinity)
 
 - [x] `HBL-AFFINITY-452` — безпосередньо перед кожним `nroEntrypointTrampoline()` отримати фактичну core mask поточного процесу через `svcGetInfo(..., InfoType_CoreMask, CUR_PROCESS_HANDLE, 0)` та відновити її для `CUR_THREAD_HANDLE` через `svcSetThreadCoreMask(..., -1, core_mask)`.
 - [x] `HBL-AFFINITY-ERROR-452` — при помилці читання або встановлення affinity завершуватися через чинний `diagAbortWithResult`; не задавати mask `0..3` за `highest_cpu_id` і не змінювати NPDM, UI чи i18n.

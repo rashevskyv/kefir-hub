@@ -1,10 +1,35 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.452**. Завершені плани збережено в
+Поточний delivery — **v0.13.453**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.452 — відновлення loader thread affinity перед NRO
+## Поточний delivery: v0.13.453 — PFS0/NSP parser hardening
+
+Статус: реалізацію прийнято після ручного Gemini junior-review циклу. Деталі
+baseline-доказів і межі scope — у
+[`pfs0_nsp_hardening_audit.md`](pfs0_nsp_hardening_audit.md). Зафіксовано exact
+metadata reads, limits, checked arithmetic, bounded names і known-size bounds у
+спільному PFS0 parser; невідомі streams лишаються підтриманими через штатний
+`FsError_NotImplemented` size result.
+
+1. `Nsp::GetCollections()` вимагає exact header/file-table/string-table reads,
+   перевіряє всі metadata-derived allocation, offsets і `CollectionEntry` до їх
+   publication, не змінюючи чинний chunk-aggregation `source::Stream::Read()`.
+2. `pfs0.hpp` зберігає binary-layout asserts, caps `0xFFFF` files / 4 MiB
+   string table, checked arithmetic, bounded NUL search і parsed known-size
+   ends. Common source `GetSize()` передає file/NCA/buffer capacity у parser;
+   лише `FsError_NotImplemented` означає unknown-size stream.
+3. `tests/test_pfs0_nsp.cpp` покриває valid layout, short reads, hostile
+   allocations, invalid/missing-NUL names, overflow і known-size overrun.
+4. Gemini фактично виконав focused test (41 checks), `tests/run.sh` (`all green`),
+   WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`) і
+   `git diff --check`. Senior review охопив parser, всі GetSize adapters і
+   PFS0/NCA callers.
+5. Версію піднято `0.13.452 → 0.13.453`; зміна parser/test/document-only, тому
+   Switch hardware/manual check не потрібний.
+
+## Попередній delivery: v0.13.452 — відновлення loader thread affinity перед NRO
 
 Статус: реалізацію, senior review і програмну верифікацію завершено. У `loadNro()` безпосередньо перед trampoline відновлюється фактична process core mask: `svcGetInfo(InfoType_CoreMask, CUR_PROCESS_HANDLE)` → `svcSetThreadCoreMask(CUR_THREAD_HANDLE, -1, core_mask)`. Будь-яка помилка проходить через `diagAbortWithResult`; `highest_cpu_id = 3` не перетворюється на жорстку mask. Gemini успішно виконав WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`) і `git diff --check`; версію піднято до `0.13.452`. Залишається лише апаратний smoke-test.
 

@@ -8,6 +8,7 @@
 #include <switch.h>
 #include <vector>
 #include <memory>
+#include <limits>
 
 namespace sphaira::nca {
 
@@ -360,6 +361,16 @@ private:
 struct NcaReader final : yati::source::Base {
     NcaReader(const nca::Header& decrypted_header, const void* key, u64 size, const std::shared_ptr<yati::source::Base>& source);
     Result Read(void *_buf, s64 off, s64 size, u64* bytes_read) override;
+    Result GetSize(s64* out) override {
+        if (!out) {
+            return FsError_InvalidOffset;
+        }
+        if (m_capacity > static_cast<u64>(std::numeric_limits<s64>::max())) {
+            return FsError_InvalidSize;
+        }
+        *out = static_cast<s64>(m_capacity);
+        return 0;
+    }
 
 private:
     Result ReadInternal(void *_buf, s64 off, s64 size, u64* bytes_read, bool decrypt);

@@ -1,27 +1,13 @@
 #include "yati/container/nsp.hpp"
+#include "yati/container/pfs0.hpp"
 #include "defines.hpp"
 #include "log.hpp"
 #include <memory>
 #include <cstring>
+#include <optional>
 
 namespace sphaira::yati::container {
 namespace {
-
-#define PFS0_MAGIC 0x30534650
-
-struct Pfs0Header {
-    u32 magic;
-    u32 total_files;
-    u32 string_table_size;
-    u32 padding;
-};
-
-struct Pfs0FileTableEntry {
-    u64 data_offset;
-    u64 data_size;
-    u32 name_offset;
-    u32 padding;
-};
 
 // stdio-like wrapper for std::vector
 struct BufHelper {
@@ -62,31 +48,60 @@ Result Nsp::GetCollections(Collections& out) {
 }
 
 Result Nsp::GetCollections(Collections& out, s64 off) {
-    u64 bytes_read;
+    R_UNLESS(m_source != nullptr, Result_NspBadMagic);
+    R_UNLESS(off >= 0, Result_NspBadMagic);
+
+    auto read_exact = [&](void* dst, s64 read_off, s64 read_sz) -> Result {
+        u64 bytes_read = 0;
+        R_TRY(m_source->Read(dst, read_off, read_sz, &bytes_read));
+        R_UNLESS(pfs0::IsExactRead(bytes_read, static_cast<u64>(read_sz)), Result_StreamUnexpectedEof);
+        return 0;
+    };
 
     // get header
-    Pfs0Header header{};
-    R_TRY(m_source->Read(std::addressof(header), off, sizeof(header), std::addressof(bytes_read)));
-    R_UNLESS(header.magic == PFS0_MAGIC, Result_NspBadMagic);
-    off += bytes_read;
+    pfs0::Header header{};
+    R_TRY(read_exact(&header, off, sizeof(header)));
+
+    std::optional<u64> known_size{};
+    s64 source_size = 0;
+    const Result size_rc = m_source->GetSize(&source_size);
+    if (R_SUCCEEDED(size_rc)) {
+        R_UNLESS(source_size >= 0, FsError_InvalidSize);
+        known_size = static_cast<u64>(source_size);
+    } else if (size_rc == FsError_NotImplemented) {
+        known_size = std::nullopt;
+    } else {
+        return size_rc;
+    }
+
+    u64 file_table_offset{};
+    u64 string_table_offset{};
+    u64 data_offset{};
+    R_UNLESS(pfs0::ValidateHeader(header, off, file_table_offset, string_table_offset, data_offset, known_size) == pfs0::Error::Ok, Result_NspBadMagic);
 
     // get file table
-    std::vector<Pfs0FileTableEntry> file_table(header.total_files);
-    R_TRY(m_source->Read(file_table.data(), off, file_table.size() * sizeof(Pfs0FileTableEntry), std::addressof(bytes_read)))
-    off += bytes_read;
+    std::vector<pfs0::FileTableEntry> file_table(header.total_files);
+    const u64 file_table_bytes = static_cast<u64>(header.total_files) * sizeof(pfs0::FileTableEntry);
+    if (file_table_bytes > 0) {
+        R_TRY(read_exact(file_table.data(), static_cast<s64>(file_table_offset), static_cast<s64>(file_table_bytes)));
+    }
 
     // get string table
     std::vector<char> string_table(header.string_table_size);
-    R_TRY(m_source->Read(string_table.data(), off, string_table.size(), std::addressof(bytes_read)))
-    off += bytes_read;
+    if (header.string_table_size > 0) {
+        R_TRY(read_exact(string_table.data(), static_cast<s64>(string_table_offset), static_cast<s64>(header.string_table_size)));
+    }
 
-    out.reserve(header.total_files);
-    for (u32 i = 0; i < header.total_files; i++) {
-        CollectionEntry entry;
-        entry.name = string_table.data() + file_table[i].name_offset;
-        entry.offset = off + file_table[i].data_offset;
-        entry.size = file_table[i].data_size;
-        out.emplace_back(entry);
+    std::vector<pfs0::ParsedEntry> parsed_entries;
+    R_UNLESS(pfs0::ValidateEntries(file_table, string_table, data_offset, parsed_entries, known_size) == pfs0::Error::Ok, Result_NspBadMagic);
+
+    out.reserve(out.size() + parsed_entries.size());
+    for (auto& pe : parsed_entries) {
+        out.emplace_back(CollectionEntry{
+            .name = std::move(pe.name),
+            .offset = pe.offset,
+            .size = pe.size,
+        });
     }
 
     R_SUCCEED();
@@ -95,8 +110,8 @@ Result Nsp::GetCollections(Collections& out, s64 off) {
 auto Nsp::Build(std::span<const CollectionEntry> entries, s64& size) -> std::vector<u8> {
     BufHelper buf;
 
-    Pfs0Header header{};
-    std::vector<Pfs0FileTableEntry> file_table(entries.size());
+    pfs0::Header header{};
+    std::vector<pfs0::FileTableEntry> file_table(entries.size());
     std::vector<char> string_table;
 
     u64 string_offset{};
@@ -116,7 +131,7 @@ auto Nsp::Build(std::span<const CollectionEntry> entries, s64& size) -> std::vec
     }
 
     // Add padding to the string table so that the header as a whole is well-aligned
-    const auto nameless_header_size = sizeof(Pfs0Header) + (file_table.size() * sizeof(Pfs0FileTableEntry));
+    const auto nameless_header_size = sizeof(pfs0::Header) + (file_table.size() * sizeof(pfs0::FileTableEntry));
     auto padded_string_table_size = ((nameless_header_size + string_table.size() + 0x1F) & ~0x1F) - nameless_header_size;
 
     // Add manual padding if the full Partition FS header would already be properly aligned.
@@ -126,13 +141,13 @@ auto Nsp::Build(std::span<const CollectionEntry> entries, s64& size) -> std::vec
 
     string_table.resize(padded_string_table_size);
 
-    header.magic = PFS0_MAGIC;
+    header.magic = pfs0::PFS0_MAGIC;
     header.total_files = entries.size();
     header.string_table_size = string_table.size();
     header.padding = 0;
 
     buf.write(&header, sizeof(header));
-    buf.write(file_table.data(), sizeof(Pfs0FileTableEntry) * file_table.size());
+    buf.write(file_table.data(), sizeof(pfs0::FileTableEntry) * file_table.size());
     buf.write(string_table.data(), string_table.size());
 
     // calculate nsp size.
