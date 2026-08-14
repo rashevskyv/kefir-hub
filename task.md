@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.451**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.452**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.451 (custom NRO search paths)
+## Поточний delivery: v0.13.452 (відновлення loader thread affinity)
+
+- [x] `HBL-AFFINITY-452` — безпосередньо перед кожним `nroEntrypointTrampoline()` отримати фактичну core mask поточного процесу через `svcGetInfo(..., InfoType_CoreMask, CUR_PROCESS_HANDLE, 0)` та відновити її для `CUR_THREAD_HANDLE` через `svcSetThreadCoreMask(..., -1, core_mask)`.
+- [x] `HBL-AFFINITY-ERROR-452` — при помилці читання або встановлення affinity завершуватися через чинний `diagAbortWithResult`; не задавати mask `0..3` за `highest_cpu_id` і не змінювати NPDM, UI чи i18n.
+- [x] `HBL-AFFINITY-VERIFY-452` — Gemini WSL `ReleaseWithInstall` завершився успішно (`[100%] Built target sphaira_nro`), `git diff --check` пройшов; версію піднято до `0.13.452`.
+- [ ] `HW-HBL-AFFINITY-452` — на реальній Switch перевірити початковий і повторний запуск NRO, зокрема повернення через `envSetNextLoad()`, без крашу або зависання.
+
+## Попередній delivery: v0.13.451 (custom NRO search paths)
 
 - [x] `NRO-SEARCH-PATHS-451` — зберігати лише нормалізовані додаткові абсолютні SD-каталоги в `[homebrew_paths]`; `/switch` лишається незмінним default root і не записується.
 - [x] `NRO-SEARCH-PATHS-UI-451` — у File Browser для вибраного SD-каталогу (крім `/` і `/switch`) показати add/remove, підтвердити remove, а після успішної зміни надіслати `homebrew::SignalChange()`.

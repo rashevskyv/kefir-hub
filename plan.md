@@ -1,8 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.451**. Завершені плани збережено в
+Поточний delivery — **v0.13.452**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
+
+## Поточний delivery: v0.13.452 — відновлення loader thread affinity перед NRO
+
+Статус: реалізацію, senior review і програмну верифікацію завершено. У `loadNro()` безпосередньо перед trampoline відновлюється фактична process core mask: `svcGetInfo(InfoType_CoreMask, CUR_PROCESS_HANDLE)` → `svcSetThreadCoreMask(CUR_THREAD_HANDLE, -1, core_mask)`. Будь-яка помилка проходить через `diagAbortWithResult`; `highest_cpu_id = 3` не перетворюється на жорстку mask. Gemini успішно виконав WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`) і `git diff --check`; версію піднято до `0.13.452`. Залишається лише апаратний smoke-test.
+
+1. Перевірити на Switch старт NRO з Homebrew Menu та повернення/перезапуск через `envSetNextLoad()`.
+2. Очікуваний результат: NRO запускається і повторно запускається без зависання, крашу або зміни UI/CPU-налаштувань.
+3. Якщо запуск переривається, зафіксувати точний Horizon Result з abort screen; це симптом для наступного bounded fix.
 
 ## 0. v0.13.451 — custom NRO search paths
 

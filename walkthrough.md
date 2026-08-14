@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.451** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.452** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.452 — відновлення loader thread affinity перед NRO
+
+- Адаптовано upstream `87c855a5973f6fa5e2bffc818ca5a69fb18d6090` у `hbl/source/main.c`.
+- Перед кожним переходом до `nroEntrypointTrampoline()` loader отримує реальну mask процесу через `svcGetInfo(..., InfoType_CoreMask, CUR_PROCESS_HANDLE, 0)` і відновлює її на main thread через `svcSetThreadCoreMask(CUR_THREAD_HANDLE, -1, core_mask)`.
+- Невдача будь-якого syscall фатальна через чинний `diagAbortWithResult`; дозволений у NPDM `highest_cpu_id = 3` не використовується як фіксована mask. `hbl.json`, локалізації та UI не змінювалися.
+- Піднято `sphaira_VERSION` до `0.13.452`. Gemini підтвердив успішні WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`) та `git diff --check`; потрібен Switch smoke-test первинного й повторного запуску NRO.
 
 ## v0.13.451 — користувацькі шляхи пошуку NRO (custom NRO search paths)
 
@@ -223,6 +230,7 @@ walkthrough збережено в
 ## Стан перевірки
 
 - [x] Зміни зібрані та зафіксовані в Git.
+- [ ] На реальній Switch перевірити v0.13.452: запуск NRO з Homebrew Menu і повторний запуск після `envSetNextLoad()` без крашу або зависання.
 - [ ] На реальній Switch перевірити v0.13.445: миттєве оновлення годинника Sphaira, результати NTP trace та збереження часу після перезапуску консолі.
 - [ ] На реальній Switch перевірити USB 3.0 On → Off → Later і Off → On →
   Reboot, значення в `system_settings.ini` та фактичну швидкість після reboot.

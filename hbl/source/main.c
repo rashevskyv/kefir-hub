@@ -222,6 +222,15 @@ static void getCodeMemoryCapability(void) {
     }
 }
 
+static Result restoreMainThreadAffinity(void) {
+    u64 core_mask = 0;
+    Result rc = svcGetInfo(&core_mask, InfoType_CoreMask, CUR_PROCESS_HANDLE, 0);
+    if (R_FAILED(rc))
+        return rc;
+
+    return svcSetThreadCoreMask(CUR_THREAD_HANDLE, -1, core_mask);
+}
+
 void NX_NORETURN loadNro(void) {
     NroHeader* header = NULL;
     size_t rw_size = 0;
@@ -470,6 +479,10 @@ void NX_NORETURN loadNro(void) {
 
     // write exit detection
     strcpy(g_nextArgv, EXIT_DETECTION_STR);
+
+    if (R_FAILED(rc = restoreMainThreadAffinity()))
+        diagAbortWithResult(rc);
+
     // jump to trampoline.s
     nroEntrypointTrampoline(&entries[0], -1, g_nroAddr);
 }

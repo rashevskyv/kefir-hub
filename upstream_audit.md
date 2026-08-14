@@ -154,9 +154,10 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
    встановлених base/update/DLC версій.
 4. MSP mod packages (`400c514`) — немає `.msp`, manifest/staging/rollback та
    Atmosphère payload install.
-5. Loader thread affinity before NRO launch (`87c855a`) — локальний `hbl/source/main.c`
-   не відновлює main-thread core mask перед trampoline. Це малий незалежний bug fix;
-   переносити з урахуванням нашого дозволеного `highest_cpu_id = 3`.
+5. [x] Loader thread affinity before NRO launch (`87c855a`) — завершено у `v0.13.452`:
+   `hbl/source/main.c` читає фактичну mask процесу через `svcGetInfo(InfoType_CoreMask)`
+   і відновлює її для main thread через `svcSetThreadCoreMask(..., -1, core_mask)` прямо
+   перед trampoline. `highest_cpu_id = 3` лишається лише NPDM-дозволом, без hard-coded mask.
 
 Окремо від MSP корисне parser hardening з `400c514`: поточний PFS0/NSP parser треба
 перевірити на exact reads, container bounds, overflow, string table і name offsets.
@@ -185,8 +186,8 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
    розширити існуючий механізм на ці long-running `ProgressBox` flows.
 2. `f4efedf` — іспанські рядки; див. вище, **не застосовується**.
 3. `87c855a` — відновлює main-thread process core mask безпосередньо перед NRO
-   trampoline. Локально цього немає, хоча `hbl.json` дозволяє ядра `0..3`; це
-   **відсутній малий bug fix** і найкращий наступний технічний пункт.
+   trampoline. Адаптовано у `v0.13.452` без зміни `hbl.json`: використовується фактична
+   process mask, а не дозволений діапазон ядер `0..3`.
 4. `ff87305` — лише version bump, **не застосовується**.
 
 ## Черга перенесення
@@ -195,7 +196,7 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 1. [x] Спільний ZIP path/size hardening у `thread::TransferUnzipAll()` — завершено у `0.13.447`.
 2. [x] Default icon для iconless NRO та decoded-size hardening — завершено у `0.13.450`.
-3. Loader thread affinity before NRO launch (`87c855a`).
+3. [x] Loader thread affinity before NRO launch (`87c855a`) — завершено у `0.13.452`.
 4. PFS0/NSP parser bounds/exact-read hardening.
 
 ### Після цього
