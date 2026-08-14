@@ -263,8 +263,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 const auto icon = nro_get_icon(e.path, e.icon_size, e.icon_offset);
                 TimeStamp ts;
                 if (!icon.empty()) {
-                    const auto image = ImageLoadFromMemory(icon);
-                    if (!image.data.empty()) {
+                    const auto image = ImageLoadIcon(icon);
+                    if (!image.data.empty() && image.w == 256 && image.h == 256) {
                         e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
                         log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
                         image_load_count++;
@@ -272,6 +272,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                         // prevent loading of this icon again as it's already failed.
                         e.icon_offset = e.icon_size = 0;
                     }
+                } else {
+                    // prevent loading of this icon again as it's already failed.
+                    e.icon_offset = e.icon_size = 0;
                 }
             }
         }

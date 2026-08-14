@@ -58,24 +58,12 @@ auto NormalizeWebdavUrl(std::string url) -> std::string {
     return url;
 }
 
-// this will try to decompress the icon and then re-convert it to jpg
-// in order to strip exif data.
-// this doesn't take long at all, but it's very overkill.
-// todo: look into jpeg/exif spec to manually strip data
 auto GetNroIcon(const std::vector<u8>& nro_icon) -> std::vector<u8> {
-    auto image = ImageLoadFromMemory(nro_icon);
-    if (!image.data.empty()) {
-        if (image.w != 256 || image.h != 256) {
-            image = ImageResize(image.data, image.w, image.h, 256, 256);
-        }
-        if (!image.data.empty()) {
-            image = ImageConvertToJpg(image.data, image.w, image.h);
-            if (!image.data.empty()) {
-                return image.data;
-            }
-        }
+    auto normalized = ImageNormalizeIcon(nro_icon);
+    if (!normalized.empty()) {
+        return normalized;
     }
-    return nro_icon;
+    return ImageGetDefaultIcon();
 }
 
 } // namespace
@@ -806,7 +794,9 @@ auto App::Install(OwoConfig& config) -> Result {
 
 auto App::Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result {
     config.nro_path = nro_add_arg_file(config.nro_path);
-    if (!config.icon.empty()) {
+    if (config.icon.empty()) {
+        config.icon = ImageGetDefaultIcon();
+    } else {
         config.icon = GetNroIcon(config.icon);
     }
 

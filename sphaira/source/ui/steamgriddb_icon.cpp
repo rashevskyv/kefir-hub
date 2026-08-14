@@ -258,28 +258,6 @@ void AppendUrls(const std::vector<u8>& data, std::vector<std::string>& urls, std
     }
 }
 
-auto ConvertToForwarderIcon(std::span<const u8> compressed) -> std::vector<u8> {
-    if (compressed.empty() || compressed.size() > MAX_IMAGE_DOWNLOAD_SIZE) {
-        return {};
-    }
-
-    const auto flags = compressed.size() >= 3 && compressed[0] == 0xFF && compressed[1] == 0xD8 && compressed[2] == 0xFF
-        ? ImageFlag_JPEG : ImageFlag_None;
-    auto decoded = ImageLoadFromMemory(compressed, flags);
-    if (decoded.data.empty() || decoded.w <= 0 || decoded.h <= 0) {
-        return {};
-    }
-
-    if (decoded.w != 256 || decoded.h != 256) {
-        decoded = ImageResize(decoded.data, decoded.w, decoded.h, 256, 256);
-        if (decoded.data.empty()) {
-            return {};
-        }
-    }
-
-    return ImageConvertToJpg(decoded.data, decoded.w, decoded.h).data;
-}
-
 auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
     const auto batch_end = std::min(state.next_url_index + ICON_BATCH_SIZE, state.urls.size());
     const auto batch_size = batch_end - state.next_url_index;
@@ -300,7 +278,7 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
             continue;
         }
 
-        auto icon = ConvertToForwarderIcon(result.data);
+        auto icon = NormalizeIcon(result.data);
         if (!icon.empty()) {
             pbox->SetImageDataConst(icon);
             state.icons.emplace_back(std::move(icon));
@@ -412,7 +390,10 @@ void StartSearch(const std::string& api_key, const std::string& title, const Ico
 } // namespace
 
 auto NormalizeIcon(std::span<const u8> icon) -> std::vector<u8> {
-    return ConvertToForwarderIcon(icon);
+    if (icon.empty() || icon.size() > MAX_IMAGE_DOWNLOAD_SIZE) {
+        return {};
+    }
+    return ImageNormalizeIcon(icon);
 }
 
 auto GetApiKey() -> std::string {

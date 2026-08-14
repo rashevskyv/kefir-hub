@@ -4,6 +4,7 @@
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
+#include "image.hpp"
 #include "nro.hpp"
 #include "swkbd.hpp"
 #include "ui/list.hpp"
@@ -79,9 +80,15 @@ public:
         m_list->SetPageJump(false);
         m_list->SetScrollBarPos(1225.f, 115.f, 505.f);
 
-        auto normalized = steamgriddb::NormalizeIcon(m_values.icon);
-        if (!normalized.empty()) {
-            m_values.icon = std::move(normalized);
+        if (m_values.icon.empty()) {
+            m_values.icon = ImageGetDefaultIcon();
+        } else {
+            auto normalized = steamgriddb::NormalizeIcon(m_values.icon);
+            if (!normalized.empty()) {
+                m_values.icon = std::move(normalized);
+            } else {
+                m_values.icon = ImageGetDefaultIcon();
+            }
         }
         UpdatePreview();
     }
@@ -365,6 +372,10 @@ private:
 
     void Create() {
         m_submitted = true;
+        if (m_values.icon.empty()) {
+            m_values.icon = ImageGetDefaultIcon();
+            UpdatePreview();
+        }
         if (m_values.title.empty() || m_values.icon.empty()
             || (m_show_author && m_values.author.empty())) {
             App::Notify("The required fields and icon must be non-empty"_i18n);
