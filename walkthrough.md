@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.447** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.448** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.448 — очищення екранних NTP-сповіщень
+
+- **Прибрано тимчасові progress tooltip-и NTP:** із `sphaira/source/ntp.cpp` вилучено прапорець `SHOW_NTP_PROGRESS_TOOLTIPS` та виклики `App::Notify` з `ReportSyncStage()`. Жодні проміжні діагностичні повідомлення (етапи мережі, DNS, socket, перевірка offset, помилки/fallback) більше не з'являються на екрані як сповіщення.
+- **Збережено діагностичне логування:** `ReportSyncStage()` і `ReportSyncFailure()` продовжують повноцінно записувати всі етапи, зміщення та коди Horizon Result у лог як `[NTP] ...`.
+- **Єдине сповіщення — локалізоване "Clock synced":**
+  - Вилучено нелокалізоване службове сповіщення `NTP: UI clock refreshed`.
+  - Єдиним екранним повідомленням від підсистеми NTP залишено `"Clock synced"_i18n`.
+  - Сповіщення `"Clock synced"` ставиться в чергу через `evman::push` виключно на шляху прямого успішного оновлення User Clock після виклику `__libnx_init_time()`.
+  - Якщо час уже синхронізований (зміщення менше за `MIN_CORRECTION_SECONDS`), `RunSync()` завершується без повідомлень.
+  - На fallback-шляху `used_fallback` (увімкнення automatic correction через `set:sys` та процесний offset) сповіщення "Clock synced" не виводиться, оскільки системний User Clock HOS ще не було змінено наживо.
+- **Верифікація:**
+  - Успішно виконано збірку WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`);
+  - Перевірено `git diff --check`, піднято версію застосунку до `0.13.448`.
 
 ## v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
 

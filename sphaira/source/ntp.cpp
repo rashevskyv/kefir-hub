@@ -49,10 +49,6 @@ constexpr u64 RESYNC_INTERVAL_NS = 6ULL * 3600ULL * 1000000000ULL;
 // after a failure, wait longer than the idle poll before hammering dns again.
 constexpr u64 RETRY_INTERVAL_NS = 120ULL * 1000000000ULL;
 
-// Temporary hardware diagnostics. Set false after the failing time-service
-// command has been identified on a physical console.
-constexpr bool SHOW_NTP_PROGRESS_TOOLTIPS = true;
-
 // SNTPv4 packet, RFC 4330. All fields are big endian on the wire.
 struct NtpPacket {
     u8 li_vn_mode;
@@ -81,9 +77,6 @@ std::atomic<s64> g_display_offset{0};
 
 void ReportSyncStage(std::string stage) {
     log_write("[NTP] %s\n", stage.c_str());
-    if constexpr (SHOW_NTP_PROGRESS_TOOLTIPS) {
-        App::Notify("NTP: " + std::move(stage), ui::NotifEntry::Side::LEFT);
-    }
 }
 
 void ReportSyncFailure(std::string stage, Result rc) {
@@ -364,7 +357,6 @@ Result RunSync() {
         ReportSyncStage("clock updated; refreshing UI");
         evman::push(evman::FunctionalEventData{[]() {
             __libnx_init_time();
-            App::Notify("NTP: UI clock refreshed", ui::NotifEntry::Side::LEFT);
             App::Notify("Clock synced"_i18n);
         }}, false);
     }

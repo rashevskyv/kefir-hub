@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.447**. Завершені плани збережено в
+Поточний delivery — **v0.13.448**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
+## 0. v0.13.448 — очищення екранних NTP-сповіщень
+
+Статус: реалізацію завершено; прибрано тимчасові діагностичні tooltip-и та нелокалізоване сповіщення UI refresh; збережено повне логування `[NTP]` та єдине локалізоване сповіщення "Clock synced" для фактично оновленого User Clock; пройдено WSL `ReleaseWithInstall`, `git diff --check`, оновлено living docs.
+
+1. У `sphaira/source/ntp.cpp` вилучено `SHOW_NTP_PROGRESS_TOOLTIPS` та виклик `App::Notify` із `ReportSyncStage()`, зберігши запис усіх етапів і результатів у `[NTP]` лог.
+2. Прибрано нелокалізоване сповіщення `App::Notify("NTP: UI clock refreshed", ...)` з блоку оновлення UI.
+3. Збережено виклик локалізованого `App::Notify("Clock synced"_i18n)` як єдиного екранного сповіщення, що чергується в UI-потоці через `evman::push` виключно після успішного live-запису User Clock та `__libnx_init_time()`.
+4. Гарантовано відсутність сповіщень на шляху, коли зміщення менше за `MIN_CORRECTION_SECONDS` (час уже точний), та на fallback-шляху `used_fallback` (коли увімкнено automatic correction і діє процесний offset).
+5. Піднято `sphaira_VERSION` до `0.13.448`, оновлено `task.md`, `plan.md`, `walkthrough.md`.
+
+## 0.1. v0.13.447 — upstream-equivalence hardening: безпечне ZIP extraction
 
 Статус: реалізацію, валідатор і тести завершено; пройдено `tests/run.sh` (106 checks у `path_util`), WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`), `git diff --check`, враховано senior review (захист `number_entry` overflow та оновлення коментаря санітизації), піднято версію до `0.13.447` і створено сфокусований коміт.
 

@@ -1,12 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.447**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.448**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.447 (upstream-equivalence hardening)
+## Поточний delivery: v0.13.448 (очищення NTP-сповіщень)
+
+- [x] `NTP-NOTIF-CLEANUP-448` — вимкнути тимчасові екранні підказки діагностичного трейсу NTP; `ReportSyncStage()` зберігає запис у `[NTP]` лог без виклику `App::Notify`.
+- [x] `NTP-TOAST-FILTER-448` — прибрати нелокалізоване сповіщення `NTP: UI clock refreshed`; єдиним екранним повідомленням залишається локалізоване `Clock synced`, яке ставиться в чергу виключно після успішного live-запису User Clock та оновлення libnx time.
+- [x] `NTP-NO-NOTIF-PATHS-448` — гарантувати відсутність сповіщень для шляхів без зміни User Clock (коли час уже точний або коли увімкнено лише системну automatic correction із процесним offset).
+- [x] `VERSION-DOC-COMMIT-448` — підняти версію до `0.13.448`, оновити living docs (`task.md`, `plan.md`, `walkthrough.md`).
+
+Наступний незалежний крок після цього delivery: default icon для iconless NRO forwarder.
+
+## Попередній delivery: v0.13.447 (upstream-equivalence hardening)
 
 - [x] `UPSTREAM-AUDIT-DOC-447` — зберегти живий аудит змін після upstream `1.0.2` у [`upstream_audit.md`](upstream_audit.md).
 - [x] `ZIP-PATH-SAFETY-447` — у спільному `thread::TransferUnzipAll()` до створення будь-якого output path відхиляти абсолютні, traversal, керуючі, обрізані та наддовгі archive entry names; не допустити overflow сумарного uncompressed size та entry count.
