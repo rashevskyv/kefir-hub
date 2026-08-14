@@ -1125,7 +1125,7 @@
   "Upload the selected file(s) to a configured network storage.": "Завантажити вибрані файли у налаштоване мережеве сховище.",
   "No network locations configured! Add one in Settings.": "Немає налаштованих мережевих джерел! Додайте їх у налаштуваннях.",
   "Select network location": "Виберіть мережеве джерело",
-  "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).": "Налаштувати нове мережеве джерело (підтримувані протоколи: SMB, WebDAV, FTP, HTTP).",
+  "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP).": "Налаштувати нове мережеве джерело (підтримувані протоколи: SMB, NFS, WebDAV, FTP, HTTP).",
   "Select Protocol": "Виберіть протокол",
   "Update language packs": "Оновити мовні пакети",
   "Update the UltraHand language package list.": "Оновити список мовних пакетів UltraHand.",

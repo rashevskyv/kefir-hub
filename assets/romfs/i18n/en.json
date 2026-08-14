@@ -993,7 +993,7 @@
   "Upload the selected file(s) to a configured network storage.": "Upload the selected file(s) to a configured network storage.",
   "No network locations configured! Add one in Settings.": "No network locations configured! Add one in Settings.",
   "Select network location": "Select network location",
-  "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).": "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP).",
+  "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP).": "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP).",
   "Select Protocol": "Select Protocol",
   "Update language packs": "Update language packs",
   "Update the UltraHand language package list.": "Update the UltraHand language package list.",

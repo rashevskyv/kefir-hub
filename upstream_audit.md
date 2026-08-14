@@ -153,7 +153,7 @@ per-user cache. Наш шлях прозоріший, але дорожчий д
 
 - `dadce0f`: лише typo.
 - `81f8b4b`: лише README/Discord.
-- `e00ac7c`: NFS URL parsing; локальна NFS-підсистема вилучена.
+- [x] `e00ac7c`: NFS URL parsing відновлено у `v0.13.449` через `nfs_parse_url_dir()` з regression coverage для nested export path.
 - `fac197d`: version bump `1.0.4`.
 - `c19e5a3`: merge, функціонально дублює play-stats patch.
 - Частина `05279db`: потрібна лише для відсутнього локально affinity relaunch.
@@ -183,5 +183,5 @@ Play-stats toggle/worker, UI керування custom repositories, affinity-aw
 
 Прямий cherry-pick не рекомендований: локально перероблені header/status UI,
 File Browser, exports, FTP VFS, MTP, NACP compatibility, branding/config paths;
-NFS вилучено, `libusbdvd` замінено на `libusbhsfs`. Беремо лише перевірену поведінку
+NFS відновлено як read-only source у `v0.13.449`, `libusbdvd` замінено на `libusbhsfs`. Беремо лише перевірену поведінку
 і вбудовуємо її у спільні локальні точки, найменшим diff без нових залежностей.

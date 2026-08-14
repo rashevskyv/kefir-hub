@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.448**. Завершені плани збережено в
+Поточний delivery — **v0.13.449**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## 0. v0.13.448 — очищення екранних NTP-сповіщень
+## 0. v0.13.449 — NFS phase 1 (read-only source)
+
+Статус: програмну реалізацію та senior review завершено; host suite (`nfs_url`: 194 checks), dead-symbol guard, WSL `ReleaseWithInstall` і `git diff --check` пройдено 2026-08-14. Апаратна перевірка на реальній Switch залишається відкритою.
+
+1. Підключено статичний `ITotalJustice/libnfs@65f3e11` через `FetchContent`; dependency documentation, examples і tests вимкнено.
+2. Додано read-only `devoptab_nfs.cpp`, що належить спільному `MountNetworkDevice2()`, використовує `nfs_parse_url_dir()`, RAII cleanup та повертає `EROFS` для мутацій.
+3. Додано host-testable NFS URL validator із canonical lowercase scheme, hostname/IPv4 і port validation, збереженням nested export path, лімітом `FsPath`, відхиленням credentials, traversal, query/fragment, IPv6 та небезпечного percent encoding.
+4. NFS підключено до File Browser, source picker і Settings; на кожному маршруті збережено read-only flag, а невалідні saved URLs відсіюються до копіювання у фіксовані `FsPath`.
+5. Оновлено англійську та українську локалізації, додано 194 host checks і завершено software verification. Наступний крок — browse/read/copy-from-NFS smoke test на Switch.
+
+## 0.1. v0.13.448 — очищення екранних NTP-сповіщень
 
 Статус: реалізацію завершено; прибрано тимчасові діагностичні tooltip-и та нелокалізоване сповіщення UI refresh; збережено повне логування `[NTP]` та єдине локалізоване сповіщення "Clock synced" для фактично оновленого User Clock; пройдено WSL `ReleaseWithInstall`, `git diff --check`, оновлено living docs.
 
@@ -282,7 +292,7 @@
 1. DBI UI: динамічний рядок журналу та наочний `ReviewQueue` із
    сегментованими NAND/SD-смугами.
 2. Games: dump/verify/read-only mount, save integration і ticket details.
-3. Network sources: NFS/SFTP — лише після окремого погодження протоколів і UX.
+3. Network sources: NFS read-only завершено у `v0.13.449`; SFTP — лише після окремого погодження протоколу й UX.
 
 Вбудований player залишається замороженим до окремого рішення.
 

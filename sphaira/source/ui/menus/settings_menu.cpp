@@ -19,6 +19,7 @@
 #include "ui/sidebar.hpp"
 #include "ui/steamgriddb_icon.hpp"
 #include "utils/devoptab_smb2.hpp"
+#include "utils/nfs_url.hpp"
 
 
 #include "app.hpp"
@@ -1377,7 +1378,7 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "+ Add network location"_i18n,
-        "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n,
+        "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP)."_i18n,
         [](){ return std::string{}; },
         [menu](){
             sphaira::ui::menu::filebrowser::AddNetworkLocationInteractive([menu](){
@@ -1449,6 +1450,9 @@ auto TestLocationConnection(const location::Entry& loc) -> Result {
 #else
         return -1;
 #endif
+    }
+    if (loc.IsNfs()) {
+        return devoptab::nfs::TestConnection(loc.url);
     }
 
     curl::Api api(CURL_LOCATION_TO_API(loc));
@@ -1672,7 +1676,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
                 options->Add<SidebarEntryCallback>("Enter/Connect"_i18n, [this, loc](){
                     if (loc.IsConfigured()) {
-                        if (loc.IsSmb()) {
+                        if (loc.IsSmb() || loc.IsNfs()) {
                             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None, &loc);
                         } else {
                             App::Push<OptionBox>("Browsing is not supported for this protocol yet."_i18n, "OK"_i18n);
@@ -1718,6 +1722,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                     std::string proto = loc.protocol;
                     if (proto.empty()) {
                         if (loc.IsSmb()) proto = "smb";
+                        else if (loc.IsNfs()) proto = "nfs";
                         else if (loc.url.starts_with("ftp://")) proto = "ftp";
                         else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav"; // fallback
                         else if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
@@ -2755,6 +2760,9 @@ auto GetLocationProtocol(const location::Entry& loc) -> std::string {
     if (loc.url.starts_with("smb://")) {
         return "smb";
     }
+    if (loc.url.starts_with("nfs://")) {
+        return "nfs";
+    }
     if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) {
         return "ftp";
     }
@@ -2767,6 +2775,9 @@ auto GetLocationProtocol(const location::Entry& loc) -> std::string {
 auto GetLocationProtocolLabel(const std::string& protocol) -> std::string {
     if (protocol == "smb") {
         return "Samba (SMB)";
+    }
+    if (protocol == "nfs") {
+        return "NFS";
     }
     if (protocol == "ftp") {
         return "FTP";
@@ -2791,6 +2802,11 @@ void ChangeLocationProtocol(location::Entry& loc, const std::string& protocol) {
     if (protocol == "smb") {
         loc.url = "smb://" + address;
         loc.port = 0;
+    } else if (protocol == "nfs") {
+        loc.url = "nfs://" + address;
+        loc.port = 0;
+        loc.user.clear();
+        loc.pass.clear();
     } else if (protocol == "webdav") {
         loc.url = "webdav://" + address;
         loc.port = 0;
@@ -2909,13 +2925,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
         "Change the network protocol and edit the fields required by the new source type."_i18n,
         [proto](){ return GetLocationProtocolLabel(proto); },
         [this, proto]() {
-            PopupList::Items protocols = {"Samba (SMB)", "WebDAV", "FTP", "HTTP"};
+            PopupList::Items protocols = {"Samba (SMB)", "NFS", "WebDAV", "FTP", "HTTP"};
             App::Push<PopupList>("Select Protocol"_i18n, protocols, [this, proto](auto op_index) {
                 if (!op_index) {
                     return;
                 }
 
-                constexpr std::array protocol_values{"smb", "webdav", "ftp", "http"};
+                constexpr std::array protocol_values{"smb", "nfs", "webdav", "ftp", "http"};
                 const auto selected = protocol_values[*op_index];
                 if (proto == selected) {
                     return;
@@ -3046,7 +3062,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
         });
     }
 
-    if (proto != "http") {
+    if (proto != "http" && proto != "nfs") {
         items.emplace_back(SettingsItem{
             "Username"_i18n,
             "Username for network connection (optional)."_i18n,

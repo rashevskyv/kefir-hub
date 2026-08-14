@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.448)
+set(sphaira_VERSION 0.13.449)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -140,6 +140,7 @@ add_executable(sphaira
     source/utils/devoptab_romfs.cpp
     source/utils/devoptab_nca.cpp
     source/utils/devoptab_smb2.cpp
+    source/utils/devoptab_nfs.cpp
     source/utils/devoptab_mtp.cpp
 
     source/usb/base.cpp
@@ -277,6 +278,11 @@ FetchContent_Declare(libsmb2
     PATCH_COMMAND patch -p1 -N -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/patches/libsmb2.patch || true
 )
 
+FetchContent_Declare(libnfs
+    GIT_REPOSITORY https://github.com/ITotalJustice/libnfs.git
+    GIT_TAG 65f3e11
+)
+
 set(USE_NEW_ZSTD ON)
 # has issues with some homebrew and game icons (oxenfree, overwatch2).
 set(USE_NVJPG ON)
@@ -321,7 +327,9 @@ set(YYJSON_DISABLE_UNALIGNED_MEMORY_ACCESS OFF)
 set(USBHSFS_GPL OFF)
 set(USBHSFS_SXOS_DISABLE ON)
 
+set(ENABLE_DOCUMENTATION OFF CACHE BOOL "Build documentation" FORCE)
 set(ENABLE_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
+set(ENABLE_TESTS OFF CACHE BOOL "Build tests" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set(CMAKE_DISABLE_FIND_PACKAGE_OpenSSL ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_GSSAPI ON)
@@ -340,6 +348,7 @@ FetchContent_MakeAvailable(
     libnxtc
     nvjpg
     libsmb2
+    libnfs
 )
 
 target_compile_definitions(smb2 PRIVATE -D__SWITCH__)
@@ -467,6 +476,7 @@ target_link_libraries(sphaira PRIVATE
     # libusbhsfs
     libnxtc
     smb2
+    nfs
 
     ${minizip_lib}
     ZLIB::ZLIB
@@ -493,6 +503,9 @@ target_include_directories(sphaira PRIVATE
     ${minizip_inc}
     ${mbedtls_inc}
     ${libsmb2_SOURCE_DIR}/include
+    ${libnfs_SOURCE_DIR}/include
+    ${libnfs_SOURCE_DIR}/include/nfsc
+    ${libnfs_SOURCE_DIR}/nfs
 )
 
 # copy the romfs

@@ -17,6 +17,7 @@
 #include "title_info.hpp"
 #include "utils/devoptab_smb2.hpp"
 #include "utils/devoptab_curl_device.hpp"
+#include "utils/nfs_url.hpp"
 #include "utils/utils.hpp"
 
 #include "log.hpp"
@@ -1163,6 +1164,10 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
 
         const auto network_locations = location::Load();
         for (const auto& e : network_locations) {
+            if (e.IsNfs() && !sphaira::nfs::ValidateUrl(e.url)) {
+                continue;
+            }
+
             FsDirectoryEntry net{};
             std::strcpy(net.name, e.name.c_str());
             net.type = FsDirEntryType_Dir;
@@ -1210,13 +1215,19 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
                     if (loc.name == e.name) {
                         const auto root_p = loc.IsSmb() ? std::string{"smb2:/"} : MakeNetworkRoot(loc.url);
                         fe.virtual_target_entry.type = FsType::Network;
-                        std::strcpy(fe.virtual_target_entry.name, loc.name.c_str());
-                        std::strcpy(fe.virtual_target_entry.root, root_p.c_str());
-                        fe.virtual_target_entry.flags = FsEntryFlag_None;
-                        std::strcpy(fe.virtual_target_entry.url, loc.url.c_str());
-                        std::strcpy(fe.virtual_target_entry.protocol, loc.protocol.c_str());
-                        std::strcpy(fe.virtual_target_entry.user, loc.user.c_str());
-                        std::strcpy(fe.virtual_target_entry.pass, loc.pass.c_str());
+                        std::strncpy(fe.virtual_target_entry.name, loc.name.c_str(), sizeof(fe.virtual_target_entry.name) - 1);
+                        fe.virtual_target_entry.name[sizeof(fe.virtual_target_entry.name) - 1] = '\0';
+                        std::strncpy(fe.virtual_target_entry.root, root_p.c_str(), sizeof(fe.virtual_target_entry.root) - 1);
+                        fe.virtual_target_entry.root[sizeof(fe.virtual_target_entry.root) - 1] = '\0';
+                        fe.virtual_target_entry.flags = loc.IsNfs() ? FsEntryFlag_ReadOnly : FsEntryFlag_None;
+                        std::strncpy(fe.virtual_target_entry.url, loc.url.c_str(), sizeof(fe.virtual_target_entry.url) - 1);
+                        fe.virtual_target_entry.url[sizeof(fe.virtual_target_entry.url) - 1] = '\0';
+                        std::strncpy(fe.virtual_target_entry.protocol, loc.protocol.c_str(), sizeof(fe.virtual_target_entry.protocol) - 1);
+                        fe.virtual_target_entry.protocol[sizeof(fe.virtual_target_entry.protocol) - 1] = '\0';
+                        std::strncpy(fe.virtual_target_entry.user, loc.user.c_str(), sizeof(fe.virtual_target_entry.user) - 1);
+                        fe.virtual_target_entry.user[sizeof(fe.virtual_target_entry.user) - 1] = '\0';
+                        std::strncpy(fe.virtual_target_entry.pass, loc.pass.c_str(), sizeof(fe.virtual_target_entry.pass) - 1);
+                        fe.virtual_target_entry.pass[sizeof(fe.virtual_target_entry.pass) - 1] = '\0';
                         fe.virtual_target_entry.port = loc.port;
 
                         // A registered/mounted devoptab does not prove that the
@@ -1834,6 +1845,7 @@ void FsView::DisplayOptions() {
                 std::string proto = loc->protocol;
                 if (proto.empty()) {
                     if (loc->IsSmb()) proto = "smb";
+                    else if (loc->IsNfs()) proto = "nfs";
                     else if (loc->url.starts_with("ftp://")) proto = "ftp";
                     else if (loc->url.starts_with("http://") || loc->url.starts_with("https://")) proto = "webdav"; // fallback
                     else if (loc->url.starts_with("webdav://") || loc->url.starts_with("webdavs://")) proto = "webdav";
@@ -1875,7 +1887,7 @@ void FsView::DisplayOptions() {
             AddNetworkLocationInteractive([this](){
                 SortAndFindLastFile(true);
             });
-        }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
+        }, "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP)."_i18n);
     }
 
     // returns true if all entries match the ext array.
@@ -2339,21 +2351,26 @@ void FsView::DisplayAdvancedOptions() {
 }
 
 void FsView::ConnectToLocation(const FsEntry& target_entry) {
-    std::string proto = target_entry.url.toString().starts_with("smb://") ? "SMB" : "Network Storage";
+    const auto target_url_str = target_entry.url.toString();
+    const auto target_proto_str = target_entry.protocol.toString();
+    std::string proto = (target_url_str.starts_with("smb://") || target_proto_str == "smb") ? "SMB" :
+                        ((target_url_str.starts_with("nfs://") || target_proto_str == "nfs") ? "NFS" : "Network Storage");
     std::string msg = "Connecting to " + proto + "...";
 
     App::Push<ProgressBox>(0, msg, target_entry.name, [this, target_entry](auto pbox) -> Result {
-        if (target_entry.url.toString().starts_with("smb://")) {
+        const auto url_str = target_entry.url.toString();
+        const auto proto_str = target_entry.protocol.toString();
+        if (url_str.starts_with("smb://") || proto_str == "smb") {
 #ifdef BUILD_SMB2
             if (g_smb2fs) {
-                if (g_smb2fs->GetConnectUrl() == target_entry.url.toString()) {
+                if (g_smb2fs->GetConnectUrl() == url_str) {
                     R_SUCCEED();
                 }
                 delete g_smb2fs;
                 g_smb2fs = nullptr;
             }
             std::string server, share;
-            ParseSmbUrl(target_entry.url.toString(), server, share);
+            ParseSmbUrl(url_str, server, share);
             g_smb2fs = new CSMB2FS(server, target_entry.user.toString(), target_entry.pass.toString(), share, "smb2", "smb2");
             if (g_smb2fs->RegisterFilesystem_v2()) {
                 R_SUCCEED();
@@ -2365,17 +2382,44 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
 #else
             R_THROW(Result_SmbNotSupported);
 #endif
+        } else if (url_str.starts_with("nfs://") || proto_str == "nfs") {
+            if (!sphaira::nfs::ValidateUrl(url_str)) {
+                log_write("[FILEBROWSER] invalid NFS URL format\n");
+                R_THROW(0xCCCC);
+            }
+
+            if (devoptab::common::IsNetworkDeviceMounted(url_str)) {
+                R_SUCCEED();
+            }
+
+            sphaira::devoptab::common::MountConfig config{
+                .name = target_entry.name.toString(),
+                .url = url_str,
+                .user = "",
+                .pass = "",
+                .port = target_entry.port,
+                .read_only = true
+            };
+
+            const auto dev_name = MakeNetworkDeviceName(url_str);
+            const auto mount_name = MakeNetworkRoot(url_str);
+
+            if (sphaira::devoptab::nfs::Mount(config, dev_name.c_str(), mount_name.c_str())) {
+                R_SUCCEED();
+            } else {
+                R_THROW(0xCCCC);
+            }
         } else {
             curl::Api api{
-                curl::Url{target_entry.url.toString()},
+                curl::Url{url_str},
                 curl::UserPass{target_entry.user.toString(), target_entry.pass.toString()},
                 curl::Port{target_entry.port},
             };
             auto probe_type = curl::ProbeType::Http;
-            if (target_entry.protocol.toString() == "webdav" ||
-                target_entry.url.toString().starts_with("webdav://") || target_entry.url.toString().starts_with("webdavs://")) {
+            if (proto_str == "webdav" ||
+                url_str.starts_with("webdav://") || url_str.starts_with("webdavs://")) {
                 probe_type = curl::ProbeType::Webdav;
-            } else if (target_entry.url.toString().starts_with("ftp://") || target_entry.url.toString().starts_with("ftps://")) {
+            } else if (url_str.starts_with("ftp://") || url_str.starts_with("ftps://")) {
                 probe_type = curl::ProbeType::Ftp;
             }
 
@@ -2385,21 +2429,21 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
                 R_THROW(0xCCCC);
             }
 
-            if (devoptab::common::IsNetworkDeviceMounted(target_entry.url.toString())) {
+            if (devoptab::common::IsNetworkDeviceMounted(url_str)) {
                 R_SUCCEED();
             }
 
             sphaira::devoptab::common::MountConfig config{
                 .name = target_entry.name.toString(),
-                .url = target_entry.url.toString(),
+                .url = url_str,
                 .user = target_entry.user.toString(),
                 .pass = target_entry.pass.toString(),
                 .port = target_entry.port,
                 .read_only = target_entry.IsReadOnly()
             };
             auto device = std::make_unique<sphaira::devoptab::common::MountCurlDevice>(config);
-            const auto dev_name = MakeNetworkDeviceName(target_entry.url.toString());
-            const auto mount_name = MakeNetworkRoot(target_entry.url.toString());
+            const auto dev_name = MakeNetworkDeviceName(url_str);
+            const auto mount_name = MakeNetworkRoot(url_str);
 
             if (sphaira::devoptab::common::MountNetworkDevice2(std::move(device), config, sizeof(sphaira::devoptab::common::CurlFileState), sizeof(sphaira::devoptab::common::CurlDirState), dev_name.c_str(), mount_name.c_str())) {
                 R_SUCCEED();
@@ -2460,11 +2504,15 @@ void FsView::ShowSourcePicker() {
 
     const auto network_locations = location::Load();
     for (const auto& e: network_locations) {
+        if (e.IsNfs() && !sphaira::nfs::ValidateUrl(e.url)) {
+            continue;
+        }
+
         FsEntry entry{
             .name = e.name,
             .root = e.IsSmb() ? "smb2:/" : MakeNetworkRoot(e.url),
             .type = FsType::Network,
-            .flags = FsEntryFlag_None,
+            .flags = e.IsNfs() ? FsEntryFlag_ReadOnly : FsEntryFlag_None,
             .url = e.url,
             .protocol = e.protocol,
             .user = e.user,
@@ -2476,6 +2524,7 @@ void FsView::ShowSourcePicker() {
         std::string proto = e.protocol;
         if (proto.empty()) {
             if (e.IsSmb()) proto = "smb";
+            else if (e.IsNfs()) proto = "nfs";
             else if (e.url.starts_with("ftp://") || e.url.starts_with("ftps://")) proto = "ftp";
             else if (e.url.starts_with("http://") || e.url.starts_with("https://")) proto = "http";
             else proto = "webdav";
@@ -2526,7 +2575,7 @@ void FsView::ShowSourcePicker() {
         AddNetworkLocationInteractive([this](){
             ShowSourcePicker();
         });
-    }, "Configure a new network location (supported protocols: SMB, WebDAV, FTP, HTTP)."_i18n);
+    }, "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP)."_i18n);
 }
 
 void FsView::MountUsbStorage() {
@@ -2620,16 +2669,29 @@ Menu::~Menu() {
 }
 
 void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
+    if (e.IsNfs() && !sphaira::nfs::ValidateUrl(e.url)) {
+        log_write("[FILEBROWSER] ConnectToLocation rejected invalid NFS URL\n");
+        App::Push<OptionBox>("Failed to connect to network storage!"_i18n + "\n" +
+            "Check that the server is powered on and reachable on your network."_i18n, "OK"_i18n);
+        return;
+    }
+
     const auto root_p = e.IsSmb() ? std::string{"smb2:/"} : MakeNetworkRoot(e.url);
     FsEntry target_entry{};
-    std::strcpy(target_entry.name, e.name.c_str());
-    std::strcpy(target_entry.root, root_p.c_str());
+    std::strncpy(target_entry.name, e.name.c_str(), sizeof(target_entry.name) - 1);
+    target_entry.name[sizeof(target_entry.name) - 1] = '\0';
+    std::strncpy(target_entry.root, root_p.c_str(), sizeof(target_entry.root) - 1);
+    target_entry.root[sizeof(target_entry.root) - 1] = '\0';
     target_entry.type = FsType::Network;
-    target_entry.flags = FsEntryFlag_None;
-    std::strcpy(target_entry.url, e.url.c_str());
-    std::strcpy(target_entry.protocol, e.protocol.c_str());
-    std::strcpy(target_entry.user, e.user.c_str());
-    std::strcpy(target_entry.pass, e.pass.c_str());
+    target_entry.flags = e.IsNfs() ? FsEntryFlag_ReadOnly : FsEntryFlag_None;
+    std::strncpy(target_entry.url, e.url.c_str(), sizeof(target_entry.url) - 1);
+    target_entry.url[sizeof(target_entry.url) - 1] = '\0';
+    std::strncpy(target_entry.protocol, e.protocol.c_str(), sizeof(target_entry.protocol) - 1);
+    target_entry.protocol[sizeof(target_entry.protocol) - 1] = '\0';
+    std::strncpy(target_entry.user, e.user.c_str(), sizeof(target_entry.user) - 1);
+    target_entry.user[sizeof(target_entry.user) - 1] = '\0';
+    std::strncpy(target_entry.pass, e.pass.c_str(), sizeof(target_entry.pass) - 1);
+    target_entry.pass[sizeof(target_entry.pass) - 1] = '\0';
     target_entry.port = e.port;
     view->ConnectToLocation(target_entry);
 }
@@ -3087,7 +3149,7 @@ bool IsUrlLike(const std::string& str) {
 }
 
 void AddNetworkLocationInteractive(std::function<void()> on_success) {
-    PopupList::Items protocols = {"Samba (SMB)", "WebDAV", "FTP", "HTTP"};
+    PopupList::Items protocols = {"Samba (SMB)", "NFS", "WebDAV", "FTP", "HTTP"};
     App::Push<PopupList>("Select Protocol"_i18n, protocols, [on_success](std::optional<s64> op_proto) {
         if (!op_proto) return;
         s64 proto = *op_proto;
@@ -3100,9 +3162,10 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
 
         std::string target_proto;
         if (proto == 0) target_proto = "smb";
-        else if (proto == 1) target_proto = "webdav";
-        else if (proto == 2) target_proto = "ftp";
-        else if (proto == 3) target_proto = "http";
+        else if (proto == 1) target_proto = "nfs";
+        else if (proto == 2) target_proto = "webdav";
+        else if (proto == 3) target_proto = "ftp";
+        else if (proto == 4) target_proto = "http";
 
         auto network_locations = location::Load();
         bool has_exact_name = false;
@@ -3114,6 +3177,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
                 std::string existing_proto = loc.protocol;
                 if (existing_proto.empty()) {
                     if (loc.url.starts_with("smb://")) existing_proto = "smb";
+                    else if (loc.url.starts_with("nfs://")) existing_proto = "nfs";
                     else if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) existing_proto = "ftp";
                     else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) existing_proto = "http";
                     else existing_proto = "webdav";
@@ -3147,6 +3211,21 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
                 }
                 e.url = target_url;
             } else if (proto == 1) {
+                e.protocol = "nfs";
+                if (is_url) {
+                    target_url = name;
+                    if (!target_url.starts_with("nfs://")) {
+                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
+                            target_url = "nfs://" + target_url.substr(pos + 3);
+                        } else {
+                            target_url = "nfs://" + target_url;
+                        }
+                    }
+                } else {
+                    target_url = "nfs://";
+                }
+                e.url = target_url;
+            } else if (proto == 2) {
                 e.protocol = "webdav";
                 if (is_url) {
                     target_url = name;
@@ -3162,7 +3241,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
                     target_url = "webdav://";
                 }
                 e.url = target_url;
-            } else if (proto == 2) {
+            } else if (proto == 3) {
                 e.protocol = "ftp";
                 e.port = 21;
                 if (is_url) {
@@ -3197,7 +3276,7 @@ void AddNetworkLocationInteractive(std::function<void()> on_success) {
                     target_url = "ftp://";
                 }
                 e.url = target_url;
-            } else if (proto == 3) {
+            } else if (proto == 4) {
                 e.protocol = "http";
                 if (is_url) {
                     target_url = name;

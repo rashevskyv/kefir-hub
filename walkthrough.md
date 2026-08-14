@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.448** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.449** (2026-08-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.449 — NFS phase 1 (read-only source)
+
+- **Pinned dependency:** статичний `ITotalJustice/libnfs@65f3e11` підключено через `FetchContent`; dependency docs, examples і tests вимкнено.
+- **Read-only backend:** новий NFS devoptab використовує спільне володіння `MountNetworkDevice2()`, `nfs_parse_url_dir()` для повного nested export path, RAII cleanup і захисні `EROFS` write callbacks.
+- **Безпечний URL boundary:** приймається лише `nfs://hostname-or-IPv4[:port]/export`; credentials, IPv6, query/fragment, literal і encoded traversal, небезпечні separators, control characters та URL довші за 768 символів відхиляються до `FsPath` construction.
+- **File Browser і Settings:** NFS доступний у connection flow, source picker, protocol picker і connection test. Усі входи зберігають `FsEntryFlag_ReadOnly`; невалідні saved entries не потрапляють у root browser чи picker, але залишаються доступними для редагування в Settings.
+- **Перевірка:** `tests/run.sh` пройшов (`nfs_url`: 194 checks; dead-symbol guard: 731/731), WSL `ReleaseWithInstall` зібрав `sphaira_nro`, `git diff --check` чистий. Ручний smoke test на Switch залишається відкритим.
 
 ## v0.13.448 — очищення екранних NTP-сповіщень
 

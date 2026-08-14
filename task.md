@@ -1,12 +1,22 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.448**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.449**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.448 (очищення NTP-сповіщень)
+## Поточний delivery: v0.13.449 (NFS phase 1 — read-only source)
+
+- [x] `NFS-LIBNFS-449` — додати pinned static dependency `ITotalJustice/libnfs@65f3e11` без документації, прикладів і dependency tests.
+- [x] `NFS-READONLY-449` — реалізувати NFS devoptab через `MountNetworkDevice2()` з RAII cleanup, `nfs_parse_url_dir()`, серіалізованими операціями та жорсткою read-only семантикою.
+- [x] `NFS-URL-449` — додати host-testable validator канонічного `nfs://host[:port]/export`, захист від credentials, traversal, encoded separators і переповнення `FsPath`; 194 NFS checks пройдено.
+- [x] `NFS-UI-449` — інтегрувати NFS у File Browser, source picker і Settings, зберегти `FsEntryFlag_ReadOnly` на всіх маршрутах та відсікати невалідні entries до створення `FsEntry`.
+- [x] `NFS-VERIFY-449` — успішно пройти `tests/run.sh`, dead-symbol guard, WSL `ReleaseWithInstall` і `git diff --check`.
+- [x] `VERSION-DOC-COMMIT-449` — підняти версію до `0.13.449`, оновити living docs і створити сфокусований коміт після senior review.
+- [ ] `HW-NFS-449` — на реальній Switch перевірити browse/open/read/copy-from-NFS для nested export і відсутність write actions.
+
+## Попередній delivery: v0.13.448 (очищення NTP-сповіщень)
 
 - [x] `NTP-NOTIF-CLEANUP-448` — вимкнути тимчасові екранні підказки діагностичного трейсу NTP; `ReportSyncStage()` зберігає запис у `[NTP]` лог без виклику `App::Notify`.
 - [x] `NTP-TOAST-FILTER-448` — прибрати нелокалізоване сповіщення `NTP: UI clock refreshed`; єдиним екранним повідомленням залишається локалізоване `Clock synced`, яке ставиться в чергу виключно після успішного live-запису User Clock та оновлення libnx time.
@@ -228,7 +238,8 @@
 - [ ] `HIST-56` — DBI: сегментовані NAND/SD-смуги та наочний `ReviewQueue`.
 - [ ] `HIST-61B` — Games: dump/verify/read-only mount і безпечні component actions.
 - [ ] `HIST-61C` — Games: save integration, ticket details і перевірений DLC unlocker.
-- [ ] `HIST-NFS-SFTP` — NFS/SFTP як окремі network sources.
+- [x] `HIST-NFS-449` — NFS як read-only network source реалізовано у `v0.13.449`.
+- [ ] `HIST-SFTP` — SFTP як окреме network source.
 - [~] `HIST-PLAYER` — вбудований player; заморожено до окремого погодження.
 
 ## Правило закриття
