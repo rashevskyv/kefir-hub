@@ -208,6 +208,10 @@ inline auto ToggleIniBoolean(std::string_view line) -> ToggleResult {
                (token[5] == '0' || token[5] == '1')) {
         new_token = std::string(token);
         new_token[5] = (token[5] == '0') ? '1' : '0';
+    } else if (token == "0") {
+        new_token = "1";
+    } else if (token == "1") {
+        new_token = "0";
     } else {
         return {false, {}};
     }

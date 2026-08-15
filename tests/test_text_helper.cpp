@@ -75,13 +75,32 @@ int main() {
     auto r13 = ToggleIniBoolean("flag = U8!0X0");
     assert(r13.toggled && r13.new_line == "flag = U8!0X1");
 
-    // Typed flag rejection cases:
+    // Plain 0 / 1 toggling
+    auto r14 = ToggleIniBoolean("autostart = 0");
+    assert(r14.toggled && r14.new_line == "autostart = 1");
+
+    auto r15 = ToggleIniBoolean("autostart = 1");
+    assert(r15.toggled && r15.new_line == "autostart = 0");
+
+    auto r16 = ToggleIniBoolean("  enabled = 0   ; trailing comment");
+    assert(r16.toggled && r16.new_line == "  enabled = 1   ; trailing comment");
+
+    auto r17 = ToggleIniBoolean("flag = 1 # hash comment");
+    assert(r17.toggled && r17.new_line == "flag = 0 # hash comment");
+
+    // Typed flag rejection cases & multi-digit numbers:
     assert(!ToggleIniBoolean("flag = u8!0x2").toggled);
     assert(!ToggleIniBoolean("flag = u32!0x0").toggled);
     assert(!ToggleIniBoolean("flag = u8!0x01").toggled);
     assert(!ToggleIniBoolean("flag = \"u8!0x0\"").toggled);
     assert(!ToggleIniBoolean("; flag = u8!0x0").toggled);
     assert(!ToggleIniBoolean("flag = my_u8!0x0_value").toggled);
+    assert(!ToggleIniBoolean("count = 10").toggled);
+    assert(!ToggleIniBoolean("count = 01").toggled);
+    assert(!ToggleIniBoolean("count = 0x0").toggled);
+    assert(!ToggleIniBoolean("count = 0x1").toggled);
+    assert(!ToggleIniBoolean("count = 2").toggled);
+    assert(!ToggleIniBoolean("; count = 0").toggled);
 
     // ReadPage pager unit tests:
     // 1. Multi-line LF paging

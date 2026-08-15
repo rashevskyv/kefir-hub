@@ -52,6 +52,7 @@ private:
     void SetupViewActions();
     void SetupEditActions();
     void SwitchToEditMode();
+    void SwitchToViewMode();
     void DisplayTextOptions();
     void PushUndo();
     void Undo();
@@ -134,8 +135,10 @@ private:
     s64 m_viewport_rows{17};
     s64 m_buffer_rows{34};
     float m_font_size{18.f};
-    bool m_l_modifier_used{false};
+    bool m_zl_modifier_used{false};
     bool m_touch_was_pinch{false};
+    bool m_held_down_at_bottom{false};
+    bool m_held_up_at_top{false};
     std::vector<s64> m_page_offsets{0};
     std::vector<s64> m_page_start_lines{1};
     s64 m_stream_start_line{1};

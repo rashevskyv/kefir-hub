@@ -1,10 +1,35 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.458**. Завершені плани збережено в
+Поточний delivery — **v0.13.460**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.458 — Homebrew settings & search paths
+## Поточний delivery: v0.13.460 — text editor basics
+
+Статус: реалізацію виконано та перевірено. Реалізовано перехід Edit → View на кнопку B
+зі збереженням стану та підтвердженням Save/Discard/Cancel при виході з View; блокування
+повторного wrap при утриманні Down/Up на межах документа; стабільний рендеринг виділеного
+рядка INI з синтаксичним підсвічуванням та перемикання значень 0 ↔ 1 у `ToggleIniBoolean`.
+До цього delivery також увійшов ще не закомічений ZL zoom chord: `ZL` + D-pad
+або вертикальний стік масштабує текст і не запускає page up після zoom.
+Пройдено host test suite (13 suites, 742 declarations), WSL ReleaseWithInstall
+(`[100%] Built target sphaira_nro`) та `git diff --check`.
+
+1. Додати `SwitchToViewMode()`: кнопка B в Edit перемикає у View без закриття меню;
+   кнопка B у View показує діалог збереження для зміненого документа.
+2. В Edit mode блокувати автоповтор wrap при утриманні кнопки на першому чи останньому
+   рядку; скидати блокування при відпусканні кнопки.
+3. Зберегти синтаксичні кольори та однаковий розмір шрифту для виділеного рядка INI.
+4. Розширити `ToggleIniBoolean()` для перемикання 0 ↔ 1 із тестами в `test_text_helper.cpp`.
+5. Підняти версію до `0.13.460`, оновити living docs, пройти тести та збірку.
+
+## Наступний запланований delivery: multi-line text editing & clipboard
+
+1. Виділення діапазону рядків у текстовому редакторі.
+2. Операції Cut / Copy / Paste рядків та блоків.
+3. Групове переміщення, видалення та коментування рядків.
+
+## Попередній delivery: v0.13.458 — Homebrew settings & search paths
 
 Статус: реалізацію виконано та перевірено. Додано виділену категорію
 `Homebrew` у Settings одразу після `General`, куди перенесено `Forwarders`,
@@ -25,31 +50,6 @@
 4. Оновити 13 файлів локалізації в `assets/romfs/i18n/*.json` (крім `ru.json`).
    Підняти версію `0.13.457 → 0.13.458`, оновити living docs, перевірити валідність
    JSON, пройти host tests та `git diff --check`.
-
-## Наступний запланований delivery: text viewer ZL zoom controls
-
-1. Застосувати chord `ZL` + D-pad Up/Down / будь-який стік для зуму тексту у
-   read-only text viewer.
-2. Зберегти release-based `ZL`/`ZR` paging без прокручування після зуму.
-3. Оновити підказки footer та перевірити керування.
-
-## Попередній delivery: v0.13.457 — text viewer viewport scrolling
-
-Статус: реалізацію виконано та перевірено. У read-only text viewer уніфіковано
-зум із патерном Image Viewer: утриманий `ZL` + D-pad Up/Down, LS Up/Down або RS Up/Down
-масштабує текст; ті самі inputs без `ZL` виконують негайний viewport scrolling.
-Відпускання `ZL` гортає 10 сторінок лише якщо `ZL` не використовувався для зуму.
-Оновлено неклікабельну footer-підказку `ZL + Up/Down`. Пройдено host test suite
-(13 suites, 742 declarations), WSL ReleaseWithInstall (`[100%] Built target sphaira_nro`)
-та `git diff --check`.
-
-1. Повторити у read-only text viewer чинний image viewer pattern: `ZL` як
-   modifier для D-pad Up/Down, LS Up/Down та RS Up/Down; без modifier усі
-   ці inputs лишаються viewport scrolling.
-2. `ZL`/`ZR` на release зберігають гортання на десять сторінок, але `ZL`,
-   використаний у zoom chord, не викликає page up після відпускання.
-3. Оновити неклікабельну footer-підказку zoom, підняти версію до `0.13.458` та
-   пройти host suite, WSL build і `git diff --check`.
 
 ## Попередній delivery: v0.13.457 — text viewer viewport scrolling
 

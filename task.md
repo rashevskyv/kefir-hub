@@ -1,12 +1,36 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.458**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.460**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.458 (Homebrew settings & search paths)
+## Поточний delivery: v0.13.460 (text editor basics)
+
+- [x] `TEXT-EDIT-VIEW-BACK-460` — кнопка B у режимі редагування повертає до режиму
+  перегляду (View) для того самого відкритого документа зі збереженням рядків,
+  позиції скролу, dirty стану та прав редагування; B у View запитує підтвердження
+  Save/Discard/Cancel для зміненого документа.
+- [x] `TEXT-EDIT-WRAP-GATE-460` — утримання Down на останньому рядку або Up на
+  першому рядку зупиняється на межі без зацикленого повторення; новий фізичний
+  натиск виконує перехід (wrap); звичайний скрол List для інших меню не змінено.
+- [x] `TEXT-INI-SYNTAX-TOGGLE-460` — виділений рядок у редакторі INI зберігає синтаксичні
+  кольори та розмір шрифту; розширено `ToggleIniBoolean` для підтримки перемикання 0 ↔ 1
+  із збереженням коментарів/пробілів та валідацією багатозначних чисел.
+- [x] `TEXT-ZL-ZOOM-460` — у read-only text viewer `ZL` + D-pad або вертикальний
+  стік масштабує текст, а відпускання `ZL` не гортає після zoom chord; без
+  modifier вертикальні inputs лишаються viewport scrolling.
+- [x] `TEXT-EDIT-VERIFY-460` — підняти версію до 0.13.460, додати хостові юніт-тести
+  для 0/1 boolean toggle, пройти host tests, WSL ReleaseWithInstall та `git diff --check`.
+
+## Наступний запланований delivery: multi-line text editing & clipboard
+
+- [ ] `TEXT-MULTI-SELECT-PLAN` — виділення діапазону рядків у текстовому редакторі.
+- [ ] `TEXT-CLIPBOARD-PLAN` — операції Cut / Copy / Paste рядків та блоків.
+- [ ] `TEXT-MULTI-OPS-PLAN` — групове переміщення, видалення та коментування рядків.
+
+## Попередній delivery: v0.13.458 (Homebrew settings & search paths)
 
 - [x] `HB-SETTINGS-CAT-458` — додати окрему категорію `Homebrew` у ліве меню
   Settings одразу після `General`, перенести туди `Forwarders` (з Install),
@@ -19,17 +43,6 @@
 - [x] `HB-RELEASE-VERIFY-458` — оновити 13 локалізацій (без `ru.json`),
   підняти версію до 0.13.458, оновити living docs, перевірити валідність JSON,
   пройти host tests, WSL ReleaseWithInstall та `git diff --check`; лишити Switch
-  smoke-test.
-
-## Наступний запланований delivery: text viewer ZL zoom controls
-
-- [ ] `TEXT-ZL-ZOOM-PLAN` — у read-only text viewer застосувати чинний image
-  viewer chord: утриманий `ZL` + D-pad Up/Down або будь-який вертикальний
-  стік масштабує текст; звичайні вертикальні inputs без ZL залишаються
-  viewport scrolling.
-- [ ] `TEXT-ZL-ZOOM-VERIFY-PLAN` — зберегти release-based `ZL`/`ZR` paging,
-  не горнути після zoom chord, оновити footer hint, підняти версію і пройти
-  host tests, WSL ReleaseWithInstall та `git diff --check`; лишити Switch
   smoke-test.
 
 ## Попередній delivery: v0.13.457 (text viewer viewport scrolling)

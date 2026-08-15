@@ -1,9 +1,31 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.458** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.460** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.460 — text editor basics
+
+- У текстовому editor `B` переходить із Edit до View у межах того самого
+  документа. Незбережені зміни зберігаються в пам'яті; наступний `B` у View
+  показує чинний Save / Discard / Cancel flow, включно зі збереженням writable
+  small-file документа.
+- Утримання Up або Down в Edit mode зупиняється на першому чи останньому
+  рядку. Після відпускання нове натискання зберігає звичний wrap; shared List
+  і всі інші меню не змінено.
+- Активний INI рядок зберігає той самий розмір і syntax colors, а double-tap
+  перемикає isolated `true`/`false`, `u8!0x0`/`u8!0x1` і plain `0`/`1`, не
+  торкаючись відступів чи коментарів. Host assertions відхиляють `10`, `01`,
+  `0x0`, `0x1` та інші не-булеві числа.
+- Read-only viewer використовує узгоджений з Image Viewer zoom: `ZL` +
+  D-pad Up/Down, LS або RS Up/Down масштабує текст; без ZL ці inputs
+  прокручують viewport, а використаний zoom chord не викликає page up на
+  відпускання ZL.
+- Версію піднято до `0.13.460`. Gemini пройшов `tests/run.sh` (13 suites,
+  743 declarations), WSL `ReleaseWithInstall` (`[100%] Built sphaira_nro`) та
+  `git diff --check`. Потрібен Switch smoke-test Edit → View, boundary wrap,
+  INI 0/1, ZL zoom і paging.
 
 ## v0.13.458 — Homebrew settings & search paths
 

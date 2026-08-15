@@ -153,8 +153,10 @@ void Menu::LoadCurrentFile() {
     m_page_start_lines = {1};
     m_current_page = 0;
     m_stream_start_line = 1;
-    m_l_modifier_used = false;
+    m_zl_modifier_used = false;
     m_touch_was_pinch = false;
+    m_held_down_at_bottom = false;
+    m_held_up_at_top = false;
     m_is_image_file = IsImageExtension(path::Extension(m_path));
 
     if (!m_fs) {
@@ -573,8 +575,10 @@ void Menu::LoadTextFile() {
     m_load_result = 0;
     m_is_streamed = false;
     m_font_size = 18.f;
-    m_l_modifier_used = false;
+    m_zl_modifier_used = false;
     m_touch_was_pinch = false;
+    m_held_down_at_bottom = false;
+    m_held_up_at_top = false;
 
     if (!m_fs) {
         m_fs = &m_sd_fs;
@@ -692,12 +696,12 @@ void Menu::SetupViewActions() {
     RemoveAction(Button::R3);
 
     SetAction(Button::B, Action{"Back"_i18n, [this](){
-        SetPop();
+        PromptTextExit();
     }});
 
     SetAction(Button::L, Action{ActionType::UP, "Page"_i18n, "\uE0E4 / \uE0E5", [](){}});
     SetAction(Button::L2, Action{ActionType::UP, "10 Pages"_i18n, "\uE0E6 / \uE0E7", [](){}});
-    SetAction(Button::SELECT, Action{ActionType::UP, "Zoom"_i18n, "\uE0E4 + \uE102", [](){}});
+    SetAction(Button::SELECT, Action{ActionType::UP, "Zoom"_i18n, "\uE0E6 \uE0EB/\uE0EC", [](){}});
     SetAction(Button::R3, Action{ActionType::UP, "Scroll"_i18n, "\uE101 / \uE102", [](){}});
 
     if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
@@ -724,7 +728,7 @@ void Menu::SetupEditActions() {
         DisplayTextOptions();
     }});
     SetAction(Button::B, Action{"Back"_i18n, [this](){
-        PromptTextExit();
+        SwitchToViewMode();
     }});
     SetAction(Button::L2, Action{"Cursor / Scroll"_i18n, "\uE101 / \uE102", [](){}});
 }
@@ -736,6 +740,8 @@ void Menu::SwitchToEditMode() {
 
     m_mode = TextMode::Edit;
     m_editable = true;
+    m_held_down_at_bottom = false;
+    m_held_up_at_top = false;
 
     if (m_text_list) {
         const float item_h = m_text_list->GetMaxY();
@@ -746,6 +752,16 @@ void Menu::SwitchToEditMode() {
     }
 
     SetupEditActions();
+    UpdateTextSubHeading();
+}
+
+void Menu::SwitchToViewMode() {
+    m_mode = TextMode::View;
+    m_editable = false;
+    m_held_down_at_bottom = false;
+    m_held_up_at_top = false;
+
+    SetupViewActions();
     UpdateTextSubHeading();
 }
 
@@ -917,7 +933,7 @@ void Menu::GoToLine() {
 }
 
 auto Menu::SaveText() -> bool {
-    if (!m_editable || m_is_streamed || !m_fs) {
+    if (!m_writable || m_is_streamed || !m_fs || m_file_size > EDIT_MAX_SIZE) {
         return false;
     }
 
@@ -1011,7 +1027,7 @@ auto Menu::SaveText() -> bool {
 }
 
 void Menu::PromptTextExit() {
-    if (!m_editable || !m_text_dirty) {
+    if (!m_writable || m_is_streamed || !m_text_dirty) {
         SetPop();
         return;
     }
@@ -1110,25 +1126,26 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
             m_text_list->OnUpdateTouchOnly(touch, m_lines.size());
         }
 
-        if (controller->GotDown(Button::L)) {
-            m_l_modifier_used = false;
+        if (controller->GotDown(Button::L2)) {
+            m_zl_modifier_used = false;
         }
-        const bool l_held = controller->GotHeld(Button::L) || controller->GotDown(Button::L);
-        if (l_held) {
-            if (controller->GotDown(Button::RS_UP) || controller->GotHeld(Button::RS_UP)) {
-                m_l_modifier_used = true;
+        const bool zl_held = controller->GotHeld(Button::L2) || controller->GotDown(Button::L2);
+        if (zl_held) {
+            const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
+                                 controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
+            const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
+                                  controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
+            if (zoom_in) {
+                m_zl_modifier_used = true;
                 ZoomText(1.f);
-            } else if (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)) {
-                m_l_modifier_used = true;
+            } else if (zoom_out) {
+                m_zl_modifier_used = true;
                 ZoomText(-1.f);
             }
         }
 
         if (controller->GotUp(Button::L)) {
-            if (!m_l_modifier_used) {
-                PageUp(1);
-            }
-            m_l_modifier_used = false;
+            PageUp(1);
         }
 
         if (controller->GotUp(Button::R)) {
@@ -1136,25 +1153,28 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
         }
 
         if (controller->GotUp(Button::L2)) {
-            PageUp(10);
+            if (!m_zl_modifier_used) {
+                PageUp(10);
+            }
+            m_zl_modifier_used = false;
         }
 
         if (controller->GotUp(Button::R2)) {
             PageDown(10);
         }
 
-        const bool up_pressed = controller->GotDown(Button::UP | Button::DPAD_UP | Button::LS_UP) ||
-                                controller->GotHeld(Button::UP | Button::DPAD_UP | Button::LS_UP) ||
-                                ((!l_held) && (controller->GotDown(Button::RS_UP) || controller->GotHeld(Button::RS_UP)));
+        if (!zl_held) {
+            const bool up_pressed = controller->GotDown(Button::UP | Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
+                                    controller->GotHeld(Button::UP | Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
 
-        const bool down_pressed = controller->GotDown(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN) ||
-                                  controller->GotHeld(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN) ||
-                                  ((!l_held) && (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)));
+            const bool down_pressed = controller->GotDown(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
+                                      controller->GotHeld(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
 
-        if (up_pressed) {
-            LineUp();
-        } else if (down_pressed) {
-            LineDown();
+            if (up_pressed) {
+                LineUp();
+            } else if (down_pressed) {
+                LineDown();
+            }
         }
         return;
     }
@@ -1172,14 +1192,35 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
         m_text_list->SetYoff(next_y);
     }
 
+    const u64 down_mask = static_cast<u64>(Button::DOWN) | static_cast<u64>(Button::DPAD_DOWN) | static_cast<u64>(Button::LS_DOWN);
+    const u64 up_mask = static_cast<u64>(Button::UP) | static_cast<u64>(Button::DPAD_UP) | static_cast<u64>(Button::LS_UP);
+
+    if (controller->GotUp(Button::DOWN) || !controller->GotHeld(Button::DOWN)) {
+        m_held_down_at_bottom = false;
+    }
+    if (controller->GotUp(Button::UP) || !controller->GotHeld(Button::UP)) {
+        m_held_up_at_top = false;
+    }
+
     Controller local_ctrl = *controller;
     const u64 rs_mask = static_cast<u64>(Button::RS_UP) | static_cast<u64>(Button::RS_DOWN) | static_cast<u64>(Button::RS_LEFT) | static_cast<u64>(Button::RS_RIGHT);
     local_ctrl.m_kdown &= ~rs_mask;
     local_ctrl.m_kheld &= ~rs_mask;
     local_ctrl.m_kup &= ~rs_mask;
 
-    m_text_list->OnUpdate(&local_ctrl, touch, m_line_index, m_lines.size(), [this](bool touched, s64 index){
+    if (count > 0) {
+        if (m_line_index == count - 1 && m_held_down_at_bottom) {
+            local_ctrl.m_kdown &= ~down_mask;
+        }
+        if (m_line_index == 0 && m_held_up_at_top) {
+            local_ctrl.m_kdown &= ~up_mask;
+        }
+    }
+
+    m_text_list->OnUpdate(&local_ctrl, touch, m_line_index, m_lines.size(), [this, count, controller](bool touched, s64 index){
         if (touched) {
+            m_held_down_at_bottom = false;
+            m_held_up_at_top = false;
             if (index != m_line_index) {
                 m_line_index = index;
                 m_last_tapped_row = index;
@@ -1211,6 +1252,12 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);
             m_line_index = index;
+            if (m_line_index == count - 1 && controller->GotHeld(Button::DOWN)) {
+                m_held_down_at_bottom = true;
+            }
+            if (m_line_index == 0 && controller->GotHeld(Button::UP)) {
+                m_held_up_at_top = true;
+            }
             m_line_scroll.Reset();
             UpdateTextSubHeading();
         }
@@ -1247,7 +1294,7 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
         const auto text_x = pos.x + gutter_w;
         const auto text_w = pos.w - gutter_w - 10.f;
 
-        if (selected && m_editable) {
+        if (selected && m_editable && !is_ini) {
             m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, m_font_size,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_lines[index]);
         } else if (is_ini) {
