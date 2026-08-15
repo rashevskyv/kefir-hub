@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace text_helper {
 
@@ -220,6 +222,100 @@ inline auto ToggleIniBoolean(std::string_view line) -> ToggleResult {
     result.append(suffix);
 
     return {true, result};
+}
+
+struct Page {
+    int64_t page_index{0};
+    int64_t start_offset{0};
+    int64_t end_offset{0};
+    int64_t start_line{1};
+    std::vector<std::string> lines{};
+    bool is_eof{false};
+    bool is_error{false};
+};
+
+template <typename ReadFunc>
+inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offset, int64_t start_line, int64_t page_rows, int64_t max_line_len = 4096) -> Page {
+    Page page;
+    page.start_offset = std::clamp<int64_t>(start_offset, 0, std::max<int64_t>(0, file_size));
+    page.start_line = std::max<int64_t>(1, start_line);
+    page.lines.reserve(page_rows > 0 ? page_rows : 1);
+
+    if (page.start_offset >= file_size || page_rows <= 0) {
+        page.end_offset = page.start_offset;
+        page.is_eof = (page.start_offset >= file_size);
+        if (file_size == 0 && page.lines.empty()) {
+            page.lines.emplace_back();
+        }
+        return page;
+    }
+
+    constexpr int64_t CHUNK_SIZE = 4096;
+    char chunk[CHUNK_SIZE];
+    int64_t offset = page.start_offset;
+    std::string current_line;
+    current_line.reserve(128);
+
+    while (static_cast<int64_t>(page.lines.size()) < page_rows && offset < file_size) {
+        const int64_t to_read = std::min<int64_t>(CHUNK_SIZE, file_size - offset);
+        const int64_t bytes_read = read_func(offset, chunk, to_read);
+        if (bytes_read <= 0) {
+            break;
+        }
+
+        int64_t pos = 0;
+        while (pos < bytes_read && static_cast<int64_t>(page.lines.size()) < page_rows) {
+            const char c = chunk[pos++];
+            if (c == '\n') {
+                if (!current_line.empty() && current_line.back() == '\r') {
+                    current_line.pop_back();
+                }
+                page.lines.emplace_back(std::move(current_line));
+                current_line.clear();
+                current_line.reserve(128);
+                if (static_cast<int64_t>(page.lines.size()) == page_rows) {
+                    offset += pos;
+                    goto page_done;
+                }
+            } else {
+                if (static_cast<int64_t>(current_line.size()) < max_line_len) {
+                    current_line.push_back(c);
+                } else {
+                    page.lines.emplace_back(std::move(current_line));
+                    current_line.clear();
+                    current_line.reserve(128);
+                    current_line.push_back(c);
+                    if (static_cast<int64_t>(page.lines.size()) == page_rows) {
+                        offset += pos;
+                        goto page_done;
+                    }
+                }
+            }
+        }
+        offset += pos;
+    }
+
+page_done:
+    if (offset >= file_size) {
+        if (!current_line.empty() || (page.lines.empty() && page.start_offset == 0)) {
+            if (!current_line.empty() && current_line.back() == '\r') {
+                current_line.pop_back();
+            }
+            if (static_cast<int64_t>(page.lines.size()) < page_rows || page.lines.empty()) {
+                page.lines.emplace_back(std::move(current_line));
+            }
+        }
+        page.is_eof = true;
+    } else if (static_cast<int64_t>(page.lines.size()) < page_rows) {
+        page.is_error = true;
+    }
+
+    if (page.lines.empty() && !page.is_error) {
+        page.lines.emplace_back();
+    }
+
+    page.end_offset = offset;
+    return page;
 }
 
 } // namespace text_helper

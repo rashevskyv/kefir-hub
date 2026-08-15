@@ -1,5 +1,6 @@
 #include "text_helper.hpp"
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -81,6 +82,94 @@ int main() {
     assert(!ToggleIniBoolean("flag = \"u8!0x0\"").toggled);
     assert(!ToggleIniBoolean("; flag = u8!0x0").toggled);
     assert(!ToggleIniBoolean("flag = my_u8!0x0_value").toggled);
+
+    // ReadPage pager unit tests:
+    // 1. Multi-line LF paging
+    std::string sample_lf = "line 1\nline 2\nline 3\nline 4\nline 5\n";
+    auto read_mem = [&](int64_t off, char* buf, int64_t sz) -> int64_t {
+        if (off >= static_cast<int64_t>(sample_lf.size())) return 0;
+        int64_t n = std::min<int64_t>(sz, sample_lf.size() - off);
+        std::memcpy(buf, sample_lf.data() + off, n);
+        return n;
+    };
+    auto p1 = ReadPage(read_mem, sample_lf.size(), 0, 1, 2);
+    assert(p1.lines.size() == 2);
+    assert(p1.lines[0] == "line 1");
+    assert(p1.lines[1] == "line 2");
+    assert(!p1.is_eof);
+    assert(p1.start_line == 1);
+    assert(p1.end_offset == 14);
+
+    auto p2 = ReadPage(read_mem, sample_lf.size(), p1.end_offset, 3, 2);
+    assert(p2.lines.size() == 2);
+    assert(p2.lines[0] == "line 3");
+    assert(p2.lines[1] == "line 4");
+    assert(!p2.is_eof);
+    assert(p2.start_line == 3);
+
+    auto p3 = ReadPage(read_mem, sample_lf.size(), p2.end_offset, 5, 2);
+    assert(p3.lines.size() == 1);
+    assert(p3.lines[0] == "line 5");
+    assert(p3.is_eof);
+
+    // 2. CRLF line endings
+    std::string sample_crlf = "alpha\r\nbeta\r\ngamma\r\n";
+    auto read_crlf = [&](int64_t off, char* buf, int64_t sz) -> int64_t {
+        if (off >= static_cast<int64_t>(sample_crlf.size())) return 0;
+        int64_t n = std::min<int64_t>(sz, sample_crlf.size() - off);
+        std::memcpy(buf, sample_crlf.data() + off, n);
+        return n;
+    };
+    auto pc1 = ReadPage(read_crlf, sample_crlf.size(), 0, 1, 10);
+    assert(pc1.lines.size() == 3);
+    assert(pc1.lines[0] == "alpha");
+    assert(pc1.lines[1] == "beta");
+    assert(pc1.lines[2] == "gamma");
+    assert(pc1.is_eof);
+
+    // 3. Empty file
+    auto read_empty = [](int64_t, char*, int64_t) -> int64_t { return 0; };
+    auto pe = ReadPage(read_empty, 0, 0, 1, 10);
+    assert(pe.lines.size() == 1);
+    assert(pe.lines[0] == "");
+    assert(pe.is_eof);
+
+    // 4. Long line capping
+    std::string long_line(500, 'x');
+    auto read_long = [&](int64_t off, char* buf, int64_t sz) -> int64_t {
+        if (off >= static_cast<int64_t>(long_line.size())) return 0;
+        int64_t n = std::min<int64_t>(sz, long_line.size() - off);
+        std::memcpy(buf, long_line.data() + off, n);
+        return n;
+    };
+    auto pl = ReadPage(read_long, long_line.size(), 0, 1, 10, 100);
+    assert(pl.lines.size() == 5);
+    assert(pl.lines[0].size() == 100);
+    assert(pl.lines[0] == std::string(100, 'x'));
+
+    // 5. Premature/error reader returning 0 before EOF
+    auto read_fail = [](int64_t, char*, int64_t) -> int64_t { return 0; };
+    auto pf = ReadPage(read_fail, 1000, 0, 1, 10);
+    assert(!pf.is_eof);
+    assert(pf.is_error);
+    assert(pf.end_offset == 0);
+
+    // 6. Premature short read terminating before page rows filled
+    int call_count = 0;
+    auto read_short = [&](int64_t, char* buf, int64_t) -> int64_t {
+        if (call_count++ == 0) {
+            std::string line = "hello\n";
+            std::memcpy(buf, line.data(), line.size());
+            return line.size();
+        }
+        return 0; // premature failure on second chunk
+    };
+    auto ps = ReadPage(read_short, 1000, 0, 1, 10);
+    assert(!ps.is_eof);
+    assert(ps.is_error);
+    assert(ps.lines.size() == 1);
+    assert(ps.lines[0] == "hello");
+    assert(ps.end_offset == 6);
 
     std::cout << "ok  text_helper: all checks passed\n";
     return 0;

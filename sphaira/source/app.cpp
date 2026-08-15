@@ -647,6 +647,11 @@ void App::Poll() {
     // for the rest of the session after the first drag.
     m_touch_info.is_clicked = false;
     m_touch_info.is_end = false;
+    m_touch_info.is_pinch = false;
+    m_touch_info.pinch_delta = 0.f;
+    m_touch_info.pinch_scale = 1.f;
+
+    static float prev_pinch_dist = 0.f;
 
 // todo: replace old touch code with gestures from below
 #if 0
@@ -693,26 +698,44 @@ void App::Poll() {
     memcpy(prev_gestures, gestures, sizeof(gestures));
 #endif
 
-    if (state.count == 1 && !m_touch_info.is_touching) {
-        m_touch_info.initial = m_touch_info.cur = state.touches[0];
-        m_touch_info.is_touching = true;
-        m_touch_info.is_tap = true;
-    } else if (state.count >= 1 && m_touch_info.is_touching) {
-        m_touch_info.cur = state.touches[0];
+    if (state.count >= 2) {
+        const float dx = static_cast<float>(state.touches[0].x - state.touches[1].x);
+        const float dy = static_cast<float>(state.touches[0].y - state.touches[1].y);
+        const float current_dist = std::sqrt(dx * dx + dy * dy);
 
-        if (m_touch_info.is_tap &&
-            (std::abs((s32)m_touch_info.initial.x - (s32)m_touch_info.cur.x) > 20 ||
-            std::abs((s32)m_touch_info.initial.y - (s32)m_touch_info.cur.y) > 20)) {
-            m_touch_info.is_tap = false;
-            m_touch_info.is_scroll = true;
+        if (prev_pinch_dist > 0.f && current_dist > 0.f) {
+            m_touch_info.pinch_delta = current_dist - prev_pinch_dist;
+            m_touch_info.pinch_scale = current_dist / prev_pinch_dist;
+            m_touch_info.is_pinch = true;
         }
-    } else if (m_touch_info.is_touching) {
-        m_touch_info.is_touching = false;
+        prev_pinch_dist = current_dist;
+        m_touch_info.is_touching = true;
+        m_touch_info.is_tap = false;
         m_touch_info.is_scroll = false;
-        if (m_touch_info.is_tap) {
-            m_touch_info.is_clicked = true;
-        } else {
-            m_touch_info.is_end = true;
+        m_touch_info.cur = state.touches[0];
+    } else {
+        prev_pinch_dist = 0.f;
+        if (state.count == 1 && !m_touch_info.is_touching) {
+            m_touch_info.initial = m_touch_info.cur = state.touches[0];
+            m_touch_info.is_touching = true;
+            m_touch_info.is_tap = true;
+        } else if (state.count == 1 && m_touch_info.is_touching) {
+            m_touch_info.cur = state.touches[0];
+
+            if (m_touch_info.is_tap &&
+                (std::abs((s32)m_touch_info.initial.x - (s32)m_touch_info.cur.x) > 20 ||
+                std::abs((s32)m_touch_info.initial.y - (s32)m_touch_info.cur.y) > 20)) {
+                m_touch_info.is_tap = false;
+                m_touch_info.is_scroll = true;
+            }
+        } else if (m_touch_info.is_touching) {
+            m_touch_info.is_touching = false;
+            m_touch_info.is_scroll = false;
+            if (m_touch_info.is_tap) {
+                m_touch_info.is_clicked = true;
+            } else {
+                m_touch_info.is_end = true;
+            }
         }
     }
 

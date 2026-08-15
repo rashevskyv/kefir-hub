@@ -212,6 +212,9 @@ struct TouchInfo {
     bool is_scroll;
     bool is_clicked;
     bool is_end;
+    bool is_pinch{false};
+    float pinch_delta{0.f};
+    float pinch_scale{1.f};
 };
 
 enum class Button : u64 {

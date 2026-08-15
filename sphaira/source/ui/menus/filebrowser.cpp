@@ -2335,11 +2335,13 @@ void FsView::DisplayAdvancedOptions() {
                 App::Push<theme_creator::Menu>(GetNewPathCurrent());
             }, "Use the selected image to create a custom Switch theme."_i18n);
             theme_entry->SetHasSubmenu(true);
-        } else if (text_helper::IsTextFile(GetEntry().GetName())) {
-            options->Add<SidebarEntryCallback>("View"_i18n, [this](){
-                App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
-            }, "Open the selected file in read-only view mode."_i18n);
+        }
 
+        options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){
+            App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
+        }, "Open the selected file in read-only text view mode."_i18n);
+
+        if (text_helper::IsTextFile(GetEntry().GetName())) {
             auto edit_entry = options->Add<SidebarEntryCallback>("Edit"_i18n, [this](){
                 App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
             }, "Open the selected file in text editor mode."_i18n);

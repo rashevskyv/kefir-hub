@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <cstring>
@@ -146,6 +147,14 @@ void Menu::LoadCurrentFile() {
     m_file_offset = 0;
     m_load_result = 0;
     m_load_failed = false;
+    m_is_streamed = false;
+    m_page_cache.clear();
+    m_page_offsets = {0};
+    m_page_start_lines = {1};
+    m_current_page = 0;
+    m_stream_start_line = 1;
+    m_l_modifier_used = false;
+    m_touch_was_pinch = false;
     m_is_image_file = IsImageExtension(path::Extension(m_path));
 
     if (!m_fs) {
@@ -168,15 +177,322 @@ void Menu::LoadCurrentFile() {
     RemoveAction(Button::Y);
     RemoveAction(Button::L2);
     RemoveAction(Button::R2);
+    RemoveAction(Button::L);
+    RemoveAction(Button::R);
     RemoveAction(Button::LEFT);
     RemoveAction(Button::RIGHT);
     RemoveAction(Button::START);
+    RemoveAction(Button::SELECT);
+    RemoveAction(Button::R3);
 
     if (m_is_image_file) {
         LoadImageFile();
     } else {
         LoadTextFile();
     }
+}
+
+void Menu::RecreateList() {
+    const float item_h = std::round(m_font_size * 1.6f);
+    constexpr float pad_y = 2.f;
+    m_page_rows = std::max<s64>(1, static_cast<s64>(530.f / (item_h + pad_y)));
+
+    const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
+    const Vec4 item_pos{50.f, 105.f, 1180.f, item_h};
+    m_text_list = std::make_unique<List>(1, m_page_rows, list_pos, item_pos, Vec2{0.f, pad_y});
+}
+
+void Menu::LoadPage(s64 page_idx) {
+    if (page_idx < 0) {
+        page_idx = 0;
+    }
+
+    auto read_func = [this](int64_t off, char* buf, int64_t sz) -> int64_t {
+        u64 bytes_read = 0;
+        Result rc = m_file.Read(off, buf, sz, 0, &bytes_read);
+        if (R_FAILED(rc)) {
+            m_load_result = rc;
+            m_load_failed = true;
+            return 0;
+        }
+        if (bytes_read == 0 && sz > 0) {
+            m_load_result = FsError_InvalidSize;
+            m_load_failed = true;
+            return 0;
+        }
+        return static_cast<int64_t>(bytes_read);
+    };
+
+    while (static_cast<s64>(m_page_offsets.size()) <= page_idx) {
+        const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
+        const s64 last_offset = m_page_offsets[last_idx];
+        const s64 last_line = m_page_start_lines[last_idx];
+        const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_page_rows);
+        if (p.is_error || p.end_offset <= last_offset) {
+            if (!m_load_failed) {
+                m_load_result = FsError_InvalidSize;
+                m_load_failed = true;
+            }
+            break;
+        }
+        if (p.is_eof) {
+            page_idx = std::min<s64>(page_idx, last_idx);
+            break;
+        }
+        m_page_offsets.push_back(p.end_offset);
+        m_page_start_lines.push_back(p.start_line + p.lines.size());
+    }
+
+    if (m_load_failed) {
+        return;
+    }
+
+    page_idx = std::clamp<s64>(page_idx, 0, static_cast<s64>(m_page_offsets.size()) - 1);
+    m_current_page = page_idx;
+
+    if (!m_page_cache.contains(page_idx)) {
+        auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[page_idx], m_page_start_lines[page_idx], m_page_rows);
+        if (p.is_error) {
+            if (!m_load_failed) {
+                m_load_result = FsError_InvalidSize;
+                m_load_failed = true;
+            }
+            return;
+        }
+        p.page_index = page_idx;
+        m_page_cache[page_idx] = std::move(p);
+
+        while (m_page_cache.size() > 4) {
+            auto furthest = m_page_cache.begin();
+            s64 max_dist = -1;
+            for (auto it = m_page_cache.begin(); it != m_page_cache.end(); ++it) {
+                const s64 dist = std::abs(it->first - m_current_page);
+                if (dist > max_dist) {
+                    max_dist = dist;
+                    furthest = it;
+                }
+            }
+            m_page_cache.erase(furthest);
+        }
+    }
+
+    const auto& cur_page = m_page_cache[page_idx];
+    m_lines = cur_page.lines;
+    m_stream_start_line = cur_page.start_line;
+    m_line_index = 0;
+    if (m_text_list) {
+        m_text_list->SetYoff(0.f);
+    }
+}
+
+void Menu::PreloadPages() {
+    if (!m_is_streamed || m_load_failed) {
+        return;
+    }
+
+    auto read_func = [this](int64_t off, char* buf, int64_t sz) -> int64_t {
+        u64 bytes_read = 0;
+        Result rc = m_file.Read(off, buf, sz, 0, &bytes_read);
+        if (R_FAILED(rc)) {
+            m_load_result = rc;
+            m_load_failed = true;
+            return 0;
+        }
+        if (bytes_read == 0 && sz > 0) {
+            m_load_result = FsError_InvalidSize;
+            m_load_failed = true;
+            return 0;
+        }
+        return static_cast<int64_t>(bytes_read);
+    };
+
+    for (s64 step = 1; step <= 2; step++) {
+        if (m_load_failed) {
+            break;
+        }
+
+        const s64 next_page = m_current_page + step;
+        if (m_page_cache.contains(next_page)) {
+            continue;
+        }
+
+        const s64 prev_page = next_page - 1;
+        if (m_page_cache.contains(prev_page) && m_page_cache[prev_page].is_eof) {
+            break;
+        }
+
+        while (static_cast<s64>(m_page_offsets.size()) <= next_page) {
+            const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
+            const s64 last_offset = m_page_offsets[last_idx];
+            const s64 last_line = m_page_start_lines[last_idx];
+            const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_page_rows);
+            if (p.is_error || p.end_offset <= last_offset) {
+                if (!m_load_failed) {
+                    m_load_result = FsError_InvalidSize;
+                    m_load_failed = true;
+                }
+                break;
+            }
+            if (p.is_eof) {
+                break;
+            }
+            m_page_offsets.push_back(p.end_offset);
+            m_page_start_lines.push_back(p.start_line + p.lines.size());
+        }
+
+        if (m_load_failed) {
+            break;
+        }
+
+        if (next_page < static_cast<s64>(m_page_offsets.size())) {
+            auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[next_page], m_page_start_lines[next_page], m_page_rows);
+            if (p.is_error) {
+                if (!m_load_failed) {
+                    m_load_result = FsError_InvalidSize;
+                    m_load_failed = true;
+                }
+                break;
+            }
+            p.page_index = next_page;
+            m_page_cache[next_page] = std::move(p);
+            while (m_page_cache.size() > 4) {
+                auto furthest = m_page_cache.begin();
+                s64 max_dist = -1;
+                for (auto it = m_page_cache.begin(); it != m_page_cache.end(); ++it) {
+                    const s64 dist = std::abs(it->first - m_current_page);
+                    if (dist > max_dist) {
+                        max_dist = dist;
+                        furthest = it;
+                    }
+                }
+                m_page_cache.erase(furthest);
+            }
+        }
+    }
+}
+
+void Menu::PageUp(s64 count) {
+    if (m_is_streamed) {
+        if (m_current_page > 0) {
+            LoadPage(std::max<s64>(0, m_current_page - count));
+            PreloadPages();
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        }
+    } else {
+        if (m_text_list) {
+            for (s64 i = 0; i < count; i++) {
+                m_text_list->ScrollPageUp(m_line_index, m_lines.size());
+            }
+            UpdateTextSubHeading();
+        }
+    }
+}
+
+void Menu::PageDown(s64 count) {
+    if (m_is_streamed) {
+        if (!m_page_cache[m_current_page].is_eof) {
+            LoadPage(m_current_page + count);
+            PreloadPages();
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        }
+    } else {
+        if (m_text_list) {
+            for (s64 i = 0; i < count; i++) {
+                m_text_list->ScrollPageDown(m_line_index, m_lines.size());
+            }
+            UpdateTextSubHeading();
+        }
+    }
+}
+
+void Menu::LineUp() {
+    if (m_is_streamed) {
+        if (m_line_index > 0) {
+            m_line_index--;
+            if (m_text_list) {
+                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+            }
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        } else if (m_current_page > 0) {
+            LoadPage(m_current_page - 1);
+            m_line_index = m_lines.empty() ? 0 : m_lines.size() - 1;
+            if (m_text_list) {
+                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+            }
+            PreloadPages();
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        }
+    } else {
+        if (m_text_list) {
+            m_text_list->ScrollUp(m_line_index, 1, m_lines.size());
+            UpdateTextSubHeading();
+        }
+    }
+}
+
+void Menu::LineDown() {
+    if (m_is_streamed) {
+        if (m_line_index + 1 < static_cast<s64>(m_lines.size())) {
+            m_line_index++;
+            if (m_text_list) {
+                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+            }
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        } else if (!m_page_cache[m_current_page].is_eof) {
+            LoadPage(m_current_page + 1);
+            m_line_index = 0;
+            if (m_text_list) {
+                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+            }
+            PreloadPages();
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        }
+    } else {
+        if (m_text_list) {
+            m_text_list->ScrollDown(m_line_index, 1, m_lines.size());
+            UpdateTextSubHeading();
+        }
+    }
+}
+
+void Menu::ZoomText(float delta) {
+    const float new_size = std::clamp(m_font_size + delta, 12.f, 32.f);
+    if (std::abs(new_size - m_font_size) < 0.1f) {
+        return;
+    }
+
+    m_font_size = new_size;
+    RecreateList();
+
+    if (m_is_streamed) {
+        s64 current_offset = 0;
+        if (m_current_page < static_cast<s64>(m_page_offsets.size())) {
+            current_offset = m_page_offsets[m_current_page];
+        }
+        s64 current_line = 1;
+        if (m_current_page < static_cast<s64>(m_page_start_lines.size())) {
+            current_line = m_page_start_lines[m_current_page];
+        }
+        m_page_offsets = {current_offset};
+        m_page_start_lines = {current_line};
+        m_page_cache.clear();
+        m_current_page = 0;
+        LoadPage(0);
+        PreloadPages();
+    } else {
+        m_line_index = std::clamp<s64>(m_line_index, 0, m_lines.empty() ? 0 : m_lines.size() - 1);
+        if (m_text_list) {
+            m_text_list->EnsureVisible(m_line_index, m_lines.size());
+        }
+    }
+
+    UpdateTextSubHeading();
 }
 
 void Menu::LoadTextFile() {
@@ -188,7 +504,10 @@ void Menu::LoadTextFile() {
     m_line_index = 0;
     m_load_failed = false;
     m_load_result = 0;
-    m_is_truncated_preview = false;
+    m_is_streamed = false;
+    m_font_size = 18.f;
+    m_l_modifier_used = false;
+    m_touch_was_pinch = false;
 
     if (!m_fs) {
         m_fs = &m_sd_fs;
@@ -209,7 +528,24 @@ void Menu::LoadTextFile() {
         return;
     }
 
-    const s64 read_size = std::min<s64>(m_file_size, EDIT_MAX_SIZE);
+    if (m_file_size > EDIT_MAX_SIZE) {
+        m_is_streamed = true;
+        m_mode = TextMode::View;
+        m_editable = false;
+        m_current_page = 0;
+        m_page_offsets = {0};
+        m_page_start_lines = {1};
+        m_page_cache.clear();
+
+        RecreateList();
+        LoadPage(0);
+        PreloadPages();
+        SetupViewActions();
+        UpdateTextSubHeading();
+        return;
+    }
+
+    const s64 read_size = m_file_size;
     std::string buf;
     buf.resize(read_size);
 
@@ -233,9 +569,8 @@ void Menu::LoadTextFile() {
     m_file.Close();
 
     buf.resize(bytes_read);
-    m_is_truncated_preview = (m_file_size > EDIT_MAX_SIZE);
 
-    if (m_mode == TextMode::Edit && (!m_writable || m_is_truncated_preview)) {
+    if (m_mode == TextMode::Edit && !m_writable) {
         m_mode = TextMode::View;
     }
     m_editable = (m_mode == TextMode::Edit);
@@ -266,9 +601,7 @@ void Menu::LoadTextFile() {
     m_text_dirty = false;
     m_line_index = 0;
 
-    const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
-    const Vec4 item_pos{50.f, 105.f, 1180.f, 30.f};
-    m_text_list = std::make_unique<List>(1, 17, list_pos, item_pos, Vec2{0.f, 2.f});
+    RecreateList();
 
     if (m_editable) {
         SetupEditActions();
@@ -282,16 +615,25 @@ void Menu::LoadTextFile() {
 void Menu::SetupViewActions() {
     RemoveAction(Button::A);
     RemoveAction(Button::X);
+    RemoveAction(Button::Y);
     RemoveAction(Button::START);
     RemoveAction(Button::L2);
+    RemoveAction(Button::R2);
+    RemoveAction(Button::L);
+    RemoveAction(Button::R);
+    RemoveAction(Button::SELECT);
+    RemoveAction(Button::R3);
 
     SetAction(Button::B, Action{"Back"_i18n, [this](){
         SetPop();
     }});
 
-    SetAction(Button::R2, Action{"Scroll"_i18n, "\uE102", [](){}});
+    SetAction(Button::L, Action{ActionType::UP, "Page"_i18n, "\uE0E4 / \uE0E5", [](){}});
+    SetAction(Button::L2, Action{ActionType::UP, "10 Pages"_i18n, "\uE0E6 / \uE0E7", [](){}});
+    SetAction(Button::SELECT, Action{ActionType::UP, "Zoom"_i18n, "\uE0E4 + \uE102", [](){}});
+    SetAction(Button::R3, Action{ActionType::UP, "Scroll"_i18n, "\uE101 / \uE102", [](){}});
 
-    if (m_writable && !m_is_truncated_preview && m_file_size <= EDIT_MAX_SIZE) {
+    if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
         SetAction(Button::A, Action{"Edit"_i18n, [this](){
             SwitchToEditMode();
         }});
@@ -300,6 +642,10 @@ void Menu::SetupViewActions() {
 
 void Menu::SetupEditActions() {
     RemoveAction(Button::R2);
+    RemoveAction(Button::L);
+    RemoveAction(Button::R);
+    RemoveAction(Button::SELECT);
+    RemoveAction(Button::R3);
 
     SetAction(Button::A, Action{"Edit line"_i18n, [this](){
         EditLine();
@@ -317,7 +663,7 @@ void Menu::SetupEditActions() {
 }
 
 void Menu::SwitchToEditMode() {
-    if (!m_writable || m_is_truncated_preview || m_file_size > EDIT_MAX_SIZE) {
+    if (!m_writable || m_is_streamed || m_file_size > EDIT_MAX_SIZE) {
         return;
     }
 
@@ -337,10 +683,25 @@ void Menu::SwitchToEditMode() {
 }
 
 void Menu::UpdateTextSubHeading() {
+    if (m_is_streamed) {
+        auto heading = "Page "_i18n + std::to_string(m_current_page + 1);
+        heading += "  |  " + "Line "_i18n + std::to_string(m_stream_start_line + m_line_index);
+        if (m_file_size > 0 && m_current_page < static_cast<s64>(m_page_offsets.size())) {
+            const s64 offset = m_page_offsets[m_current_page];
+            const s64 pct = std::clamp<s64>((offset * 100) / m_file_size, 0, 100);
+            heading += "  |  " + std::to_string(pct) + "%";
+        }
+        if (!m_writable) {
+            heading += "  (" + "Read-only"_i18n + ")";
+        } else {
+            heading += "  (" + "View"_i18n + ")";
+        }
+        SetSubHeading(heading);
+        return;
+    }
+
     auto heading = std::to_string(m_line_index + 1) + " / " + std::to_string(m_lines.size());
-    if (m_is_truncated_preview) {
-        heading += "  (" + "Preview truncated"_i18n + ")";
-    } else if (m_mode == TextMode::View) {
+    if (m_mode == TextMode::View) {
         if (!m_writable) {
             heading += "  (" + "Read-only"_i18n + ")";
         } else {
@@ -391,7 +752,6 @@ void Menu::Undo() {
     m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
-
 void Menu::Redo() {
     if (m_redo.empty()) {
         App::Notify("Nothing to redo"_i18n);
@@ -486,7 +846,7 @@ void Menu::GoToLine() {
 }
 
 auto Menu::SaveText() -> bool {
-    if (!m_editable || m_is_truncated_preview || !m_fs) {
+    if (!m_editable || m_is_streamed || !m_fs) {
         return false;
     }
 
@@ -652,6 +1012,82 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
         return;
     }
 
+    if (!m_editable) {
+        if (touch->is_touching && touch->is_tap) {
+            m_touch_was_pinch = false;
+        }
+
+        if (touch->is_pinch) {
+            m_touch_was_pinch = true;
+            if (std::abs(touch->pinch_delta) > 1.5f) {
+                ZoomText(touch->pinch_delta > 0.f ? 0.5f : -0.5f);
+            }
+        } else if (m_is_streamed) {
+            if (touch->is_end) {
+                if (!m_touch_was_pinch) {
+                    const s32 dy = static_cast<s32>(touch->cur.y) - static_cast<s32>(touch->initial.y);
+                    constexpr s32 SWIPE_THRESHOLD = 40;
+                    if (dy < -SWIPE_THRESHOLD) {
+                        PageDown(1);
+                    } else if (dy > SWIPE_THRESHOLD) {
+                        PageUp(1);
+                    }
+                }
+                m_touch_was_pinch = false;
+            }
+        } else {
+            m_text_list->OnUpdateTouchOnly(touch, m_lines.size());
+        }
+
+        if (controller->GotDown(Button::L)) {
+            m_l_modifier_used = false;
+        }
+        const bool l_held = controller->GotHeld(Button::L) || controller->GotDown(Button::L);
+        if (l_held) {
+            if (controller->GotDown(Button::RS_UP) || controller->GotHeld(Button::RS_UP)) {
+                m_l_modifier_used = true;
+                ZoomText(1.f);
+            } else if (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)) {
+                m_l_modifier_used = true;
+                ZoomText(-1.f);
+            }
+        }
+
+        if (controller->GotUp(Button::L)) {
+            if (!m_l_modifier_used) {
+                PageUp(1);
+            }
+            m_l_modifier_used = false;
+        }
+
+        if (controller->GotUp(Button::R)) {
+            PageDown(1);
+        }
+
+        if (controller->GotUp(Button::L2)) {
+            PageUp(10);
+        }
+
+        if (controller->GotUp(Button::R2)) {
+            PageDown(10);
+        }
+
+        const bool up_pressed = controller->GotDown(Button::UP | Button::DPAD_UP | Button::LS_UP) ||
+                                controller->GotHeld(Button::UP | Button::DPAD_UP | Button::LS_UP) ||
+                                ((!l_held) && (controller->GotDown(Button::RS_UP) || controller->GotHeld(Button::RS_UP)));
+
+        const bool down_pressed = controller->GotDown(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN) ||
+                                  controller->GotHeld(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN) ||
+                                  ((!l_held) && (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)));
+
+        if (up_pressed) {
+            LineUp();
+        } else if (down_pressed) {
+            LineDown();
+        }
+        return;
+    }
+
     const s64 count = static_cast<s64>(m_lines.size());
     const s64 page = m_text_list->GetPage();
     const float step = m_text_list->GetMaxY();
@@ -663,11 +1099,6 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
     } else if (controller->GotDown(Button::RS_DOWN) || controller->GotHeld(Button::RS_DOWN)) {
         const float next_y = std::clamp(m_text_list->GetYoff() + step, 0.f, y_max);
         m_text_list->SetYoff(next_y);
-    }
-
-    if (!m_editable) {
-        m_text_list->OnUpdateTouchOnly(touch, count);
-        return;
     }
 
     Controller local_ctrl = *controller;
@@ -720,9 +1151,11 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    const auto gutter = std::to_string(m_lines.size());
+    const auto gutter = m_is_streamed
+        ? std::to_string(m_stream_start_line + static_cast<s64>(m_lines.size()))
+        : std::to_string(m_lines.size());
     float bounds[4];
-    nvgFontSize(vg, 18.f);
+    nvgFontSize(vg, m_font_size);
     gfx::textBounds(vg, 0, 0, bounds, gutter.c_str());
     const float gutter_w = bounds[2] - bounds[0] + 16.f;
     const bool is_ini = text_helper::IsIniFile(m_path);
@@ -733,16 +1166,18 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
             gfx::drawRectOutline(vg, theme, 4.f, pos);
         }
 
-        gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, 16.f,
+        const s64 display_line_num = m_is_streamed ? (m_stream_start_line + index) : (index + 1);
+        const float gutter_font_size = std::max(10.f, m_font_size - 2.f);
+        gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, gutter_font_size,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%ld", static_cast<long>(index + 1));
+            "%ld", static_cast<long>(display_line_num));
 
         const auto colour = theme->GetColour((selected && m_editable) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         const auto text_x = pos.x + gutter_w;
         const auto text_w = pos.w - gutter_w - 10.f;
 
         if (selected && m_editable) {
-            m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, 18.f,
+            m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, m_font_size,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_lines[index]);
         } else if (is_ini) {
             nvgSave(vg);
@@ -750,42 +1185,41 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
 
             const auto info = text_helper::ParseIniLine(m_lines[index]);
             if (info.type == text_helper::IniLineType::Comment) {
-                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", m_lines[index].c_str());
             } else if (info.type == text_helper::IniLineType::Section) {
-                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED), "%s", m_lines[index].c_str());
             } else if (info.type == text_helper::IniLineType::KeyValue) {
                 const std::string key_str(info.key);
                 const std::string eq_str(info.eq);
                 const std::string val_str(info.val);
-
                 float key_bounds[4];
-                nvgFontSize(vg, 18.f);
+                nvgFontSize(vg, m_font_size);
                 gfx::textBounds(vg, text_x, pos.y + pos.h / 2.f, key_bounds, key_str.c_str());
                 const float key_w = key_bounds[2] - key_bounds[0];
 
-                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), "%s", key_str.c_str());
 
                 float eq_bounds[4];
                 gfx::textBounds(vg, text_x + key_w, pos.y + pos.h / 2.f, eq_bounds, eq_str.c_str());
                 const float eq_w = eq_bounds[2] - eq_bounds[0];
 
-                gfx::drawTextArgs(vg, text_x + key_w, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x + key_w, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", eq_str.c_str());
 
-                gfx::drawTextArgs(vg, text_x + key_w + eq_w, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x + key_w + eq_w, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", val_str.c_str());
             } else {
-                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+                gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, m_font_size,
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", m_lines[index].c_str());
             }
             nvgRestore(vg);
         } else {
             nvgSave(vg);
             nvgIntersectScissor(vg, text_x, pos.y, text_w, pos.h);
-            gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, 18.f,
+            gfx::drawTextArgs(vg, text_x, pos.y + pos.h / 2.f, m_font_size,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", m_lines[index].c_str());
             nvgRestore(vg);
         }

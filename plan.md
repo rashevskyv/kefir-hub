@@ -1,10 +1,38 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.455**. Завершені плани збережено в
+Поточний delivery — **v0.13.456**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.455 — INI text viewer spacing
+## Поточний delivery: v0.13.456 — text viewer pager
+
+Статус: реалізацію прийнято після Gemini junior-review. Контекстна дія працює
+для кожного звичайного файла, а великі файли читаються ліниво малими
+сторінками; коротке або помилкове читання завершує viewer через чинний error
+box без повторного discovery того самого offset. Gemini пройшов `tests/run.sh`
+(13 suites, 742 declarations), WSL `ReleaseWithInstall` (`sphaira_nro`) і
+`git diff --check`. Потрібний Switch smoke-test пейджера та жестів.
+
+1. Додати в File Browser один `View as text` для будь-якого звичайного файла.
+   Залишити автоматичний View за known text extension, а інсталяцію, image,
+   archive, NRO та file associations не змінювати.
+2. Зберегти чинний in-memory editor лише для файлів до 4 MiB. Для більших
+   відкрити read-only paged reader: тримати лише поточну і кілька наступних
+   сторінок тексту, байтові offsets сторінок та невеликий chunk buffer; не
+   читати або не індексувати весь файл наперед.
+3. У read-only text view: Up/Down і обидва стіки рухаються рядком; `L`/`R`
+   перегортають назад/уперед одну сторінку на release; `ZL`/`ZR` — десять.
+   Утриманий `L` + правий стік змінює масштаб без випадкової дії від drift;
+   release `L` гортає назад лише якщо L не був modifier. Підтримати pinch zoom
+   через фактичний two-touch input. Ніякий paging/zoom footer hint не повинен
+   спрацьовувати від touch, але scroll і pinch залишаються touch actions.
+4. Змінювати масштаб у практичних межах, перебудовуючи viewport/page rows і
+   зберігаючи поточну позицію документа настільки точно, наскільки дозволяє
+   потоковий offset. Додати одну host-перевірку page boundaries/line stepping,
+   підняти версію `0.13.455 → 0.13.456`, оновити task/plan/walkthrough та
+   пройти host suite, WSL build і `git diff --check`.
+
+## Попередній delivery: v0.13.455 — INI text viewer spacing
 
 Статус: локальну причину накладання знайдено в `fileview::Menu::DrawText`: номер рядка виставляє NanoVG на 16 px, після чого ключ вимірювався цим самим розміром, але малювався в 18 px. Перед `gfx::textBounds` ключа відновлено 18 px, тому початок `=` і значення відповідає фактично намальованій ширині ключа.
 

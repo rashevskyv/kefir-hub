@@ -1,9 +1,29 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.455** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.456** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.456 — text viewer pager
+
+- File Browser отримав контекстну дію `View as text` для кожного звичайного
+  файла. Пріоритети звичайного відкриття кнопкою A (NRO, installer, image,
+  archive, розпізнаний text та file association) не змінено.
+- Файли понад 4 MiB відкриваються тільки для читання через лінивий пейджер:
+  reader читає 4 KiB chunks, тримає поточну й не більш як три сусідні сторінки,
+  byte offsets та номери рядків; увесь файл або попередній 4 MiB preview у RAM
+  не завантажується. Некоректний short read або FS error викликає штатний
+  `Failed to read file` error box і не може зациклити discovery offset.
+- У read-only viewer D-pad та обидва стіки рухаються рядками; `L`/`R` на
+  відпускання гортають на сторінку, `ZL`/`ZR` — на десять. `L` з правим стіком
+  масштабує текст і не гортає після відпускання L. Пінч масштабує, вертикальний
+  one-finger swipe у streamed view змінює сторінку. Footer показує ці дії як
+  неклікабельні підказки, тому touch не запускає paging або zoom через кнопку.
+- Версію піднято до `0.13.456`. Gemini пройшов `tests/run.sh` (13 suites,
+  742 declarations), WSL `ReleaseWithInstall` (`[100%] Built target
+  sphaira_nro`) та `git diff --check`. Потрібен Switch smoke-test великого
+  тексту, контролерів і жестів.
 
 ## v0.13.455 — відступи INI text viewer
 

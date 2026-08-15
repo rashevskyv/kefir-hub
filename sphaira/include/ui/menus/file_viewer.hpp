@@ -5,6 +5,8 @@
 #include "ui/scrolling_text.hpp"
 #include "ui/list.hpp"
 #include "fs.hpp"
+#include "text_helper.hpp"
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -58,6 +60,14 @@ private:
     void PromptTextExit();
     void UpdateTextSubHeading();
     auto BuildText() const -> std::string;
+    void PageUp(s64 count);
+    void PageDown(s64 count);
+    void LineUp();
+    void LineDown();
+    void ZoomText(float delta);
+    void LoadPage(s64 page_idx);
+    void PreloadPages();
+    void RecreateList();
     void FreeImage();
     void ResetImageView();
     void ZoomImage(float factor);
@@ -97,7 +107,7 @@ private:
     Result m_load_result{0};
     bool m_load_failed{false};
     std::string m_saved_text{};
-    bool m_is_truncated_preview{false};
+    bool m_is_streamed{false};
 
     s64 m_last_tapped_row{-1};
     u64 m_last_tap_time{0};
@@ -118,6 +128,17 @@ private:
     s64 m_line_index{};
     bool m_editable{};
     bool m_text_dirty{};
+
+    // Streamed large file pager state
+    s64 m_current_page{0};
+    s64 m_page_rows{17};
+    float m_font_size{18.f};
+    bool m_l_modifier_used{false};
+    bool m_touch_was_pinch{false};
+    std::vector<s64> m_page_offsets{0};
+    std::vector<s64> m_page_start_lines{1};
+    s64 m_stream_start_line{1};
+    std::map<s64, text_helper::Page> m_page_cache{};
 
     bool m_is_image_file{};
     int m_image{};
