@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.454**. Завершені плани збережено в
+Поточний delivery — **v0.13.455**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.454 — NSP install diagnostics
+## Поточний delivery: v0.13.455 — INI text viewer spacing
+
+Статус: локальну причину накладання знайдено в `fileview::Menu::DrawText`: номер рядка виставляє NanoVG на 16 px, після чого ключ вимірювався цим самим розміром, але малювався в 18 px. Перед `gfx::textBounds` ключа відновлено 18 px, тому початок `=` і значення відповідає фактично намальованій ширині ключа.
+
+1. Зберегти чинні кольори, INI parser, clipping і компонування gutter без нових UI-механізмів.
+2. Встановити 18 px лише перед вимірюванням `key_str` у shared INI draw path.
+3. Підняти версію `0.13.454 → 0.13.455`, оновити living docs і пройти `git diff --check`; target WSL `sphaira` успішний, але повний `ReleaseWithInstall` окремо блокується відсутньою Make-ціллю `sphaira/sphaira.elf` під час NRO-пакування.
+4. На Switch відкрити `system_settings.ini` з ключем на кшталт `enable_send_rights_usage_status_request`; його значення має починатися після ключа без накладання.
+
+## Попередній delivery: v0.13.454 — NSP install diagnostics
 
 Статус: реалізацію виконано та перевірено. Діагностичні повідомлення встановлення NSP та перевірка версії HOS інтегровані в єдину спільну точку опису помилок `ui::GetResultDescription(Result)`. Gemini успішно виконав host checks (`test_version_compare` 34 checks, `tests/run.sh` all green), JSON parser валідацію всіх 14 мов і WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`).
 

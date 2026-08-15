@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.454** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.455** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.455 — відступи INI text viewer
+
+- Виправлено накладання значення на довгі ключі INI: після номера рядка NanoVG залишався на 16 px, через що `textBounds` недооцінював ширину ключа, який малюється 18 px.
+- Перед вимірюванням ключа явно відновлюється 18 px; parser, кольори, clipping та поведінка редактора не змінені.
+- Версію піднято до `0.13.455`; WSL target `sphaira` і `git diff --check` пройшли. Повний `ReleaseWithInstall` окремо зупинився на Make-залежності `sphaira/sphaira.elf` після успішного лінку `sphaira`, тож NRO-пакування слід відновити окремо. На Switch потрібно відкрити довгий ключ у `system_settings.ini` і переконатися, що `=` та значення не перетинають кінець ключа.
 
 ## v0.13.454 — діагностичні повідомлення встановлення NSP (NSP install diagnostics)
 

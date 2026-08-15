@@ -766,6 +766,7 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
                 const std::string val_str(info.val);
 
                 float key_bounds[4];
+                nvgFontSize(vg, 18.f);
                 gfx::textBounds(vg, text_x, pos.y + pos.h / 2.f, key_bounds, key_str.c_str());
                 const float key_w = key_bounds[2] - key_bounds[0];
 

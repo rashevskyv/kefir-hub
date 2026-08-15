@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.454**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.455**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.454 (NSP install diagnostics)
+## Поточний delivery: v0.13.455 (INI text viewer spacing)
+
+- [x] `INI-VIEW-SPACING-455` — перед вимірюванням ключа INI у `fileview::Menu::DrawText` відновити 18 px, щоб значення починалося після фактично намальованого ключа, а не після вимірювання шрифтом номера рядка (16 px).
+- [ ] `INI-VIEW-SPACING-VERIFY-455` — версію піднято до `0.13.455`, living docs і `git diff --check` оновлено, а WSL target `sphaira` пройшов; повний `ReleaseWithInstall` зупиняється на наявній Make-цілі `sphaira/sphaira.elf`, тому ще потрібні відновлення фінального NRO-пакування та короткий Switch smoke-test довгого ключа INI.
+
+## Попередній delivery: v0.13.454 (NSP install diagnostics)
 
 - [x] `NSP-DIAG-HOS-454` — для `MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer)` у `ui::GetResultDescription` відобразити мінімальну версію 4.0.0 (через `version::FormatPacked`), фактичну версію консолі через `hats::getSystemFirmware()` та інструкцію оновити системну прошивку.
 - [x] `NSP-DIAG-CORRUPT-454` — додати точні рекомендації повторного копіювання/завантаження для `Result_StreamUnexpectedEof` (передчасний кінець файлу/передачі) та `Result_NspBadMagic` (недійсний NSP, можливе пошкодження); не змінювати загальні FS чи крипто-помилки.
