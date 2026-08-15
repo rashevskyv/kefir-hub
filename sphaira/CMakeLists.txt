@@ -227,6 +227,7 @@ FetchContent_Declare(ftpsrv
 FetchContent_Declare(libhaze
     GIT_REPOSITORY https://github.com/ITotalJustice/libhaze.git
     GIT_TAG 0be1523
+    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_libhaze.cmake
 )
 
 FetchContent_Declare(nanovg
@@ -374,6 +375,15 @@ execute_process(
 )
 if (NOT ftpsrv_patch_result EQUAL 0)
     message(FATAL_ERROR "failed to patch ftpsrv: ${ftpsrv_patch_result}")
+endif()
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_libhaze.cmake
+    WORKING_DIRECTORY ${libhaze_SOURCE_DIR}
+    RESULT_VARIABLE libhaze_patch_result
+)
+if (NOT libhaze_patch_result EQUAL 0)
+    message(FATAL_ERROR "failed to patch libhaze: ${libhaze_patch_result}")
 endif()
 
 if (USE_NVJPG)

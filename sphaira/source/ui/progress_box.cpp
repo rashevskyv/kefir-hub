@@ -32,7 +32,7 @@ ProgressBox::ProgressBox(int image, const std::string& action, const std::string
     }});
 
     m_pos.w = 770.f;
-    m_pos.h = 295.f;
+    m_pos.h = 315.f;
     m_pos.x = (SCREEN_WIDTH / 2.f) - (m_pos.w / 2.f);
     m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
 
@@ -252,7 +252,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto center_x = m_pos.x + m_pos.w/2;
     const auto end_y = m_pos.y + m_pos.h;
     const auto progress_bar_w = m_pos.w - 230;
-    const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - (m_detached ? 160.f : 100.f), progress_bar_w, 12 };
+    const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - (m_detached ? 160.f : 115.f), progress_bar_w, 12 };
 
     nvgSave(vg);
     nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
@@ -304,9 +304,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
 
             if (hide_speed) {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", time_str);
             } else {
-                gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
+                gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", time_str, speed_str);
             }
         }
     } else if (offset > 0) {
@@ -339,9 +339,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             } else {
                 std::snprintf(speed_str, sizeof(speed_str), "%.2f KiB/s", (double)speed / 1024.0);
             }
-            gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", "Receiving..."_i18n.c_str(), speed_str);
+            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s (%s)", "Receiving..."_i18n.c_str(), speed_str);
         } else {
-            gfx::drawTextArgs(vg, center_x, prog_bar.y - 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", "Receiving..."_i18n.c_str());
+            gfx::drawTextArgs(vg, center_x, prog_bar.y + prog_bar.h + 8.f, 18, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", "Receiving..."_i18n.c_str());
         }
     }
 

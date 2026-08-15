@@ -1886,11 +1886,18 @@ void haze_callback(const ::haze::CallbackData *data) {
                             SCOPED_MUTEX(&g_mtp_ui_mutex);
                             init_filename = g_mtp_current_filename;
                         }
-                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, MtpParentDir(init_filename), [](auto pbox) -> Result {
+                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, MtpParentDir(init_filename), [init_filename](auto pbox) -> Result {
+                            std::string current_filename;
                             {
                                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                                 g_mtp_pbox = pbox;
+                                current_filename = g_mtp_current_filename;
+                                if (current_filename == init_filename) {
+                                    g_mtp_new_transfer = false;
+                                }
                             }
+                            pbox->SetTitle(MtpParentDir(current_filename));
+                            pbox->NewTransferForce(GetLastComponent(current_filename.c_str()));
                             
                             while (!pbox->ShouldExit() && !g_should_exit) {
                                 auto rc = waitSingle(waiterForUEvent(&g_mtp_done_event), 100000000ULL); // 100ms
@@ -1921,13 +1928,14 @@ void haze_callback(const ::haze::CallbackData *data) {
                                 }
                                 
                                 if (g_mtp_new_transfer) {
-                                    g_mtp_new_transfer = false;
                                     std::string next_filename;
                                     {
                                         SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                        g_mtp_new_transfer = false;
                                         next_filename = g_mtp_current_filename;
                                     }
-                                    pbox->NewTransferForce(next_filename);
+                                    pbox->SetTitle(MtpParentDir(next_filename));
+                                    pbox->NewTransferForce(GetLastComponent(next_filename.c_str()));
                                 }
                             }
                             
@@ -1947,7 +1955,11 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_WriteProgress: {
             SCOPED_MUTEX(&g_mtp_ui_mutex);
             if (g_mtp_pbox) {
-                g_mtp_pbox->UpdateTransferForce(e.progress.offset, e.progress.size);
+                const s64 offset = e.progress.offset;
+                const s64 chunk = e.progress.size;
+                const s64 transferred = (offset >= 0 && chunk >= 0 && offset <= INT64_MAX - chunk) ? (offset + chunk) : offset;
+                const s64 total = e.progress.total > 0 ? e.progress.total : 0;
+                g_mtp_pbox->UpdateTransferForce(transferred, total);
             }
             break;
         }
