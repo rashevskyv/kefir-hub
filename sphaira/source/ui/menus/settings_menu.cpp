@@ -6,6 +6,8 @@
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/file_picker.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/save/save_locations.hpp"
