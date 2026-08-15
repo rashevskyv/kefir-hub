@@ -349,7 +349,7 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
 
-    SetTitleSubHeading(m_entries[m_index].json_path);
+    SetTitleSubHeading(m_entries[m_index].json_path, true);
     UpdateSubheading();
 }
 

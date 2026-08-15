@@ -420,6 +420,13 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return;
     }
 
+    // Measure version text for positioning on the top row
+    nvgFontSize(vg, 14.f);
+    char ver_buf[64];
+    std::snprintf(ver_buf, sizeof(ver_buf), "v%s", APP_VERSION);
+    gfx::textBounds(vg, 0, 0, bounds, ver_buf);
+    const float ver_w = bounds[2] - bounds[0];
+
     gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
     gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
 
@@ -472,9 +479,24 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     }
 
     const float sub_right = counter_w ? gap_right - counter_w - GAP_INNER : gap_right;
-    if (sub_right > gap_left) {
-        m_scroll_title_sub_heading.Draw(vg, true, gap_left, start_y, sub_right - gap_left, 16,
-            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
+
+    if (!m_title_sub_heading.empty()) {
+        if (m_title_sub_heading_top_row) {
+            // Upper expanded slot after measured version text (10px gap)
+            const float top_left = 80.f + ver_w + 10.f;
+            const float top_w = gap_right - top_left;
+            if (top_w > 0) {
+                m_scroll_title_sub_heading.Draw(vg, true, top_left, start_y - 28.f, top_w, 16,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
+            }
+        } else {
+            // Lower row slot between title/stats and counter
+            const float lower_w = sub_right - gap_left;
+            if (lower_w > 0) {
+                m_scroll_title_sub_heading.Draw(vg, true, gap_left, start_y, lower_w, 16,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title_sub_heading.c_str());
+            }
+        }
     }
 }
 
@@ -487,8 +509,12 @@ void MenuBase::SetTitleStats(std::string top, std::string bottom) {
     m_title_stat_bottom = std::move(bottom);
 }
 
-void MenuBase::SetTitleSubHeading(std::string sub_heading) {
-    m_title_sub_heading = sub_heading;
+void MenuBase::SetTitleSubHeading(std::string sub_heading, bool top_row) {
+    if (m_title_sub_heading_top_row != top_row || sub_heading.empty()) {
+        m_scroll_title_sub_heading.Reset(sub_heading);
+    }
+    m_title_sub_heading = std::move(sub_heading);
+    m_title_sub_heading_top_row = top_row;
 }
 
 void MenuBase::SetSubHeading(std::string sub_heading) {

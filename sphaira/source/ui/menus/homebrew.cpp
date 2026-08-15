@@ -513,7 +513,7 @@ void Menu::SetIndex(s64 index) {
     // todo: fix GetFileTimeStampRaw being different to timeGetCurrentTime
     // log_write("name: %s hbini.ts: %lu file.ts: %lu smaller: %s\n", e.GetName(), e.hbini.timestamp, e.timestamp.modified, e.hbini.timestamp < e.timestamp.modified ? "true" : "false");
 
-    SetTitleSubHeading(GetEntry().path);
+    SetTitleSubHeading(GetEntry().path, true);
     this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries_current.size()));
 }
 

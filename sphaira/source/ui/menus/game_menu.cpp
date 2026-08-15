@@ -1037,7 +1037,7 @@ private:
         }
 
         LoadSaves(entry.app_id);
-        SetTitleSubHeading(entry.GetName());
+        SetTitleSubHeading(entry.GetName(), true);
         SetSubHeading(std::to_string(m_game_index + 1) + " / " + std::to_string(m_entries->size()));
         SetStorageHighlight(entry.nand_size, entry.sd_size);
     }

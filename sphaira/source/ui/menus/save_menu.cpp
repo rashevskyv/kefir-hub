@@ -765,7 +765,7 @@ void Menu::SetIndex(s64 index) {
     if (m_entries.empty()) {
         m_index = 0;
         this->SetSubHeading("0 / 0");
-        SetTitleSubHeading(GetAccountSummary() + " | " + GetDataTypeSummary());
+        SetTitleSubHeading(GetAccountSummary() + " | " + GetDataTypeSummary(), true);
         return;
     }
 
@@ -802,7 +802,7 @@ void Menu::SetIndex(s64 index) {
 
     char title[0x80];
     std::snprintf(title, sizeof(title), "%s | %s | %016lX", account.c_str(), GetSaveTypeLabel(m_entries[m_index].save_data_type), id);
-    SetTitleSubHeading(title);
+    SetTitleSubHeading(title, true);
 }
 
 void Menu::ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const {

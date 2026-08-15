@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.465**. Завершені плани збережено в
+Поточний delivery — **v0.13.466**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.465 — text editor multi-line editing
+## Поточний delivery: v0.13.466 — caller-selected header layout
+
+Статус: реалізацію виконано та перевірено. `MenuBase::SetTitleSubHeading` отримав стабільний параметр `top_row`, тому шлях або довільна назва більше не стрибає між рядками залежно від ширини. Шляхи й назви рендеряться після версії у верхньому широкому слоті, а лічильники та короткі статуси лишаються внизу.
+
+1. Додати `bool top_row = false` до `MenuBase::SetTitleSubHeading` та скидати scroll state при зміні слота або очищенні тексту.
+2. Рендерити верхній слот після виміряного `v%s` і до межі fixed status area; лишити `ScrollingText` для переповнення.
+3. Передати `top_row = true` лише caller-ам шляхів і довільних назв; залишити компактні summary на нижньому рядку.
+4. Підняти версію до `0.13.466`, оновити living docs, пройти host tests, WSL `ReleaseWithInstall` та `git diff --check`.
+
+## Попередній delivery: v0.13.465 — text editor multi-line editing
 
 Статус: реалізацію виконано та перевірено. Реалізовано вибір діапазону рядків у режимі редагування через меню дій (`Select range` / `Clear selection`), під час активного вибору A = `Finish selection`, B = `Cancel selection`. Додано процесовий буфер обміну рядками (`s_line_clipboard`) для дій Copy, Cut, Paste below та Delete над виділеним діапазоном або активним рядком. Реалізовано чисті допоміжні функції `CommentIniLine` та `UncommentIniLine` у `text_helper.hpp` із збереженням відступів та додано пункт `Undo` й `Redo` у спливаючий список дій. Пройдено повний набір host unit tests (`tests/run.sh` - 13 suites, 752 declarations) та `git diff --check`.
 

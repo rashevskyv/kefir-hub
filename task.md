@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.465**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.466**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.465 (text editor multi-line editing)
+## Поточний delivery: v0.13.466 (caller-selected header layout)
+
+- [x] `HEADER-CALLER-PLACEMENT-466` — додати `bool top_row = false` до `SetTitleSubHeading`, зберігати вибраний слот і скидати scroll state при зміні слота або очищенні.
+- [x] `HEADER-DRAW-CHROME-466` — малювати довільний підзаголовок у верхньому широкому слоті після версії або, для compact summary, на звичному нижньому рядку без автоматичного стрибка.
+- [x] `HEADER-CALLERS-MIGRATION-466` — перенести шляхи та назви у File Browser, Homebrew, GHDL, Games, Cheats, Save Menu, App Store та IRS на верхній рядок; Themezer, Title ID і App Store filter summary лишити внизу.
+- [x] `HEADER-VERIFY-466` — підняти версію до `0.13.466`, оновити living docs, пройти host tests, WSL `ReleaseWithInstall` та `git diff --check`.
+
+## Попередній delivery: v0.13.465 (text editor multi-line editing)
 
 - [x] `TEXT-RANGE-SELECTION-465` — вибір діапазону рядків у режимі Edit через Actions popup (`Select range` / `Clear selection`), під час вибору A = `Finish selection`, B = `Cancel selection`; активний діапазон підсвічується напівпрозорою focus-смугою (alpha 0.35).
 - [x] `TEXT-LINE-CLIPBOARD-465` — міжфайловий локальний буфер обміну рядками (`s_line_clipboard`) для дій Copy, Cut, Paste below та Delete над виділеним діапазоном або поточним рядком; видалення завжди зберігає щонайменше 1 порожній рядок; 1 undo snapshot для мутуючих операцій (0 для Copy).

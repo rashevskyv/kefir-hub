@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.465** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.466** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.466 — caller-selected header layout
+
+- `MenuBase::SetTitleSubHeading` тепер приймає `top_row`; місце підзаголовка визначається екраном, а не довжиною поточного рядка.
+- Шляхи та довільні назви у File Browser, File Picker, Homebrew, GHDL, Games, Cheats, Save Menu, App Store і IRS завжди використовують верхній широкий слот після версії; за потреби там працює наявний `ScrollingText`.
+- Короткі значення — індикатор сторінки Themezer, Title ID гри, параметри фільтра App Store і лічильник `current / total` — лишаються у нижньому рядку.
+- Зміна слота чи очищення тексту скидає scroll state, тому попередній зсув не переходить на інший екран.
+- Версію піднято до `0.13.466`; host unit tests, WSL `ReleaseWithInstall` та `git diff --check` пройшли успішно.
 
 ## v0.13.465 — text editor multi-line editing
 

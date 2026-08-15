@@ -286,7 +286,7 @@ void CheatGameSelectMenu::SetIndex(s64 index) {
     }
 
     this->SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_games.size()));
-    SetTitleSubHeading(GetGameDisplayName(m_games[m_index]));
+    SetTitleSubHeading(GetGameDisplayName(m_games[m_index]), true);
 }
 
 void CheatGameSelectMenu::OnLayoutChange() {

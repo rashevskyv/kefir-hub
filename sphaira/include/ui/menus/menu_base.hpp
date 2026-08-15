@@ -59,7 +59,7 @@ struct MenuBase : Widget {
     }
 
     void SetTitle(std::string title);
-    void SetTitleSubHeading(std::string sub_heading);
+    void SetTitleSubHeading(std::string sub_heading, bool top_row = false);
     // two small stacked lines drawn right after the title (top / bottom).
     // The title sub heading shifts right to make room. Empty strings hide it.
     void SetTitleStats(std::string top, std::string bottom);
@@ -87,6 +87,7 @@ struct MenuBase : Widget {
 private:
     std::string m_title{};
     std::string m_title_sub_heading{};
+    bool m_title_sub_heading_top_row{false};
     std::string m_sub_heading{};
     std::string m_title_stat_top{};
     std::string m_title_stat_bottom{};

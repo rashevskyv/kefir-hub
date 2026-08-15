@@ -1097,7 +1097,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_entries.clear();
     m_index = 0;
     m_list->SetYoff(0);
-    m_menu->SetTitleSubHeading(m_path);
+    m_menu->SetTitleSubHeading(m_path, true);
     m_selected_count = 0;
 
     m_entries_index.clear();
@@ -3124,7 +3124,7 @@ void Menu::SetSplitScreen(bool enable) {
                     view->OnFocusLost();
                     view = new_view;
                     view->OnFocusGained();
-                    SetTitleSubHeading(view->m_path);
+                    SetTitleSubHeading(view->m_path, true);
                     UpdateSubheading();
                 }
             };

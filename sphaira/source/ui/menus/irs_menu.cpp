@@ -220,7 +220,7 @@ Menu::~Menu() {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
     PollCameraStatus();
-    SetTitleSubHeading(GetEntryName(m_index));
+    SetTitleSubHeading(GetEntryName(m_index), true);
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
