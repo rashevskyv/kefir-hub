@@ -33,6 +33,7 @@ using LayoutType = grid::LayoutType;
 
 auto GetNroEntries() -> std::span<const NroEntry>;
 void SignalChange();
+auto GetSearchPaths() -> std::vector<std::string>;
 auto IsSearchPath(const fs::FsPath& path) -> bool;
 auto AddSearchPath(const fs::FsPath& path) -> bool;
 auto RemoveSearchPath(const fs::FsPath& path) -> bool;

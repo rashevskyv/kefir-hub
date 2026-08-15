@@ -407,6 +407,10 @@ void Menu::OnFocusGained() {
     }
 }
 
+auto GetSearchPaths() -> std::vector<std::string> {
+    return LoadSearchPaths();
+}
+
 auto IsSearchPath(const fs::FsPath& path) -> bool {
     const auto normalized = NormalizeSearchPath(path.s);
     if (!normalized) {

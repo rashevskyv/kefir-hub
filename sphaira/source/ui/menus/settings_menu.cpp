@@ -197,6 +197,65 @@ auto MakeOptionItem(std::string label, std::string description, option::OptionBo
     );
 }
 
+auto BuildHomebrewSearchPathsItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(SettingsItem{
+        "Add folder"_i18n,
+        "Pick a folder on the microSD card to add as a homebrew search path."_i18n,
+        [](){ return std::string{}; },
+        [](){
+            App::Push<filepicker::Menu>(
+                filepicker::LocationCallback{[](const fs::FsPath& path, const filepicker::FsEntry& fs_entry) -> bool {
+                    if (fs_entry.type != filepicker::FsType::Sd) {
+                        App::Notify("Only microSD folders can be used"_i18n);
+                        return false;
+                    }
+                    if (!homebrew::AddSearchPath(path)) {
+                        App::Notify("Failed to add Homebrew search path"_i18n);
+                        return false;
+                    }
+                    App::Notify("Homebrew search path added."_i18n);
+                    return true;
+                }},
+                std::vector<std::string>{},
+                fs::FsPath{},
+                true
+            );
+        },
+        SettingsItemKind::Folder,
+    });
+
+    for (const auto& path_str : homebrew::GetSearchPaths()) {
+        const fs::FsPath path{path_str};
+        items.emplace_back(SettingsItem{
+            path_str,
+            "Custom Homebrew search path. Select to remove."_i18n,
+            [](){ return std::string{}; },
+            [path](){
+                const auto prompt = "Remove Homebrew Search Path?"_i18n + "\n\n" + path.toString();
+                App::Push<OptionBox>(
+                    prompt,
+                    "Back"_i18n,
+                    "Delete"_i18n,
+                    0,
+                    [path](auto op_index){
+                        if (op_index && *op_index == 1) {
+                            if (homebrew::RemoveSearchPath(path)) {
+                                App::Notify("Homebrew search path removed."_i18n);
+                            } else {
+                                App::Notify("Failed to remove Homebrew search path"_i18n);
+                            }
+                        }
+                    }
+                );
+            }
+        });
+    }
+
+    return items;
+}
+
 // defaults baked into every forwarder we build. "Ask every time" swaps them
 // for the forwarder editor, see ui/forwarder_editor.hpp.
 auto BuildForwarderItems() -> std::vector<SettingsItem> {
@@ -753,18 +812,6 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
 
 auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
-
-    items.emplace_back(SettingsItem{
-        "Homebrew App Store"_i18n,
-        "Download and update homebrew apps."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
-        },
-        SettingsItemKind::Folder,
-    });
 
     items.emplace_back(SettingsItem{
         "DBI"_i18n,
@@ -2010,13 +2057,32 @@ void Menu::BuildCategories() {
                 // under Network: it is an outbound client, not a server.
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
-                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
                 { "Restart Kefir Hub"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
                     App::ExitRestart();
                 }},
                 { "Exit"_i18n, "Close Kefir Hub."_i18n, [](){ return std::string{}; }, [](){
                     App::Exit();
                 }},
+            }
+        },
+        {
+            "Homebrew"_i18n,
+            "Homebrew search paths and application options."_i18n,
+            {
+                MakeFolderItem("Homebrew Search Paths"_i18n, "Manage custom folders scanned for homebrew applications."_i18n, BuildHomebrewSearchPathsItems),
+                MakeFolderItem("Forwarders"_i18n, "Defaults baked into forwarders you create: address space, profile selection, capture and svcDebug."_i18n, BuildForwarderItems),
+                {
+                    "Homebrew App Store"_i18n,
+                    "Download and update homebrew apps."_i18n,
+                    [](){
+                        return std::string{};
+                    },
+                    [](){
+                        App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
+                    },
+                    SettingsItemKind::Folder,
+                },
+                MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
             }
         },
         {
@@ -2092,7 +2158,6 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetInstallLocation());
                 }},
-                MakeFolderItem("Forwarders"_i18n, "Defaults baked into forwarders you create: address space, profile selection, capture and svcDebug."_i18n, BuildForwarderItems),
                 MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
                 { "Skip if already installed"_i18n, "Skip or prompt for titles or NCAs that are already installed."_i18n, [](){
                     const auto val = App::GetApp()->m_skip_if_already_installed.Get();

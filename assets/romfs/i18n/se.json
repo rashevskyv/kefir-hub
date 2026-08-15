@@ -1659,5 +1659,11 @@
   "Failed to remove Homebrew search path": "Det gick inte att ta bort Homebrew-sökvägen",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Denna åtgärd kräver systemprogramvara %s eller senare (installerad: %s). Uppdatera konsolens systemprogramvara innan du försöker igen.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Filen eller överföringen avslutades i förtid innan all data lästs. Kopiera eller ladda ner filen igen.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Filen är inte en giltig NSP och kan vara skadad eller ofullständig. Kopiera eller ladda ner filen igen."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Filen är inte en giltig NSP och kan vara skadad eller ofullständig. Kopiera eller ladda ner filen igen.",
+  "Homebrew search paths and application options.": "Homebrew-sökvägar och applikationsalternativ.",
+  "Homebrew Search Paths": "Homebrew-sökvägar",
+  "Manage custom folders scanned for homebrew applications.": "Hantera anpassade mappar som genomsöks efter Homebrew-applikationer.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Välj en mapp på microSD-kortet att lägga till som en Homebrew-sökväg.",
+  "Custom Homebrew search path. Select to remove.": "Anpassad Homebrew-sökväg. Välj för att ta bort.",
+  "Only microSD folders can be used": "Endast microSD-mappar kan användas"
 }

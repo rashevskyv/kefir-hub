@@ -1,9 +1,24 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.457** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.458** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.458 — Homebrew settings & search paths
+
+- Додано окрему категорію `Homebrew` у налаштуваннях одразу після `General`.
+- У категорію `Homebrew` перенесено `Forwarders` (з розділу Install),
+  `Homebrew App Store` (з розділу Software) та `Replace hbmenu on exit` (з General)
+  без дублювання в старих місцях.
+- Реалізовано підменю `Homebrew Search Paths`:
+  - Додавання користувацьких шляхів на карті microSD через FilePicker (`Add folder`).
+  - Відображення списку додаткових шляхів та видалення через діалогове вікно підтвердження (`OptionBox`).
+  - Системний шлях за замовчуванням `/switch` залишається незмінним та не дублюється в конфігурації.
+  - Список додатків Homebrew миттєво оновлюється при зміні шляхів.
+- Оновлено 13 локалізацій (усі крім `ru.json`).
+- Версію піднято до `0.13.458`. Пройдено валідацію JSON, host test suite (`tests/run.sh`: 13 suites,
+  742 declarations) та `git diff --check`. Потрібен Switch smoke-test керування шляхами та налаштуваннями.
 
 ## v0.13.457 — text viewer viewport scrolling
 

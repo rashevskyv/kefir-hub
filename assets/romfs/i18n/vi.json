@@ -1659,5 +1659,11 @@
   "Failed to remove Homebrew search path": "Không thể xóa đường dẫn tìm kiếm Homebrew",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Thao tác này yêu cầu firmware hệ thống từ %s trở lên (đã cài đặt: %s). Vui lòng cập nhật firmware hệ thống máy trước khi thử lại.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Tệp hoặc quá trình truyền đã kết thúc trước khi đọc hết dữ liệu. Vui lòng sao chép hoặc tải lại tệp.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Tệp không phải là NSP hợp lệ và có thể bị hỏng hoặc không hoàn chỉnh. Vui lòng sao chép hoặc tải lại tệp."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Tệp không phải là NSP hợp lệ và có thể bị hỏng hoặc không hoàn chỉnh. Vui lòng sao chép hoặc tải lại tệp.",
+  "Homebrew search paths and application options.": "Đường dẫn tìm kiếm Homebrew và tùy chọn ứng dụng.",
+  "Homebrew Search Paths": "Đường dẫn tìm kiếm Homebrew",
+  "Manage custom folders scanned for homebrew applications.": "Quản lý các thư mục tùy chỉnh được quét cho các ứng dụng homebrew.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Chọn một thư mục trên thẻ microSD để thêm làm đường dẫn tìm kiếm homebrew.",
+  "Custom Homebrew search path. Select to remove.": "Đường dẫn tìm kiếm Homebrew tùy chỉnh. Chọn để xóa.",
+  "Only microSD folders can be used": "Chỉ có thể sử dụng các thư mục microSD"
 }

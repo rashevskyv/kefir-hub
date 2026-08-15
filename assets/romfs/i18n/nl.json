@@ -1659,5 +1659,11 @@
   "Failed to remove Homebrew search path": "Verwijderen van Homebrew-zoekpad mislukt",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Deze bewerking vereist systeemfirmware %s of hoger (geïnstalleerd: %s). Werk de systeemfirmware van de console bij voordat je het opnieuw probeert.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Het bestand of de overdracht is vroegtijdig beëindigd voordat alle gegevens waren gelezen. Kopieer of download het bestand opnieuw.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Het bestand is geen geldige NSP en is mogelijk beschadigd of onvolledig. Kopieer of download het bestand opnieuw."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Het bestand is geen geldige NSP en is mogelijk beschadigd of onvolledig. Kopieer of download het bestand opnieuw.",
+  "Homebrew search paths and application options.": "Homebrew-zoekpaden en applicatie-opties.",
+  "Homebrew Search Paths": "Homebrew-zoekpaden",
+  "Manage custom folders scanned for homebrew applications.": "Beheer aangepaste mappen die worden gescand op homebrew-toepassingen.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Kies een map op de microSD-kaart om toe te voegen als homebrew-zoekpad.",
+  "Custom Homebrew search path. Select to remove.": "Aangepast Homebrew-zoekpad. Selecteer om te verwijderen.",
+  "Only microSD folders can be used": "Alleen microSD-mappen kunnen worden gebruikt"
 }

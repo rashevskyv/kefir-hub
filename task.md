@@ -6,13 +6,28 @@
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.458 (text viewer ZL zoom controls)
+## Поточний delivery: v0.13.458 (Homebrew settings & search paths)
 
-- [ ] `TEXT-ZL-ZOOM-458` — у read-only text viewer застосувати чинний image
+- [x] `HB-SETTINGS-CAT-458` — додати окрему категорію `Homebrew` у ліве меню
+  Settings одразу після `General`, перенести туди `Forwarders` (з Install),
+  `Homebrew App Store` (з Software) та `Replace hbmenu on exit` (з General) без
+  дублювання.
+- [x] `HB-SEARCH-PATHS-458` — додати менеджер `Homebrew Search Paths` у
+  Settings: вибір тільки SD-папок через FilePicker, збереження у конфіг, список з
+  видаленням через діалог підтвердження та миттєве оновлення списку Homebrew. Шлях
+  `/switch` залишається незмінним, системним та не дублюється в конфігу custom paths.
+- [x] `HB-RELEASE-VERIFY-458` — оновити 13 локалізацій (без `ru.json`),
+  підняти версію до 0.13.458, оновити living docs, перевірити валідність JSON,
+  пройти host tests, WSL ReleaseWithInstall та `git diff --check`; лишити Switch
+  smoke-test.
+
+## Наступний запланований delivery: text viewer ZL zoom controls
+
+- [ ] `TEXT-ZL-ZOOM-PLAN` — у read-only text viewer застосувати чинний image
   viewer chord: утриманий `ZL` + D-pad Up/Down або будь-який вертикальний
   стік масштабує текст; звичайні вертикальні inputs без ZL залишаються
   viewport scrolling.
-- [ ] `TEXT-ZL-ZOOM-VERIFY-458` — зберегти release-based `ZL`/`ZR` paging,
+- [ ] `TEXT-ZL-ZOOM-VERIFY-PLAN` — зберегти release-based `ZL`/`ZR` paging,
   не горнути після zoom chord, оновити footer hint, підняти версію і пройти
   host tests, WSL ReleaseWithInstall та `git diff --check`; лишити Switch
   smoke-test.

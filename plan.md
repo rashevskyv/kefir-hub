@@ -4,16 +4,52 @@
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.458 — text viewer ZL zoom controls
+## Поточний delivery: v0.13.458 — Homebrew settings & search paths
+
+Статус: реалізацію виконано та перевірено. Додано виділену категорію
+`Homebrew` у Settings одразу після `General`, куди перенесено `Forwarders`,
+`Homebrew App Store` та `Replace hbmenu on exit` без дублювання. Додано
+менеджер `Homebrew Search Paths` для додавання лише microSD-папок, збереження
+користувацьких шляхів у конфіг, їх перегляду та видалення з підтвердженням,
+із негайним оновленням переліку Homebrew (системний шлях `/switch` залишається
+незмінним та прихованим від конфігу). Оновлено 13 локалізацій (без `ru.json`).
+Пройдено валідацію JSON, host test suite (13 suites, 742 declarations) та
+`git diff --check`.
+
+1. Додати окрему категорію `Homebrew` у Settings одразу після `General`.
+2. Перенести до нової категорії `Forwarders` (з `Install`), `Homebrew App Store`
+   (з `Software`) та `Replace hbmenu on exit` (з `General`).
+3. Реалізувати `Homebrew Search Paths`: додавання лише SD-папок через FilePicker,
+   збереження користувацьких шляхів у конфіг, показ списку та видалення через
+   OptionBox із миттєвим `SignalChange()` / оновленням NRO.
+4. Оновити 13 файлів локалізації в `assets/romfs/i18n/*.json` (крім `ru.json`).
+   Підняти версію `0.13.457 → 0.13.458`, оновити living docs, перевірити валідність
+   JSON, пройти host tests та `git diff --check`.
+
+## Наступний запланований delivery: text viewer ZL zoom controls
+
+1. Застосувати chord `ZL` + D-pad Up/Down / будь-який стік для зуму тексту у
+   read-only text viewer.
+2. Зберегти release-based `ZL`/`ZR` paging без прокручування після зуму.
+3. Оновити підказки footer та перевірити керування.
+
+## Попередній delivery: v0.13.457 — text viewer viewport scrolling
+
+Статус: реалізацію виконано та перевірено. У read-only text viewer уніфіковано
+зум із патерном Image Viewer: утриманий `ZL` + D-pad Up/Down, LS Up/Down або RS Up/Down
+масштабує текст; ті самі inputs без `ZL` виконують негайний viewport scrolling.
+Відпускання `ZL` гортає 10 сторінок лише якщо `ZL` не використовувався для зуму.
+Оновлено неклікабельну footer-підказку `ZL + Up/Down`. Пройдено host test suite
+(13 suites, 742 declarations), WSL ReleaseWithInstall (`[100%] Built target sphaira_nro`)
+та `git diff --check`.
 
 1. Повторити у read-only text viewer чинний image viewer pattern: `ZL` як
    modifier для D-pad Up/Down, LS Up/Down та RS Up/Down; без modifier усі
    ці inputs лишаються viewport scrolling.
 2. `ZL`/`ZR` на release зберігають гортання на десять сторінок, але `ZL`,
    використаний у zoom chord, не викликає page up після відпускання.
-3. Оновити неклікабельну footer-підказку zoom, підняти `0.13.457 → 0.13.458`,
-   додати найменшу host-перевірку та пройти host suite, WSL build і
-   `git diff --check`.
+3. Оновити неклікабельну footer-підказку zoom, підняти версію до `0.13.458` та
+   пройти host suite, WSL build і `git diff --check`.
 
 ## Попередній delivery: v0.13.457 — text viewer viewport scrolling
 

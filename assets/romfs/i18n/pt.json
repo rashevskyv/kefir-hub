@@ -1687,5 +1687,11 @@
   "Failed to remove Homebrew search path": "Falha ao remover caminho de busca do Homebrew",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Esta operação requer o firmware do sistema %s ou superior (instalado: %s). Atualize o firmware da consola antes de tentar novamente.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "O ficheiro ou transferência terminou antes de todos os dados serem lidos. Por favor copie ou descarregue o ficheiro novamente.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "O ficheiro não é um NSP válido e pode estar corrompido ou incompleto. Por favor copie ou descarregue o ficheiro novamente."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "O ficheiro não é um NSP válido e pode estar corrompido ou incompleto. Por favor copie ou descarregue o ficheiro novamente.",
+  "Homebrew search paths and application options.": "Caminhos de busca do Homebrew e opções de aplicativos.",
+  "Homebrew Search Paths": "Caminhos de Busca do Homebrew",
+  "Manage custom folders scanned for homebrew applications.": "Gerenciar pastas personalizadas verificadas para aplicativos Homebrew.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Escolha uma pasta no cartão microSD para adicionar como caminho de busca do Homebrew.",
+  "Custom Homebrew search path. Select to remove.": "Caminho de busca personalizado do Homebrew. Selecione para remover.",
+  "Only microSD folders can be used": "Apenas pastas do cartão microSD podem ser usadas"
 }

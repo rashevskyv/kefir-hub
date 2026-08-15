@@ -1659,5 +1659,11 @@
   "Failed to remove Homebrew search path": "Homebrewの検索パスの削除に失敗しました",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "この操作にはシステムファームウェア %s 以上が必要です (現在: %s)。本体のシステムファームウェアを更新してから再試行してください。",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "すべてのデータが読み取られる前にファイルまたは転送が終了しました。ファイルを再度コピーまたはダウンロードしてください。",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "有効なNSPファイルではないため、破損または不完全な可能性があります。ファイルを再度コピーまたはダウンロードしてください。"
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "有効なNSPファイルではないため、破損または不完全な可能性があります。ファイルを再度コピーまたはダウンロードしてください。",
+  "Homebrew search paths and application options.": "Homebrew検索パスとアプリケーションオプション。",
+  "Homebrew Search Paths": "Homebrew検索パス",
+  "Manage custom folders scanned for homebrew applications.": "Homebrewアプリケーションをスキャンするカスタムフォルダーを管理します。",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "microSDカード上のフォルダーを選択してHomebrew検索パスとして追加します。",
+  "Custom Homebrew search path. Select to remove.": "カスタムHomebrew検索パス。選択して削除します。",
+  "Only microSD folders can be used": "microSDフォルダーのみ使用できます"
 }

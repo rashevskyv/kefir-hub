@@ -1704,7 +1704,6 @@
   "Step back through the last 32 edits.": "Step back through the last 32 edits.",
   "Step forward again after an undo.": "Step forward again after an undo.",
   "Undo": "Undo",
-  "View": "View",
   "Cursor / Scroll": "Cursor / Scroll",
   "Scroll": "Scroll",
   "USB 3.0": "USB 3.0",
@@ -1722,5 +1721,11 @@
   "Failed to remove Homebrew search path": "Failed to remove Homebrew search path",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "The file or transfer ended early before all data was read. Please copy or download the file again.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.",
+  "Homebrew search paths and application options.": "Homebrew search paths and application options.",
+  "Homebrew Search Paths": "Homebrew Search Paths",
+  "Manage custom folders scanned for homebrew applications.": "Manage custom folders scanned for homebrew applications.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Pick a folder on the microSD card to add as a homebrew search path.",
+  "Custom Homebrew search path. Select to remove.": "Custom Homebrew search path. Select to remove.",
+  "Only microSD folders can be used": "Only microSD folders can be used"
 }

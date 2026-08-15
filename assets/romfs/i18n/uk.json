@@ -958,7 +958,7 @@
   "Star": "В обране",
   "Unstar": "З обраного",
   "Screenshot": "Скріншот",
-  "View": "Вигляд",
+  "View": "Перегляд",
   "View Options": "Налаштування вигляду",
   "Warning! Logs are enabled, Kefir Hub will run slowly!": "Увага! Логи увімкнені, Kefir Hub працюватиме повільно!",
   "Failed to restore hbmenu, using Kefir Hub instead": "Не вдалося відновити hbmenu, натомість використовується Kefir Hub",
@@ -1720,7 +1720,6 @@
   "Step back through the last 32 edits.": "Скасувати одну з останніх 32 змін.",
   "Step forward again after an undo.": "Повторити зміну після скасування.",
   "Undo": "Скасувати",
-  "View": "Перегляд",
   "Cursor / Scroll": "Курсор / Прокрутка",
   "Scroll": "Прокрутка",
   "USB 3.0": "USB 3.0",
@@ -1738,5 +1737,11 @@
   "Failed to remove Homebrew search path": "Не вдалося видалити шлях пошуку Homebrew",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Ця операція вимагає системної прошивки %s або вище (встановлено: %s). Оновіть системну прошивку консолі перед повторною спробою.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Файл або передача завершилися до того, як вдалося прочитати всі дані. Скопіюйте або завантажте файл знову.",
-  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Файл не є дійсним NSP і може бути пошкодженим або неповним. Скопіюйте або завантажте файл знову."
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Файл не є дійсним NSP і може бути пошкодженим або неповним. Скопіюйте або завантажте файл знову.",
+  "Homebrew search paths and application options.": "Шляхи пошуку Homebrew та параметри додатків.",
+  "Homebrew Search Paths": "Шляхи пошуку Homebrew",
+  "Manage custom folders scanned for homebrew applications.": "Керування додатковими папками для пошуку додатків Homebrew.",
+  "Pick a folder on the microSD card to add as a homebrew search path.": "Виберіть папку на карті microSD, щоб додати її як шлях пошуку Homebrew.",
+  "Custom Homebrew search path. Select to remove.": "Користувацький шлях пошуку Homebrew. Виберіть, щоб видалити.",
+  "Only microSD folders can be used": "Можна використовувати лише папки на карті microSD"
 }
