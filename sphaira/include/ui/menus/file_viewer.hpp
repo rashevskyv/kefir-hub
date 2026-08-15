@@ -49,6 +49,17 @@ private:
     void DeleteLine();
     void JoinLine();
     void GoToLine();
+    void StartRangeSelection();
+    void FinishRangeSelection();
+    void CancelRangeSelection();
+    void ClearRangeSelection();
+    void CopySelection();
+    void CutSelection();
+    void PasteBelow();
+    void CommentSelection();
+    void UncommentSelection();
+    auto HasSelection() const -> bool;
+    auto GetTargetRange() const -> std::pair<s64, s64>;
     void SetupViewActions();
     void SetupEditActions();
     void SwitchToEditMode();
@@ -129,6 +140,13 @@ private:
     s64 m_line_index{};
     bool m_editable{};
     bool m_text_dirty{};
+
+    // Range selection state
+    s64 m_range_anchor{0};
+    s64 m_range_start{0};
+    s64 m_range_end{0};
+    bool m_selecting_range{false};
+    bool m_has_range{false};
 
     // Streamed large file pager state
     s64 m_current_page{0};

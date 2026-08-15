@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.460**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.465**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.460 (text editor basics)
+## Поточний delivery: v0.13.465 (text editor multi-line editing)
+
+- [x] `TEXT-RANGE-SELECTION-465` — вибір діапазону рядків у режимі Edit через Actions popup (`Select range` / `Clear selection`), під час вибору A = `Finish selection`, B = `Cancel selection`; активний діапазон підсвічується напівпрозорою focus-смугою (alpha 0.35).
+- [x] `TEXT-LINE-CLIPBOARD-465` — міжфайловий локальний буфер обміну рядками (`s_line_clipboard`) для дій Copy, Cut, Paste below та Delete над виділеним діапазоном або поточним рядком; видалення завжди зберігає щонайменше 1 порожній рядок; 1 undo snapshot для мутуючих операцій (0 для Copy).
+- [x] `TEXT-INI-COMMENT-465` — коментування (`Comment`) та розкоментування (`Uncomment`) рядка або виділеного діапазону для INI файлів із збереженням пробілів/табуляцій; чисті функції `CommentIniLine` та `UncommentIniLine` у `text_helper.hpp` з хостовими юніт-тестами.
+- [x] `TEXT-ACTIONS-UNDO-REDO-465` — інтеграція пунктів `Undo` та `Redo` у спливаюче вікно Actions; динамічний заголовок дій `Line actions (line %zu)` або `Line actions (lines %zu - %zu)`.
+- [x] `TEXT-VERIFY-465` — підняти версію до `0.13.465` у `sphaira/CMakeLists.txt`, оновити living docs (`task.md`, `plan.md`, `walkthrough.md`), перевірити host unit tests, WSL ReleaseWithInstall та `git diff --check`.
+
+## Попередній delivery: v0.13.460 (text editor basics)
 
 - [x] `TEXT-EDIT-VIEW-BACK-460` — кнопка B у режимі редагування повертає до режиму
   перегляду (View) для того самого відкритого документа зі збереженням рядків,
@@ -23,12 +31,6 @@
   modifier вертикальні inputs лишаються viewport scrolling.
 - [x] `TEXT-EDIT-VERIFY-460` — підняти версію до 0.13.460, додати хостові юніт-тести
   для 0/1 boolean toggle, пройти host tests, WSL ReleaseWithInstall та `git diff --check`.
-
-## Наступний запланований delivery: multi-line text editing & clipboard
-
-- [ ] `TEXT-MULTI-SELECT-PLAN` — виділення діапазону рядків у текстовому редакторі.
-- [ ] `TEXT-CLIPBOARD-PLAN` — операції Cut / Copy / Paste рядків та блоків.
-- [ ] `TEXT-MULTI-OPS-PLAN` — групове переміщення, видалення та коментування рядків.
 
 ## Попередній delivery: v0.13.458 (Homebrew settings & search paths)
 

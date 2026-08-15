@@ -75,6 +75,8 @@ auto ImageBounds(bool fullscreen) -> Vec4 {
     return {band.x + pad_x, band.y + pad_y, band.w - pad_x * 2.f, band.h - pad_y * 2.f};
 }
 
+std::vector<std::string> s_line_clipboard{};
+
 } // namespace
 
 Menu::Menu(const fs::FsPath& path)
@@ -571,6 +573,11 @@ void Menu::LoadTextFile() {
     m_saved_text.clear();
     m_text_dirty = false;
     m_line_index = 0;
+    m_range_anchor = 0;
+    m_range_start = 0;
+    m_range_end = 0;
+    m_selecting_range = false;
+    m_has_range = false;
     m_load_failed = false;
     m_load_result = 0;
     m_is_streamed = false;
@@ -718,17 +725,27 @@ void Menu::SetupEditActions() {
     RemoveAction(Button::SELECT);
     RemoveAction(Button::R3);
 
-    SetAction(Button::A, Action{"Edit line"_i18n, [this](){
-        EditLine();
-    }});
+    if (m_selecting_range) {
+        SetAction(Button::A, Action{"Finish selection"_i18n, [this](){
+            FinishRangeSelection();
+        }});
+        SetAction(Button::B, Action{"Cancel"_i18n, [this](){
+            CancelRangeSelection();
+        }});
+    } else {
+        SetAction(Button::A, Action{"Edit line"_i18n, [this](){
+            EditLine();
+        }});
+        SetAction(Button::B, Action{"Back"_i18n, [this](){
+            SwitchToViewMode();
+        }});
+    }
+
     SetAction(Button::X, Action{"Actions"_i18n, [this](){
         ShowLineActions();
     }});
     SetAction(Button::START, Action{"Options"_i18n, [this](){
         DisplayTextOptions();
-    }});
-    SetAction(Button::B, Action{"Back"_i18n, [this](){
-        SwitchToViewMode();
     }});
     SetAction(Button::L2, Action{"Cursor / Scroll"_i18n, "\uE101 / \uE102", [](){}});
 }
@@ -760,6 +777,8 @@ void Menu::SwitchToViewMode() {
     m_editable = false;
     m_held_down_at_bottom = false;
     m_held_up_at_top = false;
+    m_selecting_range = false;
+    m_has_range = false;
 
     SetupViewActions();
     UpdateTextSubHeading();
@@ -833,12 +852,14 @@ void Menu::Undo() {
     m_undo.pop_back();
     m_text_dirty = (BuildText() != m_saved_text);
     m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    ClearRangeSelection();
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
     }
     m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
+
 void Menu::Redo() {
     if (m_redo.empty()) {
         App::Notify("Nothing to redo"_i18n);
@@ -850,6 +871,7 @@ void Menu::Redo() {
     m_redo.pop_back();
     m_text_dirty = (BuildText() != m_saved_text);
     m_line_index = std::min<s64>(m_line_index, m_lines.size() - 1);
+    ClearRangeSelection();
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
     }
@@ -870,6 +892,7 @@ void Menu::EditLine() {
 
     PushUndo();
     m_lines[m_line_index] = out;
+    ClearRangeSelection();
     m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
@@ -879,6 +902,7 @@ void Menu::InsertLine() {
     PushUndo();
     m_lines.insert(m_lines.begin() + m_line_index + 1, "");
     m_line_index++;
+    ClearRangeSelection();
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
     }
@@ -889,12 +913,14 @@ void Menu::InsertLine() {
 
 void Menu::DeleteLine() {
     if (!m_editable) return;
+    const auto [start, end] = GetTargetRange();
     PushUndo();
-    m_lines.erase(m_lines.begin() + m_line_index);
+    m_lines.erase(m_lines.begin() + start, m_lines.begin() + end + 1);
     if (m_lines.empty()) {
         m_lines.emplace_back();
     }
-    m_line_index = std::clamp<s64>(m_line_index, 0, m_lines.size() - 1);
+    m_line_index = std::clamp<s64>(start, 0, m_lines.size() - 1);
+    ClearRangeSelection();
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
     }
@@ -913,6 +939,7 @@ void Menu::JoinLine() {
     PushUndo();
     m_lines[m_line_index] += m_lines[m_line_index + 1];
     m_lines.erase(m_lines.begin() + m_line_index + 1);
+    ClearRangeSelection();
     m_text_dirty = (BuildText() != m_saved_text);
     UpdateTextSubHeading();
 }
@@ -925,11 +952,160 @@ void Menu::GoToLine() {
 
     const s64 clamped = std::clamp<s64>(out, 1, m_lines.size());
     m_line_index = clamped - 1;
+    ClearRangeSelection();
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
     }
     m_line_scroll.Reset();
     UpdateTextSubHeading();
+}
+
+void Menu::StartRangeSelection() {
+    if (!m_editable) return;
+    m_range_anchor = m_line_index;
+    m_selecting_range = true;
+    m_has_range = false;
+    SetupEditActions();
+    UpdateTextSubHeading();
+}
+
+void Menu::FinishRangeSelection() {
+    if (!m_selecting_range) return;
+    m_range_start = std::min(m_range_anchor, m_line_index);
+    m_range_end = std::max(m_range_anchor, m_line_index);
+    m_has_range = true;
+    m_selecting_range = false;
+    SetupEditActions();
+    App::PlaySoundEffect(SoundEffect_Focus);
+    UpdateTextSubHeading();
+}
+
+void Menu::CancelRangeSelection() {
+    if (!m_selecting_range) return;
+    m_selecting_range = false;
+    m_has_range = false;
+    SetupEditActions();
+    UpdateTextSubHeading();
+}
+
+void Menu::ClearRangeSelection() {
+    m_selecting_range = false;
+    m_has_range = false;
+    SetupEditActions();
+}
+
+auto Menu::HasSelection() const -> bool {
+    return m_editable && (m_has_range || m_selecting_range);
+}
+
+auto Menu::GetTargetRange() const -> std::pair<s64, s64> {
+    if (m_has_range) {
+        const s64 start = std::clamp<s64>(m_range_start, 0, m_lines.size() - 1);
+        const s64 end = std::clamp<s64>(m_range_end, start, m_lines.size() - 1);
+        return {start, end};
+    }
+    if (m_selecting_range) {
+        const s64 start = std::clamp<s64>(std::min(m_range_anchor, m_line_index), 0, m_lines.size() - 1);
+        const s64 end = std::clamp<s64>(std::max(m_range_anchor, m_line_index), start, m_lines.size() - 1);
+        return {start, end};
+    }
+    const s64 cur = std::clamp<s64>(m_line_index, 0, m_lines.size() - 1);
+    return {cur, cur};
+}
+
+void Menu::CopySelection() {
+    if (!m_editable) return;
+    const auto [start, end] = GetTargetRange();
+    s_line_clipboard.clear();
+    for (s64 i = start; i <= end && i < static_cast<s64>(m_lines.size()); i++) {
+        s_line_clipboard.push_back(m_lines[i]);
+    }
+    App::PlaySoundEffect(SoundEffect_Focus);
+}
+
+void Menu::CutSelection() {
+    if (!m_editable) return;
+    const auto [start, end] = GetTargetRange();
+    s_line_clipboard.clear();
+    for (s64 i = start; i <= end && i < static_cast<s64>(m_lines.size()); i++) {
+        s_line_clipboard.push_back(m_lines[i]);
+    }
+    PushUndo();
+    m_lines.erase(m_lines.begin() + start, m_lines.begin() + end + 1);
+    if (m_lines.empty()) {
+        m_lines.emplace_back();
+    }
+    m_line_index = std::clamp<s64>(start, 0, m_lines.size() - 1);
+    ClearRangeSelection();
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    m_text_dirty = (BuildText() != m_saved_text);
+    UpdateTextSubHeading();
+}
+
+void Menu::PasteBelow() {
+    if (!m_editable) return;
+    if (s_line_clipboard.empty()) {
+        App::Notify("Clipboard is empty"_i18n);
+        return;
+    }
+    PushUndo();
+    const s64 insert_pos = std::clamp<s64>(m_line_index + 1, 0, m_lines.size());
+    m_lines.insert(m_lines.begin() + insert_pos, s_line_clipboard.begin(), s_line_clipboard.end());
+    m_line_index = std::clamp<s64>(insert_pos + static_cast<s64>(s_line_clipboard.size()) - 1, 0, m_lines.size() - 1);
+    ClearRangeSelection();
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    m_text_dirty = (BuildText() != m_saved_text);
+    UpdateTextSubHeading();
+}
+
+void Menu::CommentSelection() {
+    if (!m_editable) return;
+    const auto [start, end] = GetTargetRange();
+    bool changed = false;
+    for (s64 i = start; i <= end && i < static_cast<s64>(m_lines.size()); i++) {
+        auto commented = text_helper::CommentIniLine(m_lines[i]);
+        if (commented != m_lines[i]) {
+            if (!changed) {
+                PushUndo();
+                changed = true;
+            }
+            m_lines[i] = std::move(commented);
+        }
+    }
+    if (changed) {
+        ClearRangeSelection();
+        m_text_dirty = (BuildText() != m_saved_text);
+        m_line_scroll.Reset();
+        UpdateTextSubHeading();
+    }
+}
+
+void Menu::UncommentSelection() {
+    if (!m_editable) return;
+    const auto [start, end] = GetTargetRange();
+    bool changed = false;
+    for (s64 i = start; i <= end && i < static_cast<s64>(m_lines.size()); i++) {
+        auto uncommented = text_helper::UncommentIniLine(m_lines[i]);
+        if (uncommented != m_lines[i]) {
+            if (!changed) {
+                PushUndo();
+                changed = true;
+            }
+            m_lines[i] = std::move(uncommented);
+        }
+    }
+    if (changed) {
+        ClearRangeSelection();
+        m_text_dirty = (BuildText() != m_saved_text);
+        m_line_scroll.Reset();
+        UpdateTextSubHeading();
+    }
 }
 
 auto Menu::SaveText() -> bool {
@@ -1053,23 +1229,53 @@ void Menu::PromptTextExit() {
 }
 
 void Menu::ShowLineActions() {
-    PopupList::Items items;
-    items.emplace_back("Edit line"_i18n);
-    items.emplace_back("Insert line below"_i18n);
-    items.emplace_back("Delete line"_i18n);
-    items.emplace_back("Join with next line"_i18n);
+    struct ActionEntry {
+        std::string title;
+        std::function<void()> callback;
+    };
+    std::vector<ActionEntry> actions;
 
-    App::Push<PopupList>("Line "_i18n + std::to_string(m_line_index + 1), items, [this](auto op_index){
-        if (!op_index) {
+    actions.push_back({"Edit line"_i18n, [this](){ EditLine(); }});
+
+    if (m_has_range) {
+        actions.push_back({"Clear selection"_i18n, [this](){ ClearRangeSelection(); }});
+    } else {
+        actions.push_back({"Select range"_i18n, [this](){ StartRangeSelection(); }});
+    }
+
+    actions.push_back({"Copy"_i18n, [this](){ CopySelection(); }});
+    actions.push_back({"Cut"_i18n, [this](){ CutSelection(); }});
+    actions.push_back({"Paste below"_i18n, [this](){ PasteBelow(); }});
+    actions.push_back({"Delete"_i18n, [this](){ DeleteLine(); }});
+    actions.push_back({"Insert line below"_i18n, [this](){ InsertLine(); }});
+    actions.push_back({"Join with next line"_i18n, [this](){ JoinLine(); }});
+
+    if (text_helper::IsIniFile(m_path)) {
+        actions.push_back({"Comment"_i18n, [this](){ CommentSelection(); }});
+        actions.push_back({"Uncomment"_i18n, [this](){ UncommentSelection(); }});
+    }
+
+    actions.push_back({"Undo"_i18n, [this](){ Undo(); }});
+    actions.push_back({"Redo"_i18n, [this](){ Redo(); }});
+
+    PopupList::Items items;
+    items.reserve(actions.size());
+    for (const auto& a : actions) {
+        items.push_back(a.title);
+    }
+
+    std::string title;
+    if (m_has_range) {
+        title = "Lines "_i18n + std::to_string(m_range_start + 1) + " - " + std::to_string(m_range_end + 1);
+    } else {
+        title = "Line "_i18n + std::to_string(m_line_index + 1);
+    }
+
+    App::Push<PopupList>(title, items, [actions = std::move(actions)](auto op_index){
+        if (!op_index || *op_index >= actions.size()) {
             return;
         }
-
-        switch (*op_index) {
-            case 0: EditLine(); break;
-            case 1: InsertLine(); break;
-            case 2: DeleteLine(); break;
-            case 3: JoinLine(); break;
-        }
+        actions[*op_index].callback();
     });
 }
 
@@ -1232,11 +1438,16 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
                 const auto now = GetCurrentTimeMs();
                 if (m_last_tapped_row == index && (now - m_last_tap_time) <= 500) {
                     m_last_tap_time = 0;
+                    if (m_selecting_range) {
+                        FinishRangeSelection();
+                        return;
+                    }
                     if (text_helper::IsIniFile(m_path)) {
                         const auto toggle = text_helper::ToggleIniBoolean(m_lines[index]);
                         if (toggle.toggled) {
                             PushUndo();
                             m_lines[index] = toggle.new_line;
+                            ClearRangeSelection();
                             m_text_dirty = (BuildText() != m_saved_text);
                             UpdateTextSubHeading();
                             App::PlaySoundEffect(SoundEffect_Focus);
@@ -1277,10 +1488,20 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
     gfx::textBounds(vg, 0, 0, bounds, gutter.c_str());
     const float gutter_w = bounds[2] - bounds[0] + 16.f;
     const bool is_ini = text_helper::IsIniFile(m_path);
+    const bool has_sel = HasSelection();
+    const auto [sel_start, sel_end] = GetTargetRange();
 
-    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini](auto* vg, auto* theme, const Vec4& pos, s64 index){
-        const auto selected = (m_line_index == index);
-        if (selected && m_editable) {
+    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini, has_sel, sel_start = sel_start, sel_end = sel_end](auto* vg, auto* theme, const Vec4& pos, s64 index){
+        const auto focused = (m_line_index == index);
+        const auto in_range = has_sel && (index >= sel_start && index <= sel_end);
+
+        if (in_range) {
+            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+            tint.a *= 0.35f;
+            gfx::drawRect(vg, pos, tint, 5.f);
+        }
+
+        if (focused && m_editable) {
             gfx::drawRectOutline(vg, theme, 4.f, pos);
         }
 
@@ -1290,11 +1511,11 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%ld", static_cast<long>(display_line_num));
 
-        const auto colour = theme->GetColour((selected && m_editable) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        const auto colour = theme->GetColour((focused && m_editable) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         const auto text_x = pos.x + gutter_w;
         const auto text_w = pos.w - gutter_w - 10.f;
 
-        if (selected && m_editable && !is_ini) {
+        if (focused && m_editable && !is_ini) {
             m_line_scroll.Draw(vg, true, text_x, pos.y + pos.h / 2.f, text_w, m_font_size,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_lines[index]);
         } else if (is_ini) {

@@ -228,6 +228,51 @@ inline auto ToggleIniBoolean(std::string_view line) -> ToggleResult {
     return {true, result};
 }
 
+inline auto CommentIniLine(std::string_view line) -> std::string {
+    size_t start = 0;
+    while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) {
+        start++;
+    }
+
+    if (start >= line.size()) {
+        return std::string(line);
+    }
+
+    const char first = line[start];
+    if (first == ';' || first == '#') {
+        return std::string(line);
+    }
+
+    std::string result;
+    result.reserve(line.size() + 1);
+    result.append(line.substr(0, start));
+    result.push_back(';');
+    result.append(line.substr(start));
+    return result;
+}
+
+inline auto UncommentIniLine(std::string_view line) -> std::string {
+    size_t start = 0;
+    while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) {
+        start++;
+    }
+
+    if (start >= line.size()) {
+        return std::string(line);
+    }
+
+    const char first = line[start];
+    if (first != ';' && first != '#') {
+        return std::string(line);
+    }
+
+    std::string result;
+    result.reserve(line.size() - 1);
+    result.append(line.substr(0, start));
+    result.append(line.substr(start + 1));
+    return result;
+}
+
 struct Page {
     int64_t page_index{0};
     int64_t start_offset{0};

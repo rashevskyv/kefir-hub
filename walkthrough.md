@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.460** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.465** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.465 — text editor multi-line editing
+
+- Реалізовано вибір діапазону рядків у режимі редагування тексту (`Edit` mode) через спливаюче вікно Actions (`Select range` / `Clear selection`).
+- Під час вибору діапазону підказки футера оновлюються на `A = Finish selection`, `B = Cancel selection`. Активний діапазон підсвічується фокусною смугою теми (`ThemeEntryID_FOCUS`) з прозорістю `alpha = 0.35`, зберігаючи синтаксичне підсвічування та розмір шрифту тексту.
+- Додано процесовий буфер обміну рядками (`s_line_clipboard`) для дій `Copy`, `Cut`, `Paste below` та `Delete` між відкритими текстовими редакторами без потреби збереження на диск.
+- Дії `Delete` та `Cut` над діапазоном чи поточним рядком гарантують збереження щонайменше одного порожнього рядка в документі.
+- Мутуючі операції створюють рівно один Undo-снапшот перед зміною; копіювання (`Copy`) не створює Undo-записів.
+- Додано чисті допоміжні функції `CommentIniLine` та `UncommentIniLine` у `sphaira/include/text_helper.hpp` із збереженням ведучих пробілів/табуляцій та повним набором хостових юніт-тестів у `tests/test_text_helper.cpp`.
+- Пункти `Undo` та `Redo` додано у спливаючий список дій (`ShowLineActions`), а заголовок списку динамічно відображає `Line actions (line %zu)` або `Line actions (lines %zu - %zu)`.
+- Версію піднято до `0.13.465` у `sphaira/CMakeLists.txt`; перед комітом виконано host unit tests, WSL `ReleaseWithInstall` та `git diff --check`.
 
 ## v0.13.460 — text editor basics
 

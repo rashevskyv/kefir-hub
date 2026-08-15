@@ -102,6 +102,36 @@ int main() {
     assert(!ToggleIniBoolean("count = 2").toggled);
     assert(!ToggleIniBoolean("; count = 0").toggled);
 
+    // INI comment / uncomment tests:
+    // 1. Commenting with indentation preservation
+    assert(CommentIniLine("flag = 1") == ";flag = 1");
+    assert(CommentIniLine("  setting = value") == "  ;setting = value");
+    assert(CommentIniLine("\tautostart = 1") == "\t;autostart = 1");
+    assert(CommentIniLine("  [section]") == "  ;[section]");
+
+    // 2. Commenting blank and already-commented lines (intact)
+    assert(CommentIniLine("") == "");
+    assert(CommentIniLine("   ") == "   ");
+    assert(CommentIniLine("\t\t") == "\t\t");
+    assert(CommentIniLine("; already commented") == "; already commented");
+    assert(CommentIniLine("  ; already commented") == "  ; already commented");
+    assert(CommentIniLine("  # hash comment") == "  # hash comment");
+
+    // 3. Uncommenting with indentation preservation
+    assert(UncommentIniLine(";flag = 1") == "flag = 1");
+    assert(UncommentIniLine("  ;setting = value") == "  setting = value");
+    assert(UncommentIniLine("  ; setting = value") == "   setting = value");
+    assert(UncommentIniLine("  #autostart = 1") == "  autostart = 1");
+    assert(UncommentIniLine("\t#\tkey = val") == "\t\tkey = val");
+
+    // 4. Uncommenting blank and non-comment negative cases (intact)
+    assert(UncommentIniLine("") == "");
+    assert(UncommentIniLine("   ") == "   ");
+    assert(UncommentIniLine("setting = value") == "setting = value");
+    assert(UncommentIniLine("  setting = value") == "  setting = value");
+    assert(UncommentIniLine("[section]") == "[section]");
+    assert(UncommentIniLine("  [section]") == "  [section]");
+
     // ReadPage pager unit tests:
     // 1. Multi-line LF paging
     std::string sample_lf = "line 1\nline 2\nline 3\nline 4\nline 5\n";

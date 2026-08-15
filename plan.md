@@ -1,10 +1,21 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.460**. Завершені плани збережено в
+Поточний delivery — **v0.13.465**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.460 — text editor basics
+## Поточний delivery: v0.13.465 — text editor multi-line editing
+
+Статус: реалізацію виконано та перевірено. Реалізовано вибір діапазону рядків у режимі редагування через меню дій (`Select range` / `Clear selection`), під час активного вибору A = `Finish selection`, B = `Cancel selection`. Додано процесовий буфер обміну рядками (`s_line_clipboard`) для дій Copy, Cut, Paste below та Delete над виділеним діапазоном або активним рядком. Реалізовано чисті допоміжні функції `CommentIniLine` та `UncommentIniLine` у `text_helper.hpp` із збереженням відступів та додано пункт `Undo` й `Redo` у спливаючий список дій. Пройдено повний набір host unit tests (`tests/run.sh` - 13 suites, 752 declarations) та `git diff --check`.
+
+1. Додати підтримку вибору діапазону рядків у `fileview::Menu` (`StartRangeSelection`, `FinishRangeSelection`, `CancelRangeSelection`, `ClearRangeSelection`) та оновити підказки кнопок футера (`Finish selection` / `Cancel`).
+2. Створити процесовий буфер обміну рядками (`s_line_clipboard`) для `CopySelection`, `CutSelection`, `PasteBelow` та `DeleteLine` (із збереженням щонайменше 1 порожнього рядка).
+3. Реалізувати чисті функції `CommentIniLine` та `UncommentIniLine` у `text_helper.hpp` з тестами в `test_text_helper.cpp` та підключити їх до дій `Comment` / `Uncomment`.
+4. Оновити спливаюче вікно дій рядка (`ShowLineActions`) для динамічного показу дій над виділеним діапазоном або поточним рядком, включно з `Undo` та `Redo`.
+5. Малювати виділення напівпрозорою фокусною смугою з alpha 0.35 (`ThemeEntryID_FOCUS`), зберігаючи синтаксичні кольори тексту.
+6. Підняти версію до `0.13.465` у `sphaira/CMakeLists.txt`, оновити living docs, пройти перевірку host tests та `git diff --check`.
+
+## Попередній delivery: v0.13.460 — text editor basics
 
 Статус: реалізацію виконано та перевірено. Реалізовано перехід Edit → View на кнопку B
 зі збереженням стану та підтвердженням Save/Discard/Cancel при виході з View; блокування
@@ -22,12 +33,6 @@
 3. Зберегти синтаксичні кольори та однаковий розмір шрифту для виділеного рядка INI.
 4. Розширити `ToggleIniBoolean()` для перемикання 0 ↔ 1 із тестами в `test_text_helper.cpp`.
 5. Підняти версію до `0.13.460`, оновити living docs, пройти тести та збірку.
-
-## Наступний запланований delivery: multi-line text editing & clipboard
-
-1. Виділення діапазону рядків у текстовому редакторі.
-2. Операції Cut / Copy / Paste рядків та блоків.
-3. Групове переміщення, видалення та коментування рядків.
 
 ## Попередній delivery: v0.13.458 — Homebrew settings & search paths
 
