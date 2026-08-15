@@ -7,14 +7,14 @@ upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 > окремим локальним i18n pipeline; функціональні задачі не змінюють i18n-файли.
 
 - Базовий upstream-коміт: `eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba` (`1.0.2`).
-- Перевірений upstream HEAD: `ff87305cc01f35f2afe692898cc9c3e7dd05ad85` (`1.0.5`, 2026-08-14).
+- Перевірений upstream HEAD: `1180672984021559718f339255bdbe7df71b0f64` (`1.0.6`, 2026-08-15).
 - Локальний стан під час первинного аудиту: `5b4c34deede4a85182c7ee2698ff59b851974d93` (`0.13.446`).
-- Upstream-діапазон: 29 комітів після базового `1.0.2`.
+- Upstream-діапазон: 41 коміт після базового `1.0.2`.
 - Прямих patch-equivalent комітів у нашій історії немає: наявні збіги реалізовано незалежно.
 
 Посилання: [baseline](https://github.com/NaGaa95/sphaira/commit/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba),
-[upstream HEAD](https://github.com/NaGaa95/sphaira/commit/ff87305cc01f35f2afe692898cc9c3e7dd05ad85),
-[повне порівняння](https://github.com/NaGaa95/sphaira/compare/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba...ff87305cc01f35f2afe692898cc9c3e7dd05ad85).
+[upstream HEAD](https://github.com/NaGaa95/sphaira/commit/1180672984021559718f339255bdbe7df71b0f64),
+[повне порівняння](https://github.com/NaGaa95/sphaira/compare/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba...1180672984021559718f339255bdbe7df71b0f64).
 
 ## Підсумок
 
@@ -22,8 +22,8 @@ upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 |---|---|
 | Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening, NSP install diagnostics |
 | Частковий перетин | Наявна локальна база є, але upstream має окрему поведінку або іншу UX-модель |
-| Залишилося запланувати | FTP refresh, English export fallback, Update/DLC checker |
-| Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX |
+| Залишилося запланувати | FTP refresh, English export fallback, HTTP User-Agent, forwarder focus/touch audit |
+| Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX, Update/DLC filter, Game Menu content shortcut, MTP folder install |
 
 ## Уже є у власній реалізації
 
@@ -192,6 +192,68 @@ negative coverage. Продуктова MSP частина не переноси
    process mask, а не дозволений діапазон ядер `0..3`.
 4. `ff87305` — лише version bump, **не застосовується**.
 
+## Оновлення upstream `1.0.6` (2026-08-15)
+
+Після `ff87305` upstream додав 12 комітів. Два (`3c04cbc`, `3ef698b`) — merge
+commits без окремої поведінки, а `1180672` — лише version bump. Нижче зафіксовано
+решту з урахуванням локальних реалізацій і політики локалізації.
+
+### Forwarder editor focus (`23f3ca6`, `1476905`)
+
+Upstream виправив два пов'язані input edge cases: touch по правому списку має
+працювати, коли фокус стоїть на title/icon ліворуч; controller input не має
+одночасно потрапляти в список; touch activation очищає лівий фокус.
+
+Локальний forwarder editor — власна суттєво інша реалізація з icon picker/crop
+flow, тому ці два малих upstream diff не можна cherry-pick. Є **частковий
+перетин**, але покриття поведінки ще не доведено: актуальна локальна логіка
+`m_icon_focused` достроково повертається до `List::OnUpdate()`. Потрібен окремий
+bounded audit touch/controller matrix після завершення поточних незакомічених змін
+у `forwarder_editor.cpp`; не змішувати з ними.
+
+### Reorder і переклади (`92da773`, `f44ca2c`, `16169c2`)
+
+`92da773` складається з локалізованих playtime units, виправлень `i18n::Reorder`
+та масових корекцій JSON, а `16169c2` виправляє корейський API-key рядок.
+Відповідно до політики окремого local i18n pipeline **не переносити** ні JSON,
+ні супутнє форматування рядків у межах цього upstream-аудиту. `f44ca2c` — merge
+без окремої функціональної зміни.
+
+### Versioned HTTP User-Agent (`2eabcec`, `3ef698b`)
+
+Upstream замінює downloader User-Agent `TotalJustice` на `Sphaira/<version>` і
+додає той самий header до curl-backed remote mounts. Локально досі використано
+`API_AGENT = "TotalJustice"` у `download.cpp`, а `MountCurlDevice` не встановлює
+`CURLOPT_USERAGENT`; отже еквіваленту **немає**. Це малий технічний кандидат:
+потрібна одна спільна константа від локального application version і її
+застосування в обох уже наявних curl common-option paths. Нових залежностей або UI
+не потрібно.
+
+### Фільтр missing Update/DLC (`ccd290e`)
+
+Upstream розширив свій `nx-versions` catalog: визначає missing/stale/current cache,
+сканує встановлений контент та додає Game Menu filter `Missing updates or DLC`.
+Локально самого `nx_versions`/catalog checker немає, тому це не доповнення до
+наявного механізму, а частина вже відкладеної продуктової функції Update/DLC
+checker. **Не запускати без окремої продуктової команди**; upstream i18n-рядки
+також не переносити.
+
+### Shortcut до application content (`a78e92e`)
+
+Upstream переносить на кнопку `Y` відкриття наявного `meta::Menu` і прибирає
+дубльований sidebar пункт. У локальному Game Menu зараз цього shortcut не знайдено.
+Це окрема UX/product decision: не переносити автоматично й не змінювати mappings
+без окремої потреби.
+
+### MTP folder installation (`3f8303d`)
+
+Upstream радикально переробляє virtual MTP install FS: підтримує вкладені каталоги,
+path-aware create/rename/delete, session reset і ігнорує неінсталяційні файли.
+Локальний `FsInstallProxy` використовує інший, старіший Haze API та flat entries;
+folder install відсутній. Це велика продуктова MTP-функція, а не безпечний parser
+або transport fix. **Відкласти** до окремого дизайну й ручної hardware-matrix;
+не переносити частинами.
+
 ## Черга перенесення
 
 ### Негайно, малими незалежними кроками
@@ -210,6 +272,11 @@ negative coverage. Продуктова MSP частина не переноси
 8. Update/DLC checker.
 9. Розширення наявного screensaver/backlight-off на інші довгі `ProgressBox` flows
    (за потребою; не прямий перенос `a55b54e`).
+10. Versioned `Sphaira/<version>` HTTP User-Agent у downloader та curl mounts
+    (`2eabcec`) — малий технічний кандидат після звільнення поточної основної
+    директорії.
+11. Forwarder editor touch/controller focus audit (`23f3ca6`, `1476905`) — тільки
+    після commit поточних локальних змін цього файлу.
 
 ### Лише за окремою потребою
 
