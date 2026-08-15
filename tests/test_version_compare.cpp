@@ -87,6 +87,8 @@ static int test_format_packed() {
     };
     CHECK(version::FormatPacked(pack(20, 1, 5)) == "20.1.5");
     CHECK(version::FormatPacked(pack(1, 0, 0)) == "1.0.0");
+    CHECK(version::FormatPacked(pack(4, 0, 0)) == "4.0.0");
+    CHECK(version::FormatPacked(4 << 26) == "4.0.0");
     CHECK(version::FormatPacked(0) == "0.0.0");
 
     // each field is masked to its own width, so the low 16 bits are ignored

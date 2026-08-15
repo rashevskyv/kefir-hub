@@ -1657,5 +1657,8 @@
   "Homebrew search path added.": "Homebrew-Suchpfad hinzugefügt.",
   "Homebrew search path removed.": "Homebrew-Suchpfad entfernt.",
   "Failed to add Homebrew search path": "Homebrew-Suchpfad konnte nicht hinzugefügt werden",
-  "Failed to remove Homebrew search path": "Homebrew-Suchpfad konnte nicht entfernt werden"
+  "Failed to remove Homebrew search path": "Homebrew-Suchpfad konnte nicht entfernt werden",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Diese Operation erfordert die System-Firmware %s oder höher (installiert: %s). Bitte aktualisieren Sie die System-Firmware der Konsole, bevor Sie es erneut versuchen.",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "Die Datei oder Übertragung wurde vorzeitig beendet, bevor alle Daten gelesen werden konnten. Bitte kopieren oder laden Sie die Datei erneut herunter.",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Die Datei ist keine gültige NSP und ist möglicherweise beschädigt oder unvollständig. Bitte kopieren oder laden Sie die Datei erneut herunter."
 }

@@ -1711,5 +1711,8 @@
   "Homebrew search path added.": "已添加 Homebrew 搜索路径。",
   "Homebrew search path removed.": "已移除 Homebrew 搜索路径。",
   "Failed to add Homebrew search path": "无法添加 Homebrew 搜索路径",
-  "Failed to remove Homebrew search path": "无法移除 Homebrew 搜索路径"
+  "Failed to remove Homebrew search path": "无法移除 Homebrew 搜索路径",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "此操作需要系统固件版本 %s 或更高 (已安装: %s)。请在重试前更新主机系统固件。",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "在读取所有数据之前，文件或传输已提前结束。请重新复制或下载该文件。",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "该文件不是有效的 NSP，可能已损坏或不完整。请重新复制或下载该文件。"
 }

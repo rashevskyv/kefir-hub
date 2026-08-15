@@ -4,7 +4,17 @@
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.454 — Homebrew multi-select actions
+## Поточний delivery: v0.13.454 — NSP install diagnostics
+
+Статус: реалізацію виконано та перевірено. Діагностичні повідомлення встановлення NSP та перевірка версії HOS інтегровані в єдину спільну точку опису помилок `ui::GetResultDescription(Result)`. Gemini успішно виконав host checks (`test_version_compare` 34 checks, `tests/run.sh` all green), JSON parser валідацію всіх 14 мов і WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`).
+
+1. У `sphaira/source/ui/error_box.cpp` додати описи для `MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer)`, `Result_StreamUnexpectedEof` та `Result_NspBadMagic`.
+2. Для HOS несумісності відображати мінімальну версію 4.0.0 через `version::FormatPacked`, динамічну встановлену версію через `hats::getSystemFirmware()` та рекомендацію оновити системну прошивку.
+3. Для `Result_StreamUnexpectedEof` та `Result_NspBadMagic` додати чіткі інструкції повторного копіювання/завантаження, не зачіпаючи стандартні файлові чи криптографічні помилки.
+4. Додати локалізацію 3 ключів до всіх 14 JSON-файлів у `assets/romfs/i18n/` та перевірити їх валідність.
+5. Розширити `tests/test_version_compare.cpp` перевіркою форматування 4.0.0 і підтвердити збірку в WSL.
+
+## Попередній delivery: v0.13.454 — Homebrew multi-select actions
 
 Статус: реалізацію прийнято після Gemini junior-review. Shared grid renderer
 залишився єдиним джерелом візуальної семантики selection: List малює checkbox

@@ -1735,5 +1735,8 @@
   "Homebrew search path added.": "Шлях пошуку Homebrew додано.",
   "Homebrew search path removed.": "Шлях пошуку Homebrew видалено.",
   "Failed to add Homebrew search path": "Не вдалося додати шлях пошуку Homebrew",
-  "Failed to remove Homebrew search path": "Не вдалося видалити шлях пошуку Homebrew"
+  "Failed to remove Homebrew search path": "Не вдалося видалити шлях пошуку Homebrew",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Ця операція вимагає системної прошивки %s або вище (встановлено: %s). Оновіть системну прошивку консолі перед повторною спробою.",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "Файл або передача завершилися до того, як вдалося прочитати всі дані. Скопіюйте або завантажте файл знову.",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Файл не є дійсним NSP і може бути пошкодженим або неповним. Скопіюйте або завантажте файл знову."
 }

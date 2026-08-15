@@ -20,7 +20,7 @@ upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 
 | Стан | Актуальний зміст |
 |---|---|
-| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening |
+| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening, NSP install diagnostics |
 | Частковий перетин | Наявна локальна база є, але upstream має окрему поведінку або іншу UX-модель |
 | Залишилося запланувати | FTP refresh, English export fallback, Update/DLC checker |
 | Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX |

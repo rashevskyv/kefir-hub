@@ -1676,5 +1676,8 @@
     "svcDebug": "svcDebug",
     "h": "h",
     "Show Games (read-only)": "Показать игры (только чтение)",
-    "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Показывает диск только для чтения с установленными играми, обновлениями и DLC в виде NSP-файлов. Копирование на ПК дампит их; на карту microSD ничего не записывается."
+    "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Показывает диск только для чтения с установленными играми, обновлениями и DLC в виде NSP-файлов. Копирование на ПК дампит их; на карту microSD ничего не записывается.",
+    "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Для этой операции требуется системная прошивка %s или выше (установлена: %s). Обновите системную прошивку консоли перед повторной попыткой.",
+    "The file or transfer ended early before all data was read. Please copy or download the file again.": "Файл или передача завершились до того, как были прочитаны все данные. Скопируйте или скачайте файл заново.",
+    "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Файл не является корректным NSP и может быть поврежден или неполон. Скопируйте или скачайте файл заново."
 }

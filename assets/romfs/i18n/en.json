@@ -1719,5 +1719,8 @@
   "Homebrew search path added.": "Homebrew search path added.",
   "Homebrew search path removed.": "Homebrew search path removed.",
   "Failed to add Homebrew search path": "Failed to add Homebrew search path",
-  "Failed to remove Homebrew search path": "Failed to remove Homebrew search path"
+  "Failed to remove Homebrew search path": "Failed to remove Homebrew search path",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "The file or transfer ended early before all data was read. Please copy or download the file again.",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."
 }

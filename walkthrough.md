@@ -5,6 +5,16 @@ walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
+## v0.13.454 — діагностичні повідомлення встановлення NSP (NSP install diagnostics)
+
+- **Централізована межа помилок:** Усі діагностичні описи реалізовано виключно на спільній межі `ui::GetResultDescription(Result)` у `sphaira/source/ui/error_box.cpp`. Кожен виклик через `App::PushErrorBox` (File Browser, потік/USB) та черга DBI (`Menu::AddError`) отримують ідентичні локалізовані описи без дублювання в окремих меню.
+- **Невідповідність системної прошивки:** Для `MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer)` (який `sphaira/source/yati/nx/es.cpp` повертає для HOS < 4.0.0) виводиться мінімально необхідна версія 4.0.0 (через наявний форматер `version::FormatPacked(4 << 26)`), динамічна фактична версія прошивки з `hats::getSystemFirmware()` та чітка інструкція оновити системну прошивку консолі перед повторною спробою.
+- **Діагностика цілісності NSP:**
+  - `Result_StreamUnexpectedEof` (коротке читання потоку/файлу) отримує чітке повідомлення про передчасне завершення файлу або передачі з порадою скопіювати чи завантажити файл знову.
+  - `Result_NspBadMagic` (невдача валідації структури PFS0/NSP) позначається як недійсний NSP, що може бути пошкодженим або неповним, із пропозицією повторного копіювання/завантаження.
+- **Свідомі виключення:** `Result_FsUnknownStdioError`, стандартні файлові помилки FS, помилки ключів, підписів і квитків не класифікуються як пошкоджені файли і зберігають стандартне відображення.
+- **Локалізація та тести:** Усі 14 мовних файлів (`assets/romfs/i18n/*.json`) оновлено однаковими ключами та перевірено JSON-парсером. Додано перевірку пакування 4.0.0 у `tests/test_version_compare.cpp` (34/34 checks pass). Успішно пройдено `tests/run.sh` (`all green`, 734 header declarations) та WSL ReleaseWithInstall збірку (`[100%] Built target sphaira_nro`).
+
 ## v0.13.454 — масові дії Homebrew
 
 - Homebrew отримав вибір `X`, інверсію `Y` і очищення вибору через `B`;

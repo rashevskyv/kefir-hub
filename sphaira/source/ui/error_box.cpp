@@ -2,6 +2,8 @@
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
+#include "hats_version.hpp"
+#include "version_compare.hpp"
 #include <cstdio>
 
 namespace sphaira::ui {
@@ -40,6 +42,8 @@ auto GetCodeMessage(Result rc) -> const char* {
         case UsbError_UrbFailed: return "UsbError_UrbFailed";
         case UsbError_UrbCancelled: return "UsbError_UrbCancelled";
         case UsbError_UrbBadStatus: return "UsbError_UrbBadStatus";
+
+        case MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer): return "LibnxError_IncompatSysVer";
 
         case Result_TransferCancelled: return "SphairaError_TransferCancelled";
         case Result_StreamBadSeek: return "SphairaError_StreamBadSeek";
@@ -196,6 +200,17 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "Samba support is not enabled in this build of Sphaira."_i18n;
         case Result_SaveSyncFailed:
             return "Save synchronization failed. Please check your WebDAV server connection and credentials."_i18n;
+        case MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer): {
+            const auto min_ver = version::FormatPacked(4 << 26);
+            const auto current_ver = hats::getSystemFirmware();
+            char buf[512]{};
+            std::snprintf(buf, sizeof(buf), "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying."_i18n.c_str(), min_ver.c_str(), current_ver.c_str());
+            return buf;
+        }
+        case Result_StreamUnexpectedEof:
+            return "The file or transfer ended early before all data was read. Please copy or download the file again."_i18n;
+        case Result_NspBadMagic:
+            return "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."_i18n;
         default:
             return "";
     }

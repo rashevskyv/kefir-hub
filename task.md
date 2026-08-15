@@ -6,7 +6,14 @@
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.454 (Homebrew multi-select actions)
+## Поточний delivery: v0.13.454 (NSP install diagnostics)
+
+- [x] `NSP-DIAG-HOS-454` — для `MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer)` у `ui::GetResultDescription` відобразити мінімальну версію 4.0.0 (через `version::FormatPacked`), фактичну версію консолі через `hats::getSystemFirmware()` та інструкцію оновити системну прошивку.
+- [x] `NSP-DIAG-CORRUPT-454` — додати точні рекомендації повторного копіювання/завантаження для `Result_StreamUnexpectedEof` (передчасний кінець файлу/передачі) та `Result_NspBadMagic` (недійсний NSP, можливе пошкодження); не змінювати загальні FS чи крипто-помилки.
+- [x] `NSP-DIAG-I18N-454` — додати локалізовані рядки для всіх 14 мовних файлів у `assets/romfs/i18n/*.json` і перевірити їх коректність за допомогою JSON-парсера.
+- [x] `NSP-DIAG-VERIFY-454` — розширити `tests/test_version_compare.cpp` перевіркою пакування 4.0.0, пройти `tests/run.sh` та WSL `ReleaseWithInstall` збірку (`[100%] Built target sphaira_nro`).
+
+## Попередній delivery: v0.13.454 (Homebrew multi-select actions)
 
 - [x] `HOMEBREW-MULTISELECT-454` — у Homebrew додати вибір X, інверсію Y і
   скасування вибору B, використавши чинний спільний рендер позначок для List,

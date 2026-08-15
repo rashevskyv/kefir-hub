@@ -1656,5 +1656,8 @@
   "Homebrew search path added.": "Đã thêm đường dẫn tìm kiếm Homebrew.",
   "Homebrew search path removed.": "Đã xóa đường dẫn tìm kiếm Homebrew.",
   "Failed to add Homebrew search path": "Không thể thêm đường dẫn tìm kiếm Homebrew",
-  "Failed to remove Homebrew search path": "Không thể xóa đường dẫn tìm kiếm Homebrew"
+  "Failed to remove Homebrew search path": "Không thể xóa đường dẫn tìm kiếm Homebrew",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Thao tác này yêu cầu firmware hệ thống từ %s trở lên (đã cài đặt: %s). Vui lòng cập nhật firmware hệ thống máy trước khi thử lại.",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "Tệp hoặc quá trình truyền đã kết thúc trước khi đọc hết dữ liệu. Vui lòng sao chép hoặc tải lại tệp.",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Tệp không phải là NSP hợp lệ và có thể bị hỏng hoặc không hoàn chỉnh. Vui lòng sao chép hoặc tải lại tệp."
 }

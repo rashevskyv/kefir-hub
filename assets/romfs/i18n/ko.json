@@ -1656,5 +1656,8 @@
   "Homebrew search path added.": "Homebrew 검색 경로가 추가되었습니다.",
   "Homebrew search path removed.": "Homebrew 검색 경로가 삭제되었습니다.",
   "Failed to add Homebrew search path": "Homebrew 검색 경로 추가 실패",
-  "Failed to remove Homebrew search path": "Homebrew 검색 경로 삭제 실패"
+  "Failed to remove Homebrew search path": "Homebrew 검색 경로 삭제 실패",
+  "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "이 작업은 시스템 펌웨어 %s 이상이 필요합니다 (현재 버전: %s). 본체 시스템 펌웨어를 업데이트한 후 다시 시도해 주세요.",
+  "The file or transfer ended early before all data was read. Please copy or download the file again.": "모든 데이터를 읽기 전에 파일 또는 전송이 조기 종료되었습니다. 파일을 다시 복사하거나 다운로드해 주세요.",
+  "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "유효한 NSP 파일이 아니며 손상되었거나 불완전할 수 있습니다. 파일을 다시 복사하거나 다운로드해 주세요."
 }
