@@ -429,13 +429,8 @@ void Menu::EditLine() {
 
 void Menu::InsertLine() {
     if (!m_editable) return;
-    std::string new_line;
-    if (R_FAILED(swkbd::ShowText(new_line, "Insert line"_i18n.c_str(), "", 0, 1024))) {
-        return;
-    }
-
     PushUndo();
-    m_lines.insert(m_lines.begin() + m_line_index + 1, new_line);
+    m_lines.insert(m_lines.begin() + m_line_index + 1, "");
     m_line_index++;
     if (m_text_list) {
         m_text_list->EnsureVisible(m_line_index, m_lines.size());
