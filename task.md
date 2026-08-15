@@ -1,12 +1,33 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.456**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.458**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.456 (text viewer pager)
+## Поточний delivery: v0.13.458 (text viewer ZL zoom controls)
+
+- [ ] `TEXT-ZL-ZOOM-458` — у read-only text viewer застосувати чинний image
+  viewer chord: утриманий `ZL` + D-pad Up/Down або будь-який вертикальний
+  стік масштабує текст; звичайні вертикальні inputs без ZL залишаються
+  viewport scrolling.
+- [ ] `TEXT-ZL-ZOOM-VERIFY-458` — зберегти release-based `ZL`/`ZR` paging,
+  не горнути після zoom chord, оновити footer hint, підняти версію і пройти
+  host tests, WSL ReleaseWithInstall та `git diff --check`; лишити Switch
+  smoke-test.
+
+## Попередній delivery: v0.13.457 (text viewer viewport scrolling)
+
+- [x] `TEXT-VIEWPORT-SCROLL-457` — у read-only text viewer Up/Down і стіки
+  одразу зміщують видиму область на один рядок без послідовного руху фокуса до
+  межі viewport; для streamed файла безперервно переходять між буферними
+  сторінками, не читаючи весь файл у пам'ять.
+- [x] `TEXT-VIEWPORT-VERIFY-457` — зберегти L/R, ZL/ZR, L + right-stick і
+  touch controls, підняти версію, оновити living docs, пройти host tests, WSL
+  ReleaseWithInstall і `git diff --check`; лишити Switch smoke-test.
+
+## Попередній delivery: v0.13.456 (text viewer pager)
 
 - [x] `TEXT-OPEN-AS-456` — у File Browser додати для кожного файла контекстну
   дію `View as text`, незалежно від розширення, без зміни пріоритету A-дій

@@ -195,11 +195,12 @@ void Menu::LoadCurrentFile() {
 void Menu::RecreateList() {
     const float item_h = std::round(m_font_size * 1.6f);
     constexpr float pad_y = 2.f;
-    m_page_rows = std::max<s64>(1, static_cast<s64>(530.f / (item_h + pad_y)));
+    m_viewport_rows = std::max<s64>(1, static_cast<s64>(530.f / (item_h + pad_y)));
+    m_buffer_rows = m_viewport_rows * 2;
 
     const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
     const Vec4 item_pos{50.f, 105.f, 1180.f, item_h};
-    m_text_list = std::make_unique<List>(1, m_page_rows, list_pos, item_pos, Vec2{0.f, pad_y});
+    m_text_list = std::make_unique<List>(1, m_viewport_rows, list_pos, item_pos, Vec2{0.f, pad_y});
 }
 
 void Menu::LoadPage(s64 page_idx) {
@@ -227,20 +228,24 @@ void Menu::LoadPage(s64 page_idx) {
         const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
         const s64 last_offset = m_page_offsets[last_idx];
         const s64 last_line = m_page_start_lines[last_idx];
-        const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_page_rows);
-        if (p.is_error || p.end_offset <= last_offset) {
+        const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
+        if (p.is_error || p.logical_end_offset <= last_offset) {
             if (!m_load_failed) {
                 m_load_result = FsError_InvalidSize;
                 m_load_failed = true;
             }
             break;
         }
-        if (p.is_eof) {
+        if (p.is_eof && p.lines.size() <= static_cast<size_t>(m_viewport_rows)) {
             page_idx = std::min<s64>(page_idx, last_idx);
             break;
         }
-        m_page_offsets.push_back(p.end_offset);
-        m_page_start_lines.push_back(p.start_line + p.lines.size());
+        m_page_offsets.push_back(p.logical_end_offset);
+        m_page_start_lines.push_back(p.logical_end_line);
+        if (p.is_eof) {
+            page_idx = std::min<s64>(page_idx, static_cast<s64>(m_page_offsets.size()) - 1);
+            break;
+        }
     }
 
     if (m_load_failed) {
@@ -251,7 +256,7 @@ void Menu::LoadPage(s64 page_idx) {
     m_current_page = page_idx;
 
     if (!m_page_cache.contains(page_idx)) {
-        auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[page_idx], m_page_start_lines[page_idx], m_page_rows);
+        auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[page_idx], m_page_start_lines[page_idx], m_buffer_rows, m_viewport_rows);
         if (p.is_error) {
             if (!m_load_failed) {
                 m_load_result = FsError_InvalidSize;
@@ -279,10 +284,6 @@ void Menu::LoadPage(s64 page_idx) {
     const auto& cur_page = m_page_cache[page_idx];
     m_lines = cur_page.lines;
     m_stream_start_line = cur_page.start_line;
-    m_line_index = 0;
-    if (m_text_list) {
-        m_text_list->SetYoff(0.f);
-    }
 }
 
 void Menu::PreloadPages() {
@@ -325,19 +326,22 @@ void Menu::PreloadPages() {
             const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
             const s64 last_offset = m_page_offsets[last_idx];
             const s64 last_line = m_page_start_lines[last_idx];
-            const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_page_rows);
-            if (p.is_error || p.end_offset <= last_offset) {
+            const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
+            if (p.is_error || p.logical_end_offset <= last_offset) {
                 if (!m_load_failed) {
                     m_load_result = FsError_InvalidSize;
                     m_load_failed = true;
                 }
                 break;
             }
+            if (p.is_eof && p.lines.size() <= static_cast<size_t>(m_viewport_rows)) {
+                break;
+            }
+            m_page_offsets.push_back(p.logical_end_offset);
+            m_page_start_lines.push_back(p.logical_end_line);
             if (p.is_eof) {
                 break;
             }
-            m_page_offsets.push_back(p.end_offset);
-            m_page_start_lines.push_back(p.start_line + p.lines.size());
         }
 
         if (m_load_failed) {
@@ -345,7 +349,7 @@ void Menu::PreloadPages() {
         }
 
         if (next_page < static_cast<s64>(m_page_offsets.size())) {
-            auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[next_page], m_page_start_lines[next_page], m_page_rows);
+            auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[next_page], m_page_start_lines[next_page], m_buffer_rows, m_viewport_rows);
             if (p.is_error) {
                 if (!m_load_failed) {
                     m_load_result = FsError_InvalidSize;
@@ -375,15 +379,27 @@ void Menu::PageUp(s64 count) {
     if (m_is_streamed) {
         if (m_current_page > 0) {
             LoadPage(std::max<s64>(0, m_current_page - count));
+            if (m_text_list) {
+                m_text_list->SetYoff(0.f);
+            }
+            m_line_index = 0;
             PreloadPages();
+            App::PlaySoundEffect(SoundEffect_Scroll);
+            UpdateTextSubHeading();
+        } else if (m_text_list && m_text_list->GetYoff() > 0.f) {
+            m_text_list->SetYoff(0.f);
+            m_line_index = 0;
             App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     } else {
         if (m_text_list) {
-            for (s64 i = 0; i < count; i++) {
-                m_text_list->ScrollPageUp(m_line_index, m_lines.size());
-            }
+            const float step = m_text_list->GetMaxY();
+            const float page_shift = static_cast<float>(count * m_viewport_rows) * step;
+            const float next_y = std::max(0.f, m_text_list->GetYoff() - page_shift);
+            m_text_list->SetYoff(next_y);
+            m_line_index = static_cast<s64>(std::round(next_y / step));
+            App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     }
@@ -393,69 +409,109 @@ void Menu::PageDown(s64 count) {
     if (m_is_streamed) {
         if (!m_page_cache[m_current_page].is_eof) {
             LoadPage(m_current_page + count);
+            if (m_text_list) {
+                m_text_list->SetYoff(0.f);
+            }
+            m_line_index = 0;
             PreloadPages();
             App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     } else {
         if (m_text_list) {
-            for (s64 i = 0; i < count; i++) {
-                m_text_list->ScrollPageDown(m_line_index, m_lines.size());
-            }
+            const s64 total = static_cast<s64>(m_lines.size());
+            const float step = m_text_list->GetMaxY();
+            const float y_max = (total > m_viewport_rows) ? static_cast<float>(total - m_viewport_rows) * step : 0.f;
+            const float page_shift = static_cast<float>(count * m_viewport_rows) * step;
+            const float next_y = std::min(y_max, m_text_list->GetYoff() + page_shift);
+            m_text_list->SetYoff(next_y);
+            m_line_index = static_cast<s64>(std::round(next_y / step));
+            App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     }
 }
 
 void Menu::LineUp() {
+    const float step = m_text_list ? m_text_list->GetMaxY() : 30.f;
     if (m_is_streamed) {
-        if (m_line_index > 0) {
-            m_line_index--;
+        const s64 cur_row = (step > 0.f && m_text_list) ? static_cast<s64>(std::round(m_text_list->GetYoff() / step)) : 0;
+        if (cur_row > 0) {
+            const float next_y = std::max(0.f, (cur_row - 1) * step);
             if (m_text_list) {
-                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+                m_text_list->SetYoff(next_y);
             }
+            m_line_index = cur_row - 1;
             App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         } else if (m_current_page > 0) {
             LoadPage(m_current_page - 1);
-            m_line_index = m_lines.empty() ? 0 : m_lines.size() - 1;
+            const s64 target_row = std::max<s64>(0, m_viewport_rows - 1);
             if (m_text_list) {
-                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+                m_text_list->SetYoff(target_row * step);
             }
+            m_line_index = target_row;
             PreloadPages();
             App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     } else {
         if (m_text_list) {
-            m_text_list->ScrollUp(m_line_index, 1, m_lines.size());
+            const s64 count = static_cast<s64>(m_lines.size());
+            const float y_max = (count > m_viewport_rows) ? static_cast<float>(count - m_viewport_rows) * step : 0.f;
+            const float next_y = std::clamp(m_text_list->GetYoff() - step, 0.f, y_max);
+            m_text_list->SetYoff(next_y);
+            m_line_index = static_cast<s64>(std::round(next_y / step));
+            App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     }
 }
 
 void Menu::LineDown() {
+    const float step = m_text_list ? m_text_list->GetMaxY() : 30.f;
     if (m_is_streamed) {
-        if (m_line_index + 1 < static_cast<s64>(m_lines.size())) {
-            m_line_index++;
-            if (m_text_list) {
-                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+        const s64 cur_row = (step > 0.f && m_text_list) ? static_cast<s64>(std::round(m_text_list->GetYoff() / step)) : 0;
+        const s64 count = static_cast<s64>(m_lines.size());
+        const bool at_eof = m_page_cache[m_current_page].is_eof;
+
+        if (cur_row + 1 < m_viewport_rows) {
+            if (cur_row + 1 + m_viewport_rows <= count || (at_eof && cur_row + 1 < count)) {
+                const float next_y = (cur_row + 1) * step;
+                if (m_text_list) {
+                    m_text_list->SetYoff(next_y);
+                }
+                m_line_index = cur_row + 1;
+                App::PlaySoundEffect(SoundEffect_Scroll);
+                UpdateTextSubHeading();
             }
-            App::PlaySoundEffect(SoundEffect_Scroll);
-            UpdateTextSubHeading();
-        } else if (!m_page_cache[m_current_page].is_eof) {
+        } else if (!at_eof) {
             LoadPage(m_current_page + 1);
-            m_line_index = 0;
             if (m_text_list) {
-                m_text_list->EnsureVisible(m_line_index, m_lines.size());
+                m_text_list->SetYoff(0.f);
             }
+            m_line_index = 0;
             PreloadPages();
             App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
+        } else {
+            const float y_max = (count > m_viewport_rows) ? static_cast<float>(count - m_viewport_rows) * step : 0.f;
+            if (m_text_list->GetYoff() + step <= y_max + 1.f) {
+                const float next_y = std::min(m_text_list->GetYoff() + step, y_max);
+                m_text_list->SetYoff(next_y);
+                m_line_index = static_cast<s64>(std::round(next_y / step));
+                App::PlaySoundEffect(SoundEffect_Scroll);
+                UpdateTextSubHeading();
+            }
         }
     } else {
         if (m_text_list) {
-            m_text_list->ScrollDown(m_line_index, 1, m_lines.size());
+            const s64 count = static_cast<s64>(m_lines.size());
+            const float y_max = (count > m_viewport_rows) ? static_cast<float>(count - m_viewport_rows) * step : 0.f;
+            const float next_y = std::clamp(m_text_list->GetYoff() + step, 0.f, y_max);
+            m_text_list->SetYoff(next_y);
+            m_line_index = static_cast<s64>(std::round(next_y / step));
+            App::PlaySoundEffect(SoundEffect_Scroll);
             UpdateTextSubHeading();
         }
     }
@@ -466,6 +522,9 @@ void Menu::ZoomText(float delta) {
     if (std::abs(new_size - m_font_size) < 0.1f) {
         return;
     }
+
+    const float old_step = m_text_list ? m_text_list->GetMaxY() : 30.f;
+    const s64 old_visible_row = (old_step > 0.f && m_text_list) ? static_cast<s64>(std::round(m_text_list->GetYoff() / old_step)) : 0;
 
     m_font_size = new_size;
     RecreateList();
@@ -484,12 +543,20 @@ void Menu::ZoomText(float delta) {
         m_page_cache.clear();
         m_current_page = 0;
         LoadPage(0);
+        if (m_text_list) {
+            m_text_list->SetYoff(0.f);
+        }
+        m_line_index = 0;
         PreloadPages();
     } else {
-        m_line_index = std::clamp<s64>(m_line_index, 0, m_lines.empty() ? 0 : m_lines.size() - 1);
+        const float new_step = m_text_list ? m_text_list->GetMaxY() : 30.f;
+        const s64 count = static_cast<s64>(m_lines.size());
+        const float y_max = (count > m_viewport_rows) ? static_cast<float>(count - m_viewport_rows) * new_step : 0.f;
+        const float next_y = std::clamp(static_cast<float>(old_visible_row) * new_step, 0.f, y_max);
         if (m_text_list) {
-            m_text_list->EnsureVisible(m_line_index, m_lines.size());
+            m_text_list->SetYoff(next_y);
         }
+        m_line_index = static_cast<s64>(std::round(next_y / new_step));
     }
 
     UpdateTextSubHeading();
@@ -683,9 +750,12 @@ void Menu::SwitchToEditMode() {
 }
 
 void Menu::UpdateTextSubHeading() {
+    const float step = m_text_list ? m_text_list->GetMaxY() : 30.f;
+    const s64 cur_row = (step > 0.f && m_text_list) ? static_cast<s64>(std::round(m_text_list->GetYoff() / step)) : 0;
+
     if (m_is_streamed) {
         auto heading = "Page "_i18n + std::to_string(m_current_page + 1);
-        heading += "  |  " + "Line "_i18n + std::to_string(m_stream_start_line + m_line_index);
+        heading += "  |  " + "Line "_i18n + std::to_string(m_stream_start_line + cur_row);
         if (m_file_size > 0 && m_current_page < static_cast<s64>(m_page_offsets.size())) {
             const s64 offset = m_page_offsets[m_current_page];
             const s64 pct = std::clamp<s64>((offset * 100) / m_file_size, 0, 100);
@@ -700,7 +770,8 @@ void Menu::UpdateTextSubHeading() {
         return;
     }
 
-    auto heading = std::to_string(m_line_index + 1) + " / " + std::to_string(m_lines.size());
+    const s64 display_line = m_editable ? (m_line_index + 1) : (cur_row + 1);
+    auto heading = std::to_string(display_line) + " / " + std::to_string(m_lines.size());
     if (m_mode == TextMode::View) {
         if (!m_writable) {
             heading += "  (" + "Read-only"_i18n + ")";

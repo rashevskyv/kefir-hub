@@ -1,10 +1,41 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.456**. Завершені плани збережено в
+Поточний delivery — **v0.13.458**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.456 — text viewer pager
+## Поточний delivery: v0.13.458 — text viewer ZL zoom controls
+
+1. Повторити у read-only text viewer чинний image viewer pattern: `ZL` як
+   modifier для D-pad Up/Down, LS Up/Down та RS Up/Down; без modifier усі
+   ці inputs лишаються viewport scrolling.
+2. `ZL`/`ZR` на release зберігають гортання на десять сторінок, але `ZL`,
+   використаний у zoom chord, не викликає page up після відпускання.
+3. Оновити неклікабельну footer-підказку zoom, підняти `0.13.457 → 0.13.458`,
+   додати найменшу host-перевірку та пройти host suite, WSL build і
+   `git diff --check`.
+
+## Попередній delivery: v0.13.457 — text viewer viewport scrolling
+
+Статус: реалізацію виконано та перевірено. У read-only text viewer Up/Down,
+D-pad та обидва стіки зміщують вікно на один рядок одразу без затримок курсора;
+streamed reader тримає буфер рядків наперед і плавно переходить між сторінками.
+Збережено release-based L/R (сторінка), ZL/ZR (10 сторінок), L + right-stick zoom,
+pinch zoom та неклікабельні footer hints. Пройдено host test suite (13 suites,
+742 declarations), WSL ReleaseWithInstall (`[100%] Built target sphaira_nro`) та
+`git diff --check`.
+
+1. У read-only viewer відокремити cursor/editing semantics від прокрутки
+   viewport: Up/Down, лівий і правий стіки зміщують вікно на один рядок одразу.
+2. Для streamed reader тримати буфер щонайменше на один viewport попереду,
+   обчислювати наступний page offset після одного видимого viewport і плавно
+   переходити на нього на межі. Не індексувати весь файл і зберегти bounded
+   cache.
+3. Зберегти release-based L/R, ZL/ZR, L + right-stick zoom, one-finger swipe,
+   pinch zoom і неклікабельні footer hints. Підняти `0.13.456 → 0.13.457`,
+   оновити living docs і пройти host suite, WSL build та `git diff --check`.
+
+## Попередній delivery: v0.13.456 — text viewer pager
 
 Статус: реалізацію прийнято після Gemini junior-review. Контекстна дія працює
 для кожного звичайного файла, а великі файли читаються ліниво малими

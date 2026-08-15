@@ -142,7 +142,7 @@ int main() {
         std::memcpy(buf, long_line.data() + off, n);
         return n;
     };
-    auto pl = ReadPage(read_long, long_line.size(), 0, 1, 10, 100);
+    auto pl = ReadPage(read_long, long_line.size(), 0, 1, 10, 0, 100);
     assert(pl.lines.size() == 5);
     assert(pl.lines[0].size() == 100);
     assert(pl.lines[0] == std::string(100, 'x'));
@@ -170,6 +170,46 @@ int main() {
     assert(ps.lines.size() == 1);
     assert(ps.lines[0] == "hello");
     assert(ps.end_offset == 6);
+
+    // 7. Buffered page with one-viewport logical offset discovery
+    std::string sample_stream = "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\n";
+    auto read_stream = [&](int64_t off, char* buf, int64_t sz) -> int64_t {
+        if (off >= static_cast<int64_t>(sample_stream.size())) return 0;
+        int64_t n = std::min<int64_t>(sz, sample_stream.size() - off);
+        std::memcpy(buf, sample_stream.data() + off, n);
+        return n;
+    };
+    // viewport = 2 rows, buffer = 4 rows
+    auto sp0 = ReadPage(read_stream, sample_stream.size(), 0, 1, 4, 2);
+    assert(sp0.lines.size() == 4);
+    assert(sp0.lines[0] == "line 1");
+    assert(sp0.lines[1] == "line 2");
+    assert(sp0.lines[2] == "line 3");
+    assert(sp0.lines[3] == "line 4");
+    assert(sp0.start_offset == 0);
+    assert(sp0.start_line == 1);
+    assert(sp0.logical_end_offset == 14); // after "line 1\nline 2\n"
+    assert(sp0.logical_end_line == 3);
+    assert(!sp0.is_eof);
+
+    auto sp1 = ReadPage(read_stream, sample_stream.size(), sp0.logical_end_offset, sp0.logical_end_line, 4, 2);
+    assert(sp1.lines.size() == 4);
+    assert(sp1.lines[0] == "line 3");
+    assert(sp1.lines[1] == "line 4");
+    assert(sp1.lines[2] == "line 5");
+    assert(sp1.lines[3] == "line 6");
+    assert(sp1.start_offset == 14);
+    assert(sp1.start_line == 3);
+    assert(sp1.logical_end_offset == 28); // after "line 3\nline 4\n"
+    assert(sp1.logical_end_line == 5);
+    assert(!sp1.is_eof);
+
+    auto sp2 = ReadPage(read_stream, sample_stream.size(), sp1.logical_end_offset, sp1.logical_end_line, 4, 2);
+    assert(sp2.lines.size() == 3);
+    assert(sp2.lines[0] == "line 5");
+    assert(sp2.lines[1] == "line 6");
+    assert(sp2.lines[2] == "line 7");
+    assert(sp2.is_eof);
 
     std::cout << "ok  text_helper: all checks passed\n";
     return 0;

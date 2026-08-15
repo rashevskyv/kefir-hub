@@ -228,21 +228,31 @@ struct Page {
     int64_t page_index{0};
     int64_t start_offset{0};
     int64_t end_offset{0};
+    int64_t logical_end_offset{0};
     int64_t start_line{1};
+    int64_t logical_end_line{1};
     std::vector<std::string> lines{};
     bool is_eof{false};
     bool is_error{false};
 };
 
 template <typename ReadFunc>
-inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offset, int64_t start_line, int64_t page_rows, int64_t max_line_len = 4096) -> Page {
+inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offset, int64_t start_line, int64_t page_rows, int64_t logical_rows = 0, int64_t max_line_len = 4096) -> Page {
+    if (logical_rows <= 0) {
+        logical_rows = page_rows;
+    }
+
     Page page;
     page.start_offset = std::clamp<int64_t>(start_offset, 0, std::max<int64_t>(0, file_size));
     page.start_line = std::max<int64_t>(1, start_line);
+    page.logical_end_offset = page.start_offset;
+    page.logical_end_line = page.start_line;
     page.lines.reserve(page_rows > 0 ? page_rows : 1);
 
     if (page.start_offset >= file_size || page_rows <= 0) {
         page.end_offset = page.start_offset;
+        page.logical_end_offset = page.start_offset;
+        page.logical_end_line = page.start_line;
         page.is_eof = (page.start_offset >= file_size);
         if (file_size == 0 && page.lines.empty()) {
             page.lines.emplace_back();
@@ -255,6 +265,7 @@ inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offs
     int64_t offset = page.start_offset;
     std::string current_line;
     current_line.reserve(128);
+    bool logical_captured = false;
 
     while (static_cast<int64_t>(page.lines.size()) < page_rows && offset < file_size) {
         const int64_t to_read = std::min<int64_t>(CHUNK_SIZE, file_size - offset);
@@ -273,6 +284,13 @@ inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offs
                 page.lines.emplace_back(std::move(current_line));
                 current_line.clear();
                 current_line.reserve(128);
+
+                if (!logical_captured && static_cast<int64_t>(page.lines.size()) == logical_rows) {
+                    page.logical_end_offset = offset + pos;
+                    page.logical_end_line = page.start_line + page.lines.size();
+                    logical_captured = true;
+                }
+
                 if (static_cast<int64_t>(page.lines.size()) == page_rows) {
                     offset += pos;
                     goto page_done;
@@ -285,6 +303,13 @@ inline auto ReadPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offs
                     current_line.clear();
                     current_line.reserve(128);
                     current_line.push_back(c);
+
+                    if (!logical_captured && static_cast<int64_t>(page.lines.size()) == logical_rows) {
+                        page.logical_end_offset = offset + pos;
+                        page.logical_end_line = page.start_line + page.lines.size();
+                        logical_captured = true;
+                    }
+
                     if (static_cast<int64_t>(page.lines.size()) == page_rows) {
                         offset += pos;
                         goto page_done;
@@ -308,6 +333,11 @@ page_done:
         page.is_eof = true;
     } else if (static_cast<int64_t>(page.lines.size()) < page_rows) {
         page.is_error = true;
+    }
+
+    if (!logical_captured) {
+        page.logical_end_offset = offset;
+        page.logical_end_line = page.start_line + page.lines.size();
     }
 
     if (page.lines.empty() && !page.is_error) {

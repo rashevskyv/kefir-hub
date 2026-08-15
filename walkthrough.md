@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.456** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.457** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.457 — text viewer viewport scrolling
+
+- У read-only text viewer відокремлено поведінку курсора/редагування від
+  прокрутки viewport: натискання Up/Down, D-pad та відхилення обох стіків одразу
+  зміщують видиму область на один рядок без затримок переміщення фокуса до краю
+  екрана.
+- Для потокового перегляду (streamed reader великих файлів) буфер рядків
+  утримується наперед, а перехід між сторінками відбувається безперервно та
+  плавно на межі видимого viewport без повного читання чи індексації файлу в пам'ять.
+- Збережено всі елементи керування: гортання сторінок на відпускання L/R (1 сторінка)
+  та ZL/ZR (10 сторінок), масштабування L + RS та pinch touch, вертикальний one-finger swipe
+  та неклікабельні підказки у footer.
+- Версію піднято до `0.13.457`. Пройдено host test suite (`tests/run.sh`: 13 suites,
+  742 declarations), WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`) та
+  `git diff --check`. Потрібен Switch smoke-test плавного прокручування великих файлів.
 
 ## v0.13.456 — text viewer pager
 

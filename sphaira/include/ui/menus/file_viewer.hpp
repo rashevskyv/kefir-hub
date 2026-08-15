@@ -131,7 +131,8 @@ private:
 
     // Streamed large file pager state
     s64 m_current_page{0};
-    s64 m_page_rows{17};
+    s64 m_viewport_rows{17};
+    s64 m_buffer_rows{34};
     float m_font_size{18.f};
     bool m_l_modifier_used{false};
     bool m_touch_was_pinch{false};
