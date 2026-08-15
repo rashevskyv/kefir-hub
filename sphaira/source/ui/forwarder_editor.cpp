@@ -16,8 +16,11 @@
 #include "ui/widget.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
+#include <functional>
 #include <memory>
+#include <tuple>
 #include <utility>
 
 namespace sphaira::ui::forwarder {
@@ -34,6 +37,230 @@ enum class Row {
     VideoCapture,
     SvcDebug,
     Create,
+};
+
+using CropCallback = std::function<void(std::vector<u8> icon, std::string source)>;
+
+class CropEditor final : public Widget {
+public:
+    CropEditor(ImageResult img, std::string source, CropCallback on_apply)
+    : m_raw_data{std::move(img.data)}
+    , m_image_w{img.w}
+    , m_image_h{img.h}
+    , m_source{std::move(source)}
+    , m_on_apply{std::move(on_apply)} {
+        SetActions(
+            std::make_pair(Button::A, Action{"Apply"_i18n, [this](){ Apply(); }}),
+            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){ SetPop(); }})
+        );
+
+        if (!m_raw_data.empty() && m_image_w > 0 && m_image_h > 0) {
+            m_image = nvgCreateImageRGBA(App::GetVg(), m_image_w, m_image_h, 0, m_raw_data.data());
+        }
+    }
+
+    ~CropEditor() override {
+        if (m_image > 0) {
+            nvgDeleteImage(App::GetVg(), m_image);
+        }
+    }
+
+    auto WantsChrome() const -> bool override { return false; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        Widget::Update(controller, touch);
+
+        if (m_image_w <= 0 || m_image_h <= 0 || !m_image) {
+            return;
+        }
+
+        const auto zoom_modifier = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
+        if (zoom_modifier) {
+            const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
+                controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
+            const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
+                controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
+            if (zoom_in) {
+                ZoomImage(1.05f);
+            } else if (zoom_out) {
+                ZoomImage(1.f / 1.05f);
+            }
+        } else {
+            constexpr float PAN_SPEED = 12.f;
+            if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) || controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
+                PanImage(0.f, -PAN_SPEED);
+            }
+            if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) || controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
+                PanImage(0.f, PAN_SPEED);
+            }
+            if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) || controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
+                PanImage(-PAN_SPEED, 0.f);
+            }
+            if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) || controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
+                PanImage(PAN_SPEED, 0.f);
+            }
+        }
+
+        if (touch->is_touching) {
+            if (touch->is_pinch) {
+                if (touch->pinch_scale > 0.01f && touch->pinch_scale < 100.f) {
+                    ZoomImage(touch->pinch_scale);
+                }
+                m_was_touching = false;
+            } else {
+                if (m_was_touching) {
+                    PanImage(static_cast<float>(touch->cur.x - m_prev_touch_x), static_cast<float>(touch->cur.y - m_prev_touch_y));
+                }
+                m_prev_touch_x = touch->cur.x;
+                m_prev_touch_y = touch->cur.y;
+                m_was_touching = true;
+            }
+        } else {
+            m_was_touching = false;
+        }
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
+
+        if (!m_image || m_image_w <= 0 || m_image_h <= 0) {
+            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to load image"_i18n.c_str());
+            Widget::Draw(vg, theme);
+            return;
+        }
+
+        constexpr float CROP_SIZE = 512.f;
+        constexpr float CROP_X = (SCREEN_WIDTH - CROP_SIZE) / 2.f;
+        constexpr float CROP_Y = (SCREEN_HEIGHT - CROP_SIZE) / 2.f;
+        const auto [image_x, image_y, image_w, image_h] = GetImageRect();
+        gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 0.f);
+
+        const auto overlay_colour = nvgRGBA(0, 0, 0, 175);
+        gfx::drawRect(vg, 0.f, 0.f, SCREEN_WIDTH, CROP_Y, overlay_colour);
+        gfx::drawRect(vg, 0.f, CROP_Y + CROP_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT - (CROP_Y + CROP_SIZE), overlay_colour);
+        gfx::drawRect(vg, 0.f, CROP_Y, CROP_X, CROP_SIZE, overlay_colour);
+        gfx::drawRect(vg, CROP_X + CROP_SIZE, CROP_Y, SCREEN_WIDTH - (CROP_X + CROP_SIZE), CROP_SIZE, overlay_colour);
+
+        nvgBeginPath(vg);
+        nvgRect(vg, CROP_X, CROP_Y, CROP_SIZE, CROP_SIZE);
+        nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+        nvgStrokeWidth(vg, 2.5f);
+        nvgStroke(vg);
+
+        gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        gfx::drawRect(vg, 30.f, 646.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        m_scroll_title.Draw(vg, true, 70.f, 55.f, 400.f, 26.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT), "Crop Icon"_i18n);
+
+        float source_bounds[4]{};
+        nvgFontSize(vg, 18.f);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgTextBounds(vg, 0.f, 0.f, m_source.c_str(), nullptr, source_bounds);
+        const auto source_width = std::min(520.f, std::max(0.f, source_bounds[2] - source_bounds[0]));
+        m_scroll_source.Draw(vg, true, 1210.f - source_width, 55.f, source_width, 18.f,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), m_source);
+
+        gfx::drawText(vg, 70.f, 675.f, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "\uE0E6 + \uE0EB/\uE0EC Zoom   \uE0EB/\uE0EC/\uE0ED/\uE0EE Move", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        Widget::Draw(vg, theme);
+    }
+
+private:
+    static constexpr float CROP_SIZE = 512.f;
+
+    auto GetScale() const -> float {
+        return std::max(CROP_SIZE / static_cast<float>(m_image_w), CROP_SIZE / static_cast<float>(m_image_h)) * m_zoom;
+    }
+
+    auto GetImageRect() const -> std::tuple<float, float, float, float> {
+        const float scale = GetScale();
+        const float image_w = static_cast<float>(m_image_w) * scale;
+        const float image_h = static_cast<float>(m_image_h) * scale;
+        return {
+            (SCREEN_WIDTH - image_w) / 2.f + m_pan_x,
+            (SCREEN_HEIGHT - image_h) / 2.f + m_pan_y,
+            image_w,
+            image_h,
+        };
+    }
+
+    void ZoomImage(float factor) {
+        m_zoom = std::clamp(m_zoom * factor, 1.f, 8.f);
+        ClampPan();
+    }
+
+    void PanImage(float dx, float dy) {
+        m_pan_x += dx;
+        m_pan_y += dy;
+        ClampPan();
+    }
+
+    void ClampPan() {
+        const float scale = GetScale();
+        const float image_w = static_cast<float>(m_image_w) * scale;
+        const float image_h = static_cast<float>(m_image_h) * scale;
+        const float max_pan_x = std::max(0.f, (image_w - CROP_SIZE) / 2.f);
+        const float max_pan_y = std::max(0.f, (image_h - CROP_SIZE) / 2.f);
+        m_pan_x = std::clamp(m_pan_x, -max_pan_x, max_pan_x);
+        m_pan_y = std::clamp(m_pan_y, -max_pan_y, max_pan_y);
+    }
+
+    void Apply() {
+        if (m_raw_data.empty() || m_image_w <= 0 || m_image_h <= 0) {
+            App::Notify("Failed to crop image"_i18n);
+            SetPop();
+            return;
+        }
+
+        const float scale = GetScale();
+        const float image_x = (SCREEN_WIDTH - static_cast<float>(m_image_w) * scale) / 2.f + m_pan_x;
+        const float image_y = (SCREEN_HEIGHT - static_cast<float>(m_image_h) * scale) / 2.f + m_pan_y;
+        const int sx = std::clamp(static_cast<int>(std::round(((SCREEN_WIDTH - CROP_SIZE) / 2.f - image_x) / scale)), 0, m_image_w - 1);
+        const int sy = std::clamp(static_cast<int>(std::round(((SCREEN_HEIGHT - CROP_SIZE) / 2.f - image_y) / scale)), 0, m_image_h - 1);
+        const int s_dim = std::clamp(static_cast<int>(std::round(CROP_SIZE / scale)), 1, std::min(m_image_w - sx, m_image_h - sy));
+
+        auto cropped = ImageCrop(m_raw_data, m_image_w, m_image_h, sx, sy, s_dim, s_dim);
+        if (cropped.data.empty()) {
+            App::Notify("Failed to crop image"_i18n);
+            SetPop();
+            return;
+        }
+
+        auto resized = cropped.w == 256 && cropped.h == 256 ? std::move(cropped) : ImageResize(cropped.data, cropped.w, cropped.h, 256, 256);
+        if (resized.data.empty() || resized.w != 256 || resized.h != 256) {
+            App::Notify("Failed to resize icon"_i18n);
+            SetPop();
+            return;
+        }
+
+        auto jpg = ImageConvertToJpg(resized.data, 256, 256);
+        if (jpg.data.empty()) {
+            App::Notify("Failed to encode icon"_i18n);
+            SetPop();
+            return;
+        }
+
+        if (m_on_apply) {
+            m_on_apply(std::move(jpg.data), std::move(m_source));
+        }
+        SetPop();
+    }
+
+    std::vector<u8> m_raw_data;
+    int m_image_w{};
+    int m_image_h{};
+    int m_image{};
+    std::string m_source;
+    CropCallback m_on_apply;
+    float m_zoom{1.f};
+    float m_pan_x{};
+    float m_pan_y{};
+    s32 m_prev_touch_x{};
+    s32 m_prev_touch_y{};
+    bool m_was_touching{};
+    ScrollingText m_scroll_title{};
+    ScrollingText m_scroll_source{};
 };
 
 class Editor final : public Widget {
@@ -308,26 +535,31 @@ private:
     }
 
     void SelectLocalIcon() {
-        const std::vector<std::string> filters{"nro", "png", "jpg", "jpeg"};
         App::Push<menu::filepicker::Menu>(
             menu::filepicker::Callback{[weak_alive = std::weak_ptr<bool>(m_alive), this](const fs::FsPath& path){
                 const auto alive = weak_alive.lock();
                 if (!alive || !*alive) {
                     return false;
                 }
-                std::vector<u8> icon;
                 const auto string_path = path.toString();
                 const auto extension = string_path.find_last_of('.');
-                const auto is_nro = extension != std::string::npos && !strcasecmp(string_path.c_str() + extension + 1, "nro");
+                const auto ext_str = extension != std::string::npos ? string_path.substr(extension + 1) : "";
+                const auto is_nro = !strcasecmp(ext_str.c_str(), "nro");
+                const auto is_jpeg = !strcasecmp(ext_str.c_str(), "jpg") || !strcasecmp(ext_str.c_str(), "jpeg");
+
+                ImageResult raw_img;
                 if (is_nro) {
-                    icon = nro_get_icon(path);
-                } else if (R_FAILED(fs::FsStdio().read_entire_file(path, icon))) {
-                    App::Notify("Failed to load icon"_i18n);
-                    return false;
+                    const auto nro_icon_data = nro_get_icon(path);
+                    if (nro_icon_data.empty()) {
+                        App::Notify("The selected file has no icon"_i18n);
+                        return false;
+                    }
+                    raw_img = ImageLoadIcon(nro_icon_data);
+                } else {
+                    raw_img = ImageLoadFromFile(path, is_jpeg ? ImageFlag_JPEG : ImageFlag_None);
                 }
 
-                auto normalized = steamgriddb::NormalizeIcon(icon);
-                if (normalized.empty()) {
+                if (raw_img.data.empty() || raw_img.w <= 0 || raw_img.h <= 0) {
                     App::Notify("The selected icon is not a valid image"_i18n);
                     return false;
                 }
@@ -336,10 +568,20 @@ private:
                 if (const auto slash = source.find_last_of('/'); slash != std::string::npos) {
                     source.erase(0, slash + 1);
                 }
-                SetIcon(std::move(normalized), std::move(source));
+
+                App::Push<CropEditor>(
+                    std::move(raw_img),
+                    std::move(source),
+                    [weak_alive, this](std::vector<u8> icon, std::string icon_source){
+                        const auto alive_inner = weak_alive.lock();
+                        if (!alive_inner || !*alive_inner) {
+                            return;
+                        }
+                        SetIcon(std::move(icon), std::move(icon_source));
+                    }
+                );
                 return true;
-            }},
-            filters
+            }}
         );
     }
 

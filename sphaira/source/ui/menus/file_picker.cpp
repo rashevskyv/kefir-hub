@@ -93,7 +93,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_entries.clear();
     m_index = 0;
     m_list->SetYoff(0);
-    SetTitleSubHeading(m_path);
+    SetTitleSubHeading(m_path, true);
 
     fs::Dir d;
     R_TRY(m_fs->OpenDirectory(new_path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d));
@@ -119,7 +119,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         // check if we have a filter.
         if (e.type == FsDirEntryType_File && !m_filter.empty()) {
             hidden = true;
-            if (const auto ext = std::strrchr(e.name, '.')) {
+            if (const auto ext = path::Extension(e.name); !ext.empty()) {
                 for (const auto& filter : m_filter) {
                     if (path::EqualsIC(ext, filter)) {
                         hidden = false;
