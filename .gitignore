@@ -36,4 +36,8 @@ tools/module_catalog/cache/
 __pycache__/
 *.py[cod]
 
+# Local Codex research and an accidentally named host-test executable.
+/.codex-tmp/
+/[[:space:]]
+
 
