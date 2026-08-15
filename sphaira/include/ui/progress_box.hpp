@@ -110,6 +110,7 @@ struct ProgressBox final : Widget, InstallProgress {
     void SetInstallTransfer(const std::string& transfer) override { NewTransfer(transfer); }
     void UpdateInstallTransfer(s64 offset, s64 size) override { UpdateTransfer(offset, size); }
     void InstallYield() override { Yield(); }
+    void OnCompatibilityWarning(const CompatibilityWarning& warning) override;
 
 private:
     void FreeImage();
@@ -156,6 +157,7 @@ private:
     std::atomic<bool> m_hide_speed{false};
     bool m_detached{false};
     bool m_minimized{false};
+    std::vector<CompatibilityWarning> m_compat_warnings{};
 };
 
 // this is a helper function that does many things.

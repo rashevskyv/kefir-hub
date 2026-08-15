@@ -17,6 +17,8 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "hats_version.hpp"
+#include "version_compare.hpp"
 #include "utils/utils.hpp"
 #include <sys/statvfs.h>
 
@@ -63,6 +65,7 @@ struct CnmtCollection : NcaCollection {
     NcmContentInfo content_info{};
     std::vector<u8> extended_header{};
     std::vector<NcmPackagedContentInfo> infos{};
+    u32 original_required_system_version{};
 };
 
 struct TikCollection {
@@ -1182,6 +1185,18 @@ Result Yati::InstallCnmtNca(std::span<TikCollection> tickets, CnmtCollection& cn
     ncmU64ToContentInfoSize(cnmt.size, &cnmt.content_info);
     cnmt.content_info.id_offset = 0;
 
+    u32 orig_req_sys_ver = 0;
+    if (cnmt.key.type == NcmContentMetaType_Application && cnmt.extended_header.size() >= sizeof(NcmApplicationMetaExtendedHeader)) {
+        NcmApplicationMetaExtendedHeader ext{};
+        std::memcpy(&ext, cnmt.extended_header.data(), sizeof(ext));
+        orig_req_sys_ver = ext.required_system_version;
+    } else if (cnmt.key.type == NcmContentMetaType_Patch && cnmt.extended_header.size() >= sizeof(NcmPatchMetaExtendedHeader)) {
+        NcmPatchMetaExtendedHeader ext{};
+        std::memcpy(&ext, cnmt.extended_header.data(), sizeof(ext));
+        orig_req_sys_ver = ext.required_system_version;
+    }
+    cnmt.original_required_system_version = orig_req_sys_ver;
+
     if (config.lower_system_version) {
         auto extended_header = (ncm::ExtendedHeader*)cnmt.extended_header.data();
         log_write("patching version\n");
@@ -1466,6 +1481,22 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         R_TRY(avmPushLaunchVersion(app_id, latest_version_num));
     }
     log_write("pushed\n");
+
+    if (pbox && (cnmt.key.type == NcmContentMetaType_Application || cnmt.key.type == NcmContentMetaType_Patch)) {
+        if (cnmt.original_required_system_version != 0) {
+            const auto installed_fw = hats::getSystemFirmware();
+            if (version::IsFirmwareLower(installed_fw, cnmt.original_required_system_version)) {
+                ui::CompatibilityWarning warning{};
+                warning.title_id = app_id;
+                warning.required_hos = version::FormatPacked(cnmt.original_required_system_version);
+                warning.installed_hos = installed_fw;
+                if (cnmt.header.sdk_version != 0) {
+                    warning.title_sdk = version::FormatSdkVersion(cnmt.header.sdk_version);
+                }
+                pbox->OnCompatibilityWarning(warning);
+            }
+        }
+    }
 
     R_SUCCEED();
 }

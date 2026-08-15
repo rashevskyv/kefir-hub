@@ -106,8 +106,42 @@ static int test_format_packed() {
     return 0;
 }
 
+static int test_format_sdk_version() {
+    CHECK(version::FormatSdkVersion(0) == "");
+    CHECK(version::FormatSdkVersion((17 << 24) | (4 << 16) | (1 << 8) | 0) == "17.4.1.0");
+    CHECK(version::FormatSdkVersion((12 << 24) | (3 << 16) | (0 << 8) | 5) == "12.3.0.5");
+    CHECK(version::FormatSdkVersion(0x000C1100) == "0.12.17.0");
+    return 0;
+}
+
+static int test_is_firmware_lower() {
+    // 0 means no requirement
+    CHECK(!version::IsFirmwareLower("17.0.1", 0));
+    CHECK(!version::IsFirmwareLower("0.0.0", 0));
+
+    const auto pack = [](std::uint32_t maj, std::uint32_t min, std::uint32_t mic) {
+        return (maj << 26) | (min << 20) | (mic << 16);
+    };
+
+    // Unknown or empty installed firmware must not trigger a warning
+    CHECK(!version::IsFirmwareLower("Unknown", pack(18, 0, 0)));
+    CHECK(!version::IsFirmwareLower("", pack(18, 0, 0)));
+    CHECK(!version::IsFirmwareLower("invalid", pack(18, 0, 0)));
+
+    // Installed firmware is lower than required
+    CHECK(version::IsFirmwareLower("17.0.1", pack(18, 0, 0)));
+    CHECK(version::IsFirmwareLower("18.0.0", pack(18, 1, 0)));
+    CHECK(version::IsFirmwareLower("18.0.0", pack(19, 0, 0)));
+
+    // Installed firmware is equal to or higher than required
+    CHECK(!version::IsFirmwareLower("18.0.0", pack(18, 0, 0)));
+    CHECK(!version::IsFirmwareLower("18.1.0", pack(18, 0, 0)));
+    CHECK(!version::IsFirmwareLower("19.0.1", pack(18, 0, 0)));
+    return 0;
+}
+
 int main() {
-    if (test_parse() || test_is_lower() || test_format_packed()) {
+    if (test_parse() || test_is_lower() || test_format_packed() || test_format_sdk_version() || test_is_firmware_lower()) {
         return 1;
     }
     std::printf("ok  version_compare: %d checks passed\n", g_checks);

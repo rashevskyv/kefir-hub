@@ -71,4 +71,33 @@ inline auto FormatPacked(std::uint32_t version) -> std::string {
            std::to_string((version >> 16) & 0xf);
 }
 
+// Formats the 32-bit SDK version word (major.minor.micro.revision) from NCA headers.
+// Returns an empty string if sdk_version is 0.
+inline auto FormatSdkVersion(std::uint32_t sdk_version) -> std::string {
+    if (!sdk_version) {
+        return "";
+    }
+    const auto major = (sdk_version >> 24) & 0xFF;
+    const auto minor = (sdk_version >> 16) & 0xFF;
+    const auto micro = (sdk_version >> 8) & 0xFF;
+    const auto revision = sdk_version & 0xFF;
+    return std::to_string(major) + "." +
+           std::to_string(minor) + "." +
+           std::to_string(micro) + "." +
+           std::to_string(revision);
+}
+
+// Returns true if the installed firmware string is lower than the packed requirement.
+// Returns false if required_packed is 0, or if installed_version contains no valid numeric version.
+inline auto IsFirmwareLower(const std::string& installed_version, std::uint32_t required_packed) -> bool {
+    if (required_packed == 0) {
+        return false;
+    }
+    if (Parse(installed_version).empty()) {
+        return false;
+    }
+    const auto required_version = FormatPacked(required_packed);
+    return IsLower(installed_version, required_version);
+}
+
 } // namespace sphaira::version

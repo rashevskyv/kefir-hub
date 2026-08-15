@@ -108,6 +108,7 @@ struct Menu final : MenuBase, InstallProgress {
     void InstallYield() override;
     bool PromptReinstall(const std::string& title_name) override;
     void OnInstallSkipped() override;
+    void OnCompatibilityWarning(const CompatibilityWarning& warning) override;
 
 private:
     void UpdateActions();
@@ -240,6 +241,9 @@ private:
     long m_session_install_location{4};
     long m_session_reserve_mb{500};
     long m_session_reserve_sd_mb{500};
+
+    std::vector<CompatibilityWarning> m_compat_warnings{};
+    std::vector<CompatibilityWarning> m_pending_warning_popups{};
 };
 
 } // namespace sphaira::ui::menu::dbi

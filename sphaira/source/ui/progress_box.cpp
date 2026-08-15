@@ -6,6 +6,7 @@
 #include "log.hpp"
 #include "threaded_file_transfer.hpp"
 #include "i18n.hpp"
+#include "version_compare.hpp"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -55,6 +56,23 @@ ProgressBox::ProgressBox(int image, const std::string& action, const std::string
     }
 }
 
+void ProgressBox::OnCompatibilityWarning(const CompatibilityWarning& warning) {
+    SCOPED_MUTEX(&m_mutex);
+    auto w = warning;
+    if (w.title_name.empty() && !m_title.empty()) {
+        w.title_name = m_title;
+    }
+    for (auto& existing : m_compat_warnings) {
+        if (existing.title_id == w.title_id) {
+            if (version::IsLower(existing.required_hos, w.required_hos)) {
+                existing = w;
+            }
+            return;
+        }
+    }
+    m_compat_warnings.push_back(w);
+}
+
 ProgressBox::~ProgressBox() {
     ueventSignal(GetCancelEvent());
     m_stop_source.request_stop();
@@ -68,6 +86,12 @@ ProgressBox::~ProgressBox() {
 
     FreeImage();
     m_done(m_thread_data.result);
+
+    if (R_SUCCEEDED(m_thread_data.result)) {
+        for (const auto& w : m_compat_warnings) {
+            App::Push<OptionBox>(FormatCompatibilityWarning(w), "OK"_i18n);
+        }
+    }
 
     App::SetBoostMode(false);
     App::SetProgressActive(false);

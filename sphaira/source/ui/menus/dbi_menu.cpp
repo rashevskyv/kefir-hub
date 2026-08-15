@@ -20,6 +20,7 @@
 #include <usbhsfs.h>
 
 #include "title_info.hpp"
+#include "version_compare.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -471,6 +472,19 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                 }
             });
         }
+    }
+
+    std::optional<CompatibilityWarning> warn_popup{};
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (!m_pending_warning_popups.empty() && (m_state == State::Summary || m_state == State::Cancelled || m_state == State::ReviewQueue)) {
+            warn_popup = m_pending_warning_popups.front();
+            m_pending_warning_popups.erase(m_pending_warning_popups.begin());
+        }
+    }
+    if (warn_popup) {
+        AddLog(FormatCompatibilityLog(*warn_popup), LogKind::Warning);
+        App::Push<OptionBox>(FormatCompatibilityWarning(*warn_popup), "OK"_i18n);
     }
 
     MenuBase::Update(controller, touch);
@@ -1065,6 +1079,13 @@ void Menu::DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area) {
     } else {
         gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good_col, "%s",
             "No errors recorded."_i18n.c_str());
+    }
+
+    if (!m_compat_warnings.empty()) {
+        y += 24.f;
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn_col, "%s (%zu)",
+            "Compatibility warning: firmware update required to launch"_i18n.c_str(),
+            m_compat_warnings.size());
     }
 }
 
@@ -1721,6 +1742,8 @@ void Menu::BeginSessionStats() {
     m_error_index = 0;
     m_show_errors = false;
     m_peak_write_bps = 0;
+    m_compat_warnings.clear();
+    m_pending_warning_popups.clear();
     m_session_timestamp.Update();
 }
 
@@ -1886,6 +1909,29 @@ bool Menu::PromptReinstall(const std::string& title_name) {
         m_prompt_data = nullptr;
     }
     return result;
+}
+
+void Menu::OnCompatibilityWarning(const CompatibilityWarning& warning) {
+    SCOPED_MUTEX(&m_mutex);
+    auto w = warning;
+    if (w.title_name.empty() && !m_current_title.empty()) {
+        w.title_name = m_current_title;
+    }
+    for (auto& existing : m_compat_warnings) {
+        if (existing.title_id == w.title_id) {
+            if (version::IsLower(existing.required_hos, w.required_hos)) {
+                existing = w;
+                for (auto& pending : m_pending_warning_popups) {
+                    if (pending.title_id == w.title_id) {
+                        pending = w;
+                    }
+                }
+            }
+            return;
+        }
+    }
+    m_compat_warnings.push_back(w);
+    m_pending_warning_popups.push_back(w);
 }
 
 } // namespace sphaira::ui::menu::dbi
