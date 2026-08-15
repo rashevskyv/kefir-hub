@@ -33,6 +33,7 @@ struct NroEntry {
     int image{}; // nvg image
     int x,y,w,h{}; // image
     bool is_nacp_valid{};
+    bool selected{};
     std::optional<bool> has_star{std::nullopt};
 
     auto GetName() const -> const char* {

@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.453** (2026-08-14). Попередні
+Актуальний delivery — **v0.13.454** (2026-08-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.454 — масові дії Homebrew
+
+- Homebrew отримав вибір `X`, інверсію `Y` і очищення вибору через `B`;
+  `X` переходить до наступного NRO, як у чинному Games flow.
+- Рендер повторно використовує `grid::Menu::DrawSelectionMark`: у List
+  checkbox показано у лівому gutter, а у Icon/Grid/HB Menu — штатну плиткову
+  позначку. Нового механізму для layout або checkbox не додано.
+- Homebrew Options працює з вибраними NRO (або з focused, якщо вибору немає),
+  показує `Star`, `Unstar` і підтверджене `Delete`. При видаленні `.star`
+  sidecar видаляється першим; його помилка зупиняє операцію до видалення NRO.
+  Синтетичний Kefir Updater stub виключено з selection і всіх цих дій.
+- Версію піднято до `0.13.454`. Gemini пройшов `tests/run.sh` (13 suite,
+  734 declarations), WSL `ReleaseWithInstall` (`Built target sphaira_nro`) і
+  `git diff --check`. Потрібний Switch smoke-test: X/Y, List/Icon/Grid/HB Menu,
+  Star/Unstar і підтверджене видалення кількох NRO.
 
 ## v0.13.453 — PFS0/NSP parser hardening
 

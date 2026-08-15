@@ -259,8 +259,18 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
                 nro_launch(GetEntry().path);
             }
         }}),
-        std::make_pair(Button::B, Action{"Exit"_i18n, [](){
-            App::Exit();
+        std::make_pair(Button::B, Action{"Exit"_i18n, [this](){
+            if (m_selected_count) {
+                ClearSelection();
+            } else {
+                App::Exit();
+            }
+        }}),
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+            ToggleCurrentSelection();
+        }}),
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+            InvertSelection();
         }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
@@ -383,8 +393,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
+        const auto layout = m_layout.Get();
         const auto selected = pos == m_index;
-        DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, card_name.c_str(), e.GetAuthor(), card_version.c_str());
+        DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), e.GetAuthor(), card_version.c_str(), e.selected);
+        DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
     });
 }
 
@@ -473,7 +485,7 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
 
-    if (IsStarEnabled()) {
+    if (IsStarEnabled() && !IsKefirUpdaterStub(GetEntry())) {
         const auto star_path = GenerateStarPath(GetEntry().path);
         if (fs::FsNativeSd().FileExists(star_path)) {
             SetAction(Button::R3, Action{"Unstar"_i18n, [this](){
@@ -787,6 +799,7 @@ void Menu::FreeEntries() {
     for (auto& e : m_entries_index) {
         e.clear();
     }
+    m_selected_count = 0;
 }
 
 void Menu::OnLayoutChange() {
@@ -829,6 +842,145 @@ Result Menu::InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon
 
 Result Menu::InstallHomebrewFromPath(const fs::FsPath& path) {
     return InstallHomebrew(path, nro_get_icon(path));
+}
+
+void Menu::ToggleCurrentSelection() {
+    if (m_entries_current.empty()) {
+        return;
+    }
+
+    auto& entry = GetEntry();
+    if (!IsKefirUpdaterStub(entry)) {
+        entry.selected ^= 1;
+        m_selected_count += entry.selected ? 1 : -1;
+    }
+
+    if (m_index + 1 < static_cast<s64>(m_entries_current.size())) {
+        SetIndex(m_index + 1);
+        m_list->EnsureVisible(m_index, m_entries_current.size());
+    }
+}
+
+void Menu::InvertSelection() {
+    m_selected_count = 0;
+    for (auto& entry : m_entries) {
+        if (IsKefirUpdaterStub(entry)) {
+            entry.selected = false;
+            continue;
+        }
+        if (entry.hbini.hidden && !m_show_hidden.Get()) {
+            entry.selected = false;
+            continue;
+        }
+        entry.selected ^= 1;
+        if (entry.selected) {
+            m_selected_count++;
+        }
+    }
+}
+
+void Menu::ClearSelection() {
+    for (auto& entry : m_entries) {
+        entry.selected = false;
+    }
+    m_selected_count = 0;
+}
+
+auto Menu::GetSelectedEntries() const -> std::vector<NroEntry> {
+    std::vector<NroEntry> out;
+    if (m_selected_count > 0) {
+        for (const auto& e : m_entries) {
+            if (e.selected && !IsKefirUpdaterStub(e)) {
+                out.emplace_back(e);
+            }
+        }
+    }
+
+    if (out.empty() && !m_entries_current.empty()) {
+        const auto& focused = m_entries[m_entries_current[m_index]];
+        if (!IsKefirUpdaterStub(focused)) {
+            out.emplace_back(focused);
+        }
+    }
+
+    return out;
+}
+
+void Menu::StarHomebrew(bool star) {
+    const auto targets = GetSelectedEntries();
+    if (targets.empty()) {
+        return;
+    }
+
+    fs::FsNativeSd fs;
+    size_t count = 0;
+    for (const auto& e : targets) {
+        if (IsKefirUpdaterStub(e)) {
+            continue;
+        }
+        const auto star_path = GenerateStarPath(e.path);
+        const bool exists = fs.FileExists(star_path);
+        if (star) {
+            if (!exists) {
+                auto rc = fs.CreateFile(star_path);
+                if (R_SUCCEEDED(rc) || rc == FsError_PathAlreadyExists) {
+                    count++;
+                }
+            }
+        } else {
+            if (exists) {
+                auto rc = fs.DeleteFile(star_path);
+                if (R_SUCCEEDED(rc) || rc == FsError_PathNotFound) {
+                    count++;
+                }
+            }
+        }
+    }
+
+    if (count > 0) {
+        if (targets.size() == 1) {
+            App::Notify((star ? "Starred "_i18n : "Unstarred "_i18n) + targets.front().GetName());
+        } else {
+            App::Notify(std::to_string(count) + " " + (star ? "homebrew starred"_i18n : "homebrew unstarred"_i18n));
+        }
+    }
+
+    ClearSelection();
+    SortAndFindLastFile();
+}
+
+void Menu::DeleteHomebrew() {
+    const auto targets = GetSelectedEntries();
+    if (targets.empty()) {
+        return;
+    }
+
+    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [targets](auto pbox) -> Result {
+        fs::FsNativeSd fs;
+        for (size_t i = 0; i < targets.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+            const auto& e = targets[i];
+            pbox->SetTitle(e.GetName());
+            pbox->UpdateTransfer(i + 1, targets.size());
+
+            const auto star_path = GenerateStarPath(e.path);
+            if (fs.FileExists(star_path)) {
+                R_TRY(fs.DeleteFile(star_path));
+            }
+
+            R_TRY(fs.DeleteFile(e.path));
+        }
+        return 0;
+    }, [this](Result rc){
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Delete failed!"_i18n);
+        } else {
+            App::Notify("Delete successful!"_i18n);
+        }
+
+        ClearSelection();
+        ScanHomebrew();
+    });
 }
 
 void Menu::DisplayOptions() {
@@ -876,28 +1028,77 @@ void Menu::DisplayOptions() {
         SortAndFindLastFile();
     }, "Shows all hidden homebrew."_i18n);
 
-    if (!m_entries_current.empty() && !IsKefirUpdaterStub(GetEntry())) {
-        // this edits the nro file itself, not a forwarder, so it lives in its
-        // own group - under FORWARDER it read as "set up the future forwarder".
-        options->Add<SidebarEntryHeader>("THIS HOMEBREW"_i18n);
+    const auto targets = GetSelectedEntries();
+    if (!targets.empty()) {
+        fs::FsNativeSd fs;
+        bool has_unstarred = false;
+        bool has_starred = false;
+        for (const auto& t : targets) {
+            if (fs.FileExists(GenerateStarPath(t.path))) {
+                has_starred = true;
+            } else {
+                has_unstarred = true;
+            }
+        }
 
-        options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this](){
-            CustomizeHomebrew();
-        }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n);
+        if (m_selected_count > 0) {
+            options->Add<SidebarEntryHeader>("SELECTED HOMEBREW"_i18n,
+                std::to_string(targets.size()) + " " + "selected"_i18n);
+        } else {
+            options->Add<SidebarEntryHeader>("THIS HOMEBREW"_i18n);
+        }
 
-        options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
+        if (targets.size() == 1 && m_selected_count == 0) {
+            options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this](){
+                CustomizeHomebrew();
+            }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n);
+        }
 
-        auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
-            InstallHomebrew();
-        }, "Add this homebrew to the HOME menu as its own tile."_i18n);
-        entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+        if (has_unstarred) {
+            options->Add<SidebarEntryCallback>("Star"_i18n, [this](){
+                StarHomebrew(true);
+            }, "Mark as favorite."_i18n);
+        }
 
-        options->Add<SidebarEntryBool>("Ask every time"_i18n, App::GetApp()->m_forwarder_ask,
-            "Open the forwarder editor when creating a forwarder instead of using the defaults from Settings."_i18n);
+        if (has_starred) {
+            options->Add<SidebarEntryCallback>("Unstar"_i18n, [this](){
+                StarHomebrew(false);
+            }, "Remove favorite mark."_i18n);
+        }
 
-        options->Add<SidebarEntryCallback>("Forwarder options"_i18n, [](){
-            App::DisplayForwarderOptions(false);
-        }, "Defaults baked into forwarders you create."_i18n);
+        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            const auto targets = GetSelectedEntries();
+            if (targets.empty()) {
+                return;
+            }
+            const auto msg = targets.size() == 1
+                ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
+                : "Are you sure you want to delete the selected homebrew?"_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
+                    if (op_index && *op_index) {
+                        DeleteHomebrew();
+                    }
+                }, targets.front().image
+            );
+        }, true, "Permanently delete all selected homebrew."_i18n);
+
+        if (targets.size() == 1 && m_selected_count == 0) {
+            options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
+
+            auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+                InstallHomebrew();
+            }, "Add this homebrew to the HOME menu as its own tile."_i18n);
+            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+
+            options->Add<SidebarEntryBool>("Ask every time"_i18n, App::GetApp()->m_forwarder_ask,
+                "Open the forwarder editor when creating a forwarder instead of using the defaults from Settings."_i18n);
+
+            options->Add<SidebarEntryCallback>("Forwarder options"_i18n, [](){
+                App::DisplayForwarderOptions(false);
+            }, "Defaults baked into forwarders you create."_i18n);
+        }
     }
 
     AddInstallShareOptions(options.get());

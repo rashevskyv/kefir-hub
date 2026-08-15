@@ -1,12 +1,24 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.453**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.454**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.453 (PFS0/NSP parser hardening)
+## Поточний delivery: v0.13.454 (Homebrew multi-select actions)
+
+- [x] `HOMEBREW-MULTISELECT-454` — у Homebrew додати вибір X, інверсію Y і
+  скасування вибору B, використавши чинний спільний рендер позначок для List,
+  Grid та HB Menu layouts.
+- [x] `HOMEBREW-ACTIONS-454` — контекстне меню вибраних Homebrew показує
+  безпечне підтверджене видалення та масові дії `Star` / `Unstar`; тимчасовий
+  Kefir Updater stub не можна видаляти чи позначати зіркою.
+- [x] `HOMEBREW-VERIFY-454` — підняти версію, оновити living docs, пройти
+  `tests/run.sh`, WSL `ReleaseWithInstall` і `git diff --check`; лишити
+  Switch smoke-test для X/Y, усіх layouts та масових дій.
+
+## Попередній delivery: v0.13.453 (PFS0/NSP parser hardening)
 
 - [x] `PFS0-EXACT-453` — у спільному `yati::container::Nsp` відхиляти short
   PFS0 header/file-table/string-table read до парсингу.

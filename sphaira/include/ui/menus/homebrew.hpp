@@ -71,6 +71,12 @@ private:
     void FreeEntries();
     void OnLayoutChange();
     void DisplayOptions();
+    void ToggleCurrentSelection();
+    void InvertSelection();
+    void ClearSelection();
+    auto GetSelectedEntries() const -> std::vector<NroEntry>;
+    void StarHomebrew(bool star);
+    void DeleteHomebrew();
 
     auto IsStarEnabled() -> bool {
         return m_sort.Get() >= SortType_UpdatedStar;
@@ -85,6 +91,7 @@ private:
     std::span<u32> m_entries_current{};
 
     s64 m_index{}; // where i am in the array
+    s64 m_selected_count{};
     std::unique_ptr<List> m_list{};
     bool m_dirty{};
 

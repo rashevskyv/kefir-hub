@@ -1,10 +1,33 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.453**. Завершені плани збережено в
+Поточний delivery — **v0.13.454**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.453 — PFS0/NSP parser hardening
+## Поточний delivery: v0.13.454 — Homebrew multi-select actions
+
+Статус: реалізацію прийнято після Gemini junior-review. Shared grid renderer
+залишився єдиним джерелом візуальної семантики selection: List малює checkbox
+у боковому gutter, а tile layouts — overlay. Gemini пройшов `tests/run.sh`
+(усі 13 suite green, 734 header declarations), WSL `ReleaseWithInstall`
+(`Built target sphaira_nro`) і `git diff --check`; лишився Switch smoke-test.
+
+1. Повторно використати в `homebrew::Menu` чинну поведінку Games: `X` змінює
+   вибір поточного NRO та переходить до наступного, `Y` інвертує вибір, `B`
+   очищує вибір до виходу; не створювати окремий checkbox/layout механізм.
+2. Передати `selected` до `grid::Menu::DrawEntry` і використати
+   `DrawSelectionMark`, який уже малює checkbox у боковому gutter для List та
+   позначку/overlay для плиткових макетів.
+3. У Homebrew Options показувати число targets і масові `Star`/`Unstar` лише
+   коли відповідна операція має роботу. `Delete` мусить вимагати підтвердження,
+   обробляти кожен результат і після успіху перезчитувати список. Не діяти на
+   синтетичному Kefir Updater stub.
+4. Підняти версію `0.13.453 → 0.13.454`, оновити task/plan/walkthrough,
+   додати найменшу потрібну перевірку, пройти host suite, WSL build і
+   `git diff --check`; вручну перевірити X/Y, List/Grid/HB Menu та всі три
+   контекстні дії на Switch.
+
+## Попередній delivery: v0.13.453 — PFS0/NSP parser hardening
 
 Статус: реалізацію прийнято після ручного Gemini junior-review циклу. Деталі
 baseline-доказів і межі scope — у
