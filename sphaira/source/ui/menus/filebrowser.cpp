@@ -1996,6 +1996,7 @@ void FsView::DisplayOptions() {
                 }
             });
         }, "Paste the clipboard contents into the current folder."_i18n);
+        paste_entry->SetIcon(ActionIcon::Paste);
         paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);
     }
 
@@ -2003,11 +2004,13 @@ void FsView::DisplayOptions() {
         auto cut_entry = options->Add<SidebarEntryCallback>("Cut"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Cut);
         }, true, "Move the selected files to the clipboard."_i18n);
+        cut_entry->SetIcon(ActionIcon::Cut);
         cut_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot cut read-only files"_i18n);
 
-        options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
+        auto copy_entry = options->Add<SidebarEntryCallback>("Copy"_i18n, [this](){
             m_menu->AddSelectedEntries(SelectedType::Copy);
         }, true, "Copy the selected files to the clipboard."_i18n);
+        copy_entry->SetIcon(ActionIcon::Copy);
     }
 
     if (!is_root && m_entries_current.size()) {
@@ -2025,6 +2028,7 @@ void FsView::DisplayOptions() {
             );
             log_write("pushed delete\n");
         }, "Permanently delete the selected file(s) or folder(s)."_i18n);
+        delete_entry->SetIcon(ActionIcon::Delete);
         delete_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot delete read-only files"_i18n);
     }
 
@@ -2054,6 +2058,7 @@ void FsView::DisplayOptions() {
                 }
             }
         }, "Rename the selected file or folder."_i18n);
+        rename_entry->SetIcon(ActionIcon::Edit);
         rename_entry->Depends([this](){ return !AnySelectedReadOnly(); }, "Cannot rename read-only files"_i18n);
     }
 
@@ -2158,6 +2163,7 @@ void FsView::DisplayOptions() {
             });
         }, "Copy the selected files and folders out of the archive to where the .zip lives."_i18n);
         extract_sel->SetHasSubmenu(false);
+        extract_sel->SetIcon(ThemeEntryID_ICON_ZIP);
     }
 
     if (!is_root && m_fs_entry.type != FsType::Archive && m_entries_current.size()) {
@@ -2166,11 +2172,12 @@ void FsView::DisplayOptions() {
                 auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
                 ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-                options->Add<SidebarEntryCallback>("Extract here"_i18n, [this](){
+                auto here_entry = options->Add<SidebarEntryCallback>("Extract here"_i18n, [this](){
                     UnzipFiles("");
                 }, "Extract the archive contents into the current folder."_i18n);
+                here_entry->SetIcon(ThemeEntryID_ICON_ZIP);
 
-                options->Add<SidebarEntryCallback>("Extract to root"_i18n, [this](){
+                auto root_entry = options->Add<SidebarEntryCallback>("Extract to root"_i18n, [this](){
                     App::Push<OptionBox>("Are you sure you want to extract to root?"_i18n,
                         "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
                         if (op_index && *op_index) {
@@ -2178,15 +2185,18 @@ void FsView::DisplayOptions() {
                         }
                     });
                 }, "Extract the archive contents to the root of this storage."_i18n);
+                root_entry->SetIcon(ThemeEntryID_ICON_ZIP);
 
-                options->Add<SidebarEntryCallback>("Extract to..."_i18n, [this](){
+                auto to_entry = options->Add<SidebarEntryCallback>("Extract to..."_i18n, [this](){
                     std::string out;
                     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", fs::AppendPath(m_path, ""))) && !out.empty()) {
                         UnzipFiles(out);
                     }
                 }, "Extract the archive to a custom path you specify."_i18n);
+                to_entry->SetIcon(ThemeEntryID_ICON_ZIP);
             }, "Extract the contents of the selected ZIP archive."_i18n);
             extract_entry->SetHasSubmenu(true);
+            extract_entry->SetIcon(ThemeEntryID_ICON_ZIP);
         }
 
         if (!check_all_ext(ZIP_EXTENSIONS) || m_selected_count) {
@@ -2194,18 +2204,21 @@ void FsView::DisplayOptions() {
                 auto options = std::make_unique<Sidebar>("Compress Options"_i18n, Sidebar::Side::RIGHT);
                 ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-                options->Add<SidebarEntryCallback>("Compress"_i18n, [this](){
+                auto comp_here = options->Add<SidebarEntryCallback>("Compress"_i18n, [this](){
                     ZipFiles("");
                 }, "Compress the selected file(s) into a zip in the current folder."_i18n);
+                comp_here->SetIcon(ThemeEntryID_ICON_ZIP);
 
-                options->Add<SidebarEntryCallback>("Compress to..."_i18n, [this](){
+                auto comp_to = options->Add<SidebarEntryCallback>("Compress to..."_i18n, [this](){
                     std::string out;
                     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter the path to the folder to extract into", m_path)) && !out.empty()) {
                         ZipFiles(out);
                     }
                 }, "Compress the selected file(s) to a custom output path."_i18n);
+                comp_to->SetIcon(ThemeEntryID_ICON_ZIP);
             }, "Compress the selected file(s) into a ZIP archive."_i18n);
             compress_entry->SetHasSubmenu(true);
+            compress_entry->SetIcon(ThemeEntryID_ICON_ZIP);
         }
     }
 

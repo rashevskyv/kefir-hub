@@ -75,7 +75,7 @@ auto ImageBounds(bool fullscreen) -> Vec4 {
     return {band.x + pad_x, band.y + pad_y, band.w - pad_x * 2.f, band.h - pad_y * 2.f};
 }
 
-std::vector<std::string> s_line_clipboard{};
+static std::vector<std::string> s_line_clipboard{};
 
 } // namespace
 
@@ -157,8 +157,6 @@ void Menu::LoadCurrentFile() {
     m_stream_start_line = 1;
     m_zl_modifier_used = false;
     m_touch_was_pinch = false;
-    m_held_down_at_bottom = false;
-    m_held_up_at_top = false;
     m_is_image_file = IsImageExtension(path::Extension(m_path));
 
     if (!m_fs) {
@@ -205,6 +203,9 @@ void Menu::RecreateList() {
     const Vec4 list_pos{40.f, 100.f, 1200.f, 530.f};
     const Vec4 item_pos{50.f, 105.f, 1180.f, item_h};
     m_text_list = std::make_unique<List>(1, m_viewport_rows, list_pos, item_pos, Vec2{0.f, pad_y});
+    if (m_has_range || m_selecting_range) {
+        m_text_list->SetWrap(false);
+    }
 }
 
 void Menu::LoadPage(s64 page_idx) {
@@ -573,19 +574,12 @@ void Menu::LoadTextFile() {
     m_saved_text.clear();
     m_text_dirty = false;
     m_line_index = 0;
-    m_range_anchor = 0;
-    m_range_start = 0;
-    m_range_end = 0;
-    m_selecting_range = false;
-    m_has_range = false;
     m_load_failed = false;
     m_load_result = 0;
     m_is_streamed = false;
     m_font_size = 18.f;
     m_zl_modifier_used = false;
     m_touch_was_pinch = false;
-    m_held_down_at_bottom = false;
-    m_held_up_at_top = false;
 
     if (!m_fs) {
         m_fs = &m_sd_fs;
@@ -703,12 +697,12 @@ void Menu::SetupViewActions() {
     RemoveAction(Button::R3);
 
     SetAction(Button::B, Action{"Back"_i18n, [this](){
-        PromptTextExit();
+        SetPop();
     }});
 
     SetAction(Button::L, Action{ActionType::UP, "Page"_i18n, "\uE0E4 / \uE0E5", [](){}});
     SetAction(Button::L2, Action{ActionType::UP, "10 Pages"_i18n, "\uE0E6 / \uE0E7", [](){}});
-    SetAction(Button::SELECT, Action{ActionType::UP, "Zoom"_i18n, "\uE0E6 \uE0EB/\uE0EC", [](){}});
+    SetAction(Button::SELECT, Action{ActionType::UP, "Zoom"_i18n, "\uE0E4 + \uE102", [](){}});
     SetAction(Button::R3, Action{ActionType::UP, "Scroll"_i18n, "\uE101 / \uE102", [](){}});
 
     if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
@@ -759,8 +753,11 @@ void Menu::SwitchToEditMode() {
     m_editable = true;
     m_held_down_at_bottom = false;
     m_held_up_at_top = false;
+    m_selecting_range = false;
+    m_has_range = false;
 
     if (m_text_list) {
+        m_text_list->SetWrap(true);
         const float item_h = m_text_list->GetMaxY();
         const s64 first_visible = (item_h > 0.f) ? static_cast<s64>(m_text_list->GetYoff() / item_h) : 0;
         const s64 total = static_cast<s64>(m_lines.size());
@@ -779,6 +776,9 @@ void Menu::SwitchToViewMode() {
     m_held_up_at_top = false;
     m_selecting_range = false;
     m_has_range = false;
+    if (m_text_list) {
+        m_text_list->SetWrap(true);
+    }
 
     SetupViewActions();
     UpdateTextSubHeading();
@@ -859,7 +859,6 @@ void Menu::Undo() {
     m_line_scroll.Reset();
     UpdateTextSubHeading();
 }
-
 void Menu::Redo() {
     if (m_redo.empty()) {
         App::Notify("Nothing to redo"_i18n);
@@ -965,6 +964,9 @@ void Menu::StartRangeSelection() {
     m_range_anchor = m_line_index;
     m_selecting_range = true;
     m_has_range = false;
+    if (m_text_list) {
+        m_text_list->SetWrap(false);
+    }
     SetupEditActions();
     UpdateTextSubHeading();
 }
@@ -975,6 +977,9 @@ void Menu::FinishRangeSelection() {
     m_range_end = std::max(m_range_anchor, m_line_index);
     m_has_range = true;
     m_selecting_range = false;
+    if (m_text_list) {
+        m_text_list->SetWrap(false);
+    }
     SetupEditActions();
     App::PlaySoundEffect(SoundEffect_Focus);
     UpdateTextSubHeading();
@@ -984,6 +989,9 @@ void Menu::CancelRangeSelection() {
     if (!m_selecting_range) return;
     m_selecting_range = false;
     m_has_range = false;
+    if (m_text_list) {
+        m_text_list->SetWrap(true);
+    }
     SetupEditActions();
     UpdateTextSubHeading();
 }
@@ -991,6 +999,9 @@ void Menu::CancelRangeSelection() {
 void Menu::ClearRangeSelection() {
     m_selecting_range = false;
     m_has_range = false;
+    if (m_text_list) {
+        m_text_list->SetWrap(true);
+    }
     SetupEditActions();
 }
 
@@ -999,6 +1010,9 @@ auto Menu::HasSelection() const -> bool {
 }
 
 auto Menu::GetTargetRange() const -> std::pair<s64, s64> {
+    if (m_lines.empty()) {
+        return {0, 0};
+    }
     if (m_has_range) {
         const s64 start = std::clamp<s64>(m_range_start, 0, m_lines.size() - 1);
         const s64 end = std::clamp<s64>(m_range_end, start, m_lines.size() - 1);
@@ -1052,7 +1066,8 @@ void Menu::PasteBelow() {
         return;
     }
     PushUndo();
-    const s64 insert_pos = std::clamp<s64>(m_line_index + 1, 0, m_lines.size());
+    const auto [start, end] = GetTargetRange();
+    const s64 insert_pos = std::clamp<s64>(end + 1, 0, m_lines.size());
     m_lines.insert(m_lines.begin() + insert_pos, s_line_clipboard.begin(), s_line_clipboard.end());
     m_line_index = std::clamp<s64>(insert_pos + static_cast<s64>(s_line_clipboard.size()) - 1, 0, m_lines.size() - 1);
     ClearRangeSelection();
@@ -1109,7 +1124,7 @@ void Menu::UncommentSelection() {
 }
 
 auto Menu::SaveText() -> bool {
-    if (!m_writable || m_is_streamed || !m_fs || m_file_size > EDIT_MAX_SIZE) {
+    if (!m_editable || m_is_streamed || !m_fs) {
         return false;
     }
 
@@ -1203,7 +1218,7 @@ auto Menu::SaveText() -> bool {
 }
 
 void Menu::PromptTextExit() {
-    if (!m_writable || m_is_streamed || !m_text_dirty) {
+    if (!m_editable || !m_text_dirty) {
         SetPop();
         return;
     }
@@ -1231,52 +1246,61 @@ void Menu::PromptTextExit() {
 void Menu::ShowLineActions() {
     struct ActionEntry {
         std::string title;
+        std::optional<ActionIcon> icon;
         std::function<void()> callback;
     };
     std::vector<ActionEntry> actions;
 
-    actions.push_back({"Edit line"_i18n, [this](){ EditLine(); }});
+    actions.push_back({"Edit line"_i18n, ActionIcon::Edit, [this](){ EditLine(); }});
 
     if (m_has_range) {
-        actions.push_back({"Clear selection"_i18n, [this](){ ClearRangeSelection(); }});
+        actions.push_back({"Clear selection"_i18n, std::nullopt, [this](){ ClearRangeSelection(); UpdateTextSubHeading(); }});
     } else {
-        actions.push_back({"Select range"_i18n, [this](){ StartRangeSelection(); }});
+        actions.push_back({"Select range"_i18n, std::nullopt, [this](){ StartRangeSelection(); }});
     }
 
-    actions.push_back({"Copy"_i18n, [this](){ CopySelection(); }});
-    actions.push_back({"Cut"_i18n, [this](){ CutSelection(); }});
-    actions.push_back({"Paste below"_i18n, [this](){ PasteBelow(); }});
-    actions.push_back({"Delete"_i18n, [this](){ DeleteLine(); }});
-    actions.push_back({"Insert line below"_i18n, [this](){ InsertLine(); }});
-    actions.push_back({"Join with next line"_i18n, [this](){ JoinLine(); }});
+    actions.push_back({"Copy"_i18n, ActionIcon::Copy, [this](){ CopySelection(); }});
+    actions.push_back({"Cut"_i18n, ActionIcon::Cut, [this](){ CutSelection(); }});
+    actions.push_back({"Paste below"_i18n, ActionIcon::Paste, [this](){ PasteBelow(); }});
+    actions.push_back({"Delete"_i18n, ActionIcon::Delete, [this](){ DeleteLine(); }});
+    actions.push_back({"Insert line below"_i18n, ActionIcon::Insert, [this](){ InsertLine(); }});
+    actions.push_back({"Join with next line"_i18n, ActionIcon::Join, [this](){ JoinLine(); }});
 
     if (text_helper::IsIniFile(m_path)) {
-        actions.push_back({"Comment"_i18n, [this](){ CommentSelection(); }});
-        actions.push_back({"Uncomment"_i18n, [this](){ UncommentSelection(); }});
+        actions.push_back({"Comment"_i18n, std::nullopt, [this](){ CommentSelection(); }});
+        actions.push_back({"Uncomment"_i18n, std::nullopt, [this](){ UncommentSelection(); }});
     }
 
-    actions.push_back({"Undo"_i18n, [this](){ Undo(); }});
-    actions.push_back({"Redo"_i18n, [this](){ Redo(); }});
+    actions.push_back({"Undo"_i18n, ActionIcon::Undo, [this](){ Undo(); }});
+    actions.push_back({"Redo"_i18n, ActionIcon::Redo, [this](){ Redo(); }});
 
     PopupList::Items items;
+    std::vector<std::optional<ActionIcon>> icons;
     items.reserve(actions.size());
+    icons.reserve(actions.size());
     for (const auto& a : actions) {
         items.push_back(a.title);
+        icons.push_back(a.icon);
     }
 
     std::string title;
     if (m_has_range) {
         title = "Lines "_i18n + std::to_string(m_range_start + 1) + " - " + std::to_string(m_range_end + 1);
+    } else if (m_selecting_range) {
+        const auto [start, end] = GetTargetRange();
+        title = "Lines "_i18n + std::to_string(start + 1) + " - " + std::to_string(end + 1);
     } else {
         title = "Line "_i18n + std::to_string(m_line_index + 1);
     }
 
-    App::Push<PopupList>(title, items, [actions = std::move(actions)](auto op_index){
+    auto popup = std::make_unique<PopupList>(title, items, [actions = std::move(actions)](auto op_index){
         if (!op_index || *op_index >= actions.size()) {
             return;
         }
         actions[*op_index].callback();
     });
+    popup->SetIcons(std::move(icons));
+    App::Push(std::move(popup));
 }
 
 void Menu::DisplayTextOptions() {
@@ -1332,15 +1356,10 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
             m_text_list->OnUpdateTouchOnly(touch, m_lines.size());
         }
 
-        if (controller->GotDown(Button::L2)) {
-            m_zl_modifier_used = false;
-        }
-        const bool zl_held = controller->GotHeld(Button::L2) || controller->GotDown(Button::L2);
+        const auto zl_held = controller->GotHeld(Button::L2);
         if (zl_held) {
-            const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-                                 controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
-            const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-                                  controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
+            const auto zoom_in = controller->GotDown(Button::UP | Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
+            const auto zoom_out = controller->GotDown(Button::DOWN | Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
             if (zoom_in) {
                 m_zl_modifier_used = true;
                 ZoomText(1.f);
@@ -1415,11 +1434,33 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
     local_ctrl.m_kup &= ~rs_mask;
 
     if (count > 0) {
-        if (m_line_index == count - 1 && m_held_down_at_bottom) {
-            local_ctrl.m_kdown &= ~down_mask;
-        }
-        if (m_line_index == 0 && m_held_up_at_top) {
-            local_ctrl.m_kdown &= ~up_mask;
+        if (m_has_range) {
+            if (m_range_end >= count - 1) {
+                local_ctrl.m_kdown &= ~down_mask;
+                local_ctrl.m_kheld &= ~down_mask;
+            }
+            if (m_range_start <= 0) {
+                local_ctrl.m_kdown &= ~up_mask;
+                local_ctrl.m_kheld &= ~up_mask;
+            }
+        } else if (m_selecting_range) {
+            if (m_line_index >= count - 1) {
+                local_ctrl.m_kdown &= ~down_mask;
+                local_ctrl.m_kheld &= ~down_mask;
+            }
+            if (m_line_index <= 0) {
+                local_ctrl.m_kdown &= ~up_mask;
+                local_ctrl.m_kheld &= ~up_mask;
+            }
+        } else {
+            const bool at_bottom = (m_line_index == count - 1);
+            const bool at_top = (m_line_index == 0);
+            if (at_bottom && m_held_down_at_bottom) {
+                local_ctrl.m_kdown &= ~down_mask;
+            }
+            if (at_top && m_held_up_at_top) {
+                local_ctrl.m_kdown &= ~up_mask;
+            }
         }
     }
 
@@ -1461,16 +1502,37 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
                 }
             }
         } else {
-            App::PlaySoundEffect(SoundEffect_Focus);
-            m_line_index = index;
-            if (m_line_index == count - 1 && controller->GotHeld(Button::DOWN)) {
-                m_held_down_at_bottom = true;
+            const s64 delta = index - m_line_index;
+            if (m_has_range) {
+                if (m_range_start + delta >= 0 && m_range_end + delta < count) {
+                    m_range_start += delta;
+                    m_range_end += delta;
+                    m_line_index = index;
+                    if (m_text_list) {
+                        m_text_list->EnsureVisible(delta > 0 ? m_range_end : m_range_start, count);
+                    }
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                    m_line_scroll.Reset();
+                    UpdateTextSubHeading();
+                } else {
+                    if (m_text_list) {
+                        m_text_list->EnsureVisible(m_line_index, count);
+                    }
+                }
+            } else {
+                m_line_index = index;
+                const bool at_bottom = (m_line_index == count - 1);
+                const bool at_top = (m_line_index == 0);
+                if (at_bottom && controller->GotHeld(Button::DOWN)) {
+                    m_held_down_at_bottom = true;
+                }
+                if (at_top && controller->GotHeld(Button::UP)) {
+                    m_held_up_at_top = true;
+                }
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_line_scroll.Reset();
+                UpdateTextSubHeading();
             }
-            if (m_line_index == 0 && controller->GotHeld(Button::UP)) {
-                m_held_up_at_top = true;
-            }
-            m_line_scroll.Reset();
-            UpdateTextSubHeading();
         }
     });
 }
@@ -1613,15 +1675,7 @@ void Menu::FreeImage() {
 }
 
 void Menu::ResetImageView() {
-    m_zoom = 1.f;
-    m_pan_x = 0.f;
-    m_pan_y = 0.f;
-    UpdateImageSubHeading();
-}
-
-void Menu::ZoomImage(float factor) {
-    m_zoom = std::clamp(m_zoom * factor, 1.f, 8.f);
-    ClampPan();
+    m_viewport.Reset();
     UpdateImageSubHeading();
 }
 
@@ -1634,7 +1688,7 @@ void Menu::NextImage(s64 direction) {
     if (app && (app->m_controller.GotHeld(Button::L2) || app->m_controller.GotDown(Button::L2))) {
         return;
     }
-    if (m_zoom > 1.001f) {
+    if (m_viewport.IsZoomed()) {
         return;
     }
 
@@ -1642,30 +1696,6 @@ void Menu::NextImage(s64 direction) {
     m_image_index = (m_image_index + direction + count) % count;
     m_path = m_image_paths[m_image_index];
     LoadCurrentFile();
-}
-
-void Menu::PanImage(float dx, float dy) {
-    m_pan_x += dx;
-    m_pan_y += dy;
-    ClampPan();
-}
-
-void Menu::ClampPan() {
-    if (!m_image_w || !m_image_h) {
-        m_pan_x = 0.f;
-        m_pan_y = 0.f;
-        return;
-    }
-
-    const auto bounds = ImageBounds(m_fullscreen);
-    const auto fit_scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h));
-    const auto image_w = static_cast<float>(m_image_w) * fit_scale * m_zoom;
-    const auto image_h = static_cast<float>(m_image_h) * fit_scale * m_zoom;
-    const auto max_pan_x = std::max(0.f, (image_w - bounds.w) / 2.f);
-    const auto max_pan_y = std::max(0.f, (image_h - bounds.h) / 2.f);
-
-    m_pan_x = std::clamp(m_pan_x, -max_pan_x, max_pan_x);
-    m_pan_y = std::clamp(m_pan_y, -max_pan_y, max_pan_y);
 }
 
 void Menu::UpdateImageSubHeading() {
@@ -1969,37 +1999,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_is_image_file) {
-        const auto zoom_modifier = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
-        if (zoom_modifier) {
-            const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-                controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
-            const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-                controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
-
-            if (zoom_in) {
-                ZoomImage(1.05f);
-            } else if (zoom_out) {
-                ZoomImage(1.f / 1.05f);
-            }
-        } else if (m_zoom > 1.001f) {
-            constexpr float PAN_SPEED = 12.f;
-            if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-                controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
-                PanImage(0.f, -PAN_SPEED);
-            }
-            if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-                controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
-                PanImage(0.f, PAN_SPEED);
-            }
-            if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) ||
-                controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
-                PanImage(-PAN_SPEED, 0.f);
-            }
-            if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) ||
-                controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
-                PanImage(PAN_SPEED, 0.f);
-            }
-        }
+        m_viewport.Update(controller, touch, m_image_w, m_image_h, ImageBounds(m_fullscreen), gfx::ImageFit::Contain);
     } else if (m_scroll_text) {
         m_scroll_text->Update(controller, touch);
     } else {
@@ -2017,15 +2017,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const auto bounds = ImageBounds(m_fullscreen);
-        const auto scale = std::min(bounds.w / static_cast<float>(m_image_w), bounds.h / static_cast<float>(m_image_h)) * m_zoom;
-        const auto image_w = static_cast<float>(m_image_w) * scale;
-        const auto image_h = static_cast<float>(m_image_h) * scale;
-        const auto image_x = bounds.x + (bounds.w - image_w) / 2.f + m_pan_x;
-        const auto image_y = bounds.y + (bounds.h - image_h) / 2.f + m_pan_y;
+        const auto img_rect = m_viewport.GetImageRect(m_image_w, m_image_h, bounds, gfx::ImageFit::Contain);
 
         nvgSave(vg);
         nvgIntersectScissor(vg, bounds.x, bounds.y, bounds.w, bounds.h);
-        gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 5);
+        gfx::drawImage(vg, img_rect.x, img_rect.y, img_rect.w, img_rect.h, m_image, 5);
         nvgRestore(vg);
 
         if (CurrentImageSelected()) {

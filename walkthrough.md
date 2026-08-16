@@ -1,9 +1,22 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.468** (2026-08-16). Попередні
+Актуальний delivery — **v0.13.469** (2026-08-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.469 — unified pending UI & updater work
+
+- Збережений WIP інтегровано поверх відновленої mainline без втрати User-Agent,
+  installer diagnostics, header layout чи cURL shutdown.
+- `gfx::ImageViewport` став спільним механізмом pan/zoom/pinch для Theme Creator і
+  forwarder icon crop; crop працює з локальними NRO/PNG/JPEG і нормалізує результат.
+- File Viewer має актуальну модель range selection, операції Copy/Cut/Paste/Comment/
+  Uncomment, action icons і коректну навігацію на межах.
+- Updater повертає фокус на перший елемент, позначає доступні Kefir updates і повторює
+  завантаження каталогу лише після повернення мережі.
+- File Picker використовує стабільний верхній header slot, збережений з колишньої
+  mainline, тому довгі шляхи не конфліктують із нижнім статусним рядком.
 
 ## v0.13.468 — cURL shutdown & shared handle serialization
 

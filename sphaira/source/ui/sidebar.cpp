@@ -252,9 +252,19 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
-    const float x = m_pos.x + 15.f;
+    float x = m_pos.x + 15.f;
     const float y = m_pos.y + (m_pos.h / 2.f);
     float max_w = m_pos.w - 30.f;
+
+    if (m_theme_icon) {
+        DrawElement(x, y - 12.f, 24.f, 24.f, *m_theme_icon);
+        x += 34.f;
+        max_w -= 34.f;
+    } else if (m_icon) {
+        gfx::drawActionIcon(vg, theme, x, y - 12.f, 24.f, *m_icon);
+        x += 34.f;
+        max_w -= 34.f;
+    }
 
     if (m_has_submenu) {
         max_w -= 20.f;

@@ -4,6 +4,7 @@
 #include "ui/list.hpp"
 #include "ui/scrolling_text.hpp"
 #include "option.hpp"
+#include <optional>
 #include <memory>
 #include <concepts>
 #include <utility>
@@ -142,10 +143,22 @@ public:
         return m_has_submenu;
     }
 
+    void SetIcon(ActionIcon icon) {
+        m_icon = icon;
+        m_theme_icon.reset();
+    }
+
+    void SetIcon(ThemeEntryID icon) {
+        m_theme_icon = icon;
+        m_icon.reset();
+    }
+
 private:
     Callback m_callback;
     bool m_pop_on_click;
     bool m_has_submenu{false};
+    std::optional<ActionIcon> m_icon{};
+    std::optional<ThemeEntryID> m_theme_icon{};
     ScrollingText m_scolling_entry_title{};
 };
 

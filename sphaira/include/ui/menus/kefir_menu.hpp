@@ -78,6 +78,7 @@ private:
     void RefreshSystemInfo();
     bool IsDowngrade(const std::string& target_version) const;
     bool IsFirmwareSupported(const std::string& target_version) const;
+    bool IsKefirUpdate(const UpdaterEntry& entry) const;
     bool FindKefirUpdate(UpdaterEntry& out) const;
     void PromptKefirThenFirmware(const UpdaterEntry& firmware_entry);
 
@@ -91,6 +92,7 @@ private:
     option::OptionLong m_downgrade_fix_mode{"updater", "downgrade_fix_mode", DowngradeFixMode_Optional};
     bool m_loading{};
     bool m_loaded{};
+    bool m_retry_on_connect{};
     std::string m_error_message;
     std::string m_current_kefir;
     std::string m_current_firmware;

@@ -644,13 +644,14 @@ void App::Poll() {
 
     HidTouchScreenState state{};
     hidGetTouchScreenStates(&state, 1);
-    // both are single frame events: is_end was never cleared, so it stayed true
-    // for the rest of the session after the first drag.
+    m_touch_info.touch_count = state.count;
     m_touch_info.is_clicked = false;
     m_touch_info.is_end = false;
     m_touch_info.is_pinch = false;
     m_touch_info.pinch_delta = 0.f;
     m_touch_info.pinch_scale = 1.f;
+    m_touch_info.pinch_x = 0.f;
+    m_touch_info.pinch_y = 0.f;
 
     static float prev_pinch_dist = 0.f;
 
@@ -700,8 +701,8 @@ void App::Poll() {
 #endif
 
     if (state.count >= 2) {
-        const float dx = static_cast<float>(state.touches[0].x - state.touches[1].x);
-        const float dy = static_cast<float>(state.touches[0].y - state.touches[1].y);
+        const float dx = static_cast<float>(static_cast<s32>(state.touches[0].x) - static_cast<s32>(state.touches[1].x));
+        const float dy = static_cast<float>(static_cast<s32>(state.touches[0].y) - static_cast<s32>(state.touches[1].y));
         const float current_dist = std::sqrt(dx * dx + dy * dy);
 
         if (prev_pinch_dist > 0.f && current_dist > 0.f) {
@@ -710,6 +711,8 @@ void App::Poll() {
             m_touch_info.is_pinch = true;
         }
         prev_pinch_dist = current_dist;
+        m_touch_info.pinch_x = static_cast<float>(state.touches[0].x + state.touches[1].x) * 0.5f;
+        m_touch_info.pinch_y = static_cast<float>(state.touches[0].y + state.touches[1].y) * 0.5f;
         m_touch_info.is_touching = true;
         m_touch_info.is_tap = false;
         m_touch_info.is_scroll = false;

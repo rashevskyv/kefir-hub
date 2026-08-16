@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/menus/menu_base.hpp"
+#include "ui/nvg_util.hpp"
 #include "fs.hpp"
 #include <string>
 #include <vector>
@@ -36,9 +37,6 @@ private:
     void LoadImageFile();
     void FreeImage();
     void ResetImageView();
-    void ZoomImage(float factor);
-    void PanImage(float dx, float dy);
-    void ClampPan();
     void ToggleFullscreen();
     void UpdateFullscreenAction();
     void DisplayTargetSelector();
@@ -59,9 +57,7 @@ private:
     int m_raw_w{};
     int m_raw_h{};
 
-    float m_zoom{1.f};
-    float m_pan_x{};
-    float m_pan_y{};
+    gfx::ImageViewport m_viewport{};
     bool m_fullscreen{};
 
     std::string m_theme_name;

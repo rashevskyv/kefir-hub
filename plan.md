@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.468**. Завершені плани збережено в
+Поточний delivery — **v0.13.469**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.468 — cURL shutdown & shared handle serialization
+## Поточний delivery: v0.13.469 — unified pending UI & updater work
+
+Статус: відновлено збережений WIP поверх повної колишньої mainline. Залишено
+новішу спільну реалізацію `gfx::ImageViewport` для Theme Creator і forwarder crop,
+покращений File Viewer з вибором діапазону та діями над ним, іконки дій у sidebar/
+popup/File Browser, а також Updater focus, Kefir update badge і reconnect. File Picker
+використовує стабільний верхній слот header з відновленої mainline.
+
+## Попередній delivery: v0.13.468 — cURL shutdown & shared handle serialization
 
 Статус: інтеграцію відновлено поверх `v0.13.467`. Спільний синхронний дескриптор
 `g_curl_single` серіалізовано через `g_mutex_single`; `curl::RequestShutdown()`

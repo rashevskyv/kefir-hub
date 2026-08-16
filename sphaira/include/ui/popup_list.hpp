@@ -36,6 +36,8 @@ public:
     // item count or it is ignored.
     auto SetRemoteMarkers(std::vector<bool> markers) -> PopupList& { m_markers = std::move(markers); return *this; }
 
+    auto SetIcons(std::vector<std::optional<ActionIcon>> icons) -> PopupList& { m_icons = std::move(icons); return *this; }
+
 private:
     void SetIndex(s64 index);
 
@@ -52,6 +54,7 @@ private:
     s64 m_starting_index{};
     bool m_menu_style{};
     std::vector<bool> m_markers{};
+    std::vector<std::optional<ActionIcon>> m_icons{};
 
     std::unique_ptr<List> m_list{};
     ScrollingText m_scroll_text{};

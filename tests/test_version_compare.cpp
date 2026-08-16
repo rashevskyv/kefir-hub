@@ -77,6 +77,11 @@ static int test_is_lower() {
     CHECK(version::IsLower("beta", "1.0.0"));
     CHECK(!version::IsLower("1.0.0", "beta"));
     CHECK(!version::IsLower("", ""));
+
+    // kefir release numbers (is installed older than target update)
+    CHECK(version::IsLower("725", "726"));
+    CHECK(!version::IsLower("726", "725"));
+    CHECK(!version::IsLower("726", "726"));
     return 0;
 }
 

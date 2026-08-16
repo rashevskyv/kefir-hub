@@ -3,6 +3,7 @@
 #include "ui/menus/menu_base.hpp"
 #include "ui/scrollable_text.hpp"
 #include "ui/scrolling_text.hpp"
+#include "ui/nvg_util.hpp"
 #include "ui/list.hpp"
 #include "fs.hpp"
 #include "text_helper.hpp"
@@ -82,10 +83,7 @@ private:
     void RecreateList();
     void FreeImage();
     void ResetImageView();
-    void ZoomImage(float factor);
     void NextImage(s64 direction);
-    void PanImage(float dx, float dy);
-    void ClampPan();
     void ToggleFullscreen();
     void UpdateFullscreenAction();
     void UpdateImageSubHeading();
@@ -166,9 +164,7 @@ private:
     int m_image{};
     int m_image_w{};
     int m_image_h{};
-    float m_zoom{1.f};
-    float m_pan_x{};
-    float m_pan_y{};
+    gfx::ImageViewport m_viewport{};
     bool m_fullscreen{};
 
     s64 m_start{};

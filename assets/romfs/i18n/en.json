@@ -1708,6 +1708,7 @@
   "Scroll": "Scroll",
   "USB 3.0": "USB 3.0",
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.",
+  "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.",
   "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?",
   "Skip package": "Skip package",
   "Skip this package?": "Skip this package?",

@@ -119,9 +119,11 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         // check if we have a filter.
         if (e.type == FsDirEntryType_File && !m_filter.empty()) {
             hidden = true;
-            if (const auto ext = path::Extension(e.name); !ext.empty()) {
+            if (const auto ext = std::strrchr(e.name, '.')) {
+                const char* ext_clean = (*ext == '.') ? ext + 1 : ext;
                 for (const auto& filter : m_filter) {
-                    if (path::EqualsIC(ext, filter)) {
+                    const char* filter_clean = (!filter.empty() && filter[0] == '.') ? filter.c_str() + 1 : filter.c_str();
+                    if (path::EqualsIC(ext_clean, filter_clean)) {
                         hidden = false;
                         break;
                     }

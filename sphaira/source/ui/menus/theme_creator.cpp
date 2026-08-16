@@ -46,16 +46,8 @@ auto HasNro() -> bool {
     return GetNroPath() != nullptr;
 }
 
-auto GetFitScale(int image_w, int image_h) -> float {
-    if (!image_w || !image_h) {
-        return 1.f;
-    }
-
-    return std::min(SCREEN_WIDTH / static_cast<float>(image_w), SCREEN_HEIGHT / static_cast<float>(image_h));
-}
-
-auto RenderVisibleImage(std::span<const u8> source, int source_w, int source_h, float zoom, float pan_x, float pan_y) -> ImageResult {
-    if (source.empty() || source_w <= 0 || source_h <= 0) {
+auto RenderVisibleImage(std::span<const u8> source, int source_w, int source_h, const Vec4& img_rect) -> ImageResult {
+    if (source.empty() || source_w <= 0 || source_h <= 0 || img_rect.w <= 0.f || img_rect.h <= 0.f) {
         return {};
     }
 
@@ -64,15 +56,13 @@ auto RenderVisibleImage(std::span<const u8> source, int source_w, int source_h, 
         out[i * IMAGE_BPP + 3] = 0xFF;
     }
 
-    const float scale = GetFitScale(source_w, source_h) * zoom;
+    const float scale = img_rect.w / static_cast<float>(source_w);
     if (scale <= 0.f) {
         return {};
     }
 
-    const float image_w = static_cast<float>(source_w) * scale;
-    const float image_h = static_cast<float>(source_h) * scale;
-    const float image_x = (SCREEN_WIDTH - image_w) / 2.f + pan_x;
-    const float image_y = (SCREEN_HEIGHT - image_h) / 2.f + pan_y;
+    const float image_x = img_rect.x;
+    const float image_y = img_rect.y;
 
     const auto sample = [&](int x, int y, int channel) -> float {
         return static_cast<float>(source[(y * source_w + x) * IMAGE_BPP + channel]);
@@ -191,37 +181,7 @@ void Menu::FreeImage() {
 }
 
 void Menu::ResetImageView() {
-    m_zoom = 1.f;
-    m_pan_x = 0.f;
-    m_pan_y = 0.f;
-}
-
-void Menu::ZoomImage(float factor) {
-    m_zoom = std::clamp(m_zoom * factor, 1.f, 8.f);
-    ClampPan();
-}
-
-void Menu::PanImage(float dx, float dy) {
-    m_pan_x += dx;
-    m_pan_y += dy;
-    ClampPan();
-}
-
-void Menu::ClampPan() {
-    if (!m_image_w || !m_image_h) {
-        m_pan_x = 0.f;
-        m_pan_y = 0.f;
-        return;
-    }
-
-    const float scale = GetFitScale(m_image_w, m_image_h) * m_zoom;
-    const float image_w = static_cast<float>(m_image_w) * scale;
-    const float image_h = static_cast<float>(m_image_h) * scale;
-    const float max_pan_x = std::max(0.f, (image_w - SCREEN_WIDTH) / 2.f);
-    const float max_pan_y = std::max(0.f, (image_h - SCREEN_HEIGHT) / 2.f);
-
-    m_pan_x = std::clamp(m_pan_x, -max_pan_x, max_pan_x);
-    m_pan_y = std::clamp(m_pan_y, -max_pan_y, max_pan_y);
+    m_viewport.Reset();
 }
 
 void Menu::ToggleFullscreen() {
@@ -275,7 +235,9 @@ void Menu::DisplayTargetSelector() {
 
 Result Menu::GenerateTheme(ProgressBox* pbox) {
     pbox->NewTransfer("Rendering image...");
-    auto rendered_res = RenderVisibleImage(m_raw_image_data, m_raw_w, m_raw_h, m_zoom, m_pan_x, m_pan_y);
+    const Vec4 screen_viewport{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
+    const auto img_rect = m_viewport.GetImageRect(m_raw_w, m_raw_h, screen_viewport, gfx::ImageFit::Contain);
+    auto rendered_res = RenderVisibleImage(m_raw_image_data, m_raw_w, m_raw_h, img_rect);
     if (rendered_res.data.empty()) {
         return -1;
     }
@@ -416,38 +378,8 @@ void Menu::InstallThemeAction(bool reboot) {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (m_state == State_Crop) {
         MenuBase::Update(controller, touch);
-        
-        const auto zoom_modifier = controller->GotDown(Button::L2) || controller->GotHeld(Button::L2);
-        if (zoom_modifier) {
-            const auto zoom_in = controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-                controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP);
-            const auto zoom_out = controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-                controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN);
-
-            if (zoom_in) {
-                ZoomImage(1.05f);
-            } else if (zoom_out) {
-                ZoomImage(1.f / 1.05f);
-            }
-        } else if (m_zoom > 1.001f) {
-            constexpr float PAN_SPEED = 12.f;
-            if (controller->GotDown(Button::DPAD_UP | Button::LS_UP | Button::RS_UP) ||
-                controller->GotHeld(Button::DPAD_UP | Button::LS_UP | Button::RS_UP)) {
-                PanImage(0.f, -PAN_SPEED);
-            }
-            if (controller->GotDown(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN) ||
-                controller->GotHeld(Button::DPAD_DOWN | Button::LS_DOWN | Button::RS_DOWN)) {
-                PanImage(0.f, PAN_SPEED);
-            }
-            if (controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT) ||
-                controller->GotHeld(Button::DPAD_LEFT | Button::LS_LEFT | Button::RS_LEFT)) {
-                PanImage(-PAN_SPEED, 0.f);
-            }
-            if (controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT) ||
-                controller->GotHeld(Button::DPAD_RIGHT | Button::LS_RIGHT | Button::RS_RIGHT)) {
-                PanImage(PAN_SPEED, 0.f);
-            }
-        }
+        const Vec4 screen_viewport{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
+        m_viewport.Update(controller, touch, m_image_w, m_image_h, screen_viewport, gfx::ImageFit::Contain);
     } else if (m_state == State_Confirm) {
         MenuBase::Update(controller, touch);
 
@@ -503,13 +435,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    const float scale = GetFitScale(m_image_w, m_image_h) * m_zoom;
-    const float image_w = static_cast<float>(m_image_w) * scale;
-    const float image_h = static_cast<float>(m_image_h) * scale;
-    const float image_x = (SCREEN_WIDTH - image_w) / 2.f + m_pan_x;
-    const float image_y = (SCREEN_HEIGHT - image_h) / 2.f + m_pan_y;
+    const Vec4 screen_viewport{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
+    const auto img_rect = m_viewport.GetImageRect(m_image_w, m_image_h, screen_viewport, gfx::ImageFit::Contain);
 
-    gfx::drawImage(vg, image_x, image_y, image_w, image_h, m_image, 5);
+    gfx::drawImage(vg, img_rect.x, img_rect.y, img_rect.w, img_rect.h, m_image, 5);
 
     if (m_state == State_Crop) {
         if (!m_fullscreen) {

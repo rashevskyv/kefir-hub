@@ -162,9 +162,12 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawRect(vg, 30.f, m_line_bottom, m_line_width, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
     const bool has_markers = m_markers.size() == m_items.size();
-    const float gutter = has_markers ? 30.f : 0.f;
+    const bool has_icons = m_icons.size() == m_items.size();
+    const float marker_gutter = has_markers ? 30.f : 0.f;
+    const float icon_gutter = has_icons ? 34.f : 0.f;
+    const float gutter = marker_gutter + icon_gutter;
 
-    m_list->Draw(vg, theme, m_items.size(), [this, has_markers, gutter](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), [this, has_markers, has_icons, marker_gutter, gutter](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto colour = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
@@ -189,6 +192,10 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
         // cloud marker sits in the reserved left gutter so text stays aligned.
         if (has_markers && m_markers[i]) {
             DrawCloudIcon(vg, x + m_text_xoffset + 8.f, mid_y, 7.f, theme->GetColour(colour));
+        }
+
+        if (has_icons && m_icons[i]) {
+            gfx::drawActionIcon(vg, theme, x + m_text_xoffset + marker_gutter, mid_y - 12.f, 24.f, *m_icons[i]);
         }
 
         const auto text_x = x + m_text_xoffset + gutter;

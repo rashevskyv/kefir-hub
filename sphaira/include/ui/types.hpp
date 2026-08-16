@@ -172,6 +172,19 @@ enum ThemeEntryID {
     ThemeEntryID_MAX,
 };
 
+enum class ActionIcon : u8 {
+    Copy,
+    Cut,
+    Paste,
+    Delete,
+    Edit,
+    Insert,
+    Join,
+    Undo,
+    Redo,
+    Save,
+};
+
 struct ThemeMeta {
     std::string name;
     std::string author;
@@ -212,9 +225,12 @@ struct TouchInfo {
     bool is_scroll;
     bool is_clicked;
     bool is_end;
+    s32 touch_count{0};
     bool is_pinch{false};
     float pinch_delta{0.f};
     float pinch_scale{1.f};
+    float pinch_x{0.f};
+    float pinch_y{0.f};
 };
 
 enum class Button : u64 {

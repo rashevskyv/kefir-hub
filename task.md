@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.468**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.469**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.468 (cURL shutdown & shared handle serialization)
+## Поточний delivery: v0.13.469 (unified pending UI & updater work)
+
+- [x] `RECOVER-UI-VIEWPORT-469` — відновлено shared `ImageViewport`, forwarder icon crop та інтеграцію Theme Creator.
+- [x] `RECOVER-FILE-VIEWER-469` — відновлено актуальний Select Range, multi-line actions і керування текстовим viewer/editor.
+- [x] `RECOVER-ACTION-ICONS-469` — відновлено іконки стандартних дій у popup, sidebar та File Browser.
+- [x] `RECOVER-UPDATER-469` — відновлено focus, Kefir update badge і reconnect після повернення мережі.
+- [x] `RECOVER-HEADER-469` — File Picker використовує `top_row` header slot з колишньої mainline.
+
+## Попередній delivery: v0.13.468 (cURL shutdown & shared handle serialization)
 
 - [x] `CURL-SERIALIZE-468` — серіалізовано доступ до `g_curl_single` у всіх синхронних cURL-операціях.
 - [x] `CURL-EARLY-SHUTDOWN-468` — додано ранній `curl::RequestShutdown()` у шлях виходу з App.

@@ -1205,25 +1205,41 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         [](){
             const bool currently_enabled = !IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x0");
             const bool next_enabled = !currently_enabled;
-            const auto rc = SetIniValue(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", next_enabled ? "u8!0x1" : "u8!0x0");
-            if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Failed to apply Kefir setting"_i18n);
+            const auto save_setting = [next_enabled](){
+                const auto rc = SetIniValue(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", next_enabled ? "u8!0x1" : "u8!0x0");
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Failed to apply Kefir setting"_i18n);
+                    return;
+                }
+
+                fsdevCommitDevice("sdmc");
+
+                App::Push<OptionBox>(
+                    "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"_i18n,
+                    "Later"_i18n,
+                    "Reboot"_i18n,
+                    0,
+                    [](auto op_index){
+                        if (op_index && *op_index == 1) {
+                            detail::RebootAfterSetting();
+                        }
+                    }
+                );
+            };
+
+            if (next_enabled) {
+                App::Push<HoldConfirmBox>(
+                    "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices."_i18n,
+                    [save_setting](bool confirmed){
+                        if (confirmed) {
+                            save_setting();
+                        }
+                    }
+                );
                 return;
             }
 
-            fsdevCommitDevice("sdmc");
-
-            App::Push<OptionBox>(
-                "USB 3.0 setting saved.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"_i18n,
-                "Later"_i18n,
-                "Reboot"_i18n,
-                0,
-                [](auto op_index){
-                    if (op_index && *op_index == 1) {
-                        detail::RebootAfterSetting();
-                    }
-                }
-            );
+            save_setting();
         }
     });
 

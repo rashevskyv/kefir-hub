@@ -13,6 +13,7 @@
 #include "fs.hpp"
 #include "hats_version.hpp"
 #include "i18n.hpp"
+#include "net.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
 
@@ -383,6 +384,7 @@ Menu::Menu() : MenuBase{"Updater", MenuFlag_None} {
             SetPop();
         }}),
         std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
+            m_retry_on_connect = false;
             m_loaded = false;
             RefreshSystemInfo();
             FetchLinks();
@@ -399,6 +401,11 @@ Menu::~Menu() = default;
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+
+    if (m_retry_on_connect && !m_loading && net::IsConnectedCached()) {
+        m_retry_on_connect = false;
+        FetchLinks();
+    }
 
     if (m_entries.empty()) {
         return;
@@ -538,8 +545,9 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         const auto selected = m_index == i;
         const auto downgrade = entry.type == UpdaterEntryType::Firmware && IsDowngrade(entry.name);
         const auto unsupported = entry.type == UpdaterEntryType::Firmware && !IsFirmwareSupported(entry.name);
+        const auto kefir_update = IsKefirUpdate(entry);
         const auto text_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-        const auto name_id = unsupported ? ThemeEntryID_TEXT_INFO : (downgrade ? ThemeEntryID_ERROR : text_id);
+        const auto name_id = unsupported ? ThemeEntryID_TEXT_INFO : (downgrade ? ThemeEntryID_ERROR : (kefir_update ? ThemeEntryID_TEXT_SELECTED : text_id));
 
         if (selected) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
@@ -558,7 +566,11 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         gfx::drawTextBox(vg, text_x, v.y + 11.f, 23.f, v.w - 230.f,
             theme->GetColour(name_id), name.c_str());
 
-        if (entry.type != UpdaterEntryType::Kefir) {
+        if (kefir_update) {
+            gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
+                NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED),
+                "UPDATE");
+        } else if (entry.type != UpdaterEntryType::Kefir) {
             const auto label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
             const auto label_colour = (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
             gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
@@ -582,6 +594,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         const auto selected = m_index == entry_index;
         const auto downgrade = entry.type == UpdaterEntryType::Firmware && IsDowngrade(entry.name);
         const auto unsupported = entry.type == UpdaterEntryType::Firmware && !IsFirmwareSupported(entry.name);
+        const auto kefir_update = IsKefirUpdate(entry);
 
         s64 previous_entry_index = TILE_EMPTY;
         for (s64 i = tile_i - 1; i >= 0; i--) {
@@ -622,7 +635,7 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
 
         // Draw texts on the right side of the card
         const auto name_colour = unsupported ? theme->GetColour(ThemeEntryID_TEXT_INFO) : downgrade ? theme->GetColour(ThemeEntryID_ERROR) :
-            theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+            (kefir_update ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT));
 
         std::string name = EntryDisplayName(entry);
         if (unsupported) {
@@ -636,8 +649,8 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         gfx::drawTextBox(vg, text_x, tile.y + 24.f, 18.f, text_clip_w, name_colour, name.c_str());
 
         // 2. Type/Status
-        const auto type_label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
-        const auto type_colour = (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const auto type_label = kefir_update ? std::string{"UPDATE"} : (unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type)));
+        const auto type_colour = kefir_update ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : ((entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO));
         gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, type_colour, type_label.c_str());
 
         // 3. Description
@@ -798,6 +811,7 @@ void Menu::FetchLinks() {
     m_latest_kefir = "Unknown";
     BuildSectionedEntries(m_entries, {});
     m_tile_entries = TileSlots(m_entries);
+    m_index = 0;
     SetIndex(0);
 
     fs::FsNativeSd().CreateDirectoryRecursively(CACHE_DIR);
@@ -814,11 +828,14 @@ void Menu::FetchLinks() {
             std::vector<UpdaterEntry> entries;
             std::string latest_kefir;
             if (!result.success || !ParseUpdaterLinks(result.path, entries, latest_kefir)) {
+                m_retry_on_connect = !net::IsConnectedCached();
                 m_error_message = "Failed to load updater lists.";
+                m_index = 0;
                 SetIndex(0);
                 return false;
             }
 
+            m_retry_on_connect = false;
             BuildSectionedEntries(m_entries, entries);
             m_tile_entries = TileSlots(m_entries);
             m_latest_kefir = latest_kefir.empty() ? "Unknown" : latest_kefir;
@@ -827,6 +844,7 @@ void Menu::FetchLinks() {
                 m_error_message = "No Kefir or firmware downloads found.";
             }
 
+            m_index = 0;
             SetIndex(0);
             return true;
         }}
@@ -1153,6 +1171,20 @@ bool Menu::IsFirmwareSupported(const std::string& target_version) const {
     }
 
     return !detail::IsVersionLower(m_supported_firmware, target_version);
+}
+
+bool Menu::IsKefirUpdate(const UpdaterEntry& entry) const {
+    if (entry.type != UpdaterEntryType::Kefir) {
+        return false;
+    }
+    if (!detail::IsKnownVersion(m_current_kefir)) {
+        return false;
+    }
+    const auto target = detail::ExtractKefirVersion(entry.name, entry.url);
+    if (!detail::IsKnownVersion(target)) {
+        return false;
+    }
+    return detail::IsVersionLower(m_current_kefir, target);
 }
 
 bool Menu::FindKefirUpdate(UpdaterEntry& out) const {

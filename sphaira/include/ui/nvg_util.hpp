@@ -34,6 +34,7 @@ constexpr float SELECTION_OUTLINE_PAD = 10.f;
 // mark sits in the same place and looks the same everywhere.
 constexpr float CHECKBOX_SIZE = 20.f;
 void drawCheckbox(NVGcontext*, const Theme*, float x, float y, float size, bool checked);
+void drawActionIcon(NVGcontext*, const Theme*, float x, float y, float size, ActionIcon icon);
 
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);
@@ -65,5 +66,44 @@ void drawAppLable(NVGcontext* vg, const Theme*, ScrollingText& st, float x, floa
 
 void updateHighlightAnimation();
 void getHighlightAnimation(float* gradientX, float* gradientY, float* color);
+
+enum class ImageFit {
+    Contain,
+    Cover,
+};
+
+class ImageViewport {
+public:
+    constexpr ImageViewport() = default;
+
+    void Reset();
+
+    auto GetZoom() const -> float { return m_zoom; }
+    auto GetPanX() const -> float { return m_pan_x; }
+    auto GetPanY() const -> float { return m_pan_y; }
+    auto IsZoomed() const -> bool { return m_zoom > 1.001f; }
+
+    void SetZoom(float zoom, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+    void SetPan(float pan_x, float pan_y, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+
+    auto GetScale(int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain) const -> float;
+    auto GetImageRect(int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain) const -> Vec4;
+
+    void Zoom(float factor, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+    void ZoomAt(float factor, float anchor_x, float anchor_y, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+    void Pan(float dx, float dy, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+    void ClampPan(int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+
+    void Update(Controller* controller, TouchInfo* touch, int image_w, int image_h, const Vec4& viewport, ImageFit fit = ImageFit::Contain);
+
+private:
+    float m_zoom{1.f};
+    float m_pan_x{0.f};
+    float m_pan_y{0.f};
+    s32 m_prev_touch_x{0};
+    s32 m_prev_touch_y{0};
+    bool m_was_touching{false};
+    bool m_pinch_active{false};
+};
 
 } // namespace sphaira::ui::gfx
