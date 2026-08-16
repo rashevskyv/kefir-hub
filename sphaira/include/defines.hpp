@@ -464,3 +464,5 @@ private:
 #define SCOPED_MUTEX(mutex) ScopedMutex ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE_){mutex}
 
 #define SCOPED_RWLOCK(lock, write) ScopedRwLock ANONYMOUS_VARIABLE(SCOPE_EXIT_STATE_){lock, write}
+
+constexpr auto APP_USER_AGENT = "Sphaira/" APP_VERSION;

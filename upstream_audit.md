@@ -20,9 +20,9 @@ upstream [`NaGaa95/sphaira`](https://github.com/NaGaa95/sphaira).
 
 | Стан | Актуальний зміст |
 |---|---|
-| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening, NSP install diagnostics |
+| Уже впроваджено після первинного аудиту | ZIP hardening, read-only NFS, NRO icon hardening/default fallback, custom NRO paths, PFS0/NSP hardening, NSP install diagnostics, versioned HTTP User-Agent |
 | Частковий перетин | Наявна локальна база є, але upstream має окрему поведінку або іншу UX-модель |
-| Залишилося запланувати | FTP refresh, English export fallback, HTTP User-Agent, forwarder focus/touch audit |
+| Залишилося запланувати | FTP refresh, English export fallback, forwarder focus/touch audit |
 | Окрема продуктова потреба | screen-off extension, MSP installer, play-stats toggle, custom repository UI, 3/4-core UX, Update/DLC filter, Game Menu content shortcut, MTP folder install |
 
 ## Уже є у власній реалізації
@@ -219,15 +219,13 @@ bounded audit touch/controller matrix після завершення поточ
 ні супутнє форматування рядків у межах цього upstream-аудиту. `f44ca2c` — merge
 без окремої функціональної зміни.
 
-### Versioned HTTP User-Agent (`2eabcec`, `3ef698b`)
+### Versioned HTTP User-Agent (`2eabcec`, `3ef698b`) — завершено у `v0.13.467`
 
-Upstream замінює downloader User-Agent `TotalJustice` на `Sphaira/<version>` і
-додає той самий header до curl-backed remote mounts. Локально досі використано
-`API_AGENT = "TotalJustice"` у `download.cpp`, а `MountCurlDevice` не встановлює
-`CURLOPT_USERAGENT`; отже еквіваленту **немає**. Це малий технічний кандидат:
-потрібна одна спільна константа від локального application version і її
-застосування в обох уже наявних curl common-option paths. Нових залежностей або UI
-не потрібно.
+У `v0.13.467` замінено застарілий downloader User-Agent `TotalJustice` на єдину
+спільну константу `APP_USER_AGENT` (`Sphaira/<APP_VERSION>`) у `defines.hpp` та
+додано встановлення `CURLOPT_USERAGENT` до `MountCurlDevice::curl_set_common_options()`.
+Тепер усі HTTP/WebDAV/FTP запити через downloader та віддалені curl-mounts
+використовують спільний версіонований User-Agent.
 
 ### Фільтр missing Update/DLC (`ccd290e`)
 
@@ -272,9 +270,8 @@ folder install відсутній. Це велика продуктова MTP-ф
 8. Update/DLC checker.
 9. Розширення наявного screensaver/backlight-off на інші довгі `ProgressBox` flows
    (за потребою; не прямий перенос `a55b54e`).
-10. Versioned `Sphaira/<version>` HTTP User-Agent у downloader та curl mounts
-    (`2eabcec`) — малий технічний кандидат після звільнення поточної основної
-    директорії.
+10. [x] Versioned `Sphaira/<version>` HTTP User-Agent у downloader та curl mounts
+    (`2eabcec`, `3ef698b`) — завершено у `v0.13.467`.
 11. Forwarder editor touch/controller focus audit (`23f3ca6`, `1476905`) — тільки
     після commit поточних локальних змін цього файлу.
 

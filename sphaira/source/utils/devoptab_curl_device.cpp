@@ -254,6 +254,7 @@ int curl_sockopt_callback(void*, curl_socket_t fd, curlsocktype) {
 void MountCurlDevice::curl_set_common_options(CURL* curl_handle, const std::string& url) {
     // NOTE: port, user and pass are set in the curl_url.
     curl_easy_reset(curl_handle);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, APP_USER_AGENT);
     curl_easy_setopt(curl_handle, CURLOPT_SOCKOPTFUNCTION, curl_sockopt_callback);
     curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl_handle, CURLOPT_AUTOREFERER, 1L);

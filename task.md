@@ -1,12 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.466**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.467**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.466 (caller-selected header layout)
+## Поточний delivery: v0.13.467 (versioned HTTP User-Agent)
+
+- [x] `HTTP-USER-AGENT-DEF-467` — додати єдину спільну константу `APP_USER_AGENT = "Sphaira/" APP_VERSION;` у `sphaira/include/defines.hpp`.
+- [x] `HTTP-USER-AGENT-DOWNLOAD-467` — видалити застарілий `API_AGENT = "TotalJustice"` у `sphaira/source/download.cpp` та перевести `SetCommonCurlOptions` на `APP_USER_AGENT`.
+- [x] `HTTP-USER-AGENT-MOUNT-467` — додати встановлення `CURLOPT_USERAGENT` із `APP_USER_AGENT` до `MountCurlDevice::curl_set_common_options()` у `sphaira/source/utils/devoptab_curl_device.cpp`.
+- [x] `HTTP-USER-AGENT-AUDIT-467` — оновити `upstream_audit.md` для позначення завершеними upstream комітів `2eabcec` та `3ef698b`.
+- [x] `HTTP-USER-AGENT-VERIFY-467` — підняти версію до `0.13.467` у `sphaira/CMakeLists.txt`, оновити living docs, перевірити відсутність застарілих символів, успішно пройти `git diff --check` та WSL `ReleaseWithInstall`.
+- [ ] `HW-HTTP-USER-AGENT-467` — перевірити на реальній Switch завантаження через downloader та доступ до віддалених curl-mounts (HTTP/WebDAV/FTP).
+
+## Попередній delivery: v0.13.466 (caller-selected header layout)
 
 - [x] `HEADER-CALLER-PLACEMENT-466` — додати `bool top_row = false` до `SetTitleSubHeading`, зберігати вибраний слот і скидати scroll state при зміні слота або очищенні.
 - [x] `HEADER-DRAW-CHROME-466` — малювати довільний підзаголовок у верхньому широкому слоті після версії або, для compact summary, на звичному нижньому рядку без автоматичного стрибка.

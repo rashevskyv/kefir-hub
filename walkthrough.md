@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.466** (2026-08-15). Попередні
+Актуальний delivery — **v0.13.467** (2026-08-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.467 — versioned HTTP User-Agent
+
+- У `sphaira/include/defines.hpp` додано єдине спільне визначення версіонованого User-Agent: `constexpr auto APP_USER_AGENT = "Sphaira/" APP_VERSION;`.
+- У `sphaira/source/download.cpp` вилучено застарілий літерал `API_AGENT = "TotalJustice"`; функція `SetCommonCurlOptions()` тепер встановлює `CURLOPT_USERAGENT` з `APP_USER_AGENT`.
+- У `sphaira/source/utils/devoptab_curl_device.cpp` у спільну функцію `MountCurlDevice::curl_set_common_options()` додано встановлення `CURLOPT_USERAGENT` із `APP_USER_AGENT`, завдяки чому всі операції віддалених curl-mounts (push, pull, open, dir list, range probe, stat, WebDAV, FTP) надсилають коректний User-Agent.
+- Політики TLS, перенаправлень, автентифікації, HTTP-семантика, UI, файли локалізації (i18n) та зовнішні залежності не змінювалися.
+- Оновлено `upstream_audit.md` (адаптацію upstream `2eabcec` / `3ef698b` позначено як завершену).
+- Версію піднято до `0.13.467` у `sphaira/CMakeLists.txt`; перевірки `git diff --check`, перевірка символів та збірка WSL `ReleaseWithInstall` пройшли успішно (`[100%] Built target sphaira_nro`). Очікується ручний Switch remote-mount smoke check.
 
 ## v0.13.466 — caller-selected header layout
 

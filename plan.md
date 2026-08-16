@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.466**. Завершені плани збережено в
+Поточний delivery — **v0.13.467**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.466 — caller-selected header layout
+## Поточний delivery: v0.13.467 — versioned HTTP User-Agent
+
+Статус: реалізацію виконано та перевірено. Замінено застарілий downloader User-Agent `TotalJustice` на єдине спільне джерело `APP_USER_AGENT` (`Sphaira/<APP_VERSION>`) у `defines.hpp` та додано встановлення `CURLOPT_USERAGENT` до `MountCurlDevice::curl_set_common_options()`. Політику TLS, редиректи, автентифікацію, HTTP-семантику, UI, i18n та залежності залишено без змін. Gemini успішно пройшов `git diff --check` та WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`). Очікується ручний Switch remote-mount smoke check.
+
+1. Додати єдину константу `APP_USER_AGENT = "Sphaira/" APP_VERSION;` у `sphaira/include/defines.hpp`.
+2. Видалити локальний `API_AGENT` у `sphaira/source/download.cpp` та використати `APP_USER_AGENT` у `SetCommonCurlOptions()`.
+3. Додати `curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, APP_USER_AGENT)` у `MountCurlDevice::curl_set_common_options()` (`sphaira/source/utils/devoptab_curl_device.cpp`).
+4. Оновити `upstream_audit.md` (пункти `2eabcec` / `3ef698b`), підняти версію до `0.13.467` у `sphaira/CMakeLists.txt`, синхронізувати living docs, пройти `git diff --check` та WSL `ReleaseWithInstall`.
+
+## Попередній delivery: v0.13.466 — caller-selected header layout
 
 Статус: реалізацію виконано та перевірено. `MenuBase::SetTitleSubHeading` отримав стабільний параметр `top_row`, тому шлях або довільна назва більше не стрибає між рядками залежно від ширини. Шляхи й назви рендеряться після версії у верхньому широкому слоті, а лічильники та короткі статуси лишаються внизу.
 

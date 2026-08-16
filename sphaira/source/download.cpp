@@ -31,7 +31,6 @@ namespace {
         log_write("curl_share_setopt(%s, %s) msg: %s\n", #opt, #v, curl_share_strerror(r)); \
     } \
 
-constexpr auto API_AGENT = "TotalJustice";
 constexpr u64 CHUNK_SIZE = 1024*1024;
 constexpr auto MAX_THREADS = 4;
 constexpr auto DOWNLOAD_MAX_ATTEMPTS = 3;
@@ -681,7 +680,7 @@ auto EncodeUrl(std::string url) -> std::string {
 }
 
 void SetCommonCurlOptions(CURL* curl, const Api& e) {
-    CURL_EASY_SETOPT_LOG(curl, CURLOPT_USERAGENT, API_AGENT);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_USERAGENT, APP_USER_AGENT);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_FOLLOWLOCATION, 1L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_SSL_VERIFYHOST, 0L);
