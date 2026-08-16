@@ -43,6 +43,8 @@ CURLSH* g_curl_share{};
 // this is used for single threaded blocking installs.
 // avoids the needed for re-creating the handle each time.
 CURL* g_curl_single{};
+// ponytail: one shared handle needs one lock; use per-request handles only if synchronous throughput becomes a bottleneck.
+Mutex g_mutex_single{};
 Mutex g_mutex_share[CURL_LOCK_DATA_LAST]{};
 
 struct UploadStruct {
@@ -757,13 +759,13 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
 
 }
 auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
-    App::SetAutoSleepDisabled(true);
-    ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
-
-    // check if stop has been requested before starting download
-    if (e.GetToken().stop_requested()) {
+    // check if stop has been requested or curl is unavailable before starting download
+    if (!g_running || !curl || e.GetToken().stop_requested()) {
         return {};
     }
+
+    App::SetAutoSleepDisabled(true);
+    ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
 
     fs::FsPath tmp_buf;
     const bool has_file = !e.GetPath().empty() && e.GetPath() != "";
@@ -944,8 +946,8 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
 }
 
 auto UploadInternal(CURL* curl, const Api& e) -> ApiResult {
-    // check if stop has been requested before starting download
-    if (e.GetToken().stop_requested()) {
+    // check if stop has been requested or curl is unavailable before starting upload
+    if (!g_running || !curl || e.GetToken().stop_requested()) {
         return {};
     }
 
@@ -1268,9 +1270,12 @@ auto Init() -> bool {
         }
     }
 
-    g_curl_single = curl_easy_init();
-    if (!g_curl_single) {
-        log_write("failed to create g_curl_single\n");
+    {
+        SCOPED_MUTEX(&g_mutex_single);
+        g_curl_single = curl_easy_init();
+        if (!g_curl_single) {
+            log_write("failed to create g_curl_single\n");
+        }
     }
 
     log_write("finished creating threads\n");
@@ -1282,14 +1287,25 @@ auto Init() -> bool {
     return true;
 }
 
-void Exit() {
+void RequestShutdown() {
     g_running = false;
+    ueventSignal(&g_thread_queue.m_uevent);
+    for (auto& entry : g_threads) {
+        ueventSignal(&entry.m_uevent);
+    }
+}
+
+void Exit() {
+    RequestShutdown();
 
     g_thread_queue.Close();
 
-    if (g_curl_single) {
-        curl_easy_cleanup(g_curl_single);
-        g_curl_single = nullptr;
+    {
+        SCOPED_MUTEX(&g_mutex_single);
+        if (g_curl_single) {
+            curl_easy_cleanup(g_curl_single);
+            g_curl_single = nullptr;
+        }
     }
 
     for (auto& entry : g_threads) {
@@ -1306,28 +1322,44 @@ void Exit() {
 }
 
 auto ToMemory(const Api& e) -> ApiResult {
-    if (!e.GetPath().empty()) {
+    if (!g_running || !e.GetPath().empty()) {
+        return {};
+    }
+    SCOPED_MUTEX(&g_mutex_single);
+    if (!g_running || !g_curl_single) {
         return {};
     }
     return DownloadInternal(g_curl_single, e);
 }
 
 auto ToFile(const Api& e) -> ApiResult {
-    if (e.GetPath().empty()) {
+    if (!g_running || e.GetPath().empty()) {
+        return {};
+    }
+    SCOPED_MUTEX(&g_mutex_single);
+    if (!g_running || !g_curl_single) {
         return {};
     }
     return DownloadInternal(g_curl_single, e);
 }
 
 auto FromMemory(const Api& e) -> ApiResult {
-    if (!e.GetPath().empty()) {
+    if (!g_running || !e.GetPath().empty()) {
+        return {};
+    }
+    SCOPED_MUTEX(&g_mutex_single);
+    if (!g_running || !g_curl_single) {
         return {};
     }
     return UploadInternal(g_curl_single, e);
 }
 
 auto FromFile(const Api& e) -> ApiResult {
-    if (e.GetPath().empty()) {
+    if (!g_running || e.GetPath().empty()) {
+        return {};
+    }
+    SCOPED_MUTEX(&g_mutex_single);
+    if (!g_running || !g_curl_single) {
         return {};
     }
     return UploadInternal(g_curl_single, e);
@@ -1367,10 +1399,16 @@ auto Probe(const Api& api, ProbeType type) -> ApiResult {
 }
 
 auto ToMemoryAsync(const Api& api) -> bool {
+    if (!g_running) {
+        return false;
+    }
     return g_thread_queue.Add(api);
 }
 
 auto ToFileAsync(const Api& e) -> bool {
+    if (!g_running) {
+        return false;
+    }
     return g_thread_queue.Add(e);
 }
 

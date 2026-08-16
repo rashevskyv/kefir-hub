@@ -190,6 +190,7 @@ void appplet_hook_calback(AppletHookType type, void *param) {
         case AppletHookType_OnExitRequest:
             // App::Notify("AppletHookType_OnExitRequest");
             devoptab::common::RequestCurlShutdown();
+            curl::RequestShutdown();
             App::Exit();
             break;
 
@@ -1345,6 +1346,7 @@ App::~App() {
     // Wake any remote filesystem reads before widget destructors wait for
     // their worker threads. The applet keeps exit locked until this finishes.
     devoptab::common::RequestCurlShutdown();
+    curl::RequestShutdown();
 
     mark("curl shutdown");
 

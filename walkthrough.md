@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.467** (2026-08-16). Попередні
+Актуальний delivery — **v0.13.468** (2026-08-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.468 — cURL shutdown & shared handle serialization
+
+- Синхронні `ToMemory`, `ToFile`, `FromMemory` та `FromFile` використовують один
+  mutex для безпечної роботи зі спільним `g_curl_single`.
+- `curl::RequestShutdown()` запускається на початку виходу з App, пробуджує черги
+  передач і блокує запуск нових операцій після запиту зупинки.
+- `curl::Exit()` очищає shared handle лише під захистом цього mutex.
 
 ## v0.13.467 — versioned HTTP User-Agent
 

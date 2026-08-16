@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.467**. Завершені плани збережено в
+Поточний delivery — **v0.13.468**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.467 — versioned HTTP User-Agent
+## Поточний delivery: v0.13.468 — cURL shutdown & shared handle serialization
+
+Статус: інтеграцію відновлено поверх `v0.13.467`. Спільний синхронний дескриптор
+`g_curl_single` серіалізовано через `g_mutex_single`; `curl::RequestShutdown()`
+викликається на початку виходу з App і не дає почати нові transfer після запиту
+зупинки. Очищення handle виконується під тим самим mutex.
+
+## Попередній delivery: v0.13.467 — versioned HTTP User-Agent
 
 Статус: реалізацію виконано та перевірено. Замінено застарілий downloader User-Agent `TotalJustice` на єдине спільне джерело `APP_USER_AGENT` (`Sphaira/<APP_VERSION>`) у `defines.hpp` та додано встановлення `CURLOPT_USERAGENT` до `MountCurlDevice::curl_set_common_options()`. Політику TLS, редиректи, автентифікацію, HTTP-семантику, UI, i18n та залежності залишено без змін. Gemini успішно пройшов `git diff --check` та WSL `ReleaseWithInstall` (`[100%] Built target sphaira_nro`). Очікується ручний Switch remote-mount smoke check.
 

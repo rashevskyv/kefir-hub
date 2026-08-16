@@ -147,6 +147,7 @@ struct DownloadEventData {
     curl::Port(loc.port)
 
 auto Init() -> bool;
+void RequestShutdown();
 void Exit();
 
 // sync functions

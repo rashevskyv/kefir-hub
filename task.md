@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.467**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.468**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.467 (versioned HTTP User-Agent)
+## Поточний delivery: v0.13.468 (cURL shutdown & shared handle serialization)
+
+- [x] `CURL-SERIALIZE-468` — серіалізовано доступ до `g_curl_single` у всіх синхронних cURL-операціях.
+- [x] `CURL-EARLY-SHUTDOWN-468` — додано ранній `curl::RequestShutdown()` у шлях виходу з App.
+- [x] `CURL-EXIT-GUARD-468` — очищення `g_curl_single` захищене тим самим mutex.
+
+## Попередній delivery: v0.13.467 (versioned HTTP User-Agent)
 
 - [x] `HTTP-USER-AGENT-DEF-467` — додати єдину спільну константу `APP_USER_AGENT = "Sphaira/" APP_VERSION;` у `sphaira/include/defines.hpp`.
 - [x] `HTTP-USER-AGENT-DOWNLOAD-467` — видалити застарілий `API_AGENT = "TotalJustice"` у `sphaira/source/download.cpp` та перевести `SetCommonCurlOptions` на `APP_USER_AGENT`.
