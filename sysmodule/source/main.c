@@ -60,7 +60,7 @@ static bool g_ts_session_internal_open;
 void __appInit(void) {
     Result rc = smInitialize();
     if (R_FAILED(rc)) {
-        diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_InitFail_SM));
+        return;
     }
 
     rc = setsysInitialize();
@@ -72,7 +72,9 @@ void __appInit(void) {
         setsysExit();
     }
 
-    for (int i = 0; i < 100; i++) {
+    // Slow SD cards can take up to 2-5 minutes to initialize during boot.
+    // Use 300s (3000 iterations @ 100ms) timeout and avoid fatal crashes.
+    for (int i = 0; i < 3000; i++) {
         rc = fsInitialize();
         if (R_SUCCEEDED(rc)) {
             break;
@@ -81,10 +83,11 @@ void __appInit(void) {
     }
     if (R_FAILED(rc)) {
         svcSleepThread(5000000000LL);
+        smExit();
         return;
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 3000; i++) {
         rc = fsdevMountSdmc();
         if (R_SUCCEEDED(rc)) {
             break;
@@ -92,7 +95,7 @@ void __appInit(void) {
         svcSleepThread(100000000LL);
     }
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 300; i++) {
         rc = tsInitialize();
         if (R_SUCCEEDED(rc)) {
             g_ts_ready = true;
@@ -103,7 +106,7 @@ void __appInit(void) {
         svcSleepThread(100000000LL);
     }
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 300; i++) {
         rc = tcInitialize();
         if (R_SUCCEEDED(rc)) {
             g_tc_ready = true;
@@ -112,7 +115,7 @@ void __appInit(void) {
         svcSleepThread(100000000LL);
     }
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 300; i++) {
         rc = fanInitialize();
         if (R_SUCCEEDED(rc)) {
             g_fan_ready = true;

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.487**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.488**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.487 (SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff)
+## Поточний delivery: v0.13.488 (Sysmodule slow SD boot timeout & crash prevention)
+
+- [x] `SYSMODULE-TIMEOUTS-488` — збільшено таймаути ініціалізації FS та монтування SD у `sysmodule/source/main.c` з 10 секунд до 300 секунд (5 хвилин), видалено `diagAbortWithResult` при помилці `smInitialize()`.
+- [x] `SYSMODULE-DOCS-VERIFY-488` — піднято версію до `0.13.488` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.487 (SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff)
 
 - [x] `FSDEV-COMMIT-SDMC-487` — виправлено назву монтування ФС на `"sdmc"` (без двокрапки) у `fsdevCommitDevice("sdmc")` та `fsdevGetDeviceFileSystem("sdmc")` у `userAppExit()` (`main.cpp`), гарантуючи скидання кешу запису microSD при завершенні та перезапуску NRO.
 - [x] `NXLINK-SD-FLUSH-487` — додано виклики `fsdevCommitDevice("sdmc")` у `nxlink.cpp` після запису та перейменування переданого NRO-файлу перед запуском.

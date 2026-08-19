@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.487**. Завершені плани збережено в
+Поточний delivery — **v0.13.488**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.487 — SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff
+## Поточний delivery: v0.13.488 — Sysmodule slow SD boot timeout & crash prevention
+
+Статус: реалізацію виконано та перевірено. На основі аналізу патчу SwitchThemeInjector усунено падіння та зависання на повільних microSD картах:
+1. **Збільшення тайм-аутів ініціалізації ФС у сисмодулі (`sysmodule/source/main.c`)**:
+   - Збільшено ліміт спроб підключення `fsInitialize()` та монтування `fsdevMountSdmc()` зі 100 ітерацій (10 секунд) до 3000 ітерацій (300 секунд / 5 хвилин), що гарантує успішний старт сисмодуля на повільних картах пам'яті.
+   - Видалено фатальний аборт `diagAbortWithResult` при помилці `smInitialize()`, що запобігає крашу Atmosphere при затримках сервісів під час завантаження ОС.
+2. **Версія та перевірка**:
+   - Ітеровано версію програми до `0.13.488` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.487 — SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff
 
 Статус: реалізацію виконано та перевірено. Усунено аварійні падіння (Data Abort 0x4A8 в `_malloc_r`) та збої файлової системи на повільних картах пам'яті під час передачі NRO через NX-Link та запуску:
 1. **Фіксація файлової системи та захист від пошкодження microSD (`main.cpp`, `nxlink.cpp`, `nro.cpp`, `log.cpp`)**:

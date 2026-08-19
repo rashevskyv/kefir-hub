@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.487** (2026-08-19). Попередні
+Актуальний delivery — **v0.13.488** (2026-08-19). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.488 — Sysmodule slow SD boot timeout & crash prevention
+
+- **Збільшення таймаутів ініціалізації ФС для повільних SD-карт**:
+  - У `sysmodule/source/main.c` збільшено цикл спроб підключення `fsInitialize()` та `fsdevMountSdmc()` до 3000 ітерацій (300 секунд = 5 хвилин) згідно з практикою усунення затримок старту на повільних картках (відповідно до коміту SwitchThemeInjector).
+  - Прибрано `diagAbortWithResult` при помилці ініціалізації SM у фоновому модулі, усуваючи фатальні паніки Atmosphere при старті.
+- **Версія та інтеграція**:
+  - Піднято версію до `0.13.488` у `sphaira/CMakeLists.txt`, оновлено документацію в `README.md`, `plan.md`, `task.md`.
 
 ## v0.13.487 — SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff
 
