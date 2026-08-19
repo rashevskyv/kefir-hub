@@ -5,6 +5,7 @@
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/socket.h>
 #include <mutex>
 #include <switch.h>
 
@@ -60,11 +61,11 @@ void do_flush(const std::string& data, bool file_open, int sock) {
         if (fd >= 0) {
             write(fd, data.data(), data.size());
             close(fd);
+            fsdevCommitDevice("sdmc");
         }
     }
-    if (sock) {
-        std::fwrite(data.data(), 1, data.size(), stdout);
-        std::fflush(stdout);
+    if (sock > 0) {
+        send(sock, data.data(), data.size(), 0);
     }
 }
 
@@ -131,10 +132,11 @@ void stop_thread() {
 
 void log_write_arg_internal(const char* s, std::va_list* v) {
     const auto t = std::time(nullptr);
-    const auto tm = std::localtime(&t);
+    struct tm tm{};
+    localtime_r(&t, &tm);
 
     char buf[512];
-    const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u] -> ", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u] -> ", tm.tm_hour, tm.tm_min, tm.tm_sec);
     const auto msg_len = std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
     const auto total_len = len + (msg_len > 0 ? msg_len : 0);
 
@@ -279,10 +281,11 @@ void log_write_error(const char* s, ...) {
     // the error log carries the full date, not just the time: it survives
     // reboots, so "12:26:59" alone would be ambiguous.
     const auto t = std::time(nullptr);
-    const auto tm = std::localtime(&t);
+    struct tm tm{};
+    localtime_r(&t, &tm);
     char line[640];
     const auto len = std::snprintf(line, sizeof(line), "[%04u-%02u-%02u %02u:%02u:%02u] %s\n",
-        1900u + tm->tm_year, 1u + tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, msg);
+        1900u + tm.tm_year, 1u + tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, msg);
 
     {
         std::scoped_lock lock{mutex};
@@ -296,6 +299,7 @@ void log_write_error(const char* s, ...) {
         if (fd >= 0) {
             write(fd, line, len > 0 ? (size_t)len : 0);
             close(fd);
+            fsdevCommitDevice("sdmc");
         }
     }
 

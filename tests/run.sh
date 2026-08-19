@@ -9,11 +9,21 @@ cd "$(dirname "$0")/.."
 fail=0
 
 echo "== host unit tests =="
+pids=""
+tmpdir="$(mktemp -d)"
 for src in tests/test_*.cpp; do
-    out="$(mktemp -d)/$(basename "$src" .cpp)"
-    g++ -std=c++20 -Wall -Wextra -Werror -I sphaira/include "$src" -o "$out"
-    "$out" || fail=1
+    (
+        out="$tmpdir/$(basename "$src" .cpp)"
+        g++ -std=c++20 -Wall -Wextra -Werror -I sphaira/include "$src" -o "$out"
+        "$out"
+    ) &
+    pids="$pids $!"
 done
+
+for pid in $pids; do
+    wait "$pid" || fail=1
+done
+rm -rf "$tmpdir"
 
 echo
 echo "== dead symbol guard =="

@@ -94,8 +94,9 @@ void userAppExit(void) {
     psmExit();
     plExit();
     socketExit();
-    // NOTE (DMC): prevents exfat corruption.
-    if (auto fs = fsdevGetDeviceFileSystem("sdmc:")) {
+    // NOTE (DMC): prevents exfat / fat32 corruption on all SD cards.
+    fsdevCommitDevice("sdmc");
+    if (auto fs = fsdevGetDeviceFileSystem("sdmc")) {
         fsFsCommit(fs);
     }
 

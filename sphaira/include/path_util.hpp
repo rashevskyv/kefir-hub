@@ -29,6 +29,15 @@ inline auto EqualsIC(std::string_view a, std::string_view b) -> bool {
     return a.length() == b.length() && !strncasecmp(a.data(), b.data(), a.length());
 }
 
+// True when `s` starts with `prefix`, ignoring case. An empty prefix always
+// matches, matching std::string_view::starts_with.
+inline auto StartsWithIC(std::string_view s, std::string_view prefix) -> bool {
+    if (s.size() < prefix.size()) {
+        return false;
+    }
+    return !strncasecmp(s.data(), prefix.data(), prefix.size());
+}
+
 // True when `s` ends with `suffix`, ignoring case. An empty suffix always
 // matches, matching std::string_view::ends_with.
 inline auto EndsWithIC(std::string_view s, std::string_view suffix) -> bool {

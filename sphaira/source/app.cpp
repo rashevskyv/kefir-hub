@@ -15,6 +15,7 @@
 #include "net.hpp"
 #include "nro.hpp"
 #include "ntp.hpp"
+#include "forwarder_auto_install.hpp"
 #include "location.hpp"
 #include "evman.hpp"
 #include "owo.hpp"
@@ -1001,9 +1002,11 @@ App::App(const char* argv0) {
 
     g_app = this;
     m_start_timestamp = armGetSystemTick();
+    m_app_path = {};
     if (!std::strncmp(argv0, "sdmc:/", 6)) {
         // memmove(path, path + 5, strlen(path)-5);
-        std::strncpy(m_app_path, argv0 + 5, std::strlen(argv0)-5);
+        std::strncpy(m_app_path, argv0 + 5, sizeof(m_app_path) - 1);
+        m_app_path.s[sizeof(m_app_path) - 1] = '\0';
     } else {
         m_app_path = argv0;
     }
@@ -1314,6 +1317,7 @@ App::App(const char* argv0) {
     mark("hid + loader info");
 
     ntp::Start();
+    forwarder_auto::StartCheck();
 
     // load default image
     InitDefaultImage();
@@ -1358,8 +1362,9 @@ App::~App() {
     mark("applet unhook");
 
     ntp::Stop();
+    forwarder_auto::StopCheck();
 
-    mark("ntp");
+    mark("ntp + forwarder_auto");
 
     if (App::GetMtpEnable()) {
         log_write("closing mtp\n");

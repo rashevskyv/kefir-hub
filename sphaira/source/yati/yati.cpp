@@ -1481,6 +1481,9 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         R_TRY(avmPushLaunchVersion(app_id, latest_version_num));
     }
     log_write("pushed\n");
+    if (pbox) {
+        pbox->OnTitleInstalled(app_id);
+    }
 
     if (pbox && (cnmt.key.type == NcmContentMetaType_Application || cnmt.key.type == NcmContentMetaType_Patch)) {
         if (cnmt.original_required_system_version != 0) {

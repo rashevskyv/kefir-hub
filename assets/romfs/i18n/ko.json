@@ -1670,5 +1670,6 @@
   "The title was installed successfully, but cannot run on this console yet.\n\n%sRequired system firmware: %s\nInstalled system firmware: %s\n\nPlease update Kefir/CFW and the console system firmware following the Kefir update instructions, then launch the game again. Reinstalling the game is not necessary after the update.": "타이틀이 성공적으로 설치되었지만, 이 콘솔에서는 아직 실행할 수 없습니다.\n\n%s필요한 시스템 펌웨어: %s\n설치된 시스템 펌웨어: %s\n\nKefir 업데이트 지침에 따라 Kefir/CFW 및 본체 시스템 펌웨어를 업데이트한 후 게임을 다시 실행하세요. 업데이트 후 게임을 재설치할 필요는 없습니다.",
   "Compatibility warning: %srequires system firmware %s (installed: %s, SDK: %s). Update firmware before launching; reinstalling is not needed.": "호환성 경고: %s시스템 펌웨어 %s 필요 (설치됨: %s, SDK: %s). 실행 전 펌웨어를 업데이트하세요. 재설치는 필요하지 않습니다.",
   "Compatibility warning: %srequires system firmware %s (installed: %s). Update firmware before launching; reinstalling is not needed.": "호환성 경고: %s시스템 펌웨어 %s 필요 (설치됨: %s). 실행 전 펌웨어를 업데이트하세요. 재설치는 필요하지 않습니다.",
-  "Compatibility warning: firmware update required to launch": "호환성 경고: 실행하려면 펌웨어 업데이트가 필요합니다"
+  "Compatibility warning: firmware update required to launch": "호환성 경고: 실행하려면 펌웨어 업데이트가 필요합니다",
+  "Homebrew Menu forwarder installed. Restart into Title Mode now?": "Homebrew Menu 포워더가 설치되었습니다. 타이틀 모드로 다시 시작할까요?"
 }

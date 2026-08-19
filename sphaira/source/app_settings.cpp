@@ -277,6 +277,14 @@ auto App::GetMtpShowSaves() -> bool {
     return g_app->m_mtp_show_saves.Get();
 }
 
+auto App::GetMtpShowRawSaves() -> bool {
+    return g_app->m_mtp_show_raw_saves.Get();
+}
+
+auto App::GetMtpShowRawSystemSaves() -> bool {
+    return g_app->m_mtp_show_raw_system_saves.Get();
+}
+
 auto App::GetMtpShowGames() -> bool {
     return g_app->m_mtp_show_games.Get();
 }
@@ -600,6 +608,26 @@ void App::SetMtpShowSaves(bool enable) {
     }
 }
 
+void App::SetMtpShowRawSaves(bool enable) {
+    if (App::GetMtpShowRawSaves() != enable) {
+        g_app->m_mtp_show_raw_saves.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpShowRawSystemSaves(bool enable) {
+    if (App::GetMtpShowRawSystemSaves() != enable) {
+        g_app->m_mtp_show_raw_system_saves.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
 void App::SetMtpShowGames(bool enable) {
     if (App::GetMtpShowGames() != enable) {
         g_app->m_mtp_show_games.Set(enable);
@@ -809,6 +837,28 @@ auto App::Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result {
     }
 
     return install_forwarder(pbox, config, GetInstallSdEnable() ? NcmStorageId_SdCard : NcmStorageId_BuiltInUser);
+}
+
+auto App::IsOledModel() -> bool {
+    static int s_is_oled = -1;
+    if (s_is_oled != -1) {
+        return s_is_oled == 1;
+    }
+
+    s_is_oled = 0;
+#ifdef __SWITCH__
+    if (R_SUCCEEDED(splInitialize())) {
+        u64 hardware_type = 0;
+        if (R_SUCCEEDED(splGetConfig(SplConfigItem_HardwareType, &hardware_type))) {
+            // 5 = Aula (Nintendo Switch OLED model)
+            if (hardware_type == 5) {
+                s_is_oled = 1;
+            }
+        }
+        splExit();
+    }
+#endif
+    return s_is_oled == 1;
 }
 
 auto App::IsEmummc() -> bool {

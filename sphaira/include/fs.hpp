@@ -559,4 +559,10 @@ struct FsNativeId final : FsNative {
     }
 };
 
+struct FsNativeBis final : FsNative {
+    FsNativeBis(FsBisPartitionId partition_id, const char* string = "") {
+        m_open_result = fsOpenBisFileSystem(&m_fs, partition_id, string);
+    }
+};
+
 } // namespace fs

@@ -16,6 +16,8 @@
 #include "image.hpp"
 #include "title_info.hpp"
 #include "nro.hpp"
+#include "app_paths.hpp"
+#include "threaded_file_transfer.hpp"
 
 #include <minIni.h>
 #include <stb_image.h>
@@ -90,20 +92,7 @@ constexpr const char* THEMES_QUERY =
     "pageInfo{itemCount limit page pageCount}}}}";
 
 
-auto GetNroPath() -> const char* {
-    fs::FsNativeSd fs;
-    for (auto& path : NRO_PATHS) {
-        if (fs.FileExists(path)) {
-            return path;
-        }
-    }
 
-    return nullptr;
-}
-
-auto HasNro() -> bool {
-    return GetNroPath() != nullptr;
-}
 
 auto JsonString(std::string_view str) -> std::string {
     std::string out;
@@ -480,6 +469,62 @@ auto BuildThemePath(const PackListEntry& entry, const ThemeEntry& theme) -> fs::
 
 } // namespace
 
+auto GetNroPath() -> const char* {
+    fs::FsNativeSd fs;
+    for (auto& path : NRO_PATHS) {
+        if (fs.FileExists(path)) {
+            return path;
+        }
+    }
+
+    return nullptr;
+}
+
+auto HasNro() -> bool {
+    return GetNroPath() != nullptr;
+}
+
+void PromptInstallTheme(const std::vector<std::string>& nxtheme_paths) {
+    if (HasNro()) {
+        App::Push<OptionBox>(
+            "Theme downloaded, install now?"_i18n,
+            "Back"_i18n, "Install"_i18n, 1, [nxtheme_paths](auto op_index){
+                if (op_index && *op_index) {
+                    std::string args;
+
+                    for (const auto& paths : nxtheme_paths) {
+                        if (!args.empty()) {
+                            args += ' ';
+                        }
+
+                        args += nro_add_arg_file(paths);
+                    }
+
+                    log_write("themezer nro: %s\n", GetNroPath());
+                    log_write("themezer args: %s\n", args.c_str());
+
+                    const auto rc = nro_launch(GetNroPath(), args);
+                    App::PushErrorBox(rc, "Failed to launch NXthemes_Installer.nro"_i18n);
+                }
+            }
+        );
+    } else {
+        App::Push<OptionBox>(
+            "NXthemes_Installer.nro not found, download now?"_i18n,
+            "Back"_i18n, "Download"_i18n, 1, [](auto op_index){
+                if (op_index && *op_index) {
+                    const gh::AssetEntry asset{
+                        .name = "NXThemesInstaller.nro",
+                        .path = "/switch/Switch_themes_Installer/NXThemesInstaller.nro",
+                    };
+
+                    gh::Download(NRO_URL, asset);
+                }
+            }
+        );
+    }
+}
+
 auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) -> Result {
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
@@ -510,39 +555,52 @@ auto InstallTheme(sphaira::ui::ProgressBox* pbox, const PackListEntry& entry) ->
     }
 
     // ensure that we actually downloaded the theme.
-    // todo: add new error for this.
     R_UNLESS(!nxtheme_paths.empty(), Result_ThemezerFailedToDownloadTheme);
 
-    // if we have nxtheme installed, prompt the user to install the theme now.
-    if (HasNro()) {
-        App::Push<OptionBox>(
-            "Theme downloaded, install now?"_i18n,
-            "Back"_i18n, "Install"_i18n, 1, [nxtheme_paths](auto op_index){
-                if (op_index && *op_index) {
-                    std::string args;
-
-                    for (const auto& paths : nxtheme_paths) {
-                        // add space between each arg.
-                        if (!args.empty()) {
-                            args += ' ';
-                        }
-
-                        // converts path to sdmc:/path.
-                        args += nro_add_arg_file(paths);
-                    }
-
-                    log_write("themezer nro: %s\n", GetNroPath());
-                    log_write("themezer args: %s\n", args.c_str());
-
-                    // launch nro with args to the nxthemes.
-                    const auto rc = nro_launch(GetNroPath(), args);
-                    App::PushErrorBox(rc, "Failed to launch NXthemes_Installer.nro"_i18n);
-                }
-            }
-        );
-    }
+    PromptInstallTheme(nxtheme_paths);
 
     log_write("finished install :)\n");
+    R_SUCCEED();
+}
+
+auto InstallThemePackage(sphaira::ui::ProgressBox* pbox, const std::string& name, const std::string& url) -> Result {
+    const auto zip_path = paths::DOWNLOADS + "/theme.zip";
+    pbox->NewTransfer("Downloading "_i18n + name);
+
+    const auto result = curl::Api().ToFile(
+        curl::Url{url},
+        curl::Path{zip_path},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
+    R_UNLESS(result.success, Result_ThemezerFailedToDownloadTheme);
+
+    fs::FsNativeSd fs;
+    R_TRY(fs.GetFsOpenResult());
+    R_TRY(fs.CreateDirectoryRecursively("/themes/"));
+
+    pbox->NewTransfer("Extracting " + name);
+
+    std::vector<std::string> nxtheme_paths;
+    auto filter = [&](const fs::FsPath& /*entry_name*/, fs::FsPath& path) -> bool {
+        std::string_view sv{path.s};
+        const std::string_view suffix{".nxtheme"};
+        if (sv.size() >= suffix.size()) {
+            auto str_end = sv.substr(sv.size() - suffix.size());
+            if (std::equal(str_end.begin(), str_end.end(), suffix.begin(), [](char a, char b){
+                return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+            })) {
+                nxtheme_paths.emplace_back(path.s);
+            }
+        }
+        return true;
+    };
+
+    R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, "/themes/", filter));
+    fs.DeleteFile(zip_path);
+
+    PromptInstallTheme(nxtheme_paths);
+
+    log_write("finished theme package install :)\n");
     R_SUCCEED();
 }
 

@@ -11,6 +11,7 @@
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/save/save_locations.hpp"
+#include "ui/menus/save/save_paths.hpp"
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -247,6 +248,65 @@ auto BuildHomebrewSearchPathsItems() -> std::vector<SettingsItem> {
                                 App::Notify("Homebrew search path removed."_i18n);
                             } else {
                                 App::Notify("Failed to remove Homebrew search path"_i18n);
+                            }
+                        }
+                    }
+                );
+            }
+        });
+    }
+
+    return items;
+}
+
+auto BuildSaveBackupSearchPathsItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(SettingsItem{
+        "Add folder"_i18n,
+        "Pick a folder on the microSD card to add as a save backup search path."_i18n,
+        [](){ return std::string{}; },
+        [](){
+            App::Push<filepicker::Menu>(
+                filepicker::LocationCallback{[](const fs::FsPath& path, const filepicker::FsEntry& fs_entry) -> bool {
+                    if (fs_entry.type != filepicker::FsType::Sd) {
+                        App::Notify("Only microSD folders can be used"_i18n);
+                        return false;
+                    }
+                    if (!save::AddBackupSearchPath(path)) {
+                        App::Notify("Failed to add save backup search path"_i18n);
+                        return false;
+                    }
+                    App::Notify("Save backup search path added."_i18n);
+                    return true;
+                }},
+                std::vector<std::string>{},
+                fs::FsPath{},
+                true
+            );
+        },
+        SettingsItemKind::Folder,
+    });
+
+    for (const auto& path_str : save::GetBackupSearchPaths()) {
+        const fs::FsPath path{path_str};
+        items.emplace_back(SettingsItem{
+            path_str,
+            "Custom save backup search path. Select to remove."_i18n,
+            [](){ return std::string{}; },
+            [path](){
+                const auto prompt = "Remove Save Backup Search Path?"_i18n + "\n\n" + path.toString();
+                App::Push<OptionBox>(
+                    prompt,
+                    "Back"_i18n,
+                    "Delete"_i18n,
+                    0,
+                    [path](auto op_index){
+                        if (op_index && *op_index == 1) {
+                            if (save::RemoveBackupSearchPath(path)) {
+                                App::Notify("Save backup search path removed."_i18n);
+                            } else {
+                                App::Notify("Failed to remove save backup search path"_i18n);
                             }
                         }
                     }
@@ -502,6 +562,8 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
     items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
     items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
+    items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
+    items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
     items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
 
     items.emplace_back(SettingsItem{
@@ -905,6 +967,35 @@ auto MakeFavoriteThemeItem(ui::menu::themezer::PackListEntry entry) -> SettingsI
     };
 }
 
+auto MakeThemePackageItem(std::string name, std::string description, std::string url) -> SettingsItem {
+    return {
+        name,
+        description,
+        [](){
+            return std::string{};
+        },
+        [name, url](){
+            App::Push<OptionBox>(
+                "Download theme?"_i18n,
+                "Back"_i18n, "Download"_i18n, 1, [name, url](auto op_index){
+                    if (op_index && *op_index) {
+                        App::Push<ProgressBox>(0, "Downloading "_i18n, name, [name, url](auto pbox) -> Result {
+                            return ui::menu::themezer::InstallThemePackage(pbox, name, url);
+                        }, [name](Result rc){
+                            App::PushErrorBox(rc, "Failed to download theme"_i18n);
+
+                            if (R_SUCCEEDED(rc)) {
+                                App::Notify("Downloaded "_i18n + name);
+                            }
+                        });
+                    }
+                }
+            );
+        },
+        SettingsItemKind::Download,
+    };
+}
+
 auto BuildThemeItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -920,37 +1011,17 @@ auto BuildThemeItems() -> std::vector<SettingsItem> {
         SettingsItemKind::Folder,
     });
 
-    items.emplace_back(MakePackageAction({
+    items.emplace_back(MakeThemePackageItem(
         "Mario BG Dark",
         "Download and extract Mario BG Modern theme.",
-        [](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                "Downloading Mario BG Dark...",
-                "https://github.com/rashevskyv/mario_bg_theme/releases/latest/download/Mario.BG.Modern.zip",
-                paths::DOWNLOADS + "/theme.zip"
-            ));
-            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/theme.zip", "/themes/"));
-            R_TRY(DeletePath(paths::DOWNLOADS + "/theme.zip"));
-            R_SUCCEED();
-        },
-    }));
+        "https://github.com/rashevskyv/mario_bg_theme/releases/latest/download/Mario.BG.Modern.zip"
+    ));
 
-    items.emplace_back(MakePackageAction({
+    items.emplace_back(MakeThemePackageItem(
         "Switch 2 Theme by alexwak",
         "Download and extract Switch 2 theme.",
-        [](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                "Downloading Switch 2 Theme...",
-                "https://github.com/alexwak/Switch-2-Switch-Theme/releases/latest/download/Switch-2-Switch-Banned.zip",
-                paths::DOWNLOADS + "/theme.zip"
-            ));
-            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/theme.zip", "/themes/"));
-            R_TRY(DeletePath(paths::DOWNLOADS + "/theme.zip"));
-            R_SUCCEED();
-        },
-    }));
+        "https://github.com/alexwak/Switch-2-Switch-Theme/releases/latest/download/Switch-2-Switch-Banned.zip"
+    ));
 
     for (const auto& entry : ui::menu::themezer::GetFavorites()) {
         items.emplace_back(MakeFavoriteThemeItem(entry));
@@ -2101,6 +2172,13 @@ void Menu::BuildCategories() {
                     SettingsItemKind::Folder,
                 },
                 MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
+            }
+        },
+        {
+            "Saves"_i18n,
+            "Save backup paths and restore options."_i18n,
+            {
+                MakeFolderItem("Save Backup Search Paths"_i18n, "Manage custom folders scanned for save backups."_i18n, BuildSaveBackupSearchPathsItems),
             }
         },
         {

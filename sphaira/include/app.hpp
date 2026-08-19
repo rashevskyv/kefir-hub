@@ -117,6 +117,8 @@ public:
     static auto GetMtpShowSd() -> bool;
     static auto GetMtpShowInstall() -> bool;
     static auto GetMtpShowSaves() -> bool;
+    static auto GetMtpShowRawSaves() -> bool;
+    static auto GetMtpShowRawSystemSaves() -> bool;
     static auto GetMtpShowGames() -> bool;
     static auto GetMtpNameSd() -> std::string;
     static auto GetMtpNameInstall() -> std::string;
@@ -185,6 +187,8 @@ public:
     static void SetMtpShowSd(bool enable);
     static void SetMtpShowInstall(bool enable);
     static void SetMtpShowSaves(bool enable);
+    static void SetMtpShowRawSaves(bool enable);
+    static void SetMtpShowRawSystemSaves(bool enable);
     static void SetMtpShowGames(bool enable);
     static void SetMtpNameSd(std::string value);
     static void SetMtpNameInstall(std::string value);
@@ -259,6 +263,7 @@ public:
 
     static void ShowTitleModeHelp(const std::string& feature = {});
 
+    static auto IsOledModel() -> bool;
     static auto IsEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;
     static auto IsFileBaseEmummc() -> bool;
@@ -268,7 +273,7 @@ public:
     static void SetAutoSleepDisabled(bool enable) {
         static Mutex mutex{};
         static int ref_count{};
-        static bool media_playback_fallback{};
+        static bool media_playback_active{};
 
         mutexLock(&mutex);
         ON_SCOPE_EXIT(mutexUnlock(&mutex));
@@ -283,13 +288,16 @@ public:
             const auto check_rc = appletIsAutoSleepDisabled(&disabled);
             if (R_SUCCEEDED(set_rc) && R_SUCCEEDED(check_rc) && disabled) {
                 log_write("[power] auto sleep disabled and verified\n");
-                return;
+            } else {
+                log_write("[power] auto sleep set failed (set=0x%X check=0x%X value=%u)\n",
+                    set_rc, check_rc, disabled);
             }
 
-            const auto fallback_rc = appletSetMediaPlaybackState(true);
-            media_playback_fallback = R_SUCCEEDED(fallback_rc);
-            log_write("[power] auto sleep verification failed (set=0x%X check=0x%X value=%u); media fallback=0x%X\n",
-                set_rc, check_rc, disabled, fallback_rc);
+            const auto media_rc = appletSetMediaPlaybackState(true);
+            media_playback_active = R_SUCCEEDED(media_rc);
+            if (!media_playback_active) {
+                log_write("[power] appletSetMediaPlaybackState(true) failed: 0x%X\n", media_rc);
+            }
         } else {
             if (!ref_count || --ref_count != 0) {
                 return;
@@ -299,12 +307,12 @@ public:
             if (R_FAILED(set_rc)) {
                 log_write("[power] failed to restore auto sleep: 0x%X\n", set_rc);
             }
-            if (media_playback_fallback) {
-                const auto fallback_rc = appletSetMediaPlaybackState(false);
-                if (R_FAILED(fallback_rc)) {
-                    log_write("[power] failed to release media fallback: 0x%X\n", fallback_rc);
+            if (media_playback_active) {
+                const auto media_rc = appletSetMediaPlaybackState(false);
+                if (R_FAILED(media_rc)) {
+                    log_write("[power] failed to release media playback state: 0x%X\n", media_rc);
                 }
-                media_playback_fallback = false;
+                media_playback_active = false;
             }
         }
     }
@@ -406,6 +414,8 @@ public:
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
     option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", false};
+    option::OptionBool m_mtp_show_raw_saves{INI_SECTION, "mtp_show_raw_saves", false};
+    option::OptionBool m_mtp_show_raw_system_saves{INI_SECTION, "mtp_show_raw_system_saves", false};
     option::OptionBool m_mtp_show_games{INI_SECTION, "mtp_show_games", false};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};

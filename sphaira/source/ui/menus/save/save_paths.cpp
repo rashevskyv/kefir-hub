@@ -1,12 +1,17 @@
 #include "ui/menus/save/save_paths.hpp"
+#include "app.hpp"
+#include "path_util.hpp"
 #include "minizip_helper.hpp"
 #include <minizip/unzip.h>
+#include <minIni.h>
 #include <cstring>
 #include <algorithm>
 #include <cstdio>
 #include <utility>
 
 namespace sphaira::ui::menu::save {
+
+constexpr const char* BACKUP_PATHS_INI_SECTION = "save_backup_paths";
 
 
 constexpr std::array<u8, 7> SAVE_TYPE_VALUES{
@@ -321,6 +326,140 @@ auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
     }
 
     return out;
+}
+
+auto IsDisaSaveFile(fs::Fs* fs, const fs::FsPath& path) -> bool {
+    fs::File file;
+    if (R_FAILED(fs->OpenFile(path, FsOpenMode_Read, &file))) {
+        return false;
+    }
+    s64 size{};
+    if (R_FAILED(file.GetSize(&size)) || size < 0x200) {
+        return false;
+    }
+    char buf[0x104]{};
+    u64 bytes_read{};
+    if (R_FAILED(file.Read(0, buf, sizeof(buf), FsReadOption_None, &bytes_read)) || bytes_read < 0x104) {
+        return false;
+    }
+    return std::memcmp(buf + 0x100, "DISF", 4) == 0;
+}
+
+auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view name) -> bool {
+    if (name.ends_with(".disa") || name.ends_with(".bin")) {
+        return IsDisaSaveFile(fs, path);
+    }
+    if (name.size() == 16) {
+        bool all_hex = true;
+        for (char c : name) {
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                all_hex = false;
+                break;
+            }
+        }
+        if (all_hex) {
+            return IsDisaSaveFile(fs, path);
+        }
+    }
+    return false;
+}
+
+auto NormalizeBackupSearchPath(std::string_view path) -> std::optional<std::string> {
+    const auto normalized = path::NormalizeAbsoluteSdPath(path);
+    if (!normalized) {
+        return std::nullopt;
+    }
+    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_BACKUP_ROOT) || path::EqualsIC(*normalized, DBI_SAVES_PATH)) {
+        return std::nullopt;
+    }
+    if (normalized->size() >= FS_MAX_PATH) {
+        return std::nullopt;
+    }
+    return normalized;
+}
+
+auto GetBackupSearchPaths() -> std::vector<std::string> {
+    std::vector<std::string> search_paths;
+
+    ini_browse([](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) -> int {
+        if (Section && Value && path::EqualsIC(Section, BACKUP_PATHS_INI_SECTION)) {
+            auto* paths = static_cast<std::vector<std::string>*>(UserData);
+            const auto normalized = NormalizeBackupSearchPath(Value);
+            if (normalized) {
+                const bool duplicate = std::any_of(paths->begin(), paths->end(), [&](const std::string& existing) {
+                    return path::EqualsIC(existing, *normalized);
+                });
+                if (!duplicate) {
+                    paths->push_back(*normalized);
+                }
+            }
+        }
+        return 1;
+    }, &search_paths, App::CONFIG_PATH);
+
+    return search_paths;
+}
+
+static auto SaveBackupSearchPaths(const std::vector<std::string>& search_paths) -> bool {
+    if (!ini_puts(BACKUP_PATHS_INI_SECTION, nullptr, nullptr, App::CONFIG_PATH)) {
+        return false;
+    }
+
+    char key[32];
+    for (size_t i = 0; i < search_paths.size(); i++) {
+        std::snprintf(key, sizeof(key), "path_%zu", i);
+        if (!ini_puts(BACKUP_PATHS_INI_SECTION, key, search_paths[i].c_str(), App::CONFIG_PATH)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+auto AddBackupSearchPath(const fs::FsPath& path) -> bool {
+    const auto normalized = NormalizeBackupSearchPath(path.toString());
+    if (!normalized) {
+        return false;
+    }
+
+    auto paths = GetBackupSearchPaths();
+    for (const auto& existing : paths) {
+        if (path::EqualsIC(existing, *normalized)) {
+            return true;
+        }
+    }
+
+    paths.push_back(*normalized);
+    if (!SaveBackupSearchPaths(paths)) {
+        return false;
+    }
+
+    SignalChange();
+    return true;
+}
+
+auto RemoveBackupSearchPath(const fs::FsPath& path) -> bool {
+    const auto normalized = NormalizeBackupSearchPath(path.toString());
+    if (!normalized) {
+        return false;
+    }
+
+    auto paths = GetBackupSearchPaths();
+    const auto it = std::remove_if(paths.begin(), paths.end(), [&](const std::string& existing) {
+        return path::EqualsIC(existing, *normalized);
+    });
+
+    if (it == paths.end()) {
+        return false;
+    }
+
+    paths.erase(it, paths.end());
+    if (!SaveBackupSearchPaths(paths)) {
+        return false;
+    }
+
+    SignalChange();
+    return true;
 }
 
 auto NormalizeBackupRoot(const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> fs::FsPath {

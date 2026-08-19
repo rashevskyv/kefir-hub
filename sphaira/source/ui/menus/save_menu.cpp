@@ -118,7 +118,16 @@ void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
-Menu::Menu(u32 flags, u64 app_id_filter) : grid::Menu{"Saves"_i18n, flags}, m_app_id_filter{app_id_filter} {
+Menu::Menu(u32 flags, u64 app_id_filter, Category category)
+: grid::Menu{
+    (category == Category::Installed) ? "Installed Games"_i18n :
+    (category == Category::Deleted)   ? "Deleted Games"_i18n :
+    (category == Category::Backups)   ? "Backups"_i18n : "Saves"_i18n,
+    flags
+}
+, m_app_id_filter{app_id_filter}
+, m_category{category}
+{
     this->SetActions(
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             if (m_selected_count) {
@@ -140,6 +149,15 @@ Menu::Menu(u32 flags, u64 app_id_filter) : grid::Menu{"Saves"_i18n, flags}, m_ap
             DisplaySaveOptions();
         }})
     );
+
+    if (!m_app_id_filter) {
+        this->SetAction(Button::L, Action{"Previous tab"_i18n, [this](){
+            ChangeCategory(-1);
+        }});
+        this->SetAction(Button::R, Action{"Next tab"_i18n, [this](){
+            ChangeCategory(1);
+        }});
+    }
 
     OnLayoutChange();
     nsInitialize();
@@ -274,6 +292,51 @@ void Menu::InvertSelection() {
             m_selected_count++;
         }
     }
+}
+
+void Menu::ChangeCategory(s64 delta) {
+    if (m_app_id_filter) {
+        return;
+    }
+
+    constexpr std::array<Category, 3> categories{
+        Category::Installed,
+        Category::Deleted,
+        Category::Backups,
+    };
+
+    s64 current_idx = -1;
+    for (size_t i = 0; i < categories.size(); i++) {
+        if (m_category == categories[i]) {
+            current_idx = static_cast<s64>(i);
+            break;
+        }
+    }
+
+    s64 next_idx = 0;
+    if (current_idx >= 0) {
+        const auto count = static_cast<s64>(categories.size());
+        next_idx = (current_idx + delta + count) % count;
+    } else {
+        next_idx = (delta > 0) ? 0 : static_cast<s64>(categories.size() - 1);
+    }
+
+    SetCategory(categories[next_idx]);
+}
+
+void Menu::SetCategory(Category category) {
+    if (m_category == category) {
+        return;
+    }
+
+    m_category = category;
+    SetTitle(
+        (m_category == Category::Installed) ? "Installed Games"_i18n :
+        (m_category == Category::Deleted)   ? "Deleted Games"_i18n :
+        (m_category == Category::Backups)   ? "Backups"_i18n : "Saves"_i18n
+    );
+    App::PlaySoundEffect(SoundEffect_Focus);
+    ScanHomebrew();
 }
 
 auto Menu::GetAccountSummary() const -> std::string {
@@ -524,6 +587,19 @@ void Menu::DisplaySaveOptions() {
     options->Add<SidebarEntryCallback>("Show saves"_i18n, [this](){
         DisplayShowSavesOptions();
     }, "Choose which categories of saves are shown: installed games, deleted games and backups."_i18n);
+
+    if (!m_entries.empty()) {
+        options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
+        options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Backup);
+        }, "Backup selected saves."_i18n);
+        options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Restore);
+        }, "Restore selected saves."_i18n);
+        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Delete);
+        }, true, "Permanently delete save data for selected games."_i18n);
+    }
 
     options->Add<SidebarEntryHeader>("SYNC"_i18n);
 
@@ -939,31 +1015,110 @@ void Menu::ScanHomebrew() {
     // "Show saves" filter has turned off. system saves are governed by the Data
     // Types filter instead, so they are always kept here.
     BuildInstalledAppIds();
-    const bool show_installed = m_show_installed.Get();
-    const bool show_deleted = m_show_deleted.Get();
+    bool show_installed = m_show_installed.Get();
+    bool show_deleted = m_show_deleted.Get();
+    bool show_backups = m_show_backups.Get();
+
+    if (m_category == Category::Installed) {
+        show_installed = true;
+        show_deleted = false;
+        show_backups = false;
+    } else if (m_category == Category::Deleted) {
+        show_installed = false;
+        show_deleted = true;
+        show_backups = false;
+    } else if (m_category == Category::Backups) {
+        show_installed = false;
+        show_deleted = false;
+        show_backups = true;
+    }
 
     m_entries.clear();
-    m_entries.reserve(grouped.size());
-    for (auto& e : grouped) {
-        if (m_app_id_filter && e.application_id != m_app_id_filter) {
-            continue;
+    m_entries.reserve(grouped.size() + m_installed_apps.size());
+
+    if (m_category == Category::Installed) {
+        std::unordered_map<u64, Entry> live_saves;
+        for (const auto& e : grouped) {
+            if (!IsSystemLikeSave(e.save_data_type)) {
+                live_saves.emplace(e.application_id, e);
+            }
         }
 
-        if (IsSystemLikeSave(e.save_data_type)) {
-            m_entries.emplace_back(e);
-            continue;
+        for (const auto app_id : m_installed_apps) {
+            if (m_app_id_filter && app_id != m_app_id_filter) {
+                continue;
+            }
+
+            auto it = live_saves.find(app_id);
+            if (it != live_saves.end()) {
+                m_entries.emplace_back(it->second);
+            } else {
+                Entry e{};
+                e.application_id = app_id;
+                e.save_data_type = FsSaveDataType_Account;
+                e.is_backup = false;
+                m_entries.emplace_back(e);
+            }
+        }
+    } else if (m_category == Category::Deleted) {
+        for (const auto& e : grouped) {
+            if (m_app_id_filter && e.application_id != m_app_id_filter) {
+                continue;
+            }
+            if (IsSystemLikeSave(e.save_data_type)) {
+                continue;
+            }
+            if (!m_installed_app_ids.contains(e.application_id)) {
+                m_entries.emplace_back(e);
+            }
+        }
+    } else if (m_category == Category::Backups) {
+        // Backups only
+    } else {
+        std::unordered_set<u64> added_installed;
+        for (const auto& e : grouped) {
+            if (m_app_id_filter && e.application_id != m_app_id_filter) {
+                continue;
+            }
+
+            if (IsSystemLikeSave(e.save_data_type)) {
+                m_entries.emplace_back(e);
+                continue;
+            }
+
+            const bool installed = m_installed_app_ids.contains(e.application_id);
+            if (installed) {
+                if (show_installed) {
+                    m_entries.emplace_back(e);
+                    added_installed.insert(e.application_id);
+                }
+            } else {
+                if (show_deleted) {
+                    m_entries.emplace_back(e);
+                }
+            }
         }
 
-        const bool installed = m_installed_app_ids.contains(e.application_id);
-        if (installed ? show_installed : show_deleted) {
-            m_entries.emplace_back(e);
+        if (show_installed) {
+            for (const auto app_id : m_installed_apps) {
+                if (m_app_id_filter && app_id != m_app_id_filter) {
+                    continue;
+                }
+                if (!added_installed.contains(app_id)) {
+                    Entry e{};
+                    e.application_id = app_id;
+                    e.save_data_type = FsSaveDataType_Account;
+                    e.is_backup = false;
+                    m_entries.emplace_back(e);
+                }
+            }
         }
     }
 
     // backup tiles come after every live save; remember the boundary so the
     // grid can split the two sections with the "Backups" divider.
     m_backup_start = static_cast<s64>(m_entries.size());
-    if (m_show_backups.Get()) {
+    if (show_backups) {
         std::vector<Entry> backups;
         ReadBackupEntries(backups);
         for (auto& b : backups) {
@@ -982,6 +1137,7 @@ void Menu::ScanHomebrew() {
 
 void Menu::BuildInstalledAppIds() {
     m_installed_app_ids.clear();
+    m_installed_apps.clear();
 
     std::vector<NsApplicationRecord> records(ENTRY_CHUNK_COUNT);
     s32 offset = 0;
@@ -992,8 +1148,20 @@ void Menu::BuildInstalledAppIds() {
         }
 
         for (s32 i = 0; i < count; i++) {
-            if (records[i].application_id) {
-                m_installed_app_ids.insert(records[i].application_id);
+            const auto app_id = records[i].application_id;
+            if (!app_id) {
+                continue;
+            }
+            if ((app_id & 0x0500000000000000) == 0x0500000000000000) {
+                continue;
+            }
+            title::MetaEntries installed_content;
+            if (R_FAILED(title::GetMetaEntries(app_id, installed_content)) || installed_content.empty()) {
+                continue;
+            }
+
+            if (m_installed_app_ids.insert(app_id).second) {
+                m_installed_apps.push_back(app_id);
             }
         }
         offset += count;
@@ -1051,9 +1219,37 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
 
     const auto dumps_root = fs::AppendPath(fs.Root(), DEFAULT_BACKUP_ROOT);
     filebrowser::FsDirCollection dumps{};
-    filebrowser::FsView::get_collection(&fs, dumps_root, "", dumps, false, true, false);
+    filebrowser::FsView::get_collection(&fs, dumps_root, "", dumps, true, true, false);
     for (const auto& dir : dumps.dirs) {
         add(parse_hex16(dir.name));
+    }
+    for (const auto& file : dumps.files) {
+        std::string_view name_view{file.name};
+        if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
+            name_view = name_view.substr(0, name_view.size() - 5);
+        }
+        if (name_view.size() == 16) {
+            add(parse_hex16(std::string{name_view}.c_str()));
+        }
+    }
+
+    // custom backup search paths
+    for (const auto& custom_path_str : GetBackupSearchPaths()) {
+        const auto custom_root = fs::AppendPath(fs.Root(), custom_path_str);
+        filebrowser::FsDirCollection custom_dir{};
+        filebrowser::FsView::get_collection(&fs, custom_root, "", custom_dir, true, true, false);
+        for (const auto& dir : custom_dir.dirs) {
+            add(parse_hex16(dir.name));
+        }
+        for (const auto& file : custom_dir.files) {
+            std::string_view name_view{file.name};
+            if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
+                name_view = name_view.substr(0, name_view.size() - 5);
+            }
+            if (name_view.size() == 16) {
+                add(parse_hex16(std::string{name_view}.c_str()));
+            }
+        }
     }
 }
 
@@ -1139,15 +1335,22 @@ void Menu::PromptSaveAction() {
     PopupList::Items items;
     items.emplace_back("Backup"_i18n);
     items.emplace_back("Restore"_i18n);
+    items.emplace_back("Delete"_i18n);
 
-    // Backup/Restore are navigation into a further options menu, not a value
+    // Backup/Restore/Delete are navigation into a further options menu, not a value
     // choice, so render a submenu chevron rather than a "current value" tick.
     auto popup = std::make_unique<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
         if (!op_index) {
             return;
         }
 
-        PromptSaveTypeOptions(*op_index == 1);
+        if (*op_index == 0) {
+            PromptSaveTypeOptions(SaveOp::Backup);
+        } else if (*op_index == 1) {
+            PromptSaveTypeOptions(SaveOp::Restore);
+        } else if (*op_index == 2) {
+            PromptSaveTypeOptions(SaveOp::Delete);
+        }
     });
     popup->SetMenuStyle(true);
     App::Push(std::move(popup));
@@ -1194,18 +1397,40 @@ auto Menu::CollectActionEntries(const std::vector<Entry>& seeds, const std::vect
     return out;
 }
 
-void Menu::PromptSaveTypeOptions(bool restore) {
+void Menu::PromptSaveTypeOptions(SaveOp op) {
     const auto seeds = GetSelectedEntries();
+    if (seeds.empty()) {
+        return;
+    }
+
+    if (op == SaveOp::Delete && (m_category == Category::Backups || std::ranges::all_of(seeds, [](const auto& e){ return e.is_backup; }))) {
+        const auto prompt = seeds.size() == 1
+            ? "Are you sure you want to delete backups for "_i18n + seeds.front().GetName() + "?"
+            : "Are you sure you want to delete backups for the selected games?"_i18n;
+
+        App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, seeds](auto choice) {
+            if (choice && *choice == 1) {
+                App::PopToMenu();
+                DeleteSaves(seeds);
+            }
+        }, seeds.front().image);
+        return;
+    }
+
     std::vector<s64> all_account_indexes;
     for (s64 i = 0; i < static_cast<s64>(m_accounts.size()); i++) {
         all_account_indexes.emplace_back(i);
     }
 
     const std::vector<u8> all_types{SAVE_TYPES.begin(), SAVE_TYPES.end()};
-    const auto available_entries = CollectActionEntries(seeds, all_types, all_account_indexes);
+    auto available_entries = CollectActionEntries(seeds, all_types, all_account_indexes);
     if (available_entries.empty()) {
-        App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
-        return;
+        if (op == SaveOp::Restore && !seeds.empty()) {
+            available_entries = seeds;
+        } else {
+            App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
+            return;
+        }
     }
 
     struct ActionState {
@@ -1288,10 +1513,20 @@ void Menu::PromptSaveTypeOptions(bool restore) {
         state->location_keys.emplace_back(MakeLocationKey(RecentBackupDir{true, stdio_locations[i].mount, "", stdio_backup_roots[i]}));
     }
 
-    auto options = std::make_unique<Sidebar>(restore ? "Restore Options"_i18n : "Backup Options"_i18n, Sidebar::Side::RIGHT);
+    const auto title = (op == SaveOp::Restore) ? "Restore Options"_i18n :
+                       (op == SaveOp::Delete)  ? "Delete Options"_i18n :
+                                                 "Backup Options"_i18n;
+    const auto action_label = (op == SaveOp::Restore) ? "Start Restore"_i18n :
+                              (op == SaveOp::Delete)  ? "Delete Saves"_i18n :
+                                                        "Start Backup"_i18n;
+    const auto action_desc = (op == SaveOp::Restore) ? "Begin restoring saves from the selected location."_i18n :
+                             (op == SaveOp::Delete)  ? "Permanently delete save data for selected games and accounts."_i18n :
+                                                       "Begin backing up saves to the selected location."_i18n;
+
+    auto options = std::make_unique<Sidebar>(title, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    options->Add<SidebarEntryCallback>(restore ? "Start Restore"_i18n : "Start Backup"_i18n, [this, state, seeds, restore]() {
+    options->Add<SidebarEntryCallback>(action_label, [this, state, seeds, op]() {
         std::vector<u8> selected_types;
         const auto system_index = SaveTypeIndex(FsSaveDataType_System);
         if (state->type_enabled[system_index]) {
@@ -1323,84 +1558,100 @@ void Menu::PromptSaveTypeOptions(bool restore) {
             return;
         }
 
+        if (op == SaveOp::Delete) {
+            const auto prompt = seeds.size() == 1
+                ? "Are you sure you want to delete save data for "_i18n + seeds.front().GetName() + "?"
+                : "Are you sure you want to delete save data for the selected games?"_i18n;
+
+            App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, entries](auto choice) {
+                if (choice && *choice == 1) {
+                    App::PopToMenu();
+                    DeleteSaves(entries);
+                }
+            }, seeds.front().image);
+            return;
+        }
+
         const auto location_index = std::min<s64>(state->location_index, static_cast<s64>(state->locations.size() - 1));
         const auto location = state->locations[location_index];
         const auto backup_root = state->location_base_paths[location_index];
 
         App::PopToMenu();
-        if (restore) {
+        if (op == SaveOp::Restore) {
             StartRestore(entries, location, backup_root);
         } else {
             BackupSaves(entries, location, backup_root);
         }
-    }, restore ? "Begin restoring saves from the selected location."_i18n : "Begin backing up saves to the selected location."_i18n);
+    }, action_desc);
 
-    options->Add<SidebarEntryHeader>("LOCATION"_i18n);
-    auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the storage and folder for backups. Game saves are always written in DBI format to /switch/DBI/saves on the selected storage; the chosen folder is used for system save backups and for finding older backups during Restore."_i18n);
-    location_entry->SetCallback([this, state, location_entry]() {
-        auto items = state->location_items;
-        const auto picker_index = static_cast<s64>(items.size());
-        items.emplace_back("Choose Folder..."_i18n);
+    if (op != SaveOp::Delete) {
+        options->Add<SidebarEntryHeader>("LOCATION"_i18n);
+        auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the storage and folder for backups. Game saves are always written in DBI format to /switch/DBI/saves on the selected storage; the chosen folder is used for system save backups and for finding older backups during Restore."_i18n);
+        location_entry->SetCallback([this, state, location_entry]() {
+            auto items = state->location_items;
+            const auto picker_index = static_cast<s64>(items.size());
+            items.emplace_back("Choose Folder..."_i18n);
 
-        App::Push<PopupList>("Location"_i18n, items, [this, state, location_entry, picker_index](auto op_index) {
-            if (!op_index) {
-                return;
-            }
+            App::Push<PopupList>("Location"_i18n, items, [this, state, location_entry, picker_index](auto op_index) {
+                if (!op_index) {
+                    return;
+                }
 
-            if (*op_index != picker_index) {
-                state->location_index = *op_index;
-                location_entry->SetValue(state->location_items[state->location_index]);
-                return;
-            }
-
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[this, state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
-                    const auto backup_root = NormalizeBackupRoot(path, fs_entry);
-                    const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
-                    const auto label = is_stdio ? MakeLocationLabel(fs_entry.name.toString(), backup_root) : MakeSdLocationLabel(backup_root);
-
-                    const RecentBackupDir recent{
-                        is_stdio,
-                        is_stdio ? fs_entry.root.toString() : "",
-                        fs_entry.name.toString(),
-                        backup_root,
-                    };
-                    const auto key = MakeLocationKey(recent);
-
-                    // if this folder is already in the current session's list
-                    // (default, history or a mount, or a previous pick this
-                    // session), just select it instead of adding a twin row.
-                    const auto existing = std::ranges::find(state->location_keys, key);
-                    if (existing != state->location_keys.end()) {
-                        state->location_index = std::distance(state->location_keys.begin(), existing);
-                    } else {
-                        state->locations.emplace_back(MakeDumpLocationFromFsEntry(fs_entry));
-                        state->location_base_paths.emplace_back(backup_root);
-                        state->location_items.emplace_back(label);
-                        state->location_keys.emplace_back(key);
-                        state->location_index = static_cast<s64>(state->location_items.size() - 1);
-                    }
+                if (*op_index != picker_index) {
+                    state->location_index = *op_index;
                     location_entry->SetValue(state->location_items[state->location_index]);
+                    return;
+                }
 
-                    AddRecentBackupDir(recent);
+                App::Push<filepicker::Menu>(
+                    filepicker::LocationCallback{[this, state, location_entry](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
+                        const auto backup_root = NormalizeBackupRoot(path, fs_entry);
+                        const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
+                        const auto label = is_stdio ? MakeLocationLabel(fs_entry.name.toString(), backup_root) : MakeSdLocationLabel(backup_root);
 
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{},
-                true
-            );
-        }, state->location_index);
-    });
+                        const RecentBackupDir recent{
+                            is_stdio,
+                            is_stdio ? fs_entry.root.toString() : "",
+                            fs_entry.name.toString(),
+                            backup_root,
+                        };
+                        const auto key = MakeLocationKey(recent);
 
-    if (!restore) {
-        options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
-            m_save_autosync.Set(v_out);
-        }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that."_i18n);
-    } else {
-        options->Add<SidebarEntryBool>("Include remote backups"_i18n, m_restore_include_remote.Get(), [this](bool& v_out){
-            m_restore_include_remote.Set(v_out);
-        }, "Before showing the backup list, download any backups that exist on your WebDAV remote but are missing on this console, so they can be restored too. Remote-only backups are marked with a cloud icon. Only applies when a single save is selected."_i18n);
+                        // if this folder is already in the current session's list
+                        // (default, history or a mount, or a previous pick this
+                        // session), just select it instead of adding a twin row.
+                        const auto existing = std::ranges::find(state->location_keys, key);
+                        if (existing != state->location_keys.end()) {
+                            state->location_index = std::distance(state->location_keys.begin(), existing);
+                        } else {
+                            state->locations.emplace_back(MakeDumpLocationFromFsEntry(fs_entry));
+                            state->location_base_paths.emplace_back(backup_root);
+                            state->location_items.emplace_back(label);
+                            state->location_keys.emplace_back(key);
+                            state->location_index = static_cast<s64>(state->location_items.size() - 1);
+                        }
+                        location_entry->SetValue(state->location_items[state->location_index]);
+
+                        AddRecentBackupDir(recent);
+
+                        return true;
+                    }},
+                    std::vector<std::string>{},
+                    fs::FsPath{},
+                    true
+                );
+            }, state->location_index);
+        });
+
+        if (op == SaveOp::Backup) {
+            options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
+                m_save_autosync.Set(v_out);
+            }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that."_i18n);
+        } else if (op == SaveOp::Restore) {
+            options->Add<SidebarEntryBool>("Include remote backups"_i18n, m_restore_include_remote.Get(), [this](bool& v_out){
+                m_restore_include_remote.Set(v_out);
+            }, "Before showing the backup list, download any backups that exist on your WebDAV remote but are missing on this console, so they can be restored too. Remote-only backups are marked with a cloud icon. Only applies when a single save is selected."_i18n);
+        }
     }
 
     const auto account_available = state->type_available[SaveTypeIndex(FsSaveDataType_Account)];

@@ -43,6 +43,11 @@ auto BuildDbiSavePath(const Entry& e, const struct tm& tm) -> fs::FsPath;
 auto IsDbiBackupName(const Entry& e, const char* name) -> bool;
 auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool;
 auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath>;
+auto IsDisaSaveFile(fs::Fs* fs, const fs::FsPath& path) -> bool;
+auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view name) -> bool;
+auto GetBackupSearchPaths() -> std::vector<std::string>;
+auto AddBackupSearchPath(const fs::FsPath& path) -> bool;
+auto RemoveBackupSearchPath(const fs::FsPath& path) -> bool;
 auto NormalizeBackupRoot(const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> fs::FsPath;
 
 } // namespace sphaira::ui::menu::save

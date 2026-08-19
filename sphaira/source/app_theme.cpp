@@ -177,9 +177,13 @@ auto App::GetDefaultImageData() -> std::span<const u8> {
 }
 
 auto App::LoadElementImage(std::string_view value) -> ElementEntry {
-    ElementEntry entry{};
+    if (value.empty()) {
+        return {};
+    }
 
-    entry.texture = nvgCreateImage(vg, value.data(), 0);
+    ElementEntry entry{};
+    const std::string path_str(value);
+    entry.texture = nvgCreateImage(vg, path_str.c_str(), 0);
     if (entry.texture) {
         entry.type = ElementType::Texture;
     }
@@ -196,14 +200,19 @@ auto App::LoadElementColour(std::string_view value) -> ElementEntry {
         return {};
     }
 
-    char* end;
-    u32 c = std::strtoul(value.data(), &end, 16);
-    if (!c && value.data() == end) {
+    if (value.empty()) {
+        return {};
+    }
+
+    const std::string hex_str(value);
+    char* end = nullptr;
+    u32 c = std::strtoul(hex_str.c_str(), &end, 16);
+    if (!c && hex_str.c_str() == end) {
         return {};
     }
 
     // force alpha bit if not already set.
-    if (value.length() <= 6) {
+    if (hex_str.length() <= 6) {
         c <<= 8;
         c |= 0xFF;
     }

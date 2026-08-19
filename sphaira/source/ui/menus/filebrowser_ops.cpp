@@ -21,7 +21,11 @@
 #include "minizip_helper.hpp"
 #include "web.hpp"
 #include "yati/yati.hpp"
+#include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_paths.hpp"
+#include "title_info.hpp"
 #include <minizip/zip.h>
+#include <minizip/unzip.h>
 #include <cstring>
 #include <cstdio>
 #include <ctime>
@@ -129,6 +133,186 @@ void FsView::InstallFiles() {
         }
     });
 #endif
+}
+
+void FsView::RestoreSaveFile(const FileEntry& entry) {
+    const auto file_path = GetNewPath(entry);
+    const bool is_disa = save::IsDisaSaveFile(m_fs.get(), file_path);
+    const bool is_zip = std::string_view{entry.name}.ends_with(".zip");
+
+    if (!is_disa && !is_zip) {
+        App::Push<OptionBox>("Not a valid save backup file."_i18n, "OK"_i18n);
+        return;
+    }
+
+    u64 target_id = 0;
+    std::string_view name_view{entry.name};
+    if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
+        name_view = name_view.substr(0, name_view.size() - 5);
+    }
+    if (name_view.size() == 16) {
+        char* end = nullptr;
+        target_id = std::strtoull(std::string{name_view}.c_str(), &end, 16);
+    }
+
+    struct SaveOption {
+        save::Entry entry;
+        std::string label;
+    };
+    std::vector<SaveOption> save_options;
+
+    const auto accounts = App::GetAccountList();
+    constexpr u8 SAVE_TYPES[] = {
+        FsSaveDataType_Account,
+        FsSaveDataType_Bcat,
+        FsSaveDataType_Device,
+        FsSaveDataType_Temporary,
+        FsSaveDataType_Cache,
+        FsSaveDataType_System,
+        FsSaveDataType_SystemBcat,
+    };
+
+    for (const auto& acc : accounts) {
+        for (const auto type : SAVE_TYPES) {
+            FsSaveDataSpaceId space_id = FsSaveDataSpaceId_User;
+            FsSaveDataFilter filter{};
+            filter.attr.save_data_type = type;
+            filter.filter_by_save_data_type = true;
+            if (type == FsSaveDataType_Account) {
+                filter.attr.uid = acc.uid;
+                filter.filter_by_user_id = true;
+            } else if (type == FsSaveDataType_System || type == FsSaveDataType_SystemBcat) {
+                space_id = FsSaveDataSpaceId_System;
+            } else if (type == FsSaveDataType_Cache) {
+                space_id = FsSaveDataSpaceId_SdUser;
+            } else if (type == FsSaveDataType_Temporary) {
+                space_id = FsSaveDataSpaceId_Temporary;
+            }
+
+            FsSaveDataInfoReader reader;
+            if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
+                ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
+                std::vector<FsSaveDataInfo> info_list(256);
+                s64 count = 0;
+                while (R_SUCCEEDED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &count)) && count > 0) {
+                    for (s64 i = 0; i < count; i++) {
+                        save::Entry se;
+                        static_cast<FsSaveDataInfo&>(se) = info_list[i];
+                        se.save_data_space_id = space_id;
+                        auto data = title::Get(se.application_id);
+                        std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
+                        std::string acc_name = (type == FsSaveDataType_Account) ? acc.nickname : save::GetSaveTypeLabel(type);
+                        char id_str[32];
+                        std::snprintf(id_str, sizeof(id_str), " [%016lX]", se.save_data_id);
+                        save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
+                    }
+                }
+            }
+        }
+    }
+
+    if (save_options.empty()) {
+        App::Push<OptionBox>("No existing save slots found on console."_i18n, "OK"_i18n);
+        return;
+    }
+
+    const auto execute_restore = [this, file_path, is_disa](save::Entry se, const std::string& label) {
+        App::Push<OptionBox>("Restore save data to\n" + label + "?", "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_disa, se](auto op_index) {
+            if (!op_index || *op_index != 1) return;
+
+            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se](auto pbox) -> Result {
+                if (is_disa) {
+                    fs::File src_file;
+                    R_TRY(m_fs->OpenFile(file_path, FsOpenMode_Read, &src_file));
+                    s64 src_size{};
+                    R_TRY(src_file.GetSize(&src_size));
+
+                    const auto partition_id = save::IsSystemLikeSave(se.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
+                    fs::FsNativeBis bis_fs{partition_id};
+                    R_TRY(bis_fs.GetFsOpenResult());
+
+                    char target_path[64];
+                    std::snprintf(target_path, sizeof(target_path), "/save/%016lX", se.save_data_id);
+
+                    bis_fs.DeleteFile(target_path);
+                    R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
+
+                    fs::File dst_file;
+                    R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
+
+                    pbox->NewTransfer("Restoring raw save..."_i18n);
+                    pbox->UpdateTransfer(0, src_size);
+
+                    R_TRY(thread::Transfer(pbox, src_size,
+                        [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
+                            return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
+                        },
+                        [&](const void* data, s64 off, s64 size) -> Result {
+                            return dst_file.Write(off, data, size, FsWriteOption_None);
+                        }
+                    ));
+
+                    R_TRY(bis_fs.Commit());
+                    R_SUCCEED();
+                } else {
+                    zlib_filefunc64_def file_func;
+                    mz::FileFuncStdio(&file_func);
+                    auto zfile = unzOpen2_64(file_path, &file_func);
+                    R_UNLESS(zfile, Result_UnzOpen2_64);
+                    ON_SCOPE_EXIT(unzClose(zfile));
+
+                    FsSaveDataAttribute attr{};
+                    attr.application_id = se.application_id;
+                    attr.uid = se.uid;
+                    attr.system_save_data_id = se.system_save_data_id;
+                    attr.save_data_type = se.save_data_type;
+                    attr.save_data_rank = se.save_data_rank;
+                    attr.save_data_index = se.save_data_index;
+
+                    fs::FsNativeSave save_fs{(FsSaveDataType)se.save_data_type, (FsSaveDataSpaceId)se.save_data_space_id, &attr, false};
+                    R_TRY(save_fs.GetFsOpenResult());
+
+                    filebrowser::FsDirCollections collections;
+                    R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
+                    R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
+
+                    pbox->NewTransfer("Restoring save..."_i18n);
+                    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
+                        if (name == ".nx_save_meta.bin" || !strcasecmp(name.s, ".dbi_save_info.ini") || !strcasecmp(name.s, ".dbi_save_extra")) {
+                            return false;
+                        }
+                        return true;
+                    }));
+                }
+                R_SUCCEED();
+            }, [](Result rc) {
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Save restore failed!"_i18n);
+                } else {
+                    App::Notify("Save restored successfully!"_i18n);
+                }
+            });
+        });
+    };
+
+    if (target_id) {
+        for (const auto& opt : save_options) {
+            if (opt.entry.save_data_id == target_id || opt.entry.application_id == target_id || opt.entry.system_save_data_id == target_id) {
+                execute_restore(opt.entry, opt.label);
+                return;
+            }
+        }
+    }
+
+    PopupList::Items items;
+    for (const auto& opt : save_options) {
+        items.emplace_back(opt.label);
+    }
+    App::Push<PopupList>("Select Target Save"_i18n, items, [save_options, execute_restore](auto op_index) {
+        if (op_index && *op_index < save_options.size()) {
+            execute_restore(save_options[*op_index].entry, save_options[*op_index].label);
+        }
+    });
 }
 
 void FsView::UnzipFiles(fs::FsPath dir_path) {

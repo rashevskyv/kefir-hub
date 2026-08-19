@@ -64,8 +64,8 @@ constexpr auto PaddedContentClipY(float y, float h, float pad) -> ClipY {
 
     if (y >= HEADER_LINE_Y) {
         top = std::max(top, CONTENT_TOP);
-    }
-    if (y + h <= FOOTER_LINE_Y) {
+        bottom = std::min(bottom, CONTENT_BOTTOM);
+    } else if (y + h <= FOOTER_LINE_Y) {
         bottom = std::min(bottom, CONTENT_BOTTOM);
     }
 

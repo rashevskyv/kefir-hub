@@ -49,17 +49,34 @@ struct SocketWrapper {
         this->nonBlocking();
     }
     ~SocketWrapper() {
-        if (this->sock > 0) {
+        if (this->sock >= 0) {
             shutdown(this->sock, SHUT_RDWR);
             close(this->sock);
         }
     }
-    void nonBlocking() {
-        fcntl(sock, F_SETFL, fcntl(sock, F_GETFL) | O_NONBLOCK);
+    SocketWrapper(const SocketWrapper&) = delete;
+    SocketWrapper& operator=(const SocketWrapper&) = delete;
+    SocketWrapper(SocketWrapper&& other) noexcept : sock{other.sock} {
+        other.sock = -1;
     }
-    Socket operator=(Socket s) { return this->sock = s; }
-    operator int() { return this->sock; }
-    Socket sock{};
+    SocketWrapper& operator=(SocketWrapper&& other) noexcept {
+        if (this != &other) {
+            if (this->sock >= 0) {
+                shutdown(this->sock, SHUT_RDWR);
+                close(this->sock);
+            }
+            this->sock = other.sock;
+            other.sock = -1;
+        }
+        return *this;
+    }
+    void nonBlocking() {
+        if (sock >= 0) {
+            fcntl(sock, F_SETFL, fcntl(sock, F_GETFL) | O_NONBLOCK);
+        }
+    }
+    operator int() const { return this->sock; }
+    Socket sock{-1};
 };
 
 struct ZlibWrapper {
@@ -88,11 +105,12 @@ void WriteCallbackNone(NxlinkCallbackType type) {
 }
 
 void WriteCallbackFile(NxlinkCallbackType type, const char* name) {
-    if (!g_callback) {
+    if (!g_callback || !name) {
         return;
     }
     NxlinkCallbackData data = {type};
-    std::strcpy(data.file.filename, name);
+    std::strncpy(data.file.filename, name, sizeof(data.file.filename) - 1);
+    data.file.filename[sizeof(data.file.filename) - 1] = '\0';
     g_callback(&data);
 }
 
@@ -357,15 +375,17 @@ void loop(void* args) {
                 continue;
             }
 
-            fs::FsPath path;
-            // if (!name_view.starts_with("/") && !name_view.starts_with("sdmc:/")) {
-            if (name[0] != '/' && strncasecmp(name, "sdmc:/", std::strlen("sdmc:/"))) {
-                path = "/switch/" + name;
-            } else {
-                path = name;
+            std::string name_str = name.s;
+            if (name_str.starts_with("sdmc:/")) {
+                name_str = name_str.substr(5);
+            } else if (name_str.starts_with("sdmc:")) {
+                name_str = name_str.substr(5);
             }
+            if (!name_str.starts_with("/")) {
+                name_str = "/switch/" + name_str;
+            }
+            const fs::FsPath path{name_str};
 
-            // if (R_FAILED(rc = create_directories(fs, path))) {
             if (R_FAILED(rc = fs.CreateDirectoryRecursivelyWithPath(path))) {
                 sendall(connfd, &ERR_FILE, sizeof(ERR_FILE));
                 log_write("failed to create directories: %X\n", rc);
@@ -409,13 +429,15 @@ void loop(void* args) {
                     offset += chunk_size;
                 }
 
-                // if (R_FAILED(rc = fsFileWrite(&f, 0, file_data.data(), file_data.size(), FsWriteOption_None))) {
                 if (R_FAILED(rc)) {
                     sendall(connfd, &ERR_FILE, sizeof(ERR_FILE));
                     log_write("failed to write: 0x%X\n", socketGetLastResult());
                     continue;
                 }
             }
+
+            fs.Commit();
+            fsdevCommitDevice("sdmc");
 
             if (R_FAILED(rc = fs.DeleteFile(path)) && rc != FsError_PathNotFound) {
                 log_write("failed to delete %X\n", rc);
@@ -426,6 +448,9 @@ void loop(void* args) {
                 log_write("failed to rename %X\n", rc);
                 continue;
             }
+
+            fs.Commit();
+            fsdevCommitDevice("sdmc");
 
             if (!sendall(connfd, &ERR_OK, sizeof(ERR_OK))) {
                 log_write("failed to send ok message: 0x%X\n", socketGetLastResult());
@@ -439,15 +464,15 @@ void loop(void* args) {
                 u32 args_len{};
                 char args_buf[256]{};
                 if (recvall(connfd, &args_len, sizeof(args_len))) {
-                    args_len = std::min<u32>(args_len, sizeof(args_buf));
+                    args_len = std::min<u32>(args_len, sizeof(args_buf) - 1);
                     if (recvall(connfd, args_buf, args_len) && args_len > 0) {
+                        args_buf[args_len] = '\0';
                         // change NULL into spaces
                         for (u32 i = 0; i < args_len; i++) {
                             if (args_buf[i] == '\0') {
                                 args_buf[i] = ' ';
                             }
                         }
-
                         args += args_buf;
                     }
                 }
@@ -461,7 +486,7 @@ void loop(void* args) {
                 args += nxlinked;
 
                 // log_write("launching with: %s %s\n", path.c_str(), args.c_str());
-                if (R_SUCCEEDED(sphaira::nro_launch(path, args))) {
+                if (R_SUCCEEDED(sphaira::nro_launch(path.s, args))) {
                     g_quit = true;
                 }
             }

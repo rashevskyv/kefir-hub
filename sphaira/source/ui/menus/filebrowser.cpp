@@ -14,6 +14,8 @@
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "title_info.hpp"
 #include "utils/devoptab_smb2.hpp"
 #include "utils/devoptab_curl_device.hpp"
@@ -1911,6 +1913,16 @@ void FsView::DisplayOptions() {
                 InstallFiles();
             }, "Install the selected NSP/XCI file(s) to the console."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+        }
+    }
+
+    if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
+        const auto new_path = GetNewPathCurrent();
+        const auto name = std::string_view{GetEntry().name};
+        if (name.ends_with(".disa") || name.ends_with(".bin") || name.size() == 16 || save::IsDisaSaveFile(m_fs.get(), new_path)) {
+            options->Add<SidebarEntryCallback>("Restore save data"_i18n, [this](){
+                RestoreSaveFile(GetEntry());
+            }, "Restore this save data file to the console."_i18n);
         }
     }
 

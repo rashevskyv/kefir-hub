@@ -153,6 +153,30 @@ int main() {
         assert(should_skip(0, 0, false) == false); // state left installing before confirmation
     }
 
+    // 7. Multi-package queue skip & continue
+    {
+        Stats stats{};
+        struct Pkg { bool selected{true}; bool installed{}; uint32_t rc{}; bool skip{}; };
+        Pkg queue[2] = { {true, false, 0x1234, true}, {true, false, 0, false} };
+
+        // Package 0: skipped by user
+        auto out0 = ClassifyPackageOutcome(queue[0].rc, false, queue[0].skip, false, true);
+        assert(out0 == Outcome::SkippedUser);
+        ApplyOutcome(out0, stats, queue[0].selected, queue[0].installed);
+        assert(queue[0].installed == false);
+
+        // Package 1: proceeds and succeeds
+        auto out1 = ClassifyPackageOutcome(queue[1].rc, false, queue[1].skip, false, false);
+        assert(out1 == Outcome::Installed);
+        ApplyOutcome(out1, stats, queue[1].selected, queue[1].installed);
+        assert(queue[1].installed == true);
+        assert(queue[1].selected == false);
+
+        assert(stats.skipped == 1);
+        assert(stats.installed == 1);
+        assert(stats.failed == 0);
+    }
+
     std::puts("ok  queue_outcome: all checks passed");
     return 0;
 }

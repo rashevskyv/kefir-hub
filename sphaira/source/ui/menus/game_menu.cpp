@@ -658,13 +658,13 @@ struct DbiDetailsMenu final : MenuBase {
 
                 if (label_w > max_allowed_label_w && item.label_scroll_idx < m_stat_label_scrolls.size()) {
                     m_stat_label_scrolls[item.label_scroll_idx].Draw(
-                        vg, true, x, y, label_col_w, kStatSize, NVG_ALIGN_LEFT, text, item.label, true);
+                        vg, true, x, y, label_col_w, kStatSize, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text, item.label, true);
                 } else {
                     gfx::drawTextBold(vg, x, y, kStatSize, text, item.label.c_str());
                 }
 
                 if (item.is_languages) {
-                    m_language_scroll.Draw(vg, true, val_x, y + 9.f, val_w, 16.f, NVG_ALIGN_LEFT, accent, item.value);
+                    m_language_scroll.Draw(vg, true, val_x, y + 1.f, val_w, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, accent, item.value);
                 } else {
                     gfx::drawText(vg, val_x, y, kStatSize, item.clickable ? accent : info, item.value.c_str());
                 }

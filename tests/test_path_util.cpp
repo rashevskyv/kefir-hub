@@ -283,8 +283,20 @@ static int test_normalize_absolute_sd_path() {
     return 0;
 }
 
+static int test_starts_with_ic() {
+    CHECK(path::StartsWithIC("Homebrew menu.nsp", "Homebrew menu"));
+    CHECK(path::StartsWithIC("homebrew menu [010000000000100D].nsp", "Homebrew MENU"));
+    CHECK(path::StartsWithIC("HOMEBREW MENU.NSP", "homebrew menu"));
+    CHECK(!path::StartsWithIC("Other menu.nsp", "Homebrew menu"));
+    CHECK(!path::StartsWithIC("Homebrew", "Homebrew menu"));
+    CHECK(path::StartsWithIC("Homebrew menu", "Homebrew menu"));
+    CHECK(path::StartsWithIC("Homebrew menu", ""));
+    CHECK(path::StartsWithIC("", ""));
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path()) {
+    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

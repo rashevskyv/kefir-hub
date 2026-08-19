@@ -13,6 +13,7 @@
 #include "ui/menus/gc_menu.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_hub_menu.hpp"
 #include "ui/menus/appstore.hpp"
 
 #include "app.hpp"
@@ -50,7 +51,7 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "You can move, copy, delete, extract zip, create zip, upload and much more.\n\n"\
         "A connected USB/HDD can be opened by mounting it in the advanced options." },
 
-    { .name = "Saves", .title = "Saves", .func = MiscMenuFuncGenerator<ui::menu::save::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
+    { .name = "Saves", .title = "Saves", .func = MiscMenuFuncGenerator<ui::menu::save::SaveHubMenu>, .flag = MiscMenuFlag_Shortcut, .info =
         "View save data for each user. "\
         "You can backup and restore saves.\n\n"\
         "Experimental support for backing up system saves is possible." },

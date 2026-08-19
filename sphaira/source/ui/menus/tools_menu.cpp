@@ -6,6 +6,7 @@
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/kefir_menu.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_hub_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/install_share.hpp"
@@ -105,7 +106,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
         }},
         { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
-            App::Push<ui::menu::save::Menu>(MenuFlag_None);
+            App::Push<ui::menu::save::SaveHubMenu>(MenuFlag_None);
         }},
         { "Games"_i18n, "View, launch and manage installed games."_i18n, 0, [](){
             App::Push<ui::menu::game::Menu>(MenuFlag_None);

@@ -190,15 +190,15 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     m_session_reserve_mb = App::GetInstallReserveMb();
     m_session_reserve_sd_mb = App::GetInstallReserveSdMb();
 
-    const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
-    const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 82.f};
+    const Vec4 queue_pos{70.f, GetY() + 63.f, 1140.f, 470.f};
+    const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 78.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, row);
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 330.f};
+    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 310.f};
     const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
-    m_log_list = std::make_unique<List>(1, 11, log_pos, log_row);
+    m_log_list = std::make_unique<List>(1, 10, log_pos, log_row);
     m_log_list->SetLayout(List::Layout::GRID);
-    m_error_list = std::make_unique<List>(1, 6, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
+    m_error_list = std::make_unique<List>(1, 5, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
     m_error_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
@@ -245,13 +245,13 @@ Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64
     m_session_reserve_mb = App::GetInstallReserveMb();
     m_session_reserve_sd_mb = App::GetInstallReserveSdMb();
 
-    const Vec4 queue_pos{70.f, GetY() + 80.f, 1140.f, 500.f};
-    m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 82.f});
+    const Vec4 queue_pos{70.f, GetY() + 63.f, 1140.f, 470.f};
+    m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 78.f});
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 330.f};
-    m_log_list = std::make_unique<List>(1, 11, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
+    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 310.f};
+    m_log_list = std::make_unique<List>(1, 10, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
     m_log_list->SetLayout(List::Layout::GRID);
-    m_error_list = std::make_unique<List>(1, 6, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
+    m_error_list = std::make_unique<List>(1, 5, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
     m_error_list->SetLayout(List::Layout::GRID);
     m_state = State::Analysing;
     UpdateActions();
@@ -309,8 +309,14 @@ void Menu::UpdateActions() {
             std::make_pair(Button::X, Action{"Select"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_install_requested) return;
-                if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size()) && R_SUCCEEDED(m_queue[m_index].analysis_result)) {
-                    m_queue[m_index].selected = !m_queue[m_index].selected;
+                if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size())) {
+                    if (R_SUCCEEDED(m_queue[m_index].analysis_result)) {
+                        m_queue[m_index].selected = !m_queue[m_index].selected;
+                    }
+                    if (m_index + 1 < static_cast<s64>(m_queue.size())) {
+                        m_index++;
+                        m_list->EnsureVisible(m_index, m_queue.size());
+                    }
                 }
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this]() {
@@ -340,7 +346,7 @@ void Menu::UpdateActions() {
                     SCOPED_MUTEX(&m_mutex);
                     active_pkg = m_current_package;
                 }
-                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, active_pkg](auto choice) {
+                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
                     if (choice && *choice == 1) {
                         SkipCurrentPackage(active_pkg);
                     }
@@ -1235,7 +1241,7 @@ void Menu::ThreadFunction() {
                 for (u32 attempt = 0; ; attempt++) {
                     m_usb_source->SetFileNameForTranfser(name);
                     install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
-                    if (!usb::IsLinkError(install_rc) || attempt >= MAX_LINK_RETRIES) {
+                    if ((!usb::IsLinkError(install_rc) && !IsDbiSessionError(install_rc)) || attempt >= MAX_LINK_RETRIES) {
                         break;
                     }
                     if (m_cancel_requested || m_skip_requested || GetToken().stop_requested()) {
@@ -1254,6 +1260,13 @@ void Menu::ThreadFunction() {
                     m_total_read.load() - read_before, m_total_write.load() - write_before);
                 if (user_skipped) {
                     AddLog("Skipped: "_i18n + name, LogKind::Success);
+                    // The USB transfer was cancelled mid-stream; resynchronize the link before next package.
+                    if (R_FAILED(ReestablishUsbLink())) {
+                        session_failed = true;
+                        m_session_failed = true;
+                        AddLog("USB session failed; remaining packages were skipped."_i18n, LogKind::Error);
+                        break;
+                    }
                 } else if (R_SUCCEEDED(install_rc)) {
                     if (m_current_file_skipped) {
                         AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);
@@ -1469,7 +1482,7 @@ void Menu::LocalThreadFunction() {
                     : open_rc;
             }
             const bool user_skipped = m_skip_requested.load();
-            const bool cancelled = m_cancel_requested || (!user_skipped && result == Result_TransferCancelled);
+            const bool cancelled = m_cancel_requested || (!user_skipped && (result == Result_TransferCancelled || result == Result_UsbCancelled));
             RecordPackageResult(i, result, cancelled, user_skipped, plan_sd,
                 m_total_read.load() - read_before, m_total_write.load() - write_before);
             if (user_skipped) {
@@ -1487,7 +1500,10 @@ void Menu::LocalThreadFunction() {
                 AddLog("Failed: "_i18n + name + " (" + ResultText(result) + ")", LogKind::Error);
                 AddError(name, "Install"_i18n, result);
             }
-            if (cancelled) break;
+            if (cancelled) {
+                m_cancel_requested = true;
+                break;
+            }
         }
 
         {

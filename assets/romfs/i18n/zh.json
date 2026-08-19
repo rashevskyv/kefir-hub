@@ -1725,5 +1725,6 @@
   "The title was installed successfully, but cannot run on this console yet.\n\n%sRequired system firmware: %s\nInstalled system firmware: %s\n\nPlease update Kefir/CFW and the console system firmware following the Kefir update instructions, then launch the game again. Reinstalling the game is not necessary after the update.": "游戏已成功安装，但尚无法在此主机上运行。\n\n%s所需系统固件: %s\n已安装系统固件: %s\n\n请按照Kefir更新说明更新Kefir/CFW和主机系统固件，然后重新启动游戏。更新固件后无需重新安装游戏。",
   "Compatibility warning: %srequires system firmware %s (installed: %s, SDK: %s). Update firmware before launching; reinstalling is not needed.": "兼容性警告: %s需要系统固件 %s (已安装: %s, SDK: %s)。请在启动前更新固件；无需重新安装。",
   "Compatibility warning: %srequires system firmware %s (installed: %s). Update firmware before launching; reinstalling is not needed.": "兼容性警告: %s需要系统固件 %s (已安装: %s)。请在启动前更新固件；无需重新安装。",
-  "Compatibility warning: firmware update required to launch": "兼容性警告: 需要更新固件才能启动"
+  "Compatibility warning: firmware update required to launch": "兼容性警告: 需要更新固件才能启动",
+  "Homebrew Menu forwarder installed. Restart into Title Mode now?": "已安装 Homebrew Menu 快捷方式。是否立即在 Title 模式下重启？"
 }

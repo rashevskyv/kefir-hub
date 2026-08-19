@@ -257,11 +257,38 @@ auto Menu::CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_r
 
         for (const auto& p : collection.files) {
             const auto view = std::string_view{p.name};
-            if (!view.ends_with(".zip")) {
-                continue;
+            const auto full_path = fs::AppendPath(collection.path, p.name);
+            if (view.ends_with(".zip")) {
+                offer(ParseBackupNameTimestamp(view), 1 + i, full_path);
+            } else if (IsRawSaveCandidate(fs, full_path, view)) {
+                offer(ParseBackupNameTimestamp(view), 1 + i, full_path);
             }
+        }
+    }
 
-            offer(ParseBackupNameTimestamp(view), 1 + i, fs::AppendPath(collection.path, p.name));
+    // custom backup search paths configured in settings
+    for (const auto& custom_path_str : GetBackupSearchPaths()) {
+        const fs::FsPath custom_root{custom_path_str};
+        for (auto i = 0; i < 4; i++) {
+            const bool legacy = i >= 2;
+            const bool force_id_path = i % 2 != 0;
+            const auto base_path = legacy
+                ? BuildSaveBasePathLegacy(e, force_id_path, custom_root)
+                : BuildSaveBasePath(e, force_id_path, custom_root);
+            const auto save_path = fs::AppendPath(fs->Root(), base_path);
+
+            filebrowser::FsDirCollection collection{};
+            filebrowser::FsView::get_collection(fs, save_path, "", collection, true, false, false);
+
+            for (const auto& p : collection.files) {
+                const auto view = std::string_view{p.name};
+                const auto full_path = fs::AppendPath(collection.path, p.name);
+                if (view.ends_with(".zip")) {
+                    offer(ParseBackupNameTimestamp(view), 10 + i, full_path);
+                } else if (IsRawSaveCandidate(fs, full_path, view)) {
+                    offer(ParseBackupNameTimestamp(view), 10 + i, full_path);
+                }
+            }
         }
     }
 
@@ -335,6 +362,110 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
                 App::Notify(std::to_string(*skipped) + " saves skipped");
             }
         }
+    });
+}
+
+void Menu::DeleteSaves(std::vector<Entry> entries) {
+    if (entries.empty()) {
+        return;
+    }
+
+    auto deleted_count = std::make_shared<size_t>(0);
+    auto failed_count = std::make_shared<size_t>(0);
+
+    App::Push<ProgressBox>(0, "Deleting saves..."_i18n, "", [this, entries, deleted_count, failed_count](auto pbox) mutable -> Result {
+        fs::FsNativeSd sd_fs;
+        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+
+        for (size_t i = 0; i < entries.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+            auto& e = entries[i];
+            detail::LoadControlEntry(e);
+            pbox->SetTitle(e.GetName());
+            if (e.image) {
+                pbox->SetImage(e.image);
+            } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+                pbox->SetImageDataConst(data->icon);
+            } else {
+                pbox->SetImage(0);
+            }
+            pbox->UpdateTransfer(i + 1, entries.size());
+
+            if (e.is_backup) {
+                pbox->SetActionName("Deleting backup files..."_i18n);
+                const auto backups = CollectBackups(&sd_fs, e, backup_root);
+                for (const auto& b : backups) {
+                    sd_fs.DeleteFile(b.path);
+                }
+
+                // Also clean up empty game directories in DBI and dumps
+                if (!IsSystemLikeSave(e.save_data_type)) {
+                    const auto dbi_game_dir = fs::AppendPath(sd_fs.Root(), fs::AppendPath(fs::FsPath{DBI_SAVES_PATH}, BuildDbiGameFolderName(e)));
+                    sd_fs.DeleteDirectory(dbi_game_dir);
+                }
+                const auto sphaira_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, false, backup_root));
+                sd_fs.DeleteDirectory(sphaira_dir);
+                const auto sphaira_id_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, true, backup_root));
+                sd_fs.DeleteDirectory(sphaira_id_dir);
+
+                // Custom search paths clean up
+                for (const auto& custom_path_str : GetBackupSearchPaths()) {
+                    const fs::FsPath custom_root{custom_path_str};
+                    const auto custom_sphaira_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, false, custom_root));
+                    sd_fs.DeleteDirectory(custom_sphaira_dir);
+                    const auto custom_sphaira_id_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, true, custom_root));
+                    sd_fs.DeleteDirectory(custom_sphaira_id_dir);
+                }
+
+                (*deleted_count)++;
+            } else {
+                pbox->SetActionName("Deleting save data..."_i18n);
+                const auto space_id = static_cast<FsSaveDataSpaceId>(
+                    IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+                    e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
+                );
+
+                Result rc = 0;
+                if (e.save_data_id != 0) {
+                    rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
+                    log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataSpaceId(0x%x, 0x%016lX): 0x%x\n", space_id, e.save_data_id, rc);
+                }
+
+                if (e.save_data_id == 0 || R_FAILED(rc)) {
+                    FsSaveDataAttribute attr{};
+                    attr.application_id = e.application_id;
+                    attr.uid = e.uid;
+                    attr.system_save_data_id = e.system_save_data_id;
+                    attr.save_data_type = e.save_data_type;
+                    attr.save_data_rank = e.save_data_rank;
+                    attr.save_data_index = e.save_data_index;
+
+                    Result rc2 = fsDeleteSaveDataFileSystemBySaveDataAttribute(space_id, &attr);
+                    log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataAttribute: 0x%x\n", rc2);
+                    if (R_SUCCEEDED(rc2)) {
+                        rc = 0;
+                    }
+                }
+
+                if (R_SUCCEEDED(rc)) {
+                    (*deleted_count)++;
+                } else {
+                    (*failed_count)++;
+                }
+            }
+        }
+        R_SUCCEED();
+    }, [this, deleted_count, failed_count](Result rc) {
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Delete failed!"_i18n);
+        } else if (*failed_count > 0 && *deleted_count == 0) {
+            App::Push<OptionBox>("Failed to delete save data."_i18n, "OK"_i18n);
+        } else {
+            App::Notify("Delete successful!"_i18n);
+        }
+
+        ClearSelection();
+        ScanHomebrew();
     });
 }
 
@@ -639,13 +770,49 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         pbox->SetImage(0);
     }
 
-    const auto save_data_space_id = (FsSaveDataSpaceId)e.save_data_space_id;
-
-    // try and get the journal and data size.
-    FsSaveDataExtraData extra{};
-    R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&extra, sizeof(extra), save_data_space_id, e.save_data_id));
-
     log_write("restoring save: %s\n", path.s);
+
+    fs::FsStdio stdio_fs;
+    fs::FsNativeSd sd_fs;
+    fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+    if (IsDisaSaveFile(probe_fs, path)) {
+        log_write("restoring raw DISA save: %s\n", path.s);
+        fs::File src_file;
+        R_TRY(probe_fs->OpenFile(path, FsOpenMode_Read, &src_file));
+        s64 src_size{};
+        R_TRY(src_file.GetSize(&src_size));
+
+        const auto partition_id = IsSystemLikeSave(e.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
+        fs::FsNativeBis bis_fs{partition_id};
+        R_TRY(bis_fs.GetFsOpenResult());
+
+        char target_path[64];
+        std::snprintf(target_path, sizeof(target_path), "/save/%016lX", e.save_data_id);
+
+        bis_fs.DeleteFile(target_path);
+        R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
+
+        fs::File dst_file;
+        R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
+
+        pbox->NewTransfer("Restoring raw save..."_i18n);
+        pbox->UpdateTransfer(0, src_size);
+
+        R_TRY(thread::Transfer(pbox, src_size,
+            [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
+                return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
+            },
+            [&](const void* data, s64 off, s64 size) -> Result {
+                return dst_file.Write(off, data, size, FsWriteOption_None);
+            }
+        ));
+
+        R_TRY(bis_fs.Commit());
+        log_write("finished raw save restore\n");
+        R_SUCCEED();
+    }
+
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -686,50 +853,6 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         }
     }
 
-    if (meta.has_value()) {
-        log_write("extending save file\n");
-        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, meta->data_size, meta->journal_size));
-        log_write("extended save file\n");
-    } else if (dbi_extra.has_value() && dbi_extra->data_size > 0 && dbi_extra->journal_size > 0) {
-        log_write("extending save file from dbi extra data\n");
-        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, dbi_extra->data_size, dbi_extra->journal_size));
-        log_write("extended save file from dbi extra data\n");
-    } else {
-        log_write("doing manual meta parse\n");
-        s64 total_size{};
-
-        // todo:: manually calculate / guess the save size.
-        unz_global_info64 ginfo;
-        R_UNLESS(UNZ_OK == unzGetGlobalInfo64(zfile, &ginfo), Result_UnzGetGlobalInfo64);
-        R_UNLESS(UNZ_OK == unzGoToFirstFile(zfile), Result_UnzGoToFirstFile);
-
-        for (s64 i = 0; i < ginfo.number_entry; i++) {
-            R_TRY(pbox->ShouldExitResult());
-
-            if (i > 0) {
-                R_UNLESS(UNZ_OK == unzGoToNextFile(zfile), Result_UnzGoToNextFile);
-            }
-
-            R_UNLESS(UNZ_OK == unzOpenCurrentFile(zfile), Result_UnzOpenCurrentFile);
-            ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
-
-            unz_file_info64 info;
-            fs::FsPath name;
-            R_UNLESS(UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name, sizeof(name), 0, 0, 0, 0), Result_UnzGetCurrentFileInfo64);
-
-            if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
-                continue;
-            }
-            total_size += info.uncompressed_size;
-        }
-
-        // TODO: untested, should work tho.
-        const auto rounded_size = total_size + (total_size % extra.journal_size);
-        log_write("extendeing manual meta parse\n");
-        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, rounded_size, extra.journal_size));
-        log_write("extended manual meta parse\n");
-    }
-
     FsSaveDataAttribute attr{};
     attr.application_id = e.application_id;
     attr.uid = e.uid;
@@ -738,8 +861,98 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     attr.save_data_rank = e.save_data_rank;
     attr.save_data_index = e.save_data_index;
 
-    // try and open the save file system.
-    fs::FsNativeSave save_fs{(FsSaveDataType)e.save_data_type, save_data_space_id, &attr, false};
+    s64 data_size = 0;
+    s64 journal_size = 0;
+    u64 owner_id = 0;
+    u32 flags = 0;
+
+    if (meta.has_value()) {
+        if (!attr.application_id) attr.application_id = meta->attr.application_id;
+        if (!attr.system_save_data_id) attr.system_save_data_id = meta->attr.system_save_data_id;
+        if (!attr.save_data_type) attr.save_data_type = meta->attr.save_data_type;
+        if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = meta->attr.uid;
+        data_size = meta->data_size;
+        journal_size = meta->journal_size;
+        owner_id = meta->owner_id;
+        flags = meta->flags;
+    } else if (dbi_extra.has_value()) {
+        if (!attr.application_id) attr.application_id = dbi_extra->attr.application_id;
+        if (!attr.system_save_data_id) attr.system_save_data_id = dbi_extra->attr.system_save_data_id;
+        if (!attr.save_data_type) attr.save_data_type = dbi_extra->attr.save_data_type;
+        if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = dbi_extra->attr.uid;
+        data_size = dbi_extra->data_size;
+        journal_size = dbi_extra->journal_size;
+        owner_id = dbi_extra->owner_id;
+        flags = dbi_extra->flags;
+    }
+
+    const auto save_data_space_id = static_cast<FsSaveDataSpaceId>(
+        IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
+        e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
+    );
+
+    // Check if save filesystem already exists or needs to be created
+    fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
+    if (R_FAILED(check_save_fs.GetFsOpenResult())) {
+        log_write("save filesystem does not exist or cannot be opened, creating save...\n");
+
+        FsSaveDataCreationInfo creation_info{};
+        creation_info.save_data_size = data_size > 0 ? data_size : 0x200000;
+        creation_info.journal_size = journal_size > 0 ? journal_size : 0x200000;
+        creation_info.available_size = 0x4000;
+        creation_info.owner_id = owner_id ? owner_id : (attr.application_id ? attr.application_id : 0);
+        creation_info.flags = flags;
+        creation_info.save_data_space_id = save_data_space_id;
+
+        FsSaveDataMetaInfo meta_info{};
+        meta_info.size = sizeof(FsSaveDataMetaInfo);
+        meta_info.type = FsSaveDataMetaType_None;
+
+        Result create_rc = 0;
+        if (IsSystemLikeSave(attr.save_data_type)) {
+            create_rc = fsCreateSaveDataFileSystemBySystemSaveDataId(&attr, &creation_info);
+        } else {
+            create_rc = fsCreateSaveDataFileSystem(&attr, &creation_info, &meta_info);
+        }
+        log_write("fsCreateSaveDataFileSystem result: 0x%x\n", create_rc);
+        if (R_FAILED(create_rc)) {
+            R_TRY(create_rc);
+        }
+    } else {
+        if (e.save_data_id != 0) {
+            if (data_size > 0 && journal_size > 0) {
+                log_write("extending save file\n");
+                fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, data_size, journal_size);
+                log_write("extended save file\n");
+            } else {
+                FsSaveDataExtraData extra{};
+                if (R_SUCCEEDED(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&extra, sizeof(extra), save_data_space_id, e.save_data_id)) && extra.journal_size > 0) {
+                    log_write("doing manual meta parse\n");
+                    s64 total_size = 0;
+                    unz_global_info64 ginfo{};
+                    if (UNZ_OK == unzGetGlobalInfo64(zfile, &ginfo) && UNZ_OK == unzGoToFirstFile(zfile)) {
+                        for (s64 i = 0; i < ginfo.number_entry; i++) {
+                            if (i > 0 && UNZ_OK != unzGoToNextFile(zfile)) break;
+                            unz_file_info64 info{};
+                            fs::FsPath name{};
+                            if (UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name, sizeof(name), 0, 0, 0, 0)) {
+                                if (name != NX_SAVE_META_NAME && strcasecmp(name.s, DBI_SAVE_INFO_NAME) && strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
+                                    total_size += info.uncompressed_size;
+                                }
+                            }
+                        }
+                        const auto rounded_size = total_size + (total_size % extra.journal_size);
+                        log_write("extending manual meta parse\n");
+                        fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, rounded_size, extra.journal_size);
+                        log_write("extended manual meta parse\n");
+                    }
+                }
+            }
+        }
+    }
+
+    // open the save file system for writing
+    fs::FsNativeSave save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
     R_TRY(save_fs.GetFsOpenResult());
 
     // delete all files in save.
@@ -762,7 +975,8 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         return true;
     }));
 
-    log_write("finished save backup\n");
+    R_TRY(save_fs.Commit());
+    log_write("finished save restore\n");
     R_SUCCEED();
 }
 

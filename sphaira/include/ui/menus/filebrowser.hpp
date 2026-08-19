@@ -267,6 +267,7 @@ private:
     void ShowNoLauncherHint();
 
     void InstallFiles();
+    void RestoreSaveFile(const FileEntry& entry);
     void UnzipFiles(fs::FsPath folder);
     void ZipFiles(fs::FsPath zip_path);
     void UploadFiles();

@@ -359,7 +359,7 @@
 - [ ] `Star` / `Unstar` — обране з'являється у Themes як окремий пункт
 - [ ] Download → тема в `/themes/sphaira`
 - [ ] Launch NXthemes_Installer.nro
-- [ ] Готові пакети: **Mario BG Dark**, **Switch 2 Theme by alexwak** — завантаження + розпакування в `/themes/`
+- [ ] Готові пакети: **Mario BG Dark**, **Switch 2 Theme by alexwak** — завантаження + розпакування в `/themes/` + пропозиція встановлення у `NXThemesInstaller`
 
 ---
 

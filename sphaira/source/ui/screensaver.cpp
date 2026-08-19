@@ -56,9 +56,8 @@ void Screensaver::Start() {
     m_user_offset_y = 0.f;
     m_drift_speed_mult = 1.0f;
     m_drift_accum = 0.f;
-    if (!m_brightness_dirty) {
-        m_current_brightness = App::GetBlankBrightness() / 100.f;
-    }
+
+    App::SetAutoSleepDisabled(true);
 
     m_lbl_ready = R_SUCCEEDED(lblInitialize());
     if (!m_lbl_ready) {
@@ -80,10 +79,26 @@ void Screensaver::Start() {
     if (m_saved_auto_brightness) {
         lblDisableAutoBrightnessControl();
     }
+
+    const bool is_oled = App::IsOledModel();
+    if (m_mode == BlankMode::Screensaver && is_oled) {
+        // On OLED screensavers, black background pixels are physically off (0W),
+        // so retain the user's configured brightness to keep the drifting clock and stats crisp.
+        if (!m_brightness_dirty) {
+            m_current_brightness = m_saved_brightness;
+        }
+    } else {
+        // On LCD models or Dim mode, lower the panel brightness to save power and backlight bleed.
+        if (!m_brightness_dirty) {
+            m_current_brightness = App::GetBlankBrightness() / 100.f;
+        }
+    }
+
     const float target_brightness = m_current_brightness;
     lblSetCurrentBrightnessSetting(target_brightness);
     lblApplyCurrentBrightnessSettingToBacklight();
-    log_write("[Screensaver] lower brightness: saved=%.2f, auto=%d -> target=%.2f\n", m_saved_brightness, m_saved_auto_brightness ? 1 : 0, target_brightness);
+    log_write("[Screensaver] brightness: saved=%.2f, auto=%d, oled=%d -> target=%.2f\n",
+        m_saved_brightness, m_saved_auto_brightness ? 1 : 0, is_oled ? 1 : 0, target_brightness);
 }
 
 void Screensaver::Stop() {
@@ -91,6 +106,7 @@ void Screensaver::Stop() {
         return;
     }
     m_active = false;
+    App::SetAutoSleepDisabled(false);
 
     if (!m_lbl_ready) {
         return;
@@ -127,6 +143,10 @@ void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
     if (!m_active) {
         return;
     }
+
+#ifdef __SWITCH__
+    appletReportUserIsActive();
+#endif
 
     const double dt = std::clamp(m_last_update.GetSecondsD(), 0.001, 0.1);
     m_last_update.Update();
@@ -408,6 +428,7 @@ SaverPreview::SaverPreview() {
 }
 
 void SaverPreview::Update(Controller* controller, TouchInfo* touch) {
+    m_saver.Update(controller, touch);
     if (m_saver.WantsWake(controller, touch)) {
         m_saver.Stop();
         m_saver.FlushPendingBrightness();

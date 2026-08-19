@@ -63,15 +63,35 @@ struct BackupCandidate {
     int source{};
 };
 
+enum class Category {
+    All,
+    Installed,
+    Deleted,
+    Backups,
+};
+
+enum class SaveOp {
+    Backup,
+    Restore,
+    Delete,
+};
+
 void SignalChange();
 
 struct Menu final : grid::Menu {
     // app_id_filter limits the grid to one game's saves (entered from the game
     // details menu); 0 shows everything, as the standalone menu does.
-    Menu(u32 flags, u64 app_id_filter = 0);
+    Menu(u32 flags, u64 app_id_filter = 0, Category category = Category::All);
     ~Menu();
 
-    auto GetShortTitle() const -> const char* override { return "Saves"; };
+    auto GetShortTitle() const -> const char* override {
+        switch (m_category) {
+            case Category::Installed: return "Installed Games";
+            case Category::Deleted:   return "Deleted Games";
+            case Category::Backups:   return "Backups";
+            default:                  return "Saves";
+        }
+    }
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
@@ -89,6 +109,8 @@ private:
     void DisplayShowSavesOptions();
     void ToggleCurrentSelection();
     void InvertSelection();
+    void ChangeCategory(s64 delta);
+    void SetCategory(Category category);
 
     // populates m_installed_app_ids from the console's application records, used
     // to tell installed-game saves apart from orphaned (deleted-game) saves.
@@ -160,11 +182,10 @@ private:
     // once CollectBackups has already run. UI-thread only.
     void ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
     void RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
-    // download every archive that exists on WebDAV for e but not locally, into
-    // the restore location; downloaded file names are appended to out_downloaded.
     Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
+    void DeleteSaves(std::vector<Entry> entries);
     void PromptSaveAction();
-    void PromptSaveTypeOptions(bool restore);
+    void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();
     void SyncSavesRemoteWithLocation(const location::Entry& loc);
 
@@ -207,6 +228,7 @@ private:
     s64 m_backup_start{};
     // application ids currently installed on the console (base title ids).
     std::unordered_set<u64> m_installed_app_ids{};
+    std::vector<u64> m_installed_apps{};
     std::unique_ptr<List> m_list{};
     bool m_is_reversed{};
     bool m_dirty{};
@@ -228,6 +250,7 @@ private:
     option::OptionBool m_show_installed{INI_SECTION, "show_installed", true};
     option::OptionBool m_show_deleted{INI_SECTION, "show_deleted", true};
     option::OptionBool m_show_backups{INI_SECTION, "show_backups", false};
+    Category m_category{Category::All};
 
     // last folders confirmed via "Choose Folder...", newest first.
     static constexpr inline size_t RECENT_BACKUP_DIR_MAX = 5;

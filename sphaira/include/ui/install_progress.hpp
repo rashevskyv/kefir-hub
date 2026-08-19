@@ -74,6 +74,8 @@ struct InstallProgress {
     virtual void OnInstallSkipped() {}
     // called when a successfully registered title requires a newer system firmware
     virtual void OnCompatibilityWarning(const CompatibilityWarning& warning) {}
+    // called when a title is successfully registered with its application record
+    virtual void OnTitleInstalled(u64 title_id) {}
 };
 
 } // namespace sphaira::ui

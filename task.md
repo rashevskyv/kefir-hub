@@ -1,12 +1,153 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.469**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.487**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.469 (unified pending UI & updater work)
+## Поточний delivery: v0.13.487 (SD card FS sync, malloc & NanoVG stability on slow cards / NX-Link handoff)
+
+- [x] `FSDEV-COMMIT-SDMC-487` — виправлено назву монтування ФС на `"sdmc"` (без двокрапки) у `fsdevCommitDevice("sdmc")` та `fsdevGetDeviceFileSystem("sdmc")` у `userAppExit()` (`main.cpp`), гарантуючи скидання кешу запису microSD при завершенні та перезапуску NRO.
+- [x] `NXLINK-SD-FLUSH-487` — додано виклики `fsdevCommitDevice("sdmc")` у `nxlink.cpp` після запису та перейменування переданого NRO-файлу перед запуском.
+- [x] `NRO-LAUNCH-COMMIT-487` — додано виклик `fsdevCommitDevice("sdmc")` у `nro.cpp` (`launch_internal`) перед передачею керування до `envSetNextLoad`, що унеможливлює пошкодження файлової системи та падіння повільних карт пам'яті.
+- [x] `LOG-SOCKET-SEND-487` — переведено передачу мережевих логів у фоновому потоці `log.cpp` на прямий системний виклик `send(sock, ...)`, усунувши конкурентні звернення до `stdout`/stdio та взаємне псування заголовків чанків пам'яті (`_malloc_r`).
+- [x] `LOG-WRITE-COMMIT-487` — додано `fsdevCommitDevice("sdmc")` після запису логів та помилок у `log.cpp`, замінено `std::localtime` на реентрабельний `localtime_r` у `log_write_error`.
+- [x] `THEME-STRING-TERMINATE-487` — усунено вихід за межі рядків при викликах `nvgCreateImage` та `std::strtoul` у `app_theme.cpp` шляхом створення нуль-термінованих `std::string` із `std::string_view`.
+- [x] `BUILD-VERIFY-DEPLOY-487` — піднято версію до `0.13.487` у `CMakeLists.txt`, оновлено документацію, успішно зібрано `sphaira_nro` у WSL, виконано тести та оновлено бінарники на карті `I:\` (`I:\hbmenu.nro`, `I:\switch\kefir-hub.nro`).
+
+## Попередній delivery: v0.13.486 (Saves menu L/R shoulder button tab navigation)
+
+- [x] `SAVE-LR-ACTIONS-486` — додано реєстрацію дій `Button::L` ("Previous tab") та `Button::R` ("Next tab") у конструкторі `Menu::Menu` (`save_menu.cpp`) для автономного режиму перегляду сейвів (`!m_app_id_filter`).
+- [x] `SAVE-CATEGORY-CYCLE-486` — реалізовано методи `Menu::ChangeCategory(s64 delta)` та `Menu::SetCategory(Category category)` (`save_menu.hpp`, `save_menu.cpp`) з циклічною навігацією між категоріями `Installed Games` <-> `Deleted Games` <-> `Backups`, оновленням заголовка `SetTitle(...)`, відтворенням звуку фокусу та рескануванням `ScanHomebrew()`.
+- [x] `SAVE-LR-DOCS-VERIFY-486` — піднято версію до `0.13.486` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL та пройдено всі unit-тести.
+
+## Попередній delivery: v0.13.485 (Screensaver display sleep prevention & OLED user brightness retention)
+
+- [x] `SAVER-NO-SLEEP-485` — увімкнено гарантовану заборону переходу в авто-сон та гасіння дисплея (`App::SetAutoSleepDisabled(true)` та `appletSetMediaPlaybackState(true)`) під час роботи скрінсейвера `Screensaver::Start()` з відновленням у `Stop()`.
+- [x] `SAVER-IDLE-REPORT-485` — додано виклики `appletReportUserIsActive()` у `Screensaver::Update` для постійного скидання системних таймерів неактивності HOS під час дрейфу екранної заставки.
+- [x] `OLED-HARDWARE-DETECT-485` — реалізовано метод `App::IsOledModel()` в `app_settings.cpp` з опитуванням апаратного типу `SplConfigItem_HardwareType` (значення 5 / Aula для Nintendo Switch OLED).
+- [x] `SAVER-OLED-BRIGHTNESS-485` — у `Screensaver::Start()` для консолей Switch OLED встановлено автоматичне збереження поточної яскравості користувача `m_saved_brightness` (оскільки чистий чорний фон не споживає струму на OLED і не вимагає приглушення, зберігаючи чіткість годинника та статистики), тоді як для LCD-моделей яскравість знижується для економії заряду та усунення світіння матриці.
+- [x] `SAVER-PREVIEW-UPDATE-485` — додано виклик `m_saver.Update` у `SaverPreview::Update` для коректної обробки активності та дрейфу в режимі попереднього перегляду.
+- [x] `SAVER-DOCS-VERIFY-485` — піднято версію до `0.13.485` у `sphaira/CMakeLists.txt`, синхронізовано `README.md`, `plan.md`, `task.md`, `walkthrough.md`, успішно зібрано бінарник у WSL (`sphaira_nro`) та пройдено всі тести.
+
+## Попередній delivery: v0.13.484 (NX-Link SD commit, path normalization, buffer bounds & forwarder auto-install stabilization)
+
+- [x] `APP-PATH-TERMINATION-484` — виправлено ініціалізацію та відсутність термінатора `\0` для `m_app_path` у `App::App` (`app.cpp`) при старті через HBL (`argv0` з префіксом `sdmc:/`), усунувши вихід за межі буфера при читаннях `GetExePath()`.
+- [x] `FWD-ACTIVE-TITLE-GUARD-484` — додано перевірку `App::IsApplication()` та вилучення Title ID із назви NSP у `forwarder_auto_install.cpp` з перевіркою `nsIsAnyApplicationEntityInstalled`, що запобігає спробам перевстановлення активного тайтла програми під час її роботи.
+- [x] `FWD-THREAD-LIFECYCLE-484` — додано функцію `StopCheck()` та перевірку `g_stop_requested` у `SilentInstallProgress`, що гарантує коректне та безпечне завершення фонового потоку інсталяції в деструкторі `App::~App()`.
+- [x] `NXLINK-PATH-NORMALIZE-484` — додано обов'язкову нормалізацію шляхів файлів, отриманих через NX-Link у `nxlink.cpp` (видалення `sdmc:`, забезпечення нативного абсолютного шляху від кореня SD).
+- [x] `NXLINK-FS-COMMIT-484` — додано виклики `fs.Commit()` після запису та перейменування тимчасового файлу в `nxlink.cpp`, що забезпечує атомарність та збереження FAT32/exFAT метаданих перед запуском NRO та запобігає падінню карти пам'яті.
+- [x] `NXLINK-BUFFER-SAFETY-484` — забезпечено безпеку буфера аргументів `args_buf` із гарантованим завершальним `\0`, безпечний `strncpy` у `WriteCallbackFile`, та переведено `SocketWrapper` на move-only семантику.
+- [x] `LOG-LOCALTIME-REENTRANT-484` — замінено `std::localtime` на `localtime_r` у `log.cpp` для потокобезпечного формування міток часу в логах.
+- [x] `TESTS-PARALLEL-VERIFY-484` — переведено `tests/run.sh` на паралельний запуск, піднято версію до `0.13.484` у `sphaira/CMakeLists.txt`, успішно зібрано бінарник `sphaira_nro` у WSL та пройдено всі unit-тести.
+
+## Попередній delivery: v0.13.483 (Install queue list layout bounds fix & auto-advance on X button)
+
+- [x] `QUEUE-LAYOUT-BOUNDS-483` — скориговано розміри та позиціонування списку `m_list` у `dbi_menu.cpp`: зменшено висоту рядка до 78.f, скориговано `queue_pos` до `{70.f, GetY() + 63.f, 1140.f, 470.f}`, усунувши вилізання елементів списку та рамки виділення на розділювач та кнопки футера (`FOOTER_LINE_Y = 646.f`), а також оптимізовано розміри `log_pos` (310.f) для списків логу та помилок.
+- [x] `QUEUE-SELECT-AUTO-ADVANCE-483` — додано автоматичний перехід курсора до наступного пункту (`m_index++`) та виклик `m_list->EnsureVisible` при натисканні кнопки `X` у черзі встановлення (`ReviewQueue`), уніфікувавши UX вибору елементів з `game_menu`, `homebrew`, `filebrowser` та `save_menu`.
+- [x] `LAYOUT-SCISSOR-GUARD-483` — посилено `PaddedContentClipY` у `layout.hpp`: для будь-якого контенту, розташованого нижче лінії шапки (`y >= HEADER_LINE_Y`), гарантовано встановлюється обмеження нижньої межі ножиць до `CONTENT_BOTTOM` (646.f).
+- [x] `QUEUE-DOCS-VERIFY-483` — піднято версію до `0.13.483` у `CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, успішно пройдено всі unit-тести та скомпільовано реліз `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.482 (Fully silent background forwarder installation without restart prompt)
+
+- [x] `FWD-SILENT-NO-PROMPT-482` — оновлено `forwarder_auto_install.cpp`: повністю прибрано спливаючі діалогові вікна `OptionBox` та запити на перезапуск після встановлення форвардера; процес виконується абсолютно прозоро та мовчки у фоні.
+- [x] `FWD-CLEANUP-INCLUDES-482` — очищено невикористовувані заголовні файли (`evman.hpp`, `i18n.hpp`, `ui/option_box.hpp`) у `forwarder_auto_install.cpp`.
+- [x] `FWD-SILENT-DOCS-VERIFY-482` — піднято версію програми до `0.13.482` у `CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, успішно виконано збірку цілі `sphaira_nro` у WSL та пройдено всі тести.
+
+## Попередній delivery: v0.13.481 (Install queue package skip fix & USB link resynchronization)
+
+- [x] `QUEUE-SKIP-USB-RESYNC-481` — реалізовано обов'язкову ресинхронізацію USB-з'єднання (`ReestablishUsbLink()`) у `ThreadFunction` після пропуску пакунка користувачем (`user_skipped`), що запобігає збою протоколу та аварійному скасуванню наступних пакунків черги.
+- [x] `QUEUE-SKIP-RETRY-EXT-481` — розширено умови циклу повторних спроб у `ThreadFunction` для автоматичного відновлення зв'язку при відновлюваних помилках протоколу/сесії DBI (`IsDbiSessionError`).
+- [x] `QUEUE-SKIP-PROMPT-DEFAULT-481` — встановлено за замовчуванням вибір `"Yes"` (індекс 1) у діалозі `OptionBox` для дії кнопки `B` ("Skip package") під час встановлення, уніфікуючи поведінку з `ProgressBox`.
+- [x] `QUEUE-SKIP-LOCAL-THREAD-481` — оновлено `LocalThreadFunction`: включено `Result_UsbCancelled` у перевірку `cancelled` та уніфіковано встановлення прапорця `m_cancel_requested` при виході.
+- [x] `QUEUE-SKIP-TESTS-DOCS-481` — розширено `test_queue_outcome.cpp` новим тестом послідовного пропуску та продовження встановлення наступних пакунків, піднято версію до `0.13.481` у `CMakeLists.txt`, успішно пройдено всі unit-тести та скомпільовано реліз у WSL.
+
+## Попередній delivery: v0.13.480 (Save data deletion mechanism & auto-creation on restore)
+
+- [x] `SAVE-DELETE-ACTION-480` — додано дію `"Delete"` у `PromptSaveAction` (натискання `A`), бічне меню `Save Options` та розширено `PromptSaveTypeOptions` з підтримкою `SaveOp::Delete`.
+- [x] `SAVE-DELETE-OPS-480` — реалізовано `Menu::DeleteSaves` для видалення сейвів із консолі (`fsDeleteSaveDataFileSystemBySaveDataSpaceId`, `fsDeleteSaveDataFileSystemBySaveDataAttribute`) та резервних копій з SD із захисними діалогами підтвердження `OptionBox` та відображенням прогресу у `ProgressBox`.
+- [x] `SAVE-RESTORE-AUTO-CREATE-480` — покращено `Menu::RestoreSaveInternal`: додано автоматичне створення файлової системи збереження (`fsCreateSaveDataFileSystem`) з метаданих архіву при відновленні на чистих/клонованих EmuNAND або нових іграх без попереднього сейву на консолі.
+- [x] `SAVE-I18N-DOCS-480` — оновлено мовні файли (`en.json`, `uk.json`), синхронізовано `README.md`, піднято версію до `0.13.480` у `CMakeLists.txt`, успішно зібрано `sphaira_nro` у WSL та перевірено всі тести.
+
+## Попередній delivery: v0.13.479 (Automatic forwarder check, silent install & title mode restart prompt)
+
+- [x] `FWD-CHECK-INSTALLED-479` — додано `forwarder_auto_install.hpp` та `forwarder_auto_install.cpp` з фоновою перевіркою встановлених тайтлів (`010000000000100D`, `050000000000100D`, та хешованих ідентифікаторів Sphaira) через `nsIsAnyApplicationEntityInstalled`.
+- [x] `FWD-SILENT-INSTALL-479` — реалізовано автоматичне фонове сканування папки `/Games/` на SD карті на наявність `Homebrew menu*.nsp`, тихе встановлення через `yati::InstallFromFile` з використанням `SilentInstallProgress`, а також додано метод `OnTitleInstalled` у `ui::InstallProgress` та `yati.cpp`.
+- [x] `FWD-RESTART-PROMPT-479` — додано повідомлення через `evman::push` з діалогом `OptionBox` про перезапуск у Title Mode із встановленого форвардера через `appletRequestLaunchApplication(target_tid, nullptr)` та `App::Exit()`.
+- [x] `FWD-PATH-UTIL-TESTS-479` — додано `path::StartsWithIC` у `path_util.hpp`, розширено host-тести `test_path_util.cpp` та оновлено 14 мовних файлів локалізації.
+- [x] `FWD-VERIFY-DOCS-479` — піднято версію до `0.13.479`, оновлено README.md, plan.md, task.md, walkthrough.md, успішно скомпільовано проєкт у WSL та пройдено всі тести.
+
+## Попередній delivery: v0.13.478 (Theme packages download & instant install prompt)
+
+- [x] `THEME-PKG-EXTRACT-478` — реалізовано `InstallThemePackage` та `PromptInstallTheme` у `themezer.cpp` із фільтрацією `.nxtheme` під час розпакування zip та збереженням шляхів для подальшої передачі інсталятору.
+- [x] `THEME-PKG-MENU-ITEM-478` — додано `MakeThemePackageItem` у `settings_menu.cpp` з діалогом `"Download theme?"`, завантаженням через `ProgressBox` та інтеграцією готових пакетів `Mario BG Dark` і `Switch 2 Theme by alexwak`.
+- [x] `THEME-PKG-DOCS-VERIFY-478` — піднято версію до `0.13.478`, оновлено README.md, TESTPLAN.md, living docs, виконано компіляцію у WSL та перевірено всі тести.
+
+## Попередній delivery: v0.13.477 (Game details stat label vertical alignment fix)
+
+- [x] `STAT-LABEL-ALIGN-477` — виправлено вирівнювання прокручуваних лейблів статистики у `game_menu.cpp`: додано `NVG_ALIGN_LEFT | NVG_ALIGN_TOP` для `m_stat_label_scrolls` та `m_language_scroll`.
+- [x] `STAT-LABEL-VERIFY-477` — піднято версію до `0.13.477`, виконано збірку в WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.476 (UTF-16 to UTF-8 decoding & Cyrillic filename fix for MTP)
+
+- [x] `MTP-UTF16-DECODE-476` — реалізовано правильне багатобайтове декодування UTF-16 у UTF-8 для `ReadString` у `ptp_data_parser.hpp` (замість відсікання старших байтів через `static_cast<char>`).
+- [x] `MTP-UTF8-ENCODE-476` — реалізовано коректне кодування UTF-8 у UTF-16 для `AddString` у `ptp_data_builder.hpp` для правильної передачі імен файлів/папок з кирилицею у Windows Explorer.
+- [x] `MTP-PATCHES-7-8-476` — додано патчі до `patch_libhaze.cmake` з повною перевіркою ідемпотентності.
+- [x] `MTP-VERIFY-476` — піднято версію до `0.13.476`, виконано збірку в WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.475 (Full read-write support with commit for MTP Saves drive)
+
+- [x] `MTP-SAVES-RW-475` — переведено `FsSaveProxy` у повноцінний режим читання-запису (відкриття `FsNativeSave` з `read_only = false` та безпечним fallback).
+- [x] `MTP-SAVES-FILE-OPS-475` — реалізовано `CreateFile`, `WriteFile`, `SetFileSize`, `DeleteFile`, `RenameFile` з автоматичним викликом `Commit()`.
+- [x] `MTP-SAVES-DIR-OPS-475` — реалізовано `CreateDirectory`, `DeleteDirectoryRecursively`, `RenameDirectory` всередині збережень з автоматичним `Commit()`.
+- [x] `MTP-SAVES-FREESPACE-NAME-475` — оновлено `GetFreeSpace` та назву MTP-сховища на `Saves`.
+- [x] `MTP-VERIFY-475` — піднято версію до `0.13.475`, зібрано цільовий NRO у WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.474 (Full MTP property handling, GetObjectPropDesc & SendObjectPropList fixes)
+
+- [x] `MTP-SEND-PROP-LIST-474` — виправлено парсер властивостей у `SendObjectPropList` (`ptp_responder_mtp_operations.cpp`), додано повну підтримку читання й пропуску всіх типів властивостей MTP (замість викиду виключення `ResultUnknownPropertyCode`).
+- [x] `MTP-PROP-DESC-BREAK-474` — виправлено пропущений `break;` після `PtpObjectPropertyCode_PersistentUniqueObjectIdentifier` у `GetObjectPropDesc`.
+- [x] `MTP-PROP-LIST-ZERO-474` — додано підтримку запиту `property_code == 0` (всі властивості) у `GetObjectPropList` та `ShouldIncludeProperty`.
+- [x] `MTP-SET-PROP-NAME-474` — додано підтримку `PtpObjectPropertyCode_Name` у `SetObjectPropValue`.
+- [x] `MTP-VERIFY-474` — піднято версію до `0.13.474`, виконано збірку в WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.473 (Installed Games save scanning & category listing fix)
+
+- [x] `SAVE-BUILD-INSTALLED-473` — оновлено `BuildInstalledAppIds` для перевірки `title::GetMetaEntries` та формування списку встановлених ігор `m_installed_apps`.
+- [x] `SAVE-INSTALLED-SCAN-473` — оновлено `ScanHomebrew` для відображення всіх встановлених ігор у `Category::Installed` з прив'язкою активних сейвів або створенням слотів.
+- [x] `SAVE-EMPTY-STATES-473` — перевірено та забезпечено коректне відображення стану "Empty..." для порожніх списків у "Видалені ігри" та "Резервні копії".
+- [x] `SAVE-RESTORE-NEW-GAME-473` — додано fallback у `PromptSaveTypeOptions` для операції Restore, що дозволяє відновлювати бекапи до встановленої гри навіть до створення першого сейву на консолі.
+- [x] `SAVE-VERIFY-473` — піднято версію до `0.13.473`, успішно зібрано бінарник у WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.472 (MTP folder and file creation storage_id fix)
+
+- [x] `MTP-PTP-STORAGE-ID-472` — виправлено помилку в `SendObjectInfo` (`ptp_responder_ptp_operations.cpp`), де `storage_id` повертався як `parentobj->GetObjectId()` замість `parentobj->GetStorageId()`.
+- [x] `MTP-PROP-STORAGE-ID-472` — виправлено помилку в `SendObjectPropList` (`ptp_responder_mtp_operations.cpp`), де `storage_id` повертався як `parentobj->GetObjectId()` замість `parentobj->GetStorageId()`.
+- [x] `MTP-LOG-DIR-472` — виправлено помилку логування в `FsProxy::CreateDirectory` у `haze_helper.cpp`.
+- [x] `MTP-VERIFY-472` — піднято версію до `0.13.472`, перевірено автоматичне накладання патчів у `patch_libhaze.cmake`, виконано успішну збірку в WSL, пройдено тести та `git diff --check`.
+
+## Попередній delivery: v0.13.471 (Save categories hub & custom save backup search paths)
+
+- [x] `SAVE-HUB-MENU-471` — реалізовано `SaveHubMenu` для початкового вибору категорій збережень (Installed Games, Deleted Games, Backups) при переході з Tools та Main Menu.
+- [x] `SAVE-CATEGORY-MODE-471` — додано `Category` enum та відповідну фільтрацію категорій у `save::Menu` із поверненням на B до хабу.
+- [x] `SAVE-SEARCH-PATHS-OPS-471` — додано функції `GetBackupSearchPaths`, `AddBackupSearchPath`, `RemoveBackupSearchPath` у `save_paths` зі збереженням у `[save_backup_paths]`.
+- [x] `SAVE-CUSTOM-PATHS-SCAN-471` — розширено `CollectBackups` та `ReadBackupEntries` для пошуку резервних копій у налаштованих користувацьких папках.
+- [x] `SETTINGS-SAVE-PATHS-471` — додано розділ `Saves -> Save Backup Search Paths` у `Settings` із вибором папок через `filepicker::Menu` та видаленням.
+- [x] `SAVE-I18N-DOCS-471` — додано переклади для EN та UK локалізацій, оновлено README.md, plan.md, task.md, walkthrough.md та піднято версію до `0.13.471`.
+- [x] `VERIFY-471` — пройдено host unit tests, WSL `ReleaseWithInstall` та `git diff --check`.
+
+## Попередній delivery: v0.13.470 (raw DISA save restore, save discovery & MTP USER:/save)
+
+- [x] `FS-NATIVE-BIS-470` — додано структуру `FsNativeBis final : FsNative` для відкриття BIS-розділів через `fsOpenBisFileSystem`.
+- [x] `SAVE-DISA-CHECK-470` — додано `IsDisaSaveFile` (перевірка `DISF` за зміщенням 0x100) та `IsRawSaveCandidate` у `save_paths`.
+- [x] `SAVE-RESTORE-RAW-470` — реалізовано пряме відновлення сирових контейнерів DISA у `RestoreSaveInternal` (`save_menu_ops.cpp`) через запис у `/save/<save_data_id>` на BIS-розділах `USER`/`SYSTEM`.
+- [x] `SAVE-DISCOVERY-RAW-470` — розширено `CollectBackups` та `ReadBackupEntries` для виявлення сирових файлів сейвів `%016lX`, `*.disa`, `*.bin`.
+- [x] `FB-SAVE-RESTORE-470` — додано `RestoreSaveFile` та дію `Restore save data` у File Browser для відновлення сейвів з будь-яких джерел.
+- [x] `MTP-RAW-SAVES-470` — додано MTP-сховища `USER:/save` та `SYSTEM:/save` у `haze_helper.cpp`, налаштування у Settings та переклади локалізацій.
+- [x] `VERIFY-470` — піднято версію до `0.13.470`, пройдено всі хостові юніт-тести, WSL `ReleaseWithInstall` та `git diff --check`.
+
+## Попередній delivery: v0.13.469 (unified pending UI & updater work)
 
 - [x] `RECOVER-UI-VIEWPORT-469` — відновлено shared `ImageViewport`, forwarder icon crop та інтеграцію Theme Creator.
 - [x] `RECOVER-FILE-VIEWER-469` — відновлено актуальний Select Range, multi-line actions і керування текстовим viewer/editor.
