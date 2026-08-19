@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.489**. Завершені плани збережено в
+Поточний delivery — **v0.13.490**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.489 — Zero-heap static logging buffer & image load ordering
+## Поточний delivery: v0.13.490 — Fix cstring include in static logger
+
+Статус: реалізацію виконано та перевірено:
+1. **Виправлення компіляції `log.cpp`**:
+   - Додано заголовок `<cstring>` у `sphaira/source/log.cpp` для повної підтримки `std::memcpy` у статичному неалокуючому буфері.
+2. **Версія та збірка**:
+   - Піднято версію до `0.13.490` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+   - Успішно зібрано `sphaira_nro` у WSL (`[100%] Built target sphaira_nro`).
+
+## Попередній delivery: v0.13.489 — Zero-heap static logging buffer & image load ordering
 
 Статус: реалізацію виконано та перевірено. Повністю усунено алокації кучі у фоновому потоці логування та нормалізовано порядок ініціалізації графіки:
 1. **Статичний буфер логування без звернень до heap (`sphaira/source/log.cpp`)**:

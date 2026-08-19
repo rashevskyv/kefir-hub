@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.489** (2026-08-19). Попередні
+Актуальний delivery — **v0.13.490** (2026-08-19). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.490 — Fix cstring include in static logger
+
+- **Виправлення заголовків компіляції**:
+  - У `sphaira/source/log.cpp` додано `#include <cstring>` для функції `std::memcpy`, що усунуло помилку компіляції в середовищі devkitA64 GCC 14/16.
+- **Версія та збірка**:
+  - Піднято версію до `0.13.490` у `sphaira/CMakeLists.txt`, оновлено документацію в `README.md`, `plan.md`, `task.md`.
+  - Успішно зібрано ціль `sphaira_nro` у WSL (`[100%] Built target sphaira_nro`).
 
 ## v0.13.489 — Zero-heap static logging buffer & image load ordering
 

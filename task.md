@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.489**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.490**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.489 (Zero-heap static logging buffer & image load ordering)
+## Поточний delivery: v0.13.490 (Fix cstring include in static logger)
+
+- [x] `LOG-CSTRING-INCLUDE-490` — додано `#include <cstring>` у `sphaira/source/log.cpp` для `std::memcpy`.
+- [x] `BUILD-VERIFY-490` — піднято версію до `0.13.490` у `sphaira/CMakeLists.txt`, оновлено документацію, успішно зібрано `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.489 (Zero-heap static logging buffer & image load ordering)
 
 - [x] `LOG-STATIC-BUFFER-489` — реалізовано 64 КБ статичний неалокуючий буфер у `sphaira/source/log.cpp`, повністю вилучивши виклики `malloc`/`realloc`/`free` з фонового та робочих потоків логування.
 - [x] `INIT-DEFAULT-IMG-ORDER-489` — перенесено `InitDefaultImage()` перед запуском `ntp::Start()` та `forwarder_auto::StartCheck()` у `App::App` (`sphaira/source/app.cpp`).

@@ -2,6 +2,7 @@
 #include "app_paths.hpp"
 #include <cstdio>
 #include <cstdarg>
+#include <cstring>
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
