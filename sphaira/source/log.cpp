@@ -24,27 +24,15 @@ int nxlink_socket{};
 bool g_file_open{};
 std::mutex mutex{};
 
-// Asynchronous logging.
-//
-// log_write() used to open()/write()/close() the log file on the sd card on
-// every single call, under a process-wide mutex. in hot paths (per usb packet,
-// per pipeline chunk, per ncz block) that serialised the logger's sd access
-// with the installer's own placeholder writes and throttled installs to a
-// crawl until windows mtp timed the transfer out.
-//
-// instead, log_write() now only appends the formatted line to an in-memory
-// buffer (cheap: a short lock + a memcpy). a dedicated low-priority background
-// thread wakes every ~100ms, swaps the buffer out and writes the whole batch
-// with a single open/write/close. so the sd is touched rarely and never from
-// the thread doing the logging -- logging can no longer starve anything.
-std::string g_buffer{};
+// Static zero-heap-allocation asynchronous logging buffer.
+// Avoids malloc/realloc/free churn from background threads during graphics/game loading.
+constexpr size_t STATIC_LOG_CAPACITY = 64u * 1024u;
+char g_buffer_data[STATIC_LOG_CAPACITY];
+size_t g_buffer_len{};
+
 Thread g_flush_thread{};
 bool g_thread_running{};
 bool g_thread_stop{};
-
-// cap so a runaway logging burst can't grow the buffer without bound if the
-// flush thread is starved of cpu. dropping debug lines is preferable to OOM.
-constexpr size_t MAX_BUFFER_BYTES = 2u * 1024u * 1024u;
 
 // flush interval. short enough that a crash loses little, long enough that
 // writes are well batched.
@@ -52,20 +40,20 @@ constexpr u64 FLUSH_INTERVAL_NS = 100'000'000ULL;
 
 // performs the actual io. must be called WITHOUT the mutex held so the sd/socket
 // write never blocks log_write(). the open flags are snapshotted by the caller.
-void do_flush(const std::string& data, bool file_open, int sock) {
-    if (data.empty()) {
+void do_flush(const char* data, size_t size, bool file_open, int sock) {
+    if (!data || size == 0) {
         return;
     }
     if (file_open) {
         int fd = open(logpath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
         if (fd >= 0) {
-            write(fd, data.data(), data.size());
+            write(fd, data, size);
             close(fd);
             fsdevCommitDevice("sdmc");
         }
     }
     if (sock > 0) {
-        send(sock, data.data(), data.size(), 0);
+        send(sock, data, size, 0);
     }
 }
 
@@ -73,21 +61,26 @@ void flush_thread_func(void*) {
     for (;;) {
         svcSleepThread(FLUSH_INTERVAL_NS);
 
-        std::string batch;
+        char batch[STATIC_LOG_CAPACITY];
+        size_t batch_len = 0;
         bool stop;
         bool file_open;
         int sock;
         {
             std::scoped_lock lock{mutex};
-            batch.swap(g_buffer);
+            if (g_buffer_len > 0) {
+                std::memcpy(batch, g_buffer_data, g_buffer_len);
+                batch_len = g_buffer_len;
+                g_buffer_len = 0;
+            }
             stop = g_thread_stop;
             file_open = g_file_open;
             sock = nxlink_socket;
         }
 
-        // final iteration still runs while g_file_open/nxlink_socket are true,
-        // so the tail is flushed before the consumer is torn down.
-        do_flush(batch, file_open, sock);
+        if (batch_len > 0) {
+            do_flush(batch, batch_len, file_open, sock);
+        }
 
         if (stop) {
             break;
@@ -101,10 +94,6 @@ void ensure_thread_started() {
         return;
     }
     g_thread_stop = false;
-    // 0x3B (PRIO_PREEMPTIVE) is the lowest priority homebrew is allowed to
-    // create -- 0x3F is out of range and makes threadCreate fail, which would
-    // leave the buffer never flushed. no core affinity so it runs in the spare
-    // time, as requested; its work (a swap plus one batched write) is tiny.
     if (R_SUCCEEDED(threadCreate(&g_flush_thread, flush_thread_func, nullptr, nullptr, 0x4000, 0x3B, -2))) {
         if (R_SUCCEEDED(threadStart(&g_flush_thread))) {
             g_thread_running = true;
@@ -140,21 +129,17 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
     const auto msg_len = std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
     const auto total_len = len + (msg_len > 0 ? msg_len : 0);
 
-    // append only; the flush thread does the actual sd/socket io. drop the line
-    // if the backlog is already huge (flush thread starved) rather than grow
-    // memory unbounded.
-    if (g_buffer.size() + total_len <= MAX_BUFFER_BYTES) {
-        g_buffer.append(buf, total_len);
+    if (total_len > 0 && g_buffer_len + total_len <= STATIC_LOG_CAPACITY) {
+        std::memcpy(g_buffer_data + g_buffer_len, buf, total_len);
+        g_buffer_len += total_len;
     }
 
-    // safety net: if the background flusher never started (threadCreate failed),
-    // flush inline so the log is never silently lost. this reintroduces the sd
-    // write under the mutex, but only on this cold path -- normally the thread
-    // is up and this is skipped.
-    if (!g_thread_running && !g_buffer.empty()) {
-        std::string batch;
-        batch.swap(g_buffer);
-        do_flush(batch, g_file_open, nxlink_socket);
+    if (!g_thread_running && g_buffer_len > 0) {
+        char batch[STATIC_LOG_CAPACITY];
+        const size_t batch_len = g_buffer_len;
+        std::memcpy(batch, g_buffer_data, batch_len);
+        g_buffer_len = 0;
+        do_flush(batch, batch_len, g_file_open, nxlink_socket);
     }
 }
 
@@ -212,14 +197,19 @@ void log_file_exit() {
         return;
     }
 
-    // thread stays up for nxlink: flush whatever is pending to the file now,
-    // then mark it closed so future batches skip it.
-    std::string batch;
+    char batch[STATIC_LOG_CAPACITY];
+    size_t batch_len = 0;
     {
         std::scoped_lock lock{mutex};
-        batch.swap(g_buffer);
+        if (g_buffer_len > 0) {
+            std::memcpy(batch, g_buffer_data, g_buffer_len);
+            batch_len = g_buffer_len;
+            g_buffer_len = 0;
+        }
     }
-    do_flush(batch, true, 0);
+    if (batch_len > 0) {
+        do_flush(batch, batch_len, true, 0);
+    }
     std::scoped_lock lock{mutex};
     g_file_open = false;
 }

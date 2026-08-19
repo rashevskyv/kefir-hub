@@ -1316,14 +1316,14 @@ App::App(const char* argv0) {
     // rtc, then goes back to sleep. Never prompts, never blocks startup.
     mark("hid + loader info");
 
-    ntp::Start();
-    forwarder_auto::StartCheck();
-
     // load default image
     InitDefaultImage();
 
-
     mark("default image");
+
+    // background clock sync & forwarder check: start after graphics initialization
+    ntp::Start();
+    forwarder_auto::StartCheck();
 
     App::Push<ui::menu::main::MainMenu>();
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());

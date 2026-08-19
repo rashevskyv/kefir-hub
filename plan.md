@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.488**. Завершені плани збережено в
+Поточний delivery — **v0.13.489**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.488 — Sysmodule slow SD boot timeout & crash prevention
+## Поточний delivery: v0.13.489 — Zero-heap static logging buffer & image load ordering
+
+Статус: реалізацію виконано та перевірено. Повністю усунено алокації кучі у фоновому потоці логування та нормалізовано порядок ініціалізації графіки:
+1. **Статичний буфер логування без звернень до heap (`sphaira/source/log.cpp`)**:
+   - Замінено динамічний `std::string` та операції `append`/`swap`/`free` на фіксований статичний буфер `g_buffer_data` (64 КБ). Це повністю виключає звернення до `_malloc_r`, `_realloc_r` та `free` під час запису логів з фонових потоків і скидання на диск/сокет, унеможливлюючи пошкодження метаданих чанків кучі (`Data Abort 0x4A8`).
+2. **Порядок завантаження ресурсів (`sphaira/source/app.cpp`)**:
+   - `InitDefaultImage()` перенесено перед запуском фонових воркерів `ntp::Start()` та `forwarder_auto::StartCheck()`, що гарантує ексклюзивне розкодування системних іконок без конкуренції за пам'ять.
+3. **Версія та інтеграція**:
+   - Піднято версію до `0.13.489` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.488 — Sysmodule slow SD boot timeout & crash prevention
 
 Статус: реалізацію виконано та перевірено. На основі аналізу патчу SwitchThemeInjector усунено падіння та зависання на повільних microSD картах:
 1. **Збільшення тайм-аутів ініціалізації ФС у сисмодулі (`sysmodule/source/main.c`)**:

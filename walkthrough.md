@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.488** (2026-08-19). Попередні
+Актуальний delivery — **v0.13.489** (2026-08-19). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.489 — Zero-heap static logging buffer & image load ordering
+
+- **Статичний буфер логування без алокацій у heap**:
+  - У `sphaira/source/log.cpp` усунено використання динамічного `std::string g_buffer` на користь фіксованого статичного буфера `g_buffer_data` (64 КБ). Це гарантує, що жоден виклик `log_write` або скидання `do_flush` у фоновому потоці не викликає `malloc`, `realloc` чи `free`, усуваючи взаємне блокування та пошкодження списку вільних чанків кучі newlib.
+- **Оптимізація порядку завантаження ресурсів**:
+  - У `sphaira/source/app.cpp` виклик `InitDefaultImage()` виконується до запуску фонових потоків `ntp::Start()` та `forwarder_auto::StartCheck()`.
+- **Версія та інтеграція**:
+  - Піднято версію до `0.13.489` у `sphaira/CMakeLists.txt`, оновлено документацію в `README.md`, `plan.md`, `task.md`.
 
 ## v0.13.488 — Sysmodule slow SD boot timeout & crash prevention
 

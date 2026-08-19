@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.488**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.489**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.488 (Sysmodule slow SD boot timeout & crash prevention)
+## Поточний delivery: v0.13.489 (Zero-heap static logging buffer & image load ordering)
+
+- [x] `LOG-STATIC-BUFFER-489` — реалізовано 64 КБ статичний неалокуючий буфер у `sphaira/source/log.cpp`, повністю вилучивши виклики `malloc`/`realloc`/`free` з фонового та робочих потоків логування.
+- [x] `INIT-DEFAULT-IMG-ORDER-489` — перенесено `InitDefaultImage()` перед запуском `ntp::Start()` та `forwarder_auto::StartCheck()` у `App::App` (`sphaira/source/app.cpp`).
+- [x] `ZERO-HEAP-DOCS-VERIFY-489` — піднято версію до `0.13.489` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.488 (Sysmodule slow SD boot timeout & crash prevention)
 
 - [x] `SYSMODULE-TIMEOUTS-488` — збільшено таймаути ініціалізації FS та монтування SD у `sysmodule/source/main.c` з 10 секунд до 300 секунд (5 хвилин), видалено `diagAbortWithResult` при помилці `smInitialize()`.
 - [x] `SYSMODULE-DOCS-VERIFY-488` — піднято версію до `0.13.488` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`.
