@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.490** (2026-08-19). Попередні
+Актуальний delivery — **v0.13.491** (2026-08-19). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.491 — Fix flush thread stack overflow
+
+- **Усунення переповнення стеку у фоновому потоці логування**:
+  - У `sphaira/source/log.cpp` усунено алокацію локального буфера `char batch[64KB]` на стеку потоку `flush_thread_func`, перенісши його у статичну пам'ять `g_flush_batch`.
+  - Збільшено розмір стеку потоку `g_flush_thread` з `0x4000` (16 КБ) до `0x8000` (32 КБ), що усунуло Stack Overflow та миттєвий Data Abort краш при відкритті програми.
+- **Версія та збірка**:
+  - Піднято версію до `0.13.491` у `sphaira/CMakeLists.txt`, оновлено документацію в `README.md`, `plan.md`, `task.md`.
 
 ## v0.13.490 — Fix cstring include in static logger
 

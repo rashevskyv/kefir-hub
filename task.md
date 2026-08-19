@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.490**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.491**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.490 (Fix cstring include in static logger)
+## Поточний delivery: v0.13.491 (Fix flush thread stack overflow)
+
+- [x] `LOG-STACK-OVERFLOW-FIX-491` — перенесено масив `batch` зі стеку функції `flush_thread_func` у статичну змінну `g_flush_batch` та збільшено стек потоку до `0x8000`.
+- [x] `BUILD-VERIFY-491` — піднято версію до `0.13.491` у `sphaira/CMakeLists.txt`, оновлено документацію, успішно зібрано `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.490 (Fix cstring include in static logger)
 
 - [x] `LOG-CSTRING-INCLUDE-490` — додано `#include <cstring>` у `sphaira/source/log.cpp` для `std::memcpy`.
 - [x] `BUILD-VERIFY-490` — піднято версію до `0.13.490` у `sphaira/CMakeLists.txt`, оновлено документацію, успішно зібрано `sphaira_nro` у WSL.

@@ -30,6 +30,7 @@ std::mutex mutex{};
 constexpr size_t STATIC_LOG_CAPACITY = 64u * 1024u;
 char g_buffer_data[STATIC_LOG_CAPACITY];
 size_t g_buffer_len{};
+char g_flush_batch[STATIC_LOG_CAPACITY];
 
 Thread g_flush_thread{};
 bool g_thread_running{};
@@ -62,7 +63,6 @@ void flush_thread_func(void*) {
     for (;;) {
         svcSleepThread(FLUSH_INTERVAL_NS);
 
-        char batch[STATIC_LOG_CAPACITY];
         size_t batch_len = 0;
         bool stop;
         bool file_open;
@@ -70,7 +70,7 @@ void flush_thread_func(void*) {
         {
             std::scoped_lock lock{mutex};
             if (g_buffer_len > 0) {
-                std::memcpy(batch, g_buffer_data, g_buffer_len);
+                std::memcpy(g_flush_batch, g_buffer_data, g_buffer_len);
                 batch_len = g_buffer_len;
                 g_buffer_len = 0;
             }
@@ -80,7 +80,7 @@ void flush_thread_func(void*) {
         }
 
         if (batch_len > 0) {
-            do_flush(batch, batch_len, file_open, sock);
+            do_flush(g_flush_batch, batch_len, file_open, sock);
         }
 
         if (stop) {
@@ -95,7 +95,7 @@ void ensure_thread_started() {
         return;
     }
     g_thread_stop = false;
-    if (R_SUCCEEDED(threadCreate(&g_flush_thread, flush_thread_func, nullptr, nullptr, 0x4000, 0x3B, -2))) {
+    if (R_SUCCEEDED(threadCreate(&g_flush_thread, flush_thread_func, nullptr, nullptr, 0x8000, 0x3B, -2))) {
         if (R_SUCCEEDED(threadStart(&g_flush_thread))) {
             g_thread_running = true;
         } else {
@@ -136,11 +136,10 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
     }
 
     if (!g_thread_running && g_buffer_len > 0) {
-        char batch[STATIC_LOG_CAPACITY];
+        std::memcpy(g_flush_batch, g_buffer_data, g_buffer_len);
         const size_t batch_len = g_buffer_len;
-        std::memcpy(batch, g_buffer_data, batch_len);
         g_buffer_len = 0;
-        do_flush(batch, batch_len, g_file_open, nxlink_socket);
+        do_flush(g_flush_batch, batch_len, g_file_open, nxlink_socket);
     }
 }
 
@@ -198,18 +197,17 @@ void log_file_exit() {
         return;
     }
 
-    char batch[STATIC_LOG_CAPACITY];
     size_t batch_len = 0;
     {
         std::scoped_lock lock{mutex};
         if (g_buffer_len > 0) {
-            std::memcpy(batch, g_buffer_data, g_buffer_len);
+            std::memcpy(g_flush_batch, g_buffer_data, g_buffer_len);
             batch_len = g_buffer_len;
             g_buffer_len = 0;
         }
     }
     if (batch_len > 0) {
-        do_flush(batch, batch_len, true, 0);
+        do_flush(g_flush_batch, batch_len, true, 0);
     }
     std::scoped_lock lock{mutex};
     g_file_open = false;

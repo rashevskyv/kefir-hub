@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.490**. Завершені плани збережено в
+Поточний delivery — **v0.13.491**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.490 — Fix cstring include in static logger
+## Поточний delivery: v0.13.491 — Fix flush thread stack overflow
+
+Статус: реалізацію виконано та перевірено:
+1. **Усунення переповнення стеку у фоновому потоці логування (`sphaira/source/log.cpp`)**:
+   - Масив `batch` (64 КБ) перенесено зі стеку функції `flush_thread_func` у статичну пам'ять `g_flush_batch`.
+   - Збільшено розмір стеку потоку `g_flush_thread` з `0x4000` (16 КБ) до `0x8000` (32 КБ), усунувши Stack Overflow (`Data Abort` при старті програми).
+2. **Версія та збірка**:
+   - Піднято версію до `0.13.491` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+   - Успішно зібрано `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.490 — Fix cstring include in static logger
 
 Статус: реалізацію виконано та перевірено:
 1. **Виправлення компіляції `log.cpp`**:
