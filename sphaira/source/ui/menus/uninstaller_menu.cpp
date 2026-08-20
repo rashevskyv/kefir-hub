@@ -434,7 +434,8 @@ void UninstallerMenu::OnFocusGained() {
 void UninstallerMenu::SetIndex(s64 index) {
     if (m_items.empty()) {
         m_index = 0;
-        SetSubHeading("No sysmodules found"_i18n);
+        SetTitleSubHeading("No sysmodules found"_i18n, true);
+        SetSubHeading("");
         return;
     }
 
@@ -621,12 +622,14 @@ void UninstallerMenu::ToggleSelectedAutostart() {
 
 void UninstallerMenu::UpdateSubheading() {
     if (m_items.empty()) {
-        SetSubHeading("No sysmodules found"_i18n);
+        SetTitleSubHeading("No sysmodules found"_i18n, true);
+        SetSubHeading("");
         return;
     }
 
     const auto& item = m_items[m_index];
-    SetSubHeading(item.description);
+    SetTitleSubHeading(item.description, true);
+    SetSubHeading("");
 }
 
 } // namespace sphaira::ui::menu::hats

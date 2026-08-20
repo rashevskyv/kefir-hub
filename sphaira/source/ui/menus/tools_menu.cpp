@@ -10,6 +10,7 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/install_share.hpp"
+#include "ui/menus/uninstaller_menu.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
@@ -69,6 +70,10 @@ constexpr const u8 ICON_SETTINGS[]{
     #embed <icons/settings.png>
 };
 
+constexpr const u8 ICON_ADVANCED_OPTIONS[]{
+    #embed <icons/advanced-options.png>
+};
+
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     int width{};
     int height{};
@@ -93,32 +98,35 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
     m_items = {
-        { "Updater"_i18n, "Update Kefir, firmware and network downloads."_i18n, 0, [](){
-            App::Push<ui::menu::kefir::Menu>();
-        }},
-        { "Kefir Settings"_i18n, "Fan curves and console-specific Kefir switches."_i18n, 0, [](){
-            App::Push<ui::menu::settings::KefirSettingsMenu>();
-        }},
-        { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
-            App::Push<ui::menu::hats::CheatsMenu>();
-        }},
         { "File Browser"_i18n, "Browse and manage SD card files."_i18n, 0, [](){
             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
-        }},
-        { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
-            App::Push<ui::menu::save::SaveHubMenu>(MenuFlag_None);
         }},
         { "Games"_i18n, "View, launch and manage installed games."_i18n, 0, [](){
             App::Push<ui::menu::game::Menu>(MenuFlag_None);
         }},
-        { "Software"_i18n, "Install DBI and mod utilities."_i18n, 0, [](){
-            App::Push<ui::menu::settings::SoftwareMenu>();
-        }},
         { "Themes"_i18n, "Download and install theme packs."_i18n, 0, [](){
             App::Push<ui::menu::settings::ThemesMenu>();
         }},
+        { "Updater"_i18n, "Update Kefir, firmware and network downloads."_i18n, 0, [](){
+            App::Push<ui::menu::kefir::Menu>();
+        }},
+        { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
+            App::Push<ui::menu::save::SaveHubMenu>(MenuFlag_None);
+        }},
+        { "Software"_i18n, "Homebrew App Store, DBI and mod utilities."_i18n, 0, [](){
+            App::Push<ui::menu::settings::SoftwareMenu>();
+        }},
+        { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
+            App::Push<ui::menu::hats::CheatsMenu>();
+        }},
+        { "Kefir Settings"_i18n, "Fan curves and console-specific Kefir switches."_i18n, 0, [](){
+            App::Push<ui::menu::settings::KefirSettingsMenu>();
+        }},
         { "Settings"_i18n, "Open Kefir Hub application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
+        }},
+        { "Tools"_i18n, "System tools and sysmodule manager."_i18n, 0, [](){
+            App::Push<ui::menu::hats::UninstallerMenu>();
         }},
     };
 
@@ -237,15 +245,16 @@ void Menu::LoadIcons() {
     };
 
     constexpr IconData icons[] = {
-        { ICON_UPDATER, sizeof(ICON_UPDATER) },
-        { ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS) },
-        { ICON_CHEATS, sizeof(ICON_CHEATS) },
         { ICON_FILE_BROWSER, sizeof(ICON_FILE_BROWSER) },
-        { ICON_SAVES, sizeof(ICON_SAVES) },
         { ICON_GAMES, sizeof(ICON_GAMES) },
-        { ICON_SOFTWARE, sizeof(ICON_SOFTWARE) },
         { ICON_THEMES, sizeof(ICON_THEMES) },
+        { ICON_UPDATER, sizeof(ICON_UPDATER) },
+        { ICON_SAVES, sizeof(ICON_SAVES) },
+        { ICON_SOFTWARE, sizeof(ICON_SOFTWARE) },
+        { ICON_CHEATS, sizeof(ICON_CHEATS) },
+        { ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS) },
         { ICON_SETTINGS, sizeof(ICON_SETTINGS) },
+        { ICON_ADVANCED_OPTIONS, sizeof(ICON_ADVANCED_OPTIONS) },
     };
 
     const auto count = std::min(m_items.size(), std::size(icons));
@@ -262,7 +271,8 @@ void Menu::SetIndex(s64 index) {
 
     if (!m_items.empty()) {
         const auto& item = m_items[m_index];
-        SetSubHeading(item.label + " - " + item.description);
+        SetTitleSubHeading(item.label + " - " + item.description, true);
+        SetSubHeading("");
     }
     m_scroll_name.Reset();
 }

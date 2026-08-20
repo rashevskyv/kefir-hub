@@ -129,6 +129,10 @@ auto App::GetLogEnable() -> bool {
     return g_app->m_log_enabled.Get();
 }
 
+auto App::GetAutoUpdateEnable() -> bool {
+    return g_app->m_auto_update.Get();
+}
+
 auto App::GetReplaceHbmenuEnable() -> bool {
     return g_app->m_replace_hbmenu.Get();
 }
@@ -433,6 +437,10 @@ void App::SetLogEnable(bool enable) {
             log_file_exit();
         }
     }
+}
+
+void App::SetAutoUpdateEnable(bool enable) {
+    g_app->m_auto_update.Set(enable);
 }
 
 void App::SetReplaceHbmenuEnable(bool enable) {

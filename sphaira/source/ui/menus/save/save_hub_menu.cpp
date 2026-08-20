@@ -189,7 +189,8 @@ void SaveHubMenu::SetIndex(s64 index) {
     m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
     if (m_index < static_cast<s64>(m_items.size())) {
         const auto& item = m_items[m_index];
-        SetSubHeading(item.label + " - " + item.description);
+        SetTitleSubHeading(item.label + " - " + item.description, true);
+        SetSubHeading("");
     }
     m_scroll_name.Reset();
 }

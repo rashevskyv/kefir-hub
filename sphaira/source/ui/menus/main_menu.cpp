@@ -17,6 +17,7 @@
 #include "ui/menus/appstore.hpp"
 
 #include "app.hpp"
+#include "auto_update.hpp"
 #include "log.hpp"
 #include "download.hpp"
 #include "defines.hpp"
@@ -28,8 +29,9 @@
 namespace sphaira::ui::menu::main {
 namespace {
 
-constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/sphaira/releases/latest"};
+constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
+constexpr fs::FsPath UPDATE_TEMP_PATH{"/switch/sphaira/cache/sphaira_update.temp"};
 constexpr long HTTP_NOT_FOUND{404};
 
 template<typename T>
@@ -135,31 +137,78 @@ MainMenu::MainMenu() {
             }
 
             auto body_key = yyjson_obj_get(root, "body");
-            R_UNLESS(body_key, false);
+            const auto body = body_key ? yyjson_get_str(body_key) : "";
 
-            const auto body = yyjson_get_str(body_key);
-            R_UNLESS(body, false);
-
-            auto assets = yyjson_obj_get(root, "assets");
-            R_UNLESS(assets, false);
-
-            auto idx0 = yyjson_arr_get(assets, 0);
-            R_UNLESS(idx0, false);
-
-            auto url_key = yyjson_obj_get(idx0, "browser_download_url");
-            R_UNLESS(url_key, false);
-
-            const auto url = yyjson_get_str(url_key);
-            R_UNLESS(url, false);
+            auto assets_val = yyjson_obj_get(root, "assets");
+            std::vector<auto_update::ReleaseAsset> assets;
+            if (assets_val && yyjson_is_arr(assets_val)) {
+                size_t idx, max;
+                yyjson_val* asset_item;
+                yyjson_arr_foreach(assets_val, idx, max, asset_item) {
+                    if (!yyjson_is_obj(asset_item)) continue;
+                    auto name_val = yyjson_obj_get(asset_item, "name");
+                    auto url_val = yyjson_obj_get(asset_item, "browser_download_url");
+                    auto type_val = yyjson_obj_get(asset_item, "content_type");
+                    auto size_val = yyjson_obj_get(asset_item, "size");
+                    if (name_val && url_val) {
+                        assets.push_back({
+                            .name = yyjson_get_str(name_val) ? yyjson_get_str(name_val) : "",
+                            .browser_download_url = yyjson_get_str(url_val) ? yyjson_get_str(url_val) : "",
+                            .content_type = (type_val && yyjson_get_str(type_val)) ? yyjson_get_str(type_val) : "",
+                            .size = size_val ? yyjson_get_uint(size_val) : 0,
+                        });
+                    }
+                }
+            }
 
             m_update_version = version;
-            m_update_url = url;
-            m_update_description = body;
+            m_update_description = body ? body : "";
             m_update_state = UpdateState::Update;
-            log_write("found url: %s\n", url);
-            log_write("found body: %s\n", body);
-            App::Notify("Update avaliable: "_i18n + m_update_version);
-            App::Notify("Download via the Network options!"_i18n);
+
+            const int best_idx = auto_update::SelectBestAsset(assets, App::GetExePath().s);
+            if (best_idx >= 0 && best_idx < static_cast<int>(assets.size())) {
+                m_update_url = assets[best_idx].browser_download_url;
+            }
+
+            if (App::GetAutoUpdateEnable() && best_idx >= 0) {
+                const auto& target_asset = assets[best_idx];
+                log_write("[AutoUpdate] Background downloading update %s (%s)\n", version, target_asset.name.c_str());
+
+                fs::FsNativeSd().CreateDirectoryRecursively("/switch/sphaira/cache");
+
+                const std::string ver_str = version;
+                const std::string asset_name = target_asset.name;
+
+                curl::Api().ToFileAsync(
+                    curl::Url{target_asset.browser_download_url},
+                    curl::Path{UPDATE_TEMP_PATH},
+                    curl::StopToken{this->GetToken()},
+                    curl::OnComplete{[ver_str, asset_name](auto& dl_result) {
+                        if (!dl_result.success) {
+                            log_write("[AutoUpdate] Download failed (code: %ld)\n", dl_result.code);
+                            fs::FsNativeSd().DeleteFile(UPDATE_TEMP_PATH);
+                            return false;
+                        }
+
+                        const fs::FsPath exe_path = App::GetExePath();
+                        const fs::FsPath dest_path = auto_update::ResolveInstallDestination(exe_path);
+                        const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
+
+                        log_write("[AutoUpdate] Installing update to %s (replace_hbmenu=%d)\n", dest_path.s, replace_hbmenu);
+
+                        if (auto_update::InstallNroUpdate(UPDATE_TEMP_PATH, dest_path, replace_hbmenu)) {
+                            log_write("[AutoUpdate] Update applied silently to %s\n", dest_path.s);
+                        } else {
+                            log_write("[AutoUpdate] Failed to install update to %s\n", dest_path.s);
+                        }
+
+                        fs::FsNativeSd().DeleteFile(UPDATE_TEMP_PATH);
+                        return true;
+                    }}
+                );
+            } else {
+                log_write("[UpdateCheck] Newer version available: %s (auto-update disabled)\n", m_update_version.c_str());
+            }
 
             return true;
         }

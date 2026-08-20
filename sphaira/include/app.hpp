@@ -138,6 +138,7 @@ public:
     static auto GetWebdavUser() -> std::string;
     static auto GetWebdavPass() -> std::string;
     static auto GetLogEnable() -> bool;
+    static auto GetAutoUpdateEnable() -> bool;
     static auto GetReplaceHbmenuEnable() -> bool;
     static auto GetInstallEnable() -> bool;
     static auto GetInstallSysmmcEnable() -> bool;
@@ -206,6 +207,7 @@ public:
     static void SetWriteProtect(bool enable);
     static void SetWebdavUrl(std::string value);
     static void SetLogEnable(bool enable);
+    static void SetAutoUpdateEnable(bool enable);
     static void SetReplaceHbmenuEnable(bool enable);
     static void SetInstallLocation(long location);
     static void SetInstallReserveMb(long reserve_mb);
@@ -433,6 +435,7 @@ public:
     option::OptionString m_webdav_pass{INI_SECTION, "webdav_pass", ""};
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
+    option::OptionBool m_auto_update{INI_SECTION, "auto_update", true};
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};
     option::OptionString m_theme_path{INI_SECTION, "theme", DEFAULT_THEME_PATH};
     option::OptionBool m_animated_waves{INI_SECTION, "animated_waves", true};

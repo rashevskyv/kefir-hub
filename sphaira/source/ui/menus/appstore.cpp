@@ -687,8 +687,8 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
         }
     });
 
-    SetSubHeading(m_entry.binary);
-    SetSubHeading(m_entry.description);
+    SetTitleSubHeading(m_entry.description, true);
+    SetSubHeading("");
     UpdateOptions();
 
     // todo: see Draw()

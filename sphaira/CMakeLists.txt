@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.495)
+set(sphaira_VERSION 0.13.499)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -82,6 +82,7 @@ add_executable(sphaira
     source/ui/menus/install_stream_menu_base.cpp
 
     source/ui/error_box.cpp
+    source/ui/about_box.cpp
     source/ui/notification.cpp
     source/ui/nvg_util.cpp
     source/ui/option_box.cpp
@@ -118,6 +119,7 @@ add_executable(sphaira
     source/nxlink.cpp
     source/owo.cpp
     source/forwarder_auto_install.cpp
+    source/auto_update.cpp
     source/swkbd.cpp
     source/web_qr.cpp
     source/web_upload.cpp

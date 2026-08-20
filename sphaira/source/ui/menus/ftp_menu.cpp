@@ -48,13 +48,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const auto pdata = GetPolledData();
     if (pdata.ip) {
         if (pdata.type == NifmInternetConnectionType_WiFi) {
-            SetSubHeading("Connection Type: WiFi | Strength: "_i18n + std::to_string(pdata.strength));
+            SetTitleSubHeading("Connection Type: WiFi | Strength: "_i18n + std::to_string(pdata.strength), true);
         } else {
-            SetSubHeading("Connection Type: Ethernet"_i18n);
+            SetTitleSubHeading("Connection Type: Ethernet"_i18n, true);
         }
     } else {
-        SetSubHeading("Connection Type: None"_i18n);
+        SetTitleSubHeading("Connection Type: None"_i18n, true);
     }
+    SetSubHeading("");
 
     const float start_x = 80;
     const float font_size = 22;

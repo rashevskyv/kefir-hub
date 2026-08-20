@@ -1,10 +1,74 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.495**. Завершені плани збережено в
+Поточний delivery — **v0.13.499**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.495 — Pixel-balanced split & full-width justified 2-row footer layout
+## Поточний delivery: v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion
+
+Статус: реалізацію виконано та перевірено:
+1. **Реорганізація сітки іконок меню Tools (`sphaira/source/ui/menus/tools_menu.cpp`)**:
+   - Оновлено розташування пунктів меню:
+     - 1-й ряд: File Browser, Games, Themes.
+     - 2-й ряд: Updater, Saves, Software (Додаткові програми).
+     - 3-й ряд: Cheats, Kefir Settings, Settings.
+     - 4-й ряд (експериментальний): Tools (Інструменти).
+2. **Оновлення опису розділу Software**:
+   - Задано опис `"Homebrew App Store, DBI and mod utilities."` для точного відображення вмісту каталогу Homebrew App Store.
+3. **Експериментальний 4-й ряд (пункт Tools)**:
+   - Додано елемент `Tools` з іконкою `advanced-options.png` та дією переходу в менеджер системних модулів `UninstallerMenu`.
+   - Забезпечено підтримку вертикального скролінгу сітки та безшовне відображення.
+4. **Локалізація та версія**:
+   - Синхронізовано нові ключі локалізації у всіх 14 мовних файлах `assets/romfs/i18n/*.json`.
+   - Піднято версію до `0.13.499` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.498 — Header Subtitle Top-Row Alignment & Section Title Sizing Fix
+
+Статус: реалізацію виконано та перевірено:
+1. **Перенесення довгих описів елементів на верхній рядок хедера (`sphaira/source/ui/menus/tools_menu.cpp`, `save_hub_menu.cpp`, `settings_menu.cpp`, `uninstaller_menu.cpp`, `ftp_menu.cpp`, `appstore.cpp`)**:
+   - Замість `SetSubHeading(description)`, що виводило текст у нижньому рядку поруч із заголовком розділу, реалізовано виклик `SetTitleSubHeading(description, true); SetSubHeading("");`.
+   - Тепер опис обраного інструмента або налаштування відображається у верхньому рядку хедера праворуч від версії програми (`v0.13.498`), плавно прокручуючись за потреби.
+2. **Збереження повного кегля назви розділу (`MenuBase::DrawChrome`)**:
+   - Звільнення нижнього рядка від довгих описів гарантує повний простір для назви розділу («Інструменти» / «Tools», «Налаштування» / «Settings» тощо). Заголовок виводиться повним кеглем 28px без стискання до 40% та непотрібної прокрутки.
+3. **Збірка, тести та версія**:
+   - Піднято версію до `0.13.498` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+   - Успішно скомпільовано та пройдено всі unit-тести.
+
+## Попередній delivery: v0.13.497 — Clean Switch compilation, translation pipeline sync & NX-Link deployment
+
+Статус: реалізацію виконано та перевірено:
+1. **Виправлення сумісності компіляції під Nintendo Switch (`sphaira/source/auto_update.cpp`, `sphaira/source/ui/about_box.cpp`, `sphaira/source/ui/menus/install_stream_menu_base.cpp`, `sphaira/source/ftpsrv_helper.cpp`)**:
+   - Виправлено виклик `fs.OpenFile(staging_path, FsOpenMode_Read, &file)` з перевіркою розміру через `file.GetSize(&file_size)`.
+   - Оновлено `AboutBox::Update` на використання коректних полів `TouchInfo` (`touch->is_touching`, `touch->cur.y`).
+   - Виправлено форматні специфікатори `%ld` для `s64` та прибрано зайві попередження компілятора.
+2. **Повний переклад через Gemini 3.6 Flash (`tools/i18n-translate/translate.py`)**:
+   - Синхронізовано та повністю перекладено всі мовні файли (`uk`, `ru`, `en`, `de`, `fr`, `es`, `it`, `ja`, `ko`, `nl`, `pt`, `se`, `vi`, `zh`) без помилок (0 missing keys).
+3. **Успішна збірка та розгортання через NX-Link**:
+   - Скомпільовано цільовий двійковий файл `kefir-hub.nro` у WSL середовищі devkitA64 (`ReleaseWithInstall`).
+   - Успішно передано бінарник на консоль через `make nxlink` (`192.168.50.69`).
+
+## Попередній delivery: v0.13.496 — Automatic Silent Update, Background Self-Updating & About Changelog Box
+
+Статус: реалізацію виконано та перевірено:
+1. **Налаштування автоматичного оновлення (`sphaira/include/app.hpp`, `sphaira/source/app_settings.cpp`, `sphaira/source/ui/menus/settings_menu.cpp`)**:
+   - Додано конфігураційну опцію `m_auto_update` (`App::GetAutoUpdateEnable()`, `App::SetAutoUpdateEnable(bool)`).
+   - Відображено пункт `Auto-update` у меню `Settings → General` із детальним описом та перемикачем On/Off (увімкнено за замовчуванням).
+   - Оновлено словники перекладу у всіх 14 мовних файлах `assets/romfs/i18n/*.json`.
+2. **Фонове тихе оновлення виконуваного файлу (`sphaira/include/auto_update.hpp`, `sphaira/source/auto_update.cpp`, `sphaira/source/ui/menus/main_menu.cpp`)**:
+   - Оновлено URL репозиторію на `https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest` та `kefir-hub.json`.
+   - Реалізовано асинхронне фонове завантаження релізного ассету (`kefir-hub.nro` / `sphaira.nro`) у тимчасовий файл `/switch/sphaira/cache/sphaira_update.temp` без блокування інтерфейсу чи підгальмовувань.
+   - Реалізовано атомарне копіювання завантаженого бінарника у шлях поточного запущеного файлу (`App::GetExePath()`), а також синхронізацію з `/hbmenu.nro`, якщо увімкнено відповідний параметр.
+   - Процес оновлення відбувається на 100% тихо та прозоро для користувача — без спливаючих діалогових вікон, без вимоги перезапуску чи підтверджень; оновлена версія безшовно запускається при наступному відкритті програми.
+3. **Діалогове вікно About та перегляд списку змін (`sphaira/include/ui/about_box.hpp`, `sphaira/source/ui/about_box.cpp`, `sphaira/source/ui/menus/settings_menu.cpp`)**:
+   - Створено модальний віджет `AboutBox` для перегляду поточної версії, посилання на репозиторій та списку змін (changelog) останніх релізів.
+   - Реалізовано Markdown-форматування тексту, плавне прокручування (стіки, D-Pad, L/R для перегортання сторінок, жест тач-скролінгу) та кнопку оновлення (X: Refresh).
+   - Додано пункт `About` у меню `Settings → General`.
+4. **Unit-тести та документація**:
+   - Створено `tests/test_auto_update_asset.cpp` з 8 перевірками точності вибору ассетів релізу для різних середовищ та назв файлів.
+   - Піднято версію до `0.13.496` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`.
+   - Пройдено всі 15 наборів host unit-тестів та перевірку відсутності мертвих символів (`tests/run.sh`).
+
+## Попередній delivery: v0.13.495 — Pixel-balanced split & full-width justified 2-row footer layout
 
 Статус: реалізацію виконано та перевірено:
 1. **Попіксельне балансування рядків футера (`sphaira/source/ui/widget.cpp`)**:

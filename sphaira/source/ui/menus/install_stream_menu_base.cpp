@@ -147,7 +147,7 @@ Result InstallNroFromStream(ui::ProgressBox* pbox, Stream* source) {
     R_TRY(sd.Commit());
 
     guard.success = true;
-    log_write("[NRO] installed homebrew to %s (%lld bytes)\n", full.s, offset);
+    log_write("[NRO] installed homebrew to %s (%ld bytes)\n", full.s, offset);
 
     // the homebrew menu rescans /switch on the next frame.
     homebrew::SignalChange();

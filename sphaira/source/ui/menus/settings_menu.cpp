@@ -15,6 +15,7 @@
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
+#include "ui/about_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/screensaver.hpp"
 #include "ui/progress_box.hpp"
@@ -2153,11 +2154,15 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetTextScrollSpeed());
                 }},
+                MakeBoolItem("Auto-update"_i18n, "Automatically download and install updates in the background."_i18n, App::GetAutoUpdateEnable, App::SetAutoUpdateEnable),
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
                 // clock sync sits with the other clock settings rather than
                 // under Network: it is an outbound client, not a server.
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
+                { "About"_i18n, "View application version and changelog."_i18n, [](){ return "v" + std::string(APP_VERSION); }, [](){
+                    App::Push<AboutBox>();
+                }},
                 { "Restart Kefir Hub"_i18n, "Close and reopen the application."_i18n, [](){ return std::string{}; }, [](){
                     App::ExitRestart();
                 }},
@@ -2343,7 +2348,8 @@ void Menu::SetCategoryIndex(s64 index) {
     // a category may open on a section header; step past it.
     SetItemIndex(0);
 
-    SetSubHeading(m_categories[m_category_index].description);
+    SetTitleSubHeading(m_categories[m_category_index].description, true);
+    SetSubHeading("");
 }
 
 void Menu::SetItemIndex(s64 index) {
@@ -2432,7 +2438,8 @@ void Menu::OpenFolder(const SettingsItem& item) {
     m_item_list->SetYoff(0);
 
     SetFolderIndex(0);
-    SetSubHeading(item.description);
+    SetTitleSubHeading(item.description, true);
+    SetSubHeading("");
     SetFocusPane(FocusPane::Items);
     m_category_list->EnsureVisible(CategoryRow(), CategoryRowCount());
 }
@@ -2451,7 +2458,8 @@ void Menu::CloseFolder() {
     m_item_index = m_saved_item_index;
     m_item_list->SetYoff(m_saved_item_yoff);
     m_item_list->EnsureVisible(m_item_index, static_cast<s64>(m_categories[m_category_index].items.size()));
-    SetSubHeading(m_categories[m_category_index].description);
+    SetTitleSubHeading(m_categories[m_category_index].description, true);
+    SetSubHeading("");
 }
 
 void Menu::OnSelect() {
@@ -2618,7 +2626,8 @@ void SoftwareMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 }
 
 void SoftwareMenu::OnSelect() {
@@ -2687,7 +2696,8 @@ void DbiMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 }
 
 void DbiMenu::OnSelect() {
@@ -2756,7 +2766,8 @@ void KefirSettingsMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 }
 
 void KefirSettingsMenu::OnSelect() {
@@ -2819,7 +2830,8 @@ void ThemesMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 
     const auto& item = m_items[m_index];
     if (item.kind == SettingsItemKind::Favorite) {
@@ -2904,7 +2916,8 @@ void TranslateMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 }
 
 void TranslateMenu::OnSelect() {
@@ -3060,7 +3073,8 @@ void SourceEditMenu::SetIndex(s64 index) {
     if (!m_index) {
         m_list->SetYoff(0);
     }
-    SetSubHeading(m_items[m_index].description);
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
 }
 
 void SourceEditMenu::OnSelect() {

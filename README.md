@@ -101,6 +101,14 @@ Sphaira includes a dedicated **Forwarder Editor** (`Tools -> Create Forwarder` o
 - **SteamGridDB Icon Picker:** Search [SteamGridDB](https://www.steamgriddb.com) directly from the console to select high-quality vertical icons. You can paste an API key manually or use the built-in **Web Handoff** (`/apikey` endpoint) by scanning a QR code with a phone on the same Wi-Fi. The API key request endpoint is securely gated (`404 Not Found` when handoff is inactive) and saved to `/config/kefir/config.ini` in plain text (`[steamgriddb] api_key`).
 - **Per-Forwarder Launch Options:** Customize startup settings per forwarder, including user profile selection prompt, screenshot capture, video recording, address space mode (Automatic / 36-bit / 39-bit), and `svcDebug` flags.
 
+### Automatic Silent Update & Self-Updating
+
+Sphaira / Kefir Hub includes an intelligent, non-blocking **Automatic Silent Update** system:
+- **Background Release Detection & Download:** On startup, the application queries GitHub Releases (`https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest`) in the background. If a newer release is detected, it automatically matches the correct binary asset (`kefir-hub.nro` / `sphaira.nro`), downloads it asynchronously to a cache staging path without locking or lagging the UI, and verifies integrity before applying.
+- **Safe Atomic Replacement:** Once verified, the update replaces the active executable path (`App::GetExePath()`) atomically. If `Replace hbmenu on exit` is enabled, `/hbmenu.nro` is also seamlessly kept up to date. The update is applied completely silently in the background without popups or prompts; the new version will seamlessly run the next time the application is opened.
+- **Configurable in Settings:** Can be enabled or disabled via **Settings -> General -> Auto-update** (enabled by default).
+- **About Screen & Changelog Viewer:** View the current application version, repository link, and browse release notes / changelogs directly under **Settings -> General -> About**. Includes rich markdown rendering, smooth scrolling (analog sticks, d-pad, L/R page jumping, and touch dragging), and an instant refresh option (press **X**).
+
 ### Safe Homebrew NRO Customization
 
 Customize NRO metadata and icons directly from the Homebrew menu via **Customize Homebrew**:
@@ -217,6 +225,14 @@ Sphaira supports multiple display layouts for homebrew and games, customizable t
 - **HB Menu Layout:** Replicates the classic Nintendo Switch Homebrew Menu style. It displays a large icon of the selected app on the left along with detailed metadata (Name, Author, Version) on the right, and lists all available applications in a horizontal row at the bottom. The horizontal row uses custom dual-banner cards (showing the clean filename in a white banner on top, and the full-sized icon below).
 - **Animated Waves:** An animated wave background (reproducing the classic hbmenu background) runs along the bottom of the screen. This can be enabled or disabled via "Settings -> Appearance -> Animated waves". Its colors are fully customizable in `/config/kefir/config.ini` by specifying `wave_color_dark` (for dark themes) and `wave_color_light` (for light themes) as hex values (e.g. `0x00FFC8`). If left blank, it automatically resolves to the active theme's highlight colors.
 - **Charging Indicator:** When charging, the battery percentage numbers are displayed in a clean green color with a static lightning bolt icon on the right, maintaining a consistent size and layout to align perfectly with other status bar elements.
+
+## Tools Hub
+
+The **Tools** tab provides quick access to core utilities and settings in an organized grid:
+- **Row 1:** **File Browser** (manage SD card files), **Games** (installed titles manager), **Themes** (theme packs).
+- **Row 2:** **Updater** (Kefir & firmware updates), **Saves** (Save Hub & DISA backup/restoration), **Software** (Homebrew App Store, DBI installer, and community mod utilities).
+- **Row 3:** **Cheats** (cheat databases & dmnt cheats manager), **Kefir Settings** (fan curves & system switches), **Settings** (app settings).
+- **Row 4:** **Tools** (sysmodule & background module manager).
 
 ## Sysmodule Catalog Generator
 

@@ -17,6 +17,13 @@ from pathlib import Path
 
 import requests
 
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = Path(__file__).resolve().parent
 I18N = ROOT.parent.parent / "assets" / "romfs" / "i18n"
 SRC = ROOT.parent.parent / "sphaira"

@@ -1,12 +1,41 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.495**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.499**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.495 (Pixel-balanced split & full-width justified 2-row footer layout)
+## Поточний delivery: v0.13.499 (Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion)
+
+- [x] `TOOLS-MENU-REORDER-499` — реорганізовано порядок пунктів у меню Tools: 1-й ряд (File Browser, Games, Themes), 2-й ряд (Updater, Saves, Software), 3-й ряд (Cheats, Kefir Settings, Settings), 4-й ряд (Tools).
+- [x] `SOFTWARE-DESC-UPDATE-499` — оновлено опис розділу Software на `"Homebrew App Store, DBI and mod utilities."` з підтримкою Homebrew App Store.
+- [x] `TOOLS-ROW4-EXPANSION-499` — експериментально додано пункт Tools у 4-й ряд з іконкою `advanced-options.png` та відкриттям менеджера модулів (`UninstallerMenu`) з підтримкою вертикального скролінгу сітки.
+- [x] `I18N-SYNC-499` — синхронізовано переклади для нових ключів у всіх 14 мовних файлах `assets/romfs/i18n/*.json`.
+- [x] `DOCS-BUMP-499` — піднято версію до `0.13.499` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.498 (Header Subtitle Top-Row Alignment & Section Title Sizing Fix)
+
+- [x] `HEADER-SUBTITLE-TOPROW-498` — перенесено виведення довгих описів елементів меню (Tools, Settings, SaveHub, Uninstaller, FTP, AppStore) з нижнього рядка підзаголовка у верхній рядок хедера поруч з версією програми через `SetTitleSubHeading(..., true)`.
+- [x] `HEADER-TITLE-FULLSIZE-498` — завдяки перенесенню опису у верхній рядок звільнено нижній рядок хедера: назви розділів («Інструменти» / «Tools», «Налаштування» / «Settings» тощо) зберігають повний великий кегль 28px без стискання до 40% та непотрібної прокрутки.
+- [x] `DOCS-BUMP-498` — піднято версію до `0.13.498` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, скомпільовано цільовий бінарник у WSL та перевірено unit-тести.
+
+## Попередній delivery: v0.13.497 (Clean Switch compilation, translation pipeline sync & NX-Link deployment)
+
+- [x] `SWITCH-COMPILATION-FIXES-497` — виправлено помилки та попередження компіляції під Nintendo Switch (`fs.OpenFile(staging_path, FsOpenMode_Read, &file)`, `TouchInfo` члени у `AboutBox::Update`, специфікатор `%ld` для `s64`).
+- [x] `I18N-TRANSLATE-SYNC-497` — виконано повну синхронізацію та переклад усіх мовних файлів через Gemini 3.6 Flash (0 відсутніх ключів).
+- [x] `NRO-BUILD-NXLINK-497` — скомпільовано цільовий двійковий файл `kefir-hub.nro` у WSL та успішно відправлено на Switch через NX-Link (`192.168.50.69`).
+- [x] `DOCS-BUMP-497` — піднято версію до `0.13.497` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.496 (Automatic Silent Update, Background Self-Updating & About Changelog Box)
+
+- [x] `SETTINGS-AUTO-UPDATE-OPT-496` — додано опцію `m_auto_update` (`App::GetAutoUpdateEnable()`, `App::SetAutoUpdateEnable(bool)`) та пункт налаштування `Auto-update` у `Settings → General` з перекладами у всіх 14 мовних файлах `assets/romfs/i18n/*.json`.
+- [x] `MAIN-SILENT-UPDATE-FLOW-496` — оновлено URL репозиторію на `rashevskyv/kefir-hub`, реалізовано 100% тихий фоновий асинхронний пайплайн завантаження релізного ассету (`.nro` / `.zip`) у `MainMenu::MainMenu()` та безпечну атомарну заміну файлу `App::GetExePath()` і `/hbmenu.nro` без попапів чи переривань користувача.
+- [x] `ABOUT-CHANGELOG-BOX-496` — створено модальне вікно `AboutBox` (`ui/about_box.hpp`, `ui/about_box.cpp`) з переглядом поточної версії, лінком на репозиторій та кешованим/живим списком змін релізу, додано пункт `About` у `Settings → General`.
+- [x] `TESTS-AUTO-UPDATE-496` — створено unit-тест `tests/test_auto_update_asset.cpp` для валідації вибору ассетів та порівняння версій.
+- [x] `DOCS-BUILD-VERIFY-496` — піднято версію до `0.13.496` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `task.md`, `walkthrough.md`, пройдено всі 15 наборів host unit-тестів у WSL.
+
+## Попередній delivery: v0.13.495 (Pixel-balanced split & full-width justified 2-row footer layout)
 
 - [x] `FOOTER-PIXEL-BALANCE-SPLIT-495` — оновлено алгоритм вибору точки розбиття $k$ у `Widget::SetupUiButtons` (`sphaira/source/ui/widget.cpp`) для мінімізації різниці між сумарною кількістю зайнятих пікселів контенту верхнього та нижнього рядків ($|W_{\text{bottom}} - W_{\text{top}}|$).
 - [x] `FOOTER-JUSTIFIED-FULLWIDTH-495` — реалізовано `LayoutUiButtonsRowJustified`, який динамічно розподіляє вільний простір між елементами рядка ($gap = (W_{\text{avail}} - W_{\text{content}}) / (M - 1)$), завдяки чому обидва рядки повністю займають усю ширину футера (від `30px` до `1220px`), а сенсорні зони безшовно покривають весь екран.
