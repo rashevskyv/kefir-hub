@@ -1,10 +1,26 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.499**. Завершені плани збережено в
+Поточний delivery — **v0.13.500**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion
+## Поточний delivery: v0.13.500 — NexLink / DBI return crash
+
+Статус: traceback і клас першопричини підтверджено трьома незалежними аудитами; реалізація очікує Gemini handoff:
+1. **Доказова діагностика**:
+   - Найновіший report `F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log` точно відповідає WSL ELF за Build ID `29AC83A4D4BFAD5E9014FC1C660A598627CDA520`.
+   - У 17/20 звітів allocator виконує валідний split top-chunk і падає на `str x1, [x3,#8]`, причому `Exception Address == X3 + 8`; `ScanThemes`, `opendir` та декодери зображень є лише першими алокаціями, що доходять до недоступної сторінки.
+   - Решта 3/20 звітів належать окремому старому stack overflow логера, усуненому у v0.13.491.
+2. **Спільний root-boundary fix**:
+   - Додати strong `__libnx_initheap()` без алокацій: пройти loader-provided OverrideHeap через `svcQueryMemory`, відкинути успадковані `Perm_None` / `IsBorrowed` діапазони та передати newlib найбільший суцільний `MemType_Heap + Perm_Rw + attr == 0` сегмент.
+   - Для запуску без OverrideHeap дослівно зберегти стандартний libnx fallback через `__nx_heap_size` і `svcSetHeapSize`; при помилці query або відсутності придатного сегмента завершуватися контрольовано з `LibnxError_HeapAllocFailed`.
+   - Перенести outbound NXLink logger thread із `userAppInit/userAppExit` у межі `App::App/App::~App`, виправити socket sentinel `-1` та обмежити довжину копіювання фактично записаними байтами `buf[512]`.
+3. **Реалізація й верифікація**:
+   - Передати вузький патч у свіжий Gemini-чат, після чого перевірити повний diff як senior reviewer.
+   - Підняти версію до `0.13.500`, виконати `tests/run.sh` і ReleaseWithInstall-збірку у WSL.
+   - Після встановлення нового NRO виконати щонайменше 10 послідовних NexLink reload і 10 повернень із DBI; після кожного циклу дочекатися повного старту й сканування тем. У разі нового report звірити його Build ID з новим ELF.
+
+## Попередній delivery: v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion
 
 Статус: реалізацію виконано та перевірено:
 1. **Реорганізація сітки іконок меню Tools (`sphaira/source/ui/menus/tools_menu.cpp`)**:

@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.499**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.500**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.499 (Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion)
+## Поточний delivery: v0.13.500 (NexLink / DBI return crash)
+
+- [x] `CRASH-TRACEBACK-500` — знайдено crash-report на змонтованій microSD (`F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log`), підтверджено точний збіг Build ID з актуальним WSL ELF та відновлено стек `_malloc_r → _memalign_r → opendir → App::ScanThemes → App::App`.
+- [ ] `NRO-LIFECYCLE-ROOT-CAUSE-500` — захистити ранню ініціалізацію newlib heap від успадкованих `Perm_None` / `IsBorrowed` сторінок після попереднього NRO: у strong `__libnx_initheap()` вибирати найбільший суцільний чистий `Heap + RW` діапазон із loader override; окремо закрити підтверджені lifecycle/sentinel/OOB дефекти логера, які можуть залишати зайвий heap-backed thread stack.
+- [ ] `REGRESSION-VERIFY-500` — виконати host-тести, ReleaseWithInstall-збірку у WSL, звірити Build ID нового ELF/NRO та повторити на Switch сценарії NexLink upload і повернення з DBI.
+- [ ] `DOCS-BUMP-COMMIT-500` — підняти версію до `0.13.500`, зафіксувати результат у документації та створити сфокусований коміт.
+
+## Попередній delivery: v0.13.499 (Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion)
 
 - [x] `TOOLS-MENU-REORDER-499` — реорганізовано порядок пунктів у меню Tools: 1-й ряд (File Browser, Games, Themes), 2-й ряд (Updater, Saves, Software), 3-й ряд (Cheats, Kefir Settings, Settings), 4-й ряд (Tools).
 - [x] `SOFTWARE-DESC-UPDATE-499` — оновлено опис розділу Software на `"Homebrew App Store, DBI and mod utilities."` з підтримкою Homebrew App Store.
