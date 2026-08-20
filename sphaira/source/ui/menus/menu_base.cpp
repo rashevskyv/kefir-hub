@@ -327,80 +327,84 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return "+" + value;
     };
 
-    // Left edge of the whole status block, so the header gap can end against
-    // it. The labels are drawn left aligned from label_x, so that is already
-    // the leftmost pixel of the block.
-    m_status_left_x = label_x;
+    if (m_show_storage) {
+        // Left edge of the whole status block, so the header gap can end against
+        // it. The labels are drawn left aligned from label_x, so that is already
+        // the leftmost pixel of the block.
+        m_status_left_x = label_x;
 
-    auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) {
-        if (total_bytes <= 0) return;
-        const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
-        const float fill_w     = bar_w * used_ratio;
-        const float bar_y      = y - bar_h;
+        auto draw_storage_bar = [&](float y, const char* label, s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) {
+            if (total_bytes <= 0) return;
+            const float used_ratio = 1.f - static_cast<float>(free_bytes) / static_cast<float>(total_bytes);
+            const float fill_w     = bar_w * used_ratio;
+            const float bar_y      = y - bar_h;
 
-        // Track (background)
-        const NVGcolor track_col = nvgRGBA(80, 80, 80, 180);
-        gfx::drawRect(vg, bar_x, bar_y, bar_w, bar_h, track_col);
+            // Track (background)
+            const NVGcolor track_col = nvgRGBA(80, 80, 80, 180);
+            gfx::drawRect(vg, bar_x, bar_y, bar_w, bar_h, track_col);
 
-        // Fill
-        NVGcolor fill_col;
-        if (used_ratio > 0.9f)       fill_col = nvgRGBA(230, 60,  60,  255);
-        else if (used_ratio > 0.75f) fill_col = nvgRGBA(230, 180, 60,  255);
-        else                         fill_col = nvgRGBA(90,  200, 120, 255);
-        gfx::drawRect(vg, bar_x, bar_y, fill_w, bar_h, fill_col);
+            // Fill
+            NVGcolor fill_col;
+            if (used_ratio > 0.9f)       fill_col = nvgRGBA(230, 60,  60,  255);
+            else if (used_ratio > 0.75f) fill_col = nvgRGBA(230, 180, 60,  255);
+            else                         fill_col = nvgRGBA(90,  200, 120, 255);
+            gfx::drawRect(vg, bar_x, bar_y, fill_w, bar_h, fill_col);
 
-        // Games may expose how much of the used region belongs to the current
-        // title. Anchor the highlighted segment at the end of the used region
-        // so it remains proportional without claiming that storage is physically
-        // contiguous on disk.
-        if (highlight_bytes && m_storage_projection) {
-            // planned usage: the segment extends from the end of the used
-            // region into the free space. Red when it does not fit.
-            const float ratio = static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes);
-            const float seg_w = std::min(bar_w - fill_w, std::max(2.f, bar_w * ratio));
-            const bool fits = free_bytes > 0 && highlight_bytes <= static_cast<u64>(free_bytes);
-            const auto seg_col = fits ? theme->GetColour(ThemeEntryID_HIGHLIGHT_1) : nvgRGBA(230, 60, 60, 255);
-            gfx::drawRect(vg, bar_x + fill_w, bar_y, seg_w, bar_h, seg_col);
+            // Games may expose how much of the used region belongs to the current
+            // title. Anchor the highlighted segment at the end of the used region
+            // so it remains proportional without claiming that storage is physically
+            // contiguous on disk.
+            if (highlight_bytes && m_storage_projection) {
+                // planned usage: the segment extends from the end of the used
+                // region into the free space. Red when it does not fit.
+                const float ratio = static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes);
+                const float seg_w = std::min(bar_w - fill_w, std::max(2.f, bar_w * ratio));
+                const bool fits = free_bytes > 0 && highlight_bytes <= static_cast<u64>(free_bytes);
+                const auto seg_col = fits ? theme->GetColour(ThemeEntryID_HIGHLIGHT_1) : nvgRGBA(230, 60, 60, 255);
+                gfx::drawRect(vg, bar_x + fill_w, bar_y, seg_w, bar_h, seg_col);
 
-            // the package in focus takes the head of the segment, so it reads as
-            // "of everything queued here, this much is the one you are looking at".
-            // Amber is hardcoded like the red above: the theme highlights are
-            // often two shades of the same colour, which reads as one segment.
-            if (focus_bytes) {
-                const float f_ratio = static_cast<float>(focus_bytes) / static_cast<float>(total_bytes);
-                const float f_w = std::min(seg_w, std::max(2.f, bar_w * f_ratio));
-                gfx::drawRect(vg, bar_x + fill_w, bar_y, f_w, bar_h, nvgRGBA(255, 200, 60, 255));
+                // the package in focus takes the head of the segment, so it reads as
+                // "of everything queued here, this much is the one you are looking at".
+                // Amber is hardcoded like the red above: the theme highlights are
+                // often two shades of the same colour, which reads as one segment.
+                if (focus_bytes) {
+                    const float f_ratio = static_cast<float>(focus_bytes) / static_cast<float>(total_bytes);
+                    const float f_w = std::min(seg_w, std::max(2.f, bar_w * f_ratio));
+                    gfx::drawRect(vg, bar_x + fill_w, bar_y, f_w, bar_h, nvgRGBA(255, 200, 60, 255));
+                }
+            } else if (highlight_bytes && fill_w > 0.f) {
+                const float highlight_ratio = std::min(
+                    used_ratio, static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes));
+                const float highlight_w = std::max(2.f, bar_w * highlight_ratio);
+                const float highlight_x = bar_x + std::max(0.f, fill_w - highlight_w);
+                gfx::drawRect(vg, highlight_x, bar_y, std::min(highlight_w, fill_w), bar_h,
+                    theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
             }
-        } else if (highlight_bytes && fill_w > 0.f) {
-            const float highlight_ratio = std::min(
-                used_ratio, static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes));
-            const float highlight_w = std::max(2.f, bar_w * highlight_ratio);
-            const float highlight_x = bar_x + std::max(0.f, fill_w - highlight_w);
-            gfx::drawRect(vg, highlight_x, bar_y, std::min(highlight_w, fill_w), bar_h,
-                theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
-        }
 
-        // Normally show free space. Games replace it with the exact size of the
-        // focused title or the sum of the current multi-selection.
-        const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
-        const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
-            ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
+            // Normally show free space. Games replace it with the exact size of the
+            // focused title or the sum of the current multi-selection.
+            const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
+            const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
+                ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
-        nvgFontSize(vg, storage_font);
-        // reading order is label, bar, size: the two outer columns are fixed
-        // and only the size text inside its reserved column changes width.
-        gfx::drawTextArgs(vg, label_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
-            "%s", label);
+            nvgFontSize(vg, storage_font);
+            // reading order is label, bar, size: the two outer columns are fixed
+            // and only the size text inside its reserved column changes width.
+            gfx::drawTextArgs(vg, label_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
+                "%s", label);
 
-        gfx::drawTextArgs(vg, value_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
-            "%s", value.c_str());
-    };
+            gfx::drawTextArgs(vg, value_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
+                "%s", value.c_str());
+        };
 
-    // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
-    const float storage_mid  = (y_ip + start_y) * 0.5f;
-    const float storage_gap  = 20.f;
-    draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
-    draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
+        // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
+        const float storage_mid  = (y_ip + start_y) * 0.5f;
+        const float storage_gap  = 20.f;
+        draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
+        draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
+    } else {
+        m_status_left_x = start_x;
+    }
 
     } // draw_status
 
@@ -408,12 +412,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // redraws its own at the same y, so the line still reads as continuous.
     gfx::drawRect(vg, layout::SIDE_X, layout::HEADER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, layout::SIDE_X, layout::FOOTER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
-
-    nvgFontSize(vg, 28);
-    gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
-
-    const auto text_w = SCREEN_WIDTH / 2 - 30;
-    float title_sub_x = 80 + (bounds[2] - bounds[0]) + 10;
 
     // title block: left half of the header band, covered by a left side panel.
     if (occluded(Vec4{0.f, 0.f, SCREEN_WIDTH / 2.f, layout::HEADER_LINE_Y})) {
@@ -428,57 +426,85 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float ver_w = bounds[2] - bounds[0];
 
     gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
-    gfx::drawTextArgs(vg, 80, start_y, 28.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
 
-    // optional stat block right after the title: two small stacked lines
-    // (e.g. the file browser's selection count and total size). The sub
-    // heading shifts right so nothing overlaps.
-    if (!m_title_stat_top.empty() || !m_title_stat_bottom.empty()) {
-        const auto stat_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
-        nvgFontSize(vg, 15.f);
-        float stat_w = 0.f;
-        for (const auto* line : {&m_title_stat_top, &m_title_stat_bottom}) {
-            if (line->empty()) continue;
-            gfx::textBounds(vg, 0, 0, bounds, line->c_str());
-            stat_w = std::max(stat_w, bounds[2] - bounds[0]);
-        }
-        gfx::drawTextArgs(vg, title_sub_x, start_y - 16.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_top.c_str());
-        gfx::drawTextArgs(vg, title_sub_x, start_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_bottom.c_str());
-        title_sub_x += stat_w + 14.f;
-    }
-    // The header is four slots: title (+ version above it), this gap, the
-    // storage bars, then the clock (+ access point above it). The last two are
-    // fixed width, so the gap is simply whatever the title leaves - measured
-    // every frame rather than assumed to be half the screen, which is what the
-    // old `text_w` bound did no matter how short the title was.
-    //
-    // Inside the gap: the descriptive sub heading (title id, accounts, path)
-    // from the left, the counter ("12 / 148") against the right. Both scroll
-    // what does not fit. Suppressed with the status block, since a panel over
-    // that corner must not have them ghost through.
-    // same margin on both sides, so the gap reads as its own slot rather than
-    // as text leaning on the storage bars.
     constexpr float GAP_MARGIN = 30.f;
     constexpr float GAP_INNER = 20.f;
-
-    // title_sub_x already carries a 10px lead-out from the title block.
-    const float gap_left = title_sub_x + GAP_MARGIN - 10.f;
+    const auto text_w = SCREEN_WIDTH / 2 - 30;
     const float gap_right = (draw_status ? m_status_left_x : text_w) - GAP_MARGIN;
 
     float counter_w = 0.f;
-    if (!m_sub_heading.empty() && draw_status && gap_right > gap_left) {
+    if (!m_sub_heading.empty() && draw_status && gap_right > 80.f + 100.f) {
         // ScrollingText clips from its x rightwards, so x is always the left
         // edge; right alignment is done by measuring and offsetting. A counter
         // wide enough to fill the gap is left aligned and allowed to scroll.
         nvgFontSize(vg, 18.f);
         gfx::textBounds(vg, 0, 0, bounds, m_sub_heading.c_str());
-        counter_w = std::min(bounds[2] - bounds[0], gap_right - gap_left);
+        counter_w = std::min(bounds[2] - bounds[0], gap_right - 80.f - 100.f);
 
         m_scroll_sub_heading.Draw(vg, true, gap_right - counter_w, start_y, counter_w, 18,
             NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
     }
 
     const float sub_right = counter_w ? gap_right - counter_w - GAP_INNER : gap_right;
+
+    // Optional stat block right after the title: two small stacked lines
+    float stat_w = 0.f;
+    if (!m_title_stat_top.empty() || !m_title_stat_bottom.empty()) {
+        nvgFontSize(vg, 15.f);
+        for (const auto* line : {&m_title_stat_top, &m_title_stat_bottom}) {
+            if (line->empty()) continue;
+            gfx::textBounds(vg, 0, 0, bounds, line->c_str());
+            stat_w = std::max(stat_w, bounds[2] - bounds[0]);
+        }
+    }
+
+    const float avail_title_w = std::max(50.f, sub_right - 80.f - (stat_w > 0.f ? stat_w + 14.f : 0.f));
+
+    // Dynamic title scaling: base 28px, reduce up to 40% (min 16.8px), then scroll
+    constexpr float BASE_TITLE_FONT = 28.f;
+    constexpr float MIN_TITLE_FONT = BASE_TITLE_FONT * 0.60f;
+
+    nvgFontSize(vg, BASE_TITLE_FONT);
+    gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
+    const float title_unscaled_w = bounds[2] - bounds[0];
+
+    float title_font_size = BASE_TITLE_FONT;
+    bool title_needs_scroll = false;
+
+    if (title_unscaled_w <= avail_title_w || avail_title_w <= 0.f) {
+        title_font_size = BASE_TITLE_FONT;
+    } else {
+        const float scale = avail_title_w / title_unscaled_w;
+        if (scale >= 0.60f) {
+            title_font_size = BASE_TITLE_FONT * scale;
+        } else {
+            title_font_size = MIN_TITLE_FONT;
+            title_needs_scroll = true;
+        }
+    }
+
+    if (title_needs_scroll) {
+        m_scroll_title.Draw(vg, true, 80.f, start_y, avail_title_w, title_font_size,
+            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title);
+    } else {
+        m_scroll_title.Reset(m_title);
+        gfx::drawTextArgs(vg, 80.f, start_y, title_font_size,
+            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", m_title.c_str());
+    }
+
+    nvgFontSize(vg, title_font_size);
+    gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
+    const float rendered_title_w = std::min(bounds[2] - bounds[0], avail_title_w);
+    float title_sub_x = 80.f + rendered_title_w + 10.f;
+
+    if (!m_title_stat_top.empty() || !m_title_stat_bottom.empty()) {
+        const auto stat_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawTextArgs(vg, title_sub_x, start_y - 16.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_top.c_str());
+        gfx::drawTextArgs(vg, title_sub_x, start_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, stat_col, "%s", m_title_stat_bottom.c_str());
+        title_sub_x += stat_w + 14.f;
+    }
+
+    const float gap_left = title_sub_x + GAP_MARGIN - 10.f;
 
     if (!m_title_sub_heading.empty()) {
         if (m_title_sub_heading_top_row) {
@@ -501,7 +527,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 }
 
 void MenuBase::SetTitle(std::string title) {
-    m_title = title;
+    if (m_title != title) {
+        m_scroll_title.Reset(title);
+    }
+    m_title = std::move(title);
 }
 
 void MenuBase::SetTitleStats(std::string top, std::string bottom) {

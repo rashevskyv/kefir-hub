@@ -14,44 +14,170 @@ namespace {
 // text stops being readable and is simply allowed to overflow.
 constexpr float UI_HINT_SIZE = 20.f;
 constexpr float UI_GLYPH_SIZE = 26.f;
+
+constexpr float UI_HINT_SIZE_2ROW = 17.f;
+constexpr float UI_GLYPH_SIZE_2ROW = 22.f;
+
 constexpr float MIN_UI_BUTTON_SCALE = 0.6f;
 
-// Lays the hint row out right to left from pos at the given scale and returns
-// how wide it came out, so the caller can measure before committing.
-auto LayoutUiButtons(NVGcontext* vg, Widget::uiButtons& buttons, const Vec2& pos, float scale) -> float {
+// Measures intrinsic unspaced content width of buttons in range [start_idx, end_idx)
+// and outputs individual hint and glyph lengths.
+auto MeasureUiButtonsContent(NVGcontext* vg, const Widget::uiButtons& buttons, size_t start_idx, size_t end_idx,
+                             float scale, float base_hint_size, float base_glyph_size,
+                             std::vector<float>& out_hint_lens, std::vector<float>& out_glyph_lens) -> float {
+    float total_w = 0.f;
+    float bounds[4]{};
+
+    const auto hint_size = base_hint_size * scale;
+    const auto glyph_size = base_glyph_size * scale;
+
+    out_hint_lens.clear();
+    out_glyph_lens.clear();
+    out_hint_lens.reserve(end_idx - start_idx);
+    out_glyph_lens.reserve(end_idx - start_idx);
+
+    for (size_t i = start_idx; i < end_idx; i++) {
+        const auto& e = buttons[i];
+
+        nvgFontSize(vg, hint_size);
+        nvgTextBounds(vg, 0.f, 0.f, e.m_action_str.c_str(), nullptr, bounds);
+        const float hint_len = bounds[2] - bounds[0];
+        out_hint_lens.push_back(hint_len);
+
+        nvgFontSize(vg, glyph_size);
+        nvgTextBounds(vg, 0.f, 0.f, e.m_button_str.c_str(), nullptr, bounds);
+        const float glyph_len = bounds[2] - bounds[0];
+        out_glyph_lens.push_back(glyph_len);
+
+        total_w += hint_len + 8.f * scale + glyph_len;
+    }
+
+    return total_w;
+}
+
+// Lays out a sub-range [start_idx, end_idx) of buttons right-to-left from pos.
+// If apply is false, only measures and returns the total width without modifying button properties.
+auto LayoutUiButtonsRow(NVGcontext* vg, Widget::uiButtons& buttons, size_t start_idx, size_t end_idx,
+                        const Vec2& pos, float scale, float base_hint_size, float base_glyph_size,
+                        bool is_two_rows, int row_index, bool apply) -> float {
     auto [x, y] = pos;
     float bounds[4]{};
 
-    const auto hint_size = UI_HINT_SIZE * scale;
-    const auto glyph_size = UI_GLYPH_SIZE * scale;
+    const auto hint_size = base_hint_size * scale;
+    const auto glyph_size = base_glyph_size * scale;
 
-    for (auto& e : buttons) {
+    for (size_t i = start_idx; i < end_idx; i++) {
+        auto& e = buttons[i];
         nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
 
         nvgFontSize(vg, hint_size);
         nvgTextBounds(vg, x, y, e.m_action_str.c_str(), nullptr, bounds);
-        auto len = bounds[2] - bounds[0];
-        e.m_hint_pos = {x, y, len, hint_size};
-        e.m_hint_size = hint_size;
+        const auto hint_len = bounds[2] - bounds[0];
 
-        x -= len + 8.f * scale;
+        const float hint_pos_x = x;
+        const float hint_pos_y = y;
+
+        x -= hint_len + 8.f * scale;
         nvgFontSize(vg, glyph_size);
-        nvgTextBounds(vg, x, y - 7.f * scale, e.m_button_str.c_str(), nullptr, bounds);
-        len = bounds[2] - bounds[0];
-        e.m_button_pos = {x, y - 4.f * scale, len, glyph_size};
-        e.m_button_size = glyph_size;
-        x -= len + 16.f * scale;
+        nvgTextBounds(vg, x, y - (is_two_rows ? 4.f : 7.f) * scale, e.m_button_str.c_str(), nullptr, bounds);
+        const auto btn_len = bounds[2] - bounds[0];
 
-        // the touch box keeps its full height at any scale: shrinking the text
-        // is a layout fix, shrinking the target the finger has to hit is not.
-        e.SetPos(e.m_button_pos);
-        e.SetX(e.GetX() - 40.f * scale);
-        e.SetW(e.m_hint_pos.x - e.m_button_pos.x + len + 25.f * scale);
-        e.SetY(e.GetY() - 18.f);
-        e.SetH(UI_GLYPH_SIZE + 18.f * 2.f);
+        const float btn_pos_x = x;
+        const float btn_pos_y = y - (is_two_rows ? 4.f : 4.f) * scale;
+        x -= btn_len + 16.f * scale;
+
+        if (apply) {
+            e.m_hint_pos = {hint_pos_x, hint_pos_y, hint_len, hint_size};
+            e.m_hint_size = hint_size;
+            e.m_button_pos = {btn_pos_x, btn_pos_y, btn_len, glyph_size};
+            e.m_button_size = glyph_size;
+
+            e.SetPos(e.m_button_pos);
+            e.SetX(e.GetX() - (is_two_rows ? 30.f : 40.f) * scale);
+            e.SetW(e.m_hint_pos.x - e.m_button_pos.x + btn_len + (is_two_rows ? 20.f : 25.f) * scale);
+
+            if (is_two_rows) {
+                if (row_index == 1) {
+                    // Top row
+                    e.SetY(646.f);
+                    e.SetH(36.f);
+                } else {
+                    // Bottom row
+                    e.SetY(682.f);
+                    e.SetH(38.f);
+                }
+            } else {
+                e.SetY(e.GetY() - 18.f);
+                e.SetH(UI_GLYPH_SIZE + 18.f * 2.f);
+            }
+        }
     }
 
     return pos.x - x;
+}
+
+// Lays out a sub-range [start_idx, end_idx) of buttons with justified spacing
+// spanning the entire width between pos.x (right) and left_bound_x (left).
+auto LayoutUiButtonsRowJustified(NVGcontext* vg, Widget::uiButtons& buttons, size_t start_idx, size_t end_idx,
+                                 const Vec2& pos, float left_bound_x, float scale,
+                                 float base_hint_size, float base_glyph_size,
+                                 int row_index) -> void {
+    const size_t count = end_idx - start_idx;
+    if (count == 0) return;
+
+    std::vector<float> hint_lens;
+    std::vector<float> glyph_lens;
+    const float content_w = MeasureUiButtonsContent(vg, buttons, start_idx, end_idx, scale, base_hint_size, base_glyph_size, hint_lens, glyph_lens);
+
+    const float avail_w = pos.x - left_bound_x;
+    const float hint_size = base_hint_size * scale;
+    const auto glyph_size = base_glyph_size * scale;
+
+    float inter_gap = 16.f * scale;
+    if (count > 1 && avail_w > content_w) {
+        inter_gap = (avail_w - content_w) / static_cast<float>(count - 1);
+    }
+
+    float current_x = pos.x;
+
+    for (size_t idx = 0; idx < count; idx++) {
+        const size_t i = start_idx + idx;
+        auto& e = buttons[i];
+
+        const float hint_len = hint_lens[idx];
+        const float glyph_len = glyph_lens[idx];
+
+        const float hint_pos_x = current_x;
+        const float hint_pos_y = pos.y;
+
+        const float glyph_x = current_x - hint_len - 8.f * scale;
+        const float glyph_y = pos.y - 4.f * scale;
+        const float btn_left_x = glyph_x - glyph_len;
+
+        e.m_hint_pos = {hint_pos_x, hint_pos_y, hint_len, hint_size};
+        e.m_hint_size = hint_size;
+        e.m_button_pos = {glyph_x, glyph_y, glyph_len, glyph_size};
+        e.m_button_size = glyph_size;
+
+        // Set touch target box to seamlessly cover half the gap on each side
+        const float touch_right = (idx == 0) ? pos.x : (hint_pos_x + inter_gap / 2.f);
+        const float touch_left = (idx == count - 1) ? left_bound_x : (btn_left_x - inter_gap / 2.f);
+
+        e.SetX(touch_left);
+        e.SetW(std::max(1.f, touch_right - touch_left));
+
+        if (row_index == 1) {
+            // Top row
+            e.SetY(646.f);
+            e.SetH(36.f);
+        } else {
+            // Bottom row
+            e.SetY(682.f);
+            e.SetH(38.f);
+        }
+
+        current_x = btn_left_x - inter_gap;
+    }
 }
 
 auto GetUiButtonSortPriority(Button button) -> int {
@@ -206,17 +332,62 @@ auto Widget::FireAction(Button b, u8 type) -> bool {
 }
 
 void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
-    auto vg = App::GetVg();
-
-    // measure at full size first. if the row would run off the left of the
-    // footer, shrink the whole row until it fits - a hint that has to be merged
-    // with its neighbour to make room loses its own touch target.
-    const auto avail = button_pos.x - layout::SIDE_X;
-    const auto want = LayoutUiButtons(vg, buttons, button_pos, 1.f);
-
-    if (want > avail && avail > 0.f) {
-        LayoutUiButtons(vg, buttons, button_pos, std::max(MIN_UI_BUTTON_SCALE, avail / want));
+    if (buttons.empty()) {
+        return;
     }
+
+    auto vg = App::GetVg();
+    const float left_bound_x = layout::SIDE_X;
+    const auto avail = button_pos.x - left_bound_x;
+
+    // 1. Measure 1-row layout at full size first
+    const auto want_1row = LayoutUiButtonsRow(vg, buttons, 0, buttons.size(), button_pos, 1.f, UI_HINT_SIZE, UI_GLYPH_SIZE, false, 0, false);
+    const float scale_1row = (want_1row > 0.f && avail > 0.f) ? (avail / want_1row) : 1.f;
+
+    // If it fits nicely on 1 row with scale >= 0.85 (or if there is only 1 button)
+    if ((want_1row <= avail || scale_1row >= 0.85f || buttons.size() < 2) && avail > 0.f) {
+        LayoutUiButtonsRow(vg, buttons, 0, buttons.size(), button_pos, std::max(MIN_UI_BUTTON_SCALE, std::min(1.f, scale_1row)), UI_HINT_SIZE, UI_GLYPH_SIZE, false, 0, true);
+        return;
+    }
+
+    // 2. 2-row layout: find split index k in [1, buttons.size() - 1]
+    // Balance rows by occupied pixel content: minimize |W_bottom - W_top|
+    std::vector<float> unscaled_widths(buttons.size(), 0.f);
+    float total_content_pixels = 0.f;
+    for (size_t i = 0; i < buttons.size(); i++) {
+        std::vector<float> hl, gl;
+        unscaled_widths[i] = MeasureUiButtonsContent(vg, buttons, i, i + 1, 1.f, UI_HINT_SIZE_2ROW, UI_GLYPH_SIZE_2ROW, hl, gl);
+        total_content_pixels += unscaled_widths[i];
+    }
+
+    size_t best_k = buttons.size() / 2;
+    float best_diff = 1e9f;
+    float best_max_w = 1e9f;
+
+    float current_bottom_w = 0.f;
+    for (size_t k = 1; k < buttons.size(); k++) {
+        current_bottom_w += unscaled_widths[k - 1];
+        const float current_top_w = total_content_pixels - current_bottom_w;
+
+        const float diff = std::abs(current_bottom_w - current_top_w);
+        const float max_w = std::max(current_bottom_w, current_top_w);
+
+        if (diff < best_diff || (std::abs(diff - best_diff) < 1.f && max_w < best_max_w)) {
+            best_diff = diff;
+            best_max_w = max_w;
+            best_k = k;
+        }
+    }
+
+    const float scale_2row = (best_max_w > 0.f && avail > 0.f) ? (avail / best_max_w) : 1.f;
+    const float final_scale = std::clamp(scale_2row, MIN_UI_BUTTON_SCALE, 1.f);
+
+    const float y_top = (button_pos.y >= 640.f) ? 655.f : (button_pos.y - 14.f);
+    const float y_bottom = (button_pos.y >= 640.f) ? 687.f : (button_pos.y + 14.f);
+
+    // Apply justified layout across full width for Row 1 (top: buttons [best_k, N)) and Row 2 (bottom: buttons [0, best_k))
+    LayoutUiButtonsRowJustified(vg, buttons, best_k, buttons.size(), Vec2{button_pos.x, y_top}, left_bound_x, final_scale, UI_HINT_SIZE_2ROW, UI_GLYPH_SIZE_2ROW, 1);
+    LayoutUiButtonsRowJustified(vg, buttons, 0, best_k, Vec2{button_pos.x, y_bottom}, left_bound_x, final_scale, UI_HINT_SIZE_2ROW, UI_GLYPH_SIZE_2ROW, 2);
 }
 
 auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool sort) -> uiButtons {

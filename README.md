@@ -157,7 +157,10 @@ Sphaira features customizable theme options and multi-language support:
 ## Image Viewer
 
 Sphaira provides an integrated image viewer with dedicated legend and controls:
-- **Custom Legend & Standard Chrome:** Clear bottom-bar indicators (`Prev / Next Image` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR). Normal view preserves standard screen header/footer chrome above image content, while Full Screen mode expands to full display without chrome.
+- **Uncluttered Header & Full-Width Title:** NAND and SD storage bars are cleanly omitted in the image viewer, giving the filename the full header space from the left margin up to the clock.
+- **Adaptive Title Scaling & Scrolling:** If an image or menu title is long (e.g. Switch screenshot filenames like `2026081517021600-57B4628D2267231D57E0FC1078C0596D.jpg`), the font size automatically scales down by up to 40% (down to 16.8px) to fit the available space, and seamlessly scrolls if it still exceeds the space at minimum font size.
+- **Two-Row Pixel-Balanced & Justified Footer Legend:** When an extensive set of actions is active or when translated text exceeds single-line width, footer action hints automatically format across two rows balanced by occupied pixel width (minimizing width disparity between rows). Each row dynamically distributes spacing between items to occupy the full width of the footer (`30px` to `1220px`), providing large fonts and complete edge-to-edge touch hitboxes with zero dead zones.
+- **Custom Legend & Standard Chrome:** Clear bottom-bar indicators (unified `Prev / Next Image` with `\uE0ED / \uE0EE` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR). Normal view preserves standard screen header/footer chrome above image content, while Full Screen mode expands to full display without chrome.
 - **Zoom & Navigation:** Holding ZL with Analog Stick / D-Pad Up or Down zooms in or out without accidentally changing images.
 - **Stick Panning:** Releasing ZL while zoomed in enables smooth pan/scroll across the zoomed image using analog sticks or D-Pad without scale changes or switching files.
 

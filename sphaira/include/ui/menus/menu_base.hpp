@@ -74,6 +74,14 @@ struct MenuBase : Widget {
     void SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus = 0, u64 sd_focus = 0);
     void ClearStorageHighlight();
 
+    void SetShowStorage(bool show) {
+        m_show_storage = show;
+    }
+
+    auto ShowStorage() const -> bool {
+        return m_show_storage;
+    }
+
     auto GetTitle() const {
         return m_title;
     }
@@ -92,6 +100,7 @@ private:
     std::string m_title_stat_top{};
     std::string m_title_stat_bottom{};
 
+    ScrollingText m_scroll_title{};
     ScrollingText m_scroll_title_sub_heading{};
     ScrollingText m_scroll_sub_heading{};
 
@@ -107,6 +116,7 @@ private:
     u64 m_sd_focus{};
     bool m_storage_highlight_active{};
     bool m_storage_projection{};
+    bool m_show_storage{true};
 
     u32 m_flags{};
 };

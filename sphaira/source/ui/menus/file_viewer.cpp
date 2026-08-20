@@ -188,8 +188,10 @@ void Menu::LoadCurrentFile() {
     RemoveAction(Button::R3);
 
     if (m_is_image_file) {
+        SetShowStorage(false);
         LoadImageFile();
     } else {
+        SetShowStorage(true);
         LoadTextFile();
     }
 }
@@ -1645,10 +1647,10 @@ void Menu::LoadImageFile() {
     UpdateFullscreenAction();
 
     if (m_image_paths.size() > 1) {
-        SetAction(Button::LEFT, Action{"Previous Image"_i18n, [this](){
+        SetAction(Button::LEFT, Action{"Prev / Next Image"_i18n, "\uE0ED / \uE0EE", [this](){
             NextImage(-1);
         }});
-        SetAction(Button::RIGHT, Action{"Next Image"_i18n, [this](){
+        SetAction(Button::RIGHT, Action{"", [this](){
             NextImage(1);
         }});
     }

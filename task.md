@@ -1,12 +1,38 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.491**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.495**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.491 (Fix flush thread stack overflow)
+## Поточний delivery: v0.13.495 (Pixel-balanced split & full-width justified 2-row footer layout)
+
+- [x] `FOOTER-PIXEL-BALANCE-SPLIT-495` — оновлено алгоритм вибору точки розбиття $k$ у `Widget::SetupUiButtons` (`sphaira/source/ui/widget.cpp`) для мінімізації різниці між сумарною кількістю зайнятих пікселів контенту верхнього та нижнього рядків ($|W_{\text{bottom}} - W_{\text{top}}|$).
+- [x] `FOOTER-JUSTIFIED-FULLWIDTH-495` — реалізовано `LayoutUiButtonsRowJustified`, який динамічно розподіляє вільний простір між елементами рядка ($gap = (W_{\text{avail}} - W_{\text{content}}) / (M - 1)$), завдяки чому обидва рядки повністю займають усю ширину футера (від `30px` до `1220px`), а сенсорні зони безшовно покривають весь екран.
+- [x] `TESTS-JUSTIFIED-SPLIT-495` — оновлено unit-тест `tests/test_title_scaling.cpp` для перевірки попіксельного балансування рядків і точного приземлення крайнього лівого елемента на координату `30.f`.
+- [x] `DOCS-BUILD-VERIFY-495` — піднято версію до `0.13.495` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, скомпільовано цільовий бінарник `sphaira_nro` у WSL та пройдено всі unit-тести.
+
+## Попередній delivery: v0.13.494 (Unified Prev/Next Image button hint in image viewer footer)
+
+- [x] `IMAGE-SLASH-NAV-HINT-494` — об'єднано окремі підказки «Попереднє зображення» та «Наступне зображення» у вівері (`file_viewer.cpp`) в єдиний компактний елемент `Action{"Prev / Next Image"_i18n, "\uE0ED / \uE0EE", ...}` для `Button::LEFT`, а для `Button::RIGHT` зареєстровано приховану дію (для збереження обробки події переходу вперед контролером), оптимізувавши ширину футера.
+- [x] `DOCS-BUILD-VERIFY-494` — піднято версію до `0.13.494` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, скомпільовано цільовий бінарник `sphaira_nro` у WSL та перевірено тести.
+
+## Попередній delivery: v0.13.493 (Image viewer uncluttered header, dynamic title scaling/scrolling & 2-row footer layout)
+
+- [x] `IMAGE-HEADER-NO-STORAGE-493` — додано прапорець `m_show_storage` та методи `SetShowStorage(bool)` / `ShowStorage()` у `MenuBase` (`menu_base.hpp`), реалізовано приховування панелей пам'яті NAND/SD у вівері зображень (`file_viewer.cpp`) зі звільненням усього простору від лівого краю (`x=80`) до годинника під назву файлу.
+- [x] `TITLE-ADAPTIVE-SCALE-SCROLL-493` — реалізовано динамічне масштабування шрифту назви файлу та заголовків меню в `MenuBase::DrawChrome` (`menu_base.cpp`) (базовий 28px, зменшення до 40% / 16.8px пропорційно вільному місцю) з автоматичним переходом у плавну прокрутку `m_scroll_title` (`ScrollingText`), якщо текст перевищує ширину навіть при мінімальному кеглі.
+- [x] `FOOTER-2ROW-AUTO-LAYOUT-493` — реалізовано автоматичний перехід легенди футера на 2 збалансовані рядки у `Widget::SetupUiButtons` (`widget.cpp`) при падінні масштабу 1 рядка нижче 0.85 (нижній рядок — основні кнопки дій, верхній рядок — тригери та вторинні дії) зі збереженням великого шрифту та незалежних сенсорних хітбоксів для обох рядків.
+- [x] `TESTS-TITLE-FOOTER-493` — створено `tests/test_title_scaling.cpp` для повної перевірки математики масштабування та алгоритму оптимального розбиття 2-рядкового футера.
+- [x] `DOCS-BUILD-VERIFY-493` — піднято версію до `0.13.493` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, скомпільовано цільовий бінарник `sphaira_nro` у WSL та успішно пройдено всі unit-тести.
+
+## Попередній delivery: v0.13.492 (Homebrew App Store restored to Tools > Software)
+
+- [x] `RESTORE-APPSTORE-SOFTWARE-492` — повернуто `Homebrew App Store` у список `BuildSoftwareItems()` (`sphaira/source/ui/menus/settings_menu.cpp`) як перший пункт розділу `Tools → Software`.
+- [x] `CLEANUP-SETTINGS-HB-492` — прибрано ярлик `Homebrew App Store` із `Settings → Homebrew` (`BuildCategories()`), залишивши в налаштуваннях виключно параметри конфігурації.
+- [x] `DOCS-BUILD-VERIFY-492` — піднято версію до `0.13.492` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, скомпільовано цільовий бінарник `sphaira_nro` у WSL та пройдено тести.
+
+## Попередній delivery: v0.13.491 (Fix flush thread stack overflow)
 
 - [x] `LOG-STACK-OVERFLOW-FIX-491` — перенесено масив `batch` зі стеку функції `flush_thread_func` у статичну змінну `g_flush_batch` та збільшено стек потоку до `0x8000`.
 - [x] `BUILD-VERIFY-491` — піднято версію до `0.13.491` у `sphaira/CMakeLists.txt`, оновлено документацію, успішно зібрано `sphaira_nro` у WSL.

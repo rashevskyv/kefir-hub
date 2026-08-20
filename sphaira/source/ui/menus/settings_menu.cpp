@@ -878,6 +878,18 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(SettingsItem{
+        "Homebrew App Store"_i18n,
+        "Download and update homebrew apps."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
         "DBI"_i18n,
         "DBI installer and translations."_i18n,
         [](){
@@ -2160,17 +2172,6 @@ void Menu::BuildCategories() {
             {
                 MakeFolderItem("Homebrew Search Paths"_i18n, "Manage custom folders scanned for homebrew applications."_i18n, BuildHomebrewSearchPathsItems),
                 MakeFolderItem("Forwarders"_i18n, "Defaults baked into forwarders you create: address space, profile selection, capture and svcDebug."_i18n, BuildForwarderItems),
-                {
-                    "Homebrew App Store"_i18n,
-                    "Download and update homebrew apps."_i18n,
-                    [](){
-                        return std::string{};
-                    },
-                    [](){
-                        App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
-                    },
-                    SettingsItemKind::Folder,
-                },
                 MakeBoolItem("Replace hbmenu on exit"_i18n, "Replace /hbmenu.nro with Kefir Hub on exit."_i18n, App::GetReplaceHbmenuEnable, App::SetReplaceHbmenuEnable),
             }
         },
