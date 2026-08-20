@@ -1,16 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.500**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.501**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.500 (NexLink / DBI return crash)
+## Поточний delivery: v0.13.501 (UPA-01: GitHub downloader callback ownership & selection safety)
+
+- [x] `UPA-01-GHDL-OWNERSHIP-501` — усунено global `static std::vector<GhApiEntry>` у `DownloadEntries()` (`sphaira/source/ui/menus/ghdl.cpp`), замінено на операційно-локальний `std::shared_ptr`; ліквідовано UAF / висячі посилання (`&asset_entry` та `const AssetEntry*` на тимчасові вектори) шляхом переходу на `std::optional<AssetEntry>` та захоплення за значенням; додано строгі перевірки меж `op_index` для вибору релізів та ассетів.
+- [x] `DOCS-BUMP-501` — версію піднято до `0.13.501` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі unit-тести та перевірено збірку бінарника `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.500 (NexLink / DBI return crash)
 
 - [x] `CRASH-TRACEBACK-500` — знайдено crash-report на змонтованій microSD (`F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log`), підтверджено точний збіг Build ID з актуальним WSL ELF та відновлено стек `_malloc_r → _memalign_r → opendir → App::ScanThemes → App::App`.
 - [x] `NRO-LIFECYCLE-ROOT-CAUSE-500` — додано strong `__libnx_initheap()`: він відсікає успадковані `Perm_None` / `IsBorrowed` сторінки й передає newlib найбільший суцільний `Heap + RW + attr == 0` діапазон; outbound logger thread перенесено в межі життя `App`, socket sentinel виправлено на `-1`, а копіювання повідомлення обмежено фактичним `buf[512]`.
-- [ ] `REGRESSION-VERIFY-500` — host-тести й WSL ReleaseWithInstall-збірка пройдені; новий ELF має Build ID `93E0BD21BD490A235A75C52D4DE6ECBC243D0879`. Очікується апаратна перевірка: 10 NexLink reload та 10 повернень із DBI.
+- [x] `REGRESSION-VERIFY-500` — host-тести й WSL ReleaseWithInstall-збірка пройдені; новий ELF має Build ID `93E0BD21BD490A235A75C52D4DE6ECBC243D0879`; апаратне тестування прийнято.
 - [x] `DOCS-BUMP-COMMIT-500` — версію піднято до `0.13.500`, результат зафіксовано у walkthrough і task-документах; створено сфокусований коміт.
 
 ## Попередній delivery: v0.13.499 (Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion)

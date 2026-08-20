@@ -24,6 +24,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <string>
+#include <memory>
+#include <optional>
 
 namespace sphaira::ui::menu::gh {
 namespace {
@@ -465,20 +467,18 @@ void DownloadEntries(const Entry& entry) {
         return;
     }
 
-    // hack
-    static std::vector<GhApiEntry> gh_entries;
-    gh_entries = {};
+    auto gh_entries = std::make_shared<std::vector<GhApiEntry>>();
 
-    App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry](auto pbox) -> Result {
-        return DownloadReleaseJsonJson(pbox, GenerateApiUrl(entry), gh_entries);
-    }, [entry](Result rc){
+    App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry, gh_entries](auto pbox) -> Result {
+        return DownloadReleaseJsonJson(pbox, GenerateApiUrl(entry), *gh_entries);
+    }, [entry, gh_entries](Result rc){
         App::PushErrorBox(rc, "Failed to download json"_i18n);
-        if (R_FAILED(rc) || gh_entries.empty()) {
+        if (R_FAILED(rc) || gh_entries->empty()) {
             return;
         }
 
         PopupList::Items entry_items;
-        for (const auto& e : gh_entries) {
+        for (const auto& e : *gh_entries) {
             std::string str;
             if (!e.name.empty()) {
                 str += e.name + "   |  ";
@@ -490,73 +490,78 @@ void DownloadEntries(const Entry& entry) {
             }
             str += " [" + e.published_at.substr(0, 10) + "]";
 
-            entry_items.emplace_back(str);
+            entry_items.emplace_back(std::move(str));
         }
 
-        App::Push<PopupList>("Select release to download for "_i18n + entry.repo, entry_items, [entry](auto op_index){
-            if (!op_index) {
+        if (entry_items.empty()) {
+            return;
+        }
+
+        App::Push<PopupList>("Select release to download for "_i18n + entry.repo, entry_items, [entry, gh_entries](auto op_index){
+            if (!op_index || *op_index < 0 || static_cast<size_t>(*op_index) >= gh_entries->size()) {
                 return;
             }
 
-            const auto& gh_entry = gh_entries[*op_index];
+            const auto& gh_entry = (*gh_entries)[*op_index];
             const auto& assets = entry.assets;
             PopupList::Items asset_items;
-            std::vector<const AssetEntry*> asset_ptr;
+            std::vector<std::optional<AssetEntry>> matched_assets;
             std::vector<GhApiAsset> api_assets;
             bool using_name = false;
 
-            for (auto&p : gh_entry.assets) {
-                bool found = false;
-
-                for (auto& e : assets) {
+            for (const auto& p : gh_entry.assets) {
+                std::optional<AssetEntry> matched;
+                for (const auto& e : assets) {
                     if (!e.name.empty()) {
                         using_name = true;
                     }
 
-                    if (p.name.find(e.name) != p.name.npos) {
-                        found = true;
-                        asset_ptr.emplace_back(&e);
+                    if (!e.name.empty() && p.name.find(e.name) != std::string::npos) {
+                        matched = e;
                         break;
                     }
                 }
 
-                if (!using_name || found) {
+                if (!using_name || matched.has_value()) {
                     std::string str = p.name + "   |  ";
                     str += " [" + p.updated_at.substr(0, 10) + "]";
 
-                    asset_items.emplace_back(str);
+                    asset_items.emplace_back(std::move(str));
+                    matched_assets.emplace_back(std::move(matched));
                     api_assets.emplace_back(p);
                 }
             }
 
-            App::Push<PopupList>("Select asset to download for "_i18n + entry.repo, asset_items, [entry, api_assets, asset_ptr](auto op_index){
-                if (!op_index) {
+            if (asset_items.empty()) {
+                App::Push<OptionBox>("No downloadable assets found."_i18n, "OK"_i18n);
+                return;
+            }
+
+            App::Push<PopupList>("Select asset to download for "_i18n + entry.repo, asset_items, [entry, api_assets = std::move(api_assets), matched_assets = std::move(matched_assets)](auto op_index){
+                if (!op_index || *op_index < 0 || static_cast<size_t>(*op_index) >= api_assets.size()) {
                     return;
                 }
 
-                const auto index = *op_index;
-                const auto& asset_entry = api_assets[index];
-                const AssetEntry* ptr{};
+                const auto index = static_cast<size_t>(*op_index);
+                const auto asset_entry = api_assets[index];
+                const auto matched = matched_assets[index];
                 auto pre_install_message = entry.pre_install_message;
-                if (asset_ptr.size()) {
-                    ptr = asset_ptr[index];
-                    if (!ptr->pre_install_message.empty()) {
-                        pre_install_message = ptr->pre_install_message;
-                    }
+                if (matched && !matched->pre_install_message.empty()) {
+                    pre_install_message = matched->pre_install_message;
                 }
 
-                const auto func = [entry, &asset_entry, ptr](){
-                    App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry, &asset_entry, ptr](auto pbox) -> Result {
-                        return DownloadApp(pbox, asset_entry, ptr);
-                    }, [entry, ptr](Result rc){
+                const auto func = [entry, asset_entry, matched](){
+                    App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry, asset_entry, matched](auto pbox) -> Result {
+                        return DownloadApp(pbox, asset_entry, matched ? &(*matched) : nullptr);
+                    }, [entry, matched](Result rc){
                         homebrew::SignalChange();
                         App::PushErrorBox(rc, "Failed to download app!"_i18n);
 
                         if (R_SUCCEEDED(rc)) {
                             App::Notify("Downloaded "_i18n + entry.repo);
                             auto post_install_message = entry.post_install_message;
-                            if (ptr && !ptr->post_install_message.empty()) {
-                                post_install_message = ptr->post_install_message;
+                            if (matched && !matched->post_install_message.empty()) {
+                                post_install_message = matched->post_install_message;
                             }
 
                             if (!post_install_message.empty()) {
@@ -569,7 +574,7 @@ void DownloadEntries(const Entry& entry) {
                 if (!pre_install_message.empty()) {
                     App::Push<OptionBox>(
                         pre_install_message,
-                        "Back"_i18n, "Download"_i18n, 1, [entry, func](auto op_index){
+                        "Back"_i18n, "Download"_i18n, 1, [func](auto op_index){
                             if (op_index && *op_index) {
                                 func();
                             }

@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.500** (2026-08-20). Попередні
+Актуальний delivery — **v0.13.501** (2026-08-20). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.501 — GitHub Downloader Callback Ownership & Selection Safety (UPA-01)
+
+- **Ліквідація Global Static стану `gh_entries`**:
+  - У `sphaira/source/ui/menus/ghdl.cpp` прибрано змінну `static std::vector<GhApiEntry> gh_entries` усередині `DownloadEntries()`, яка призводила до того, що паралельні або послідовні запити завантаження з Github перезаписували спільний масив релізів під час роботи асинхронних попапів.
+  - Контейнер переведено на операційно-локальний `std::shared_ptr<std::vector<GhApiEntry>>`, що гарантує ізольоване володіння даними кожної окремої операції завантаження.
+- **Усунення Use-After-Free (UAF) та висячих посилань у відкладених Callbacks**:
+  - Раніше лямбда `func` захоплювала локальне посилання `&asset_entry` та сирий вказівник `const AssetEntry* ptr` на елементи вектора `entry.assets`, який знищувався після виходу з попереднього виклику `PopupList`. При відкладеному виклику це спричиняло читання невалідної пам'яті.
+  - Замінено сирі вказівники на `std::vector<std::optional<AssetEntry>> matched_assets` та значення `asset_entry`, захоплені за значенням (`[entry, asset_entry, matched]`).
+- **Захист від виходу за межі діапазону (Out-of-Bounds Guards)**:
+  - Додано строгі перевірки валідності індексу `op_index` для вибору релізів (`!op_index || *op_index < 0 || static_cast<size_t>(*op_index) >= gh_entries->size()`) та ассетів (`static_cast<size_t>(*op_index) >= api_assets.size()`).
+  - Додано перевірку на порожній список валідних ассетів із показом інформаційного вікна `OptionBox("No downloadable assets found.")` замість спроби відкриття порожнього меню.
+- **Верифікація та тести**:
+  - Піднято версію до **`0.13.501`** у `sphaira/CMakeLists.txt`.
+  - Успішно виконано всі 15 наборів host unit-тестів у WSL (`tests/run.sh`).
+  - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
 
 ## v0.13.500 — OverrideHeap Inaccessible Pages Defense & Logger Lifecycle Hardening
 

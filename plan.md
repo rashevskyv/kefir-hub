@@ -1,12 +1,28 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.500**. Завершені плани збережено в
+Поточний delivery — **v0.13.501**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.500 — NexLink / DBI return crash
+## Поточний delivery: v0.13.501 — UPA-01: GitHub downloader callback ownership & selection safety
 
-Статус: реалізацію переглянуто senior-review та прийнято; залишилася лише апаратна циклічна регресія на Switch:
+Статус: реалізацію виконано та верифіковано:
+1. **Ліквідація global static стану (`sphaira/source/ui/menus/ghdl.cpp`)**:
+   - `static std::vector<GhApiEntry> gh_entries` у `DownloadEntries()` замінено на операційно-локальний `auto gh_entries = std::make_shared<std::vector<GhApiEntry>>()`.
+   - Тепер кілька послідовних запитів завантаження не можуть перетерти дані релізів один одного.
+2. **Безпека володіння пам'яттю та усунення UAF / висячих посилань**:
+   - Усунено небезпечне захоплення за посиланням `&asset_entry` та збереження сирих вказівників `const AssetEntry*` на елементи тимчасових векторів усередині відкладених лямбд (`PopupList`, `OptionBox`, `ProgressBox`).
+   - Застосовано `std::optional<AssetEntry>` та безпечне захоплення параметрів за значенням (`[entry, asset_entry, matched]`).
+3. **Захист від виходу за межі діапазону (Out-of-Bounds Guards)**:
+   - Додано перевірки меж індексів `op_index` для вибору релізу (`!op_index || *op_index < 0 || static_cast<size_t>(*op_index) >= gh_entries->size()`) та ассету (`static_cast<size_t>(*op_index) >= api_assets.size()`).
+   - Додано перевірку на порожній список ассетів з показом інформаційного вікна замість спроби розіменування.
+4. **Збірка та тести**:
+   - Пройдено всі 15 наборів host unit-тестів та dead symbol guard у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.500 — NexLink / DBI return crash
+
+Статус: реалізацію виконано, переглянуто senior-review та прийнято апаратним тестуванням:
 1. **Доказова діагностика**:
    - Найновіший report `F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log` точно відповідає WSL ELF за Build ID `29AC83A4D4BFAD5E9014FC1C660A598627CDA520`.
    - У 17/20 звітів allocator виконує валідний split top-chunk і падає на `str x1, [x3,#8]`, причому `Exception Address == X3 + 8`; `ScanThemes`, `opendir` та декодери зображень є лише першими алокаціями, що доходять до недоступної сторінки.
@@ -19,7 +35,7 @@
    - Додано strong `__libnx_initheap()` у `sphaira/source/main.cpp`: без алокацій він обходить OverrideHeap через `svcQueryMemory` і передає newlib найбільший суцільний `MemType_Heap + Perm_Rw + attr == 0` сегмент; fallback без OverrideHeap відповідає libnx.
    - Lifecycle outbound logger перенесено до `App`, socket sentinel виправлено на `-1`, а довжину повідомлення обмежено фактичним вмістом `buf[512]`; inbound `nxlinkInitialize()` не змінювався.
    - Gemini виконав `tests/run.sh` (усі host-тести) та WSL ReleaseWithInstall build; Build ID нового ELF — `93E0BD21BD490A235A75C52D4DE6ECBC243D0879`.
-   - Після встановлення нового NRO виконати щонайменше 10 послідовних NexLink reload і 10 повернень із DBI; після кожного циклу дочекатися повного старту й сканування тем. У разі нового report звірити його Build ID з новим ELF.
+   - Апаратне тестування прийнято.
 
 ## Попередній delivery: v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion
 
