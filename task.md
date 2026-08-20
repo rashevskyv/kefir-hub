@@ -9,9 +9,9 @@
 ## Поточний delivery: v0.13.500 (NexLink / DBI return crash)
 
 - [x] `CRASH-TRACEBACK-500` — знайдено crash-report на змонтованій microSD (`F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log`), підтверджено точний збіг Build ID з актуальним WSL ELF та відновлено стек `_malloc_r → _memalign_r → opendir → App::ScanThemes → App::App`.
-- [ ] `NRO-LIFECYCLE-ROOT-CAUSE-500` — захистити ранню ініціалізацію newlib heap від успадкованих `Perm_None` / `IsBorrowed` сторінок після попереднього NRO: у strong `__libnx_initheap()` вибирати найбільший суцільний чистий `Heap + RW` діапазон із loader override; окремо закрити підтверджені lifecycle/sentinel/OOB дефекти логера, які можуть залишати зайвий heap-backed thread stack.
-- [ ] `REGRESSION-VERIFY-500` — виконати host-тести, ReleaseWithInstall-збірку у WSL, звірити Build ID нового ELF/NRO та повторити на Switch сценарії NexLink upload і повернення з DBI.
-- [ ] `DOCS-BUMP-COMMIT-500` — підняти версію до `0.13.500`, зафіксувати результат у документації та створити сфокусований коміт.
+- [x] `NRO-LIFECYCLE-ROOT-CAUSE-500` — додано strong `__libnx_initheap()`: він відсікає успадковані `Perm_None` / `IsBorrowed` сторінки й передає newlib найбільший суцільний `Heap + RW + attr == 0` діапазон; outbound logger thread перенесено в межі життя `App`, socket sentinel виправлено на `-1`, а копіювання повідомлення обмежено фактичним `buf[512]`.
+- [ ] `REGRESSION-VERIFY-500` — host-тести й WSL ReleaseWithInstall-збірка пройдені; новий ELF має Build ID `93E0BD21BD490A235A75C52D4DE6ECBC243D0879`. Очікується апаратна перевірка: 10 NexLink reload та 10 повернень із DBI.
+- [x] `DOCS-BUMP-COMMIT-500` — версію піднято до `0.13.500`, результат зафіксовано у walkthrough і task-документах; створено сфокусований коміт.
 
 ## Попередній delivery: v0.13.499 (Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion)
 

@@ -21,7 +21,7 @@ const auto& errorpath = sphaira::paths::ERROR_LOG;
 // Rolled over once it gets big rather than growing without bound.
 constexpr off_t MAX_ERROR_LOG_BYTES = 256u * 1024u;
 
-int nxlink_socket{};
+int nxlink_socket = -1;
 bool g_file_open{};
 std::mutex mutex{};
 
@@ -54,7 +54,7 @@ void do_flush(const char* data, size_t size, bool file_open, int sock) {
             fsdevCommitDevice("sdmc");
         }
     }
-    if (sock > 0) {
+    if (sock >= 0) {
         send(sock, data, size, 0);
     }
 }
@@ -126,9 +126,15 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
     localtime_r(&t, &tm);
 
     char buf[512];
+    buf[0] = '\0';
     const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u] -> ", tm.tm_hour, tm.tm_min, tm.tm_sec);
-    const auto msg_len = std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
-    const auto total_len = len + (msg_len > 0 ? msg_len : 0);
+    if (len > 0 && (size_t)len < sizeof(buf)) {
+        std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
+    } else {
+        std::vsnprintf(buf, sizeof(buf), s, *v);
+    }
+    buf[sizeof(buf) - 1] = '\0';
+    const size_t total_len = std::strlen(buf);
 
     if (total_len > 0 && g_buffer_len + total_len <= STATIC_LOG_CAPACITY) {
         std::memcpy(g_buffer_data + g_buffer_len, buf, total_len);
@@ -166,15 +172,15 @@ auto log_file_init() -> bool {
 
 auto log_nxlink_init() -> bool {
     std::scoped_lock lock{mutex};
-    if (nxlink_socket) {
+    if (nxlink_socket >= 0) {
         return false;
     }
 
     nxlink_socket = nxlinkConnectToHost(true, false);
-    if (nxlink_socket) {
+    if (nxlink_socket >= 0) {
         ensure_thread_started();
     }
-    return nxlink_socket != 0;
+    return nxlink_socket >= 0;
 }
 
 void log_file_exit() {
@@ -185,7 +191,7 @@ void log_file_exit() {
         if (!g_file_open) {
             return;
         }
-        shared = nxlink_socket != 0;
+        shared = nxlink_socket >= 0;
     }
 
     if (!shared) {
@@ -207,7 +213,7 @@ void log_file_exit() {
         }
     }
     if (batch_len > 0) {
-        do_flush(g_flush_batch, batch_len, true, 0);
+        do_flush(g_flush_batch, batch_len, true, -1);
     }
     std::scoped_lock lock{mutex};
     g_file_open = false;
@@ -217,7 +223,7 @@ void log_nxlink_exit() {
     bool shared;
     {
         std::scoped_lock lock{mutex};
-        if (!nxlink_socket) {
+        if (nxlink_socket < 0) {
             return;
         }
         shared = g_file_open;
@@ -228,15 +234,15 @@ void log_nxlink_exit() {
     }
 
     std::scoped_lock lock{mutex};
-    if (nxlink_socket) {
+    if (nxlink_socket >= 0) {
         close(nxlink_socket);
-        nxlink_socket = 0;
+        nxlink_socket = -1;
     }
 }
 
 bool log_is_init() {
     std::scoped_lock lock{mutex};
-    return g_file_open || nxlink_socket;
+    return g_file_open || nxlink_socket >= 0;
 }
 
 void log_write(const char* s, ...) {

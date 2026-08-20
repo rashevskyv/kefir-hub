@@ -6,7 +6,7 @@
 
 ## Поточний delivery: v0.13.500 — NexLink / DBI return crash
 
-Статус: traceback і клас першопричини підтверджено трьома незалежними аудитами; реалізація очікує Gemini handoff:
+Статус: реалізацію переглянуто senior-review та прийнято; залишилася лише апаратна циклічна регресія на Switch:
 1. **Доказова діагностика**:
    - Найновіший report `F:\atmosphere\crash_reports\01787234167_03db12780bd84000.log` точно відповідає WSL ELF за Build ID `29AC83A4D4BFAD5E9014FC1C660A598627CDA520`.
    - У 17/20 звітів allocator виконує валідний split top-chunk і падає на `str x1, [x3,#8]`, причому `Exception Address == X3 + 8`; `ScanThemes`, `opendir` та декодери зображень є лише першими алокаціями, що доходять до недоступної сторінки.
@@ -16,8 +16,9 @@
    - Для запуску без OverrideHeap дослівно зберегти стандартний libnx fallback через `__nx_heap_size` і `svcSetHeapSize`; при помилці query або відсутності придатного сегмента завершуватися контрольовано з `LibnxError_HeapAllocFailed`.
    - Перенести outbound NXLink logger thread із `userAppInit/userAppExit` у межі `App::App/App::~App`, виправити socket sentinel `-1` та обмежити довжину копіювання фактично записаними байтами `buf[512]`.
 3. **Реалізація й верифікація**:
-   - Передати вузький патч у свіжий Gemini-чат, після чого перевірити повний diff як senior reviewer.
-   - Підняти версію до `0.13.500`, виконати `tests/run.sh` і ReleaseWithInstall-збірку у WSL.
+   - Додано strong `__libnx_initheap()` у `sphaira/source/main.cpp`: без алокацій він обходить OverrideHeap через `svcQueryMemory` і передає newlib найбільший суцільний `MemType_Heap + Perm_Rw + attr == 0` сегмент; fallback без OverrideHeap відповідає libnx.
+   - Lifecycle outbound logger перенесено до `App`, socket sentinel виправлено на `-1`, а довжину повідомлення обмежено фактичним вмістом `buf[512]`; inbound `nxlinkInitialize()` не змінювався.
+   - Gemini виконав `tests/run.sh` (усі host-тести) та WSL ReleaseWithInstall build; Build ID нового ELF — `93E0BD21BD490A235A75C52D4DE6ECBC243D0879`.
    - Після встановлення нового NRO виконати щонайменше 10 послідовних NexLink reload і 10 повернень із DBI; після кожного циклу дочекатися повного старту й сканування тем. У разі нового report звірити його Build ID з новим ELF.
 
 ## Попередній delivery: v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion

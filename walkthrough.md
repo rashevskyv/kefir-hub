@@ -1,9 +1,30 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.499** (2026-08-20). Попередні
+Актуальний delivery — **v0.13.500** (2026-08-20). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.500 — OverrideHeap Inaccessible Pages Defense & Logger Lifecycle Hardening
+
+- **Діагностика збоїв запуску (Build ID та трейсбек)**:
+  - Ідентифіковано причину падіння аллокатора при старті NRO (`PC 0x2c1258: str x1, [x3, #8]` у `_malloc_r`/`_memalign_r`), що зафіксовано у звітах Atmosphère (зокрема `01787234167_03db12780bd84000.log`, Build ID `29AC83A4D4BFAD5E9014FC1C660A598627CDA520`).
+  - Збій відбувався при спробі запису заголовка нового top-чанка у пам'ять за адресою `Exception Address = 0x0000000CBAF673F8` під час сканування тем або декодування зображень (виклики-жертви).
+- **Причина проблеми (успадковані дірки в OverrideHeap)**:
+  - Попередній NRO-процес або потік, створений через `threadCreate(..., stack_mem=nullptr)` без завершального виклику `threadClose()`, залишає вихідні сторінки стеку у стані `Perm_None` з атрибутом `MemAttr_IsBorrowed` (через `svcMapMemory`).
+  - Homebrew loader перевикористовує той самий `OverrideHeap` для наступного NRO, у результаті чого стандартна ініціалізація newlib вважала арену неперервною та намагалася виконати запис у недоступну сторінку.
+- **Захист через `__libnx_initheap` (пошук найбільшого чистого діапазону)**:
+  - Реалізовано strong override `extern "C" void __libnx_initheap(void)` у `sphaira/source/main.cpp`.
+  - При активному `envHasHeapOverride()` здійснюється сканування інтервалу пам'яті за допомогою `svcQueryMemory`, обрізка блоків за межами оверрайду, перевірка типу `MemType_Heap`, прав `Perm_Rw` та атрибутів `attr == 0`.
+  - Вибирається найбільший неперервний валідний діапазон сторінок, а `fake_heap_start`/`fake_heap_end` встановлюються лише після успішного повного сканування без виділення пам'яті.
+  - У разі помилки або відсутності доступної пам'яті виконання детерміновано зупиняється через `diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_HeapAllocFailed))`.
+- **Посилення надійності та життєвого циклу логера**:
+  - У `sphaira/source/log.cpp` сентінел сокета `nxlink_socket` ініціалізовано значенням `-1`, а перевірки валідності стандартизовано як `>= 0` (дескриптор 0 є валідним).
+  - У `log_write_arg_internal` виправлено копіювання рядків: довжина копіювання суворо обмежена фактичним розміром NUL-термінованого буфера `std::strlen(buf)` без виходу за межі `buf[512]`.
+  - Життєвий цикл вихідного логера перенесено: `log_nxlink_init()` викликається в `App::App` після `g_app = this` (коли сокети та глобальні C++ об'єкти вже ініціалізовані), а завершення у `App::~App` спочатку відправляє фінальне повідомлення, закриває `log_nxlink_exit()`, а потім зупиняє та закриває потік логування через `log_file_exit()`.
+- **Ітерація версії та верифікація**:
+  - Піднято версію програми до **`0.13.500`** у `sphaira/CMakeLists.txt`.
+  - Успішно виконано збірку у WSL (`ReleaseWithInstall`), згенеровано новий `kefir-hub.nro` та `sphaira.elf`, пройдено всі host-тести.
 
 ## v0.13.499 — Tools Menu Layout Reorganization, Software Description Update & 4th Row Expansion
 

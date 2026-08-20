@@ -1001,6 +1001,7 @@ App::App(const char* argv0) {
     ON_SCOPE_EXIT(App::SetBoostMode(false));
 
     g_app = this;
+    log_nxlink_init();
     m_start_timestamp = armGetSystemTick();
     m_app_path = {};
     if (!std::strncmp(argv0, "sdmc:/", 6)) {
@@ -1485,6 +1486,11 @@ App::~App() {
 
     if (App::GetLogEnable()) {
         log_write("closing log\n");
+    }
+
+    log_nxlink_exit();
+
+    if (App::GetLogEnable()) {
         log_file_exit();
     }
 }
