@@ -33,4 +33,8 @@ inline auto GetAuthor(const NacpStruct& nacp, std::size_t index = 0) -> const ch
     return GetLanguageEntry(nacp, index).author;
 }
 
+inline auto GetDisplayVersion(const NacpStruct& nacp) -> const char* {
+    return nacp.display_version;
+}
+
 } // namespace sphaira::nacp_util

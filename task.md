@@ -1,12 +1,24 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.516**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.518**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.516 (AppStore EntryMenu launch confirmation guard)
+## Поточний delivery: v0.13.518 (RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass)
+
+- [x] `RETROARCH-7Z-EXTRACTOR-518` — підключено `libphysfs.a` у `sphaira/CMakeLists.txt`, реалізовано рекурсивний потоковий розпакувальник `ExtractPhysfsArchive` у `sphaira/source/ui/menus/appstore.cpp` для `.7z` архівів з автоматичною генерацією метаданих `info.json` (`Nightly`), усунуто невідповідну перевірку MD5 хешу для динамічних білдів RetroArch Nightly.
+- [x] `DOCS-BUMP-518` — версію піднято до `0.13.518` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL з розгортанням на `F:`.
+
+## Попередній delivery: v0.13.517 (AppStore installed version display, clean network handover & LibRetro Nightly resolver)
+
+- [x] `APPSTORE-INSTALLED-VER-517` — у структуру `Entry` додано поле `installed_version`, реалізовано зчитування версії з `info.json` та з NACP бінарника (`nacp_util::GetDisplayVersion`); у меню додатка `EntryMenu::Draw` виведено відображення `installed: <версія>` з підсвічуванням кольором теми при наявності оновлення.
+- [x] `RETROARCH-NIGHTLY-RESOLVER-517` — створено допоміжний модуль `sphaira/include/ui/menus/appstore_util.hpp` з функціями `IsRetroArchPackageName` та `ResolveAppstoreZipUrl`; перенаправлено завантаження `RetroNX`/`RetroArch` на офіційний збірник LibRetro Nightly (`RetroArch.7z`); у меню опцій для застарілих версій RetroArch кнопка `Launch` блокується і пропонується дія `Update`.
+- [x] `NET-SHUTDOWN-ORDER-517` — у `sphaira/source/main.cpp` виправлено порядок деініціалізації сервісів: `socketExit()` тепер викликається строго перед `nifmExit()`, додано 50 мс паузу перед `appletUnlockExit()` для повного очищення мережевих дескрипторів ядра Horizon OS перед ланцюговим запуском NRO (`envSetNextLoad`).
+- [x] `DOCS-BUMP-517` — версію піднято до `0.13.517` у `sphaira/CMakeLists.txt`, створено unit-тест `tests/test_appstore_util.cpp`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL з копіюванням на `F:`.
+
+## Попередній delivery: v0.13.516 (AppStore EntryMenu launch confirmation guard)
 
 - [x] `APPSTORE-LAUNCH-CONFIRM-516` — додано обов'язкове діалогове вікно підтвердження (`OptionBox`) для дії `Launch` у меню детальної інформації про додаток (`EntryMenu` у `sphaira/source/ui/menus/appstore.cpp`), що усуває раптовий та випадковий запуск сторонніх `.nro` при відкритті карток встановлених додатків у магазині; оновлено та розгорнуто скомпільований бінарник `kefir-hub.nro` безпосередньо на карту пам'яті `F:`.
 - [x] `DOCS-BUMP-516` — версію піднято до `0.13.516` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

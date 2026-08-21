@@ -64,6 +64,7 @@ struct Entry {
     LazyImage image{};
     u32 updated_num{};
     EntryStatus status{EntryStatus::Get};
+    std::string installed_version{};
 };
 
 // number to index m_entries to get entry

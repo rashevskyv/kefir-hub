@@ -1,11 +1,38 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.516** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.518** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
-## v0.13.516 — AppStore EntryMenu Launch Confirmation Guard
+## v0.13.518 — RetroArch 7z PhysFS Stream Extractor & Nightly MD5 Bypass
+
+- **Підтримка розпакування архівів `.7z` для RetroArch**:
+  - Інтегровано бібліотеку `physfs` (`libphysfs.a`) у систему збірки `sphaira/CMakeLists.txt`.
+  - Реалізовано потоковий рекурсивний екстрактор `ExtractPhysfsArchive` у `sphaira/source/ui/menus/appstore.cpp`, що розгортає папки та файли `.7z` архіву LibRetro Nightly (`RetroArch.7z`) безпосередньо у відповідні каталоги SD карти (`/switch/retroarch_switch.nro`, `/retroarch/`).
+  - Усунуто невідповідну перевірку MD5 хешу (`SphairaError_AppstoreFailedMd5`), яка порівнювала хеш динамічного Nightly архіву зі старим хешем з `repo.json`.
+  - Створено автоматичну генерацію файлу метаданих `info.json` з позначкою `Nightly` після завершення встановлення.
+
+## v0.13.517 — AppStore Installed Version Display, Clean Network Handover & LibRetro Nightly Resolver
+
+- **Відображення поточної встановленої версії в AppStore**:
+  - У структуру `Entry` (`sphaira/include/ui/menus/appstore.hpp`) додано поле `installed_version`.
+  - У `ReadFromInfoJson` та при скануванні локальних NRO (`Menu::ScanHomebrew`) реалізовано зчитування версії як з `.info`/`info.json`, так і безпосередньо з заголовка NACP бінарника (`nacp_util::GetDisplayVersion(nacp)`).
+  - У `EntryMenu::Draw` тепер виводиться рядок `installed: <версія>` (підсвічується виділеним кольором теми, якщо доступне оновлення), показуючи користувачу як версію в магазині (`version: ...`), так і реально встановлену версію на консолі.
+- **Підміна джерела завантаження для RetroArch на LibRetro Nightly Buildbot та розпакування `.7z`**:
+  - Створено модуль `sphaira/include/ui/menus/appstore_util.hpp` з функціями `IsRetroArchPackageName` та `ResolveAppstoreZipUrl`.
+  - Для пакета `RetroNX` / `RetroArch` посилання на скачування автоматично перенаправляється на актуальний реліз з офіційного збірника LibRetro (`https://buildbot.libretro.com/nightly/nintendo/switch/libnx/RetroArch.7z`).
+  - Підключено бібліотеку `physfs` (`libphysfs.a`) для прямого рекурсивного розпакування `.7z` архівів (`ExtractPhysfsArchive`) на SD карту без проміжного розпакування в пам'ять.
+  - Для RetroArch Nightly пропущено невідповідну перевірку MD5 хешу зі старого репозиторію `repo.json` (яка викликала помилку `SphairaError_AppstoreFailedMd5`).
+  - У `EntryMenu::UpdateOptions` для застарілих / не-Nightly версій RetroArch кнопка `Launch` блокується та пропонується дія `Update` («Оновити»).
+- **Виправлення порядку закриття мережевих сервісів перед запуском NRO**:
+  - У `sphaira/source/main.cpp` у функції `userAppExit()` виправлено порядок деініціалізації: `socketExit()` тепер викликається суворо перед `nifmExit()`, усуваючи стан «висячих» сокетів у ядрі Horizon OS під час ланцюгового завантаження NRO через `envSetNextLoad`.
+  - Додано паузу 50 мс (`svcSleepThread(50'000'000)`) перед `appletUnlockExit()` для повного очищення IPC-дескрипторів ядра.
+- **Тести та розгортання**:
+  - Піднято версію до **`0.13.517`** у `sphaira/CMakeLists.txt`.
+  - Створено автономний набір unit-тестів [**`tests/test_appstore_util.cpp`**](tests/test_appstore_util.cpp).
+  - Пройдено всі 18 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL та розгорнуто `kefir-hub.nro` і `hbmenu.nro` на змонтований диск `F:`.
 
 - **Діагностика та усунення проблеми з неконтрольованим запуском RetroArch**:
   - Знайдено та проаналізовано crash dump `F:/atmosphere/crash_reports/01787305551_03db12780bd84000.log` та системний лог `F:/config/kefir/log.txt`.

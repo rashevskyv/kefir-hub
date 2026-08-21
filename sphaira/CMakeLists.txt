@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.516)
+set(sphaira_VERSION 0.13.518)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -464,6 +464,8 @@ find_package(ZLIB REQUIRED)
 find_library(minizip_lib minizip REQUIRED)
 find_path(minizip_inc minizip REQUIRED)
 
+find_library(physfs_lib physfs REQUIRED)
+
 find_package(CURL REQUIRED)
 find_path(mbedtls_inc mbedtls REQUIRED)
 find_library(mbedcrypto_lib mbedcrypto REQUIRED)
@@ -492,6 +494,7 @@ target_link_libraries(sphaira PRIVATE
     smb2
     nfs
 
+    ${physfs_lib}
     ${minizip_lib}
     ZLIB::ZLIB
     CURL::libcurl

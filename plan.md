@@ -1,10 +1,40 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.516**. Завершені плани збережено в
+Поточний delivery — **v0.13.518**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.516 — AppStore EntryMenu launch confirmation guard
+## Поточний delivery: v0.13.518 — RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Підтримка `.7z` та пряме потокове розпакування (`sphaira/source/ui/menus/appstore.cpp`)**:
+   - Інтегровано `physfs` (`libphysfs.a`) для обробки 7z-архівів.
+   - Реалізовано функцію `ExtractPhysfsArchive`, яка рекурсивно створює каталоги та записує файли на карту пам'яті.
+   - Пропущено MD5-перевірку для динамічних релізів RetroArch Nightly.
+   - Реалізовано запис метаданих `info.json` (`"version": "Nightly"`).
+2. **Збірка та деплой**:
+   - Пройдено всі 18 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Зібрано версію `v0.13.518` та оновлено `kefir-hub.nro` і `hbmenu.nro` на диску `F:`.
+
+## Попередній delivery: v0.13.517 — AppStore installed version display, clean network handover & LibRetro Nightly resolver
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Відображення встановленої версії в AppStore (`EntryMenu::Draw`)**:
+   - Додано поле `installed_version` у структуру `Entry`.
+   - Реалізовано зчитування встановленої версії з `info.json` та з заголовка NACP бінарника (`nacp_util::GetDisplayVersion`).
+   - У меню картки додатка виводиться рядок `installed: <версія>` (підсвічується кольором теми, якщо є оновлення).
+2. **Підміна джерела для RetroArch на LibRetro Nightly Buildbot (`appstore_util.hpp`)**:
+   - Створено функції `IsRetroArchPackageName` та `ResolveAppstoreZipUrl`.
+   - Завантаження RetroArch перенаправлено на актуальний офіційний білд `RetroArch.7z` з LibRetro Nightly.
+   - Для застарілих версій RetroArch дія `Launch` замінюється на `Update`.
+3. **Коректний порядок деініціалізації мережі (`sphaira/source/main.cpp`)**:
+   - `socketExit()` тепер викликається строго перед `nifmExit()` у `userAppExit()`.
+   - Додано 50 мс паузу перед `appletUnlockExit()` для повного очищення IPC-дескрипторів ядра Horizon OS.
+4. **Збірка та деплой**:
+   - Пройдено всі 18 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано та скопійовано бінарники `kefir-hub.nro` і `hbmenu.nro` на карту пам'яті `F:`.
+
+## Попередній delivery: v0.13.516 — AppStore EntryMenu launch confirmation guard
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Захист від випадкового запуску NRO у меню AppStore (`sphaira/source/ui/menus/appstore.cpp`)**:

@@ -194,14 +194,15 @@ void userAppExit(void) {
     sphaira::WebShareStop();
     sphaira::net::Exit();
 
+    socketExit();
+    nifmExit();
     ncmExit();
     hidsysExit();
     setExit();
     accountExit();
-    nifmExit();
     psmExit();
     plExit();
-    socketExit();
+
     // NOTE (DMC): prevents exfat / fat32 corruption on all SD cards.
     fsdevCommitDevice("sdmc");
     if (auto fs = fsdevGetDeviceFileSystem("sdmc")) {
@@ -209,6 +210,7 @@ void userAppExit(void) {
     }
 
     sphaira::App::SetBoostMode(false);
+    svcSleepThread(50'000'000);
     appletUnlockExit();
 }
 
