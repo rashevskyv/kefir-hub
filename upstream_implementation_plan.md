@@ -225,7 +225,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 15 | `UPA-10B-MTP-DISPLAY-NAME` | P1 | Localized UTF-8 MTP display names використовують shared title data | `UPA-10A-EXPORT-NAME` | середній | `DONE (v0.13.513)` |
 | 16 | `UPA-11-GC-BARS` | P1 | Правильна theme role і safe storage ratios | `UPA-GATE-500` | низький, hardware | `DONE (v0.13.514)` |
 | 17 | `UPA-12-DIRECT-ZIP-SPACE` | P1 | SD-specific destination-aware free-space preflight | `UPA-03-GHDL-URL` | architecture/behavior | `BLOCKED`: preflight seam/overwrite policy |
-| 18 | `UPA-13-ROM-ALIASES` | P2 | Лише підтверджені корисні ROM database aliases | `UPA-GATE-500` | низький | `PLANNED` |
+| 18 | `UPA-13-ROM-ALIASES` | P2 | Лише підтверджені корисні ROM database aliases | `UPA-GATE-500` | низький | `DONE (v0.13.515)` |
 | 19 | `UPA-HW-NFS-449` | Acceptance | Реальний NFS smoke-test | наявний `v0.13.449` | hardware | `PLANNED` |
 | 20 | `UPA-HW-HBL-452` | Acceptance | Реальний loader-affinity smoke-test | наявний `v0.13.452` | hardware | `PLANNED` |
 

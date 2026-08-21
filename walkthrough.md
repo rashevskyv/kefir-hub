@@ -1,9 +1,22 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.514** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.515** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.515 — Confirmed ROM Database Compatibility Aliases (UPA-13)
+
+- **Розширення бази відповідностей ROM та емуляторів**:
+  - У `sphaira/include/ui/menus/filebrowser_assoc.hpp` додано підтримку `NEC - PC Engine SuperGrafx` (папки `supergrafx`, `pce-sg`, `pcesg`), підтверджену файлами ядер Mednafen у RomFS.
+  - Додано взаємний резолвінг для `Nintendo - Family Computer Disk System` та `Nintendo - Famicom Disk System` (папка `fds`).
+  - Додано базовий запис `SNK - Neo Geo` (папка `neogeo`) поряд із `Pocket`/`Pocket Color`/`CD`.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.515`** у `sphaira/CMakeLists.txt`.
+  - Розширено unit-тести у [**`tests/test_tico_assoc.cpp`**](tests/test_tico_assoc.cpp) (20 checks passed).
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.514 — GameCard Theme Roles & Safe Storage Ratio (UPA-11)
 

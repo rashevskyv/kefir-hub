@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.514**. Завершені плани збережено в
+Поточний delivery — **v0.13.515**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.514 — UPA-11: GameCard theme roles & safe storage ratio
+## Поточний delivery: v0.13.515 — UPA-13: Confirmed ROM database compatibility aliases
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Розширення таблиці асоціацій баз даних ROM (`sphaira/include/ui/menus/filebrowser_assoc.hpp`)**:
+   - Додано базу даних `NEC - PC Engine SuperGrafx` (папки `supergrafx`, `pce-sg`, `pcesg`), підтверджену конфігурацією ядер Mednafen у RomFS.
+   - Додано взаємне співставлення для `Nintendo - Family Computer Disk System` та `Nintendo - Famicom Disk System` (папка `fds`).
+   - Додано базовий запис `SNK - Neo Geo` (папка `neogeo`) поряд із Pocket/Color/CD.
+2. **Unit-тести та збірка**:
+   - Розширено unit-тести [**`tests/test_tico_assoc.cpp`**](tests/test_tico_assoc.cpp) (20 checks passed).
+   - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.514 — UPA-11: GameCard theme roles & safe storage ratio
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Безпечне обчислення коефіцієнтів сховища (`sphaira/include/storage_ratio.hpp`)**:

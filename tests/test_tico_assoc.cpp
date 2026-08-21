@@ -96,6 +96,10 @@ static constexpr RomDatabaseEntry TEST_PATHS[]{
     { "naomi", "Sega - Naomi", { "naomi" } },
     { "naomi2", "Sega - Naomi 2", { "naomi2" } },
     { "atomiswave", "Atomiswave", { "atomiswave" } },
+    { "fds", "Nintendo - Famicom Disk System", { "Nintendo - Family Computer Disk System" } },
+    { "fds", "Nintendo - Family Computer Disk System", { "Nintendo - Famicom Disk System" } },
+    { "supergrafx", "NEC - PC Engine SuperGrafx", { "pce-sg", "pcesg" } },
+    { "neogeo", "SNK - Neo Geo" },
 };
 
 static int test_rom_database_aliases() {
@@ -107,6 +111,21 @@ static int test_rom_database_aliases() {
     CHECK(TEST_PATHS[2].IsDatabase("naomi"));
     CHECK(TEST_PATHS[3].IsDatabase("naomi2"));
     CHECK(TEST_PATHS[4].IsDatabase("atomiswave"));
+
+    // SuperGrafx
+    CHECK(TEST_PATHS[7].IsDatabase("supergrafx"));
+    CHECK(TEST_PATHS[7].IsDatabase("pce-sg"));
+    CHECK(TEST_PATHS[7].IsDatabase("pcesg"));
+    CHECK(TEST_PATHS[7].IsDatabase("NEC - PC Engine SuperGrafx"));
+
+    // Family Computer Disk System / Famicom Disk System
+    CHECK(TEST_PATHS[5].IsDatabase("fds"));
+    CHECK(TEST_PATHS[5].IsDatabase("Nintendo - Family Computer Disk System"));
+    CHECK(TEST_PATHS[6].IsDatabase("Nintendo - Famicom Disk System"));
+
+    // Neo Geo
+    CHECK(TEST_PATHS[8].IsDatabase("neogeo"));
+    CHECK(TEST_PATHS[8].IsDatabase("SNK - Neo Geo"));
 
     return 0;
 }
