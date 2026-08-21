@@ -433,18 +433,20 @@ struct FsProxy final : FsProxyBase {
             }
         }
 #endif
-        if (const auto rule = GetRedirectRule(path); rule && (mode & FsOpenMode_Write)) {
+        const auto rule = GetRedirectRule(path);
+        if (rule && (mode & FsOpenMode_Write)) {
             // make sure the target folder exists before writing into it.
             m_fs->CreateDirectoryRecursively(GetRedirectDir(rule, GetLastComponent(FixPath(path))));
-            // a redirected write lands in /switch, so the homebrew menu needs to
-            // rescan once the host closes the file.
-            m_notify_homebrew = true;
         }
 
+        const auto routed_path = RoutePath(path);
         auto fptr = new fs::File();
-        const auto rc = m_fs->OpenFile(RoutePath(path), mode, fptr);
+        const auto rc = m_fs->OpenFile(routed_path, mode, fptr);
 
         if (R_SUCCEEDED(rc)) {
+            if (mode & FsOpenMode_Write) {
+                m_open_write_files[fptr] = routed_path.s;
+            }
             std::memcpy(&out_file->s, &fptr, sizeof(fptr));
         } else {
             delete fptr;
@@ -557,16 +559,16 @@ struct FsProxy final : FsProxyBase {
         fs::File* f;
         std::memcpy(&f, &file->s, sizeof(f));
         if (f) {
+            auto it = m_open_write_files.find(f);
+            if (it != m_open_write_files.end()) {
+                const std::string written_path = std::move(it->second);
+                m_open_write_files.erase(it);
+                m_fs->Commit();
+                ui::menu::homebrew::NotifyFileCreated(written_path);
+            }
             delete f;
         }
         std::memset(file, 0, sizeof(*file));
-
-        if (m_notify_homebrew) {
-            m_notify_homebrew = false;
-            m_fs->Commit();
-            // the homebrew menu rescans /switch on its next frame.
-            ui::menu::homebrew::SignalChange();
-        }
     }
 
     Result CreateDirectory(const char* path) override {
@@ -627,9 +629,9 @@ struct FsProxy final : FsProxyBase {
 
 private:
     std::unique_ptr<fs::Fs> m_fs{};
-    // set when a redirected (.nro -> /switch) write is open, so CloseFile can
-    // tell the homebrew menu to rescan.
-    bool m_notify_homebrew{};
+    // Tracks open files opened for write so CloseFile can notify the homebrew menu
+    // via the shared mutation policy once the transfer successfully completes.
+    std::map<fs::File*, std::string> m_open_write_files{};
 #if ENABLE_NETWORK_INSTALL
     std::vector<FsDirectoryEntry> m_virtual_entries;
     std::set<VirtualFile*> m_virtual_handles;

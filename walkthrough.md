@@ -1,9 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.507** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.508** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.508 — MTP Upload / Final Close Shared Mutation Policy Integration (UPA-07A)
+
+- **Інтеграція спільної політики оновлення Homebrew у файлову систему MTP**:
+  - У `sphaira/source/haze_helper.cpp` клас `FsProxy` позбувся застарілого глобального прапорця `m_notify_homebrew`.
+  - Введено контейнер `m_open_write_files` (`std::map<fs::File*, std::string>`), який прив'язує відкритий дескриптор до остаточного маршрутизованого шляху призначення (`routed_path.s`).
+  - Під час виклику `CloseFile()` дескриптор безпечно закривається, здійснюється `Commit()`, а сповіщення `ui::menu::homebrew::NotifyFileCreated(written_path)` надсилається детерміновано один раз лише за умови, що записаний файл дійсно впливає на каталог Homebrew (знаходиться в `/switch` або кастомному search root і має розширення `.nro`).
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.508`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.507 — Shared Homebrew Mutation Policy & Complete Web Success Coverage (UPA-06)
 

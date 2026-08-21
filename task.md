@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.507**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.508**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.507 (UPA-06: Shared homebrew mutation policy & complete Web success coverage)
+## Поточний delivery: v0.13.508 (UPA-07A: MTP upload/final-close shared mutation policy integration)
+
+- [x] `UPA-07A-HB-MTP-UPLOAD-508` — інтегровано спільну політику мутацій Homebrew у MTP VFS (`sphaira/source/haze_helper.cpp`): замінено прапорець `m_notify_homebrew` на точний облік відкритих на запис файлів `m_open_write_files`; сповіщення `ui::menu::homebrew::NotifyFileCreated(written_path)` надсилається детерміновано один раз під час успішного `CloseFile()` для будь-яких записів у дефолтний `/switch`, редиректи або кастомні search roots.
+- [x] `DOCS-BUMP-508` — версію піднято до `0.13.508` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.507 (UPA-06: Shared homebrew mutation policy & complete Web success coverage)
 
 - [x] `UPA-06-HB-POLICY-WEB-507` — реалізовано спільну політику мутацій Homebrew (`path::IsSubpathOf`, `path::IsNroPath`, `path::PathAffectsHomebrew` у `sphaira/include/path_util.hpp`); додано безпечні функції сповіщення (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`, `NotifyPathChanged` у `sphaira/include/ui/menus/homebrew.hpp` та `sphaira/source/ui/menus/homebrew.cpp`); підключено спільну політику у Web server (`sphaira/source/web.cpp`: `HandleUpload` та `HandleDelete`); додано 53 нові перевірки в unit-тести `tests/test_path_util.cpp` (283 checks passed).
 - [x] `DOCS-BUMP-507` — версію піднято до `0.13.507` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

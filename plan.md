@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.507**. Завершені плани збережено в
+Поточний delivery — **v0.13.508**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.507 — UPA-06: Shared homebrew mutation policy & complete Web success coverage
+## Поточний delivery: v0.13.508 — UPA-07A: MTP upload/final-close shared mutation policy integration
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Інтеграція спільної політики мутацій у MTP VFS (`sphaira/source/haze_helper.cpp`)**:
+   - `FsProxy` веде облік відкритих на запис файлів `m_open_write_files` (`std::map<fs::File*, std::string>`), зберігаючи маршрутизований шлях `routed_path.s`.
+   - Замінено глобальний прапорець `m_notify_homebrew`: сповіщення `ui::menu::homebrew::NotifyFileCreated(written_path)` тепер надсилається суворо після успішного закриття файлу `CloseFile()` і тільки для файлів, які зачіпають каталог Homebrew.
+2. **Підтримка прямих та перенаправлених записів**:
+   - Покриваються прямі завантаження в `/switch`, вкладені папки, редиректи з кореня та довільні кастомні search roots.
+   - Не-homebrew файли (наприклад, `.mp4`, `.nsp`, `.sav`) ігноруються автоматично без зайвих сканувань меню.
+3. **Unit-тести та збірка**:
+   - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.507 — UPA-06: Shared homebrew mutation policy & complete Web success coverage
 
 Статус: реалізацію виконано та верифіковано:
 1. **Спільна політика мутацій Homebrew (`sphaira/include/path_util.hpp`, `sphaira/source/ui/menus/homebrew.cpp`)**:
