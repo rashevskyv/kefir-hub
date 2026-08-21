@@ -1938,17 +1938,32 @@ void Menu::LoadPlaytime() {
 
     const auto accounts = App::GetAccountList();
 
-    App::Push<ProgressBox>(0, "Updating play statistics"_i18n, "", [this, accounts](auto pbox) -> Result {
-        pbox->UpdateTransfer(0, m_entries.size());
+    // Snapshot app IDs on the UI thread to isolate the worker from m_entries
+    std::vector<u64> app_ids;
+    app_ids.reserve(m_entries.size());
+    for (const auto& e : m_entries) {
+        app_ids.push_back(e.app_id);
+    }
 
-        for (size_t i = 0; i < m_entries.size(); i++) {
+    struct PlaytimeResult {
+        u64 app_id;
+        u64 playtime;
+    };
+
+    auto results = std::make_shared<std::vector<PlaytimeResult>>();
+    results->resize(app_ids.size());
+
+    App::Push<ProgressBox>(0, "Updating play statistics"_i18n, "", [accounts, app_ids, results](auto pbox) -> Result {
+        pbox->UpdateTransfer(0, app_ids.size());
+
+        for (size_t i = 0; i < app_ids.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
 
-            auto& e = m_entries[i];
+            const u64 app_id = app_ids[i];
             u64 total{};
             for (const auto& account : accounts) {
                 PdmPlayStatistics stats{};
-                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId(e.app_id, account.uid, true, &stats))) {
+                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId(app_id, account.uid, true, &stats))) {
                     total += stats.playtime;
                 }
             }
@@ -1957,24 +1972,34 @@ void Menu::LoadPlaytime() {
             // console-wide figure so a played title never reads as zero.
             if (!total) {
                 PdmPlayStatistics stats{};
-                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationId(e.app_id, true, &stats))) {
+                if (R_SUCCEEDED(pdmqryQueryPlayStatisticsByApplicationId(app_id, true, &stats))) {
                     total = stats.playtime;
                 }
             }
 
-            e.playtime = total;
+            (*results)[i] = {app_id, total};
 
             char section[17];
-            std::snprintf(section, sizeof(section), "%016lX", e.app_id);
+            std::snprintf(section, sizeof(section), "%016lX", app_id);
             ini_putl(section, "playtime_mins", total / 60000000000ULL, App::PLAYLOG_PATH);
 
-            pbox->UpdateTransfer(i + 1, m_entries.size());
+            pbox->UpdateTransfer(i + 1, app_ids.size());
         }
 
         R_SUCCEED();
-    }, [this](Result rc){
+    }, [this, results](Result rc){
         if (R_FAILED(rc)) {
             return;
+        }
+
+        // Apply playtime results to UI-owned entries strictly on the UI thread
+        for (const auto& res : *results) {
+            for (auto& e : m_entries) {
+                if (e.app_id == res.app_id) {
+                    e.playtime = res.playtime;
+                    break;
+                }
+            }
         }
 
         m_sort.Set(SortType_PlayTime);

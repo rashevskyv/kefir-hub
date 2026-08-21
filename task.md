@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.505**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.506**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.505 (UPA-04A: MTP zero-byte upload support & patch shape verification)
+## Поточний delivery: v0.13.506 (UPA-05: Playtime worker UI-thread isolation & race elimination)
+
+- [x] `UPA-05-PLAYTIME-RACE-506` — ліквідовано стан гонитви (data race) у `Menu::LoadPlaytime()` (`sphaira/source/ui/menus/game_menu.cpp`): фоновий потік `ProgressBox` тепер працює виключно зі знімком ідентифікаторів та окремим буфером результатів без прямого доступу до `m_entries`; результати застосовуються суворо на UI thread після завершення потоку та лише за умови успіху (`R_SUCCEEDED(rc)`).
+- [x] `DOCS-BUMP-506` — версію піднято до `0.13.506` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.505 (UPA-04A: MTP zero-byte upload support & patch shape verification)
 
 - [x] `UPA-04A-MTP-ZERO-505` — виправлено умову розрахунку розміру файлу під час MTP upload (`SendObject`) у `sphaira/cmake/patch_libhaze.cmake` на `data_header.length >= sizeof(PtpUsbBulkContainer)`, що забезпечує коректне встановлення нульового розміру файлів без залишення dummy `4_GB`; збережено всі локальні розширення та ідемпотентність; додано автоматичний runnable fixture check `tests/test_patch_libhaze.sh` у `tests/run.sh`.
 - [x] `DOCS-BUMP-505` — версію піднято до `0.13.505` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

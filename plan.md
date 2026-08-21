@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.505**. Завершені плани збережено в
+Поточний delivery — **v0.13.506**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.505 — UPA-04A: MTP zero-byte upload support & patch shape verification
+## Поточний delivery: v0.13.506 — UPA-05: Playtime worker UI-thread isolation & race elimination
+
+Статус: реалізацію виконано та верифіковано:
+1. **Ізоляція фонового воркера від UI даних (`sphaira/source/ui/menus/game_menu.cpp`)**:
+   - `Menu::LoadPlaytime()` створює знімок `app_ids` та окремий контейнер `PlaytimeResult` перед запуском `ProgressBox`.
+   - Воркер взаємодіє виключно з цими структурами, повністю усунувши стан гонитви з рендером та іншими UI-потоками.
+2. **Детерміноване застосування результатів**:
+   - Результати з буфера воркера записуються в `m_entries` виключно в колбеку `done` на UI thread і тільки у разі успішного завершення операції (`R_SUCCEEDED(rc)`).
+   - У разі скасування або помилки зміни не застосовуються до інтерфейсу.
+3. **Unit-тести та збірка**:
+   - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+   - Успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.505 — UPA-04A: MTP zero-byte upload support & patch shape verification
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Zero-byte payload підтримка в libhaze (`sphaira/cmake/patch_libhaze.cmake`)**:
