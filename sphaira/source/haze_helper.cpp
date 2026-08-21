@@ -382,15 +382,31 @@ struct FsProxy final : FsProxyBase {
 
             // also remove any physical leftover (e.g. a file copied before interception
             // worked) and always succeed, so that explorer's replace flow can proceed.
-            m_fs->DeleteFile(RoutePath(path));
+            const auto routed_path = RoutePath(path);
+            m_fs->DeleteFile(routed_path);
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyFileDeleted(routed_path.s);
             R_SUCCEED();
         }
 #endif
-        return m_fs->DeleteFile(RoutePath(path));
+        const auto routed_path = RoutePath(path);
+        const auto rc = m_fs->DeleteFile(routed_path);
+        if (R_SUCCEEDED(rc)) {
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyFileDeleted(routed_path.s);
+        }
+        return rc;
     }
     Result RenameFile(const char *old_path, const char *new_path) override {
         log_write("[HAZE] RenameFile(%s -> %s)\n", old_path, new_path);
-        return m_fs->RenameFile(RoutePath(old_path), RoutePath(new_path));
+        const auto routed_old = RoutePath(old_path);
+        const auto routed_new = RoutePath(new_path);
+        const auto rc = m_fs->RenameFile(routed_old, routed_new);
+        if (R_SUCCEEDED(rc)) {
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyRename(routed_old.s, routed_new.s, false);
+        }
+        return rc;
     }
     Result OpenFile(const char *path, u32 mode, FsFile *out_file) override {
         log_write("[HAZE] OpenFile(%s)\n", path);
@@ -573,15 +589,34 @@ struct FsProxy final : FsProxyBase {
 
     Result CreateDirectory(const char* path) override {
         log_write("[HAZE] CreateDirectory(%s)\n", path);
-        return m_fs->CreateDirectory(FixPath(path));
+        const auto fixed_path = FixPath(path);
+        const auto rc = m_fs->CreateDirectory(fixed_path);
+        if (R_SUCCEEDED(rc)) {
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyDirectoryCreated(fixed_path);
+        }
+        return rc;
     }
     Result DeleteDirectoryRecursively(const char* path) override {
         log_write("[HAZE] DeleteDirectoryRecursively(%s)\n", path);
-        return m_fs->DeleteDirectoryRecursively(FixPath(path));
+        const auto fixed_path = FixPath(path);
+        const auto rc = m_fs->DeleteDirectoryRecursively(fixed_path);
+        if (R_SUCCEEDED(rc)) {
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyDirectoryDeleted(fixed_path);
+        }
+        return rc;
     }
     Result RenameDirectory(const char *old_path, const char *new_path) override {
         log_write("[HAZE] RenameDirectory(%s -> %s)\n", old_path, new_path);
-        return m_fs->RenameDirectory(FixPath(old_path), FixPath(new_path));
+        const auto fixed_old = FixPath(old_path);
+        const auto fixed_new = FixPath(new_path);
+        const auto rc = m_fs->RenameDirectory(fixed_old, fixed_new);
+        if (R_SUCCEEDED(rc)) {
+            m_fs->Commit();
+            ui::menu::homebrew::NotifyRename(fixed_old, fixed_new, true);
+        }
+        return rc;
     }
     Result OpenDirectory(const char *path, u32 mode, FsDir *out_dir) override {
         auto fptr = new fs::Dir();

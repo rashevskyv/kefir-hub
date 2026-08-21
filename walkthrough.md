@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.508** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.509** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.509 — MTP Delete/Rename/Directory Operations Mutation Coverage (UPA-07B)
+
+- **Повне покриття мутацій у файловій системі MTP**:
+  - У `sphaira/source/haze_helper.cpp` клас `FsProxy` оновлено для всіх типів файлових та каталожних змін:
+    - `DeleteFile` — після успішного видалення та коміту надсилає `NotifyFileDeleted(routed_path.s)`.
+    - `RenameFile` — після успішного перейменування надсилає `NotifyRename(routed_old.s, routed_new.s, false)`.
+    - `CreateDirectory` — після створення каталогу надсилає `NotifyDirectoryCreated(fixed_path)`.
+    - `DeleteDirectoryRecursively` — після рекурсивного видалення надсилає `NotifyDirectoryDeleted(fixed_path)`.
+    - `RenameDirectory` — після перейменування каталогу надсилає `NotifyRename(fixed_old, fixed_new, true)`.
+  - Усі виклики суворо перевіряють статус успіху `R_SUCCEEDED(rc)` і не надсилають сповіщень при помилках чи операціях поза каталогом Homebrew.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.509`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.508 — MTP Upload / Final Close Shared Mutation Policy Integration (UPA-07A)
 

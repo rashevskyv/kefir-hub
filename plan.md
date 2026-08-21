@@ -1,10 +1,26 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.508**. Завершені плани збережено в
+Поточний delivery — **v0.13.509**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.508 — UPA-07A: MTP upload/final-close shared mutation policy integration
+## Поточний delivery: v0.13.509 — UPA-07B: MTP delete/rename/directory operations mutation coverage
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Повне покриття мутацій у MTP VFS (`sphaira/source/haze_helper.cpp`)**:
+   - `DeleteFile`: після успішного видалення та коміту надсилає `NotifyFileDeleted(routed_path.s)`.
+   - `RenameFile`: після успішного перейменування надсилає `NotifyRename(routed_old.s, routed_new.s, false)`.
+   - `CreateDirectory`: після створення директорії надсилає `NotifyDirectoryCreated(fixed_path)`.
+   - `DeleteDirectoryRecursively`: після рекурсивного видалення надсилає `NotifyDirectoryDeleted(fixed_path)`.
+   - `RenameDirectory`: після перейменування директорії надсилає `NotifyRename(fixed_old, fixed_new, true)`.
+2. **Точність та детермінізм**:
+   - Жодна операція, що завершилася з помилкою, не викликає сповіщення.
+   - Усі шляхи оцінюються через спільну політику, захищаючи від непотрібних оновлень поза межами `/switch` та кастомних search roots.
+3. **Unit-тести та збірка**:
+   - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.508 — UPA-07A: MTP upload/final-close shared mutation policy integration
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Інтеграція спільної політики мутацій у MTP VFS (`sphaira/source/haze_helper.cpp`)**:

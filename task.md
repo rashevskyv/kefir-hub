@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.508**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.509**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.508 (UPA-07A: MTP upload/final-close shared mutation policy integration)
+## Поточний delivery: v0.13.509 (UPA-07B: MTP delete/rename/directory operations mutation coverage)
+
+- [x] `UPA-07B-HB-MTP-MUTATIONS-509` — покрито всі операції мутацій файлів та директорій у MTP VFS (`sphaira/source/haze_helper.cpp`: `DeleteFile`, `RenameFile`, `CreateDirectory`, `DeleteDirectoryRecursively`, `RenameDirectory`); усі виклики перевіряють результат (`R_SUCCEEDED(rc)`), роблять `Commit()` та сповіщають `homebrew` через спільну політику (`NotifyFileDeleted`, `NotifyRename`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`).
+- [x] `DOCS-BUMP-509` — версію піднято до `0.13.509` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.508 (UPA-07A: MTP upload/final-close shared mutation policy integration)
 
 - [x] `UPA-07A-HB-MTP-UPLOAD-508` — інтегровано спільну політику мутацій Homebrew у MTP VFS (`sphaira/source/haze_helper.cpp`): замінено прапорець `m_notify_homebrew` на точний облік відкритих на запис файлів `m_open_write_files`; сповіщення `ui::menu::homebrew::NotifyFileCreated(written_path)` надсилається детерміновано один раз під час успішного `CloseFile()` для будь-яких записів у дефолтний `/switch`, редиректи або кастомні search roots.
 - [x] `DOCS-BUMP-508` — версію піднято до `0.13.508` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

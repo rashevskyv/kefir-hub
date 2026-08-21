@@ -216,7 +216,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 6 | `UPA-05-PLAYTIME-RACE` | P0 | Worker не мутує UI-owned `m_entries` | `UPA-GATE-500` | високий | `DONE (v0.13.506)` |
 | 7 | `UPA-06-HB-POLICY-WEB` | P0 | Shared mutation policy, producer inventory і повне Web success coverage | `UPA-GATE-500` | середній | `DONE (v0.13.507)` |
 | 8 | `UPA-07A-HB-MTP-UPLOAD` | P0 | MTP upload/final-close використовує shared policy | `UPA-06-HB-POLICY-WEB` | високий, hardware | `DONE (v0.13.508)` |
-| 9 | `UPA-07B-HB-MTP-MUTATIONS` | P0 | MTP delete/rename/directory ops використовують shared policy | `UPA-07A-HB-MTP-UPLOAD` | високий, hardware | `PLANNED` |
+| 9 | `UPA-07B-HB-MTP-MUTATIONS` | P0 | MTP delete/rename/directory ops використовують shared policy | `UPA-07A-HB-MTP-UPLOAD` | високий, hardware | `DONE (v0.13.509)` |
 | 10 | `UPA-08A-HB-FTP-DISCOVERY` | Gate | Зафіксовані ftpsrv success seams, callback thread і patch shapes | `UPA-06-HB-POLICY-WEB` | dependency | `PLANNED`, senior-only |
 | 11 | `UPA-08B-HB-FTP` | P0 | Raw FTP upload/delete/rename використовують shared policy | `UPA-08A-HB-FTP-DISCOVERY` | високий, dependency/hardware | `PLANNED` |
 | 12 | `UPA-04B-MTP-IDENTITY` | P1 | Versioned MTP DeviceInfo з правильною локальною product identity | `UPA-GATE-500` | product/dependency/hardware | `BLOCKED`: brand/buffer policy |
