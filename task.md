@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.512**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.513**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.512 (UPA-10A: Tested usable-title core & ASCII-safe NSP export helper)
+## Поточний delivery: v0.13.513 (UPA-10B: Localized UTF-8 MTP display names)
+
+- [x] `UPA-10B-MTP-DISPLAY-NAME-513` — додано безпечну валідацію, санітизацію та транкацію UTF-8 рядків (`SanitizeUtf8TitleName`, `TruncateUtf8`, `ResolveMtpDisplayTitleName`, `FormatMtpGameDirName`) у `sphaira/include/title_export_name.hpp`; підключено `FormatMtpGameDirName` у `BuildGameDirName` (`sphaira/source/haze_helper.cpp`), що гарантує збереження символів кирилиці (українські/європейські назви), CJK, емодзі без обрізання посеред багатобайтового символу; розширено unit-тести `tests/test_title_export_name.cpp` (42 checks passed).
+- [x] `DOCS-BUMP-513` — версію піднято до `0.13.513` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.512 (UPA-10A: Tested usable-title core & ASCII-safe NSP export helper)
 
 - [x] `UPA-10A-EXPORT-NAME-512` — реалізовано модуль [**`sphaira/include/title_export_name.hpp`**](sphaira/include/title_export_name.hpp) з чіткою ієрархією кандидатів (American English -> British English -> Localized -> Title ID hex), семантичною валідацією придатності (`IsUsableTitleName`) та безпечною транкацією; інтегровано хелпер у звичайний (`BuildNspPath`) та об'єднаний (`BuildMergedNspEntry`) експорт NSP у `sphaira/source/title_nsp.cpp`; додано unit-тести [**`tests/test_title_export_name.cpp`**](tests/test_title_export_name.cpp) (24 checks passed).
 - [x] `DOCS-BUMP-512` — версію піднято до `0.13.512` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

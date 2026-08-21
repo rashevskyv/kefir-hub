@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.512** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.513** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.513 — Localized UTF-8 MTP Display Names (UPA-10B)
+
+- **Збереження Unicode-символів у назвах каталогів MTP**:
+  - У `sphaira/include/title_export_name.hpp` додано реалізацію `SanitizeUtf8TitleName`, `TruncateUtf8`, `ResolveMtpDisplayTitleName` та `FormatMtpGameDirName`.
+  - Усунуто заміну кириличних та Unicode-символів на `_` для MTP: тепер українські, японські назви та емодзі коректно відображаються у віртуальному диску MTP.
+  - Реалізовано безпечне скорочення `TruncateUtf8`, яке не розриває багатобайтові code points UTF-8 на границі ліміту довжини файлової назви, гарантуючи збереження суфікса `[TitleID]`.
+  - У `sphaira/source/haze_helper.cpp` функцію `BuildGameDirName` оновлено для використання нового хелпера.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.513`** у `sphaira/CMakeLists.txt`.
+  - Додано тести для кирилиці, емодзі, UTF-8 транкації та MTP фолбеків у [**`tests/test_title_export_name.cpp`**](tests/test_title_export_name.cpp) (42 checks passed).
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 16 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.512 — Usable Title Core & ASCII-Safe NSP Export Helper (UPA-10A)
 

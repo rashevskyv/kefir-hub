@@ -6,6 +6,7 @@
 #include "evman.hpp"
 #include "i18n.hpp"
 #include "title_info.hpp"
+#include "title_export_name.hpp"
 #include "title_nsp.hpp"
 #include "mtp_games_path.hpp"
 #include "ui/menus/save/save_paths.hpp"
@@ -980,28 +981,11 @@ auto MakeVirtualDirEntry(const std::string& name) -> FsDirectoryEntry {
 // note: title::Init() must be held by the caller, so title::Get() can load the
 // control data.
 auto BuildGameDirName(u64 application_id) -> std::string {
-    char suffix[0x20];
-    std::snprintf(suffix, sizeof(suffix), "[%016lX]", application_id);
-
-    std::string base;
+    const char* localized_name = nullptr;
     if (const auto data = title::Get(application_id); data && data->status == title::NacpLoadStatus::Loaded) {
-        fs::FsPath buf{};
-        std::snprintf(buf, sizeof(buf), "%s", data->lang.name);
-        title::utilsReplaceIllegalCharacters(buf, true);
-        base = TrimName(buf.s);
+        localized_name = data->lang.name;
     }
-
-    if (base.empty()) {
-        return suffix;
-    }
-
-    // trim the name, never the [TitleID] suffix - it keeps equal names unique.
-    const auto suffix_len = std::strlen(suffix) + 1; // + separating space.
-    const auto max_len = sizeof(FsDirectoryEntry::name) - 1;
-    if (base.size() + suffix_len > max_len) {
-        base.resize(max_len - suffix_len);
-    }
-    return base + " " + suffix;
+    return title::FormatMtpGameDirName(localized_name, nullptr, nullptr, application_id, sizeof(FsDirectoryEntry::name) - 1);
 }
 
 

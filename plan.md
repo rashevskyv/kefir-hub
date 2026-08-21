@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.512**. Завершені плани збережено в
+Поточний delivery — **v0.13.513**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.512 — UPA-10A: Tested usable-title core & ASCII-safe NSP export helper
+## Поточний delivery: v0.13.513 — UPA-10B: Localized UTF-8 MTP display names
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Збереження Unicode у MTP папках (`sphaira/include/title_export_name.hpp`, `sphaira/source/haze_helper.cpp`)**:
+   - Реалізовано UTF-8 санітизацію (`SanitizeUtf8TitleName`) та безпечну транкацію на межі code point (`TruncateUtf8`).
+   - `FormatMtpGameDirName` зберігає локалізовані назви (кирилиця, українські/європейські літери, ієрогліфи, емодзі) та гарантує збереження суфікса `[TitleID]`.
+   - Забезпечено коректний fallback: Localized name -> English slot 0 -> English slot 1 -> Title ID.
+2. **Unit-тести та збірка**:
+   - Розширено [**`tests/test_title_export_name.cpp`**](tests/test_title_export_name.cpp) тестами Unicode/кирилиці, емодзі, безпечної UTF-8 транкації та MTP фолбеків (42 checks passed).
+   - Пройдено всі 16 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.512 — UPA-10A: Tested usable-title core & ASCII-safe NSP export helper
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Ядро визначення придатної назви та NSP експорт (`sphaira/include/title_export_name.hpp`)**:
