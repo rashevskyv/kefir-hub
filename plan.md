@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.515**. Завершені плани збережено в
+Поточний delivery — **v0.13.516**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.515 — UPA-13: Confirmed ROM database compatibility aliases
+## Поточний delivery: v0.13.516 — AppStore EntryMenu launch confirmation guard
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Захист від випадкового запуску NRO у меню AppStore (`sphaira/source/ui/menus/appstore.cpp`)**:
+   - Додано діалогове вікно підтвердження `OptionBox` ("Launch [App]? No / Yes") для дії запуску `Launch` в `EntryMenu`.
+   - Запобігає автоматичному / миттєвому закриттю Sphaira та запуску сторонніх застосунків при відкритті інформаційної картки вже встановленого додатка у магазині.
+2. **Збірка та деплой**:
+   - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано та скопійовано бінарник `kefir-hub.nro` на карту пам'яті `F:`.
+
+## Попередній delivery: v0.13.515 — UPA-13: Confirmed ROM database compatibility aliases
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Розширення таблиці асоціацій баз даних ROM (`sphaira/include/ui/menus/filebrowser_assoc.hpp`)**:

@@ -830,7 +830,7 @@ void EntryMenu::UpdateOptions() {
 
     const Option install_option{"Install"_i18n, install};
     const Option update_option{"Update"_i18n, install};
-    const Option launch_option{"Launch"_i18n, launch};
+    const Option launch_option{"Launch"_i18n, "Launch "_i18n + m_entry.title + '?', launch};
     const Option remove_option{"Remove"_i18n, "Completely remove "_i18n + m_entry.title + '?', uninstall};
 
     m_options.clear();

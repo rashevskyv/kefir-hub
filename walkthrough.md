@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.515** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.516** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.516 — AppStore EntryMenu Launch Confirmation Guard
+
+- **Діагностика та усунення проблеми з неконтрольованим запуском RetroArch**:
+  - Знайдено та проаналізовано crash dump `F:/atmosphere/crash_reports/01787305551_03db12780bd84000.log` та системний лог `F:/config/kefir/log.txt`.
+  - Встановлено причину: при натисканні кнопки `A` на встановленому додатку у списку AppStore відкривалося меню інформації (`EntryMenu`), де першою дією (індекс 0 за замовчуванням) без жодного підтвердження була дія `Launch`. Це призводило до негайного виклику `nro_launch("sdmc:/switch/retroarch_switch.nro")` та виходу зі Sphaira. При прямому запуску RetroArch (який мав збережену конфігурацію ядра без попередньо переданого ROM) виникав Data Abort (0x4A8: 2168-0002).
+  - У `sphaira/source/ui/menus/appstore.cpp` для опції `Launch` додано обов'язкове модальне вікно підтвердження (`OptionBox` з текстом "Launch [Назва додатка]?"), що унеможливлює випадковий запуск сторонніх NRO при перегляді карток магазину.
+- **Тести та розгортання**:
+  - Піднято версію до **`0.13.516`** у `sphaira/CMakeLists.txt`.
+  - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL та оновлено файл `kefir-hub.nro` і `hbmenu.nro` на змонтованому диску `F:`.
 
 ## v0.13.515 — Confirmed ROM Database Compatibility Aliases (UPA-13)
 

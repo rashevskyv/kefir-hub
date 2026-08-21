@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.515**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.516**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.515 (UPA-13: Confirmed ROM database compatibility aliases)
+## Поточний delivery: v0.13.516 (AppStore EntryMenu launch confirmation guard)
+
+- [x] `APPSTORE-LAUNCH-CONFIRM-516` — додано обов'язкове діалогове вікно підтвердження (`OptionBox`) для дії `Launch` у меню детальної інформації про додаток (`EntryMenu` у `sphaira/source/ui/menus/appstore.cpp`), що усуває раптовий та випадковий запуск сторонніх `.nro` при відкритті карток встановлених додатків у магазині; оновлено та розгорнуто скомпільований бінарник `kefir-hub.nro` безпосередньо на карту пам'яті `F:`.
+- [x] `DOCS-BUMP-516` — версію піднято до `0.13.516` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.515 (UPA-13: Confirmed ROM database compatibility aliases)
 
 - [x] `UPA-13-ROM-ALIASES-515` — оновлено таблицю співставлення баз даних ROM у [**`sphaira/include/ui/menus/filebrowser_assoc.hpp`**](sphaira/include/ui/menus/filebrowser_assoc.hpp): додано підтримку `NEC - PC Engine SuperGrafx` (папки `supergrafx`, `pce-sg`, `pcesg`), `Nintendo - Family Computer Disk System` поряд із `Nintendo - Famicom Disk System` (папка `fds`), та базовий `SNK - Neo Geo` поряд із `Pocket`/`Pocket Color`/`CD` (папка `neogeo`); розширено unit-тести [**`tests/test_tico_assoc.cpp`**](tests/test_tico_assoc.cpp) (20 checks passed).
 - [x] `DOCS-BUMP-515` — версію піднято до `0.13.515` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
