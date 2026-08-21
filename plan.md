@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.503**. Завершені плани збережено в
+Поточний delivery — **v0.13.504**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.503 — UPA-02B: GHDL ZIP type detection & safe non-ZIP destination
+## Поточний delivery: v0.13.504 — UPA-03: Centralized GitHub and direct URL validation
+
+Статус: реалізацію виконано та верифіковано:
+1. **Централізована валідація URL GitHub (`sphaira/include/path_util.hpp`)**:
+   - Реалізовано `path::ParseGitHubRepoUrl(url)`: перевіряє схему (http/https), хост (github.com / www.github.com), відсікає `.git` та trailing slash, вимагає валідні ідентифікатори owner/repo без спецсимволів, відхиляє userinfo, порти, параметри запиту, фрагменти та directory traversal.
+2. **Валідація прямих посилань та ZIP-файлів**:
+   - Реалізовано `path::IsValidDirectAssetUrl(url)` та `path::IsValidDirectZipUrl(url)`.
+   - Оновлено `LoadEntriesFromPath`, `Download`, та `OpenDirectLinkPrompt` у `sphaira/source/ui/menus/ghdl.cpp`.
+3. **Unit-тести та збірка**:
+   - Покрито повним набором тестів у `tests/test_path_util.cpp` (230 checks passed).
+   - Успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.503 — UPA-02B: GHDL ZIP type detection & safe non-ZIP destination
 
 Статус: реалізацію виконано та верифіковано:
 1. **Комплексне визначення ZIP-архівів (`sphaira/include/path_util.hpp`, `sphaira/source/ui/menus/ghdl.cpp`)**:

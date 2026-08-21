@@ -348,8 +348,79 @@ static int test_extract_basename() {
     return 0;
 }
 
+static int test_parse_github_repo_url() {
+    // Valid standard URLs
+    auto r1 = path::ParseGitHubRepoUrl("https://github.com/owner/repo");
+    CHECK(r1.has_value() && r1->owner == "owner" && r1->repo == "repo");
+
+    auto r2 = path::ParseGitHubRepoUrl("http://github.com/Owner-1/Repo_2");
+    CHECK(r2.has_value() && r2->owner == "Owner-1" && r2->repo == "Repo_2");
+
+    auto r3 = path::ParseGitHubRepoUrl("https://www.github.com/my.name/cool-project");
+    CHECK(r3.has_value() && r3->owner == "my.name" && r3->repo == "cool-project");
+
+    // Trailing slash
+    auto r4 = path::ParseGitHubRepoUrl("https://github.com/owner/repo/");
+    CHECK(r4.has_value() && r4->owner == "owner" && r4->repo == "repo");
+
+    // .git suffix removal
+    auto r5 = path::ParseGitHubRepoUrl("https://github.com/owner/repo.git");
+    CHECK(r5.has_value() && r5->owner == "owner" && r5->repo == "repo");
+
+    auto r6 = path::ParseGitHubRepoUrl("https://github.com/owner/repo.GIT/");
+    CHECK(r6.has_value() && r6->owner == "owner" && r6->repo == "repo");
+
+    // Invalid URLs
+    CHECK(!path::ParseGitHubRepoUrl("").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("ftp://github.com/owner/repo").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://other.com/owner/repo").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner/").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner/repo/extra").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner/repo?token=123").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner/repo#readme").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://user:pass@github.com/owner/repo").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com:8080/owner/repo").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/../repo").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/owner/..").has_value());
+    CHECK(!path::ParseGitHubRepoUrl("https://github.com/own er/repo").has_value());
+
+    return 0;
+}
+
+static int test_is_valid_direct_asset_url() {
+    // Valid direct URLs
+    CHECK(path::IsValidDirectAssetUrl("https://example.com/file.zip"));
+    CHECK(path::IsValidDirectAssetUrl("http://cdn.site.org:8080/downloads/app.nro"));
+    CHECK(path::IsValidDirectAssetUrl("https://host.com/path/to/asset?token=abc%20123"));
+
+    // Invalid direct URLs
+    CHECK(!path::IsValidDirectAssetUrl(""));
+    CHECK(!path::IsValidDirectAssetUrl("ftp://example.com/file.zip"));
+    CHECK(!path::IsValidDirectAssetUrl("file:///sdmc/app.nro"));
+    CHECK(!path::IsValidDirectAssetUrl("https:///file.zip")); // missing host
+    CHECK(!path::IsValidDirectAssetUrl("https://"));
+    CHECK(!path::IsValidDirectAssetUrl("https://user:pass@example.com/file.zip"));
+    CHECK(!path::IsValidDirectAssetUrl("https://example.com/file.zip#frag"));
+    CHECK(!path::IsValidDirectAssetUrl("https://example.com/file name.zip"));
+
+    return 0;
+}
+
+static int test_is_valid_direct_zip_url() {
+    CHECK(path::IsValidDirectZipUrl("https://example.com/file.zip"));
+    CHECK(path::IsValidDirectZipUrl("https://example.com/archive.ZIP"));
+    CHECK(path::IsValidDirectZipUrl("http://site.org/downloads/bundle.zip?token=123"));
+    CHECK(!path::IsValidDirectZipUrl("https://example.com/file.nro"));
+    CHECK(!path::IsValidDirectZipUrl("https://example.com/file.nro?fake=file.zip"));
+    CHECK(!path::IsValidDirectZipUrl("ftp://example.com/file.zip"));
+    CHECK(!path::IsValidDirectZipUrl(""));
+
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename()) {
+    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename() || test_parse_github_repo_url() || test_is_valid_direct_asset_url() || test_is_valid_direct_zip_url()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

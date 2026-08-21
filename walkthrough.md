@@ -1,9 +1,27 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.503** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.504** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.504 — Centralized GitHub and Direct URL Validation (UPA-03)
+
+- **Централізований парсер та валідатор URL GitHub**:
+  - У `sphaira/include/path_util.hpp` додано функцію `path::ParseGitHubRepoUrl(url)`.
+  - Вона підтримує схеми `http://` та `https://`, хости `github.com` та `www.github.com`, автоматично відсікає суфікс `.git` та завершальні слеші.
+  - Строго перевіряє сегменти `owner` та `repo` на валідність (тільки ASCII букви, цифри, `-`, `_`, `.`), відхиляє credentials (`@`), небезпечні порти (`:port`), фрагменти (`#`), параметри запиту (`?`) та directory traversal (`..`).
+- **Валідація прямих та ZIP посилань**:
+  - Додано `path::IsValidDirectAssetUrl(url)` та `path::IsValidDirectZipUrl(url)`.
+  - Усі некоректні посилання відхиляються до початку мережевих запитів та створення записів.
+- **Оновлення меню завантажувача GitHub**:
+  - У `sphaira/source/ui/menus/ghdl.cpp` замінено наївне обрізання `entry.url.substr(19)` на `path::ParseGitHubRepoUrl`.
+  - Функції `LoadEntriesFromPath`, `Download` та `OpenDirectLinkPrompt` переведено на централізовану валідацію.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.504`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Покрито новими unit-тестами у `tests/test_path_util.cpp` (230 checks passed).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.503 — GHDL ZIP Type Detection & Safe Non-ZIP Destination (UPA-02B)
 

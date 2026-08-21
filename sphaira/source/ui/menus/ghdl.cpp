@@ -289,9 +289,9 @@ void OpenDirectLinkPrompt() {
         return;
     }
 
-    // Validate URL ends with .zip
-    if (url.size() < 4 || strcasecmp(url.c_str() + url.size() - 4, ".zip") != 0) {
-        App::Push<OptionBox>("URL must end with .zip"_i18n, "OK"_i18n);
+    // Validate direct ZIP URL
+    if (!path::IsValidDirectZipUrl(url)) {
+        App::Push<OptionBox>("URL must be a valid HTTP(S) link ending with .zip"_i18n, "OK"_i18n);
         return;
     }
 
@@ -467,13 +467,21 @@ void Menu::LoadEntriesFromPath(const fs::FsPath& path) {
         const auto full_path = fs::AppendPath(path, d->d_name);
         from_json(full_path, entry);
 
-        // parse owner and author from url (if needed).
+        // parse owner and repo from url if needed
         if (!entry.url.empty()) {
-            const auto s = entry.url.substr(std::strlen("https://github.com/"));
-            const auto it = s.find('/');
-            if (it != s.npos) {
-                entry.owner = s.substr(0, it);
-                entry.repo = s.substr(it + 1);
+            if (auto repo = path::ParseGitHubRepoUrl(entry.url)) {
+                entry.owner = repo->owner;
+                entry.repo = repo->repo;
+            } else if (entry.owner.empty() || entry.repo.empty()) {
+                log_write("ignoring entry with invalid GitHub URL: %s in %s\n", entry.url.c_str(), full_path.s);
+                continue;
+            }
+        }
+
+        if (!entry.direct_url.empty()) {
+            if (!path::IsValidDirectAssetUrl(entry.direct_url)) {
+                log_write("ignoring entry with invalid direct URL: %s in %s\n", entry.direct_url.c_str(), full_path.s);
+                continue;
             }
         }
 
@@ -485,15 +493,12 @@ void Menu::LoadEntriesFromPath(const fs::FsPath& path) {
         // For direct_url entries without owner/repo, use filename as display name
         if (!entry.direct_url.empty() && entry.repo.empty()) {
             // Extract filename from URL for display
-            auto pos = entry.direct_url.rfind('/');
-            if (pos != std::string::npos && pos + 1 < entry.direct_url.size()) {
-                entry.repo = entry.direct_url.substr(pos + 1);
+            const auto basename = path::ExtractBasename(entry.direct_url);
+            if (!basename.empty()) {
+                entry.repo = std::string(basename);
                 // Remove .zip extension for cleaner display
-                if (entry.repo.size() > 4) {
-                    auto ext_pos = entry.repo.rfind(".zip");
-                    if (ext_pos != std::string::npos && ext_pos == entry.repo.size() - 4) {
-                        entry.repo = entry.repo.substr(0, ext_pos);
-                    }
+                if (path::EndsWithIC(entry.repo, ".zip")) {
+                    entry.repo.resize(entry.repo.size() - 4);
                 }
             } else {
                 entry.repo = "Direct Link";
@@ -671,17 +676,17 @@ bool Download(const std::string& url, const std::vector<AssetEntry>& assets, con
     entry.pre_install_message = pre_install_message;
     entry.post_install_message = post_install_message;
 
-    // parse owner and author from url (if needed).
+    // parse owner and repo from url
     if (!entry.url.empty()) {
-        const auto s = entry.url.substr(std::strlen("https://github.com/"));
-        const auto it = s.find('/');
-        if (it != s.npos) {
-            entry.owner = s.substr(0, it);
-            entry.repo = s.substr(it + 1);
+        if (auto repo = path::ParseGitHubRepoUrl(entry.url)) {
+            entry.owner = repo->owner;
+            entry.repo = repo->repo;
+        } else {
+            return false;
         }
     }
 
-    // check that we have a owner and repo
+    // check that we have an owner and repo
     if (entry.owner.empty() || entry.repo.empty()) {
         return false;
     }
