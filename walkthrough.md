@@ -1,9 +1,24 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.509** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.510** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.510 — Raw FTP Mutation Adapter & Discovery Gate (UPA-08A & UPA-08B)
+
+- **Архітектурний дизайн та фіксація точок мутацій ftpsrv (UPA-08A)**:
+  - Проведено аудит бібліотеки `ftpsrv` і визначено точні функції успішного виконання дій у `src/platform/nx/vfs/vfs_nx_fs.c` (`vfs_fs_close`, `vfs_fs_unlink`, `vfs_fs_rmdir`, `vfs_fs_mkdir`, `vfs_fs_rename`).
+  - Підтверджено повну потокобезпечність виклику неблокуючого механізму сповіщень `homebrew::SignalChange()` (`ueventSignal`) з фонового потоку `g_thread`.
+- **C ABI хуки та адаптер мутацій ftpsrv (UPA-08B)**:
+  - У `sphaira/cmake/patch_ftpsrv.cmake` додано секцію 4 (`vfs_nx.h`, `vfs_nx_fs.h`, `vfs_nx_fs.c`), що надає C ABI інтерфейс `vfs_nx_set_mutation_callback(vfs_nx_mutation_cb cb)` і сповіщає про події мутації суворо за умови успішного виконання (`rc == 0`).
+  - У `sphaira/source/ftpsrv_helper.cpp` підключено колбек `FtpMutationCallback` до спільної політики Homebrew (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`).
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.510`** у `sphaira/CMakeLists.txt`.
+  - Створено перевірочний fixture-скрипт [**`tests/test_patch_ftpsrv.sh`**](tests/test_patch_ftpsrv.sh) для тестування форми патчу ftpsrv та підключено його в `tests/run.sh`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 15 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.509 — MTP Delete/Rename/Directory Operations Mutation Coverage (UPA-07B)
 

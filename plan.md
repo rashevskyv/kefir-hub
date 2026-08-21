@@ -1,10 +1,24 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.509**. Завершені плани збережено в
+Поточний delivery — **v0.13.510**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.509 — UPA-07B: MTP delete/rename/directory operations mutation coverage
+## Поточний delivery: v0.13.510 — UPA-08A/B: Raw FTP mutation adapter & discovery gate
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Дизайн та фіксація точок інтеграції (`UPA-08A`)**:
+   - Визначено точки успішного завершення операцій у `src/platform/nx/vfs/vfs_nx_fs.c` (`vfs_fs_close`, `vfs_fs_unlink`, `vfs_fs_rmdir`, `vfs_fs_mkdir`, `vfs_fs_rename`).
+   - Підтверджено потокобезпечність викликів сповіщень з worker-потоку ftpsrv (`ueventSignal`).
+2. **Адаптер мутацій у ftpsrv (`sphaira/cmake/patch_ftpsrv.cmake`, `sphaira/source/ftpsrv_helper.cpp`)**:
+   - Додано C ABI інтерфейс `vfs_nx_set_mutation_callback` для відправлення сповіщень про події створення/видалення/перейменування файлів та папок.
+   - Підключено обробник `FtpMutationCallback` у `ftpsrv_helper.cpp` до спільної політики Homebrew (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`).
+3. **Unit-тести, shape-checks та збірка**:
+   - Створено автономний перевірочний скрипт `tests/test_patch_ftpsrv.sh` та підключено його до `tests/run.sh`.
+   - Пройдено всі 15 наборів host unit-тестів та обидва shape-checks (libhaze + ftpsrv).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.509 — UPA-07B: MTP delete/rename/directory operations mutation coverage
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Повне покриття мутацій у MTP VFS (`sphaira/source/haze_helper.cpp`)**:

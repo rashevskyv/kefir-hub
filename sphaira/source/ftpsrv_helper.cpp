@@ -4,6 +4,7 @@
 #include "fs.hpp"
 #include "log.hpp"
 #include "net.hpp"
+#include "ui/menus/homebrew.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -15,6 +16,41 @@
 
 namespace sphaira::ftpsrv {
 namespace {
+
+void FtpMutationCallback(enum VfsNxMutation type, const char* p1, const char* p2) {
+    switch (type) {
+        case VFS_NX_MUTATION_FILE_CREATED:
+            if (p1) {
+                ui::menu::homebrew::NotifyFileCreated(p1);
+            }
+            break;
+        case VFS_NX_MUTATION_FILE_DELETED:
+            if (p1) {
+                ui::menu::homebrew::NotifyFileDeleted(p1);
+            }
+            break;
+        case VFS_NX_MUTATION_DIR_CREATED:
+            if (p1) {
+                ui::menu::homebrew::NotifyDirectoryCreated(p1);
+            }
+            break;
+        case VFS_NX_MUTATION_DIR_DELETED:
+            if (p1) {
+                ui::menu::homebrew::NotifyDirectoryDeleted(p1);
+            }
+            break;
+        case VFS_NX_MUTATION_RENAME_FILE:
+            if (p1 && p2) {
+                ui::menu::homebrew::NotifyRename(p1, p2, false);
+            }
+            break;
+        case VFS_NX_MUTATION_RENAME_DIR:
+            if (p1 && p2) {
+                ui::menu::homebrew::NotifyRename(p1, p2, true);
+            }
+            break;
+    }
+}
 
 // the folder shared over ftp alongside "sdmc:" and "install:", if any. held as a
 // plain microSD path ("/games/roms"): ftpsrv exposes it as a root device backed
@@ -628,10 +664,12 @@ bool Init() {
     };
 
     vfs_nx_set_root_write_router(ftp_root_write_router);
-    log_write("[FTP] root-drop routing armed\n");
+    vfs_nx_set_mutation_callback(FtpMutationCallback);
+    log_write("[FTP] root-drop routing and mutation callbacks armed\n");
     UpdateFtpVisibleDevices();
     vfs_nx_init(&custom, mount_devices, save_writable, mount_bis, false);
 #else
+    vfs_nx_set_mutation_callback(FtpMutationCallback);
     UpdateFtpVisibleDevices();
     vfs_nx_init(NULL, mount_devices, save_writable, mount_bis, false);
 #endif

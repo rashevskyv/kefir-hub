@@ -34,6 +34,10 @@ echo "== libhaze patch shape check =="
 ./tests/test_patch_libhaze.sh || fail=1
 
 echo
+echo "== ftpsrv patch shape check =="
+./tests/test_patch_ftpsrv.sh || fail=1
+
+echo
 if [ "$fail" -ne 0 ]; then
     echo "FAILED"
     exit 1

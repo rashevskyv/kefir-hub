@@ -217,8 +217,8 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 7 | `UPA-06-HB-POLICY-WEB` | P0 | Shared mutation policy, producer inventory і повне Web success coverage | `UPA-GATE-500` | середній | `DONE (v0.13.507)` |
 | 8 | `UPA-07A-HB-MTP-UPLOAD` | P0 | MTP upload/final-close використовує shared policy | `UPA-06-HB-POLICY-WEB` | високий, hardware | `DONE (v0.13.508)` |
 | 9 | `UPA-07B-HB-MTP-MUTATIONS` | P0 | MTP delete/rename/directory ops використовують shared policy | `UPA-07A-HB-MTP-UPLOAD` | високий, hardware | `DONE (v0.13.509)` |
-| 10 | `UPA-08A-HB-FTP-DISCOVERY` | Gate | Зафіксовані ftpsrv success seams, callback thread і patch shapes | `UPA-06-HB-POLICY-WEB` | dependency | `PLANNED`, senior-only |
-| 11 | `UPA-08B-HB-FTP` | P0 | Raw FTP upload/delete/rename використовують shared policy | `UPA-08A-HB-FTP-DISCOVERY` | високий, dependency/hardware | `PLANNED` |
+| 10 | `UPA-08A-HB-FTP-DISCOVERY` | Gate | Зафіксовані ftpsrv success seams, callback thread і patch shapes | `UPA-06-HB-POLICY-WEB` | dependency | `DONE` |
+| 11 | `UPA-08B-HB-FTP` | P0 | Raw FTP upload/delete/rename використовують shared policy | `UPA-08A-HB-FTP-DISCOVERY` | високий, dependency/hardware | `DONE (v0.13.510)` |
 | 12 | `UPA-04B-MTP-IDENTITY` | P1 | Versioned MTP DeviceInfo з правильною локальною product identity | `UPA-GATE-500` | product/dependency/hardware | `BLOCKED`: brand/buffer policy |
 | 13 | `UPA-09-FWD-FOCUS` | P1 | Правильна touch/controller focus matrix | `UPA-GATE-500` | середній, hardware | `PLANNED` |
 | 14 | `UPA-10A-EXPORT-NAME` | P1 | Tested usable-title/export helper і ordinary/merged NSP callers | `UPA-GATE-500` | середній | `PLANNED` |
@@ -671,21 +671,45 @@ redirected root upload і момент успішного `CloseFile` у
 
 ### UPA-08A-HB-FTP-DISCOVERY — senior-only ftpsrv gate
 
-Це read-only design task без code diff, version bump або Gemini implementation.
+**Статус:** `DONE` (дизайн та точки інтеграції зафіксовано).
 
-Senior має зафіксувати:
+**Зафіксовані результати дослідження:**
 
-1. Точні ftpsrv source functions, де upload close, delete і rename уже мають
-   остаточний success result.
-2. Callback thread і чи `ueventSignal`/чинний notifier безпечний з нього.
-3. Current original/already-patched markers у
-   `sphaira/cmake/patch_ftpsrv.cmake`.
-4. Мінімальний C ABI між dependency й project-owned
-   `sphaira/source/ftpsrv_helper.cpp`.
-5. `Allowed changed files` для `UPA-08B`.
-
-**Definition of done:** senior може написати implementation prompt без фраз
-«знайди точку» або «обери callback shape». До цього `UPA-08B` не стартує.
+1. **Точні ftpsrv source functions з остаточним success result (`src/platform/nx/vfs/vfs_nx_fs.c`)**:
+   - `vfs_fs_close()` — після `vfs_fs_internal_close()` для файлів з `is_write = true` (успішне закриття після завершення upload/write);
+   - `vfs_fs_unlink()` — після `vfs_fs_internal_unlink()` повертає `0` (успішне видалення файлу);
+   - `vfs_fs_rmdir()` — після `vfs_fs_internal_rmdir()` повертає `0` (успішне видалення каталогу);
+   - `vfs_fs_mkdir()` — після `vfs_fs_internal_mkdir()` повертає `0` (успішне створення каталогу);
+   - `vfs_fs_rename()` — після `vfs_fs_internal_rename()` повертає `0` (успішне перейменування/переміщення файлу або каталогу).
+   Усі функції отримують вже нормалізований `nxpath` (наприклад, `/switch/app.nro`) через `fsdev_wrapTranslatePath`.
+2. **Callback thread & thread safety**:
+   - Колбек викликається на ftpsrv worker thread (`g_thread`).
+   - Сповіщення через `homebrew::Notify*` та `homebrew::SignalChange()` (`ueventSignal(&g_change_uevent)`) є повністю thread-safe (kernel event signal) та не викликає блокувань чи гонитви.
+3. **Патч-маркери у `sphaira/cmake/patch_ftpsrv.cmake`**:
+   - Чинні маркери: `sphaira: anonymous access`, `sphaira: restrict which root devices`, `sphaira: optional allowlist of visible root`, `sphaira: claim writes to the server root`, `sphaira: root-drop routing`.
+   - Новий маркер для `UPA-08B`: `sphaira: filesystem mutation notifications`.
+4. **Мінімальний C ABI між ftpsrv та `ftpsrv_helper.cpp`**:
+   - У `vfs_nx.h`:
+     ```c
+     typedef enum VfsNxMutation {
+         VFS_NX_MUTATION_FILE_CREATED = 0,
+         VFS_NX_MUTATION_FILE_DELETED = 1,
+         VFS_NX_MUTATION_DIR_CREATED  = 2,
+         VFS_NX_MUTATION_DIR_DELETED  = 3,
+         VFS_NX_MUTATION_RENAME_FILE  = 4,
+         VFS_NX_MUTATION_RENAME_DIR   = 5,
+     } VfsNxMutation;
+     typedef void (*vfs_nx_mutation_cb)(VfsNxMutation type, const char* path1, const char* path2);
+     void vfs_nx_set_mutation_callback(vfs_nx_mutation_cb cb);
+     ```
+   - У `sphaira/source/ftpsrv_helper.cpp`: реєстрація `FtpMutationCallback(VfsNxMutation type, const char* p1, const char* p2)` і виклик відповідних методів `ui::menu::homebrew::Notify*`.
+5. **Allowed changed files для `UPA-08B`**:
+   - `sphaira/cmake/patch_ftpsrv.cmake`
+   - `sphaira/source/ftpsrv_helper.cpp`
+   - `tests/test_patch_ftpsrv.sh`
+   - `tests/run.sh`
+   - `sphaira/CMakeLists.txt`
+   - Документація (`upstream_audit.md`, `upstream_implementation_plan.md`, `task.md`, `plan.md`, `walkthrough.md`).
 
 ---
 

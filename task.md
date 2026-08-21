@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.509**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.510**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.509 (UPA-07B: MTP delete/rename/directory operations mutation coverage)
+## Поточний delivery: v0.13.510 (UPA-08A & UPA-08B: Raw FTP mutation adapter & discovery gate)
+
+- [x] `UPA-08A-HB-FTP-DISCOVERY-510` — зафіксовано архітектурні точки інтеграції, безпеку потоків (`g_thread` worker -> atomic event signal) та патч-маркери у ftpsrv.
+- [x] `UPA-08B-HB-FTP-510` — розширено `sphaira/cmake/patch_ftpsrv.cmake` секцією 4 (`vfs_nx.h`, `vfs_nx_fs.h`, `vfs_nx_fs.c`) з підтримкою C ABI хуків для подій мутацій (`vfs_nx_set_mutation_callback`); підключено обробник `FtpMutationCallback` у `sphaira/source/ftpsrv_helper.cpp` до спільної політики Homebrew (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`); додано перевірочний скрипт `tests/test_patch_ftpsrv.sh` у `tests/run.sh`.
+- [x] `DOCS-BUMP-510` — версію піднято до `0.13.510` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.509 (UPA-07B: MTP delete/rename/directory operations mutation coverage)
 
 - [x] `UPA-07B-HB-MTP-MUTATIONS-509` — покрито всі операції мутацій файлів та директорій у MTP VFS (`sphaira/source/haze_helper.cpp`: `DeleteFile`, `RenameFile`, `CreateDirectory`, `DeleteDirectoryRecursively`, `RenameDirectory`); усі виклики перевіряють результат (`R_SUCCEEDED(rc)`), роблять `Commit()` та сповіщають `homebrew` через спільну політику (`NotifyFileDeleted`, `NotifyRename`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`).
 - [x] `DOCS-BUMP-509` — версію піднято до `0.13.509` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
