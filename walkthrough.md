@@ -1,9 +1,26 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.501** (2026-08-20). Попередні
+Актуальний delivery — **v0.13.502** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.502 — GitHub Downloader Operation Identity, Cancel & Temp Isolation (UPA-02A)
+
+- **Ізоляція та гарантоване очищення тимчасових файлів**:
+  - У `sphaira/source/ui/menus/ghdl.cpp` перед початком завантаження файлів (`DownloadApp()`, `DoDirectLinkDownload()`) додано виклик `fs.DeleteFile(temp_file)` та реєстрацію `ON_SCOPE_EXIT(fs.DeleteFile(temp_file))`.
+  - Унеможливлено використання застарілих або пошкоджених файлів від перерваних операцій завантаження.
+- **Фазові перевірки скасування (Phase Cancellation Gates)**:
+  - Додано перевірки стану скасування `pbox->ShouldExit()` перед початком передачі даних через libcurl, безпосередньо після її завершення перед операціями з файловою системою, а також перед викликом розпакування `thread::TransferUnzipAll` та фінального перейменування.
+  - У разі скасування повертається детермінований код `Result_TransferCancelled`, що унеможливлює виконання небезпечних мутацій файлової системи після відмови користувача.
+- **Захист від помилкових сигналів оновлення Homebrew**:
+  - Виклик `homebrew::SignalChange()` перенесено суворо всередину блоку успішного завершення операції `if (R_SUCCEEDED(rc))`.
+  - Для коду `Result_TransferCancelled` прибрано показ непотрібних спливаючих вікон про збій мережі `App::PushErrorBox`.
+- **Верифікація та тести**:
+  - Піднято версію до **`0.13.502`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси у звітах [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 15 наборів host unit-тестів у WSL (`tests/run.sh`).
+  - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
 
 ## v0.13.501 — GitHub Downloader Callback Ownership & Selection Safety (UPA-01)
 

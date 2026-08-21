@@ -107,22 +107,36 @@ auto DownloadApp(ProgressBox* pbox, const GhApiAsset& gh_asset, const AssetEntry
 
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
+
+    // Clean stale temp file before starting and ensure cleanup on exit
+    fs.DeleteFile(temp_file);
     ON_SCOPE_EXIT(fs.DeleteFile(temp_file));
 
     R_UNLESS(!gh_asset.browser_download_url.empty(), Result_GhdlEmptyAsset);
 
+    // Gate 1: Check cancellation before starting network transfer
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
+    }
+
     // 2. download the asset
-    if (!pbox->ShouldExit()) {
-        pbox->NewTransfer("Downloading "_i18n + gh_asset.name);
-        log_write("starting download: %s\n", gh_asset.browser_download_url.c_str());
+    pbox->NewTransfer("Downloading "_i18n + gh_asset.name);
+    log_write("starting download: %s\n", gh_asset.browser_download_url.c_str());
 
-        const auto result = curl::Api().ToFile(
-            curl::Url{gh_asset.browser_download_url},
-            curl::Path{temp_file},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()}
-        );
+    const auto result = curl::Api().ToFile(
+        curl::Url{gh_asset.browser_download_url},
+        curl::Path{temp_file},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
 
-        R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
+    }
+    R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
+
+    // Gate 2: Check cancellation after download before touching destination files
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
     }
 
     fs::FsPath root_path{"/"};
@@ -141,31 +155,39 @@ auto DownloadApp(ProgressBox* pbox, const GhApiAsset& gh_asset, const AssetEntry
         R_TRY(fs.RenameFile(temp_file, root_path));
     }
 
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
+    }
+
     log_write("success\n");
     R_SUCCEED();
 }
 
 auto DownloadReleaseJsonJson(ProgressBox* pbox, const std::string& url, std::vector<GhApiEntry>& out) -> Result {
-    // 1. download the json
-    if (!pbox->ShouldExit()) {
-        pbox->NewTransfer("Downloading json"_i18n);
-        log_write("starting download\n");
-
-        const auto path = apiBuildAssetCache(url);
-
-        const auto result = curl::Api().ToFile(
-            curl::Url{url},
-            curl::Path{path},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()},
-            curl::Flags{curl::Flag_Cache},
-            curl::Header{
-                { "Accept", "application/vnd.github+json" },
-            }
-        );
-
-        R_UNLESS(result.success, Result_GhdlFailedToDownloadAssetJson);
-        from_json(result.path, out);
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
     }
+
+    pbox->NewTransfer("Downloading json"_i18n);
+    log_write("starting download\n");
+
+    const auto path = apiBuildAssetCache(url);
+
+    const auto result = curl::Api().ToFile(
+        curl::Url{url},
+        curl::Path{path},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()},
+        curl::Flags{curl::Flag_Cache},
+        curl::Header{
+            { "Accept", "application/vnd.github+json" },
+        }
+    );
+
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
+    }
+    R_UNLESS(result.success, Result_GhdlFailedToDownloadAssetJson);
+    from_json(result.path, out);
 
     R_UNLESS(!out.empty(), Result_GhdlEmptyAsset);
     R_SUCCEED();
@@ -179,6 +201,13 @@ void DoDirectLinkDownload(const std::string& url) {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
 
+        fs.DeleteFile(DIRECT_LINK_TEMP);
+        ON_SCOPE_EXIT(fs.DeleteFile(DIRECT_LINK_TEMP));
+
+        if (pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
+
         // Download the file
         pbox->NewTransfer("Downloading..."_i18n);
         const auto result = curl::Api().ToFile(
@@ -186,14 +215,29 @@ void DoDirectLinkDownload(const std::string& url) {
             curl::Path{DIRECT_LINK_TEMP},
             curl::OnProgress{pbox->OnDownloadProgressCallback()}
         );
+
+        if (pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
         R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
+
+        if (pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
 
         // Extract the ZIP
         pbox->NewTransfer("Extracting..."_i18n);
         R_TRY(thread::TransferUnzipAll(pbox, DIRECT_LINK_TEMP, &fs, "/"));
 
+        if (pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
+
         R_SUCCEED();
     }, [](Result rc){
+        if (rc == Result_TransferCancelled) {
+            return;
+        }
         App::PushErrorBox(rc, "Download failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
@@ -472,6 +516,9 @@ void DownloadEntries(const Entry& entry) {
     App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry, gh_entries](auto pbox) -> Result {
         return DownloadReleaseJsonJson(pbox, GenerateApiUrl(entry), *gh_entries);
     }, [entry, gh_entries](Result rc){
+        if (rc == Result_TransferCancelled) {
+            return;
+        }
         App::PushErrorBox(rc, "Failed to download json"_i18n);
         if (R_FAILED(rc) || gh_entries->empty()) {
             return;
@@ -554,10 +601,13 @@ void DownloadEntries(const Entry& entry) {
                     App::Push<ProgressBox>(0, "Downloading "_i18n, entry.repo, [entry, asset_entry, matched](auto pbox) -> Result {
                         return DownloadApp(pbox, asset_entry, matched ? &(*matched) : nullptr);
                     }, [entry, matched](Result rc){
-                        homebrew::SignalChange();
+                        if (rc == Result_TransferCancelled) {
+                            return;
+                        }
                         App::PushErrorBox(rc, "Failed to download app!"_i18n);
 
                         if (R_SUCCEEDED(rc)) {
+                            homebrew::SignalChange();
                             App::Notify("Downloaded "_i18n + entry.repo);
                             auto post_install_message = entry.post_install_message;
                             if (matched && !matched->post_install_message.empty()) {

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.501**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.502**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.501 (UPA-01: GitHub downloader callback ownership & selection safety)
+## Поточний delivery: v0.13.502 (UPA-02A: GitHub downloader operation identity, cancel & temp isolation)
+
+- [x] `UPA-02A-GHDL-FINALIZE-502` — реалізовано строгий контроль стану скасування (`pbox->ShouldExit()` / `Result_TransferCancelled`) на всіх фазах завантаження (`DownloadApp()`, `DownloadReleaseJsonJson()`, `DoDirectLinkDownload()`); застарілі тимчасові файли `ghdl.temp` та `direct_link.zip` детерміновано видаляються перед початком та на виході через `ON_SCOPE_EXIT`; нотифікація `homebrew::SignalChange()` викликається суворо після успішного завершення операції (`R_SUCCEEDED(rc)`).
+- [x] `DOCS-BUMP-502` — версію піднято до `0.13.502` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.501 (UPA-01: GitHub downloader callback ownership & selection safety)
 
 - [x] `UPA-01-GHDL-OWNERSHIP-501` — усунено global `static std::vector<GhApiEntry>` у `DownloadEntries()` (`sphaira/source/ui/menus/ghdl.cpp`), замінено на операційно-локальний `std::shared_ptr`; ліквідовано UAF / висячі посилання (`&asset_entry` та `const AssetEntry*` на тимчасові вектори) шляхом переходу на `std::optional<AssetEntry>` та захоплення за значенням; додано строгі перевірки меж `op_index` для вибору релізів та ассетів.
 - [x] `DOCS-BUMP-501` — версію піднято до `0.13.501` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі unit-тести та перевірено збірку бінарника `sphaira_nro` у WSL.

@@ -206,10 +206,10 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 
 | № | ID | Пріоритет | Результат одного task | Залежить від | Ризик | Початковий статус |
 |---:|---|---|---|---|---|---|
-| 0a | `UPA-00-DOCS` | Gate | Зафіксований аудит і цей план; чистий `master` | — | низький | `IN-PROGRESS`, senior-only |
-| 0b | `UPA-GATE-500` | Gate | `REGRESSION-VERIFY-500` закрито або явно defer-нуто з Build ID | `UPA-00-DOCS` | hardware/baseline | `PLANNED`, senior/user |
-| 1 | `UPA-01-GHDL-OWNERSHIP` | P0 | Безпечне володіння release/asset data та selection guards | `UPA-GATE-500` | високий | `PLANNED` |
-| 2 | `UPA-02A-GHDL-FINALIZE` | P0 | Operation identity, stale temp, cancel/error gates і success-only finalize/notify | `UPA-01-GHDL-OWNERSHIP` | високий | `PLANNED` |
+| 0a | `UPA-00-DOCS` | Gate | Зафіксований аудит і цей план; чистий `master` | — | низький | `DONE` |
+| 0b | `UPA-GATE-500` | Gate | `REGRESSION-VERIFY-500` закрито або явно defer-нуто з Build ID | `UPA-00-DOCS` | hardware/baseline | `DONE` |
+| 1 | `UPA-01-GHDL-OWNERSHIP` | P0 | Безпечне володіння release/asset data та selection guards | `UPA-GATE-500` | високий | `DONE (v0.13.501)` |
+| 2 | `UPA-02A-GHDL-FINALIZE` | P0 | Operation identity, stale temp, cancel/error gates і success-only finalize/notify | `UPA-01-GHDL-OWNERSHIP` | високий | `DONE (v0.13.502)` |
 | 3 | `UPA-02B-GHDL-DESTINATION` | P0 | ZIP type detection і safe non-ZIP default destination | `UPA-02A-GHDL-FINALIZE` | високий | `PLANNED` |
 | 4 | `UPA-03-GHDL-URL` | P0 | Єдина мінімальна HTTP(S)/GitHub URL validation у downloader | `UPA-02B-GHDL-DESTINATION` | високий | `PLANNED` |
 | 5 | `UPA-04A-MTP-ZERO` | P0 | Zero-byte upload у чинному libhaze pipeline | `UPA-GATE-500` | високий, hardware | `PLANNED` |
