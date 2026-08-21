@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.510**. Завершені плани збережено в
+Поточний delivery — **v0.13.511**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.510 — UPA-08A/B: Raw FTP mutation adapter & discovery gate
+## Поточний delivery: v0.13.511 — UPA-09: Forwarder editor touch/controller focus matrix
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Виправлення матриці фокусу сенсора та контролера (`sphaira/source/ui/forwarder_editor.cpp`)**:
+   - Усунуто безумовний вихід з `Update` при `m_icon_focused`: тепер сенсорні події для правого списку обробляються через `m_list->OnUpdate(nullptr, touch, ...)`.
+   - Дотик або скролінг списку переносить фокус з іконки на рядок без хибних активацій.
+   - Кнопка `RIGHT` переносить фокус на список без виклику дії рядка, кнопка `LEFT` повертає фокус на іконку.
+   - Кнопка `A` активує лише активний елемент (іконку або вибраний рядок списку).
+2. **Unit-тести та збірка**:
+   - Пройдено всі 15 наборів host unit-тестів та shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.510 — UPA-08A/B: Raw FTP mutation adapter & discovery gate
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Дизайн та фіксація точок інтеграції (`UPA-08A`)**:

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.510**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.511**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.510 (UPA-08A & UPA-08B: Raw FTP mutation adapter & discovery gate)
+## Поточний delivery: v0.13.511 (UPA-09: Forwarder editor touch/controller focus matrix)
+
+- [x] `UPA-09-FWD-FOCUS-511` — виправлено обробку подій сенсорного екрану та геймпада в `ForwarderEditor` (`sphaira/source/ui/forwarder_editor.cpp`): усунуто ранній `return` при `m_icon_focused`, додано виклик `m_list->OnUpdate(nullptr, touch, ...)` при фокусі на іконці, що забезпечує коректний скролінг та перемикання фокусу на елементи списку при натисканні/дотику без хибних або подвійних спрацьовувань.
+- [x] `DOCS-BUMP-511` — версію піднято до `0.13.511` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.510 (UPA-08A & UPA-08B: Raw FTP mutation adapter & discovery gate)
 
 - [x] `UPA-08A-HB-FTP-DISCOVERY-510` — зафіксовано архітектурні точки інтеграції, безпеку потоків (`g_thread` worker -> atomic event signal) та патч-маркери у ftpsrv.
 - [x] `UPA-08B-HB-FTP-510` — розширено `sphaira/cmake/patch_ftpsrv.cmake` секцією 4 (`vfs_nx.h`, `vfs_nx_fs.h`, `vfs_nx_fs.c`) з підтримкою C ABI хуків для подій мутацій (`vfs_nx_set_mutation_callback`); підключено обробник `FtpMutationCallback` у `sphaira/source/ftpsrv_helper.cpp` до спільної політики Homebrew (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`); додано перевірочний скрипт `tests/test_patch_ftpsrv.sh` у `tests/run.sh`.

@@ -266,6 +266,15 @@ public:
                 App::PlaySoundEffect(SoundEffect_Focus);
                 m_icon_focused = false;
             }
+            m_list->OnUpdate(nullptr, touch, m_index, m_rows.size(), [this](bool touched, s64 index){
+                m_icon_focused = false;
+                if (touched && m_index == index) {
+                    FireAction(Button::A);
+                } else {
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                    m_index = index;
+                }
+            });
             return;
         }
 

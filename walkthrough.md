@@ -1,9 +1,22 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.510** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.511** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.511 — Forwarder Editor Touch/Controller Focus Matrix (UPA-09)
+
+- **Корекція матриці фокусування в редакторі форвардерів**:
+  - У `sphaira/source/ui/forwarder_editor.cpp` усунуто блокування сенсорних подій для правого списку при активному фокусі на іконці (`m_icon_focused`).
+  - При `m_icon_focused == true` викликається `m_list->OnUpdate(nullptr, touch, ...)`, що дозволяє скролити список та переносити фокус дотиком без блокування чи подвійної активації.
+  - Кнопка `RIGHT` переносить фокус з іконки на список без виклику дії рядка, кнопка `LEFT` повертає фокус на іконку.
+  - Натискання кнопки `A` виконує дію строго для активного компонента (іконки або вибраного рядка списку).
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.511`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 15 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.510 — Raw FTP Mutation Adapter & Discovery Gate (UPA-08A & UPA-08B)
 

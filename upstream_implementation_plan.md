@@ -220,7 +220,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 10 | `UPA-08A-HB-FTP-DISCOVERY` | Gate | Зафіксовані ftpsrv success seams, callback thread і patch shapes | `UPA-06-HB-POLICY-WEB` | dependency | `DONE` |
 | 11 | `UPA-08B-HB-FTP` | P0 | Raw FTP upload/delete/rename використовують shared policy | `UPA-08A-HB-FTP-DISCOVERY` | високий, dependency/hardware | `DONE (v0.13.510)` |
 | 12 | `UPA-04B-MTP-IDENTITY` | P1 | Versioned MTP DeviceInfo з правильною локальною product identity | `UPA-GATE-500` | product/dependency/hardware | `BLOCKED`: brand/buffer policy |
-| 13 | `UPA-09-FWD-FOCUS` | P1 | Правильна touch/controller focus matrix | `UPA-GATE-500` | середній, hardware | `PLANNED` |
+| 13 | `UPA-09-FWD-FOCUS` | P1 | Правильна touch/controller focus matrix | `UPA-GATE-500` | середній, hardware | `DONE (v0.13.511)` |
 | 14 | `UPA-10A-EXPORT-NAME` | P1 | Tested usable-title/export helper і ordinary/merged NSP callers | `UPA-GATE-500` | середній | `PLANNED` |
 | 15 | `UPA-10B-MTP-DISPLAY-NAME` | P1 | Localized UTF-8 MTP display names використовують shared title data | `UPA-10A-EXPORT-NAME` | середній | `PLANNED` |
 | 16 | `UPA-11-GC-BARS` | P1 | Правильна theme role і safe storage ratios | `UPA-GATE-500` | низький, hardware | `PLANNED` |

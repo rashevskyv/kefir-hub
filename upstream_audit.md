@@ -27,7 +27,7 @@ junior-виконавця винесено в
 | Актуальний upstream HEAD | [`eacb54b3`](https://github.com/NaGaa95/sphaira/commit/eacb54b35548ff99057744bd94f56d67c3449fed), 2026-08-17 |
 | Повний upstream-діапазон | [48 комітів після `1.0.2`](https://github.com/NaGaa95/sphaira/compare/eeac5ff8fcffaf57d88b91d05d704e6fb0c75dba...eacb54b35548ff99057744bd94f56d67c3449fed) |
 | Поточний локальний HEAD | `f7b10f3e406d3c427c563eb1b58cac24dc61ba8d`, `master` |
-| Поточна локальна версія | `0.13.510` |
+| Поточна локальна версія | `0.13.511` |
 | Checkout | `D:\git\dev\sphaira`, primary checkout |
 | Стан перед створенням звіту | чистий `master`; аудит був read-only до зміни цього Markdown-файлу |
 
