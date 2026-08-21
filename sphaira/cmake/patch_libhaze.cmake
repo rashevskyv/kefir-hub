@@ -139,8 +139,9 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
     string(FIND "${src}" "sphaira: pass genuine total to progress callback (write transfer)" find_write_marker)
     string(FIND "${src}" "data_header.length != 0xFFFFFFFFU" find_sentinel_check)
     string(FIND "${src}" "m_send_prop_list->size <= (u64)INT64_MAX" find_safe_cast)
+    string(FIND "${src}" "data_header.length >= sizeof(PtpUsbBulkContainer)" find_zero_byte)
 
-    if(NOT find_read_cb EQUAL -1 AND NOT find_write_cb EQUAL -1 AND NOT find_read_marker EQUAL -1 AND NOT find_write_marker EQUAL -1 AND NOT find_sentinel_check EQUAL -1 AND NOT find_safe_cast EQUAL -1)
+    if(NOT find_read_cb EQUAL -1 AND NOT find_write_cb EQUAL -1 AND NOT find_read_marker EQUAL -1 AND NOT find_write_marker EQUAL -1 AND NOT find_sentinel_check EQUAL -1 AND NOT find_safe_cast EQUAL -1 AND NOT find_zero_byte EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_responder_ptp_operations.cpp already patched")
     else()
         # Read operation replacement
@@ -202,7 +203,7 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             }
         }")
 
-        set(ops_write_new
+        set(ops_write_prev2
 "        /* Dummy file size for the threaded transfer. */
         auto file_size = 4_GB;
         /* sphaira: pass genuine total to progress callback (write transfer). */
@@ -216,6 +217,32 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             }
         } else {
             if (data_header.length > sizeof(PtpUsbBulkContainer)) {
+                /* Got the real file size. */
+                file_size = data_header.length - sizeof(PtpUsbBulkContainer);
+                if (data_header.length != 0xFFFFFFFFU) {
+                    total_size = (s64)file_size;
+                }
+                R_TRY(Fs(obj).SetFileSize(std::addressof(file), file_size));
+            } else {
+                /* Truncate the file after locking for write. */
+                R_TRY(Fs(obj).SetFileSize(std::addressof(file), 0));
+            }
+        }")
+
+        set(ops_write_new
+"        /* Dummy file size for the threaded transfer. */
+        auto file_size = 4_GB;
+        /* sphaira: pass genuine total to progress callback (write transfer). */
+        s64 total_size = 0;
+        u64 offset = 0;
+
+        if (m_send_prop_list) {
+            file_size = m_send_prop_list->size;
+            if (m_send_prop_list->size > 0 && m_send_prop_list->size <= (u64)INT64_MAX) {
+                total_size = (s64)m_send_prop_list->size;
+            }
+        } else {
+            if (data_header.length >= sizeof(PtpUsbBulkContainer)) {
                 /* Got the real file size. */
                 file_size = data_header.length - sizeof(PtpUsbBulkContainer);
                 if (data_header.length != 0xFFFFFFFFU) {
@@ -247,6 +274,7 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             }, mode")
 
         string(REPLACE "${ops_read_old}" "${ops_read_new}" src "${src}")
+        string(REPLACE "${ops_write_prev2}" "${ops_write_new}" src "${src}")
         string(REPLACE "${ops_write_prev}" "${ops_write_new}" src "${src}")
         string(REPLACE "${ops_write_old}" "${ops_write_new}" src "${src}")
         string(REPLACE "${ops_write_cb_old}" "${ops_write_cb_new}" src "${src}")
@@ -257,8 +285,9 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         string(FIND "${src}" "sphaira: pass genuine total to progress callback (write transfer)" find_write_marker_after)
         string(FIND "${src}" "data_header.length != 0xFFFFFFFFU" find_sentinel_check_after)
         string(FIND "${src}" "m_send_prop_list->size <= (u64)INT64_MAX" find_safe_cast_after)
+        string(FIND "${src}" "data_header.length >= sizeof(PtpUsbBulkContainer)" find_zero_byte_after)
 
-        if(find_read_cb_after EQUAL -1 OR find_write_cb_after EQUAL -1 OR find_read_marker_after EQUAL -1 OR find_write_marker_after EQUAL -1 OR find_sentinel_check_after EQUAL -1 OR find_safe_cast_after EQUAL -1)
+        if(find_read_cb_after EQUAL -1 OR find_write_cb_after EQUAL -1 OR find_read_marker_after EQUAL -1 OR find_write_marker_after EQUAL -1 OR find_sentinel_check_after EQUAL -1 OR find_safe_cast_after EQUAL -1 OR find_zero_byte_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] failed to apply genuine total patch to ptp_responder_ptp_operations.cpp (unexpected shape or partial patch)")
         endif()
         file(WRITE "source/ptp_responder_ptp_operations.cpp" "${src}")

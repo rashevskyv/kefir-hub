@@ -212,7 +212,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 2 | `UPA-02A-GHDL-FINALIZE` | P0 | Operation identity, stale temp, cancel/error gates і success-only finalize/notify | `UPA-01-GHDL-OWNERSHIP` | високий | `DONE (v0.13.502)` |
 | 3 | `UPA-02B-GHDL-DESTINATION` | P0 | ZIP type detection і safe non-ZIP default destination | `UPA-02A-GHDL-FINALIZE` | високий | `DONE (v0.13.503)` |
 | 4 | `UPA-03-GHDL-URL` | P0 | Єдина мінімальна HTTP(S)/GitHub URL validation у downloader | `UPA-02B-GHDL-DESTINATION` | високий | `DONE (v0.13.504)` |
-| 5 | `UPA-04A-MTP-ZERO` | P0 | Zero-byte upload у чинному libhaze pipeline | `UPA-GATE-500` | високий, hardware | `PLANNED` |
+| 5 | `UPA-04A-MTP-ZERO` | P0 | Zero-byte upload у чинному libhaze pipeline | `UPA-GATE-500` | високий, hardware | `SW-DONE (v0.13.505) / HW-PENDING` |
 | 6 | `UPA-05-PLAYTIME-RACE` | P0 | Worker не мутує UI-owned `m_entries` | `UPA-GATE-500` | високий | `PLANNED` |
 | 7 | `UPA-06-HB-POLICY-WEB` | P0 | Shared mutation policy, producer inventory і повне Web success coverage | `UPA-GATE-500` | середній | `PLANNED` |
 | 8 | `UPA-07A-HB-MTP-UPLOAD` | P0 | MTP upload/final-close використовує shared policy | `UPA-06-HB-POLICY-WEB` | високий, hardware | `PLANNED` |

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.504**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.505**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.504 (UPA-03: Centralized GitHub and direct URL validation)
+## Поточний delivery: v0.13.505 (UPA-04A: MTP zero-byte upload support & patch shape verification)
+
+- [x] `UPA-04A-MTP-ZERO-505` — виправлено умову розрахунку розміру файлу під час MTP upload (`SendObject`) у `sphaira/cmake/patch_libhaze.cmake` на `data_header.length >= sizeof(PtpUsbBulkContainer)`, що забезпечує коректне встановлення нульового розміру файлів без залишення dummy `4_GB`; збережено всі локальні розширення та ідемпотентність; додано автоматичний runnable fixture check `tests/test_patch_libhaze.sh` у `tests/run.sh`.
+- [x] `DOCS-BUMP-505` — версію піднято до `0.13.505` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.504 (UPA-03: Centralized GitHub and direct URL validation)
 
 - [x] `UPA-03-GHDL-URL-504` — реалізовано строгу централізовану валідацію GitHub репозиторіїв `path::ParseGitHubRepoUrl` (підтримка http/https, www, stripping `.git` та trailing slashes, заборона userinfo/port/query/fragment/traversal); додано `path::IsValidDirectAssetUrl` та `path::IsValidDirectZipUrl`; оновлено завантажувач у `sphaira/source/ui/menus/ghdl.cpp` (`LoadEntriesFromPath`, `Download`, `OpenDirectLinkPrompt`); покрито повним набором unit-тестів у `tests/test_path_util.cpp` (230 checks passed).
 - [x] `DOCS-BUMP-504` — версію піднято до `0.13.504` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

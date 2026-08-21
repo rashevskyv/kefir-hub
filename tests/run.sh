@@ -30,6 +30,10 @@ echo "== dead symbol guard =="
 python3 tests/check_dead_symbols.py || fail=1
 
 echo
+echo "== libhaze patch shape check =="
+./tests/test_patch_libhaze.sh || fail=1
+
+echo
 if [ "$fail" -ne 0 ]; then
     echo "FAILED"
     exit 1

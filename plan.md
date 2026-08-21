@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.504**. Завершені плани збережено в
+Поточний delivery — **v0.13.505**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.504 — UPA-03: Centralized GitHub and direct URL validation
+## Поточний delivery: v0.13.505 — UPA-04A: MTP zero-byte upload support & patch shape verification
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Zero-byte payload підтримка в libhaze (`sphaira/cmake/patch_libhaze.cmake`)**:
+   - Уточнено умову розрахунку `file_size` під час `SendObject`: змінено `data_header.length > sizeof(PtpUsbBulkContainer)` на `>= sizeof(PtpUsbBulkContainer)`.
+   - Забезпечено коректне встановлення нульового розміру файлу замість залишення fallback-розміру `4_GB`.
+2. **Ідемпотентність та shape-check падінь**:
+   - Патч підтримує повторне застосування та міграцію з проміжних версій патчу.
+   - Створено ізольований перевірочний тест `tests/test_patch_libhaze.sh`, що перевіряє застосування патчу до вихідного коду, ідемпотентність при повторному запуску та завершення з очікуваною помилкою при спотвореній формі.
+3. **Unit-тести та збірка**:
+   - Підключено перевірку форми патча в `tests/run.sh` (всі тести зелені).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.504 — UPA-03: Centralized GitHub and direct URL validation
 
 Статус: реалізацію виконано та верифіковано:
 1. **Централізована валідація URL GitHub (`sphaira/include/path_util.hpp`)**:

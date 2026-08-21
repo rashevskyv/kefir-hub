@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.504** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.505** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.505 — MTP Zero-Byte Upload Support & Patch Shape Verification (UPA-04A)
+
+- **Підтримка завантаження файлів розміром 0 байт через MTP**:
+  - У `sphaira/cmake/patch_libhaze.cmake` (секція `SendObject`) умову обчислення розміру файлу `data_header.length > sizeof(PtpUsbBulkContainer)` виправлено на `>= sizeof(PtpUsbBulkContainer)`.
+  - Це дозволяє коректно приймати нульовий payload контейнера PTP/MTP та викликати `SetFileSize(0)`, запобігаючи помилковому залишенню фіктивного розміру `4_GB` для порожніх файлів.
+- **Ідемпотентність та Shape Check патчу**:
+  - Забезпечено повну сумісність скрипта патчування: підтримується вихідний стан, попередньо пропатчений стан та стан з проміжними правками.
+  - Додано автономний перевірочний скрипт [**`tests/test_patch_libhaze.sh`**](tests/test_patch_libhaze.sh), що перевіряє застосування патчу, ідемпотентність повторного виклику та детекцію спотворення коду.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.505`** у `sphaira/CMakeLists.txt`.
+  - Підключено shape-check у [**`tests/run.sh`**](tests/run.sh) (всі 15 suite + shape check зелені).
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md) (статус задачі: `SW-DONE / HW-PENDING`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.504 — Centralized GitHub and Direct URL Validation (UPA-03)
 
