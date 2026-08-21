@@ -1,5 +1,6 @@
 #include "title_nsp.hpp"
 #include "merged_nsp_tag.hpp"
+#include "title_export_name.hpp"
 #include "title_info.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -34,14 +35,7 @@ auto ClipSize(s64 off, s64 size, s64 file_size) -> s64 {
 }
 
 auto BuildNspPath(const char* name, const NsApplicationContentMetaStatus& status, bool app_folder) -> fs::FsPath {
-    fs::FsPath name_buf = name;
-    utilsReplaceIllegalCharacters(name_buf, true);
-
-    // a title whose control never loaded has no name, fall back to its id so
-    // the nsp is still addressable.
-    if (name_buf.empty()) {
-        std::snprintf(name_buf, sizeof(name_buf), "%016lX", status.application_id);
-    }
+    const std::string safe_name = ResolveExportTitleName(name, status.application_id);
 
     char version[sizeof(NacpStruct::display_version) + 1]{};
     if (status.meta_type == NcmContentMetaType_Patch) {
@@ -57,9 +51,9 @@ auto BuildNspPath(const char* name, const NsApplicationContentMetaStatus& status
 
     fs::FsPath path;
     if (app_folder) {
-        std::snprintf(path, sizeof(path), "%s/%s %s[%016lX][v%u][%s].nsp", name_buf.s, name_buf.s, version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
+        std::snprintf(path, sizeof(path), "%s/%s %s[%016lX][v%u][%s].nsp", safe_name.c_str(), safe_name.c_str(), version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
     } else {
-        std::snprintf(path, sizeof(path), "%s %s[%016lX][v%u][%s].nsp", name_buf.s, version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
+        std::snprintf(path, sizeof(path), "%s %s[%016lX][v%u][%s].nsp", safe_name.c_str(), version, status.application_id, status.version, ncm::GetMetaTypeShortStr(status.meta_type));
     }
 
     return path;
@@ -341,13 +335,8 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& ou
     keys::Keys keys;
     R_TRY(keys::parse_keys(keys, true));
 
-    fs::FsPath name_buf = name;
-    utilsReplaceIllegalCharacters(name_buf, true);
-    if (name_buf.empty()) {
-        std::snprintf(name_buf, sizeof(name_buf), "%016lX", app_id);
-    }
-
-    const std::string filename = FormatMergedNspFilename(name_buf.s, app_id, has_base, has_patch, patch_version, dlc_count);
+    const std::string safe_name = ResolveExportTitleName(name, app_id);
+    const std::string filename = FormatMergedNspFilename(safe_name, app_id, has_base, has_patch, patch_version, dlc_count);
     fs::FsPath path = filename.c_str();
 
     return BuildNspEntryFromInfoEntries(name, path, content_entries, keys, out);

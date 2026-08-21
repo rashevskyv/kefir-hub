@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.511** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.512** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.512 — Usable Title Core & ASCII-Safe NSP Export Helper (UPA-10A)
+
+- **Ядро резолвінгу валідних назв ігор для експорту**:
+  - Створено заголовний модуль [**`sphaira/include/title_export_name.hpp`**](sphaira/include/title_export_name.hpp), що реалізує детерміновану ієрархію вибору імені: American English (slot 0) -> British English (slot 1) -> Localized/Current name -> Title ID hex fallback (`%016llX`).
+  - Додано семантичний валідатор `IsUsableTitleName`, який відхиляє неінформативні рядки (порожні або які складаються виключно з пробілів, крапок і підкреслень).
+  - Реалізовано безпечну ASCII-санітизацію файлових назв з транкацією `TruncateTitleName`, що залишає гарантований бюджет під суфікс метаданих.
+  - Інтегровано хелпер у звичайний (`BuildNspPath`) та об'єднаний (`BuildMergedNspEntry`) експорт у `sphaira/source/title_nsp.cpp`.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.512`** у `sphaira/CMakeLists.txt`.
+  - Створено набір unit-тестів [**`tests/test_title_export_name.cpp`**](tests/test_title_export_name.cpp) з покриттям усіх 6 обов'язкових сценаріїв ієрархії та санітизації (24 checks passed).
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 16 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.511 — Forwarder Editor Touch/Controller Focus Matrix (UPA-09)
 

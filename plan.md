@@ -1,10 +1,24 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.511**. Завершені плани збережено в
+Поточний delivery — **v0.13.512**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.511 — UPA-09: Forwarder editor touch/controller focus matrix
+## Поточний delivery: v0.13.512 — UPA-10A: Tested usable-title core & ASCII-safe NSP export helper
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Ядро визначення придатної назви та NSP експорт (`sphaira/include/title_export_name.hpp`)**:
+   - Реалізовано єдиний помічник `ResolveExportTitleName` із суворою ієрархією: American English (slot 0) -> British English (slot 1) -> Localized/Current name -> Title ID hex fallback (`%016llX`).
+   - Додано семантичний валідатор `IsUsableTitleName` (відхиляє порожні та рядки з одних пробілів, крапок або підкреслень після санітизації).
+   - Забезпечено коректне скорочення (`TruncateTitleName`) з гарантованим запасом місця під суфікс `[TitleID][vVersion][Type].nsp`.
+2. **Інтеграція в експорт NSP (`sphaira/source/title_nsp.cpp`)**:
+   - `BuildNspPath` та `BuildMergedNspEntry` використовують єдиний перевірений хелпер.
+3. **Unit-тести та збірка**:
+   - Створено автономний набір host unit-тестів [**`tests/test_title_export_name.cpp`**](tests/test_title_export_name.cpp) (24 перевірки).
+   - Пройдено всі 16 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.511 — UPA-09: Forwarder editor touch/controller focus matrix
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Виправлення матриці фокусу сенсора та контролера (`sphaira/source/ui/forwarder_editor.cpp`)**:
