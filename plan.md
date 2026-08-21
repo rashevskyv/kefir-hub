@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.502**. Завершені плани збережено в
+Поточний delivery — **v0.13.503**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.502 — UPA-02A: GitHub downloader operation identity, cancel & temp isolation
+## Поточний delivery: v0.13.503 — UPA-02B: GHDL ZIP type detection & safe non-ZIP destination
+
+Статус: реалізацію виконано та верифіковано:
+1. **Комплексне визначення ZIP-архівів (`sphaira/include/path_util.hpp`, `sphaira/source/ui/menus/ghdl.cpp`)**:
+   - Реалізовано `path::IsZipAsset(content_type, filename, url)`: визначає ZIP за наявністю підрядка `"zip"` у `content_type`, суфікса `.zip` у назві файлу або в шляху URL (ігноруючи параметри запиту `?` та фрагменти `#`).
+2. **Безпечне встановлення не-ZIP ассетів**:
+   - Для файлів без явної конфігурації `entry.path` призначається безпечна цільова директорія `/switch/<sanitized-asset-name>` (замість небезпечного перезапису/видалення кореня `/`).
+   - Якщо `entry.path` вказує на директорію, до неї коректно дописується ім'я файлу.
+   - Додано перевірку валідності імені файлу `path::IsSafeFilename` та вилучення імені `path::ExtractBasename`.
+3. **Unit-тести та збірка**:
+   - Додано нові тести у `tests/test_path_util.cpp` (193 checks passed).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.502 — UPA-02A: GitHub downloader operation identity, cancel & temp isolation
 
 Статус: реалізацію виконано та верифіковано:
 1. **Ізоляція та очищення тимчасових файлів (`sphaira/source/ui/menus/ghdl.cpp`)**:

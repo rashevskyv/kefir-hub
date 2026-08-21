@@ -174,4 +174,59 @@ inline auto NormalizeAbsoluteSdPath(std::string_view path) -> std::optional<std:
     return normalized;
 }
 
+// Returns true if the content type or filename/URL indicates a ZIP archive.
+// - Content type contains "zip" (case-insensitive)
+// - Filename or URL path ends with ".zip" (case-insensitive, URL query/fragment ignored)
+inline auto IsZipAsset(std::string_view content_type, std::string_view filename, std::string_view url = {}) -> bool {
+    if (!content_type.empty()) {
+        for (std::size_t i = 0; i + 3 <= content_type.size(); ++i) {
+            if ((content_type[i] == 'z' || content_type[i] == 'Z') &&
+                (content_type[i + 1] == 'i' || content_type[i + 1] == 'I') &&
+                (content_type[i + 2] == 'p' || content_type[i + 2] == 'P')) {
+                return true;
+            }
+        }
+    }
+    if (EndsWithIC(filename, ".zip")) {
+        return true;
+    }
+    if (!url.empty()) {
+        const auto q = url.find_first_of("?#");
+        const auto url_path = (q != std::string_view::npos) ? url.substr(0, q) : url;
+        if (EndsWithIC(url_path, ".zip")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Validates a filename basename (rejects slashes, backslashes, colons, traversal '..' and control chars)
+inline auto IsSafeFilename(std::string_view name) -> bool {
+    if (name.empty() || name == "." || name == "..") {
+        return false;
+    }
+    for (const char c : name) {
+        const auto uc = static_cast<unsigned char>(c);
+        if (uc < 0x20 || uc == 0x7F || c == '/' || c == '\\' || c == ':') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Extracts the basename from a path or URL (e.g. "https://foo/bar.nro?v=1" -> "bar.nro", "/switch/app.nro" -> "app.nro")
+inline auto ExtractBasename(std::string_view path_or_url) -> std::string_view {
+    if (path_or_url.empty()) {
+        return {};
+    }
+    const auto q = path_or_url.find_first_of("?#");
+    const auto clean = (q != std::string_view::npos) ? path_or_url.substr(0, q) : path_or_url;
+    const auto slash = clean.find_last_of('/');
+    if (slash == clean.npos) {
+        return clean;
+    }
+    return clean.substr(slash + 1);
+}
+
 } // namespace sphaira::path
+

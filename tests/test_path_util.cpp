@@ -295,10 +295,64 @@ static int test_starts_with_ic() {
     return 0;
 }
 
+static int test_is_zip_asset() {
+    // Content-type checks
+    CHECK(path::IsZipAsset("application/zip", "app.bin", ""));
+    CHECK(path::IsZipAsset("application/x-zip-compressed", "app.bin", ""));
+    CHECK(path::IsZipAsset("APPLICATION/ZIP", "app.bin", ""));
+    CHECK(!path::IsZipAsset("application/octet-stream", "app.nro", ""));
+
+    // Filename extension checks
+    CHECK(path::IsZipAsset("", "app.zip", ""));
+    CHECK(path::IsZipAsset("", "APP.ZIP", ""));
+    CHECK(path::IsZipAsset("", "release_v1.0.Zip", ""));
+    CHECK(!path::IsZipAsset("", "app.nro", ""));
+    CHECK(!path::IsZipAsset("", "app.zip.bak", ""));
+
+    // URL path checks with query parameters
+    CHECK(path::IsZipAsset("", "", "https://github.com/foo/bar/releases/download/v1/app.zip"));
+    CHECK(path::IsZipAsset("", "", "https://github.com/foo/bar/releases/download/v1/app.ZIP?token=123#frag"));
+    CHECK(!path::IsZipAsset("", "", "https://github.com/foo/bar/releases/download/v1/app.nro?file=foo.zip"));
+    CHECK(!path::IsZipAsset("", "", "https://github.com/foo/bar/releases/download/v1/app.nro"));
+
+    return 0;
+}
+
+static int test_is_safe_filename() {
+    CHECK(path::IsSafeFilename("app.nro"));
+    CHECK(path::IsSafeFilename("Sphaira.zip"));
+    CHECK(path::IsSafeFilename("file-1.2.3_final.bin"));
+    CHECK(path::IsSafeFilename(".hidden"));
+
+    // Unsafe / traversal names
+    CHECK(!path::IsSafeFilename(""));
+    CHECK(!path::IsSafeFilename("."));
+    CHECK(!path::IsSafeFilename(".."));
+    CHECK(!path::IsSafeFilename("a/b"));
+    CHECK(!path::IsSafeFilename("a\\b"));
+    CHECK(!path::IsSafeFilename("c:file"));
+    CHECK(!path::IsSafeFilename("app\n.nro"));
+    CHECK(!path::IsSafeFilename("app\x01.nro"));
+    CHECK(!path::IsSafeFilename("app\x7f.nro"));
+
+    return 0;
+}
+
+static int test_extract_basename() {
+    CHECK(path::ExtractBasename("app.nro") == "app.nro");
+    CHECK(path::ExtractBasename("/switch/app.nro") == "app.nro");
+    CHECK(path::ExtractBasename("https://github.com/owner/repo/releases/download/v1/app.nro") == "app.nro");
+    CHECK(path::ExtractBasename("https://example.com/download/app.nro?token=123#hash") == "app.nro");
+    CHECK(path::ExtractBasename("") == "");
+
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path()) {
+    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);
     return 0;
 }
+

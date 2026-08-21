@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.502**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.503**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.502 (UPA-02A: GitHub downloader operation identity, cancel & temp isolation)
+## Поточний delivery: v0.13.503 (UPA-02B: GHDL ZIP type detection & safe non-ZIP destination)
+
+- [x] `UPA-02B-GHDL-DESTINATION-503` — додано комплексне визначення ZIP-архівів через `path::IsZipAsset` (перевірка `content_type`, суфікса імені файлу та шляху URL без query-параметрів); для не-ZIP ассетів без явного шляху призначено безпечну директорію `/switch/<sanitized-name>` замість кореня `/`; додано валідацію `path::IsSafeFilename` та нормалізацію шляхів через `path::NormalizeAbsoluteSdPath`; покрито новими unit-тестами у `tests/test_path_util.cpp` (193 checks passed).
+- [x] `DOCS-BUMP-503` — версію піднято до `0.13.503` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.502 (UPA-02A: GitHub downloader operation identity, cancel & temp isolation)
 
 - [x] `UPA-02A-GHDL-FINALIZE-502` — реалізовано строгий контроль стану скасування (`pbox->ShouldExit()` / `Result_TransferCancelled`) на всіх фазах завантаження (`DownloadApp()`, `DownloadReleaseJsonJson()`, `DoDirectLinkDownload()`); застарілі тимчасові файли `ghdl.temp` та `direct_link.zip` детерміновано видаляються перед початком та на виході через `ON_SCOPE_EXIT`; нотифікація `homebrew::SignalChange()` викликається суворо після успішного завершення операції (`R_SUCCEEDED(rc)`).
 - [x] `DOCS-BUMP-502` — версію піднято до `0.13.502` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано цільовий бінарник `sphaira_nro` у WSL.

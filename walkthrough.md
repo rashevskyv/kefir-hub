@@ -1,9 +1,26 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.502** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.503** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.503 — GHDL ZIP Type Detection & Safe Non-ZIP Destination (UPA-02B)
+
+- **Комплексне визначення ZIP-архівів**:
+  - У `sphaira/include/path_util.hpp` додано функцію `path::IsZipAsset(content_type, filename, url)`.
+  - Вона надійно ідентифікує ZIP за вмістом `content_type` (`"application/zip"`, `"application/x-zip-compressed"` тощо), за розширенням назви файлу (`.zip`/`.ZIP`), або за шляхом у URL навіть за наявності параметрів запиту `?token=...` чи фрагментів `#...`.
+- **Безпечна директорія встановлення не-ZIP ассетів**:
+  - Раніше для не-ZIP файлів без вказаного `entry.path` використовувався небезпечний шлях `"/"`, що могло призвести до спроби видалення кореня SD-карти або запису файлу в корінь.
+  - Тепер за замовчуванням файли (наприклад, `.nro`) встановлюються у `/switch/<sanitized-name>`.
+  - Додано валідацію `path::IsSafeFilename`, що відсікає спроби directory traversal (`..`), символи шляху (`/`, `\`, `:`) та керуючі символи.
+- **Підтримка нормалізації та директорій**:
+  - Якщо `entry.path` є директорією (закінчується на `/`), до неї безпечно додається назва ассету.
+  - Усі шляхи нормалізуються через `path::NormalizeAbsoluteSdPath`.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.503`** у `sphaira/CMakeLists.txt`.
+  - Додано нові unit-тести у `tests/test_path_util.cpp` (перевірено 193 інваріанти).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.502 — GitHub Downloader Operation Identity, Cancel & Temp Isolation (UPA-02A)
 

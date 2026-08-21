@@ -18,6 +18,7 @@
 #include "i18n.hpp"
 #include "yyjson_helper.hpp"
 #include "threaded_file_transfer.hpp"
+#include "path_util.hpp"
 
 #include <minIni.h>
 #include <dirent.h>
@@ -139,20 +140,45 @@ auto DownloadApp(ProgressBox* pbox, const GhApiAsset& gh_asset, const AssetEntry
         return Result_TransferCancelled;
     }
 
-    fs::FsPath root_path{"/"};
-    if (entry && !entry->path.empty()) {
-        root_path = entry->path;
-    }
+    const bool is_zip = path::IsZipAsset(gh_asset.content_type, gh_asset.name, gh_asset.browser_download_url);
 
-    // 3. extract the zip / file
-    if (gh_asset.content_type.find("zip") != gh_asset.content_type.npos) {
+    // 3. extract the zip / install non-zip file
+    if (is_zip) {
         log_write("found zip\n");
         pbox->NewTransfer("Extracting..."_i18n);
+        fs::FsPath root_path{"/"};
+        if (entry && !entry->path.empty()) {
+            if (auto norm = path::NormalizeAbsoluteSdPath(entry->path)) {
+                root_path = *norm;
+            }
+        }
         R_TRY(thread::TransferUnzipAll(pbox, temp_file, &fs, root_path));
     } else {
-        fs.CreateDirectoryRecursivelyWithPath(root_path);
-        fs.DeleteFile(root_path);
-        R_TRY(fs.RenameFile(temp_file, root_path));
+        std::string_view basename = gh_asset.name;
+        if (!path::IsSafeFilename(basename)) {
+            basename = path::ExtractBasename(gh_asset.browser_download_url);
+            R_UNLESS(path::IsSafeFilename(basename), Result_GhdlEmptyAsset);
+        }
+
+        fs::FsPath target_path;
+        if (entry && !entry->path.empty()) {
+            if (auto norm = path::NormalizeAbsoluteSdPath(entry->path)) {
+                if (entry->path.back() == '/' || *norm == "/") {
+                    target_path = fs::AppendPath(*norm, std::string(basename));
+                } else {
+                    target_path = *norm;
+                }
+            } else {
+                target_path = fs::AppendPath("/switch", std::string(basename));
+            }
+        } else {
+            target_path = fs::AppendPath("/switch", std::string(basename));
+        }
+
+        log_write("installing non-zip asset to: %s\n", target_path.s);
+        fs.CreateDirectoryRecursivelyWithPath(target_path);
+        fs.DeleteFile(target_path);
+        R_TRY(fs.RenameFile(temp_file, target_path));
     }
 
     if (pbox->ShouldExit()) {
