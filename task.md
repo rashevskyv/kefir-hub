@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.513**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.514**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.513 (UPA-10B: Localized UTF-8 MTP display names)
+## Поточний delivery: v0.13.514 (UPA-11: GameCard theme roles & safe storage ratio)
+
+- [x] `UPA-11-GC-BARS-514` — реалізовано модуль [**`sphaira/include/storage_ratio.hpp`**](sphaira/include/storage_ratio.hpp) із безпечним обчисленням коефіцієнтів та доступного обсягу пам'яті (захист від ділення на нуль, `total <= 0`, `free < 0` та `free > total`); оновлено відображення смуг пам'яті в `Menu::Draw` (`sphaira/source/ui/menus/gc_menu.cpp`), додано роль теми `ThemeEntryID_PROGRESSBAR_BACKGROUND`; додано обнулення змінних перед запитом у `UpdateStorageSize`; створено unit-тести [**`tests/test_storage_ratio.cpp`**](tests/test_storage_ratio.cpp) (14 checks passed).
+- [x] `DOCS-BUMP-514` — версію піднято до `0.13.514` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.513 (UPA-10B: Localized UTF-8 MTP display names)
 
 - [x] `UPA-10B-MTP-DISPLAY-NAME-513` — додано безпечну валідацію, санітизацію та транкацію UTF-8 рядків (`SanitizeUtf8TitleName`, `TruncateUtf8`, `ResolveMtpDisplayTitleName`, `FormatMtpGameDirName`) у `sphaira/include/title_export_name.hpp`; підключено `FormatMtpGameDirName` у `BuildGameDirName` (`sphaira/source/haze_helper.cpp`), що гарантує збереження символів кирилиці (українські/європейські назви), CJK, емодзі без обрізання посеред багатобайтового символу; розширено unit-тести `tests/test_title_export_name.cpp` (42 checks passed).
 - [x] `DOCS-BUMP-513` — версію піднято до `0.13.513` у `sphaira/CMakeLists.txt`, оновлено `upstream_audit.md`, `upstream_implementation_plan.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL.

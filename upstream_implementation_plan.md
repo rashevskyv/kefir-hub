@@ -223,7 +223,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 13 | `UPA-09-FWD-FOCUS` | P1 | Правильна touch/controller focus matrix | `UPA-GATE-500` | середній, hardware | `DONE (v0.13.511)` |
 | 14 | `UPA-10A-EXPORT-NAME` | P1 | Tested usable-title/export helper і ordinary/merged NSP callers | `UPA-GATE-500` | середній | `DONE (v0.13.512)` |
 | 15 | `UPA-10B-MTP-DISPLAY-NAME` | P1 | Localized UTF-8 MTP display names використовують shared title data | `UPA-10A-EXPORT-NAME` | середній | `DONE (v0.13.513)` |
-| 16 | `UPA-11-GC-BARS` | P1 | Правильна theme role і safe storage ratios | `UPA-GATE-500` | низький, hardware | `PLANNED` |
+| 16 | `UPA-11-GC-BARS` | P1 | Правильна theme role і safe storage ratios | `UPA-GATE-500` | низький, hardware | `DONE (v0.13.514)` |
 | 17 | `UPA-12-DIRECT-ZIP-SPACE` | P1 | SD-specific destination-aware free-space preflight | `UPA-03-GHDL-URL` | architecture/behavior | `BLOCKED`: preflight seam/overwrite policy |
 | 18 | `UPA-13-ROM-ALIASES` | P2 | Лише підтверджені корисні ROM database aliases | `UPA-GATE-500` | низький | `PLANNED` |
 | 19 | `UPA-HW-NFS-449` | Acceptance | Реальний NFS smoke-test | наявний `v0.13.449` | hardware | `PLANNED` |

@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.513**. Завершені плани збережено в
+Поточний delivery — **v0.13.514**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.513 — UPA-10B: Localized UTF-8 MTP display names
+## Поточний delivery: v0.13.514 — UPA-11: GameCard theme roles & safe storage ratio
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Безпечне обчислення коефіцієнтів сховища (`sphaira/include/storage_ratio.hpp`)**:
+   - Створено функції `CalculateStorageUsedRatio` та `CalculateStorageFreeGb` з гарантованим захистом від ділення на нуль, `total <= 0`, `free < 0` та `free > total`.
+2. **Оновлення інтерфейсу меню GameCard (`sphaira/source/ui/menus/gc_menu.cpp`)**:
+   - У `Menu::Draw` для фону смуг використано `ThemeEntryID_PROGRESSBAR_BACKGROUND` замість `ThemeEntryID_BACKGROUND`, що забезпечує коректний вигляд у темах зі складним або зображувальним фоном.
+   - У `Menu::UpdateStorageSize` додано обнулення змінних перед опитуванням сховищ.
+3. **Unit-тести та збірка**:
+   - Створено unit-тести [**`tests/test_storage_ratio.cpp`**](tests/test_storage_ratio.cpp) (14 checks passed).
+   - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно зібрано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.513 — UPA-10B: Localized UTF-8 MTP display names
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Збереження Unicode у MTP папках (`sphaira/include/title_export_name.hpp`, `sphaira/source/haze_helper.cpp`)**:

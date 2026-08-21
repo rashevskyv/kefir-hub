@@ -15,6 +15,7 @@
 #include "dumper.hpp"
 #include "image.hpp"
 #include "title_info.hpp"
+#include "storage_ratio.hpp"
 #include "utils/utils.hpp"
 
 #include <cstring>
@@ -451,18 +452,28 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     #define STORAGE_BAR_W   325
     #define STORAGE_BAR_H   14
 
-    const auto size_sd_gb = (double)m_size_free_sd / 0x40000000;
-    const auto size_nand_gb = (double)m_size_free_nand / 0x40000000;
+    const auto size_sd_gb = CalculateStorageFreeGb(m_size_total_sd, m_size_free_sd);
+    const auto size_nand_gb = CalculateStorageFreeGb(m_size_total_nand, m_size_free_nand);
+
+    const auto nand_used_ratio = CalculateStorageUsedRatio(m_size_total_nand, m_size_free_nand);
+    const auto sd_used_ratio = CalculateStorageUsedRatio(m_size_total_sd, m_size_free_sd);
+
+    const float nand_fill_w = std::clamp(static_cast<float>(nand_used_ratio * (STORAGE_BAR_W - 4)), 0.0f, static_cast<float>(STORAGE_BAR_W - 4));
+    const float sd_fill_w = std::clamp(static_cast<float>(sd_used_ratio * (STORAGE_BAR_W - 4)), 0.0f, static_cast<float>(STORAGE_BAR_W - 4));
 
     gfx::drawTextArgs(vg, 490, 135, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "System memory %.1f GB"_i18n.c_str(), size_nand_gb);
     gfx::drawRect(vg, 480, 170, STORAGE_BAR_W, STORAGE_BAR_H, theme->GetColour(ThemeEntryID_TEXT));
-    gfx::drawRect(vg, 480 + 1, 170 + 1, STORAGE_BAR_W - 2, STORAGE_BAR_H - 2, theme->GetColour(ThemeEntryID_BACKGROUND));
-    gfx::drawRect(vg, 480 + 2, 170 + 2, STORAGE_BAR_W - (((double)m_size_free_nand / (double)m_size_total_nand) * STORAGE_BAR_W) - 4, STORAGE_BAR_H - 4, theme->GetColour(ThemeEntryID_TEXT));
+    gfx::drawRect(vg, 480 + 1, 170 + 1, STORAGE_BAR_W - 2, STORAGE_BAR_H - 2, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND));
+    if (nand_fill_w > 0.0f) {
+        gfx::drawRect(vg, 480 + 2, 170 + 2, nand_fill_w, STORAGE_BAR_H - 4, theme->GetColour(ThemeEntryID_TEXT));
+    }
 
     gfx::drawTextArgs(vg, 870, 135, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "microSD card %.1f GB"_i18n.c_str(), size_sd_gb);
     gfx::drawRect(vg, 860, 170, STORAGE_BAR_W, STORAGE_BAR_H, theme->GetColour(ThemeEntryID_TEXT));
-    gfx::drawRect(vg, 860 + 1, 170 + 1, STORAGE_BAR_W - 2, STORAGE_BAR_H - 2, theme->GetColour(ThemeEntryID_BACKGROUND));
-    gfx::drawRect(vg, 860 + 2, 170 + 2, STORAGE_BAR_W - (((double)m_size_free_sd / (double)m_size_total_sd) * STORAGE_BAR_W) - 4, STORAGE_BAR_H - 4, theme->GetColour(ThemeEntryID_TEXT));
+    gfx::drawRect(vg, 860 + 1, 170 + 1, STORAGE_BAR_W - 2, STORAGE_BAR_H - 2, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND));
+    if (sd_fill_w > 0.0f) {
+        gfx::drawRect(vg, 860 + 2, 170 + 2, sd_fill_w, STORAGE_BAR_H - 4, theme->GetColour(ThemeEntryID_TEXT));
+    }
 
     gfx::drawRect(vg, 30, 90, 375, 555, theme->GetColour(ThemeEntryID_GRID));
 
@@ -821,6 +832,11 @@ Result Menu::GcOnEvent(bool force) {
 }
 
 Result Menu::UpdateStorageSize() {
+    m_size_free_sd = 0;
+    m_size_total_sd = 0;
+    m_size_free_nand = 0;
+    m_size_total_nand = 0;
+
     fs::FsNativeContentStorage fs_nand{FsContentStorageId_User};
     fs::FsNativeContentStorage fs_sd{FsContentStorageId_SdCard};
 

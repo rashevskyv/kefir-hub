@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.513** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.514** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.514 — GameCard Theme Roles & Safe Storage Ratio (UPA-11)
+
+- **Безпечне обчислення коефіцієнтів та оновлення ролей теми для смуг пам'яті GameCard**:
+  - Створено допоміжний модуль [**`sphaira/include/storage_ratio.hpp`**](sphaira/include/storage_ratio.hpp) з математично захищеними функціями `CalculateStorageUsedRatio` та `CalculateStorageFreeGb`.
+  - Повністю усунуто ризик ділення на нуль, `NaN`, негативного обсягу вільного місця або виходу смуги заповнення за межі контейнера.
+  - У `sphaira/source/ui/menus/gc_menu.cpp` для фону смуг використано `ThemeEntryID_PROGRESSBAR_BACKGROUND` замість базового `ThemeEntryID_BACKGROUND`, що забезпечує коректний контраст у темах з графічними фонами.
+  - У `Menu::UpdateStorageSize` додано обнулення змінних розміру перед виконанням системних викликів.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.514`** у `sphaira/CMakeLists.txt`.
+  - Створено автономний набір unit-тестів [**`tests/test_storage_ratio.cpp`**](tests/test_storage_ratio.cpp) (14 checks passed).
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Пройдено всі 17 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.513 — Localized UTF-8 MTP Display Names (UPA-10B)
 
