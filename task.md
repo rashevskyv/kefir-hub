@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.518**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.519**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.518 (RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass)
+## Поточний delivery: v0.13.519 (AppStore EntryMenu layout anti-overlap & instant launch state transition)
+
+- [x] `APPSTORE-LAYOUT-FOOTER-519` — усунуто налізання кнопок дій на футер у `EntryMenu::Draw`: кнопки зафіксовано вище футера на 16 пікселів (`bottom_y = 630.f`), скориговано розмір шрифту та інтервали блоку метаданих, що забезпечило понад 80 пікселів вільного простору.
+- [x] `APPSTORE-STATE-TRANSITION-519` — реалізовано детерміноване оновлення `installed_version` у колбеках `install`/`uninstall` та свіже оновлення при відкритті `EntryMenu`, завдяки чому після встановлення кнопка «Оновити» миттєво змінюється на «Запустити» та відображається `installed: Nightly`.
+- [x] `DOCS-BUMP-519` — версію піднято до `0.13.519` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL з розгортанням на `F:`.
+
+## Попередній delivery: v0.13.518 (RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass)
 
 - [x] `RETROARCH-7Z-EXTRACTOR-518` — підключено `libphysfs.a` у `sphaira/CMakeLists.txt`, реалізовано рекурсивний потоковий розпакувальник `ExtractPhysfsArchive` у `sphaira/source/ui/menus/appstore.cpp` для `.7z` архівів з автоматичною генерацією метаданих `info.json` (`Nightly`), усунуто невідповідну перевірку MD5 хешу для динамічних білдів RetroArch Nightly.
 - [x] `DOCS-BUMP-518` — версію піднято до `0.13.518` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі host unit-тести та успішно зібрано бінарник `sphaira_nro` у WSL з розгортанням на `F:`.

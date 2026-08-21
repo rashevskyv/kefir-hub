@@ -801,6 +801,21 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
 
     SetTitleSubHeading(m_entry.description, true);
     SetSubHeading("");
+
+    ReadFromInfoJson(m_entry);
+    if (m_entry.installed_version.empty() && !m_entry.binary.empty()) {
+        fs::FsNativeSd fs;
+        if (fs.FileExists(m_entry.binary)) {
+            NacpStruct nacp;
+            if (R_SUCCEEDED(nro_get_nacp(m_entry.binary, nacp))) {
+                m_entry.installed_version = nacp_util::GetDisplayVersion(nacp);
+            }
+            if (m_entry.installed_version.empty()) {
+                m_entry.installed_version = "Installed";
+            }
+        }
+    }
+
     UpdateOptions();
 
     // todo: see Draw()
@@ -840,10 +855,10 @@ void EntryMenu::Draw(NVGcontext* vg, Theme* theme) {
     DrawIcon(vg, m_banner, m_entry.image.image ? m_entry.image : m_default_icon, banner_vec, false);
     DrawIcon(vg, m_entry.image, m_default_icon, icon_vec);
 
-    constexpr float text_start_x = icon_vec.x;// - 10;
-    float text_start_y = 218 + line_vec.y;
-    const float text_inc_y = 32;
-    const float font_size = 20;
+    constexpr float text_start_x = icon_vec.x;
+    float text_start_y = 276.f;
+    const float text_inc_y = 26.f;
+    const float font_size = 18.f;
 
     gfx::drawTextArgs(vg, text_start_x, text_start_y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "version: %s"_i18n.c_str(), m_entry.version.c_str());
     text_start_y += text_inc_y;
@@ -859,26 +874,24 @@ void EntryMenu::Draw(NVGcontext* vg, Theme* theme) {
     gfx::drawTextArgs(vg, text_start_x, text_start_y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "extracted: %.2f MiB"_i18n.c_str(), (double)m_entry.extracted / 1024.0);
     text_start_y += text_inc_y;
     gfx::drawTextArgs(vg, text_start_x, text_start_y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "app_dls: %s"_i18n.c_str(), AppDlToStr(m_entry.app_dls).c_str());
-    text_start_y += text_inc_y;
 
-    // todo: rewrite this mess and use list
-    constexpr float mm = 0;//20;
-    constexpr Vec4 block{968.f + mm, 110.f, 256.f - mm*2, 60.f};
-    const float x = block.x;
-    float y = 1.f + text_start_y + (text_inc_y * 3) ;
-    const float h = block.h;
-    const float w = block.w;
+    // Action buttons anchored cleanly above the footer line (Y=646)
+    constexpr float block_w = 256.f;
+    constexpr float block_h = 50.f;
+    constexpr float block_gap = 14.f;
+    const float block_x = icon_vec.x;
+    const float bottom_y = 630.f;
 
-    for (s32 i = m_options.size() - 1; i >= 0; i--) {
+    for (size_t i = 0; i < m_options.size(); i++) {
+        const float opt_y = bottom_y - ((m_options.size() - i) * block_h + (m_options.size() - 1 - i) * block_gap);
         const auto& option = m_options[i];
         auto text_id = ThemeEntryID_TEXT;
-        if (m_index == i) {
+        if (m_index == (s32)i) {
             text_id = ThemeEntryID_TEXT_SELECTED;
-            gfx::drawRectOutline(vg, theme, 4.f, Vec4{x, y, w, h});
+            gfx::drawRectOutline(vg, theme, 4.f, Vec4{block_x, opt_y, block_w, block_h});
         }
 
-        gfx::drawTextArgs(vg, x + w / 2, y + h / 2, 22, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER, theme->GetColour(text_id), option.display_text.c_str());
-        y -= block.h + 18;
+        gfx::drawTextArgs(vg, block_x + block_w / 2.f, opt_y + block_h / 2.f, 22.f, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER, theme->GetColour(text_id), option.display_text.c_str());
     }
 
     if (m_show_file_list) {
@@ -923,6 +936,11 @@ void EntryMenu::UpdateOptions() {
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Downloaded "_i18n + m_entry.title);
                 m_entry.status = EntryStatus::Installed;
+                if (IsRetroArchPackage(m_entry)) {
+                    m_entry.installed_version = "Nightly";
+                } else {
+                    m_entry.installed_version = m_entry.version;
+                }
                 m_menu.SetDirty();
                 UpdateOptions();
             }
@@ -939,6 +957,7 @@ void EntryMenu::UpdateOptions() {
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Removed "_i18n + m_entry.title);
                 m_entry.status = EntryStatus::Get;
+                m_entry.installed_version.clear();
                 m_menu.SetDirty();
                 UpdateOptions();
             }

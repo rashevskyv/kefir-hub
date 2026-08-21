@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.518**. Завершені плани збережено в
+Поточний delivery — **v0.13.519**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.518 — RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass
+## Поточний delivery: v0.13.519 — AppStore EntryMenu layout anti-overlap & instant launch state transition
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Фіксація координат кнопок та блоку метаданих (`sphaira/source/ui/menus/appstore.cpp`)**:
+   - Кнопки дій позиціонуються від нижнього краю робочої зони (`bottom_y = 630.f`), залишаючи 16 пікселів відступу від футера.
+   - Метадані розміщені з інтервалом 26 пікселів (шрифт 18), що виключає перекриття або налізання на футер.
+2. **Миттєве оновлення статусу та відображення версії RetroArch**:
+   - У колбеку успішного завершення завантаження `install` прописується `m_entry.installed_version = "Nightly"` та статус `Installed`, що негайно активує кнопку «Запустити» (`Launch`).
+   - При відкритті `EntryMenu` версія оновлюється з файлу `info.json` або зчитується з NACP бінарника.
+3. **Збірка та деплой**:
+   - Пройдено всі 18 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Зібрано версію `v0.13.519` та оновлено `kefir-hub.nro` і `hbmenu.nro` на диску `F:`.
+
+## Попередній delivery: v0.13.518 — RetroArch 7z PhysFS stream extractor & Nightly MD5 bypass
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Підтримка `.7z` та пряме потокове розпакування (`sphaira/source/ui/menus/appstore.cpp`)**:
