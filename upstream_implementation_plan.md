@@ -214,7 +214,7 @@ error/cancel behavior, ownership boundary і acceptance result. Якщо хоч 
 | 4 | `UPA-03-GHDL-URL` | P0 | Єдина мінімальна HTTP(S)/GitHub URL validation у downloader | `UPA-02B-GHDL-DESTINATION` | високий | `DONE (v0.13.504)` |
 | 5 | `UPA-04A-MTP-ZERO` | P0 | Zero-byte upload у чинному libhaze pipeline | `UPA-GATE-500` | високий, hardware | `SW-DONE (v0.13.505) / HW-PENDING` |
 | 6 | `UPA-05-PLAYTIME-RACE` | P0 | Worker не мутує UI-owned `m_entries` | `UPA-GATE-500` | високий | `DONE (v0.13.506)` |
-| 7 | `UPA-06-HB-POLICY-WEB` | P0 | Shared mutation policy, producer inventory і повне Web success coverage | `UPA-GATE-500` | середній | `PLANNED` |
+| 7 | `UPA-06-HB-POLICY-WEB` | P0 | Shared mutation policy, producer inventory і повне Web success coverage | `UPA-GATE-500` | середній | `DONE (v0.13.507)` |
 | 8 | `UPA-07A-HB-MTP-UPLOAD` | P0 | MTP upload/final-close використовує shared policy | `UPA-06-HB-POLICY-WEB` | високий, hardware | `PLANNED` |
 | 9 | `UPA-07B-HB-MTP-MUTATIONS` | P0 | MTP delete/rename/directory ops використовують shared policy | `UPA-07A-HB-MTP-UPLOAD` | високий, hardware | `PLANNED` |
 | 10 | `UPA-08A-HB-FTP-DISCOVERY` | Gate | Зафіксовані ftpsrv success seams, callback thread і patch shapes | `UPA-06-HB-POLICY-WEB` | dependency | `PLANNED`, senior-only |

@@ -240,6 +240,47 @@ void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
+auto ShouldSignalChange(std::string_view path, bool is_directory) -> bool {
+    const auto search_paths = LoadSearchPaths();
+    return path::PathAffectsHomebrew(path, search_paths, is_directory);
+}
+
+void NotifyFileCreated(std::string_view path) {
+    if (ShouldSignalChange(path, false)) {
+        SignalChange();
+    }
+}
+
+void NotifyFileDeleted(std::string_view path) {
+    if (ShouldSignalChange(path, false)) {
+        SignalChange();
+    }
+}
+
+void NotifyDirectoryCreated(std::string_view path) {
+    if (ShouldSignalChange(path, true)) {
+        SignalChange();
+    }
+}
+
+void NotifyDirectoryDeleted(std::string_view path) {
+    if (ShouldSignalChange(path, true)) {
+        SignalChange();
+    }
+}
+
+void NotifyRename(std::string_view old_path, std::string_view new_path, bool is_directory) {
+    if (ShouldSignalChange(old_path, is_directory) || ShouldSignalChange(new_path, is_directory)) {
+        SignalChange();
+    }
+}
+
+void NotifyPathChanged(std::string_view path, bool is_directory) {
+    if (ShouldSignalChange(path, is_directory)) {
+        SignalChange();
+    }
+}
+
 auto GetNroEntries() -> std::span<const NroEntry> {
     if (!g_menu) {
         return {};

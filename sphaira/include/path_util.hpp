@@ -390,5 +390,72 @@ inline auto IsValidDirectZipUrl(std::string_view url) -> bool {
     return EndsWithIC(path_only, ".zip");
 }
 
+// Returns true if `path` is within `parent` (or equals `parent`), matching on
+// directory component boundaries case-insensitively. Trailing slashes are ignored.
+inline auto IsSubpathOf(std::string_view path, std::string_view parent) -> bool {
+    while (path.size() > 1 && path.back() == '/') {
+        path.remove_suffix(1);
+    }
+    while (parent.size() > 1 && parent.back() == '/') {
+        parent.remove_suffix(1);
+    }
+
+    if (parent.empty() || path.empty()) {
+        return false;
+    }
+
+    if (parent == "/") {
+        return path.front() == '/';
+    }
+
+    if (EqualsIC(path, parent)) {
+        return true;
+    }
+
+    if (path.size() > parent.size() && StartsWithIC(path, parent) && path[parent.size()] == '/') {
+        return true;
+    }
+
+    return false;
+}
+
+// True if `path` ends with ".nro", case-insensitively.
+inline auto IsNroPath(std::string_view path) -> bool {
+    return EndsWithIC(path, ".nro");
+}
+
+// Checks whether a mutation on `path` affects the homebrew catalog,
+// considering the default "/switch" root and any custom search paths.
+// If `is_directory` is true, any directory within a search root affects the catalog.
+// If `is_directory` is false, only .nro files within a search root affect the catalog.
+inline auto PathAffectsHomebrew(std::string_view path, std::span<const std::string> custom_roots = {}, bool is_directory = false) -> bool {
+    if (path.empty()) {
+        return false;
+    }
+
+    const auto check_root = [&](std::string_view root) -> bool {
+        if (!IsSubpathOf(path, root)) {
+            return false;
+        }
+        if (is_directory) {
+            return true;
+        }
+        return IsNroPath(path);
+    };
+
+    if (check_root("/switch")) {
+        return true;
+    }
+
+    for (const auto& root : custom_roots) {
+        if (check_root(root)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 } // namespace sphaira::path
+
 

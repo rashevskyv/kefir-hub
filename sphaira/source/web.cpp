@@ -873,12 +873,11 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     }
 
     upload_guard.success = true;
+    fs.Commit();
+    ui::menu::homebrew::NotifyFileCreated(out_path.s);
 
     if (is_nro) {
-        fs.Commit();
         log_write("[WEB] installed homebrew to %s\n", out_path.s);
-        // the homebrew menu rescans /switch on its next frame.
-        ui::menu::homebrew::SignalChange();
         SendResponse(sock, "200 OK", "text/plain", "Installed");
         return;
     }
@@ -903,6 +902,7 @@ void HandleDelete(Socket sock, const std::string& query) {
             SendResponse(sock, "500 Internal Server Error", "text/plain", "Could not delete folder recursively");
             return;
         }
+        ui::menu::homebrew::NotifyDirectoryDeleted(path);
         SendResponse(sock, "200 OK", "text/plain", "Deleted");
         return;
     }
@@ -918,6 +918,7 @@ void HandleDelete(Socket sock, const std::string& query) {
         return;
     }
 
+    ui::menu::homebrew::NotifyFileDeleted(path);
     SendResponse(sock, "200 OK", "text/plain", "Deleted");
 }
 

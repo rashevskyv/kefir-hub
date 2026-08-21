@@ -1,9 +1,29 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.506** (2026-08-21). Попередні
+Актуальний delivery — **v0.13.507** (2026-08-21). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.507 — Shared Homebrew Mutation Policy & Complete Web Success Coverage (UPA-06)
+
+- **Спільна політика виявлення змін у каталозі Homebrew**:
+  - У `sphaira/include/path_util.hpp` реалізовано:
+    - `path::IsSubpathOf(path, parent)` — перевірка входження підшляху з точним контролем меж компонентів шляху (виключає пастки типу `/switch2` vs `/switch`).
+    - `path::IsNroPath(path)` — перевірка розширення `.nro` без урахування регістру символів.
+    - `path::PathAffectsHomebrew(path, custom_roots, is_directory)` — централізований аналіз впливу модифікації шляху на каталог додатків.
+- **Розширені функції сповіщення в меню Homebrew**:
+  - У `sphaira/include/ui/menus/homebrew.hpp` та `sphaira/source/ui/menus/homebrew.cpp` реалізовано `NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`, `NotifyPathChanged`.
+  - Сповіщення надсилається лише тоді, коли операція дійсно зачіпає дефолтну або сконфігуровану директорію додатків.
+- **Покриття Web сервера**:
+  - У `sphaira/source/web.cpp` (`HandleUpload`) замінено прямий `SignalChange()` на перевірку через `NotifyFileCreated(out_path.s)`.
+  - У `HandleDelete` додано виклики `NotifyDirectoryDeleted(path)` та `NotifyFileDeleted(path)` після успішного видалення об'єктів.
+- **Тести та збірка**:
+  - Піднято версію до **`0.13.507`** у `sphaira/CMakeLists.txt`.
+  - Оновлено статуси в [**`upstream_audit.md`**](upstream_audit.md) та [**`upstream_implementation_plan.md`**](upstream_implementation_plan.md).
+  - Додано 53 нові перевірки в `tests/test_path_util.cpp` (283 checks passed).
+  - Пройдено всі 15 наборів host unit-тестів та shape-check у WSL (`tests/run.sh`).
+  - Успішно зібрано бінарник `sphaira_nro` у WSL.
 
 ## v0.13.506 — Playtime Worker UI-Thread Isolation & Race Elimination (UPA-05)
 

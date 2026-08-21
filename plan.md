@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.506**. Завершені плани збережено в
+Поточний delivery — **v0.13.507**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.506 — UPA-05: Playtime worker UI-thread isolation & race elimination
+## Поточний delivery: v0.13.507 — UPA-06: Shared homebrew mutation policy & complete Web success coverage
+
+Статус: реалізацію виконано та верифіковано:
+1. **Спільна політика мутацій Homebrew (`sphaira/include/path_util.hpp`, `sphaira/source/ui/menus/homebrew.cpp`)**:
+   - Реалізовано перевірки меж шляхів `path::IsSubpathOf`, розширення `path::IsNroPath` та визначення впливу на каталог `path::PathAffectsHomebrew` (з урахуванням дефолтного `/switch` та кастомних директорій пошуку).
+   - Додано функції сповіщення про створення, видалення та перейменування файлів і директорій (`NotifyFileCreated`, `NotifyFileDeleted`, `NotifyDirectoryCreated`, `NotifyDirectoryDeleted`, `NotifyRename`, `NotifyPathChanged`).
+2. **Інтеграція у Web сервер (`sphaira/source/web.cpp`)**:
+   - `HandleUpload`: викликає `NotifyFileCreated` після фіналізації та коміту файлу.
+   - `HandleDelete`: викликає `NotifyDirectoryDeleted` або `NotifyFileDeleted` після успішного видалення файлу/каталогу на SD карті.
+3. **Unit-тести та збірка**:
+   - Додано 53 перевірки в `tests/test_path_util.cpp` (283 checks passed).
+   - Успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.506 — UPA-05: Playtime worker UI-thread isolation & race elimination
 
 Статус: реалізацію виконано та верифіковано:
 1. **Ізоляція фонового воркера від UI даних (`sphaira/source/ui/menus/game_menu.cpp`)**:

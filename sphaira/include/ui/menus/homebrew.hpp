@@ -33,6 +33,13 @@ using LayoutType = grid::LayoutType;
 
 auto GetNroEntries() -> std::span<const NroEntry>;
 void SignalChange();
+auto ShouldSignalChange(std::string_view path, bool is_directory = false) -> bool;
+void NotifyFileCreated(std::string_view path);
+void NotifyFileDeleted(std::string_view path);
+void NotifyDirectoryCreated(std::string_view path);
+void NotifyDirectoryDeleted(std::string_view path);
+void NotifyRename(std::string_view old_path, std::string_view new_path, bool is_directory = false);
+void NotifyPathChanged(std::string_view path, bool is_directory = false);
 auto GetSearchPaths() -> std::vector<std::string>;
 auto IsSearchPath(const fs::FsPath& path) -> bool;
 auto AddSearchPath(const fs::FsPath& path) -> bool;

@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 using namespace sphaira;
 
@@ -419,8 +420,100 @@ static int test_is_valid_direct_zip_url() {
     return 0;
 }
 
+static int test_is_subpath_of() {
+    // Exact match and trailing slashes
+    CHECK(path::IsSubpathOf("/switch", "/switch"));
+    CHECK(path::IsSubpathOf("/switch/", "/switch"));
+    CHECK(path::IsSubpathOf("/switch", "/switch/"));
+    CHECK(path::IsSubpathOf("/switch/", "/switch/"));
+    CHECK(path::IsSubpathOf("/SWITCH/APP", "/switch"));
+    CHECK(path::IsSubpathOf("/switch/app", "/SWITCH"));
+
+    // Subpaths
+    CHECK(path::IsSubpathOf("/switch/app.nro", "/switch"));
+    CHECK(path::IsSubpathOf("/switch/folder/app.nro", "/switch"));
+    CHECK(path::IsSubpathOf("/switch/a/b/c/d", "/switch"));
+    CHECK(path::IsSubpathOf("/custom/nros/game.nro", "/custom/nros"));
+
+    // Boundary prefix traps (must NOT match)
+    CHECK(!path::IsSubpathOf("/switch2", "/switch"));
+    CHECK(!path::IsSubpathOf("/switch2/app.nro", "/switch"));
+    CHECK(!path::IsSubpathOf("/switchboard", "/switch"));
+    CHECK(!path::IsSubpathOf("/switchboard/app.nro", "/switch"));
+    CHECK(!path::IsSubpathOf("/switc", "/switch"));
+    CHECK(!path::IsSubpathOf("/custom/nros2/game.nro", "/custom/nros"));
+
+    // Root directory matching
+    CHECK(path::IsSubpathOf("/switch", "/"));
+    CHECK(path::IsSubpathOf("/anything/file", "/"));
+    CHECK(path::IsSubpathOf("/", "/"));
+    CHECK(!path::IsSubpathOf("relative/path", "/"));
+
+    // Empty checks
+    CHECK(!path::IsSubpathOf("", "/switch"));
+    CHECK(!path::IsSubpathOf("/switch", ""));
+
+    return 0;
+}
+
+static int test_is_nro_path() {
+    CHECK(path::IsNroPath("/switch/app.nro"));
+    CHECK(path::IsNroPath("/switch/APP.NRO"));
+    CHECK(path::IsNroPath("/switch/folder/GAME.Nro"));
+    CHECK(path::IsNroPath("app.nro"));
+    CHECK(!path::IsNroPath("/switch/app.nro.bak"));
+    CHECK(!path::IsNroPath("/switch/app.zip"));
+    CHECK(!path::IsNroPath("/switch/nro"));
+    CHECK(!path::IsNroPath("/switch/"));
+    CHECK(!path::IsNroPath(""));
+
+    return 0;
+}
+
+static int test_path_affects_homebrew() {
+    const std::vector<std::string> custom_roots = {"/retroarch/cores", "/games/homebrew"};
+
+    // Default /switch root: NRO files
+    CHECK(path::PathAffectsHomebrew("/switch/app.nro"));
+    CHECK(path::PathAffectsHomebrew("/switch/APP.NRO"));
+    CHECK(path::PathAffectsHomebrew("/switch/folder/app.nro"));
+    CHECK(path::PathAffectsHomebrew("/SWITCH/sub/game.NRO"));
+
+    // Default /switch root: Non-NRO files do NOT affect catalog unless directory
+    CHECK(!path::PathAffectsHomebrew("/switch/readme.txt"));
+    CHECK(!path::PathAffectsHomebrew("/switch/image.png"));
+    CHECK(!path::PathAffectsHomebrew("/switch/folder/config.ini"));
+
+    // Default /switch root: Directory mutations DO affect catalog
+    CHECK(path::PathAffectsHomebrew("/switch", {}, true));
+    CHECK(path::PathAffectsHomebrew("/switch/folder", {}, true));
+    CHECK(path::PathAffectsHomebrew("/switch/folder/subfolder", {}, true));
+
+    // Prefix traps must NOT affect homebrew
+    CHECK(!path::PathAffectsHomebrew("/switch2/app.nro"));
+    CHECK(!path::PathAffectsHomebrew("/switchboard/app.nro"));
+    CHECK(!path::PathAffectsHomebrew("/switch2/folder", {}, true));
+
+    // Custom roots: NRO files
+    CHECK(path::PathAffectsHomebrew("/retroarch/cores/fceumm_libretro.nro", custom_roots));
+    CHECK(path::PathAffectsHomebrew("/GAMES/homebrew/doom.NRO", custom_roots));
+    CHECK(!path::PathAffectsHomebrew("/retroarch/cores/info.txt", custom_roots));
+
+    // Custom roots: Directory mutations
+    CHECK(path::PathAffectsHomebrew("/retroarch/cores", custom_roots, true));
+    CHECK(path::PathAffectsHomebrew("/games/homebrew/doom", custom_roots, true));
+
+    // Completely unrelated paths
+    CHECK(!path::PathAffectsHomebrew("/atmosphere/contents/0100000000001000/exefs.nsp"));
+    CHECK(!path::PathAffectsHomebrew("/Nintendo/Album/2026/08/21/photo.jpg"));
+    CHECK(!path::PathAffectsHomebrew("/atmosphere/kips", custom_roots, true));
+    CHECK(!path::PathAffectsHomebrew(""));
+
+    return 0;
+}
+
 int main() {
-    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename() || test_parse_github_repo_url() || test_is_valid_direct_asset_url() || test_is_valid_direct_zip_url()) {
+    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename() || test_parse_github_repo_url() || test_is_valid_direct_asset_url() || test_is_valid_direct_zip_url() || test_is_subpath_of() || test_is_nro_path() || test_path_affects_homebrew()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);
