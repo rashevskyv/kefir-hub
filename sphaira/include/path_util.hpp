@@ -390,6 +390,21 @@ inline auto IsValidDirectZipUrl(std::string_view url) -> bool {
     return EndsWithIC(path_only, ".zip");
 }
 
+// Validates a direct NRO URL
+inline auto IsValidDirectNroUrl(std::string_view url) -> bool {
+    if (!IsValidDirectAssetUrl(url)) {
+        return false;
+    }
+    const auto q = url.find('?');
+    const auto path_only = (q != std::string_view::npos) ? url.substr(0, q) : url;
+    return EndsWithIC(path_only, ".nro");
+}
+
+// Validates a direct download URL (.zip or .nro)
+inline auto IsValidDirectDownloadUrl(std::string_view url) -> bool {
+    return IsValidDirectZipUrl(url) || IsValidDirectNroUrl(url);
+}
+
 // Returns true if `path` is within `parent` (or equals `parent`), matching on
 // directory component boundaries case-insensitively. Trailing slashes are ignored.
 inline auto IsSubpathOf(std::string_view path, std::string_view parent) -> bool {

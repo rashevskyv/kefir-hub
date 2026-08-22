@@ -1,12 +1,48 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.519**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.525**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.519 (AppStore EntryMenu layout anti-overlap & instant launch state transition)
+## Поточний delivery: v0.13.525 (Graceful download cancellation & universal remote text/URL transfer)
+
+- [x] `APPSTORE-CANCEL-GRACEFUL-525` — усунуто появу аварійного діалогу `SphairaError_AppstoreFailedZipDownload` при перериванні завантаження або видалення в AppStore: додано повернення та обробку `Result_TransferCancelled` із виведенням спокійного інформаційного діалогу.
+- [x] `REMOTE-INPUT-MODULE-525` — створено загальний модуль `ui::remote_input` (`sphaira/include/ui/remote_input.hpp`, `sphaira/source/ui/remote_input.cpp`), веб-ендпоінти `/input`, `/remote-input`, `/input/config` та інтерфейс `REMOTE_INPUT_PAGE` для передачі тексту/посилань з телефону або ПК без ручного набору.
+- [x] `DIRECT-DOWNLOAD-NRO-ZIP-525` — оновлено `Custom Link` / `Direct Download` у `ghdl.cpp` із підтримкою `PromptTextInput`, прямим завантаженням виконуваних `.nro` файлів у `/switch/` та розпакуванням `.zip` архівів у корінь.
+- [x] `DOCS-BUMP-525` — версію піднято до `0.13.525` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `README.md`, пройдено всі 22 набори unit-тестів та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Поточний delivery: v0.13.524 (USB 3.0 indicator, waiting screen anti-overlap layout & screensaver clean title display)
+
+- [x] `USB3-INDICATOR-524` — реалізовано векторну іконку тризуба USB `gfx::drawUsbIcon` у `sphaira/include/ui/nvg_util.hpp` та `sphaira/source/ui/nvg_util.cpp`; додано зчитування конфігурації `usb30_force_enabled` з `system_settings.ini` та апаратного лінку `usbDsGetSpeed`; додано відображення бейджа `[ USB 3.0 ]` у глобальному хедері `MenuBase::DrawChrome` поруч із MTP/FTP над смугами пам'яті; на екрані очікування черги встановлення `dbi_menu.cpp` додано статусний бейдж з іконкою USB та деталізацією швидкості (SuperSpeed 5 Gbps / High Speed 480 Mbps).
+- [x] `DBI-WAITING-ANTI-OVERLAP-524` — оновлено розмітку екрана очікування в `dbi_menu.cpp`: основні інструкції розміщено на `y = 250.f`, реалізовано динамічний розрахунок вертикальних меж тексту через `nvgTextBoxBounds`; попередження про Applet Mode винесено в окрему виділену плашку строго під основним текстом (`std::max(bounds[3] + 35.f, 470.f)`), що повністю усуває взаємне налізання написів.
+- [x] `SCREENSAVER-CLEAN-TITLE-524` — у `dbi_menu.cpp` (`ComputeSaverInfo` та живий перегляд) вилучено додавання технічних хешів/імен NCA/NCZ файлів (`.nca`/`.ncz`), забезпечено вивід чистої назви гри (`m_current_title` з фолбеком на ім'я файлу пакету) та збереження службових статусів оновлення БД; у `screensaver.cpp` розширено ширину треку до 840 пікселів та реалізовано адаптивне зменшення шрифту з лівим прив'язуванням для довгих назв, що виключає обрізання початку назви гри.
+- [x] `STORAGE-FONT-SEPARATION-524` — зменшено розмір шрифту `storage_font` для підписів `NAND`, `SD` та чисел розміру з 19.05px до 15.5px, а позицію бейджів/версії `badge_y` піднято до 17.f, що забезпечило чіткий вертикальний проміжок і повністю усунуло налізання тексту пам'яті на верхній рядок системної версії/Kefir.
+- [x] `HEADER-EMUNAND-BADGE-3WAY-524` — створено статусний бейдж режиму NAND із підтримкою адаптивного розгортання: при наявності вільного простору (без USB 3.0) відображається повний напис `EmuNAND` (зелений) або `SysNAND` (сірий), а при браку місця (наприклад з активним USB 3.0) бейдж компактно згортається до літери `E` / `S`; усунуто дублювання `|E`/`|S` наприкінці системного рядка версії в `hats_version.cpp`; сформовано два окремі блоки: Блок 1 (бейджі MTP, FTP, USB 3.0, EmuNAND/E) та Блок 2 (системний рядок версії Кефіру та ОС); реалізовано 3-сторонній симетричний розподіл з абсолютно рівними інтервалами між краями сховища та між самими блоками ($M = (W_{span} - (W_1 + W_2)) / 3$).
+- [x] `DOCS-BUMP-524` — створено unit-тести `tests/test_screensaver_title.cpp` (11 checks), `tests/test_usb3_indicator.cpp` (12 checks) та оновлено `tests/test_header_service_indicators.cpp` (31 checks), версію піднято до `0.13.524` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 22 набори host unit-тестів та успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.523 (Header Kefir version, System OS Firmware & EmuNAND/SysNAND indicator)
+
+- [x] `HEADER-SYS-VERSION-523` — додано `getKefirVersion()` та `getSystemVersionString()` до `sphaira::hats` (`sphaira/include/hats_version.hpp`, `sphaira/source/hats_version.cpp`); сформовано системний рядок версії з точним форматуванням як у налаштуваннях Horizon OS (`<Kefir> · <FW>|AMS <AMS>|<E/S>`, наприклад `Kefir 802 · 19.0.1|AMS 1.8.0|E`); у `MenuBase::DrawChrome` розміщено системний рядок у верхньому рядку сховища з правим вирівнюванням по осі `storage_right` на одній висоті з бейджами MTP та FTP.
+- [x] `DOCS-BUMP-523` — оновлено `tests/test_header_service_indicators.cpp` (28 checks), версію піднято до `0.13.523` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 20 наборів host unit-тестів у WSL.
+
+## Попередній delivery: v0.13.522 (Exact NAND-edge boundary calculation & conditional anti-overlap marquee)
+
+- [x] `HEADER-NET-NAND-BOUNDS-522` — перенесено розрахунок геометрії пам'яті перед відмальовуванням рядка мережі в `MenuBase::DrawChrome`; реалізовано динамічний розрахунок правого краю тексту NAND (`nand_right = value_x + nand_val_w`), встановлено ліву межу слота мережі на `net_left = nand_right + 12.f`; скролінг активується виключно при наявності реального перекриття (нахльосту) на область NAND, а при вільному розміщенні рядок лишається статичним з правим вирівнюванням.
+- [x] `DOCS-BUMP-522` — оновлено `tests/test_header_network_layout.cpp` (28 checks), версію піднято до `0.13.522` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 20 наборів host unit-тестів та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Поточний delivery: v0.13.521 (Header MTP and FTP demarcated service badges over storage bars)
+
+- [x] `HEADER-SERVICE-INDICATORS-521` — додано поля `mtp_running` та `ftp_running` до структури `PolledData` у `MenuBase`; реалізовано щосекундне опитування активності служб через `sphaira::haze::IsRunning()` та `sphaira::ftpsrv::IsRunning()`; у `MenuBase::DrawChrome` розміщено відокремлені бейджі `MTP` та `FTP` (`[ ● MTP ]  [ ● FTP ]`) безпосередньо над графічними смугами накопичувачів NAND/SD (починаючи від `bar_x`) всередині блоку сховища з динамічним колірним кодуванням (яскраво-зелений індикатор та фон при активній службі, сірий колір теми `TEXT_INFO` при неактивній).
+- [x] `DOCS-BUMP-521` — створено unit-тест `tests/test_header_service_indicators.cpp` (23 checks), версію піднято до `0.13.521` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 20 наборів host unit-тестів.
+
+## Попередній delivery: v0.13.520 (Header network SSID & IP anti-overlap scrolling marquee)
+
+- [x] `HEADER-NET-MARQUEE-520` — інтегровано `ScrollingText m_scroll_network` у `MenuBase` (`sphaira/include/ui/menus/menu_base.hpp`, `sphaira/source/ui/menus/menu_base.cpp`); обчислено динамічні межі виділеного слота (`[start_x, bar_right]`), що усуває налізання довгих назв точок доступу Wi-Fi (SSID) та IP-адрес на індикатори пам'яті NAND/SD; реалізовано плавний біжучий рядок зі збереженням естетичного правого вирівнювання для коротких назв.
+- [x] `DOCS-BUMP-520` — створено unit-тест `tests/test_header_network_layout.cpp` (25 checks), версію піднято до `0.13.520` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 19 наборів host unit-тестів та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.519 (AppStore EntryMenu layout anti-overlap & instant launch state transition)
 
 - [x] `APPSTORE-LAYOUT-FOOTER-519` — усунуто налізання кнопок дій на футер у `EntryMenu::Draw`: кнопки зафіксовано вище футера на 16 пікселів (`bottom_y = 630.f`), скориговано розмір шрифту та інтервали блоку метаданих, що забезпечило понад 80 пікселів вільного простору.
 - [x] `APPSTORE-STATE-TRANSITION-519` — реалізовано детерміноване оновлення `installed_version` у колбеках `install`/`uninstall` та свіже оновлення при відкритті `EntryMenu`, завдяки чому після встановлення кнопка «Оновити» миттєво змінюється на «Запустити» та відображається `installed: Nightly`.

@@ -29,6 +29,7 @@
 
 #include "ui/progress_box.hpp"
 #include "ui/steamgriddb_icon.hpp"
+#include "ui/remote_input.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "yati/yati.hpp"
 #include "yati/source/stream.hpp"
@@ -1101,6 +1102,75 @@ void HandleApiKeyPost(Socket sock, const std::string& req) {
     SendResponse(sock, "200 OK", "text/plain", "OK");
 }
 
+void HandleRemoteInputPost(Socket sock, const std::string& req) {
+    constexpr s64 MAX_INPUT_SIZE = 64 * 1024; // 64KB
+
+    const auto length_str = HeaderValue(req, "content-length");
+    if (length_str.empty()) {
+        SendResponse(sock, "411 Length Required", "text/plain", "Missing Content-Length");
+        return;
+    }
+
+    const auto content_length = std::strtoll(length_str.c_str(), nullptr, 10);
+    if (content_length <= 0 || content_length > MAX_INPUT_SIZE) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Bad Content-Length");
+        return;
+    }
+
+    std::string body;
+    if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
+        body = req.substr(header_end + 4);
+    }
+    body.resize(std::min<size_t>(body.size(), content_length));
+
+    for (u32 attempts = 0; attempts < 5000 && (s64)body.size() < content_length; attempts++) {
+        char buf[256];
+        const auto want = std::min<s64>(sizeof(buf), content_length - body.size());
+        const auto got = recv(sock, buf, want, 0);
+        if (got > 0) {
+            body.append(buf, got);
+        } else if (got == 0) {
+            break;
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            svcSleepThread(1'000'000);
+        } else {
+            break;
+        }
+    }
+
+    const auto opts = ui::remote_input::GetCurrentOptions();
+    if (!opts.multiline) {
+        const auto first = body.find_first_not_of(" \t\r\n");
+        const auto last = body.find_last_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Empty input");
+            return;
+        }
+        body = body.substr(first, last - first + 1);
+    }
+
+    if (body.empty()) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Empty input");
+        return;
+    }
+
+    ui::remote_input::SetReceivedText(body);
+    SendResponse(sock, "200 OK", "text/plain", "OK");
+}
+
+void HandleRemoteInputConfig(Socket sock) {
+    const auto opts = ui::remote_input::GetCurrentOptions();
+    std::string json = "{";
+    json += "\"title\":\"" + JsonEscape(opts.title) + "\",";
+    json += "\"guide\":\"" + JsonEscape(opts.guide) + "\",";
+    json += "\"placeholder\":\"" + JsonEscape(opts.placeholder) + "\",";
+    json += "\"default_text\":\"" + JsonEscape(opts.default_text) + "\",";
+    json += "\"multiline\":" + std::string(opts.multiline ? "true" : "false");
+    json += "}";
+
+    SendResponse(sock, "200 OK", "application/json", json);
+}
+
 void HandleRequest(Socket sock) {
     std::string req;
     bool header_too_large = false;
@@ -1160,6 +1230,35 @@ void HandleRequest(Socket sock) {
             return;
         } else if (method == "GET") {
             SendResponse(sock, "200 OK", "text/html", std::string{APIKEY_PAGE});
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input" || path == "/remote-input") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "POST") {
+            HandleRemoteInputPost(sock, req);
+            return;
+        } else if (method == "GET") {
+            SendResponse(sock, "200 OK", "text/html", std::string{REMOTE_INPUT_PAGE});
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input/config") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "GET") {
+            HandleRemoteInputConfig(sock);
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

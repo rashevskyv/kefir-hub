@@ -35,6 +35,7 @@ constexpr float SELECTION_OUTLINE_PAD = 10.f;
 constexpr float CHECKBOX_SIZE = 20.f;
 void drawCheckbox(NVGcontext*, const Theme*, float x, float y, float size, bool checked);
 void drawActionIcon(NVGcontext*, const Theme*, float x, float y, float size, ActionIcon icon);
+void drawUsbIcon(NVGcontext*, float x, float y, float size, const NVGcolor& colour);
 
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);

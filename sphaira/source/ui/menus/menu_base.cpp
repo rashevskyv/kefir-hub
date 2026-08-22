@@ -1,6 +1,10 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "ntp.hpp"
+#include "haze_helper.hpp"
+#include "ftpsrv_helper.hpp"
+#include "hats_version.hpp"
+#include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
@@ -57,6 +61,25 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.status = {};
         data.strength = {};
         data.ip = {};
+        data.mtp_running = haze::IsRunning();
+        data.ftp_running = ftpsrv::IsRunning();
+
+        static std::string s_cached_sys_version{};
+        static bool s_sys_version_loaded = false;
+        if (!s_sys_version_loaded) {
+            s_cached_sys_version = hats::getSystemVersionString();
+            s_sys_version_loaded = true;
+        }
+        data.sys_version = s_cached_sys_version;
+
+        static bool s_cached_usb3_enabled = false;
+        static bool s_usb3_loaded = false;
+        if (!s_usb3_loaded || force_refresh) {
+            s_cached_usb3_enabled = !settings::detail::IniValueEquals("/atmosphere/config/system_settings.ini", "usb", "usb30_force_enabled", "u8!0x0");
+            s_usb3_loaded = true;
+        }
+        data.usb3_enabled = s_cached_usb3_enabled;
+        data.is_emummc = App::IsEmummc();
 
         const auto t = std::time(NULL) + ntp::GetDisplayOffset();
         localtime_r(&t, &data.tm);
@@ -200,9 +223,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float bar_w     = 262.f;
     const float bar_h     = 10.f;
     const float small_font = 15.f;
-    // the storage rows have head room above and below, so they run larger than
-    // the ip line they share the block with.
-    const float storage_font = small_font * 1.27f;
+    // storage rows font: reduced to 15.5px for crisp, overlap-free spacing from system/Kefir version header line
+    const float storage_font = 15.5f;
     const float y_ip      = 48.f;
 
     // Align clock + battery at the rightmost position (bar_right = 1220)
@@ -257,30 +279,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // Ensure the right edge never encroaches on the left edge of that block (start_x).
     const float storage_right = std::min(start_x - 10.f, bar_right);
 
-    // ---- Row 1 (y=48): access point + IP address ----
-    {
-        const auto ip_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
-        if (pdata.ip) {
-            // "MyAP · 192.168.1.5" for wi-fi, "LAN · 192.168.1.5" for ethernet.
-            std::string network;
-            if (pdata.type == NifmInternetConnectionType_Ethernet) {
-                network = "LAN";
-            } else if (!pdata.ssid.empty()) {
-                network = pdata.ssid;
-            }
-            if (!network.empty()) {
-                network += " · ";
-            }
-            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
-                "%s%u.%u.%u.%u", network.c_str(),
-                pdata.ip & 0xFF, (pdata.ip >> 8) & 0xFF,
-                (pdata.ip >> 16) & 0xFF, (pdata.ip >> 24) & 0xFF);
-        } else {
-            gfx::drawTextArgs(vg, bar_right, y_ip, small_font, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col,
-                "%s", ("No Internet"_i18n).c_str());
-        }
-    }
-
     // ---- Storage row layout: NAND ▓▓▓▓ 4.5 GB ----
     // Both outer edges are fixed and only the size text inside the reserved
     // column changes, so nothing shifts as the cursor moves between titles.
@@ -326,6 +324,61 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         }
         return "+" + value;
     };
+
+    // Determine the exact rightmost boundary of the NAND storage part on Row 1 (y=48).
+    // The network SSID/IP text occupies the region from right after the NAND text to bar_right.
+    // If the text would overlap NAND, it scrolls strictly within this window.
+    float net_left = start_x;
+    if (m_show_storage) {
+        m_status_left_x = label_x;
+        const auto nand_val = storage_value_of(pdata.nand_free, m_nand_highlight, m_nand_focus);
+        nvgFontSize(vg, storage_font);
+        gfx::textBounds(vg, 0, 0, bounds, nand_val.c_str());
+        const float nand_val_w = bounds[2] - bounds[0];
+        const float nand_right = value_x + nand_val_w;
+        net_left = nand_right + 12.f;
+    } else {
+        m_status_left_x = start_x;
+    }
+
+    // ---- Row 1 (y=48): access point + IP address ----
+    {
+        const auto ip_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        std::string network_str;
+        if (pdata.ip) {
+            // "MyAP · 192.168.1.5" for wi-fi, "LAN · 192.168.1.5" for ethernet.
+            if (pdata.type == NifmInternetConnectionType_Ethernet) {
+                network_str = "LAN";
+            } else if (!pdata.ssid.empty()) {
+                network_str = pdata.ssid;
+            }
+            if (!network_str.empty()) {
+                network_str += " · ";
+            }
+            char ip_buf[32];
+            std::snprintf(ip_buf, sizeof(ip_buf), "%u.%u.%u.%u",
+                pdata.ip & 0xFF, (pdata.ip >> 8) & 0xFF,
+                (pdata.ip >> 16) & 0xFF, (pdata.ip >> 24) & 0xFF);
+            network_str += ip_buf;
+        } else {
+            network_str = "No Internet"_i18n;
+        }
+
+        const float net_w = std::max(0.f, bar_right - net_left);
+
+        nvgFontSize(vg, small_font);
+        gfx::textBounds(vg, 0, 0, bounds, network_str.c_str());
+        const float net_text_w = bounds[2] - bounds[0];
+
+        if (net_w > 0.f && net_text_w > net_w) {
+            m_scroll_network.Draw(vg, true, net_left, y_ip, net_w, small_font,
+                NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, ip_col, network_str);
+        } else {
+            m_scroll_network.Reset(network_str);
+            gfx::drawTextArgs(vg, bar_right, y_ip, small_font,
+                NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col, "%s", network_str.c_str());
+        }
+    }
 
     if (m_show_storage) {
         // Left edge of the whole status block, so the header gap can end against
@@ -397,9 +450,137 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
                 "%s", value.c_str());
         };
 
-        // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
+        // ---- Storage indicators and bars ----
         const float storage_mid  = (y_ip + start_y) * 0.5f;
         const float storage_gap  = 20.f;
+
+        // ---- Row 1: Demarcated service badges (Block 1) and System / Kefir version info (Block 2) ----
+        const float badge_y    = 17.f;
+        const float badge_h    = 16.f;
+        const float badge_font = 12.f;
+        const float sys_font   = 12.f;
+        const float badge_gap  = 6.f;
+
+        struct ServiceBadgeItem {
+            const char* name;
+            bool is_active;
+        };
+
+        const char* nand_full_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
+        const char* nand_short_label = pdata.is_emummc ? "E" : "S";
+
+        // Measure Block 2 (System version text) width
+        float block2_w = 0.f;
+        if (!pdata.sys_version.empty()) {
+            nvgFontSize(vg, sys_font);
+            gfx::textBounds(vg, 0, 0, bounds, pdata.sys_version.c_str());
+            block2_w = bounds[2] - bounds[0];
+        }
+
+        const float storage_left = label_x;
+        const float storage_span_w = std::max(0.f, storage_right - storage_left);
+
+        // Helper to compute Block 1 width for candidate NAND label
+        auto compute_block1_w = [&](const char* nand_label) -> float {
+            nvgFontSize(vg, badge_font);
+            float w = 0.f;
+            for (const char* name : {"MTP", "FTP"}) {
+                gfx::textBounds(vg, 0, 0, bounds, name);
+                w += (bounds[2] - bounds[0]) + 24.f + badge_gap;
+            }
+            if (pdata.usb3_enabled) {
+                gfx::textBounds(vg, 0, 0, bounds, "USB 3.0");
+                w += (bounds[2] - bounds[0]) + 24.f + badge_gap;
+            }
+            gfx::textBounds(vg, 0, 0, bounds, nand_label);
+            w += (bounds[2] - bounds[0]) + 24.f;
+            return w;
+        };
+
+        const float block1_full_w = compute_block1_w(nand_full_label);
+        const float margin_full = (block2_w > 0.f)
+            ? (storage_span_w - (block1_full_w + block2_w)) / 3.f
+            : (storage_span_w - block1_full_w) * 0.5f;
+
+        // If margin is at least 10px, use the expanded "EmuNAND"/"SysNAND" label; otherwise fallback to compact "E"/"S"
+        const char* nand_label = (margin_full >= 10.f) ? nand_full_label : nand_short_label;
+
+        std::vector<ServiceBadgeItem> badges;
+        badges.push_back({"MTP", pdata.mtp_running});
+        badges.push_back({"FTP", pdata.ftp_running});
+        if (pdata.usb3_enabled) {
+            badges.push_back({"USB 3.0", true});
+        }
+        badges.push_back({nand_label, pdata.is_emummc});
+
+        // Measure actual Block 1 (Badges) width
+        nvgFontSize(vg, badge_font);
+        float block1_w = 0.f;
+        for (size_t i = 0; i < badges.size(); ++i) {
+            gfx::textBounds(vg, 0, 0, bounds, badges[i].name);
+            const float bw = (bounds[2] - bounds[0]) + 24.f;
+            block1_w += bw;
+            if (i + 1 < badges.size()) {
+                block1_w += badge_gap;
+            }
+        }
+
+        // Calculate 3-way equal margin M across the storage block (from label_x to storage_right)
+        const float content_total_w = block1_w + block2_w;
+
+        float margin_m = 0.f;
+        if (block2_w > 0.f) {
+            // 3 equal intervals: left margin, center gap between Block 1 and Block 2, right margin
+            margin_m = std::max(4.f, (storage_span_w - content_total_w) / 3.f);
+        } else {
+            margin_m = std::max(4.f, (storage_span_w - block1_w) * 0.5f);
+        }
+
+        // Render Block 1 (Badges)
+        float cur_badge_x = storage_left + margin_m;
+        for (const auto& b : badges) {
+            nvgFontSize(vg, badge_font);
+            gfx::textBounds(vg, 0, 0, bounds, b.name);
+            const float text_w = bounds[2] - bounds[0];
+            const float bw = text_w + 24.f;
+
+            const NVGcolor bg_col = b.is_active
+                ? nvgRGBA(28, 68, 42, 220)
+                : nvgRGBA(55, 55, 58, 160);
+            const NVGcolor dot_col = b.is_active
+                ? nvgRGBA(76, 210, 120, 255)
+                : nvgRGBA(130, 130, 135, 200);
+            const NVGcolor text_col = b.is_active
+                ? nvgRGBA(225, 255, 235, 255)
+                : theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+            // Container
+            gfx::drawRect(vg, cur_badge_x, badge_y, bw, badge_h, bg_col, 4.f);
+
+            // Dot
+            const float dot_x = cur_badge_x + 8.f;
+            const float dot_y = badge_y + badge_h * 0.5f;
+            nvgBeginPath(vg);
+            nvgCircle(vg, dot_x, dot_y, 3.f);
+            nvgFillColor(vg, dot_col);
+            nvgFill(vg);
+
+            // Text
+            gfx::drawTextArgs(vg, cur_badge_x + 15.f, dot_y, badge_font, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col, "%s", b.name);
+
+            cur_badge_x += bw + badge_gap;
+        }
+
+        // Render Block 2 (System version text)
+        if (!pdata.sys_version.empty()) {
+            const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const float text_mid_y = badge_y + badge_h * 0.5f;
+            const float block2_x = (cur_badge_x - badge_gap) + margin_m;
+            gfx::drawTextArgs(vg, block2_x, text_mid_y, sys_font, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col,
+                "%s", pdata.sys_version.c_str());
+        }
+
+        // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
         draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
         draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
     } else {

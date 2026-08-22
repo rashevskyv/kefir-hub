@@ -64,9 +64,14 @@ Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when ena
 Sphaira includes a built-in, high-performance Homebrew AppStore client designed for seamless package discovery and maintenance:
 - **Installed vs Store Version Tracking:** App cards display both the repository version (`version: ...`) and the locally installed version (`installed: ...`), determined from `.info` metadata or parsed directly from NRO NACP headers. When an update is available, the installed version is highlighted with the active theme's accent color.
 - **LibRetro Nightly Buildbot Integration:** For RetroArch (`RetroNX`), downloads and updates are automatically routed to the official LibRetro Nightly builder (`https://buildbot.libretro.com/nightly/nintendo/switch/libnx/RetroArch.7z`), ensuring modern Atmosphere and Horizon OS compatibility. If an outdated store build or non-Nightly package is detected, the `Launch` button is replaced by an `Update` action.
-- **Launch Confirmation Guards:** Opening an installed app card requires explicit confirmation before launching the NRO, preventing accidental applet exits or unintended launches.
-- **Clean Network Teardown:** Ensures BSD sockets, network interface services, and background downloader threads are fully sanitized and drained before chain-loading next NRO targets.
+- **Graceful Download Cancellation:** Cancelling a download or uninstall operation at any point cleanly aborts transfer threads and notifies the user with a friendly dialog without triggering false-positive network error alerts.
 
+## Remote Input & Direct Downloads
+
+Sphaira provides an interactive **Remote Input** system that allows users to send URLs, API keys, or arbitrary text fragments to the console directly from a smartphone or PC:
+- **Dual Input Modes:** Prompts offer **Manual (Keyboard)** for typing on the Switch's on-screen keyboard, or **From Phone / PC** for scanning a QR code or visiting a local web link (e.g. `http://<ip>:8080/input`).
+- **Web Input Interface:** The mobile-responsive `/input` page features clipboard paste integration, live configuration reflection, and support for multiline text payloads.
+- **Direct NRO & ZIP Downloads:** The **Custom Link / Direct Download** utility accepts both `.zip` archives (extracted to root with prompt to keep/delete) and standalone `.nro` binaries (saved directly to `/switch/` with an instant launch prompt).
 
 ## File association
 
@@ -101,7 +106,14 @@ In the queue review screen, pressing **X** toggles package selection and automat
 
 During active installation, you can control the queue on the fly: press **B** to skip only the current package and proceed to the next queued item, or press **X** to cancel the remaining queue (both actions display an explicit confirmation dialog before interrupting).
 
+The USB installation waiting screen features an intelligent **USB 3.0 Status Indicator** and dynamic layout:
+- **USB 3.0 & Link Speed Badge:** Automatically detects whether USB 3.0 is force-enabled in Atmosphère configuration (`system_settings.ini`) and queries real-time hardware link speeds, rendering a dedicated badge with vector USB iconography (e.g. `USB 3.0 SuperSpeed (5 Gbps)` vs `USB 2.0 High Speed (480 Mbps)`). When USB 3.0 is enabled in settings, an ambient `[ USB 3.0 ]` indicator also appears in the top status bar above the NAND/SD storage meters.
+- **Dynamic Anti-Overlap Spacing:** All text boxes and Applet Mode warning cards dynamically calculate vertical rendered bounds (`nvgTextBoxBounds`), ensuring instructions, connection badges, and warning boxes remain perfectly spaced and never overlap across all screen orientations and translated languages.
+
 Long queues do not need the panel on: **Minus** blanks the screen, and *Settings → Install → Screen off (Minus)* chooses between lowering the brightness, cutting the backlight, and a drifting black-background readout (clock, package counter, progress, speed, ETA, battery, real-time speed graph). While the screensaver is active, system auto-sleep and display turn-off are strictly inhibited, and hardware OLED consoles automatically maintain the user's configured brightness against true black pixels without aggressive panel dimming (while LCD consoles reduce brightness to conserve battery). While the screensaver is active, you can interactively fly the readout around with the **Left Analog Stick**, adjust screen brightness with the **Right Stick (Up/Down)**, and speed up or slow down drift with the **Right Stick (Left/Right)**. Any button brings the screen back.
+
+- **Clean Game Title Display:** The screensaver and installation view strip internal NCA/NCZ hash strings (e.g. `dd38de587cb690a36b1d4b6ca4.nca`), presenting clean, human-readable game titles (or package filenames when metadata is pending) and descriptive stage notices (such as database updates).
+- **Adaptive Title Rendering:** The screensaver features an expanded 840px display track with adaptive font scaling and left-edge anchoring for lengthy titles, ensuring game names are always readable in full and never clipped at the start.
 
 ### Forwarder Editor & SteamGridDB Integration
 
@@ -127,7 +139,7 @@ Customize NRO metadata and icons directly from the Homebrew menu via **Customize
 ### Game Details & Header UI Layout
 
 Sphaira provides a DBI-style **Game Details** card and status bar header layout:
-- **Header Storage Bars:** Real-time NAND and SD card storage indicators with expanded bar widths and right-aligned status indicators (clock, battery, IP).
+- **Header Storage Bars, Services & System Info:** Real-time NAND and SD card storage indicators with compact, high-legibility font sizing and right-aligned status indicators (clock, battery, Wi-Fi SSID and IP address with anti-overlap marquee scrolling). Prominent **MTP**, **FTP**, **USB 3.0**, and **EmuNAND / SysNAND status badges** sit directly above the storage meters (adaptively displaying `[ ● EmuNAND ]` in full or compact `[ ● E ]` when USB 3.0 is active). System information in the version block displays pure versioning (`<Kefir> · <FW>|AMS <AMS>`) with 3-way symmetric spacing across the storage span ($M = (W_{span} - (W_1 + W_2)) / 3$).
 - **Logical Stat Blocks:** Game details statistics are neatly organized into 4 logical blocks (Title ID & Version, Languages & Mods folder, Play time & Last played, Components/Tickets/Saves & Save quota). All values within each block align strictly to a single vertical column, with long translated labels automatically scrolling when exceeding 1/3 of the row width.
 
 ### Ftp (install)
@@ -228,7 +240,7 @@ Sphaira includes a built-in theme creator that allows you to easily convert any 
 ## Display Layouts
 
 Sphaira supports multiple display layouts for homebrew and games, customizable to suit your preference:
-- **Storage Status Bar:** The status bar displays the current network IP address (or a localized "No Internet" status), dual NAND and SD storage capacity bars (color-coded green, yellow, and red based on usage), clock, and battery percentage details. The positioning is static in both states to prevent interface shift, displaying a static green lightning bolt icon after the numbers during charging, and a standard percent symbol when discharging.
+- **Storage Status Bar:** The status bar displays the current network IP address (or a localized "No Internet" status), dual NAND and SD storage capacity bars (color-coded green, yellow, and red based on usage), clock, and battery percentage details. Long Wi-Fi SSID and IP strings automatically scroll in a dedicated bounded marquee slot above the clock/battery block, preventing any overlap with the NAND/SD storage indicators. The positioning is static in both states to prevent interface shift, displaying a static green lightning bolt icon after the numbers during charging, and a standard percent symbol when discharging.
 - **NACP v2 Support:** Added compatibility for parsing the new compressed NACP metadata format introduced in Nintendo Switch firmware 20.0+, ensuring titles and authors display correctly.
 - **Grid & Icon Views:** Grid and Icon views now support seamless row-to-row navigation. Pressing **Right** on the last item of a row moves the cursor directly to the next row, and **Left** on the first item of a row moves it back to the previous row.
 - **HB Menu Layout:** Replicates the classic Nintendo Switch Homebrew Menu style. It displays a large icon of the selected app on the left along with detailed metadata (Name, Author, Version) on the right, and lists all available applications in a horizontal row at the bottom. The horizontal row uses custom dual-banner cards (showing the clean filename in a white banner on top, and the full-sized icon below).

@@ -490,10 +490,17 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
             api_result = curl::ToMemory(api);
         }
 
+        if (pbox->ShouldExit()) {
+            return Result_TransferCancelled;
+        }
         R_UNLESS(api_result.success, Result_AppstoreFailedZipDownload);
     }
 
     ON_SCOPE_EXIT(fs.DeleteFile(zip_out));
+
+    if (pbox->ShouldExit()) {
+        return Result_TransferCancelled;
+    }
 
     // 2. md5 check (skip for RetroArch Nightly as its buildbot hash differs from repo.json)
     if (!is_retroarch && !pbox->ShouldExit()) {
@@ -931,19 +938,24 @@ void EntryMenu::UpdateOptions() {
             return InstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
-            App::PushErrorBox(rc, "Failed to download application"_i18n);
-
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Downloaded "_i18n + m_entry.title);
-                m_entry.status = EntryStatus::Installed;
-                if (IsRetroArchPackage(m_entry)) {
-                    m_entry.installed_version = "Nightly";
-                } else {
-                    m_entry.installed_version = m_entry.version;
-                }
-                m_menu.SetDirty();
-                UpdateOptions();
+            if (rc == Result_TransferCancelled) {
+                App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
+                return;
             }
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to download application"_i18n);
+                return;
+            }
+
+            App::Notify("Downloaded "_i18n + m_entry.title);
+            m_entry.status = EntryStatus::Installed;
+            if (IsRetroArchPackage(m_entry)) {
+                m_entry.installed_version = "Nightly";
+            } else {
+                m_entry.installed_version = m_entry.version;
+            }
+            m_menu.SetDirty();
+            UpdateOptions();
         });
     };
 
@@ -952,15 +964,20 @@ void EntryMenu::UpdateOptions() {
             return UninstallApp(pbox, m_entry);
         }, [this](Result rc){
             homebrew::SignalChange();
-            App::PushErrorBox(rc, "Failed to uninstall application"_i18n);
-
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Removed "_i18n + m_entry.title);
-                m_entry.status = EntryStatus::Get;
-                m_entry.installed_version.clear();
-                m_menu.SetDirty();
-                UpdateOptions();
+            if (rc == Result_TransferCancelled) {
+                App::Push<OptionBox>("Uninstall was cancelled."_i18n, "OK"_i18n);
+                return;
             }
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to uninstall application"_i18n);
+                return;
+            }
+
+            App::Notify("Removed "_i18n + m_entry.title);
+            m_entry.status = EntryStatus::Get;
+            m_entry.installed_version.clear();
+            m_menu.SetDirty();
+            UpdateOptions();
         });
     };
 

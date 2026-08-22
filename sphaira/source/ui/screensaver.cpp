@@ -14,7 +14,7 @@ namespace {
 
 // the block never fills the panel: it drifts inside the margin left over, so a
 // two hour install does not burn its outline into an OLED.
-constexpr float BLOCK_W = 760.f;
+constexpr float BLOCK_W = 840.f;
 constexpr float DRIFT_X = 170.f;
 constexpr float DRIFT_Y = 90.f;
 
@@ -305,7 +305,28 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     if (show_file) {
         nvgSave(vg);
         nvgIntersectScissor(vg, left, y, BLOCK_W, file_h);
-        gfx::drawTextArgs(vg, cx, y, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.file.c_str());
+
+        float font_sz = 22.f;
+        nvgFontSize(vg, font_sz);
+        float bounds[4]{};
+        gfx::textBounds(vg, 0, 0, bounds, info.file.c_str());
+        float text_w = bounds[2] - bounds[0];
+
+        // If text is slightly too long for BLOCK_W, adapt font size down to 18px to fit
+        if (text_w > BLOCK_W && font_sz > 18.f) {
+            font_sz = std::max(18.f, font_sz * (BLOCK_W / text_w));
+            nvgFontSize(vg, font_sz);
+            gfx::textBounds(vg, 0, 0, bounds, info.file.c_str());
+            text_w = bounds[2] - bounds[0];
+        }
+
+        if (text_w <= BLOCK_W) {
+            // Fits within BLOCK_W: center it nicely
+            gfx::drawTextArgs(vg, cx, y, font_sz, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.file.c_str());
+        } else {
+            // Still exceeds BLOCK_W: align left from left margin so the beginning of the title is never clipped
+            gfx::drawTextArgs(vg, left, y, font_sz, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s", info.file.c_str());
+        }
         nvgRestore(vg);
         y += file_h;
     }

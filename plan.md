@@ -1,10 +1,102 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.519**. Завершені плани збережено в
+Поточний delivery — **v0.13.525**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.519 — AppStore EntryMenu layout anti-overlap & instant launch state transition
+## Поточний delivery: v0.13.525 — Graceful download cancellation & universal remote text/URL transfer
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Коректна обробка скасування в AppStore (`sphaira/source/ui/menus/appstore.cpp`)**:
+   - Реалізовано перехоплення `Result_TransferCancelled` у `InstallApp` та `EntryMenu::UpdateOptions` з виведенням спокійного інформаційного діалогу замість червоної аварійної помилки.
+2. **Універсальний модуль дистанційного введення тексту `ui::remote_input` (`sphaira/include/ui/remote_input.hpp`, `sphaira/source/ui/remote_input.cpp`, `sphaira/source/web.cpp`)**:
+   - Реалізовано вибір між клавіатурою Switch та передачею з телефону/ПК через QR-код і локальний веб-ендпоінт `/input`.
+3. **Пряме завантаження `.nro` та `.zip` (`sphaira/source/ui/menus/ghdl.cpp`, `sphaira/include/path_util.hpp`)**:
+   - Розширено валідатор `IsValidDirectDownloadUrl` та реалізовано збереження `.nro` у `/switch/` із можливістю негайного запуску.
+
+## Попередній delivery: v0.13.524 — USB 3.0 indicator, waiting screen anti-overlap layout & screensaver clean title display
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Індикатор USB 3.0 та швидкість з'єднання (`sphaira/include/ui/nvg_util.hpp`, `sphaira/source/ui/nvg_util.cpp`, `sphaira/source/ui/menus/menu_base.cpp`, `sphaira/source/ui/menus/dbi_menu.cpp`)**:
+   - Створено функцію малювання векторної іконки USB `gfx::drawUsbIcon(vg, x, y, size, col)` (стандартний тризуб з верхньою стрілкою, квадратною та круглою гілками).
+   - Інтегровано перевірку конфігурації `usb30_force_enabled` з `system_settings.ini` та опитування апаратного лінку `usbDsGetSpeed(&speed)`.
+   - У глобальному хедері `MenuBase::DrawChrome` над графіками пам'яті виведено бейдж `[ USB 3.0 ]` поряд із MTP та FTP.
+   - На екрані очікування встановлення по USB (`dbi_menu.cpp`) розміщено статусний бейдж на `y = 180.f` з іконкою USB та деталізацією швидкості (`USB 3.0 SuperSpeed (5 Gbps)` або `USB 2.0 High Speed (480 Mbps)`).
+2. **Динамічна розмітка екрану очікування без перекриттів (`sphaira/source/ui/menus/dbi_menu.cpp`)**:
+   - Основні інструкції розміщено на `y = 250.f`, розрахунок висоти тексту виконується динамічно через `nvgTextBoxBounds`.
+   - Попередження про Applet Mode винесено в окрему виділену плашку з м'яким бордером і гарантованим відступом строго нижче основного тексту (`std::max(text_bounds[3] + 35.f, 470.f)`), що виключає будь-яке налізання елементів.
+3. **Чисте відображення назви гри у скрінсейвері (`sphaira/source/ui/menus/dbi_menu.cpp`, `sphaira/source/ui/screensaver.cpp`)**:
+   - Усунуто додавання технічних хешів/імен NCA/NCZ файлів (`.nca`/`.ncz`) до назви гри, залишено лише змістовні статуси (наприклад, "Updating ncm database").
+   - У `screensaver.cpp` розширено ширину блоку до 840 пікселів (з безпечним 50px OLED burn-in запасом) та додано плавне адаптивне зменшення шрифту з лівим прив'язуванням для дуже довгих назв, гарантуючи, що перші слова назви гри ніколи не зрізаються.
+4. **Зменшення шрифту пам'яті та усунення налізання на рядок прошивки/Кефіру (`sphaira/source/ui/menus/menu_base.cpp`)**:
+   - Розмір шрифту `storage_font` для міток `NAND`, `SD` та чисел пам'яті зменшено з 19.05px до 15.5px.
+   - Позицію `badge_y` піднято до 17.f, що забезпечило комфортний вертикальний відступ і ліквідувало налізання верхніх країв літер пам'яті на рядок системної версії/Kefir.
+5. **Статусний бейдж EmuNAND/SysNAND та 3-сторонній симетричний розподіл у хедері (`sphaira/source/ui/menus/menu_base.cpp`, `sphaira/source/hats_version.cpp`)**:
+   - Створено статусний бейдж режиму NAND з адаптивним розгортанням (`EmuNAND` зеленого кольору в EmuNAND при наявності місця, `E` при обмеженому просторі з USB 3.0; аналогічно `SysNAND`/`S`).
+   - Усунуто дублювання `|E`/`|S` наприкінці системного рядка версії Atmosphere/Kefir.
+   - Інформацію згруповано у два блоки: Блок 1 (бейджі MTP, FTP, USB 3.0, EmuNAND/E) та Блок 2 (версія Кефіру та ОС).
+   - Реалізовано динамічний розрахунок рівних інтервалів: відстань від лівого краю сховища до Блоку 1, відстань між Блоком 1 і Блоком 2, та відстань від Блоку 2 до правого краю сховища абсолютно однакові ($M = (W_{span} - (W_1 + W_2)) / 3$).
+6. **Unit-тести та верифікація**:
+   - Створено `tests/test_screensaver_title.cpp` (11 checks), `tests/test_usb3_indicator.cpp` (12 checks) та оновлено `tests/test_header_service_indicators.cpp` (31 checks).
+   - Пройдено всі 22 набори host unit-тестів у WSL (`tests/run.sh`).
+   - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.523 — Header Kefir version, System OS Firmware & EmuNAND/SysNAND indicator
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Зчитування та форматування системної версії (`sphaira/include/hats_version.hpp`, `sphaira/source/hats_version.cpp`)**:
+   - Реалізовано функцію `getKefirVersion()`, що перевіряє `/switch/kefir-updater/version` або `HATS_VERSION.txt`.
+   - Реалізовано `getSystemVersionString()`, що формує рядок за форматом системних налаштувань Switch: `<Kefir> · <FW>|AMS <AMS>|<E/S>` (наприклад `Kefir 802 · 19.0.1|AMS 1.8.0|E` або `19.0.1|AMS 1.8.0|E`).
+2. **Відображення у хедері (`sphaira/source/ui/menus/menu_base.cpp`)**:
+   - Одноразово кешовано результат у `MenuBase::GetPolledData` (нульовий оверхед).
+   - У `MenuBase::DrawChrome` рядок виводиться на висоті `y = 19.f` з правим вирівнюванням по осі `storage_right`, гармонійно доповнюючи бейджі MTP/FTP зліва.
+3. **Unit-тести та верифікація**:
+   - Оновлено `tests/test_header_service_indicators.cpp` (28 checks) з тестуванням усіх варіацій (Kefir + FW + AMS + EmuNAND/SysNAND).
+   - Пройдено всі 20 наборів host unit-тестів у WSL (`tests/run.sh`).
+
+## Попередній delivery: v0.13.522 — Exact NAND-edge boundary calculation & conditional anti-overlap marquee
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Точне позиціонування зони скролінгу від правого краю блоку NAND (`sphaira/source/ui/menus/menu_base.cpp`)**:
+   - Розрахунок геометрії сховища перенесено перед відмальовуванням першого рядка (Wi-Fi/IP).
+   - Обчислюється точна координата правого краю тексту пам'яті NAND: `nand_right = value_x + nand_val_w`.
+   - Ліва межа доступного вікна мережі встановлюється як `net_left = nand_right + 12.f`, що дає максимально можливий простір до `bar_right`.
+   - Якщо довжина рядка мережі `net_text_w > (bar_right - net_left)` (є нахльост на блок NAND), вмикається плавний біжучий рядок через `m_scroll_network.Draw` з відсіканням строго на `net_left`.
+   - Якщо нахльосту немає (`net_text_w <= bar_right - net_left`), рядок відображається статично вирівняним праворуч без скролінгу.
+2. **Unit-тести та збірка**:
+   - Оновлено [**`tests/test_header_network_layout.cpp`**](tests/test_header_network_layout.cpp) з моделюванням точного розрахунку відступу від правого краю тексту NAND.
+   - Пройдено всі 20 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.521 — Header MTP and FTP background service indicators above NAND/SD
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Інтеграція статусу фонових служб (`sphaira/include/ui/menus/menu_base.hpp`, `sphaira/source/ui/menus/menu_base.cpp`)**:
+   - У структуру `PolledData` додано прапорці `bool mtp_running{}` та `bool ftp_running{}`.
+   - Метод `MenuBase::GetPolledData` щосекунди оновлює статус служб через легкі виклики `sphaira::haze::IsRunning()` та `sphaira::ftpsrv::IsRunning()`.
+2. **Геометричне розміщення та колірне кодування в інтерфейсі (`MenuBase::DrawChrome`)**:
+   - Індикатори `MTP` та `FTP` розміщено над рядками сховищ NAND/SD на базовій лінії `y = 29.f` (`storage_mid - storage_gap * 1.5f`), що забезпечує ідеальний 20-піксельний вертикальний крок відносно рядка NAND (`y=49.f`) та SD (`y=69.f`).
+   - Позиціонування починається від лівої межі блоку пам'яті (`label_x`), утворюючи єдину вертикальну вісь з підписами дисків.
+   - Коли служба активна та слухає порт/з'єднання, відповідний напис забарвлюється у яскраво-зелений колір `nvgRGBA(76, 190, 120, 255)`; коли неактивна — у приглушений сірий колір теми `ThemeEntryID_TEXT_INFO`.
+3. **Unit-тести та збірка**:
+   - Створено набір unit-тестів [**`tests/test_header_service_indicators.cpp`**](tests/test_header_service_indicators.cpp) (20 checks: перевірка розрахунку координат, вертикального кроку, ширини та мапінгу кольорів).
+   - Пройдено всі 20 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL з розгортанням на `F:\switch\kefir-hub.nro`.
+
+## Попередній delivery: v0.13.520 — Header network SSID & IP anti-overlap scrolling marquee
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Ізоляція та скролінг мережевого статусу (`sphaira/include/ui/menus/menu_base.hpp`, `sphaira/source/ui/menus/menu_base.cpp`)**:
+   - У клас `MenuBase` додано екземпляр `ScrollingText m_scroll_network`.
+   - У `MenuBase::DrawChrome` обчислюються точні межі слота мережевого тексту: ліва межа `net_x = start_x` (що гарантує щонайменше 10 пікселів відстані від правого краю індикаторів NAND/SD пам'яті `storage_right`), права межа `bar_right = 1220.f`, ширина `net_w = bar_right - net_x`.
+   - Якщо довжина рядка (SSID + IP) перевищує ширину виділеного слота, активується плавний скролінг через `m_scroll_network.Draw` з апаратним scissor-відсіканням. Довгі назви точок доступу більше ніколи не налізають на числа та смуги сховища NAND.
+   - Якщо рядок уміщується в слот, він вирівнюється праворуч без скролінгу, зберігаючи естетичне вирівнювання з годинником та батареєю.
+2. **Unit-тести та верифікація**:
+   - Створено набір unit-тестів [**`tests/test_header_network_layout.cpp`**](tests/test_header_network_layout.cpp) (25 перевірок: форматування SSID/IP/LAN/No Internet, розрахунок меж слота, гарантія відсутності перекриття NAND/SD, активація скролінгу).
+   - Пройдено всі 19 наборів host unit-тестів та обидва shape-checks у WSL (`tests/run.sh`).
+   - Успішно скомпільовано цільовий бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.519 — AppStore EntryMenu layout anti-overlap & instant launch state transition
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Фіксація координат кнопок та блоку метаданих (`sphaira/source/ui/menus/appstore.cpp`)**:

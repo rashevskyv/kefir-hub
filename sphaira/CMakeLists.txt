@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.519)
+set(sphaira_VERSION 0.13.525)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -97,6 +97,7 @@ add_executable(sphaira
     source/ui/scrolling_text.cpp
     source/ui/forwarder_editor.cpp
     source/ui/steamgriddb_icon.cpp
+    source/ui/remote_input.cpp
 
     source/app.cpp
     source/app_settings.cpp

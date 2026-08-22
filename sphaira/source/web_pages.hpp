@@ -691,10 +691,86 @@ const pct=s.total>0?Math.min(100,Math.round((s.bytes/s.total)*100)):0;
 c.innerHTML='<div class="name">'+s.name.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]))+'</div>'+
 '<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div>'+
 '<div class="pct">'+pct+'%</div>';
-}catch(e){}
+    }catch(e){}
 }
 poll();
 setInterval(poll,1000);
+</script>
+</body></html>
+)HTML";
+
+constexpr std::string_view REMOTE_INPUT_PAGE = R"HTML(
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Remote Input &bull; Kefir Hub</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;box-sizing:border-box}
+.card{max-width:520px;width:100%;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:24px;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+h1{font-size:20px;margin:0 0 8px;color:#f4f4f5}
+p{color:#a1a1aa;font-size:14px;line-height:1.5;margin:0 0 16px}
+input,textarea{width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border-radius:8px;border:1px solid #3f3f46;background:#27272a;color:#f4f4f5;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,0.2)}
+textarea{min-height:120px;resize:vertical}
+.btn-row{display:flex;gap:10px;margin-top:14px}
+button{flex:1;padding:12px;font-size:15px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer;transition:background 0.2s}
+button:hover{background:#0369a1}
+button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
+.btn-secondary{flex:0 0 auto;background:#3f3f46;color:#e4e4e7}
+.btn-secondary:hover{background:#52525b}
+.msg{margin-top:14px;font-size:14px;min-height:20px}
+.ok{color:#4ade80}
+.err{color:#f87171}
+</style>
+</head><body>
+<div class="card">
+<h1 id="title">Remote Input</h1>
+<p id="guide">Send text or URL directly to Nintendo Switch.</p>
+<div id="input-container">
+  <input id="text-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Enter text or URL...">
+</div>
+<div class="btn-row">
+  <button id="paste-btn" class="btn-secondary" type="button">Paste</button>
+  <button id="send-btn" type="button">Send to Switch</button>
+</div>
+<div class="msg" id="msg"></div>
+</div>
+<script>
+const titleEl=document.getElementById('title'),guideEl=document.getElementById('guide'),container=document.getElementById('input-container'),pasteBtn=document.getElementById('paste-btn'),sendBtn=document.getElementById('send-btn'),msg=document.getElementById('msg');
+let field=document.getElementById('text-input');
+async function init(){
+  try{
+    const res=await fetch('/input/config');
+    if(res.ok){
+      const cfg=await res.json();
+      if(cfg.title)titleEl.textContent=cfg.title;
+      if(cfg.guide)guideEl.textContent=cfg.guide;
+      if(cfg.multiline){
+        container.innerHTML='<textarea id="text-input" spellcheck="false"></textarea>';
+        field=document.getElementById('text-input');
+      }
+      if(cfg.placeholder)field.placeholder=cfg.placeholder;
+      if(cfg.default_text)field.value=cfg.default_text;
+    }
+  }catch(e){}
+  field.focus();
+}
+pasteBtn.addEventListener('click',async()=>{
+  try{
+    const text=await navigator.clipboard.readText();
+    if(text){field.value=text;msg.className='msg ok';msg.textContent='Pasted from clipboard.';}
+  }catch(e){msg.className='msg err';msg.textContent='Clipboard permission denied. Paste manually.';}
+});
+sendBtn.addEventListener('click',async()=>{
+  const val=field.value.trim();
+  if(!val){msg.className='msg err';msg.textContent='Please enter or paste text first.';return;}
+  sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
+  try{
+    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val});
+    if(res.ok){msg.className='msg ok';msg.textContent='✓ Sent successfully! You can close this page.';}
+    else{msg.className='msg err';msg.textContent='Console rejected the input.';sendBtn.disabled=false;pasteBtn.disabled=false;}
+  }catch(e){msg.className='msg err';msg.textContent='Could not connect to console.';sendBtn.disabled=false;pasteBtn.disabled=false;}
+});
+init();
 </script>
 </body></html>
 )HTML";

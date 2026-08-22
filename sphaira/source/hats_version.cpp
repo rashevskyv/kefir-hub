@@ -87,15 +87,67 @@ std::string getAtmosphereVersion() {
         res = std::to_string((version >> 56) & ((1 << 8) - 1)) + "." +
               std::to_string((version >> 48) & ((1 << 8) - 1)) + "." +
               std::to_string((version >> 40) & ((1 << 8) - 1));
-
-        u64 emummc;
-        if (R_SUCCEEDED(splGetConfig((SplConfigItem)65007, &emummc))) {
-            res += emummc ? "|E" : "|S";
-        }
     }
 
     splExit();
     return res;
+}
+
+std::string getKefirVersion() {
+    FILE* f = fopen("/switch/kefir-updater/version", "r");
+    if (f) {
+        char buf[64];
+        if (fgets(buf, sizeof(buf), f)) {
+            fclose(f);
+            size_t len = std::strlen(buf);
+            while (len > 0 && (buf[len - 1] == '\r' || buf[len - 1] == '\n' || buf[len - 1] == ' ')) {
+                buf[--len] = '\0';
+            }
+            char* start = buf;
+            while (*start == ' ' || *start == '\t') {
+                start++;
+            }
+            if (*start != '\0' && std::strcmp(start, "Not Found") != 0 && std::strcmp(start, "Unknown") != 0) {
+                std::string s(start);
+                if (s.rfind("kefir", 0) != 0 && s.rfind("Kefir", 0) != 0) {
+                    return "Kefir " + s;
+                }
+                return s;
+            }
+        } else {
+            fclose(f);
+        }
+    }
+
+    std::string hats = getHatsVersion();
+    if (hats != "Not Found" && hats != "Unknown") {
+        return hats;
+    }
+
+    return "";
+}
+
+std::string getSystemVersionString() {
+    std::string fw = getSystemFirmware();
+    std::string ams = getAtmosphereVersion();
+    std::string kefir = getKefirVersion();
+
+    std::string sys_str;
+    if (fw != "Unknown" && ams != "Unknown") {
+        sys_str = fw + "|AMS " + ams;
+    } else if (fw != "Unknown") {
+        sys_str = fw;
+    } else if (ams != "Unknown") {
+        sys_str = "AMS " + ams;
+    }
+
+    if (!kefir.empty()) {
+        if (!sys_str.empty()) {
+            return kefir + " · " + sys_str;
+        }
+        return kefir;
+    }
+    return sys_str;
 }
 
 bool isErista() {

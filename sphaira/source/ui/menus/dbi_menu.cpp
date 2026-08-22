@@ -21,6 +21,7 @@
 
 #include "title_info.hpp"
 #include "version_compare.hpp"
+#include "ui/menus/settings/settings_fs_utils.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -580,7 +581,14 @@ auto Menu::ComputeSaverInfo() -> SaverInfo {
         }
 
         info.file = m_current_title;
-        if (!m_current_transfer.empty()) {
+        if (info.file.empty() && m_current_package < m_queue.size()) {
+            info.file = m_queue[m_current_package].file_name;
+        }
+        if (!m_current_transfer.empty() &&
+            !path::EndsWithIC(m_current_transfer, ".nca") &&
+            !path::EndsWithIC(m_current_transfer, ".ncz") &&
+            m_current_transfer.find(".nca") == std::string::npos &&
+            m_current_transfer.find(".ncz") == std::string::npos) {
             info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
         }
         info.package = std::min(m_current_package + 1, m_queue.size());
@@ -629,27 +637,68 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const auto state = m_state.load();
 
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing) {
-        // the raw usb link state, polled once a second. "Detached" means the
-        // console is not on the bus at all -- the host never saw us attach, so
-        // no pc side app can help; anything past it means we are attached and
-        // the problem is further up. Worth seeing while waiting, because the
-        // two look identical from here otherwise.
-        if (state == State::WaitingForUsb) {
-            if (!m_usb_link_buf[0] || m_usb_poll_ts.GetSeconds() >= 1) {
-                m_usb_poll_ts.Update();
+        UsbState usb_state{UsbState_Detached};
+        usbDsGetState(&usb_state);
 
-                UsbState usb_state{UsbState_Detached};
-                usbDsGetState(&usb_state);
+        UsbDeviceSpeed speed{(UsbDeviceSpeed)UsbDeviceSpeed_None};
+        usbDsGetSpeed(&speed);
 
-                UsbDeviceSpeed speed{(UsbDeviceSpeed)UsbDeviceSpeed_None};
-                usbDsGetSpeed(&speed);
+        const bool is_usb3_forced = !settings::detail::IniValueEquals("/atmosphere/config/system_settings.ini", "usb", "usb30_force_enabled", "u8!0x0");
+        const bool is_super_speed = (speed == UsbDeviceSpeed_Super);
+        const bool is_usb3 = is_usb3_forced || is_super_speed;
 
-                std::snprintf(m_usb_link_buf, sizeof(m_usb_link_buf), "USB: %s | %s",
-                    i18n::get(GetUsbDsStateStr(usb_state)).c_str(), i18n::get(GetUsbDsSpeedStr(speed)).c_str());
+        // Draw USB Status Pill/Badge at y = 180.f
+        {
+            std::string usb_status_text;
+            if (state == State::WaitingForUsb && usb_state == UsbState_Detached) {
+                usb_status_text = is_usb3
+                    ? "USB 3.0 Enabled · Waiting for PC connection"_i18n
+                    : "USB 2.0 · Waiting for PC connection"_i18n;
+            } else if (is_super_speed) {
+                usb_status_text = "USB 3.0 SuperSpeed (5 Gbps)"_i18n;
+            } else if (is_usb3_forced) {
+                usb_status_text = "USB 3.0 Enabled · Link: USB 2.0 High Speed (480 Mbps)"_i18n;
+            } else {
+                usb_status_text = "USB 2.0 High Speed (480 Mbps)"_i18n;
             }
 
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, 240.f, 20.f,
-                NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", m_usb_link_buf);
+            const float badge_h = 36.f;
+            const float badge_y = 180.f;
+            const float badge_font = 16.f;
+            nvgFontSize(vg, badge_font);
+            float b[4]{};
+            gfx::textBounds(vg, 0, 0, b, usb_status_text.c_str());
+            const float text_w = b[2] - b[0];
+            const float icon_sz = 22.f;
+            const float badge_w = text_w + icon_sz + 36.f;
+            const float badge_x = (SCREEN_WIDTH - badge_w) / 2.f;
+
+            const NVGcolor bg_col = is_usb3
+                ? nvgRGBA(20, 50, 75, 200)
+                : nvgRGBA(45, 45, 50, 180);
+            const NVGcolor border_col = is_usb3
+                ? nvgRGBA(80, 170, 255, 180)
+                : nvgRGBA(90, 90, 95, 150);
+            const NVGcolor icon_col = is_usb3
+                ? nvgRGBA(80, 170, 255, 255)
+                : theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const NVGcolor text_col = is_usb3
+                ? nvgRGBA(230, 245, 255, 255)
+                : theme->GetColour(ThemeEntryID_TEXT);
+
+            gfx::drawRect(vg, badge_x, badge_y, badge_w, badge_h, bg_col, 8.f);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, badge_x, badge_y, badge_w, badge_h, 8.f);
+            nvgStrokeColor(vg, border_col);
+            nvgStrokeWidth(vg, 1.5f);
+            nvgStroke(vg);
+
+            // Draw USB trident icon
+            gfx::drawUsbIcon(vg, badge_x + 12.f, badge_y + (badge_h - icon_sz) / 2.f, icon_sz, icon_col);
+
+            // Draw status text
+            gfx::drawTextArgs(vg, badge_x + 12.f + icon_sz + 8.f, badge_y + badge_h * 0.5f, badge_font,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col, "%s", usb_status_text.c_str());
         }
 
         const auto text = state == State::WaitingForUsb
@@ -657,13 +706,40 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             : state == State::WaitingForList
                 ? "PC connected. Now pick the packages in your PC app and start the transfer.\n\nDBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy are all understood."_i18n
                 : "Analysing packages (nothing is being installed)..."_i18n;
-        gfx::drawTextBox(vg, (SCREEN_WIDTH - 1000.f) / 2.f, 290.f, 26.f, 1000.f,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        const float main_text_y = 250.f;
+        const float main_text_w = 1000.f;
+        const float main_text_x = (SCREEN_WIDTH - main_text_w) / 2.f;
+
+        float text_bounds[4]{};
+        nvgFontSize(vg, 24.f);
+        nvgTextBoxBounds(vg, main_text_x, main_text_y, main_text_w, text.c_str(), nullptr, text_bounds);
+
+        gfx::drawTextBox(vg, main_text_x, main_text_y, 24.f, main_text_w,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.35f);
 
         if (!m_local_fs && App::IsApplet()) {
             const auto warning = "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n;
-            gfx::drawTextBox(vg, (SCREEN_WIDTH - 850.f) / 2.f, 440.f, 20.f, 850.f,
-                theme->GetColour(ThemeEntryID_TEXT_INFO), warning.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
+            const float warn_y = std::max(text_bounds[3] + 35.f, 470.f);
+            const float warn_w = 900.f;
+            const float warn_x = (SCREEN_WIDTH - warn_w) / 2.f;
+            const float warn_pad_y = 12.f;
+
+            float warn_bounds[4]{};
+            nvgFontSize(vg, 19.f);
+            nvgTextBoxBounds(vg, warn_x + 20.f, warn_y + warn_pad_y, warn_w - 40.f, warning.c_str(), nullptr, warn_bounds);
+            const float warn_h = (warn_bounds[3] - warn_bounds[1]) + warn_pad_y * 2.f;
+
+            // Soft warning card container
+            gfx::drawRect(vg, warn_x, warn_y, warn_w, warn_h, nvgRGBA(140, 40, 35, 45), 6.f);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, warn_x, warn_y, warn_w, warn_h, 6.f);
+            nvgStrokeColor(vg, nvgRGBA(220, 80, 70, 140));
+            nvgStrokeWidth(vg, 1.5f);
+            nvgStroke(vg);
+
+            gfx::drawTextBox(vg, warn_x + 20.f, warn_y + warn_pad_y, 19.f, warn_w - 40.f,
+                nvgRGBA(255, 180, 175, 255), warning.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.3f);
         }
         return;
     }
@@ -827,9 +903,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
     }
     DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
-    if (!m_current_title.empty()) {
-        const auto title = m_current_transfer.empty()
-            ? m_current_title : m_current_title + " — " + m_current_transfer;
+    const auto display_title = !m_current_title.empty()
+        ? m_current_title
+        : (m_current_package < m_queue.size() ? m_queue[m_current_package].file_name : "");
+    if (!display_title.empty()) {
+        std::string title = display_title;
+        if (!m_current_transfer.empty() &&
+            !path::EndsWithIC(m_current_transfer, ".nca") &&
+            !path::EndsWithIC(m_current_transfer, ".ncz") &&
+            m_current_transfer.find(".nca") == std::string::npos &&
+            m_current_transfer.find(".ncz") == std::string::npos) {
+            title += " — " + m_current_transfer;
+        }
         nvgSave(vg);
         nvgIntersectScissor(vg, 70.f, GetY() + 38.f, 1140.f, 25.f);
         gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,

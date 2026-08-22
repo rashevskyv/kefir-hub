@@ -379,6 +379,53 @@ void drawActionIcon(NVGcontext* vg, const Theme* theme, float x, float y, float 
     }
 }
 
+void drawUsbIcon(NVGcontext* vg, float x, float y, float size, const NVGcolor& colour) {
+    const float s = size / 24.f;
+    const auto line = [&](float x1, float y1, float x2, float y2) {
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, x + x1 * s, y + y1 * s);
+        nvgLineTo(vg, x + x2 * s, y + y2 * s);
+        nvgStrokeColor(vg, colour);
+        nvgStrokeWidth(vg, 1.8f * s);
+        nvgLineCap(vg, NVG_ROUND);
+        nvgStroke(vg);
+    };
+
+    // Central trunk
+    line(12.f, 6.f, 12.f, 19.f);
+
+    // Bottom base circle
+    nvgBeginPath(vg);
+    nvgCircle(vg, x + 12.f * s, y + 19.f * s, 2.2f * s);
+    nvgFillColor(vg, colour);
+    nvgFill(vg);
+
+    // Top arrow (triangle pointing up)
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, x + 12.f * s, y + 2.5f * s);
+    nvgLineTo(vg, x + 9.5f * s, y + 6.5f * s);
+    nvgLineTo(vg, x + 14.5f * s, y + 6.5f * s);
+    nvgClosePath(vg);
+    nvgFillColor(vg, colour);
+    nvgFill(vg);
+
+    // Right branch: diagonal to square
+    line(12.f, 13.f, 17.f, 9.f);
+    line(17.f, 9.f, 17.f, 7.5f);
+    nvgBeginPath(vg);
+    nvgRect(vg, x + 15.2f * s, y + 5.5f * s, 3.6f * s, 3.6f * s);
+    nvgFillColor(vg, colour);
+    nvgFill(vg);
+
+    // Left branch: diagonal to small circle
+    line(12.f, 15.f, 7.f, 11.5f);
+    line(7.f, 11.5f, 7.f, 9.5f);
+    nvgBeginPath(vg);
+    nvgCircle(vg, x + 7.f * s, y + 8.5f * s, 2.0f * s);
+    nvgFillColor(vg, colour);
+    nvgFill(vg);
+}
+
 void drawText(NVGcontext* vg, float x, float y, float size, const char* str, const char* end, int align, const NVGcolor& c) {
     drawTextIntenal(vg, {x,y}, size, str, end, align, c);
 }

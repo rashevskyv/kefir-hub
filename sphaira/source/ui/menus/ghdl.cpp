@@ -2,6 +2,8 @@
 #include "ui/menus/homebrew.hpp"
 
 #include "ui/sidebar.hpp"
+#include "ui/remote_input.hpp"
+#include "nro.hpp"
 #include "swkbd.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -223,22 +225,38 @@ constexpr s64 MAX_DIRECT_LINK_SIZE = 20 * 1024 * 1024; // 20MB soft limit
 constexpr fs::FsPath DIRECT_LINK_TEMP{"/switch/sphaira/cache/github/direct_link.zip"};
 
 void DoDirectLinkDownload(const std::string& url) {
-    App::Push<ProgressBox>(0, "Downloading..."_i18n, "", [url](auto pbox) -> Result {
+    const bool is_nro = path::IsValidDirectNroUrl(url);
+
+    // Extract filename from URL
+    const auto q = url.find('?');
+    const auto path_only = (q != std::string::npos) ? url.substr(0, q) : url;
+    const auto slash = path_only.find_last_of('/');
+    std::string filename = (slash != std::string::npos) ? path_only.substr(slash + 1) : path_only;
+    if (filename.empty()) {
+        filename = is_nro ? "downloaded.nro" : "downloaded.zip";
+    }
+
+    const fs::FsPath dest_file = is_nro ? fs::FsPath("/switch/" + filename) : DIRECT_LINK_TEMP;
+
+    App::Push<ProgressBox>(0, "Downloading..."_i18n, filename, [url, is_nro, dest_file, filename](auto pbox) -> Result {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
 
-        fs.DeleteFile(DIRECT_LINK_TEMP);
-        ON_SCOPE_EXIT(fs.DeleteFile(DIRECT_LINK_TEMP));
+        if (is_nro) {
+            fs.CreateDirectoryRecursively("/switch");
+        } else {
+            fs.DeleteFile(DIRECT_LINK_TEMP);
+        }
 
         if (pbox->ShouldExit()) {
             return Result_TransferCancelled;
         }
 
         // Download the file
-        pbox->NewTransfer("Downloading..."_i18n);
+        pbox->NewTransfer("Downloading "_i18n + filename);
         const auto result = curl::Api().ToFile(
             curl::Url{url},
-            curl::Path{DIRECT_LINK_TEMP},
+            curl::Path{dest_file},
             curl::OnProgress{pbox->OnDownloadProgressCallback()}
         );
 
@@ -251,24 +269,40 @@ void DoDirectLinkDownload(const std::string& url) {
             return Result_TransferCancelled;
         }
 
-        // Extract the ZIP
-        pbox->NewTransfer("Extracting..."_i18n);
-        R_TRY(thread::TransferUnzipAll(pbox, DIRECT_LINK_TEMP, &fs, "/"));
+        // Extract if it is a ZIP archive
+        if (!is_nro) {
+            pbox->NewTransfer("Extracting..."_i18n);
+            R_TRY(thread::TransferUnzipAll(pbox, DIRECT_LINK_TEMP, &fs, "/"));
 
-        if (pbox->ShouldExit()) {
-            return Result_TransferCancelled;
+            if (pbox->ShouldExit()) {
+                return Result_TransferCancelled;
+            }
         }
 
         R_SUCCEED();
-    }, [](Result rc){
+    }, [is_nro, dest_file, filename](Result rc){
         if (rc == Result_TransferCancelled) {
+            App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
             return;
         }
-        App::PushErrorBox(rc, "Download failed!"_i18n);
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Download failed!"_i18n);
+            return;
+        }
 
-        if (R_SUCCEEDED(rc)) {
-            homebrew::SignalChange();
+        homebrew::SignalChange();
 
+        if (is_nro) {
+            App::Notify("Downloaded "_i18n + filename);
+            App::Push<OptionBox>(
+                "Downloaded "_i18n + filename + " to /switch/\n" + "Launch now?"_i18n,
+                "No"_i18n, "Launch"_i18n, 1, [dest_file](auto op_index){
+                    if (op_index && *op_index) {
+                        nro_launch(dest_file);
+                    }
+                }
+            );
+        } else {
             // Ask whether to delete the ZIP
             App::Push<OptionBox>(
                 "Download and extract completed!\nDelete ZIP file?"_i18n,
@@ -283,15 +317,14 @@ void DoDirectLinkDownload(const std::string& url) {
     });
 }
 
-void OpenDirectLinkPrompt() {
-    std::string url;
-    if (R_FAILED(swkbd::ShowText(url, "Enter ZIP URL", "https://")) || url.empty()) {
+void ProcessDirectLinkUrl(const std::string& url) {
+    if (url.empty()) {
         return;
     }
 
-    // Validate direct ZIP URL
-    if (!path::IsValidDirectZipUrl(url)) {
-        App::Push<OptionBox>("URL must be a valid HTTP(S) link ending with .zip"_i18n, "OK"_i18n);
+    // Validate direct download URL (.zip or .nro)
+    if (!path::IsValidDirectDownloadUrl(url)) {
+        App::Push<OptionBox>("URL must be a valid HTTP(S) link ending with .zip or .nro"_i18n, "OK"_i18n);
         return;
     }
 
@@ -324,6 +357,20 @@ void OpenDirectLinkPrompt() {
 
     // Size OK or unknown - proceed with download
     DoDirectLinkDownload(url);
+}
+
+void OpenDirectLinkPrompt() {
+    ui::remote_input::Options opts{
+        .title = "Direct Download"_i18n,
+        .guide = "Enter direct link to a .zip archive or .nro file"_i18n,
+        .default_text = "https://",
+        .placeholder = "https://example.com/app.nro or app.zip",
+        .multiline = false,
+    };
+
+    ui::remote_input::PromptTextInput(opts, [](const std::string& url){
+        ProcessDirectLinkUrl(url);
+    });
 }
 
 } // namespace

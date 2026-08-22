@@ -26,6 +26,13 @@ struct PolledData {
     s64 nand_total{};
     s64 sd_free{};
     s64 sd_total{};
+    // Background service status
+    bool mtp_running{};
+    bool ftp_running{};
+    bool usb3_enabled{};
+    bool is_emummc{};
+    // Full system version string (Kefir, firmware, AMS)
+    std::string sys_version{};
 };
 
 struct MenuBase : Widget {
@@ -103,6 +110,7 @@ private:
     ScrollingText m_scroll_title{};
     ScrollingText m_scroll_title_sub_heading{};
     ScrollingText m_scroll_sub_heading{};
+    ScrollingText m_scroll_network{};
 
     // left edge of the status block (storage bars), measured while drawing it.
     // The sub heading parks against it, so it has to survive the frame.
