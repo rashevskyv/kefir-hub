@@ -94,6 +94,10 @@ void List::OnUpdateTouchOnly(TouchInfo* touch, s64 count) {
 // Coasts the view after the finger leaves. Called every frame, before input, so
 // a fresh touch cancels whatever is still moving.
 void List::StepFling(TouchInfo* touch, s64 count, bool horizontal) {
+    if (!touch) {
+        return;
+    }
+
     // putting a finger down catches a list that is still coasting, whether the
     // touch turns out to be a drag or a tap.
     if (touch->is_touching && !m_was_touching) {
@@ -124,6 +128,10 @@ void List::StepFling(TouchInfo* touch, s64 count, bool horizontal) {
 }
 
 auto List::OnTouchScroll(TouchInfo* touch, s64 count, bool horizontal) -> bool {
+    if (!touch) {
+        return false;
+    }
+
     if (touch->is_scroll && touch->in_range(GetPos())) {
         const auto prog = horizontal
             ? (float)touch->initial.x - (float)touch->cur.x
@@ -376,31 +384,31 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    if (m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
+    if (controller && m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
+    } else if (controller && m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (!has_r && controller->GotDown(Button::R))) {
+    } else if (controller && GetPageJump() && (!has_r && controller->GotDown(Button::R))) {
         if (ScrollPageDown(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && (!has_l && controller->GotDown(Button::L))) {
+    } else if (controller && GetPageJump() && (!has_l && controller->GotDown(Button::L))) {
         if (ScrollPageUp(index, count)) {
             callback(false, index);
         }
-    } else if (controller->GotDown(Button::RIGHT)) {
+    } else if (controller && controller->GotDown(Button::RIGHT)) {
         if (ScrollDown(index, m_row, count)) {
             callback(false, index);
         }
-    } else if (controller->GotDown(Button::LEFT)) {
+    } else if (controller && controller->GotDown(Button::LEFT)) {
         if (ScrollUp(index, m_row, count)) {
             callback(false, index);
         }
-    } else if (touch->is_clicked && touch->in_range(GetPos())) {
+    } else if (touch && touch->is_clicked && touch->in_range(GetPos())) {
         auto v = m_v;
         v.x -= ClampX(m_yoff + m_y_prog, count);
 
@@ -419,7 +427,7 @@ void List::OnUpdateHome(Controller* controller, TouchInfo* touch, s64 index, s64
                 return;
             }
         }
-    } else {
+    } else if (touch) {
         OnTouchScroll(touch, count, true);
     }
 }
@@ -430,15 +438,15 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
     const bool has_r  = widget && widget->HasAction(Button::R);
     const bool has_l  = widget && widget->HasAction(Button::L);
 
-    if (m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
+    if (controller && m_fast_scroll && !has_r2 && controller->GotDown(Button::R2)) {
         if (ScrollToEnd(index, count)) {
             callback(false, index);
         }
-    } else if (m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
+    } else if (controller && m_fast_scroll && !has_l2 && controller->GotDown(Button::L2)) {
         if (ScrollToStart(index, count)) {
             callback(false, index);
         }
-    } else if (GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
+    } else if (controller && GetPageJump() && ((!has_r && controller->GotDown(Button::R)) || (m_row == 1 && controller->GotDown(Button::RIGHT)))) {
         if (m_row == 1) {
             if (ScrollStepList(index, count, true)) {
                 callback(false, index);
@@ -448,7 +456,7 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
                 callback(false, index);
             }
         }
-    } else if (GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
+    } else if (controller && GetPageJump() && ((!has_l && controller->GotDown(Button::L)) || (m_row == 1 && controller->GotDown(Button::LEFT)))) {
         if (m_row == 1) {
             if (ScrollStepList(index, count, false)) {
                 callback(false, index);
@@ -458,23 +466,23 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
                 callback(false, index);
             }
         }
-    } else if (controller->GotDown(Button::DOWN)) {
+    } else if (controller && controller->GotDown(Button::DOWN)) {
         if (ScrollDown(index, m_row, count)) {
             callback(false, index);
         }
-    } else if (controller->GotDown(Button::UP)) {
+    } else if (controller && controller->GotDown(Button::UP)) {
         if (ScrollUp(index, m_row, count)) {
             callback(false, index);
         }
-    } else if (m_row > 1 && controller->GotDown(Button::RIGHT)) {
+    } else if (controller && m_row > 1 && controller->GotDown(Button::RIGHT)) {
         if (ScrollDown(index, 1, count)) {
             callback(false, index);
         }
-    } else if (m_row > 1 && controller->GotDown(Button::LEFT)) {
+    } else if (controller && m_row > 1 && controller->GotDown(Button::LEFT)) {
         if (ScrollUp(index, 1, count)) {
             callback(false, index);
         }
-    } else if (touch->is_clicked && touch->in_range(GetPos())) {
+    } else if (touch && touch->is_clicked && touch->in_range(GetPos())) {
         auto v = m_v;
         v.y -= ClampY(m_yoff + m_y_prog, count);
 
@@ -509,7 +517,7 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
 
             v.x = x;
         }
-    } else {
+    } else if (touch) {
         OnTouchScroll(touch, count, false);
     }
 }

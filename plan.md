@@ -1,10 +1,25 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.528**. Завершені плани збережено в
+Поточний delivery — **v0.13.529**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.528 — HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration
+## Поточний delivery: v0.13.529 — Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Аналіз краш-звітів на карті пам'яті (`F:\atmosphere\crash_reports`)**:
+   - `01787411683_03db12780bd84000.log`, `01787411672_03db12780bd84000.log` та `01787411496_03db12780bd84000.log`.
+   - Виявлено розіменування нульового покажчика `x24` (`controller`) у `sphaira::ui::List::OnUpdateGrid` на адресі `PC = sphaira + 0xf08f4`, коли `Forwarder Editor` викликав `m_list->OnUpdate(nullptr, ...)` при фокусі на іконці.
+2. **Захист покажчиків у List (`sphaira/source/ui/list.cpp`)**:
+   - Додано перевірки `if (controller)` перед зверненням до методів контролера у `OnUpdateGrid` та `OnUpdateHome`.
+   - Додано захист `if (!touch)` у `StepFling` та `OnTouchScroll`.
+3. **Навігація фокусу D-Pad у Forwarder Editor (`sphaira/source/ui/forwarder_editor.cpp`)**:
+   - Додано перехід фокусу `DOWN` / `RIGHT` з іконки до списку налаштувань, та `LEFT` / `UP` (з першого рядка) назад на іконку.
+4. **Host unit-тести та верифікація**:
+   - Створено `tests/test_list_null_safety.cpp` (6 перевірок).
+   - Пройдено всі 24 набори unit-тестів у WSL.
+
+## Попередній delivery: v0.13.528 — HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Аналіз краш-звітів на карті пам'яті (`F:\atmosphere\crash_reports`)**:

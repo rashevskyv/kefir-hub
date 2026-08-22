@@ -1,9 +1,26 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.528** (2026-08-22). Попередні
+Актуальний delivery — **v0.13.529** (2026-08-22). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.529 — Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions
+
+- **Аналіз краш-звітів на підключеній SD-картці Switch (`F:\atmosphere\crash_reports`)**:
+  - `01787411683_03db12780bd84000.log`, `01787411672_03db12780bd84000.log` та `01787411496_03db12780bd84000.log`.
+  - Збій відбувався у `sphaira` за адресою `PC = sphaira + 0xf08f4` (`sphaira::ui::List::OnUpdateGrid`) із помилкою `Data Abort` (`2168-0002`) на адресі `0x0000000000000000`.
+  - Інструкція збою: `ldr x1, [x24]`. Регістр `X[24]` містив покажчик `Controller* controller`, який передавався як `nullptr`.
+- **Виявлення першопричини (Root Cause)**:
+  - У `sphaira/source/ui/forwarder_editor.cpp` прапорець `m_icon_focused` за замовчуванням ініціалізувався як `true`.
+  - Коли фокус знаходився на лівій панелі іконки, редактор передавав `nullptr` як покажчик контролера у список: `m_list->OnUpdate(nullptr, touch, ...)`, щоб список не перехоплював клавіші D-Pad.
+  - Проте у `sphaira/source/ui/list.cpp` функції `OnUpdateGrid` та `OnUpdateHome` безумовно викликали методи контролера `controller->GotDown(...)` без перевірки покажчика на `nullptr`. В результаті будь-яке натискання клавіші при відкритті вікна створення форвардера миттєво уроняло програму з null-pointer dereference.
+- **Виправлення**:
+  - **Захист покажчиків у `sphaira/source/ui/list.cpp`:** Усі звернення до `controller` у `OnUpdateGrid` та `OnUpdateHome` загорнуто в перевірки `if (controller)`. У функціях `StepFling` та `OnTouchScroll` додано захист `if (!touch)`.
+  - **Навігація фокусу D-Pad у `sphaira/source/ui/forwarder_editor.cpp`:** Реалізовано перехід між панеллю іконки та списком налаштувань (`DOWN` або `RIGHT` переходить до списку, `LEFT` або `UP` з верхнього пункту повертає на іконку).
+- **Тестування**:
+  - Створено unit-тест `tests/test_list_null_safety.cpp` (6 перевірок).
+  - Пройдено всі 24 набори unit-тестів у WSL.
 
 ## v0.13.528 — HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration
 

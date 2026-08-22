@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.528**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.529**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.528 (HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration)
+## Поточний delivery: v0.13.529 (Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions)
+
+- [x] `CRASH-LOG-TRACEBACK-529` — проведено аналіз crash-звітів `01787411683_03db12780bd84000.log`, `01787411672_03db12780bd84000.log` та `01787411496_03db12780bd84000.log` на підключеній SD-картці Switch (диск `F:`). З'ясовано, що у `sphaira` на адресі `PC = sphaira + 0xf08f4` (`sphaira::ui::List::OnUpdateGrid`) відбувався `Data Abort` на нульовій адресі `0x0000000000000000` через розіменування `controller` (`ldr x1, [x24]`), коли `Forwarder Editor` викликав `m_list->OnUpdate(nullptr, ...)` під час фокусу на іконці.
+- [x] `LIST-NULL-SAFETY-529` — у `sphaira/source/ui/list.cpp` додано повний захист покажчиків `controller` та `touch` у `OnUpdateGrid`, `OnUpdateHome`, `StepFling` та `OnTouchScroll`, що запобігає збоям при виклику з `nullptr`.
+- [x] `FORWARDER-DPAD-FOCUS-529` — у `sphaira/source/ui/forwarder_editor.cpp` реалізовано плавний перехід фокусу за допомогою D-Pad між іконкою та списком налаштувань (натискання `DOWN` або `RIGHT` переводить фокус у список, `LEFT` або `UP` з першого рядка повертає на іконку).
+- [x] `TEST-LIST-NULL-SAFETY-529` — створено host unit-тест `tests/test_list_null_safety.cpp` (6 перевірок), що тестує виклики `List::OnUpdate` з `controller=nullptr` та різними станами `TouchInfo`.
+- [x] `DOCS-BUMP-529` — версію піднято до `0.13.529` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 24 набори unit-тестів у WSL.
+
+## Попередній delivery: v0.13.528 (HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration)
 
 - [x] `CRASH-LOG-TRACEBACK-528` — проведено аналіз crash-звітів `01787404697_010000000000100d.log` (Album mode) та `01787404688_03db12780bd84000.log` (Forwarder mode). З'ясовано подвійну проблему: (1) в режимі Альбому лоадер жорстко передавав `AppletType_SystemApplication` замість `AppletType_LibraryApplet`, через що `NX-Activity-Log` намагався виділити 64.5 МБ пам'яті в 32-мегабайтному пулі аплету; (2) у форвардері функція `calculateMaxHeapSize` безумовно віднімала 96 МБ (`size -= 0x6000000`), що урізало купу до ~100 МБ і викликало збій `dc civac` на адресі `0x25fb8f000`.
 - [x] `HBL-APPLET-APPLICATION-DETECT-528` — у `hbl/source/main.c` додано `getIsApplication()` (через `svcGetInfo(..., InfoType_IsApplication)` та `pm:shell`) і `getIsAutomaticGameplayRecording()` (через `nsGetApplicationControlData`), що динамічно налаштовує `AppletType_LibraryApplet` або `AppletType_SystemApplication` і віднімає 96 МБ лише за реальної наявності `video_capture == 2`.

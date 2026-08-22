@@ -262,7 +262,7 @@ public:
         }
 
         if (m_icon_focused) {
-            if (controller->GotDown(Button::RIGHT)) {
+            if (controller->GotDown(Button::RIGHT) || controller->GotDown(Button::DOWN)) {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 m_icon_focused = false;
             }
@@ -278,7 +278,7 @@ public:
             return;
         }
 
-        if (controller->GotDown(Button::LEFT)) {
+        if (controller->GotDown(Button::LEFT) || (m_index == 0 && controller->GotDown(Button::UP))) {
             App::PlaySoundEffect(SoundEffect_Focus);
             m_icon_focused = true;
             return;
