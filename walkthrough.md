@@ -1,11 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.525** (2026-08-22). Попередні
+Актуальний delivery — **v0.13.526** (2026-08-22). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
-## v0.13.525 — Graceful Download Cancellation & Universal Remote Text/URL Transfer (QR / Web)
+## v0.13.526 — Menu Structure Refinement: Network Downloads & Custom Link moved to Software Menu
+
+- **Очищення меню оновлень Updater (`sphaira/source/ui/menus/kefir_menu.cpp`)**:
+  - З меню `Updater` вилучено блок `OTHER` (`Network Downloads` та `Custom Link`).
+  - Меню `Updater` тепер сфокусоване виключно на оновленнях ядра: **KEFIR** (пакети кефіру) та **FIRMWARE** (прошивки та ручне встановлення прошивок).
+- **Перенесення мережевих завантажень до Додаткових програм (`sphaira/source/ui/menus/settings_menu.cpp`)**:
+  - У меню **Software** (`SoftwareMenu`) додано два окремі пункти:
+    - **«Network Downloads»** (папка переходу) — відкриває завантажувач пакунків із GitHub (`App::Push<ui::menu::gh::Menu>`).
+    - **«Custom Link»** (дія) — відкриває універсальний діалог завантаження за прямими посиланнями `.nro`/`.zip` (`ui::menu::gh::DownloadDirectLink`) з вибором екранної клавіатури або дистанційного вводу з телефону/ПК.
+- **Оновлення описів у Tools Menu (`sphaira/source/ui/menus/tools_menu.cpp`)**:
+  - Підписи для карток `Updater` та `Software` оновлено для точного відображення їхнього нового вмісту.
 
 - **Коректна та дружня обробка скасування завантаження в AppStore (`sphaira/source/ui/menus/appstore.cpp`)**:
   - У `InstallApp` додано регулярну перевірку `pbox->ShouldExit()` після завантаження та перевірки хешів із поверненням `Result_TransferCancelled`.

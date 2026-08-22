@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.525**. Завершені плани збережено в
+Поточний delivery — **v0.13.526**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.525 — Graceful download cancellation & universal remote text/URL transfer
+## Поточний delivery: v0.13.526 — Menu Structure: Network Downloads & Custom Link to Software Menu
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Очищення меню оновлень Updater (`sphaira/source/ui/menus/kefir_menu.cpp`)**:
+   - Меню `Updater` звільнено від мережевих завантажень GitHub/Custom Link і сфокусовано виключно на KEFIR та FIRMWARE.
+2. **Перенесення до Software Menu (`sphaira/source/ui/menus/settings_menu.cpp`)**:
+   - Додано `Network Downloads` та `Custom Link` безпосередньо в список додаткових програм `Software`.
+3. **Оновлення описів карток у Tools Menu (`sphaira/source/ui/menus/tools_menu.cpp`)**:
+   - Актуалізовано підписи карток `Updater` та `Software`.
+
+## Попередній delivery: v0.13.525 — Graceful download cancellation & universal remote text/URL transfer
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Коректна обробка скасування в AppStore (`sphaira/source/ui/menus/appstore.cpp`)**:

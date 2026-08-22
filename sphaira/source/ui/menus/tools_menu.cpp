@@ -107,13 +107,13 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Themes"_i18n, "Download and install theme packs."_i18n, 0, [](){
             App::Push<ui::menu::settings::ThemesMenu>();
         }},
-        { "Updater"_i18n, "Update Kefir, firmware and network downloads."_i18n, 0, [](){
+        { "Updater"_i18n, "Update Kefir and firmware packages."_i18n, 0, [](){
             App::Push<ui::menu::kefir::Menu>();
         }},
         { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
             App::Push<ui::menu::save::SaveHubMenu>(MenuFlag_None);
         }},
-        { "Software"_i18n, "Homebrew App Store, DBI and mod utilities."_i18n, 0, [](){
+        { "Software"_i18n, "App Store, GitHub downloads, DBI and mod utilities."_i18n, 0, [](){
             App::Push<ui::menu::settings::SoftwareMenu>();
         }},
         { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){

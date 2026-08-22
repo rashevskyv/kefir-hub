@@ -5,6 +5,7 @@
 #include "ui/menus/settings/settings_fancurve.hpp"
 
 #include "ui/menus/appstore.hpp"
+#include "ui/menus/ghdl.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/homebrew.hpp"
@@ -888,6 +889,30 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
             App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
         },
         SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
+        "Network Downloads"_i18n,
+        "Download homebrew from GitHub repositories."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::gh::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
+        "Custom Link"_i18n,
+        "Direct download .zip or .nro from URL."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            ui::menu::gh::DownloadDirectLink();
+        },
+        SettingsItemKind::Action,
     });
 
     items.emplace_back(SettingsItem{

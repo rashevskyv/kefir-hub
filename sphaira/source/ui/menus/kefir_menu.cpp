@@ -305,10 +305,6 @@ void BuildSectionedEntries(std::vector<UpdaterEntry>& out, const std::vector<Upd
         .url = {},
         .pack = false,
     });
-
-    AddSectionEntry(out, "OTHER");
-    AddNetworkEntry(out);
-    AddCustomLinkEntry(out);
 }
 
 auto AddJsonEntries(yyjson_val* object, UpdaterEntryType type, std::vector<UpdaterEntry>& out, std::string& latest_kefir, bool& latest_from_pack) -> bool {

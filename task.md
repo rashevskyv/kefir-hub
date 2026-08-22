@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.525**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.526**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.525 (Graceful download cancellation & universal remote text/URL transfer)
+## Поточний delivery: v0.13.526 (Menu Structure: Network Downloads & Custom Link to Software Menu)
+
+- [x] `UPDATER-CLEANUP-526` — вилучено секцію `OTHER` (`Network Downloads` та `Custom Link`) з `BuildSectionedEntries` у `kefir_menu.cpp`; меню `Updater` сфокусовано виключно на оновленнях `KEFIR` та `FIRMWARE`.
+- [x] `SOFTWARE-NETWORK-DOWNLOADS-526` — додано пункти `Network Downloads` (відкриває GitHub Downloader) та `Custom Link` (відкриває Direct Download діалог з підтримкою QR/Web) у `BuildSoftwareItems()` в `settings_menu.cpp`.
+- [x] `TOOLS-MENU-DESCRIPTIONS-526` — оновлено описи карток `Updater` («Update Kefir and firmware packages.») та `Software` («App Store, GitHub downloads, DBI and mod utilities.») у `tools_menu.cpp`.
+- [x] `DOCS-BUMP-526` — версію піднято до `0.13.526` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `README.md`, пройдено всі 22 набори unit-тестів.
+
+## Попередній delivery: v0.13.525 (Graceful download cancellation & universal remote text/URL transfer)
 
 - [x] `APPSTORE-CANCEL-GRACEFUL-525` — усунуто появу аварійного діалогу `SphairaError_AppstoreFailedZipDownload` при перериванні завантаження або видалення в AppStore: додано повернення та обробку `Result_TransferCancelled` із виведенням спокійного інформаційного діалогу.
 - [x] `REMOTE-INPUT-MODULE-525` — створено загальний модуль `ui::remote_input` (`sphaira/include/ui/remote_input.hpp`, `sphaira/source/ui/remote_input.cpp`), веб-ендпоінти `/input`, `/remote-input`, `/input/config` та інтерфейс `REMOTE_INPUT_PAGE` для передачі тексту/посилань з телефону або ПК без ручного набору.
