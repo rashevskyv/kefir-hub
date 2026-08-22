@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.526**. Завершені плани збережено в
+Поточний delivery — **v0.13.527**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.526 — Menu Structure: Network Downloads & Custom Link to Software Menu
+## Поточний delivery: v0.13.527 — Software Menu Visual Separation: Dedicated Bottom Network Section
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Виділення секції мережевих завантажень у Software Menu (`sphaira/source/ui/menus/settings_menu.cpp`)**:
+   - `Network Downloads` та `Custom Link` перенесено в самий низ списку.
+   - Додано чіткий розділювач `MakeHeader("NETWORK DOWNLOADS")` з горизонтальною лінією (HR).
+   - `DrawActionListItem` підтримує відмальовку заголовків, а `SoftwareMenu::SetIndex` пропускає неінтерактивні рядки.
+
+## Попередній delivery: v0.13.526 — Menu Structure: Network Downloads & Custom Link to Software Menu
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Очищення меню оновлень Updater (`sphaira/source/ui/menus/kefir_menu.cpp`)**:

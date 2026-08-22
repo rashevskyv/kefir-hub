@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.526** (2026-08-22). Попередні
+Актуальний delivery — **v0.13.527** (2026-08-22). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.527 — Software Menu Visual Separation: Dedicated Bottom Network Section
+
+- **Візуальний розділювач та нижнє розміщення мережевих завантажень (`sphaira/source/ui/menus/settings_menu.cpp`)**:
+  - У меню **Software** (`SoftwareMenu`) перенесено пункти `Network Downloads` та `Custom Link` у самий низ списку.
+  - Додано чіткий візуальний заголовок-розділювач `MakeHeader("NETWORK DOWNLOADS")` з горизонтальною лінією (HR), що наочно відділяє локальні утиліти та мод-завантажувачі від інструментів прямих мережевих завантажень.
+  - У `DrawActionListItem` реалізовано коректне відображення заголовка секції (`SettingsItemKind::Header`), а в `SoftwareMenu::SetIndex` інтегровано `ResolveItemIndex` для автоматичного перестрибування курсору через неінтерактивні заголовки при навігації.
 
 ## v0.13.526 — Menu Structure Refinement: Network Downloads & Custom Link moved to Software Menu
 

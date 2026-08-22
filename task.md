@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.526**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.527**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.526 (Menu Structure: Network Downloads & Custom Link to Software Menu)
+## Поточний delivery: v0.13.527 (Software Menu Visual Separation: Dedicated Bottom Network Section)
+
+- [x] `SOFTWARE-SECTION-HEADER-527` — у `BuildSoftwareItems()` в `settings_menu.cpp` перенесено `Network Downloads` та `Custom Link` у самий кінець списку, додано розділювач `MakeHeader("NETWORK DOWNLOADS")` з лінією розмежування (HR); у `DrawActionListItem` реалізовано рендеринг заголовка секції, а в `SoftwareMenu::SetIndex` — пропуск неінтерактивних рядків через `ResolveItemIndex`.
+- [x] `DOCS-BUMP-527` — версію піднято до `0.13.527` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 22 набори unit-тестів та успішно зібрано бінарник `sphaira_nro` у WSL.
+
+## Попередній delivery: v0.13.526 (Menu Structure: Network Downloads & Custom Link to Software Menu)
 
 - [x] `UPDATER-CLEANUP-526` — вилучено секцію `OTHER` (`Network Downloads` та `Custom Link`) з `BuildSectionedEntries` у `kefir_menu.cpp`; меню `Updater` сфокусовано виключно на оновленнях `KEFIR` та `FIRMWARE`.
 - [x] `SOFTWARE-NETWORK-DOWNLOADS-526` — додано пункти `Network Downloads` (відкриває GitHub Downloader) та `Custom Link` (відкриває Direct Download діалог з підтримкою QR/Web) у `BuildSoftwareItems()` в `settings_menu.cpp`.

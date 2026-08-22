@@ -265,24 +265,6 @@ void AddSectionEntry(std::vector<UpdaterEntry>& out, std::string name) {
     });
 }
 
-void AddNetworkEntry(std::vector<UpdaterEntry>& out) {
-    out.push_back({
-        .type = UpdaterEntryType::Network,
-        .name = "Network Downloads",
-        .url = {},
-        .pack = false,
-    });
-}
-
-void AddCustomLinkEntry(std::vector<UpdaterEntry>& out) {
-    out.push_back({
-        .type = UpdaterEntryType::CustomLink,
-        .name = "Custom Link",
-        .url = {},
-        .pack = false,
-    });
-}
-
 void AppendEntriesOfType(std::vector<UpdaterEntry>& out, const std::vector<UpdaterEntry>& entries, UpdaterEntryType type) {
     for (const auto& entry : entries) {
         if (entry.type == type) {

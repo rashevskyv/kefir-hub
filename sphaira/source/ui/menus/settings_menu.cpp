@@ -892,30 +892,6 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
     });
 
     items.emplace_back(SettingsItem{
-        "Network Downloads"_i18n,
-        "Download homebrew from GitHub repositories."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::Push<ui::menu::gh::Menu>(MenuFlag_None);
-        },
-        SettingsItemKind::Folder,
-    });
-
-    items.emplace_back(SettingsItem{
-        "Custom Link"_i18n,
-        "Direct download .zip or .nro from URL."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            ui::menu::gh::DownloadDirectLink();
-        },
-        SettingsItemKind::Action,
-    });
-
-    items.emplace_back(SettingsItem{
         "DBI"_i18n,
         "DBI installer and translations."_i18n,
         [](){
@@ -971,6 +947,32 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
     }));
+
+    items.emplace_back(MakeHeader("NETWORK DOWNLOADS"_i18n));
+
+    items.emplace_back(SettingsItem{
+        "Network Downloads"_i18n,
+        "Download homebrew from GitHub repositories."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::gh::Menu>(MenuFlag_None);
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
+        "Custom Link"_i18n,
+        "Direct download .zip or .nro from URL (Keyboard or Phone/PC)."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            ui::menu::gh::DownloadDirectLink();
+        },
+        SettingsItemKind::Download,
+    });
 
     return items;
 }
@@ -2539,6 +2541,20 @@ namespace {
 
 
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected) {
+    if (item.kind == SettingsItemKind::Header) {
+        const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const float text_x = v.x + 18.f;
+        const float text_y = v.y + v.h - 22.f;
+        gfx::drawTextArgs(vg, text_x, text_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", item.label.c_str());
+        float bounds[4];
+        nvgFontSize(vg, 15.f);
+        gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+        const float rule_x = text_x + (bounds[2] - bounds[0]) + 12.f;
+        gfx::drawRect(vg, rule_x, text_y + 9.f, std::max(0.f, v.x + v.w - 20.f - rule_x), 1.f,
+            theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        return;
+    }
+
     const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
     const auto value = item.value ? item.value() : std::string{};
     const auto value_width = value.empty() ? 0.f : 224.f;
@@ -2647,7 +2663,7 @@ void SoftwareMenu::SetIndex(s64 index) {
         m_index = 0;
         return;
     }
-    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    m_index = ResolveItemIndex(m_items, index, m_index);
     if (!m_index) {
         m_list->SetYoff(0);
     }
