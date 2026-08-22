@@ -17,6 +17,9 @@ static const char g_noticeText[] = { "sphaira " VERSION };
 static u64 g_nroSize = 0;
 static NroHeader g_nroHeader = {0};
 
+static bool g_isApplication = false;
+static bool g_isAutomaticGameplayRecording = false;
+
 static enum {
     CodeMemoryUnavailable    = 0,
     CodeMemoryForeignProcess = BIT(0),
@@ -103,6 +106,59 @@ fail0:
     }
 }
 
+static void getIsApplication(void) {
+    Result rc;
+
+    // Try asking the kernel directly (only works on [9.0.0+] or mesosphère)
+    u64 flag = 0;
+    rc = svcGetInfo(&flag, InfoType_IsApplication, CUR_PROCESS_HANDLE, 0);
+    if (R_SUCCEEDED(rc)) {
+        g_isApplication = flag != 0;
+        return;
+    }
+
+    // Retrieve our process' PID
+    u64 cur_pid = 0;
+    rc = svcGetProcessId(&cur_pid, CUR_PROCESS_HANDLE);
+    if (R_FAILED(rc)) diagAbortWithResult(rc);
+
+    // Try reading the current application PID through pm:shell
+    rc = pmshellInitialize();
+    if (R_SUCCEEDED(rc)) {
+        u64 app_pid = 0;
+        rc = pmshellGetApplicationProcessIdForShell(&app_pid);
+        pmshellExit();
+
+        if (cur_pid == app_pid)
+            g_isApplication = true;
+    }
+}
+
+static void getIsAutomaticGameplayRecording(void) {
+    Result rc;
+
+    // Do nothing if the HOS version predates [4.0.0], or we're not an application.
+    if (hosversionBefore(4, 0, 0) || !g_isApplication)
+        return;
+
+    // Retrieve our process' Program ID
+    u64 cur_progid = 0;
+    rc = svcGetInfo(&cur_progid, InfoType_ProgramId, CUR_PROCESS_HANDLE, 0);
+    if (R_FAILED(rc)) diagAbortWithResult(rc);
+
+    // Try reading our NACP
+    rc = nsInitialize();
+    if (R_SUCCEEDED(rc)) {
+        NsApplicationControlData data;
+        u64 size = 0;
+        rc = nsGetApplicationControlData(NsApplicationControlSource_Storage, cur_progid, &data, sizeof(data), &size);
+        nsExit();
+
+        if (R_SUCCEEDED(rc) && data.nacp.video_capture == 2)
+            g_isAutomaticGameplayRecording = true;
+    }
+}
+
 static u64 calculateMaxHeapSize(void) {
     u64 size = 0;
     u64 mem_available = 0, mem_used = 0;
@@ -110,11 +166,11 @@ static u64 calculateMaxHeapSize(void) {
     svcGetInfo(&mem_available, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
     svcGetInfo(&mem_used, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
 
-    if (mem_available > mem_used+0x200000)
+    if (mem_available > mem_used + 0x200000)
         size = (mem_available - mem_used - 0x200000) & ~0x1FFFFF;
     if (size == 0)
-        size = 0x2000000*16;
-    if (size > 0x6000000)
+        size = 0x2000000 * 16;
+    if (size > 0x6000000 && g_isAutomaticGameplayRecording)
         size -= 0x6000000;
 
     return size;
@@ -346,6 +402,7 @@ void NX_NORETURN loadNro(void) {
         uint8_t *nrobuf = (uint8_t*) g_heapAddr;
         NroStart*  start  = (NroStart*)  (nrobuf + 0);
         header = (NroHeader*) (nrobuf + sizeof(NroStart));
+        uint8_t*   rest   = (uint8_t*)   (nrobuf + sizeof(NroStart) + sizeof(NroHeader));
 
         FsFileSystem fs;
         if (R_FAILED(rc = fsOpenSdCardFileSystem(&fs))) {
@@ -358,10 +415,28 @@ void NX_NORETURN loadNro(void) {
             diagAbortWithResult(rc);
         }
 
-        u64 bytes_read;
-        if (R_FAILED(rc = fsFileRead(&f, 0, start, g_heapSize, FsReadOption_None, &bytes_read)) ||
-            header->magic != NROHEADER_MAGIC ||
-            bytes_read < sizeof(*start) + sizeof(*header) + header->size) {
+        u64 bytes_read = 0;
+        s64 offset = 0;
+
+        if (R_FAILED(rc = fsFileRead(&f, offset, start, sizeof(*start), FsReadOption_None, &bytes_read)) ||
+            bytes_read != sizeof(*start)) {
+            diagAbortWithResult(rc);
+        }
+        offset += sizeof(*start);
+
+        if (R_FAILED(rc = fsFileRead(&f, offset, header, sizeof(*header), FsReadOption_None, &bytes_read)) ||
+            bytes_read != sizeof(*header) || header->magic != NROHEADER_MAGIC) {
+            diagAbortWithResult(rc);
+        }
+        offset += sizeof(*header);
+
+        if (header->size < sizeof(NroStart) + sizeof(NroHeader)) {
+            diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
+        }
+
+        const size_t rest_size = header->size - (sizeof(NroStart) + sizeof(NroHeader));
+        if (R_FAILED(rc = fsFileRead(&f, offset, rest, rest_size, FsReadOption_None, &bytes_read)) ||
+            bytes_read != rest_size) {
             diagAbortWithResult(rc);
         }
 
@@ -386,9 +461,13 @@ void NX_NORETURN loadNro(void) {
     memcpy(&g_nroHeader, header, sizeof(g_nroHeader));
     header = &g_nroHeader;
 
+    const size_t total_size = (header->size + header->bss_size + 0xFFF) & ~0xFFF;
+    if (total_size > header->size) {
+        memset((uint8_t*)g_heapAddr + header->size, 0, total_size - header->size);
+    }
+
     // Map code memory to a new randomized address
     virtmemLock();
-    const size_t total_size = (header->size + header->bss_size + 0xFFF) & ~0xFFF;
     void* map_addr = virtmemFindCodeMemory(total_size, 0);
     rc = svcMapProcessCodeMemory(g_procHandle, (u64)map_addr, (u64)g_heapAddr, total_size);
     virtmemUnlock();
@@ -439,7 +518,16 @@ void NX_NORETURN loadNro(void) {
         { EntryType_EndOfList,            0, {(u64)(uintptr_t)g_noticeText, sizeof(g_noticeText)} }
     };
 
-    ConfigEntry *entry_Syscalls = &entries[7];
+    ConfigEntry *entry_AppletType = &entries[2];
+    ConfigEntry *entry_Syscalls   = &entries[7];
+
+    if (g_isApplication) {
+        entry_AppletType->Value[0] = AppletType_SystemApplication;
+        entry_AppletType->Value[1] = EnvAppletFlags_ApplicationOverride;
+    } else {
+        entry_AppletType->Value[0] = AppletType_LibraryApplet;
+        entry_AppletType->Value[1] = 0;
+    }
 
     if (!(g_codeMemoryCapability & BIT(0))) {
         // Revoke access to svcCreateCodeMemory if it's not available.
@@ -489,6 +577,8 @@ void NX_NORETURN loadNro(void) {
 
 int main(int argc, char **argv) {
     memcpy(g_savedTls, (const u8*)armGetTls() + 0x100, 0x100);
+    getIsApplication();
+    getIsAutomaticGameplayRecording();
     setupHbHeap();
     getOwnProcessHandle();
     getCodeMemoryCapability();

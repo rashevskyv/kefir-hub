@@ -154,6 +154,13 @@ Sphaira features an embedded NX-Link server allowing wireless deployment and exe
 - **Path Normalization:** Received file paths are automatically sanitized (stripping redundant `sdmc:/` prefixes and enforcing native absolute paths), ensuring full compatibility with Horizon OS filesystem services.
 - **Safe Buffer Bounds:** Arguments and connection packets are bounds-checked with guaranteed null-termination.
 
+### Homebrew Loader Safety (HBL & Forwarder Isolation)
+
+The built-in Homebrew Loader (embedded within forwarder NSPs and chainloader pipelines) includes hardened NRO parsing and memory isolation:
+- **Exact Code Segment Reading:** Sequentially reads exact `NroStart` (16 bytes), `NroHeader` (112 bytes), and payload data strictly up to `header->size`. Appended RomFS assets, NACP metadata, and icons are never read into memory buffers, preventing payload overflow into target program address spaces.
+- **Deterministic BSS Memory Zeroing:** The unmapped BSS memory range (`[header->size, (header->size + header->bss_size + 0xFFF) & ~0xFFF]`) is explicitly zeroed before memory mapping (`svcMapProcessCodeMemory`), ensuring target homebrew applications (such as `NX-Activity-Log` and `pipensx`) start with clean uninitialized data sections and eliminating invalid pointer dereferences / Data Abort (`2168-0002`) cache maintenance crashes.
+- **Clean OverrideHeap Placement:** Accurately places `OverrideHeap` boundaries (`nro_heap_start` and `nro_heap_size`) immediately following the verified NRO code and BSS segments, guaranteeing that memory allocators (`dlmalloc`) initialize from clean, uncorrupted heap space.
+
 ## Fan curves & Fan sysmodule
 
 Sphaira includes a "Fan curve" settings menu under "Kefir Settings" to dynamically configure custom fan speed tables (Handheld and Docked modes).

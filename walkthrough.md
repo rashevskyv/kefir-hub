@@ -1,9 +1,26 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.527** (2026-08-22). Попередні
+Актуальний delivery — **v0.13.528** (2026-08-22). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.528 — HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration
+
+- **Аналіз свіжих краш-звітів на підключеній SD-картці Switch (`F:\atmosphere\crash_reports`)**:
+  - `01787404697_010000000000100d.log` (Album mode): `NX-Activity-Log` намагався виділити текстурний буфер розміром **64.5 МБ** (`X[20] = 0x04080000`), що в режимі аплету (ліміт ~32 МБ) призводило до миттєвого виходу за межі пам'яті на адресі `0x3155f5f000` та аварійного завершення `dc civac` із кодом Data Abort `2168-0002`.
+  - `01787404688_03db12780bd84000.log` (Forwarder mode): `NX-Activity-Log` падав на інструкції `dc civac` за адресою `0x25fb8f000` при виділенні 3.75 МБ буфера, оскільки функція `calculateMaxHeapSize` безумовно віднімала 96 МБ купи (`size -= 0x6000000`), обмежуючи купу форвардера лише ~100 МБ.
+- **Виявлення першопричини (Root Cause)**:
+  - **Хибний дескриптор AppletType:** `hbl/source/main.c` завжди передавав цільовим NRO прапорець `AppletType_SystemApplication` навіть у режимі Альбому, тому програми не обмежували алокації й не показували користувачеві попередження про Applet Mode.
+  - **Безпідставне урізання купи на 96 МБ:** Лоадер забирав 96 МБ пам'яті, призначені виключно для комерційних ігор із фоновим записом відео (`video_capture == 2`).
+  - **Залишковий стан сесії GPU:** У `sphaira/source/main.cpp` не викликався `nvExit()`, залишаючи ресурси драйвера Tegra та відеопам'ять відкритими для наступного NRO.
+- **Комплексні виправлення в коді**:
+  - **Динамічне визначення середовища в `hbl/source/main.c`:** Інтегровано `getIsApplication()` (через `svcGetInfo` та `pm:shell`) і `getIsAutomaticGameplayRecording()` (через `nsGetApplicationControlData`), що повертає цільовим NRO повний обсяг купи та коректний `AppletType_LibraryApplet` / `AppletType_SystemApplication`.
+  - **Детерміноване читання NRO та обнулення BSS:** Заборонено читання RomFS-ресурсів у буфер коду та додано обов'язкове `memset` секції BSS.
+  - **Звільнення сесії NV GPU в `sphaira/source/main.cpp`:** У `userAppExit()` додано `nvExit()`.
+- **Тестування**:
+  - Оновлено host unit-тест `tests/test_hbl_nro_reader.cpp` (528,394 перевірки).
+  - Усі 23 набори unit-тестів пройдено успішно.
 
 ## v0.13.527 — Software Menu Visual Separation: Dedicated Bottom Network Section
 

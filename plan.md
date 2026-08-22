@@ -1,10 +1,28 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.527**. Завершені плани збережено в
+Поточний delivery — **v0.13.528**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.527 — Software Menu Visual Separation: Dedicated Bottom Network Section
+## Поточний delivery: v0.13.528 — HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Аналіз краш-звітів на карті пам'яті (`F:\atmosphere\crash_reports`)**:
+   - `01787404697_010000000000100d.log` (Album mode) та `01787404688_03db12780bd84000.log` (Forwarder mode).
+   - Виявлено: у режимі Альбому передавався хибний `AppletType_SystemApplication`, провокуючи виділення 64.5 МБ у 32 МБ пам'яті аплету; у форвардері функція `calculateMaxHeapSize` безумовно крала 96 МБ купи (`size -= 0x6000000`), що спричиняло збій на адресі `0x25fb8f000`.
+2. **Динамічне визначення типу додатку та відновлення розміру купи (`hbl/source/main.c`)**:
+   - Реалізовано `getIsApplication()` (запит до ядра через `svcGetInfo(..., InfoType_IsApplication)` та `pm:shell`).
+   - Реалізовано `getIsAutomaticGameplayRecording()` (через `nsGetApplicationControlData`), усунуто безпідставне урізання 96 МБ для хоумбрю.
+   - Динамічно передається `AppletType_LibraryApplet` (в альбомі) або `AppletType_SystemApplication` (у форвардері/тайтлі).
+3. **Детерміноване читання NRO та обнулення BSS (`hbl/source/main.c`)**:
+   - Читання `NroStart` (16 байт), `NroHeader` (112 байт) та виключно корисного навантаження `header->size - 0x80`.
+   - Явне обнулення пам'яті BSS (`memset(nrobuf + header->size, 0, total_size - header->size)`).
+4. **Звільнення графічних ресурсів GPU (`sphaira/source/main.cpp`)**:
+   - Додано `nvExit()` до `userAppExit()` для чистого закриття сесій Tegra перед стартом наступного NRO.
+5. **Host unit-тести та верифікація**:
+   - Створено та розширено `tests/test_hbl_nro_reader.cpp` (528,394 перевірки).
+
+## Попередній delivery: v0.13.527 — Software Menu Visual Separation: Dedicated Bottom Network Section
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Виділення секції мережевих завантажень у Software Menu (`sphaira/source/ui/menus/settings_menu.cpp`)**:

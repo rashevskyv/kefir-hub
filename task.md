@@ -1,12 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.527**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.528**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.527 (Software Menu Visual Separation: Dedicated Bottom Network Section)
+## Поточний delivery: v0.13.528 (HBL Loader Fix: Exact NRO Segment Sizing, Applet/Application Mode Detection & Heap Restoration)
+
+- [x] `CRASH-LOG-TRACEBACK-528` — проведено аналіз crash-звітів `01787404697_010000000000100d.log` (Album mode) та `01787404688_03db12780bd84000.log` (Forwarder mode). З'ясовано подвійну проблему: (1) в режимі Альбому лоадер жорстко передавав `AppletType_SystemApplication` замість `AppletType_LibraryApplet`, через що `NX-Activity-Log` намагався виділити 64.5 МБ пам'яті в 32-мегабайтному пулі аплету; (2) у форвардері функція `calculateMaxHeapSize` безумовно віднімала 96 МБ (`size -= 0x6000000`), що урізало купу до ~100 МБ і викликало збій `dc civac` на адресі `0x25fb8f000`.
+- [x] `HBL-APPLET-APPLICATION-DETECT-528` — у `hbl/source/main.c` додано `getIsApplication()` (через `svcGetInfo(..., InfoType_IsApplication)` та `pm:shell`) і `getIsAutomaticGameplayRecording()` (через `nsGetApplicationControlData`), що динамічно налаштовує `AppletType_LibraryApplet` або `AppletType_SystemApplication` і віднімає 96 МБ лише за реальної наявності `video_capture == 2`.
+- [x] `HBL-NRO-READ-EXACT-528` — у `hbl/source/main.c` реалізовано детерміноване покрокове зчитування NRO: окремо `NroStart` (16 байт), `NroHeader` (112 байт) та дані тіла `rest_size = header->size - 0x80`. Додано явне обнулення пам'яті BSS (`memset`) перед відображенням `svcMapProcessCodeMemory`, усунуто проникнення RomFS у BSS та забезпечено коректне розташування `OverrideHeap`.
+- [x] `SPHAIRA-NVEXIT-CLEANUP-528` — у `sphaira/source/main.cpp` у функцію `userAppExit()` додано явний виклик `nvExit()` для чистого звільнення ресурсів драйвера Tegra та відображення відеопам'яті перед ланцюговим запуском наступного NRO.
+- [x] `TEST-HBL-NRO-READER-528` — оновлено host unit-тест `tests/test_hbl_nro_reader.cpp` (528,394 перевірки), що симулює NRO із 12 МБ RomFS та перевіряє захист пам'яті BSS, купи та коректність розрахунку розміру пам'яті.
+- [x] `DOCS-BUMP-528` — версію піднято до `0.13.528` у `sphaira/CMakeLists.txt`, оновлено `README.md`, `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 23 набори unit-тестів у WSL.
+
+## Попередній delivery: v0.13.527 (Software Menu Visual Separation: Dedicated Bottom Network Section)
 
 - [x] `SOFTWARE-SECTION-HEADER-527` — у `BuildSoftwareItems()` в `settings_menu.cpp` перенесено `Network Downloads` та `Custom Link` у самий кінець списку, додано розділювач `MakeHeader("NETWORK DOWNLOADS")` з лінією розмежування (HR); у `DrawActionListItem` реалізовано рендеринг заголовка секції, а в `SoftwareMenu::SetIndex` — пропуск неінтерактивних рядків через `ResolveItemIndex`.
 - [x] `DOCS-BUMP-527` — версію піднято до `0.13.527` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 22 набори unit-тестів та успішно зібрано бінарник `sphaira_nro` у WSL.

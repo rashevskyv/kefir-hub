@@ -194,6 +194,7 @@ void userAppExit(void) {
     sphaira::WebShareStop();
     sphaira::net::Exit();
 
+    nvExit();
     socketExit();
     nifmExit();
     ncmExit();
