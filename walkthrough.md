@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.534** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.535** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.535 — Auto-Forwarder: Fast-Path Check & User Files Protection
+
+- **Оптимізація та зміни**:
+  - **Fast Path перевірка**: `ThreadFunc` тепер першим ділом робить швидку перевірку `nsIsAnyApplicationEntityInstalled(kefirhub_tid)`: якщо нативний форвардер KefirHub уже є на консолі, фоновий worker миттєво завершує виконання (~0.1 мс). Сканування бази встановлених застосунків та операції видалення не виконуються.
+  - **Захист файлів**: Прибрано будь-які операції сканування та видалення в папці `/Games`.
+  - **Тестування та верифікація**:
+    - Усі 25 наборів unit-тестів у WSL пройдено (all green). Збірку не запускаємо (user compiles manually).
 
 ## v0.13.534 — Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator
 

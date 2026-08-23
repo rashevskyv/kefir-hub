@@ -113,36 +113,6 @@ bool IsOldHomebrewTitle(const std::string& raw_name, uint64_t tid, uint64_t kefi
     return false;
 }
 
-bool IsOldForwarderNspFile(const std::string& raw_name) {
-    std::string name = raw_name;
-    for (char& c : name) {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-
-    if (name.length() < 4 || name.substr(name.length() - 4) != ".nsp") {
-        return false;
-    }
-
-    if (name.find("kefir") != std::string::npos || name.find("sphaira") != std::string::npos) {
-        return false;
-    }
-
-    if (name.find("homebrew menu") != std::string::npos ||
-        name.find("homebrew launcher") != std::string::npos ||
-        name.find("hblauncher") != std::string::npos ||
-        name.find("hbmenu") != std::string::npos ||
-        name.find("hbm") != std::string::npos ||
-        name.find("hbl") != std::string::npos ||
-        name.find("03db1280bd84000") != std::string::npos ||
-        name.find("03db12780bd84000") != std::string::npos ||
-        name.find("010000000000100d") != std::string::npos ||
-        name.find("050000000000100d") != std::string::npos) {
-        return true;
-    }
-
-    return false;
-}
-
 int RunTests() {
     MockForwarderAutoLifecycle lc;
 
@@ -220,23 +190,6 @@ int RunTests() {
         // Regular games must not match
         CHECK(!IsOldHomebrewTitle("Super Mario Odyssey", 0x0100000000010000ULL, kefirhub_tid));
         CHECK(!IsOldHomebrewTitle("RetroArch", 0x0100000000020000ULL, kefirhub_tid));
-    }
-
-    // Test 5: IsOldForwarderNspFile detection in /Games
-    {
-        CHECK(IsOldForwarderNspFile("Homebrew menu [010000000000100D].nsp"));
-        CHECK(IsOldForwarderNspFile("Homebrew Launcher.nsp"));
-        CHECK(IsOldForwarderNspFile("hbmenu.nsp"));
-        CHECK(IsOldForwarderNspFile("hblauncher.nsp"));
-        CHECK(IsOldForwarderNspFile("HBM [03DB1280BD84000].nsp"));
-        CHECK(IsOldForwarderNspFile("HBL.nsp"));
-
-        // Must not match KefirHub forwarders or other files
-        CHECK(!IsOldForwarderNspFile("Kefir Hub [0500000000123000].nsp"));
-        CHECK(!IsOldForwarderNspFile("Sphaira.nsp"));
-        CHECK(!IsOldForwarderNspFile("SuperMario.nsp"));
-        CHECK(!IsOldForwarderNspFile("hbmenu.nro")); // Only .nsp files
-        CHECK(!IsOldForwarderNspFile("info.txt"));
     }
 
     return 0;

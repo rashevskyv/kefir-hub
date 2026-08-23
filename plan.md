@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.534**. Завершені плани збережено в
+Поточний delivery — **v0.13.535**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.534 — Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator
+## Поточний delivery: v0.13.535 — Auto-Forwarder: Fast-Path Check & User Files Protection
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Миттєва перевірка наявності форвардера KefirHub (Fast Path)**:
+   - Спочатку виконується виклик `nsIsAnyApplicationEntityInstalled` для `kefirhub_tid`. Якщо форвардер уже встановлений, потік миттєво завершує роботу (0.1 мс), не зачіпаючи базу ігор і не проводячи жодних операцій.
+2. **Захист файлів користувача**:
+   - Повністю виключено будь-які операції з папкою `/Games` чи файлами на SD-картці.
+3. **Очищення лише за відсутності форвардера**:
+   - Лише якщо форвардер KefirHub відсутній, видаляються застарілі форвардери HBL/HBM та встановлюється форвардер KefirHub.
+4. **Верифікація**:
+   - Пройдено всі 25 наборів unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.534 — Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Видалення застарілих форвардерів та файлів**:

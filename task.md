@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.534**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.535**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.534 (Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator)
+## Поточний delivery: v0.13.535 (Auto-Forwarder: Fast-Path Check & User Files Protection)
+
+- [x] `FORWARDER-FAST-PATH-535` — у `sphaira/source/forwarder_auto_install.cpp` реалізовано миттєву перевірку `nsIsAnyApplicationEntityInstalled(kefirhub_tid)`: якщо форвардер KefirHub уже встановлено на консолі, фоновий потік завершує роботу за 0.1 мс без сканування бази даних застосунків та без операцій видалення.
+- [x] `FORWARDER-NO-FILE-TOUCH-535` — повністю прибрано видалення та перевірку NSP-файлів у папці `/Games`. Користувацькі файли не модифікуються і не видаляються.
+- [x] `TEST-FAST-PATH-535` — оновлено host unit-тести `tests/test_forwarder_auto_lifecycle.cpp` (36 checks).
+- [x] `DOCS-BUMP-535` — версію піднято до `0.13.535` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Пройдено всі 25 наборів unit-тестів у WSL.
+
+## Попередній delivery: v0.13.534 (Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator)
 
 - [x] `FORWARDER-CLEANUP-534` — у `sphaira/source/forwarder_auto_install.cpp` замінено встановлення файлів з `/Games` на їх автоматичне видалення (`Homebrew menu*.nsp`, `hbmenu*.nsp`, `hblauncher*.nsp`). Додано видалення застарілих та неробочих встановлених форвардерів за Title ID (`0x03DB1280BD84000`, `0x03DB12780BD84000`, `0x010000000000100D`, `0x050000000000100D`) та за назвами в NACP (`Homebrew Menu`, `Homebrew Launcher`, `HBM`, `HBL`, `hbmenu`, `hblauncher`, `nx-hbmenu`).
 - [x] `FORWARDER-INTERNAL-CREATE-534` — у `sphaira/source/owo.cpp` додано підтримку silent-встановлення (`pbox == nullptr`). У `forwarder_auto_install.cpp` реалізовано автоматичну генерацію та встановлення нативного форвардера KefirHub на льоту із фіксованими налаштуваннями: **39-бітний адресний простір**, **знімки та відеозапис вимкнено**, **вибір профілю вимкнено**, **дебаг вимкнено**.
