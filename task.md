@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.532**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.533**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.532 (HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation)
+## Поточний delivery: v0.13.533 (Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass)
+
+- [x] `FORWARDER-THREAD-LIFECYCLE-533` — у `sphaira/source/forwarder_auto_install.cpp` розділено стан створення потоку (`g_thread_created`) та стан активного виконання (`g_thread_active`). Усунуто скидання прапорця очищення всередині `ThreadFunc`, завдяки чому `StopCheck()` гарантовано викликає `threadWaitForExit()` та `threadClose()`, навіть якщо worker завершився завчасно.
+- [x] `FORWARDER-APP-BYPASS-533` — у `StartCheck()` додано перевірку `App::IsApplication()`, яка взагалі не створює потік і не виділяє 64 KiB стек, коли KefirHub уже запущено як повноцінний Title/Application.
+- [x] `TEST-FORWARDER-LIFECYCLE-533` — створено host unit-тест `tests/test_forwarder_auto_lifecycle.cpp` (19 checks), що перевіряє життєвий цикл потоку та гарантію закриття ресурсів при завчасному завершенні worker'а.
+- [x] `DOCS-BUMP-533` — версію піднято до `0.13.533` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Пройдено всі 25 наборів unit-тестів у WSL.
+
+## Попередній delivery: v0.13.532 (HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation)
 
 - [x] `HBL-BOUNDS-U64-532` — у `hbl/source/main.c` виправлено розрахунок `rw_size` (data+BSS) та вирівнювання за сторінками виключно у 64-бітній арифметиці `u64`, усунувши ризик 32-бітного переповнення/обгортання суми `seg2_size + bss_size`.
 - [x] `HBL-BOUNDS-EARLY-CHECK-532` — повну валідацію сегментів, меж data+BSS та code+BSS проти `g_heapSize` перенесено безпосередньо після зчитування заголовка `NroHeader` до початку вичитування тіла NRO з файлу.

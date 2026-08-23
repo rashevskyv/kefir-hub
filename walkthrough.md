@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.532** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.533** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.533 — Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass
+
+- **Виявлення першопричини регресії з v0.13.487**:
+  - У коміті `32f655b` (v0.13.487) було додано фоновий потік `forwarder_auto::StartCheck()`.
+  - У `ThreadFunc` по завершенню (або при `App::IsApplication() == true`) виконувався виклик `ON_SCOPE_EXIT(g_thread_running = false)`.
+  - Внаслідок цього під час виходу з програми або запуску дочірнього NRO деструктор `App` викликав `forwarder_auto::StopCheck()`, де умова `if (g_thread_running.exchange(false))` повертала `false`.
+  - Це призводило до того, що `threadWaitForExit()` і `threadClose()` ніколи не викликалися для створеного потоку, а його 64 KiB стек і ресурси ядра залишалися незакритими в процесі, викликаючи падіння сторонніх NRO на великих операціях з пам'яттю.
+- **Внесені зміни**:
+  - **Розділення станів життєвого циклу (`sphaira/source/forwarder_auto_install.cpp`)**: Прапорець `g_thread_created` відповідає за факт виділення ресурсів ОС, а `g_thread_active` — за виконання коду worker'а. У `StopCheck()` очищення `threadWaitForExit()` та `threadClose()` виконується детерміновано за прапорцем `g_thread_created`.
+  - **Пропуск створення потоку в Application Mode**: Якщо KefirHub вже запущено як додаток (`App::IsApplication()`), `StartCheck()` взагалі не виділяє потік і стек.
+  - **Тести (`tests/test_forwarder_auto_lifecycle.cpp`)**: Створено тест для перевірки коректного звільнення ресурсів потоку навіть при завчасному виході worker'а.
+- **Тестування та верифікація**:
+  - Пройдено всі 25 наборів unit-тестів у WSL (all green). Апаратне тестування на Switch залишається pending.
 
 ## v0.13.532 — HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation
 

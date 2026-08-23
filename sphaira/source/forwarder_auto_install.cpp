@@ -16,7 +16,8 @@ namespace sphaira::forwarder_auto {
 namespace {
 
 std::atomic_bool g_stop_requested{false};
-std::atomic_bool g_thread_running{false};
+std::atomic_bool g_thread_active{false};
+std::atomic_bool g_thread_created{false};
 Thread g_check_thread{};
 
 class SilentInstallProgress final : public ui::InstallProgress {
@@ -81,7 +82,7 @@ u64 ExtractTitleIdFromName(const std::string& name) {
 }
 
 void ThreadFunc(void*) {
-    ON_SCOPE_EXIT(g_thread_running = false);
+    ON_SCOPE_EXIT(g_thread_active = false);
 
     log_write("[ForwarderAuto] Checking installed forwarders...\n");
 
@@ -194,30 +195,40 @@ void ThreadFunc(void*) {
 } // namespace
 
 void StartCheck() {
-    if (g_thread_running) {
+    if (g_thread_created.exchange(true)) {
+        return;
+    }
+
+    if (App::IsApplication()) {
+        log_write("[ForwarderAuto] Running in Application mode, forwarder check skipped\n");
+        g_thread_created = false;
         return;
     }
 
     g_stop_requested = false;
+    g_thread_active = true;
     if (R_FAILED(threadCreate(&g_check_thread, ThreadFunc, nullptr, nullptr, 1024 * 64, PRIO_PREEMPTIVE, -2))) {
         log_write("[ForwarderAuto] failed to create forwarder check thread\n");
+        g_thread_active = false;
+        g_thread_created = false;
         return;
     }
 
     if (R_FAILED(threadStart(&g_check_thread))) {
         threadClose(&g_check_thread);
         log_write("[ForwarderAuto] failed to start forwarder check thread\n");
+        g_thread_active = false;
+        g_thread_created = false;
         return;
     }
-
-    g_thread_running = true;
 }
 
 void StopCheck() {
-    if (g_thread_running.exchange(false)) {
+    if (g_thread_created.exchange(false)) {
         g_stop_requested = true;
         threadWaitForExit(&g_check_thread);
         threadClose(&g_check_thread);
+        g_thread_active = false;
     }
 }
 

@@ -1,10 +1,24 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.532**. Завершені плани збережено в
+Поточний delivery — **v0.13.533**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.532 — HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation
+## Поточний delivery: v0.13.533 — Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Розділення станів життєвого циклу потоку (`sphaira/source/forwarder_auto_install.cpp`)**:
+   - `g_thread_created` відстежує необхідність виклику `threadClose()`.
+   - `g_thread_active` відстежує активність функції потоку.
+   - Встановлено детерміноване очищення ресурсів у `StopCheck()`: `threadWaitForExit()` і `threadClose()` викликаються завжди, коли потік створювався.
+2. **Пропуск створення потоку в режимі Application**:
+   - У `StartCheck()` додано ранню перевірку `App::IsApplication()`, що запобігає виділенню зайвих 64 KiB пам'яті під стек.
+3. **Unit-тестування**:
+   - Створено `tests/test_forwarder_auto_lifecycle.cpp` (19 checks).
+4. **Верифікація**:
+   - Пройдено всі 25 наборів unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.532 — HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **64-бітний розрахунок меж data+BSS (`hbl/source/main.c`)**:
