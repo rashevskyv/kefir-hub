@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.535** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.536** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.536 — Fix: nacp_util::GetName in forwarder_auto_install.cpp
+
+- **Виправлення**:
+  - У `sphaira/source/forwarder_auto_install.cpp` виправлено виклик `nacp_util::GetTitle` на `nacp_util::GetName(control_data->nacp)`.
+- **Тестування та верифікація**:
+  - Усі 25 наборів unit-тестів у WSL пройдено (all green). Збірку NRO не запускаємо (користувач компілює власноруч).
 
 ## v0.13.535 — Auto-Forwarder: Fast-Path Check & User Files Protection
 

@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.535**. Завершені плани збережено в
+Поточний delivery — **v0.13.536**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.535 — Auto-Forwarder: Fast-Path Check & User Files Protection
+## Поточний delivery: v0.13.536 — Fix: nacp_util::GetName in forwarder_auto_install.cpp
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Виправлення звернення до функції `nacp_util`**:
+   - Замінено неіснуючий `nacp_util::GetTitle` на `nacp_util::GetName(control_data->nacp)`.
+2. **Верифікація**:
+   - Пройдено всі 25 наборів unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.535 — Auto-Forwarder: Fast-Path Check & User Files Protection
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Миттєва перевірка наявності форвардера KefirHub (Fast Path)**:

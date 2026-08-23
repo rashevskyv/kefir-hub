@@ -111,7 +111,7 @@ void CleanOldInstalledForwarders(u64 kefirhub_tid) {
             auto control_data = std::make_unique<NsApplicationControlData>();
             u64 actual_size = 0;
             if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, control_data.get(), sizeof(NsApplicationControlData), &actual_size))) {
-                std::string title_name = nacp_util::GetTitle(&control_data->nacp);
+                std::string title_name = nacp_util::GetName(control_data->nacp);
                 if (IsOldHomebrewTitle(title_name, app_id, kefirhub_tid)) {
                     log_write("[ForwarderAuto] Deleting old forwarder title %016lx (%s)\n", app_id, title_name.c_str());
                     nsDeleteApplicationCompletely(app_id);

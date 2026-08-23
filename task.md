@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.535**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.536**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.535 (Auto-Forwarder: Fast-Path Check & User Files Protection)
+## Поточний delivery: v0.13.536 (Fix: nacp_util::GetName in forwarder_auto_install.cpp)
+
+- [x] `FIX-NACP-GETNAME-536` — у `sphaira/source/forwarder_auto_install.cpp` виправлено виклик `nacp_util::GetTitle` на `nacp_util::GetName(control_data->nacp)`, усунувши помилку компіляції Switch NRO.
+- [x] `DOCS-BUMP-536` — версію піднято до `0.13.536` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Пройдено всі 25 наборів unit-тестів у WSL.
+
+## Попередній delivery: v0.13.535 (Auto-Forwarder: Fast-Path Check & User Files Protection)
 
 - [x] `FORWARDER-FAST-PATH-535` — у `sphaira/source/forwarder_auto_install.cpp` реалізовано миттєву перевірку `nsIsAnyApplicationEntityInstalled(kefirhub_tid)`: якщо форвардер KefirHub уже встановлено на консолі, фоновий потік завершує роботу за 0.1 мс без сканування бази даних застосунків та без операцій видалення.
 - [x] `FORWARDER-NO-FILE-TOUCH-535` — повністю прибрано видалення та перевірку NSP-файлів у папці `/Games`. Користувацькі файли не модифікуються і не видаляються.
