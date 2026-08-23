@@ -444,6 +444,18 @@ static int test_is_valid_direct_download_url() {
     return 0;
 }
 
+static int test_collapse_repeated_http_schemes() {
+    CHECK(path::CollapseRepeatedHttpSchemes("https://github.com/a/b.zip") == "https://github.com/a/b.zip");
+    CHECK(path::CollapseRepeatedHttpSchemes("https://https://github.com/a/b.zip") == "https://github.com/a/b.zip");
+    CHECK(path::CollapseRepeatedHttpSchemes("https://HTTPS://github.com/a/b.nro") == "HTTPS://github.com/a/b.nro");
+    CHECK(path::CollapseRepeatedHttpSchemes("http://https://cdn.example/x.zip") == "https://cdn.example/x.zip");
+    CHECK(path::CollapseRepeatedHttpSchemes("  https://https://https://e.com/a.nro  ") == "https://e.com/a.nro");
+    CHECK(path::CollapseRepeatedHttpSchemes("https://") == "https://");
+    CHECK(path::CollapseRepeatedHttpSchemes("") == "");
+
+    return 0;
+}
+
 static int test_is_subpath_of() {
     // Exact match and trailing slashes
     CHECK(path::IsSubpathOf("/switch", "/switch"));
@@ -537,7 +549,7 @@ static int test_path_affects_homebrew() {
 }
 
 int main() {
-    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename() || test_parse_github_repo_url() || test_is_valid_direct_asset_url() || test_is_valid_direct_zip_url() || test_is_valid_direct_nro_url() || test_is_valid_direct_download_url() || test_is_subpath_of() || test_is_nro_path() || test_path_affects_homebrew()) {
+    if (test_equals_ic() || test_starts_with_ic() || test_ends_with_ic() || test_extension() || test_is_any_of_ic() || test_parse_title_id_name() || test_is_safe_archive_entry() || test_normalize_absolute_sd_path() || test_is_zip_asset() || test_is_safe_filename() || test_extract_basename() || test_parse_github_repo_url() || test_is_valid_direct_asset_url() || test_is_valid_direct_zip_url() || test_is_valid_direct_nro_url() || test_is_valid_direct_download_url() || test_collapse_repeated_http_schemes() || test_is_subpath_of() || test_is_nro_path() || test_path_affects_homebrew()) {
         return 1;
     }
     std::printf("ok  path_util: %d checks passed\n", g_checks);

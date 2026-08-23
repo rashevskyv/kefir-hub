@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.541**. Завершені плани збережено в
+Поточний delivery — **v0.13.542**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.541 — Zip: "Install NRO to /switch" label
+## Поточний delivery: v0.13.542 — Forwarder capture, URL scheme collapse, friendly download errors
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Автофорвардер знову дозволяє скріншоти і відео (для дебагу).
+2. Подвійні `http://`/`https://` у Direct Download згортаються (поле в браузері і обробка на консолі).
+3. Поганий або недоступний URL — звичайне пояснення і кнопка «Виправити URL» (клавіатура консолі або знову з ПК).
+
+## Попередній delivery: v0.13.541 — Zip: "Install NRO to /switch" label
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Якщо в zip один `.nro`, перша дія називається «Встановити NRO в папку switch», а не довгим шляхом.

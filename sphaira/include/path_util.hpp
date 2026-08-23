@@ -405,6 +405,36 @@ inline auto IsValidDirectDownloadUrl(std::string_view url) -> bool {
     return IsValidDirectZipUrl(url) || IsValidDirectNroUrl(url);
 }
 
+// Trims whitespace and peels stacked http:// / https:// prefixes so
+// "https://https://host/file.zip" becomes "https://host/file.zip".
+inline auto CollapseRepeatedHttpSchemes(std::string_view url) -> std::string {
+    std::string s{url};
+    while (!s.empty() && static_cast<unsigned char>(s.front()) <= ' ') {
+        s.erase(s.begin());
+    }
+    while (!s.empty() && static_cast<unsigned char>(s.back()) <= ' ') {
+        s.pop_back();
+    }
+
+    while (true) {
+        std::size_t n = 0;
+        if (StartsWithIC(s, "https://")) {
+            n = 8;
+        } else if (StartsWithIC(s, "http://")) {
+            n = 7;
+        } else {
+            break;
+        }
+        const auto rest = std::string_view{s}.substr(n);
+        if (StartsWithIC(rest, "https://") || StartsWithIC(rest, "http://")) {
+            s.erase(0, n);
+            continue;
+        }
+        break;
+    }
+    return s;
+}
+
 // Returns true if `path` is within `parent` (or equals `parent`), matching on
 // directory component boundaries case-insensitively. Trailing slashes are ignored.
 inline auto IsSubpathOf(std::string_view path, std::string_view parent) -> bool {

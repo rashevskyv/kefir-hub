@@ -757,6 +757,27 @@ async function init(){
     }
   }catch(e){}
   field.focus();
+  bindUrlField();
+}
+function collapseSchemes(s){
+  s=(s||'').trim();
+  while(/^(https?:\/\/)(?=https?:\/\/)/i.test(s)){
+    s=s.replace(/^(https?:\/\/)/i,'');
+  }
+  return s;
+}
+function tidyField(){
+  const c=collapseSchemes(field.value);
+  if(c!==field.value)field.value=c;
+}
+function bindUrlField(){
+  field.addEventListener('input',tidyField);
+  field.addEventListener('change',tidyField);
+  field.addEventListener('paste',()=>setTimeout(tidyField,0));
+  field.addEventListener('focus',()=>{
+    if(/^(https?:\/\/)$/i.test(field.value)&&field.select)field.select();
+  });
+  if(/^(https?:\/\/)$/i.test(field.value)&&field.select)field.select();
 }
 pasteBtn.addEventListener('click',async()=>{
   field.focus();
@@ -771,7 +792,8 @@ pasteBtn.addEventListener('click',async()=>{
   msg.textContent='Long-press the field and tap Paste.';
 });
 sendBtn.addEventListener('click',async()=>{
-  const val=field.value.trim();
+  const val=collapseSchemes(field.value);
+  if(val)field.value=val;
   if(!val){msg.className='msg err';msg.textContent='Paste or type the address first.';return;}
   sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
   try{

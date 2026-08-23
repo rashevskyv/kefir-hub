@@ -411,7 +411,21 @@ void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
     App::Push(std::move(popup));
 }
 
-void DoDirectLinkDownload(const std::string& url) {
+void OpenDirectLinkPrompt(std::string filled = {});
+
+void OfferFixDirectUrl(std::string url, const std::string& message) {
+    App::Push<OptionBox>(
+        message,
+        "OK"_i18n, "Edit URL"_i18n, 1, [url = std::move(url)](auto op_index){
+            if (op_index && *op_index) {
+                OpenDirectLinkPrompt(url);
+            }
+        }
+    );
+}
+
+void DoDirectLinkDownload(std::string url) {
+    url = path::CollapseRepeatedHttpSchemes(url);
     const bool is_nro = path::IsValidDirectNroUrl(url);
     const auto filename = UrlFilename(url, is_nro);
     const fs::FsPath dest_file = is_nro
@@ -448,13 +462,13 @@ void DoDirectLinkDownload(const std::string& url) {
         }
         R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
         R_SUCCEED();
-    }, [is_nro, dest_file, filename](Result rc){
+    }, [is_nro, dest_file, filename, url](Result rc){
         if (rc == Result_TransferCancelled) {
             App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
             return;
         }
         if (R_FAILED(rc)) {
-            App::PushErrorBox(rc, "Download failed!"_i18n);
+            OfferFixDirectUrl(url, "Couldn't download that file.\nThe address may be wrong, or the server didn't respond. Edit the URL and try again."_i18n);
             return;
         }
 
@@ -477,14 +491,14 @@ void DoDirectLinkDownload(const std::string& url) {
     });
 }
 
-void ProcessDirectLinkUrl(const std::string& url) {
+void ProcessDirectLinkUrl(std::string url) {
+    url = path::CollapseRepeatedHttpSchemes(url);
     if (url.empty()) {
         return;
     }
 
-    // Validate direct download URL (.zip or .nro)
     if (!path::IsValidDirectDownloadUrl(url)) {
-        App::Push<OptionBox>("URL must be a valid HTTP(S) link ending with .zip or .nro"_i18n, "OK"_i18n);
+        OfferFixDirectUrl(url, "This isn't a direct link to a .zip or .nro file.\nCheck the address (it should start with http and end with .zip or .nro) and try again."_i18n);
         return;
     }
 
@@ -519,11 +533,11 @@ void ProcessDirectLinkUrl(const std::string& url) {
     DoDirectLinkDownload(url);
 }
 
-void OpenDirectLinkPrompt() {
+void OpenDirectLinkPrompt(std::string filled) {
     ui::remote_input::Options opts{
         .title = "Direct Download"_i18n,
         .guide = "Enter direct link to a .zip archive or .nro file"_i18n,
-        .default_text = "https://",
+        .default_text = filled.empty() ? "https://" : std::move(filled),
         .placeholder = "https://example.com/app.nro or app.zip",
         .multiline = false,
     };

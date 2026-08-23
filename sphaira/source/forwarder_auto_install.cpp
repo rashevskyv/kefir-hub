@@ -220,8 +220,8 @@ void InstallKefirHubForwarder(u64 kefirhub_tid) {
 
     ForwarderOptions options{};
     options.address_space = ForwarderAddressSpace::Bit39;
-    options.screenshot = false;
-    options.video_capture = false;
+    options.screenshot = true;
+    options.video_capture = true;
     options.profile_selection = false;
     options.svc_debug_mode = ForwarderSvcDebugMode::Disabled;
     config.options = options;
