@@ -2,14 +2,11 @@
 
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/filebrowser.hpp"
-#include "ui/menus/irs_menu.hpp"
 #include "ui/menus/tools_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/ghdl.hpp"
 #include "ui/menus/dbi_menu.hpp"
-#include "ui/menus/ftp_menu.hpp"
-#include "ui/menus/mtp_menu.hpp"
 #include "ui/menus/gc_menu.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/save_menu.hpp"
@@ -67,26 +64,11 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "Download releases directly from GitHub. "\
         "Custom entries can be added to /config/kefir/github" },
 
-#if ENABLE_NETWORK_INSTALL
-    { .name = "FTP", .title = "FTP Install", .func = MiscMenuFuncGenerator<ui::menu::ftp::Menu>, .flag = MiscMenuFlag_Install, .info =
-        "Install apps via FTP.\n\n"\
-        "NOTE: This feature does not always work, use at your own risk. "\
-        "If you encounter an issue, do not open an issue, it will not be fixed." },
-
-    { .name = "MTP", .title = "MTP Install", .func = MiscMenuFuncGenerator<ui::menu::mtp::Menu>, .flag = MiscMenuFlag_Install, .info =
-        "Install apps via MTP.\n\n"\
-        "NOTE: This feature does not always work, use at your own risk. "\
-        "If you encounter an issue, do not open an issue, it will not be fixed." },
-
-#endif
     { .name = "GameCard", .title = "GameCard", .func = MiscMenuFuncGenerator<ui::menu::gc::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
         "View info on the inserted Game Card (GC). "\
         "You can backup and install the inserted GC. "\
         "To swap GC's, simply remove the old GC and insert the new one. "\
         "You do not need to exit the menu." },
-
-    { .name = "IRS", .title = "IRS (Infrared Joycon Camera)", .func = MiscMenuFuncGenerator<ui::menu::irs::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "InfraRed Sensor (IRS) is the small camera found on right JoyCon." },
 };
 
 } // namespace

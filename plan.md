@@ -1,10 +1,21 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.536**. Завершені плани збережено в
+Поточний delivery — **v0.13.537**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.536 — Fix: nacp_util::GetName in forwarder_auto_install.cpp
+## Поточний delivery: v0.13.537 — GameCard row, dead install screens, zip extract defaults
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. **Games / GameCard**: картридж як окремий рядок у списку ігор, синя обводка на іконці, підпис `[GC]`.
+2. **A3 — мертві екрани**: видалено IRS, `firmware_menu`, екрани FTP/MTP Install. FTP/MTP лишились сервісами.
+3. **Header**: версія Kefir над IP/Wi-Fi; повні підписи SysNAND/EmuNAND і microSD, бейджі по центру.
+4. **Auto-forwarder**: план за джерелом запуску (новий / старий / Album); не чіпати title, з якого зайшли; системний TID більше не «завжди старий».
+5. **Remote input Paste**: на HTTP LAN Clipboard API недоступний — без червоної помилки, фокус поля і Ctrl+V/Cmd+V.
+6. **Custom Links / Direct Download zip**: після завантаження — огляд структури архіву, дефолтний шлях, Browse / Cancel, Keep/Delete zip, відкрити файловий браузер. Голе `.nro` → `/switch/<stem>/<file>`; NRO в теці → `/switch` (тека вже `switch` → `/`); кілька кореневих тек → `/downloads/<stem>`; інакше `/downloads`. Zip скачується в `/downloads`.
+7. **Тести**: `tests/test_game_list_info.cpp`, `tests/test_zip_extract_plan.cpp`, оновлені forwarder/header тести. Агент їх не запускав.
+
+## Попередній delivery: v0.13.536 — Fix: nacp_util::GetName in forwarder_auto_install.cpp
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Виправлення звернення до функції `nacp_util`**:

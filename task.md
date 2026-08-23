@@ -1,12 +1,22 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.536**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.537**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.536 (Fix: nacp_util::GetName in forwarder_auto_install.cpp)
+## Поточний delivery: v0.13.537 (GameCard row, dead install screens, zip extract defaults)
+
+- [x] `GAMECARD-ROW-537` — GameCard як рядок у Games, обводка на іконці, `[GC]`.
+- [x] `A3-DEAD-SCREENS-537` — видалено IRS, firmware list, FTP/MTP Install menus; FTP/MTP як сервіси.
+- [x] `HEADER-CHROME-537` — версія над IP/Wi-Fi, повні NAND/SD підписи, центровані бейджі.
+- [x] `FORWARDER-SOURCE-537` — notices за LaunchSource; системний TID не вважати старим forwarder.
+- [x] `REMOTE-PASTE-537` — Paste на HTTP без Clipboard API error; Ctrl+V/Cmd+V.
+- [x] `ZIP-EXTRACT-PATH-537` — дефолт шляху з структури zip, `/downloads`, вибір теки, Keep/Delete, відкрити файловий браузер.
+- [x] `DOCS-BUMP-537` — версію піднято до `0.13.537` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `audit.md`, `AGENTS.md`. Агент не компілював.
+
+## Попередній delivery: v0.13.536 (Fix: nacp_util::GetName in forwarder_auto_install.cpp)
 
 - [x] `FIX-NACP-GETNAME-536` — у `sphaira/source/forwarder_auto_install.cpp` виправлено виклик `nacp_util::GetTitle` на `nacp_util::GetName(control_data->nacp)`, усунувши помилку компіляції Switch NRO.
 - [x] `DOCS-BUMP-536` — версію піднято до `0.13.536` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Пройдено всі 25 наборів unit-тестів у WSL.

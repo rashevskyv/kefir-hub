@@ -2755,9 +2755,10 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     view->ConnectToLocation(target_entry);
 }
 
-void Menu::SetFolderPicker(FolderPickCallback cb) {
+void Menu::SetFolderPicker(FolderPickCallback cb, std::string title, std::string confirm) {
     m_on_folder_picked = std::move(cb);
-    SetTitle("Select firmware folder"_i18n);
+    m_folder_pick_confirm = confirm.empty() ? "Install firmware from this folder?"_i18n : std::move(confirm);
+    SetTitle(title.empty() ? "Select firmware folder"_i18n : std::move(title));
     // relabel START so the "select this folder" affordance is visible.
     SetAction(Button::START, Action{"Select folder"_i18n, [this](){
         ConfirmFolderPick(view->m_path);
@@ -2771,7 +2772,7 @@ void Menu::ConfirmFolderPick(const fs::FsPath& folder) {
 
     const std::string path_str = folder.s[0] ? folder.s : "/";
     App::Push<OptionBox>(
-        "Install firmware from this folder?"_i18n + "\n\n" + path_str,
+        m_folder_pick_confirm + "\n\n" + path_str,
         "Cancel"_i18n, "Select"_i18n, 1,
         [this, folder](auto op_index) {
             if (op_index && *op_index == 1 && m_on_folder_picked) {

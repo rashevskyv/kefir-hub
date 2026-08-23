@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.536)
+set(sphaira_VERSION 0.13.537)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -43,13 +43,13 @@ add_executable(sphaira
     source/ui/menus/file_picker.cpp
     source/ui/menus/homebrew.cpp
     source/ui/menus/install_share.cpp
-    source/ui/menus/irs_menu.cpp
+
     source/ui/menus/kefir_menu.cpp
     source/ui/menus/kefir/kefir_changelog.cpp
     source/ui/menus/kefir/kefir_firmware.cpp
     source/ui/menus/main_menu.cpp
     source/ui/menus/menu_base.cpp
-    source/ui/menus/firmware_menu.cpp
+
     source/ui/menus/settings_menu.cpp
     source/ui/menus/settings/settings_fs_utils.cpp
     source/ui/menus/settings/settings_translations.cpp
@@ -74,8 +74,7 @@ add_executable(sphaira
     source/ui/menus/cheats/cheat_download_menu.cpp
     source/ui/menus/ghdl.cpp
     source/ui/menus/dbi_menu.cpp
-    source/ui/menus/ftp_menu.cpp
-    source/ui/menus/mtp_menu.cpp
+
     source/ui/menus/gc_menu.cpp
     source/ui/menus/game_menu.cpp
     source/ui/menus/grid_menu_base.cpp

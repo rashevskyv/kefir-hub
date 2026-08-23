@@ -21,19 +21,6 @@ auto GetUsbDsStateStr(UsbState state) -> const char* {
     return "Unknown";
 }
 
-auto GetUsbDsSpeedStr(UsbDeviceSpeed speed) -> const char* {
-    // todo: remove this cast when libnx pr is merged.
-    switch ((u32)speed) {
-        case UsbDeviceSpeed_None: return "None";
-        case UsbDeviceSpeed_Low: return "USB 1.0 Low Speed";
-        case UsbDeviceSpeed_Full: return "USB 1.1 Full Speed";
-        case UsbDeviceSpeed_High: return "USB 2.0 High Speed";
-        case UsbDeviceSpeed_Super: return "USB 3.0 Super Speed";
-    }
-
-    return "Unknown";
-}
-
 namespace sphaira::usb {
 namespace {
 

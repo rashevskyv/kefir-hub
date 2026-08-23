@@ -754,11 +754,23 @@ async function init(){
   }catch(e){}
   field.focus();
 }
+function pasteHint(){
+  return /Mac|iPhone|iPad/.test(navigator.userAgent)?'Press Cmd+V to paste.':'Press Ctrl+V to paste.';
+}
+function promptManualPaste(){
+  field.focus();
+  if(field.select)field.select();
+  msg.className='msg';
+  msg.textContent=pasteHint();
+}
 pasteBtn.addEventListener('click',async()=>{
-  try{
-    const text=await navigator.clipboard.readText();
-    if(text){field.value=text;msg.className='msg ok';msg.textContent='Pasted from clipboard.';}
-  }catch(e){msg.className='msg err';msg.textContent='Clipboard permission denied. Paste manually.';}
+  if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.readText){
+    try{
+      const text=await navigator.clipboard.readText();
+      if(text){field.value=text;msg.className='msg ok';msg.textContent='Pasted from clipboard.';return;}
+    }catch(e){}
+  }
+  promptManualPaste();
 });
 sendBtn.addEventListener('click',async()=>{
   const val=field.value.trim();

@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.536** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.537** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.537 — GameCard row, dead install screens, zip extract defaults
+
+- **Games**: картридж у списку ігор, синя обводка на обкладинці, `[GC]`.
+- **A3**: прибрано IRS, firmware list, FTP/MTP Install; сервіси FTP/MTP лишились.
+- **Header**: версія над IP/Wi-Fi; SysNAND/EmuNAND і microSD повними назвами; бейджі по центру.
+- **Auto-forwarder**: поведінка від джерела запуску; системний TID 0x010000000000100D більше не «завжди старий».
+- **Remote input**: Paste на `http://IP` не показує Clipboard permission denied; фокус і Ctrl+V/Cmd+V.
+- **Direct Download / Custom Links zip**: скачування в `/downloads`; дефолт розпакування з вмісту архіву; Browse / Cancel; Keep/Delete; відкрити файловий браузер.
+- **Політика агента**: після готової зміни — bump версії, plan/task/walkthrough/audit, коміт. Компіляцію не запускаємо.
+- **Тести (не запускались агентом)**: `test_game_list_info.cpp`, `test_zip_extract_plan.cpp`.
 
 ## v0.13.536 — Fix: nacp_util::GetName in forwarder_auto_install.cpp
 

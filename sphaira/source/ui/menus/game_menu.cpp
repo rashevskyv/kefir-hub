@@ -10,6 +10,7 @@
 #include "utils/utils.hpp"
 
 #include "ui/menus/game_menu.hpp"
+#include "ui/menus/game_list_info.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -268,6 +269,9 @@ Result LoadGameSummary(Entry& entry) {
             entry.sd_size += size;
         } else if (status.storageID == NcmStorageId_BuiltInUser) {
             entry.nand_size += size;
+        } else if (status.storageID == NcmStorageId_GameCard) {
+            entry.on_gamecard = true;
+            entry.gc_size += size;
         }
     }
 
@@ -339,37 +343,32 @@ auto BuildMoveSummary(const title::MovePlan& plan, NcmStorageId target) -> std::
 // right-hand column of a list row, DBI's "[S|b]  1.38 GB": storage letters
 // (S = microSD, N = system memory) plus content letters (b/u/d/L), then size.
 auto FormatListInfo(const Entry& e) -> std::string {
-    std::string flags;
-    if (e.sd_size) {
-        flags += 'S';
-    }
-    if (e.nand_size) {
-        flags += 'N';
-    }
-    flags += '|';
-    if (e.content_flags & title::ContentFlag_Application) {
-        flags += 'b';
-    }
-    if (e.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
-        flags += 'u';
-    }
-    if (e.content_flags & title::ContentFlag_AddOnContent) {
-        flags += 'd';
-    }
-    if (e.layeredfs) {
-        flags += 'L';
-    }
+    const auto size = e.nand_size + e.sd_size + e.gc_size;
+    return FormatGameListInfo(
+        e.sd_size != 0, e.nand_size != 0, e.on_gamecard,
+        e.content_flags & title::ContentFlag_Application,
+        e.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch),
+        e.content_flags & title::ContentFlag_AddOnContent,
+        e.layeredfs,
+        size ? FormatBytes(size) : std::string{});
+}
 
-    // sizes arrive with the (throttled) summary load; until then show flags only.
-    const auto size = e.nand_size + e.sd_size;
-    return "[" + flags + "]  " + (size ? FormatBytes(size) : "");
+void DrawGameCardOutline(NVGcontext* vg, const Vec4& v) {
+    nvgBeginPath(vg);
+    nvgStrokeWidth(vg, 3.f);
+    nvgStrokeColor(vg, nvgRGBA(40, 140, 230, 255));
+    nvgRoundedRect(vg, v.x, v.y, v.w, v.h, 5.f);
+    nvgStroke(vg);
 }
 
 void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entry) {
     struct Badge { const char* text; NVGcolor colour; };
-    std::array<Badge, 5> badges{};
+    std::array<Badge, 6> badges{};
     size_t count{};
 
+    if (entry.on_gamecard) {
+        badges[count++] = {"GC", nvgRGBA(40, 140, 230, 255)};
+    }
     if (entry.content_flags & title::ContentFlag_Application) {
         badges[count++] = {"Base", nvgRGBA(0, 78, 190, 255)};
     }
@@ -1718,7 +1717,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", e.app_id);
         DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, e.GetAuthor());
-        DrawGameBadges(vg, theme, Vec4{80.f, 120.f, 200.f, 200.f}, e);
+        const Vec4 header_cover{80.f, 120.f, 200.f, 200.f};
+        if (e.on_gamecard) {
+            DrawGameCardOutline(vg, header_cover);
+        }
+        DrawGameBadges(vg, theme, header_cover, e);
     }
 
     // max images per frame, in order to not hit io / gpu too hard.
@@ -1767,13 +1770,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // which also replaces the badges - they do not fit a 46px row icon.
         const auto list_info = layout == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
         const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), layout == grid::LayoutType_List ? list_info.c_str() : title_id, e.selected);
+        Vec4 cover_v = image_v;
+        if (layout == grid::LayoutType_HbMenu) {
+            cover_v.y += 28.f;
+            cover_v.h -= 28.f;
+        }
+        if (e.on_gamecard) {
+            DrawGameCardOutline(vg, cover_v);
+        }
         if (layout != grid::LayoutType_List) {
-            auto badge_v = image_v;
-            if (layout == grid::LayoutType_HbMenu) {
-                badge_v.y += 28.f;
-                badge_v.h -= 28.f;
-            }
-            DrawGameBadges(vg, theme, badge_v, e);
+            DrawGameBadges(vg, theme, cover_v, e);
         }
 
         DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
@@ -1784,7 +1790,10 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
     if (m_entries.empty()) {
         ScanHomebrew();
+        return;
     }
+    AppendGameCardEntries();
+    SortAndFindLastFile(false);
 }
 
 void Menu::SetIndex(s64 index) {
@@ -1810,6 +1819,53 @@ void Menu::SetIndex(s64 index) {
     auto& entry = m_entries[m_index];
     LoadGameSummary(entry);
     UpdateStorageHighlight();
+}
+
+void Menu::AppendGameCardEntries() {
+    NcmContentMetaDatabase db{};
+    if (R_FAILED(ncmOpenContentMetaDatabase(&db, NcmStorageId_GameCard))) {
+        return;
+    }
+    ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
+
+    std::vector<NcmContentMetaKey> keys(16);
+    s32 total{};
+    s32 written{};
+    if (R_FAILED(ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+            NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full))) {
+        return;
+    }
+    if (total > written && total > static_cast<s32>(keys.size())) {
+        keys.resize(total);
+        if (R_FAILED(ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(),
+                NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full))) {
+            return;
+        }
+    }
+    keys.resize(written);
+
+    for (const auto& key : keys) {
+        if (key.type != NcmContentMetaType_Application && key.type != NcmContentMetaType_Patch
+            && key.type != NcmContentMetaType_AddOnContent) {
+            continue;
+        }
+
+        const u64 app_id = ncm::GetAppId(key);
+        if (!app_id) {
+            continue;
+        }
+
+        auto it = std::ranges::find_if(m_entries, [app_id](const Entry& e) {
+            return e.app_id == app_id;
+        });
+        if (it != m_entries.end()) {
+            it->on_gamecard = true;
+            continue;
+        }
+
+        m_entries.emplace_back(app_id, 0, 0);
+        m_entries.back().on_gamecard = true;
+    }
 }
 
 void Menu::ScanHomebrew() {
@@ -1857,6 +1913,7 @@ void Menu::ScanHomebrew() {
         offset += record_count;
     }
 
+    AppendGameCardEntries();
     LoadPlayStats();
 
     // filtering here rather than keeping a second, filtered copy of the list:
@@ -2057,6 +2114,9 @@ void Menu::Sort() {
     };
 
     const auto sorter = [sort, order, &name_cmp, &publisher_cmp](const Entry& lhs, const Entry& rhs) -> bool {
+        if (lhs.on_gamecard != rhs.on_gamecard) {
+            return lhs.on_gamecard;
+        }
         switch (sort) {
             case SortType_Updated: {
                 if (lhs.last_updated == rhs.last_updated) {

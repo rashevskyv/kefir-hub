@@ -11,6 +11,7 @@
 #include <span>
 #include <memory>
 #include <functional>
+#include <string>
 
 namespace sphaira::location {
 struct Entry;
@@ -567,7 +568,7 @@ struct Menu final : MenuBase {
     // firmware dump). the callback receives the chosen folder path. selection
     // is by pressing START, or by opening any file inside the target folder.
     using FolderPickCallback = std::function<void(const fs::FsPath&)>;
-    void SetFolderPicker(FolderPickCallback cb);
+    void SetFolderPicker(FolderPickCallback cb, std::string title = {}, std::string confirm = {});
     auto IsFolderPicker() const -> bool { return static_cast<bool>(m_on_folder_picked); }
     // confirm and commit the chosen folder (asks first, then closes the picker).
     void ConfirmFolderPick(const fs::FsPath& folder);
@@ -610,6 +611,7 @@ private:
     std::vector<FileAssocEntry> m_assoc_entries{};
     SelectedStash m_selected{};
     FolderPickCallback m_on_folder_picked{};
+    std::string m_folder_pick_confirm{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Alphabetical};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

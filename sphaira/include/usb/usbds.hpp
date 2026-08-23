@@ -3,7 +3,6 @@
 #include "base.hpp"
 
 auto GetUsbDsStateStr(UsbState state) -> const char*;
-auto GetUsbDsSpeedStr(UsbDeviceSpeed speed) -> const char*;
 
 namespace sphaira::usb {
 

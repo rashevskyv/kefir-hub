@@ -1272,6 +1272,9 @@
   "Extracting...": "Extracting...",
   "Download failed!": "Download failed!",
   "Download and extract completed!\nDelete ZIP file?": "Download and extract completed!\nDelete ZIP file?",
+  "Extracted to: ": "Extracted to: ",
+  "Extract to ": "Extract to ",
+  "Extract ZIP to this folder?": "Extract ZIP to this folder?",
   "Keep": "Keep",
   "URL must end with .zip": "URL must end with .zip",
   "Force": "Force",
@@ -1820,5 +1823,8 @@
   "homebrew starred": "homebrew starred",
   "homebrew unstarred": "homebrew unstarred",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store, DBI and mod utilities.",
-  "System tools and sysmodule manager.": "System tools and sysmodule manager."
+  "System tools and sysmodule manager.": "System tools and sysmodule manager.",
+  "An old Homebrew Menu forwarder is still on the HOME Menu. It can cause errors and will be removed now. Keep using this Kefir Hub icon.": "An old Homebrew Menu forwarder is still on the HOME Menu. It can cause errors and will be removed now. Keep using this Kefir Hub icon.",
+  "Kefir Hub now has a HOME Menu icon. Next time, launch from that Kefir Hub icon, not this old one. The old forwarder will then be removed automatically.": "Kefir Hub now has a HOME Menu icon. Next time, launch from that Kefir Hub icon, not this old one. The old forwarder will then be removed automatically.",
+  "Launch Kefir Hub from its HOME Menu icon, not Album. A Kefir Hub icon will be installed if needed, and any old Homebrew Menu forwarder will be removed.": "Launch Kefir Hub from its HOME Menu icon, not Album. A Kefir Hub icon will be installed if needed, and any old Homebrew Menu forwarder will be removed."
 }

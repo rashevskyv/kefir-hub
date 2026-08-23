@@ -212,8 +212,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const auto pdata = GetPolledData();
 
     // --- Status bar layout (top-right) ---
-    // Line 1 (y=48): IP address
-    // Lines 2-3: NAND / SD storage bars, vertically centered between line 1 and line 4
+    // Line 0 (y=25): Kefir / firmware version, centered over the IP/Wi-Fi block
+    // Line 1 (y=48): IP address / SSID
+    // Lines 2-3: SysNAND|EmuNAND / microSD bars
     // Line 4 (y=70 = start_y): Clock + Battery
 
     const float start_y   = 70;
@@ -294,10 +295,12 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return bounds[2] - bounds[0];
     }();
 
+    const char* nand_bar_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
+    const char* sd_bar_label = "microSD";
     const float label_col_w = [&]{
         nvgFontSize(vg, storage_font);
         float out = 0.f;
-        for (const auto* label : {"NAND", "SD"}) {
+        for (const auto* label : {nand_bar_label, sd_bar_label}) {
             gfx::textBounds(vg, 0, 0, bounds, label);
             out = std::max(out, bounds[2] - bounds[0]);
         }
@@ -378,6 +381,25 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, bar_right, y_ip, small_font,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM, ip_col, "%s", network_str.c_str());
         }
+
+        if (!pdata.sys_version.empty()) {
+            constexpr float sys_font = 12.f;
+            nvgFontSize(vg, sys_font);
+            gfx::textBounds(vg, 0, 0, bounds, pdata.sys_version.c_str());
+            const float ver_w = bounds[2] - bounds[0];
+            const float col_left = (net_w > 0.f && net_text_w > net_w) ? net_left : (bar_right - net_text_w);
+            const float col_right = bar_right;
+            const float col_w = std::max(0.f, col_right - col_left);
+            const float text_mid_y = 25.f;
+            const auto ver_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            if (ver_w <= col_w) {
+                gfx::drawTextArgs(vg, col_left + col_w * 0.5f, text_mid_y, sys_font,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, ver_col, "%s", pdata.sys_version.c_str());
+            } else {
+                gfx::drawTextArgs(vg, col_right, text_mid_y, sys_font,
+                    NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, ver_col, "%s", pdata.sys_version.c_str());
+            }
+        }
     }
 
     if (m_show_storage) {
@@ -441,10 +463,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
                 ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
             nvgFontSize(vg, storage_font);
-            // reading order is label, bar, size: the two outer columns are fixed
-            // and only the size text inside its reserved column changes width.
-            gfx::drawTextArgs(vg, label_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
-                "%s", label);
+            gfx::drawTextArgs(vg, label_x + label_col_w * 0.5f, y, storage_font,
+                NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, text_col, "%s", label);
 
             gfx::drawTextArgs(vg, value_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
                 "%s", value.c_str());
@@ -454,11 +474,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         const float storage_mid  = (y_ip + start_y) * 0.5f;
         const float storage_gap  = 20.f;
 
-        // ---- Row 1: Demarcated service badges (Block 1) and System / Kefir version info (Block 2) ----
+        // ---- Service badges, centered over the NAND / microSD block ----
         const float badge_y    = 17.f;
         const float badge_h    = 16.f;
         const float badge_font = 12.f;
-        const float sys_font   = 12.f;
         const float badge_gap  = 6.f;
 
         struct ServiceBadgeItem {
@@ -466,44 +485,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             bool is_active;
         };
 
-        const char* nand_full_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
-        const char* nand_short_label = pdata.is_emummc ? "E" : "S";
-
-        // Measure Block 2 (System version text) width
-        float block2_w = 0.f;
-        if (!pdata.sys_version.empty()) {
-            nvgFontSize(vg, sys_font);
-            gfx::textBounds(vg, 0, 0, bounds, pdata.sys_version.c_str());
-            block2_w = bounds[2] - bounds[0];
-        }
+        const char* nand_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
 
         const float storage_left = label_x;
         const float storage_span_w = std::max(0.f, storage_right - storage_left);
-
-        // Helper to compute Block 1 width for candidate NAND label
-        auto compute_block1_w = [&](const char* nand_label) -> float {
-            nvgFontSize(vg, badge_font);
-            float w = 0.f;
-            for (const char* name : {"MTP", "FTP"}) {
-                gfx::textBounds(vg, 0, 0, bounds, name);
-                w += (bounds[2] - bounds[0]) + 24.f + badge_gap;
-            }
-            if (pdata.usb3_enabled) {
-                gfx::textBounds(vg, 0, 0, bounds, "USB 3.0");
-                w += (bounds[2] - bounds[0]) + 24.f + badge_gap;
-            }
-            gfx::textBounds(vg, 0, 0, bounds, nand_label);
-            w += (bounds[2] - bounds[0]) + 24.f;
-            return w;
-        };
-
-        const float block1_full_w = compute_block1_w(nand_full_label);
-        const float margin_full = (block2_w > 0.f)
-            ? (storage_span_w - (block1_full_w + block2_w)) / 3.f
-            : (storage_span_w - block1_full_w) * 0.5f;
-
-        // If margin is at least 10px, use the expanded "EmuNAND"/"SysNAND" label; otherwise fallback to compact "E"/"S"
-        const char* nand_label = (margin_full >= 10.f) ? nand_full_label : nand_short_label;
 
         std::vector<ServiceBadgeItem> badges;
         badges.push_back({"MTP", pdata.mtp_running});
@@ -513,7 +498,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         }
         badges.push_back({nand_label, pdata.is_emummc});
 
-        // Measure actual Block 1 (Badges) width
         nvgFontSize(vg, badge_font);
         float block1_w = 0.f;
         for (size_t i = 0; i < badges.size(); ++i) {
@@ -525,18 +509,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        // Calculate 3-way equal margin M across the storage block (from label_x to storage_right)
-        const float content_total_w = block1_w + block2_w;
+        const float margin_m = std::max(4.f, (storage_span_w - block1_w) * 0.5f);
 
-        float margin_m = 0.f;
-        if (block2_w > 0.f) {
-            // 3 equal intervals: left margin, center gap between Block 1 and Block 2, right margin
-            margin_m = std::max(4.f, (storage_span_w - content_total_w) / 3.f);
-        } else {
-            margin_m = std::max(4.f, (storage_span_w - block1_w) * 0.5f);
-        }
-
-        // Render Block 1 (Badges)
         float cur_badge_x = storage_left + margin_m;
         for (const auto& b : badges) {
             nvgFontSize(vg, badge_font);
@@ -571,18 +545,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             cur_badge_x += bw + badge_gap;
         }
 
-        // Render Block 2 (System version text)
-        if (!pdata.sys_version.empty()) {
-            const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
-            const float text_mid_y = badge_y + badge_h * 0.5f;
-            const float block2_x = (cur_badge_x - badge_gap) + margin_m;
-            gfx::drawTextArgs(vg, block2_x, text_mid_y, sys_font, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col,
-                "%s", pdata.sys_version.c_str());
-        }
-
-        // ---- Rows 2-3: NAND / SD bars, vertically centered between the IP row and the clock row ----
-        draw_storage_bar(storage_mid - storage_gap * 0.5f, "NAND", pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
-        draw_storage_bar(storage_mid + storage_gap * 0.5f, "SD",   pdata.sd_free,   pdata.sd_total, m_sd_highlight, m_sd_focus);
+        draw_storage_bar(storage_mid - storage_gap * 0.5f, nand_bar_label, pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
+        draw_storage_bar(storage_mid + storage_gap * 0.5f, sd_bar_label, pdata.sd_free, pdata.sd_total, m_sd_highlight, m_sd_focus);
     } else {
         m_status_left_x = start_x;
     }

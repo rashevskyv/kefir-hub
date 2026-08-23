@@ -46,10 +46,8 @@ struct HeaderStorageAndServicesLayout {
     float storage_span_w{0.f};
 
     float block1_w{0.f};
-    float block2_w{0.f};
     float margin_m{0.f};
     float block1_x{0.f};
-    float block2_x{0.f};
 };
 
 struct MockBadge {
@@ -58,9 +56,8 @@ struct MockBadge {
     float text_w;
 };
 
-static auto ComputeTwoBlockLayout(float storage_left, float storage_right,
-                                  const std::vector<MockBadge>& badges,
-                                  float version_text_w) -> HeaderStorageAndServicesLayout {
+static auto ComputeBadgeLayout(float storage_left, float storage_right,
+                               const std::vector<MockBadge>& badges) -> HeaderStorageAndServicesLayout {
     HeaderStorageAndServicesLayout layout;
     layout.y_ip = 48.f;
     layout.start_y = 70.f;
@@ -73,7 +70,6 @@ static auto ComputeTwoBlockLayout(float storage_left, float storage_right,
     layout.storage_right = storage_right;
     layout.storage_span_w = std::max(0.f, storage_right - storage_left);
 
-    // Measure Block 1 (Badges)
     constexpr float badge_gap = 6.f;
     layout.block1_w = 0.f;
     for (size_t i = 0; i < badges.size(); ++i) {
@@ -84,20 +80,8 @@ static auto ComputeTwoBlockLayout(float storage_left, float storage_right,
         }
     }
 
-    // Measure Block 2 (Version)
-    layout.block2_w = version_text_w;
-
-    // 3-way equal margin calculation
-    const float content_total_w = layout.block1_w + layout.block2_w;
-    if (layout.block2_w > 0.f) {
-        layout.margin_m = std::max(4.f, (layout.storage_span_w - content_total_w) / 3.f);
-    } else {
-        layout.margin_m = std::max(4.f, (layout.storage_span_w - layout.block1_w) * 0.5f);
-    }
-
+    layout.margin_m = std::max(4.f, (layout.storage_span_w - layout.block1_w) * 0.5f);
     layout.block1_x = layout.storage_left + layout.margin_m;
-    layout.block2_x = layout.block1_x + layout.block1_w + layout.margin_m;
-
     return layout;
 }
 
@@ -107,7 +91,7 @@ static int test_vertical_geometry_and_spacing() {
         {"FTP", false, 23.f},
         {"E", true, 8.f},
     };
-    auto layout = ComputeTwoBlockLayout(823.f, 1220.f, badges, 160.f);
+    auto layout = ComputeBadgeLayout(823.f, 1220.f, badges);
 
     // 1. Storage mid-point calculation: (48 + 70) / 2 = 59.f
     CHECK(layout.storage_mid == 59.f);
@@ -135,44 +119,24 @@ static int test_vertical_geometry_and_spacing() {
     return 0;
 }
 
-static int test_3way_symmetric_spacing() {
-    // Badges: MTP (50px) + 6 + FTP (47px) + 6 + E (32px) = 141px
+static int test_badges_centered_over_storage() {
+    // MTP 50 + 6 + FTP 47 + 6 + EmuNAND (54+24=78) = 187
     std::vector<MockBadge> badges = {
         {"MTP", true, 26.f},
         {"FTP", false, 23.f},
-        {"E", true, 8.f},
+        {"EmuNAND", true, 54.f},
     };
-    float version_w = 160.f;
-    float storage_left = 823.f;
-    float storage_right = 1220.f;
+    auto layout = ComputeBadgeLayout(823.f, 1220.f, badges);
 
-    auto layout = ComputeTwoBlockLayout(storage_left, storage_right, badges, version_w);
-
-    // Span width = 1220 - 823 = 397.f
     CHECK(layout.storage_span_w == 397.f);
-    CHECK(layout.block1_w == 141.f);
-    CHECK(layout.block2_w == 160.f);
+    CHECK(layout.block1_w == 187.f);
+    CHECK(layout.margin_m == 105.f); // (397 - 187) / 2
 
-    // Total content = 141 + 160 = 301.f
-    // Space remaining = 397 - 301 = 96.f
-    // M = 96 / 3 = 32.f
-    CHECK(layout.margin_m == 32.f);
-
-    // 1. Distance from storage_left to Block 1 left edge = M
-    float left_gap = layout.block1_x - layout.storage_left;
+    const float left_gap = layout.block1_x - layout.storage_left;
+    const float right_gap = layout.storage_right - (layout.block1_x + layout.block1_w);
     CHECK(left_gap == layout.margin_m);
-
-    // 2. Distance between Block 1 right edge and Block 2 left edge = M
-    float mid_gap = layout.block2_x - (layout.block1_x + layout.block1_w);
-    CHECK(mid_gap == layout.margin_m);
-
-    // 3. Distance from Block 2 right edge to storage_right = M
-    float right_gap = layout.storage_right - (layout.block2_x + layout.block2_w);
     CHECK(right_gap == layout.margin_m);
-
-    // Verify all three intervals are exactly equal!
-    CHECK(left_gap == mid_gap);
-    CHECK(mid_gap == right_gap);
+    CHECK(left_gap == right_gap);
 
     return 0;
 }
@@ -235,51 +199,33 @@ static int test_system_version_formatting() {
     return 0;
 }
 
-static int test_adaptive_nand_label() {
-    constexpr float badge_gap = 6.f;
-    float storage_span_w = 397.f;
-    float version_w = 160.f;
-
-    auto compute_block1_w = [&](bool has_usb3, float nand_text_w) -> float {
-        float w = (26.f + 24.f) + badge_gap + (23.f + 24.f) + badge_gap; // MTP + FTP
-        if (has_usb3) {
-            w += (48.f + 24.f) + badge_gap; // USB 3.0
-        }
-        w += (nand_text_w + 24.f);
-        return w;
+static int test_full_nand_label() {
+    auto nand_badge_name = [](bool is_emummc) {
+        return is_emummc ? "EmuNAND" : "SysNAND";
     };
+    CHECK(std::string(nand_badge_name(true)) == "EmuNAND");
+    CHECK(std::string(nand_badge_name(false)) == "SysNAND");
+    return 0;
+}
 
-    // Case 1: Without USB 3.0 -> "EmuNAND" (text_w = 54px, badge_w = 78px)
-    {
-        float block1_full_w = compute_block1_w(false, 54.f); // 50 + 6 + 47 + 6 + 78 = 187px
-        float margin_full = (storage_span_w - (block1_full_w + version_w)) / 3.f; // (397 - 347) / 3 = 16.67px
-        CHECK(margin_full >= 10.f);
-
-        std::string chosen_label = (margin_full >= 10.f) ? "EmuNAND" : "E";
-        CHECK(chosen_label == "EmuNAND");
-    }
-
-    // Case 2: With USB 3.0 -> Falls back to compact "E" (text_w = 8px, badge_w = 32px)
-    {
-        float block1_full_w = compute_block1_w(true, 54.f); // 50 + 6 + 47 + 6 + 72 + 6 + 78 = 265px
-        float margin_full = (storage_span_w - (block1_full_w + version_w)) / 3.f; // (397 - 425) / 3 = -9.33px
-        CHECK(margin_full < 10.f);
-
-        std::string chosen_label = (margin_full >= 10.f) ? "EmuNAND" : "E";
-        CHECK(chosen_label == "E");
-
-        float block1_short_w = compute_block1_w(true, 8.f); // 219px
-        float margin_short = (storage_span_w - (block1_short_w + version_w)) / 3.f; // (397 - 379) / 3 = 6.0px
-        CHECK(margin_short >= 4.f);
-    }
-
+static int test_version_centered_over_network() {
+    const float bar_right = 1240.f;
+    const float net_text_w = 140.f;
+    const float ver_w = 120.f;
+    const float col_left = bar_right - net_text_w;
+    const float col_w = bar_right - col_left;
+    CHECK(col_w == 140.f);
+    CHECK(ver_w <= col_w);
+    const float ver_x = col_left + col_w * 0.5f;
+    CHECK(ver_x == 1170.f);
     return 0;
 }
 
 int main() {
     if (test_vertical_geometry_and_spacing()) return 1;
-    if (test_3way_symmetric_spacing()) return 1;
-    if (test_adaptive_nand_label()) return 1;
+    if (test_badges_centered_over_storage()) return 1;
+    if (test_full_nand_label()) return 1;
+    if (test_version_centered_over_network()) return 1;
     if (test_state_color_mapping()) return 1;
     if (test_system_version_formatting()) return 1;
 

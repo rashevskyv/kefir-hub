@@ -25,9 +25,11 @@ struct Entry {
     // that folder holds something, i.e. LayeredFS actually loads files for
     // this title.
     bool layeredfs{};
+    bool on_gamecard{};
     u32 content_flags{};
     u64 nand_size{};
     u64 sd_size{};
+    u64 gc_size{};
     // posix seconds, from pdm. 0 when never played (or pdm is unavailable).
     u64 last_played{};
     // nanoseconds, summed over every user profile. filled by LoadPlaytime().
@@ -73,6 +75,7 @@ struct Menu final : grid::Menu {
 private:
     void SetIndex(s64 index);
     void ScanHomebrew();
+    void AppendGameCardEntries();
     // fills last_played from pdm and playtime from the cache, on every scan.
     void LoadPlayStats();
     // queries pdm for total playtime per title and caches it in playlog.ini.

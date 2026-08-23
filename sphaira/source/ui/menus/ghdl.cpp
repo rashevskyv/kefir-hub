@@ -1,5 +1,6 @@
 #include "ui/menus/ghdl.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/filebrowser.hpp"
 
 #include "ui/sidebar.hpp"
 #include "ui/remote_input.hpp"
@@ -21,6 +22,10 @@
 #include "yyjson_helper.hpp"
 #include "threaded_file_transfer.hpp"
 #include "path_util.hpp"
+#include "zip_extract_plan.hpp"
+#include "minizip_helper.hpp"
+
+#include <minizip/unzip.h>
 
 #include <minIni.h>
 #include <dirent.h>
@@ -222,37 +227,171 @@ auto DownloadReleaseJsonJson(ProgressBox* pbox, const std::string& url, std::vec
 }
 
 constexpr s64 MAX_DIRECT_LINK_SIZE = 20 * 1024 * 1024; // 20MB soft limit
-constexpr fs::FsPath DIRECT_LINK_TEMP{"/switch/sphaira/cache/github/direct_link.zip"};
+
+auto UrlFilename(const std::string& url, bool is_nro) -> std::string {
+    auto name = std::string{path::ExtractBasename(url)};
+    if (!path::IsSafeFilename(name)) {
+        return is_nro ? "downloaded.nro" : "downloaded.zip";
+    }
+    return name;
+}
+
+auto ListZipEntryNames(const fs::FsPath& zip_path) -> std::vector<std::string> {
+    zlib_filefunc64_def file_func;
+    mz::FileFuncStdio(&file_func);
+    auto zfile = unzOpen2_64(zip_path, &file_func);
+    if (!zfile) {
+        return {};
+    }
+    ON_SCOPE_EXIT(unzClose(zfile));
+
+    std::vector<std::string> names;
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        return names;
+    }
+    do {
+        char name_buf[1024]{};
+        unz_file_info64 info{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
+            continue;
+        }
+        names.emplace_back(name_buf);
+    } while (UNZ_OK == unzGoToNextFile(zfile));
+    return names;
+}
+
+auto DefaultExtractPathForZip(const fs::FsPath& zip_path, std::string_view filename) -> fs::FsPath {
+    const auto names = ListZipEntryNames(zip_path);
+    std::vector<std::string_view> views;
+    views.reserve(names.size());
+    for (const auto& n : names) {
+        views.emplace_back(n);
+    }
+    return zip_extract::SuggestExtractPath(views, zip_extract::FileStem(filename));
+}
+
+void OpenSdBrowser(const fs::FsPath& path) {
+    const filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
+    App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
+}
+
+void AskOpenExtractedFolder(const fs::FsPath& path) {
+    const char* shown = (path.s[0] != '\0') ? path.s : "/";
+    App::Push<OptionBox>(
+        "Extracted to: "_i18n + shown,
+        "No"_i18n, "Open in file browser"_i18n, 1, [path](auto op_index){
+            if (op_index && *op_index) {
+                OpenSdBrowser(path);
+            }
+        }
+    );
+}
+
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path);
+void BrowseExtractFolder(fs::FsPath zip_path);
+void PromptExtractPath(fs::FsPath zip_path, fs::FsPath default_path);
+
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path) {
+    if (auto norm = path::NormalizeAbsoluteSdPath(extract_path.s)) {
+        extract_path = norm->c_str();
+    } else {
+        extract_path = zip_extract::kDownloadsDir.data();
+    }
+
+    App::Push<ProgressBox>(0, "Extracting..."_i18n, extract_path.s, [zip_path, extract_path](auto pbox) -> Result {
+        fs::FsNativeSd fs;
+        R_TRY(fs.GetFsOpenResult());
+        if (std::strcmp(extract_path.s, "/") != 0) {
+            fs.CreateDirectoryRecursively(extract_path);
+        }
+        pbox->NewTransfer("Extracting..."_i18n);
+        R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path));
+        R_SUCCEED();
+    }, [zip_path, extract_path](Result rc){
+        if (rc == Result_TransferCancelled) {
+            App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
+            return;
+        }
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Extract failed!"_i18n);
+            return;
+        }
+
+        homebrew::SignalChange();
+        App::Push<OptionBox>(
+            "Download and extract completed!\nDelete ZIP file?"_i18n,
+            "Keep"_i18n, "Delete"_i18n, 1, [zip_path, extract_path](auto op_index){
+                if (op_index && *op_index) {
+                    fs::FsNativeSd fs;
+                    fs.DeleteFile(zip_path);
+                }
+                AskOpenExtractedFolder(extract_path);
+            }
+        );
+    });
+}
+
+void BrowseExtractFolder(fs::FsPath zip_path) {
+    auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
+    browser->SetFolderPicker(
+        [zip_path](const fs::FsPath& folder) {
+            ExtractDownloadedZip(zip_path, folder);
+        },
+        "Select folder"_i18n,
+        "Extract ZIP to this folder?"_i18n);
+    App::Push(std::move(browser));
+}
+
+void PromptExtractPath(fs::FsPath zip_path, fs::FsPath default_path) {
+    const char* shown = (default_path.s[0] != '\0') ? default_path.s : "/";
+    PopupList::Items items;
+    if (std::strcmp(shown, "/") == 0) {
+        items.emplace_back("Extract to root"_i18n);
+    } else {
+        items.emplace_back("Extract to "_i18n + shown);
+    }
+    items.emplace_back("Extract to..."_i18n);
+    items.emplace_back("Cancel"_i18n);
+
+    auto popup = std::make_unique<PopupList>("Extract Options"_i18n, items, [zip_path, default_path](auto op_index){
+        if (!op_index) {
+            return;
+        }
+        if (*op_index == 0) {
+            ExtractDownloadedZip(zip_path, default_path);
+        } else if (*op_index == 1) {
+            BrowseExtractFolder(zip_path);
+        }
+    }, 0);
+    popup->SetMenuStyle(true);
+    App::Push(std::move(popup));
+}
 
 void DoDirectLinkDownload(const std::string& url) {
     const bool is_nro = path::IsValidDirectNroUrl(url);
-
-    // Extract filename from URL
-    const auto q = url.find('?');
-    const auto path_only = (q != std::string::npos) ? url.substr(0, q) : url;
-    const auto slash = path_only.find_last_of('/');
-    std::string filename = (slash != std::string::npos) ? path_only.substr(slash + 1) : path_only;
-    if (filename.empty()) {
-        filename = is_nro ? "downloaded.nro" : "downloaded.zip";
-    }
-
-    const fs::FsPath dest_file = is_nro ? fs::FsPath("/switch/" + filename) : DIRECT_LINK_TEMP;
+    const auto filename = UrlFilename(url, is_nro);
+    const fs::FsPath dest_file = is_nro
+        ? fs::FsPath{zip_extract::SuggestNakedNroPath(filename)}
+        : fs::FsPath{std::string{zip_extract::kDownloadsDir} + "/" + filename};
 
     App::Push<ProgressBox>(0, "Downloading..."_i18n, filename, [url, is_nro, dest_file, filename](auto pbox) -> Result {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
 
         if (is_nro) {
-            fs.CreateDirectoryRecursively("/switch");
+            const auto slash = std::string_view{dest_file.s}.find_last_of('/');
+            if (slash != std::string_view::npos && slash > 0) {
+                fs.CreateDirectoryRecursively(std::string{dest_file.s, dest_file.s + slash});
+            }
         } else {
-            fs.DeleteFile(DIRECT_LINK_TEMP);
+            fs.CreateDirectoryRecursively(std::string{zip_extract::kDownloadsDir});
+            fs.DeleteFile(dest_file);
         }
 
         if (pbox->ShouldExit()) {
             return Result_TransferCancelled;
         }
 
-        // Download the file
         pbox->NewTransfer("Downloading "_i18n + filename);
         const auto result = curl::Api().ToFile(
             curl::Url{url},
@@ -264,21 +403,6 @@ void DoDirectLinkDownload(const std::string& url) {
             return Result_TransferCancelled;
         }
         R_UNLESS(result.success, Result_GhdlFailedToDownloadAsset);
-
-        if (pbox->ShouldExit()) {
-            return Result_TransferCancelled;
-        }
-
-        // Extract if it is a ZIP archive
-        if (!is_nro) {
-            pbox->NewTransfer("Extracting..."_i18n);
-            R_TRY(thread::TransferUnzipAll(pbox, DIRECT_LINK_TEMP, &fs, "/"));
-
-            if (pbox->ShouldExit()) {
-                return Result_TransferCancelled;
-            }
-        }
-
         R_SUCCEED();
     }, [is_nro, dest_file, filename](Result rc){
         if (rc == Result_TransferCancelled) {
@@ -295,25 +419,17 @@ void DoDirectLinkDownload(const std::string& url) {
         if (is_nro) {
             App::Notify("Downloaded "_i18n + filename);
             App::Push<OptionBox>(
-                "Downloaded "_i18n + filename + " to /switch/\n" + "Launch now?"_i18n,
+                "Downloaded "_i18n + filename + " to " + dest_file.s + "\n" + "Launch now?"_i18n,
                 "No"_i18n, "Launch"_i18n, 1, [dest_file](auto op_index){
                     if (op_index && *op_index) {
                         nro_launch(dest_file);
                     }
                 }
             );
-        } else {
-            // Ask whether to delete the ZIP
-            App::Push<OptionBox>(
-                "Download and extract completed!\nDelete ZIP file?"_i18n,
-                "Keep"_i18n, "Delete"_i18n, 1, [](auto op_index){
-                    if (op_index && *op_index) {
-                        fs::FsNativeSd fs;
-                        fs.DeleteFile(DIRECT_LINK_TEMP);
-                    }
-                }
-            );
+            return;
         }
+
+        PromptExtractPath(dest_file, DefaultExtractPathForZip(dest_file, filename));
     });
 }
 
