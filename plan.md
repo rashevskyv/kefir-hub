@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.531**. Завершені плани збережено в
+Поточний delivery — **v0.13.532**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.531 — HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds
+## Поточний delivery: v0.13.532 — HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **64-бітний розрахунок меж data+BSS (`hbl/source/main.c`)**:
+   - Переведено всі арифметичні операції для `seg2_size + bss_size`, вирівнювання за сторінками та зміщень сегментів на тип `u64`.
+   - Додано перевірки переповнення суми, переповнення вирівнювання та перевірку `seg2_off + rw_size <= g_heapSize`.
+2. **Рання валідація меж до зчитування тіла NRO**:
+   - Усі перевірки валідності заголовка, сегментів та розмірів коду/купи перенесено безпосередньо перед зчитуванням залишку NRO з SD-карти.
+3. **Host unit-тести (`tests/test_hbl_nro_reader.cpp`)**:
+   - Додано `CheckRwSizeBounds` та перевірки на перехоплення 32-бітного обгортання.
+4. **Верифікація**:
+   - Пройдено всі unit-тести у WSL.
+
+## Попередній delivery: v0.13.531 — HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Валідація неперервної купи в HBL (`hbl/source/main.c`)**:

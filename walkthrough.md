@@ -1,9 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.531** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.532** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.532 — HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation
+
+- **Проблема**:
+  - У `hbl/source/main.c` розрахунок `rw_size = header->segments[2].size + header->bss_size` відбувався у 32-бітній арифметиці `u32`, що створювало можливість цілочисельного переповнення (wrap-around) суми сегмента даних і BSS перед приведенням до `size_t`.
+  - Крім того, вичитування залишку тіла NRO з файлу виконувалося до повної валідації розмірів сегментів та BSS.
+- **Внесені зміни**:
+  - **64-бітний розрахунок меж (`hbl/source/main.c`)**: Розрахунок `rw_size`, зміщень сегментів та `total_size` переведено на 64-бітний тип `u64` з явними перевірками переповнення суми та сторінкового вирівнювання (`(rw_size_raw + 0xFFFULL) & ~0xFFFULL`).
+  - **Рання валідація меж**: Перевірку всіх трьох сегментів, перевірку переповнень і перевірку сумісності з `g_heapSize` перенесено перед зчитуванням тіла NRO з файлу.
+  - **Unit-тести (`tests/test_hbl_nro_reader.cpp`)**: Оновлено функцію `CheckNroHeapBounds`, додано `CheckRwSizeBounds` та адресні перевірки на перехоплення 32-бітного wrap-around.
+- **Тестування та верифікація**:
+  - Усі unit-тести у WSL пройдено (all green). Апаратне тестування на консолі залишається pending.
 
 ## v0.13.531 — HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds
 

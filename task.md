@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.531**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.532**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.531 (HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds)
+## Поточний delivery: v0.13.532 (HBL Loader: 64-bit Integer-Safe NRO Bounds & Pre-Body Read Validation)
+
+- [x] `HBL-BOUNDS-U64-532` — у `hbl/source/main.c` виправлено розрахунок `rw_size` (data+BSS) та вирівнювання за сторінками виключно у 64-бітній арифметиці `u64`, усунувши ризик 32-бітного переповнення/обгортання суми `seg2_size + bss_size`.
+- [x] `HBL-BOUNDS-EARLY-CHECK-532` — повну валідацію сегментів, меж data+BSS та code+BSS проти `g_heapSize` перенесено безпосередньо після зчитування заголовка `NroHeader` до початку вичитування тіла NRO з файлу.
+- [x] `TEST-HBL-WRAP-532` — у `tests/test_hbl_nro_reader.cpp` додано `CheckRwSizeBounds` та адресні перевірки відхилення 32-бітних обгорток (wrap-around) для розмірів сегментів і BSS.
+- [x] `DOCS-BUMP-532` — версію піднято до `0.13.532` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Апаратне тестування на Switch залишається pending.
+
+## Попередній delivery: v0.13.531 (HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds)
 
 - [x] `HBL-HEAP-SCAN-531` — у `hbl/source/main.c` додано локальну допоміжну функцію `findUsableHeapRange`, яка через `svcQueryMemory` сканує діапазон пам'яті купи та обирає найбільший неперервний вирівняний по сторінках відрізок з критеріями `MemType_Heap`, `Perm_Rw` та `attr == 0`. Виключено передачу «дірок» з `Perm_None`, сторонніх типів пам'яті або позичених сторінок у `EntryType_OverrideHeap`.
 - [x] `HBL-NRO-BOUNDS-531` — у `loadNro()` усунуто застарілий TODO та додано повну перевірку меж NRO code+BSS і `rw_size` проти `g_heapSize` із захистом від арифметичного переповнення перед зчитуванням тіла, обнуленням BSS та відображенням `svcMapProcessCodeMemory`.

@@ -147,29 +147,54 @@ bool FindUsableHeapRangeMock(uint64_t override_addr, uint64_t override_size,
     return true;
 }
 
+bool CheckRwSizeBounds(uint64_t heap_size, uint32_t seg2_off, uint32_t seg2_size, uint32_t bss_size) {
+    const uint64_t seg2_off_u64 = (uint64_t)seg2_off;
+    const uint64_t seg2_size_u64 = (uint64_t)seg2_size;
+    const uint64_t bss_size_u64 = (uint64_t)bss_size;
+
+    const uint64_t rw_size_raw = seg2_size_u64 + bss_size_u64;
+    if (rw_size_raw < seg2_size_u64) {
+        return false;
+    }
+
+    const uint64_t rw_size_aligned = (rw_size_raw + 0xFFFULL) & ~0xFFFULL;
+    if (rw_size_aligned < rw_size_raw) {
+        return false;
+    }
+
+    if (seg2_off_u64 + rw_size_aligned < seg2_off_u64 || (seg2_off_u64 + rw_size_aligned) > heap_size) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CheckNroHeapBounds(uint64_t heap_size, uint32_t nro_size, uint32_t bss_size, uint32_t seg2_off, uint32_t seg2_size) {
-    if (nro_size < sizeof(NroStart) + sizeof(NroHeader) || nro_size > heap_size) {
+    const uint64_t nro_size_u64 = (uint64_t)nro_size;
+    const uint64_t bss_size_u64 = (uint64_t)bss_size;
+    const uint64_t seg2_off_u64 = (uint64_t)seg2_off;
+    const uint64_t seg2_size_u64 = (uint64_t)seg2_size;
+
+    if (nro_size_u64 < sizeof(NroStart) + sizeof(NroHeader) || nro_size_u64 > heap_size) {
         return false;
     }
 
-    if ((uint64_t)seg2_size + (uint64_t)bss_size + 0xFFFULL < (uint64_t)seg2_size) {
+    if (seg2_off_u64 >= nro_size_u64 || seg2_size_u64 > nro_size_u64 ||
+        (seg2_off_u64 + seg2_size_u64) < seg2_off_u64 || (seg2_off_u64 + seg2_size_u64) > nro_size_u64) {
         return false;
     }
 
-    uint64_t rw_size = seg2_size + bss_size;
-    rw_size = (rw_size + 0xFFF) & ~0xFFF;
-
-    if ((uint64_t)seg2_off + rw_size > heap_size) {
+    if (!CheckRwSizeBounds(heap_size, seg2_off, seg2_size, bss_size)) {
         return false;
     }
 
-    const uint64_t total_size_raw = (uint64_t)nro_size + (uint64_t)bss_size + 0xFFFULL;
-    if (total_size_raw < (uint64_t)nro_size) {
+    const uint64_t total_size_raw = nro_size_u64 + bss_size_u64;
+    if (total_size_raw < nro_size_u64) {
         return false;
     }
 
-    const size_t total_size = (size_t)(total_size_raw & ~0xFFFULL);
-    if (total_size > heap_size) {
+    const uint64_t total_size_aligned = (total_size_raw + 0xFFFULL) & ~0xFFFULL;
+    if (total_size_aligned < total_size_raw || total_size_aligned > heap_size) {
         return false;
     }
 
@@ -341,6 +366,16 @@ struct MockNroReader {
 
             // Integer overflow in code_size + bss_size
             CHECK(!CheckNroHeapBounds(heap_size, 0x1000000, 0xFFFFFFF0, 0xF00000, 0x100000));
+
+            // 32-bit wrap in seg2_size + bss_size (e.g. 0x10000 + 0xFFFFFFFF = 0x10000FFFF > heap_size)
+            // In 32-bit addition, 0x10000 + 0xFFFFFFFF wraps to 0xFFFF, page-aligned to 0x10000 <= 32MB!
+            // CheckRwSizeBounds must reject this in 64-bit arithmetic:
+            CHECK(!CheckRwSizeBounds(heap_size, 0, 0x10000, 0xFFFFFFFF));
+            CHECK(!CheckRwSizeBounds(heap_size, 0, 0x80000000, 0x80000000)); // 32-bit wraps to 0x00000000
+            CHECK(!CheckNroHeapBounds(heap_size, 0x10000, 0xFFFFFFFF, 0, 0x10000));
+
+            // Segment file_off + size 32-bit wrap
+            CHECK(!CheckNroHeapBounds(heap_size, 0x100000, 0x1000, 0xFFFFFF00, 0x200));
         }
 
         return 0;
