@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.542**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.543**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.542 (Forwarder capture, URL cleanup, friendly errors)
+## Поточний delivery: v0.13.543 (Centered OptionBox buttons, honest forwarder notices)
+
+- [x] `OPTIONBOX-CENTER-543` — підпис+гліф по центру кнопки; шрифт менший лише якщо 26px не влазить.
+- [x] `FORWARDER-NOTICE-TONE-543` — notices пояснюють навіщо і відповідають plan (встановлюємо / видаляємо зараз).
+- [x] `DOCS-BUMP-543` — версію піднято до `0.13.543`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.542 (Forwarder capture, URL cleanup, friendly errors)
 
 - [x] `FORWARDER-CAPTURE-542` — автофорвардер: screenshot і video_capture увімкнені.
 - [x] `URL-SCHEME-COLLAPSE-542` — згортання `https://https://…` у remote input і `ProcessDirectLinkUrl`.

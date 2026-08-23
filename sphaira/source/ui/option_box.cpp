@@ -104,24 +104,54 @@ auto OptionBoxEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
         gfx::drawRectOutline(vg, theme, 4.f, m_pos);
     }
 
-    if (m_glyph.empty()) {
-        gfx::drawText(vg, m_text_pos, 26.f, colour, m_label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    constexpr float pad = 10.f;
+    constexpr float gap = 8.f;
+    constexpr float glyph_size = 26.f;
+    const float inner_w = m_pos.w - pad * 2.f;
+    const float mid_y = m_pos.y + m_pos.h / 2.f;
+
+    auto measure = [&](float size, const char* s) -> float {
+        nvgFontSize(vg, size);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float b[4]{};
+        nvgTextBounds(vg, 0.f, 0.f, s, nullptr, b);
+        return b[2] - b[0];
+    };
+
+    const float glyph_w = m_glyph.empty() ? 0.f : measure(glyph_size, m_glyph.c_str());
+    const float prefix = m_glyph.empty() ? 0.f : glyph_w + gap;
+    constexpr float sizes[] = {26.f, 22.f, 18.f};
+    float label_size = 26.f;
+    float label_w = 0.f;
+    bool fits = false;
+    for (const float sz : sizes) {
+        label_w = measure(sz, m_label.c_str());
+        if (prefix + label_w <= inner_w) {
+            label_size = sz;
+            fits = true;
+            break;
+        }
+        label_size = sz;
+    }
+
+    if (fits) {
+        const float group_w = prefix + label_w;
+        float x = m_pos.x + (m_pos.w - group_w) / 2.f;
+        if (!m_glyph.empty()) {
+            gfx::drawText(vg, x, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            x += glyph_w + gap;
+        }
+        gfx::drawText(vg, x, mid_y, label_size, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return;
     }
 
-    constexpr float pad = 12.f;
-    constexpr float glyph_size = 26.f;
-    constexpr float glyph_slot = 34.f;
-    const float mid_y = m_pos.y + m_pos.h / 2.f;
-    gfx::drawText(vg, m_pos.x + pad, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-
-    const float text_x = m_pos.x + pad + glyph_slot;
-    const float text_w = m_pos.w - pad * 2.f - glyph_slot;
-    nvgFontSize(vg, 22.f);
-    float bounds[4]{};
-    nvgTextBounds(vg, 0.f, 0.f, m_label.c_str(), nullptr, bounds);
-    const float size = (bounds[2] - bounds[0] <= text_w) ? 22.f : 18.f;
-    gfx::drawTextBox(vg, text_x, mid_y, size, text_w, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
+    const float text_w = inner_w - prefix;
+    float x = m_pos.x + pad;
+    if (!m_glyph.empty()) {
+        gfx::drawText(vg, x, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        x += glyph_w + gap;
+    }
+    gfx::drawTextBox(vg, x, mid_y, label_size, text_w, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
 }
 
 auto OptionBoxEntry::Selected(bool enable) -> void {

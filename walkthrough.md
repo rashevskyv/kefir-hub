@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.542** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.543** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.543 — Center OptionBox buttons, honest forwarder notices
+
+- Кнопки діалогів: іконка + текст як група по центру; 26px, потім 22/18 лише якщо не влазить, інакше перенос.
+- Повідомлення форвардера без «якщо треба»: пояснюють навіщо HOME-іконка і що видалення/встановлення вже йде.
 
 ## v0.13.542 — Forwarder capture, URL scheme collapse, friendly download errors
 

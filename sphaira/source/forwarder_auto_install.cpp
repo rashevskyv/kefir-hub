@@ -168,17 +168,25 @@ auto ClassifyLaunch(u64 own_tid, u64 kefirhub_tid) -> LaunchSource {
     return LaunchSource::Album;
 }
 
-void NotifyUi(Notice notice) {
+void NotifyUi(const Plan& plan) {
     const char* key = nullptr;
-    switch (notice) {
+    switch (plan.notice) {
     case Notice::OldWillBeRemoved:
-        key = "An old Homebrew Menu forwarder is still on the HOME Menu. It can cause errors and will be removed now. Keep using this Kefir Hub icon.";
+        key = "An old Homebrew Menu forwarder is still on the HOME Menu. It can cause errors, so it is being removed now. You can keep using this Kefir Hub icon.";
         break;
     case Notice::UseNewNextTime:
-        key = "Kefir Hub now has a HOME Menu icon. Next time, launch from that Kefir Hub icon, not this old one. The old forwarder will then be removed automatically.";
+        key = plan.install_new
+            ? "Kefir Hub is installing a HOME Menu icon so you can launch it without this old Homebrew Menu forwarder. Next time, open that new icon. This old one cannot be removed while you are using it; it will be removed automatically afterwards."
+            : "Kefir Hub already has a HOME Menu icon. Next time, launch from that icon. This old Homebrew Menu forwarder cannot be removed while you are using it; it will be removed automatically afterwards.";
         break;
     case Notice::PreferHomeIcon:
-        key = "Launch Kefir Hub from its HOME Menu icon, not Album. A Kefir Hub icon will be installed if needed, and any old Homebrew Menu forwarder will be removed.";
+        if (plan.install_new && plan.delete_old) {
+            key = "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album. An old Homebrew Menu forwarder is being removed now because it can cause errors.";
+        } else if (plan.install_new) {
+            key = "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album.";
+        } else {
+            key = "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.";
+        }
         break;
     case Notice::None:
         return;
@@ -273,7 +281,7 @@ void ThreadFunc(void*) {
     if (plan.delete_old) {
         CleanOldInstalledForwarders(kefirhub_tid, own_tid);
     }
-    NotifyUi(plan.notice);
+    NotifyUi(plan);
 }
 
 } // namespace
