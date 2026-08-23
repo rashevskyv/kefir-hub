@@ -1,9 +1,22 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.529** (2026-08-22). Попередні
+Актуальний delivery — **v0.13.530** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.530 — NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal
+
+- **Аналіз результатів покрокової бісекції**:
+  - Порівняння поведінки білдів показало, що у `v0.13.469` (`1bb99c4`) запуск дочірніх NRO через створений форвардер працював коректно, тоді як регресія виникла при переході до великого коміту `v0.13.487` (`32f655b`).
+  - HBL loader (`hbl/source/main.c`), конфігурація NPDM (`hbl/hbl.json`) та генератор форвардерів (`owo.cpp`) між версіями 469 та 487 залишалися незмінними.
+  - Єдиною прямою зміною в ланцюжку передачі керування (`handoff`) NRO була ін'єкція викликів `fsdevCommitDevice("sdmc")` та `fsFsCommit(fs)` у функцію `launch_internal` безпосередньо перед `envSetNextLoad(path.c_str(), argv.c_str())`.
+  - Крім того, оскільки `fsdevCommitDevice("sdmc")` у libnx уже всередині викликає `fsFsCommit(fs)`, операція коміту файлової системи виконувалася двічі в критичний момент передачі контексту.
+- **Внесені зміни**:
+  - **Очищення `launch_internal` (`sphaira/source/nro.cpp`)**: Повністю прибрано виклики `fsdevCommitDevice` та `fsFsCommit` з функції реєстрації наступного NRO, повернувши стан коду до перевіреного `v0.13.469`.
+  - **Очищення `userAppExit` (`sphaira/source/main.cpp`)**: Прибрано зайвий дубльований виклик `fsFsCommit` після `fsdevCommitDevice("sdmc")`.
+- **Тестування та верифікація**:
+  - Пройдено всі 24 набори unit-тестів у WSL (all green).
 
 ## v0.13.529 — Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions
 

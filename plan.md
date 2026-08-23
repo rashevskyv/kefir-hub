@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.529**. Завершені плани збережено в
+Поточний delivery — **v0.13.530**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.529 — Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions
+## Поточний delivery: v0.13.530 — NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Аналіз покрокової бісекції (v0.13.469 -> v0.13.487)**:
+   - Встановлено, що у версії `v0.13.469` (`1bb99c4`) запуск дочірніх NRO (включаючи `NX-Activity-Log` та `Pipe NSX`) працював стабільно.
+   - У коміті `v0.13.487` (`32f655b`) в `launch_internal` перед `envSetNextLoad` було додано подвійний FS commit: `fsdevCommitDevice("sdmc")` та `fsFsCommit(fs)`.
+2. **Очищення handoff-ланцюжка в NRO (`sphaira/source/nro.cpp`)**:
+   - Вилучено передчасні виклики `fsdevCommitDevice` та `fsFsCommit` безпосередньо перед `envSetNextLoad` та `evman::push`.
+3. **Очищення виходу програми (`sphaira/source/main.cpp`)**:
+   - Усунуто дублювання `fsFsCommit` після `fsdevCommitDevice("sdmc")` у `userAppExit()`.
+4. **Верифікація**:
+   - Успішно пройдено всі 24 набори unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.529 — Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Аналіз краш-звітів на карті пам'яті (`F:\atmosphere\crash_reports`)**:

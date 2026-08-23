@@ -198,11 +198,6 @@ auto nro_get_icon_internal(fs::File* f, u64 size, u64 offset) -> std::vector<u8>
 }
 
 auto launch_internal(const std::string& path, const std::string& argv) -> Result {
-    fsdevCommitDevice("sdmc");
-    if (auto fs = fsdevGetDeviceFileSystem("sdmc")) {
-        fsFsCommit(fs);
-    }
-
     R_TRY(envSetNextLoad(path.c_str(), argv.c_str()));
 
     log_write("set launch with path: %s argv: %s\n", path.c_str(), argv.c_str());

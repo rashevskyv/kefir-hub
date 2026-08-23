@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.529**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.530**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.529 (Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions)
+## Поточний delivery: v0.13.530 (NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal)
+
+- [x] `REGRESSION-BISECT-TRACE-530` — проведено покрокову бісекцію регресії запуску NRO: з'ясовано, що у `v0.13.469` (`1bb99c4`) запуск NRO працював штатно, а в масивному коміті `v0.13.487` (`32f655b`) перед викликом `envSetNextLoad` у `launch_internal` було додано `fsdevCommitDevice("sdmc")` та дубльований виклик `fsFsCommit(fs)`.
+- [x] `NRO-LAUNCH-CLEANUP-530` — у `sphaira/source/nro.cpp` функцію `launch_internal` очищено від передчасного та подвійного FS commit перед `envSetNextLoad`, повернувши чистий ланцюжок передачі керування дочірнім NRO як у `v0.13.469`.
+- [x] `USERAPPEXIT-CLEANUP-530` — у `sphaira/source/main.cpp` усунуто дублювання `fsFsCommit` після `fsdevCommitDevice("sdmc")` у `userAppExit()`.
+- [x] `DOCS-BUMP-530` — версію піднято до `0.13.530` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі 24 набори unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.529 (Forwarder Editor: List Null Pointer Safety & D-Pad Focus Transitions)
 
 - [x] `CRASH-LOG-TRACEBACK-529` — проведено аналіз crash-звітів `01787411683_03db12780bd84000.log`, `01787411672_03db12780bd84000.log` та `01787411496_03db12780bd84000.log` на підключеній SD-картці Switch (диск `F:`). З'ясовано, що у `sphaira` на адресі `PC = sphaira + 0xf08f4` (`sphaira::ui::List::OnUpdateGrid`) відбувався `Data Abort` на нульовій адресі `0x0000000000000000` через розіменування `controller` (`ldr x1, [x24]`), коли `Forwarder Editor` викликав `m_list->OnUpdate(nullptr, ...)` під час фокусу на іконці.
 - [x] `LIST-NULL-SAFETY-529` — у `sphaira/source/ui/list.cpp` додано повний захист покажчиків `controller` та `touch` у `OnUpdateGrid`, `OnUpdateHome`, `StepFling` та `OnTouchScroll`, що запобігає збоям при виклику з `nullptr`.

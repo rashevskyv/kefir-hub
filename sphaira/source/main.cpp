@@ -206,9 +206,6 @@ void userAppExit(void) {
 
     // NOTE (DMC): prevents exfat / fat32 corruption on all SD cards.
     fsdevCommitDevice("sdmc");
-    if (auto fs = fsdevGetDeviceFileSystem("sdmc")) {
-        fsFsCommit(fs);
-    }
 
     sphaira::App::SetBoostMode(false);
     svcSleepThread(50'000'000);
