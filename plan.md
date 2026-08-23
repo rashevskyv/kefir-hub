@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.540**. Завершені плани збережено в
+Поточний delivery — **v0.13.541**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.540 — OptionBox: wrap long button labels, keep + glyph fixed
+## Поточний delivery: v0.13.541 — Zip: "Install NRO to /switch" label
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Якщо в zip один `.nro`, перша дія називається «Встановити NRO в папку switch», а не довгим шляхом.
+
+## Попередній delivery: v0.13.540 — OptionBox: wrap long button labels, keep + glyph fixed
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Довгі підписи кнопок OptionBox (наприклад «Відкрити у файловому браузері») більше не вилазять за край.

@@ -378,8 +378,7 @@ void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
     PopupList::Items items;
     const bool has_nro = nro.has_value();
     if (has_nro) {
-        const auto dest = zip_extract::NroInstallDest(*nro);
-        items.emplace_back(*nro + " → " + dest);
+        items.emplace_back("Install NRO to /switch"_i18n);
     }
     auto extract_all = "Extract all to /downloads"_i18n;
     if (!roots.empty()) {

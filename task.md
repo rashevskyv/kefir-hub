@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.540**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.541**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.540 (OptionBox long button labels)
+## Поточний delivery: v0.13.541 (Install NRO to /switch label)
+
+- [x] `ZIP-NRO-INSTALL-LABEL-541` — рядок дії для одного NRO: «Install NRO to /switch» / «Встановити NRO в папку switch».
+- [x] `DOCS-BUMP-541` — версію піднято до `0.13.541`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.540 (OptionBox long button labels)
 
 - [x] `OPTIONBOX-BUTTON-FIT-540` — гліф +/B фіксований зліва; довгий підпис кнопки меншим шрифтом і в два рядки.
 - [x] `DOCS-BUMP-540` — версію піднято до `0.13.540`, оновлено plan/task/walkthrough/audit. Агент не компілював.
