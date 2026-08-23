@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.530**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.531**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.530 (NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal)
+## Поточний delivery: v0.13.531 (HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds)
+
+- [x] `HBL-HEAP-SCAN-531` — у `hbl/source/main.c` додано локальну допоміжну функцію `findUsableHeapRange`, яка через `svcQueryMemory` сканує діапазон пам'яті купи та обирає найбільший неперервний вирівняний по сторінках відрізок з критеріями `MemType_Heap`, `Perm_Rw` та `attr == 0`. Виключено передачу «дірок» з `Perm_None`, сторонніх типів пам'яті або позичених сторінок у `EntryType_OverrideHeap`.
+- [x] `HBL-NRO-BOUNDS-531` — у `loadNro()` усунуто застарілий TODO та додано повну перевірку меж NRO code+BSS і `rw_size` проти `g_heapSize` із захистом від арифметичного переповнення перед зчитуванням тіла, обнуленням BSS та відображенням `svcMapProcessCodeMemory`.
+- [x] `TEST-HBL-HEAP-BOUNDS-531` — розширено host-тест `tests/test_hbl_nro_reader.cpp`, додано моделювання пам'яті з дірками (`Perm_None`, `attr != 0`, non-heap memory) та перевірки відхилення надвеликих NRO / BSS.
+- [x] `DOCS-BUMP-531` — версію піднято до `0.13.531` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, пройдено всі unit-тести та перевірено збірку бінарника.
+
+## Попередній delivery: v0.13.530 (NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal)
 
 - [x] `REGRESSION-BISECT-TRACE-530` — проведено покрокову бісекцію регресії запуску NRO: з'ясовано, що у `v0.13.469` (`1bb99c4`) запуск NRO працював штатно, а в масивному коміті `v0.13.487` (`32f655b`) перед викликом `envSetNextLoad` у `launch_internal` було додано `fsdevCommitDevice("sdmc")` та дубльований виклик `fsFsCommit(fs)`.
 - [x] `NRO-LAUNCH-CLEANUP-530` — у `sphaira/source/nro.cpp` функцію `launch_internal` очищено від передчасного та подвійного FS commit перед `envSetNextLoad`, повернувши чистий ланцюжок передачі керування дочірнім NRO як у `v0.13.469`.

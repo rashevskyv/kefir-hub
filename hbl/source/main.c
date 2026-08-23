@@ -287,6 +287,79 @@ static Result restoreMainThreadAffinity(void) {
     return svcSetThreadCoreMask(CUR_THREAD_HANDLE, -1, core_mask);
 }
 
+static void findUsableHeapRange(u64 override_addr, u64 override_size, u64* out_start, u64* out_size) {
+    if (override_size == 0 || override_addr == 0 || (override_addr + override_size) <= override_addr) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 28));
+    }
+
+    const u64 override_end = override_addr + override_size;
+    u64 cur_addr = override_addr;
+
+    u64 best_start = 0;
+    u64 best_size = 0;
+    u64 current_usable_start = 0;
+    u64 current_usable_size = 0;
+
+    while (cur_addr < override_end) {
+        MemoryInfo info = {0};
+        u32 pageinfo = 0;
+        Result rc = svcQueryMemory(&info, &pageinfo, cur_addr);
+        if (R_FAILED(rc)) {
+            diagAbortWithResult(rc);
+        }
+
+        if (info.size == 0 || (info.addr + info.size) <= info.addr || cur_addr < info.addr || cur_addr >= (info.addr + info.size)) {
+            diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 28));
+        }
+
+        const u64 mem_end = info.addr + info.size;
+        const u64 block_start = (info.addr < override_addr) ? override_addr : info.addr;
+        const u64 block_end = (mem_end > override_end) ? override_end : mem_end;
+        const u64 block_size = block_end - block_start;
+
+        const bool is_usable = ((info.type & MemState_Type) == MemType_Heap) &&
+                               (info.perm == Perm_Rw) &&
+                               (info.attr == 0);
+
+        if (is_usable && (block_start % 0x1000 == 0) && (block_size % 0x1000 == 0)) {
+            if (current_usable_size > 0 && (current_usable_start + current_usable_size) == block_start) {
+                current_usable_size += block_size;
+            } else {
+                if (current_usable_size > best_size) {
+                    best_size = current_usable_size;
+                    best_start = current_usable_start;
+                }
+                current_usable_start = block_start;
+                current_usable_size = block_size;
+            }
+        } else {
+            if (current_usable_size > best_size) {
+                best_size = current_usable_size;
+                best_start = current_usable_start;
+            }
+            current_usable_start = 0;
+            current_usable_size = 0;
+        }
+
+        if (mem_end <= cur_addr) {
+            diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 28));
+        }
+        cur_addr = mem_end;
+    }
+
+    if (current_usable_size > best_size) {
+        best_size = current_usable_size;
+        best_start = current_usable_start;
+    }
+
+    if (best_size == 0) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 28));
+    }
+
+    *out_start = best_start;
+    *out_size = best_size;
+}
+
 void NX_NORETURN loadNro(void) {
     NroHeader* header = NULL;
     size_t rw_size = 0;
@@ -430,7 +503,7 @@ void NX_NORETURN loadNro(void) {
         }
         offset += sizeof(*header);
 
-        if (header->size < sizeof(NroStart) + sizeof(NroHeader)) {
+        if (header->size < sizeof(NroStart) + sizeof(NroHeader) || header->size > g_heapSize) {
             diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
         }
 
@@ -444,6 +517,10 @@ void NX_NORETURN loadNro(void) {
         fsFsClose(&fs);
     }
 
+    if ((u64)header->segments[2].size + (u64)header->bss_size + 0xFFFULL < (u64)header->segments[2].size) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
+    }
+
     rw_size = header->segments[2].size + header->bss_size;
     rw_size = (rw_size+0xFFF) & ~0xFFF;
 
@@ -455,13 +532,23 @@ void NX_NORETURN loadNro(void) {
         }
     }
 
-    // todo: Detect whether NRO fits into heap or not.
+    if ((u64)header->segments[2].file_off + (u64)rw_size > g_heapSize) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
+    }
+
+    const u64 total_size_raw = (u64)header->size + (u64)header->bss_size + 0xFFFULL;
+    if (total_size_raw < (u64)header->size) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
+    }
+    const size_t total_size = (size_t)(total_size_raw & ~0xFFFULL);
+    if (total_size > g_heapSize) {
+        diagAbortWithResult(MAKERESULT(Module_HomebrewLoader, 6));
+    }
 
     // Copy header to elsewhere because we're going to unmap it next.
     memcpy(&g_nroHeader, header, sizeof(g_nroHeader));
     header = &g_nroHeader;
 
-    const size_t total_size = (header->size + header->bss_size + 0xFFF) & ~0xFFF;
     if (total_size > header->size) {
         memset((uint8_t*)g_heapAddr + header->size, 0, total_size - header->size);
     }
@@ -497,8 +584,12 @@ void NX_NORETURN loadNro(void) {
         diagAbortWithResult(rc);
 
     const u64 nro_size = header->segments[2].file_off + rw_size;
-    const u64 nro_heap_start = ((u64) g_heapAddr) + nro_size;
-    const u64 nro_heap_size  = g_heapSize + (u64) g_heapAddr - (u64) nro_heap_start;
+    const u64 raw_heap_start = ((u64) g_heapAddr) + nro_size;
+    const u64 raw_heap_size  = g_heapSize + (u64) g_heapAddr - raw_heap_start;
+
+    u64 nro_heap_start = 0;
+    u64 nro_heap_size = 0;
+    findUsableHeapRange(raw_heap_start, raw_heap_size, &nro_heap_start, &nro_heap_size);
 
     #define M EntryFlag_IsMandatory
 

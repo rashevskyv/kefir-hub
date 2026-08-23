@@ -1,9 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.530** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.531** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.531 — HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds
+
+- **Проблема**:
+  - HBL вираховував `OverrideHeap` для дочірніх NRO виключно арифметично від кінця завантаженого NRO до кінця виділеної купи процесу (`nro_heap_start = g_heapAddr + nro_size`, `nro_heap_size = g_heapSize + g_heapAddr - nro_heap_start`) без перевірки через `svcQueryMemory`.
+  - Якщо в цьому діапазоні існували недоступні сторінки (`Perm_None`), чужі буфери пам'яті або позичені/IPC сторінки (`attr != 0`), дочірній NRO отримував розірвану або частково недоступну купу і падав під час великих алокацій.
+- **Внесені зміни**:
+  - **Пошук валідної неперервної купи (`hbl/source/main.c`)**: Реалізовано функцію `findUsableHeapRange`, яка ітерується по діапазону через `svcQueryMemory`, перевіряє критерії `(info.type & MemState_Type) == MemType_Heap`, `info.perm == Perm_Rw` та `info.attr == 0` з вирівнюванням по 4 КБ та передає в `EntryType_OverrideHeap` лише найбільший валідний неперервний відрізок.
+  - **Захист меж NRO**: Замінено TODO в `loadNro()` на перевірки розмірів `header->size`, `bss_size` та `rw_size` проти `g_heapSize` із захистом від цілочисельного переповнення перед читанням тіла, обнуленням BSS та відображенням `svcMapProcessCodeMemory`.
+  - **Тести (`tests/test_hbl_nro_reader.cpp`)**: Додано моделювання фрагментованої пам'яті, ізоляції дірок `Perm_None`/`attr != 0` та перевірки граничних розмірів NRO.
+- **Тестування та верифікація**:
+  - Усі unit-тести пройдено (all green). Апаратне тестування на Switch (HW verification) залишається pending.
 
 ## v0.13.530 — NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal
 

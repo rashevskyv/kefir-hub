@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.530**. Завершені плани збережено в
+Поточний delivery — **v0.13.531**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.530 — NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal
+## Поточний delivery: v0.13.531 — HBL Loader: Validated Contiguous OverrideHeap & Checked NRO Bounds
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Валідація неперервної купи в HBL (`hbl/source/main.c`)**:
+   - Додано `findUsableHeapRange`: сканування через `svcQueryMemory` для пошуку найбільшого валідного неперервного діапазону з `MemType_Heap`, `Perm_Rw`, `attr == 0` та вирівнюванням по 4 КБ.
+   - Усунуто передачу сирого арифметичного діапазону, що міг включати недоступні сторінки або чужі буфери.
+2. **Перевірка меж NRO та BSS**:
+   - Замінено застарілий TODO на строгі перевірки `total_size <= g_heapSize`, `rw_size` та захист від цілочисельного переповнення перед читанням та відображенням пам'яті.
+3. **Host unit-тести**:
+   - Розширено `tests/test_hbl_nro_reader.cpp` з моделюванням дірок у пам'яті та граничних випадків розмірів NRO.
+4. **Верифікація**:
+   - Успішно пройдено всі unit-тести у WSL, зібрано цільовий бінарник.
+
+## Попередній delivery: v0.13.530 — NRO Launch Handoff: Clean envSetNextLoad & Redundant FS Commit Removal
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Аналіз покрокової бісекції (v0.13.469 -> v0.13.487)**:

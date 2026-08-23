@@ -58,6 +58,124 @@ uint64_t CalcHeapSize(uint64_t mem_available, uint64_t mem_used, bool recording)
     return size;
 }
 
+struct MockMemRegion {
+    uint64_t addr;
+    uint64_t size;
+    uint32_t type;
+    uint32_t attr;
+    uint32_t perm;
+};
+
+constexpr uint32_t MemType_Heap = 5;
+constexpr uint32_t MemState_Type = 0xFF;
+constexpr uint32_t Perm_Rw = 3;
+constexpr uint32_t Perm_None = 0;
+
+bool FindUsableHeapRangeMock(uint64_t override_addr, uint64_t override_size,
+                            const std::vector<MockMemRegion>& regions,
+                            uint64_t* out_start, uint64_t* out_size) {
+    if (override_size == 0 || override_addr == 0 || (override_addr + override_size) <= override_addr) {
+        return false;
+    }
+
+    const uint64_t override_end = override_addr + override_size;
+    uint64_t cur_addr = override_addr;
+
+    uint64_t best_start = 0;
+    uint64_t best_size = 0;
+    uint64_t current_usable_start = 0;
+    uint64_t current_usable_size = 0;
+
+    while (cur_addr < override_end) {
+        const MockMemRegion* found = nullptr;
+        for (const auto& r : regions) {
+            if (cur_addr >= r.addr && cur_addr < (r.addr + r.size)) {
+                found = &r;
+                break;
+            }
+        }
+        if (!found || found->size == 0 || (found->addr + found->size) <= found->addr) {
+            return false;
+        }
+
+        const uint64_t mem_end = found->addr + found->size;
+        const uint64_t block_start = (found->addr < override_addr) ? override_addr : found->addr;
+        const uint64_t block_end = (mem_end > override_end) ? override_end : mem_end;
+        const uint64_t block_size = block_end - block_start;
+
+        const bool is_usable = ((found->type & MemState_Type) == MemType_Heap) &&
+                               (found->perm == Perm_Rw) &&
+                               (found->attr == 0);
+
+        if (is_usable && (block_start % 0x1000 == 0) && (block_size % 0x1000 == 0)) {
+            if (current_usable_size > 0 && (current_usable_start + current_usable_size) == block_start) {
+                current_usable_size += block_size;
+            } else {
+                if (current_usable_size > best_size) {
+                    best_size = current_usable_size;
+                    best_start = current_usable_start;
+                }
+                current_usable_start = block_start;
+                current_usable_size = block_size;
+            }
+        } else {
+            if (current_usable_size > best_size) {
+                best_size = current_usable_size;
+                best_start = current_usable_start;
+            }
+            current_usable_start = 0;
+            current_usable_size = 0;
+        }
+
+        if (mem_end <= cur_addr) {
+            return false;
+        }
+        cur_addr = mem_end;
+    }
+
+    if (current_usable_size > best_size) {
+        best_size = current_usable_size;
+        best_start = current_usable_start;
+    }
+
+    if (best_size == 0) {
+        return false;
+    }
+
+    *out_start = best_start;
+    *out_size = best_size;
+    return true;
+}
+
+bool CheckNroHeapBounds(uint64_t heap_size, uint32_t nro_size, uint32_t bss_size, uint32_t seg2_off, uint32_t seg2_size) {
+    if (nro_size < sizeof(NroStart) + sizeof(NroHeader) || nro_size > heap_size) {
+        return false;
+    }
+
+    if ((uint64_t)seg2_size + (uint64_t)bss_size + 0xFFFULL < (uint64_t)seg2_size) {
+        return false;
+    }
+
+    uint64_t rw_size = seg2_size + bss_size;
+    rw_size = (rw_size + 0xFFF) & ~0xFFF;
+
+    if ((uint64_t)seg2_off + rw_size > heap_size) {
+        return false;
+    }
+
+    const uint64_t total_size_raw = (uint64_t)nro_size + (uint64_t)bss_size + 0xFFFULL;
+    if (total_size_raw < (uint64_t)nro_size) {
+        return false;
+    }
+
+    const size_t total_size = (size_t)(total_size_raw & ~0xFFFULL);
+    if (total_size > heap_size) {
+        return false;
+    }
+
+    return true;
+}
+
 struct MockNroReader {
     static int TestNroReaderLogic() {
         CHECK(sizeof(NroStart) == 0x10);
@@ -145,6 +263,85 @@ struct MockNroReader {
         // Forwarder Application with 512MB total, 16MB used, recording enabled
         uint64_t heap_rec = CalcHeapSize(0x20000000, 0x1000000, true);
         CHECK(heap_rec == 0x18E00000); // Subtracts 96MB (0x6000000)
+
+        // Step 7: Verify memory hole / non-contiguous heap scan logic
+        {
+            // Fully contiguous 64MB heap
+            std::vector<MockMemRegion> mem_contiguous = {
+                { 0x20000000, 0x04000000, MemType_Heap, 0, Perm_Rw }
+            };
+            uint64_t out_start = 0, out_size = 0;
+            CHECK(FindUsableHeapRangeMock(0x20000000, 0x04000000, mem_contiguous, &out_start, &out_size));
+            CHECK(out_start == 0x20000000);
+            CHECK(out_size == 0x04000000);
+        }
+
+        {
+            // Heap with a 1MB Perm_None hole in the middle (e.g. 16MB RW, 1MB None, 31MB RW)
+            std::vector<MockMemRegion> mem_with_hole = {
+                { 0x20000000, 0x01000000, MemType_Heap, 0, Perm_Rw },   // 16MB
+                { 0x21000000, 0x00100000, MemType_Heap, 0, Perm_None }, // 1MB hole (Perm_None)
+                { 0x21100000, 0x01F00000, MemType_Heap, 0, Perm_Rw },   // 31MB
+            };
+            uint64_t out_start = 0, out_size = 0;
+            CHECK(FindUsableHeapRangeMock(0x20000000, 0x03000000, mem_with_hole, &out_start, &out_size));
+            // Must pick the largest contiguous valid chunk (31MB at 0x21100000), NEVER bridge the hole
+            CHECK(out_start == 0x21100000);
+            CHECK(out_size == 0x01F00000);
+        }
+
+        {
+            // Heap with borrowed/non-zero attribute page (e.g. 32MB clean, 64KB attr=1, 16MB clean)
+            std::vector<MockMemRegion> mem_with_attr = {
+                { 0x20000000, 0x02000000, MemType_Heap, 0, Perm_Rw },   // 32MB
+                { 0x22000000, 0x00010000, MemType_Heap, 1, Perm_Rw },   // 64KB borrowed (attr != 0)
+                { 0x22010000, 0x01000000, MemType_Heap, 0, Perm_Rw },   // 16MB
+            };
+            uint64_t out_start = 0, out_size = 0;
+            CHECK(FindUsableHeapRangeMock(0x20000000, 0x03010000, mem_with_attr, &out_start, &out_size));
+            // Must pick the largest contiguous chunk (32MB at 0x20000000)
+            CHECK(out_start == 0x20000000);
+            CHECK(out_size == 0x02000000);
+        }
+
+        {
+            // Heap with non-heap memory type block (e.g. MemType_CodeStatic)
+            std::vector<MockMemRegion> mem_with_code = {
+                { 0x20000000, 0x00800000, MemType_Heap, 0, Perm_Rw },   // 8MB
+                { 0x20800000, 0x00800000, 3,            0, Perm_Rw },   // 8MB non-heap (type=3)
+                { 0x21000000, 0x01000000, MemType_Heap, 0, Perm_Rw },   // 16MB
+            };
+            uint64_t out_start = 0, out_size = 0;
+            CHECK(FindUsableHeapRangeMock(0x20000000, 0x02000000, mem_with_code, &out_start, &out_size));
+            CHECK(out_start == 0x21000000);
+            CHECK(out_size == 0x01000000);
+        }
+
+        {
+            // Completely unusable / missing heap
+            std::vector<MockMemRegion> mem_bad = {
+                { 0x20000000, 0x01000000, MemType_Heap, 0, Perm_None }
+            };
+            uint64_t out_start = 0, out_size = 0;
+            CHECK(!FindUsableHeapRangeMock(0x20000000, 0x01000000, mem_bad, &out_start, &out_size));
+        }
+
+        // Step 8: Verify NRO size boundary and overflow protection
+        {
+            const uint64_t heap_size = 0x2000000; // 32MB
+
+            // Valid NRO fits in heap
+            CHECK(CheckNroHeapBounds(heap_size, 0x400000, 0x80000, 0x300000, 0x100000));
+
+            // Oversized NRO code exceeds heap
+            CHECK(!CheckNroHeapBounds(heap_size, 0x3000000, 0x80000, 0x2F00000, 0x100000));
+
+            // Code fits, but BSS expands past heap size
+            CHECK(!CheckNroHeapBounds(heap_size, 0x1000000, 0x2000000, 0xF00000, 0x100000));
+
+            // Integer overflow in code_size + bss_size
+            CHECK(!CheckNroHeapBounds(heap_size, 0x1000000, 0xFFFFFFF0, 0xF00000, 0x100000));
+        }
 
         return 0;
     }
