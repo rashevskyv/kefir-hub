@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.537**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.538**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.537 (GameCard row, dead install screens, zip extract defaults)
+## Поточний delivery: v0.13.538 (Remote input: no Paste on desktop)
+
+- [x] `REMOTE-NO-DESKTOP-PASTE-538` — на ПК немає кнопки Paste, є інструкція вставити або ввести адресу; на телефоні Paste лишилась.
+- [x] `DOCS-BUMP-538` — версію піднято до `0.13.538` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `audit.md`. Агент не компілював.
+
+## Попередній delivery: v0.13.537 (GameCard row, dead install screens, zip extract defaults)
 
 - [x] `GAMECARD-ROW-537` — GameCard як рядок у Games, обводка на іконці, `[GC]`.
 - [x] `A3-DEAD-SCREENS-537` — видалено IRS, firmware list, FTP/MTP Install menus; FTP/MTP як сервіси.

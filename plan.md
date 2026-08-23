@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.537**. Завершені плани збережено в
+Поточний delivery — **v0.13.538**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.537 — GameCard row, dead install screens, zip extract defaults
+## Поточний delivery: v0.13.538 — Remote input: no Paste on desktop
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. **Desktop**: кнопку Paste прибрано. Під полем інструкція «Paste or type the address, then Send».
+2. **Phone**: кнопку залишено — фокус поля і long-press Paste (Clipboard API на HTTP усе одно не працює).
+
+## Попередній delivery: v0.13.537 — GameCard row, dead install screens, zip extract defaults
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. **Games / GameCard**: картридж як окремий рядок у списку ігор, синя обводка на іконці, підпис `[GC]`.

@@ -708,6 +708,7 @@ body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;
 .card{max-width:520px;width:100%;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:24px;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
 h1{font-size:20px;margin:0 0 8px;color:#f4f4f5}
 p{color:#a1a1aa;font-size:14px;line-height:1.5;margin:0 0 16px}
+.hint{color:#a1a1aa;font-size:13px;line-height:1.4;margin:8px 0 0}
 input,textarea{width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border-radius:8px;border:1px solid #3f3f46;background:#27272a;color:#f4f4f5;outline:none;font-family:inherit}
 input:focus,textarea:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,0.2)}
 textarea{min-height:120px;resize:vertical}
@@ -726,8 +727,9 @@ button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
 <h1 id="title">Remote Input</h1>
 <p id="guide">Send text or URL directly to Nintendo Switch.</p>
 <div id="input-container">
-  <input id="text-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Enter text or URL...">
+  <input id="text-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste or type a URL">
 </div>
+<p class="hint" id="hint">Paste or type the address, then Send.</p>
 <div class="btn-row">
   <button id="paste-btn" class="btn-secondary" type="button">Paste</button>
   <button id="send-btn" type="button">Send to Switch</button>
@@ -735,8 +737,10 @@ button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
 <div class="msg" id="msg"></div>
 </div>
 <script>
-const titleEl=document.getElementById('title'),guideEl=document.getElementById('guide'),container=document.getElementById('input-container'),pasteBtn=document.getElementById('paste-btn'),sendBtn=document.getElementById('send-btn'),msg=document.getElementById('msg');
+const titleEl=document.getElementById('title'),guideEl=document.getElementById('guide'),container=document.getElementById('input-container'),pasteBtn=document.getElementById('paste-btn'),sendBtn=document.getElementById('send-btn'),msg=document.getElementById('msg'),hintEl=document.getElementById('hint');
 let field=document.getElementById('text-input');
+const isPhone=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>0&&matchMedia('(pointer:coarse)').matches);
+if(!isPhone){pasteBtn.style.display='none';}
 async function init(){
   try{
     const res=await fetch('/input/config');
@@ -754,27 +758,21 @@ async function init(){
   }catch(e){}
   field.focus();
 }
-function pasteHint(){
-  return /Mac|iPhone|iPad/.test(navigator.userAgent)?'Press Cmd+V to paste.':'Press Ctrl+V to paste.';
-}
-function promptManualPaste(){
+pasteBtn.addEventListener('click',async()=>{
   field.focus();
   if(field.select)field.select();
-  msg.className='msg';
-  msg.textContent=pasteHint();
-}
-pasteBtn.addEventListener('click',async()=>{
   if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.readText){
     try{
       const text=await navigator.clipboard.readText();
       if(text){field.value=text;msg.className='msg ok';msg.textContent='Pasted from clipboard.';return;}
     }catch(e){}
   }
-  promptManualPaste();
+  msg.className='msg';
+  msg.textContent='Long-press the field and tap Paste.';
 });
 sendBtn.addEventListener('click',async()=>{
   const val=field.value.trim();
-  if(!val){msg.className='msg err';msg.textContent='Please enter or paste text first.';return;}
+  if(!val){msg.className='msg err';msg.textContent='Paste or type the address first.';return;}
   sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
   try{
     const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val});

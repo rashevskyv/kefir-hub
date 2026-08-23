@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.537** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.538** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.538 — Remote input: no Paste on desktop
+
+- На комп’ютері кнопки Paste немає: під полем «Paste or type the address, then Send».
+- На телефоні Paste лишилась, щоб сфокусувати поле під системний long-press.
+- Clipboard API на HTTP не використовується як основний шлях.
 
 ## v0.13.537 — GameCard row, dead install screens, zip extract defaults
 
