@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.543**. Завершені плани збережено в
+Поточний delivery — **v0.13.544**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.543 — Center OptionBox buttons, honest forwarder notices
+## Поточний delivery: v0.13.544 — OptionBox: glyph is part of the caption
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Гліф знову в одному рядку з підписом, весь напис по центру. Шрифт 26px, менше лише якщо не влазить.
+
+## Попередній delivery: v0.13.543 — Center OptionBox buttons, honest forwarder notices
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Кнопки OptionBox знову по центру; гліф фіксований; шрифт 26, зменшення лише якщо не влазить.

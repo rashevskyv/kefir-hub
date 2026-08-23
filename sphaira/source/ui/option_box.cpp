@@ -3,7 +3,6 @@
 #include "app.hpp"
 
 #include <algorithm>
-#include <cstring>
 
 namespace sphaira::ui {
 namespace {
@@ -69,31 +68,10 @@ auto AddGlyphIfMissing(const std::string& text, const std::string& glyph) -> std
     return glyph + " " + text;
 }
 
-void SplitLeadingGlyph(const std::string& text, std::string& glyph, std::string& label) {
-    const auto try_split = [&](const char* g) -> bool {
-        const auto glen = std::strlen(g);
-        if (text.size() >= glen && text.compare(0, glen, g) == 0) {
-            glyph = g;
-            auto rest = text.substr(glen);
-            while (!rest.empty() && rest.front() == ' ') {
-                rest.erase(rest.begin());
-            }
-            label = std::move(rest);
-            return true;
-        }
-        return false;
-    };
-    if (try_split("\uE0E1") || try_split("\uE0EF")) {
-        return;
-    }
-    glyph.clear();
-    label = text;
-}
-
 } // namespace
 
-OptionBoxEntry::OptionBoxEntry(const std::string& text, Vec4 pos) {
-    SplitLeadingGlyph(text, m_glyph, m_label);
+OptionBoxEntry::OptionBoxEntry(const std::string& text, Vec4 pos)
+: m_text{text} {
     m_pos = pos;
     m_text_pos = Vec2{m_pos.x + (m_pos.w / 2.f), m_pos.y + (m_pos.h / 2.f)};
 }
@@ -105,53 +83,29 @@ auto OptionBoxEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     constexpr float pad = 10.f;
-    constexpr float gap = 8.f;
-    constexpr float glyph_size = 26.f;
     const float inner_w = m_pos.w - pad * 2.f;
-    const float mid_y = m_pos.y + m_pos.h / 2.f;
-
-    auto measure = [&](float size, const char* s) -> float {
-        nvgFontSize(vg, size);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        float b[4]{};
-        nvgTextBounds(vg, 0.f, 0.f, s, nullptr, b);
-        return b[2] - b[0];
-    };
-
-    const float glyph_w = m_glyph.empty() ? 0.f : measure(glyph_size, m_glyph.c_str());
-    const float prefix = m_glyph.empty() ? 0.f : glyph_w + gap;
     constexpr float sizes[] = {26.f, 22.f, 18.f};
-    float label_size = 26.f;
-    float label_w = 0.f;
+    float size = 26.f;
     bool fits = false;
     for (const float sz : sizes) {
-        label_w = measure(sz, m_label.c_str());
-        if (prefix + label_w <= inner_w) {
-            label_size = sz;
+        nvgFontSize(vg, sz);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float b[4]{};
+        nvgTextBounds(vg, 0.f, 0.f, m_text.c_str(), nullptr, b);
+        if (b[2] - b[0] <= inner_w) {
+            size = sz;
             fits = true;
             break;
         }
-        label_size = sz;
+        size = sz;
     }
 
     if (fits) {
-        const float group_w = prefix + label_w;
-        float x = m_pos.x + (m_pos.w - group_w) / 2.f;
-        if (!m_glyph.empty()) {
-            gfx::drawText(vg, x, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            x += glyph_w + gap;
-        }
-        gfx::drawText(vg, x, mid_y, label_size, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        gfx::drawText(vg, m_text_pos, size, colour, m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         return;
     }
 
-    const float text_w = inner_w - prefix;
-    float x = m_pos.x + pad;
-    if (!m_glyph.empty()) {
-        gfx::drawText(vg, x, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        x += glyph_w + gap;
-    }
-    gfx::drawTextBox(vg, x, mid_y, label_size, text_w, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
+    gfx::drawTextBox(vg, m_pos.x + pad, m_text_pos.y, size, inner_w, colour, m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
 }
 
 auto OptionBoxEntry::Selected(bool enable) -> void {

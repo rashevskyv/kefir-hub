@@ -16,8 +16,7 @@ public:
     void UpdateLayout(const Vec4& pos);
 
 private:
-    std::string m_glyph{};
-    std::string m_label{};
+    std::string m_text{};
     Vec2 m_text_pos{};
     bool m_selected{false};
 };

@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.543** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.544** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.544 — OptionBox: glyph is part of the caption
+
+- Кнопка знову один напис (гліф + текст) по центру. 26px, менше або перенос лише якщо не влазить.
 
 ## v0.13.543 — Center OptionBox buttons, honest forwarder notices
 
