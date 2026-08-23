@@ -858,8 +858,10 @@ auto create_meta_nca(u64 tid, const keys::Keys& keys, NcmStorageId storage_id, c
 }
 
 auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStorageId storage_id) -> Result {
-    pbox->SetTitle(config.name);
-    pbox->SetImageDataConst(config.icon);
+    if (pbox) {
+        pbox->SetTitle(config.name);
+        pbox->SetImageDataConst(config.icon);
+    }
 
     R_UNLESS(!config.nro_path.empty(), Result_OwoBadArgs);
     R_UNLESS(!config.icon.empty(), Result_OwoBadArgs);
@@ -897,7 +899,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
 
     // create program
     if (config.program_nca.empty()) {
-        pbox->NewTransfer("Creating Program"_i18n).UpdateTransfer(0, 8);
+        if (pbox) {
+            pbox->NewTransfer("Creating Program"_i18n).UpdateTransfer(0, 8);
+        }
         FileEntries exefs;
         add_file_entry(exefs, "main", HBL_MAIN_DATA);
         add_file_entry(exefs, "main.npdm", HBL_NPDM_DATA);
@@ -931,7 +935,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
 
     // create control
     {
-        pbox->NewTransfer("Creating Control"_i18n).UpdateTransfer(1, 8);
+        if (pbox) {
+            pbox->NewTransfer("Creating Control"_i18n).UpdateTransfer(1, 8);
+        }
         // patch nacp
         NcapPatch nacp_patch{};
         nacp_patch.tid = tid;
@@ -957,7 +963,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
     ncm::ContentStorageRecord content_storage_record;
     NcmContentMetaData content_meta_data;
     {
-        pbox->NewTransfer("Creating Meta"_i18n).UpdateTransfer(2, 8);
+        if (pbox) {
+            pbox->NewTransfer("Creating Meta"_i18n).UpdateTransfer(2, 8);
+        }
         const auto meta_entry = create_meta_nca(tid, keys, storage_id, nca_entries);
 
         nca_entries.emplace_back(meta_entry.nca_entry);
@@ -974,7 +982,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
         ON_SCOPE_EXIT(ncmContentStorageClose(&cs));
 
         for (const auto& nca : nca_entries) {
-            pbox->NewTransfer("Writing Nca"_i18n).UpdateTransfer(3, 8);
+            if (pbox) {
+                pbox->NewTransfer("Writing Nca"_i18n).UpdateTransfer(3, 8);
+            }
             NcmContentId content_id;
             NcmPlaceHolderId placeholder_id;
             std::memcpy(&content_id, nca.hash, sizeof(content_id));
@@ -989,7 +999,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
 
     // setup database
     {
-        pbox->NewTransfer("Updating ncm database"_i18n).UpdateTransfer(4, 8);
+        if (pbox) {
+            pbox->NewTransfer("Updating ncm database"_i18n).UpdateTransfer(4, 8);
+        }
         NcmContentMetaDatabase db;
         R_TRY(ncmOpenContentMetaDatabase(&db, storage_id));
         ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
@@ -1000,7 +1012,9 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
 
     // push record
     {
-        pbox->NewTransfer("Pushing application record"_i18n).UpdateTransfer(5, 8);
+        if (pbox) {
+            pbox->NewTransfer("Pushing application record"_i18n).UpdateTransfer(5, 8);
+        }
         Service srv{}, *srv_ptr = &srv;
         bool already_installed{};
 

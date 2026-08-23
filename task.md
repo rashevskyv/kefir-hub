@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.533**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.534**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.533 (Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass)
+## Поточний delivery: v0.13.534 (Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator)
+
+- [x] `FORWARDER-CLEANUP-534` — у `sphaira/source/forwarder_auto_install.cpp` замінено встановлення файлів з `/Games` на їх автоматичне видалення (`Homebrew menu*.nsp`, `hbmenu*.nsp`, `hblauncher*.nsp`). Додано видалення застарілих та неробочих встановлених форвардерів за Title ID (`0x03DB1280BD84000`, `0x03DB12780BD84000`, `0x010000000000100D`, `0x050000000000100D`) та за назвами в NACP (`Homebrew Menu`, `Homebrew Launcher`, `HBM`, `HBL`, `hbmenu`, `hblauncher`, `nx-hbmenu`).
+- [x] `FORWARDER-INTERNAL-CREATE-534` — у `sphaira/source/owo.cpp` додано підтримку silent-встановлення (`pbox == nullptr`). У `forwarder_auto_install.cpp` реалізовано автоматичну генерацію та встановлення нативного форвардера KefirHub на льоту із фіксованими налаштуваннями: **39-бітний адресний простір**, **знімки та відеозапис вимкнено**, **вибір профілю вимкнено**, **дебаг вимкнено**.
+- [x] `TEST-FORWARDER-CLEANUP-534` — розширено unit-тест `tests/test_forwarder_auto_lifecycle.cpp` (47 checks) перевірками фільтрації та розпізнавання застарілих форвардерів і файлів.
+- [x] `DOCS-BUMP-534` — версію піднято до `0.13.534` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`. Пройдено всі unit-тести у WSL.
+
+## Попередній delivery: v0.13.533 (Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass)
 
 - [x] `FORWARDER-THREAD-LIFECYCLE-533` — у `sphaira/source/forwarder_auto_install.cpp` розділено стан створення потоку (`g_thread_created`) та стан активного виконання (`g_thread_active`). Усунуто скидання прапорця очищення всередині `ThreadFunc`, завдяки чому `StopCheck()` гарантовано викликає `threadWaitForExit()` та `threadClose()`, навіть якщо worker завершився завчасно.
 - [x] `FORWARDER-APP-BYPASS-533` — у `StartCheck()` додано перевірку `App::IsApplication()`, яка взагалі не створює потік і не виділяє 64 KiB стек, коли KefirHub уже запущено як повноцінний Title/Application.

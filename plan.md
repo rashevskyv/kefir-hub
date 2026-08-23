@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.533**. Завершені плани збережено в
+Поточний delivery — **v0.13.534**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.533 — Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass
+## Поточний delivery: v0.13.534 — Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator
+
+Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
+1. **Видалення застарілих форвардерів та файлів**:
+   - Автоматичне видалення старих NSP із `/Games` (`Homebrew menu*.nsp`, `hbmenu*.nsp`, `hblauncher*.nsp`).
+   - Видалення застарілих встановлених форвардерів за Title ID (`03DB1280BD84000`, `03DB12780BD84000`, `010000000000100D`, `050000000000100D`) та за назвами через `nsListApplicationRecord` і `nsDeleteApplicationCompletely`.
+2. **Внутрішня генерація форвардера KefirHub**:
+   - Безшумна генерація форвардера через `owo` із параметрами: 39-бітний адресний простір, вимкнені знімки/відео, вимкнений вибір профілю та вимкнений дебаг.
+3. **Unit-тестування**:
+   - `tests/test_forwarder_auto_lifecycle.cpp` (47 checks).
+4. **Верифікація**:
+   - Пройдено всі 25 наборів unit-тестів у WSL (all green).
+
+## Попередній delivery: v0.13.533 — Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass
 
 Статус: програмну частину реалізовано та верифіковано (SW-DONE / HW-PENDING):
 1. **Розділення станів життєвого циклу потоку (`sphaira/source/forwarder_auto_install.cpp`)**:

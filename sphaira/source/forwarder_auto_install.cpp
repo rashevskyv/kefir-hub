@@ -3,14 +3,18 @@
 #include "fs.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
-#include "yati/yati.hpp"
-#include "ui/install_progress.hpp"
+#include "owo.hpp"
+#include "nro.hpp"
+#include "image.hpp"
+#include "nacp_util.hpp"
 #include <switch.h>
 #include <vector>
 #include <string>
 #include <cstring>
 #include <atomic>
-#include <cstdlib>
+#include <algorithm>
+#include <cctype>
+#include <memory>
 
 namespace sphaira::forwarder_auto {
 namespace {
@@ -20,129 +24,71 @@ std::atomic_bool g_thread_active{false};
 std::atomic_bool g_thread_created{false};
 Thread g_check_thread{};
 
-class SilentInstallProgress final : public ui::InstallProgress {
-public:
-    SilentInstallProgress() {
-        ueventCreate(&m_cancel_event, true);
-    }
-
-    Result CheckCancelled() override {
-        if (g_stop_requested) {
-            return 1;
-        }
-        return 0;
-    }
-
-    UEvent* GetInstallCancelEvent() override {
-        return &m_cancel_event;
-    }
-
-    void SetInstallTitle(const std::string&) override {}
-    void SetInstallImage(std::vector<u8>&) override {}
-    void SetInstallTransfer(const std::string&) override {}
-    void UpdateInstallTransfer(s64, s64) override {}
-    void UpdateInstallReadWrite(s64, s64) override {}
-    void InstallYield() override {
-        svcSleepThread(1000000ULL);
-    }
-    bool PromptReinstall(const std::string&) override {
+bool IsOldHomebrewTitle(const std::string& raw_name, u64 tid, u64 kefirhub_tid) {
+    if (tid == kefirhub_tid && kefirhub_tid != 0) {
         return false;
     }
-    void OnInstallSkipped() override {}
-    void OnCompatibilityWarning(const ui::CompatibilityWarning&) override {}
 
-    void OnTitleInstalled(u64 title_id) override {
-        m_installed_title_id = title_id;
+    // Specific known Title IDs for Homebrew Menu / HBL forwarders
+    if (tid == 0x03DB1280BD84000ULL || tid == 0x03DB12780BD84000ULL ||
+        tid == 0x010000000000100DULL || tid == 0x050000000000100DULL) {
+        return true;
     }
 
-    [[nodiscard]] u64 GetInstalledTitleId() const {
-        return m_installed_title_id;
+    std::string name = raw_name;
+    std::ranges::transform(name, name.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    // Never delete KefirHub or Sphaira itself
+    if (name.find("kefir") != std::string::npos || name.find("sphaira") != std::string::npos) {
+        return false;
     }
 
-private:
-    UEvent m_cancel_event{};
-    u64 m_installed_title_id{0};
-};
-
-u64 ExtractTitleIdFromName(const std::string& name) {
-    auto start = name.find('[');
-    while (start != std::string::npos) {
-        auto end = name.find(']', start + 1);
-        if (end != std::string::npos && end - start - 1 == 16) {
-            const std::string hex_str = name.substr(start + 1, 16);
-            char* end_ptr = nullptr;
-            const u64 tid = std::strtoull(hex_str.c_str(), &end_ptr, 16);
-            if (end_ptr == hex_str.c_str() + 16 && tid != 0) {
-                return tid;
-            }
-        }
-        start = name.find('[', start + 1);
+    if (name == "hbm" || name == "hbl" || name == "hbmenu" || name == "hblauncher" || name == "nx-hbmenu") {
+        return true;
     }
-    return 0;
+
+    if (name.find("homebrew menu") != std::string::npos ||
+        name.find("homebrew launcher") != std::string::npos ||
+        name.find("hblauncher") != std::string::npos ||
+        name.find("hbmenu") != std::string::npos ||
+        name.find("nx-hbmenu") != std::string::npos) {
+        return true;
+    }
+
+    return false;
 }
 
-void ThreadFunc(void*) {
-    ON_SCOPE_EXIT(g_thread_active = false);
+bool IsOldForwarderNspFile(const std::string& raw_name) {
+    std::string name = raw_name;
+    std::ranges::transform(name, name.begin(), [](unsigned char c) { return std::tolower(c); });
 
-    log_write("[ForwarderAuto] Checking installed forwarders...\n");
-
-    if (App::IsApplication()) {
-        u64 current_tid = 0;
-        if (hosversionAtLeast(3, 0, 0)) {
-            svcGetInfo(&current_tid, InfoType_ProgramId, CUR_PROCESS_HANDLE, 0);
-        }
-        log_write("[ForwarderAuto] Running in Application mode (TID: %016lx), forwarder already active\n", current_tid);
-        return;
+    if (!path::EndsWithIC(name, ".nsp")) {
+        return false;
     }
 
-    if (R_SUCCEEDED(nsInitialize())) {
-        ON_SCOPE_EXIT(nsExit());
-
-        if (hosversionAtLeast(2, 0, 0)) {
-            bool is_installed = false;
-
-            // Check standard Homebrew Menu forwarder title IDs
-            if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(0x010000000000100D, &is_installed)) && is_installed) {
-                log_write("[ForwarderAuto] Forwarder 010000000000100D is already installed\n");
-                return;
-            }
-            if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(0x050000000000100D, &is_installed)) && is_installed) {
-                log_write("[ForwarderAuto] Forwarder 050000000000100D is already installed\n");
-                return;
-            }
-
-            // Check Sphaira's own generated forwarder IDs based on executable path
-            u64 hash_data[SHA256_HASH_SIZE / sizeof(u64)]{};
-            const auto exe_path = App::GetExePath().toString();
-            if (!exe_path.empty()) {
-                const auto hash_path = exe_path + exe_path;
-                sha256CalculateHash(hash_data, hash_path.data(), hash_path.length());
-                const u64 owo_tid = 0x0500000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
-                const u64 owo_old_tid = 0x0100000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
-
-                if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(owo_tid, &is_installed)) && is_installed) {
-                    log_write("[ForwarderAuto] Forwarder %016lx is already installed\n", owo_tid);
-                    return;
-                }
-                if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(owo_old_tid, &is_installed)) && is_installed) {
-                    log_write("[ForwarderAuto] Forwarder %016lx is already installed\n", owo_old_tid);
-                    return;
-                }
-            }
-        }
+    if (name.find("kefir") != std::string::npos || name.find("sphaira") != std::string::npos) {
+        return false;
     }
 
-    if (g_stop_requested) {
-        return;
+    if (name.find("homebrew menu") != std::string::npos ||
+        name.find("homebrew launcher") != std::string::npos ||
+        name.find("hblauncher") != std::string::npos ||
+        name.find("hbmenu") != std::string::npos ||
+        name.find("hbm") != std::string::npos ||
+        name.find("hbl") != std::string::npos ||
+        name.find("03db1280bd84000") != std::string::npos ||
+        name.find("03db12780bd84000") != std::string::npos ||
+        name.find("010000000000100d") != std::string::npos ||
+        name.find("050000000000100d") != std::string::npos) {
+        return true;
     }
 
-    log_write("[ForwarderAuto] Forwarder not found, scanning /Games for Homebrew menu*.nsp...\n");
+    return false;
+}
 
+void CleanOldForwarderFiles() {
     fs::FsNativeSd sd;
     fs::Dir dir;
-    std::string nsp_path;
-    u64 nsp_tid{0};
-
     if (R_SUCCEEDED(sd.OpenDirectory("/Games", FsDirOpenMode_ReadFiles, &dir))) {
         std::vector<FsDirectoryEntry> entries;
         if (R_SUCCEEDED(dir.ReadAll(entries))) {
@@ -150,46 +96,160 @@ void ThreadFunc(void*) {
                 if (g_stop_requested) {
                     return;
                 }
-                if (path::StartsWithIC(entry.name, "Homebrew menu") && path::EndsWithIC(entry.name, ".nsp")) {
-                    nsp_path = std::string("/Games/") + entry.name;
-                    nsp_tid = ExtractTitleIdFromName(entry.name);
-                    log_write("[ForwarderAuto] Found NSP: %s (TID: %016lx)\n", nsp_path.c_str(), nsp_tid);
-                    break;
+                if (IsOldForwarderNspFile(entry.name)) {
+                    const std::string full_path = std::string("/Games/") + entry.name;
+                    log_write("[ForwarderAuto] Deleting old forwarder NSP file: %s\n", full_path.c_str());
+                    sd.DeleteFile(full_path);
                 }
             }
         }
     }
+}
 
-    if (nsp_path.empty() || g_stop_requested) {
-        if (nsp_path.empty()) {
-            log_write("[ForwarderAuto] No matching Homebrew menu NSP found in /Games\n");
-        }
+void CleanOldInstalledForwarders(u64 kefirhub_tid) {
+    if (R_FAILED(nsInitialize())) {
         return;
     }
+    ON_SCOPE_EXIT(nsExit());
 
-    // If the found NSP title is already installed on the system, skip reinstallation
-    if (nsp_tid != 0 && R_SUCCEEDED(nsInitialize())) {
-        ON_SCOPE_EXIT(nsExit());
-        bool is_installed = false;
-        if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(nsp_tid, &is_installed)) && is_installed) {
-            log_write("[ForwarderAuto] Found NSP title %016lx is already installed, skipping\n", nsp_tid);
+    // 1. Explicit deletion of known Title IDs
+    const u64 known_bad_tids[] = {
+        0x03DB1280BD84000ULL,
+        0x03DB12780BD84000ULL,
+        0x010000000000100DULL,
+        0x050000000000100DULL,
+    };
+
+    for (const u64 bad_tid : known_bad_tids) {
+        if (g_stop_requested) {
             return;
         }
+        if (bad_tid == kefirhub_tid) {
+            continue;
+        }
+        bool is_installed = false;
+        if (hosversionAtLeast(2, 0, 0)) {
+            if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(bad_tid, &is_installed)) && is_installed) {
+                log_write("[ForwarderAuto] Deleting old forwarder title ID: %016lx\n", bad_tid);
+                nsDeleteApplicationCompletely(bad_tid);
+            }
+        }
     }
 
-    log_write("[ForwarderAuto] Starting silent background installation of %s\n", nsp_path.c_str());
+    // 2. Enumerate installed applications to find any other Homebrew Menu / HBL forwarders by name
+    constexpr s32 CHUNK_SIZE = 32;
+    std::vector<NsApplicationRecord> records(CHUNK_SIZE);
+    s32 offset = 0;
 
-    SilentInstallProgress progress;
-    yati::ConfigOverride override{};
-    override.skip_if_already_installed = 1;
+    while (!g_stop_requested) {
+        s32 record_count = 0;
+        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &record_count)) || record_count <= 0) {
+            break;
+        }
 
-    const auto rc = yati::InstallFromFile(&progress, &sd, nsp_path, override);
-    if (R_FAILED(rc)) {
-        log_write("[ForwarderAuto] Failed to install forwarder: 0x%X\n", rc);
+        for (s32 i = 0; i < record_count; i++) {
+            if (g_stop_requested) {
+                return;
+            }
+            const u64 app_id = records[i].application_id;
+            if (app_id == kefirhub_tid) {
+                continue;
+            }
+
+            auto control_data = std::make_unique<NsApplicationControlData>();
+            u64 actual_size = 0;
+            if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, control_data.get(), sizeof(NsApplicationControlData), &actual_size))) {
+                std::string title_name = nacp_util::GetTitle(&control_data->nacp);
+                if (IsOldHomebrewTitle(title_name, app_id, kefirhub_tid)) {
+                    log_write("[ForwarderAuto] Deleting old forwarder title %016lx (%s)\n", app_id, title_name.c_str());
+                    nsDeleteApplicationCompletely(app_id);
+                }
+            }
+        }
+
+        offset += record_count;
+    }
+}
+
+void InstallKefirHubForwarder(u64 kefirhub_tid) {
+    if (g_stop_requested) {
         return;
     }
 
-    log_write("[ForwarderAuto] Forwarder installed successfully (TID: %016lx)\n", progress.GetInstalledTitleId());
+    bool is_installed = false;
+    if (R_SUCCEEDED(nsInitialize())) {
+        ON_SCOPE_EXIT(nsExit());
+        if (hosversionAtLeast(2, 0, 0)) {
+            if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(kefirhub_tid, &is_installed)) && is_installed) {
+                log_write("[ForwarderAuto] KefirHub forwarder %016lx is already installed\n", kefirhub_tid);
+                return;
+            }
+        }
+    }
+
+    log_write("[ForwarderAuto] Generating and installing KefirHub forwarder (%016lx)...\n", kefirhub_tid);
+
+    const auto exe_path = App::GetExePath();
+    OwoConfig config{};
+    config.nro_path = exe_path.toString();
+    config.args = exe_path.toString();
+    nro_get_nacp(exe_path, config.nacp);
+    config.icon = nro_get_icon(exe_path);
+    if (config.icon.empty()) {
+        config.icon = ImageGetDefaultIcon();
+    }
+
+    config.name = "Kefir Hub";
+    config.author = "rashevskyv";
+    std::string nro_name = nacp_util::GetName(config.nacp);
+    if (!nro_name.empty()) {
+        config.name = nro_name;
+    }
+    std::string nro_author = nacp_util::GetAuthor(config.nacp);
+    if (!nro_author.empty()) {
+        config.author = nro_author;
+    }
+
+    ForwarderOptions options{};
+    options.address_space = ForwarderAddressSpace::Bit39;
+    options.screenshot = false;
+    options.video_capture = false;
+    options.profile_selection = false;
+    options.svc_debug_mode = ForwarderSvcDebugMode::Disabled;
+    config.options = options;
+
+    const auto rc = install_forwarder(nullptr, config, NcmStorageId_SdCard);
+    if (R_FAILED(rc)) {
+        log_write("[ForwarderAuto] Failed to install KefirHub forwarder: 0x%X\n", rc);
+    } else {
+        log_write("[ForwarderAuto] KefirHub forwarder installed successfully (%016lx)\n", kefirhub_tid);
+    }
+}
+
+void ThreadFunc(void*) {
+    ON_SCOPE_EXIT(g_thread_active = false);
+
+    log_write("[ForwarderAuto] Running forwarder check and cleanup worker...\n");
+
+    const auto exe_path = App::GetExePath().toString();
+    u64 kefirhub_tid = 0;
+    if (!exe_path.empty()) {
+        u64 hash_data[SHA256_HASH_SIZE / sizeof(u64)]{};
+        const auto hash_path = exe_path + exe_path;
+        sha256CalculateHash(hash_data, hash_path.data(), hash_path.length());
+        kefirhub_tid = 0x0500000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
+    }
+
+    // 1. Delete leftover forwarder files from /Games
+    CleanOldForwarderFiles();
+
+    // 2. Delete old/incompatible Homebrew Menu / HBL forwarders
+    CleanOldInstalledForwarders(kefirhub_tid);
+
+    // 3. Create and install KefirHub forwarder if not present
+    if (kefirhub_tid != 0) {
+        InstallKefirHubForwarder(kefirhub_tid);
+    }
 }
 
 } // namespace

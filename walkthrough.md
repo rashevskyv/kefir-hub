@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.533** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.534** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.534 — Auto-Forwarder: Legacy HBL Forwarder Deletion & Native KefirHub Generator
+
+- **Суть змін**:
+  - Відмовлено від автоматичного встановлення чужих NSP-файлів форвардерів з папки `/Games`.
+  - Замість цього реалізовано автоматичне очищення застарілих NSP-файлів (`Homebrew menu*.nsp`, `hbmenu*.nsp`, `hblauncher*.nsp`) у `/Games`.
+  - Додано пошук і видалення застарілих та неробочих форвардерів через `nsDeleteApplicationCompletely`: за Title ID (`03DB1280BD84000`, `03DB12780BD84000`, `010000000000100D`, `050000000000100D`) та за назвами в NACP (`Homebrew Menu`, `Homebrew Launcher`, `HBM`, `HBL`, `hbmenu`, `hblauncher`, `nx-hbmenu`).
+  - Реалізовано створення нативного форвардера для KefirHub на льоту за допомогою внутрішнього механізму `owo` з параметрами:
+    - **Address Space**: `ForwarderAddressSpace::Bit39` (39-бітний адресний простір).
+    - **Screenshots / Video Capture**: вимкнено (`false`).
+    - **Profile Selection**: вимкнено (`false`).
+    - **Debug**: вимкнено (`Disabled`).
+  - Додано підтримку `pbox == nullptr` у `owo.cpp` для silent-встановлення у фоновому потоці.
+  - Розширено unit-тест `tests/test_forwarder_auto_lifecycle.cpp` (47 checks).
+- **Тестування та верифікація**:
+  - Усі 25 наборів host unit-тестів пройдено у WSL (all green). Апаратне тестування на консолі залишається pending.
 
 ## v0.13.533 — Auto-Forwarder Thread Lifecycle: Guaranteed threadClose & Application Bypass
 
