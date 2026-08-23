@@ -502,7 +502,8 @@ void patch_nacp(NacpStruct& nacp, const NcapPatch& patch) {
     nacp.screenshot = patch.screenshot ? 0x0 : 0x1; // 0x0 = allowed
     // hos gates recording behind the capture button being usable at all, so
     // denying screenshots kills video capture too. write what actually happens.
-    nacp.video_capture = (patch.screenshot && patch.video_capture) ? 0x2 : 0x0; // auto or disabled
+    // 0x1 = Manual (hold capture). 0x2 = Auto crashes am (2128-0007) on homebrew titles.
+    nacp.video_capture = (patch.screenshot && patch.video_capture) ? 0x1 : 0x0;
     nacp.logo_type = 0x2; // Nintendo
     nacp.logo_handling = 0x0; // auto
     nacp.data_loss_confirmation = 0x0; // disable as we don't use saves

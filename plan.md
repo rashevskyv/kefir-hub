@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.544**. Завершені плани збережено в
+Поточний delivery — **v0.13.545**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.544 — OptionBox: glyph is part of the caption
+## Поточний delivery: v0.13.545 — Forwarder NACP video capture Manual, not Auto
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. `nacp.video_capture` 0x1 (Manual), не 0x2 (Auto). Auto валив `am` 2128-0007 при запуску ікона з HOME.
+
+## Попередній delivery: v0.13.544 — OptionBox: glyph is part of the caption
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Гліф знову в одному рядку з підписом, весь напис по центру. Шрифт 26px, менше лише якщо не влазить.

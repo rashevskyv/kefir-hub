@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.544** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.545** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.545 — Forwarder video capture Manual
+
+- Лог: Album → install `0589b80763c84000` → вихід → `am` 2128-0007. Причина: NACP `video_capture = Auto (0x2)`. Ставимо Manual (0x1). Трейсбек по sphaira.elf не застосовується (креш у `am`, не в NRO). Після збірки видалити іконку Kefir Hub з HOME і ще раз зайти з Album.
 
 ## v0.13.544 — OptionBox: glyph is part of the caption
 
