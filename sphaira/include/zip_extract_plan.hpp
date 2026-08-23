@@ -2,9 +2,11 @@
 
 #include "path_util.hpp"
 
+#include <algorithm>
+#include <optional>
+#include <span>
 #include <string>
 #include <string_view>
-#include <span>
 #include <vector>
 
 namespace sphaira::zip_extract {
@@ -45,36 +47,65 @@ inline auto NormalizeZipEntry(std::string_view raw) -> std::string {
     return n.substr(i);
 }
 
-// Default extract directory for a downloaded zip.
-// - more than one folder at the archive root → /downloads/<archive_stem>
-// - exactly one .nro sitting in a folder (one root folder) → /switch
-//   (if that folder is already "switch", extract to /)
-// - exactly one naked .nro at the archive root → /switch/<nro_stem>
-// - anything else → /downloads
-inline auto SuggestExtractPath(std::span<const std::string_view> names, std::string_view archive_stem) -> std::string {
-    std::vector<std::string> root_folders;
-    auto add_root_folder = [&](std::string_view comp) {
-        if (comp.empty() || comp == "." || comp == "..") {
-            return;
+inline auto IsNroFile(std::string_view normalized) -> bool {
+    return !normalized.empty() && normalized.back() != '/' && path::EndsWithIC(normalized, ".nro");
+}
+
+// One .nro anywhere in the archive, or nullopt if none / more than one.
+inline auto FindSingleNro(std::span<const std::string_view> names) -> std::optional<std::string> {
+    std::string found;
+    int count = 0;
+    for (const auto raw : names) {
+        auto n = NormalizeZipEntry(raw);
+        if (!IsNroFile(n)) {
+            continue;
         }
-        for (const auto& f : root_folders) {
-            if (path::EqualsIC(f, comp)) {
+        count++;
+        found = std::move(n);
+        if (count > 1) {
+            return std::nullopt;
+        }
+    }
+    if (count == 1) {
+        return found;
+    }
+    return std::nullopt;
+}
+
+// /switch/<stem>/<file.nro>
+inline auto NroInstallDest(std::string_view nro_zip_path) -> std::string {
+    const auto n = NormalizeZipEntry(nro_zip_path);
+    auto base = std::string{path::ExtractBasename(n)};
+    if (!path::IsSafeFilename(base)) {
+        base = "downloaded.nro";
+    }
+    return std::string{kSwitchDir} + "/" + SafeFolderName(FileStem(base)) + "/" + base;
+}
+
+// Direct .nro URL: /switch/<stem>/<filename>
+inline auto SuggestNakedNroPath(std::string_view filename) -> std::string {
+    const auto base = path::ExtractBasename(filename);
+    const auto name = path::IsSafeFilename(base) ? std::string{base} : std::string{"downloaded.nro"};
+    return NroInstallDest(name);
+}
+
+// Top-level names for the extract-all row, e.g. "atmosphere/, switch/, hbmenu.nro".
+inline auto FormatZipRoots(std::span<const std::string_view> names, std::size_t max_names = 4) -> std::string {
+    std::vector<std::string> roots;
+    auto add = [&](std::string item) {
+        for (const auto& r : roots) {
+            if (path::EqualsIC(r, item)) {
                 return;
             }
         }
-        root_folders.emplace_back(comp);
+        roots.emplace_back(std::move(item));
     };
-
-    int nro_root = 0;
-    int nro_nested = 0;
-    std::string root_nro;
 
     for (const auto raw : names) {
         auto n = NormalizeZipEntry(raw);
         if (n.empty()) {
             continue;
         }
-
         const bool is_dir = n.back() == '/';
         if (is_dir) {
             n.pop_back();
@@ -82,44 +113,32 @@ inline auto SuggestExtractPath(std::span<const std::string_view> names, std::str
                 continue;
             }
         }
-
         const auto slash = n.find('/');
         if (slash != std::string::npos) {
-            add_root_folder(n.substr(0, slash));
-            if (!is_dir && path::EndsWithIC(n, ".nro")) {
-                nro_nested++;
-            }
+            add(std::string{n.substr(0, slash)} + "/");
         } else if (is_dir) {
-            add_root_folder(n);
-        } else if (path::EndsWithIC(n, ".nro")) {
-            nro_root++;
-            root_nro = n;
+            add(n + "/");
+        } else {
+            add(n);
         }
     }
 
-    if (root_folders.size() > 1) {
-        return std::string{kDownloadsDir} + "/" + SafeFolderName(archive_stem);
+    if (roots.empty()) {
+        return {};
     }
 
-    if (nro_root + nro_nested == 1 && nro_nested == 1 && root_folders.size() == 1) {
-        if (path::EqualsIC(root_folders[0], "switch")) {
-            return "/";
+    std::string out;
+    const auto shown = std::min(roots.size(), max_names);
+    for (std::size_t i = 0; i < shown; i++) {
+        if (i) {
+            out += ", ";
         }
-        return std::string{kSwitchDir};
+        out += roots[i];
     }
-
-    if (nro_root + nro_nested == 1 && nro_root == 1 && root_folders.empty()) {
-        return std::string{kSwitchDir} + "/" + SafeFolderName(FileStem(root_nro));
+    if (roots.size() > max_names) {
+        out += ", …";
     }
-
-    return std::string{kDownloadsDir};
-}
-
-// Direct .nro URL: /switch/<stem>/<filename>
-inline auto SuggestNakedNroPath(std::string_view filename) -> std::string {
-    const auto base = path::ExtractBasename(filename);
-    const auto name = path::IsSafeFilename(base) ? std::string{base} : std::string{"downloaded.nro"};
-    return std::string{kSwitchDir} + "/" + SafeFolderName(FileStem(name)) + "/" + name;
+    return out;
 }
 
 } // namespace sphaira::zip_extract

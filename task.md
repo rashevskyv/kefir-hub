@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.538**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.539**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.538 (Remote input: no Paste on desktop)
+## Поточний delivery: v0.13.539 (Zip extract: one NRO to /switch/stem)
+
+- [x] `ZIP-ONE-NRO-539` — один `.nro` у zip, незалежно від тек, ставиться в `/switch/<stem>/<file.nro>`; показані шлях у архіві і призначення.
+- [x] `ZIP-NO-ROOT-OPTION-539` — немає пункту «розпакувати в корінь»; є «все в /downloads» (з коренем архіву) і «Extract to...».
+- [x] `DOCS-BUMP-539` — версію піднято до `0.13.539`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.538 (Remote input: no Paste on desktop)
 
 - [x] `REMOTE-NO-DESKTOP-PASTE-538` — на ПК немає кнопки Paste, є інструкція вставити або ввести адресу; на телефоні Paste лишилась.
 - [x] `DOCS-BUMP-538` — версію піднято до `0.13.538` у `sphaira/CMakeLists.txt`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `audit.md`. Агент не компілював.

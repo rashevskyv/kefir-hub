@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.538**. Завершені плани збережено в
+Поточний delivery — **v0.13.539**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.538 — Remote input: no Paste on desktop
+## Поточний delivery: v0.13.539 — Zip extract: one NRO → /switch/stem, no root option
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Якщо в архіві рівно один `.nro` (будь-яка глибина тек) — перша дія: покласти **цей файл** у `/switch/<назва без .nro>/<файл.nro>`. Рядок показує шлях у zip і куди ляже.
+2. Завжди: «Extract all to /downloads» (зі списком кореня архіву: `atmosphere/, switch/, …`) і «Extract to...».
+3. Окремої «Extract to root» немає. Корінь SD лише якщо користувач сам обере його в огляді.
+
+## Попередній delivery: v0.13.538 — Remote input: no Paste on desktop
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. **Desktop**: кнопку Paste прибрано. Під полем інструкція «Paste or type the address, then Send».

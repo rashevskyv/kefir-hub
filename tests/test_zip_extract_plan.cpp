@@ -5,11 +5,14 @@
 #include "zip_extract_plan.hpp"
 
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
-using sphaira::zip_extract::SuggestExtractPath;
+using sphaira::zip_extract::FindSingleNro;
+using sphaira::zip_extract::FormatZipRoots;
+using sphaira::zip_extract::NroInstallDest;
 using sphaira::zip_extract::SuggestNakedNroPath;
 using sphaira::zip_extract::FileStem;
 
@@ -24,36 +27,34 @@ static int g_checks = 0;
         }                                                                     \
     } while (0)
 
-static auto Suggest(std::initializer_list<std::string_view> names, std::string_view stem) -> std::string {
+static auto Nro(std::initializer_list<std::string_view> names) -> std::optional<std::string> {
     const std::vector<std::string_view> v{names};
-    return SuggestExtractPath(v, stem);
+    return FindSingleNro(v);
+}
+
+static auto Roots(std::initializer_list<std::string_view> names) -> std::string {
+    const std::vector<std::string_view> v{names};
+    return FormatZipRoots(v);
 }
 
 static int test_zip_extract_plan() {
     CHECK(FileStem("MyApp.nro") == "MyApp");
     CHECK(FileStem("pack.ZIP") == "pack");
-    CHECK(FileStem("https://x/a/b/Foo.Bar.zip?x=1") == "Foo.Bar");
 
     CHECK(SuggestNakedNroPath("MyApp.nro") == "/switch/MyApp/MyApp.nro");
-    CHECK(SuggestNakedNroPath("https://cdn/HB.nro") == "/switch/HB/HB.nro");
+    CHECK(NroInstallDest("deep/nested/HB.nro") == "/switch/HB/HB.nro");
+    CHECK(NroInstallDest("switch/appstore/appstore.nro") == "/switch/appstore/appstore.nro");
 
-    CHECK(Suggest({"MyApp.nro"}, "x") == "/switch/MyApp");
-    CHECK(Suggest({"MyApp.nro", "readme.txt"}, "x") == "/switch/MyApp");
+    CHECK(Nro({"MyApp.nro"}) == "MyApp.nro");
+    CHECK(Nro({"MyApp/MyApp.nro", "MyApp/config.ini"}) == "MyApp/MyApp.nro");
+    CHECK(Nro({"a/b/c/foo.nro"}) == "a/b/c/foo.nro");
+    CHECK(Nro({"atmosphere/x", "hbmenu.nro"}) == "hbmenu.nro");
+    CHECK(!Nro({"a.nro", "b.nro"}));
+    CHECK(!Nro({"config.ini"}));
 
-    CHECK(Suggest({"MyApp/MyApp.nro"}, "x") == "/switch");
-    CHECK(Suggest({"MyApp/MyApp.nro", "MyApp/config.ini"}, "x") == "/switch");
-    CHECK(Suggest({"switch/app.nro"}, "x") == "/");
-
-    CHECK(Suggest({"atmosphere/kips/x", "bootloader/hekate_ipl.ini"}, "pack") == "/downloads/pack");
-    CHECK(Suggest({"A/a.txt", "B/b.txt"}, "multi") == "/downloads/multi");
-    CHECK(Suggest({"A/a.nro", "B/b.txt"}, "mixed") == "/downloads/mixed");
-
-    CHECK(Suggest({"a.nro", "b.nro"}, "two") == "/downloads");
-    CHECK(Suggest({"config.ini", "icon.png"}, "misc") == "/downloads");
-    CHECK(Suggest({"App/app.nro", "readme.txt"}, "x") == "/switch");
-
-    CHECK(Suggest({"App/a.nro", "App/b.nro"}, "two") == "/downloads");
-    CHECK(Suggest({"naked.nro", "folder/file.txt"}, "mix") == "/downloads");
+    CHECK(Roots({"atmosphere/kips/x", "bootloader/hekate_ipl.ini", "hbmenu.nro"})
+        == "atmosphere/, bootloader/, hbmenu.nro");
+    CHECK(Roots({"switch/appstore/appstore.nro"}) == "switch/");
 
     return 0;
 }

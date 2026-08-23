@@ -260,14 +260,13 @@ auto ListZipEntryNames(const fs::FsPath& zip_path) -> std::vector<std::string> {
     return names;
 }
 
-auto DefaultExtractPathForZip(const fs::FsPath& zip_path, std::string_view filename) -> fs::FsPath {
-    const auto names = ListZipEntryNames(zip_path);
+auto ZipNameViews(const std::vector<std::string>& names) -> std::vector<std::string_view> {
     std::vector<std::string_view> views;
     views.reserve(names.size());
     for (const auto& n : names) {
         views.emplace_back(n);
     }
-    return zip_extract::SuggestExtractPath(views, zip_extract::FileStem(filename));
+    return views;
 }
 
 void OpenSdBrowser(const fs::FsPath& path) {
@@ -287,27 +286,55 @@ void AskOpenExtractedFolder(const fs::FsPath& path) {
     );
 }
 
-void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path);
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name = {});
 void BrowseExtractFolder(fs::FsPath zip_path);
-void PromptExtractPath(fs::FsPath zip_path, fs::FsPath default_path);
+void PromptExtractPath(fs::FsPath zip_path, std::string filename);
 
-void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path) {
-    if (auto norm = path::NormalizeAbsoluteSdPath(extract_path.s)) {
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name) {
+    const bool nro_only = !nro_zip_name.empty();
+    fs::FsPath open_dir = extract_path;
+    if (nro_only) {
+        extract_path = zip_extract::NroInstallDest(nro_zip_name).c_str();
+        const auto slash = std::string_view{extract_path.s}.find_last_of('/');
+        open_dir = (slash != std::string_view::npos && slash > 0)
+            ? fs::FsPath{std::string{extract_path.s, extract_path.s + slash}}
+            : fs::FsPath{zip_extract::kSwitchDir.data()};
+    } else if (auto norm = path::NormalizeAbsoluteSdPath(extract_path.s)) {
         extract_path = norm->c_str();
+        open_dir = extract_path;
     } else {
         extract_path = zip_extract::kDownloadsDir.data();
+        open_dir = extract_path;
     }
 
-    App::Push<ProgressBox>(0, "Extracting..."_i18n, extract_path.s, [zip_path, extract_path](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Extracting..."_i18n, extract_path.s, [zip_path, extract_path, nro_zip_name, nro_only](auto pbox) -> Result {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
-        if (std::strcmp(extract_path.s, "/") != 0) {
-            fs.CreateDirectoryRecursively(extract_path);
+        if (nro_only) {
+            const auto slash = std::string_view{extract_path.s}.find_last_of('/');
+            if (slash != std::string_view::npos && slash > 0) {
+                fs.CreateDirectoryRecursively(std::string{extract_path.s, extract_path.s + slash});
+            }
+            pbox->NewTransfer("Extracting..."_i18n);
+            R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, "/",
+                [nro_zip_name, extract_path](const fs::FsPath& name, fs::FsPath& out) {
+                    const auto n = zip_extract::NormalizeZipEntry(name.s);
+                    const auto want = zip_extract::NormalizeZipEntry(nro_zip_name);
+                    if (!path::EqualsIC(n, want)) {
+                        return false;
+                    }
+                    out = extract_path;
+                    return true;
+                }));
+        } else {
+            if (std::strcmp(extract_path.s, "/") != 0) {
+                fs.CreateDirectoryRecursively(extract_path);
+            }
+            pbox->NewTransfer("Extracting..."_i18n);
+            R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path));
         }
-        pbox->NewTransfer("Extracting..."_i18n);
-        R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path));
         R_SUCCEED();
-    }, [zip_path, extract_path](Result rc){
+    }, [zip_path, open_dir](Result rc){
         if (rc == Result_TransferCancelled) {
             App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
             return;
@@ -320,12 +347,12 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path) {
         homebrew::SignalChange();
         App::Push<OptionBox>(
             "Download and extract completed!\nDelete ZIP file?"_i18n,
-            "Keep"_i18n, "Delete"_i18n, 1, [zip_path, extract_path](auto op_index){
+            "Keep"_i18n, "Delete"_i18n, 1, [zip_path, open_dir](auto op_index){
                 if (op_index && *op_index) {
                     fs::FsNativeSd fs;
                     fs.DeleteFile(zip_path);
                 }
-                AskOpenExtractedFolder(extract_path);
+                AskOpenExtractedFolder(open_dir);
             }
         );
     });
@@ -342,27 +369,45 @@ void BrowseExtractFolder(fs::FsPath zip_path) {
     App::Push(std::move(browser));
 }
 
-void PromptExtractPath(fs::FsPath zip_path, fs::FsPath default_path) {
-    const char* shown = (default_path.s[0] != '\0') ? default_path.s : "/";
-    PopupList::Items items;
-    if (std::strcmp(shown, "/") == 0) {
-        items.emplace_back("Extract to root"_i18n);
-    } else {
-        items.emplace_back("Extract to "_i18n + shown);
-    }
-    items.emplace_back("Extract to..."_i18n);
-    items.emplace_back("Cancel"_i18n);
+void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
+    const auto names = ListZipEntryNames(zip_path);
+    const auto views = ZipNameViews(names);
+    const auto nro = zip_extract::FindSingleNro(views);
+    const auto roots = zip_extract::FormatZipRoots(views);
 
-    auto popup = std::make_unique<PopupList>("Extract Options"_i18n, items, [zip_path, default_path](auto op_index){
-        if (!op_index) {
-            return;
-        }
-        if (*op_index == 0) {
-            ExtractDownloadedZip(zip_path, default_path);
-        } else if (*op_index == 1) {
-            BrowseExtractFolder(zip_path);
-        }
-    }, 0);
+    PopupList::Items items;
+    const bool has_nro = nro.has_value();
+    if (has_nro) {
+        const auto dest = zip_extract::NroInstallDest(*nro);
+        items.emplace_back(*nro + " → " + dest);
+    }
+    auto extract_all = "Extract all to /downloads"_i18n;
+    if (!roots.empty()) {
+        extract_all += " (" + roots + ")";
+    }
+    items.emplace_back(std::move(extract_all));
+    items.emplace_back("Extract to..."_i18n);
+
+    auto popup = std::make_unique<PopupList>(
+        filename.empty() ? "Extract Options"_i18n : filename, items,
+        [zip_path, has_nro, nro](auto op_index){
+            if (!op_index) {
+                return;
+            }
+            auto i = *op_index;
+            if (has_nro) {
+                if (i == 0) {
+                    ExtractDownloadedZip(zip_path, "/", *nro);
+                    return;
+                }
+                i--;
+            }
+            if (i == 0) {
+                ExtractDownloadedZip(zip_path, zip_extract::kDownloadsDir.data());
+            } else if (i == 1) {
+                BrowseExtractFolder(zip_path);
+            }
+        }, 0);
     popup->SetMenuStyle(true);
     App::Push(std::move(popup));
 }
@@ -429,7 +474,7 @@ void DoDirectLinkDownload(const std::string& url) {
             return;
         }
 
-        PromptExtractPath(dest_file, DefaultExtractPathForZip(dest_file, filename));
+        PromptExtractPath(dest_file, filename);
     });
 }
 
