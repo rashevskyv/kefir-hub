@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.539**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.540**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.539 (Zip extract: one NRO to /switch/stem)
+## Поточний delivery: v0.13.540 (OptionBox long button labels)
+
+- [x] `OPTIONBOX-BUTTON-FIT-540` — гліф +/B фіксований зліва; довгий підпис кнопки меншим шрифтом і в два рядки.
+- [x] `DOCS-BUMP-540` — версію піднято до `0.13.540`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.539 (Zip extract: one NRO to /switch/stem)
 
 - [x] `ZIP-ONE-NRO-539` — один `.nro` у zip, незалежно від тек, ставиться в `/switch/<stem>/<file.nro>`; показані шлях у архіві і призначення.
 - [x] `ZIP-NO-ROOT-OPTION-539` — немає пункту «розпакувати в корінь»; є «все в /downloads» (з коренем архіву) і «Extract to...».

@@ -3,6 +3,7 @@
 #include "app.hpp"
 
 #include <algorithm>
+#include <cstring>
 
 namespace sphaira::ui {
 namespace {
@@ -68,21 +69,59 @@ auto AddGlyphIfMissing(const std::string& text, const std::string& glyph) -> std
     return glyph + " " + text;
 }
 
+void SplitLeadingGlyph(const std::string& text, std::string& glyph, std::string& label) {
+    const auto try_split = [&](const char* g) -> bool {
+        const auto glen = std::strlen(g);
+        if (text.size() >= glen && text.compare(0, glen, g) == 0) {
+            glyph = g;
+            auto rest = text.substr(glen);
+            while (!rest.empty() && rest.front() == ' ') {
+                rest.erase(rest.begin());
+            }
+            label = std::move(rest);
+            return true;
+        }
+        return false;
+    };
+    if (try_split("\uE0E1") || try_split("\uE0EF")) {
+        return;
+    }
+    glyph.clear();
+    label = text;
+}
+
 } // namespace
 
-OptionBoxEntry::OptionBoxEntry(const std::string& text, Vec4 pos)
-: m_text{text} {
+OptionBoxEntry::OptionBoxEntry(const std::string& text, Vec4 pos) {
+    SplitLeadingGlyph(text, m_glyph, m_label);
     m_pos = pos;
     m_text_pos = Vec2{m_pos.x + (m_pos.w / 2.f), m_pos.y + (m_pos.h / 2.f)};
 }
 
 auto OptionBoxEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
+    const auto colour = theme->GetColour(m_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
     if (m_selected) {
         gfx::drawRectOutline(vg, theme, 4.f, m_pos);
-        gfx::drawText(vg, m_text_pos, 26.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-    } else {
-        gfx::drawText(vg, m_text_pos, 26.f, theme->GetColour(ThemeEntryID_TEXT), m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     }
+
+    if (m_glyph.empty()) {
+        gfx::drawText(vg, m_text_pos, 26.f, colour, m_label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        return;
+    }
+
+    constexpr float pad = 12.f;
+    constexpr float glyph_size = 26.f;
+    constexpr float glyph_slot = 34.f;
+    const float mid_y = m_pos.y + m_pos.h / 2.f;
+    gfx::drawText(vg, m_pos.x + pad, mid_y, glyph_size, colour, m_glyph.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+    const float text_x = m_pos.x + pad + glyph_slot;
+    const float text_w = m_pos.w - pad * 2.f - glyph_slot;
+    nvgFontSize(vg, 22.f);
+    float bounds[4]{};
+    nvgTextBounds(vg, 0.f, 0.f, m_label.c_str(), nullptr, bounds);
+    const float size = (bounds[2] - bounds[0] <= text_w) ? 22.f : 18.f;
+    gfx::drawTextBox(vg, text_x, mid_y, size, text_w, colour, m_label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
 }
 
 auto OptionBoxEntry::Selected(bool enable) -> void {

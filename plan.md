@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.539**. Завершені плани збережено в
+Поточний delivery — **v0.13.540**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.539 — Zip extract: one NRO → /switch/stem, no root option
+## Поточний delivery: v0.13.540 — OptionBox: wrap long button labels, keep + glyph fixed
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Довгі підписи кнопок OptionBox (наприклад «Відкрити у файловому браузері») більше не вилазять за край.
+2. Іконка + / B лишається зліва без прокрутки; текст зменшується і переноситься на два рядки.
+
+## Попередній delivery: v0.13.539 — Zip extract: one NRO → /switch/stem, no root option
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Якщо в архіві рівно один `.nro` (будь-яка глибина тек) — перша дія: покласти **цей файл** у `/switch/<назва без .nro>/<файл.nro>`. Рядок показує шлях у zip і куди ляже.

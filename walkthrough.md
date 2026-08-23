@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.539** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.540** (2026-08-23). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.540 — OptionBox: wrap long button labels
+
+- Кнопка «Відкрити у файловому браузері» вміщається: іконка + лишається зліва, текст переноситься / зменшується.
 
 ## v0.13.539 — Zip extract: one NRO → /switch/stem
 
