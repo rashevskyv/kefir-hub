@@ -105,7 +105,14 @@ auto OptionBoxEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
         return;
     }
 
-    gfx::drawTextBox(vg, m_pos.x + pad, m_text_pos.y, size, inner_w, colour, m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nullptr, 1.15f);
+    nvgFontSize(vg, size);
+    nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    nvgTextLineHeight(vg, 1.15f);
+    float box_b[4]{};
+    nvgTextBoxBounds(vg, 0.f, 0.f, inner_w, m_text.c_str(), nullptr, box_b);
+    const float text_h = box_b[3] - box_b[1];
+    const float text_y = m_pos.y + (m_pos.h - text_h) * 0.5f;
+    gfx::drawTextBox(vg, m_pos.x + pad, text_y, size, inner_w, colour, m_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.15f);
 }
 
 auto OptionBoxEntry::Selected(bool enable) -> void {
@@ -177,20 +184,15 @@ OptionBox::OptionBox(const std::string& message, const Option& a, const Option& 
 
     m_pos.w = 770.f;
     m_button_yoff = CalculateButtonYoff(message, image != 0);
-    m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT;
+    m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT * 2.f;
     m_pos.x = (SCREEN_WIDTH / 2.f) - (m_pos.w / 2.f);
     m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
 
-    auto box = m_pos;
-    box.w /= 3.f;
-    box.y += m_button_yoff;
-    box.h -= m_button_yoff;
-
-    m_entries.emplace_back(AddGlyphIfMissing(a, "\uE0E1"), box);
-    box.x += box.w;
-    m_entries.emplace_back(b, box);
-    box.x += box.w;
-    m_entries.emplace_back(AddGlyphIfMissing(c, "\uE0EF"), box);
+    // a = Later (B), b = Skip (Minus, full-width row above), c = Update (+)
+    m_entries.emplace_back(AddGlyphIfMissing(a, "\uE0E1"), m_pos);
+    m_entries.emplace_back(AddGlyphIfMissing(b, "\uE0F0"), m_pos);
+    m_entries.emplace_back(AddGlyphIfMissing(c, "\uE0EF"), m_pos);
+    LayoutButtons();
 
     Setup(index);
 }
@@ -247,26 +249,10 @@ auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             m_button_yoff = std::max(190.f, m_button_yoff);
         }
 
-        // Recalculate popup size and position
-        m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT;
+        const float button_rows = m_entries.size() == 3 ? 2.f : 1.f;
+        m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT * button_rows;
         m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
-
-        // Re-align buttons
-        m_spacer_line = Vec4{m_pos.x, m_pos.y + m_button_yoff - 2.f, m_pos.w, 2.f};
-        
-        auto box = m_pos;
-        box.y += m_button_yoff;
-        box.h -= m_button_yoff;
-        
-        if (m_entries.size() == 1) {
-            m_entries[0].UpdateLayout(box);
-        } else if (!m_entries.empty()) {
-            box.w /= static_cast<float>(m_entries.size());
-            for (auto& e : m_entries) {
-                e.UpdateLayout(box);
-                box.x += box.w;
-            }
-        }
+        LayoutButtons();
 
         m_layout_done = true;
     }
@@ -326,20 +312,80 @@ auto OptionBox::OnFocusLost() noexcept -> void {
     SetHidden(true);
 }
 
+void OptionBox::LayoutButtons() {
+    m_spacer_line = Vec4{m_pos.x, m_pos.y + m_button_yoff - 2.f, m_pos.w, 2.f};
+
+    auto box = m_pos;
+    box.y += m_button_yoff;
+    box.h -= m_button_yoff;
+
+    if (m_entries.size() == 1) {
+        m_entries[0].UpdateLayout(box);
+        return;
+    }
+
+    if (m_entries.size() == 3) {
+        Vec4 top = box;
+        top.h = OPTION_BUTTON_HEIGHT;
+        m_entries[1].UpdateLayout(top);
+
+        Vec4 bot = box;
+        bot.y += OPTION_BUTTON_HEIGHT;
+        bot.h = OPTION_BUTTON_HEIGHT;
+        bot.w *= 0.5f;
+        m_entries[0].UpdateLayout(bot);
+        bot.x += bot.w;
+        m_entries[2].UpdateLayout(bot);
+        return;
+    }
+
+    box.w /= static_cast<float>(m_entries.size());
+    for (auto& e : m_entries) {
+        e.UpdateLayout(box);
+        box.x += box.w;
+    }
+}
+
 auto OptionBox::Setup(s64 index) -> void {
     m_index = std::min<s64>(m_entries.size() - 1, index);
     m_entries[m_index].Selected(true);
-    m_spacer_line = Vec4{m_pos.x, m_pos.y + m_button_yoff - 2.f, m_pos.w, 2.f};
+    LayoutButtons();
 
     SetActions(
         std::make_pair(Button::LEFT, Action{[this](){
+            if (m_entries.size() == 3) {
+                if (m_index == 2) {
+                    SetIndex(0);
+                } else if (m_index == 0) {
+                    SetIndex(1);
+                }
+                return;
+            }
             if (m_index) {
                 SetIndex(m_index - 1);
             }
         }}),
         std::make_pair(Button::RIGHT, Action{[this](){
+            if (m_entries.size() == 3) {
+                if (m_index == 0) {
+                    SetIndex(2);
+                } else if (m_index == 1) {
+                    SetIndex(2);
+                }
+                return;
+            }
             if (m_index < (m_entries.size() - 1)) {
                 SetIndex(m_index + 1);
+            }
+        }}),
+        std::make_pair(Button::UP, Action{[this](){
+            if (m_entries.size() == 3 && m_index != 1) {
+                SetIndex(1);
+            }
+        }}),
+        std::make_pair(Button::DOWN, Action{[this](){
+            if (m_entries.size() == 3 && m_index == 1) {
+                SetIndex(2);
             }
         }}),
         std::make_pair(Button::A, Action{[this](){
@@ -353,6 +399,12 @@ auto OptionBox::Setup(s64 index) -> void {
                 m_callback({});
             }
             SetPop();
+        }}),
+        std::make_pair(Button::SELECT, Action{[this](){
+            if (m_entries.size() == 3) {
+                m_callback(1);
+                SetPop();
+            }
         }}),
         std::make_pair(Button::START, Action{[this](){
             if (m_entries.size() >= 2) {

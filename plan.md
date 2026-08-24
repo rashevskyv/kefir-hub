@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.579**. Завершені плани збережено в
+Поточний delivery — **v0.13.580**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.579 — Ready — restart actually restarts
+## Поточний delivery: v0.13.580 — Ask dialog: Skip on its own row, Minus shortcut
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Skip на всю ширину над Пізніше/Оновити, текст по центру. Minus — скіп, Plus — оновити, B — пізніше.
+
+## Попередній delivery: v0.13.579 — Ready — restart actually restarts
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Auto-update → Update now, коли «Ready — restart»: тап перезапускає Kefir Hub.

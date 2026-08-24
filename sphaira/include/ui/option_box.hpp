@@ -43,6 +43,7 @@ public:
 private:
     auto Setup(s64 index) -> void; // common setup values
     void SetIndex(s64 index);
+    void LayoutButtons();
 
 private:
     const std::string m_message;
