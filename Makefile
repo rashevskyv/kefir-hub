@@ -1,6 +1,8 @@
 # === Configuration ===
 SPHAIRA_ROOT_DIR := $(CURDIR)
-SPHAIRA_VERSION := $(shell sed -n 's/^set(sphaira_VERSION \([^)]*\))/\1/p' $(SPHAIRA_ROOT_DIR)/sphaira/CMakeLists.txt)
+# GNU make matches parentheses inside a shell-function snippet even in quotes,
+# so a sed capture like ([^)]*) truncates the command. Keep this snippet paren-free.
+SPHAIRA_VERSION := $(shell grep sphaira_VERSION $(SPHAIRA_ROOT_DIR)/sphaira/CMakeLists.txt | head -1 | tr -cd '0-9.')
 SPHAIRA_BUILD_PRESET := ReleaseWithInstall
 SPHAIRA_BUILD_JOBS ?= $(shell nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 SPHAIRA_FAN_TITLE_ID := 00FF46554E43544C
