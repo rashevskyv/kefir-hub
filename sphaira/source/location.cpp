@@ -21,7 +21,13 @@ void EnsureUsbHsFsInitialized() {
     // haze::Exit() hands it back and, when the drive is enabled, re-initializes
     // usbhsfs on its way out -- so the check below then finds it already up.
     if (haze::IsRunning()) {
-        log_write("[USB_HOST] haze MTP server running; stopping haze to switch USB port to Host mode\n");
+        UsbState usb_state{};
+        const bool pc = R_SUCCEEDED(usbDsGetState(&usb_state)) && usb_state == UsbState_Configured;
+        if (pc) {
+            // a PC is in the middle of an MTP session; listing USB would drop it.
+            return;
+        }
+        log_write("[USB_HOST] haze MTP server idle; stopping haze to switch USB port to Host mode\n");
         haze::Exit();
     }
 
@@ -154,7 +160,8 @@ auto GetStdio(bool write) -> StdioEntries {
             flags |= ui::menu::filebrowser::FsEntryFlag_ReadOnly;
         }
         out.emplace_back(e.name, display_name, flags);
-        log_write("\t[USBHSFS] %s name: %s serial: %s man: %s\n", e.name, e.product_name, e.serial_number, e.manufacturer);
+        log_write("\t[USBHSFS] %s vid:%04x pid:%04x name: %s serial: %s man: %s\n",
+            e.name, e.vid, e.pid, e.product_name, e.serial_number, e.manufacturer);
     }
 
     return out;

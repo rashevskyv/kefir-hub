@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.585**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.586**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.585 (USB flash vs MTP port crash)
+## Поточний delivery: v0.13.586 (USB flash hotplug → file browser)
+
+- [x] `USB-FLASH-DETECT-586` — після MTP unplug одразу host; UMS → попап відкрити цю флешку.
+- [x] `USB-FLASH-UNPLUG-586` — витяг флешки закриває файловий браузер на її mount.
+- [x] `DOCS-BUMP-586` — версію піднято до `0.13.586`. Агент не компілював.
+
+## Попередній delivery: v0.13.585 (USB flash vs MTP port crash)
 
 - [x] `USB-FLASH-MTP-CRASH-585` — не тримати usb:ds без ПК; хост для флешки; MTP лише коли є LowPower.
 - [x] `DOCS-BUMP-585` — версію піднято до `0.13.585`. Агент не компілював.

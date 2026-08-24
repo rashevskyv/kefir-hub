@@ -182,6 +182,23 @@ void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
+void Menu::CloseIfOnUsbMount(std::string_view mount) {
+    auto matches = [&](FsView* v) {
+        if (!v) {
+            return false;
+        }
+        const auto& e = v->GetFsEntry();
+        if (e.type != FsType::Stdio) {
+            return false;
+        }
+        const auto root = e.root.toString();
+        return root == mount || root.starts_with(std::string(mount));
+    };
+    if (matches(view) || matches(view_left.get()) || matches(view_right.get())) {
+        SetPop();
+    }
+}
+
 namespace {
 
 // only touched from the main thread (ui callbacks).

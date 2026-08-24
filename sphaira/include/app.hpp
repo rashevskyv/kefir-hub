@@ -426,12 +426,13 @@ public:
     // Flash: offer to open it in the file browser. PC: start MTP (the port
     // cannot be host and device at once). Auto-MTP is undone on unplug.
     void PollUsbStorage();
-    void OfferOpenUsbDrive();
+    void OfferOpenUsbDrive(std::string name, std::string mount, u32 flags);
+    void CloseFileBrowsersOnUsbMount(const std::string& mount);
     void TryStartAutoMtp();
     void RestoreUsbAfterAutoMtp();
     void ApplyMtpEnable(bool enable, bool notify_conflict);
     TimeStamp m_usb_poll_ts{};
-    u32 m_usb_device_count{};
+    std::vector<std::string> m_usb_mounts{};
     bool m_usb_poll_primed{};
     PsmChargerType m_usb_charger{PsmChargerType_Unconnected};
     bool m_usb_pending_mtp{};

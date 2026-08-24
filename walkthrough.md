@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.585** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.586** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.586 — flash in → offer that drive; flash out → close it
+
+- Після виймання MTP-кабеля порт одразу стає host (usb:ds Detached), без заходу в файловий браузер.
+- Новий UMS (vid/pid) → попап «відкрити у файловому браузері» саме цю флешку.
+- Витяг флешки закриває браузер, якщо він відкритий на ній.
 
 ## v0.13.585 — plugging a flash drive while MTP is on
 

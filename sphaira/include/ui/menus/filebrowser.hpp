@@ -12,6 +12,7 @@
 #include <memory>
 #include <functional>
 #include <string>
+#include <string_view>
 
 namespace sphaira::location {
 struct Entry;
@@ -564,6 +565,8 @@ struct Menu final : MenuBase {
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
+    // pop this browser if it is currently showing `mount` (e.g. "ums0:").
+    void CloseIfOnUsbMount(std::string_view mount);
 
     // folder-picker mode: run the browser purely to choose a folder (e.g. a
     // firmware dump). the callback receives the chosen folder path. selection

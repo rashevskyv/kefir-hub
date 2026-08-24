@@ -837,10 +837,17 @@ void App::Update() {
 }
 
 void App::PollUsbStorage() {
-    if (m_usb_poll_primed && m_usb_poll_ts.GetSeconds() < 1) {
+    bool host_changed = false;
+    if (auto* ev = usbHsFsGetStatusChangeUserEvent(); ev) {
+        host_changed = R_SUCCEEDED(waitSingle(waiterForUEvent(ev), 0));
+    }
+    const bool timed = !m_usb_poll_primed || m_usb_poll_ts.GetSeconds() >= 1;
+    if (!timed && !host_changed) {
         return;
     }
-    m_usb_poll_ts.Update();
+    if (timed) {
+        m_usb_poll_ts.Update();
+    }
 
     PsmChargerType charger{PsmChargerType_Unconnected};
     psmGetChargerType(&charger);
@@ -848,22 +855,38 @@ void App::PollUsbStorage() {
     UsbState usb_state{};
     const bool usbds_up = R_SUCCEEDED(usbDsGetState(&usb_state));
     const bool pc_enumerated = usbds_up && usb_state == UsbState_Configured;
-    // USB install owns usb:ds without haze. Do not yank the port out from under it.
-    if (usbds_up && !haze::IsRunning()) {
+    // USB install owns usb:ds without haze while a PC is sending files.
+    if (usbds_up && !haze::IsRunning() && pc_enumerated) {
         return;
     }
 
+    // PC unplugged: usb:ds drops off Configured even if VBUS lags. Free the
+    // port immediately so a flash drive can enumerate as a host device.
+    if (haze::IsRunning() && (!usbds_up || usb_state == UsbState_Detached)) {
+        log_write("[USB] MTP session gone (state=%u); releasing port to host\n",
+            static_cast<unsigned>(usb_state));
+        haze::Exit();
+    }
+
     const bool host_up = usbHsFsGetStatusChangeUserEvent();
-    const u32 count = host_up ? usbHsFsGetMountedDeviceCount() : 0;
-    const u32 physical = host_up ? usbHsFsGetPhysicalDeviceCount() : 0;
     const bool handheld = appletGetOperationMode() != AppletOperationMode_Console;
 
+    std::vector<location::StdioEntry> devices;
+    if (host_up && !haze::IsRunning()) {
+        devices = location::GetStdio(false);
+    }
+    std::vector<std::string> mounts;
+    mounts.reserve(devices.size());
+    for (const auto& d : devices) {
+        mounts.push_back(d.mount);
+    }
+
     if (!m_usb_poll_primed) {
-        m_usb_device_count = count;
+        m_usb_mounts = std::move(mounts);
         m_usb_charger = charger;
         m_usb_poll_primed = true;
         if (charger == PsmChargerType_LowPower
-            && physical == 0 && count == 0
+            && m_usb_mounts.empty()
             && !haze::IsRunning() && handheld) {
             m_usb_pending_mtp = true;
             m_usb_pending_mtp_ts.Update();
@@ -871,38 +894,39 @@ void App::PollUsbStorage() {
         return;
     }
 
-    if (host_up && count != m_usb_device_count) {
-        const bool added = count > m_usb_device_count;
-        m_usb_device_count = count;
-        if (added) {
+    for (const auto& d : devices) {
+        if (std::ranges::find(m_usb_mounts, d.mount) == m_usb_mounts.end()) {
+            log_write("[USB] mass-storage %s vid/pid via %s\n", d.name.c_str(), d.mount.c_str());
             m_usb_pending_mtp = false;
-            OfferOpenUsbDrive();
-        } else {
+            OfferOpenUsbDrive(d.name, d.mount, d.flags);
+        }
+    }
+    for (const auto& old : m_usb_mounts) {
+        if (std::ranges::find(mounts, old) == mounts.end()) {
+            log_write("[USB] mass-storage removed %s\n", old.c_str());
             App::Notify("USB drive removed"_i18n);
+            CloseFileBrowsersOnUsbMount(old);
             if (!m_widgets.empty()) {
                 m_widgets.back()->OnFocusGained();
             }
         }
-    } else {
-        m_usb_device_count = count;
     }
+    m_usb_mounts = std::move(mounts);
 
     if (charger != m_usb_charger) {
-        log_write("[USB] charger %u -> %u (physical=%u mounted=%u haze=%d configured=%d)\n",
+        log_write("[USB] charger %u -> %u (mounted=%zu haze=%d configured=%d)\n",
             static_cast<unsigned>(m_usb_charger), static_cast<unsigned>(charger),
-            physical, count, haze::IsRunning() ? 1 : 0, pc_enumerated ? 1 : 0);
+            m_usb_mounts.size(), haze::IsRunning() ? 1 : 0, pc_enumerated ? 1 : 0);
         if (charger == PsmChargerType_Unconnected) {
             m_usb_pending_mtp = false;
             if (m_usb_auto_mtp) {
                 RestoreUsbAfterAutoMtp();
             } else if (haze::IsRunning() && !pc_enumerated) {
-                // settings still say MTP on, but nothing is a USB host: free
-                // the port so a flash drive can enumerate.
                 log_write("[USB] MTP idle with no PC; releasing port to host\n");
                 haze::Exit();
             }
         } else if (charger == PsmChargerType_LowPower
-            && physical == 0 && count == 0
+            && m_usb_mounts.empty()
             && !haze::IsRunning() && handheld) {
             m_usb_pending_mtp = true;
             m_usb_pending_mtp_ts.Update();
@@ -913,7 +937,7 @@ void App::PollUsbStorage() {
     }
 
     if (m_usb_pending_mtp) {
-        if (physical > 0 || count > 0 || haze::IsRunning()) {
+        if (!m_usb_mounts.empty() || haze::IsRunning()) {
             m_usb_pending_mtp = false;
         } else if (m_usb_pending_mtp_ts.GetSeconds() >= 2) {
             m_usb_pending_mtp = false;
@@ -922,12 +946,7 @@ void App::PollUsbStorage() {
     }
 }
 
-void App::OfferOpenUsbDrive() {
-    const auto devices = location::GetStdio(false);
-    const std::string name = devices.empty() ? std::string{} : devices.back().name;
-    const std::string mount = devices.empty() ? std::string{} : devices.back().mount;
-    const u32 flags = devices.empty() ? 0u : devices.back().flags;
-
+void App::OfferOpenUsbDrive(std::string name, std::string mount, u32 flags) {
     if (!m_widgets.empty()) {
         m_widgets.back()->OnFocusGained();
     }
@@ -950,6 +969,14 @@ void App::OfferOpenUsbDrive() {
                 name, mount, ui::menu::filebrowser::FsType::Stdio, flags};
             App::Push<ui::menu::filebrowser::Menu>(ui::menu::MenuFlag_None, entry, mount);
         });
+}
+
+void App::CloseFileBrowsersOnUsbMount(const std::string& mount) {
+    for (auto& w : m_widgets) {
+        if (auto* fb = dynamic_cast<ui::menu::filebrowser::Menu*>(w.get())) {
+            fb->CloseIfOnUsbMount(mount);
+        }
+    }
 }
 
 void App::TryStartAutoMtp() {

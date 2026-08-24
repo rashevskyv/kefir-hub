@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.585**. Завершені плани збережено в
+Поточний delivery — **v0.13.586**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.585 — USB flash while MTP is on must not crash
+## Поточний delivery: v0.13.586 — flash plug/unplug without file-browser magic
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Після MTP-кабеля Poll більше не ігнорує usb:hs (ранній return usbds&&!haze). PC unplug = usb:ds Detached → haze::Exit одразу.
+2. UMS (vid/pid) → попап відкрити саме цю флешку. Витяг → закрити файловий браузер, якщо він на ній.
+
+## Попередній delivery: v0.13.585 — USB flash while MTP is on must not crash
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. MTP у налаштуваннях більше не хапає порт як gadget, поки немає ПК (LowPower). Інакше флешка (теж device) валить usb:ds Instruction Abort.
