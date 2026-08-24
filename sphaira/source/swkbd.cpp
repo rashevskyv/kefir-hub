@@ -1,22 +1,21 @@
 #include "swkbd.hpp"
+#include "app.hpp"
 #include "defines.hpp"
 #include <cstdlib>
+#include <string>
 
 namespace sphaira::swkbd {
 namespace {
 
-struct Config {
-    char out_text[FS_MAX_PATH]{};
-    bool numpad{};
-};
-
-Result ShowInternal(Config& cfg, const char* guide, const char* initial, s64 len_min, s64 len_max) {
+Result ShowInternal(bool numpad, std::string& out, const char* guide, const char* initial, s64 len_min, s64 len_max) {
     SwkbdConfig c;
     R_TRY(swkbdCreate(&c, 0));
+    ON_SCOPE_EXIT(swkbdClose(&c));
+
     swkbdConfigMakePresetDefault(&c);
     swkbdConfigSetInitialCursorPos(&c, 1);
 
-    if (cfg.numpad) {
+    if (numpad) {
         swkbdConfigSetType(&c, SwkbdType_NumPad);
     }
 
@@ -32,27 +31,33 @@ Result ShowInternal(Config& cfg, const char* guide, const char* initial, s64 len
         swkbdConfigSetStringLenMin(&c, len_min);
     }
 
-    if (len_max >= 0) {
-        swkbdConfigSetStringLenMax(&c, len_max);
+    s64 max_len = len_max >= 0 ? len_max : (FS_MAX_PATH - 1);
+    if (max_len < 1) {
+        max_len = 1;
     }
+    if (max_len > 0x8000) {
+        max_len = 0x8000;
+    }
+    swkbdConfigSetStringLenMax(&c, max_len);
 
-    return swkbdShow(&c, cfg.out_text, sizeof(cfg.out_text));
+    std::string buf(static_cast<size_t>(max_len) + 1, '\0');
+    const auto rc = swkbdShow(&c, buf.data(), buf.size());
+    App::ResetTouchAfterApplet();
+    R_TRY(rc);
+    out = buf.c_str();
+    R_SUCCEED();
 }
 
 } // namespace
 
 Result ShowText(std::string& out, const char* guide, const char* initial, s64 len_min, s64 len_max) {
-    Config cfg{};
-    R_TRY(ShowInternal(cfg, guide, initial, len_min, len_max));
-    out = cfg.out_text;
-    R_SUCCEED();
+    return ShowInternal(false, out, guide, initial, len_min, len_max);
 }
 
 Result ShowNumPad(s64& out, const char* guide, const char* initial, s64 len_min, s64 len_max) {
-    Config cfg{};
-    cfg.numpad = true;
-    R_TRY(ShowInternal(cfg, guide, initial, len_min, len_max));
-    out = std::atoll(cfg.out_text);
+    std::string text;
+    R_TRY(ShowInternal(true, text, guide, initial, len_min, len_max));
+    out = std::atoll(text.c_str());
     R_SUCCEED();
 }
 

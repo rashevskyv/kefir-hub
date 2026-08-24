@@ -765,9 +765,7 @@ void Menu::SetupEditActions() {
             CancelRangeSelection();
         }});
     } else {
-        SetAction(Button::A, Action{"Edit line"_i18n, [this](){
-            EditLine();
-        }});
+        RefreshEditAHint();
         SetAction(Button::B, Action{"Back"_i18n, [this](){
             SwitchToViewMode();
         }});
@@ -849,6 +847,7 @@ void Menu::UpdateTextSubHeading() {
             heading += "  (" + "View"_i18n + ")";
         }
         SetSubHeading(heading);
+        RefreshEditAHint();
         return;
     }
 
@@ -865,6 +864,7 @@ void Menu::UpdateTextSubHeading() {
         heading += "  *";
     }
     SetSubHeading(heading);
+    RefreshEditAHint();
 }
 
 auto Menu::BuildText() const -> std::string {
@@ -925,8 +925,42 @@ void Menu::Redo() {
     UpdateTextSubHeading();
 }
 
+auto Menu::TryToggleLine(s64 index) -> bool {
+    if (!m_editable || index < 0 || index >= static_cast<s64>(m_lines.size())) {
+        return false;
+    }
+    const auto toggle = text_helper::ToggleIniBoolean(m_lines[index]);
+    if (!toggle.toggled) {
+        return false;
+    }
+    PushUndo();
+    m_lines[index] = toggle.new_line;
+    ClearRangeSelection();
+    m_text_dirty = (BuildText() != m_saved_text);
+    UpdateTextSubHeading();
+    App::PlaySoundEffect(SoundEffect_Focus);
+    return true;
+}
+
+void Menu::RefreshEditAHint() {
+    if (!m_editable || m_adjusting_range || m_selecting_range) {
+        return;
+    }
+    const bool can_toggle = m_line_index >= 0
+        && m_line_index < static_cast<s64>(m_lines.size())
+        && text_helper::ToggleIniBoolean(m_lines[m_line_index]).toggled;
+    SetAction(Button::A, Action{can_toggle ? "Toggle"_i18n : "Edit line"_i18n, [this](){
+        if (!TryToggleLine(m_line_index)) {
+            EditLine();
+        }
+    }});
+}
+
 void Menu::EditLine() {
     if (!m_editable) return;
+    if (m_line_index < 0 || m_line_index >= static_cast<s64>(m_lines.size())) {
+        return;
+    }
     std::string out;
     if (R_FAILED(swkbd::ShowText(out, "Edit line"_i18n.c_str(), m_lines[m_line_index].c_str(), 0, 1024))) {
         return;
@@ -1444,6 +1478,10 @@ void Menu::ShowLineActions() {
     };
     std::vector<ActionEntry> actions;
 
+    if (m_line_index >= 0 && m_line_index < static_cast<s64>(m_lines.size())
+        && text_helper::ToggleIniBoolean(m_lines[m_line_index]).toggled) {
+        actions.push_back({"Toggle"_i18n, std::nullopt, [this](){ TryToggleLine(m_line_index); }});
+    }
     actions.push_back({"Edit line"_i18n, ActionIcon::Edit, [this](){ EditLine(); }});
 
     if (m_has_range) {
@@ -1733,17 +1771,8 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
                         FinishRangeSelection();
                         return;
                     }
-                    if (text_helper::IsIniFile(m_path)) {
-                        const auto toggle = text_helper::ToggleIniBoolean(m_lines[index]);
-                        if (toggle.toggled) {
-                            PushUndo();
-                            m_lines[index] = toggle.new_line;
-                            ClearRangeSelection();
-                            m_text_dirty = (BuildText() != m_saved_text);
-                            UpdateTextSubHeading();
-                            App::PlaySoundEffect(SoundEffect_Focus);
-                            return;
-                        }
+                    if (TryToggleLine(index)) {
+                        return;
                     }
                     EditLine();
                 } else {

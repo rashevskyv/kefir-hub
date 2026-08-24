@@ -77,6 +77,10 @@ public:
     static auto PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> bool;
     static auto HasActiveTransfer() -> bool;
 
+    // Drop a click/drag that started before a blocking applet (swkbd) so the
+    // same finger-up is not delivered to the menu underneath on return.
+    static void ResetTouchAfterApplet();
+
     // pops all widgets above a menu
     static void PopToMenu();
     static void Pop();

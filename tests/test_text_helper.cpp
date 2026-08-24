@@ -88,6 +88,12 @@ int main() {
     auto r17 = ToggleIniBoolean("flag = 1 # hash comment");
     assert(r17.toggled && r17.new_line == "flag = 0 # hash comment");
 
+    auto r18 = ToggleIniBoolean("debugmode=0");
+    assert(r18.toggled && r18.new_line == "debugmode=1");
+
+    auto r19 = ToggleIniBoolean("enable=1");
+    assert(r19.toggled && r19.new_line == "enable=0");
+
     // Typed flag rejection cases & multi-digit numbers:
     assert(!ToggleIniBoolean("flag = u8!0x2").toggled);
     assert(!ToggleIniBoolean("flag = u32!0x0").toggled);

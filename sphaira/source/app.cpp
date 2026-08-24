@@ -452,6 +452,17 @@ auto App::HasActiveTransfer() -> bool {
     return g_app && g_app->m_active_transfer_pbox != nullptr;
 }
 
+void App::ResetTouchAfterApplet() {
+    if (!g_app) {
+        return;
+    }
+    g_app->m_touch_info.is_clicked = false;
+    g_app->m_touch_info.is_tap = false;
+    g_app->m_touch_info.is_touching = false;
+    g_app->m_touch_info.is_scroll = false;
+    g_app->m_touch_info.is_end = false;
+}
+
 auto App::PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> bool {
     pbox->SetDetached(true);
     // if one is already running (shouldn't normally happen, callers are expected

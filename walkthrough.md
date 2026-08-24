@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.569** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.570** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.570 — Toggle 0/1 with A; swkbd no longer overflows
+
+- На рядку `key=0` / `key=1` (і true/false / u8!0x0) **A** і подвійний тап міняють значення місцями. Клавіатура лише якщо це не буль.
+- swkbd писав до 1024 байт у буфер 769 і не викликав `swkbdClose` — виправлено. Після клавіатури тач не добиває меню під нею.
 
 ## v0.13.569 — Silent update ToFileAsync StopToken
 

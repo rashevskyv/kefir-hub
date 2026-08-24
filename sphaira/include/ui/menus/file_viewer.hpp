@@ -72,6 +72,8 @@ private:
     auto GetTargetRange() const -> std::pair<s64, s64>;
     void SetupViewActions();
     void SetupEditActions();
+    auto TryToggleLine(s64 index) -> bool;
+    void RefreshEditAHint();
     void SwitchToEditMode();
     void SwitchToViewMode();
     void DisplayTextOptions();

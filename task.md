@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.569**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.570**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.569 (Silent ToFileAsync StopToken)
+## Поточний delivery: v0.13.570 (Toggle bool on A; swkbd overflow)
+
+- [x] `TEXT-TOGGLE-A-570` — A / double-tap фліпає `=0`/`=1` без вимоги `.ini`; клавіатура лише якщо це не буль.
+- [x] `SWKBD-OVERFLOW-570` — буфер під `len_max`, `swkbdClose`, скидання тачу після аплету.
+- [x] `DOCS-BUMP-570` — версію піднято до `0.13.570`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.569 (Silent ToFileAsync StopToken)
 
 - [x] `UPDATE-SILENT-STOPTOKEN-569` — Silent `ToFileAsync` отримує `curl::StopToken{}`.
 - [x] `DOCS-BUMP-569` — версію піднято до `0.13.569`, оновлено plan/task/walkthrough/audit. Агент не компілював.

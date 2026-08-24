@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.569**. Завершені плани збережено в
+Поточний delivery — **v0.13.570**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.569 — Silent update ToFileAsync needs StopToken
+## Поточний delivery: v0.13.570 — Toggle 0/1 on A; fix swkbd overflow
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. У редакторі **A** / подвійний тап на `=0`/`=1`/`true`/`false`/`u8!0x0` перемикає буль, не відкриває клавіатуру. Підказка A: Toggle.
+2. swkbd: буфер = max length, `swkbdClose`, скидання тачу після аплету.
+
+## Попередній delivery: v0.13.569 — Silent update ToFileAsync needs StopToken
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Silent `ToFileAsync` передає `StopToken{}` — інакше static_assert.
