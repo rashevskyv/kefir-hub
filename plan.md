@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.583**. Завершені плани збережено в
+Поточний delivery — **v0.13.584**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.583 — MTP Games dumps: compatible / separate / both
+## Поточний delivery: v0.13.584 — Games storage bars: blue only where the title lives
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. NAND/EmuNAND і microSD синіють лише якщо на цьому носії є дані поточної гри (або виділення). Гра лише на SD — синя SD; лише на NAND — синій NAND; спліт — обидва.
+
+## Попередній delivery: v0.13.583 — MTP Games dumps: compatible / separate / both
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Диск Games був порожній: haze відкриває `/games`, парсер чекав `/Merged`. FixPath як у Saves.

@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.583** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.584** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.584 — Games: blue storage bar only where the title lives
+
+- У Tools → Ігри підсвічуються лише ті смуги, де лежить гра: SD-only — microSD, NAND-only — SysNAND/EmuNAND, спліт — обидві. Порожній носій лишається сірим і показує вільне місце.
 
 ## v0.13.583 — MTP Games: compatible dump vs separate files
 

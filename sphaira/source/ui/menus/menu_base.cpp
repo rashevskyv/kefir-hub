@@ -315,8 +315,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     // value shown next to a bar: free space normally, the highlighted size in
     // highlight mode, "+size" for a projection (planned install usage).
+    // A bar with no bytes for this title stays free-space grey: only the
+    // storage that actually holds the game (or the planned install) turns blue.
     auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
-        if (!m_storage_highlight_active || (m_storage_projection && !highlight_bytes)) {
+        if (!m_storage_highlight_active || !highlight_bytes) {
             return utils::formatSizeStorage(free_bytes);
         }
         const auto value = utils::formatSizeStorage(highlight_bytes);
@@ -461,7 +463,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             // Normally show free space. Games replace it with the exact size of the
             // focused title or the sum of the current multi-selection.
             const auto value = storage_value_of(free_bytes, highlight_bytes, focus_bytes);
-            const auto text_col = theme->GetColour(m_storage_highlight_active && !(m_storage_projection && !highlight_bytes)
+            const auto text_col = theme->GetColour(m_storage_highlight_active && highlight_bytes
                 ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
             nvgFontSize(vg, storage_font);

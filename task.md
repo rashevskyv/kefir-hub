@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.583**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.584**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.583 (MTP Games dump formats)
+## Поточний delivery: v0.13.584 (Games NAND/SD highlight per storage)
+
+- [x] `GAMES-STORAGE-BLUE-584` — синій підпис/смуга лише на носії, де є дані гри.
+- [x] `DOCS-BUMP-584` — версію піднято до `0.13.584`. Агент не компілював.
+
+## Попередній delivery: v0.13.583 (MTP Games dump formats)
 
 - [x] `MTP-GAMES-FIXPATH-583` — FixPath перед ParseGamesPath, диск більше не PathNotFound на `/games`.
 - [x] `MTP-GAMES-LAYOUT-583` — Dump format: Compatible / Separate / Both, рестарт MTP.
