@@ -977,6 +977,14 @@ auto MakeVirtualDirEntry(const std::string& name) -> FsDirectoryEntry {
     return e;
 }
 
+auto MakeVirtualFileEntry(const std::string& name, s64 size) -> FsDirectoryEntry {
+    FsDirectoryEntry e{};
+    std::snprintf(e.name, sizeof(e.name), "%s", name.c_str());
+    e.type = FsDirEntryType_File;
+    e.file_size = size;
+    return e;
+}
+
 // "<Game Name> [TitleID]", or "[TitleID]" when no usable name exists.
 // note: title::Init() must be held by the caller, so title::Get() can load the
 // control data.
@@ -1490,9 +1498,9 @@ private:
 
 // read-only virtual drive of installed titles as NSP dumps. layout is a
 // setting: compatible (merged NSPs at the root), separate (a folder per game),
-// or both (Merged/, Unmerged/, Separate/, Forwarders/). HOME-menu forwarders
-// are never mixed into the game folders. copying a file to the pc streams it
-// from ncm; nothing is written to the sd.
+// or both (Merged/, Separate/, Forwarders/ — names follow the UI language).
+// HOME-menu forwarders are never mixed into the game folders. copying a file
+// to the pc streams it from ncm; nothing is written to the sd.
 struct FsGameProxy final : FsProxyBase {
     FsGameProxy(const char* name, const char* display_name) : FsProxyBase{name, display_name} {
         // holds the ncm storages (and the control loader) open for our
@@ -1500,9 +1508,13 @@ struct FsGameProxy final : FsProxyBase {
         m_has_title = R_SUCCEEDED(title::Init());
         m_is_file_based_emummc = App::IsFileBaseEmummc();
         m_layout = static_cast<sphaira::mtp::GamesLayout>(App::GetMtpGamesLayout());
+        m_names.merged = "Merged"_i18n;
+        m_names.separate = "Separate"_i18n;
+        m_names.forwarders = "Forwarders"_i18n;
+        m_names.readme = "Readme.txt"_i18n;
         ScanGames();
-        log_write("[MTP-GAMES] layout=%d scanned %zu games\n",
-            static_cast<int>(m_layout), m_games.size());
+        log_write("[MTP-GAMES] layout=%d scanned %zu games, %zu forwarders\n",
+            static_cast<int>(m_layout), m_games.size(), m_forwarders.size());
     }
 
     ~FsGameProxy() {
@@ -1527,7 +1539,6 @@ struct FsGameProxy final : FsProxyBase {
         switch (pp.kind) {
             case sphaira::mtp::PathKind::Root:
             case sphaira::mtp::PathKind::MergedDir:
-            case sphaira::mtp::PathKind::UnmergedDir:
             case sphaira::mtp::PathKind::SeparateDir:
             case sphaira::mtp::PathKind::ForwardersDir:
                 *out_entry_type = FsDirEntryType_Dir;
@@ -1539,18 +1550,14 @@ struct FsGameProxy final : FsProxyBase {
                 R_SUCCEED();
             }
 
+            case sphaira::mtp::PathKind::InfoFile:
+                *out_entry_type = FsDirEntryType_File;
+                R_SUCCEED();
+
             case sphaira::mtp::PathKind::MergedFile: {
                 std::shared_ptr<GameNsp> nsp;
                 size_t index{};
                 R_TRY(FindMergedFile(pp.filename, nsp, index));
-                *out_entry_type = FsDirEntryType_File;
-                R_SUCCEED();
-            }
-
-            case sphaira::mtp::PathKind::UnmergedFile: {
-                std::shared_ptr<GameNsp> nsp;
-                size_t index{};
-                R_TRY(FindUnmergedFile(pp.filename, nsp, index));
                 *out_entry_type = FsDirEntryType_File;
                 R_SUCCEED();
             }
@@ -1618,10 +1625,10 @@ struct FsGameProxy final : FsProxyBase {
         const auto pp = Parse(path);
         auto handle = std::make_unique<FileHandle>();
 
-        if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
+        if (pp.kind == sphaira::mtp::PathKind::InfoFile) {
+            handle->info = InfoText(pp.game);
+        } else if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
             R_TRY(FindMergedFile(pp.filename, handle->nsp, handle->index));
-        } else if (pp.kind == sphaira::mtp::PathKind::UnmergedFile) {
-            R_TRY(FindUnmergedFile(pp.filename, handle->nsp, handle->index));
         } else if (pp.kind == sphaira::mtp::PathKind::ForwardersFile) {
             R_TRY(FindForwarderFile(pp.filename, handle->nsp, handle->index));
         } else if (pp.kind == sphaira::mtp::PathKind::SeparateFile) {
@@ -1637,12 +1644,27 @@ struct FsGameProxy final : FsProxyBase {
     Result GetFileSize(FsFile *file, s64 *out_size) override {
         FileHandle* h;
         std::memcpy(&h, &file->s, sizeof(h));
+        if (!h->info.empty()) {
+            *out_size = static_cast<s64>(h->info.size());
+            R_SUCCEED();
+        }
         *out_size = h->nsp->entries[h->index].nsp_size;
         R_SUCCEED();
     }
     Result ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u32 option, u64 *out_bytes_read) override {
         FileHandle* h;
         std::memcpy(&h, &file->s, sizeof(h));
+
+        if (!h->info.empty()) {
+            *out_bytes_read = 0;
+            if (off < 0 || off >= static_cast<s64>(h->info.size())) {
+                R_SUCCEED();
+            }
+            const auto n = std::min<u64>(read_size, static_cast<u64>(h->info.size() - off));
+            std::memcpy(buf, h->info.data() + off, n);
+            *out_bytes_read = n;
+            R_SUCCEED();
+        }
 
         const auto rc = h->nsp->entries[h->index].Read(buf, off, read_size, out_bytes_read);
         if (m_is_file_based_emummc) {
@@ -1672,22 +1694,30 @@ struct FsGameProxy final : FsProxyBase {
                                 handle->entries.emplace_back(nsp->listing[0]);
                             }
                         }
+                        handle->entries.emplace_back(InfoDirEntry(""));
                     }
                     if (mode & FsDirOpenMode_ReadDirs) {
-                        handle->entries.emplace_back(MakeVirtualDirEntry("Forwarders"));
+                        handle->entries.emplace_back(MakeVirtualDirEntry(m_names.forwarders));
                     }
                 } else if (m_layout == sphaira::mtp::GamesLayout::Separate) {
                     if (mode & FsDirOpenMode_ReadDirs) {
                         for (const auto& [name, game] : m_games) {
                             handle->entries.emplace_back(MakeVirtualDirEntry(name));
                         }
-                        handle->entries.emplace_back(MakeVirtualDirEntry("Forwarders"));
+                        handle->entries.emplace_back(MakeVirtualDirEntry(m_names.forwarders));
                     }
-                } else if (mode & FsDirOpenMode_ReadDirs) {
-                    handle->entries.emplace_back(MakeVirtualDirEntry("Merged"));
-                    handle->entries.emplace_back(MakeVirtualDirEntry("Unmerged"));
-                    handle->entries.emplace_back(MakeVirtualDirEntry("Separate"));
-                    handle->entries.emplace_back(MakeVirtualDirEntry("Forwarders"));
+                    if (mode & FsDirOpenMode_ReadFiles) {
+                        handle->entries.emplace_back(InfoDirEntry(""));
+                    }
+                } else {
+                    if (mode & FsDirOpenMode_ReadDirs) {
+                        handle->entries.emplace_back(MakeVirtualDirEntry(m_names.merged));
+                        handle->entries.emplace_back(MakeVirtualDirEntry(m_names.separate));
+                        handle->entries.emplace_back(MakeVirtualDirEntry(m_names.forwarders));
+                    }
+                    if (mode & FsDirOpenMode_ReadFiles) {
+                        handle->entries.emplace_back(InfoDirEntry(""));
+                    }
                 }
                 break;
             }
@@ -1701,19 +1731,7 @@ struct FsGameProxy final : FsProxyBase {
                             handle->entries.emplace_back(nsp->listing[0]);
                         }
                     }
-                }
-                break;
-            }
-
-            case sphaira::mtp::PathKind::UnmergedDir: {
-                if (mode & FsDirOpenMode_ReadFiles) {
-                    R_TRY(BuildUnmergedCacheIfNeeded());
-                    SCOPED_MUTEX(&m_cache_mutex);
-                    for (const auto& [name, ref] : m_unmerged_cache) {
-                        if (ref.index < ref.nsp->listing.size()) {
-                            handle->entries.emplace_back(ref.nsp->listing[ref.index]);
-                        }
-                    }
+                    handle->entries.emplace_back(InfoDirEntry("merged"));
                 }
                 break;
             }
@@ -1727,6 +1745,7 @@ struct FsGameProxy final : FsProxyBase {
                             handle->entries.emplace_back(nsp->listing[0]);
                         }
                     }
+                    handle->entries.emplace_back(InfoDirEntry("forwarders"));
                 }
                 break;
             }
@@ -1736,6 +1755,9 @@ struct FsGameProxy final : FsProxyBase {
                     for (const auto& [name, game] : m_games) {
                         handle->entries.emplace_back(MakeVirtualDirEntry(name));
                     }
+                }
+                if (mode & FsDirOpenMode_ReadFiles) {
+                    handle->entries.emplace_back(InfoDirEntry("separate"));
                 }
                 break;
             }
@@ -1803,16 +1825,12 @@ private:
         std::vector<FsDirectoryEntry> listing{};
     };
 
-    struct FileRef {
-        std::shared_ptr<GameNsp> nsp{};
-        size_t index{};
-    };
-
     // open handles hold their own reference, so a cache flush never pulls the
-    // nsp out from under a transfer in progress.
+    // nsp out from under a transfer in progress. `info` is a virtual readme.
     struct FileHandle {
         std::shared_ptr<GameNsp> nsp{};
         size_t index{};
+        std::string info{};
     };
 
     struct DirHandle {
@@ -1948,54 +1966,6 @@ private:
         R_SUCCEED();
     }
 
-    Result BuildUnmergedCacheIfNeeded() {
-        SCOPED_MUTEX(&m_cache_mutex);
-        if (m_unmerged_built) {
-            R_SUCCEED();
-        }
-
-        for (const auto& [dir_name, rec] : m_games) {
-            std::shared_ptr<GameNsp> nsp;
-            if (const auto cached = m_cache.find(dir_name); cached != m_cache.end()) {
-                nsp = cached->second;
-            } else {
-                nsp = std::make_shared<GameNsp>();
-                const auto rc = title::BuildNspEntries(rec.app_id, rec.name.c_str(), title::ContentFlag_All, false, nsp->entries);
-                if (R_FAILED(rc)) {
-                    log_write("[MTP-GAMES] failed to build unmerged nsp for %s 0x%X\n", dir_name.c_str(), rc);
-                    continue;
-                }
-                for (const auto& e : nsp->entries) {
-                    FsDirectoryEntry fe{};
-                    std::snprintf(fe.name, sizeof(fe.name), "%s", e.path.s);
-                    fe.type = FsDirEntryType_File;
-                    fe.file_size = e.nsp_size;
-                    nsp->listing.emplace_back(fe);
-                }
-                m_cache.emplace(dir_name, nsp);
-            }
-
-            for (size_t i = 0; i < nsp->listing.size(); i++) {
-                m_unmerged_cache.emplace(nsp->listing[i].name, FileRef{nsp, i});
-            }
-        }
-
-        m_unmerged_built = true;
-        R_SUCCEED();
-    }
-
-    Result FindUnmergedFile(const std::string& filename, std::shared_ptr<GameNsp>& nsp, size_t& index) {
-        R_TRY(BuildUnmergedCacheIfNeeded());
-
-        SCOPED_MUTEX(&m_cache_mutex);
-        const auto it = m_unmerged_cache.find(filename);
-        R_UNLESS(it != m_unmerged_cache.end(), FsError_PathNotFound);
-
-        nsp = it->second.nsp;
-        index = it->second.index;
-        R_SUCCEED();
-    }
-
     Result BuildForwarderCacheIfNeeded() {
         SCOPED_MUTEX(&m_cache_mutex);
         if (m_forwarder_built) {
@@ -2053,9 +2023,29 @@ private:
 
     auto Parse(const char* path) const -> sphaira::mtp::ParsedPath {
         // libhaze names the storage root "/games"; strip that so listings and
-        // reads see "/", "/Merged", "/Unmerged", "/Separate/...", "/Forwarders"
-        // like the host tests.
-        return sphaira::mtp::ParseGamesPath(FixPath(path).s, m_layout);
+        // reads see "/", "/Merged", "/Separate/...", "/Forwarders" like the
+        // host tests (and the locale's names, which m_names holds).
+        return sphaira::mtp::ParseGamesPath(FixPath(path).s, m_layout, m_names);
+    }
+
+    auto InfoText(std::string_view which) const -> std::string {
+        if (which == "merged") {
+            return "Each file is one game. Base, update and DLC are packed into a single NSP. Use this when the installer expects one file per title."_i18n + "\n";
+        }
+        if (which == "separate") {
+            return "Each folder is one game. Inside are separate NSP files for the base, the update and each DLC."_i18n + "\n";
+        }
+        if (which == "forwarders") {
+            return "HOME-menu forwarders (homebrew icons). These are not Nintendo games. Copy one to dump that icon as an NSP."_i18n + "\n";
+        }
+        return "This drive dumps installed titles as NSP files you can copy to a PC."_i18n + "\n\n"
+            + m_names.merged + " — " + "One NSP per game with base, update and DLC together."_i18n + "\n"
+            + m_names.separate + " — " + "A folder per game with each component as its own NSP."_i18n + "\n"
+            + m_names.forwarders + " — " + "HOME-menu homebrew icons, not Nintendo games."_i18n + "\n";
+    }
+
+    auto InfoDirEntry(std::string_view which) const -> FsDirectoryEntry {
+        return MakeVirtualFileEntry(m_names.readme, static_cast<s64>(InfoText(which).size()));
     }
 
     // game folder name -> title. built once at registration, immutable
@@ -2066,16 +2056,15 @@ private:
     // built on demand, see GetNsp().
     std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_cache{};
     std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_merged_cache{};
-    std::map<std::string, FileRef, CaseInsensitiveLess> m_unmerged_cache{};
     std::map<std::string, std::shared_ptr<GameNsp>, CaseInsensitiveLess> m_forwarder_cache{};
     bool m_merged_built{false};
-    bool m_unmerged_built{false};
     bool m_forwarder_built{false};
     Mutex m_cache_mutex{};
 
     bool m_has_title{};
     bool m_is_file_based_emummc{};
     sphaira::mtp::GamesLayout m_layout{sphaira::mtp::GamesLayout::Both};
+    sphaira::mtp::GamesFolderNames m_names{};
 };
 
 ::haze::FsEntries g_fs_entries{};

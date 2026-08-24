@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.591**. Завершені плани збережено в
+Поточний delivery — **v0.13.592**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.591 — MTP Games: Forwarders folder, Unmerged, no mix
+## Поточний delivery: v0.13.592 — MTP Games: drop Unmerged, localize folders, Readme
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Unmerged прибрано (дубль Merged). Both: Merged, Separate, Forwarders.
+2. Назви тек мовою інтерфейсу (укр. Злиті / Окремі / Форвардери). English aliases лишаються.
+3. У корені і в кожній теці — Readme.txt (Прочитай.txt) з поясненням.
+
+## Попередній delivery: v0.13.591 — MTP Games: Forwarders folder, Unmerged, no mix
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Форвардери (TID 0x05… і HBL 0x03) більше не в Merged/Unmerged/Separate. Окрема тека Forwarders.

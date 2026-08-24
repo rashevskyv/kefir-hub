@@ -740,7 +740,7 @@ auto MtpGamesLayoutDescription(long layout) -> std::string {
     switch (layout) {
         case 0: return "One NSP per game with base, update and DLC together."_i18n;
         case 1: return "A folder per game with each component as its own NSP."_i18n;
-        default: return "Merged (one NSP), Unmerged (all files), Separate (folder per game) and Forwarders."_i18n;
+        default: return "Merged (one NSP), Separate (folder per game) and Forwarders."_i18n;
     }
 }
 

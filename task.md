@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.591**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.592**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.591 (MTP Games Forwarders folder)
+## Поточний delivery: v0.13.592 (MTP Games folders localized + Readme)
+
+- [x] `MTP-GAMES-NO-UNMERGED-592` — Unmerged прибрано; лишились Merged, Separate, Forwarders.
+- [x] `MTP-GAMES-I18N-592` — назви тек і Readme мовою UI; у кожній теці пояснювальний файл.
+- [x] `DOCS-BUMP-592` — версію піднято до `0.13.592`. Агент не компілював.
+
+## Попередній delivery: v0.13.591 (MTP Games Forwarders folder)
 
 - [x] `MTP-GAMES-FORWARDERS-591` — форвардери лише в Forwarders; Merged/Unmerged/Separate без них.
 - [x] `DOCS-BUMP-591` — версію піднято до `0.13.591`. Агент не компілював.

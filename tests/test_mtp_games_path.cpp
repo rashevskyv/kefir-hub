@@ -99,22 +99,50 @@ static int test_parse_games_path() {
         CHECK(res.kind == PathKind::Invalid);
     }
 
-    // Unmerged cases
+    // Readme / info files
+    {
+        auto res = ParseGamesPath("/Readme.txt");
+        CHECK(res.kind == PathKind::InfoFile);
+        CHECK(res.game.empty());
+    }
+    {
+        auto res = ParseGamesPath("/Merged/Readme.txt");
+        CHECK(res.kind == PathKind::InfoFile);
+        CHECK(res.game == "merged");
+    }
+    {
+        auto res = ParseGamesPath("/Separate/Readme.txt");
+        CHECK(res.kind == PathKind::InfoFile);
+        CHECK(res.game == "separate");
+    }
+    {
+        auto res = ParseGamesPath("/Forwarders/Readme.txt");
+        CHECK(res.kind == PathKind::InfoFile);
+        CHECK(res.game == "forwarders");
+    }
+
+    // Locale aliases (Ukrainian folder names) still accept English.
+    {
+        GamesFolderNames uk{"Злиті", "Окремі", "Форвардери", "Прочитай.txt"};
+        auto res = ParseGamesPath("/Злиті", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::MergedDir);
+        res = ParseGamesPath("/Merged", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::MergedDir);
+        res = ParseGamesPath("/Окремі", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::SeparateDir);
+        res = ParseGamesPath("/Форвардери/x.nsp", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::ForwardersFile);
+        CHECK(res.filename == "x.nsp");
+        res = ParseGamesPath("/Прочитай.txt", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::InfoFile);
+        res = ParseGamesPath("/Злиті/Прочитай.txt", GamesLayout::Both, uk);
+        CHECK(res.kind == PathKind::InfoFile);
+        CHECK(res.game == "merged");
+    }
+
+    // Unmerged is not a folder.
     {
         auto res = ParseGamesPath("/Unmerged");
-        CHECK(res.kind == PathKind::UnmergedDir);
-    }
-    {
-        auto res = ParseGamesPath("/unmerged/");
-        CHECK(res.kind == PathKind::UnmergedDir);
-    }
-    {
-        auto res = ParseGamesPath("/Unmerged/Game A [0100000000010000][v0][BASE].nsp");
-        CHECK(res.kind == PathKind::UnmergedFile);
-        CHECK(res.filename == "Game A [0100000000010000][v0][BASE].nsp");
-    }
-    {
-        auto res = ParseGamesPath("/Unmerged/a/b.nsp");
         CHECK(res.kind == PathKind::Invalid);
     }
 

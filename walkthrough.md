@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.591** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.592** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.592 — MTP Games: three folders, in the UI language
+
+- Unmerged прибрано (це був дубль Merged). Лишились **Merged / Separate / Forwarders**.
+- Назви тек з мови інтерфейсу: українською **Злиті**, **Окремі**, **Форвардери**.
+- У корені диска і в кожній теці — **Прочитай.txt** (англійською Readme.txt) з поясненням, що там лежить.
 
 ## v0.13.591 — MTP Games: Forwarders out of the game dumps
 
