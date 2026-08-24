@@ -708,12 +708,10 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     return items;
 }
 
-// items for the "FTP" settings page: the FTP server toggle plus login/port.
-// folder restriction is not exposed yet - the server serves the whole SD card.
+// login/port for the FTP server. The on/off switch lives on the Network page.
 auto BuildFtpItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
-    items.emplace_back(MakeBoolItem("Enable FTP server"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable));
     items.emplace_back(MakeBoolItem("Anonymous (no login)"_i18n, "Allow connecting without a username or password."_i18n, App::GetFtpAnon, App::SetFtpAnon));
 
     items.emplace_back(SettingsItem{
@@ -2325,7 +2323,8 @@ void Menu::BuildCategories() {
             "Network"_i18n,
             "Servers that let a PC reach this console."_i18n,
             {
-                MakeFolderItem("FTP"_i18n, "Configure the FTP server: enable, login and port."_i18n, BuildFtpItems),
+                MakeBoolItem("FTP"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable),
+                MakeFolderItem("FTP settings"_i18n, "Login, anonymous access and port."_i18n, BuildFtpItems),
                 MakeBoolItem("MTP"_i18n, "Run the MTP server in the background. Shares the USB port with USB storage, so turning this on turns USB storage off."_i18n, App::GetMtpEnable, App::SetMtpEnable),
                 MakeFolderItem("MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, BuildMtpStorageItems),
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),

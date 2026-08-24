@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.572**. Завершені плани збережено в
+Поточний delivery — **v0.13.573**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.572 — Auto-update category at the top of Settings
+## Поточний delivery: v0.13.573 — Network: FTP/MTP toggles then folders
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Мережа: FTP і MTP — увімк/вимк на самій сторінці; під кожним папка (логін/порт і сховища).
+
+## Попередній delivery: v0.13.572 — Auto-update category at the top of Settings
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Settings: перша категорія «Автооновлення» — режим (Off / Silent / Ask / On demand) з окремим описом кожного, Update now, пропущена версія.

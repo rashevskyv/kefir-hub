@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.572** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.573** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.573 — Network: FTP and MTP toggles, then their folders
+
+- Мережа: **FTP** увімк/вимк, під ним папка логін/порт. **MTP** так само, під ним сховища.
 
 ## v0.13.572 — Auto-update is its own Settings category
 
