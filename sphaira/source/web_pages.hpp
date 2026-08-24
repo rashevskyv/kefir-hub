@@ -840,6 +840,7 @@ html,body{height:100%;margin:0;display:flex;flex-direction:column;background:#0f
 #name{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #msg{font-size:13px;color:#a1a1aa}
 button{padding:8px 14px;font-size:14px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer}
+button.secondary{background:#3f3f46;color:#e4e4e7}
 button:disabled{background:#3f3f46;color:#71717a}
 #wrap{flex:1 1 auto;min-height:0;position:relative}
 #ed{width:100%;height:100%;box-sizing:border-box;border:0;outline:none;resize:none;padding:12px 14px;background:#0f0f12;color:#e2e8f0;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
@@ -860,15 +861,20 @@ button:disabled{background:#3f3f46;color:#71717a}
 .ok{color:#4ade80}.err{color:#f87171}
 </style>
 </head><body>
-<div id="bar"><div id="name">file</div><div id="msg"></div><button type="button" id="save">Save to Switch</button></div>
+<div id="bar"><div id="name">file</div><div id="msg"></div><button type="button" id="save">Save to Switch</button><button type="button" id="save-close" class="secondary">Save and Close</button></div>
 <div id="wrap"><textarea id="ed" spellcheck="false" wrap="off"></textarea></div>
 <script>
 const CM='https://cdn.jsdelivr.net/npm/codemirror@5.65.16/';
-const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),msg=document.getElementById('msg');
+const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),saveCloseBtn=document.getElementById('save-close'),msg=document.getElementById('msg');
 let cm=null,dirty=false,closed=false,draftTimer=0;
 function val(){return cm?cm.getValue():ed.value;}
 function markDirty(){if(!dirty){dirty=true;document.title='* '+document.title.replace(/^\* /,'');}}
 function clearDirty(){dirty=false;document.title=document.title.replace(/^\* /,'');}
+function setBusy(b){saveBtn.disabled=b||closed;saveCloseBtn.disabled=b||closed;}
+function markClosed(text){
+  closed=true;clearTimeout(draftTimer);setBusy(true);
+  msg.className='';msg.textContent=text||'Closed on the Switch.';
+}
 async function postDraft(){
   if(closed)return;
   try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
@@ -882,12 +888,8 @@ async function pollStatus(){
   try{
     const s=await(await fetch('/input/status')).json();
     if(s.closing){
-      clearTimeout(draftTimer);
       try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
-      closed=true;
-      msg.className='';
-      msg.textContent='Closed on the Switch.';
-      saveBtn.disabled=true;
+      markClosed();
       return;
     }
   }catch(e){}
@@ -909,16 +911,28 @@ function modeOf(name){
 }
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
 function loadCss(href){return new Promise((res,rej)=>{const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.onload=res;l.onerror=rej;document.head.appendChild(l);});}
-async function save(){
-  saveBtn.disabled=true;msg.className='';msg.textContent='Saving...';
+async function postSave(close){
+  if(closed)return;
+  setBusy(true);msg.className='';msg.textContent='Saving...';
   try{
-    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});
-    if(res.ok){msg.className='ok';msg.textContent='Saved. You can close this page.';clearDirty();}
-    else{msg.className='err';msg.textContent='Console rejected the file.';saveBtn.disabled=false;}
-  }catch(e){msg.className='err';msg.textContent='Could not reach the console.';saveBtn.disabled=false;}
+    const res=await fetch(close?'/input':'/input/save',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});
+    if(res.ok){
+      clearDirty();
+      if(close){markClosed('Saved. You can close this page.');}
+      else{msg.className='ok';msg.textContent='Saved.';setBusy(false);}
+    }else{msg.className='err';msg.textContent='Console rejected the file.';setBusy(false);}
+  }catch(e){msg.className='err';msg.textContent='Could not reach the console.';setBusy(false);}
 }
+function save(){postSave(false);}
+function saveAndClose(){postSave(true);}
 saveBtn.addEventListener('click',save);
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}});
+saveCloseBtn.addEventListener('click',saveAndClose);
+document.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='s')return;
+  e.preventDefault();
+  if(e.shiftKey)saveAndClose();
+  else save();
+});
 window.addEventListener('beforeunload',e=>{
   if(!dirty||closed)return;
   e.preventDefault();e.returnValue='';
@@ -947,7 +961,7 @@ ed.addEventListener('input',scheduleDraft);
       lineNumbers:true,indentUnit:2,tabSize:2,
       lineWrapping:matchMedia('(pointer:coarse)').matches,
       mode:json?{name:'javascript',json:true}:(spec?spec[0]:null),
-      extraKeys:{'Ctrl-S':save,'Cmd-S':save}
+      extraKeys:{'Ctrl-S':save,'Cmd-S':save,'Shift-Ctrl-S':saveAndClose,'Shift-Cmd-S':saveAndClose}
     });
     cm.setSize('100%','100%');
     cm.on('change',scheduleDraft);

@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.594** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.595** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.595 — Remote editor: Save stays open
+
+- **Save to Switch** і **Ctrl-S** лише пишуть файл на консоль. QR-сесія не закривається — можна редагувати далі.
+- **Save and Close** зберігає і завершує сесію (як раніше робив Save).
 
 ## v0.13.594 — Tools: Game Tools, system stubs, Module Manager
 

@@ -1102,7 +1102,7 @@ void HandleApiKeyPost(Socket sock, const std::string& req) {
     SendResponse(sock, "200 OK", "text/plain", "OK");
 }
 
-void HandleRemoteInputPost(Socket sock, const std::string& req, bool draft = false) {
+void HandleRemoteInputPost(Socket sock, const std::string& req, bool draft = false, bool commit = false) {
     const auto opts = ui::remote_input::GetCurrentOptions();
     const s64 max_size = opts.editor ? 4 * 1024 * 1024 : (opts.multiline ? 256 * 1024 : 64 * 1024);
 
@@ -1156,6 +1156,8 @@ void HandleRemoteInputPost(Socket sock, const std::string& req, bool draft = fal
 
     if (draft) {
         ui::remote_input::SetDraftText(body);
+    } else if (commit) {
+        ui::remote_input::SetCommitText(body);
     } else {
         ui::remote_input::SetReceivedText(body);
     }
@@ -1283,6 +1285,19 @@ void HandleRequest(Socket sock) {
         }
         if (method == "POST") {
             HandleRemoteInputPost(sock, req, true);
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input/save") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "POST") {
+            HandleRemoteInputPost(sock, req, false, true);
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

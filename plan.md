@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.594**. Завершені плани збережено в
+Поточний delivery — **v0.13.595**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.594 — Tools: Game Tools, stubs, Module Manager
+## Поточний delivery: v0.13.595 — Remote editor Save does not close the session
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Save to Switch / Ctrl-S лише записує файл, сесія на консолі лишається.
+2. Save and Close — зберегти і закрити редактор.
+
+## Попередній delivery: v0.13.594 — Tools: Game Tools, stubs, Module Manager
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Games / Saves / Cheats — тека **Game Tools**.

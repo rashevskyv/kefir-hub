@@ -30,6 +30,10 @@ auto IsRemoteInputActive() -> bool;
 void SetReceivedText(const std::string& text);
 auto GetReceivedText() -> std::string;
 auto HasReceivedText() -> bool;
+// editor: persist on the Switch without ending the QR session.
+void SetCommitText(const std::string& text);
+auto HasCommitText() -> bool;
+auto TakeCommitText() -> std::string;
 void SetDraftText(const std::string& text);
 auto GetDraftText() -> std::string;
 auto HasDraftText() -> bool;

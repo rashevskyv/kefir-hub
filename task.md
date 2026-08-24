@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.594**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.595**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.594 (Tools rearrange + Module Manager)
+## Поточний delivery: v0.13.595 (Remote editor Save vs Save and Close)
+
+- [x] `REMOTE-SAVE-KEEP-595` — Save to Switch / Ctrl-S не закриває сесію.
+- [x] `REMOTE-SAVE-CLOSE-595` — кнопка Save and Close зберігає і закриває.
+- [x] `DOCS-BUMP-595` — версію піднято до `0.13.595`. Агент не компілював.
+
+## Попередній delivery: v0.13.594 (Tools rearrange + Module Manager)
 
 - [x] `TOOLS-GAME-FOLDER-594` — Games, Saves, Cheats у Game Tools.
 - [x] `TOOLS-STUBS-594` — заглушки Wi-Fi, Users, System info, SD zeros, parental, junk.

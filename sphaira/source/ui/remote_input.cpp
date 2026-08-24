@@ -1,5 +1,6 @@
 #include "ui/remote_input.hpp"
 #include "app.hpp"
+#include "evman.hpp"
 #include "i18n.hpp"
 #include "swkbd.hpp"
 #include "web.hpp"
@@ -17,11 +18,13 @@ std::mutex g_mutex;
 bool g_active{false};
 bool g_received{false};
 bool g_has_draft{false};
+bool g_has_commit{false};
 bool g_closing{false};
 bool g_client_seen{false};
 u32 g_draft_seq{0};
 std::string g_received_text;
 std::string g_draft_text;
+std::string g_commit_text;
 Options g_current_options;
 
 auto NewlinesToLf(std::string_view in) -> std::string {
@@ -52,11 +55,13 @@ void SetRemoteInputActive(bool active) {
     if (!active) {
         g_received = false;
         g_has_draft = false;
+        g_has_commit = false;
         g_closing = false;
         g_client_seen = false;
         g_draft_seq = 0;
         g_received_text.clear();
         g_draft_text.clear();
+        g_commit_text.clear();
     }
 }
 
@@ -69,6 +74,27 @@ void SetReceivedText(const std::string& text) {
     std::lock_guard lock(g_mutex);
     g_received_text = text;
     g_received = true;
+    g_current_options.default_text = text;
+    g_has_draft = false;
+}
+
+void SetCommitText(const std::string& text) {
+    std::lock_guard lock(g_mutex);
+    g_commit_text = text;
+    g_has_commit = true;
+    g_current_options.default_text = text;
+    g_has_draft = false;
+}
+
+auto HasCommitText() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_has_commit;
+}
+
+auto TakeCommitText() -> std::string {
+    std::lock_guard lock(g_mutex);
+    g_has_commit = false;
+    return std::move(g_commit_text);
 }
 
 auto GetReceivedText() -> std::string {
@@ -146,14 +172,25 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
 
     App::Push<ProgressBox>(
         share.qr_image, options.title, share.url,
-        [](auto pbox) -> Result {
+        [on_complete](auto pbox) -> Result {
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same Wi-Fi. Press B to cancel."_i18n
                 : (GetCurrentOptions().editor
-                    ? "Scan the QR or open the URL. Edit, then Save. Press B to cancel."_i18n
+                    ? "Scan the QR or open the URL. Save keeps the session open. Save and Close finishes. Press B to cancel."_i18n
                     : "Scan the QR code with phone or open URL on PC to send text. Press B to cancel."_i18n));
 
             while (!pbox->ShouldExit()) {
+                if (HasCommitText()) {
+                    const auto text = TakeCommitText();
+                    evman::push(evman::FunctionalEventData{[on_complete, text]() {
+                        if (HasReceivedText()) {
+                            return;
+                        }
+                        if (on_complete) {
+                            on_complete(text);
+                        }
+                    }});
+                }
                 if (HasReceivedText()) {
                     R_SUCCEED();
                 }

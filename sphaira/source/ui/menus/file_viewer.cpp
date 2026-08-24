@@ -1531,7 +1531,7 @@ void Menu::EditOnDevice() {
 
     remote_input::Options opts{};
     opts.title = GetDisplayName();
-    opts.guide = "Edit on your computer or phone, then Save."_i18n;
+    opts.guide = "Edit on your computer or phone. Save to Switch keeps the session open."_i18n;
     opts.default_text = BuildText();
     opts.placeholder = opts.title;
     opts.multiline = true;
@@ -1552,8 +1552,16 @@ void Menu::ApplyRemoteText(const std::string& text) {
         SwitchToEditMode();
     }
 
+    auto next = SplitLines(text);
+    if (next == m_lines) {
+        if (m_text_dirty) {
+            SaveText();
+        }
+        return;
+    }
+
     PushUndo();
-    m_lines = SplitLines(text);
+    m_lines = std::move(next);
 
     m_line_index = 0;
     ClearRangeSelection();
@@ -1569,7 +1577,7 @@ void Menu::DisplayTextOptions() {
     if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
         options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
             EditOnDevice();
-        }, "Open this file in a browser, edit it there, then Save to send it back."_i18n);
+        }, "Open this file in a browser. Save to Switch writes the file; Save and Close also ends the session."_i18n);
     }
 
     if (!m_editable) {
