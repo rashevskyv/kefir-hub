@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.596** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.597** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.597 — Module Manager compiles against current libnx
+
+- RAM used/free береться через `svcGetSystemInfo` (`SystemInfoType_Total/UsedPhysicalMemorySize`). Старі `InfoType_*PhysicalMemorySize` у цьому libnx немає.
 
 ## v0.13.596 — Remote editor: closed session is obvious
 

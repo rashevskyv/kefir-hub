@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.596**. Завершені плани збережено в
+Поточний delivery — **v0.13.597**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.596 — Remote editor shows when the session ended
+## Поточний delivery: v0.13.597 — Module Manager RAM uses svcGetSystemInfo
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. `InfoType_TotalPhysicalMemorySize` немає в поточному libnx. Замість нього `svcGetSystemInfo` + `SystemInfoType_*`.
+
+## Попередній delivery: v0.13.596 — Remote editor shows when the session ended
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Закриття зі Switch або кнопки Close: повноекранна завіса, редактор read-only.
