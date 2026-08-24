@@ -54,6 +54,12 @@ private:
     void FinishRangeSelection();
     void CancelRangeSelection();
     void ClearRangeSelection();
+    void StartAdjustRange();
+    void FinishAdjustRange();
+    void CancelAdjustRange();
+    void NudgeRangeTop(s64 delta);
+    void NudgeRangeBottom(s64 delta);
+    void UpdateAdjustRange(Controller* controller);
     void CopySelection();
     void CutSelection();
     void PasteBelow();
@@ -147,8 +153,11 @@ private:
     s64 m_range_anchor{0};
     s64 m_range_start{0};
     s64 m_range_end{0};
+    s64 m_adjust_orig_start{0};
+    s64 m_adjust_orig_end{0};
     bool m_selecting_range{false};
     bool m_has_range{false};
+    bool m_adjusting_range{false};
 
     // Streamed large file pager state
     s64 m_current_page{0};

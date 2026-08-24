@@ -745,8 +745,19 @@ void Menu::SetupEditActions() {
     RemoveAction(Button::R);
     RemoveAction(Button::SELECT);
     RemoveAction(Button::R3);
+    RemoveAction(Button::Y);
+    RemoveAction(Button::L2);
 
-    if (m_selecting_range) {
+    if (m_adjusting_range) {
+        SetAction(Button::A, Action{"Done"_i18n, [this](){
+            FinishAdjustRange();
+        }});
+        SetAction(Button::B, Action{"Cancel"_i18n, [this](){
+            CancelAdjustRange();
+        }});
+        SetAction(Button::L, Action{ActionType::UP, "Top bound"_i18n, "\uE0E4+\uE0E8/\uE0E9 / \uE101", [](){}});
+        SetAction(Button::R, Action{ActionType::UP, "Bottom bound"_i18n, "\uE0E5+\uE0E8/\uE0E9 / \uE102", [](){}});
+    } else if (m_selecting_range) {
         SetAction(Button::A, Action{"Finish selection"_i18n, [this](){
             FinishRangeSelection();
         }});
@@ -760,6 +771,11 @@ void Menu::SetupEditActions() {
         SetAction(Button::B, Action{"Back"_i18n, [this](){
             SwitchToViewMode();
         }});
+        if (m_has_range) {
+            SetAction(Button::Y, Action{"Expand range"_i18n, [this](){
+                StartAdjustRange();
+            }});
+        }
     }
 
     SetAction(Button::X, Action{"Actions"_i18n, [this](){
@@ -768,7 +784,9 @@ void Menu::SetupEditActions() {
     SetAction(Button::START, Action{"Options"_i18n, [this](){
         DisplayTextOptions();
     }});
-    SetAction(Button::L2, Action{"Cursor / Scroll"_i18n, "\uE101 / \uE102", [](){}});
+    if (!m_adjusting_range) {
+        SetAction(Button::L2, Action{"Cursor / Scroll"_i18n, "\uE101 / \uE102", [](){}});
+    }
 }
 
 void Menu::SwitchToEditMode() {
@@ -782,6 +800,7 @@ void Menu::SwitchToEditMode() {
     m_held_up_at_top = false;
     m_selecting_range = false;
     m_has_range = false;
+    m_adjusting_range = false;
 
     if (m_text_list) {
         m_text_list->SetWrap(true);
@@ -803,6 +822,7 @@ void Menu::SwitchToViewMode() {
     m_held_up_at_top = false;
     m_selecting_range = false;
     m_has_range = false;
+    m_adjusting_range = false;
     if (m_text_list) {
         m_text_list->SetWrap(true);
     }
@@ -991,6 +1011,7 @@ void Menu::StartRangeSelection() {
     m_range_anchor = m_line_index;
     m_selecting_range = true;
     m_has_range = false;
+    m_adjusting_range = false;
     if (m_text_list) {
         m_text_list->SetWrap(false);
     }
@@ -1004,6 +1025,7 @@ void Menu::FinishRangeSelection() {
     m_range_end = std::max(m_range_anchor, m_line_index);
     m_has_range = true;
     m_selecting_range = false;
+    m_adjusting_range = false;
     if (m_text_list) {
         m_text_list->SetWrap(false);
     }
@@ -1016,6 +1038,7 @@ void Menu::CancelRangeSelection() {
     if (!m_selecting_range) return;
     m_selecting_range = false;
     m_has_range = false;
+    m_adjusting_range = false;
     if (m_text_list) {
         m_text_list->SetWrap(true);
     }
@@ -1026,10 +1049,108 @@ void Menu::CancelRangeSelection() {
 void Menu::ClearRangeSelection() {
     m_selecting_range = false;
     m_has_range = false;
+    m_adjusting_range = false;
     if (m_text_list) {
         m_text_list->SetWrap(true);
     }
     SetupEditActions();
+}
+
+void Menu::StartAdjustRange() {
+    if (!m_editable || !m_has_range) {
+        return;
+    }
+    m_adjusting_range = true;
+    m_adjust_orig_start = m_range_start;
+    m_adjust_orig_end = m_range_end;
+    if (m_text_list) {
+        m_text_list->SetWrap(false);
+    }
+    SetupEditActions();
+    UpdateTextSubHeading();
+}
+
+void Menu::FinishAdjustRange() {
+    if (!m_adjusting_range) {
+        return;
+    }
+    m_adjusting_range = false;
+    SetupEditActions();
+    App::PlaySoundEffect(SoundEffect_Focus);
+    UpdateTextSubHeading();
+}
+
+void Menu::CancelAdjustRange() {
+    if (!m_adjusting_range) {
+        return;
+    }
+    m_range_start = m_adjust_orig_start;
+    m_range_end = m_adjust_orig_end;
+    m_adjusting_range = false;
+    m_line_index = std::clamp<s64>(m_range_start, 0, m_lines.empty() ? 0 : static_cast<s64>(m_lines.size()) - 1);
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    SetupEditActions();
+    UpdateTextSubHeading();
+}
+
+void Menu::NudgeRangeTop(s64 delta) {
+    if (m_lines.empty()) {
+        return;
+    }
+    const s64 next = std::clamp<s64>(m_range_start + delta, 0, m_range_end);
+    if (next == m_range_start) {
+        return;
+    }
+    m_range_start = next;
+    m_line_index = m_range_start;
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_range_start, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    App::PlaySoundEffect(SoundEffect_Focus);
+    UpdateTextSubHeading();
+}
+
+void Menu::NudgeRangeBottom(s64 delta) {
+    if (m_lines.empty()) {
+        return;
+    }
+    const s64 last = static_cast<s64>(m_lines.size()) - 1;
+    const s64 next = std::clamp<s64>(m_range_end + delta, m_range_start, last);
+    if (next == m_range_end) {
+        return;
+    }
+    m_range_end = next;
+    m_line_index = m_range_end;
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_range_end, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    App::PlaySoundEffect(SoundEffect_Focus);
+    UpdateTextSubHeading();
+}
+
+void Menu::UpdateAdjustRange(Controller* controller) {
+    const bool l_mod = controller->GotDown(Button::L) || controller->GotHeld(Button::L);
+    const bool r_mod = controller->GotDown(Button::R) || controller->GotHeld(Button::R);
+    const bool pad_up = controller->GotDown(Button::DPAD_UP | Button::UP) &&
+                        !controller->GotDown(Button::LS_UP | Button::RS_UP);
+    const bool pad_down = controller->GotDown(Button::DPAD_DOWN | Button::DOWN) &&
+                          !controller->GotDown(Button::LS_DOWN | Button::RS_DOWN);
+
+    if (controller->GotDown(Button::LS_UP) || (l_mod && pad_up)) {
+        NudgeRangeTop(-1);
+    } else if (controller->GotDown(Button::LS_DOWN) || (l_mod && pad_down)) {
+        NudgeRangeTop(1);
+    }
+
+    if (controller->GotDown(Button::RS_UP) || (r_mod && pad_up)) {
+        NudgeRangeBottom(-1);
+    } else if (controller->GotDown(Button::RS_DOWN) || (r_mod && pad_down)) {
+        NudgeRangeBottom(1);
+    }
 }
 
 auto Menu::HasSelection() const -> bool {
@@ -1326,6 +1447,9 @@ void Menu::ShowLineActions() {
     actions.push_back({"Edit line"_i18n, ActionIcon::Edit, [this](){ EditLine(); }});
 
     if (m_has_range) {
+        if (!m_adjusting_range) {
+            actions.push_back({"Expand range"_i18n, std::nullopt, [this](){ StartAdjustRange(); }});
+        }
         actions.push_back({"Clear selection"_i18n, std::nullopt, [this](){ ClearRangeSelection(); UpdateTextSubHeading(); }});
     } else {
         actions.push_back({"Select range"_i18n, std::nullopt, [this](){ StartRangeSelection(); }});
@@ -1522,6 +1646,11 @@ void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
                 LineDown();
             }
         }
+        return;
+    }
+
+    if (m_adjusting_range) {
+        UpdateAdjustRange(controller);
         return;
     }
 

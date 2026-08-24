@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.558** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.559** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.559 — Text editor: expand an existing line range
+
+- Після «Вибрати діапазон»: **Y** або Дії → «Розширити діапазон».
+- **L** + вгору розширює верх, **L** + вниз звужує верх; те саме **R** для низу (вгору піднімає край, вниз розширює). Лівий стік = верх, правий = низ.
+- Легенда показує верхню/нижню межу з гліфами L/R і стіків. **A** лишає нові межі, **B** повертає як було.
 
 ## v0.13.558 — Text editor: selection outline spans all chosen lines
 

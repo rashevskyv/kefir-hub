@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.558**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.559**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.558 (Selection outline spans lines)
+## Поточний delivery: v0.13.559 (Expand existing line range)
+
+- [x] `TEXT-EXPAND-RANGE-559` — за наявності виділення: Y / Дії «Розширити діапазон»; L/лівий стік — верхня межа, R/правий — нижня; легенда.
+- [x] `DOCS-BUMP-559` — версію піднято до `0.13.559`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.558 (Selection outline spans lines)
 
 - [x] `TEXT-SEL-OUTLINE-558` — рамка виділення рядків одна, на весь діапазон.
 - [x] `DOCS-BUMP-558` — версію піднято до `0.13.558`, оновлено plan/task/walkthrough/audit. Агент не компілював.
