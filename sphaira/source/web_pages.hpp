@@ -835,28 +835,28 @@ constexpr std::string_view REMOTE_EDITOR_PAGE = R"HTML(
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Edit &bull; Kefir Hub</title>
 <style>
-html,body{height:100%;margin:0;background:#0f0f12;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif}
-#bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#18181b;border-bottom:1px solid #27272a}
+html,body{height:100%;margin:0;display:flex;flex-direction:column;background:#0f0f12;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif}
+#bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#18181b;border-bottom:1px solid #27272a}
 #name{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #msg{font-size:13px;color:#a1a1aa}
 button{padding:8px 14px;font-size:14px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer}
 button:disabled{background:#3f3f46;color:#71717a}
-#wrap{height:calc(100% - 53px)}
+#wrap{flex:1 1 auto;min-height:0;position:relative}
 #ed{width:100%;height:100%;box-sizing:border-box;border:0;outline:none;resize:none;padding:12px 14px;background:#0f0f12;color:#e2e8f0;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
-.CodeMirror{height:100%;background:#0f0f12;color:#e2e8f0;font-size:14px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-.CodeMirror-gutters{background:#18181b;border-right:1px solid #27272a}
-.CodeMirror-linenumber{color:#71717a}
-.CodeMirror-cursor{border-left:1px solid #38bdf8}
-.CodeMirror-selected{background:#1e3a5f}
-.cm-s-default .cm-comment{color:#64748b}
-.cm-s-default .cm-string,.cm-s-default .cm-string-2{color:#86efac}
-.cm-s-default .cm-number,.cm-s-default .cm-atom{color:#fda4af}
-.cm-s-default .cm-keyword,.cm-s-default .cm-meta,.cm-s-default .cm-builtin{color:#7dd3fc}
-.cm-s-default .cm-def{color:#93c5fd}
-.cm-s-default .cm-variable,.cm-s-default .cm-variable-2{color:#e2e8f0}
-.cm-s-default .cm-property,.cm-s-default .cm-attribute{color:#cbd5e1}
-.cm-s-default .cm-operator,.cm-s-default .cm-qualifier{color:#a1a1aa}
-.cm-s-default .cm-tag{color:#c4b5fd}
+#wrap .CodeMirror{position:absolute;inset:0;height:100%;width:100%;background:#0f0f12;color:#e2e8f0;font-size:14px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+#wrap .CodeMirror-gutters{background:#18181b;border-right:1px solid #27272a}
+#wrap .CodeMirror-linenumber{color:#71717a}
+#wrap .CodeMirror-cursor{border-left:1px solid #38bdf8}
+#wrap .CodeMirror-selected{background:#1e3a5f}
+#wrap .cm-s-default .cm-comment{color:#64748b}
+#wrap .cm-s-default .cm-string,#wrap .cm-s-default .cm-string-2{color:#86efac}
+#wrap .cm-s-default .cm-number,#wrap .cm-s-default .cm-atom{color:#fda4af}
+#wrap .cm-s-default .cm-keyword,#wrap .cm-s-default .cm-meta,#wrap .cm-s-default .cm-builtin{color:#7dd3fc}
+#wrap .cm-s-default .cm-def{color:#93c5fd}
+#wrap .cm-s-default .cm-variable,#wrap .cm-s-default .cm-variable-2{color:#e2e8f0}
+#wrap .cm-s-default .cm-property,#wrap .cm-s-default .cm-attribute{color:#cbd5e1}
+#wrap .cm-s-default .cm-operator,#wrap .cm-s-default .cm-qualifier{color:#a1a1aa}
+#wrap .cm-s-default .cm-tag{color:#c4b5fd}
 .ok{color:#4ade80}.err{color:#f87171}
 </style>
 </head><body>
@@ -921,7 +921,9 @@ ed.addEventListener('input',markDirty);
       mode:json?{name:'javascript',json:true}:(spec?spec[0]:null),
       extraKeys:{'Ctrl-S':save,'Cmd-S':save}
     });
+    cm.setSize('100%','100%');
     cm.on('change',markDirty);
+    window.addEventListener('resize',()=>cm.refresh());
     cm.focus();
   }catch(e){ed.focus();}
 })();

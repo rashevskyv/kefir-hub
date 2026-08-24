@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.561** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.562** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.562 — Remote editor fills the browser window
+
+- Редактор на ПК займає всю висоту під панеллю Save, а не смугу з білим фоном.
 
 ## v0.13.561 — Edit on PC / phone from the file list
 
