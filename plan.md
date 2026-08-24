@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.597**. Завершені плани збережено в
+Поточний delivery — **v0.13.598**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.597 — Module Manager RAM uses svcGetSystemInfo
+## Поточний delivery: v0.13.598 — svcGetSystemInfo takes a Handle
+
+Статус: зібрано. nxlink після збірки.
+1. libnx: `svcGetSystemInfo(out, type, handle, pool)` — передаємо `INVALID_HANDLE`.
+
+## Попередній delivery: v0.13.597 — Module Manager RAM uses svcGetSystemInfo
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. `InfoType_TotalPhysicalMemorySize` немає в поточному libnx. Замість нього `svcGetSystemInfo` + `SystemInfoType_*`.

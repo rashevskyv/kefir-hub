@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.597**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.598**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.597 (Module Manager RAM compile fix)
+## Поточний delivery: v0.13.598 (svcGetSystemInfo Handle)
+
+- [x] `MODULE-RAM-HANDLE-598` — `svcGetSystemInfo(..., INVALID_HANDLE, pool)`.
+- [x] `DOCS-BUMP-598` — версію піднято до `0.13.598`.
+
+## Попередній delivery: v0.13.597 (Module Manager RAM compile fix)
 
 - [x] `MODULE-RAM-SVC-597` — `svcGetSystemInfo` замість неіснуючих `InfoType_*PhysicalMemorySize`.
 - [x] `DOCS-BUMP-597` — версію піднято до `0.13.597`. Агент не компілював.

@@ -279,10 +279,10 @@ void SystemRam(u64& used, u64& total) {
     total = 0;
     for (u64 pool = 0; pool < 4; pool++) {
         u64 t{}, u{};
-        if (R_SUCCEEDED(svcGetSystemInfo(&t, SystemInfoType_TotalPhysicalMemorySize, pool))) {
+        if (R_SUCCEEDED(svcGetSystemInfo(&t, SystemInfoType_TotalPhysicalMemorySize, INVALID_HANDLE, pool))) {
             total += t;
         }
-        if (R_SUCCEEDED(svcGetSystemInfo(&u, SystemInfoType_UsedPhysicalMemorySize, pool))) {
+        if (R_SUCCEEDED(svcGetSystemInfo(&u, SystemInfoType_UsedPhysicalMemorySize, INVALID_HANDLE, pool))) {
             used += u;
         }
     }
