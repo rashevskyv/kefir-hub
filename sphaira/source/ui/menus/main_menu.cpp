@@ -32,7 +32,7 @@ constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/kefir-
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
 constexpr long HTTP_NOT_FOUND{404};
 // ponytail: test hook — always treat GitHub latest as an update, even if the
-// installed build is newer. Set false once Silent/Ask/On-demand are verified.
+// installed build is newer. Set false once Silent/Ask are verified.
 constexpr bool kForceUpdateForTest = true;
 
 template<typename T>
@@ -170,26 +170,33 @@ MainMenu::MainMenu() {
                     return true;
                 }
 
+                if (version::IsEqual(App::GetAutoUpdateSkip(), version)) {
+                    log_write("[UpdateCheck] %s skipped\n", version);
+                    auto_update::SetJobState(auto_update::JobState::Idle);
+                    m_update_state = UpdateState::None;
+                    return true;
+                }
+
                 auto_update::SetAvailable(version, url);
                 const auto mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
                 if (mode == auto_update::Mode::Silent) {
                     auto_update::StartDownload();
-                } else if (mode == auto_update::Mode::Notify) {
-                    if (version::IsEqual(App::GetAutoUpdateSkip(), version)) {
-                        log_write("[UpdateCheck] %s skipped\n", version);
-                    } else if (auto_update::ConsumeNotifyPrompt()) {
-                        App::Push<OptionBox>(
-                            "A new version is available. Update now?"_i18n,
-                            "Skip"_i18n, "Update"_i18n, 1,
-                            [ver = std::string(version)](auto op) {
-                                if (op && *op == 1) {
-                                    auto_update::StartDownload();
-                                } else if (op && *op == 0) {
-                                    App::SetAutoUpdateSkip(ver);
-                                }
+                } else if (mode == auto_update::Mode::Notify && auto_update::ConsumeNotifyPrompt()) {
+                    App::Push<OptionBox>(
+                        "A new version is available. Update now?"_i18n,
+                        "Later"_i18n, "Skip this update"_i18n, "Update"_i18n, 2,
+                        [ver = std::string(version)](auto op) {
+                            if (!op) {
+                                return;
                             }
-                        );
-                    }
+                            if (*op == 2) {
+                                auto_update::StartDownload();
+                            } else if (*op == 1) {
+                                App::SetAutoUpdateSkip(ver);
+                                auto_update::SetJobState(auto_update::JobState::Idle);
+                            }
+                        }
+                    );
                 } else {
                     log_write("[UpdateCheck] %s available (mode=%ld)\n", version, App::GetAutoUpdateMode());
                 }

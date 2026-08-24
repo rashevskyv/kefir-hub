@@ -118,7 +118,8 @@ void AboutBox::ApplyRelease(const char* tag, const char* body, const std::string
         m_text = "No changelog entries found for the latest release."_i18n;
     }
 
-    if (tag && !download_url.empty() && version::IsLower(APP_VERSION, tag)) {
+    if (tag && !download_url.empty() && version::IsLower(APP_VERSION, tag)
+        && !version::IsEqual(App::GetAutoUpdateSkip(), tag)) {
         const auto job = auto_update::GetJob();
         if (job.state != auto_update::JobState::Downloading
             && job.state != auto_update::JobState::Installing

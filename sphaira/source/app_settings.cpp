@@ -136,14 +136,14 @@ auto App::GetAutoUpdateEnable() -> bool {
 
 auto App::GetAutoUpdateMode() -> long {
     const auto mode = g_app->m_auto_update.Get();
-    if (mode < 0 || mode > 3) {
+    if (mode < 0 || mode > 2) {
         return static_cast<long>(auto_update::Mode::Silent);
     }
     return mode;
 }
 
 void App::SetAutoUpdateMode(long mode) {
-    if (mode < 0 || mode > 3) {
+    if (mode < 0 || mode > 2) {
         mode = static_cast<long>(auto_update::Mode::Silent);
     }
     g_app->m_auto_update.Set(mode);

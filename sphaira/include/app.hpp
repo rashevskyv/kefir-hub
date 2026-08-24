@@ -459,7 +459,7 @@ public:
     option::OptionString m_webdav_pass{INI_SECTION, "webdav_pass", ""};
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
-    option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off matches old false
+    option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off, 2=Ask; old 3 (On demand) maps to Silent
     option::OptionString m_auto_update_skip{INI_SECTION, "auto_update_skip", ""};
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};
     option::OptionString m_theme_path{INI_SECTION, "theme", DEFAULT_THEME_PATH};

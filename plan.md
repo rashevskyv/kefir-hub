@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.577**. Завершені плани збережено в
+Поточний delivery — **v0.13.578**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.577 — Auto-update is a folder in General
+## Поточний delivery: v0.13.578 — Drop On demand; Ask has Later / Skip / Update
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Режими: Off / Silent / Ask. On demand прибрано (старий 3 → Silent).
+2. Ask: Пізніше (знову спитає), Пропустити це оновлення (до наступного релізу), Оновити. У папці лишається рядок пропущеної версії.
+
+## Попередній delivery: v0.13.577 — Auto-update is a folder in General
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Автооновлення — папка зверху в Загальний, не окрема категорія зліва.

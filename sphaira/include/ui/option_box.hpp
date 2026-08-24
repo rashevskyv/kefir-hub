@@ -31,6 +31,7 @@ public:
     OptionBox(const std::string& message, const Option& a, const Callback& cb = [](auto){}, int image = 0, bool own_image = false); // confirm
     OptionBox(const std::string& message, const Option& a, const Option& b, const Callback& cb, int image = 0, bool own_image = false); // yesno
     OptionBox(const std::string& message, const Option& a, const Option& b, s64 index, const Callback& cb, int image = 0, bool own_image = false); // yesno
+    OptionBox(const std::string& message, const Option& a, const Option& b, const Option& c, s64 index, const Callback& cb, int image = 0, bool own_image = false);
     ~OptionBox();
 
     auto Update(Controller* controller, TouchInfo* touch) -> void override;

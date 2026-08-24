@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.577**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.578**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.577 (Auto-update folder in General)
+## Поточний delivery: v0.13.578 (Ask: Later / Skip this update / Update)
+
+- [x] `UPDATE-DROP-ONDEMAND-578` — On demand прибрано.
+- [x] `UPDATE-ASK-THREE-578` — попап: Later, Skip this update, Update. Скіп у меню лишається.
+- [x] `DOCS-BUMP-578` — версію піднято до `0.13.578`. Агент не компілював.
+
+## Попередній delivery: v0.13.577 (Auto-update folder in General)
 
 - [x] `UPDATE-FOLDER-GENERAL-577` — Auto-update папка в Загальний, не пункт лівого меню.
 - [x] `DOCS-BUMP-577` — версію піднято до `0.13.577`. Агент не компілював.

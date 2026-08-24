@@ -169,6 +169,32 @@ OptionBox::OptionBox(const std::string& message, const Option& a, const Option& 
     Setup(index);
 }
 
+OptionBox::OptionBox(const std::string& message, const Option& a, const Option& b, const Option& c, s64 index, const Callback& cb, int image, bool own_image)
+: m_message{message}
+, m_callback{cb}
+, m_image{image}
+, m_own_image{own_image} {
+
+    m_pos.w = 770.f;
+    m_button_yoff = CalculateButtonYoff(message, image != 0);
+    m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT;
+    m_pos.x = (SCREEN_WIDTH / 2.f) - (m_pos.w / 2.f);
+    m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
+
+    auto box = m_pos;
+    box.w /= 3.f;
+    box.y += m_button_yoff;
+    box.h -= m_button_yoff;
+
+    m_entries.emplace_back(AddGlyphIfMissing(a, "\uE0E1"), box);
+    box.x += box.w;
+    m_entries.emplace_back(b, box);
+    box.x += box.w;
+    m_entries.emplace_back(AddGlyphIfMissing(c, "\uE0EF"), box);
+
+    Setup(index);
+}
+
 OptionBox::~OptionBox() {
     if (m_image && m_own_image) {
         nvgDeleteImage(App::GetVg(), m_image);
@@ -234,11 +260,12 @@ auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         
         if (m_entries.size() == 1) {
             m_entries[0].UpdateLayout(box);
-        } else if (m_entries.size() == 2) {
-            box.w /= 2.f;
-            m_entries[0].UpdateLayout(box);
-            box.x += box.w;
-            m_entries[1].UpdateLayout(box);
+        } else if (!m_entries.empty()) {
+            box.w /= static_cast<float>(m_entries.size());
+            for (auto& e : m_entries) {
+                e.UpdateLayout(box);
+                box.x += box.w;
+            }
         }
 
         m_layout_done = true;
@@ -320,7 +347,7 @@ auto OptionBox::Setup(s64 index) -> void {
             SetPop();
         }}),
         std::make_pair(Button::B, Action{[this](){
-            if (m_entries.size() == 2) {
+            if (m_entries.size() >= 2) {
                 m_callback(0);
             } else {
                 m_callback({});
@@ -328,8 +355,8 @@ auto OptionBox::Setup(s64 index) -> void {
             SetPop();
         }}),
         std::make_pair(Button::START, Action{[this](){
-            if (m_entries.size() == 2) {
-                m_callback(1);
+            if (m_entries.size() >= 2) {
+                m_callback(static_cast<s64>(m_entries.size() - 1));
                 SetPop();
             }
         }})

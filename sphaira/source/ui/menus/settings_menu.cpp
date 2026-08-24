@@ -138,7 +138,6 @@ auto AutoUpdateModeLabel(long mode) -> std::string {
         case 0: return "Off"_i18n;
         case 1: return "Silent"_i18n;
         case 2: return "Ask"_i18n;
-        case 3: return "On demand"_i18n;
         default: return "Silent"_i18n;
     }
 }
@@ -147,8 +146,7 @@ auto AutoUpdateModeDescription(long mode) -> std::string {
     switch (mode) {
         case 0: return "Don't check for updates."_i18n;
         case 1: return "Download in the background. Next launch uses the new version."_i18n;
-        case 2: return "Popup when a new version is found. Skip it, or update now."_i18n;
-        case 3: return "Only when you tap Update now."_i18n;
+        case 2: return "Popup when a new version is found. Later, skip this version, or update now."_i18n;
         default: return AutoUpdateModeDescription(1);
     }
 }
@@ -182,7 +180,6 @@ auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
                 "Off"_i18n,
                 "Silent"_i18n,
                 "Ask"_i18n,
-                "On demand"_i18n,
             };
             App::Push<PopupList>("Auto-update"_i18n, std::move(choices), [](std::optional<s64> op_index){
                 if (op_index) {

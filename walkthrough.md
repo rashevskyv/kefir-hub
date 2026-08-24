@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.577** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.578** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.578 — Ask: Later, skip this version, or update
+
+- On demand прибрано. Ask питає трьома кнопками: **Пізніше**, **Пропустити це оновлення**, **Оновити**. Пропуск діє до наступного релізу; у папці Auto-update його можна скинути тапом.
 
 ## v0.13.577 — Auto-update folder lives in General
 

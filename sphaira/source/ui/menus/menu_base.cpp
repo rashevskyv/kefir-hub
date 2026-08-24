@@ -545,8 +545,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         }
 
         const auto update_job = auto_update::GetJob();
-        // Silent keeps progress in the header bars. Ask / On demand use the
-        // download transfer badge (App::PushTransfer) instead.
+        // Silent keeps progress in the header bars. Ask uses the download
+        // transfer badge (App::PushTransfer) instead.
         const bool show_update =
             static_cast<auto_update::Mode>(App::GetAutoUpdateMode()) == auto_update::Mode::Silent
             && (update_job.state == auto_update::JobState::Downloading

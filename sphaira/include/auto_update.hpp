@@ -19,7 +19,6 @@ enum class Mode : long {
     Off = 0,
     Silent = 1,
     Notify = 2,
-    OnDemand = 3,
 };
 
 enum class JobState : std::uint8_t {
