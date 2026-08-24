@@ -1488,19 +1488,20 @@ private:
     Mutex m_mount_mutex{};
 };
 
-// read-only virtual drive exposing every installed title as nsp files:
-// /<GameName [TitleID]>/<Name [id][vN][BASE|UPD|DLC].nsp>, one file per
-// installed component (base game, update, each dlc). the nsp is built out of
-// ncm when its folder is opened and streamed straight from content storage, so
-// copying one to the pc is the same dump the games menu writes to the sd card,
-// without needing the space for it.
+// read-only virtual drive of installed titles as NSP dumps. layout is a
+// setting: compatible (one merged NSP per game at the root), separate (a
+// folder per game with BASE/UPD/DLC files), or both (Merged/ and Separate/).
+// copying a file to the pc streams it from ncm; nothing is written to the sd.
 struct FsGameProxy final : FsProxyBase {
     FsGameProxy(const char* name, const char* display_name) : FsProxyBase{name, display_name} {
         // holds the ncm storages (and the control loader) open for our
         // lifetime - every listing and every read goes through them.
         m_has_title = R_SUCCEEDED(title::Init());
         m_is_file_based_emummc = App::IsFileBaseEmummc();
+        m_layout = static_cast<sphaira::mtp::GamesLayout>(App::GetMtpGamesLayout());
         ScanGames();
+        log_write("[MTP-GAMES] layout=%d scanned %zu games\n",
+            static_cast<int>(m_layout), m_games.size());
     }
 
     ~FsGameProxy() {
@@ -1520,7 +1521,7 @@ struct FsGameProxy final : FsProxyBase {
     }
 
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override {
-        const auto pp = sphaira::mtp::ParseGamesPath(path);
+        const auto pp = Parse(path);
 
         switch (pp.kind) {
             case sphaira::mtp::PathKind::Root:
@@ -1595,7 +1596,7 @@ struct FsGameProxy final : FsProxyBase {
         log_write("[MTP-GAMES] OpenFile(%s)\n", path);
         R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
 
-        const auto pp = sphaira::mtp::ParseGamesPath(path);
+        const auto pp = Parse(path);
         auto handle = std::make_unique<FileHandle>();
 
         if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
@@ -1634,12 +1635,28 @@ struct FsGameProxy final : FsProxyBase {
     }
 
     Result OpenDirectory(const char *path, u32 mode, FsDir *out_dir) override {
-        const auto pp = sphaira::mtp::ParseGamesPath(path);
+        const auto pp = Parse(path);
         auto handle = std::make_unique<DirHandle>();
 
         switch (pp.kind) {
             case sphaira::mtp::PathKind::Root: {
-                if (mode & FsDirOpenMode_ReadDirs) {
+                if (m_layout == sphaira::mtp::GamesLayout::Compatible) {
+                    if (mode & FsDirOpenMode_ReadFiles) {
+                        R_TRY(BuildMergedCacheIfNeeded());
+                        SCOPED_MUTEX(&m_cache_mutex);
+                        for (const auto& [name, nsp] : m_merged_cache) {
+                            if (!nsp->listing.empty()) {
+                                handle->entries.emplace_back(nsp->listing[0]);
+                            }
+                        }
+                    }
+                } else if (m_layout == sphaira::mtp::GamesLayout::Separate) {
+                    if (mode & FsDirOpenMode_ReadDirs) {
+                        for (const auto& [name, game] : m_games) {
+                            handle->entries.emplace_back(MakeVirtualDirEntry(name));
+                        }
+                    }
+                } else if (mode & FsDirOpenMode_ReadDirs) {
                     handle->entries.emplace_back(MakeVirtualDirEntry("Merged"));
                     handle->entries.emplace_back(MakeVirtualDirEntry("Separate"));
                 }
@@ -1879,6 +1896,12 @@ private:
         R_THROW(FsError_PathNotFound);
     }
 
+    auto Parse(const char* path) const -> sphaira::mtp::ParsedPath {
+        // libhaze names the storage root "/games"; strip that so listings and
+        // reads see "/", "/Merged", "/Separate/..." like the host tests.
+        return sphaira::mtp::ParseGamesPath(FixPath(path).s, m_layout);
+    }
+
     // game folder name -> title. built once at registration, immutable
     // afterwards (safe for concurrent reads).
     std::map<std::string, GameRec, CaseInsensitiveLess> m_games{};
@@ -1891,6 +1914,7 @@ private:
 
     bool m_has_title{};
     bool m_is_file_based_emummc{};
+    sphaira::mtp::GamesLayout m_layout{sphaira::mtp::GamesLayout::Both};
 };
 
 ::haze::FsEntries g_fs_entries{};

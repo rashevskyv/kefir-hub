@@ -323,6 +323,14 @@ auto App::GetMtpShowGames() -> bool {
     return g_app->m_mtp_show_games.Get();
 }
 
+auto App::GetMtpGamesLayout() -> long {
+    const auto layout = g_app->m_mtp_games_layout.Get();
+    if (layout < 0 || layout > 2) {
+        return 2;
+    }
+    return layout;
+}
+
 auto App::GetMtpNameSd() -> std::string {
     return g_app->m_mtp_name_sd.Get();
 }
@@ -741,6 +749,19 @@ void App::SetMtpShowRawSystemSaves(bool enable) {
 void App::SetMtpShowGames(bool enable) {
     if (App::GetMtpShowGames() != enable) {
         g_app->m_mtp_show_games.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpGamesLayout(long layout) {
+    if (layout < 0 || layout > 2) {
+        layout = 2;
+    }
+    if (App::GetMtpGamesLayout() != layout) {
+        g_app->m_mtp_games_layout.Set(layout);
         if (App::GetMtpEnable()) {
             SetMtpEnable(false);
             SetMtpEnable(true);

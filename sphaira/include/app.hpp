@@ -124,6 +124,8 @@ public:
     static auto GetMtpShowRawSaves() -> bool;
     static auto GetMtpShowRawSystemSaves() -> bool;
     static auto GetMtpShowGames() -> bool;
+    // 0 = compatible (one merged NSP), 1 = separate files, 2 = both folders.
+    static auto GetMtpGamesLayout() -> long;
     static auto GetMtpNameSd() -> std::string;
     static auto GetMtpNameInstall() -> std::string;
     // extra folders exposed as MTP storages (absolute SD paths).
@@ -215,6 +217,7 @@ public:
     static void SetMtpShowRawSaves(bool enable);
     static void SetMtpShowRawSystemSaves(bool enable);
     static void SetMtpShowGames(bool enable);
+    static void SetMtpGamesLayout(long layout);
     static void SetMtpNameSd(std::string value);
     static void SetMtpNameInstall(std::string value);
     static void SetMtpFolders(const std::vector<std::string>& folders);
@@ -453,6 +456,7 @@ public:
     option::OptionBool m_mtp_show_raw_saves{INI_SECTION, "mtp_show_raw_saves", false};
     option::OptionBool m_mtp_show_raw_system_saves{INI_SECTION, "mtp_show_raw_system_saves", false};
     option::OptionBool m_mtp_show_games{INI_SECTION, "mtp_show_games", false};
+    option::OptionLong m_mtp_games_layout{INI_SECTION, "mtp_games_layout", 2};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
     // extra MTP storage folders, '|'-separated absolute paths ('|' is illegal in FAT names).

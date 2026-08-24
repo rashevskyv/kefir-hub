@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.582**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.583**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.582 (USB plug identify: flash vs PC)
+## Поточний delivery: v0.13.583 (MTP Games dump formats)
+
+- [x] `MTP-GAMES-FIXPATH-583` — FixPath перед ParseGamesPath, диск більше не PathNotFound на `/games`.
+- [x] `MTP-GAMES-LAYOUT-583` — Dump format: Compatible / Separate / Both, рестарт MTP.
+- [x] `DOCS-BUMP-583` — версію піднято до `0.13.583`. Агент не компілював.
+
+## Попередній delivery: v0.13.582 (USB plug identify: flash vs PC)
 
 - [x] `USB-FLASH-OFFER-582` — нова флешка: попап відкрити у файловому браузері.
 - [x] `USB-PC-MTP-582` — кабель у ПК: авто-MTP; unplug повертає USB storage.

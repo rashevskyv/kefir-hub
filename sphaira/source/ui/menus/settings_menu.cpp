@@ -728,6 +728,22 @@ auto BuildScreenOffItems() -> std::vector<SettingsItem> {
     return items;
 }
 
+auto MtpGamesLayoutLabel(long layout) -> std::string {
+    switch (layout) {
+        case 0: return "Compatible dump"_i18n;
+        case 1: return "Separate files"_i18n;
+        default: return "Both"_i18n;
+    }
+}
+
+auto MtpGamesLayoutDescription(long layout) -> std::string {
+    switch (layout) {
+        case 0: return "One NSP per game with base, update and DLC together."_i18n;
+        case 1: return "A folder per game with each component as its own NSP."_i18n;
+        default: return "Merged folder (one NSP) and Separate folder (files per game)."_i18n;
+    }
+}
+
 // items for the "MTP storages" settings page (was a side popup). values read
 // live state, so toggles/names refresh in place without a rebuild.
 auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
@@ -739,6 +755,24 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
     items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
     items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
+
+    items.emplace_back(SettingsItem{
+        "Dump format"_i18n,
+        MtpGamesLayoutDescription(App::GetMtpGamesLayout()),
+        [](){ return MtpGamesLayoutLabel(App::GetMtpGamesLayout()); },
+        [](){
+            PopupList::Items choices = {
+                "Compatible dump"_i18n,
+                "Separate files"_i18n,
+                "Both"_i18n,
+            };
+            App::Push<PopupList>("Dump format"_i18n, std::move(choices), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetMtpGamesLayout(*op_index);
+                }
+            }, App::GetMtpGamesLayout());
+        }
+    });
 
     items.emplace_back(SettingsItem{
         "microSD card name"_i18n,

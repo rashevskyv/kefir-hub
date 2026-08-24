@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.582**. Завершені плани збережено в
+Поточний delivery — **v0.13.583**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.582 — USB plug: flash → file browser, PC → MTP
+## Поточний delivery: v0.13.583 — MTP Games dumps: compatible / separate / both
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Диск Games був порожній: haze відкриває `/games`, парсер чекав `/Merged`. FixPath як у Saves.
+2. Settings → MTP storages → Dump format: сумісний (один NSP), окремі файли, обидва (Merged/ + Separate/).
+
+## Попередній delivery: v0.13.582 — USB plug: flash → file browser, PC → MTP
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Флешка (usbhsfs): попап «відкрити у файловому браузері».

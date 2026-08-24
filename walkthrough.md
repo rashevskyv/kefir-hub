@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.582** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.583** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.583 — MTP Games: compatible dump vs separate files
+
+- Диск Games був порожній, бо haze дає шлях `/games`, а віртуальний FS чекав `/Merged` і `/Separate`. Тепер префікс сховища зрізається, як у Saves.
+- Settings → MTP storages → **Dump format**:
+  - **Compatible dump** — один NSP на гру (база + апдейт + DLC).
+  - **Separate files** — тека на гру, кожен компонент окремим NSP.
+  - **Both** — теки Merged і Separate (типово).
 
 ## v0.13.582 — USB plug: flash opens the file browser, PC starts MTP
 

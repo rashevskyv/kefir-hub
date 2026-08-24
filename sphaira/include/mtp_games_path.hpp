@@ -17,13 +17,20 @@ enum class PathKind {
     Invalid
 };
 
+// how the MTP Games drive is laid out. stored as OptionLong 0/1/2.
+enum class GamesLayout {
+    Compatible = 0, // one merged NSP per game, at the drive root
+    Separate = 1,   // a folder per game with BASE/UPD/DLC files
+    Both = 2,       // root contains Merged/ and Separate/
+};
+
 struct ParsedPath {
     PathKind kind{PathKind::Invalid};
     std::string game{};
     std::string filename{};
 };
 
-inline ParsedPath ParseGamesPath(std::string_view path) {
+inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = GamesLayout::Both) {
     ParsedPath result{};
     std::vector<std::string_view> segments;
 
@@ -56,6 +63,30 @@ inline ParsedPath ParseGamesPath(std::string_view path) {
         }
         return true;
     };
+
+    if (layout == GamesLayout::Compatible) {
+        if (segments.size() == 1) {
+            result.kind = PathKind::MergedFile;
+            result.filename = std::string(segments[0]);
+        } else {
+            result.kind = PathKind::Invalid;
+        }
+        return result;
+    }
+
+    if (layout == GamesLayout::Separate) {
+        if (segments.size() == 1) {
+            result.kind = PathKind::SeparateGameDir;
+            result.game = std::string(segments[0]);
+        } else if (segments.size() == 2) {
+            result.kind = PathKind::SeparateFile;
+            result.game = std::string(segments[0]);
+            result.filename = std::string(segments[1]);
+        } else {
+            result.kind = PathKind::Invalid;
+        }
+        return result;
+    }
 
     if (equals_ic(segments[0], "Merged")) {
         if (segments.size() == 1) {

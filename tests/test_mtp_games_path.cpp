@@ -109,6 +109,47 @@ static int test_parse_games_path() {
         CHECK(res.kind == PathKind::Invalid);
     }
 
+    // Compatible layout: merged NSP files sit at the drive root.
+    {
+        auto res = ParseGamesPath("/", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::Root);
+    }
+    {
+        auto res = ParseGamesPath("/Game A [0100000000010000][B+U65536+9DLC].nsp", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::MergedFile);
+        CHECK(res.filename == "Game A [0100000000010000][B+U65536+9DLC].nsp");
+    }
+    {
+        auto res = ParseGamesPath("/Merged", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::MergedFile);
+        CHECK(res.filename == "Merged");
+    }
+    {
+        auto res = ParseGamesPath("/a/b.nsp", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::Invalid);
+    }
+
+    // Separate layout: a folder per game at the drive root.
+    {
+        auto res = ParseGamesPath("/", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::Root);
+    }
+    {
+        auto res = ParseGamesPath("/Game A [0100000000010000]", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::SeparateGameDir);
+        CHECK(res.game == "Game A [0100000000010000]");
+    }
+    {
+        auto res = ParseGamesPath("/Game A [0100000000010000]/Game A [BASE].nsp", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::SeparateFile);
+        CHECK(res.game == "Game A [0100000000010000]");
+        CHECK(res.filename == "Game A [BASE].nsp");
+    }
+    {
+        auto res = ParseGamesPath("/a/b/c.nsp", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::Invalid);
+    }
+
     return 0;
 }
 
