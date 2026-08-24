@@ -380,7 +380,8 @@ void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_f
             ExtractDownloadedZip(zip_path, folder, {}, include_files);
         },
         "Select folder"_i18n,
-        "Extract ZIP to this folder?"_i18n);
+        "Extract ZIP to this folder?"_i18n,
+        zip_extract::SafeFolderName(zip_extract::FileStem(zip_path.s)));
     App::Push(std::move(browser));
 }
 

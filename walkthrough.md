@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.553** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.554** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.554 — Picker Create Folder defaults to the archive name
+
+- «Створити теку» підставляє `Awoo-Installer` з `Awoo-Installer.zip` (і так само для будь-якого архіву). Можна стерти або перейменувати.
 
 ## v0.13.553 — Direct Download: Enter sends the URL
 

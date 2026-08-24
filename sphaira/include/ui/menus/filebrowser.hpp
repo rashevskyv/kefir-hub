@@ -569,7 +569,7 @@ struct Menu final : MenuBase {
     // firmware dump). the callback receives the chosen folder path. selection
     // is by pressing START, or by opening any file inside the target folder.
     using FolderPickCallback = std::function<void(const fs::FsPath&)>;
-    void SetFolderPicker(FolderPickCallback cb, std::string title = {}, std::string confirm = {});
+    void SetFolderPicker(FolderPickCallback cb, std::string title = {}, std::string confirm = {}, std::string create_name = {});
     auto IsFolderPicker() const -> bool { return static_cast<bool>(m_on_folder_picked); }
     // confirm and commit the chosen folder (asks first, then closes the picker).
     void ConfirmFolderPick(const fs::FsPath& folder);
@@ -613,6 +613,7 @@ private:
     SelectedStash m_selected{};
     FolderPickCallback m_on_folder_picked{};
     std::string m_folder_pick_confirm{};
+    std::string m_picker_create_name{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Alphabetical};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

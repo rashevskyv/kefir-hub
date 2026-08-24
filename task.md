@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.553**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.554**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.553 (Direct Download Enter)
+## Поточний delivery: v0.13.554 (Picker folder name from archive)
+
+- [x] `PICKER-CREATE-NAME-554` — Create Folder у пікері за замовченням називається як архів (без розширення).
+- [x] `DOCS-BUMP-554` — версію піднято до `0.13.554`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.553 (Direct Download Enter)
 
 - [x] `REMOTE-INPUT-ENTER-553` — Enter у полі Direct Download надсилає URL.
 - [x] `DOCS-BUMP-553` — версію піднято до `0.13.553`, оновлено plan/task/walkthrough/audit. Агент не компілював.

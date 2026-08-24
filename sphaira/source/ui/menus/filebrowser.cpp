@@ -1786,7 +1786,7 @@ void FsView::DisplayPickerOptions() {
 
     auto create_folder_entry = options->Add<SidebarEntryCallback>("Create Folder"_i18n, [this](){
         std::string out;
-        if (R_SUCCEEDED(swkbd::ShowText(out, "Set Folder Name"_i18n.c_str(), "")) && !out.empty()) {
+        if (R_SUCCEEDED(swkbd::ShowText(out, "Set Folder Name"_i18n.c_str(), m_menu->m_picker_create_name.c_str())) && !out.empty()) {
             App::PopToMenu();
 
             fs::FsPath full_path;
@@ -2788,9 +2788,10 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     view->ConnectToLocation(target_entry);
 }
 
-void Menu::SetFolderPicker(FolderPickCallback cb, std::string title, std::string confirm) {
+void Menu::SetFolderPicker(FolderPickCallback cb, std::string title, std::string confirm, std::string create_name) {
     m_on_folder_picked = std::move(cb);
     m_folder_pick_confirm = confirm.empty() ? "Install firmware from this folder?"_i18n : std::move(confirm);
+    m_picker_create_name = std::move(create_name);
     SetTitle(title.empty() ? "Select firmware folder"_i18n : std::move(title));
     view->RemoveAction(Button::X);
     view->RemoveAction(Button::Y);
