@@ -865,10 +865,34 @@ button:disabled{background:#3f3f46;color:#71717a}
 <script>
 const CM='https://cdn.jsdelivr.net/npm/codemirror@5.65.16/';
 const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),msg=document.getElementById('msg');
-let cm=null,dirty=false;
+let cm=null,dirty=false,closed=false,draftTimer=0;
 function val(){return cm?cm.getValue():ed.value;}
 function markDirty(){if(!dirty){dirty=true;document.title='* '+document.title.replace(/^\* /,'');}}
 function clearDirty(){dirty=false;document.title=document.title.replace(/^\* /,'');}
+async function postDraft(){
+  if(closed)return;
+  try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
+}
+function scheduleDraft(){
+  markDirty();
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(postDraft,400);
+}
+async function pollStatus(){
+  try{
+    const s=await(await fetch('/input/status')).json();
+    if(s.closing){
+      clearTimeout(draftTimer);
+      try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
+      closed=true;
+      msg.className='';
+      msg.textContent='Closed on the Switch.';
+      saveBtn.disabled=true;
+      return;
+    }
+  }catch(e){}
+  if(!closed)setTimeout(pollStatus,400);
+}
 function modeOf(name){
   const n=(name||'').toLowerCase();
   if(/\.(ini|cfg|conf|config)$/.test(n))return ['properties','mode/properties/properties.min.js'];
@@ -895,8 +919,12 @@ async function save(){
 }
 saveBtn.addEventListener('click',save);
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}});
-window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
-ed.addEventListener('input',markDirty);
+window.addEventListener('beforeunload',e=>{
+  if(!dirty||closed)return;
+  e.preventDefault();e.returnValue='';
+  try{navigator.sendBeacon('/input/draft',new Blob([val()],{type:'text/plain;charset=utf-8'}));}catch(x){}
+});
+ed.addEventListener('input',scheduleDraft);
 (async()=>{
   let title='file';
   try{
@@ -922,10 +950,11 @@ ed.addEventListener('input',markDirty);
       extraKeys:{'Ctrl-S':save,'Cmd-S':save}
     });
     cm.setSize('100%','100%');
-    cm.on('change',markDirty);
+    cm.on('change',scheduleDraft);
     window.addEventListener('resize',()=>cm.refresh());
     cm.focus();
   }catch(e){ed.focus();}
+  pollStatus();
 })();
 </script></body></html>
 )HTML";

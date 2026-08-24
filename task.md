@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.562**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.563**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.562 (Remote editor fills the window)
+## Поточний delivery: v0.13.563 (Prompt save on remote editor close)
+
+- [x] `REMOTE-EDITOR-CLOSE-SAVE-563` — B на Switch при незбережених правках у браузері питає «Зберегти зміни?».
+- [x] `DOCS-BUMP-563` — версію піднято до `0.13.563`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.562 (Remote editor fills the window)
 
 - [x] `REMOTE-EDITOR-FULLHEIGHT-562` — CodeMirror на всю висоту вікна, не дефолтні 300px з CDN CSS.
 - [x] `DOCS-BUMP-562` — версію піднято до `0.13.562`, оновлено plan/task/walkthrough/audit. Агент не компілював.

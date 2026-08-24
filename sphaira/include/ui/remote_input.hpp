@@ -30,6 +30,13 @@ auto IsRemoteInputActive() -> bool;
 void SetReceivedText(const std::string& text);
 auto GetReceivedText() -> std::string;
 auto HasReceivedText() -> bool;
+void SetDraftText(const std::string& text);
+auto GetDraftText() -> std::string;
+auto HasDraftText() -> bool;
+void SetClosing(bool closing);
+auto IsClosing() -> bool;
+void SetClientSeen();
+auto ClientSeen() -> bool;
 auto GetCurrentOptions() -> Options;
 
 } // namespace sphaira::ui::remote_input

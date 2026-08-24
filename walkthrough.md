@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.562** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.563** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.563 — Save prompt when closing the remote editor from the Switch
+
+- Редагуєш на ПК, забуваєш Save, тиснеш **B** на консолі: «Зберегти зміни?» **+** зберігає текст з браузера, **B** відкидає.
 
 ## v0.13.562 — Remote editor fills the browser window
 

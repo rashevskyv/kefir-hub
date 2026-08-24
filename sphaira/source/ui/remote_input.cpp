@@ -7,6 +7,7 @@
 #include "ui/option_box.hpp"
 
 #include <mutex>
+#include <string_view>
 #include <switch.h>
 
 namespace sphaira::ui::remote_input {
@@ -15,8 +16,33 @@ namespace {
 std::mutex g_mutex;
 bool g_active{false};
 bool g_received{false};
+bool g_has_draft{false};
+bool g_closing{false};
+bool g_client_seen{false};
+u32 g_draft_seq{0};
 std::string g_received_text;
+std::string g_draft_text;
 Options g_current_options;
+
+auto NewlinesToLf(std::string_view in) -> std::string {
+    std::string out;
+    out.reserve(in.size());
+    for (size_t i = 0; i < in.size(); i++) {
+        if (in[i] == '\r') {
+            out.push_back('\n');
+            if (i + 1 < in.size() && in[i + 1] == '\n') {
+                i++;
+            }
+        } else {
+            out.push_back(in[i]);
+        }
+    }
+    return out;
+}
+
+auto TextChanged(const std::string& a, const std::string& b) -> bool {
+    return NewlinesToLf(a) != NewlinesToLf(b);
+}
 
 } // namespace
 
@@ -25,7 +51,12 @@ void SetRemoteInputActive(bool active) {
     g_active = active;
     if (!active) {
         g_received = false;
+        g_has_draft = false;
+        g_closing = false;
+        g_client_seen = false;
+        g_draft_seq = 0;
         g_received_text.clear();
+        g_draft_text.clear();
     }
 }
 
@@ -48,6 +79,48 @@ auto GetReceivedText() -> std::string {
 auto HasReceivedText() -> bool {
     std::lock_guard lock(g_mutex);
     return g_received;
+}
+
+void SetDraftText(const std::string& text) {
+    std::lock_guard lock(g_mutex);
+    g_draft_text = text;
+    g_has_draft = true;
+    g_draft_seq++;
+}
+
+auto DraftSeq() -> u32 {
+    std::lock_guard lock(g_mutex);
+    return g_draft_seq;
+}
+
+auto GetDraftText() -> std::string {
+    std::lock_guard lock(g_mutex);
+    return g_draft_text;
+}
+
+auto HasDraftText() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_has_draft;
+}
+
+void SetClosing(bool closing) {
+    std::lock_guard lock(g_mutex);
+    g_closing = closing;
+}
+
+auto IsClosing() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_closing;
+}
+
+void SetClientSeen() {
+    std::lock_guard lock(g_mutex);
+    g_client_seen = true;
+}
+
+auto ClientSeen() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_client_seen;
 }
 
 auto GetCurrentOptions() -> Options {
@@ -87,30 +160,75 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
                 svcSleepThread(150'000'000);
             }
 
+            if (GetCurrentOptions().editor && ClientSeen()) {
+                SetClosing(true);
+                const auto seq0 = DraftSeq();
+                for (int i = 0; i < 10; i++) {
+                    if (HasReceivedText()) {
+                        R_SUCCEED();
+                    }
+                    if (DraftSeq() != seq0) {
+                        break;
+                    }
+                    svcSleepThread(100'000'000);
+                }
+            }
+
             R_THROW(Result_TransferCancelled);
         },
         [on_complete, was_running](Result rc) {
             const auto text = GetReceivedText();
-            SetRemoteInputActive(false);
-            if (!was_running) {
-                WebShareStop();
+            const auto draft = GetDraftText();
+            const auto has_draft = HasDraftText();
+            const auto opts = GetCurrentOptions();
+            const auto original = opts.default_text;
+
+            const auto stop_server = [was_running]() {
+                SetRemoteInputActive(false);
+                if (!was_running) {
+                    WebShareStop();
+                }
+            };
+
+            if (R_SUCCEEDED(rc)) {
+                stop_server();
+                if (!opts.editor && text.empty()) {
+                    App::Notify("No input received"_i18n);
+                    return;
+                }
+                App::Notify(opts.editor
+                    ? "Saved from PC / phone"_i18n
+                    : "Received input from phone/PC"_i18n);
+                if (on_complete) {
+                    on_complete(text);
+                }
+                return;
             }
 
+            if (rc == Result_TransferCancelled && opts.editor && has_draft && TextChanged(original, draft)) {
+                stop_server();
+                App::Push<OptionBox>(
+                    "Save changes?"_i18n,
+                    "Don't save"_i18n, "Save"_i18n, 1,
+                    [on_complete, draft](auto op_index) {
+                        if (op_index && *op_index == 1) {
+                            App::Notify("Saved from PC / phone"_i18n);
+                            if (on_complete) {
+                                on_complete(draft);
+                            }
+                        } else {
+                            App::Notify("Input cancelled"_i18n);
+                        }
+                    }
+                );
+                return;
+            }
+
+            stop_server();
             if (rc == Result_TransferCancelled) {
                 App::Notify("Input cancelled"_i18n);
-                return;
-            }
-
-            if (R_FAILED(rc) || (!GetCurrentOptions().editor && text.empty())) {
+            } else {
                 App::Notify("No input received"_i18n);
-                return;
-            }
-
-            App::Notify(GetCurrentOptions().editor
-                ? "Saved from PC / phone"_i18n
-                : "Received input from phone/PC"_i18n);
-            if (on_complete) {
-                on_complete(text);
             }
         }
     );

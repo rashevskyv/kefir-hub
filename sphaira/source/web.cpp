@@ -1102,7 +1102,7 @@ void HandleApiKeyPost(Socket sock, const std::string& req) {
     SendResponse(sock, "200 OK", "text/plain", "OK");
 }
 
-void HandleRemoteInputPost(Socket sock, const std::string& req) {
+void HandleRemoteInputPost(Socket sock, const std::string& req, bool draft = false) {
     const auto opts = ui::remote_input::GetCurrentOptions();
     const s64 max_size = opts.editor ? 4 * 1024 * 1024 : (opts.multiline ? 256 * 1024 : 64 * 1024);
 
@@ -1154,7 +1154,11 @@ void HandleRemoteInputPost(Socket sock, const std::string& req) {
         return;
     }
 
-    ui::remote_input::SetReceivedText(body);
+    if (draft) {
+        ui::remote_input::SetDraftText(body);
+    } else {
+        ui::remote_input::SetReceivedText(body);
+    }
     SendResponse(sock, "200 OK", "text/plain", "OK");
 }
 
@@ -1247,8 +1251,11 @@ void HandleRequest(Socket sock) {
             return;
         } else if (method == "GET") {
             // ponytail: editor HTML is a thin shell; CodeMirror loads from CDN in the browser.
-            const auto page = ui::remote_input::GetCurrentOptions().editor
-                ? REMOTE_EDITOR_PAGE : REMOTE_INPUT_PAGE;
+            const auto editor = ui::remote_input::GetCurrentOptions().editor;
+            if (editor) {
+                ui::remote_input::SetClientSeen();
+            }
+            const auto page = editor ? REMOTE_EDITOR_PAGE : REMOTE_INPUT_PAGE;
             SendResponse(sock, "200 OK", "text/html", std::string{page});
             return;
         }
@@ -1263,6 +1270,34 @@ void HandleRequest(Socket sock) {
         }
         if (method == "GET") {
             HandleRemoteInputConfig(sock);
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input/draft") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "POST") {
+            HandleRemoteInputPost(sock, req, true);
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input/status") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "GET") {
+            const auto json = std::string{"{\"closing\":"} +
+                (ui::remote_input::IsClosing() ? "true" : "false") + "}";
+            SendResponse(sock, "200 OK", "application/json", json);
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.562**. Завершені плани збережено в
+Поточний delivery — **v0.13.563**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.562 — Remote editor fills the browser window
+## Поточний delivery: v0.13.563 — Ask to save when closing the remote editor from the Switch
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. **B** на консолі, якщо в браузері були незбережені правки: «Зберегти зміни?» Не зберігати / Зберегти.
+
+## Попередній delivery: v0.13.562 — Remote editor fills the browser window
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Поле CodeMirror більше не лишається смугою ~300px: CSS після CDN і flex розтягують редактор на всю висоту вікна.
