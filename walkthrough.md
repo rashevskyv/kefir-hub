@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.567** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.568** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.568 — Non-silent update uses the download icon
+
+- Ask / On demand: апдейт іде в ProgressBox скачування (іконка в куті, L3 згортає, B скасовує). Хедер з NAND/SD не чіпаємо.
+- Silent як і було: «Оновлення» + бар замість смуг сховища.
 
 ## v0.13.567 — Force auto-update for mode testing
 

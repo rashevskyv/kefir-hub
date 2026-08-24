@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.567**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.568**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.567 (Force update for testing)
+## Поточний delivery: v0.13.568 (Non-silent update uses download icon)
+
+- [x] `UPDATE-TRANSFER-ICON-568` — Ask / On demand: PushTransfer ProgressBox, як скачування. Silent: хедер.
+- [x] `DOCS-BUMP-568` — версію піднято до `0.13.568`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.567 (Force update for testing)
 
 - [x] `UPDATE-FORCE-TEST-567` — latest з GitHub завжди пропонується як апдейт; режими не чіпали.
 - [x] `DOCS-BUMP-567` — версію піднято до `0.13.567`, оновлено plan/task/walkthrough/audit. Агент не компілював.

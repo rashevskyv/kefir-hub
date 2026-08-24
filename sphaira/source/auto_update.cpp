@@ -2,8 +2,10 @@
 #include "app.hpp"
 #include "download.hpp"
 #include "fs.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
+#include "ui/progress_box.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -62,6 +64,104 @@ auto ConsumeNotifyPrompt() -> bool {
     return true;
 }
 
+namespace {
+
+bool ApplyStaging(const fs::FsPath& temp_path) {
+    SetJobState(JobState::Installing);
+    const auto dest = ResolveInstallDestination(App::GetExePath());
+    const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
+    log_write("[AutoUpdate] installing to %s (replace_hbmenu=%d)\n", dest.s, replace_hbmenu);
+    const bool ok = InstallNroUpdate(temp_path, dest, replace_hbmenu);
+    fs::FsNativeSd().DeleteFile(temp_path);
+    if (ok) {
+        SetJobState(JobState::Ready);
+        log_write("[AutoUpdate] ready — next launch uses the new build\n");
+    } else {
+        SetJobState(JobState::Failed);
+    }
+    return ok;
+}
+
+void StartSilentDownload(const std::string& url, const fs::FsPath& temp_path) {
+    curl::Api().ToFileAsync(
+        curl::Url{url},
+        curl::Path{temp_path},
+        curl::OnProgress{[](s64 dltotal, s64 dlnow, s64, s64) -> bool {
+            if (dltotal > 0) {
+                SetJobProgress(static_cast<float>(dlnow) / static_cast<float>(dltotal));
+            }
+            return true;
+        }},
+        curl::OnComplete{[temp_path](auto& result) {
+            if (!result.success) {
+                log_write("[AutoUpdate] download failed (code: %ld)\n", result.code);
+                fs::FsNativeSd().DeleteFile(temp_path);
+                SetJobState(JobState::Failed);
+                return false;
+            }
+            ApplyStaging(temp_path);
+            return true;
+        }}
+    );
+}
+
+void StartTransferDownload(const std::string& url, const std::string& version, const fs::FsPath& temp_path) {
+    if (App::HasActiveTransfer() || App::GetProgressActive()) {
+        log_write("[AutoUpdate] transfer already active, not starting\n");
+        SetJobState(JobState::Available);
+        App::Notify("Another transfer is in progress."_i18n);
+        return;
+    }
+
+    auto pbox = std::make_unique<ui::ProgressBox>(
+        0, "Updating"_i18n, version,
+        [url, version, temp_path](ui::ProgressBox* pbox) -> Result {
+            pbox->NewTransfer("Downloading "_i18n + version);
+            const auto result = curl::Api().ToFile(
+                curl::Url{url},
+                curl::Path{temp_path},
+                curl::OnProgress{pbox->OnDownloadProgressCallback()}
+            );
+
+            if (pbox->ShouldExit()) {
+                fs::FsNativeSd().DeleteFile(temp_path);
+                SetJobState(JobState::Available);
+                R_THROW(Result_TransferCancelled);
+            }
+
+            if (!result.success) {
+                log_write("[AutoUpdate] download failed (code: %ld)\n", result.code);
+                fs::FsNativeSd().DeleteFile(temp_path);
+                SetJobState(JobState::Failed);
+                R_THROW(Result_CurlFailedEasyInit);
+            }
+
+            pbox->NewTransfer("Installing "_i18n + version);
+            if (!ApplyStaging(temp_path)) {
+                R_THROW(Result_CurlFailedEasyInit);
+            }
+            R_SUCCEED();
+        },
+        [](Result rc) {
+            if (rc == Result_TransferCancelled) {
+                return;
+            }
+            if (R_FAILED(rc)) {
+                App::Notify("Failed"_i18n);
+                return;
+            }
+            App::Notify("Ready — restart"_i18n);
+        }
+    );
+
+    if (!App::PushTransfer(std::move(pbox))) {
+        log_write("[AutoUpdate] PushTransfer refused\n");
+        SetJobState(JobState::Available);
+    }
+}
+
+} // namespace
+
 void StartDownload() {
     Job job;
     {
@@ -78,38 +178,12 @@ void StartDownload() {
     fs::FsNativeSd().CreateDirectoryRecursively("/switch/sphaira/cache");
 
     constexpr fs::FsPath temp_path{"/switch/sphaira/cache/sphaira_update.temp"};
-
-    curl::Api().ToFileAsync(
-        curl::Url{job.url},
-        curl::Path{temp_path},
-        curl::OnProgress{[](s64 dltotal, s64 dlnow, s64, s64) -> bool {
-            if (dltotal > 0) {
-                SetJobProgress(static_cast<float>(dlnow) / static_cast<float>(dltotal));
-            }
-            return true;
-        }},
-        curl::OnComplete{[temp_path](auto& result) {
-            if (!result.success) {
-                log_write("[AutoUpdate] download failed (code: %ld)\n", result.code);
-                fs::FsNativeSd().DeleteFile(temp_path);
-                SetJobState(JobState::Failed);
-                return false;
-            }
-
-            SetJobState(JobState::Installing);
-            const auto dest = ResolveInstallDestination(App::GetExePath());
-            const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
-            log_write("[AutoUpdate] installing to %s (replace_hbmenu=%d)\n", dest.s, replace_hbmenu);
-            if (InstallNroUpdate(temp_path, dest, replace_hbmenu)) {
-                SetJobState(JobState::Ready);
-                log_write("[AutoUpdate] ready — next launch uses the new build\n");
-            } else {
-                SetJobState(JobState::Failed);
-            }
-            fs::FsNativeSd().DeleteFile(temp_path);
-            return true;
-        }}
-    );
+    const auto mode = static_cast<Mode>(App::GetAutoUpdateMode());
+    if (mode == Mode::Silent) {
+        StartSilentDownload(job.url, temp_path);
+    } else {
+        StartTransferDownload(job.url, job.version, temp_path);
+    }
 }
 
 fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
