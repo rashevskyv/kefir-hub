@@ -842,6 +842,10 @@ html,body{height:100%;margin:0;display:flex;flex-direction:column;background:#0f
 button{padding:8px 14px;font-size:14px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer}
 button.secondary{background:#3f3f46;color:#e4e4e7}
 button:disabled{background:#3f3f46;color:#71717a}
+#veil{display:none;position:fixed;inset:0;z-index:50;background:rgba(9,9,11,.92);align-items:center;justify-content:center;padding:24px;text-align:center}
+#veil.show{display:flex}
+#veil h2{margin:0 0 10px;font-size:28px;color:#f4f4f5}
+#veil p{margin:0;max-width:420px;font-size:16px;line-height:1.5;color:#a1a1aa}
 #wrap{flex:1 1 auto;min-height:0;position:relative}
 #ed{width:100%;height:100%;box-sizing:border-box;border:0;outline:none;resize:none;padding:12px 14px;background:#0f0f12;color:#e2e8f0;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
 #wrap .CodeMirror{position:absolute;inset:0;height:100%;width:100%;background:#0f0f12;color:#e2e8f0;font-size:14px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
@@ -861,39 +865,61 @@ button:disabled{background:#3f3f46;color:#71717a}
 .ok{color:#4ade80}.err{color:#f87171}
 </style>
 </head><body>
-<div id="bar"><div id="name">file</div><div id="msg"></div><button type="button" id="save">Save to Switch</button><button type="button" id="save-close" class="secondary">Save and Close</button></div>
+<div id="bar"><div id="name">file</div><div id="msg"></div><button type="button" id="save">Save to Switch</button><button type="button" id="save-close" class="secondary">Save and Close</button><button type="button" id="close" class="secondary">Close</button></div>
 <div id="wrap"><textarea id="ed" spellcheck="false" wrap="off"></textarea></div>
+<div id="veil"><div><h2 id="veil-title">Session closed</h2><p id="veil-msg">This page is no longer connected to the Switch. Typing here will not be saved.</p></div></div>
 <script>
 const CM='https://cdn.jsdelivr.net/npm/codemirror@5.65.16/';
-const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),saveCloseBtn=document.getElementById('save-close'),msg=document.getElementById('msg');
-let cm=null,dirty=false,closed=false,draftTimer=0;
+const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),saveCloseBtn=document.getElementById('save-close'),closeBtn=document.getElementById('close'),msg=document.getElementById('msg'),veil=document.getElementById('veil');
+let cm=null,dirty=false,closed=false,draftTimer=0,statusFails=0;
 function val(){return cm?cm.getValue():ed.value;}
-function markDirty(){if(!dirty){dirty=true;document.title='* '+document.title.replace(/^\* /,'');}}
+function markDirty(){if(closed)return;if(!dirty){dirty=true;document.title='* '+document.title.replace(/^\* /,'');}}
 function clearDirty(){dirty=false;document.title=document.title.replace(/^\* /,'');}
-function setBusy(b){saveBtn.disabled=b||closed;saveCloseBtn.disabled=b||closed;}
-function markClosed(text){
-  closed=true;clearTimeout(draftTimer);setBusy(true);
-  msg.className='';msg.textContent=text||'Closed on the Switch.';
+function setBusy(b){saveBtn.disabled=b||closed;saveCloseBtn.disabled=b||closed;closeBtn.disabled=b||closed;}
+function lockEditor(){
+  ed.readOnly=true;
+  if(cm){cm.setOption('readOnly','nocursor');cm.getWrapperElement().style.opacity='.45';}
+  else{ed.style.opacity='.45';}
+}
+function markClosed(title,detail){
+  if(closed)return;
+  closed=true;clearTimeout(draftTimer);setBusy(true);lockEditor();
+  msg.className='';msg.textContent=title||'Session closed';
+  document.getElementById('veil-title').textContent=title||'Session closed';
+  document.getElementById('veil-msg').textContent=detail||'This page is no longer connected to the Switch. Typing here will not be saved.';
+  veil.classList.add('show');
+  document.title=(title||'Session closed')+' \u2022 Kefir Hub';
 }
 async function postDraft(){
   if(closed)return;
   try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
 }
 function scheduleDraft(){
+  if(closed)return;
   markDirty();
   clearTimeout(draftTimer);
   draftTimer=setTimeout(postDraft,400);
 }
 async function pollStatus(){
+  if(closed)return;
   try{
-    const s=await(await fetch('/input/status')).json();
+    const res=await fetch('/input/status');
+    if(!res.ok)throw 'gone';
+    statusFails=0;
+    const s=await res.json();
     if(s.closing){
       try{await fetch('/input/draft',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});}catch(e){}
-      markClosed();
+      markClosed('Session closed on the Switch','The console ended this edit session. Further typing will not be saved.');
       return;
     }
-  }catch(e){}
-  if(!closed)setTimeout(pollStatus,400);
+  }catch(e){
+    statusFails++;
+    if(statusFails>=2){
+      markClosed('Lost connection to the Switch','This edit session has ended. Further typing will not be saved.');
+      return;
+    }
+  }
+  setTimeout(pollStatus,250);
 }
 function modeOf(name){
   const n=(name||'').toLowerCase();
@@ -918,15 +944,23 @@ async function postSave(close){
     const res=await fetch(close?'/input':'/input/save',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});
     if(res.ok){
       clearDirty();
-      if(close){markClosed('Saved. You can close this page.');}
+      if(close){markClosed('Saved. Session closed','The file was written to the Switch. This page is no longer connected.');}
       else{msg.className='ok';msg.textContent='Saved.';setBusy(false);}
     }else{msg.className='err';msg.textContent='Console rejected the file.';setBusy(false);}
   }catch(e){msg.className='err';msg.textContent='Could not reach the console.';setBusy(false);}
 }
 function save(){postSave(false);}
 function saveAndClose(){postSave(true);}
+async function closeSession(){
+  if(closed)return;
+  if(dirty && !confirm('Close without saving? Unsaved changes will not be written to the Switch.'))return;
+  setBusy(true);
+  try{await fetch('/input/close?discard='+(dirty?'1':'0'),{method:'POST'});}catch(e){}
+  markClosed('Session closed','This page is no longer connected to the Switch. Typing here will not be saved.');
+}
 saveBtn.addEventListener('click',save);
 saveCloseBtn.addEventListener('click',saveAndClose);
+closeBtn.addEventListener('click',closeSession);
 document.addEventListener('keydown',e=>{
   if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='s')return;
   e.preventDefault();

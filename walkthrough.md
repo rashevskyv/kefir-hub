@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.595** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.596** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.596 — Remote editor: closed session is obvious
+
+- Коли сесію закрито зі Switch, кнопкою **Close** або **Save and Close**, сторінка показує повноекранну завісу і блокує набір.
+- Якщо консоль уже не відповідає, те саме: «Lost connection».
 
 ## v0.13.595 — Remote editor: Save stays open
 

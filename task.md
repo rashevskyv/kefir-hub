@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.595**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.596**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.595 (Remote editor Save vs Save and Close)
+## Поточний delivery: v0.13.596 (Remote editor closed overlay)
+
+- [x] `REMOTE-CLOSED-OVERLAY-596` — завіса + read-only, коли сесію закрито зі Switch, Close або втрати зв’язку.
+- [x] `DOCS-BUMP-596` — версію піднято до `0.13.596`. Агент не компілював.
+
+## Попередній delivery: v0.13.595 (Remote editor Save vs Save and Close)
 
 - [x] `REMOTE-SAVE-KEEP-595` — Save to Switch / Ctrl-S не закриває сесію.
 - [x] `REMOTE-SAVE-CLOSE-595` — кнопка Save and Close зберігає і закриває.

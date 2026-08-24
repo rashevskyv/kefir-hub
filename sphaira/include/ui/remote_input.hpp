@@ -41,6 +41,10 @@ void SetClosing(bool closing);
 auto IsClosing() -> bool;
 void SetClientSeen();
 auto ClientSeen() -> bool;
+// browser Close: end the session. discard skips the Switch "Save changes?" prompt.
+void SetClientClosed(bool discard);
+auto HasClientClosed() -> bool;
+auto ClientClosedDiscard() -> bool;
 auto GetCurrentOptions() -> Options;
 
 } // namespace sphaira::ui::remote_input

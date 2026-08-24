@@ -1304,6 +1304,20 @@ void HandleRequest(Socket sock) {
         return;
     }
 
+    if (path == "/input/close") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "POST") {
+            ui::remote_input::SetClientClosed(GetQueryValue(query, "discard") == "1");
+            SendResponse(sock, "200 OK", "text/plain", "OK");
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
     if (path == "/input/status") {
         if (!ui::remote_input::IsRemoteInputActive()) {
             SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");

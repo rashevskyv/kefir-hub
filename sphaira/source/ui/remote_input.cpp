@@ -21,6 +21,8 @@ bool g_has_draft{false};
 bool g_has_commit{false};
 bool g_closing{false};
 bool g_client_seen{false};
+bool g_client_closed{false};
+bool g_client_closed_discard{false};
 u32 g_draft_seq{0};
 std::string g_received_text;
 std::string g_draft_text;
@@ -58,6 +60,8 @@ void SetRemoteInputActive(bool active) {
         g_has_commit = false;
         g_closing = false;
         g_client_seen = false;
+        g_client_closed = false;
+        g_client_closed_discard = false;
         g_draft_seq = 0;
         g_received_text.clear();
         g_draft_text.clear();
@@ -149,6 +153,22 @@ auto ClientSeen() -> bool {
     return g_client_seen;
 }
 
+void SetClientClosed(bool discard) {
+    std::lock_guard lock(g_mutex);
+    g_client_closed = true;
+    g_client_closed_discard = discard;
+}
+
+auto HasClientClosed() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_client_closed;
+}
+
+auto ClientClosedDiscard() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_client_closed_discard;
+}
+
 auto GetCurrentOptions() -> Options {
     std::lock_guard lock(g_mutex);
     return g_current_options;
@@ -180,10 +200,13 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
                     : "Scan the QR code with phone or open URL on PC to send text. Press B to cancel."_i18n));
 
             while (!pbox->ShouldExit()) {
+                if (HasClientClosed()) {
+                    R_THROW(Result_TransferCancelled);
+                }
                 if (HasCommitText()) {
                     const auto text = TakeCommitText();
                     evman::push(evman::FunctionalEventData{[on_complete, text]() {
-                        if (HasReceivedText()) {
+                        if (HasReceivedText() || HasClientClosed()) {
                             return;
                         }
                         if (on_complete) {
@@ -200,9 +223,12 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
             if (GetCurrentOptions().editor && ClientSeen()) {
                 SetClosing(true);
                 const auto seq0 = DraftSeq();
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 20; i++) {
                     if (HasReceivedText()) {
                         R_SUCCEED();
+                    }
+                    if (HasClientClosed()) {
+                        R_THROW(Result_TransferCancelled);
                     }
                     if (DraftSeq() != seq0) {
                         break;
@@ -217,6 +243,7 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
             const auto text = GetReceivedText();
             const auto draft = GetDraftText();
             const auto has_draft = HasDraftText();
+            const auto discard = ClientClosedDiscard();
             const auto opts = GetCurrentOptions();
             const auto original = opts.default_text;
 
@@ -242,7 +269,8 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
                 return;
             }
 
-            if (rc == Result_TransferCancelled && opts.editor && has_draft && TextChanged(original, draft)) {
+            if (rc == Result_TransferCancelled && opts.editor && has_draft
+                && TextChanged(original, draft) && !discard) {
                 stop_server();
                 App::Push<OptionBox>(
                     "Save changes?"_i18n,

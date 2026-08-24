@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.595**. Завершені плани збережено в
+Поточний delivery — **v0.13.596**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.595 — Remote editor Save does not close the session
+## Поточний delivery: v0.13.596 — Remote editor shows when the session ended
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Закриття зі Switch або кнопки Close: повноекранна завіса, редактор read-only.
+2. Кнопка Close; втрата зв’язку теж показує, що сесія скінчилась.
+
+## Попередній delivery: v0.13.595 — Remote editor Save does not close the session
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Save to Switch / Ctrl-S лише записує файл, сесія на консолі лишається.
