@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.550**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.551**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.550 (Zip extract separators / outline)
+## Поточний delivery: v0.13.551 (Folder picker extract UX)
+
+- [x] `PICKER-CREATE-FOLDER-551` — у пікері Options лише Create Folder, без copy/cut.
+- [x] `PICKER-BACK-TO-EXTRACT-551` — «−» закриває пікер, не весь Direct Download; екран розпакування лишається під ним.
+- [x] `DOCS-BUMP-551` — версію піднято до `0.13.551`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.550 (Zip extract separators / outline)
 
 - [x] `ZIP-EXTRACT-STABLE-HR-550` — роздільник рядка в дереві завжди на місці, не ховається під курсором.
 - [x] `ZIP-EXTRACT-OUTLINE-PAD-550` — рамка першого/останнього пункту дій не заходить на золоті смуги.

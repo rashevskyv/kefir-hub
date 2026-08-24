@@ -35,6 +35,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <functional>
 
 namespace sphaira::ui::menu::gh {
 namespace {
@@ -279,7 +280,7 @@ void AskOpenExtractedFolder(const fs::FsPath& path) {
 }
 
 void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name = {}, std::vector<std::string> include_files = {});
-void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files = {});
+void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files = {}, std::function<void()> on_picked = {});
 void PromptExtractPath(fs::FsPath zip_path, std::string filename);
 
 void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name, std::vector<std::string> include_files) {
@@ -369,10 +370,13 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
     });
 }
 
-void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files) {
+void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files, std::function<void()> on_picked) {
     auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
     browser->SetFolderPicker(
-        [zip_path, include_files](const fs::FsPath& folder) {
+        [zip_path, include_files, on_picked](const fs::FsPath& folder) {
+            if (on_picked) {
+                on_picked();
+            }
             ExtractDownloadedZip(zip_path, folder, {}, include_files);
         },
         "Select folder"_i18n,
@@ -388,8 +392,8 @@ void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
         [zip_path](fs::FsPath dest, std::string nro_only, std::vector<std::string> files) {
             ExtractDownloadedZip(zip_path, dest, std::move(nro_only), std::move(files));
         },
-        [zip_path](std::vector<std::string> files) {
-            BrowseExtractFolder(zip_path, std::move(files));
+        [zip_path](std::vector<std::string> files, std::function<void()> on_picked) {
+            BrowseExtractFolder(zip_path, std::move(files), std::move(on_picked));
         });
 }
 

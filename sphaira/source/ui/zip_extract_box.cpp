@@ -203,6 +203,12 @@ void ZipExtractBox::RunExtractAction(s64 index) {
     auto extract = m_extract;
     auto browse = m_browse;
     auto named = m_named_dest;
+    if (i == 2) {
+        if (browse) {
+            browse(std::move(files), [this]{ SetPop(); });
+        }
+        return;
+    }
     SetPop();
     if (i == 0) {
         if (extract) {
@@ -211,10 +217,6 @@ void ZipExtractBox::RunExtractAction(s64 index) {
     } else if (i == 1) {
         if (extract) {
             extract(named.c_str(), {}, std::move(files));
-        }
-    } else if (i == 2) {
-        if (browse) {
-            browse(std::move(files));
         }
     }
 }

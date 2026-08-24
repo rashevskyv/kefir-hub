@@ -405,6 +405,7 @@ private:
     void DisplayHash(hash::Type type);
 
     void DisplayOptions();
+    void DisplayPickerOptions();
     void DisplayAdvancedOptions();
     void ShowSourcePicker();
     // brings up usb host storage on demand and opens the drive it finds.

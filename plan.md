@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.550**. Завершені плани збережено в
+Поточний delivery — **v0.13.551**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.550 — Zip extract: stable row lines, selection off the stripes
+## Поточний delivery: v0.13.551 — Folder picker: Create Folder, minus returns to extract
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Options пікера — лише «Створити папку», без copy/cut.
+2. «−» / B у корені закриває лише пікер і повертає до варіантів розпакування.
+
+## Попередній delivery: v0.13.550 — Zip extract: stable row lines, selection off the stripes
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Роздільники в дереві архіву більше не їздять разом із курсором.

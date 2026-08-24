@@ -1780,7 +1780,39 @@ void FsView::DisplayHash(hash::Type type) {
     });
 }
 
+void FsView::DisplayPickerOptions() {
+    auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    auto create_folder_entry = options->Add<SidebarEntryCallback>("Create Folder"_i18n, [this](){
+        std::string out;
+        if (R_SUCCEEDED(swkbd::ShowText(out, "Set Folder Name"_i18n.c_str(), "")) && !out.empty()) {
+            App::PopToMenu();
+
+            fs::FsPath full_path;
+            if (out.starts_with(m_fs_entry.root.s)) {
+                full_path = out;
+            } else {
+                full_path = fs::AppendPath(m_path, out);
+            }
+
+            if (R_SUCCEEDED(m_fs->CreateDirectoryRecursively(full_path))) {
+                log_write("created dir: %s\n", full_path.s);
+                Scan(m_path);
+            } else {
+                log_write("failed to create dir: %s\n", full_path.s);
+            }
+        }
+    });
+    create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
+}
+
 void FsView::DisplayOptions() {
+    if (m_menu->IsFolderPicker()) {
+        DisplayPickerOptions();
+        return;
+    }
+
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
@@ -2755,6 +2787,8 @@ void Menu::SetFolderPicker(FolderPickCallback cb, std::string title, std::string
     m_on_folder_picked = std::move(cb);
     m_folder_pick_confirm = confirm.empty() ? "Install firmware from this folder?"_i18n : std::move(confirm);
     SetTitle(title.empty() ? "Select firmware folder"_i18n : std::move(title));
+    view->RemoveAction(Button::X);
+    view->RemoveAction(Button::Y);
 }
 
 void Menu::ConfirmFolderPick(const fs::FsPath& folder) {
