@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.549** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.550** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.550 — Zip extract: stable HRs, outline clear of stripes
+
+- Лінії між файлами в дереві більше не стрибають за курсором.
+- Рамка вибору списку дій стоїть між золотими смугами, не на них і не під футером.
 
 ## v0.13.549 — Zip extract: smaller checks, X/Y, create folder in picker
 

@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.549**. Завершені плани збережено в
+Поточний delivery — **v0.13.550**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.549 — Zip extract: smaller checks, X/Y like file browser, no "new folder" row
+## Поточний delivery: v0.13.550 — Zip extract: stable row lines, selection off the stripes
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Роздільники в дереві архіву більше не їздять разом із курсором.
+2. Рамка вибору не наїжджає на золоті смуги зверху/знизу списку дій — відступ з обох боків.
+
+## Попередній delivery: v0.13.549 — Zip extract: smaller checks, X/Y like file browser, no "new folder" row
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Чекбокси дерева — той самий `drawCheckbox`, трохи менші (16px).

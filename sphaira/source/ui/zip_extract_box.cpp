@@ -34,6 +34,9 @@ constexpr float ACTION_ROW = 54.f;
 constexpr float LIST_X = 70.f;
 constexpr float LIST_W = 1140.f;
 constexpr float TREE_CHECKBOX = 16.f;
+// keep the selection outline off the gold separator lines (stroke sits ~2px
+// outside the row; the drop shadow needs a bit more).
+constexpr float BAND_PAD = gfx::SELECTION_OUTLINE_PAD;
 
 } // namespace
 
@@ -68,9 +71,10 @@ ZipExtractBox::ZipExtractBox(std::string title, std::vector<std::string> entry_n
     m_focus_actions = true;
 
     const float actions_h = ACTION_ROW * static_cast<float>(m_actions.size());
-    m_actions_top = layout::FOOTER_LINE_Y - actions_h;
+    m_actions_top = layout::FOOTER_LINE_Y - BAND_PAD - actions_h;
     m_tree_top = TREE_TOP;
-    const float tree_h = std::max(ACTION_ROW, m_actions_top - m_tree_top - 8.f);
+    const float divider_y = m_actions_top - BAND_PAD;
+    const float tree_h = std::max(ACTION_ROW, divider_y - m_tree_top);
     const auto tree_page = std::max<s64>(1, static_cast<s64>(tree_h / TREE_ROW));
 
     const Vec4 tree_pos{0.f, m_tree_top, SCREEN_WIDTH, tree_h};
@@ -266,7 +270,7 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawText(vg, TITLE_X, TITLE_Y, 24.f, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
     gfx::drawRect(vg, 30.f, layout::HEADER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawTextBox(vg, TITLE_X, HINT_Y, 18.f, LIST_W, theme->GetColour(ThemeEntryID_TEXT_INFO), m_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
-    gfx::drawRect(vg, 30.f, m_actions_top - 1.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+    gfx::drawRect(vg, 30.f, m_actions_top - BAND_PAD, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawRect(vg, 30.f, layout::FOOTER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
     if (m_tree_list && !m_nodes.empty()) {
@@ -274,12 +278,13 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             const auto& [x, y, w, h] = v;
             const auto selected = m_tree_index == i;
             const auto focused = selected && !m_focus_actions;
+            if (i + 1 != static_cast<s64>(m_nodes.size())) {
+                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
             if (focused) {
                 gfx::drawRectOutline(vg, theme, 4.f, v);
             } else if (selected) {
                 gfx::drawRect(vg, x, y, w, h, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 4.f);
-            } else if (i + 1 != static_cast<s64>(m_nodes.size())) {
-                gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
             }
 
             const auto mid_y = y + (h / 2.f);
@@ -298,12 +303,13 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         const auto& [x, y, w, h] = v;
         const auto selected = m_action_index == i;
         const auto focused = selected && m_focus_actions;
+        if (i + 1 != static_cast<s64>(m_actions.size())) {
+            gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        }
         if (focused) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
         } else if (selected) {
             gfx::drawRect(vg, x, y, w, h, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 4.f);
-        } else if (i + 1 != static_cast<s64>(m_actions.size())) {
-            gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         }
 
         const auto mid_y = y + (h / 2.f);
