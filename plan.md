@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.580**. Завершені плани збережено в
+Поточний delivery — **v0.13.581**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.580 — Ask dialog: Skip on its own row, Minus shortcut
+## Поточний delivery: v0.13.581 — GitHub release; restore only-if-newer auto-update
+
+Статус: SW-DONE. Деплой на rashevskyv/kefir-hub.
+1. `kForceUpdateForTest = false`: оновлення лише якщо latest новіший.
+2. Реліз 0.13.581 (changelog з 0.13.565).
+
+## Попередній delivery: v0.13.580 — Ask dialog: Skip on its own row, Minus shortcut
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Skip на всю ширину над Пізніше/Оновити, текст по центру. Minus — скіп, Plus — оновити, B — пізніше.

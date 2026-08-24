@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.580**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.581**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.580 (Ask dialog Skip row + Minus)
+## Поточний delivery: v0.13.581 (Deploy; only-if-newer)
+
+- [x] `UPDATE-FORCE-OFF-581` — `kForceUpdateForTest = false`.
+- [x] `DOCS-BUMP-581` — версію піднято до `0.13.581`.
+
+## Попередній delivery: v0.13.580 (Ask dialog Skip row + Minus)
 
 - [x] `ASK-SKIP-ROW-580` — Skip на всю ширину зверху; вертикальний центр; Minus скіпає.
 - [x] `DOCS-BUMP-580` — версію піднято до `0.13.580`. Агент не компілював.

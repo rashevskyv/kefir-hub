@@ -33,7 +33,7 @@ constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
 constexpr long HTTP_NOT_FOUND{404};
 // ponytail: test hook — always treat GitHub latest as an update, even if the
 // installed build is newer. Set false once Silent/Ask are verified.
-constexpr bool kForceUpdateForTest = true;
+constexpr bool kForceUpdateForTest = false;
 
 template<typename T>
 auto MiscMenuFuncGenerator(u32 flags) {

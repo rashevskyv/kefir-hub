@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.580** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.581** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.581 — GitHub release; auto-update only if newer
+
+- `kForceUpdateForTest` вимкнено. Реліз **0.13.581** на GitHub.
 
 ## v0.13.580 — Ask dialog: Skip on a full-width row
 
