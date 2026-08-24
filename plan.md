@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.568**. Завершені плани збережено в
+Поточний delivery — **v0.13.569**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.568 — Non-silent update uses the download icon
+## Поточний delivery: v0.13.569 — Silent update ToFileAsync needs StopToken
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Silent `ToFileAsync` передає `StopToken{}` — інакше static_assert.
+
+## Попередній delivery: v0.13.568 — Non-silent update uses the download icon
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Ask / On demand: прогрес апдейта в тому ж ProgressBox, що й скачування (іконка, L3 згортає). Silent лишає «Оновлення» в хедері.

@@ -86,6 +86,7 @@ void StartSilentDownload(const std::string& url, const fs::FsPath& temp_path) {
     curl::Api().ToFileAsync(
         curl::Url{url},
         curl::Path{temp_path},
+        curl::StopToken{},
         curl::OnProgress{[](s64 dltotal, s64 dlnow, s64, s64) -> bool {
             if (dltotal > 0) {
                 SetJobProgress(static_cast<float>(dlnow) / static_cast<float>(dltotal));

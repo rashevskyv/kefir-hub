@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.568** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.569** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.569 — Silent update ToFileAsync StopToken
+
+- Silent `ToFileAsync` без StopToken не збирався (`static_assert`). Тепер передається порожній токен: Silent не скасовується з меню.
 
 ## v0.13.568 — Non-silent update uses the download icon
 
