@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.593**. Завершені плани збережено в
+Поточний delivery — **v0.13.594**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.593 — L3 launches the focused game from the list
+## Поточний delivery: v0.13.594 — Tools: Game Tools, stubs, Module Manager
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Games / Saves / Cheats — тека **Game Tools**.
+2. Tools: Module Manager + заглушки (Wi-Fi, Users, System info, SD zeros, parental, junk).
+3. Module Manager прибрано з Kefir Settings. RAM used/free, пам’ять модуля, сортування, Options і Info з GitHub.
+
+## Попередній delivery: v0.13.593 — L3 launches the focused game from the list
 
 Статус: програмну частину реалізовано. Збірка і деплой у цьому ж delivery.
 1. L3 у списку ігор запускає поточну гру, як у картці гри.

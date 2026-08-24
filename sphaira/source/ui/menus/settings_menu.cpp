@@ -10,7 +10,6 @@
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/themezer.hpp"
-#include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_paths.hpp"
 
@@ -1590,18 +1589,6 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         },
         [](){
             OpenFanCurveMenu();
-        },
-        SettingsItemKind::Folder,
-    });
-
-    items.emplace_back(SettingsItem{
-        "Module Manager"_i18n,
-        "Start, stop and configure installed sysmodules."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::Push<ui::menu::hats::UninstallerMenu>();
         },
         SettingsItemKind::Folder,
     });

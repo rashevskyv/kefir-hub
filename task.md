@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.593**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.594**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.593 (L3 launch from Games list)
+## Поточний delivery: v0.13.594 (Tools rearrange + Module Manager)
+
+- [x] `TOOLS-GAME-FOLDER-594` — Games, Saves, Cheats у Game Tools.
+- [x] `TOOLS-STUBS-594` — заглушки Wi-Fi, Users, System info, SD zeros, parental, junk.
+- [x] `TOOLS-MODULES-594` — Module Manager у Tools, не в Kefir Settings; RAM, sort, Info/GitHub.
+- [x] `DOCS-BUMP-594` — версію піднято до `0.13.594`. Агент не компілював.
+
+## Попередній delivery: v0.13.593 (L3 launch from Games list)
 
 - [x] `GAMES-LIST-L3-593` — L3 у списку ігор запускає поточну гру.
 - [x] `DOCS-BUMP-593` — версію піднято до `0.13.593`.

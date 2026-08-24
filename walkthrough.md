@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.593** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.594** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.594 — Tools: Game Tools, system stubs, Module Manager
+
+- **Ігрові інструменти**: Games, Saves, Cheats більше не на головному екрані Tools.
+- **Tools**: Module Manager і заглушки (Wi-Fi, користувачі, інфо системи, нулі на SD, батьківський контроль, сміття).
+- Керування модулями прибрано з Kefir Settings. У списку — зайнято/вільно RAM, пам’ять кожного запущеного модуля, сортування (назва / статус / пам’ять / автозапуск), Options і **Info** (опис з GitHub).
 
 ## v0.13.593 — L3 launches from the Games list
 

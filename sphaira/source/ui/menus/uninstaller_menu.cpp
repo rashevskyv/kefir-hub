@@ -1,12 +1,17 @@
 #include "ui/menus/uninstaller_menu.hpp"
 
 #include "ui/nvg_util.hpp"
+#include "ui/option_box.hpp"
+#include "ui/popup_list.hpp"
+#include "ui/sidebar.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "download.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "path_util.hpp"
+#include "utils/utils.hpp"
 
 #include <algorithm>
 #include <cinttypes>
@@ -16,6 +21,7 @@
 #include <strings.h>
 #include <string_view>
 #include <yyjson.h>
+#include <switch.h>
 #include <switch/services/pm.h>
 
 namespace sphaira::ui::menu::hats {
@@ -227,16 +233,59 @@ auto ParseToolbox(const std::vector<u8>& data, ModuleItem& out) -> bool {
     return true;
 }
 
-auto IsRunning(u64 program_id) -> bool {
+auto MeasureProcessMemory(u64 pid) -> u64 {
+    Handle debug{};
+    if (R_FAILED(svcDebugActiveProcess(&debug, pid))) {
+        return 0;
+    }
+    ON_SCOPE_EXIT(svcCloseHandle(debug));
+
+    MemoryInfo mem{};
+    u32 page{};
+    u64 addr{};
+    u64 total{};
+    while (R_SUCCEEDED(svcQueryDebugProcessMemory(&mem, &page, debug, addr))) {
+        addr = mem.addr + mem.size;
+        if (mem.type != MemType_Unmapped && mem.perm != Perm_None && mem.size) {
+            total += mem.size;
+        }
+        if (!addr) {
+            break;
+        }
+    }
+    return total;
+}
+
+void QueryRuntime(ModuleItem& item) {
+    item.running = false;
+    item.memory_bytes = 0;
+
     Result rc = pmshellInitialize();
     if (R_FAILED(rc)) {
-        return false;
+        return;
     }
+    ON_SCOPE_EXIT(pmshellExit());
 
     u64 pid{};
-    rc = pmshellGetProcessId(&pid, program_id);
-    pmshellExit();
-    return R_SUCCEEDED(rc);
+    if (R_FAILED(pmshellGetProcessId(&pid, item.program_id))) {
+        return;
+    }
+    item.running = true;
+    item.memory_bytes = MeasureProcessMemory(pid);
+}
+
+void SystemRam(u64& used, u64& total) {
+    used = 0;
+    total = 0;
+    for (u64 pool = 0; pool < 4; pool++) {
+        u64 t{}, u{};
+        if (R_SUCCEEDED(svcGetInfo(&t, InfoType_TotalPhysicalMemorySize, CUR_PROCESS_HANDLE, pool))) {
+            total += t;
+        }
+        if (R_SUCCEEDED(svcGetInfo(&u, InfoType_UsedPhysicalMemorySize, CUR_PROCESS_HANDLE, pool))) {
+            used += u;
+        }
+    }
 }
 
 auto LaunchModule(u64 program_id) -> Result {
@@ -314,6 +363,12 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
             m_loaded = false;
             LoadModules();
             RequestCatalogUpdate(true);
+        }}),
+        std::make_pair(Button::START, Action{"Options"_i18n, [this](){
+            ShowContextMenu();
+        }}),
+        std::make_pair(Button::SELECT, Action{"Info"_i18n, [this](){
+            ShowInfo();
         }})
     );
 
@@ -350,7 +405,16 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
     gfx::drawTextArgs(vg, 80.f, GetY() + 10.f, 16.f,
         NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
         theme->GetColour(ThemeEntryID_TEXT_INFO),
-        "A: Toggle running    Y: Toggle autostart    X: Refresh"_i18n.c_str());
+        "A: Toggle    Y: Autostart    X: Refresh    -: Info"_i18n.c_str());
+
+    if (m_ram_total) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH - 80.f, GetY() + 10.f, 16.f,
+            NVG_ALIGN_RIGHT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s %s / %s %s",
+            "Used"_i18n.c_str(), utils::formatSizeStorage(m_ram_used).c_str(),
+            "Free"_i18n.c_str(), utils::formatSizeStorage(m_ram_total > m_ram_used ? m_ram_total - m_ram_used : 0).c_str());
+    }
 
     if (!m_error_message.empty()) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 24.f,
@@ -404,10 +468,14 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto now_text = item.running ? "Now: On"_i18n : "Now: Off"_i18n;
         const auto now_colour = item.running ? nvgRGBA(76, 190, 120, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        std::string now_line = now_text;
+        if (item.running && item.memory_bytes) {
+            now_line += "  " + utils::formatSizeStorage(item.memory_bytes);
+        }
         gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f - 11.f, 14.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
             now_colour,
-            "%s", now_text.c_str());
+            "%s", now_line.c_str());
 
         const auto reboot_text = item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
         const auto reboot_colour = item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -494,25 +562,22 @@ void UninstallerMenu::LoadModules() {
             continue;
         }
 
-        if (const auto it = catalog.find(item.program_id_text); it != catalog.end() && item.name == item.program_id_text) {
-            item.name = it->second.name;
+        if (const auto it = catalog.find(item.program_id_text); it != catalog.end()) {
+            if (item.name == item.program_id_text) {
+                item.name = it->second.name;
+            }
+            item.repository = it->second.repository;
         }
         item.description = ModuleDescription(item.program_id);
 
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
-        item.running = IsRunning(item.program_id);
+        QueryRuntime(item);
         m_items.push_back(std::move(item));
     }
 
-    std::sort(m_items.begin(), m_items.end(), [](const ModuleItem& a, const ModuleItem& b) {
-        if (a.requires_reboot != b.requires_reboot) {
-            return !a.requires_reboot;
-        }
-        return strcasecmp(a.name.c_str(), b.name.c_str()) < 0;
-    });
-
+    SystemRam(m_ram_used, m_ram_total);
     m_loaded = true;
-    SetIndex(std::min<s64>(m_index, static_cast<s64>(m_items.size()) - 1));
+    SortItems();
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
 }
 
@@ -566,7 +631,12 @@ void UninstallerMenu::RefreshStatuses() {
 
     for (auto& item : m_items) {
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
-        item.running = IsRunning(item.program_id);
+        QueryRuntime(item);
+    }
+    SystemRam(m_ram_used, m_ram_total);
+    if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Memory || m_sort == ModuleSort::Autostart) {
+        const auto keep = m_items.empty() ? 0 : m_items[m_index].program_id;
+        SortItems(keep);
     }
     UpdateSubheading();
 }
@@ -630,6 +700,158 @@ void UninstallerMenu::UpdateSubheading() {
     const auto& item = m_items[m_index];
     SetTitleSubHeading(item.description, true);
     SetSubHeading("");
+}
+
+void UninstallerMenu::SortItems(u64 keep_program_id) {
+    if (keep_program_id == 0 && !m_items.empty() && m_index >= 0 && m_index < static_cast<s64>(m_items.size())) {
+        keep_program_id = m_items[m_index].program_id;
+    }
+
+    std::sort(m_items.begin(), m_items.end(), [this](const ModuleItem& a, const ModuleItem& b) {
+        switch (m_sort) {
+            case ModuleSort::Running:
+                if (a.running != b.running) {
+                    return a.running && !b.running;
+                }
+                break;
+            case ModuleSort::Memory:
+                if (a.memory_bytes != b.memory_bytes) {
+                    return a.memory_bytes > b.memory_bytes;
+                }
+                break;
+            case ModuleSort::Autostart:
+                if (a.autostart != b.autostart) {
+                    return a.autostart && !b.autostart;
+                }
+                break;
+            case ModuleSort::Name:
+            default:
+                break;
+        }
+        if (a.requires_reboot != b.requires_reboot) {
+            return !a.requires_reboot;
+        }
+        return strcasecmp(a.name.c_str(), b.name.c_str()) < 0;
+    });
+
+    s64 index = 0;
+    if (keep_program_id) {
+        for (s64 i = 0; i < static_cast<s64>(m_items.size()); i++) {
+            if (m_items[i].program_id == keep_program_id) {
+                index = i;
+                break;
+            }
+        }
+    }
+    SetIndex(index);
+}
+
+void UninstallerMenu::ShowContextMenu() {
+    if (m_items.empty()) {
+        ShowSortMenu();
+        return;
+    }
+
+    auto options = std::make_unique<Sidebar>(m_items[m_index].name, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryCallback>(m_items[m_index].running ? "Stop"_i18n : "Start"_i18n, [this](){
+        ToggleSelectedModule();
+    }, true, "Start or stop this module now."_i18n);
+    options->Add<SidebarEntryCallback>("Autostart"_i18n, [this](){
+        ToggleSelectedAutostart();
+    }, true, "Launch this module when the console boots."_i18n);
+    options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
+        ShowInfo();
+    }, true, "Name, memory and GitHub description."_i18n);
+    options->Add<SidebarEntryCallback>("Sort"_i18n, [this](){
+        ShowSortMenu();
+    }, "Order the list by name, status, memory or autostart."_i18n);
+}
+
+void UninstallerMenu::ShowSortMenu() {
+    PopupList::Items choices = {
+        "Name"_i18n,
+        "Running"_i18n,
+        "Memory"_i18n,
+        "Autostart"_i18n,
+    };
+    App::Push<PopupList>("Sort"_i18n, std::move(choices), [this](std::optional<s64> op){
+        if (!op) {
+            return;
+        }
+        m_sort = static_cast<ModuleSort>(*op);
+        SortItems();
+    }, static_cast<s64>(m_sort));
+}
+
+void UninstallerMenu::ShowInfo() {
+    if (m_items.empty()) {
+        return;
+    }
+
+    auto& item = m_items[m_index];
+    if (!item.github_description.empty() || item.repository.empty()) {
+        ShowInfoBox(item);
+        return;
+    }
+
+    const auto parsed = path::ParseGitHubRepoUrl(item.repository);
+    if (!parsed) {
+        ShowInfoBox(item);
+        return;
+    }
+
+    const auto url = "https://api.github.com/repos/" + parsed->owner + "/" + parsed->repo;
+    const auto index = m_index;
+    App::Notify("Loading..."_i18n);
+    curl::Api().ToMemoryAsync(
+        curl::Url{url},
+        curl::Header{{"Accept", "application/vnd.github+json"}},
+        curl::StopToken{this->GetToken()},
+        curl::OnComplete{[this, index](auto& result) {
+            if (index < 0 || index >= static_cast<s64>(m_items.size())) {
+                return;
+            }
+            auto& item = m_items[index];
+            if (result.success && !result.data.empty()) {
+                auto* doc = yyjson_read(reinterpret_cast<const char*>(result.data.data()), result.data.size(), YYJSON_READ_NOFLAG);
+                if (doc) {
+                    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+                    auto* root = yyjson_doc_get_root(doc);
+                    auto* desc = root && yyjson_is_obj(root) ? yyjson_obj_get(root, "description") : nullptr;
+                    if (desc && yyjson_is_str(desc) && yyjson_get_str(desc) && *yyjson_get_str(desc)) {
+                        item.github_description = yyjson_get_str(desc);
+                    }
+                }
+            }
+            if (item.github_description.empty()) {
+                item.github_description = item.description;
+            }
+            ShowInfoBox(item);
+        }}
+    );
+}
+
+void UninstallerMenu::ShowInfoBox(const ModuleItem& item) {
+    std::string msg = item.name + "\n" + item.program_id_text + "\n";
+    msg += (item.running ? "Now: On"_i18n : "Now: Off"_i18n);
+    if (item.running && item.memory_bytes) {
+        msg += "  " + utils::formatSizeStorage(item.memory_bytes);
+    }
+    msg += "\n";
+    msg += item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
+    msg += "\n";
+    if (!item.repository.empty()) {
+        msg += item.repository + "\n";
+    }
+    msg += "\n";
+    if (!item.github_description.empty()) {
+        msg += item.github_description;
+    } else {
+        msg += item.description;
+    }
+    App::Push<OptionBox>(msg, "OK"_i18n);
 }
 
 } // namespace sphaira::ui::menu::hats
