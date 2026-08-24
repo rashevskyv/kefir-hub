@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.560**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.561**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.560 (Full-page remote file editor)
+## Поточний delivery: v0.13.561 (File browser: Edit on PC / phone)
+
+- [x] `FILE-BROWSER-REMOTE-EDIT-561` — Options файлу: «Редагувати на ПК / телефоні» для текстових файлів, які можна редагувати.
+- [x] `DOCS-BUMP-561` — версію піднято до `0.13.561`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.560 (Full-page remote file editor)
 
 - [x] `REMOTE-EDITOR-PAGE-560` — редагування всього файлу: повний екран + CodeMirror з CDN; вставка рядків лишає мале вікно.
 - [x] `DOCS-BUMP-560` — версію піднято до `0.13.560`, оновлено plan/task/walkthrough/audit. Агент не компілював.

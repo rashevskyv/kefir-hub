@@ -29,6 +29,7 @@ struct Menu final : MenuBase {
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
+    void QueueRemoteEdit() { m_pending_remote_edit = true; }
 
     // standard chrome is drawn in normal (non-fullscreen) mode, and hidden in fullscreen.
     auto WantsChrome() const -> bool override {
@@ -168,6 +169,7 @@ private:
     bool m_touch_was_pinch{false};
     bool m_held_down_at_bottom{false};
     bool m_held_up_at_top{false};
+    bool m_pending_remote_edit{false};
     std::vector<s64> m_page_offsets{0};
     std::vector<s64> m_page_start_lines{1};
     s64 m_stream_start_line{1};

@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.560** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.561** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.561 — Edit on PC / phone from the file list
+
+- У файловому браузері Options на текстовому файлі (як у Edit: не read-only, до 4 МБ) є «Редагувати на ПК / телефоні». Відкриває той самий повноекранний редактор у браузері.
 
 ## v0.13.560 — Full-page editor on PC / phone
 

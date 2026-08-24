@@ -2407,9 +2407,17 @@ void FsView::DisplayAdvancedOptions() {
             auto edit_entry = options->Add<SidebarEntryCallback>("Edit"_i18n, [this](){
                 App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
             }, "Open the selected file in text editor mode."_i18n);
-            edit_entry->Depends([this](){
+            auto remote_entry = options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
+                auto menu = std::make_unique<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
+                menu->QueueRemoteEdit();
+                App::Push(std::move(menu));
+            }, "Open this file in a browser, edit it there, then Save to send it back."_i18n);
+            const auto can_edit = [this](){
                 return !IsReadOnly(GetNewPathCurrent()) && GetEntry().file_size <= 4 * 1024 * 1024;
-            }, IsReadOnly(GetNewPathCurrent()) ? "File is read-only"_i18n : "File is too large to edit"_i18n);
+            };
+            const auto edit_reason = IsReadOnly(GetNewPathCurrent()) ? "File is read-only"_i18n : "File is too large to edit"_i18n;
+            edit_entry->Depends(can_edit, edit_reason);
+            remote_entry->Depends(can_edit, edit_reason);
         }
     }
 

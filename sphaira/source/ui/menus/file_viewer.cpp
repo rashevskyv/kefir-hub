@@ -2299,6 +2299,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    if (m_pending_remote_edit) {
+        m_pending_remote_edit = false;
+        if (!m_load_failed) {
+            EditOnDevice();
+        }
+    }
 }
 
 } // namespace sphaira::ui::menu::fileview

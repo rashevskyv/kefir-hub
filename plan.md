@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.560**. Завершені плани збережено в
+Поточний delivery — **v0.13.561**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.560 — Full-page remote file editor (CodeMirror)
+## Поточний delivery: v0.13.561 — Edit on PC / phone from the file browser
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Options файлового браузера: для текстового файлу, який можна редагувати (не read-only, ≤ 4 МБ), є «Редагувати на ПК / телефоні» поруч із Edit.
+
+## Попередній delivery: v0.13.560 — Full-page remote file editor (CodeMirror)
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. «Редагувати на ПК / телефоні» відкриває повноекранний редактор, не картку з textarea.
