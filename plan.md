@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.575**. Завершені плани збережено в
+Поточний delivery — **v0.13.576**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.575 — About: parse ### headings, split Update vs notes
+## Поточний delivery: v0.13.576 — Header counter no longer jitters 1px
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. «2 / 13» у хедері прив’язаний правим краєм; слот як «13 / 13», щоб 1 і 2 не зсували лічильник.
+
+## Попередній delivery: v0.13.575 — About: parse ### headings, split Update vs notes
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Changelog: `###` / `##` рендеряться як заголовки, без решіток.

@@ -14,6 +14,7 @@
 
 #include <switch.h>
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <sys/statvfs.h>
 
@@ -604,15 +605,29 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     float counter_w = 0.f;
     if (!m_sub_heading.empty() && draw_status && gap_right > 80.f + 100.f) {
-        // ScrollingText clips from its x rightwards, so x is always the left
-        // edge; right alignment is done by measuring and offsetting. A counter
-        // wide enough to fill the gap is left aligned and allowed to scroll.
+        // Pin the right edge at gap_right. The slot is as wide as "N / N" for
+        // this list so 1/13 vs 2/13 does not shift the counter (or start a
+        // 1px scroll because measured width != drawn width).
         nvgFontSize(vg, 18.f);
         gfx::textBounds(vg, 0, 0, bounds, m_sub_heading.c_str());
-        counter_w = std::min(bounds[2] - bounds[0], gap_right - 80.f - 100.f);
-
-        m_scroll_sub_heading.Draw(vg, true, gap_right - counter_w, start_y, counter_w, 18,
-            NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_sub_heading.c_str());
+        float slot_w = bounds[2] - bounds[0];
+        const auto slash = m_sub_heading.rfind(" / ");
+        if (slash != std::string::npos) {
+            const auto total = m_sub_heading.substr(slash + 3);
+            if (!total.empty() && std::all_of(total.begin(), total.end(), [](unsigned char c) {
+                return std::isdigit(c);
+            })) {
+                const auto probe = total + " / " + total;
+                gfx::textBounds(vg, 0, 0, bounds, probe.c_str());
+                slot_w = std::max(slot_w, bounds[2] - bounds[0]);
+            }
+        }
+        counter_w = std::min(slot_w, gap_right - 80.f - 100.f);
+        nvgSave(vg);
+        nvgIntersectScissor(vg, gap_right - counter_w, 0.f, counter_w + 1.f, SCREEN_HEIGHT);
+        gfx::drawText(vg, gap_right, start_y, 18.f, theme->GetColour(ThemeEntryID_TEXT),
+            m_sub_heading.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
+        nvgRestore(vg);
     }
 
     const float sub_right = counter_w ? gap_right - counter_w - GAP_INNER : gap_right;
