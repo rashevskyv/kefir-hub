@@ -1103,7 +1103,8 @@ void HandleApiKeyPost(Socket sock, const std::string& req) {
 }
 
 void HandleRemoteInputPost(Socket sock, const std::string& req) {
-    constexpr s64 MAX_INPUT_SIZE = 64 * 1024; // 64KB
+    const auto opts = ui::remote_input::GetCurrentOptions();
+    const s64 max_size = opts.editor ? 4 * 1024 * 1024 : 64 * 1024;
 
     const auto length_str = HeaderValue(req, "content-length");
     if (length_str.empty()) {
@@ -1112,7 +1113,7 @@ void HandleRemoteInputPost(Socket sock, const std::string& req) {
     }
 
     const auto content_length = std::strtoll(length_str.c_str(), nullptr, 10);
-    if (content_length <= 0 || content_length > MAX_INPUT_SIZE) {
+    if (content_length < 0 || content_length > max_size) {
         SendResponse(sock, "400 Bad Request", "text/plain", "Bad Content-Length");
         return;
     }
@@ -1121,11 +1122,11 @@ void HandleRemoteInputPost(Socket sock, const std::string& req) {
     if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
         body = req.substr(header_end + 4);
     }
-    body.resize(std::min<size_t>(body.size(), content_length));
+    body.resize(std::min<size_t>(body.size(), static_cast<size_t>(content_length)));
 
-    for (u32 attempts = 0; attempts < 5000 && (s64)body.size() < content_length; attempts++) {
-        char buf[256];
-        const auto want = std::min<s64>(sizeof(buf), content_length - body.size());
+    for (u32 attempts = 0; attempts < 20000 && (s64)body.size() < content_length; attempts++) {
+        char buf[4096];
+        const auto want = std::min<s64>(sizeof(buf), content_length - (s64)body.size());
         const auto got = recv(sock, buf, want, 0);
         if (got > 0) {
             body.append(buf, got);
@@ -1138,8 +1139,7 @@ void HandleRemoteInputPost(Socket sock, const std::string& req) {
         }
     }
 
-    const auto opts = ui::remote_input::GetCurrentOptions();
-    if (!opts.multiline) {
+    if (!opts.multiline && !opts.editor) {
         const auto first = body.find_first_not_of(" \t\r\n");
         const auto last = body.find_last_not_of(" \t\r\n");
         if (first == std::string::npos) {
@@ -1149,7 +1149,7 @@ void HandleRemoteInputPost(Socket sock, const std::string& req) {
         body = body.substr(first, last - first + 1);
     }
 
-    if (body.empty()) {
+    if (body.empty() && !opts.editor) {
         SendResponse(sock, "400 Bad Request", "text/plain", "Empty input");
         return;
     }
@@ -1164,8 +1164,9 @@ void HandleRemoteInputConfig(Socket sock) {
     json += "\"title\":\"" + JsonEscape(opts.title) + "\",";
     json += "\"guide\":\"" + JsonEscape(opts.guide) + "\",";
     json += "\"placeholder\":\"" + JsonEscape(opts.placeholder) + "\",";
-    json += "\"default_text\":\"" + JsonEscape(opts.default_text) + "\",";
-    json += "\"multiline\":" + std::string(opts.multiline ? "true" : "false");
+    json += "\"default_text\":\"" + JsonEscape(opts.editor ? std::string{} : opts.default_text) + "\",";
+    json += "\"multiline\":" + std::string(opts.multiline ? "true" : "false") + ",";
+    json += "\"editor\":" + std::string(opts.editor ? "true" : "false");
     json += "}";
 
     SendResponse(sock, "200 OK", "application/json", json);
@@ -1245,7 +1246,9 @@ void HandleRequest(Socket sock) {
             HandleRemoteInputPost(sock, req);
             return;
         } else if (method == "GET") {
-            SendResponse(sock, "200 OK", "text/html", std::string{REMOTE_INPUT_PAGE});
+            const auto opts = ui::remote_input::GetCurrentOptions();
+            SendResponse(sock, "200 OK", "text/html",
+                std::string{opts.editor ? REMOTE_EDITOR_PAGE : REMOTE_INPUT_PAGE});
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");
@@ -1259,6 +1262,20 @@ void HandleRequest(Socket sock) {
         }
         if (method == "GET") {
             HandleRemoteInputConfig(sock);
+            return;
+        }
+        SendResponse(sock, "404 Not Found", "text/plain", "Not found");
+        return;
+    }
+
+    if (path == "/input/body") {
+        if (!ui::remote_input::IsRemoteInputActive()) {
+            SendResponse(sock, "404 Not Found", "text/plain", "Remote input not active");
+            return;
+        }
+        if (method == "GET") {
+            SendResponse(sock, "200 OK", "text/plain; charset=utf-8",
+                ui::remote_input::GetCurrentOptions().default_text);
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

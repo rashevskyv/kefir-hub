@@ -11,6 +11,7 @@ struct Options {
     std::string default_text{""};
     std::string placeholder{"https://... or enter text"};
     bool multiline{false};
+    bool editor{false};
     int min_length{1};
     int max_length{4096};
 };
@@ -28,6 +29,7 @@ void SetRemoteInputActive(bool active);
 auto IsRemoteInputActive() -> bool;
 void SetReceivedText(const std::string& text);
 auto GetReceivedText() -> std::string;
+auto HasReceivedText() -> bool;
 auto GetCurrentOptions() -> Options;
 
 } // namespace sphaira::ui::remote_input

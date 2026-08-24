@@ -819,4 +819,70 @@ init();
 </body></html>
 )HTML";
 
+constexpr std::string_view REMOTE_EDITOR_PAGE = R"HTML(
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit &bull; Kefir Hub</title>
+<style>
+html,body{height:100%;margin:0;background:#0f0f12;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#18181b;border-bottom:1px solid #27272a}
+.bar .name{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .msg{font-size:13px;color:#a1a1aa}
+button{padding:8px 14px;font-size:14px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer}
+button:disabled{background:#3f3f46;color:#71717a}
+.ed{position:relative;height:calc(100% - 52px)}
+#hl,#ed{position:absolute;inset:0;margin:0;padding:12px 14px;border:0;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;overflow:auto;tab-size:2;box-sizing:border-box}
+#hl{color:#e2e8f0;pointer-events:none;background:#0f0f12}
+#ed{color:transparent;caret-color:#38bdf8;background:transparent;resize:none;outline:none}
+.c{color:#64748b}.s{color:#86efac}.n{color:#fda4af}.k{color:#7dd3fc}
+.ok{color:#4ade80}.err{color:#f87171}
+</style></head><body>
+<div class="bar"><div class="name" id="name">file</div><div class="msg" id="msg"></div><button type="button" id="save">Save to Switch</button></div>
+<div class="ed"><pre id="hl"></pre><textarea id="ed" spellcheck="false" wrap="off"></textarea></div>
+<script>
+const ed=document.getElementById('ed'),hl=document.getElementById('hl'),saveBtn=document.getElementById('save'),msg=document.getElementById('msg');
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function highlight(src){
+  const re=/(\/\/[^\n]*|#(?!!).*$|;[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b\d+(?:\.\d+)?\b)|(\b(?:true|false|null|if|else|for|while|return|function|var|let|const|class|void|int|bool)\b)/gm;
+  let out='',last=0,m;
+  while((m=re.exec(src))){
+    out+=esc(src.slice(last,m.index));
+    const cls=m[1]?'c':m[2]?'s':m[3]?'n':'k';
+    out+='<span class="'+cls+'">'+esc(m[0])+'</span>';
+    last=m.index+m[0].length;
+  }
+  return out+esc(src.slice(last));
+}
+function paint(){
+  const v=ed.value;
+  hl.innerHTML=(v.length>200000?esc(v):highlight(v))+'\n';
+  hl.scrollTop=ed.scrollTop;hl.scrollLeft=ed.scrollLeft;
+}
+let t=0;
+ed.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(paint,60);});
+ed.addEventListener('scroll',()=>{hl.scrollTop=ed.scrollTop;hl.scrollLeft=ed.scrollLeft;});
+async function save(){
+  saveBtn.disabled=true;msg.className='msg';msg.textContent='Saving...';
+  try{
+    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:ed.value});
+    if(res.ok){msg.className='ok';msg.textContent='Saved. You can close this page.';}
+    else{msg.className='err';msg.textContent='Console rejected the file.';saveBtn.disabled=false;}
+  }catch(e){msg.className='err';msg.textContent='Could not reach the console.';saveBtn.disabled=false;}
+}
+saveBtn.addEventListener('click',save);
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save();}
+});
+(async()=>{
+  try{
+    const cfg=await(await fetch('/input/config')).json();
+    document.getElementById('name').textContent=cfg.title||'file';
+    document.title=(cfg.title||'file')+' • Kefir Hub';
+  }catch(e){}
+  try{ed.value=await(await fetch('/input/body')).text();}catch(e){ed.value='';}
+  paint();ed.focus();
+})();
+</script></body></html>
+)HTML";
+
 } // namespace sphaira::webpages

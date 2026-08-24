@@ -66,6 +66,8 @@ private:
     void SwitchToEditMode();
     void SwitchToViewMode();
     void DisplayTextOptions();
+    void EditOnDevice();
+    void ApplyRemoteText(const std::string& text);
     void PushUndo();
     void Undo();
     void Redo();

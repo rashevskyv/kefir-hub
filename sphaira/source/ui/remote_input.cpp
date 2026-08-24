@@ -14,6 +14,7 @@ namespace {
 
 std::mutex g_mutex;
 bool g_active{false};
+bool g_received{false};
 std::string g_received_text;
 Options g_current_options;
 
@@ -23,6 +24,7 @@ void SetRemoteInputActive(bool active) {
     std::lock_guard lock(g_mutex);
     g_active = active;
     if (!active) {
+        g_received = false;
         g_received_text.clear();
     }
 }
@@ -35,11 +37,17 @@ auto IsRemoteInputActive() -> bool {
 void SetReceivedText(const std::string& text) {
     std::lock_guard lock(g_mutex);
     g_received_text = text;
+    g_received = true;
 }
 
 auto GetReceivedText() -> std::string {
     std::lock_guard lock(g_mutex);
     return g_received_text;
+}
+
+auto HasReceivedText() -> bool {
+    std::lock_guard lock(g_mutex);
+    return g_received;
 }
 
 auto GetCurrentOptions() -> Options {
@@ -68,10 +76,12 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
         [](auto pbox) -> Result {
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same Wi-Fi. Press B to cancel."_i18n
-                : "Scan the QR code with phone or open URL on PC to send text. Press B to cancel."_i18n);
+                : (GetCurrentOptions().editor
+                    ? "Scan the QR or open the URL. Edit, then Save. Press B to cancel."_i18n
+                    : "Scan the QR code with phone or open URL on PC to send text. Press B to cancel."_i18n));
 
             while (!pbox->ShouldExit()) {
-                if (!GetReceivedText().empty()) {
+                if (HasReceivedText()) {
                     R_SUCCEED();
                 }
                 svcSleepThread(150'000'000);
@@ -91,12 +101,14 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
                 return;
             }
 
-            if (R_FAILED(rc) || text.empty()) {
+            if (R_FAILED(rc) || (!GetCurrentOptions().editor && text.empty())) {
                 App::Notify("No input received"_i18n);
                 return;
             }
 
-            App::Notify("Received input from phone/PC"_i18n);
+            App::Notify(GetCurrentOptions().editor
+                ? "Saved from PC / phone"_i18n
+                : "Received input from phone/PC"_i18n);
             if (on_complete) {
                 on_complete(text);
             }

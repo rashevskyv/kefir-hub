@@ -15,6 +15,7 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/remote_input.hpp"
 #include "ui/sidebar.hpp"
 #include "web.hpp"
 
@@ -711,6 +712,9 @@ void Menu::SetupViewActions() {
         SetAction(Button::A, Action{"Edit"_i18n, [this](){
             SwitchToEditMode();
         }});
+        SetAction(Button::START, Action{"Options"_i18n, [this](){
+            DisplayTextOptions();
+        }});
     }
 }
 
@@ -1305,9 +1309,74 @@ void Menu::ShowLineActions() {
     App::Push(std::move(popup));
 }
 
+void Menu::EditOnDevice() {
+    if (!m_writable || m_is_streamed || m_file_size > EDIT_MAX_SIZE) {
+        return;
+    }
+
+    remote_input::Options opts{};
+    opts.title = GetDisplayName();
+    opts.guide = "Edit on your computer or phone, then Save."_i18n;
+    opts.default_text = BuildText();
+    opts.placeholder = opts.title;
+    opts.multiline = true;
+    opts.editor = true;
+    opts.min_length = 0;
+    opts.max_length = static_cast<int>(EDIT_MAX_SIZE);
+
+    remote_input::RequestRemoteText(opts, [this](const std::string& text) {
+        ApplyRemoteText(text);
+    });
+}
+
+void Menu::ApplyRemoteText(const std::string& text) {
+    if (!m_writable || m_is_streamed) {
+        return;
+    }
+    if (!m_editable) {
+        SwitchToEditMode();
+    }
+
+    PushUndo();
+    m_lines.clear();
+    std::string_view view{text};
+    size_t start = 0;
+    while (start <= view.size()) {
+        const auto end = view.find('\n', start);
+        auto line = view.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
+        if (line.ends_with('\r')) {
+            line.remove_suffix(1);
+        }
+        m_lines.emplace_back(line);
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    if (m_lines.empty()) {
+        m_lines.emplace_back();
+    }
+
+    m_line_index = 0;
+    ClearRangeSelection();
+    RecreateList();
+    SaveText();
+    UpdateTextSubHeading();
+}
+
 void Menu::DisplayTextOptions() {
     auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
+        options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
+            EditOnDevice();
+        }, "Open this file in a browser, edit it there, then Save to send it back."_i18n);
+    }
+
+    if (!m_editable) {
+        return;
+    }
 
     options->Add<SidebarEntryCallback>("Save"_i18n, [this](){
         SaveText();
