@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.564** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.565** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.565 — Open menu for text files; expand-range legend uses Up/Down
+
+- **A** на `exosphere.ini` (і будь-якому текстовому, який можна редагувати): View / Edit / Edit on PC / phone — до відкриття файлу.
+- Легенда розширення діапазону: L + Up/Down і R + Up/Down (не SL/SR).
 
 ## v0.13.564 — Auto-forwarder no longer stalls launch and exit
 

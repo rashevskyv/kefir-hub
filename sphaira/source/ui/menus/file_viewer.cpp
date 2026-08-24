@@ -755,8 +755,8 @@ void Menu::SetupEditActions() {
         SetAction(Button::B, Action{"Cancel"_i18n, [this](){
             CancelAdjustRange();
         }});
-        SetAction(Button::L, Action{ActionType::UP, "Top bound"_i18n, "\uE0E4+\uE0E8/\uE0E9 / \uE101", [](){}});
-        SetAction(Button::R, Action{ActionType::UP, "Bottom bound"_i18n, "\uE0E5+\uE0E8/\uE0E9 / \uE102", [](){}});
+        SetAction(Button::L, Action{ActionType::UP, "Top bound"_i18n, "\uE0E4+\uE0EB/\uE0EC / \uE101", [](){}});
+        SetAction(Button::R, Action{ActionType::UP, "Bottom bound"_i18n, "\uE0E5+\uE0EB/\uE0EC / \uE102", [](){}});
     } else if (m_selecting_range) {
         SetAction(Button::A, Action{"Finish selection"_i18n, [this](){
             FinishRangeSelection();

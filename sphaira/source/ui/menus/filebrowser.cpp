@@ -303,7 +303,33 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                         });
                     }
                 } else if (text_helper::IsTextFile(entry.name)) {
-                    App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
+                    const auto path = GetNewPathCurrent();
+                    const bool writable = !IsReadOnly(path);
+                    const bool can_edit = writable && entry.file_size <= 4 * 1024 * 1024;
+                    if (!can_edit) {
+                        App::Push<fileview::Menu>(m_fs.get(), path, fileview::TextMode::View, writable);
+                    } else {
+                        PopupList::Items items;
+                        items.emplace_back("View as text"_i18n);
+                        items.emplace_back("Edit"_i18n);
+                        items.emplace_back("Edit on PC / phone"_i18n);
+                        auto popup = std::make_unique<PopupList>("Open: "_i18n + entry.GetName(), items, [this, path](auto op_index){
+                            if (!op_index) {
+                                return;
+                            }
+                            if (*op_index == 0) {
+                                App::Push<fileview::Menu>(m_fs.get(), path, fileview::TextMode::View, true);
+                            } else if (*op_index == 1) {
+                                App::Push<fileview::Menu>(m_fs.get(), path, fileview::TextMode::Edit, true);
+                            } else {
+                                auto menu = std::make_unique<fileview::Menu>(m_fs.get(), path, fileview::TextMode::Edit, true);
+                                menu->QueueRemoteEdit();
+                                App::Push(std::move(menu));
+                            }
+                        });
+                        popup->SetMenuStyle(true);
+                        App::Push(std::move(popup));
+                    }
                 } else if (IsSd()) {
                     const auto assoc_list = m_menu->FindFileAssocFor();
                     if (!assoc_list.empty()) {
@@ -1961,6 +1987,27 @@ void FsView::DisplayOptions() {
                 RestoreSaveFile(GetEntry());
             }, "Restore this save data file to the console."_i18n);
         }
+
+        options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){
+            App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
+        }, "Open the selected file in read-only text view mode."_i18n);
+
+        if (text_helper::IsTextFile(GetEntry().GetName())) {
+            auto edit_entry = options->Add<SidebarEntryCallback>("Edit"_i18n, [this](){
+                App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
+            }, "Open the selected file in text editor mode."_i18n);
+            auto remote_entry = options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
+                auto menu = std::make_unique<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
+                menu->QueueRemoteEdit();
+                App::Push(std::move(menu));
+            }, "Open this file in a browser, edit it there, then Save to send it back."_i18n);
+            const auto can_edit = [this](){
+                return !IsReadOnly(GetNewPathCurrent()) && GetEntry().file_size <= 4 * 1024 * 1024;
+            };
+            const auto edit_reason = IsReadOnly(GetNewPathCurrent()) ? "File is read-only"_i18n : "File is too large to edit"_i18n;
+            edit_entry->Depends(can_edit, edit_reason);
+            remote_entry->Depends(can_edit, edit_reason);
+        }
     }
 
     if (IsSd() && m_entries_current.size() && !m_selected_count) {
@@ -2397,27 +2444,6 @@ void FsView::DisplayAdvancedOptions() {
                 App::Push<theme_creator::Menu>(GetNewPathCurrent());
             }, "Use the selected image to create a custom Switch theme."_i18n);
             theme_entry->SetHasSubmenu(true);
-        }
-
-        options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){
-            App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
-        }, "Open the selected file in read-only text view mode."_i18n);
-
-        if (text_helper::IsTextFile(GetEntry().GetName())) {
-            auto edit_entry = options->Add<SidebarEntryCallback>("Edit"_i18n, [this](){
-                App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
-            }, "Open the selected file in text editor mode."_i18n);
-            auto remote_entry = options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
-                auto menu = std::make_unique<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Edit, true);
-                menu->QueueRemoteEdit();
-                App::Push(std::move(menu));
-            }, "Open this file in a browser, edit it there, then Save to send it back."_i18n);
-            const auto can_edit = [this](){
-                return !IsReadOnly(GetNewPathCurrent()) && GetEntry().file_size <= 4 * 1024 * 1024;
-            };
-            const auto edit_reason = IsReadOnly(GetNewPathCurrent()) ? "File is read-only"_i18n : "File is too large to edit"_i18n;
-            edit_entry->Depends(can_edit, edit_reason);
-            remote_entry->Depends(can_edit, edit_reason);
         }
     }
 

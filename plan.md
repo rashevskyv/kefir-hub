@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.564**. Завершені плани збережено в
+Поточний delivery — **v0.13.565**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.564 — Stop auto-forwarder from stalling launch/exit
+## Поточний delivery: v0.13.565 — File open menu for text + correct expand-range glyphs
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. **A** на текстовому файлі (до відкриття): View / Edit / Edit on PC / phone. Те саме в Options, вище в списку.
+2. Легенда розширення діапазону: **L/R + Up/Down**, не SL/SR.
+
+## Попередній delivery: v0.13.564 — Stop auto-forwarder from stalling launch/exit
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Скан HOME-іконів більше не читає NACP кожної гри — лише 0x05 / відомі HBL Title ID.

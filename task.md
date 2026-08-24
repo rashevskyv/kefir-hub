@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.564**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.565**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.564 (Auto-forwarder no longer stalls)
+## Поточний delivery: v0.13.565 (Text file open menu + range glyphs)
+
+- [x] `FILE-OPEN-TEXT-MENU-565` — A на editable-тексті: View / Edit / Edit on PC; Options теж вище в списку.
+- [x] `TEXT-RANGE-GLYPH-565` — легенда L/R + Up/Down, не SL/SR.
+- [x] `DOCS-BUMP-565` — версію піднято до `0.13.565`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.564 (Auto-forwarder no longer stalls)
 
 - [x] `FORWARDER-SCAN-PREFIX-564` — TitleName лише для 0x05 / відомих HBL tid, не для всіх ігор.
 - [x] `FORWARDER-NO-NXLINK-DUP-564` — Album/nxlink не ставить новий ікон, якщо Kefir Hub на HOME уже є.
