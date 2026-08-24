@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.557** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.558** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.558 — Text editor: selection outline spans all chosen lines
+
+- Дії → Select range: одна рамка на всі виділені рядки, не лише на курсор.
 
 ## v0.13.557 — Reuse remote input for file edit
 

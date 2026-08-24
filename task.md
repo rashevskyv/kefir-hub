@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.557**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.558**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.557 (Reuse remote input page)
+## Поточний delivery: v0.13.558 (Selection outline spans lines)
+
+- [x] `TEXT-SEL-OUTLINE-558` — рамка виділення рядків одна, на весь діапазон.
+- [x] `DOCS-BUMP-558` — версію піднято до `0.13.558`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.557 (Reuse remote input page)
 
 - [x] `REMOTE-REUSE-INPUT-557` — без окремого editor HTML; файл і вставка йдуть через існуючий remote input.
 - [x] `DOCS-BUMP-557` — версію піднято до `0.13.557`, оновлено plan/task/walkthrough/audit. Агент не компілював.

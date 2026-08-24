@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.557**. Завершені плани збережено в
+Поточний delivery — **v0.13.558**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.557 — Reuse remote input for file edit (no extra editor page)
+## Поточний delivery: v0.13.558 — Text editor: one outline around the whole line selection
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Виділені через Дії рядки підсвічуються однією рамкою, розтягнутою на весь діапазон, як рамка поточного рядка.
+
+## Попередній delivery: v0.13.557 — Reuse remote input for file edit (no extra editor page)
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Прибрано окрему JS-сторінку редактора. І «редагувати файл», і «вставити під курсор» — той самий `/input` + `RequestRemoteText`, лише `multiline`.

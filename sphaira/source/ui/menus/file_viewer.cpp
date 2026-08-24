@@ -1673,18 +1673,18 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
     const bool is_ini = text_helper::IsIniFile(m_path);
     const bool has_sel = HasSelection();
     const auto [sel_start, sel_end] = GetTargetRange();
+    bool sel_box_drawn = false;
 
-    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini, has_sel, sel_start = sel_start, sel_end = sel_end](auto* vg, auto* theme, const Vec4& pos, s64 index){
+    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini, has_sel, sel_start, sel_end, &sel_box_drawn](auto* vg, auto* theme, const Vec4& pos, s64 index){
         const auto focused = (m_line_index == index);
         const auto in_range = has_sel && (index >= sel_start && index <= sel_end);
 
-        if (in_range) {
-            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-            tint.a *= 0.35f;
-            gfx::drawRect(vg, pos, tint, 5.f);
-        }
-
-        if (focused && m_editable) {
+        if (in_range && !sel_box_drawn) {
+            sel_box_drawn = true;
+            Vec4 span = pos;
+            span.h = static_cast<float>(sel_end - index) * m_text_list->GetMaxY() + pos.h;
+            gfx::drawRectOutline(vg, theme, 4.f, span);
+        } else if (focused && m_editable && !has_sel) {
             gfx::drawRectOutline(vg, theme, 4.f, pos);
         }
 
