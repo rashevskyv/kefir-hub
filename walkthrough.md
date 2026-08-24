@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.598** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.599** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.599 — nxlink no longer crashes on exit with a file open
+
+- Після прийому NRO через NX-Link програма завжди виходить. Стек віджетів більше не чиститься знизу вгору: file viewer закривається, поки file browser ще живий.
+- `envSetNextLoad` виконується на головному потоці, не з потоку nxlink.
+- Нативний `FsFile` закривається без віртуального `IsNative()` на вже знищеному `Fs`.
 
 ## v0.13.598 — svcGetSystemInfo Handle argument
 

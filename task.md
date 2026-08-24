@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.598**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.599**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.598 (svcGetSystemInfo Handle)
+## Поточний delivery: v0.13.599 (nxlink teardown UAF)
+
+- [x] `NXLINK-WIDGET-TEARDOWN-599` — `pop_back` замість `clear()`; `envSetNextLoad` на головному потоці; `File::Close` без `IsNative()` на dangling `Fs*`.
+- [x] `DOCS-BUMP-599` — версію піднято до `0.13.599`.
+
+## Попередній delivery: v0.13.598 (svcGetSystemInfo Handle)
 
 - [x] `MODULE-RAM-HANDLE-598` — `svcGetSystemInfo(..., INVALID_HANDLE, pool)`.
 - [x] `DOCS-BUMP-598` — версію піднято до `0.13.598`.

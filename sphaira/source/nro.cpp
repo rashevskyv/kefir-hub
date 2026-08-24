@@ -198,9 +198,10 @@ auto nro_get_icon_internal(fs::File* f, u64 size, u64 offset) -> std::vector<u8>
 }
 
 auto launch_internal(const std::string& path, const std::string& argv) -> Result {
-    R_TRY(envSetNextLoad(path.c_str(), argv.c_str()));
-
-    log_write("set launch with path: %s argv: %s\n", path.c_str(), argv.c_str());
+    // envSetNextLoad runs on the main thread when LaunchNroEventData is
+    // handled. Calling it here used to be fine for UI launches, and a data
+    // race when nxlink invoked nro_launch from its worker.
+    log_write("queue launch with path: %s argv: %s\n", path.c_str(), argv.c_str());
 
     evman::push(evman::LaunchNroEventData{path, argv});
     R_SUCCEED();

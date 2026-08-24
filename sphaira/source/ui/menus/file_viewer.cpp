@@ -159,6 +159,9 @@ Menu::Menu(const fs::FsPath& path, std::vector<fs::FsPath> image_paths, s64 imag
 }
 
 Menu::~Menu() {
+    remote_input::SetRemoteInputActive(false);
+    m_file.Close();
+    m_file.m_fs = nullptr;
     FreeImage();
 }
 
@@ -1939,7 +1942,9 @@ void Menu::LoadImageFile() {
 
 void Menu::FreeImage() {
     if (m_image) {
-        nvgDeleteImage(App::GetVg(), m_image);
+        if (auto* vg = App::GetVg()) {
+            nvgDeleteImage(vg, m_image);
+        }
         m_image = 0;
     }
 

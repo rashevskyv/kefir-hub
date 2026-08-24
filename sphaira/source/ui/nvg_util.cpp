@@ -196,7 +196,7 @@ const char* getButton(const Button want) {
             return val;
         }
     }
-    std::unreachable();
+    return "";
 }
 
 void drawTextArgs(NVGcontext* vg, float x, float y, float size, int align, const NVGcolor& c, const char* str, ...) {

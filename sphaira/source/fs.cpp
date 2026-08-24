@@ -620,26 +620,34 @@ Result File::GetSize(s64* out) {
 }
 
 void File::Close() {
-    if (!m_fs) {
+    // Close a native handle without asking the parent Fs first. File viewer
+    // stores a raw Fs* into the file browser; if that browser is already
+    // gone, IsNative() is a virtual call into freed memory.
+    if (serviceIsActive(&m_native.s)) {
+        fsFileClose(&m_native);
+        m_native = {};
+        if (m_fs && (m_mode & FsOpenMode_Write)) {
+            m_fs->Commit();
+        }
+        m_fs = {};
         return;
     }
 
-    if (m_fs->IsNative()) {
-        if (serviceIsActive(&m_native.s)) {
-            fsFileClose(&m_native);
-            if (m_mode & FsOpenMode_Write) {
-                m_fs->Commit();
-            }
-            m_native = {};
-        }
-    } else if (m_fs->IsVirtual()) {
-        m_fs->vCloseFile(this);
-    } else {
+    if (!m_fs) {
         if (m_stdio) {
             std::fclose(m_stdio);
             m_stdio = {};
         }
+        return;
     }
+
+    if (m_fs->IsVirtual()) {
+        m_fs->vCloseFile(this);
+    } else if (m_stdio) {
+        std::fclose(m_stdio);
+        m_stdio = {};
+    }
+    m_fs = {};
 }
 
 namespace {

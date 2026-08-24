@@ -321,6 +321,16 @@ void App::Loop() {
                     ini_putl(nro_path.c_str(), "timestamp", timestamp, App::PLAYLOG_PATH);
                     log_write("updating timestamp for: %s %lu\n", nro_path.c_str(), timestamp);
 
+                    // envSetNextLoad belongs on this thread. nxlink used to call
+                    // nro_launch from its worker, which set the next NRO while
+                    // Draw/teardown were still running.
+                    if (R_FAILED(envSetNextLoad(arg.path.c_str(), arg.argv.c_str()))) {
+                        log_write("[LaunchNroEventData] envSetNextLoad failed for %s\n", arg.path.c_str());
+                        App::Notify("Failed to launch"_i18n);
+                        return;
+                    }
+                    log_write("set launch with path: %s argv: %s\n", arg.path.c_str(), arg.argv.c_str());
+
                     // force disable pop-back to main menu.
                     __nx_applet_exit_mode = 0;
                     m_quit = true;
@@ -1581,17 +1591,27 @@ App::~App() {
 
     mark("usb mass storage");
 
-    // destroy this first as it seems to prevent a crash when exiting the appstore
-    // when an image that was being drawn is displayed
-    // replicate: saves -> homebrew -> misc -> appstore -> sphaira -> changelog -> exit
-    // it will crash when deleting image 43.
-    this->destroyFramebufferResources();
+    // GPU must be idle before widgets free nvg images, but the swapchain and
+    // nvg context have to stay alive for those deletes (file viewer, games
+    // list, appstore changelog). The old "destroy framebuffer first" order
+    // avoided a stale in-flight texture on appstore exit; waitIdle is the
+    // actual requirement.
+    //
+    // Pop from the top. vector::clear() destroys front-to-back, so a file
+    // viewer still holding a raw Fs* into the file browser under it would
+    // call IsNative() on a freed object (2168-0001 at a null vtable slot)
+    // when nxlink (or SELECT) exits with the viewer open.
+    if (this->swapchain) {
+        this->queue.waitIdle();
+    }
 
-    // this has to be called before any cleanup to ensure the lifetime of
-    // nvg is still active as some widgets may need to free images.
     m_active_transfer_pbox.reset();
-    m_widgets.clear();
+    while (!m_widgets.empty()) {
+        m_widgets.pop_back();
+    }
     nvgDeleteImage(vg, m_default_image);
+
+    this->destroyFramebufferResources();
 
     mark("widgets + framebuffer");
 

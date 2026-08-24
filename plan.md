@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.598**. Завершені плани збережено в
+Поточний delivery — **v0.13.599**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.598 — svcGetSystemInfo takes a Handle
+## Поточний delivery: v0.13.599 — nxlink exit must not UAF the widget stack
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Після прийому NRO через nxlink процес виходить з будь-якого екрана. `m_widgets.clear()` знищував стек знизу вгору: file viewer тримає сирий `Fs*` на file browser під ним → `File::Close` → `IsNative()` по звільненому об’єкту (2168-0001 PC=0x60 / 2168-0002 addr 0).
+2. Знищувати віджети згори (`pop_back`). `envSetNextLoad` лише на головному потоці. Нативний файл закривати без віртуального виклику в `Fs`.
+
+## Попередній delivery: v0.13.598 — svcGetSystemInfo takes a Handle
 
 Статус: зібрано. nxlink після збірки.
 1. libnx: `svcGetSystemInfo(out, type, handle, pool)` — передаємо `INVALID_HANDLE`.
