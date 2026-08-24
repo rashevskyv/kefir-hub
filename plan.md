@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.601**. Завершені плани збережено в
+Поточний delivery — **v0.13.602**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.601 — Software without Network Downloads, Tools icons match
+## Поточний delivery: v0.13.602 — Module Manager shows where RAM goes
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Три пули Horizon: Application / Applet / System. Зелений шматок на System — сума listed sysmodules.
+2. У списку кожен запущений модуль показує свій розмір (heap+code+stack, не вся mapped memory).
+3. Options → Where RAM goes: усі процеси за спаданням RAM.
+
+## Попередній delivery: v0.13.601 — Software without Network Downloads, Tools icons match
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Tools → Software: рядок Network Downloads прибрано. Custom Link лишається.

@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.601**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.602**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.601 (Software + Tools icon polish)
+## Поточний delivery: v0.13.602 (Module Manager RAM map)
+
+- [x] `MODULE-RAM-POOLS-602` — Application / Applet / System bars; modules as a slice of System.
+- [x] `MODULE-RAM-PER-PROCESS-602` — private RAM per module; Where RAM goes lists every process.
+- [x] `DOCS-BUMP-602` — версію піднято до `0.13.602`.
+
+## Попередній delivery: v0.13.601 (Software + Tools icon polish)
 
 - [x] `SOFTWARE-NO-NXDL-601` — Network Downloads прибрано з Tools → Software.
 - [x] `TOOLS-ICON-BG-601` — прозорий фон як раніше, один cyan, Tools/Game Tools без скругленого чорного кадру.

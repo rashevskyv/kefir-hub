@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.601** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.602** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.602 — Module Manager: where RAM goes
+
+- Зверху три пули: **Application** (гра / цей homebrew), **Applet**, **System** (OS + sysmodules). Зелений відрізок на System — сума модулів зі списку.
+- Кожен запущений модуль справа показує свій розмір. Список за замовчуванням сортується за пам’яттю.
+- START → **Where RAM goes** — усі процеси консолі від більшого до меншого.
 
 ## v0.13.601 — Software without Network Downloads, Tools icons match the set
 

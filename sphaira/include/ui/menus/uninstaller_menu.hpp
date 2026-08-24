@@ -29,6 +29,20 @@ enum class ModuleSort : u8 {
     Autostart,
 };
 
+struct RamPool {
+    u64 used{};
+    u64 total{};
+};
+
+struct RamBreakdown {
+    RamPool application;
+    RamPool applet;
+    RamPool system;
+    RamPool system_unsafe;
+    u64 modules_bytes{};
+    u64 this_app_bytes{};
+};
+
 // name of a sysmodule / homebrew program id, from its toolbox.json or the
 // module catalog the Module Manager uses. empty when it isn't a known module.
 auto GetModuleName(u64 program_id) -> std::string;
@@ -53,8 +67,10 @@ private:
     void SortItems(u64 keep_program_id = 0);
     void ShowContextMenu();
     void ShowSortMenu();
+    void ShowRamMap();
     void ShowInfo();
     void ShowInfoBox(const ModuleItem& item);
+    void DrawRamPanel(NVGcontext* vg, Theme* theme);
 
 private:
     std::vector<ModuleItem> m_items;
@@ -63,9 +79,8 @@ private:
     bool m_loaded{false};
     bool m_catalog_update_attempted{false};
     bool m_catalog_update_pending{false};
-    ModuleSort m_sort{ModuleSort::Name};
-    u64 m_ram_used{};
-    u64 m_ram_total{};
+    ModuleSort m_sort{ModuleSort::Memory};
+    RamBreakdown m_ram{};
     std::string m_error_message;
 };
 
