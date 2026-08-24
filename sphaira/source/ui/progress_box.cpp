@@ -22,9 +22,11 @@ void threadFunc(void* arg) {
 
 } // namespace
 
-ProgressBox::ProgressBox(int image, const std::string& action, const std::string& title, ProgressBoxCallback callback, ProgressBoxDoneCallback done, int cpuid, int prio, int stack_size) {
+ProgressBox::ProgressBox(int image, const std::string& action, const std::string& title, ProgressBoxCallback callback, ProgressBoxDoneCallback done, int cpuid, int prio, int stack_size, bool cpu_boost) {
     App::SetProgressActive(true);
-    if (App::GetApp()->m_progress_boost_mode.Get()) {
+    // FastLoad clocks the GPU down; ncm moves are storage-bound and the UI
+    // (including Cancel) has to keep painting. Installs still want the boost.
+    if (cpu_boost && App::GetApp()->m_progress_boost_mode.Get()) {
         App::SetBoostMode(true);
     }
 
@@ -624,7 +626,7 @@ auto ProgressBox::CopyFile(const fs::FsPath& src_path, const fs::FsPath& dst_pat
 }
 
 void ProgressBox::Yield() {
-    svcSleepThread(YieldType_WithoutCoreMigration);
+    svcSleepThread(YieldType_ToAnyThread);
 }
 
 void ProgressBox::FreeImage() {

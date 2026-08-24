@@ -833,7 +833,9 @@ void App::Update() {
         m_widgets.back()->OnFocusGained();
     }
 
-    PollUsbStorage();
+    if (!App::GetProgressActive()) {
+        PollUsbStorage();
+    }
 }
 
 void App::PollUsbStorage() {
@@ -1035,6 +1037,20 @@ void App::Draw() {
     nvgBeginFrame(this->vg, s_width, s_height, 1.f);
     nvgScale(vg, m_scale.x, m_scale.y);
 
+    // a blocking ProgressBox (NAND/SD move, install) already dims the screen.
+    // redrawing the games grid behind it fights ncm for the GPU and makes the
+    // dialog freeze so B/Stop never run until the copy finishes.
+    bool skip_under_progress = false;
+    for (const auto& p : m_widgets) {
+        if (auto* box = dynamic_cast<ui::ProgressBox*>(p.get()); box && !box->IsMinimized()) {
+            skip_under_progress = true;
+            break;
+        }
+    }
+    if (m_active_transfer_pbox && !m_active_transfer_pbox->IsMinimized()) {
+        skip_under_progress = true;
+    }
+
     // find the last menu in the list, start drawing from there
     auto menu_it = m_widgets.rend();
     for (auto it = m_widgets.rbegin(); it != m_widgets.rend(); it++) {
@@ -1052,35 +1068,37 @@ void App::Draw() {
 
     // reverse itr so loop backwards to go forwarders.
     if (menu_it != m_widgets.rend()) {
-        for (auto it = menu_it; ; it--) {
-            const auto& p = *it;
+        if (!skip_under_progress) {
+            for (auto it = menu_it; ; it--) {
+                const auto& p = *it;
 
-            // draw all normal (non-modal) content/widgets on top of the menu first.
-            if (!p->IsHidden() && !p->IsModal()) {
-                p->Draw(vg, &m_theme);
+                // draw all normal (non-modal) content/widgets on top of the menu first.
+                if (!p->IsHidden() && !p->IsModal()) {
+                    p->Draw(vg, &m_theme);
+                }
+
+                if (it == m_widgets.rbegin()) {
+                    break;
+                }
             }
 
-            if (it == m_widgets.rbegin()) {
-                break;
+            // draw standard header/footer chrome after normal content/widgets if no stacked widget opts out.
+            bool allow_chrome = true;
+            for (auto it = menu_it; ; it--) {
+                const auto& p = *it;
+                if (!p->IsHidden() && !p->WantsChrome()) {
+                    allow_chrome = false;
+                    break;
+                }
+                if (it == m_widgets.rbegin()) {
+                    break;
+                }
             }
-        }
 
-        // draw standard header/footer chrome after normal content/widgets if no stacked widget opts out.
-        bool allow_chrome = true;
-        for (auto it = menu_it; ; it--) {
-            const auto& p = *it;
-            if (!p->IsHidden() && !p->WantsChrome()) {
-                allow_chrome = false;
-                break;
-            }
-            if (it == m_widgets.rbegin()) {
-                break;
-            }
-        }
-
-        if (allow_chrome && !(*menu_it)->IsHidden()) {
-            if (auto* chrome = (*menu_it)->GetChromeOwner()) {
-                chrome->DrawChrome(vg, &m_theme);
+            if (allow_chrome && !(*menu_it)->IsHidden()) {
+                if (auto* chrome = (*menu_it)->GetChromeOwner()) {
+                    chrome->DrawChrome(vg, &m_theme);
+                }
             }
         }
 

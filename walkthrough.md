@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.587** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.588** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.588 — NAND/SD move no longer freezes the UI
+
+- Під час перенесення не перемальовується сітка ігор за діалогом (через неї GPU чекав кадр і B/Stop не спрацьовували).
+- Move не вмикає CPU FastLoad (він садить GPU). Скасування має доходити між NCA; сам CreatePlaceHolder ncm не перериває.
 
 ## v0.13.587 — Move to NAND/SD names the NCA being copied
 

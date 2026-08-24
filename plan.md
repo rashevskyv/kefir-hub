@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.587**. Завершені плани збережено в
+Поточний delivery — **v0.13.588**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.587 — Move to NAND/SD shows the current NCA
+## Поточний delivery: v0.13.588 — NAND/SD move UI stays alive (Cancel works)
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Під час ProgressBox не малювати сітку ігор (GPU чекав кадр, B не доходив).
+2. Move без CPU FastLoad (глушить GPU). YieldType_ToAnyThread.
+
+## Попередній delivery: v0.13.587 — Move to NAND/SD shows the current NCA
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. CreatePlaceHolder на гігабайти тримає бар на 0%. Тепер рядок: Allocating/Copying · Application · Program (1/4) + розмір; бар 0–100% по поточному NCA.

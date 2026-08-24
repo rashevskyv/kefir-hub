@@ -1127,7 +1127,7 @@ private:
                         } else if (rc != Result_TransferCancelled) {
                             App::PushErrorBox(rc, "Move failed!"_i18n);
                         }
-                    });
+                    }, 1, PRIO_PREEMPTIVE, 1024*128, false);
                 }, label + ".");
             }
 
@@ -1202,7 +1202,7 @@ private:
                         } else if (rc != Result_TransferCancelled) {
                             App::PushErrorBox(rc, "Move failed!"_i18n);
                         }
-                    });
+                    }, 1, PRIO_PREEMPTIVE, 1024*128, false);
                 });
             }, true, hint);
         };
@@ -1592,7 +1592,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             } else if (rc != Result_TransferCancelled) {
                                 App::PushErrorBox(rc, "Move failed!"_i18n);
                             }
-                        });
+                        }, 1, PRIO_PREEMPTIVE, 1024*128, false);
                     }, true, hint);
                 };
 

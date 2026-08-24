@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.587**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.588**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.587 (Move progress shows current NCA)
+## Поточний delivery: v0.13.588 (Move UI stays responsive)
+
+- [x] `MOVE-UI-ALIVE-588` — не малювати games grid під ProgressBox; move без FastLoad.
+- [x] `DOCS-BUMP-588` — версію піднято до `0.13.588`. Агент не компілював.
+
+## Попередній delivery: v0.13.587 (Move progress shows current NCA)
 
 - [x] `MOVE-PROGRESS-NCA-587` — Allocating/Copying + тип NCA + бар по поточному файлу.
 - [x] `DOCS-BUMP-587` — версію піднято до `0.13.587`. Агент не компілював.
