@@ -131,6 +131,84 @@ auto MakeHeader(std::string label) -> SettingsItem {
     return { std::move(label), {}, {}, {}, SettingsItemKind::Header };
 }
 
+auto AutoUpdateModeLabel(long mode) -> std::string {
+    switch (mode) {
+        case 0: return "Off"_i18n;
+        case 1: return "Silent"_i18n;
+        case 2: return "Ask"_i18n;
+        case 3: return "On demand"_i18n;
+        default: return "Silent"_i18n;
+    }
+}
+
+auto AutoUpdateModeDescription(long mode) -> std::string {
+    switch (mode) {
+        case 0: return "Don't check for updates."_i18n;
+        case 1: return "Download in the background. Next launch uses the new version."_i18n;
+        case 2: return "Popup when a new version is found. Skip it, or update now."_i18n;
+        case 3: return "Only when you tap Update now."_i18n;
+        default: return AutoUpdateModeDescription(1);
+    }
+}
+
+auto UpdateNowValue() -> std::string {
+    const auto job = auto_update::GetJob();
+    switch (job.state) {
+        case auto_update::JobState::Downloading:
+        case auto_update::JobState::Installing:
+            return "Updating"_i18n;
+        case auto_update::JobState::Ready:
+            return "Ready — restart"_i18n;
+        case auto_update::JobState::Available:
+            return job.version.empty() ? "Update"_i18n : job.version;
+        case auto_update::JobState::Failed:
+            return "Failed"_i18n;
+        case auto_update::JobState::Checking:
+            return "Checking..."_i18n;
+        default:
+            return "Up to date"_i18n;
+    }
+}
+
+auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
+    const auto mode = App::GetAutoUpdateMode();
+    std::vector<SettingsItem> items = {
+        { "When to install"_i18n, AutoUpdateModeDescription(mode), [](){
+            return AutoUpdateModeLabel(App::GetAutoUpdateMode());
+        }, [](){
+            PopupList::Items choices = {
+                "Off"_i18n,
+                "Silent"_i18n,
+                "Ask"_i18n,
+                "On demand"_i18n,
+            };
+            App::Push<PopupList>("Auto-update"_i18n, std::move(choices), [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetAutoUpdateMode(*op_index);
+                }
+            }, App::GetAutoUpdateMode());
+        }},
+        { "Update now"_i18n, "Download a waiting release, or retry a failed download."_i18n, UpdateNowValue, [](){
+            const auto job = auto_update::GetJob();
+            if (job.state == auto_update::JobState::Available || job.state == auto_update::JobState::Failed) {
+                auto_update::StartDownload();
+            }
+        }},
+    };
+
+    const auto skipped = App::GetAutoUpdateSkip();
+    if (!skipped.empty()) {
+        items.push_back({
+            "Skipped version"_i18n,
+            "Tap to ask about this version again."_i18n,
+            [](){ return App::GetAutoUpdateSkip(); },
+            [](){ App::SetAutoUpdateSkip(""); },
+        });
+    }
+
+    return items;
+}
+
 // headers are captions, not rows: the cursor steps over them in the direction
 // it was already travelling and wraps around the ends, so a category that
 // starts with a header can still be left by pressing up on its first row.
@@ -2157,6 +2235,11 @@ void Menu::BuildCategories() {
 
     m_categories = {
         {
+            "Auto-update"_i18n,
+            "When and how new versions are installed."_i18n,
+            BuildAutoUpdateItems(),
+        },
+        {
             "General"_i18n,
             "Language, timing and application flow."_i18n,
             {
@@ -2181,50 +2264,6 @@ void Menu::BuildCategories() {
                             App::SetTextScrollSpeed(*op_index);
                         }
                     }, App::GetTextScrollSpeed());
-                }},
-                { "Auto-update"_i18n, "How Kefir Hub installs new versions."_i18n, [](){
-                    switch (App::GetAutoUpdateMode()) {
-                        case 0: return "Off"_i18n;
-                        case 1: return "Silent"_i18n;
-                        case 2: return "Ask"_i18n;
-                        case 3: return "On demand"_i18n;
-                        default: return "Silent"_i18n;
-                    }
-                }, [](){
-                    PopupList::Items items = {
-                        "Off"_i18n,
-                        "Silent"_i18n,
-                        "Ask"_i18n,
-                        "On demand"_i18n,
-                    };
-                    App::Push<PopupList>("Auto-update"_i18n, std::move(items), [](std::optional<s64> op_index){
-                        if (op_index) {
-                            App::SetAutoUpdateMode(*op_index);
-                        }
-                    }, App::GetAutoUpdateMode());
-                }},
-                { "Update now"_i18n, "Download the latest release if one is waiting, or retry a failed download."_i18n, [](){
-                    const auto job = auto_update::GetJob();
-                    switch (job.state) {
-                        case auto_update::JobState::Downloading:
-                        case auto_update::JobState::Installing:
-                            return "Updating"_i18n;
-                        case auto_update::JobState::Ready:
-                            return "Ready — restart"_i18n;
-                        case auto_update::JobState::Available:
-                            return job.version.empty() ? "Update"_i18n : job.version;
-                        case auto_update::JobState::Failed:
-                            return "Failed"_i18n;
-                        case auto_update::JobState::Checking:
-                            return "Checking..."_i18n;
-                        default:
-                            return "Up to date"_i18n;
-                    }
-                }, [](){
-                    const auto job = auto_update::GetJob();
-                    if (job.state == auto_update::JobState::Available || job.state == auto_update::JobState::Failed) {
-                        auto_update::StartDownload();
-                    }
                 }},
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
                 // clock sync sits with the other clock settings rather than

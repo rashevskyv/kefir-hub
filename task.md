@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.571**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.572**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.571 (Y is Toggle)
+## Поточний delivery: v0.13.572 (Auto-update settings category)
+
+- [x] `UPDATE-SETTINGS-TOP-572` — категорія Auto-update перша в Settings; чотири режими з описами; Update now.
+- [x] `UPDATE-ASK-SKIP-572` — Ask: Skip запам'ятовує версію; Update качає зараз.
+- [x] `DOCS-BUMP-572` — версію піднято до `0.13.572`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.571 (Y is Toggle)
 
 - [x] `TEXT-TOGGLE-Y-571` — Y туглить буль; A лишається Edit line. Expand range лишається в Actions.
 - [x] `DOCS-BUMP-571` — версію піднято до `0.13.571`, оновлено plan/task/walkthrough/audit. Агент не компілював.

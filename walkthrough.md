@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.571** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.572** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.572 — Auto-update is its own Settings category
+
+- Settings відкривається на **Auto-update** зверху: When to install (Off / Silent / Ask / On demand) і Update now.
+- Ask показує попап **Skip** / **Update**. Skip більше не питає про цей реліз; Update now у Settings усе одно поставить його.
 
 ## v0.13.571 — Y toggles boolean lines
 

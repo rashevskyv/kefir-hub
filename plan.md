@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.571**. Завершені плани збережено в
+Поточний delivery — **v0.13.572**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.571 — Y toggles boolean lines
+## Поточний delivery: v0.13.572 — Auto-update category at the top of Settings
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Settings: перша категорія «Автооновлення» — режим (Off / Silent / Ask / On demand) з окремим описом кожного, Update now, пропущена версія.
+2. Ask: попап Skip / Update; Skip запам'ятовує цей реліз і більше не питає.
+
+## Попередній delivery: v0.13.571 — Y toggles boolean lines
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. У редакторі **Y** — Toggle (`=0`/`=1` / true/false / u8!0x0). **A** знову лише Edit line.

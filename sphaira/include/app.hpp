@@ -145,6 +145,8 @@ public:
     static auto GetAutoUpdateEnable() -> bool;
     static auto GetAutoUpdateMode() -> long;
     static void SetAutoUpdateMode(long mode);
+    static auto GetAutoUpdateSkip() -> std::string;
+    static void SetAutoUpdateSkip(std::string version);
     static auto GetReplaceHbmenuEnable() -> bool;
     static auto GetInstallEnable() -> bool;
     static auto GetInstallSysmmcEnable() -> bool;
@@ -442,6 +444,7 @@ public:
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
     option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off matches old false
+    option::OptionString m_auto_update_skip{INI_SECTION, "auto_update_skip", ""};
     option::OptionBool m_replace_hbmenu{INI_SECTION, "replace_hbmenu", false};
     option::OptionString m_theme_path{INI_SECTION, "theme", DEFAULT_THEME_PATH};
     option::OptionBool m_animated_waves{INI_SECTION, "animated_waves", true};

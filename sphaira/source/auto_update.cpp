@@ -75,6 +75,7 @@ bool ApplyStaging(const fs::FsPath& temp_path) {
     fs::FsNativeSd().DeleteFile(temp_path);
     if (ok) {
         SetJobState(JobState::Ready);
+        App::SetAutoUpdateSkip("");
         log_write("[AutoUpdate] ready — next launch uses the new build\n");
     } else {
         SetJobState(JobState::Failed);

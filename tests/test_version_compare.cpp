@@ -90,6 +90,16 @@ static int test_is_lower() {
     return 0;
 }
 
+static int test_is_equal() {
+    CHECK(version::IsEqual("20.0.0", "20.0.0"));
+    CHECK(version::IsEqual("20", "20.0.0"));
+    CHECK(version::IsEqual("v0.13.565", "0.13.565"));
+    CHECK(version::IsEqual("", ""));
+    CHECK(!version::IsEqual("0.13.565", "0.13.566"));
+    CHECK(!version::IsEqual("v0.13.565", "0.13.500"));
+    return 0;
+}
+
 static int test_format_packed() {
     // layout: major << 26 | minor << 20 | micro << 16
     const auto pack = [](std::uint32_t maj, std::uint32_t min, std::uint32_t mic) {
@@ -151,7 +161,7 @@ static int test_is_firmware_lower() {
 }
 
 int main() {
-    if (test_parse() || test_is_lower() || test_format_packed() || test_format_sdk_version() || test_is_firmware_lower()) {
+    if (test_parse() || test_is_lower() || test_is_equal() || test_format_packed() || test_format_sdk_version() || test_is_firmware_lower()) {
         return 1;
     }
     std::printf("ok  version_compare: %d checks passed\n", g_checks);

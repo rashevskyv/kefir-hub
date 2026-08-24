@@ -20,6 +20,7 @@
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "version_compare.hpp"
 
 #include <yyjson.h>
 #include <iomanip>
@@ -173,16 +174,22 @@ MainMenu::MainMenu() {
                 const auto mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
                 if (mode == auto_update::Mode::Silent) {
                     auto_update::StartDownload();
-                } else if (mode == auto_update::Mode::Notify && auto_update::ConsumeNotifyPrompt()) {
-                    App::Push<OptionBox>(
-                        "A new version is available. Update now?"_i18n,
-                        "Later"_i18n, "Update"_i18n, 1,
-                        [](auto op) {
-                            if (op && *op == 1) {
-                                auto_update::StartDownload();
+                } else if (mode == auto_update::Mode::Notify) {
+                    if (version::IsEqual(App::GetAutoUpdateSkip(), version)) {
+                        log_write("[UpdateCheck] %s skipped\n", version);
+                    } else if (auto_update::ConsumeNotifyPrompt()) {
+                        App::Push<OptionBox>(
+                            "A new version is available. Update now?"_i18n,
+                            "Skip"_i18n, "Update"_i18n, 1,
+                            [ver = std::string(version)](auto op) {
+                                if (op && *op == 1) {
+                                    auto_update::StartDownload();
+                                } else if (op && *op == 0) {
+                                    App::SetAutoUpdateSkip(ver);
+                                }
                             }
-                        }
-                    );
+                        );
+                    }
                 } else {
                     log_write("[UpdateCheck] %s available (mode=%ld)\n", version, App::GetAutoUpdateMode());
                 }

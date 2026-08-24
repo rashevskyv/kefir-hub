@@ -70,6 +70,10 @@ inline auto IsLower(const std::string& target, const std::string& current) -> bo
     return false;
 }
 
+inline auto IsEqual(const std::string& a, const std::string& b) -> bool {
+    return !IsLower(a, b) && !IsLower(b, a);
+}
+
 // Unpacks the packed version word amssuGetUpdateInformation reports.
 inline auto FormatPacked(std::uint32_t version) -> std::string {
     return std::to_string((version >> 26) & 0x1f) + "." +

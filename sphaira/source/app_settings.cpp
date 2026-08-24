@@ -155,6 +155,14 @@ void App::SetAutoUpdateMode(long mode) {
     }
 }
 
+auto App::GetAutoUpdateSkip() -> std::string {
+    return g_app->m_auto_update_skip.Get();
+}
+
+void App::SetAutoUpdateSkip(std::string version) {
+    g_app->m_auto_update_skip.Set(std::move(version));
+}
+
 auto App::GetReplaceHbmenuEnable() -> bool {
     return g_app->m_replace_hbmenu.Get();
 }
