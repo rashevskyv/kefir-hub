@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.590** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.591** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.591 — MTP Games: Forwarders out of the game dumps
+
+- Форвардери (HOME-іконки 0x05… і старий HBL) більше не в Merged / Unmerged / Separate.
+- Тека **Forwarders** — окремі NSP. **Unmerged** — усі BASE/UPD/DLC одним плоским списком.
+- Both: Merged, Unmerged, Separate, Forwarders.
 
 ## v0.13.590 — compile fix: no dynamic_cast under -fno-rtti
 

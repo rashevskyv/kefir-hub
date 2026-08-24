@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.590**. Завершені плани збережено в
+Поточний delivery — **v0.13.591**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.590 — no dynamic_cast (Switch builds with -fno-rtti)
+## Поточний delivery: v0.13.591 — MTP Games: Forwarders folder, Unmerged, no mix
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Форвардери (TID 0x05… і HBL 0x03) більше не в Merged/Unmerged/Separate. Окрема тека Forwarders.
+2. Both: Merged, Unmerged (усі BASE/UPD/DLC одним списком), Separate, Forwarders.
+
+## Попередній delivery: v0.13.590 — no dynamic_cast (Switch builds with -fno-rtti)
 
 Статус: програмну частину реалізовано (SW-DONE). Агент не компілює.
 1. `App::Draw` і `CloseFileBrowsersOnUsbMount` не можна кастити через `dynamic_cast` (`-fno-rtti`). Замість цього віртуальні `Widget::BlocksDrawUnder` і `OnUsbMountRemoved`.

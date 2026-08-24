@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -11,9 +12,13 @@ enum class PathKind {
     Root,
     MergedDir,
     MergedFile,
+    UnmergedDir,
+    UnmergedFile,
     SeparateDir,
     SeparateGameDir,
     SeparateFile,
+    ForwardersDir,
+    ForwardersFile,
     Invalid
 };
 
@@ -21,8 +26,16 @@ enum class PathKind {
 enum class GamesLayout {
     Compatible = 0, // one merged NSP per game, at the drive root
     Separate = 1,   // a folder per game with BASE/UPD/DLC files
-    Both = 2,       // root contains Merged/ and Separate/
+    Both = 2,       // Merged/, Unmerged/, Separate/, Forwarders/
 };
+
+// owo HOME-menu forwarders (0x05…) and the known HBL 0x03 titles.
+inline auto IsForwarderTitleId(std::uint64_t tid) -> bool {
+    if ((tid & 0xFF00000000000000ULL) == 0x0500000000000000ULL) {
+        return true;
+    }
+    return tid == 0x03DB1280BD84000ULL || tid == 0x03DB12780BD84000ULL;
+}
 
 struct ParsedPath {
     PathKind kind{PathKind::Invalid};
@@ -64,6 +77,20 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
         return true;
     };
 
+    // Forwarders/ is a folder in every layout so HOME-menu NSPs are not mixed
+    // into Merged / Unmerged / Separate.
+    if (equals_ic(segments[0], "Forwarders")) {
+        if (segments.size() == 1) {
+            result.kind = PathKind::ForwardersDir;
+        } else if (segments.size() == 2) {
+            result.kind = PathKind::ForwardersFile;
+            result.filename = std::string(segments[1]);
+        } else {
+            result.kind = PathKind::Invalid;
+        }
+        return result;
+    }
+
     if (layout == GamesLayout::Compatible) {
         if (segments.size() == 1) {
             result.kind = PathKind::MergedFile;
@@ -93,6 +120,15 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
             result.kind = PathKind::MergedDir;
         } else if (segments.size() == 2) {
             result.kind = PathKind::MergedFile;
+            result.filename = std::string(segments[1]);
+        } else {
+            result.kind = PathKind::Invalid;
+        }
+    } else if (equals_ic(segments[0], "Unmerged")) {
+        if (segments.size() == 1) {
+            result.kind = PathKind::UnmergedDir;
+        } else if (segments.size() == 2) {
+            result.kind = PathKind::UnmergedFile;
             result.filename = std::string(segments[1]);
         } else {
             result.kind = PathKind::Invalid;

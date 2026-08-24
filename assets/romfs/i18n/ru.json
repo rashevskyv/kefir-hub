@@ -1686,7 +1686,7 @@
   "Both": "Оба",
   "One NSP per game with base, update and DLC together.": "Один NSP на игру: база, обновление и DLC вместе.",
   "A folder per game with each component as its own NSP.": "Папка на игру, каждый компонент отдельным NSP.",
-  "Merged folder (one NSP) and Separate folder (files per game).": "Папка Merged (один NSP) и Separate (файлы на игру).",
+  "Merged (one NSP), Unmerged (all files), Separate (folder per game) and Forwarders.": "Merged (один NSP), Unmerged (все файлы), Separate (папка на игру) и Forwarders.",
   "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Показывает диск только для чтения с установленными играми, обновлениями и DLC в виде NSP-файлов. Копирование на ПК дампит их; на карту microSD ничего не записывается.",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Для этой операции требуется системная прошивка %s или выше (установлена: %s). Обновите системную прошивку консоли перед повторной попыткой.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Файл или передача завершились до того, как были прочитаны все данные. Скопируйте или скачайте файл заново.",

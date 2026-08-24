@@ -1719,7 +1719,7 @@
   "Both": "Обидва",
   "One NSP per game with base, update and DLC together.": "Один NSP на гру: база, оновлення і DLC разом.",
   "A folder per game with each component as its own NSP.": "Тека на гру, кожен компонент окремим NSP.",
-  "Merged folder (one NSP) and Separate folder (files per game).": "Тека Merged (один NSP) і Separate (файли на гру).",
+  "Merged (one NSP), Unmerged (all files), Separate (folder per game) and Forwarders.": "Merged (один NSP), Unmerged (усі файли), Separate (тека на гру) і Forwarders.",
   "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Показує диск лише для читання з встановленими іграми, оновленнями та DLC у вигляді NSP-файлів. Копіювання на ПК дампить їх; на карту microSD нічого не записується.",
   "Include platform in title": "Додати платформу до назви",
   "Version (optional)": "Версія (необов’язково)",

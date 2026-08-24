@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.590**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.591**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.590 (no RTTI casts)
+## Поточний delivery: v0.13.591 (MTP Games Forwarders folder)
+
+- [x] `MTP-GAMES-FORWARDERS-591` — форвардери лише в Forwarders; Merged/Unmerged/Separate без них.
+- [x] `DOCS-BUMP-591` — версію піднято до `0.13.591`. Агент не компілював.
+
+## Попередній delivery: v0.13.590 (no RTTI casts)
 
 - [x] `NO-RTTI-CAST-590` — ProgressBox/file browser через віртуальні методи, не `dynamic_cast`.
 - [x] `DOCS-BUMP-590` — версію піднято до `0.13.590`. Агент не компілював.

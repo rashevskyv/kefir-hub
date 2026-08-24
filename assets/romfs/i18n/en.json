@@ -952,7 +952,7 @@
   "Both": "Both",
   "One NSP per game with base, update and DLC together.": "One NSP per game with base, update and DLC together.",
   "A folder per game with each component as its own NSP.": "A folder per game with each component as its own NSP.",
-  "Merged folder (one NSP) and Separate folder (files per game).": "Merged folder (one NSP) and Separate folder (files per game).",
+  "Merged (one NSP), Unmerged (all files), Separate (folder per game) and Forwarders.": "Merged (one NSP), Unmerged (all files), Separate (folder per game) and Forwarders.",
   "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.",
   "microSD card name": "microSD card name",
   "Set custom name for microSD card in MTP.": "Set custom name for microSD card in MTP.",

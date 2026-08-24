@@ -99,6 +99,53 @@ static int test_parse_games_path() {
         CHECK(res.kind == PathKind::Invalid);
     }
 
+    // Unmerged cases
+    {
+        auto res = ParseGamesPath("/Unmerged");
+        CHECK(res.kind == PathKind::UnmergedDir);
+    }
+    {
+        auto res = ParseGamesPath("/unmerged/");
+        CHECK(res.kind == PathKind::UnmergedDir);
+    }
+    {
+        auto res = ParseGamesPath("/Unmerged/Game A [0100000000010000][v0][BASE].nsp");
+        CHECK(res.kind == PathKind::UnmergedFile);
+        CHECK(res.filename == "Game A [0100000000010000][v0][BASE].nsp");
+    }
+    {
+        auto res = ParseGamesPath("/Unmerged/a/b.nsp");
+        CHECK(res.kind == PathKind::Invalid);
+    }
+
+    // Forwarders cases (every layout)
+    {
+        auto res = ParseGamesPath("/Forwarders");
+        CHECK(res.kind == PathKind::ForwardersDir);
+    }
+    {
+        auto res = ParseGamesPath("/forwarders/");
+        CHECK(res.kind == PathKind::ForwardersDir);
+    }
+    {
+        auto res = ParseGamesPath("/Forwarders/App [0500000000123000][B].nsp");
+        CHECK(res.kind == PathKind::ForwardersFile);
+        CHECK(res.filename == "App [0500000000123000][B].nsp");
+    }
+    {
+        auto res = ParseGamesPath("/Forwarders/a/b.nsp");
+        CHECK(res.kind == PathKind::Invalid);
+    }
+    {
+        auto res = ParseGamesPath("/Forwarders", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::ForwardersDir);
+    }
+    {
+        auto res = ParseGamesPath("/Forwarders/x.nsp", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::ForwardersFile);
+        CHECK(res.filename == "x.nsp");
+    }
+
     // Invalid roots
     {
         auto res = ParseGamesPath("/InvalidRoot");
@@ -149,6 +196,12 @@ static int test_parse_games_path() {
         auto res = ParseGamesPath("/a/b/c.nsp", GamesLayout::Separate);
         CHECK(res.kind == PathKind::Invalid);
     }
+
+    CHECK(IsForwarderTitleId(0x0500000000123000ULL));
+    CHECK(IsForwarderTitleId(0x03DB1280BD84000ULL));
+    CHECK(IsForwarderTitleId(0x03DB12780BD84000ULL));
+    CHECK(!IsForwarderTitleId(0x0100000000010000ULL));
+    CHECK(!IsForwarderTitleId(0x0700000000000000ULL));
 
     return 0;
 }
