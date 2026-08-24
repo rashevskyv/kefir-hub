@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.600**. Завершені плани збережено в
+Поточний delivery — **v0.13.601**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.600 — menu icons, Games options, Tools tiles
+## Поточний delivery: v0.13.601 — Software without Network Downloads, Tools icons match
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Tools → Software: рядок Network Downloads прибрано. Custom Link лишається.
+2. Іконки Tools знову з прозорим фоном (сіра плитка UI), однаковий cyan. Game Tools / Tools без скругленого чорного квадрата і без іншого відтінку.
+
+## Попередній delivery: v0.13.600 — menu icons, Games options, Tools tiles
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Undo/Redo у текстовому редакторі дивились не в той бік — стрілки поміняні.

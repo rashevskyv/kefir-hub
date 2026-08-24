@@ -82,7 +82,7 @@ void DownloadEntries(const Entry& entry);
 // parses the params into entry struct and calls DonwloadEntries
 bool Download(const std::string& url, const std::vector<AssetEntry>& assets = {}, const std::string& pre_install_message = {}, const std::string& post_install_message = {});
 
-// Opens the same direct ZIP URL flow used by the Network Downloads menu.
+// Direct ZIP / NRO URL flow used by Software -> Custom Link.
 void DownloadDirectLink();
 
 // calls the above function by pushing the asset to an array.

@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.600** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.601** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.601 — Software without Network Downloads, Tools icons match the set
+
+- Tools → Software більше не має рядка Network Downloads (GitHub-меню). Custom Link лишається.
+- Іконки Tools знову з прозорим фоном, тож видно сіру плитку сітки, як раніше. Game Tools і Tools того ж cyan, без скругленого чорного квадрата всередині плитки.
 
 ## v0.13.600 — menu icons, Games options, Tools tiles
 

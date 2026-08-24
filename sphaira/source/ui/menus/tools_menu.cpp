@@ -183,7 +183,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Updater"_i18n, "Update Kefir and firmware packages."_i18n, 0, [](){
             App::Push<ui::menu::kefir::Menu>();
         }},
-        { "Software"_i18n, "App Store, GitHub downloads, DBI and mod utilities."_i18n, 0, [](){
+        { "Software"_i18n, "App Store, DBI and mod utilities."_i18n, 0, [](){
             App::Push<ui::menu::settings::SoftwareMenu>();
         }},
         { "Tools"_i18n, "System tools and sysmodule manager."_i18n, 0, [](){

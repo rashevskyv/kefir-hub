@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.600**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.601**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.600 (menu icons + Games options + Tools tiles)
+## Поточний delivery: v0.13.601 (Software + Tools icon polish)
+
+- [x] `SOFTWARE-NO-NXDL-601` — Network Downloads прибрано з Tools → Software.
+- [x] `TOOLS-ICON-BG-601` — прозорий фон як раніше, один cyan, Tools/Game Tools без скругленого чорного кадру.
+- [x] `DOCS-BUMP-601` — версію піднято до `0.13.601`.
+
+## Попередній delivery: v0.13.600 (menu icons + Games options + Tools tiles)
 
 - [x] `UNDO-REDO-ICONS-600` — Undo ліворуч, Redo праворуч.
 - [x] `MENU-ACTION-ICONS-600` — ActionIcon на сайдбарах ігор, файлів, homebrew, сейвів, редактора.

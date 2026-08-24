@@ -1151,20 +1151,6 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
         },
     }));
 
-    items.emplace_back(MakeHeader("NETWORK DOWNLOADS"_i18n));
-
-    items.emplace_back(SettingsItem{
-        "Network Downloads"_i18n,
-        "Download homebrew from GitHub repositories."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::Push<ui::menu::gh::Menu>(MenuFlag_None);
-        },
-        SettingsItemKind::Folder,
-    });
-
     items.emplace_back(SettingsItem{
         "Custom Link"_i18n,
         "Direct download .zip or .nro from URL (Keyboard or Phone/PC)."_i18n,
