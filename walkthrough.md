@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.552** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.553** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.553 — Direct Download: Enter sends the URL
+
+- Enter у полі адреси надсилає лінк на Switch. У багаторядковому полі — Ctrl+Enter / Cmd+Enter.
 
 ## v0.13.552 — Picker Options: Create Folder + Close picker
 

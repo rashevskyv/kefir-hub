@@ -726,14 +726,16 @@ button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
 <div class="card">
 <h1 id="title">Remote Input</h1>
 <p id="guide">Send text or URL directly to Nintendo Switch.</p>
+<form id="send-form" action="javascript:void(0)">
 <div id="input-container">
   <input id="text-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste or type a URL">
 </div>
 <p class="hint" id="hint">Paste or type the address, then Send.</p>
 <div class="btn-row">
   <button id="paste-btn" class="btn-secondary" type="button">Paste</button>
-  <button id="send-btn" type="button">Send to Switch</button>
+  <button id="send-btn" type="submit">Send to Switch</button>
 </div>
+</form>
 <div class="msg" id="msg"></div>
 </div>
 <script>
@@ -777,7 +779,27 @@ function bindUrlField(){
   field.addEventListener('focus',()=>{
     if(/^(https?:\/\/)$/i.test(field.value)&&field.select)field.select();
   });
+  field.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    if(field.tagName==='TEXTAREA'&&!(e.ctrlKey||e.metaKey))return;
+    e.preventDefault();
+    send();
+  });
   if(/^(https?:\/\/)$/i.test(field.value)&&field.select)field.select();
+}
+let sending=false;
+async function send(){
+  if(sending)return;
+  const val=collapseSchemes(field.value);
+  if(val)field.value=val;
+  if(!val){msg.className='msg err';msg.textContent='Paste or type the address first.';return;}
+  sending=true;
+  sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
+  try{
+    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val});
+    if(res.ok){msg.className='msg ok';msg.textContent='✓ Sent successfully! You can close this page.';}
+    else{msg.className='msg err';msg.textContent='Console rejected the input.';sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
+  }catch(e){msg.className='msg err';msg.textContent='Could not connect to console.';sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
 }
 pasteBtn.addEventListener('click',async()=>{
   field.focus();
@@ -791,17 +813,7 @@ pasteBtn.addEventListener('click',async()=>{
   msg.className='msg';
   msg.textContent='Long-press the field and tap Paste.';
 });
-sendBtn.addEventListener('click',async()=>{
-  const val=collapseSchemes(field.value);
-  if(val)field.value=val;
-  if(!val){msg.className='msg err';msg.textContent='Paste or type the address first.';return;}
-  sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
-  try{
-    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val});
-    if(res.ok){msg.className='msg ok';msg.textContent='✓ Sent successfully! You can close this page.';}
-    else{msg.className='msg err';msg.textContent='Console rejected the input.';sendBtn.disabled=false;pasteBtn.disabled=false;}
-  }catch(e){msg.className='msg err';msg.textContent='Could not connect to console.';sendBtn.disabled=false;pasteBtn.disabled=false;}
-});
+document.getElementById('send-form').addEventListener('submit',e=>{e.preventDefault();send();});
 init();
 </script>
 </body></html>

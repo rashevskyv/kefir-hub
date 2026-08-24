@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.552**. Завершені плани збережено в
+Поточний delivery — **v0.13.553**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.552 — Picker Options: Create Folder + Close picker
+## Поточний delivery: v0.13.553 — Direct Download: Enter sends the URL
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Enter у полі Direct Download надсилає адресу на консоль (як кнопка Send).
+
+## Попередній delivery: v0.13.552 — Picker Options: Create Folder + Close picker
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Контекстне меню пікера: «Створити теку» і «Закрити вибір папки».
