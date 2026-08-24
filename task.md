@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.584**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.585**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.584 (Games NAND/SD highlight per storage)
+## Поточний delivery: v0.13.585 (USB flash vs MTP port crash)
+
+- [x] `USB-FLASH-MTP-CRASH-585` — не тримати usb:ds без ПК; хост для флешки; MTP лише коли є LowPower.
+- [x] `DOCS-BUMP-585` — версію піднято до `0.13.585`. Агент не компілював.
+
+## Попередній delivery: v0.13.584 (Games NAND/SD highlight per storage)
 
 - [x] `GAMES-STORAGE-BLUE-584` — синій підпис/смуга лише на носії, де є дані гри.
 - [x] `DOCS-BUMP-584` — версію піднято до `0.13.584`. Агент не компілював.

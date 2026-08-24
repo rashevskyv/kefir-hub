@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.584** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.585** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.585 — plugging a flash drive while MTP is on
+
+- Краш `2168-0001` Instruction Abort: MTP тримав порт як USB device, флешка теж device.
+- MTP у settings більше не стартує gadget, поки немає ПК. Без ПК — host (usbhsfs), флешка відкривається в браузері. Кабель у ПК — MTP.
 
 ## v0.13.584 — Games: blue storage bar only where the title lives
 

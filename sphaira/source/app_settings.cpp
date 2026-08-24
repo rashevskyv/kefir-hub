@@ -682,13 +682,21 @@ void App::ApplyMtpEnable(bool enable, bool notify_conflict) {
         }
         g_app->m_mtp_enabled.Set(enable);
         if (enable) {
-            if (haze::Init()) {
-                ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
-            } else {
-                // e.g. every storage is disabled in "MTP storages" - keep the
-                // toggle honest, otherwise settings would show a running
-                // server that never started.
-                g_app->m_mtp_enabled.Set(false);
+            PsmChargerType charger{PsmChargerType_Unconnected};
+            psmGetChargerType(&charger);
+            // only grab the port as a gadget if a PC is already providing
+            // VBUS. otherwise stay in host mode so a flash drive can mount.
+            if (charger == PsmChargerType_LowPower) {
+                if (haze::Init()) {
+                    ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+                } else {
+                    g_app->m_mtp_enabled.Set(false);
+                }
+            } else if (!usbHsFsGetStatusChangeUserEvent()) {
+                if (App::GetWriteProtect()) {
+                    usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+                }
+                usbHsFsInitialize(1);
             }
         } else {
             haze::Exit();

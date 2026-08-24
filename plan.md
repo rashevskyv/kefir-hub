@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.584**. Завершені плани збережено в
+Поточний delivery — **v0.13.585**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.584 — Games storage bars: blue only where the title lives
+## Поточний delivery: v0.13.585 — USB flash while MTP is on must not crash
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. MTP у налаштуваннях більше не хапає порт як gadget, поки немає ПК (LowPower). Інакше флешка (теж device) валить usb:ds Instruction Abort.
+2. Без ПК — usbhsfs (хост), флешка монтується і пропонується файловий браузер. ПК — MTP.
+
+## Попередній delivery: v0.13.584 — Games storage bars: blue only where the title lives
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. NAND/EmuNAND і microSD синіють лише якщо на цьому носії є дані поточної гри (або виділення). Гра лише на SD — синя SD; лише на NAND — синій NAND; спліт — обидва.

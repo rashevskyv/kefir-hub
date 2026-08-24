@@ -269,9 +269,21 @@ void App::Loop() {
     while (!m_quit && appletMainLoop()) {
         if (!mtp_initialized) {
             mtp_initialized = true;
-            if (App::GetMtpEnable()) {
+            // MTP on in settings means "talk to a PC when one is there", not
+            // "grab the port as a gadget now". Holding usb:ds with nothing
+            // configured is what crashed when a flash drive was plugged in.
+            PsmChargerType charger{PsmChargerType_Unconnected};
+            psmGetChargerType(&charger);
+            if (App::GetMtpEnable() && charger == PsmChargerType_LowPower) {
                 haze::Init();
                 ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+            }
+            if (!haze::IsRunning() && !usbHsFsGetStatusChangeUserEvent()) {
+                if (App::GetWriteProtect()) {
+                    usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+                }
+                usbHsFsInitialize(1);
+                log_write("[USB] host stack up for flash detection\n");
             }
         }
         if (m_widgets.empty()) {
@@ -833,30 +845,33 @@ void App::PollUsbStorage() {
     PsmChargerType charger{PsmChargerType_Unconnected};
     psmGetChargerType(&charger);
 
-    // usbhsfs is only up while USB storage is enabled. MTP (and USB install)
-    // own the same controller, so a zero count here means "we are not looking",
-    // not "nothing is plugged in".
-    const bool hdd_up = App::GetHddEnable() && usbHsFsGetStatusChangeUserEvent();
-    const u32 count = hdd_up ? usbHsFsGetMountedDeviceCount() : 0;
-    const u32 physical = hdd_up ? usbHsFsGetPhysicalDeviceCount() : 0;
+    UsbState usb_state{};
+    const bool usbds_up = R_SUCCEEDED(usbDsGetState(&usb_state));
+    const bool pc_enumerated = usbds_up && usb_state == UsbState_Configured;
+    // USB install owns usb:ds without haze. Do not yank the port out from under it.
+    if (usbds_up && !haze::IsRunning()) {
+        return;
+    }
+
+    const bool host_up = usbHsFsGetStatusChangeUserEvent();
+    const u32 count = host_up ? usbHsFsGetMountedDeviceCount() : 0;
+    const u32 physical = host_up ? usbHsFsGetPhysicalDeviceCount() : 0;
+    const bool handheld = appletGetOperationMode() != AppletOperationMode_Console;
 
     if (!m_usb_poll_primed) {
         m_usb_device_count = count;
         m_usb_charger = charger;
         m_usb_poll_primed = true;
-        // already sitting on a PC cable at launch: start the same debounce
-        // as a hot-plug so MTP comes up without a trip to Settings.
         if (charger == PsmChargerType_LowPower
             && physical == 0 && count == 0
-            && !App::GetMtpEnable() && !haze::IsRunning()
-            && appletGetOperationMode() != AppletOperationMode_Console) {
+            && !haze::IsRunning() && handheld) {
             m_usb_pending_mtp = true;
             m_usb_pending_mtp_ts.Update();
         }
         return;
     }
 
-    if (hdd_up && count != m_usb_device_count) {
+    if (host_up && count != m_usb_device_count) {
         const bool added = count > m_usb_device_count;
         m_usb_device_count = count;
         if (added) {
@@ -873,21 +888,22 @@ void App::PollUsbStorage() {
     }
 
     if (charger != m_usb_charger) {
-        log_write("[USB] charger %u -> %u (physical=%u mounted=%u)\n",
+        log_write("[USB] charger %u -> %u (physical=%u mounted=%u haze=%d configured=%d)\n",
             static_cast<unsigned>(m_usb_charger), static_cast<unsigned>(charger),
-            physical, count);
+            physical, count, haze::IsRunning() ? 1 : 0, pc_enumerated ? 1 : 0);
         if (charger == PsmChargerType_Unconnected) {
             m_usb_pending_mtp = false;
             if (m_usb_auto_mtp) {
                 RestoreUsbAfterAutoMtp();
+            } else if (haze::IsRunning() && !pc_enumerated) {
+                // settings still say MTP on, but nothing is a USB host: free
+                // the port so a flash drive can enumerate.
+                log_write("[USB] MTP idle with no PC; releasing port to host\n");
+                haze::Exit();
             }
         } else if (charger == PsmChargerType_LowPower
             && physical == 0 && count == 0
-            && !App::GetMtpEnable() && !haze::IsRunning()
-            && appletGetOperationMode() != AppletOperationMode_Console) {
-            // LowPower VBUS with no mass-storage is a PC (or a charge-only
-            // USB port). Official chargers and the dock report EnoughPower
-            // and must not steal the port from usbhsfs.
+            && !haze::IsRunning() && handheld) {
             m_usb_pending_mtp = true;
             m_usb_pending_mtp_ts.Update();
         } else {
@@ -897,7 +913,7 @@ void App::PollUsbStorage() {
     }
 
     if (m_usb_pending_mtp) {
-        if (physical > 0 || count > 0 || App::GetMtpEnable() || haze::IsRunning()) {
+        if (physical > 0 || count > 0 || haze::IsRunning()) {
             m_usb_pending_mtp = false;
         } else if (m_usb_pending_mtp_ts.GetSeconds() >= 2) {
             m_usb_pending_mtp = false;
@@ -937,7 +953,7 @@ void App::OfferOpenUsbDrive() {
 }
 
 void App::TryStartAutoMtp() {
-    if (App::GetMtpEnable() || haze::IsRunning()) {
+    if (haze::IsRunning()) {
         return;
     }
     if (appletGetOperationMode() == AppletOperationMode_Console) {
@@ -946,21 +962,27 @@ void App::TryStartAutoMtp() {
 
     UsbState usb_state{};
     if (R_SUCCEEDED(usbDsGetState(&usb_state))) {
-        // USB install (or anything else) already owns usb:ds.
         log_write("[USB] skip auto MTP; usbDs already active (state %u)\n",
             static_cast<unsigned>(usb_state));
         return;
     }
 
-    const bool restore_hdd = App::GetHddEnable();
     log_write("[USB] PC host detected; starting MTP\n");
+    if (App::GetMtpEnable()) {
+        // setting already on; just take the port. haze::Init drops usbhsfs.
+        if (haze::Init()) {
+            ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
+            App::Notify("Computer connected — MTP started"_i18n);
+        }
+        return;
+    }
+
+    const bool restore_hdd = App::GetHddEnable();
     ApplyMtpEnable(true, false);
     if (App::GetMtpEnable()) {
         m_usb_auto_mtp = true;
         m_usb_auto_mtp_restore_hdd = restore_hdd;
         App::Notify("Computer connected — MTP started"_i18n);
-    } else if (restore_hdd) {
-        App::SetHddEnable(true);
     }
 }
 
@@ -1487,7 +1509,7 @@ App::~App() {
 
     mark("ntp + forwarder_auto");
 
-    if (App::GetMtpEnable()) {
+    if (haze::IsRunning()) {
         log_write("closing mtp\n");
         haze::Exit();
     }
@@ -1509,7 +1531,7 @@ App::~App() {
 
     mark("nxlink");
 
-    if (App::GetHddEnable()) {
+    if (usbHsFsGetStatusChangeUserEvent()) {
         log_write("closing hdd\n");
         usbHsFsExit();
     }

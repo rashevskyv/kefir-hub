@@ -2199,18 +2199,18 @@ bool Init() {
     }
 
     g_should_exit = false;
-    if (App::GetHddEnable()) {
+    // always drop the host stack, even if the "USB storage" setting is off:
+    // detection keeps usbhsfs up whenever MTP is not actually serving a PC.
+    if (usbHsFsGetStatusChangeUserEvent()) {
         usbHsFsExit();
     }
 
     if (!::haze::Initialize(haze_callback, THREAD_PRIO, THREAD_CORE, g_fs_entries)) {
         g_fs_entries.clear();
-        if (App::GetHddEnable()) {
-            if (App::GetWriteProtect()) {
-                usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
-            }
-            usbHsFsInitialize(1);
+        if (App::GetWriteProtect()) {
+            usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
         }
+        usbHsFsInitialize(1);
         return false;
     }
 
@@ -2238,12 +2238,11 @@ void Exit() {
 
     log_write("[MTP] exitied\n");
 
-    if (App::GetHddEnable()) {
-        if (App::GetWriteProtect()) {
-            usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
-        }
-        usbHsFsInitialize(1);
+    // hand the port back to host so a flash drive is visible again.
+    if (App::GetWriteProtect()) {
+        usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
     }
+    usbHsFsInitialize(1);
 }
 
 bool IsRunning() {
