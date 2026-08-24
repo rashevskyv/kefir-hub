@@ -1,40 +1,48 @@
 #pragma once
 
-#include <string>
+#include <array>
+#include <cstddef>
 
 namespace sphaira::ui::menu::game {
 
-// Right-hand column of a Games list row. Cart titles use [GC] instead of [S|N|b].
-inline auto FormatGameListInfo(bool on_sd, bool on_nand, bool on_gamecard,
-    bool has_base, bool has_update, bool has_dlc, bool layeredfs,
-    const std::string& size) -> std::string
-{
-    if (on_gamecard) {
-        return size.empty() ? std::string{"[GC]"} : ("[GC]  " + size);
-    }
+inline constexpr std::size_t kMaxGameBadges = 8;
 
-    std::string flags;
-    if (on_sd) {
-        flags += 'S';
+// Same labels the cover pills use (GC / Base / DLC / Update / LayeredFS / "-").
+// List rows also pass include_storage so SD and NAND show as pills, not [S|N].
+inline auto CollectGameBadgeLabels(
+    bool on_sd, bool on_nand, bool on_gamecard,
+    bool has_base, bool has_update, bool has_dlc, bool layeredfs,
+    bool include_storage,
+    std::array<const char*, kMaxGameBadges>& out) -> std::size_t
+{
+    std::size_t n = 0;
+    if (include_storage) {
+        if (on_sd) {
+            out[n++] = "SD";
+        }
+        if (on_nand) {
+            out[n++] = "NAND";
+        }
     }
-    if (on_nand) {
-        flags += 'N';
+    if (on_gamecard) {
+        out[n++] = "GC";
     }
-    flags += '|';
     if (has_base) {
-        flags += 'b';
-    }
-    if (has_update) {
-        flags += 'u';
+        out[n++] = "Base";
     }
     if (has_dlc) {
-        flags += 'd';
+        out[n++] = "DLC";
+    }
+    if (has_update) {
+        out[n++] = "Update";
     }
     if (layeredfs) {
-        flags += 'L';
+        out[n++] = "LayeredFS";
     }
-
-    return size.empty() ? ("[" + flags + "]  ") : ("[" + flags + "]  " + size);
+    if (!has_base) {
+        out[n++] = "-";
+    }
+    return n;
 }
 
 } // namespace sphaira::ui::menu::game

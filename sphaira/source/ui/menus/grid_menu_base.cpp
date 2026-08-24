@@ -8,13 +8,8 @@
 namespace sphaira::ui::menu::grid {
 namespace {
 
-// gap between the "[flags]" column and the size column, and the widest size
-// string the latter has to hold ("1023.99 MB" is as long as FormatBytes gets).
-constexpr float LIST_INFO_COL_GAP = 10.f;
-constexpr const char* LIST_INFO_VALUE_SAMPLE = "1023.99 MB";
-
-// callers build the right column as "[flags]  value" (see FormatListInfo in the
-// game and save menus). Split it back apart so each half gets its own column;
+// callers build the right column as "[flags]  value" (see FormatListInfo in
+// the save menu). Split it back apart so each half gets its own column;
 // a string with no "]  " is all label if it is bracketed, all value otherwise.
 auto SplitListInfo(std::string_view info) -> std::pair<std::string, std::string> {
     if (const auto sep = info.find("]  "); sep != info.npos) {
@@ -62,15 +57,15 @@ void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec
     }
 }
 
-Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked) {
-    return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version, marked);
+Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked, float extra_right) {
+    return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version, marked, extra_right);
 }
 
-Vec4 Menu::DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version, bool marked) {
-    return DrawEntry(vg, theme, false, layout, v, selected, 0, name, author, version, marked);
+Vec4 Menu::DrawEntryNoImage(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, const char* name, const char* author, const char* version, bool marked, float extra_right) {
+    return DrawEntry(vg, theme, false, layout, v, selected, 0, name, author, version, marked, extra_right);
 }
 
-Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked) {
+Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked, float extra_right) {
     const auto& [x, y, w, h] = v;
 
     auto text_id = ThemeEntryID_TEXT;
@@ -141,7 +136,9 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         // right column, DBI-style. The caller hands it over as "[flags]  size";
         // the two halves get their own columns so every "[...]" lands on the
         // same x instead of being pushed around by the width of its own size.
-        float right_w = 0.f;
+        // extra_right is space the caller will paint itself (games list badges)
+        // immediately left of that column.
+        float right_w = extra_right;
         if (version && *version) {
             const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
             const auto [label, value] = SplitListInfo(version);
@@ -165,7 +162,9 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
                 gfx::drawText(vg, right - value_w - LIST_INFO_COL_GAP, y + h / 2.f, 18.f, info_col, label.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
 
-            right_w = value_w + LIST_INFO_COL_GAP + label_w + 20.f;
+            right_w += value_w + LIST_INFO_COL_GAP + label_w + 20.f;
+        } else if (extra_right > 0.f) {
+            right_w += 20.f;
         }
 
         const float text_clip_w = w - text_x + x - 15.f - right_w;

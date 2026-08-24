@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.588** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.589** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.589 — Games list shows the same badges as icon layouts
+
+- У макеті список замість `[S|N|b|u|d|L]` / `[GC]` справа — ті самі кольорові pill-бейджі, що на обкладинках у сітці: GC, Base, DLC, Update, LayeredFS.
+- NAND і SD теж pill-ами (повні підписи), бо в списку є місце. Розмір гри лишається окремою колонкою справа.
+- На картриджі більше не ховаються апдейт/DLC/SD: як на іконках, показується все, що є.
 
 ## v0.13.588 — NAND/SD move no longer freezes the UI
 

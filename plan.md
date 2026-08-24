@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.588**. Завершені плани збережено в
+Поточний delivery — **v0.13.589**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.588 — NAND/SD move UI stays alive (Cancel works)
+## Поточний delivery: v0.13.589 — Games list uses the same badge pills as icon layouts
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Макет список більше не пише `[S|N|b|u]` літерами збоку. Ті самі кольорові бейджі, що на обкладинках (GC / Base / DLC / Update / LayeredFS), плюс SD і NAND повними підписами; розмір лишається справа.
+
+## Попередній delivery: v0.13.588 — NAND/SD move UI stays alive (Cancel works)
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Під час ProgressBox не малювати сітку ігор (GPU чекав кадр, B не доходив).

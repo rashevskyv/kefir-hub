@@ -29,6 +29,7 @@
 #include <cstring>
 #include <cctype>
 #include <algorithm>
+#include <array>
 #include <ctime>
 #include <ranges>
 #include <minIni.h>
@@ -340,17 +341,41 @@ auto BuildMoveSummary(const title::MovePlan& plan, NcmStorageId target) -> std::
     return msg;
 }
 
-// right-hand column of a list row, DBI's "[S|b]  1.38 GB": storage letters
-// (S = microSD, N = system memory) plus content letters (b/u/d/L), then size.
-auto FormatListInfo(const Entry& e) -> std::string {
-    const auto size = e.nand_size + e.sd_size + e.gc_size;
-    return FormatGameListInfo(
+auto CollectEntryBadgeLabels(const Entry& e, bool include_storage,
+    std::array<const char*, kMaxGameBadges>& out) -> std::size_t
+{
+    return CollectGameBadgeLabels(
         e.sd_size != 0, e.nand_size != 0, e.on_gamecard,
         e.content_flags & title::ContentFlag_Application,
         e.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch),
         e.content_flags & title::ContentFlag_AddOnContent,
         e.layeredfs,
-        size ? FormatBytes(size) : std::string{});
+        include_storage, out);
+}
+
+auto GameBadgeColour(const char* label) -> NVGcolor {
+    if (!std::strcmp(label, "SD")) {
+        return nvgRGBA(0, 128, 160, 255);
+    }
+    if (!std::strcmp(label, "NAND")) {
+        return nvgRGBA(90, 100, 130, 255);
+    }
+    if (!std::strcmp(label, "GC")) {
+        return nvgRGBA(40, 140, 230, 255);
+    }
+    if (!std::strcmp(label, "Base")) {
+        return nvgRGBA(0, 78, 190, 255);
+    }
+    if (!std::strcmp(label, "DLC")) {
+        return nvgRGBA(112, 35, 175, 255);
+    }
+    if (!std::strcmp(label, "Update")) {
+        return nvgRGBA(190, 76, 0, 255);
+    }
+    if (!std::strcmp(label, "LayeredFS")) {
+        return nvgRGBA(0, 112, 58, 255);
+    }
+    return nvgRGBA(180, 24, 24, 255);
 }
 
 void DrawGameCardOutline(NVGcontext* vg, const Vec4& v) {
@@ -362,29 +387,8 @@ void DrawGameCardOutline(NVGcontext* vg, const Vec4& v) {
 }
 
 void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entry) {
-    struct Badge { const char* text; NVGcolor colour; };
-    std::array<Badge, 6> badges{};
-    size_t count{};
-
-    if (entry.on_gamecard) {
-        badges[count++] = {"GC", nvgRGBA(40, 140, 230, 255)};
-    }
-    if (entry.content_flags & title::ContentFlag_Application) {
-        badges[count++] = {"Base", nvgRGBA(0, 78, 190, 255)};
-    }
-    if (entry.content_flags & title::ContentFlag_AddOnContent) {
-        badges[count++] = {"DLC", nvgRGBA(112, 35, 175, 255)};
-    }
-    if (entry.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch)) {
-        badges[count++] = {"Update", nvgRGBA(190, 76, 0, 255)};
-    }
-    if (entry.layeredfs) {
-        badges[count++] = {"LayeredFS", nvgRGBA(0, 112, 58, 255)};
-    }
-    if (!(entry.content_flags & title::ContentFlag_Application)) {
-        badges[count++] = {"-", nvgRGBA(180, 24, 24, 255)};
-    }
-
+    std::array<const char*, kMaxGameBadges> labels{};
+    const auto count = CollectEntryBadgeLabels(entry, false, labels);
     if (!count) {
         return;
     }
@@ -400,7 +404,7 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     gfx::textBounds(vg, 0, 0, bounds, "Base");
     width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
     for (size_t i = 0; i < count; i++) {
-        gfx::textBounds(vg, 0, 0, bounds, badges[i].text);
+        gfx::textBounds(vg, 0, 0, bounds, labels[i]);
         width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
     }
     width = std::min(width, image.w - margin * 2.f);
@@ -409,10 +413,70 @@ void DrawGameBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     float y = image.y + margin;
     for (size_t i = 0; i < count; i++) {
         gfx::drawRect(vg, x - 1.f, y - 1.f, width + 2.f, height + 2.f, nvgRGBA(0, 0, 0, 255), 5.f);
-        gfx::drawRect(vg, x, y, width, height, badges[i].colour, 4.f);
+        gfx::drawRect(vg, x, y, width, height, GameBadgeColour(labels[i]), 4.f);
         gfx::drawText(vg, x + width * 0.5f, y + height * 0.5f, font,
-            nvgRGBA(255, 255, 255, 255), badges[i].text, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgRGBA(255, 255, 255, 255), labels[i], NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         y += height + gap;
+    }
+}
+
+constexpr float LIST_BADGE_FONT = 12.f;
+constexpr float LIST_BADGE_PAD_X = 7.f;
+constexpr float LIST_BADGE_H = 20.f;
+constexpr float LIST_BADGE_GAP = 4.f;
+
+auto MeasureListBadges(NVGcontext* vg, const Entry& e) -> float {
+    std::array<const char*, kMaxGameBadges> labels{};
+    const auto count = CollectEntryBadgeLabels(e, true, labels);
+    nvgFontSize(vg, LIST_BADGE_FONT);
+    float bounds[4]{};
+    float total = 0.f;
+    for (size_t i = 0; i < count; i++) {
+        gfx::textBounds(vg, 0, 0, bounds, labels[i]);
+        total += bounds[2] - bounds[0] + LIST_BADGE_PAD_X * 2.f;
+        if (i) {
+            total += LIST_BADGE_GAP;
+        }
+    }
+    return total;
+}
+
+void DrawListBadges(NVGcontext* vg, const Vec4& row, const Entry& e, bool has_size) {
+    std::array<const char*, kMaxGameBadges> labels{};
+    const auto count = CollectEntryBadgeLabels(e, true, labels);
+    if (!count) {
+        return;
+    }
+
+    nvgFontSize(vg, LIST_BADGE_FONT);
+    float widths[kMaxGameBadges]{};
+    float bounds[4]{};
+    float total = 0.f;
+    for (size_t i = 0; i < count; i++) {
+        gfx::textBounds(vg, 0, 0, bounds, labels[i]);
+        widths[i] = bounds[2] - bounds[0] + LIST_BADGE_PAD_X * 2.f;
+        total += widths[i];
+        if (i) {
+            total += LIST_BADGE_GAP;
+        }
+    }
+
+    float x_right = row.x + row.w - 15.f;
+    if (has_size) {
+        nvgFontSize(vg, 18.f);
+        gfx::textBounds(vg, 0, 0, bounds, grid::LIST_INFO_VALUE_SAMPLE);
+        x_right -= (bounds[2] - bounds[0]) + grid::LIST_INFO_COL_GAP;
+        nvgFontSize(vg, LIST_BADGE_FONT);
+    }
+
+    const float y = row.y + (row.h - LIST_BADGE_H) / 2.f;
+    float x = x_right - total;
+    for (size_t i = 0; i < count; i++) {
+        gfx::drawRect(vg, x - 1.f, y - 1.f, widths[i] + 2.f, LIST_BADGE_H + 2.f, nvgRGBA(0, 0, 0, 255), 4.f);
+        gfx::drawRect(vg, x, y, widths[i], LIST_BADGE_H, GameBadgeColour(labels[i]), 3.f);
+        gfx::drawText(vg, x + widths[i] * 0.5f, y + LIST_BADGE_H * 0.5f, LIST_BADGE_FONT,
+            nvgRGBA(255, 255, 255, 255), labels[i], NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        x += widths[i] + LIST_BADGE_GAP;
     }
 }
 
@@ -1766,10 +1830,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto layout = m_layout.Get();
         const auto selected = pos == m_index;
-        // the list row spends its right column on the DBI-style size/flags text,
-        // which also replaces the badges - they do not fit a 46px row icon.
-        const auto list_info = layout == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
-        const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), layout == grid::LayoutType_List ? list_info.c_str() : title_id, e.selected);
+        // list rows have room for the same badge pills as the grid (plus SD/NAND);
+        // the right column is only the size, badges are painted beside it.
+        std::string list_info;
+        float extra_right = 0.f;
+        const char* version = title_id;
+        if (layout == grid::LayoutType_List) {
+            const auto bytes = e.nand_size + e.sd_size + e.gc_size;
+            list_info = bytes ? grid::FormatBytes(bytes) : std::string{};
+            version = list_info.c_str();
+            extra_right = MeasureListBadges(vg, e);
+        }
+        const auto image_v = DrawEntry(vg, theme, layout, v, selected, e.image, e.GetName(), e.GetAuthor(), version, e.selected, extra_right);
         Vec4 cover_v = image_v;
         if (layout == grid::LayoutType_HbMenu) {
             cover_v.y += 28.f;
@@ -1778,7 +1850,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (e.on_gamecard) {
             DrawGameCardOutline(vg, cover_v);
         }
-        if (layout != grid::LayoutType_List) {
+        if (layout == grid::LayoutType_List) {
+            DrawListBadges(vg, v, e, !list_info.empty());
+        } else {
             DrawGameBadges(vg, theme, cover_v, e);
         }
 
