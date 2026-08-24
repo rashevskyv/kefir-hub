@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.545**. Завершені плани збережено в
+Поточний delivery — **v0.13.546**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.545 — Forwarder NACP video capture Manual, not Auto
+## Поточний delivery: v0.13.546 — Full-screen zip extract: tree, checkboxes, named folder
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Після Direct Download zip — повноекранне меню, не смужка знизу. Зверху дерево архіву з галочками (Y — усі/жоден).
+2. Якщо в архіві один `.nro`: пояснення, що **програму** буде встановлено в `/switch/<назва>`; дія «Встановити програму в папку switch».
+3. Розпакування: файли в `/downloads`; у нову папку `/downloads/<ім'я архіву>`; файли в обрану папку; у нову папку всередині обраної (ім'я за замовченням — як у zip).
+
+## Попередній delivery: v0.13.545 — Forwarder NACP video capture Manual, not Auto
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. `nacp.video_capture` 0x1 (Manual), не 0x2 (Auto). Auto валив `am` 2128-0007 при запуску ікона з HOME.

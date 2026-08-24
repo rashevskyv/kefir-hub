@@ -8,6 +8,7 @@
 #include "swkbd.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
+#include "ui/zip_extract_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "ui/nvg_util.hpp"
@@ -260,15 +261,6 @@ auto ListZipEntryNames(const fs::FsPath& zip_path) -> std::vector<std::string> {
     return names;
 }
 
-auto ZipNameViews(const std::vector<std::string>& names) -> std::vector<std::string_view> {
-    std::vector<std::string_view> views;
-    views.reserve(names.size());
-    for (const auto& n : names) {
-        views.emplace_back(n);
-    }
-    return views;
-}
-
 void OpenSdBrowser(const fs::FsPath& path) {
     const filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
     App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
@@ -286,12 +278,13 @@ void AskOpenExtractedFolder(const fs::FsPath& path) {
     );
 }
 
-void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name = {});
-void BrowseExtractFolder(fs::FsPath zip_path);
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name = {}, std::vector<std::string> include_files = {});
+void BrowseExtractFolder(fs::FsPath zip_path, bool create_named = false, std::string zip_filename = {}, std::vector<std::string> include_files = {});
 void PromptExtractPath(fs::FsPath zip_path, std::string filename);
 
-void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name) {
+void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name, std::vector<std::string> include_files) {
     const bool nro_only = !nro_zip_name.empty();
+    const bool filtered = !nro_only && !include_files.empty();
     fs::FsPath open_dir = extract_path;
     if (nro_only) {
         extract_path = zip_extract::NroInstallDest(nro_zip_name).c_str();
@@ -307,7 +300,7 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
         open_dir = extract_path;
     }
 
-    App::Push<ProgressBox>(0, "Extracting..."_i18n, extract_path.s, [zip_path, extract_path, nro_zip_name, nro_only](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Extracting..."_i18n, extract_path.s, [zip_path, extract_path, nro_zip_name, nro_only, include_files, filtered](auto pbox) -> Result {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
         if (nro_only) {
@@ -331,7 +324,14 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
                 fs.CreateDirectoryRecursively(extract_path);
             }
             pbox->NewTransfer("Extracting..."_i18n);
-            R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path));
+            if (filtered) {
+                R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path,
+                    [include_files](const fs::FsPath& name, fs::FsPath&) {
+                        return zip_extract::EntryMatchesSelection(name.s, include_files);
+                    }));
+            } else {
+                R_TRY(thread::TransferUnzipAll(pbox, zip_path, &fs, extract_path));
+            }
         }
         R_SUCCEED();
     }, [zip_path, open_dir](Result rc){
@@ -358,57 +358,35 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
     });
 }
 
-void BrowseExtractFolder(fs::FsPath zip_path) {
+void BrowseExtractFolder(fs::FsPath zip_path, bool create_named, std::string zip_filename, std::vector<std::string> include_files) {
     auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
     browser->SetFolderPicker(
-        [zip_path](const fs::FsPath& folder) {
-            ExtractDownloadedZip(zip_path, folder);
+        [zip_path, create_named, zip_filename, include_files](const fs::FsPath& folder) {
+            fs::FsPath dest = folder;
+            if (create_named) {
+                const char* parent = folder.s[0] ? folder.s : "/";
+                dest = zip_extract::NewFolderDest(parent, zip_filename).c_str();
+            }
+            ExtractDownloadedZip(zip_path, dest, {}, include_files);
         },
         "Select folder"_i18n,
-        "Extract ZIP to this folder?"_i18n);
+        create_named
+            ? "Create a folder named after the archive here?"_i18n
+            : "Extract ZIP to this folder?"_i18n);
     App::Push(std::move(browser));
 }
 
 void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
     const auto names = ListZipEntryNames(zip_path);
-    const auto views = ZipNameViews(names);
-    const auto nro = zip_extract::FindSingleNro(views);
-    const auto roots = zip_extract::FormatZipRoots(views);
-
-    PopupList::Items items;
-    const bool has_nro = nro.has_value();
-    if (has_nro) {
-        items.emplace_back("Install NRO to /switch"_i18n);
-    }
-    auto extract_all = "Extract all to /downloads"_i18n;
-    if (!roots.empty()) {
-        extract_all += " (" + roots + ")";
-    }
-    items.emplace_back(std::move(extract_all));
-    items.emplace_back("Extract to..."_i18n);
-
-    auto popup = std::make_unique<PopupList>(
-        filename.empty() ? "Extract Options"_i18n : filename, items,
-        [zip_path, has_nro, nro](auto op_index){
-            if (!op_index) {
-                return;
-            }
-            auto i = *op_index;
-            if (has_nro) {
-                if (i == 0) {
-                    ExtractDownloadedZip(zip_path, "/", *nro);
-                    return;
-                }
-                i--;
-            }
-            if (i == 0) {
-                ExtractDownloadedZip(zip_path, zip_extract::kDownloadsDir.data());
-            } else if (i == 1) {
-                BrowseExtractFolder(zip_path);
-            }
-        }, 0);
-    popup->SetMenuStyle(true);
-    App::Push(std::move(popup));
+    App::Push<ZipExtractBox>(
+        filename.empty() ? "Extract Options"_i18n : filename,
+        names,
+        [zip_path](fs::FsPath dest, std::string nro_only, std::vector<std::string> files) {
+            ExtractDownloadedZip(zip_path, dest, std::move(nro_only), std::move(files));
+        },
+        [zip_path, filename](bool create_named, std::vector<std::string> files) {
+            BrowseExtractFolder(zip_path, create_named, filename, std::move(files));
+        });
 }
 
 void OpenDirectLinkPrompt(std::string filled = {});

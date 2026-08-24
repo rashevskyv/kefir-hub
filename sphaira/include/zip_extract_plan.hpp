@@ -89,6 +89,127 @@ inline auto SuggestNakedNroPath(std::string_view filename) -> std::string {
     return NroInstallDest(name);
 }
 
+inline auto JoinDir(std::string_view parent, std::string_view name) -> std::string {
+    const auto n = SafeFolderName(name);
+    if (parent.empty() || parent == "/") {
+        return std::string{"/"} + n;
+    }
+    if (parent.back() == '/') {
+        return std::string{parent} + n;
+    }
+    return std::string{parent} + "/" + n;
+}
+
+// /downloads/<archive-stem> (or parent/<archive-stem>).
+inline auto NewFolderDest(std::string_view parent, std::string_view zip_filename) -> std::string {
+    return JoinDir(parent, FileStem(zip_filename));
+}
+
+struct ZipTreeNode {
+    std::string label;
+    std::string prefix;
+    int depth{};
+    bool is_dir{};
+};
+
+// Unique folders and files, zip order, folders created before their children.
+inline auto BuildZipTree(std::span<const std::string_view> names) -> std::vector<ZipTreeNode> {
+    std::vector<ZipTreeNode> tree;
+
+    auto has = [&](std::string_view p) -> bool {
+        for (const auto& n : tree) {
+            if (n.prefix == p) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (const auto raw : names) {
+        auto n = NormalizeZipEntry(raw);
+        if (n.empty()) {
+            continue;
+        }
+        const bool as_dir = n.back() == '/';
+        if (as_dir) {
+            n.pop_back();
+        }
+        if (n.empty()) {
+            continue;
+        }
+
+        std::string accum;
+        std::size_t start = 0;
+        while (start <= n.size()) {
+            const auto slash = n.find('/', start);
+            const bool last = slash == std::string::npos;
+            const auto part = last ? n.substr(start) : n.substr(start, slash - start);
+            if (part.empty() || part == "." || part == "..") {
+                if (last) {
+                    break;
+                }
+                start = slash + 1;
+                continue;
+            }
+
+            const bool dir_node = !last || as_dir;
+            if (!accum.empty() && accum.back() != '/') {
+                accum += '/';
+            }
+            accum += part;
+            if (dir_node) {
+                accum += '/';
+            }
+
+            if (!has(accum)) {
+                int depth = 0;
+                for (std::size_t i = 0; i + 1 < accum.size(); ++i) {
+                    if (accum[i] == '/') {
+                        depth++;
+                    }
+                }
+                tree.push_back(ZipTreeNode{
+                    std::string{part} + (dir_node ? "/" : ""),
+                    accum,
+                    depth,
+                    dir_node,
+                });
+            }
+
+            if (last) {
+                break;
+            }
+            start = slash + 1;
+        }
+    }
+    return tree;
+}
+
+inline auto SelectedFilePrefixes(std::span<const ZipTreeNode> nodes, std::span<const char> checked) -> std::vector<std::string> {
+    std::vector<std::string> out;
+    const auto n = std::min(nodes.size(), checked.size());
+    out.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        if (!nodes[i].is_dir && checked[i]) {
+            out.push_back(nodes[i].prefix);
+        }
+    }
+    return out;
+}
+
+inline auto EntryMatchesSelection(std::string_view normalized, std::span<const std::string> files) -> bool {
+    const auto n = NormalizeZipEntry(normalized);
+    if (n.empty() || n.back() == '/') {
+        return false;
+    }
+    for (const auto& f : files) {
+        if (path::EqualsIC(n, f)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Top-level names for the extract-all row, e.g. "atmosphere/, switch/, hbmenu.nro".
 inline auto FormatZipRoots(std::span<const std::string_view> names, std::size_t max_names = 4) -> std::string {
     std::vector<std::string> roots;

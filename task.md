@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.545**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.546**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.545 (Forwarder video capture Manual)
+## Поточний delivery: v0.13.546 (Full-screen zip extract)
+
+- [x] `ZIP-EXTRACT-FULLSCREEN-546` — повноекранне дерево архіву з галочками замість нижнього PopupList.
+- [x] `ZIP-EXTRACT-APP-LABEL-546` — «встановити програму», не «NRO»; шлях `/switch/<назва>`.
+- [x] `ZIP-EXTRACT-NAMED-FOLDER-546` — розпакувати файли в папку **або** в нову папку з іменем архіву.
+- [x] `DOCS-BUMP-546` — версію піднято до `0.13.546`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.545 (Forwarder video capture Manual)
 
 - [x] `FORWARDER-NACP-VIDEO-MANUAL-545` — video_capture Manual (0x1); Auto (0x2) падав у am 2128-0007.
 - [x] `DOCS-BUMP-545` — версію піднято до `0.13.545`, оновлено plan/task/walkthrough/audit. Агент не компілював.

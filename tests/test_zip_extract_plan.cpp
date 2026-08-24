@@ -15,6 +15,10 @@ using sphaira::zip_extract::FormatZipRoots;
 using sphaira::zip_extract::NroInstallDest;
 using sphaira::zip_extract::SuggestNakedNroPath;
 using sphaira::zip_extract::FileStem;
+using sphaira::zip_extract::BuildZipTree;
+using sphaira::zip_extract::NewFolderDest;
+using sphaira::zip_extract::EntryMatchesSelection;
+using sphaira::zip_extract::SelectedFilePrefixes;
 
 static int g_checks = 0;
 
@@ -55,6 +59,41 @@ static int test_zip_extract_plan() {
     CHECK(Roots({"atmosphere/kips/x", "bootloader/hekate_ipl.ini", "hbmenu.nro"})
         == "atmosphere/, bootloader/, hbmenu.nro");
     CHECK(Roots({"switch/appstore/appstore.nro"}) == "switch/");
+
+    CHECK(NewFolderDest("/downloads", "Atmosphere.zip") == "/downloads/Atmosphere");
+    CHECK(NewFolderDest("/", "pack.ZIP") == "/pack");
+    CHECK(NewFolderDest("/downloads/", "a.zip") == "/downloads/a");
+
+    {
+        const std::vector<std::string_view> names{
+            "atmosphere/kips/x", "atmosphere/package3", "switch/daybreak/daybreak.nro", "hbmenu.nro"};
+        const auto t = BuildZipTree(names);
+        CHECK(t.size() == 8);
+        CHECK(t[0].label == "atmosphere/" && t[0].is_dir && t[0].depth == 0);
+        CHECK(t[1].label == "kips/" && t[1].is_dir && t[1].depth == 1);
+        CHECK(t[2].label == "x" && !t[2].is_dir && t[2].prefix == "atmosphere/kips/x");
+        CHECK(t[3].label == "package3" && !t[3].is_dir);
+        CHECK(t[4].label == "switch/" && t[4].is_dir);
+        CHECK(t[7].label == "hbmenu.nro" && !t[7].is_dir && t[7].depth == 0);
+
+        std::vector<char> checked(t.size(), 1);
+        auto files = SelectedFilePrefixes(t, checked);
+        CHECK(files.size() == 4);
+        CHECK(EntryMatchesSelection("atmosphere/package3", files));
+        CHECK(EntryMatchesSelection("hbmenu.nro", files));
+
+        checked[2] = 0;
+        files = SelectedFilePrefixes(t, checked);
+        CHECK(!EntryMatchesSelection("atmosphere/kips/x", files));
+        CHECK(EntryMatchesSelection("atmosphere/package3", files));
+    }
+
+    {
+        const std::vector<std::string_view> names{"Awoo-Installer.nro"};
+        const auto t = BuildZipTree(names);
+        CHECK(t.size() == 1);
+        CHECK(t[0].label == "Awoo-Installer.nro" && !t[0].is_dir);
+    }
 
     return 0;
 }

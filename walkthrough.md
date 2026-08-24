@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.545** (2026-08-23). Попередні
+Актуальний delivery — **v0.13.546** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.546 — Full-screen zip extract
+
+- Після завантаження zip екран на всю висоту: дерево файлів з галочками, знизу дії. A на дереві — позначити; A на дії — виконати; Y — усі/жоден.
+- Один `.nro`: «програму буде встановлено в `/switch/<назва>`», не «NRO в папку switch».
+- Atmosphere-подібний zip: можна зняти `switch/` чи `hbmenu.nro`; розпакувати файли в обрану папку **або** в нову папку з іменем архіву (`/downloads/<stem>` одразу, або вибрати батьківську).
 
 ## v0.13.545 — Forwarder video capture Manual
 

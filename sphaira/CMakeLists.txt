@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.545)
+set(sphaira_VERSION 0.13.546)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -86,6 +86,7 @@ add_executable(sphaira
     source/ui/nvg_util.cpp
     source/ui/option_box.cpp
     source/ui/popup_list.cpp
+    source/ui/zip_extract_box.cpp
     source/ui/progress_box.cpp
     source/ui/screensaver.cpp
     source/ui/scrollable_text.cpp
