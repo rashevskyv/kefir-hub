@@ -756,10 +756,17 @@ async function init(){
       }
       if(cfg.placeholder)field.placeholder=cfg.placeholder;
       if(cfg.default_text)field.value=cfg.default_text;
+      if(cfg.multiline&&hintEl)hintEl.textContent='Paste or type the text, then Send.';
     }
   }catch(e){}
   field.focus();
-  bindUrlField();
+  if(field.tagName==='TEXTAREA'){
+    field.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send();}
+    });
+  }else{
+    bindUrlField();
+  }
 }
 function collapseSchemes(s){
   s=(s||'').trim();
@@ -790,9 +797,10 @@ function bindUrlField(){
 let sending=false;
 async function send(){
   if(sending)return;
-  const val=collapseSchemes(field.value);
-  if(val)field.value=val;
-  if(!val){msg.className='msg err';msg.textContent='Paste or type the address first.';return;}
+  const isArea=field.tagName==='TEXTAREA';
+  const val=isArea?field.value:collapseSchemes(field.value);
+  if(!isArea&&val)field.value=val;
+  if(!val){msg.className='msg err';msg.textContent=isArea?'Paste or type some text first.':'Paste or type the address first.';return;}
   sending=true;
   sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
   try{

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.555**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.556**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.555 (Remote text editor)
+## Поточний delivery: v0.13.556 (Paste snippet from PC)
+
+- [x] `REMOTE-PASTE-SNIPPET-556` — Actions → вставити багаторядковий текст з ПК/телефона під курсор.
+- [x] `DOCS-BUMP-556` — версію піднято до `0.13.556`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.555 (Remote text editor)
 
 - [x] `REMOTE-EDITOR-555` — Options текстового редактора: QR/браузер, JS-редактор, Save пише файл на SD.
 - [x] `DOCS-BUMP-555` — версію піднято до `0.13.555`, оновлено plan/task/walkthrough/audit. Агент не компілював.

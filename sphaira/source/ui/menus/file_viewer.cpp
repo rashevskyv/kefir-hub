@@ -1085,6 +1085,65 @@ void Menu::PasteBelow() {
     UpdateTextSubHeading();
 }
 
+void Menu::InsertSnippet(const std::string& text, s64 insert_at) {
+    if (!m_editable) {
+        return;
+    }
+
+    std::vector<std::string> lines;
+    std::string_view view{text};
+    size_t start = 0;
+    while (start <= view.size()) {
+        const auto end = view.find('\n', start);
+        auto line = view.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
+        if (line.ends_with('\r')) {
+            line.remove_suffix(1);
+        }
+        lines.emplace_back(line);
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    if (lines.empty()) {
+        return;
+    }
+
+    insert_at = std::clamp<s64>(insert_at, 0, static_cast<s64>(m_lines.size()));
+    PushUndo();
+    m_lines.insert(m_lines.begin() + insert_at, lines.begin(), lines.end());
+    m_line_index = std::clamp<s64>(insert_at + static_cast<s64>(lines.size()) - 1, 0, m_lines.size() - 1);
+    ClearRangeSelection();
+    RecreateList();
+    if (m_text_list) {
+        m_text_list->EnsureVisible(m_line_index, m_lines.size());
+    }
+    m_line_scroll.Reset();
+    m_text_dirty = (BuildText() != m_saved_text);
+    UpdateTextSubHeading();
+}
+
+void Menu::PasteFromDevice() {
+    if (!m_editable) {
+        return;
+    }
+
+    const auto [start, end] = GetTargetRange();
+    const s64 insert_at = std::clamp<s64>(end + 1, 0, static_cast<s64>(m_lines.size()));
+
+    remote_input::Options opts{};
+    opts.title = "Paste text"_i18n;
+    opts.guide = "Paste or type the text, then Send."_i18n;
+    opts.placeholder = "Paste text here"_i18n;
+    opts.multiline = true;
+    opts.min_length = 1;
+    opts.max_length = 256 * 1024;
+
+    remote_input::RequestRemoteText(opts, [this, insert_at](const std::string& text) {
+        InsertSnippet(text, insert_at);
+    });
+}
+
 void Menu::CommentSelection() {
     if (!m_editable) return;
     const auto [start, end] = GetTargetRange();
@@ -1268,6 +1327,7 @@ void Menu::ShowLineActions() {
     actions.push_back({"Copy"_i18n, ActionIcon::Copy, [this](){ CopySelection(); }});
     actions.push_back({"Cut"_i18n, ActionIcon::Cut, [this](){ CutSelection(); }});
     actions.push_back({"Paste below"_i18n, ActionIcon::Paste, [this](){ PasteBelow(); }});
+    actions.push_back({"Paste from PC / phone"_i18n, ActionIcon::Paste, [this](){ PasteFromDevice(); }});
     actions.push_back({"Delete"_i18n, ActionIcon::Delete, [this](){ DeleteLine(); }});
     actions.push_back({"Insert line below"_i18n, ActionIcon::Insert, [this](){ InsertLine(); }});
     actions.push_back({"Join with next line"_i18n, ActionIcon::Join, [this](){ JoinLine(); }});

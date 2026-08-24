@@ -1104,7 +1104,7 @@ void HandleApiKeyPost(Socket sock, const std::string& req) {
 
 void HandleRemoteInputPost(Socket sock, const std::string& req) {
     const auto opts = ui::remote_input::GetCurrentOptions();
-    const s64 max_size = opts.editor ? 4 * 1024 * 1024 : 64 * 1024;
+    const s64 max_size = opts.editor ? 4 * 1024 * 1024 : (opts.multiline ? 256 * 1024 : 64 * 1024);
 
     const auto length_str = HeaderValue(req, "content-length");
     if (length_str.empty()) {

@@ -57,6 +57,8 @@ private:
     void CopySelection();
     void CutSelection();
     void PasteBelow();
+    void PasteFromDevice();
+    void InsertSnippet(const std::string& text, s64 insert_at);
     void CommentSelection();
     void UncommentSelection();
     auto HasSelection() const -> bool;

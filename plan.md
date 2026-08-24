@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.555**. Завершені плани збережено в
+Поточний delivery — **v0.13.556**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.555 — Text editor on PC / phone
+## Поточний delivery: v0.13.556 — Paste from PC / phone at the cursor
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. У діях текстового редактора: «Вставити з ПК / телефона» — багаторядковий remote input, текст лягає під поточний рядок.
+
+## Попередній delivery: v0.13.555 — Text editor on PC / phone
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. У файловому редакторі Options → «Редагувати на ПК / телефоні»: той самий QR/HTTP, простий JS-редактор (підсвітка, undo/cut, Ctrl+S). Save надсилає файл назад і пише на SD.
