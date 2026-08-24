@@ -2190,28 +2190,30 @@ void FsView::DisplayOptions() {
         options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
             m_menu->m_sort.Set(index_out);
             SortAndFindLastFile();
-        }, m_menu->m_sort.Get(), "Select which field to sort files and folders by."_i18n);
+        }, m_menu->m_sort.Get(), "Select which field to sort files and folders by."_i18n)->SetIcon(ActionIcon::Sort);
 
         options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
             m_menu->m_order.Set(index_out);
             SortAndFindLastFile();
-        }, m_menu->m_order.Get(), "Sort entries from largest to smallest or A to Z."_i18n);
+        }, m_menu->m_order.Get(), "Sort entries from largest to smallest or A to Z."_i18n)->SetIcon(ActionIcon::Sort);
 
         options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_menu->m_show_hidden.Get(), [this](bool& v_out){
             m_menu->m_show_hidden.Set(v_out);
             SortAndFindLastFile();
-        }, "Show files and folders that start with a dot (hidden)."_i18n);
+        }, "Show files and folders that start with a dot (hidden)."_i18n)->SetIcon(ActionIcon::Toggle);
 
         options->Add<SidebarEntryBool>("Folders First"_i18n, m_menu->m_folders_first.Get(), [this](bool& v_out){
             m_menu->m_folders_first.Set(v_out);
             SortAndFindLastFile();
-        }, "Place folders before files in the listing."_i18n);
+        }, "Place folders before files in the listing."_i18n)->SetIcon(ActionIcon::Folder);
 
         options->Add<SidebarEntryBool>("Hidden Last"_i18n, m_menu->m_hidden_last.Get(), [this](bool& v_out){
             m_menu->m_hidden_last.Set(v_out);
             SortAndFindLastFile();
-        }, "Push hidden entries to the bottom of the listing."_i18n);
+        }, "Push hidden entries to the bottom of the listing."_i18n)->SetIcon(ActionIcon::Sort);
     }, "Change display order and visibility settings for files."_i18n);
+    view_entry->SetIcon(ActionIcon::Layout);
+    view_entry->SetHasSubmenu(true);
     view_entry->SetHasSubmenu(true);
 
     if (m_fs_entry.type == FsType::Archive && m_entries_current.size()) {

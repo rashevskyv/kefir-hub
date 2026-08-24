@@ -367,15 +367,85 @@ void drawActionIcon(NVGcontext* vg, const Theme* theme, float x, float y, float 
             break;
         case ActionIcon::Undo:
         case ActionIcon::Redo: {
+            // Undo points left, Redo points right (the previous assignment was reversed).
             const bool redo = icon == ActionIcon::Redo;
-            const float left = redo ? 5.f : 19.f, right = redo ? 19.f : 5.f, tip = redo ? 10.f : 14.f;
-            line(left, 10.f, right, 10.f); line(right, 10.f, right, 18.f);
-            nvgBeginPath(vg); nvgMoveTo(vg, x + left * s, y + 10.f * s); nvgLineTo(vg, x + tip * s, y + 5.f * s); nvgLineTo(vg, x + tip * s, y + 15.f * s); nvgClosePath(vg); nvgFillColor(vg, colour); nvgFill(vg);
+            const float nose = redo ? 19.f : 5.f, tail = redo ? 5.f : 19.f, base = redo ? 14.f : 10.f;
+            line(nose, 10.f, tail, 10.f); line(tail, 10.f, tail, 18.f);
+            nvgBeginPath(vg); nvgMoveTo(vg, x + nose * s, y + 10.f * s); nvgLineTo(vg, x + base * s, y + 5.f * s); nvgLineTo(vg, x + base * s, y + 15.f * s); nvgClosePath(vg); nvgFillColor(vg, colour); nvgFill(vg);
             break;
         }
         case ActionIcon::Save:
             nvgBeginPath(vg); nvgRoundedRect(vg, x + 4.f * s, y + 3.f * s, 16.f * s, 18.f * s, 1.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
             line(8.f, 4.f, 8.f, 10.f); line(8.f, 10.f, 16.f, 10.f); line(8.f, 16.f, 16.f, 16.f);
+            break;
+        case ActionIcon::Search:
+            nvgBeginPath(vg); nvgCircle(vg, x + 10.f * s, y + 10.f * s, 5.5f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
+            line(14.f, 14.f, 19.5f, 19.5f);
+            break;
+        case ActionIcon::Sort:
+            line(8.f, 5.f, 8.f, 19.f); line(5.f, 8.f, 8.f, 5.f); line(11.f, 8.f, 8.f, 5.f);
+            line(16.f, 5.f, 16.f, 19.f); line(13.f, 16.f, 16.f, 19.f); line(19.f, 16.f, 16.f, 19.f);
+            break;
+        case ActionIcon::Layout:
+            nvgBeginPath(vg); nvgRect(vg, x + 4.f * s, y + 4.f * s, 7.f * s, 7.f * s); nvgRect(vg, x + 13.f * s, y + 4.f * s, 7.f * s, 7.f * s); nvgRect(vg, x + 4.f * s, y + 13.f * s, 7.f * s, 7.f * s); nvgRect(vg, x + 13.f * s, y + 13.f * s, 7.f * s, 7.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
+            break;
+        case ActionIcon::Launch:
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 7.f * s, y + 5.f * s); nvgLineTo(vg, x + 19.f * s, y + 12.f * s); nvgLineTo(vg, x + 7.f * s, y + 19.f * s); nvgClosePath(vg); nvgFillColor(vg, colour); nvgFill(vg);
+            break;
+        case ActionIcon::Folder:
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 4.f * s, y + 8.f * s); nvgLineTo(vg, x + 4.f * s, y + 19.f * s); nvgLineTo(vg, x + 20.f * s, y + 19.f * s); nvgLineTo(vg, x + 20.f * s, y + 10.f * s); nvgLineTo(vg, x + 12.f * s, y + 10.f * s); nvgLineTo(vg, x + 10.f * s, y + 7.f * s); nvgLineTo(vg, x + 4.f * s, y + 7.f * s); nvgClosePath(vg); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
+            break;
+        case ActionIcon::Dump:
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 5.f * s, y + 18.f * s); nvgLineTo(vg, x + 5.f * s, y + 20.f * s); nvgLineTo(vg, x + 19.f * s, y + 20.f * s); nvgLineTo(vg, x + 19.f * s, y + 18.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgLineCap(vg, NVG_ROUND); nvgStroke(vg);
+            line(12.f, 5.f, 12.f, 16.f); line(12.f, 5.f, 8.f, 9.f); line(12.f, 5.f, 16.f, 9.f);
+            break;
+        case ActionIcon::Move:
+            line(4.f, 9.f, 20.f, 9.f); line(4.f, 9.f, 8.f, 6.f); line(4.f, 9.f, 8.f, 12.f);
+            line(4.f, 16.f, 20.f, 16.f); line(20.f, 16.f, 16.f, 13.f); line(20.f, 16.f, 16.f, 19.f);
+            break;
+        case ActionIcon::Refresh:
+            nvgBeginPath(vg); nvgArc(vg, x + 12.f * s, y + 12.f * s, 7.f * s, -0.4f, 4.4f, NVG_CW); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgLineCap(vg, NVG_ROUND); nvgStroke(vg);
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 18.f * s, y + 5.f * s); nvgLineTo(vg, x + 18.f * s, y + 10.f * s); nvgLineTo(vg, x + 13.f * s, y + 10.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgLineCap(vg, NVG_ROUND); nvgLineJoin(vg, NVG_ROUND); nvgStroke(vg);
+            break;
+        case ActionIcon::Random:
+            line(7.f, 7.f, 17.f, 17.f); line(17.f, 7.f, 7.f, 17.f);
+            nvgBeginPath(vg); nvgCircle(vg, x + 7.f * s, y + 7.f * s, 2.f * s); nvgCircle(vg, x + 17.f * s, y + 17.f * s, 2.f * s); nvgCircle(vg, x + 17.f * s, y + 7.f * s, 2.f * s); nvgCircle(vg, x + 7.f * s, y + 17.f * s, 2.f * s); nvgFillColor(vg, colour); nvgFill(vg);
+            break;
+        case ActionIcon::Star:
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, x + 12.f * s, y + 3.f * s);
+            nvgLineTo(vg, x + 14.5f * s, y + 9.f * s);
+            nvgLineTo(vg, x + 21.f * s, y + 9.5f * s);
+            nvgLineTo(vg, x + 16.f * s, y + 14.f * s);
+            nvgLineTo(vg, x + 17.5f * s, y + 20.f * s);
+            nvgLineTo(vg, x + 12.f * s, y + 16.5f * s);
+            nvgLineTo(vg, x + 6.5f * s, y + 20.f * s);
+            nvgLineTo(vg, x + 8.f * s, y + 14.f * s);
+            nvgLineTo(vg, x + 3.f * s, y + 9.5f * s);
+            nvgLineTo(vg, x + 9.5f * s, y + 9.f * s);
+            nvgClosePath(vg);
+            nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgLineJoin(vg, NVG_ROUND); nvgStroke(vg);
+            break;
+        case ActionIcon::GoTo:
+            line(5.f, 7.f, 19.f, 7.f); line(5.f, 12.f, 14.f, 12.f); line(5.f, 17.f, 19.f, 17.f);
+            line(14.f, 12.f, 18.f, 9.f); line(14.f, 12.f, 18.f, 15.f);
+            break;
+        case ActionIcon::Comment:
+            line(7.f, 5.f, 11.f, 19.f); line(13.f, 5.f, 17.f, 19.f);
+            break;
+        case ActionIcon::Range:
+            line(7.f, 5.f, 7.f, 19.f); line(7.f, 5.f, 11.f, 5.f); line(7.f, 19.f, 11.f, 19.f);
+            line(17.f, 5.f, 17.f, 19.f); line(17.f, 5.f, 13.f, 5.f); line(17.f, 19.f, 13.f, 19.f);
+            break;
+        case ActionIcon::Toggle:
+            nvgBeginPath(vg); nvgRoundedRect(vg, x + 4.f * s, y + 8.f * s, 16.f * s, 8.f * s, 4.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
+            nvgBeginPath(vg); nvgCircle(vg, x + 16.f * s, y + 12.f * s, 3.f * s); nvgFillColor(vg, colour); nvgFill(vg);
+            break;
+        case ActionIcon::Compress:
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 7.f * s, y + 6.f * s); nvgLineTo(vg, x + 12.f * s, y + 3.f * s); nvgLineTo(vg, x + 17.f * s, y + 6.f * s); nvgLineTo(vg, x + 17.f * s, y + 20.f * s); nvgLineTo(vg, x + 7.f * s, y + 20.f * s); nvgClosePath(vg); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
+            line(10.f, 11.f, 14.f, 11.f); line(10.f, 15.f, 14.f, 15.f);
+            break;
+        default:
             break;
     }
 }

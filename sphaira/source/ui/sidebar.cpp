@@ -84,14 +84,26 @@ auto SidebarEntryBase::OnFocusLost() noexcept -> void {
     m_scolling_value.Reset();
 }
 
-void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected) {
+void SidebarEntryBase::DrawLeadingIcon(NVGcontext* vg, Theme* theme, float x, float y) const {
+    if (m_theme_icon) {
+        DrawElement(x, y, 24.f, 24.f, *m_theme_icon);
+    } else if (m_icon) {
+        gfx::drawActionIcon(vg, theme, x, y, 24.f, *m_icon);
+    }
+}
+
+void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected, float extra_right) {
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
     const auto value_colour = IsEnabled() ? theme->GetColour(use_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT) : DisabledTextColour();
 
+    const float icon_w = LeadingIconWidth();
     const float pad = 15.f;
     const float gap = 10.f;
-    const float usable_w = m_pos.w - pad * 2.f;
     const float mid_y = m_pos.y + (m_pos.h / 2.f);
+    if (icon_w) {
+        DrawLeadingIcon(vg, theme, m_pos.x + pad, mid_y - 12.f);
+    }
+    const float usable_w = m_pos.w - pad * 2.f - icon_w - extra_right;
 
     nvgFontSize(vg, 20);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
@@ -113,9 +125,10 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
         const float top_y = mid_y - line_gap / 2.f;
         const float bottom_y = mid_y + line_gap / 2.f;
 
-        m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
+        const float text_x = m_pos.x + pad + icon_w;
+        m_scolling_title.Draw(vg, HasFocus(), text_x, top_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
         // each line scrolls on focus if even the full row width isn't enough.
-        m_scolling_value.Draw(vg, HasFocus(), m_pos.x + pad, bottom_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
+        m_scolling_value.Draw(vg, HasFocus(), text_x, bottom_y, usable_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
         return;
     }
 
@@ -134,10 +147,11 @@ void SidebarEntryBase::DrawEntry(NVGcontext* vg, Theme* theme, const std::string
         right_w = std::min(value_w, side_cap);
         left_w = std::max(0.f, std::min(label_w, usable_w - right_w - side_gap));
     }
-    const float right_x = m_pos.x + m_pos.w - pad - right_w;
+    const float right_x = m_pos.x + m_pos.w - pad - extra_right - right_w;
+    const float text_x = m_pos.x + pad + icon_w;
 
     m_scolling_value.Draw(vg, HasFocus(), right_x, mid_y, right_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, value_colour, right);
-    m_scolling_title.Draw(vg, HasFocus(), m_pos.x + pad, mid_y, left_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
+    m_scolling_title.Draw(vg, HasFocus(), text_x, mid_y, left_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, left, true);
 }
 
 SidebarEntryBool::SidebarEntryBool(const std::string& title, bool option, Callback cb, const std::string& info, const std::string& true_str, const std::string& false_str)
@@ -252,41 +266,22 @@ void SidebarEntryCallback::Draw(NVGcontext* vg, Theme* theme, const Vec4& root_p
     SidebarEntryBase::Draw(vg, theme, root_pos, left);
 
     const auto colour = IsEnabled() ? theme->GetColour(ThemeEntryID_TEXT) : DisabledTextColour();
-    float x = m_pos.x + 15.f;
-    const float y = m_pos.y + (m_pos.h / 2.f);
-    float max_w = m_pos.w - 30.f;
-
-    if (m_theme_icon) {
-        DrawElement(x, y - 12.f, 24.f, 24.f, *m_theme_icon);
-        x += 34.f;
-        max_w -= 34.f;
-    } else if (m_icon) {
-        gfx::drawActionIcon(vg, theme, x, y - 12.f, 24.f, *m_icon);
-        x += 34.f;
-        max_w -= 34.f;
-    }
+    const float extra_right = m_has_submenu ? 20.f : 0.f;
+    SidebarEntryBase::DrawEntry(vg, theme, m_title, "", false, extra_right);
 
     if (m_has_submenu) {
-        max_w -= 20.f;
+        const float y = m_pos.y + (m_pos.h / 2.f);
         const float x1 = m_pos.x + m_pos.w - 24.f;
-        const float y1 = y;
         nvgBeginPath(vg);
-        nvgMoveTo(vg, x1 - 8.f, y1 - 8.f);
-        nvgLineTo(vg, x1, y1);
-        nvgLineTo(vg, x1 - 8.f, y1 + 8.f);
+        nvgMoveTo(vg, x1 - 8.f, y - 8.f);
+        nvgLineTo(vg, x1, y);
+        nvgLineTo(vg, x1 - 8.f, y + 8.f);
         nvgStrokeColor(vg, colour);
         nvgStrokeWidth(vg, 3.f);
         nvgLineCap(vg, NVG_ROUND);
         nvgLineJoin(vg, NVG_ROUND);
         nvgStroke(vg);
     }
-
-    m_scolling_entry_title.Draw(vg, HasFocus(), x, y, max_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_title, true);
-}
-
-auto SidebarEntryCallback::OnFocusLost() noexcept -> void {
-    SidebarEntryBase::OnFocusLost();
-    m_scolling_entry_title.Reset();
 }
 
 SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& items, std::string& index, const std::string& info)

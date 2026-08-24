@@ -1237,7 +1237,7 @@ private:
     void ShowGameActions() {
         auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
-        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n);
+        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n)->SetIcon(ActionIcon::Launch);
 
         const auto& entry = CurrentEntry();
 
@@ -1268,7 +1268,7 @@ private:
                         }
                     }, 1, PRIO_PREEMPTIVE, 1024*128, false);
                 });
-            }, true, hint);
+            }, true, hint)->SetIcon(ActionIcon::Move);
         };
 
         add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move game components from NAND to SD card."_i18n);
@@ -1276,13 +1276,13 @@ private:
 
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);
-        }, true, "Export base, updates, DLC and data patches."_i18n);
+        }, true, "Export base, updates, DLC and data patches."_i18n)->SetIcon(ActionIcon::Dump);
         options->Add<SidebarEntryCallback>("Create repack"_i18n, [this](){
             ShowCreateRepackSidebar();
-        }, true, "Export selected installed components as one merged NSP."_i18n);
+        }, true, "Export selected installed components as one merged NSP."_i18n)->SetIcon(ActionIcon::Compress);
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
-        }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n);
+        }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);
     }
 
     void ShowCreateRepackSidebar() {
@@ -1466,7 +1466,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     common_flags &= entry->content_flags;
                 }
 
-                options->Add<SidebarEntryHeader>("LIBRARY"_i18n);
+                options->Add<SidebarEntryHeader>("VIEW"_i18n);
                 // item order matches LayoutType: List, Grid(Icon), GridDetail(Grid), HbMenu.
                 SidebarEntryArray::Items layout_items;
                 layout_items.push_back("List"_i18n);
@@ -1477,19 +1477,9 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                 options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
                     m_layout.Set(index_out);
                     OnLayoutChange();
-                }, m_layout.Get(), "Choose how games are displayed on screen."_i18n);
+                }, m_layout.Get(), "Choose how games are displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
 
-                options->Add<SidebarEntryBool>("Show unavailable games"_i18n, m_show_unavailable.Get(), [this](bool& v_out){
-                    m_show_unavailable.Set(v_out);
-                    m_dirty = true;
-                }, "Show application records that have no installed content or readable metadata."_i18n);
-
-                options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
-                    m_hide_forwarders.Set(v_out);
-                    m_dirty = true;
-                }, "Hide game forwarder shortcuts from the list."_i18n);
-
-                options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
+                auto sort_entry = options->Add<SidebarEntryCallback>("Sort By"_i18n, [this](){
                     auto options = std::make_unique<Sidebar>("Sort Options"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
@@ -1508,37 +1498,45 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
                         m_sort.Set(index_out);
                         SortAndFindLastFile(false);
-                    }, m_sort.Get(), "Select which field to sort games by."_i18n);
+                    }, m_sort.Get(), "Select which field to sort games by."_i18n)->SetIcon(ActionIcon::Sort);
 
                     options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
                         m_order.Set(index_out);
                         SortAndFindLastFile(false);
-                    }, m_order.Get(), "Sort games from newest to oldest or A to Z."_i18n);
+                    }, m_order.Get(), "Sort games from newest to oldest or A to Z."_i18n)->SetIcon(ActionIcon::Sort);
 
                     options->Add<SidebarEntryCallback>("Update play time"_i18n, [this](){
                         LoadPlaytime();
-                    }, "Read total play time for every game from the console's play log, then sort by it."_i18n);
+                    }, "Read total play time for every game from the console's play log, then sort by it."_i18n)->SetIcon(ActionIcon::Refresh);
 
                 }, "Change display order for games."_i18n);
+                sort_entry->SetIcon(ActionIcon::Sort);
+                sort_entry->SetHasSubmenu(true);
 
                 options->Add<SidebarEntryCallback>("Search"_i18n, [this](){
                     SetSearch();
                 }, m_search_query.empty()
                     ? "Show only games whose name contains what you type."_i18n
-                    : "Searching for: "_i18n + m_search_query);
+                    : "Searching for: "_i18n + m_search_query)->SetIcon(ActionIcon::Search);
 
                 if (!m_search_query.empty()) {
                     options->Add<SidebarEntryCallback>("Clear search"_i18n, [this](){
                         m_search_query.clear();
                         m_dirty = true;
-                    }, "Show every game again."_i18n);
+                    }, "Show every game again."_i18n)->SetIcon(ActionIcon::Delete);
                 }
 
-                #if 0
-                options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
+                options->Add<SidebarEntryHeader>("LIBRARY"_i18n);
 
-                });
-                #endif
+                options->Add<SidebarEntryBool>("Show unavailable games"_i18n, m_show_unavailable.Get(), [this](bool& v_out){
+                    m_show_unavailable.Set(v_out);
+                    m_dirty = true;
+                }, "Show application records that have no installed content or readable metadata."_i18n)->SetIcon(ActionIcon::Toggle);
+
+                options->Add<SidebarEntryBool>("Hide forwarders"_i18n, m_hide_forwarders.Get(), [this](bool& v_out){
+                    m_hide_forwarders.Set(v_out);
+                    m_dirty = true;
+                }, "Hide game forwarder shortcuts from the list."_i18n)->SetIcon(ActionIcon::Toggle);
 
                 options->Add<SidebarEntryCallback>("Launch random game"_i18n, [this](){
                     const auto random_index = randomGet64() % std::size(m_entries);
@@ -1553,11 +1551,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                         }, e.image
                     );
-                }, "Pick and launch a random game from your library."_i18n);
-
-                options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
-                    App::DisplayDumpOptions(false);
-                }, "Configure dump output settings such as folder structure and ticket handling."_i18n);
+                }, "Pick and launch a random game from your library."_i18n)->SetIcon(ActionIcon::Random);
 
                 options->Add<SidebarEntryHeader>("SELECTED GAMES"_i18n,
                     std::to_string(targets.size()) + " " + "selected"_i18n);
@@ -1595,38 +1589,40 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             #endif
                         }
                     );
-                    }, "Show all installed content meta records for the selected game."_i18n);
+                    }, "Show all installed content meta records for the selected game."_i18n)->SetIcon(ActionIcon::Edit);
                 }
 
                 if (all_have_content) {
-                    options->Add<SidebarEntryCallback>("Dump"_i18n, [this, common_flags](){
+                    auto dump_entry = options->Add<SidebarEntryCallback>("Dump"_i18n, [this, common_flags](){
                     auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
                     options->Add<SidebarEntryCallback>("Dump All"_i18n, [this](){
                         DumpGames(title::ContentFlag_All);
-                    }, true, "Dump all content: base game, updates, and DLC."_i18n);
+                    }, true, "Dump all content: base game, updates, and DLC."_i18n)->SetIcon(ActionIcon::Dump);
                     if (common_flags & title::ContentFlag_Application) {
                         options->Add<SidebarEntryCallback>("Dump Application"_i18n, [this](){
                             DumpGames(title::ContentFlag_Application);
-                        }, true, "Dump the base application NSP only."_i18n);
+                        }, true, "Dump the base application NSP only."_i18n)->SetIcon(ActionIcon::Dump);
                     }
                     if (common_flags & title::ContentFlag_Patch) {
                         options->Add<SidebarEntryCallback>("Dump Patch"_i18n, [this](){
                             DumpGames(title::ContentFlag_Patch);
-                        }, true, "Dump the game update/patch NSP only."_i18n);
+                        }, true, "Dump the game update/patch NSP only."_i18n)->SetIcon(ActionIcon::Dump);
                     }
                     if (common_flags & title::ContentFlag_AddOnContent) {
                         options->Add<SidebarEntryCallback>("Dump AddOnContent"_i18n, [this](){
                             DumpGames(title::ContentFlag_AddOnContent);
-                        }, true, "Dump downloadable content (DLC) NSP only."_i18n);
+                        }, true, "Dump downloadable content (DLC) NSP only."_i18n)->SetIcon(ActionIcon::Dump);
                     }
                     if (common_flags & title::ContentFlag_DataPatch) {
                         options->Add<SidebarEntryCallback>("Dump DataPatch"_i18n, [this](){
                             DumpGames(title::ContentFlag_DataPatch);
-                        }, true, "Dump data patch NSP only."_i18n);
+                        }, true, "Dump data patch NSP only."_i18n)->SetIcon(ActionIcon::Dump);
                     }
                     }, true, "Export content shared by all selected games as NSP files."_i18n);
+                    dump_entry->SetIcon(ActionIcon::Dump);
+                    dump_entry->SetHasSubmenu(true);
                 }
 
                 // same rule as the single-game menu: a direction is only offered
@@ -1663,7 +1659,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                                 App::PushErrorBox(rc, "Move failed!"_i18n);
                             }
                         }, 1, PRIO_PREEMPTIVE, 1024*128, false);
-                    }, true, hint);
+                    }, true, hint)->SetIcon(ActionIcon::Move);
                 };
 
                 add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move all selected games to SD card."_i18n);
@@ -1671,7 +1667,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
 
                 options->Add<SidebarEntryCallback>("Create mods folders"_i18n, [this](){
                     CreateContentsFolders();
-                }, "Create Atmosphere LayeredFS folders for all selected games."_i18n);
+                }, "Create Atmosphere LayeredFS folders for all selected games."_i18n)->SetIcon(ActionIcon::Folder);
 
                 options->Add<SidebarEntryCallback>("Create save"_i18n, [this](){
                     ui::PopupList::Items items{};
@@ -1687,7 +1683,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                         }
                     );
-                }, "Manually create save data entries for all selected games."_i18n);
+                }, "Manually create save data entries for all selected games."_i18n)->SetIcon(ActionIcon::Save);
 
                 // completely deletes the application record and all data.
                 options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
@@ -1703,21 +1699,25 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                         }, targets.front().image
                     );
-                }, true, "Permanently delete all selected games and their data."_i18n);
+                }, true, "Permanently delete all selected games and their data."_i18n)->SetIcon(ActionIcon::Delete);
             }
 
-            options->Add<SidebarEntryCallback>("Advanced options"_i18n, [this](){
+            auto advanced_entry = options->Add<SidebarEntryCallback>("Advanced options"_i18n, [this](){
                 auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
                 ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+                options->Add<SidebarEntryCallback>("Dump options"_i18n, [this](){
+                    App::DisplayDumpOptions(false);
+                }, "Configure dump output settings such as folder structure and ticket handling."_i18n)->SetIcon(ActionIcon::Dump);
 
                 options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
                     m_dirty = true;
                     App::PopToMenu();
-                }, "Rescan the game library and reload the list."_i18n);
+                }, "Rescan the game library and reload the list."_i18n)->SetIcon(ActionIcon::Refresh);
 
                 options->Add<SidebarEntryBool>("Title cache"_i18n, m_title_cache.Get(), [this](bool& v_out){
                     m_title_cache.Set(v_out);
-                }, "Cache game names and icons to speed up loading."_i18n);
+                }, "Cache game names and icons to speed up loading."_i18n)->SetIcon(ActionIcon::Save);
 
                 options->Add<SidebarEntryCallback>("Delete title cache"_i18n, [this](){
                     App::Push<OptionBox>(
@@ -1730,8 +1730,10 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                             }
                         }
                     );
-                }, "Clear cached game metadata to force a fresh reload."_i18n);
+                }, "Clear cached game metadata to force a fresh reload."_i18n)->SetIcon(ActionIcon::Delete);
             }, "Access developer and maintenance tools."_i18n);
+            advanced_entry->SetIcon(ActionIcon::Edit);
+            advanced_entry->SetHasSubmenu(true);
         }})
     );
 

@@ -33,7 +33,7 @@ public:
         return true;
     }
 
-    void DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected);
+    void DrawEntry(NVGcontext* vg, Theme* theme, const std::string& left, const std::string& right, bool use_selected, float extra_right = 0.f);
 
     void Depends(const DependsCallback& callback, const std::string& depends_info, const DependsClickCallback& depends_click = {}) {
         m_depends_callback = callback;
@@ -53,6 +53,16 @@ public:
         m_depends_click = depends_click;
     }
 
+    void SetIcon(ActionIcon icon) {
+        m_icon = icon;
+        m_theme_icon.reset();
+    }
+
+    void SetIcon(ThemeEntryID icon) {
+        m_theme_icon = icon;
+        m_icon.reset();
+    }
+
 protected:
     auto IsEnabled() const -> bool {
         if (m_depends_callback) {
@@ -70,6 +80,13 @@ protected:
 
 protected:
     std::string m_title;
+    std::optional<ActionIcon> m_icon{};
+    std::optional<ThemeEntryID> m_theme_icon{};
+
+    void DrawLeadingIcon(NVGcontext* vg, Theme* theme, float x, float y) const;
+    auto LeadingIconWidth() const -> float {
+        return (m_icon || m_theme_icon) ? 34.f : 0.f;
+    }
 
 private:
     std::string m_info{};
@@ -133,7 +150,6 @@ public:
     explicit SidebarEntryCallback(const std::string& title, Callback cb, const std::string& info);
     explicit SidebarEntryCallback(const std::string& title, Callback cb, bool pop_on_click = false, const std::string& info = "");
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
-    auto OnFocusLost() noexcept -> void override;
 
     void SetHasSubmenu(bool value = true) {
         m_has_submenu = value;
@@ -143,23 +159,10 @@ public:
         return m_has_submenu;
     }
 
-    void SetIcon(ActionIcon icon) {
-        m_icon = icon;
-        m_theme_icon.reset();
-    }
-
-    void SetIcon(ThemeEntryID icon) {
-        m_theme_icon = icon;
-        m_icon.reset();
-    }
-
 private:
     Callback m_callback;
     bool m_pop_on_click;
     bool m_has_submenu{false};
-    std::optional<ActionIcon> m_icon{};
-    std::optional<ThemeEntryID> m_theme_icon{};
-    ScrollingText m_scolling_entry_title{};
 };
 
 class SidebarEntryArray final : public SidebarEntryBase {

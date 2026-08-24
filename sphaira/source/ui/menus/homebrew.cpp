@@ -1056,22 +1056,22 @@ void Menu::DisplayOptions() {
     options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this, sort_items](s64& index_out){
         m_sort.Set(index_out);
         SortAndFindLastFile();
-    }, m_sort.Get(), "Select which field to sort homebrew by."_i18n);
+    }, m_sort.Get(), "Select which field to sort homebrew by."_i18n)->SetIcon(ActionIcon::Sort);
 
     options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this, order_items](s64& index_out){
         m_order.Set(index_out);
         SortAndFindLastFile();
-    }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n);
+    }, m_order.Get(), "Display entries in Ascending or Descending order."_i18n)->SetIcon(ActionIcon::Sort);
 
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
         m_layout.Set(index_out);
         OnLayoutChange();
-    }, m_layout.Get(), "Choose how apps are displayed on screen."_i18n);
+    }, m_layout.Get(), "Choose how apps are displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
 
     options->Add<SidebarEntryBool>("Show Hidden"_i18n, m_show_hidden.Get(), [this](bool& enable){
         m_show_hidden.Set(enable);
         SortAndFindLastFile();
-    }, "Shows all hidden homebrew."_i18n);
+    }, "Shows all hidden homebrew."_i18n)->SetIcon(ActionIcon::Toggle);
 
     const auto targets = GetSelectedEntries();
     if (!targets.empty()) {
@@ -1096,19 +1096,19 @@ void Menu::DisplayOptions() {
         if (targets.size() == 1 && m_selected_count == 0) {
             options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this](){
                 CustomizeHomebrew();
-            }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n);
+            }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n)->SetIcon(ActionIcon::Edit);
         }
 
         if (has_unstarred) {
             options->Add<SidebarEntryCallback>("Star"_i18n, [this](){
                 StarHomebrew(true);
-            }, "Mark as favorite."_i18n);
+            }, "Mark as favorite."_i18n)->SetIcon(ActionIcon::Star);
         }
 
         if (has_starred) {
             options->Add<SidebarEntryCallback>("Unstar"_i18n, [this](){
                 StarHomebrew(false);
-            }, "Remove favorite mark."_i18n);
+            }, "Remove favorite mark."_i18n)->SetIcon(ActionIcon::Star);
         }
 
         options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
@@ -1127,7 +1127,7 @@ void Menu::DisplayOptions() {
                     }
                 }, targets.front().image
             );
-        }, true, "Permanently delete all selected homebrew."_i18n);
+        }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
 
         if (targets.size() == 1 && m_selected_count == 0) {
             options->Add<SidebarEntryHeader>("FORWARDER"_i18n);

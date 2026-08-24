@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.599** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.600** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.600 — menu icons, Games options, Tools tiles
+
+- Undo в текстовому редакторі вказує ліворуч, Redo — праворуч.
+- Іконки дій (пошук, сортування, макет, видалення, запуск…) на сайдбарах ігор, файлів, homebrew, сейвів і редактора. Раніше вони були лише у файловому браузері й попапі рядка.
+- Опції Games розкладені: **VIEW** (макет, сортування, пошук), **LIBRARY** (фільтри, випадкова гра), **SELECTED** (дамп, переміщення, видалення). Налаштування дампу — в Advanced.
+- Плитки Tools і Game Tools перемальовані в одному стилі, без тексту на іконці. Advanced Options і вкладені Tools Tools — окремим кроком.
 
 ## v0.13.599 — nxlink no longer crashes on exit with a file open
 

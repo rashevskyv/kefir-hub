@@ -1469,17 +1469,17 @@ void Menu::ShowLineActions() {
 
     if (m_line_index >= 0 && m_line_index < static_cast<s64>(m_lines.size())
         && text_helper::ToggleIniBoolean(m_lines[m_line_index]).toggled) {
-        actions.push_back({"Toggle"_i18n, std::nullopt, [this](){ TryToggleLine(m_line_index); }});
+        actions.push_back({"Toggle"_i18n, ActionIcon::Toggle, [this](){ TryToggleLine(m_line_index); }});
     }
     actions.push_back({"Edit line"_i18n, ActionIcon::Edit, [this](){ EditLine(); }});
 
     if (m_has_range) {
         if (!m_adjusting_range) {
-            actions.push_back({"Expand range"_i18n, std::nullopt, [this](){ StartAdjustRange(); }});
+            actions.push_back({"Expand range"_i18n, ActionIcon::Range, [this](){ StartAdjustRange(); }});
         }
-        actions.push_back({"Clear selection"_i18n, std::nullopt, [this](){ ClearRangeSelection(); UpdateTextSubHeading(); }});
+        actions.push_back({"Clear selection"_i18n, ActionIcon::Delete, [this](){ ClearRangeSelection(); UpdateTextSubHeading(); }});
     } else {
-        actions.push_back({"Select range"_i18n, std::nullopt, [this](){ StartRangeSelection(); }});
+        actions.push_back({"Select range"_i18n, ActionIcon::Range, [this](){ StartRangeSelection(); }});
     }
 
     actions.push_back({"Copy"_i18n, ActionIcon::Copy, [this](){ CopySelection(); }});
@@ -1491,8 +1491,8 @@ void Menu::ShowLineActions() {
     actions.push_back({"Join with next line"_i18n, ActionIcon::Join, [this](){ JoinLine(); }});
 
     if (text_helper::IsIniFile(m_path)) {
-        actions.push_back({"Comment"_i18n, std::nullopt, [this](){ CommentSelection(); }});
-        actions.push_back({"Uncomment"_i18n, std::nullopt, [this](){ UncommentSelection(); }});
+        actions.push_back({"Comment"_i18n, ActionIcon::Comment, [this](){ CommentSelection(); }});
+        actions.push_back({"Uncomment"_i18n, ActionIcon::Comment, [this](){ UncommentSelection(); }});
     }
 
     actions.push_back({"Undo"_i18n, ActionIcon::Undo, [this](){ Undo(); }});
@@ -1580,7 +1580,7 @@ void Menu::DisplayTextOptions() {
     if (m_writable && !m_is_streamed && m_file_size <= EDIT_MAX_SIZE) {
         options->Add<SidebarEntryCallback>("Edit on PC / phone"_i18n, [this](){
             EditOnDevice();
-        }, "Open this file in a browser. Save to Switch writes the file; Save and Close also ends the session."_i18n);
+        }, "Open this file in a browser. Save to Switch writes the file; Save and Close also ends the session."_i18n)->SetIcon(ActionIcon::Edit);
     }
 
     if (!m_editable) {
@@ -1589,19 +1589,19 @@ void Menu::DisplayTextOptions() {
 
     options->Add<SidebarEntryCallback>("Save"_i18n, [this](){
         SaveText();
-    }, "Save changes to the file."_i18n);
+    }, "Save changes to the file."_i18n)->SetIcon(ActionIcon::Save);
 
     options->Add<SidebarEntryCallback>("Undo"_i18n, [this](){
         Undo();
-    }, "Step back through the last 32 edits."_i18n);
+    }, "Step back through the last 32 edits."_i18n)->SetIcon(ActionIcon::Undo);
 
     options->Add<SidebarEntryCallback>("Redo"_i18n, [this](){
         Redo();
-    }, "Step forward again after an undo."_i18n);
+    }, "Step forward again after an undo."_i18n)->SetIcon(ActionIcon::Redo);
 
     options->Add<SidebarEntryCallback>("Go to line"_i18n, [this](){
         GoToLine();
-    }, "Jump straight to a line number."_i18n);
+    }, "Jump straight to a line number."_i18n)->SetIcon(ActionIcon::GoTo);
 }
 
 void Menu::UpdateText(Controller* controller, TouchInfo* touch) {
@@ -2028,17 +2028,17 @@ void Menu::DisplayImageOptions() {
     options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
         App::PopToMenu();
         DeleteImages();
-    }, "Permanently delete the selected image(s) from the SD card."_i18n);
+    }, "Permanently delete the selected image(s) from the SD card."_i18n)->SetIcon(ActionIcon::Delete);
 
     options->Add<SidebarEntryCallback>("Compress to zip"_i18n, [this](){
         App::PopToMenu();
         ZipImages("");
-    }, "Compress the selected image(s) into a zip archive."_i18n);
+    }, "Compress the selected image(s) into a zip archive."_i18n)->SetIcon(ActionIcon::Compress);
 
     options->Add<SidebarEntryCallback>("Create Switch Theme"_i18n, [this](){
         App::PopToMenu();
         CreateSwitchTheme();
-    }, "Use the selected image to create a custom Switch theme."_i18n);
+    }, "Use the selected image to create a custom Switch theme."_i18n)->SetIcon(ActionIcon::Layout);
 
     App::Push(std::move(options));
 }

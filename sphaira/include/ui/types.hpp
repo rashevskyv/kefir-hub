@@ -183,6 +183,21 @@ enum class ActionIcon : u8 {
     Undo,
     Redo,
     Save,
+    Search,
+    Sort,
+    Layout,
+    Launch,
+    Folder,
+    Dump,
+    Move,
+    Refresh,
+    Random,
+    Star,
+    GoTo,
+    Comment,
+    Range,
+    Toggle,
+    Compress,
 };
 
 struct ThemeMeta {

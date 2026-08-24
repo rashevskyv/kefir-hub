@@ -526,17 +526,17 @@ void Menu::DisplaySaveOptions() {
         const auto new_layout = layout_map_local[std::clamp<s64>(index_out, 0, 3)];
         m_layout.Set(new_layout);
         OnLayoutChange();
-    }, cur_idx, "Choose how saves are displayed on screen."_i18n);
+    }, cur_idx, "Choose how saves are displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
 
     options->Add<SidebarEntryArray>("Sort"_i18n, SidebarEntryArray::Items{"Updated"_i18n}, [this](s64& index_out){
         m_sort.Set(index_out);
         SortAndFindLastFile(false);
-    }, m_sort.Get(), "Select which field to sort saves by."_i18n);
+    }, m_sort.Get(), "Select which field to sort saves by."_i18n)->SetIcon(ActionIcon::Sort);
 
     options->Add<SidebarEntryArray>("Order"_i18n, SidebarEntryArray::Items{"Descending"_i18n, "Ascending"_i18n}, [this](s64& index_out){
         m_order.Set(index_out);
         SortAndFindLastFile(false);
-    }, m_order.Get(), "Sort saves from newest to oldest or oldest to newest."_i18n);
+    }, m_order.Get(), "Sort saves from newest to oldest or oldest to newest."_i18n)->SetIcon(ActionIcon::Sort);
 
     options->Add<SidebarEntryCallback>("Accounts"_i18n, [this](){
         DisplayAccountOptions();
@@ -554,13 +554,13 @@ void Menu::DisplaySaveOptions() {
         options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
         options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
             PromptSaveTypeOptions(SaveOp::Backup);
-        }, "Backup selected saves."_i18n);
+        }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
         options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
             PromptSaveTypeOptions(SaveOp::Restore);
-        }, "Restore selected saves."_i18n);
+        }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
         options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
             PromptSaveTypeOptions(SaveOp::Delete);
-        }, true, "Permanently delete save data for selected games."_i18n);
+        }, true, "Permanently delete save data for selected games."_i18n)->SetIcon(ActionIcon::Delete);
     }
 
     options->Add<SidebarEntryHeader>("SYNC"_i18n);
