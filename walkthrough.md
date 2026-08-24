@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.563** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.564** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.564 — Auto-forwarder no longer stalls launch and exit
+
+- Скан іконів більше не чіпає NACP кожної гри — через це старт, вихід і запуск інших NRO знову швидкі.
+- nxlink / Album не ставить другий Kefir Hub, якщо ікон уже висить на HOME.
 
 ## v0.13.563 — Save prompt when closing the remote editor from the Switch
 

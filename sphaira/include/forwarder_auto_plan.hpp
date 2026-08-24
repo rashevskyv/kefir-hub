@@ -50,6 +50,15 @@ inline auto IsOldHomebrewTitle(std::string_view raw_name, std::uint64_t tid, std
     return false;
 }
 
+// owo 0x05 forwarders, plus the known HBL 0x03 titles. Nintendo games are
+// 0x01… — never fetch their NACP during a HOME-icon scan.
+inline auto NeedsTitleLookup(std::uint64_t tid) -> bool {
+    if ((tid & 0xFF00000000000000ULL) == 0x0500000000000000ULL) {
+        return true;
+    }
+    return tid == 0x03DB1280BD84000ULL || tid == 0x03DB12780BD84000ULL;
+}
+
 // A previous Kefir Hub / Sphaira HOME icon whose Title ID is not the current
 // path-hash. 0x05… is the owo forwarder prefix — never a Nintendo game.
 inline auto IsStaleOwnForwarder(std::string_view raw_name, std::uint64_t tid, std::uint64_t kefirhub_tid) -> bool {

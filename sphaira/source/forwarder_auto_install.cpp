@@ -89,6 +89,9 @@ void ForEachOldForwarder(u64 kefirhub_tid, u64 skip_tid, Fn&& fn) {
             if (app_id == kefirhub_tid || app_id == skip_tid) {
                 continue;
             }
+            if (!NeedsTitleLookup(app_id)) {
+                continue;
+            }
             if (IsOldHomebrewTitle(TitleName(app_id), app_id, kefirhub_tid)) {
                 fn(app_id);
             }
@@ -113,6 +116,42 @@ void CleanOldInstalledForwarders(u64 kefirhub_tid, u64 skip_tid) {
     });
 }
 
+auto HasOwnKefirHubIcon(u64 kefirhub_tid, u64 skip_tid) -> bool {
+    if (IsInstalled(kefirhub_tid)) {
+        return true;
+    }
+
+    constexpr s32 CHUNK_SIZE = 32;
+    std::vector<NsApplicationRecord> records(CHUNK_SIZE);
+    s32 offset = 0;
+
+    while (!g_stop_requested) {
+        s32 record_count = 0;
+        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &record_count)) || record_count <= 0) {
+            break;
+        }
+
+        for (s32 i = 0; i < record_count; i++) {
+            if (g_stop_requested) {
+                return false;
+            }
+            const u64 app_id = records[i].application_id;
+            if (app_id == skip_tid) {
+                continue;
+            }
+            if ((app_id & 0xFF00000000000000ULL) != 0x0500000000000000ULL) {
+                continue;
+            }
+            if (IsKefirHubName(TitleName(app_id))) {
+                return true;
+            }
+        }
+
+        offset += record_count;
+    }
+    return false;
+}
+
 void CleanStaleOwnForwarders(u64 kefirhub_tid, u64 skip_tid) {
     constexpr s32 CHUNK_SIZE = 32;
     std::vector<NsApplicationRecord> records(CHUNK_SIZE);
@@ -130,6 +169,9 @@ void CleanStaleOwnForwarders(u64 kefirhub_tid, u64 skip_tid) {
             }
             const u64 app_id = records[i].application_id;
             if (app_id == kefirhub_tid || app_id == skip_tid) {
+                continue;
+            }
+            if ((app_id & 0xFF00000000000000ULL) != 0x0500000000000000ULL) {
                 continue;
             }
             if (IsStaleOwnForwarder(TitleName(app_id), app_id, kefirhub_tid)) {
@@ -239,7 +281,18 @@ void ThreadFunc(void*) {
     const auto src = ClassifyLaunch(App::IsApplication(), own_tid, kefirhub_tid, own_name);
     const bool new_installed = (src == LaunchSource::NewForwarder) || IsInstalled(kefirhub_tid);
     const bool old_installed = HasOldForwarder(kefirhub_tid, own_tid);
-    const auto plan = Decide(src, new_installed, old_installed);
+    auto plan = Decide(src, new_installed, old_installed);
+
+    // nxlink / Album argv is not the HOME-icon path. Installing from it would
+    // mint a second 0x05 title and stall ns until the NCA is done. If a Kefir
+    // Hub icon already exists, leave it.
+    if (src == LaunchSource::Album && plan.install_new && HasOwnKefirHubIcon(kefirhub_tid, own_tid)) {
+        log_write("[ForwarderAuto] skip install: a Kefir Hub HOME icon already exists\n");
+        plan.install_new = false;
+        if (!plan.delete_old) {
+            plan.notice = Notice::None;
+        }
+    }
 
     log_write("[ForwarderAuto] launch=%d own=%016lx new=%u old=%u install=%u delete=%u\n",
         (int)src, own_tid, new_installed, old_installed, plan.install_new, plan.delete_old);

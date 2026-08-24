@@ -151,6 +151,14 @@ int RunTests() {
         CHECK(!IsOldHomebrewTitle("Super Mario Odyssey", 0x0100000000010000ULL, kefirhub_tid));
         CHECK(!IsOldHomebrewTitle("RetroArch", 0x0100000000020000ULL, kefirhub_tid));
 
+        using sphaira::forwarder_auto::NeedsTitleLookup;
+        CHECK(NeedsTitleLookup(0x0500000000123000ULL));
+        CHECK(NeedsTitleLookup(0x03DB1280BD84000ULL));
+        CHECK(NeedsTitleLookup(0x03DB12780BD84000ULL));
+        CHECK(NeedsTitleLookup(0x050000000000100DULL));
+        CHECK(!NeedsTitleLookup(0x0100000000010000ULL));
+        CHECK(!NeedsTitleLookup(0));
+
         CHECK(IsStaleOwnForwarder("Kefir Hub", stale_tid, kefirhub_tid));
         CHECK(IsStaleOwnForwarder("Sphaira", stale_tid, kefirhub_tid));
         CHECK(!IsStaleOwnForwarder("Kefir Hub", kefirhub_tid, kefirhub_tid));

@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.563**. Завершені плани збережено в
+Поточний delivery — **v0.13.564**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.563 — Ask to save when closing the remote editor from the Switch
+## Поточний delivery: v0.13.564 — Stop auto-forwarder from stalling launch/exit
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Скан HOME-іконів більше не читає NACP кожної гри — лише 0x05 / відомі HBL Title ID.
+2. Запуск з Album / nxlink більше не ставить другий Kefir Hub, якщо ікон уже є (інший path-hash).
+
+## Попередній delivery: v0.13.563 — Ask to save when closing the remote editor from the Switch
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. **B** на консолі, якщо в браузері були незбережені правки: «Зберегти зміни?» Не зберігати / Зберегти.

@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.563**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.564**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.563 (Prompt save on remote editor close)
+## Поточний delivery: v0.13.564 (Auto-forwarder no longer stalls)
+
+- [x] `FORWARDER-SCAN-PREFIX-564` — TitleName лише для 0x05 / відомих HBL tid, не для всіх ігор.
+- [x] `FORWARDER-NO-NXLINK-DUP-564` — Album/nxlink не ставить новий ікон, якщо Kefir Hub на HOME уже є.
+- [x] `DOCS-BUMP-564` — версію піднято до `0.13.564`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.563 (Prompt save on remote editor close)
 
 - [x] `REMOTE-EDITOR-CLOSE-SAVE-563` — B на Switch при незбережених правках у браузері питає «Зберегти зміни?».
 - [x] `DOCS-BUMP-563` — версію піднято до `0.13.563`, оновлено plan/task/walkthrough/audit. Агент не компілював.
