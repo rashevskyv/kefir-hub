@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.592**. Завершені плани збережено в
+Поточний delivery — **v0.13.593**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.592 — MTP Games: drop Unmerged, localize folders, Readme
+## Поточний delivery: v0.13.593 — L3 launches the focused game from the list
+
+Статус: програмну частину реалізовано. Збірка і деплой у цьому ж delivery.
+1. L3 у списку ігор запускає поточну гру, як у картці гри.
+
+## Попередній delivery: v0.13.592 — MTP Games: drop Unmerged, localize folders, Readme
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Unmerged прибрано (дубль Merged). Both: Merged, Separate, Forwarders.

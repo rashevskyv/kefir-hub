@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.592** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.593** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.593 — L3 launches from the Games list
+
+- L3 у списку ігор запускає гру під курсором, як уже в картці гри.
 
 ## v0.13.592 — MTP Games: three folders, in the UI language
 

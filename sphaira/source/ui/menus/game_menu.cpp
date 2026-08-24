@@ -1436,6 +1436,12 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                 SetIndex(index);
             });
         }}),
+        std::make_pair(Button::L3, Action{"Launch"_i18n, [this](){
+            if (m_entries.empty()) {
+                return;
+            }
+            LaunchEntry(m_entries[m_index]);
+        }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             auto options = std::make_unique<Sidebar>("Game Options"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));

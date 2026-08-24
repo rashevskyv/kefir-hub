@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.592**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.593**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.592 (MTP Games folders localized + Readme)
+## Поточний delivery: v0.13.593 (L3 launch from Games list)
+
+- [x] `GAMES-LIST-L3-593` — L3 у списку ігор запускає поточну гру.
+- [x] `DOCS-BUMP-593` — версію піднято до `0.13.593`.
+
+## Попередній delivery: v0.13.592 (MTP Games folders localized + Readme)
 
 - [x] `MTP-GAMES-NO-UNMERGED-592` — Unmerged прибрано; лишились Merged, Separate, Forwarders.
 - [x] `MTP-GAMES-I18N-592` — назви тек і Readme мовою UI; у кожній теці пояснювальний файл.
