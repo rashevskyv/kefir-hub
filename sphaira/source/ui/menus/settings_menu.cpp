@@ -131,6 +131,8 @@ auto MakeHeader(std::string label) -> SettingsItem {
     return { std::move(label), {}, {}, {}, SettingsItemKind::Header };
 }
 
+auto MakeSaveSyncLocationItem() -> SettingsItem;
+
 auto AutoUpdateModeLabel(long mode) -> std::string {
     switch (mode) {
         case 0: return "Off"_i18n;
@@ -395,6 +397,92 @@ auto BuildSaveBackupSearchPathsItems() -> std::vector<SettingsItem> {
             }
         });
     }
+
+    return items;
+}
+
+void PickSaveDefaultLocationFolder() {
+    App::Push<filepicker::Menu>(
+        filepicker::LocationCallback{[](const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> bool {
+            const auto backup_root = save::NormalizeBackupRoot(path, fs_entry);
+            const auto is_stdio = fs_entry.type == filebrowser::FsType::Stdio;
+            const save::RecentBackupDir recent{
+                is_stdio,
+                is_stdio ? fs_entry.root.toString() : "",
+                fs_entry.name.toString(),
+                backup_root,
+            };
+            save::PushRecentBackupDir(recent);
+            App::SetSaveDefaultLocation(save::MakeLocationKey(recent));
+            return true;
+        }},
+        std::vector<std::string>{},
+        fs::FsPath{},
+        true
+    );
+}
+
+auto BuildSavesCategoryItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
+
+    items.emplace_back(MakeHeader("Show"_i18n));
+    items.emplace_back(MakeBoolItem("Installed game saves"_i18n, "Show saves belonging to games that are currently installed."_i18n, App::GetSaveShowInstalled, App::SetSaveShowInstalled));
+    items.emplace_back(MakeBoolItem("Deleted game saves"_i18n, "Show orphaned saves whose game is no longer installed."_i18n, App::GetSaveShowDeleted, App::SetSaveShowDeleted));
+    items.emplace_back(MakeBoolItem("Backups"_i18n, "Show a tile for every game that has a save backup on the SD card."_i18n, App::GetSaveShowBackups, App::SetSaveShowBackups));
+
+    items.emplace_back(MakeHeader("Backup"_i18n));
+    items.emplace_back(SettingsItem{
+        "Default location"_i18n,
+        "Storage used for Backup and Restore unless you pick another."_i18n,
+        [](){
+            const auto key = App::GetSaveDefaultLocation();
+            const auto choices = save::ListBackupLocationChoices();
+            if (key.empty() && !choices.empty()) {
+                return choices.front().label;
+            }
+            for (const auto& c : choices) {
+                if (c.key == key) {
+                    return c.label;
+                }
+            }
+            return save::MakeSdLocationLabel(save::DEFAULT_BACKUP_ROOT);
+        },
+        [](){
+            const auto choices = save::ListBackupLocationChoices();
+            PopupList::Items list;
+            s64 current = 0;
+            const auto key = App::GetSaveDefaultLocation();
+            for (size_t i = 0; i < choices.size(); i++) {
+                list.push_back(choices[i].label);
+                if (!key.empty() && choices[i].key == key) {
+                    current = static_cast<s64>(i);
+                }
+            }
+            const auto picker_index = static_cast<s64>(list.size());
+            list.push_back("Choose Folder..."_i18n);
+
+            App::Push<PopupList>("Default location"_i18n, std::move(list), [choices, picker_index](std::optional<s64> op_index){
+                if (!op_index) {
+                    return;
+                }
+                if (*op_index == picker_index) {
+                    PickSaveDefaultLocationFolder();
+                    return;
+                }
+                if (*op_index >= 0 && *op_index < static_cast<s64>(choices.size())) {
+                    App::SetSaveDefaultLocation(choices[static_cast<size_t>(*op_index)].key);
+                }
+            }, current);
+        }
+    });
+    items.emplace_back(MakeBoolItem("Compress backup"_i18n, "Save backups as compressed ZIP archives to reduce disk space."_i18n, App::GetSaveCompressBackup, App::SetSaveCompressBackup));
+    items.emplace_back(MakeBoolItem("Auto backup on restore"_i18n, "Automatically create a backup before restoring a save."_i18n, App::GetSaveAutoBackupOnRestore, App::SetSaveAutoBackupOnRestore));
+    items.emplace_back(MakeFolderItem("Save Backup Search Paths"_i18n, "Manage custom folders scanned for save backups."_i18n, BuildSaveBackupSearchPathsItems));
+
+    items.emplace_back(MakeHeader("Remote"_i18n));
+    items.emplace_back(MakeBoolItem("Auto-sync after backup"_i18n, "After each Backup, upload the new ZIP to the WebDAV location below."_i18n, App::GetSaveAutosync, App::SetSaveAutosync));
+    items.emplace_back(MakeBoolItem("Include remote backups"_i18n, "When restoring, also list backups that exist on WebDAV but not on this console."_i18n, App::GetSaveRestoreIncludeRemote, App::SetSaveRestoreIncludeRemote));
+    items.emplace_back(MakeSaveSyncLocationItem());
 
     return items;
 }
@@ -1686,10 +1774,6 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
         });
     }
 
-    // the save-sync target is a property of the sources above, so it sits with
-    // them rather than under Network.
-    items.emplace_back(MakeSaveSyncLocationItem());
-
     return items;
 }
 
@@ -2290,10 +2374,8 @@ void Menu::BuildCategories() {
         },
         {
             "Saves"_i18n,
-            "Save backup paths and restore options."_i18n,
-            {
-                MakeFolderItem("Save Backup Search Paths"_i18n, "Manage custom folders scanned for save backups."_i18n, BuildSaveBackupSearchPathsItems),
-            }
+            "What the Saves menu shows, and where backups go."_i18n,
+            BuildSavesCategoryItems(),
         },
         {
             "Appearance"_i18n,

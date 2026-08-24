@@ -168,6 +168,22 @@ public:
     static auto GetGodModeEnabled() -> bool;
     static auto GetProgressActive() -> bool;
     static auto GetSaveSettingsGlobally() -> bool;
+    static auto GetSaveShowInstalled() -> bool;
+    static void SetSaveShowInstalled(bool enable);
+    static auto GetSaveShowDeleted() -> bool;
+    static void SetSaveShowDeleted(bool enable);
+    static auto GetSaveShowBackups() -> bool;
+    static void SetSaveShowBackups(bool enable);
+    static auto GetSaveAutoBackupOnRestore() -> bool;
+    static void SetSaveAutoBackupOnRestore(bool enable);
+    static auto GetSaveCompressBackup() -> bool;
+    static void SetSaveCompressBackup(bool enable);
+    static auto GetSaveAutosync() -> bool;
+    static void SetSaveAutosync(bool enable);
+    static auto GetSaveRestoreIncludeRemote() -> bool;
+    static void SetSaveRestoreIncludeRemote(bool enable);
+    static auto GetSaveDefaultLocation() -> std::string;
+    static void SetSaveDefaultLocation(std::string key);
 
     // Minus-key screen blanking during the install queue, see ui/screensaver.hpp.
     static auto GetBlankMode() -> long;
@@ -484,6 +500,16 @@ public:
     option::OptionBool m_allow_downgrade{INI_SECTION, "allow_downgrade", false};
     option::OptionLong m_skip_if_already_installed{INI_SECTION, "skip_if_already_installed", 1};
     option::OptionBool m_save_settings_globally{INI_SECTION, "save_settings_globally", true};
+    // Saves menu defaults. Same [saves] keys the save menu used to own, so
+    // existing configs keep their values.
+    option::OptionBool m_save_show_installed{"saves", "show_installed", true};
+    option::OptionBool m_save_show_deleted{"saves", "show_deleted", true};
+    option::OptionBool m_save_show_backups{"saves", "show_backups", false};
+    option::OptionBool m_save_auto_backup_on_restore{"saves", "auto_backup_on_restore", true};
+    option::OptionBool m_save_compress_backup{"saves", "compress_save_backup", true};
+    option::OptionBool m_save_autosync{"saves", "save_autosync", true};
+    option::OptionBool m_save_restore_include_remote{"saves", "restore_include_remote", false};
+    option::OptionString m_save_default_location{"saves", "default_backup_location", ""};
     option::OptionBool m_ticket_only{INI_SECTION, "ticket_only", false};
     option::OptionBool m_skip_base{INI_SECTION, "skip_base", false};
     option::OptionBool m_skip_patch{INI_SECTION, "skip_patch", false};

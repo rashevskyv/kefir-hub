@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.573**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.574**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.573 (Network FTP/MTP toggle then folder)
+## Поточний delivery: v0.13.574 (Saves settings category)
+
+- [x] `SAVES-SETTINGS-574` — усі дефолти збережень у Settings → Saves, включно з джерелом за замовчуванням і WebDAV sync.
+- [x] `DOCS-BUMP-574` — версію піднято до `0.13.574`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.573 (Network FTP/MTP toggle then folder)
 
 - [x] `NET-FTP-MTP-TOGGLE-573` — FTP і MTP: тумблер на сторінці Мережа, папка з деталями під кожним.
 - [x] `DOCS-BUMP-573` — версію піднято до `0.13.573`, оновлено plan/task/walkthrough/audit. Агент не компілював.

@@ -88,7 +88,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
         for (auto& e : entries) {
             // the entry may not have loaded yet.
             detail::LoadControlEntry(e);
-            R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), false, backup_root));
+            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
         }
         R_SUCCEED();
     }, [this, entries, location, backup_root](Result rc){
@@ -97,7 +97,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
         if (R_SUCCEEDED(rc)) {
             App::Notify("Backup successful!"_i18n);
 
-            if (m_save_autosync.Get()) {
+            if (App::GetSaveAutosync()) {
                 const auto webdav_locations = GetWebdavLocations();
                 if (!webdav_locations.empty()) {
                     location::Entry target_loc = webdav_locations.front();
@@ -337,9 +337,9 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
                 continue;
             }
 
-            if (m_auto_backup_on_restore.Get()) {
+            if (App::GetSaveAutoBackupOnRestore()) {
                 pbox->SetActionName("Auto backup"_i18n);
-                R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), true, backup_root));
+                R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
             }
 
             pbox->SetActionName("Restore"_i18n);
@@ -479,7 +479,7 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
 
     Entry e = entries.front();
 
-    if (!m_restore_include_remote.Get()) {
+    if (!App::GetSaveRestoreIncludeRemote()) {
         ShowRestorePicker(std::move(e), location, backup_root, {});
         return;
     }
@@ -617,9 +617,9 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
     App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen](auto pbox) mutable -> Result {
         detail::LoadControlEntry(e);
 
-        if (m_auto_backup_on_restore.Get()) {
+        if (App::GetSaveAutoBackupOnRestore()) {
             pbox->SetActionName("Auto backup"_i18n);
-            R_TRY(BackupSaveInternal(pbox, location, e, m_compress_save_backup.Get(), true, backup_root));
+            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
         }
 
         pbox->SetActionName("Restore"_i18n);

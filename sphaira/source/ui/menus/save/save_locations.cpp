@@ -1,11 +1,14 @@
 #include "ui/menus/save/save_locations.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
 #include "fs.hpp"
 #include "location.hpp"
+#include "option.hpp"
 #include <cstring>
 #include <algorithm>
 #include <memory>
+#include <set>
 #include <utility>
 
 namespace sphaira::ui::menu::save {
@@ -152,6 +155,80 @@ auto MakeFsForLocation(const dump::DumpLocation& location) -> std::unique_ptr<fs
         return std::make_unique<fs::FsNativeSd>();
     }
     std::unreachable();
+}
+
+namespace {
+
+constexpr const char* kSavesIni = "saves";
+constexpr int kRecentMax = 5;
+
+auto RecentDirOption(int i) -> option::OptionString {
+    return {kSavesIni, "recent_backup_dir_" + std::to_string(i), ""};
+}
+
+} // namespace
+
+auto LoadRecentBackupDirs() -> std::vector<RecentBackupDir> {
+    std::vector<RecentBackupDir> out;
+    for (int i = 0; i < kRecentMax; i++) {
+        auto opt = RecentDirOption(i);
+        RecentBackupDir dir;
+        if (ParseRecentBackupDir(opt.Get(), dir) && RecentBackupDirExists(dir)) {
+            out.emplace_back(std::move(dir));
+        }
+    }
+    return out;
+}
+
+void PushRecentBackupDir(const RecentBackupDir& dir) {
+    const auto key = SerializeRecentBackupDir(dir);
+    const auto id = MakeLocationKey(dir);
+
+    std::vector<std::string> keys{key};
+    for (int i = 0; i < kRecentMax; i++) {
+        auto opt = RecentDirOption(i);
+        const auto v = opt.Get();
+        if (v.empty()) {
+            continue;
+        }
+        RecentBackupDir parsed;
+        if (!ParseRecentBackupDir(v, parsed)) {
+            continue;
+        }
+        if (MakeLocationKey(parsed) == id) {
+            continue;
+        }
+        if (keys.size() < static_cast<size_t>(kRecentMax)) {
+            keys.emplace_back(v);
+        }
+    }
+    for (int i = 0; i < kRecentMax; i++) {
+        RecentDirOption(i).Set(i < static_cast<int>(keys.size()) ? keys[static_cast<size_t>(i)] : "");
+    }
+}
+
+auto ListBackupLocationChoices() -> std::vector<BackupLocationChoice> {
+    std::vector<BackupLocationChoice> out;
+    std::set<std::string> seen;
+    const fs::FsPath default_root{DEFAULT_BACKUP_ROOT};
+
+    auto add = [&](const RecentBackupDir& d, std::string label) {
+        const auto key = MakeLocationKey(d);
+        if (!seen.insert(key).second) {
+            return;
+        }
+        out.push_back({key, std::move(label)});
+    };
+
+    add({false, "", "", default_root}, MakeSdLocationLabel(default_root));
+    for (const auto& dir : LoadRecentBackupDirs()) {
+        add(dir, dir.stdio ? MakeLocationLabel(dir.name, dir.path) : MakeSdLocationLabel(dir.path));
+    }
+    for (const auto& st : location::GetStdio(true)) {
+        const fs::FsPath root = st.dump_path.empty() ? default_root : fs::FsPath{st.dump_path};
+        add({true, st.mount, st.name, root}, MakeLocationLabel(st.name, root));
+    }
+    return out;
 }
 
 auto MakeAggregateProgressCb(ProgressBox* pbox, bool is_upload, s64 files_done, s64 total_units) -> curl::OnProgress {

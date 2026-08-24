@@ -215,49 +215,11 @@ void Menu::MarkFiltersChanged() {
 }
 
 auto Menu::GetRecentBackupDirs() -> std::vector<RecentBackupDir> {
-    std::vector<RecentBackupDir> out;
-    for (auto& opt : m_recent_backup_dirs) {
-        RecentBackupDir dir;
-        if (ParseRecentBackupDir(opt.Get(), dir) && RecentBackupDirExists(dir)) {
-            out.emplace_back(std::move(dir));
-        }
-    }
-
-    return out;
+    return LoadRecentBackupDirs();
 }
 
 void Menu::AddRecentBackupDir(const RecentBackupDir& dir) {
-    const auto key = SerializeRecentBackupDir(dir);
-    const auto id = MakeLocationKey(dir);
-
-    // move-to-front, drop duplicates, keep at most RECENT_BACKUP_DIR_MAX.
-    // de-dup is by normalized location (MakeLocationKey - display name ignored),
-    // so re-picking the same folder never leaves a stale twin behind just
-    // because its shown name differs.
-    std::vector<std::string> keys{key};
-    for (auto& opt : m_recent_backup_dirs) {
-        const auto v = opt.Get();
-        if (v.empty()) {
-            continue;
-        }
-
-        RecentBackupDir parsed;
-        if (!ParseRecentBackupDir(v, parsed)) {
-            continue;
-        }
-
-        if (MakeLocationKey(parsed) == id) {
-            continue;
-        }
-
-        if (keys.size() < m_recent_backup_dirs.size()) {
-            keys.emplace_back(v);
-        }
-    }
-
-    for (size_t i = 0; i < m_recent_backup_dirs.size(); i++) {
-        m_recent_backup_dirs[i].Set(i < keys.size() ? keys[i] : "");
-    }
+    PushRecentBackupDir(dir);
 }
 
 void Menu::ToggleCurrentSelection() {
@@ -516,20 +478,20 @@ void Menu::DisplayShowSavesOptions() {
 
     options->Add<SidebarEntryCheckbox>(
         "Installed game saves"_i18n,
-        [this](){ return m_show_installed.Get(); },
-        [this](bool enabled){ m_show_installed.Set(enabled); MarkFiltersChanged(); },
+        [this](){ return App::GetSaveShowInstalled(); },
+        [this](bool enabled){ App::SetSaveShowInstalled(enabled); MarkFiltersChanged(); },
         "Show saves belonging to games that are currently installed."_i18n);
 
     options->Add<SidebarEntryCheckbox>(
         "Deleted game saves"_i18n,
-        [this](){ return m_show_deleted.Get(); },
-        [this](bool enabled){ m_show_deleted.Set(enabled); MarkFiltersChanged(); },
+        [this](){ return App::GetSaveShowDeleted(); },
+        [this](bool enabled){ App::SetSaveShowDeleted(enabled); MarkFiltersChanged(); },
         "Show orphaned saves whose game is no longer installed (marked with a grey border)."_i18n);
 
     options->Add<SidebarEntryCheckbox>(
         "Backups"_i18n,
-        [this](){ return m_show_backups.Get(); },
-        [this](bool enabled){ m_show_backups.Set(enabled); MarkFiltersChanged(); },
+        [this](){ return App::GetSaveShowBackups(); },
+        [this](bool enabled){ App::SetSaveShowBackups(enabled); MarkFiltersChanged(); },
         "Show a tile for every game that has a save backup on the SD card, listed below the divider (marked with a yellow border)."_i18n);
 }
 
@@ -611,12 +573,12 @@ void Menu::DisplaySaveOptions() {
         auto options = std::make_unique<Sidebar>("Advanced Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-        options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, m_auto_backup_on_restore.Get(), [this](bool& v_out){
-            m_auto_backup_on_restore.Set(v_out);
+        options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, App::GetSaveAutoBackupOnRestore(), [](bool& v_out){
+            App::SetSaveAutoBackupOnRestore(v_out);
         }, "Automatically create a backup before restoring a save."_i18n);
 
-        options->Add<SidebarEntryBool>("Compress backup"_i18n, m_compress_save_backup.Get(), [this](bool& v_out){
-            m_compress_save_backup.Set(v_out);
+        options->Add<SidebarEntryBool>("Compress backup"_i18n, App::GetSaveCompressBackup(), [](bool& v_out){
+            App::SetSaveCompressBackup(v_out);
         }, "Save backups as compressed ZIP archives to reduce disk space."_i18n);
     }, "Access advanced backup and restore settings."_i18n);
 }
@@ -1015,9 +977,9 @@ void Menu::ScanHomebrew() {
     // "Show saves" filter has turned off. system saves are governed by the Data
     // Types filter instead, so they are always kept here.
     BuildInstalledAppIds();
-    bool show_installed = m_show_installed.Get();
-    bool show_deleted = m_show_deleted.Get();
-    bool show_backups = m_show_backups.Get();
+    bool show_installed = App::GetSaveShowInstalled();
+    bool show_deleted = App::GetSaveShowDeleted();
+    bool show_backups = App::GetSaveShowBackups();
 
     if (m_category == Category::Installed) {
         show_installed = true;
@@ -1513,6 +1475,16 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
         state->location_keys.emplace_back(MakeLocationKey(RecentBackupDir{true, stdio_locations[i].mount, "", stdio_backup_roots[i]}));
     }
 
+    const auto def_key = App::GetSaveDefaultLocation();
+    if (!def_key.empty()) {
+        for (s64 i = 0; i < static_cast<s64>(state->location_keys.size()); i++) {
+            if (state->location_keys[i] == def_key) {
+                state->location_index = i;
+                break;
+            }
+        }
+    }
+
     const auto title = (op == SaveOp::Restore) ? "Restore Options"_i18n :
                        (op == SaveOp::Delete)  ? "Delete Options"_i18n :
                                                  "Backup Options"_i18n;
@@ -1644,12 +1616,12 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
         });
 
         if (op == SaveOp::Backup) {
-            options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, m_save_autosync.Get(), [this](bool& v_out){
-                m_save_autosync.Set(v_out);
+            options->Add<SidebarEntryBool>("Auto-sync after backup"_i18n, App::GetSaveAutosync(), [](bool& v_out){
+                App::SetSaveAutosync(v_out);
             }, "After each Backup, automatically upload only the newly created backup ZIP to WebDAV. Does not sync your whole backup library - use Sync with remote (Save Options) for that."_i18n);
         } else if (op == SaveOp::Restore) {
-            options->Add<SidebarEntryBool>("Include remote backups"_i18n, m_restore_include_remote.Get(), [this](bool& v_out){
-                m_restore_include_remote.Set(v_out);
+            options->Add<SidebarEntryBool>("Include remote backups"_i18n, App::GetSaveRestoreIncludeRemote(), [](bool& v_out){
+                App::SetSaveRestoreIncludeRemote(v_out);
             }, "Before showing the backup list, download any backups that exist on your WebDAV remote but are missing on this console, so they can be restored too. Remote-only backups are marked with a cloud icon. Only applies when a single save is selected."_i18n);
         }
     }

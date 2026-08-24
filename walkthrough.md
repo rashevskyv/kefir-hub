@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.573** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.574** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.574 — Saves settings: filters, default location, WebDAV
+
+- Settings → **Saves**: installed/deleted/backups, default backup location, compress, auto backup on restore, search paths, auto-sync, remote backups, WebDAV sync location.
 
 ## v0.13.573 — Network: FTP and MTP toggles, then their folders
 

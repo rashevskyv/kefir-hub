@@ -242,25 +242,7 @@ private:
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Updated};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_Grid};
-    option::OptionBool m_auto_backup_on_restore{INI_SECTION, "auto_backup_on_restore", true};
-    option::OptionBool m_compress_save_backup{INI_SECTION, "compress_save_backup", true};
-    option::OptionBool m_save_autosync{INI_SECTION, "save_autosync", true};
-    option::OptionBool m_restore_include_remote{INI_SECTION, "restore_include_remote", false};
-    // "Show saves" filter: which categories of tiles appear in the grid.
-    option::OptionBool m_show_installed{INI_SECTION, "show_installed", true};
-    option::OptionBool m_show_deleted{INI_SECTION, "show_deleted", true};
-    option::OptionBool m_show_backups{INI_SECTION, "show_backups", false};
     Category m_category{Category::All};
-
-    // last folders confirmed via "Choose Folder...", newest first.
-    static constexpr inline size_t RECENT_BACKUP_DIR_MAX = 5;
-    std::array<option::OptionString, RECENT_BACKUP_DIR_MAX> m_recent_backup_dirs{
-        option::OptionString{INI_SECTION, "recent_backup_dir_0", ""},
-        option::OptionString{INI_SECTION, "recent_backup_dir_1", ""},
-        option::OptionString{INI_SECTION, "recent_backup_dir_2", ""},
-        option::OptionString{INI_SECTION, "recent_backup_dir_3", ""},
-        option::OptionString{INI_SECTION, "recent_backup_dir_4", ""},
-    };
 };
 
 } // namespace sphaira::ui::menu::save

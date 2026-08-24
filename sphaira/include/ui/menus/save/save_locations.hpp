@@ -22,6 +22,14 @@ auto SerializeRecentBackupDir(const RecentBackupDir& d) -> std::string;
 auto MakeLocationKey(const RecentBackupDir& d) -> std::string;
 auto ParseRecentBackupDir(const std::string& s, RecentBackupDir& out) -> bool;
 auto RecentBackupDirExists(const RecentBackupDir& d) -> bool;
+auto LoadRecentBackupDirs() -> std::vector<RecentBackupDir>;
+void PushRecentBackupDir(const RecentBackupDir& dir);
+
+struct BackupLocationChoice {
+    std::string key{};
+    std::string label{};
+};
+auto ListBackupLocationChoices() -> std::vector<BackupLocationChoice>;
 auto MakeDumpLocationFromRecent(const RecentBackupDir& d) -> dump::DumpLocation;
 auto MakeFsForLocation(const dump::DumpLocation& location) -> std::unique_ptr<fs::Fs>;
 auto MakeAggregateProgressCb(ProgressBox* pbox, bool is_upload, s64 files_done, s64 total_units) -> curl::OnProgress;
