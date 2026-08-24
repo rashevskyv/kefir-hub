@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.576**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.577**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.576 (Stable header item counter)
+## Поточний delivery: v0.13.577 (Auto-update folder in General)
+
+- [x] `UPDATE-FOLDER-GENERAL-577` — Auto-update папка в Загальний, не пункт лівого меню.
+- [x] `DOCS-BUMP-577` — версію піднято до `0.13.577`. Агент не компілював.
+
+## Попередній delivery: v0.13.576 (Stable header item counter)
 
 - [x] `HEADER-COUNTER-STABLE-576` — «N / M» не стрибає на 1px при зміні пункту.
 - [x] `DOCS-BUMP-576` — версію піднято до `0.13.576`. Агент не компілював.

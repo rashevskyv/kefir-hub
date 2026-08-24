@@ -2317,14 +2317,10 @@ void Menu::BuildCategories() {
 
     m_categories = {
         {
-            "Auto-update"_i18n,
-            "When and how new versions are installed."_i18n,
-            BuildAutoUpdateItems(),
-        },
-        {
             "General"_i18n,
             "Language, timing and application flow."_i18n,
             {
+                MakeFolderItem("Auto-update"_i18n, "When and how new versions are installed."_i18n, BuildAutoUpdateItems),
                 { "Language"_i18n, "Select the active interface language."_i18n, LanguageValue, [](){
                     PopupList::Items items;
                     for (const auto& lang : LANGUAGE_ITEMS) {
