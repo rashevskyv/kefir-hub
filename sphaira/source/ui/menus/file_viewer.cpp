@@ -37,6 +37,27 @@ auto GetCurrentTimeMs() -> u64 {
     return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
+auto SplitLines(std::string_view text) -> std::vector<std::string> {
+    std::vector<std::string> lines;
+    size_t start = 0;
+    while (start <= text.size()) {
+        const auto end = text.find('\n', start);
+        auto line = text.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
+        if (line.ends_with('\r')) {
+            line.remove_suffix(1);
+        }
+        lines.emplace_back(line);
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    if (lines.empty()) {
+        lines.emplace_back();
+    }
+    return lines;
+}
+
 auto PathFileName(const fs::FsPath& path) -> std::string {
     const std::string_view view{path};
     const auto slash = view.find_last_of('/');
@@ -1090,22 +1111,8 @@ void Menu::InsertSnippet(const std::string& text, s64 insert_at) {
         return;
     }
 
-    std::vector<std::string> lines;
-    std::string_view view{text};
-    size_t start = 0;
-    while (start <= view.size()) {
-        const auto end = view.find('\n', start);
-        auto line = view.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
-        if (line.ends_with('\r')) {
-            line.remove_suffix(1);
-        }
-        lines.emplace_back(line);
-        if (end == std::string_view::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-    if (lines.empty()) {
+    auto lines = SplitLines(text);
+    if (lines.size() == 1 && lines[0].empty()) {
         return;
     }
 
@@ -1398,24 +1405,7 @@ void Menu::ApplyRemoteText(const std::string& text) {
     }
 
     PushUndo();
-    m_lines.clear();
-    std::string_view view{text};
-    size_t start = 0;
-    while (start <= view.size()) {
-        const auto end = view.find('\n', start);
-        auto line = view.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
-        if (line.ends_with('\r')) {
-            line.remove_suffix(1);
-        }
-        m_lines.emplace_back(line);
-        if (end == std::string_view::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-    if (m_lines.empty()) {
-        m_lines.emplace_back();
-    }
+    m_lines = SplitLines(text);
 
     m_line_index = 0;
     ClearRangeSelection();

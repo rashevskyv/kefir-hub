@@ -1246,9 +1246,7 @@ void HandleRequest(Socket sock) {
             HandleRemoteInputPost(sock, req);
             return;
         } else if (method == "GET") {
-            const auto opts = ui::remote_input::GetCurrentOptions();
-            SendResponse(sock, "200 OK", "text/html",
-                std::string{opts.editor ? REMOTE_EDITOR_PAGE : REMOTE_INPUT_PAGE});
+            SendResponse(sock, "200 OK", "text/html", std::string{REMOTE_INPUT_PAGE});
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

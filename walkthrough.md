@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.556** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.557** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.557 — Reuse remote input for file edit
+
+- Окрему сторінку редактора прибрано. Файл і вставка під курсор — той самий remote input (textarea, Send).
 
 ## v0.13.556 — Paste from PC / phone at the cursor
 

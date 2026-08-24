@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.556**. Завершені плани збережено в
+Поточний delivery — **v0.13.557**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.556 — Paste from PC / phone at the cursor
+## Поточний delivery: v0.13.557 — Reuse remote input for file edit (no extra editor page)
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Прибрано окрему JS-сторінку редактора. І «редагувати файл», і «вставити під курсор» — той самий `/input` + `RequestRemoteText`, лише `multiline`.
+
+## Попередній delivery: v0.13.556 — Paste from PC / phone at the cursor
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. У діях текстового редактора: «Вставити з ПК / телефона» — багаторядковий remote input, текст лягає під поточний рядок.
