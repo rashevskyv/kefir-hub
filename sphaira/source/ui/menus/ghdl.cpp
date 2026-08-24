@@ -334,7 +334,7 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
             }
         }
         R_SUCCEED();
-    }, [zip_path, open_dir](Result rc){
+    }, [zip_path, open_dir, nro_only, extract_path](Result rc){
         if (rc == Result_TransferCancelled) {
             App::Push<OptionBox>("Download was cancelled."_i18n, "OK"_i18n);
             return;
@@ -347,10 +347,21 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
         homebrew::SignalChange();
         App::Push<OptionBox>(
             "Download and extract completed!\nDelete ZIP file?"_i18n,
-            "Keep"_i18n, "Delete"_i18n, 1, [zip_path, open_dir](auto op_index){
+            "Keep"_i18n, "Delete"_i18n, 1, [zip_path, open_dir, nro_only, extract_path](auto op_index){
                 if (op_index && *op_index) {
                     fs::FsNativeSd fs;
                     fs.DeleteFile(zip_path);
+                }
+                if (nro_only) {
+                    App::Push<OptionBox>(
+                        "Launch now?"_i18n,
+                        "No"_i18n, "Launch"_i18n, 1, [extract_path](auto launch_index){
+                            if (launch_index && *launch_index) {
+                                nro_launch(extract_path);
+                            }
+                        }
+                    );
+                    return;
                 }
                 AskOpenExtractedFolder(open_dir);
             }

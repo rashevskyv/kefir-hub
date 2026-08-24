@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.546**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.547**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.546 (Full-screen zip extract)
+## Поточний delivery: v0.13.547 (Launch app after zip install)
+
+- [x] `ZIP-INSTALL-LAUNCH-547` — після встановлення програми з zip: Keep/Delete архів, потім Launch / No. Папку не відкриваємо.
+- [x] `DOCS-BUMP-547` — версію піднято до `0.13.547`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.546 (Full-screen zip extract)
 
 - [x] `ZIP-EXTRACT-FULLSCREEN-546` — повноекранне дерево архіву з галочками замість нижнього PopupList.
 - [x] `ZIP-EXTRACT-APP-LABEL-546` — «встановити програму», не «NRO»; шлях `/switch/<назва>`.

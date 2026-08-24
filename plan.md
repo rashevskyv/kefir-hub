@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.546**. Завершені плани збережено в
+Поточний delivery — **v0.13.547**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.546 — Full-screen zip extract: tree, checkboxes, named folder
+## Поточний delivery: v0.13.547 — After installing an app from zip: launch, don't open the folder
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Після «Встановити програму» лишається Keep/Delete zip, друге питання — запустити додаток, не файловий браузер.
+
+## Попередній delivery: v0.13.546 — Full-screen zip extract: tree, checkboxes, named folder
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Після Direct Download zip — повноекранне меню, не смужка знизу. Зверху дерево архіву з галочками (Y — усі/жоден).

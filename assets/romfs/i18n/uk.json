@@ -414,6 +414,7 @@
   "All / none": "Усі / жоден",
   "Select at least one file to extract.": "Виберіть хоча б один файл для розпакування.",
   "Create a folder named after the archive here?": "Створити тут папку з іменем архіву?",
+  "Launch now?": "Запустити зараз?",
   "Enter the path to the folder to extract into": "Введіть шлях до теки для розпакування",
   "Extracting ": "Розпакування ",
   "Extracting": "Розпакування",

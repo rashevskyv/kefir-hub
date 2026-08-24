@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.546** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.547** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.547 — Launch the installed app, don't open its folder
+
+- Після «Встановити програму» з zip: спочатку Keep/Delete архів, потім «Запустити зараз?» (Ні / Запустити). Файловий браузер не пропонується — додаток уже лежить у `/switch/<назва>/`.
+- Повне розпакування як і раніше: після zip можна відкрити папку призначення.
 
 ## v0.13.546 — Full-screen zip extract
 
