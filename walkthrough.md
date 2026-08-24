@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.586** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.587** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.587 — Move to NAND/SD names the NCA being copied
+
+- Поки ncm виділяє placeholder (часто весь «нуль» на барі), рядок каже **Allocating · Application · Program (1/4)  2.1 GB**.
+- Під час копіювання — **Copying** і бар 0–100% по цьому NCA, не по всій грі одразу.
 
 ## v0.13.586 — flash in → offer that drive; flash out → close it
 

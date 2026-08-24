@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.586**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.587**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.586 (USB flash hotplug → file browser)
+## Поточний delivery: v0.13.587 (Move progress shows current NCA)
+
+- [x] `MOVE-PROGRESS-NCA-587` — Allocating/Copying + тип NCA + бар по поточному файлу.
+- [x] `DOCS-BUMP-587` — версію піднято до `0.13.587`. Агент не компілював.
+
+## Попередній delivery: v0.13.586 (USB flash hotplug → file browser)
 
 - [x] `USB-FLASH-DETECT-586` — після MTP unplug одразу host; UMS → попап відкрити цю флешку.
 - [x] `USB-FLASH-UNPLUG-586` — витяг флешки закриває файловий браузер на її mount.

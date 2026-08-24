@@ -9,8 +9,10 @@
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/ns.hpp"
 #include "ui/progress_box.hpp"
+#include "utils/utils.hpp"
 
 #include <cstring>
+#include <cstdio>
 #include <atomic>
 #include <ranges>
 #include <algorithm>
@@ -815,8 +817,29 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
     u64 out_meta_size{};
     R_TRY(ncmContentMetaDatabaseGet(std::addressof(src_db), std::addressof(key), std::addressof(out_meta_size), meta_buf.data(), meta_buf.size()));
 
-    // the progress box action line already says where this is going.
-    const auto label = i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type));
+    const auto meta_label = i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type));
+
+    auto file_label = [&](const NcmContentInfo& info, size_t i, u64 nca_size) {
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "%s · %s  (%zu/%zu)  %s",
+            meta_label.c_str(), ncm::GetContentTypeStr(info.content_type),
+            i + 1, infos.size(), utils::formatSizeStorage(nca_size).c_str());
+        return std::string{buf};
+    };
+
+    auto show_step = [&](const std::string& step, const std::string& file, s64 offset, s64 size) {
+        if (!pbox) {
+            return;
+        }
+        pbox->SetTransfer(file.empty() ? step : (step + " · " + file));
+        if (size > 0) {
+            pbox->UpdateTransfer(offset, size);
+        }
+        // ncm CreatePlaceHolder can sit on a multi-GB allocate with no byte
+        // callbacks; sleep one frame so the label actually paints first.
+        pbox->Yield();
+        svcSleepThread(16'000'000);
+    };
 
     MoveRollback rollback{std::addressof(dst_cs), std::addressof(dst_db)};
 
@@ -831,13 +854,7 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
         const auto& info = infos[i];
         u64 nca_size{};
         ncmContentInfoSizeToU64(std::addressof(info), std::addressof(nca_size));
-
-        if (pbox) {
-            char buf[256];
-            std::snprintf(buf, sizeof(buf), "%s  (%s %zu/%zu)", label.c_str(), ncm::GetContentTypeStr(info.content_type), i + 1, infos.size());
-            pbox->SetTransfer(buf);
-            pbox->UpdateTransfer(done, total);
-        }
+        const auto file = file_label(info, i, nca_size);
 
         bool has{};
         ncmContentStorageHas(std::addressof(dst_cs), std::addressof(has), std::addressof(info.content_id));
@@ -845,15 +862,19 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
             // already present on the target (shared nca), nothing to copy.
             done += nca_size;
             if (pbox) {
-                pbox->UpdateTransfer(done, total);
+                pbox->UpdateTransfer(nca_size, nca_size ? nca_size : 1);
             }
             continue;
         }
+
+        show_step("Allocating"_i18n, file, 0, nca_size ? static_cast<s64>(nca_size) : 1);
 
         NcmPlaceHolderId placeholder_id{};
         R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(dst_cs), std::addressof(placeholder_id)));
         R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(dst_cs), std::addressof(info.content_id), std::addressof(placeholder_id), nca_size));
         rollback.placeholders.emplace_back(placeholder_id);
+
+        show_step("Copying"_i18n, file, 0, nca_size ? static_cast<s64>(nca_size) : 1);
 
         u64 nca_offset{};
         TimeStamp log_ts;
@@ -868,7 +889,7 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
             nca_offset += to_read;
             done += to_read;
             if (pbox) {
-                pbox->UpdateTransfer(done, total);
+                pbox->UpdateTransfer(static_cast<s64>(nca_offset), static_cast<s64>(nca_size));
             }
 
             // one line a second, so a "the bar never moves" report can be
@@ -889,9 +910,7 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
     }
 
     // every nca is on the target now; publish the meta entry there.
-    if (pbox) {
-        pbox->SetTransfer("Updating ncm database"_i18n);
-    }
+    show_step("Updating ncm database"_i18n, {}, 1, 1);
     R_TRY(ncmContentMetaDatabaseSet(std::addressof(dst_db), std::addressof(key), meta_buf.data(), meta_buf.size()));
     R_TRY(ncmContentMetaDatabaseCommit(std::addressof(dst_db)));
     rollback.meta_key = key;
@@ -899,15 +918,11 @@ Result MoveComponentImpl(const NsApplicationContentMetaStatus& status, NcmStorag
 
     // point of no return: from here the title launches from the target copy.
     // cancelling is refused rather than half-applied.
-    if (pbox) {
-        pbox->SetTransfer("Pushing application record"_i18n);
-    }
+    show_step("Pushing application record"_i18n, {}, 1, 1);
     R_TRY(RepointApplicationRecord(ncm::GetAppId(key), key, target_storage));
     rollback.Commit();
 
-    if (pbox) {
-        pbox->SetTransfer("Removing old copy"_i18n);
-    }
+    show_step("Removing old copy"_i18n, {}, 1, 1);
     R_TRY(ncm::DeleteKey(std::addressof(src_cs), std::addressof(src_db), std::addressof(key)));
 
     if (ns::AppManager am; am) {
@@ -968,6 +983,11 @@ Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId 
 }
 
 Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox) {
+    if (pbox) {
+        pbox->NewTransfer("Preparing move"_i18n);
+        pbox->UpdateTransfer(0, 1);
+    }
+
     MovePlan plan;
     R_TRY(GetMovePlan(app_id, target_storage, plan));
     if (plan.move.empty()) {
@@ -982,10 +1002,6 @@ Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox*
     R_UNLESS(free_space <= 0 || (u64)free_space > plan.move_size, Result_GameMoveNotEnoughSpace);
 
     u64 done{};
-    if (pbox) {
-        pbox->NewTransfer(i18n::get(ncm::GetReadableMetaTypeStr(plan.move.front().status.meta_type)));
-        pbox->UpdateTransfer(0, plan.move_size);
-    }
 
     for (const auto& entry : plan.move) {
         R_TRY(pbox ? pbox->ShouldExitResult() : 0);

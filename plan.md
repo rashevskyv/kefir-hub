@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.586**. Завершені плани збережено в
+Поточний delivery — **v0.13.587**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.586 — flash plug/unplug without file-browser magic
+## Поточний delivery: v0.13.587 — Move to NAND/SD shows the current NCA
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. CreatePlaceHolder на гігабайти тримає бар на 0%. Тепер рядок: Allocating/Copying · Application · Program (1/4) + розмір; бар 0–100% по поточному NCA.
+
+## Попередній delivery: v0.13.586 — flash plug/unplug without file-browser magic
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Після MTP-кабеля Poll більше не ігнорує usb:hs (ранній return usbds&&!haze). PC unplug = usb:ds Detached → haze::Exit одразу.
