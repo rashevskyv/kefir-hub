@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.589** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.590** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.590 — compile fix: no dynamic_cast under -fno-rtti
+
+- `app.cpp` падав: `dynamic_cast` не дозволений. ProgressBox каже `BlocksDrawUnder()`, файловий браузер — `OnUsbMountRemoved()`.
 
 ## v0.13.589 — Games list shows the same badges as icon layouts
 

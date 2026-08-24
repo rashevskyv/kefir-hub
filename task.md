@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.589**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.590**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.589 (Games list badges match icon layouts)
+## Поточний delivery: v0.13.590 (no RTTI casts)
+
+- [x] `NO-RTTI-CAST-590` — ProgressBox/file browser через віртуальні методи, не `dynamic_cast`.
+- [x] `DOCS-BUMP-590` — версію піднято до `0.13.590`. Агент не компілював.
+
+## Попередній delivery: v0.13.589 (Games list badges match icon layouts)
 
 - [x] `GAMES-LIST-BADGES-589` — макет список: SD/NAND/GC/Base/DLC/Update/LayeredFS pill-бейджами як у сітці, не літерами `[S|N|b|u]`.
 - [x] `DOCS-BUMP-589` — версію піднято до `0.13.589`. Агент не компілював.

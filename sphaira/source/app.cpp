@@ -975,9 +975,7 @@ void App::OfferOpenUsbDrive(std::string name, std::string mount, u32 flags) {
 
 void App::CloseFileBrowsersOnUsbMount(const std::string& mount) {
     for (auto& w : m_widgets) {
-        if (auto* fb = dynamic_cast<ui::menu::filebrowser::Menu*>(w.get())) {
-            fb->CloseIfOnUsbMount(mount);
-        }
+        w->OnUsbMountRemoved(mount);
     }
 }
 
@@ -1042,7 +1040,7 @@ void App::Draw() {
     // dialog freeze so B/Stop never run until the copy finishes.
     bool skip_under_progress = false;
     for (const auto& p : m_widgets) {
-        if (auto* box = dynamic_cast<ui::ProgressBox*>(p.get()); box && !box->IsMinimized()) {
+        if (p->BlocksDrawUnder()) {
             skip_under_progress = true;
             break;
         }

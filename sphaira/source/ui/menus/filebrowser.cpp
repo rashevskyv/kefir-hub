@@ -182,7 +182,7 @@ void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
-void Menu::CloseIfOnUsbMount(std::string_view mount) {
+void Menu::OnUsbMountRemoved(std::string_view mount) {
     auto matches = [&](FsView* v) {
         if (!v) {
             return false;

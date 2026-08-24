@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.589**. Завершені плани збережено в
+Поточний delivery — **v0.13.590**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.589 — Games list uses the same badge pills as icon layouts
+## Поточний delivery: v0.13.590 — no dynamic_cast (Switch builds with -fno-rtti)
+
+Статус: програмну частину реалізовано (SW-DONE). Агент не компілює.
+1. `App::Draw` і `CloseFileBrowsersOnUsbMount` не можна кастити через `dynamic_cast` (`-fno-rtti`). Замість цього віртуальні `Widget::BlocksDrawUnder` і `OnUsbMountRemoved`.
+
+## Попередній delivery: v0.13.589 — Games list uses the same badge pills as icon layouts
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Макет список більше не пише `[S|N|b|u]` літерами збоку. Ті самі кольорові бейджі, що на обкладинках (GC / Base / DLC / Update / LayeredFS), плюс SD і NAND повними підписами; розмір лишається справа.

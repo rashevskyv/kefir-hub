@@ -6,6 +6,7 @@
 #include <map>
 #include <unordered_map>
 #include <concepts>
+#include <string_view>
 
 namespace sphaira::ui::menu {
 struct MenuBase;
@@ -58,6 +59,15 @@ struct Widget : public Object {
     virtual auto IsModal() const -> bool {
         return false;
     }
+
+    // a full-screen ProgressBox owns the GPU for the frame; menus under it
+    // skip Draw so the dialog can still take B/Stop. no RTTI (Switch is -fno-rtti).
+    virtual auto BlocksDrawUnder() const -> bool {
+        return false;
+    }
+
+    // USB mass-storage unplug: file browsers on that mount pop themselves.
+    virtual void OnUsbMountRemoved(std::string_view) {}
 
     virtual auto WantsChrome() const -> bool {
         return true;
