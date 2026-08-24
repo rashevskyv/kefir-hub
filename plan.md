@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.566**. Завершені плани збережено в
+Поточний delivery — **v0.13.567**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.566 — Auto-update modes, header progress, no EmuNAND badge
+## Поточний delivery: v0.13.567 — Force auto-update for mode testing
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Тимчасово: latest з GitHub завжди вважається оновленням, навіть якщо встановлена версія вища. Режими Silent / Ask / On demand / Off лишаються. Після QA — повернути порівняння версій.
+
+## Попередній delivery: v0.13.566 — Auto-update modes, header progress, no EmuNAND badge
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Тихе оновлення в фоні; тег `v0.13.x` порівнюється коректно. У хедері під час завантаження — «Оновлення» + прогрес замість смуг NAND/SD.

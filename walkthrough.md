@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.566** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.567** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.567 — Force auto-update for mode testing
+
+- Тимчасово ігнорує порівняння версій: будь-яка встановлена збірка пробує latest з GitHub за режимом Silent / Ask / On demand. Після перевірки повернути `kForceUpdateForTest = false`.
 
 ## v0.13.566 — Silent auto-update with header progress
 
