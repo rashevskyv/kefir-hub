@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.574** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.575** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.575 — About: headings without hashes, Update Kefir Hub on A
+
+- `### Direct Download` більше не показує решітки — це заголовок.
+- **X** — оновити список змін. **A** — оновити сам Kefir Hub, якщо GitHub має новіший реліз (або Restart, якщо вже скачано).
 
 ## v0.13.574 — Saves settings: filters, default location, WebDAV
 

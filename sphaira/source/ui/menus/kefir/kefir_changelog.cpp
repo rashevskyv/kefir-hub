@@ -291,6 +291,47 @@ auto RenderChangelogLine(NVGcontext* vg, Theme* theme, const std::string& line, 
     return (current_y - y) + line_height;
 }
 
+auto MarkdownAtxLevel(const std::string& line) -> int {
+    size_t start = 0;
+    while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) {
+        start++;
+    }
+    size_t i = start;
+    while (i < line.size() && line[i] == '#') {
+        i++;
+    }
+    const auto level = static_cast<int>(i - start);
+    if (level < 1 || level > 6) {
+        return 0;
+    }
+    if (i >= line.size() || (line[i] != ' ' && line[i] != '\t')) {
+        return 0;
+    }
+    return level;
+}
+
+auto StripMarkdownAtx(const std::string& line, int level) -> std::string {
+    size_t start = 0;
+    while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) {
+        start++;
+    }
+    start += static_cast<size_t>(level);
+    while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) {
+        start++;
+    }
+    size_t end = line.size();
+    while (end > start && (line[end - 1] == ' ' || line[end - 1] == '\t')) {
+        end--;
+    }
+    while (end > start && line[end - 1] == '#') {
+        end--;
+    }
+    while (end > start && (line[end - 1] == ' ' || line[end - 1] == '\t')) {
+        end--;
+    }
+    return line.substr(start, end - start);
+}
+
 auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, const Vec4& area, float scroll, bool render,
     float regular_font_size, float line_height_scale, float header_font_size, float preamble_font_size) -> float {
     std::istringstream stream(text);
@@ -304,18 +345,32 @@ auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, 
             line.pop_back();
         }
 
-        const auto is_header = IsVersionHeaderLine(line);
+        const auto md_level = MarkdownAtxLevel(line);
+        const auto is_md_header = md_level > 0;
+        const auto is_ver_header = IsVersionHeaderLine(line);
+        const auto is_header = is_ver_header || is_md_header;
         const auto is_blank = ::sphaira::utils::TrimAsciiWhitespace(line).empty();
         const auto is_preamble = !reached_version_entries && !is_header && !is_blank;
-        const auto font_size = is_header ? header_font_size : (is_preamble ? preamble_font_size : regular_font_size);
+        float font_size = regular_font_size;
+        if (is_md_header) {
+            font_size = md_level <= 2 ? header_font_size : std::max(regular_font_size + 1.f, header_font_size - 2.f);
+        } else if (is_ver_header) {
+            font_size = header_font_size;
+        } else if (is_preamble) {
+            font_size = preamble_font_size;
+        }
         const auto line_height = font_size * (is_header ? 1.35f : line_height_scale);
 
-        if (is_header) {
+        if (is_ver_header) {
             reached_version_entries = true;
         }
 
-        const auto height = is_blank ? line_height * 0.55f :
-            RenderChangelogLine(vg, theme, line, area.x, y, area.w, font_size, line_height, render);
+        const auto display = is_md_header ? StripMarkdownAtx(line, md_level) : line;
+        auto height = is_blank ? line_height * 0.55f :
+            RenderChangelogLine(vg, theme, display, area.x, y, area.w, font_size, line_height, render);
+        if (is_header && !is_blank) {
+            height += 6.f;
+        }
         y += height;
         total_height += height;
     }

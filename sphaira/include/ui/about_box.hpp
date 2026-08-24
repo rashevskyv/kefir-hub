@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/widget.hpp"
+#include <cstdint>
 #include <string>
 
 namespace sphaira::ui {
@@ -21,6 +22,8 @@ private:
 
     void LoadChangelog();
     void FetchLatestChangelog();
+    void ApplyRelease(const char* tag, const char* body, const std::string& download_url);
+    void RefreshFooterActions();
     void ScrollBy(float amount);
     void DrawChangelogText(NVGcontext* vg, Theme* theme);
 
@@ -34,6 +37,7 @@ private:
     bool m_loading{true};
     bool m_touch_dragging{false};
     float m_touch_last_y{0.f};
+    std::uint8_t m_footer_job_state{0xFF};
 };
 
 } // namespace sphaira::ui

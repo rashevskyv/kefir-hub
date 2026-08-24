@@ -453,6 +453,8 @@
   "Current Firmware:": "Current Firmware:",
   "Console:": "Console:",
   "Refresh": "Refresh",
+  "Refresh notes": "Refresh notes",
+  "Update Kefir Hub": "Update Kefir Hub",
   "Invert": "Invert",
   "Auto backup on restore": "Auto backup on restore",
   "Compress backup": "Compress backup",

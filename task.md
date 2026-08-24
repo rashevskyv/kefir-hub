@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.574**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.575**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.574 (Saves settings category)
+## Поточний delivery: v0.13.575 (About markdown headings + update button)
+
+- [x] `ABOUT-MD-HEADINGS-575` — `###` у changelog рендериться як заголовок.
+- [x] `ABOUT-UPDATE-BTN-575` — X: Refresh notes; A: Update Kefir Hub, якщо є апдейт.
+- [x] `DOCS-BUMP-575` — версію піднято до `0.13.575`. Агент не компілював.
+
+## Попередній delivery: v0.13.574 (Saves settings category)
 
 - [x] `SAVES-SETTINGS-574` — усі дефолти збережень у Settings → Saves, включно з джерелом за замовчуванням і WebDAV sync.
 - [x] `DOCS-BUMP-574` — версію піднято до `0.13.574`, оновлено plan/task/walkthrough/audit. Агент не компілював.

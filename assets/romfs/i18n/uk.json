@@ -566,6 +566,8 @@
   "Current Firmware:": "Поточна прошивка:",
   "Console:": "Консоль:",
   "Refresh": "Оновити",
+  "Refresh notes": "Оновити список змін",
+  "Update Kefir Hub": "Оновити Kefir Hub",
   "Invert": "Інвертувати",
   "Auto backup on restore": "Автобекап при відновленні",
   "Compress backup": "Стискати бекап",
