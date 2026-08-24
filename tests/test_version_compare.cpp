@@ -44,6 +44,11 @@ static int test_parse() {
     // interchangeable with App::GetVersionFromString
     CHECK((version::Parse("1.2.3.4") == std::vector<int>{1, 2, 3, 4}));
 
+    CHECK((version::Parse("v0.13.565") == std::vector<int>{0, 13, 565}));
+    CHECK((version::Parse("V0.13.500") == std::vector<int>{0, 13, 500}));
+    CHECK(!version::IsLower("v0.13.565", "0.13.563"));
+    CHECK(version::IsLower("0.13.563", "v0.13.565"));
+
     // trailing junk inside an otherwise numeric segment: strtol takes the number
     CHECK((version::Parse("20.1rc.5") == std::vector<int>{20, 1, 5}));
     return 0;

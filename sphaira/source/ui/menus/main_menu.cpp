@@ -12,6 +12,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_hub_menu.hpp"
 #include "ui/menus/appstore.hpp"
+#include "ui/option_box.hpp"
 
 #include "app.hpp"
 #include "auto_update.hpp"
@@ -28,7 +29,6 @@ namespace {
 
 constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
-constexpr fs::FsPath UPDATE_TEMP_PATH{"/switch/sphaira/cache/sphaira_update.temp"};
 constexpr long HTTP_NOT_FOUND{404};
 
 template<typename T>
@@ -78,123 +78,116 @@ auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry> {
 }
 
 MainMenu::MainMenu() {
-    curl::Api().ToFileAsync(
-        curl::Url{GITHUB_URL},
-        curl::Path{CACHE_PATH},
-        curl::Flags{curl::Flag_Cache},
-        curl::StopToken{this->GetToken()},
-        curl::Header{
-            { "Accept", "application/vnd.github+json" },
-        },
-        curl::OnComplete{[this](auto& result){
-            log_write("inside github download\n");
-            m_update_state = UpdateState::Error;
-            ON_SCOPE_EXIT( log_write("update status: %u\n", (u8)m_update_state) );
+    const auto update_mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
+    if (update_mode != auto_update::Mode::Off) {
+        auto_update::SetJobState(auto_update::JobState::Checking);
+        curl::Api().ToFileAsync(
+            curl::Url{GITHUB_URL},
+            curl::Path{CACHE_PATH},
+            curl::Flags{curl::Flag_Cache},
+            curl::StopToken{this->GetToken()},
+            curl::Header{
+                { "Accept", "application/vnd.github+json" },
+            },
+            curl::OnComplete{[this](auto& result){
+                log_write("inside github download\n");
+                m_update_state = UpdateState::Error;
+                ON_SCOPE_EXIT( log_write("update status: %u\n", (u8)m_update_state) );
 
-            if (!result.success) {
-                if (result.code == HTTP_NOT_FOUND) {
+                if (!result.success) {
+                    if (result.code == HTTP_NOT_FOUND) {
+                        m_update_state = UpdateState::None;
+                        auto_update::SetJobState(auto_update::JobState::Idle);
+                        log_write("no github release found for update check\n");
+                        return true;
+                    }
+                    auto_update::SetJobState(auto_update::JobState::Failed);
+                    return false;
+                }
+
+                auto json = yyjson_read_file(CACHE_PATH, YYJSON_READ_NOFLAG, nullptr, nullptr);
+                if (!json) {
+                    auto_update::SetJobState(auto_update::JobState::Failed);
+                    return false;
+                }
+                ON_SCOPE_EXIT(yyjson_doc_free(json));
+
+                auto root = yyjson_doc_get_root(json);
+                auto tag_key = root ? yyjson_obj_get(root, "tag_name") : nullptr;
+                const auto version = tag_key ? yyjson_get_str(tag_key) : nullptr;
+                if (!version) {
+                    auto_update::SetJobState(auto_update::JobState::Failed);
+                    return false;
+                }
+                if (!App::IsVersionNewer(APP_VERSION, version)) {
                     m_update_state = UpdateState::None;
-                    log_write("no github release found for update check\n");
+                    auto_update::SetJobState(auto_update::JobState::Idle);
                     return true;
                 }
 
-                return false;
-            }
+                auto body_key = yyjson_obj_get(root, "body");
+                const auto body = body_key ? yyjson_get_str(body_key) : "";
 
-            auto json = yyjson_read_file(CACHE_PATH, YYJSON_READ_NOFLAG, nullptr, nullptr);
-            R_UNLESS(json, false);
-            ON_SCOPE_EXIT(yyjson_doc_free(json));
-
-            auto root = yyjson_doc_get_root(json);
-            R_UNLESS(root, false);
-
-            auto tag_key = yyjson_obj_get(root, "tag_name");
-            R_UNLESS(tag_key, false);
-
-            const auto version = yyjson_get_str(tag_key);
-            R_UNLESS(version, false);
-            if (!App::IsVersionNewer(APP_VERSION, version)) {
-                m_update_state = UpdateState::None;
-                return true;
-            }
-
-            auto body_key = yyjson_obj_get(root, "body");
-            const auto body = body_key ? yyjson_get_str(body_key) : "";
-
-            auto assets_val = yyjson_obj_get(root, "assets");
-            std::vector<auto_update::ReleaseAsset> assets;
-            if (assets_val && yyjson_is_arr(assets_val)) {
-                size_t idx, max;
-                yyjson_val* asset_item;
-                yyjson_arr_foreach(assets_val, idx, max, asset_item) {
-                    if (!yyjson_is_obj(asset_item)) continue;
-                    auto name_val = yyjson_obj_get(asset_item, "name");
-                    auto url_val = yyjson_obj_get(asset_item, "browser_download_url");
-                    auto type_val = yyjson_obj_get(asset_item, "content_type");
-                    auto size_val = yyjson_obj_get(asset_item, "size");
-                    if (name_val && url_val) {
-                        assets.push_back({
-                            .name = yyjson_get_str(name_val) ? yyjson_get_str(name_val) : "",
-                            .browser_download_url = yyjson_get_str(url_val) ? yyjson_get_str(url_val) : "",
-                            .content_type = (type_val && yyjson_get_str(type_val)) ? yyjson_get_str(type_val) : "",
-                            .size = size_val ? yyjson_get_uint(size_val) : 0,
-                        });
+                auto assets_val = yyjson_obj_get(root, "assets");
+                std::vector<auto_update::ReleaseAsset> assets;
+                if (assets_val && yyjson_is_arr(assets_val)) {
+                    size_t idx, max;
+                    yyjson_val* asset_item;
+                    yyjson_arr_foreach(assets_val, idx, max, asset_item) {
+                        if (!yyjson_is_obj(asset_item)) continue;
+                        auto name_val = yyjson_obj_get(asset_item, "name");
+                        auto url_val = yyjson_obj_get(asset_item, "browser_download_url");
+                        auto type_val = yyjson_obj_get(asset_item, "content_type");
+                        auto size_val = yyjson_obj_get(asset_item, "size");
+                        if (name_val && url_val) {
+                            assets.push_back({
+                                .name = yyjson_get_str(name_val) ? yyjson_get_str(name_val) : "",
+                                .browser_download_url = yyjson_get_str(url_val) ? yyjson_get_str(url_val) : "",
+                                .content_type = (type_val && yyjson_get_str(type_val)) ? yyjson_get_str(type_val) : "",
+                                .size = size_val ? yyjson_get_uint(size_val) : 0,
+                            });
+                        }
                     }
                 }
-            }
 
-            m_update_version = version;
-            m_update_description = body ? body : "";
-            m_update_state = UpdateState::Update;
+                m_update_version = version;
+                m_update_description = body ? body : "";
+                m_update_state = UpdateState::Update;
 
-            const int best_idx = auto_update::SelectBestAsset(assets, App::GetExePath().s);
-            if (best_idx >= 0 && best_idx < static_cast<int>(assets.size())) {
-                m_update_url = assets[best_idx].browser_download_url;
-            }
+                std::string url;
+                const int best_idx = auto_update::SelectBestAsset(assets, App::GetExePath().s);
+                if (best_idx >= 0 && best_idx < static_cast<int>(assets.size())) {
+                    url = assets[best_idx].browser_download_url;
+                    m_update_url = url;
+                }
 
-            if (App::GetAutoUpdateEnable() && best_idx >= 0) {
-                const auto& target_asset = assets[best_idx];
-                log_write("[AutoUpdate] Background downloading update %s (%s)\n", version, target_asset.name.c_str());
+                if (url.empty()) {
+                    auto_update::SetJobState(auto_update::JobState::Failed);
+                    return true;
+                }
 
-                fs::FsNativeSd().CreateDirectoryRecursively("/switch/sphaira/cache");
-
-                const std::string ver_str = version;
-                const std::string asset_name = target_asset.name;
-
-                curl::Api().ToFileAsync(
-                    curl::Url{target_asset.browser_download_url},
-                    curl::Path{UPDATE_TEMP_PATH},
-                    curl::StopToken{this->GetToken()},
-                    curl::OnComplete{[ver_str, asset_name](auto& dl_result) {
-                        if (!dl_result.success) {
-                            log_write("[AutoUpdate] Download failed (code: %ld)\n", dl_result.code);
-                            fs::FsNativeSd().DeleteFile(UPDATE_TEMP_PATH);
-                            return false;
+                auto_update::SetAvailable(version, url);
+                const auto mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
+                if (mode == auto_update::Mode::Silent) {
+                    auto_update::StartDownload();
+                } else if (mode == auto_update::Mode::Notify && auto_update::ConsumeNotifyPrompt()) {
+                    App::Push<OptionBox>(
+                        "A new version is available. Update now?"_i18n,
+                        "Later"_i18n, "Update"_i18n, 1,
+                        [](auto op) {
+                            if (op && *op == 1) {
+                                auto_update::StartDownload();
+                            }
                         }
+                    );
+                } else {
+                    log_write("[UpdateCheck] %s available (mode=%ld)\n", version, App::GetAutoUpdateMode());
+                }
 
-                        const fs::FsPath exe_path = App::GetExePath();
-                        const fs::FsPath dest_path = auto_update::ResolveInstallDestination(exe_path);
-                        const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
-
-                        log_write("[AutoUpdate] Installing update to %s (replace_hbmenu=%d)\n", dest_path.s, replace_hbmenu);
-
-                        if (auto_update::InstallNroUpdate(UPDATE_TEMP_PATH, dest_path, replace_hbmenu)) {
-                            log_write("[AutoUpdate] Update applied silently to %s\n", dest_path.s);
-                        } else {
-                            log_write("[AutoUpdate] Failed to install update to %s\n", dest_path.s);
-                        }
-
-                        fs::FsNativeSd().DeleteFile(UPDATE_TEMP_PATH);
-                        return true;
-                    }}
-                );
-            } else {
-                log_write("[UpdateCheck] Newer version available: %s (auto-update disabled)\n", m_update_version.c_str());
+                return true;
             }
-
-            return true;
-        }
-    });
+        });
+    }
 
     this->SetActions(
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){

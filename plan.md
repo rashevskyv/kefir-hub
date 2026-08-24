@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.565**. Завершені плани збережено в
+Поточний delivery — **v0.13.566**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.565 — File open menu for text + correct expand-range glyphs
+## Поточний delivery: v0.13.566 — Auto-update modes, header progress, no EmuNAND badge
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Тихе оновлення в фоні; тег `v0.13.x` порівнюється коректно. У хедері під час завантаження — «Оновлення» + прогрес замість смуг NAND/SD.
+2. Settings: Off / Silent / Ask / On demand + Update now.
+3. Бейдж EmuNAND прибрано: підпис смуги вже EmuNAND.
+
+## Попередній delivery: v0.13.565 — File open menu for text + correct expand-range glyphs
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. **A** на текстовому файлі (до відкриття): View / Edit / Edit on PC / phone. Те саме в Options, вище в списку.

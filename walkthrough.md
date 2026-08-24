@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.565** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.566** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.566 — Silent auto-update with header progress
+
+- Silent (за замовчуванням): нова версія качається в фоні; хедер показує «Оновлення» і прогрес замість смуг NAND/SD, потім знову сховище. Наступний запуск — нова збірка.
+- Settings → Auto-update: Off, Silent, Ask, On demand; окремо Update now.
+- Тег GitHub `v0.13.x` більше не ламає порівняння.
+- Зелений бейдж EmuNAND прибрано: напис на смузі вже EmuNAND.
 
 ## v0.13.565 — Open menu for text files; expand-range legend uses Up/Down
 

@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "auto_update.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -130,7 +131,28 @@ auto App::GetLogEnable() -> bool {
 }
 
 auto App::GetAutoUpdateEnable() -> bool {
-    return g_app->m_auto_update.Get();
+    return GetAutoUpdateMode() == static_cast<long>(auto_update::Mode::Silent);
+}
+
+auto App::GetAutoUpdateMode() -> long {
+    const auto mode = g_app->m_auto_update.Get();
+    if (mode < 0 || mode > 3) {
+        return static_cast<long>(auto_update::Mode::Silent);
+    }
+    return mode;
+}
+
+void App::SetAutoUpdateMode(long mode) {
+    if (mode < 0 || mode > 3) {
+        mode = static_cast<long>(auto_update::Mode::Silent);
+    }
+    g_app->m_auto_update.Set(mode);
+    if (mode == static_cast<long>(auto_update::Mode::Silent)) {
+        const auto job = auto_update::GetJob();
+        if (job.state == auto_update::JobState::Available) {
+            auto_update::StartDownload();
+        }
+    }
 }
 
 auto App::GetReplaceHbmenuEnable() -> bool {
@@ -440,7 +462,9 @@ void App::SetLogEnable(bool enable) {
 }
 
 void App::SetAutoUpdateEnable(bool enable) {
-    g_app->m_auto_update.Set(enable);
+    SetAutoUpdateMode(enable
+        ? static_cast<long>(auto_update::Mode::Silent)
+        : static_cast<long>(auto_update::Mode::Off));
 }
 
 void App::SetReplaceHbmenuEnable(bool enable) {

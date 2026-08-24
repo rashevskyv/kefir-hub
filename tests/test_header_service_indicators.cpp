@@ -89,7 +89,6 @@ static int test_vertical_geometry_and_spacing() {
     std::vector<MockBadge> badges = {
         {"MTP", true, 26.f},
         {"FTP", false, 23.f},
-        {"E", true, 8.f},
     };
     auto layout = ComputeBadgeLayout(823.f, 1220.f, badges);
 
@@ -120,17 +119,16 @@ static int test_vertical_geometry_and_spacing() {
 }
 
 static int test_badges_centered_over_storage() {
-    // MTP 50 + 6 + FTP 47 + 6 + EmuNAND (54+24=78) = 187
+    // MTP 50 + 6 + FTP 47 = 103. EmuNAND is the storage-bar label, not a badge.
     std::vector<MockBadge> badges = {
         {"MTP", true, 26.f},
         {"FTP", false, 23.f},
-        {"EmuNAND", true, 54.f},
     };
     auto layout = ComputeBadgeLayout(823.f, 1220.f, badges);
 
     CHECK(layout.storage_span_w == 397.f);
-    CHECK(layout.block1_w == 187.f);
-    CHECK(layout.margin_m == 105.f); // (397 - 187) / 2
+    CHECK(layout.block1_w == 103.f);
+    CHECK(layout.margin_m == 147.f); // (397 - 103) / 2
 
     const float left_gap = layout.block1_x - layout.storage_left;
     const float right_gap = layout.storage_right - (layout.block1_x + layout.block1_w);

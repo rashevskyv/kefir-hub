@@ -1,4 +1,6 @@
 #include "auto_update.hpp"
+#include "app.hpp"
+#include "download.hpp"
 #include "fs.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
@@ -6,9 +8,109 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <mutex>
 #include <string_view>
 
 namespace sphaira::auto_update {
+namespace {
+
+std::mutex g_job_mutex;
+Job g_job{};
+bool g_notify_shown{};
+
+} // namespace
+
+auto GetJob() -> Job {
+    std::lock_guard lock(g_job_mutex);
+    return g_job;
+}
+
+void SetJobState(JobState state) {
+    std::lock_guard lock(g_job_mutex);
+    g_job.state = state;
+    if (state == JobState::Downloading) {
+        g_job.progress = 0.f;
+    }
+    if (state == JobState::Installing) {
+        g_job.progress = 1.f;
+    }
+    if (state == JobState::Idle || state == JobState::Failed) {
+        g_job.progress = 0.f;
+    }
+}
+
+void SetJobProgress(float progress) {
+    std::lock_guard lock(g_job_mutex);
+    g_job.progress = std::clamp(progress, 0.f, 1.f);
+}
+
+void SetAvailable(std::string version, std::string url) {
+    std::lock_guard lock(g_job_mutex);
+    g_job.state = JobState::Available;
+    g_job.progress = 0.f;
+    g_job.version = std::move(version);
+    g_job.url = std::move(url);
+    g_notify_shown = false;
+}
+
+auto ConsumeNotifyPrompt() -> bool {
+    std::lock_guard lock(g_job_mutex);
+    if (g_notify_shown || g_job.state != JobState::Available) {
+        return false;
+    }
+    g_notify_shown = true;
+    return true;
+}
+
+void StartDownload() {
+    Job job;
+    {
+        std::lock_guard lock(g_job_mutex);
+        job = g_job;
+        if (job.url.empty() || (job.state != JobState::Available && job.state != JobState::Failed)) {
+            return;
+        }
+        g_job.state = JobState::Downloading;
+        g_job.progress = 0.f;
+    }
+
+    log_write("[AutoUpdate] downloading %s\n", job.version.c_str());
+    fs::FsNativeSd().CreateDirectoryRecursively("/switch/sphaira/cache");
+
+    constexpr fs::FsPath temp_path{"/switch/sphaira/cache/sphaira_update.temp"};
+
+    curl::Api().ToFileAsync(
+        curl::Url{job.url},
+        curl::Path{temp_path},
+        curl::OnProgress{[](s64 dltotal, s64 dlnow, s64, s64) -> bool {
+            if (dltotal > 0) {
+                SetJobProgress(static_cast<float>(dlnow) / static_cast<float>(dltotal));
+            }
+            return true;
+        }},
+        curl::OnComplete{[temp_path](auto& result) {
+            if (!result.success) {
+                log_write("[AutoUpdate] download failed (code: %ld)\n", result.code);
+                fs::FsNativeSd().DeleteFile(temp_path);
+                SetJobState(JobState::Failed);
+                return false;
+            }
+
+            SetJobState(JobState::Installing);
+            const auto dest = ResolveInstallDestination(App::GetExePath());
+            const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
+            log_write("[AutoUpdate] installing to %s (replace_hbmenu=%d)\n", dest.s, replace_hbmenu);
+            if (InstallNroUpdate(temp_path, dest, replace_hbmenu)) {
+                SetJobState(JobState::Ready);
+                log_write("[AutoUpdate] ready — next launch uses the new build\n");
+            } else {
+                SetJobState(JobState::Failed);
+            }
+            fs::FsNativeSd().DeleteFile(temp_path);
+            return true;
+        }}
+    );
+}
 
 fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
     if (!running_exe_path.empty() && strcasecmp(running_exe_path.s, "/hbmenu.nro") != 0) {

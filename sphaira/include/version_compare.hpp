@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace sphaira::version {
@@ -23,8 +24,13 @@ namespace sphaira::version {
 // "20.1.5" -> {20, 1, 5}. Empty segments are skipped; parsing stops at the
 // first segment that does not start with a number, so "1.2.beta" -> {1, 2}.
 inline auto Parse(const std::string& version) -> std::vector<int> {
+    std::string_view in = version;
+    while (!in.empty() && (in.front() == 'v' || in.front() == 'V' || in.front() == ' ')) {
+        in.remove_prefix(1);
+    }
+
     std::vector<int> parts;
-    std::stringstream ss(version);
+    std::stringstream ss{std::string{in}};
     std::string segment;
 
     while (std::getline(ss, segment, '.')) {

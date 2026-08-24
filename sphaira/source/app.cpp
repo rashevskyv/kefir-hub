@@ -1496,6 +1496,12 @@ App::~App() {
 }
 
 auto App::GetVersionFromString(const char* str) -> u32 {
+    if (!str) {
+        return 0;
+    }
+    while (*str == 'v' || *str == 'V' || *str == ' ') {
+        ++str;
+    }
     u32 major{}, minor{}, macro{};
     std::sscanf(str, "%u.%u.%u", &major, &minor, &macro);
     return MAKEHOSVERSION(major, minor, macro);

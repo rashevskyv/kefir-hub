@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.565**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.566**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.565 (Text file open menu + range glyphs)
+## Поточний delivery: v0.13.566 (Auto-update modes and header progress)
+
+- [x] `UPDATE-VPREFIX-566` — порівняння версії знімає префікс `v` з tag_name.
+- [x] `UPDATE-MODES-566` — Off / Silent / Ask / On demand + Update now.
+- [x] `UPDATE-HEADER-566` — під час завантаження хедер: «Оновлення» + бар; без бейджа EmuNAND.
+- [x] `DOCS-BUMP-566` — версію піднято до `0.13.566`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.565 (Text file open menu + range glyphs)
 
 - [x] `FILE-OPEN-TEXT-MENU-565` — A на editable-тексті: View / Edit / Edit on PC; Options теж вище в списку.
 - [x] `TEXT-RANGE-GLYPH-565` — легенда L/R + Up/Down, не SL/SR.

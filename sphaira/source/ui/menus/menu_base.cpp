@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "auto_update.hpp"
 #include "log.hpp"
 #include "ntp.hpp"
 #include "haze_helper.hpp"
@@ -485,8 +486,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             bool is_active;
         };
 
-        const char* nand_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
-
         const float storage_left = label_x;
         const float storage_span_w = std::max(0.f, storage_right - storage_left);
 
@@ -496,7 +495,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         if (pdata.usb3_enabled) {
             badges.push_back({"USB 3.0", true});
         }
-        badges.push_back({nand_label, pdata.is_emummc});
 
         nvgFontSize(vg, badge_font);
         float block1_w = 0.f;
@@ -545,8 +543,31 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             cur_badge_x += bw + badge_gap;
         }
 
-        draw_storage_bar(storage_mid - storage_gap * 0.5f, nand_bar_label, pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
-        draw_storage_bar(storage_mid + storage_gap * 0.5f, sd_bar_label, pdata.sd_free, pdata.sd_total, m_sd_highlight, m_sd_focus);
+        const auto update_job = auto_update::GetJob();
+        const bool show_update = update_job.state == auto_update::JobState::Downloading
+            || update_job.state == auto_update::JobState::Installing;
+
+        if (show_update) {
+            const float y_label = storage_mid - storage_gap * 0.5f;
+            const float y_bar = storage_mid + storage_gap * 0.5f;
+            const float bar_y = y_bar - bar_h;
+            const float pct = std::clamp(update_job.progress, 0.f, 1.f);
+            const NVGcolor track_col = nvgRGBA(80, 80, 80, 180);
+            const NVGcolor fill_col = nvgRGBA(56, 189, 248, 255);
+            const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+            nvgFontSize(vg, storage_font);
+            gfx::drawTextArgs(vg, label_x + label_col_w * 0.5f, y_label, storage_font,
+                NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, text_col, "%s", "Updating"_i18n.c_str());
+
+            gfx::drawRect(vg, bar_x, bar_y, bar_w, bar_h, track_col);
+            gfx::drawRect(vg, bar_x, bar_y, bar_w * pct, bar_h, fill_col);
+            gfx::drawTextArgs(vg, value_x, y_bar, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
+                "%d%%", static_cast<int>(pct * 100.f + 0.5f));
+        } else {
+            draw_storage_bar(storage_mid - storage_gap * 0.5f, nand_bar_label, pdata.nand_free, pdata.nand_total, m_nand_highlight, m_nand_focus);
+            draw_storage_bar(storage_mid + storage_gap * 0.5f, sd_bar_label, pdata.sd_free, pdata.sd_total, m_sd_highlight, m_sd_focus);
+        }
     } else {
         m_status_left_x = start_x;
     }

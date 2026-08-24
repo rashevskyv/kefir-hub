@@ -15,6 +15,30 @@
 
 namespace sphaira::auto_update {
 
+enum class Mode : long {
+    Off = 0,
+    Silent = 1,
+    Notify = 2,
+    OnDemand = 3,
+};
+
+enum class JobState : std::uint8_t {
+    Idle = 0,
+    Checking,
+    Available,
+    Downloading,
+    Installing,
+    Ready,
+    Failed,
+};
+
+struct Job {
+    JobState state{JobState::Idle};
+    float progress{};
+    std::string version{};
+    std::string url{};
+};
+
 struct ReleaseAsset {
     std::string name{};
     std::string browser_download_url{};
@@ -128,6 +152,13 @@ fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path);
 
 // Atomically installs the staging file to destination (and /hbmenu.nro if replace_hbmenu is enabled).
 bool InstallNroUpdate(const fs::FsPath& staging_path, const fs::FsPath& dest_path, bool replace_hbmenu);
+
+auto GetJob() -> Job;
+void SetJobState(JobState state);
+void SetJobProgress(float progress);
+void SetAvailable(std::string version, std::string url);
+auto ConsumeNotifyPrompt() -> bool;
+void StartDownload();
 #endif
 
 } // namespace sphaira::auto_update
