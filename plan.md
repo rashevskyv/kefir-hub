@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.578**. Завершені плани збережено в
+Поточний delivery — **v0.13.579**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.578 — Drop On demand; Ask has Later / Skip / Update
+## Поточний delivery: v0.13.579 — Ready — restart actually restarts
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Auto-update → Update now, коли «Ready — restart»: тап перезапускає Kefir Hub.
+
+## Попередній delivery: v0.13.578 — Drop On demand; Ask has Later / Skip / Update
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Режими: Off / Silent / Ask. On demand прибрано (старий 3 → Silent).

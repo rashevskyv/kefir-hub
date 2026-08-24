@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.578** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.579** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.579 — Ready — restart restarts the app
+
+- У Auto-update, коли рядок пише «Ready — restart», A перезапускає Kefir Hub.
 
 ## v0.13.578 — Ask: Later, skip this version, or update
 

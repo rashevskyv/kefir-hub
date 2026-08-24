@@ -187,8 +187,16 @@ auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
                 }
             }, App::GetAutoUpdateMode());
         }},
-        { "Update now"_i18n, "Download a waiting release, or retry a failed download."_i18n, UpdateNowValue, [](){
+        { "Update now"_i18n,
+          auto_update::GetJob().state == auto_update::JobState::Ready
+              ? "The new version is installed. Tap to restart."_i18n
+              : "Download a waiting release, or retry a failed download."_i18n,
+          UpdateNowValue, [](){
             const auto job = auto_update::GetJob();
+            if (job.state == auto_update::JobState::Ready) {
+                App::ExitRestart();
+                return;
+            }
             if (job.state == auto_update::JobState::Available || job.state == auto_update::JobState::Failed) {
                 auto_update::StartDownload();
             }
