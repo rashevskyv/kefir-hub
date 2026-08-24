@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.551**. Завершені плани збережено в
+Поточний delivery — **v0.13.552**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.551 — Folder picker: Create Folder, minus returns to extract
+## Поточний delivery: v0.13.552 — Picker Options: Create Folder + Close picker
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Контекстне меню пікера: «Створити теку» і «Закрити вибір папки».
+
+## Попередній delivery: v0.13.551 — Folder picker: Create Folder, minus returns to extract
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Options пікера — лише «Створити папку», без copy/cut.

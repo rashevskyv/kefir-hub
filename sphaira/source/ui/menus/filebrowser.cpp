@@ -1805,6 +1805,11 @@ void FsView::DisplayPickerOptions() {
         }
     });
     create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
+
+    options->Add<SidebarEntryCallback>("Close picker"_i18n, [this](){
+        App::PopToMenu();
+        m_menu->PromptIfShouldExit();
+    });
 }
 
 void FsView::DisplayOptions() {
