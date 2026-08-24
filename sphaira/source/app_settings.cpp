@@ -659,12 +659,18 @@ void App::Set12HourTimeEnable(bool enable) {
 }
 
 void App::SetMtpEnable(bool enable) {
+    g_app->ApplyMtpEnable(enable, true);
+}
+
+void App::ApplyMtpEnable(bool enable, bool notify_conflict) {
     if (App::GetMtpEnable() != enable) {
         // mutually exclusive with usb host storage -- see SetHddEnable. Free
         // the port before haze grabs it.
         if (enable && App::GetHddEnable()) {
             App::SetHddEnable(false);
-            App::Notify("USB storage turned off to free the USB port"_i18n);
+            if (notify_conflict) {
+                App::Notify("USB storage turned off to free the USB port"_i18n);
+            }
         }
         g_app->m_mtp_enabled.Set(enable);
         if (enable) {

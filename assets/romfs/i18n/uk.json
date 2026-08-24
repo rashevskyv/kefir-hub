@@ -1608,6 +1608,7 @@
   "No USB drive found.\nCheck that it has power and is formatted as FAT32, exFAT or NTFS.": "USB-накопичувач не знайдено.\nПеревірте живлення та що він відформатований у FAT32, exFAT або NTFS.",
   "Mounted": "Змонтовано",
   "USB drive connected": "USB-накопичувач підключено",
+  "Computer connected — MTP started": "Комп'ютер підключено — MTP запущено",
   "USB drive removed": "USB-накопичувач від'єднано",
   "MTP turned off to free the USB port": "MTP вимкнено, щоб звільнити USB-порт",
   "USB storage turned off to free the USB port": "USB-накопичувач вимкнено, щоб звільнити USB-порт",

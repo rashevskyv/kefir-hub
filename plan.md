@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.581**. Завершені плани збережено в
+Поточний delivery — **v0.13.582**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.581 — GitHub release; restore only-if-newer auto-update
+## Поточний delivery: v0.13.582 — USB plug: flash → file browser, PC → MTP
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Флешка (usbhsfs): попап «відкрити у файловому браузері».
+2. Кабель у ПК (LowPower VBUS, немає mass-storage): одразу MTP; після від'єднання порт повертається USB storage.
+
+## Попередній delivery: v0.13.581 — GitHub release; restore only-if-newer auto-update
 
 Статус: SW-DONE. Деплой на rashevskyv/kefir-hub.
 1. `kForceUpdateForTest = false`: оновлення лише якщо latest новіший.

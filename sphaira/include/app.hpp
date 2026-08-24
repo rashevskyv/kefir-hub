@@ -418,13 +418,23 @@ public:
 
     AppletHookCookie m_appletHookCookie{};
 
-    // usb host storage hotplug watch: polled once a second while HDD is on, so
-    // plugging or pulling a drive raises a notification and refreshes the file
-    // browser root without the user having to do anything.
+    // usb plug watch: once a second, decide whether the cable is a flash drive
+    // (usbhsfs mounted something) or a PC (LowPower VBUS, no mass-storage).
+    // Flash: offer to open it in the file browser. PC: start MTP (the port
+    // cannot be host and device at once). Auto-MTP is undone on unplug.
     void PollUsbStorage();
+    void OfferOpenUsbDrive();
+    void TryStartAutoMtp();
+    void RestoreUsbAfterAutoMtp();
+    void ApplyMtpEnable(bool enable, bool notify_conflict);
     TimeStamp m_usb_poll_ts{};
     u32 m_usb_device_count{};
     bool m_usb_poll_primed{};
+    PsmChargerType m_usb_charger{PsmChargerType_Unconnected};
+    bool m_usb_pending_mtp{};
+    TimeStamp m_usb_pending_mtp_ts{};
+    bool m_usb_auto_mtp{};
+    bool m_usb_auto_mtp_restore_hdd{};
 
     Theme m_theme{};
     fs::FsPath theme_path{};

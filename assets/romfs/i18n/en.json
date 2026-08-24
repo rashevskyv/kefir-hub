@@ -1468,6 +1468,7 @@
   "Mount MTP": "Mount MTP",
   "MTP stopped": "MTP stopped",
   "MTP started": "MTP started",
+  "Computer connected — MTP started": "Computer connected — MTP started",
   "Failed to start MTP": "Failed to start MTP",
   "Toggle the MTP responder to browse SD card files on PC.": "Toggle the MTP responder to browse SD card files on PC.",
   "USB install failed!": "USB install failed!",

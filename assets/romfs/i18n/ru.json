@@ -1547,6 +1547,7 @@
   "No USB drive found.\nCheck that it has power and is formatted as FAT32, exFAT or NTFS.": "USB-накопитель не найден.\nУбедитесь, что подано питание и он отформатирован в FAT32, exFAT или NTFS.",
   "Mounted": "Смонтировано",
   "USB drive connected": "USB-накопитель подключен",
+  "Computer connected — MTP started": "Компьютер подключён — MTP запущен",
   "MTP is using the USB port. Turn MTP off in Settings, then mount the drive again.": "MTP использует порт USB. Отключите MTP в Настройках, затем снова смонтируйте диск.",
   "MTP turned off to free the USB port": "MTP отключен, чтобы освободить порт USB",
   "USB drive removed": "USB-накопитель извлечен",

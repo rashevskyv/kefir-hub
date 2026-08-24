@@ -6,6 +6,7 @@
 #include "ui/error_box.hpp"
 
 #include "ui/menus/main_menu.hpp"
+#include "ui/menus/filebrowser.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 
 #include "app.hpp"
@@ -824,47 +825,155 @@ void App::Update() {
 }
 
 void App::PollUsbStorage() {
-    if (!App::GetHddEnable()) {
-        // nothing to watch while the drive stack is down; re-arm so the first
-        // poll after it comes back reports the current set as the baseline
-        // rather than as a fresh insertion.
-        m_usb_poll_primed = false;
-        return;
-    }
-
     if (m_usb_poll_primed && m_usb_poll_ts.GetSeconds() < 1) {
         return;
     }
     m_usb_poll_ts.Update();
 
-    const auto count = usbHsFsGetMountedDeviceCount();
+    PsmChargerType charger{PsmChargerType_Unconnected};
+    psmGetChargerType(&charger);
+
+    // usbhsfs is only up while USB storage is enabled. MTP (and USB install)
+    // own the same controller, so a zero count here means "we are not looking",
+    // not "nothing is plugged in".
+    const bool hdd_up = App::GetHddEnable() && usbHsFsGetStatusChangeUserEvent();
+    const u32 count = hdd_up ? usbHsFsGetMountedDeviceCount() : 0;
+    const u32 physical = hdd_up ? usbHsFsGetPhysicalDeviceCount() : 0;
+
     if (!m_usb_poll_primed) {
-        // first poll of a session: record what is already there silently.
         m_usb_device_count = count;
+        m_usb_charger = charger;
         m_usb_poll_primed = true;
+        // already sitting on a PC cable at launch: start the same debounce
+        // as a hot-plug so MTP comes up without a trip to Settings.
+        if (charger == PsmChargerType_LowPower
+            && physical == 0 && count == 0
+            && !App::GetMtpEnable() && !haze::IsRunning()
+            && appletGetOperationMode() != AppletOperationMode_Console) {
+            m_usb_pending_mtp = true;
+            m_usb_pending_mtp_ts.Update();
+        }
         return;
     }
 
-    if (count == m_usb_device_count) {
-        return;
-    }
-
-    const bool added = count > m_usb_device_count;
-    m_usb_device_count = count;
-
-    if (added) {
-        // name the drive that just appeared, so the message is concrete.
-        const auto devices = location::GetStdio(false);
-        const auto name = devices.empty() ? std::string{} : devices.back().name;
-        App::Notify(name.empty() ? "USB drive connected"_i18n : "USB drive connected"_i18n + ": " + name);
+    if (hdd_up && count != m_usb_device_count) {
+        const bool added = count > m_usb_device_count;
+        m_usb_device_count = count;
+        if (added) {
+            m_usb_pending_mtp = false;
+            OfferOpenUsbDrive();
+        } else {
+            App::Notify("USB drive removed"_i18n);
+            if (!m_widgets.empty()) {
+                m_widgets.back()->OnFocusGained();
+            }
+        }
     } else {
-        App::Notify("USB drive removed"_i18n);
+        m_usb_device_count = count;
     }
 
-    // if the file browser is sitting at its root, make the drive appear (or
-    // vanish) there straight away instead of on the next manual navigation.
+    if (charger != m_usb_charger) {
+        log_write("[USB] charger %u -> %u (physical=%u mounted=%u)\n",
+            static_cast<unsigned>(m_usb_charger), static_cast<unsigned>(charger),
+            physical, count);
+        if (charger == PsmChargerType_Unconnected) {
+            m_usb_pending_mtp = false;
+            if (m_usb_auto_mtp) {
+                RestoreUsbAfterAutoMtp();
+            }
+        } else if (charger == PsmChargerType_LowPower
+            && physical == 0 && count == 0
+            && !App::GetMtpEnable() && !haze::IsRunning()
+            && appletGetOperationMode() != AppletOperationMode_Console) {
+            // LowPower VBUS with no mass-storage is a PC (or a charge-only
+            // USB port). Official chargers and the dock report EnoughPower
+            // and must not steal the port from usbhsfs.
+            m_usb_pending_mtp = true;
+            m_usb_pending_mtp_ts.Update();
+        } else {
+            m_usb_pending_mtp = false;
+        }
+        m_usb_charger = charger;
+    }
+
+    if (m_usb_pending_mtp) {
+        if (physical > 0 || count > 0 || App::GetMtpEnable() || haze::IsRunning()) {
+            m_usb_pending_mtp = false;
+        } else if (m_usb_pending_mtp_ts.GetSeconds() >= 2) {
+            m_usb_pending_mtp = false;
+            TryStartAutoMtp();
+        }
+    }
+}
+
+void App::OfferOpenUsbDrive() {
+    const auto devices = location::GetStdio(false);
+    const std::string name = devices.empty() ? std::string{} : devices.back().name;
+    const std::string mount = devices.empty() ? std::string{} : devices.back().mount;
+    const u32 flags = devices.empty() ? 0u : devices.back().flags;
+
     if (!m_widgets.empty()) {
         m_widgets.back()->OnFocusGained();
+    }
+
+    const std::string message = name.empty()
+        ? "USB drive connected"_i18n
+        : "USB drive connected"_i18n + ":\n" + name;
+
+    if (!m_widgets.empty() && m_widgets.back()->IsModal()) {
+        App::Notify(message);
+        return;
+    }
+
+    App::Push<ui::OptionBox>(message, "No"_i18n, "Open in file browser"_i18n, 1,
+        [mount, name, flags](auto op_index) {
+            if (!op_index || !*op_index || mount.empty()) {
+                return;
+            }
+            const ui::menu::filebrowser::FsEntry entry{
+                name, mount, ui::menu::filebrowser::FsType::Stdio, flags};
+            App::Push<ui::menu::filebrowser::Menu>(ui::menu::MenuFlag_None, entry, mount);
+        });
+}
+
+void App::TryStartAutoMtp() {
+    if (App::GetMtpEnable() || haze::IsRunning()) {
+        return;
+    }
+    if (appletGetOperationMode() == AppletOperationMode_Console) {
+        return;
+    }
+
+    UsbState usb_state{};
+    if (R_SUCCEEDED(usbDsGetState(&usb_state))) {
+        // USB install (or anything else) already owns usb:ds.
+        log_write("[USB] skip auto MTP; usbDs already active (state %u)\n",
+            static_cast<unsigned>(usb_state));
+        return;
+    }
+
+    const bool restore_hdd = App::GetHddEnable();
+    log_write("[USB] PC host detected; starting MTP\n");
+    ApplyMtpEnable(true, false);
+    if (App::GetMtpEnable()) {
+        m_usb_auto_mtp = true;
+        m_usb_auto_mtp_restore_hdd = restore_hdd;
+        App::Notify("Computer connected — MTP started"_i18n);
+    } else if (restore_hdd) {
+        App::SetHddEnable(true);
+    }
+}
+
+void App::RestoreUsbAfterAutoMtp() {
+    m_usb_auto_mtp = false;
+    const bool restore_hdd = m_usb_auto_mtp_restore_hdd;
+    m_usb_auto_mtp_restore_hdd = false;
+    log_write("[USB] PC unplugged; stopping auto MTP (restore hdd=%d)\n", restore_hdd);
+    if (App::GetMtpEnable()) {
+        ApplyMtpEnable(false, false);
+    }
+    if (restore_hdd && !App::GetHddEnable()) {
+        App::SetHddEnable(true);
     }
 }
 

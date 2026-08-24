@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.581** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.582** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.582 — USB plug: flash opens the file browser, PC starts MTP
+
+- Флешка в порт: попап «USB drive connected» / **Open in file browser**.
+- Кабель у комп'ютер: MTP вмикається сам (порт не може бути хостом і девайсом одночасно). Після від'єднання MTP вимикається і USB storage повертається. Офіційна зарядка / док не чіпають порт.
 
 ## v0.13.581 — GitHub release; auto-update only if newer
 
