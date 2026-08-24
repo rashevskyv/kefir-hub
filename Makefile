@@ -1,5 +1,6 @@
 # === Configuration ===
 SPHAIRA_ROOT_DIR := $(CURDIR)
+SPHAIRA_VERSION := $(shell sed -n 's/^set(sphaira_VERSION \([^)]*\))/\1/p' $(SPHAIRA_ROOT_DIR)/sphaira/CMakeLists.txt)
 SPHAIRA_BUILD_PRESET := ReleaseWithInstall
 SPHAIRA_BUILD_JOBS ?= $(shell nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 SPHAIRA_FAN_TITLE_ID := 00FF46554E43544C
@@ -49,7 +50,7 @@ endif
 # Команда за замовчуванням (make або make all)
 all: copy
 	@echo "-------------------------------------------------------"
-	@echo "Kefir Hub built and copied to $(DEST_NRO_FILE)"
+	@echo "Kefir Hub $(SPHAIRA_VERSION) built and copied to $(DEST_NRO_FILE)"
 	@echo "-------------------------------------------------------"
 
 # Тільки збірка
@@ -75,7 +76,7 @@ copy: build
 nxlink:
 	@echo ">>> Sending $(SOURCE_NRO_FILE) to $(NXLINK_IP) via nxlink..."
 	@nxlink -a $(NXLINK_IP) $(SOURCE_NRO_FILE)
-	@echo ">>> Sent via nxlink."
+	@echo ">>> Sent via nxlink. Kefir Hub $(SPHAIRA_VERSION)"
 
 # Відправка через FTP
 ftp pftp:
