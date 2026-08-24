@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.548**. Завершені плани збережено в
+Поточний delivery — **v0.13.549**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.548 — Auto-forwarder deletes our previous HOME icon
+## Поточний delivery: v0.13.549 — Zip extract: smaller checks, X/Y like file browser, no "new folder" row
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Чекбокси дерева — той самий `drawCheckbox`, трохи менші (16px).
+2. **X** — позначити поточний рядок, **Y** — інвертувати вибір (як у файловому браузері).
+3. Прибрано «Розпакувати в нову папку…». Нову папку створюєш у Options огляду («Extract files to…»), перший рядок обирає поточну.
+
+## Попередній delivery: v0.13.548 — Auto-forwarder deletes our previous HOME icon
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Новий Kefir Hub форвардер більше не сідає поруч зі старим: інші ікони Kefir Hub/Sphaira з префіксом 0x05 прибираються, щойно є поточний.

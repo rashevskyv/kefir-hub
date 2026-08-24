@@ -33,6 +33,7 @@ constexpr float TREE_ROW = 46.f;
 constexpr float ACTION_ROW = 54.f;
 constexpr float LIST_X = 70.f;
 constexpr float LIST_W = 1140.f;
+constexpr float TREE_CHECKBOX = 16.f;
 
 } // namespace
 
@@ -63,7 +64,6 @@ ZipExtractBox::ZipExtractBox(std::string title, std::vector<std::string> entry_n
     m_actions.emplace_back("Extract files to /downloads"_i18n);
     m_actions.emplace_back("Extract into "_i18n + m_named_dest);
     m_actions.emplace_back("Extract files to..."_i18n);
-    m_actions.emplace_back("Extract into new folder..."_i18n);
 
     m_focus_actions = true;
 
@@ -87,7 +87,8 @@ ZipExtractBox::ZipExtractBox(std::string title, std::vector<std::string> entry_n
     this->SetActions(
         std::make_pair(Button::A, Action{"Toggle"_i18n, [this](){ OnA(); }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
-        std::make_pair(Button::Y, Action{"All / none"_i18n, [this](){ AllOrNone(); }})
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){ Toggle(m_tree_index); }}),
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ Invert(); }})
     );
     UpdateAHint();
 
@@ -153,16 +154,13 @@ void ZipExtractBox::Toggle(s64 index) {
     SyncDirChecks();
 }
 
-void ZipExtractBox::AllOrNone() {
-    bool any_off = false;
+void ZipExtractBox::Invert() {
     for (std::size_t i = 0; i < m_nodes.size(); ++i) {
-        if (!m_nodes[i].is_dir && !m_checked[i]) {
-            any_off = true;
-            break;
+        if (!m_nodes[i].is_dir) {
+            m_checked[i] = m_checked[i] ? 0 : 1;
         }
     }
-    const char next = any_off ? 1 : 0;
-    std::fill(m_checked.begin(), m_checked.end(), next);
+    SyncDirChecks();
 }
 
 auto ZipExtractBox::SelectedFiles() const -> std::vector<std::string> {
@@ -212,11 +210,7 @@ void ZipExtractBox::RunExtractAction(s64 index) {
         }
     } else if (i == 2) {
         if (browse) {
-            browse(false, std::move(files));
-        }
-    } else if (i == 3) {
-        if (browse) {
-            browse(true, std::move(files));
+            browse(std::move(files));
         }
     }
 }
@@ -289,11 +283,11 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
 
             const auto mid_y = y + (h / 2.f);
-            const auto box_y = y + (h - gfx::CHECKBOX_SIZE) / 2.f;
-            gfx::drawCheckbox(vg, theme, x + 12.f, box_y, gfx::CHECKBOX_SIZE, m_checked[static_cast<std::size_t>(i)] != 0);
+            const auto box_y = y + (h - TREE_CHECKBOX) / 2.f;
+            gfx::drawCheckbox(vg, theme, x + 12.f, box_y, TREE_CHECKBOX, m_checked[static_cast<std::size_t>(i)] != 0);
 
             const auto indent = 22.f * static_cast<float>(m_nodes[static_cast<std::size_t>(i)].depth);
-            const auto text_x = x + 12.f + gfx::CHECKBOX_SIZE + 12.f + indent;
+            const auto text_x = x + 12.f + TREE_CHECKBOX + 12.f + indent;
             const auto text_w = w - (text_x - x) - 20.f;
             const auto colour = theme->GetColour(focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
             m_tree_scroll.Draw(vg, focused, text_x, mid_y, text_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, m_nodes[static_cast<std::size_t>(i)].label);

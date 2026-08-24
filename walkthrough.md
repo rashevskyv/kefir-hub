@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.548** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.549** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.549 — Zip extract: smaller checks, X/Y, create folder in picker
+
+- Дерево: стандартний чекбокс, 16px. **X** позначає рядок, **Y** інвертує.
+- Немає пункту «нова папка». «Розпакувати файли в…» відкриває огляд: **+** — Options (створити папку), перший рядок — обрати поточну.
 
 ## v0.13.548 — Delete our previous Kefir Hub HOME icon
 

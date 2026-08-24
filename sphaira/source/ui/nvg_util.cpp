@@ -309,7 +309,8 @@ void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float si
 
     // the tick is a glyph, not a shape, so it gets a 1px black halo to stay
     // legible on a light theme where box and tick would otherwise both be pale.
-    constexpr float tick = 18.f;
+    // scale with the box (18px at the standard 20px CHECKBOX_SIZE).
+    const float tick = size * (18.f / 20.f);
     const float cx = x + size / 2.f;
     const float cy = y + (size - tick) / 2.f;
     const auto outline = nvgRGBA(0, 0, 0, 255);

@@ -18,7 +18,7 @@ namespace sphaira::ui {
 class ZipExtractBox final : public Widget {
 public:
     using ExtractCb = std::function<void(fs::FsPath dest, std::string nro_only, std::vector<std::string> files)>;
-    using BrowseCb = std::function<void(bool create_named, std::vector<std::string> files)>;
+    using BrowseCb = std::function<void(std::vector<std::string> files)>;
 
     ZipExtractBox(std::string title, std::vector<std::string> entry_names, ExtractCb extract, BrowseCb browse);
 
@@ -34,7 +34,7 @@ private:
     void SetFocusActions(bool actions);
     void Toggle(s64 index);
     void SyncDirChecks();
-    void AllOrNone();
+    void Invert();
     void OnA();
     void RunExtractAction(s64 index);
     auto SelectedFiles() const -> std::vector<std::string>;

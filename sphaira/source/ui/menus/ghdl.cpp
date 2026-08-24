@@ -279,7 +279,7 @@ void AskOpenExtractedFolder(const fs::FsPath& path) {
 }
 
 void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name = {}, std::vector<std::string> include_files = {});
-void BrowseExtractFolder(fs::FsPath zip_path, bool create_named = false, std::string zip_filename = {}, std::vector<std::string> include_files = {});
+void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files = {});
 void PromptExtractPath(fs::FsPath zip_path, std::string filename);
 
 void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::string nro_zip_name, std::vector<std::string> include_files) {
@@ -369,21 +369,14 @@ void ExtractDownloadedZip(fs::FsPath zip_path, fs::FsPath extract_path, std::str
     });
 }
 
-void BrowseExtractFolder(fs::FsPath zip_path, bool create_named, std::string zip_filename, std::vector<std::string> include_files) {
+void BrowseExtractFolder(fs::FsPath zip_path, std::vector<std::string> include_files) {
     auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
     browser->SetFolderPicker(
-        [zip_path, create_named, zip_filename, include_files](const fs::FsPath& folder) {
-            fs::FsPath dest = folder;
-            if (create_named) {
-                const char* parent = folder.s[0] ? folder.s : "/";
-                dest = zip_extract::NewFolderDest(parent, zip_filename).c_str();
-            }
-            ExtractDownloadedZip(zip_path, dest, {}, include_files);
+        [zip_path, include_files](const fs::FsPath& folder) {
+            ExtractDownloadedZip(zip_path, folder, {}, include_files);
         },
         "Select folder"_i18n,
-        create_named
-            ? "Create a folder named after the archive here?"_i18n
-            : "Extract ZIP to this folder?"_i18n);
+        "Extract ZIP to this folder?"_i18n);
     App::Push(std::move(browser));
 }
 
@@ -395,8 +388,8 @@ void PromptExtractPath(fs::FsPath zip_path, std::string filename) {
         [zip_path](fs::FsPath dest, std::string nro_only, std::vector<std::string> files) {
             ExtractDownloadedZip(zip_path, dest, std::move(nro_only), std::move(files));
         },
-        [zip_path, filename](bool create_named, std::vector<std::string> files) {
-            BrowseExtractFolder(zip_path, create_named, filename, std::move(files));
+        [zip_path](std::vector<std::string> files) {
+            BrowseExtractFolder(zip_path, std::move(files));
         });
 }
 

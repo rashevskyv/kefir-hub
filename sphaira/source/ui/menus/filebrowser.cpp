@@ -2676,11 +2676,7 @@ void FsView::MountUsbStorage() {
 
 Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuBase{"FileBrowser"_i18n, flags} {
     SetAction(Button::START, Action{"Options"_i18n, [this](){
-        if (IsFolderPicker()) {
-            ConfirmFolderPick(view->m_path);
-            return;
-        }
-        if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
+        if (App::GetApp()->m_controller.GotHeld(Button::R2) && !IsFolderPicker()) {
             view->DisplayAdvancedOptions();
         } else {
             view->DisplayOptions();
@@ -2759,10 +2755,6 @@ void Menu::SetFolderPicker(FolderPickCallback cb, std::string title, std::string
     m_on_folder_picked = std::move(cb);
     m_folder_pick_confirm = confirm.empty() ? "Install firmware from this folder?"_i18n : std::move(confirm);
     SetTitle(title.empty() ? "Select firmware folder"_i18n : std::move(title));
-    // relabel START so the "select this folder" affordance is visible.
-    SetAction(Button::START, Action{"Select folder"_i18n, [this](){
-        ConfirmFolderPick(view->m_path);
-    }});
 }
 
 void Menu::ConfirmFolderPick(const fs::FsPath& folder) {
