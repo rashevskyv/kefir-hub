@@ -765,15 +765,17 @@ void Menu::SetupEditActions() {
             CancelRangeSelection();
         }});
     } else {
-        RefreshEditAHint();
+        SetAction(Button::A, Action{"Edit line"_i18n, [this](){
+            EditLine();
+        }});
         SetAction(Button::B, Action{"Back"_i18n, [this](){
             SwitchToViewMode();
         }});
-        if (m_has_range) {
-            SetAction(Button::Y, Action{"Expand range"_i18n, [this](){
-                StartAdjustRange();
-            }});
-        }
+        SetAction(Button::Y, Action{"Toggle"_i18n, [this](){
+            if (!TryToggleLine(m_line_index)) {
+                App::Notify("Not a boolean value"_i18n);
+            }
+        }});
     }
 
     SetAction(Button::X, Action{"Actions"_i18n, [this](){
@@ -847,7 +849,6 @@ void Menu::UpdateTextSubHeading() {
             heading += "  (" + "View"_i18n + ")";
         }
         SetSubHeading(heading);
-        RefreshEditAHint();
         return;
     }
 
@@ -864,7 +865,6 @@ void Menu::UpdateTextSubHeading() {
         heading += "  *";
     }
     SetSubHeading(heading);
-    RefreshEditAHint();
 }
 
 auto Menu::BuildText() const -> std::string {
@@ -940,20 +940,6 @@ auto Menu::TryToggleLine(s64 index) -> bool {
     UpdateTextSubHeading();
     App::PlaySoundEffect(SoundEffect_Focus);
     return true;
-}
-
-void Menu::RefreshEditAHint() {
-    if (!m_editable || m_adjusting_range || m_selecting_range) {
-        return;
-    }
-    const bool can_toggle = m_line_index >= 0
-        && m_line_index < static_cast<s64>(m_lines.size())
-        && text_helper::ToggleIniBoolean(m_lines[m_line_index]).toggled;
-    SetAction(Button::A, Action{can_toggle ? "Toggle"_i18n : "Edit line"_i18n, [this](){
-        if (!TryToggleLine(m_line_index)) {
-            EditLine();
-        }
-    }});
 }
 
 void Menu::EditLine() {

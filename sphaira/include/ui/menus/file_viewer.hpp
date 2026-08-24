@@ -73,7 +73,6 @@ private:
     void SetupViewActions();
     void SetupEditActions();
     auto TryToggleLine(s64 index) -> bool;
-    void RefreshEditAHint();
     void SwitchToEditMode();
     void SwitchToViewMode();
     void DisplayTextOptions();

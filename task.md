@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.570**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.571**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.570 (Toggle bool on A; swkbd overflow)
+## Поточний delivery: v0.13.571 (Y is Toggle)
+
+- [x] `TEXT-TOGGLE-Y-571` — Y туглить буль; A лишається Edit line. Expand range лишається в Actions.
+- [x] `DOCS-BUMP-571` — версію піднято до `0.13.571`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.570 (Toggle bool on A; swkbd overflow)
 
 - [x] `TEXT-TOGGLE-A-570` — A / double-tap фліпає `=0`/`=1` без вимоги `.ini`; клавіатура лише якщо це не буль.
 - [x] `SWKBD-OVERFLOW-570` — буфер під `len_max`, `swkbdClose`, скидання тачу після аплету.

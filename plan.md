@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.570**. Завершені плани збережено в
+Поточний delivery — **v0.13.571**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.570 — Toggle 0/1 on A; fix swkbd overflow
+## Поточний delivery: v0.13.571 — Y toggles boolean lines
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. У редакторі **Y** — Toggle (`=0`/`=1` / true/false / u8!0x0). **A** знову лише Edit line.
+
+## Попередній delivery: v0.13.570 — Toggle 0/1 on A; fix swkbd overflow
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. У редакторі **A** / подвійний тап на `=0`/`=1`/`true`/`false`/`u8!0x0` перемикає буль, не відкриває клавіатуру. Підказка A: Toggle.
