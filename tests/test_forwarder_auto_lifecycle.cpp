@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <atomic>
 #include <string>
-#include <cctype>
 
 static int g_checks = 0;
 
@@ -74,39 +73,6 @@ struct MockForwarderAutoLifecycle {
     }
 };
 
-bool IsOldHomebrewTitle(const std::string& raw_name, uint64_t tid, uint64_t kefirhub_tid) {
-    if (tid == kefirhub_tid && kefirhub_tid != 0) {
-        return false;
-    }
-
-    std::string name = raw_name;
-    for (char& c : name) {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (name.find("kefir") != std::string::npos || name.find("sphaira") != std::string::npos) {
-        return false;
-    }
-
-    if (tid == 0x03DB1280BD84000ULL || tid == 0x03DB12780BD84000ULL ||
-        tid == 0x050000000000100DULL) {
-        return true;
-    }
-
-    if (name == "hbm" || name == "hbl" || name == "hbmenu" || name == "hblauncher" || name == "nx-hbmenu") {
-        return true;
-    }
-
-    if (name.find("homebrew menu") != std::string::npos ||
-        name.find("homebrew launcher") != std::string::npos ||
-        name.find("hblauncher") != std::string::npos ||
-        name.find("hbmenu") != std::string::npos ||
-        name.find("nx-hbmenu") != std::string::npos) {
-        return true;
-    }
-
-    return false;
-}
-
 int RunTests() {
     MockForwarderAutoLifecycle lc;
 
@@ -155,18 +121,21 @@ int RunTests() {
         CHECK(lc.mock_close_calls == 1);
     }
 
-    // Test 4: IsOldHomebrewTitle detection
+    // Test 4: IsOldHomebrewTitle / IsStaleOwnForwarder / ClassifyLaunch
     {
-        const uint64_t kefirhub_tid = 0x0500000000123000ULL;
+        using sphaira::forwarder_auto::IsOldHomebrewTitle;
+        using sphaira::forwarder_auto::IsStaleOwnForwarder;
+        using sphaira::forwarder_auto::ClassifyLaunch;
+        using sphaira::forwarder_auto::LaunchSource;
 
-        // Known legacy Title IDs must be detected regardless of name
+        const uint64_t kefirhub_tid = 0x0500000000123000ULL;
+        const uint64_t stale_tid = 0x0500000000ABCDEFULL;
+
         CHECK(IsOldHomebrewTitle("Anything", 0x03DB1280BD84000ULL, kefirhub_tid));
         CHECK(IsOldHomebrewTitle("Anything", 0x03DB12780BD84000ULL, kefirhub_tid));
         CHECK(IsOldHomebrewTitle("Custom Name", 0x050000000000100DULL, kefirhub_tid));
-        // Nintendo system title IDs are not old forwarders
         CHECK(!IsOldHomebrewTitle("Custom Name", 0x010000000000100DULL, kefirhub_tid));
 
-        // Matching Homebrew Menu names
         CHECK(IsOldHomebrewTitle("Homebrew Menu", 0x0100111222333000ULL, kefirhub_tid));
         CHECK(IsOldHomebrewTitle("homebrew menu v2.0", 0x0100111222333000ULL, kefirhub_tid));
         CHECK(IsOldHomebrewTitle("Homebrew Launcher", 0x0100111222333000ULL, kefirhub_tid));
@@ -176,14 +145,23 @@ int RunTests() {
         CHECK(IsOldHomebrewTitle("hblauncher", 0x0100111222333000ULL, kefirhub_tid));
         CHECK(IsOldHomebrewTitle("nx-hbmenu", 0x0100111222333000ULL, kefirhub_tid));
 
-        // KefirHub / Sphaira must NEVER be matched
         CHECK(!IsOldHomebrewTitle("Kefir Hub", kefirhub_tid, kefirhub_tid));
         CHECK(!IsOldHomebrewTitle("KefirHub", 0x0100111222333000ULL, kefirhub_tid));
         CHECK(!IsOldHomebrewTitle("Sphaira", 0x0100111222333000ULL, kefirhub_tid));
-
-        // Regular games must not match
         CHECK(!IsOldHomebrewTitle("Super Mario Odyssey", 0x0100000000010000ULL, kefirhub_tid));
         CHECK(!IsOldHomebrewTitle("RetroArch", 0x0100000000020000ULL, kefirhub_tid));
+
+        CHECK(IsStaleOwnForwarder("Kefir Hub", stale_tid, kefirhub_tid));
+        CHECK(IsStaleOwnForwarder("Sphaira", stale_tid, kefirhub_tid));
+        CHECK(!IsStaleOwnForwarder("Kefir Hub", kefirhub_tid, kefirhub_tid));
+        CHECK(!IsStaleOwnForwarder("Kefir Hub", 0x0100000000010000ULL, kefirhub_tid));
+        CHECK(!IsStaleOwnForwarder("Homebrew Menu", stale_tid, kefirhub_tid));
+
+        CHECK(ClassifyLaunch(false, 0, kefirhub_tid, "") == LaunchSource::Album);
+        CHECK(ClassifyLaunch(true, kefirhub_tid, kefirhub_tid, "Kefir Hub") == LaunchSource::NewForwarder);
+        CHECK(ClassifyLaunch(true, stale_tid, kefirhub_tid, "Kefir Hub") == LaunchSource::StaleOwn);
+        CHECK(ClassifyLaunch(true, 0x03DB1280BD84000ULL, kefirhub_tid, "Homebrew Menu") == LaunchSource::OldForwarder);
+        CHECK(ClassifyLaunch(true, 0x0100AABBCCDDE000ULL, kefirhub_tid, "Some App") == LaunchSource::Album);
     }
 
     // Test 5: launch-source plan — never delete the forwarder we launched from
@@ -221,6 +199,16 @@ int RunTests() {
         CHECK(!from_album_clean.install_new);
         CHECK(!from_album_clean.delete_old);
         CHECK(from_album_clean.notice == Notice::None);
+
+        auto from_stale = Decide(LaunchSource::StaleOwn, false, false);
+        CHECK(from_stale.install_new);
+        CHECK(!from_stale.delete_old);
+        CHECK(from_stale.notice == Notice::None);
+
+        auto from_stale_ready = Decide(LaunchSource::StaleOwn, true, false);
+        CHECK(!from_stale_ready.install_new);
+        CHECK(!from_stale_ready.delete_old);
+        CHECK(from_stale_ready.notice == Notice::None);
     }
 
     return 0;

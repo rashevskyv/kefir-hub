@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.547**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.548**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.547 (Launch app after zip install)
+## Поточний delivery: v0.13.548 (Delete our previous auto-forwarder)
+
+- [x] `FORWARDER-STALE-OWN-548` — при встановленні нового Kefir Hub ікона видаляти попередні свої 0x05 (не HBL). Не чіпати title, з якого зайшли.
+- [x] `FORWARDER-TID-HASH-548` — auto-install більше не ставить args=path, тож TID збігається з перевіркою IsInstalled.
+- [x] `DOCS-BUMP-548` — версію піднято до `0.13.548`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.547 (Launch app after zip install)
 
 - [x] `ZIP-INSTALL-LAUNCH-547` — після встановлення програми з zip: Keep/Delete архів, потім Launch / No. Папку не відкриваємо.
 - [x] `DOCS-BUMP-547` — версію піднято до `0.13.547`, оновлено plan/task/walkthrough/audit. Агент не компілював.

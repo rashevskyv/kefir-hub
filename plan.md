@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.547**. Завершені плани збережено в
+Поточний delivery — **v0.13.548**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.547 — After installing an app from zip: launch, don't open the folder
+## Поточний delivery: v0.13.548 — Auto-forwarder deletes our previous HOME icon
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. Новий Kefir Hub форвардер більше не сідає поруч зі старим: інші ікони Kefir Hub/Sphaira з префіксом 0x05 прибираються, щойно є поточний.
+2. Запуск зі старого нашого ікона — це не «вже новий»: ставиться поточний Title ID; той, з якого зайшли, зніметься наступного разу (його не можна видалити, поки він запущений).
+3. args більше не дублюються — hash Title ID збігається з тим, що ставить install_forwarder.
+
+## Попередній delivery: v0.13.547 — After installing an app from zip: launch, don't open the folder
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Після «Встановити програму» лишається Keep/Delete zip, друге питання — запустити додаток, не файловий браузер.

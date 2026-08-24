@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.547** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.548** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.548 — Delete our previous Kefir Hub HOME icon
+
+- Зміна параметрів / шляху більше не лишає другий ікон: інші Kefir Hub/Sphaira з Title ID 0x05… прибираються, щойно стоїть поточний.
+- Якщо зайшли зі старого нашого ікона — його не можна знести, поки він запущений; ставиться новий, старий зникне з Album або з нового ікона.
+- Hash Title ID знову path+path, як у install_forwarder (без зайвого args).
 
 ## v0.13.547 — Launch the installed app, don't open its folder
 
