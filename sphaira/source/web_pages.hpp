@@ -741,7 +741,6 @@ button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
 <script>
 const titleEl=document.getElementById('title'),guideEl=document.getElementById('guide'),container=document.getElementById('input-container'),pasteBtn=document.getElementById('paste-btn'),sendBtn=document.getElementById('send-btn'),msg=document.getElementById('msg'),hintEl=document.getElementById('hint');
 let field=document.getElementById('text-input');
-let isEditor=false;
 const isPhone=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>0&&matchMedia('(pointer:coarse)').matches);
 if(!isPhone){pasteBtn.style.display='none';}
 async function init(){
@@ -749,7 +748,6 @@ async function init(){
     const res=await fetch('/input/config');
     if(res.ok){
       const cfg=await res.json();
-      isEditor=!!cfg.editor;
       if(cfg.title)titleEl.textContent=cfg.title;
       if(cfg.guide)guideEl.textContent=cfg.guide;
       if(cfg.multiline){
@@ -757,10 +755,8 @@ async function init(){
         field=document.getElementById('text-input');
       }
       if(cfg.placeholder)field.placeholder=cfg.placeholder;
-      if(isEditor){
-        try{field.value=await(await fetch('/input/body')).text();}catch(e){}
-      }else if(cfg.default_text)field.value=cfg.default_text;
-      if(cfg.multiline&&hintEl)hintEl.textContent=isEditor?'Edit, then Send to save on the Switch.':'Paste or type the text, then Send.';
+      if(cfg.default_text)field.value=cfg.default_text;
+      if(cfg.multiline&&hintEl)hintEl.textContent='Paste or type the text, then Send.';
     }
   }catch(e){}
   field.focus();
@@ -804,7 +800,7 @@ async function send(){
   const isArea=field.tagName==='TEXTAREA';
   const val=isArea?field.value:collapseSchemes(field.value);
   if(!isArea&&val)field.value=val;
-  if(!val&&!isEditor){msg.className='msg err';msg.textContent=isArea?'Paste or type some text first.':'Paste or type the address first.';return;}
+  if(!val){msg.className='msg err';msg.textContent=isArea?'Paste or type some text first.':'Paste or type the address first.';return;}
   sending=true;
   sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
   try{
@@ -829,6 +825,107 @@ document.getElementById('send-form').addEventListener('submit',e=>{e.preventDefa
 init();
 </script>
 </body></html>
+)HTML";
+
+// Full-page file editor. CodeMirror 5 is loaded from a CDN in the browser so
+// the NRO only ships this shell; if the CDN is unreachable a full-page
+// textarea still works (line numbers and highlight are skipped).
+constexpr std::string_view REMOTE_EDITOR_PAGE = R"HTML(
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Edit &bull; Kefir Hub</title>
+<style>
+html,body{height:100%;margin:0;background:#0f0f12;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif}
+#bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#18181b;border-bottom:1px solid #27272a}
+#name{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#msg{font-size:13px;color:#a1a1aa}
+button{padding:8px 14px;font-size:14px;font-weight:500;border:0;border-radius:8px;background:#0284c7;color:#fff;cursor:pointer}
+button:disabled{background:#3f3f46;color:#71717a}
+#wrap{height:calc(100% - 53px)}
+#ed{width:100%;height:100%;box-sizing:border-box;border:0;outline:none;resize:none;padding:12px 14px;background:#0f0f12;color:#e2e8f0;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
+.CodeMirror{height:100%;background:#0f0f12;color:#e2e8f0;font-size:14px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.CodeMirror-gutters{background:#18181b;border-right:1px solid #27272a}
+.CodeMirror-linenumber{color:#71717a}
+.CodeMirror-cursor{border-left:1px solid #38bdf8}
+.CodeMirror-selected{background:#1e3a5f}
+.cm-s-default .cm-comment{color:#64748b}
+.cm-s-default .cm-string,.cm-s-default .cm-string-2{color:#86efac}
+.cm-s-default .cm-number,.cm-s-default .cm-atom{color:#fda4af}
+.cm-s-default .cm-keyword,.cm-s-default .cm-meta,.cm-s-default .cm-builtin{color:#7dd3fc}
+.cm-s-default .cm-def{color:#93c5fd}
+.cm-s-default .cm-variable,.cm-s-default .cm-variable-2{color:#e2e8f0}
+.cm-s-default .cm-property,.cm-s-default .cm-attribute{color:#cbd5e1}
+.cm-s-default .cm-operator,.cm-s-default .cm-qualifier{color:#a1a1aa}
+.cm-s-default .cm-tag{color:#c4b5fd}
+.ok{color:#4ade80}.err{color:#f87171}
+</style>
+</head><body>
+<div id="bar"><div id="name">file</div><div id="msg"></div><button type="button" id="save">Save to Switch</button></div>
+<div id="wrap"><textarea id="ed" spellcheck="false" wrap="off"></textarea></div>
+<script>
+const CM='https://cdn.jsdelivr.net/npm/codemirror@5.65.16/';
+const ed=document.getElementById('ed'),saveBtn=document.getElementById('save'),msg=document.getElementById('msg');
+let cm=null,dirty=false;
+function val(){return cm?cm.getValue():ed.value;}
+function markDirty(){if(!dirty){dirty=true;document.title='* '+document.title.replace(/^\* /,'');}}
+function clearDirty(){dirty=false;document.title=document.title.replace(/^\* /,'');}
+function modeOf(name){
+  const n=(name||'').toLowerCase();
+  if(/\.(ini|cfg|conf|config)$/.test(n))return ['properties','mode/properties/properties.min.js'];
+  if(/\.(json|js|mjs|cjs)$/.test(n))return ['javascript','mode/javascript/javascript.min.js'];
+  if(/\.(xml|html|htm)$/.test(n))return ['xml','mode/xml/xml.min.js'];
+  if(/\.css$/.test(n))return ['css','mode/css/css.min.js'];
+  if(/\.(md|markdown)$/.test(n))return ['markdown','mode/markdown/markdown.min.js'];
+  if(/\.py$/.test(n))return ['python','mode/python/python.min.js'];
+  if(/\.(c|h|cpp|hpp|cc|hh)$/.test(n))return ['clike','mode/clike/clike.min.js'];
+  if(/\.(yml|yaml)$/.test(n))return ['yaml','mode/yaml/yaml.min.js'];
+  if(/\.(sh|bash)$/.test(n))return ['shell','mode/shell/shell.min.js'];
+  if(/\.toml$/.test(n))return ['toml','mode/toml/toml.min.js'];
+  return null;
+}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+function loadCss(href){return new Promise((res,rej)=>{const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.onload=res;l.onerror=rej;document.head.appendChild(l);});}
+async function save(){
+  saveBtn.disabled=true;msg.className='';msg.textContent='Saving...';
+  try{
+    const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val()});
+    if(res.ok){msg.className='ok';msg.textContent='Saved. You can close this page.';clearDirty();}
+    else{msg.className='err';msg.textContent='Console rejected the file.';saveBtn.disabled=false;}
+  }catch(e){msg.className='err';msg.textContent='Could not reach the console.';saveBtn.disabled=false;}
+}
+saveBtn.addEventListener('click',save);
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}});
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+ed.addEventListener('input',markDirty);
+(async()=>{
+  let title='file';
+  try{
+    const cfg=await(await fetch('/input/config')).json();
+    title=cfg.title||'file';
+    document.getElementById('name').textContent=title;
+    document.title=title+' \u2022 Kefir Hub';
+  }catch(e){}
+  try{ed.value=await(await fetch('/input/body')).text();}catch(e){ed.value='';}
+  const spec=modeOf(title);
+  try{
+    await Promise.race([
+      Promise.all([loadCss(CM+'lib/codemirror.css'),loadScript(CM+'lib/codemirror.min.js')]),
+      new Promise((_,rej)=>setTimeout(()=>rej('timeout'),5000))
+    ]);
+    if(spec&&window.CodeMirror){try{await loadScript(CM+spec[1]);}catch(e){}}
+    if(!window.CodeMirror)throw 'no cm';
+    const json=/\.json$/i.test(title);
+    cm=CodeMirror.fromTextArea(ed,{
+      lineNumbers:true,indentUnit:2,tabSize:2,
+      lineWrapping:matchMedia('(pointer:coarse)').matches,
+      mode:json?{name:'javascript',json:true}:(spec?spec[0]:null),
+      extraKeys:{'Ctrl-S':save,'Cmd-S':save}
+    });
+    cm.on('change',markDirty);
+    cm.focus();
+  }catch(e){ed.focus();}
+})();
+</script></body></html>
 )HTML";
 
 } // namespace sphaira::webpages

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.559**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.560**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.559 (Expand existing line range)
+## Поточний delivery: v0.13.560 (Full-page remote file editor)
+
+- [x] `REMOTE-EDITOR-PAGE-560` — редагування всього файлу: повний екран + CodeMirror з CDN; вставка рядків лишає мале вікно.
+- [x] `DOCS-BUMP-560` — версію піднято до `0.13.560`, оновлено plan/task/walkthrough/audit. Агент не компілював.
+
+## Попередній delivery: v0.13.559 (Expand existing line range)
 
 - [x] `TEXT-EXPAND-RANGE-559` — за наявності виділення: Y / Дії «Розширити діапазон»; L/лівий стік — верхня межа, R/правий — нижня; легенда.
 - [x] `DOCS-BUMP-559` — версію піднято до `0.13.559`, оновлено plan/task/walkthrough/audit. Агент не компілював.

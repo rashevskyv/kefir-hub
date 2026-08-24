@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.559** (2026-08-24). Попередні
+Актуальний delivery — **v0.13.560** (2026-08-24). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.560 — Full-page editor on PC / phone
+
+- Options → «Редагувати на ПК / телефоні»: повний екран, номери рядків, підсвітка (CodeMirror з інтернету в браузері). Ctrl+S / кнопка Save пише файл на Switch.
+- «Вставити з ПК / телефона» як і раніше — маленьке вікно на кілька рядків.
+- Без інтернету в браузері лишається повноекранне поле, лише без підсвітки.
 
 ## v0.13.559 — Text editor: expand an existing line range
 

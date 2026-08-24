@@ -1246,7 +1246,10 @@ void HandleRequest(Socket sock) {
             HandleRemoteInputPost(sock, req);
             return;
         } else if (method == "GET") {
-            SendResponse(sock, "200 OK", "text/html", std::string{REMOTE_INPUT_PAGE});
+            // ponytail: editor HTML is a thin shell; CodeMirror loads from CDN in the browser.
+            const auto page = ui::remote_input::GetCurrentOptions().editor
+                ? REMOTE_EDITOR_PAGE : REMOTE_INPUT_PAGE;
+            SendResponse(sock, "200 OK", "text/html", std::string{page});
             return;
         }
         SendResponse(sock, "404 Not Found", "text/plain", "Not found");

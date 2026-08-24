@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.559**. Завершені плани збережено в
+Поточний delivery — **v0.13.560**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.559 — Text editor: expand an existing line range
+## Поточний delivery: v0.13.560 — Full-page remote file editor (CodeMirror)
+
+Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
+1. «Редагувати на ПК / телефоні» відкриває повноекранний редактор, не картку з textarea.
+2. CodeMirror 5 з CDN: номери рядків, підсвітка за розширенням, Ctrl+S. У NRO лише HTML-оболонка.
+3. Вставка кількох рядків лишається маленьким вікном Send.
+
+## Попередній delivery: v0.13.559 — Text editor: expand an existing line range
 
 Статус: програмну частину реалізовано (SW-DONE / HW-PENDING). Агент не компілює.
 1. Коли вже є виділення рядків: **Y** і Дії → «Розширити діапазон».
