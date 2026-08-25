@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.614**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.615**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.614 (official account import)
+## Поточний delivery: v0.13.615 (account save compile fix)
+
+- [x] `ACC-SAVE-ID-615` — `system_save_data_id` замість неіснуючого `save_data_id`; ReleaseWithInstall зібрано.
+- [x] `DOCS-BUMP-615` — версію піднято до `0.13.615`.
+
+## Попередній delivery: v0.13.614 (official account import)
 
 - [x] `USERS-OFFICIAL-614` — підтверджено Linkalho vs official tokens; Import/Export; stub із попередженням; статус Linked/Offline stub/Local.
 - [x] `DOCS-BUMP-614` — версію піднято до `0.13.614`.

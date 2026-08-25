@@ -1,12 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.614**. Завершені плани збережено в
+Поточний delivery — **v0.13.615**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.614 — Users: official account import instead of Linkalho-only
+## Поточний delivery: v0.13.615 — compile fix: system_save_data_id
 
-Статус: програмну частину реалізовано. Агент не компілює.
+Статус: зібрано `ReleaseWithInstall` (NRO ок).
+1. `FsSaveDataAttribute` у поточному libnx не має `save_data_id`. Відкриття account save `0x8000000000000010` йде через `system_save_data_id`, як у haze/filebrowser.
+
+## Попередній delivery: v0.13.614 — Users: official account import instead of Linkalho-only
+
+Статус: програмну частину реалізовано.
 1. Чутка підтверджена: Linkalho пише випадкові baas/nas без `id.token` / `refresh.token`, тож OLSC/BAAS ретраять Nintendo. Офіційна прив’язка на sysNAND + перенос `0x8000000000000010` має справжні токени.
 2. Tools → Users: Import official link + Export на SD. Офлайн-заглушка Linkalho лишилась з попередженням. Статус: Linked / Offline stub / Local.
 

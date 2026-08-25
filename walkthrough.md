@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.614** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.615** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.615 — compile fix for account save mount
+
+- `FsSaveDataAttribute` не має `save_data_id`. Відкриття system save акаунта йде через `system_save_data_id`. ReleaseWithInstall зібрано.
 
 ## v0.13.614 — Users: official Nintendo Account import
 

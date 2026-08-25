@@ -133,14 +133,14 @@ void ShutdownAccountServices() {
 auto OpenAccountSave() -> fs::FsNativeSave {
     ShutdownAccountServices();
     FsSaveDataAttribute attr{};
-    attr.save_data_id = ACCOUNT_SAVE_ID;
+    attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
     return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
 }
 
 auto TryOpenAccountSave() -> fs::FsNativeSave {
     FsSaveDataAttribute attr{};
-    attr.save_data_id = ACCOUNT_SAVE_ID;
+    attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
     return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
 }
