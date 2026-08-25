@@ -1,0 +1,152 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# Kefir Hub: restore decrypted system-save files onto THIS console.
+# Writes inner files into the destination's existing SYSTEM saves, then
+# commit() signs them with this console's keys.
+# Do NOT copy raw SYSTEM:/save/80000000000000F0 blobs — that bricks emuMMC.
+# Destination play hours (and profiles, if 0010 is in the pack) are replaced.
+# Back up the destination SYSTEM partition first.
+
+writeDir = {
+    src = srcRoot
+    if (rel.len()) {
+        src = combinepath(srcRoot, rel)
+    }
+    listing = readdir(src)
+    if (listing.result) {
+        println("readdir fail", src)
+        errors = errors + 1
+    } .else() {
+        files = listing.files.copy()
+        subs = listing.folders.copy()
+        files.foreach("fname") {
+            fsrc = combinepath(src, fname)
+            fdst = "/" + fname
+            if (rel.len()) {
+                fdst = "/" + rel + "/" + fname
+            }
+            println(fdst)
+            bytes = readfile(fsrc)
+            rc = saveObj.write(fdst, bytes)
+            if (rc) {
+                println("write fail", fdst, rc)
+                errors = errors + 1
+            } .else() {
+                wrote = wrote + 1
+            }
+        }
+        subs.foreach("dname") {
+            oldrel = rel
+            if (rel.len()) {
+                rel = rel + "/" + dname
+            } .else() {
+                rel = dname
+            }
+            writeDir()
+            rel = oldrel
+        }
+    }
+}
+
+restoreOne = {
+    srcRoot = combinepath(pack, saveId)
+    if (!fsexists(srcRoot)) {
+        println("skip pack", saveId)
+    } .else() {
+        bis = combinepath("bis:/save", saveId)
+        if (!fsexists(bis)) {
+            println("skip dest (no blob, will not create)", bis)
+            errors = errors + 1
+        } .else() {
+            println("open", bis)
+            saveObj = readsave(bis)
+            rel = ""
+            writeDir()
+            println("commit", saveId)
+            saveObj.commit()
+        }
+    }
+}
+
+clear()
+println("Kefir Hub NAND transfer restore")
+println("Encrypts inner files with THIS console keys, then signs.")
+println("")
+
+packRoot = "sd:/config/kefir/nand_transfer"
+names = ["Cancel"].copy()
+paths = [""].copy()
+
+here = cwd()
+if (fsexists(combinepath(here, "80000000000000F0")) || fsexists(combinepath(here, "8000000000000010"))) {
+    names.add("This folder")
+    paths.add(here)
+}
+
+d = readdir(packRoot)
+if (!d.result) {
+    d.folders.foreach("folder") {
+        p = combinepath(packRoot, folder)
+        if (fsexists(combinepath(p, "80000000000000F0")) || fsexists(combinepath(p, "8000000000000010"))) {
+            names.add(folder)
+            paths.add(p)
+        }
+    }
+}
+
+if (names.len() == 1) {
+    println("No pack found. Expected", packRoot)
+    println("or run restore.te from inside a pack folder.")
+    pause()
+    exit()
+}
+
+idx = menu(names, 0)
+if (!idx) {
+    exit()
+}
+pack = paths[idx]
+println("pack:", pack)
+
+targets = ["Cancel"].copy()
+targets.add("emuMMC SYSTEM")
+targets.add("sysMMC SYSTEM")
+choice = menu(targets, 0)
+if (!choice) {
+    exit()
+}
+
+if (choice == 1) {
+    if (!emu()) {
+        println("No emuMMC")
+        pause()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    rc = mountsys("SYSTEM")
+}
+
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    pause()
+    exit()
+}
+
+wrote = 0
+errors = 0
+ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
+ids.foreach("saveId") {
+    restoreOne()
+}
+
+println("")
+println("wrote", wrote, "errors", errors)
+println("Reboot CFW. Destination hours are now the source hours.")
+if (errors) {
+    println("There were errors. If Atmosphere fails to boot, restore SYSTEM.")
+}
+pause()

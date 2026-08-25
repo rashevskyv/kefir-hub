@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.616**. Завершені плани збережено в
+Поточний delivery — **v0.13.617**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.616 — Users: grid, avatars, create/rename/delete/backup
+## Поточний delivery: v0.13.617 — NAND transfer: decrypt on Hub, encrypt via TegraExplorer
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Tools → Users → Backup profiles & play hours: розшифрований дамп 0010/0011/00F0/0041 у `/config/kefir/nand_transfer/<stamp>/`.
+2. Рестор не з Horizon: `restore.te` у паку (і romfs). TegraExplorer `readsave` + `write` + `commit()` підписує ключами цілі. Сирий blob не копіюємо.
+3. Restore user pack лишається окремо (новий UID, без годин). Інструкція `docs/account-transfer.md`.
+
+## Попередній delivery: v0.13.616 — Users: grid, avatars, create/rename/delete/backup
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Tools → Users: сітка як ігри (List/Icon/Grid/HB Menu), аватар, бейдж лінку, мультивибір (X/Y).

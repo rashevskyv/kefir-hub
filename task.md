@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.616**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.617**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.616 (Users manager)
+## Поточний delivery: v0.13.617 (NAND transfer dump + TegraExplorer restore)
+
+- [x] `NAND-DUMP-617` — Хаб розшифровує 0010/0011/00F0/0041 на SD (`/config/kefir/nand_transfer/`).
+- [x] `NAND-TE-617` — `restore.te`: readsave/write/commit ключами цілі; сирий blob не кладемо.
+- [x] `DOCS-BUMP-617` — версію піднято до `0.13.617`.
+
+## Попередній delivery: v0.13.616 (Users manager)
 
 - [x] `USERS-GRID-616` — сітка, аватар, layout, мультивибір, бейдж лінку.
 - [x] `USERS-CRUD-616` — create/rename/avatar/delete через acc:su; бекап акаунта і сейвів з галочками; пак restore.

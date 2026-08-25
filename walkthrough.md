@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.616** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.617** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.617 — profiles & play hours: Hub decrypt, TegraExplorer encrypt
+
+- Tools → Users → **Backup profiles & play hours**: внутрішні файли 0010/0011/00F0/0041 на `/config/kefir/nand_transfer/<stamp>/` (Horizon розшифрував). UID зберігаються.
+- Рестор: `restore.te` у паку. На цілі TegraExplorer пише файли в уже існуючі SYSTEM save і `commit()` підписує ключами цілі. Сирий `SYSTEM:/save/8000…` не копіюємо.
+- Restore user pack як і раніше створює **нового** юзера — години так не їдуть.
+- Інструкція: `docs/account-transfer.md`. Агент не компілює.
 
 ## v0.13.616 — Users manager
 

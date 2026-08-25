@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
+#include "nand_transfer.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
 #include "swkbd.hpp"
@@ -371,7 +372,12 @@ void Menu::ShowContextMenu() {
     }
     options->Add<SidebarEntryCallback>("Restore user pack"_i18n, [this](){
         ConfirmRestore();
-    }, true, "Create a profile from a pack (name, avatar, link). Use this to move a user to another console."_i18n);
+    }, true, "Create a new profile from a pack (name, avatar, link). New UID — play hours are not copied. Use Backup profiles & play hours to keep hours."_i18n);
+
+    options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
+    options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
+        ConfirmNandBackup();
+    }, true, "Decrypt account (0010) and play log (00F0) to SD. Restore on the other console with TegraExplorer restore.te — it encrypts with that console's keys. Destination hours are replaced."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
@@ -497,9 +503,20 @@ void Menu::ConfirmBackup() {
         });
 }
 
+void Menu::ConfirmNandBackup() {
+    App::Push<OptionBox>(
+        "Decrypt this NAND's profiles (0010) and play hours (00F0) to SD. Restore is not done here: on the destination, inject TegraExplorer and run restore.te from the pack. That encrypts with the destination keys. Destination hours and profiles will be replaced. Back up SYSTEM first. emuNAND recommended."_i18n,
+        "Cancel"_i18n, "Backup"_i18n, 1,
+        [this](auto op) {
+            if (op && *op == 1) {
+                RunNandBackup();
+            }
+        });
+}
+
 void Menu::ConfirmRestore() {
     App::Push<OptionBox>(
-        "Pick a user pack folder (profile.json + avatar.jpg). A new local profile is created. Y selects the folder."_i18n,
+        "Pick a user pack folder (profile.json + avatar.jpg). A new local profile is created (new UID, no play hours). Y selects the folder."_i18n,
         "Cancel"_i18n, "Choose folder"_i18n, 1,
         [this](auto op) {
             if (!op || *op != 1) {
@@ -664,6 +681,40 @@ void Menu::RunSetAvatar(std::vector<u8> jpeg) {
         }
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 64, false);
+}
+
+void Menu::RunNandBackup() {
+    auto report = std::make_shared<nand_transfer::Report>();
+    App::Push<ProgressBox>(0, "Backup profiles & play hours"_i18n, "Backup profiles & play hours"_i18n,
+        [report](auto pbox) -> Result {
+            pbox->NewTransfer("Decrypting system saves"_i18n);
+            R_TRY(nand_transfer::Export(pbox, *report));
+            R_SUCCEED();
+        }, [this, report](Result rc) {
+            if (R_FAILED(rc) || report->dir.empty()) {
+                App::Push<OptionBox>(
+                    "Could not dump system saves. Close games and other homebrew, then try again."_i18n,
+                    "OK"_i18n);
+                return;
+            }
+            std::string msg = "Wrote decrypted saves to "_i18n + report->dir + ". ";
+            if (!report->save_00F0) {
+                msg += "Play hours (00F0) could not be opened. Close games and retry. "_i18n;
+            }
+            if (!report->save_0010) {
+                msg += "Account save (0010) could not be opened. "_i18n;
+            }
+            msg += "On the destination: copy this folder to its SD, inject TegraExplorer, run restore.te, pick emuMMC or sysMMC SYSTEM. Reboot this console."_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Later"_i18n, "Reboot"_i18n, 1,
+                [](auto op) {
+                    if (op && *op == 1) {
+                        utils::requestForcedReboot();
+                    }
+                });
+            Refresh();
+        }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
 void Menu::RunBackup() {
