@@ -55,6 +55,7 @@ private:
     void ConfirmChangeAvatar();
     void ConfirmBackup();
     void ConfirmNandBackup();
+    void ConfirmNandRestore();
     void ConfirmRestore();
     void ConfirmDelete();
     void RunUnlink(bool all);
@@ -66,6 +67,7 @@ private:
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup();
     void RunNandBackup();
+    void RunNandRestore(const std::string& dir);
     void RunRestore(const std::string& dir);
     void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
 

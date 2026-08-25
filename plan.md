@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.617**. Завершені плани збережено в
+Поточний delivery — **v0.13.618**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.617 — NAND transfer: decrypt on Hub, encrypt via TegraExplorer
+## Поточний delivery: v0.13.618 — Hub encrypts restore; TE is fallback
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Restore profiles & play hours на цілі: FS-запис у існуючі 0010/00F0, Horizon шифрує ключами цієї консолі. Сирий blob не копіюємо.
+2. TegraExplorer `restore.te` лишився запасним, якщо pdm не віддає 00F0. BIS-копія контейнера — не рестор.
+3. Бекап як у 0.13.617 (розшифрований пак на SD).
+
+## Попередній delivery: v0.13.617 — NAND transfer: decrypt on Hub, encrypt via TegraExplorer
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Tools → Users → Backup profiles & play hours: розшифрований дамп 0010/0011/00F0/0041 у `/config/kefir/nand_transfer/<stamp>/`.

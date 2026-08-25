@@ -15,8 +15,13 @@ struct Report {
     bool save_0041{};
 };
 
-// Decrypt system saves 0010/0011/00F0/0041 onto SD. Restore is TegraExplorer
-// restore.te (destination keys via Save.commit), not a raw NAND blob copy.
+auto IsPack(const std::string& dir) -> bool;
+
+// Decrypt system saves 0010/0011/00F0/0041 onto SD (source Horizon keys).
 auto Export(ui::ProgressBox* pbox, Report& out) -> Result;
+
+// Write that pack into this console's existing system saves. Horizon encrypts
+// and signs with destination keys. Does not copy raw SYSTEM:/save blobs.
+auto Import(ui::ProgressBox* pbox, const std::string& dir, Report& out) -> Result;
 
 } // namespace sphaira::nand_transfer

@@ -377,7 +377,10 @@ void Menu::ShowContextMenu() {
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
         ConfirmNandBackup();
-    }, true, "Decrypt account (0010) and play log (00F0) to SD. Restore on the other console with TegraExplorer restore.te — it encrypts with that console's keys. Destination hours are replaced."_i18n);
+    }, true, "Decrypt account (0010) and play log (00F0) to SD. Restore on the other console with Restore profiles & play hours. Horizon encrypts with that console's keys. Destination hours are replaced."_i18n);
+    options->Add<SidebarEntryCallback>("Restore profiles & play hours"_i18n, [this](){
+        ConfirmNandRestore();
+    }, true, "Write a decrypted pack into this console's system saves. Horizon encrypts with this console's keys. Hours and profiles on this NAND are replaced."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
@@ -505,12 +508,31 @@ void Menu::ConfirmBackup() {
 
 void Menu::ConfirmNandBackup() {
     App::Push<OptionBox>(
-        "Decrypt this NAND's profiles (0010) and play hours (00F0) to SD. Restore is not done here: on the destination, inject TegraExplorer and run restore.te from the pack. That encrypts with the destination keys. Destination hours and profiles will be replaced. Back up SYSTEM first. emuNAND recommended."_i18n,
+        "Decrypt this NAND's profiles (0010) and play hours (00F0) to SD. On the destination open Restore profiles & play hours and pick the pack. Horizon encrypts with that console's keys. Destination hours and profiles will be replaced. Back up SYSTEM first. emuNAND recommended."_i18n,
         "Cancel"_i18n, "Backup"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
                 RunNandBackup();
             }
+        });
+}
+
+void Menu::ConfirmNandRestore() {
+    App::Push<OptionBox>(
+        "Write a Kefir pack (0010/00F0) into this NAND? Hours and profiles here will be replaced. Back up SYSTEM first. emuNAND recommended. Y selects the pack folder."_i18n,
+        "Cancel"_i18n, "Choose folder"_i18n, 1,
+        [this](auto op) {
+            if (!op || *op != 1) {
+                return;
+            }
+            App::Push<filepicker::Menu>(
+                filepicker::LocationCallback{[this](const fs::FsPath& path, const filebrowser::FsEntry&) -> bool {
+                    RunNandRestore(path.toString());
+                    return true;
+                }},
+                std::vector<std::string>{},
+                fs::FsPath{paths::DATA_ROOT + "/nand_transfer"},
+                true);
         });
 }
 
@@ -704,7 +726,47 @@ void Menu::RunNandBackup() {
             if (!report->save_0010) {
                 msg += "Account save (0010) could not be opened. "_i18n;
             }
-            msg += "On the destination: copy this folder to its SD, inject TegraExplorer, run restore.te, pick emuMMC or sysMMC SYSTEM. Reboot this console."_i18n;
+            msg += "Copy this folder to the destination SD, then Restore profiles & play hours there. Reboot this console."_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Later"_i18n, "Reboot"_i18n, 1,
+                [](auto op) {
+                    if (op && *op == 1) {
+                        utils::requestForcedReboot();
+                    }
+                });
+            Refresh();
+        }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
+}
+
+void Menu::RunNandRestore(const std::string& dir) {
+    if (!nand_transfer::IsPack(dir)) {
+        App::Push<OptionBox>(
+            "That folder is not a profiles & play hours pack (needs 80000000000000F0 or 8000000000000010)."_i18n,
+            "OK"_i18n);
+        return;
+    }
+    auto report = std::make_shared<nand_transfer::Report>();
+    App::Push<ProgressBox>(0, "Restore profiles & play hours"_i18n, "Restore profiles & play hours"_i18n,
+        [dir, report](auto pbox) -> Result {
+            pbox->NewTransfer("Writing system saves"_i18n);
+            R_TRY(nand_transfer::Import(pbox, dir, *report));
+            R_SUCCEED();
+        }, [this, report](Result rc) {
+            if (R_FAILED(rc)) {
+                const auto msg = (rc == Result_FsInvalidType)
+                    ? "That folder is not a profiles & play hours pack (needs 80000000000000F0 or 8000000000000010)."_i18n
+                    : "Could not write system saves. Close games and other homebrew, then try again. If play hours stay locked, TegraExplorer restore.te in the pack is the fallback."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+                return;
+            }
+            std::string msg = "Wrote pack into this NAND. Reboot required. "_i18n;
+            if (!report->save_00F0) {
+                msg += "Play hours (00F0) could not be opened. Close games and retry, or use restore.te. "_i18n;
+            }
+            if (!report->save_0010) {
+                msg += "Account save (0010) could not be opened. "_i18n;
+            }
             App::Push<OptionBox>(
                 msg,
                 "Later"_i18n, "Reboot"_i18n, 1,

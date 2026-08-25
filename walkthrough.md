@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.617** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.618** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.618 — Hub restore encrypts; TegraExplorer is fallback
+
+- Tools → Users → **Restore profiles & play hours**: пак пишеться в існуючі 0010/0011/00F0/0041. Horizon `Commit()` шифрує ключами цієї консолі. Вміст сейву перед копією стирається.
+- TE `restore.te` лишився, якщо pdm не віддає 00F0. Копія сирого blob на розшифрований BIS — не рестор (цеглить).
+- Агент не компілює.
 
 ## v0.13.617 — profiles & play hours: Hub decrypt, TegraExplorer encrypt
 

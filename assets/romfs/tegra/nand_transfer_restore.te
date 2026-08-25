@@ -3,9 +3,10 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# Kefir Hub: restore decrypted system-save files onto THIS console.
-# Writes inner files into the destination's existing SYSTEM saves, then
-# commit() signs them with this console's keys.
+# Fallback if Kefir Hub cannot open 00F0 under Horizon (in use).
+# Prefer: Hub → Users → Restore profiles & play hours (Horizon encrypts).
+# This script writes inner files into existing SYSTEM saves, then commit()
+# (TegraExplorer save sign with this console's prod.keys).
 # Do NOT copy raw SYSTEM:/save/80000000000000F0 blobs — that bricks emuMMC.
 # Destination play hours (and profiles, if 0010 is in the pack) are replaced.
 # Back up the destination SYSTEM partition first.

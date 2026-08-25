@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.617**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.618**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.617 (NAND transfer dump + TegraExplorer restore)
+## Поточний delivery: v0.13.618 (Hub restore encrypts via FS)
+
+- [x] `NAND-RESTORE-618` — Import пака в існуючі system save; Horizon commit = ключі цілі. Wipe вмісту перед копією.
+- [x] `NAND-TE-FALLBACK-618` — `restore.te` як запас, якщо 00F0 зайнятий.
+- [x] `DOCS-BUMP-618` — версію піднято до `0.13.618`.
+
+## Попередній delivery: v0.13.617 (NAND transfer dump + TegraExplorer restore)
 
 - [x] `NAND-DUMP-617` — Хаб розшифровує 0010/0011/00F0/0041 на SD (`/config/kefir/nand_transfer/`).
 - [x] `NAND-TE-617` — `restore.te`: readsave/write/commit ключами цілі; сирий blob не кладемо.
