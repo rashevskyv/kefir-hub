@@ -32,6 +32,9 @@ namespace {
 
 constexpr const char* ATMOSPHERE_CONTENTS_PATH = "/atmosphere/contents";
 constexpr u64 TESLA_MENU_PROGRAM_ID = 0x420000000007E51AULL;
+constexpr u64 SYS_PATCH_PROGRAM_ID = 0x420000000000000BULL;
+constexpr u64 FUNCONTROL_PROGRAM_ID = 0x00FF46554E43544CULL;
+constexpr u64 FUNCONTROL_OLD_PROGRAM_ID = 0x00FF000053504846ULL;
 constexpr const char* MODULE_CATALOG_ROMFS_PATH = "romfs:/modules/homebrew_sysmodules.json";
 constexpr const char* MODULE_INDEX_URL = "https://gist.githubusercontent.com/ndeadly/a4b8c01bb453028cd0008f282098f696/raw/homebrew_sysmodules.txt";
 
@@ -251,6 +254,29 @@ void QueryRuntime(ModuleItem& item) {
     }
     item.running = true;
     item.memory_bytes = meminfo::MeasurePid(pid);
+}
+
+auto NameStartsWith(const std::string& name, const char* prefix) -> bool {
+    const auto n = std::strlen(prefix);
+    return name.size() >= n && strncasecmp(name.c_str(), prefix, n) == 0;
+}
+
+enum class TogglePolicy {
+    Normal,
+    BootOnly,
+    AppManaged,
+};
+
+auto GetTogglePolicy(const ModuleItem& item) -> TogglePolicy {
+    if (item.program_id == SYS_PATCH_PROGRAM_ID || NameStartsWith(item.name, "sys-patch")) {
+        return TogglePolicy::BootOnly;
+    }
+    if (item.program_id == FUNCONTROL_PROGRAM_ID ||
+        item.program_id == FUNCONTROL_OLD_PROGRAM_ID ||
+        NameStartsWith(item.name, "FunControl")) {
+        return TogglePolicy::AppManaged;
+    }
+    return TogglePolicy::Normal;
 }
 
 auto LaunchModule(u64 program_id) -> Result {
@@ -609,6 +635,20 @@ void UninstallerMenu::ToggleSelectedModule() {
     }
 
     auto& item = Current();
+    switch (GetTogglePolicy(item)) {
+        case TogglePolicy::BootOnly:
+            App::Push<OptionBox>(
+                "This module cannot be turned on here. It starts when the console boots and does not need to be started again."_i18n,
+                "OK"_i18n);
+            return;
+        case TogglePolicy::AppManaged:
+            App::Push<OptionBox>(
+                "FunControl is started by Kefir Hub when you use the fan curve, then stopped automatically. You do not need to turn it on here."_i18n,
+                "OK"_i18n);
+            return;
+        case TogglePolicy::Normal:
+            break;
+    }
 
     Result rc{};
     if (item.requires_reboot) {
@@ -628,7 +668,10 @@ void UninstallerMenu::ToggleSelectedModule() {
     }
 
     if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to toggle module"_i18n);
+        App::Push<OptionBox>(item.running
+            ? "Could not stop this module."_i18n
+            : "Could not start this module. Some modules only load when the console boots — use autostart."_i18n,
+            "OK"_i18n);
     }
     RefreshStatuses();
 }
@@ -639,6 +682,12 @@ void UninstallerMenu::ToggleSelectedAutostart() {
     }
 
     auto& item = Current();
+    if (GetTogglePolicy(item) == TogglePolicy::AppManaged) {
+        App::Push<OptionBox>(
+            "FunControl is started by Kefir Hub when you use the fan curve, then stopped automatically. You do not need autostart."_i18n,
+            "OK"_i18n);
+        return;
+    }
     fs::FsNativeSd fs;
 
     const auto enable = !item.autostart;

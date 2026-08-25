@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.611** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.612** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.612 — Module Manager toggle explanations
+
+- sys-patch: A не стартує процес. Пояснення: вантажиться з бута, повторно вмикати не треба. Autostart лишається.
+- FunControl: A і autostart заблоковані в хабі. Крива кулера сама стартує/стопить модуль; ручний boot2 конфліктував би з цим.
+- Інший збій toggle — звичайний OptionBox, без 0x20F / Module 15 / Telegram.
 
 ## v0.13.611 — web-server overlay translucent again
 

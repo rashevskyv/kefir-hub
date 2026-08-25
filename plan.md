@@ -1,13 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.611**. Завершені плани збережено в
+Поточний delivery — **v0.13.612**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.611 — web-server overlay is translucent again
+## Поточний delivery: v0.13.612 — Module Manager explains sys-patch / FunControl toggles
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Detached transfer (вебдоступ) знову малює меню під dim. Раніше skip_under_progress ховав увесь UI, тож dim лягав на порожній кадр.
+1. Toggle більше не відкриває ErrorBox з кодом 0x20F. sys-patch: не стартує звідси, вантажиться з бута. FunControl: хаб сам стартує/стопить для кривої кулера (і A, і autostart). Інші збої — звичайний OptionBox.
+
+## Попередній delivery: v0.13.611 — web-server overlay is translucent again
 
 ## Попередній delivery: v0.13.610 — Module Manager counter and filter
 

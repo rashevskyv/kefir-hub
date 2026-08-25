@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.611**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.612**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.611 (translucent web overlay)
+## Поточний delivery: v0.13.612 (module toggle explanations)
+
+- [x] `MODULE-TOGGLE-EXPLAIN-612` — sys-patch/FunControl без ErrorBox; інші збої — OptionBox без коду/Telegram.
+- [x] `DOCS-BUMP-612` — версію піднято до `0.13.612`.
+
+## Попередній delivery: v0.13.611 (translucent web overlay)
 
 - [x] `WEB-OVERLAY-DIM-611` — вебдоступ знову dim поверх меню, не на порожньому кадрі.
 - [x] `DOCS-BUMP-611` — версію піднято до `0.13.611`.
