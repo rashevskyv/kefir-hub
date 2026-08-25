@@ -12,6 +12,7 @@
 #include "i18n.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
+#include "utils/utils.hpp"
 
 #include <algorithm>
 #include <cinttypes>
@@ -236,6 +237,7 @@ auto ParseToolbox(const std::vector<u8>& data, ModuleItem& out) -> bool {
 
 void QueryRuntime(ModuleItem& item) {
     item.running = false;
+    item.memory_bytes = 0;
 
     Result rc = pmshellInitialize();
     if (R_FAILED(rc)) {
@@ -248,6 +250,23 @@ void QueryRuntime(ModuleItem& item) {
         return;
     }
     item.running = true;
+    item.memory_bytes = meminfo::MeasurePid(pid);
+}
+
+auto QueryOverlay(bool& running) -> meminfo::RamPool {
+    running = false;
+    Result rc = pmshellInitialize();
+    if (R_FAILED(rc)) {
+        return {};
+    }
+    ON_SCOPE_EXIT(pmshellExit());
+
+    u64 pid{};
+    if (R_FAILED(pmshellGetProcessId(&pid, TESLA_MENU_PROGRAM_ID))) {
+        return {};
+    }
+    running = true;
+    return meminfo::QueryProcess(pid);
 }
 
 auto LaunchModule(u64 program_id) -> Result {
@@ -335,9 +354,9 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
     );
 
     const float list_x = 75.f;
-    const float list_y = GetY() + 44.f;
+    const float list_y = GetY() + 72.f;
     const float list_w = 1070.f;
-    const float list_h = 575.f;
+    const float list_h = 547.f;
     const float row_h = 79.f;
 
     m_list = std::make_unique<List>(1, 7, Vec4{list_x, list_y, list_w, list_h}, Vec4{list_x, list_y, list_w, row_h});
@@ -384,9 +403,9 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
 
     nvgSave(vg);
     const float list_x = 75.f;
-    const float list_y = GetY() + 44.f;
+    const float list_y = GetY() + 72.f;
     const float list_w = 1070.f;
-    const float list_h = 575.f;
+    const float list_h = 547.f;
     const float p = gfx::SELECTION_OUTLINE_PAD;
     nvgScissor(vg, list_x - p, list_y - p, list_w + p * 2, list_h + p * 2);
 
@@ -416,9 +435,16 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
             theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%s%s", item.program_id_text.c_str(), item.requires_reboot ? " - Applies after reboot"_i18n.c_str() : "");
 
+        if (item.running && item.memory_bytes) {
+            gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f - 11.f, 18.f,
+                NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(text_id),
+                "%s", utils::formatSizeStorage(item.memory_bytes).c_str());
+        }
+
         const auto reboot_text = item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
         const auto reboot_colour = item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
-        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f, 14.f,
+        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f + 14.f, 14.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
             reboot_colour,
             "%s", reboot_text.c_str());
@@ -515,6 +541,7 @@ void UninstallerMenu::LoadModules() {
     }
 
     m_system = meminfo::QuerySystem();
+    m_overlay = QueryOverlay(m_overlay_running);
     m_loaded = true;
     SortItems();
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
@@ -573,6 +600,7 @@ void UninstallerMenu::RefreshStatuses() {
         QueryRuntime(item);
     }
     m_system = meminfo::QuerySystem();
+    m_overlay = QueryOverlay(m_overlay_running);
     if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Autostart) {
         const auto keep = m_items.empty() ? 0 : m_items[m_index].program_id;
         SortItems(keep);
@@ -630,7 +658,7 @@ void UninstallerMenu::ToggleSelectedAutostart() {
 }
 
 void UninstallerMenu::DrawRamPanel(NVGcontext* vg, Theme* theme) {
-    meminfo::DrawSystemPool(vg, theme, 80.f, GetY() + 6.f, m_system);
+    meminfo::DrawRamBars(vg, theme, 80.f, GetY() + 6.f, m_system, m_overlay, m_overlay_running);
 }
 
 void UninstallerMenu::UpdateSubheading() {
@@ -773,6 +801,9 @@ void UninstallerMenu::ShowInfo() {
 void UninstallerMenu::ShowInfoBox(const ModuleItem& item) {
     std::string msg = item.name + "\n" + item.program_id_text + "\n";
     msg += (item.running ? "Now: On"_i18n : "Now: Off"_i18n);
+    if (item.running && item.memory_bytes) {
+        msg += "  " + utils::formatSizeStorage(item.memory_bytes);
+    }
     msg += "\n";
     msg += item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
     msg += "\n";

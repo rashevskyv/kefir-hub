@@ -17,6 +17,7 @@ struct ModuleItem {
     bool requires_reboot{};
     bool running{};
     bool autostart{};
+    u64 memory_bytes{};
     std::string description;
     std::string repository;
     std::string github_description;
@@ -65,6 +66,8 @@ private:
     bool m_catalog_update_pending{false};
     ModuleSort m_sort{ModuleSort::Running};
     meminfo::RamPool m_system{};
+    meminfo::RamPool m_overlay{};
+    bool m_overlay_running{};
     std::string m_error_message;
 };
 

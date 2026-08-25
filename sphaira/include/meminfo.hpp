@@ -17,7 +17,10 @@ struct RamPool {
 
 auto QueryPool(u64 pool) -> RamPool;
 auto QuerySystem() -> RamPool;
+auto QueryProcess(u64 pid) -> RamPool;
+auto MeasurePid(u64 pid) -> u64;
 
-void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& pool);
+void DrawRamBars(NVGcontext* vg, Theme* theme, float x, float y,
+    const RamPool& system, const RamPool& overlay, bool overlay_running);
 
 } // namespace sphaira::meminfo

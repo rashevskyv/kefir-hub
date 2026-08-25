@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.605** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.606** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.606 — Overlay memory + per-module RAM via debug
+
+- Друга смуга **Overlay memory**: heap процесу nx-ovlloader (`420000000007E51A`). Used / total і **free** — те, що Tesla показує як «12.5 MB free». Не System-пул і не RAM консолі.
+- Знову пробуємо розмір кожного модуля через `svcDebugActiveProcess` (у kefir увімкнений `force_debug_prod`). Якщо debug не віддає цифру — поле порожнє.
 
 ## v0.13.605 — Module Manager System RAM used/free
 
