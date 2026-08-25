@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.607** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.608** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.608 — Module Manager on/off colours
+
+- Крапка зліва: **зелена** = модуль зараз увімкнений, **сіра** = вимкнений. Жовтий (autostart без запуску) з крапки прибрано. Рядок After reboot без змін.
 
 ## v0.13.607 — Sysmodule RAM only
 

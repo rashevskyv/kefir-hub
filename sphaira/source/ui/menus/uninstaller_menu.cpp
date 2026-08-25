@@ -405,8 +405,9 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         }
 
-        const auto marker_colour = item.running ? nvgRGBA(76, 190, 120, 255) :
-            item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const auto marker_colour = item.running
+            ? nvgRGBA(76, 190, 120, 255)
+            : theme->GetColour(ThemeEntryID_TEXT_INFO);
         gfx::drawRect(vg, x + 15.f, y + h / 2.f - 7.f, 14.f, 14.f, marker_colour, 7.f);
 
         gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f - 11.f, 18.f,

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.607**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.608**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.607 (Sysmodule RAM only)
+## Поточний delivery: v0.13.608 (Module Manager on/off colours)
+
+- [x] `MODULE-DOT-COLOUR-608` — крапка: зелена увімкнено, сіра вимкнено. After reboot як було.
+- [x] `DOCS-BUMP-608` — версію піднято до `0.13.608`.
+
+## Попередній delivery: v0.13.607 (Sysmodule RAM only)
 
 - [x] `DROP-OVERLAY-MEMORY-607` — Overlay memory прибрано; лишається Sysmodule RAM.
 - [x] `DOCS-BUMP-607` — версію піднято до `0.13.607`.
