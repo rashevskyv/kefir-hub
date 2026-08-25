@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.602**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.603**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.602 (Module Manager RAM map)
+## Поточний delivery: v0.13.603 (Task Manager)
+
+- [x] `TASK-MANAGER-603` — Tools → Tools → Task Manager: усі процеси й RAM.
+- [x] `DOCS-BUMP-603` — версію піднято до `0.13.603`.
+
+## Попередній delivery: v0.13.602 (Module Manager RAM map)
 
 - [x] `MODULE-RAM-POOLS-602` — Application / Applet / System bars; modules as a slice of System.
 - [x] `MODULE-RAM-PER-PROCESS-602` — private RAM per module; Where RAM goes lists every process.

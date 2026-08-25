@@ -2,6 +2,7 @@
 
 #include "ui/menus/menu_base.hpp"
 #include "ui/list.hpp"
+#include "meminfo.hpp"
 
 #include <cstdint>
 #include <string>
@@ -27,20 +28,6 @@ enum class ModuleSort : u8 {
     Running,
     Memory,
     Autostart,
-};
-
-struct RamPool {
-    u64 used{};
-    u64 total{};
-};
-
-struct RamBreakdown {
-    RamPool application;
-    RamPool applet;
-    RamPool system;
-    RamPool system_unsafe;
-    u64 modules_bytes{};
-    u64 this_app_bytes{};
 };
 
 // name of a sysmodule / homebrew program id, from its toolbox.json or the
@@ -80,7 +67,8 @@ private:
     bool m_catalog_update_attempted{false};
     bool m_catalog_update_pending{false};
     ModuleSort m_sort{ModuleSort::Memory};
-    RamBreakdown m_ram{};
+    meminfo::RamBreakdown m_ram{};
+    u64 m_modules_bytes{};
     std::string m_error_message;
 };
 

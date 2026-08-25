@@ -1,4 +1,6 @@
 #include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/task_manager.hpp"
+#include "meminfo.hpp"
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -234,60 +236,6 @@ auto ParseToolbox(const std::vector<u8>& data, ModuleItem& out) -> bool {
     return true;
 }
 
-auto WalkPrivateMemory(Handle debug) -> u64 {
-    MemoryInfo mem{};
-    u32 page{};
-    u64 addr{};
-    u64 total{};
-    while (R_SUCCEEDED(svcQueryDebugProcessMemory(&mem, &page, debug, addr))) {
-        addr = mem.addr + mem.size;
-        switch (mem.type) {
-            case MemType_CodeStatic:
-            case MemType_CodeMutable:
-            case MemType_Heap:
-            case MemType_Stack:
-            case MemType_ThreadLocal:
-                total += mem.size;
-                break;
-            default:
-                break;
-        }
-        if (!addr) {
-            break;
-        }
-    }
-    return total;
-}
-
-auto MeasureProcessMemory(u64 pid) -> u64 {
-    u64 self_pid{};
-    if (R_SUCCEEDED(svcGetProcessId(&self_pid, CUR_PROCESS_HANDLE)) && pid == self_pid) {
-        u64 used{};
-        if (R_SUCCEEDED(svcGetInfo(&used, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0))) {
-            return used;
-        }
-    }
-
-    Handle debug{};
-    if (R_FAILED(svcDebugActiveProcess(&debug, pid))) {
-        return 0;
-    }
-    ON_SCOPE_EXIT(svcCloseHandle(debug));
-
-    u64 used{};
-    if (R_SUCCEEDED(svcGetInfo(&used, InfoType_UsedMemorySize, debug, 0)) && used) {
-        return used;
-    }
-    return WalkPrivateMemory(debug);
-}
-
-auto QueryPool(u64 pool) -> RamPool {
-    RamPool out{};
-    svcGetSystemInfo(&out.total, SystemInfoType_TotalPhysicalMemorySize, INVALID_HANDLE, pool);
-    svcGetSystemInfo(&out.used, SystemInfoType_UsedPhysicalMemorySize, INVALID_HANDLE, pool);
-    return out;
-}
-
 void QueryRuntime(ModuleItem& item) {
     item.running = false;
     item.memory_bytes = 0;
@@ -303,22 +251,17 @@ void QueryRuntime(ModuleItem& item) {
         return;
     }
     item.running = true;
-    item.memory_bytes = MeasureProcessMemory(pid);
+    item.memory_bytes = meminfo::MeasurePid(pid);
 }
 
-void FillRamBreakdown(RamBreakdown& out, const std::vector<ModuleItem>& items) {
-    out.application = QueryPool(PhysicalMemorySystemInfo_Application);
-    out.applet = QueryPool(PhysicalMemorySystemInfo_Applet);
-    out.system = QueryPool(PhysicalMemorySystemInfo_System);
-    out.system_unsafe = QueryPool(PhysicalMemorySystemInfo_SystemUnsafe);
-    out.modules_bytes = 0;
+auto ModulesBytes(const std::vector<ModuleItem>& items) -> u64 {
+    u64 sum{};
     for (const auto& item : items) {
         if (item.running) {
-            out.modules_bytes += item.memory_bytes;
+            sum += item.memory_bytes;
         }
     }
-    out.this_app_bytes = 0;
-    svcGetInfo(&out.this_app_bytes, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
+    return sum;
 }
 
 auto LaunchModule(u64 program_id) -> Result {
@@ -593,7 +536,8 @@ void UninstallerMenu::LoadModules() {
         m_items.push_back(std::move(item));
     }
 
-    FillRamBreakdown(m_ram, m_items);
+    meminfo::QueryBreakdown(m_ram);
+    m_modules_bytes = ModulesBytes(m_items);
     m_loaded = true;
     SortItems();
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
@@ -651,7 +595,8 @@ void UninstallerMenu::RefreshStatuses() {
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
         QueryRuntime(item);
     }
-    FillRamBreakdown(m_ram, m_items);
+    meminfo::QueryBreakdown(m_ram);
+    m_modules_bytes = ModulesBytes(m_items);
     if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Memory || m_sort == ModuleSort::Autostart) {
         const auto keep = m_items.empty() ? 0 : m_items[m_index].program_id;
         SortItems(keep);
@@ -709,125 +654,16 @@ void UninstallerMenu::ToggleSelectedAutostart() {
 }
 
 void UninstallerMenu::DrawRamPanel(NVGcontext* vg, Theme* theme) {
-    const float x = 80.f;
-    const float y0 = GetY() + 6.f;
-    const float bar_x = 520.f;
-    const float bar_w = 680.f;
-    const float bar_h = 9.f;
-    const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
-
-    const auto row = [&](float y, const char* label, const RamPool& pool, NVGcolor fill, u64 slice = 0) {
-        gfx::drawTextArgs(vg, x, y, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
-            "%s  %s / %s",
-            label,
-            utils::formatSizeStorage(pool.used).c_str(),
-            utils::formatSizeStorage(pool.total).c_str());
-
-        gfx::drawRect(vg, bar_x, y - bar_h / 2.f, bar_w, bar_h, nvgRGBA(255, 255, 255, 28), 3.f);
-        if (pool.total) {
-            const float used_w = bar_w * std::min(1.f, static_cast<float>(pool.used) / static_cast<float>(pool.total));
-            gfx::drawRect(vg, bar_x, y - bar_h / 2.f, used_w, bar_h, fill, 3.f);
-            if (slice && slice <= pool.used) {
-                const float slice_w = bar_w * static_cast<float>(slice) / static_cast<float>(pool.total);
-                gfx::drawRect(vg, bar_x, y - bar_h / 2.f, slice_w, bar_h, nvgRGBA(76, 190, 120, 255), 3.f);
-            }
-        }
-    };
-
-    char system_label[80]{};
-    if (m_ram.modules_bytes) {
-        std::snprintf(system_label, sizeof(system_label), "%s (%s %s)",
-            "System"_i18n.c_str(),
-            "modules"_i18n.c_str(),
-            utils::formatSizeStorage(m_ram.modules_bytes).c_str());
-    } else {
-        std::snprintf(system_label, sizeof(system_label), "%s", "System"_i18n.c_str());
+    char extra[64]{};
+    if (m_modules_bytes) {
+        std::snprintf(extra, sizeof(extra), "%s %s",
+            "modules"_i18n.c_str(), utils::formatSizeStorage(m_modules_bytes).c_str());
     }
-
-    row(y0 + 8.f, "Application"_i18n.c_str(), m_ram.application, nvgRGBA(80, 160, 230, 220));
-    row(y0 + 24.f, "Applet"_i18n.c_str(), m_ram.applet, nvgRGBA(160, 120, 220, 220));
-    row(y0 + 40.f, system_label, m_ram.system, nvgRGBA(90, 90, 90, 220), m_ram.modules_bytes);
+    meminfo::DrawBreakdown(vg, theme, 80.f, GetY() + 6.f, m_ram, m_modules_bytes, extra[0] ? extra : nullptr);
 }
 
 void UninstallerMenu::ShowRamMap() {
-    struct Proc {
-        u64 memory_bytes{};
-        std::string name;
-    };
-    std::vector<Proc> procs;
-
-    u64 pids[0x80]{};
-    s32 count{};
-    if (R_SUCCEEDED(svcGetProcessList(&count, pids, std::size(pids)))) {
-        u64 self_pid{};
-        svcGetProcessId(&self_pid, CUR_PROCESS_HANDLE);
-
-        for (s32 i = 0; i < count; i++) {
-            Proc p;
-            if (pids[i] == self_pid) {
-                p.memory_bytes = m_ram.this_app_bytes;
-                p.name = "Kefir Hub";
-                procs.push_back(std::move(p));
-                continue;
-            }
-
-            Handle debug{};
-            if (R_FAILED(svcDebugActiveProcess(&debug, pids[i]))) {
-                continue;
-            }
-            ON_SCOPE_EXIT(svcCloseHandle(debug));
-
-            u64 program_id{};
-            char raw_name[13]{};
-            DebugEventInfo ev{};
-            while (R_SUCCEEDED(svcGetDebugEvent(&ev, debug))) {
-                if (ev.type == DebugEventType_CreateProcess) {
-                    program_id = ev.info.create_process.program_id;
-                    std::memcpy(raw_name, ev.info.create_process.name, 12);
-                    break;
-                }
-            }
-
-            u64 used{};
-            if (R_FAILED(svcGetInfo(&used, InfoType_UsedMemorySize, debug, 0)) || !used) {
-                used = WalkPrivateMemory(debug);
-            }
-            p.memory_bytes = used;
-
-            if (auto named = GetModuleName(program_id); !named.empty()) {
-                p.name = std::move(named);
-            } else if (raw_name[0]) {
-                p.name = raw_name;
-            } else if (program_id) {
-                p.name = FormatProgramId(program_id);
-            } else {
-                continue;
-            }
-            procs.push_back(std::move(p));
-        }
-    }
-
-    std::sort(procs.begin(), procs.end(), [](const Proc& a, const Proc& b) {
-        return a.memory_bytes > b.memory_bytes;
-    });
-
-    PopupList::Items lines;
-    lines.reserve(procs.size() + 4);
-    lines.push_back("Application  " + utils::formatSizeStorage(m_ram.application.used) + " / " + utils::formatSizeStorage(m_ram.application.total));
-    lines.push_back("Applet  " + utils::formatSizeStorage(m_ram.applet.used) + " / " + utils::formatSizeStorage(m_ram.applet.total));
-    lines.push_back("System  " + utils::formatSizeStorage(m_ram.system.used) + " / " + utils::formatSizeStorage(m_ram.system.total)
-        + "  (" + "modules"_i18n + " " + utils::formatSizeStorage(m_ram.modules_bytes) + ")");
-    if (m_ram.system_unsafe.total) {
-        lines.push_back("Devices  " + utils::formatSizeStorage(m_ram.system_unsafe.used) + " / " + utils::formatSizeStorage(m_ram.system_unsafe.total));
-    }
-    for (const auto& p : procs) {
-        if (!p.memory_bytes) {
-            continue;
-        }
-        lines.push_back(p.name + "  " + utils::formatSizeStorage(p.memory_bytes));
-    }
-
-    App::Push<PopupList>("Where RAM goes"_i18n, std::move(lines), [](std::optional<s64>){});
+    App::Push<ui::menu::tools::TaskManagerMenu>();
 }
 
 void UninstallerMenu::UpdateSubheading() {
@@ -904,9 +740,9 @@ void UninstallerMenu::ShowContextMenu() {
     options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
         ShowInfo();
     }, true, "Name, memory and GitHub description."_i18n);
-    options->Add<SidebarEntryCallback>("Where RAM goes"_i18n, [this](){
+    options->Add<SidebarEntryCallback>("Task Manager"_i18n, [this](){
         ShowRamMap();
-    }, true, "Every running process and which Horizon memory pool it sits in."_i18n);
+    }, true, "Every running process and how much RAM it uses."_i18n);
     options->Add<SidebarEntryCallback>("Sort"_i18n, [this](){
         ShowSortMenu();
     }, "Order the list by name, status, memory or autostart."_i18n);

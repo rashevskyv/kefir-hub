@@ -11,6 +11,7 @@
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/install_share.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/task_manager.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
@@ -406,6 +407,9 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
     m_items = {
         { "Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, 0, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
+        }},
+        { "Task Manager"_i18n, "Everything using RAM: processes, applets, this app, Horizon."_i18n, 0, [](){
+            App::Push<TaskManagerMenu>();
         }},
         { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, ComingSoon },
         { "Users"_i18n, "Manage console user profiles."_i18n, 0, ComingSoon },
