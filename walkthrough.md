@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.604** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.605** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.605 — Module Manager System RAM used/free
+
+- Зверху одна смуга: **Sysmodule RAM** = Horizon System pool (OS + Atmosphere + sysmodules). Used / total і скільки **free**. Це запас, щоб увімкнути ще модулі.
+- Application («Base game») і Applet прибрано — той пул для гри/тайтла, не для модулів.
+- Per-module розмір прибрано: title-режим не має debug, `svcDebugActiveProcess` на чужі PID падає, тож завжди було «—». Tesla «12.5 MB free» — купа самого оверлея, не цей пул.
 
 ## v0.13.604 — Module Manager per-module RAM, Task Manager removed
 

@@ -9,21 +9,15 @@ namespace sphaira::meminfo {
 struct RamPool {
     u64 used{};
     u64 total{};
-};
 
-struct RamBreakdown {
-    RamPool application;
-    RamPool applet;
-    RamPool system;
-    RamPool system_unsafe;
-    u64 this_app_bytes{};
+    auto Free() const -> u64 {
+        return total > used ? total - used : 0;
+    }
 };
 
 auto QueryPool(u64 pool) -> RamPool;
-void QueryBreakdown(RamBreakdown& out);
-auto MeasurePid(u64 pid) -> u64;
+auto QuerySystem() -> RamPool;
 
-void DrawBreakdown(NVGcontext* vg, Theme* theme, float x, float y,
-    const RamBreakdown& ram, u64 system_slice = 0, const char* system_extra = nullptr);
+void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& pool);
 
 } // namespace sphaira::meminfo

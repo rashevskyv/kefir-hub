@@ -1,14 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.604**. Завершені плани збережено в
+Поточний delivery — **v0.13.605**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.604 — Module Manager shows per-module RAM, no Task Manager
+## Поточний delivery: v0.13.605 — Module Manager shows System pool used/free
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Одна смуга: System RAM (пул Horizon для OS + Atmosphere + sysmodules), used / total і free.
+2. Прибрано Application («Base game»), Applet і прочерки per-module. Без debug title не вміє міряти чужі процеси.
+
+## Попередній delivery: v0.13.604 — Module Manager shows per-module RAM, no Task Manager
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Task Manager прибрано з Tools і з Options Module Manager.
-2. У списку модулів справа вгорі — розмір кожного запущеного модуля (code+heap+tls), не «—». `MemoryInfo.type` маскується `MemState_Type`.
+2. Спроба показати RAM кожного модуля — не спрацювала без debug у title-режимі.
 
 ## Попередній delivery: v0.13.603 — Task Manager lists every process using RAM
 

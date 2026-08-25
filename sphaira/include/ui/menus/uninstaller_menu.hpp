@@ -17,7 +17,6 @@ struct ModuleItem {
     bool requires_reboot{};
     bool running{};
     bool autostart{};
-    u64 memory_bytes{};
     std::string description;
     std::string repository;
     std::string github_description;
@@ -26,7 +25,6 @@ struct ModuleItem {
 enum class ModuleSort : u8 {
     Name,
     Running,
-    Memory,
     Autostart,
 };
 
@@ -65,9 +63,8 @@ private:
     bool m_loaded{false};
     bool m_catalog_update_attempted{false};
     bool m_catalog_update_pending{false};
-    ModuleSort m_sort{ModuleSort::Memory};
-    meminfo::RamBreakdown m_ram{};
-    u64 m_modules_bytes{};
+    ModuleSort m_sort{ModuleSort::Running};
+    meminfo::RamPool m_system{};
     std::string m_error_message;
 };
 

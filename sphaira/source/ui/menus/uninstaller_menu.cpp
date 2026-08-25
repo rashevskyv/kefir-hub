@@ -12,7 +12,6 @@
 #include "i18n.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
-#include "utils/utils.hpp"
 
 #include <algorithm>
 #include <cinttypes>
@@ -237,7 +236,6 @@ auto ParseToolbox(const std::vector<u8>& data, ModuleItem& out) -> bool {
 
 void QueryRuntime(ModuleItem& item) {
     item.running = false;
-    item.memory_bytes = 0;
 
     Result rc = pmshellInitialize();
     if (R_FAILED(rc)) {
@@ -250,17 +248,6 @@ void QueryRuntime(ModuleItem& item) {
         return;
     }
     item.running = true;
-    item.memory_bytes = meminfo::MeasurePid(pid);
-}
-
-auto ModulesBytes(const std::vector<ModuleItem>& items) -> u64 {
-    u64 sum{};
-    for (const auto& item : items) {
-        if (item.running) {
-            sum += item.memory_bytes;
-        }
-    }
-    return sum;
 }
 
 auto LaunchModule(u64 program_id) -> Result {
@@ -348,9 +335,9 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
     );
 
     const float list_x = 75.f;
-    const float list_y = GetY() + 60.f;
+    const float list_y = GetY() + 44.f;
     const float list_w = 1070.f;
-    const float list_h = 559.f;
+    const float list_h = 575.f;
     const float row_h = 79.f;
 
     m_list = std::make_unique<List>(1, 7, Vec4{list_x, list_y, list_w, list_h}, Vec4{list_x, list_y, list_w, row_h});
@@ -397,9 +384,9 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
 
     nvgSave(vg);
     const float list_x = 75.f;
-    const float list_y = GetY() + 60.f;
+    const float list_y = GetY() + 44.f;
     const float list_w = 1070.f;
-    const float list_h = 559.f;
+    const float list_h = 575.f;
     const float p = gfx::SELECTION_OUTLINE_PAD;
     nvgScissor(vg, list_x - p, list_y - p, list_w + p * 2, list_h + p * 2);
 
@@ -429,17 +416,9 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
             theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%s%s", item.program_id_text.c_str(), item.requires_reboot ? " - Applies after reboot"_i18n.c_str() : "");
 
-        const auto mem_text = (item.running && item.memory_bytes)
-            ? utils::formatSizeStorage(item.memory_bytes)
-            : std::string{"—"};
-        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f - 11.f, 18.f,
-            NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
-            item.running && item.memory_bytes ? theme->GetColour(text_id) : theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%s", mem_text.c_str());
-
         const auto reboot_text = item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
         const auto reboot_colour = item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
-        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f + 14.f, 14.f,
+        gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f, 14.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
             reboot_colour,
             "%s", reboot_text.c_str());
@@ -535,8 +514,7 @@ void UninstallerMenu::LoadModules() {
         m_items.push_back(std::move(item));
     }
 
-    meminfo::QueryBreakdown(m_ram);
-    m_modules_bytes = ModulesBytes(m_items);
+    m_system = meminfo::QuerySystem();
     m_loaded = true;
     SortItems();
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
@@ -594,9 +572,8 @@ void UninstallerMenu::RefreshStatuses() {
         item.autostart = fs.FileExists(Boot2FlagPath(item.program_id));
         QueryRuntime(item);
     }
-    meminfo::QueryBreakdown(m_ram);
-    m_modules_bytes = ModulesBytes(m_items);
-    if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Memory || m_sort == ModuleSort::Autostart) {
+    m_system = meminfo::QuerySystem();
+    if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Autostart) {
         const auto keep = m_items.empty() ? 0 : m_items[m_index].program_id;
         SortItems(keep);
     }
@@ -653,12 +630,7 @@ void UninstallerMenu::ToggleSelectedAutostart() {
 }
 
 void UninstallerMenu::DrawRamPanel(NVGcontext* vg, Theme* theme) {
-    char extra[64]{};
-    if (m_modules_bytes) {
-        std::snprintf(extra, sizeof(extra), "%s %s",
-            "modules"_i18n.c_str(), utils::formatSizeStorage(m_modules_bytes).c_str());
-    }
-    meminfo::DrawBreakdown(vg, theme, 80.f, GetY() + 6.f, m_ram, m_modules_bytes, extra[0] ? extra : nullptr);
+    meminfo::DrawSystemPool(vg, theme, 80.f, GetY() + 6.f, m_system);
 }
 
 void UninstallerMenu::UpdateSubheading() {
@@ -683,11 +655,6 @@ void UninstallerMenu::SortItems(u64 keep_program_id) {
             case ModuleSort::Running:
                 if (a.running != b.running) {
                     return a.running && !b.running;
-                }
-                break;
-            case ModuleSort::Memory:
-                if (a.memory_bytes != b.memory_bytes) {
-                    return a.memory_bytes > b.memory_bytes;
                 }
                 break;
             case ModuleSort::Autostart:
@@ -737,14 +704,13 @@ void UninstallerMenu::ShowContextMenu() {
     }, true, "Name, memory and GitHub description."_i18n);
     options->Add<SidebarEntryCallback>("Sort"_i18n, [this](){
         ShowSortMenu();
-    }, "Order the list by name, status, memory or autostart."_i18n);
+    }, "Order the list by name, status or autostart."_i18n);
 }
 
 void UninstallerMenu::ShowSortMenu() {
     PopupList::Items choices = {
         "Name"_i18n,
         "Running"_i18n,
-        "Memory"_i18n,
         "Autostart"_i18n,
     };
     App::Push<PopupList>("Sort"_i18n, std::move(choices), [this](std::optional<s64> op){
@@ -807,9 +773,6 @@ void UninstallerMenu::ShowInfo() {
 void UninstallerMenu::ShowInfoBox(const ModuleItem& item) {
     std::string msg = item.name + "\n" + item.program_id_text + "\n";
     msg += (item.running ? "Now: On"_i18n : "Now: Off"_i18n);
-    if (item.running && item.memory_bytes) {
-        msg += "  " + utils::formatSizeStorage(item.memory_bytes);
-    }
     msg += "\n";
     msg += item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
     msg += "\n";
