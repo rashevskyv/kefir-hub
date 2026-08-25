@@ -405,10 +405,10 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         }
 
-        const auto marker_colour = item.running
-            ? nvgRGBA(76, 190, 120, 255)
-            : theme->GetColour(ThemeEntryID_TEXT_INFO);
-        gfx::drawRect(vg, x + 15.f, y + h / 2.f - 7.f, 14.f, 14.f, marker_colour, 7.f);
+        const auto on_colour = nvgRGBA(76, 190, 120, 255);
+        const auto off_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawRect(vg, x + 15.f, y + h / 2.f - 7.f, 14.f, 14.f,
+            item.running ? on_colour : off_colour, 7.f);
 
         gfx::drawTextArgs(vg, x + 44.f, y + h / 2.f - 11.f, 18.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
@@ -428,7 +428,7 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const auto reboot_text = item.autostart ? "After reboot: Enabled"_i18n : "After reboot: Disabled"_i18n;
-        const auto reboot_colour = item.autostart ? nvgRGBA(216, 174, 80, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const auto reboot_colour = item.autostart ? on_colour : off_colour;
         gfx::drawTextArgs(vg, x + w - 15.f, y + h / 2.f + 14.f, 14.f,
             NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
             reboot_colour,

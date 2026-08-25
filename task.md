@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.608**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.609**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.608 (Module Manager on/off colours)
+## Поточний delivery: v0.13.609 (After reboot colours)
+
+- [x] `AFTER-REBOOT-COLOUR-609` — After reboot Enabled зелений, Disabled сірий, як крапка.
+- [x] `DOCS-BUMP-609` — версію піднято до `0.13.609`.
+
+## Попередній delivery: v0.13.608 (Module Manager on/off colours)
 
 - [x] `MODULE-DOT-COLOUR-608` — крапка: зелена увімкнено, сіра вимкнено. After reboot як було.
 - [x] `DOCS-BUMP-608` — версію піднято до `0.13.608`.

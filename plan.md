@@ -1,13 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.608**. Завершені плани збережено в
+Поточний delivery — **v0.13.609**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.608 — Module Manager on/off colours
+## Поточний delivery: v0.13.609 — After reboot same green/grey as the status dot
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Крапка статусу: зелена = зараз увімкнено, сіра = вимкнено. Жовтий для autostart на крапці прибрано. After reboot без змін.
+1. «After reboot: Enabled/Disabled» тим самим зеленим/сірим, що й крапка зліва. Жовтий прибрано.
+
+## Попередній delivery: v0.13.608 — Module Manager on/off colours
 
 ## Попередній delivery: v0.13.607 — drop Overlay memory, keep Sysmodule RAM
 
