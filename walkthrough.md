@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.615** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.616** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.616 — Users manager
+
+- Сітка як ігри, аватарка з `accountProfileLoadImage`, бейдж Linked/Offline stub/Local, X/Y мультивибір.
+- Create / Rename / Change avatar (SD або SteamGridDB) / Delete через `acc:su` (без мережі, можна всіх і поточного).
+- Видалення: спитати бекап акаунта, потім бекап сейвів зі списком ігор з галочками; після DeleteUser сейви цього UID прибираються. Паки в `/config/kefir/user_packs/`. Restore пака створює нового юзера.
 
 ## v0.13.615 — compile fix for account save mount
 

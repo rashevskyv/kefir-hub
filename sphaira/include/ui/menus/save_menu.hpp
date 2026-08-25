@@ -96,6 +96,12 @@ struct Menu final : grid::Menu {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    static auto ListAccountSaves(const AccountUid& uid) -> std::vector<Entry>;
+    void BackupSaves(std::vector<Entry> entries);
+    void DeleteSaves(std::vector<Entry> entries);
+    auto BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result;
+    auto DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result;
+
 private:
     void SetIndex(s64 index);
     void ScanHomebrew();
@@ -166,7 +172,6 @@ private:
     }
 
     void BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries);
-    void BackupSaves(std::vector<Entry> entries);
     void BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
@@ -183,7 +188,6 @@ private:
     void ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
     void RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
     Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
-    void DeleteSaves(std::vector<Entry> entries);
     void PromptSaveAction();
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();

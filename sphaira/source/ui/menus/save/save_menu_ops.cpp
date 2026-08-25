@@ -83,6 +83,50 @@ void Menu::BackupSaves(std::vector<Entry> entries) {
     BackupSaves(std::move(entries), MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
+auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result {
+    const auto location = MakeSdCardDumpLocation();
+    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+    for (auto& e : entries) {
+        R_TRY(pbox->ShouldExitResult());
+        detail::LoadControlEntry(e);
+        R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
+    }
+    R_SUCCEED();
+}
+
+auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result {
+    for (size_t i = 0; i < entries.size(); i++) {
+        R_TRY(pbox->ShouldExitResult());
+        auto& e = entries[i];
+        detail::LoadControlEntry(e);
+        pbox->SetTitle(e.GetName());
+        pbox->UpdateTransfer(i + 1, entries.size());
+        pbox->SetActionName("Deleting save data..."_i18n);
+
+        const auto space_id = static_cast<FsSaveDataSpaceId>(
+            IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+            e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
+        );
+
+        Result rc = 0;
+        if (e.save_data_id != 0) {
+            rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
+        }
+        if (e.save_data_id == 0 || R_FAILED(rc)) {
+            FsSaveDataAttribute attr{};
+            attr.application_id = e.application_id;
+            attr.uid = e.uid;
+            attr.system_save_data_id = e.system_save_data_id;
+            attr.save_data_type = e.save_data_type;
+            attr.save_data_rank = e.save_data_rank;
+            attr.save_data_index = e.save_data_index;
+            rc = fsDeleteSaveDataFileSystemBySaveDataAttribute(space_id, &attr);
+        }
+        (void)rc;
+    }
+    R_SUCCEED();
+}
+
 void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root](auto pbox) mutable -> Result {
         for (auto& e : entries) {

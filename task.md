@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.615**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.616**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.615 (account save compile fix)
+## Поточний delivery: v0.13.616 (Users manager)
+
+- [x] `USERS-GRID-616` — сітка, аватар, layout, мультивибір, бейдж лінку.
+- [x] `USERS-CRUD-616` — create/rename/avatar/delete через acc:su; бекап акаунта і сейвів з галочками; пак restore.
+- [x] `DOCS-BUMP-616` — версію піднято до `0.13.616`.
+
+## Попередній delivery: v0.13.615 (account save compile fix)
 
 - [x] `ACC-SAVE-ID-615` — `system_save_data_id` замість неіснуючого `save_data_id`; ReleaseWithInstall зібрано.
 - [x] `DOCS-BUMP-615` — версію піднято до `0.13.615`.

@@ -843,6 +843,33 @@ void Menu::SetIndex(s64 index) {
     SetTitleSubHeading(title, true);
 }
 
+auto Menu::ListAccountSaves(const AccountUid& uid) -> std::vector<Entry> {
+    std::vector<Entry> out;
+    AccountProfileBase acc{};
+    acc.uid = uid;
+    FsSaveDataSpaceId space_id;
+    FsSaveDataFilter filter;
+    GetFsSaveAttr(acc, FsSaveDataType_Account, space_id, filter);
+
+    FsSaveDataInfoReader reader;
+    if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
+        return out;
+    }
+    ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
+
+    std::vector<FsSaveDataInfo> info_list(256);
+    while (true) {
+        s64 record_count{};
+        if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count)) || !record_count) {
+            break;
+        }
+        for (s32 i = 0; i < record_count; i++) {
+            out.emplace_back(info_list[i]);
+        }
+    }
+    return out;
+}
+
 void Menu::ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const {
     if (m_accounts.empty()) {
         return;

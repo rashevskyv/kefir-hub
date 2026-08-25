@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.615**. Завершені плани збережено в
+Поточний delivery — **v0.13.616**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.615 — compile fix: system_save_data_id
+## Поточний delivery: v0.13.616 — Users: grid, avatars, create/rename/delete/backup
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Tools → Users: сітка як ігри (List/Icon/Grid/HB Menu), аватар, бейдж лінку, мультивибір (X/Y).
+2. Створити / перейменувати / аватар (SD або SteamGridDB) / видалити через `acc:su` без мережі. Видалення: опційний бекап акаунта, список сейвів з галочками, потім DeleteUser і чистка сейвів.
+3. Пак користувача в `/config/kefir/user_packs/` (ім’я, jpg, baas/nas). Restore створює нового юзера.
+
+## Попередній delivery: v0.13.615 — compile fix: system_save_data_id
 
 Статус: зібрано `ReleaseWithInstall` (NRO ок).
 1. `FsSaveDataAttribute` у поточному libnx не має `save_data_id`. Відкриття account save `0x8000000000000010` йде через `system_save_data_id`, як у haze/filebrowser.
