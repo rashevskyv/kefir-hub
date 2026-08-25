@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.609** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.610** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.610 — Module Manager counter and filter
+
+- На панелі Sysmodule RAM: **N running / M** (з усього списку, навіть якщо фільтр щось ховає).
+- START → Filter: All, Running, Stopped, Autostart, Applies after reboot.
 
 ## v0.13.609 — After reboot green/grey
 

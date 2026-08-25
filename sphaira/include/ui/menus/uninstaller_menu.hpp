@@ -29,6 +29,14 @@ enum class ModuleSort : u8 {
     Autostart,
 };
 
+enum class ModuleFilter : u8 {
+    All,
+    Running,
+    Stopped,
+    Autostart,
+    NeedsReboot,
+};
+
 // name of a sysmodule / homebrew program id, from its toolbox.json or the
 // module catalog the Module Manager uses. empty when it isn't a known module.
 auto GetModuleName(u64 program_id) -> std::string;
@@ -51,20 +59,28 @@ private:
     void UpdateSubheading();
     void RequestCatalogUpdate(bool force = false);
     void SortItems(u64 keep_program_id = 0);
+    void RebuildView(u64 keep_program_id = 0);
+    auto MatchesFilter(const ModuleItem& item) const -> bool;
+    auto HasCurrent() const -> bool;
+    auto Current() -> ModuleItem&;
+    auto Current() const -> const ModuleItem&;
     void ShowContextMenu();
     void ShowSortMenu();
+    void ShowFilterMenu();
     void ShowInfo();
     void ShowInfoBox(const ModuleItem& item);
     void DrawRamPanel(NVGcontext* vg, Theme* theme);
 
 private:
     std::vector<ModuleItem> m_items;
+    std::vector<s64> m_view;
     s64 m_index{};
     std::unique_ptr<List> m_list;
     bool m_loaded{false};
     bool m_catalog_update_attempted{false};
     bool m_catalog_update_pending{false};
     ModuleSort m_sort{ModuleSort::Running};
+    ModuleFilter m_filter{ModuleFilter::All};
     meminfo::RamPool m_system{};
     std::string m_error_message;
 };

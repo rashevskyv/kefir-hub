@@ -20,6 +20,7 @@ auto QuerySystem() -> RamPool;
 auto QueryProcess(u64 pid) -> RamPool;
 auto MeasurePid(u64 pid) -> u64;
 
-void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& system);
+void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& system,
+    u32 running, u32 total);
 
 } // namespace sphaira::meminfo

@@ -1,13 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.609**. Завершені плани збережено в
+Поточний delivery — **v0.13.610**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.609 — After reboot same green/grey as the status dot
+## Поточний delivery: v0.13.610 — Module Manager counter and filter
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. «After reboot: Enabled/Disabled» тим самим зеленим/сірим, що й крапка зліва. Жовтий прибрано.
+1. Зверху `N running / M` поруч із Sysmodule RAM (завжди з повного списку).
+2. Options → Filter: All / Running / Stopped / Autostart / Applies after reboot.
+
+## Попередній delivery: v0.13.609 — After reboot same green/grey as the status dot
 
 ## Попередній delivery: v0.13.608 — Module Manager on/off colours
 

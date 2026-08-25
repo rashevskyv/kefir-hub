@@ -92,7 +92,8 @@ auto MeasurePid(u64 pid) -> u64 {
     return QueryProcess(pid).used;
 }
 
-void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& system) {
+void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& system,
+    u32 running, u32 total) {
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const float bar_w = 1120.f;
@@ -100,10 +101,14 @@ void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPoo
 
     ui::gfx::drawTextArgs(vg, x, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", "Sysmodule RAM"_i18n.c_str());
     if (system.total) {
-        ui::gfx::drawTextArgs(vg, x + 280.f, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
+        ui::gfx::drawTextArgs(vg, x + 220.f, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
             "%s / %s",
             utils::formatSizeStorage(system.used).c_str(),
             utils::formatSizeStorage(system.total).c_str());
+    }
+    ui::gfx::drawTextArgs(vg, x + 560.f, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text,
+        "%u running / %u", running, total);
+    if (system.total) {
         ui::gfx::drawTextArgs(vg, x + bar_w, y + 8.f, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
             "%s %s",
             utils::formatSizeStorage(system.Free()).c_str(),
