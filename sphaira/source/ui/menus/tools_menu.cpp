@@ -409,7 +409,7 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
             App::Push<ui::menu::hats::UninstallerMenu>();
         }},
         { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, ComingSoon },
-        { "Users"_i18n, "Manage console user profiles."_i18n, 0, [](){
+        { "Users"_i18n, "Import an official Nintendo Account dump, or manage offline stubs."_i18n, 0, [](){
             App::Push<ui::menu::users::Menu>();
         }},
         { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, ComingSoon },

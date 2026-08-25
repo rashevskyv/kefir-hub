@@ -1,13 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.613**. Завершені плани збережено в
+Поточний delivery — **v0.13.614**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.613 — Users: offline Nintendo Account link (Linkalho method)
+## Поточний delivery: v0.13.614 — Users: official account import instead of Linkalho-only
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Tools → Users. Link/Unlink пише baas/nas у system save `0x8000000000000010` (як Linkalho). Це не справжня eShop-прив’язка. Бекап у `/config/kefir/account_backups/`. Потрібен ребут.
+1. Чутка підтверджена: Linkalho пише випадкові baas/nas без `id.token` / `refresh.token`, тож OLSC/BAAS ретраять Nintendo. Офіційна прив’язка на sysNAND + перенос `0x8000000000000010` має справжні токени.
+2. Tools → Users: Import official link + Export на SD. Офлайн-заглушка Linkalho лишилась з попередженням. Статус: Linked / Offline stub / Local.
+
+## Попередній delivery: v0.13.613 — Users: offline Nintendo Account link (Linkalho method)
 
 ## Попередній delivery: v0.13.612 — Module Manager explains sys-patch / FunControl toggles
 

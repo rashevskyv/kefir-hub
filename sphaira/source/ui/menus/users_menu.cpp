@@ -3,7 +3,7 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
-#include "log.hpp"
+#include "ui/menus/file_picker.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -11,6 +11,8 @@
 #include "utils/utils.hpp"
 
 #include <algorithm>
+#include <memory>
+#include <string>
 
 namespace sphaira::ui::menu::users {
 
@@ -100,10 +102,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             "%s", item.uid_hex.c_str());
 
         if (item.linked_known) {
-            const auto status = item.linked ? "Linked"_i18n : "Local"_i18n;
-            const auto status_colour = item.linked
-                ? nvgRGBA(76, 190, 120, 255)
-                : theme->GetColour(ThemeEntryID_TEXT_INFO);
+            std::string status = "Local"_i18n;
+            NVGcolor status_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            if (item.kind == account_link::LinkKind::Official) {
+                status = "Linked"_i18n;
+                status_colour = nvgRGBA(76, 190, 120, 255);
+            } else if (item.kind == account_link::LinkKind::Offline) {
+                status = "Offline stub"_i18n;
+                status_colour = nvgRGBA(230, 160, 60, 255);
+            }
             gfx::drawTextArgs(vg, x + w - 20.f, y + h / 2.f, 16.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
                 status_colour, "%s", status.c_str());
@@ -117,44 +124,80 @@ void Menu::ShowContextMenu() {
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     if (!m_items.empty()) {
-        options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
-            ConfirmLink(false);
-        }, true, "Write a fake Nintendo Account into this profile (Linkalho method). Not a real eShop login."_i18n);
+        options->Add<SidebarEntryCallback>("Import official link"_i18n, [this](){
+            ConfirmImport(false);
+        }, true, "Copy baas/nas (including Nintendo tokens) from a sysNAND dump onto this profile."_i18n);
         options->Add<SidebarEntryCallback>("Unlink Nintendo Account"_i18n, [this](){
             ConfirmUnlink(false);
-        }, true, "Remove the injected Nintendo Account from this profile."_i18n);
+        }, true, "Remove the Nintendo Account data from this profile."_i18n);
+        options->Add<SidebarEntryCallback>("Offline stub (Linkalho)"_i18n, [this](){
+            ConfirmOffline(false);
+        }, true, "Write fake baas/nas IDs with no Nintendo tokens. Games may retry Nintendo servers."_i18n);
     }
-    options->Add<SidebarEntryCallback>("Link all"_i18n, [this](){
-        ConfirmLink(true);
-    }, true, "Inject a fake Nintendo Account into every profile."_i18n);
+    options->Add<SidebarEntryCallback>("Export account save"_i18n, [this](){
+        ConfirmExport();
+    }, true, "Write this NAND's baas/nas to SD so you can import them on emuNAND."_i18n);
+    options->Add<SidebarEntryCallback>("Import official link to all"_i18n, [this](){
+        ConfirmImport(true);
+    }, true, "Graft the dumped Nintendo Account onto every profile."_i18n);
     options->Add<SidebarEntryCallback>("Unlink all"_i18n, [this](){
         ConfirmUnlink(true);
-    }, true, "Remove injected Nintendo Accounts from every profile."_i18n);
+    }, true, "Remove Nintendo Account data from every profile."_i18n);
 }
 
-void Menu::ConfirmLink(bool all) {
+void Menu::ConfirmImport(bool all) {
     App::Push<OptionBox>(
-        "This writes a fake Nintendo Account into the profile save (same method as Linkalho). It is not a real eShop login. A reboot is required."_i18n,
-        "Cancel"_i18n, "Link"_i18n, 1,
+        "Pick a folder dumped from a console that was linked officially (usually sysNAND). It must contain baas/ and nas/, including id.token and refresh.token. Y selects the folder. This is the method that does not keep retrying Nintendo servers."_i18n,
+        "Cancel"_i18n, "Choose folder"_i18n, 1,
+        [this, all](auto op) {
+            if (!op || *op != 1) {
+                return;
+            }
+            App::Push<filepicker::Menu>(
+                filepicker::LocationCallback{[this, all](const fs::FsPath& path, const filebrowser::FsEntry&) -> bool {
+                    RunImport(all, path.toString());
+                    return true;
+                }},
+                std::vector<std::string>{},
+                fs::FsPath{},
+                true);
+        });
+}
+
+void Menu::ConfirmOffline(bool all) {
+    App::Push<OptionBox>(
+        "Offline stub writes random Nintendo IDs with no real tokens (same as Linkalho). Horizon then retries Nintendo servers, which shows up as Please wait / airplane-mode nags. Prefer Import official link. A reboot is required."_i18n,
+        "Cancel"_i18n, "Write stub"_i18n, 0,
         [this, all](auto op) {
             if (op && *op == 1) {
-                Run(true, all);
+                RunOffline(all);
             }
         });
 }
 
 void Menu::ConfirmUnlink(bool all) {
     App::Push<OptionBox>(
-        "Remove the injected Nintendo Account from the selected profile(s)? A reboot is required."_i18n,
+        "Remove the Nintendo Account from the selected profile(s)? A reboot is required."_i18n,
         "Cancel"_i18n, "Unlink"_i18n, 1,
         [this, all](auto op) {
             if (op && *op == 1) {
-                Run(false, all);
+                RunUnlink(all);
             }
         });
 }
 
-void Menu::Run(bool link, bool all) {
+void Menu::ConfirmExport() {
+    App::Push<OptionBox>(
+        "Export baas/ and nas/ from this NAND to SD. On a clean sysNAND with a real Nintendo Account, export here, then import that folder on emuNAND."_i18n,
+        "Cancel"_i18n, "Export"_i18n, 1,
+        [this](auto op) {
+            if (op && *op == 1) {
+                RunExport();
+            }
+        });
+}
+
+auto Menu::SelectedUids(bool all) const -> std::vector<AccountUid> {
     std::vector<AccountUid> uids;
     if (all) {
         for (const auto& u : m_items) {
@@ -163,18 +206,18 @@ void Menu::Run(bool link, bool all) {
     } else if (!m_items.empty()) {
         uids.push_back(m_items[m_index].uid);
     }
+    return uids;
+}
+
+void Menu::RunUnlink(bool all) {
+    const auto uids = SelectedUids(all);
     if (uids.empty()) {
         return;
     }
 
-    const auto title = link ? "Link Nintendo Account"_i18n : "Unlink Nintendo Account"_i18n;
-    App::Push<ProgressBox>(0, title, title, [link, uids](auto pbox) -> Result {
-        pbox->NewTransfer(link ? "Writing account save"_i18n : "Updating account save"_i18n);
-        if (link) {
-            R_TRY(account_link::LinkUsers(uids));
-        } else {
-            R_TRY(account_link::UnlinkUsers(uids));
-        }
+    App::Push<ProgressBox>(0, "Unlink Nintendo Account"_i18n, "Unlink Nintendo Account"_i18n, [uids](auto pbox) -> Result {
+        pbox->NewTransfer("Updating account save"_i18n);
+        R_TRY(account_link::UnlinkUsers(uids));
         R_SUCCEED();
     }, [this](Result rc) {
         if (R_FAILED(rc)) {
@@ -193,6 +236,92 @@ void Menu::Run(bool link, bool all) {
             });
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+}
+
+void Menu::RunOffline(bool all) {
+    const auto uids = SelectedUids(all);
+    if (uids.empty()) {
+        return;
+    }
+
+    App::Push<ProgressBox>(0, "Offline stub (Linkalho)"_i18n, "Offline stub (Linkalho)"_i18n, [uids](auto pbox) -> Result {
+        pbox->NewTransfer("Writing account save"_i18n);
+        R_TRY(account_link::LinkUsers(uids));
+        R_SUCCEED();
+    }, [this](Result rc) {
+        if (R_FAILED(rc)) {
+            App::Push<OptionBox>(
+                "Could not update the account save. Close other homebrew and try again."_i18n,
+                "OK"_i18n);
+            return;
+        }
+        App::Push<OptionBox>(
+            "Offline stub written. Games that only check for a linked account may work, but Horizon can keep retrying Nintendo. Reboot required."_i18n,
+            "Later"_i18n, "Reboot"_i18n, 1,
+            [](auto op) {
+                if (op && *op == 1) {
+                    utils::requestForcedReboot();
+                }
+            });
+        Refresh();
+    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+}
+
+void Menu::RunImport(bool all, const std::string& dump_dir) {
+    const auto uids = SelectedUids(all);
+    if (uids.empty()) {
+        return;
+    }
+
+    auto had_tokens = std::make_shared<bool>(false);
+    App::Push<ProgressBox>(0, "Import official link"_i18n, "Import official link"_i18n,
+        [uids, dump_dir, had_tokens](auto pbox) -> Result {
+            pbox->NewTransfer("Importing account save"_i18n);
+            R_TRY(account_link::ImportOfficialLink(uids, dump_dir, *had_tokens));
+            R_SUCCEED();
+        }, [this, had_tokens](Result rc) {
+            if (R_FAILED(rc)) {
+                const auto msg = (rc == Result_FsInvalidType)
+                    ? "No baas/nas dump in that folder. Dump system save 8000000000000010 (JKSV or TegraExplorer) from a console that was linked officially."_i18n
+                    : "Could not update the account save. Close other homebrew and try again."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+                return;
+            }
+            const auto msg = *had_tokens
+                ? "Official Nintendo tokens imported. Reboot for the change to apply. Keep emuNAND off Nintendo servers (dns.mitm / prodinfo blank)."_i18n
+                : "baas/nas imported, but this dump has no id.token / refresh.token. Horizon can still retry Nintendo servers. Prefer a dump from an officially linked sysNAND."_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Later"_i18n, "Reboot"_i18n, 1,
+                [](auto op) {
+                    if (op && *op == 1) {
+                        utils::requestForcedReboot();
+                    }
+                });
+            Refresh();
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+}
+
+void Menu::RunExport() {
+    auto out_dir = std::make_shared<std::string>();
+    App::Push<ProgressBox>(0, "Export account save"_i18n, "Export account save"_i18n,
+        [out_dir](auto pbox) -> Result {
+            pbox->NewTransfer("Exporting account save"_i18n);
+            R_TRY(account_link::ExportAccountSave(*out_dir));
+            R_SUCCEED();
+        }, [this, out_dir](Result rc) {
+            if (R_FAILED(rc)) {
+                const auto msg = (rc == Result_FsEmpty)
+                    ? "Nothing to export. This NAND has no baas/nas account data."_i18n
+                    : "Could not export the account save. Close other homebrew and try again."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+                return;
+            }
+            App::Push<OptionBox>(
+                "Exported to "_i18n + *out_dir,
+                "OK"_i18n);
+            Refresh();
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
 } // namespace sphaira::ui::menu::users

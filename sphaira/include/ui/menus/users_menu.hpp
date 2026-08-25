@@ -5,6 +5,7 @@
 #include "account_link.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sphaira::ui::menu::users {
@@ -22,9 +23,15 @@ private:
     void SetIndex(s64 index);
     void Refresh();
     void ShowContextMenu();
-    void ConfirmLink(bool all);
+    void ConfirmImport(bool all);
+    void ConfirmOffline(bool all);
     void ConfirmUnlink(bool all);
-    void Run(bool link, bool all);
+    void ConfirmExport();
+    void RunUnlink(bool all);
+    void RunOffline(bool all);
+    void RunImport(bool all, const std::string& dump_dir);
+    void RunExport();
+    auto SelectedUids(bool all) const -> std::vector<AccountUid>;
 
 private:
     std::vector<account_link::User> m_items;

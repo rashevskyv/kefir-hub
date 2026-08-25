@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.613**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.614**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.613 (Users offline account link)
+## Поточний delivery: v0.13.614 (official account import)
+
+- [x] `USERS-OFFICIAL-614` — підтверджено Linkalho vs official tokens; Import/Export; stub із попередженням; статус Linked/Offline stub/Local.
+- [x] `DOCS-BUMP-614` — версію піднято до `0.13.614`.
+
+## Попередній delivery: v0.13.613 (Users offline account link)
 
 - [x] `USERS-MENU-613` — Tools → Users: список профілів, Link/Unlink (метод Linkalho), бекап, ребут.
 - [x] `DOCS-BUMP-613` — версію піднято до `0.13.613`.

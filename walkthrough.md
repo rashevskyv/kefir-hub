@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.613** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.614** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.614 — Users: official Nintendo Account import
+
+- Чутка підтверджена. Linkalho пише випадкові baas/nas **без** `nas/<id>_id.token` і `_refresh.token`. OLSC/BAAS тоді ретраять Nintendo (Please wait, авіарежим). Офіційна прив’язка на sysNAND + копія `0x8000000000000010` в emuNAND має справжні токени.
+- Tools → Users: **Import official link** (тека baas/nas) і **Export account save** на `/config/kefir/account_export/`. Офлайн-заглушка Linkalho лишилась з попередженням.
+- Статус: зелений Linked (є токени), жовтий Offline stub, сірий Local.
 
 ## v0.13.613 — Users: offline Nintendo Account link
 
