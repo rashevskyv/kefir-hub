@@ -66,8 +66,6 @@ private:
     bool m_catalog_update_pending{false};
     ModuleSort m_sort{ModuleSort::Running};
     meminfo::RamPool m_system{};
-    meminfo::RamPool m_overlay{};
-    bool m_overlay_running{};
     std::string m_error_message;
 };
 

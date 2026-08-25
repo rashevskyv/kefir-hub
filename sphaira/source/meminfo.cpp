@@ -92,57 +92,28 @@ auto MeasurePid(u64 pid) -> u64 {
     return QueryProcess(pid).used;
 }
 
-void DrawRamBars(NVGcontext* vg, Theme* theme, float x, float y,
-    const RamPool& system, const RamPool& overlay, bool overlay_running) {
+void DrawSystemPool(NVGcontext* vg, Theme* theme, float x, float y, const RamPool& system) {
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const float bar_w = 1120.f;
     const float bar_h = 10.f;
 
-    const auto row = [&](float yy, const char* label, const RamPool& pool, NVGcolor fill, bool show) {
-        ui::gfx::drawTextArgs(vg, x, yy, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", label);
-        if (show && pool.total) {
-            ui::gfx::drawTextArgs(vg, x + 280.f, yy, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
-                "%s / %s",
-                utils::formatSizeStorage(pool.used).c_str(),
-                utils::formatSizeStorage(pool.total).c_str());
-            ui::gfx::drawTextArgs(vg, x + bar_w, yy, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
-                "%s %s",
-                utils::formatSizeStorage(pool.Free()).c_str(),
-                "free"_i18n.c_str());
-        } else {
-            ui::gfx::drawTextArgs(vg, x + bar_w, yy, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
-                "%s", "not running"_i18n.c_str());
-        }
-
-        ui::gfx::drawRect(vg, x, yy + 12.f, bar_w, bar_h, nvgRGBA(255, 255, 255, 28), 3.f);
-        if (show && pool.total) {
-            const float used_w = bar_w * std::min(1.f, static_cast<float>(pool.used) / static_cast<float>(pool.total));
-            ui::gfx::drawRect(vg, x, yy + 12.f, used_w, bar_h, fill, 3.f);
-        }
-    };
-
-    row(y + 8.f, "Sysmodule RAM"_i18n.c_str(), system, nvgRGBA(80, 160, 230, 220), system.total != 0);
-
-    const bool overlay_ok = overlay_running && overlay.total;
-    ui::gfx::drawTextArgs(vg, x, y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", "Overlay memory"_i18n.c_str());
-    if (overlay_ok) {
-        ui::gfx::drawTextArgs(vg, x + 280.f, y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
+    ui::gfx::drawTextArgs(vg, x, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", "Sysmodule RAM"_i18n.c_str());
+    if (system.total) {
+        ui::gfx::drawTextArgs(vg, x + 280.f, y + 8.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info,
             "%s / %s",
-            utils::formatSizeStorage(overlay.used).c_str(),
-            utils::formatSizeStorage(overlay.total).c_str());
-        ui::gfx::drawTextArgs(vg, x + 1120.f, y + 40.f, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
+            utils::formatSizeStorage(system.used).c_str(),
+            utils::formatSizeStorage(system.total).c_str());
+        ui::gfx::drawTextArgs(vg, x + bar_w, y + 8.f, 14.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
             "%s %s",
-            utils::formatSizeStorage(overlay.Free()).c_str(),
+            utils::formatSizeStorage(system.Free()).c_str(),
             "free"_i18n.c_str());
-    } else {
-        ui::gfx::drawTextArgs(vg, x + 1120.f, y + 40.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info,
-            "%s", overlay_running ? "cannot measure"_i18n.c_str() : "not running"_i18n.c_str());
     }
-    ui::gfx::drawRect(vg, x, y + 52.f, 1120.f, 10.f, nvgRGBA(255, 255, 255, 28), 3.f);
-    if (overlay_ok) {
-        const float used_w = 1120.f * std::min(1.f, static_cast<float>(overlay.used) / static_cast<float>(overlay.total));
-        ui::gfx::drawRect(vg, x, y + 52.f, used_w, 10.f, nvgRGBA(160, 120, 220, 220), 3.f);
+
+    ui::gfx::drawRect(vg, x, y + 20.f, bar_w, bar_h, nvgRGBA(255, 255, 255, 28), 3.f);
+    if (system.total) {
+        const float used_w = bar_w * std::min(1.f, static_cast<float>(system.used) / static_cast<float>(system.total));
+        ui::gfx::drawRect(vg, x, y + 20.f, used_w, bar_h, nvgRGBA(80, 160, 230, 220), 3.f);
     }
 }
 

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.606**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.607**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.606 (Overlay memory + per-module debug retry)
+## Поточний delivery: v0.13.607 (Sysmodule RAM only)
+
+- [x] `DROP-OVERLAY-MEMORY-607` — Overlay memory прибрано; лишається Sysmodule RAM.
+- [x] `DOCS-BUMP-607` — версію піднято до `0.13.607`.
+
+## Попередній delivery: v0.13.606 (Overlay memory + per-module debug retry)
 
 - [x] `OVERLAY-MEMORY-606` — смуга Overlay memory (Tesla/nx-ovlloader heap used/total/free).
 - [x] `MODULE-RAM-DEBUG-606` — знову MeasurePid через debug; порожньо, якщо не вийде.

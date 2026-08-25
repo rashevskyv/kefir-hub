@@ -253,22 +253,6 @@ void QueryRuntime(ModuleItem& item) {
     item.memory_bytes = meminfo::MeasurePid(pid);
 }
 
-auto QueryOverlay(bool& running) -> meminfo::RamPool {
-    running = false;
-    Result rc = pmshellInitialize();
-    if (R_FAILED(rc)) {
-        return {};
-    }
-    ON_SCOPE_EXIT(pmshellExit());
-
-    u64 pid{};
-    if (R_FAILED(pmshellGetProcessId(&pid, TESLA_MENU_PROGRAM_ID))) {
-        return {};
-    }
-    running = true;
-    return meminfo::QueryProcess(pid);
-}
-
 auto LaunchModule(u64 program_id) -> Result {
     Result rc = pmshellInitialize();
     R_TRY(rc);
@@ -354,9 +338,9 @@ UninstallerMenu::UninstallerMenu() : MenuBase{"Module Manager"_i18n, MenuFlag_No
     );
 
     const float list_x = 75.f;
-    const float list_y = GetY() + 72.f;
+    const float list_y = GetY() + 44.f;
     const float list_w = 1070.f;
-    const float list_h = 547.f;
+    const float list_h = 575.f;
     const float row_h = 79.f;
 
     m_list = std::make_unique<List>(1, 7, Vec4{list_x, list_y, list_w, list_h}, Vec4{list_x, list_y, list_w, row_h});
@@ -403,9 +387,9 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
 
     nvgSave(vg);
     const float list_x = 75.f;
-    const float list_y = GetY() + 72.f;
+    const float list_y = GetY() + 44.f;
     const float list_w = 1070.f;
-    const float list_h = 547.f;
+    const float list_h = 575.f;
     const float p = gfx::SELECTION_OUTLINE_PAD;
     nvgScissor(vg, list_x - p, list_y - p, list_w + p * 2, list_h + p * 2);
 
@@ -541,7 +525,6 @@ void UninstallerMenu::LoadModules() {
     }
 
     m_system = meminfo::QuerySystem();
-    m_overlay = QueryOverlay(m_overlay_running);
     m_loaded = true;
     SortItems();
     log_write("[MODULES] loaded %zu toolbox sysmodules\n", m_items.size());
@@ -600,7 +583,6 @@ void UninstallerMenu::RefreshStatuses() {
         QueryRuntime(item);
     }
     m_system = meminfo::QuerySystem();
-    m_overlay = QueryOverlay(m_overlay_running);
     if (m_sort == ModuleSort::Running || m_sort == ModuleSort::Autostart) {
         const auto keep = m_items.empty() ? 0 : m_items[m_index].program_id;
         SortItems(keep);
@@ -658,7 +640,7 @@ void UninstallerMenu::ToggleSelectedAutostart() {
 }
 
 void UninstallerMenu::DrawRamPanel(NVGcontext* vg, Theme* theme) {
-    meminfo::DrawRamBars(vg, theme, 80.f, GetY() + 6.f, m_system, m_overlay, m_overlay_running);
+    meminfo::DrawSystemPool(vg, theme, 80.f, GetY() + 6.f, m_system);
 }
 
 void UninstallerMenu::UpdateSubheading() {

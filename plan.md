@@ -1,14 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.606**. Завершені плани збережено в
+Поточний delivery — **v0.13.607**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.606 — Overlay memory + retry per-module RAM via debug
+## Поточний delivery: v0.13.607 — drop Overlay memory, keep Sysmodule RAM
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Друга смуга **Overlay memory**: купа nx-ovlloader (Tesla), used/total і free. Та сама формула, що в Tesla (`TotalMemorySize − UsedMemorySize`).
-2. Знову міряємо RAM кожного модуля через `svcDebugActiveProcess` (kefir `force_debug_prod`). Якщо debug не дає цифр — поле порожнє, не «—».
+1. Overlay memory прибрано. Лишається одна смуга **Sysmodule RAM** (Horizon System pool).
+
+## Попередній delivery: v0.13.606 — Overlay memory + retry per-module RAM via debug
 
 ## Попередній delivery: v0.13.605 — Module Manager shows System pool used/free
 
