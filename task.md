@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.612**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.613**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.612 (module toggle explanations)
+## Поточний delivery: v0.13.613 (Users offline account link)
+
+- [x] `USERS-MENU-613` — Tools → Users: список профілів, Link/Unlink (метод Linkalho), бекап, ребут.
+- [x] `DOCS-BUMP-613` — версію піднято до `0.13.613`.
+
+## Попередній delivery: v0.13.612 (module toggle explanations)
 
 - [x] `MODULE-TOGGLE-EXPLAIN-612` — sys-patch/FunControl без ErrorBox; інші збої — OptionBox без коду/Telegram.
 - [x] `DOCS-BUMP-612` — версію піднято до `0.13.612`.

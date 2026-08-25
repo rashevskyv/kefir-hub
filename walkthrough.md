@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.612** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.613** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.613 — Users: offline Nintendo Account link
+
+- Tools → Users. Link/Unlink обраного або всіх профілів методом Linkalho: зупиняє account/BCAT/OLSC, пише `baas/<uid>.dat` + `nas/<id>.dat` + `_user.json` у system save `0x8000000000000010`. Бекап на SD. Ребут обов’язковий.
+- Це фейкова прив’язка (ігри, що лише перевіряють «чи є акаунт»). Справжній eShop/Nintendo login так не замінити.
 
 ## v0.13.612 — Module Manager toggle explanations
 

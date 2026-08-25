@@ -1,13 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.612**. Завершені плани збережено в
+Поточний delivery — **v0.13.613**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.612 — Module Manager explains sys-patch / FunControl toggles
+## Поточний delivery: v0.13.613 — Users: offline Nintendo Account link (Linkalho method)
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Toggle більше не відкриває ErrorBox з кодом 0x20F. sys-patch: не стартує звідси, вантажиться з бута. FunControl: хаб сам стартує/стопить для кривої кулера (і A, і autostart). Інші збої — звичайний OptionBox.
+1. Tools → Users. Link/Unlink пише baas/nas у system save `0x8000000000000010` (як Linkalho). Це не справжня eShop-прив’язка. Бекап у `/config/kefir/account_backups/`. Потрібен ребут.
+
+## Попередній delivery: v0.13.612 — Module Manager explains sys-patch / FunControl toggles
 
 ## Попередній delivery: v0.13.611 — web-server overlay is translucent again
 

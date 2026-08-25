@@ -11,6 +11,7 @@
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/install_share.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/users_menu.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
@@ -408,7 +409,9 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
             App::Push<ui::menu::hats::UninstallerMenu>();
         }},
         { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, ComingSoon },
-        { "Users"_i18n, "Manage console user profiles."_i18n, 0, ComingSoon },
+        { "Users"_i18n, "Manage console user profiles."_i18n, 0, [](){
+            App::Push<ui::menu::users::Menu>();
+        }},
         { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, ComingSoon },
         { "Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, 0, ComingSoon },
         { "Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, 0, ComingSoon },
