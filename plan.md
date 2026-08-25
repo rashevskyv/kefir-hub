@@ -1,16 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.603**. Завершені плани збережено в
+Поточний delivery — **v0.13.604**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.603 — Task Manager lists every process using RAM
+## Поточний delivery: v0.13.604 — Module Manager shows per-module RAM, no Task Manager
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Tools → Tools → **Task Manager**: усі процеси (sysmodules, Horizon, цей хаб) з розміром і відсотком.
-2. Module Manager START → Task Manager відкриває той самий екран, не попап.
+1. Task Manager прибрано з Tools і з Options Module Manager.
+2. У списку модулів справа вгорі — розмір кожного запущеного модуля (code+heap+tls), не «—». `MemoryInfo.type` маскується `MemState_Type`.
 
-## Попередній delivery: v0.13.602 — Module Manager shows where RAM goes
+## Попередній delivery: v0.13.603 — Task Manager lists every process using RAM
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Три пули Horizon: Application / Applet / System. Зелений шматок на System — сума listed sysmodules.

@@ -54,7 +54,6 @@ private:
     void SortItems(u64 keep_program_id = 0);
     void ShowContextMenu();
     void ShowSortMenu();
-    void ShowRamMap();
     void ShowInfo();
     void ShowInfoBox(const ModuleItem& item);
     void DrawRamPanel(NVGcontext* vg, Theme* theme);

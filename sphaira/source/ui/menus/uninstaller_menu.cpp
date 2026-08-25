@@ -1,5 +1,4 @@
 #include "ui/menus/uninstaller_menu.hpp"
-#include "ui/menus/task_manager.hpp"
 #include "meminfo.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -662,10 +661,6 @@ void UninstallerMenu::DrawRamPanel(NVGcontext* vg, Theme* theme) {
     meminfo::DrawBreakdown(vg, theme, 80.f, GetY() + 6.f, m_ram, m_modules_bytes, extra[0] ? extra : nullptr);
 }
 
-void UninstallerMenu::ShowRamMap() {
-    App::Push<ui::menu::tools::TaskManagerMenu>();
-}
-
 void UninstallerMenu::UpdateSubheading() {
     if (m_items.empty()) {
         SetTitleSubHeading("No sysmodules found"_i18n, true);
@@ -740,9 +735,6 @@ void UninstallerMenu::ShowContextMenu() {
     options->Add<SidebarEntryCallback>("Info"_i18n, [this](){
         ShowInfo();
     }, true, "Name, memory and GitHub description."_i18n);
-    options->Add<SidebarEntryCallback>("Task Manager"_i18n, [this](){
-        ShowRamMap();
-    }, true, "Every running process and how much RAM it uses."_i18n);
     options->Add<SidebarEntryCallback>("Sort"_i18n, [this](){
         ShowSortMenu();
     }, "Order the list by name, status, memory or autostart."_i18n);

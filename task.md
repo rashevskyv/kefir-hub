@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.603**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.604**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.603 (Task Manager)
+## Поточний delivery: v0.13.604 (Module Manager per-module RAM)
+
+- [x] `DROP-TASK-MANAGER-604` — Task Manager прибрано з Tools і Module Manager Options.
+- [x] `MODULE-RAM-TYPE-MASK-604` — споживання кожного запущеного модуля справа вгорі рядка (`MemState_Type`).
+- [x] `DOCS-BUMP-604` — версію піднято до `0.13.604`.
+
+## Попередній delivery: v0.13.603 (Task Manager)
 
 - [x] `TASK-MANAGER-603` — Tools → Tools → Task Manager: усі процеси й RAM.
 - [x] `DOCS-BUMP-603` — версію піднято до `0.13.603`.

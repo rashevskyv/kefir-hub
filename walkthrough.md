@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.603** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.604** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.604 — Module Manager per-module RAM, Task Manager removed
+
+- Task Manager прибрано: зайвий екран зі всіма процесами Horizon.
+- У Module Manager справа вгорі рядка — розмір кожного запущеного модуля. Раніше завжди було «—»: `MemoryInfo.type` порівнювали з `MemType_*` без маски `MemState_Type`, тож сума завжди була 0.
 
 ## v0.13.603 — Task Manager
 
