@@ -1045,18 +1045,16 @@ void App::Draw() {
     nvgBeginFrame(this->vg, s_width, s_height, 1.f);
     nvgScale(vg, m_scale.x, m_scale.y);
 
-    // a blocking ProgressBox (NAND/SD move, install) already dims the screen.
-    // redrawing the games grid behind it fights ncm for the GPU and makes the
-    // dialog freeze so B/Stop never run until the copy finishes.
+    // a blocking ProgressBox on the widget stack (NAND/SD move, install)
+    // already dims the screen. redrawing the games grid behind it fights ncm
+    // for the GPU and freezes B/Stop. detached transfers (web server, MTP)
+    // must still paint the menu underneath so the dim is actually translucent.
     bool skip_under_progress = false;
     for (const auto& p : m_widgets) {
         if (p->BlocksDrawUnder()) {
             skip_under_progress = true;
             break;
         }
-    }
-    if (m_active_transfer_pbox && !m_active_transfer_pbox->IsMinimized()) {
-        skip_under_progress = true;
     }
 
     // find the last menu in the list, start drawing from there

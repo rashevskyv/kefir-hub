@@ -1,14 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.610**. Завершені плани збережено в
+Поточний delivery — **v0.13.611**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.610 — Module Manager counter and filter
+## Поточний delivery: v0.13.611 — web-server overlay is translucent again
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. Зверху `N running / M` поруч із Sysmodule RAM (завжди з повного списку).
-2. Options → Filter: All / Running / Stopped / Autostart / Applies after reboot.
+1. Detached transfer (вебдоступ) знову малює меню під dim. Раніше skip_under_progress ховав увесь UI, тож dim лягав на порожній кадр.
+
+## Попередній delivery: v0.13.610 — Module Manager counter and filter
 
 ## Попередній delivery: v0.13.609 — After reboot same green/grey as the status dot
 

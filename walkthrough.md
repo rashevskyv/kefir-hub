@@ -1,9 +1,13 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.610** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.611** (2026-08-25). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.611 — web-server overlay translucent again
+
+- Екран вебдоступу знову напівпрозорий поверх меню. Detached transfer більше не пропускає малювання UI під dim (це було для NAND/SD move, щоб не фрізити Cancel).
 
 ## v0.13.610 — Module Manager counter and filter
 
