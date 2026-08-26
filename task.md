@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.632**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.633**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.632 (full UID makes user-pack paths unique)
+## Поточний delivery: v0.13.633 (no embedded avatar presets)
+
+- [x] `USERS-NO-EMBED-633` — видалено Avatar 01–08 (`#embed`) і romfs JPEG-пресети.
+- [x] `USERS-CREATE-NO-FAKE-AVATAR-633` — Create через `acc:su` без підставленої картинки.
+- [x] `BUILD-WSL-633` — `ReleaseWithInstall` успішно зібрано з `DEVKITPRO=/opt/devkitpro`.
+- [x] `DOCS-BUMP-633` — версію піднято до `0.13.633`.
+
+## Попередній delivery: v0.13.632 (full UID makes user-pack paths unique)
 
 - [x] `USER-PACK-FULL-UID-632` — повний UID у назві теки пака; 8-символьний префікс міг колізувати.
 - [x] `DOCS-BUMP-632` — версію піднято до `0.13.632`.

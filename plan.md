@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.632**. Завершені плани збережено в
+Поточний delivery — **v0.13.633**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.632 — Correct unique full-UID user-pack directories
+## Поточний delivery: v0.13.633 — Remove embedded avatars; create real empty Horizon profile
+
+Статус: програмну частину реалізовано; WSL `ReleaseWithInstall` успішно зібрано.
+1. Видалено вісім `#embed` JPEG-пресетів і romfs-аватари; вони не були системними іконками та ламали GCC-збірку.
+2. Create user одразу викликає `acc:su`-шлях без підставленого `ImageGetDefaultIcon()`: Horizon створює профіль без довільної картинки.
+3. Change avatar лишає аватари реальних профілів, SD/`config/kefir/avatars` і SteamGridDB.
+
+## Попередній delivery: v0.13.632 — Correct unique full-UID user-pack directories
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Повний UID у назві теки (`<stamp>_<name>_<full_uid>`), а не 8-символьний префікс: навіть профілі з однаковими першими 32 бітами UID не можуть розділити пак.

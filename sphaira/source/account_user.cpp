@@ -180,9 +180,6 @@ auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<
             icon = std::move(normalized);
         }
     }
-    if (icon.empty()) {
-        icon = ImageGetDefaultIcon();
-    }
     auto store = StoreProfile(uid, base, data,
         icon.empty() ? nullptr : icon.data(), icon.size());
     if (R_FAILED(store)) {

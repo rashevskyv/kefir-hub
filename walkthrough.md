@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.632** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.633** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.633 — no invented avatar presets; direct Horizon profile creation
+
+- Прибрано вісім вбудованих JPEG `Avatar 01–08` і `#embed`, який поточний devkitPro GCC не підтримує та через який WSL build падав.
+- Create user після введення імені одразу створює профіль через `acc:su` без `ImageGetDefaultIcon()`: хаб не підсовує власну картинку замість системної.
+- У Change avatar залишилися лише картинки існуючих системних профілів, файли з SD/`config/kefir/avatars` і SteamGridDB.
+- `ReleaseWithInstall` зібрано у WSL (`DEVKITPRO=/opt/devkitpro`); синхронізація RomFS також прибирає застарілий `romfs/avatars`, щоб інкрементальна збірка не повернула вилучені JPEG до NRO.
 
 ## v0.13.632 — full UID prevents every user-pack directory collision
 

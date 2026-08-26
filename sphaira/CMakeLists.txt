@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.632)
+set(sphaira_VERSION 0.13.633)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -544,6 +544,8 @@ file(GLOB_RECURSE sphaira_romfs_source_files CONFIGURE_DEPENDS
     ${CMAKE_SOURCE_DIR}/assets/romfs/*
 )
 add_custom_target(sphaira_romfs_sync
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+        ${CMAKE_CURRENT_BINARY_DIR}/romfs/avatars
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets/romfs
         ${CMAKE_CURRENT_BINARY_DIR}/romfs

@@ -35,15 +35,6 @@
 namespace sphaira::ui::menu::users {
 namespace {
 
-constexpr u8 PRESET_AVATAR_01[] { #embed <avatars/01.jpg> };
-constexpr u8 PRESET_AVATAR_02[] { #embed <avatars/02.jpg> };
-constexpr u8 PRESET_AVATAR_03[] { #embed <avatars/03.jpg> };
-constexpr u8 PRESET_AVATAR_04[] { #embed <avatars/04.jpg> };
-constexpr u8 PRESET_AVATAR_05[] { #embed <avatars/05.jpg> };
-constexpr u8 PRESET_AVATAR_06[] { #embed <avatars/06.jpg> };
-constexpr u8 PRESET_AVATAR_07[] { #embed <avatars/07.jpg> };
-constexpr u8 PRESET_AVATAR_08[] { #embed <avatars/08.jpg> };
-
 auto CollectSaves(const std::vector<AccountUid>& uids) -> std::vector<save::Entry> {
     title::Init();
     std::vector<save::Entry> out;
@@ -159,10 +150,10 @@ private:
 
 struct AvatarPickMenu final : MenuBase {
     using Callback = std::function<void(std::vector<u8>)>;
-    enum class Kind { Jpeg, FromSd, Sgdb };
+    enum class Kind { Existing, FromSd, Sgdb };
 
     struct Tile {
-        Kind kind{Kind::Jpeg};
+        Kind kind{Kind::Existing};
         std::vector<u8> jpeg;
         int image{};
         std::string label;
@@ -268,19 +259,6 @@ private:
     }
 
     void LoadTiles() {
-        const std::pair<const u8*, size_t> presets[] = {
-            {PRESET_AVATAR_01, sizeof(PRESET_AVATAR_01)},
-            {PRESET_AVATAR_02, sizeof(PRESET_AVATAR_02)},
-            {PRESET_AVATAR_03, sizeof(PRESET_AVATAR_03)},
-            {PRESET_AVATAR_04, sizeof(PRESET_AVATAR_04)},
-            {PRESET_AVATAR_05, sizeof(PRESET_AVATAR_05)},
-            {PRESET_AVATAR_06, sizeof(PRESET_AVATAR_06)},
-            {PRESET_AVATAR_07, sizeof(PRESET_AVATAR_07)},
-            {PRESET_AVATAR_08, sizeof(PRESET_AVATAR_08)},
-        };
-        for (const auto& p : presets) {
-            AddDecodedTile(std::span<const u8>{p.first, p.second});
-        }
         for (const auto& base : App::GetAccountList()) {
             std::vector<u8> jpeg;
             if (R_SUCCEEDED(account_user::LoadImageJpeg(base.uid, jpeg))) {
@@ -732,12 +710,7 @@ void Menu::ConfirmCreate() {
     if (R_FAILED(swkbd::ShowText(name, "New user"_i18n.c_str(), nullptr, 1, 31)) || name.empty()) {
         return;
     }
-    App::Push(std::make_unique<AvatarPickMenu>([this, name](std::vector<u8> jpeg) {
-        if (jpeg.empty()) {
-            return;
-        }
-        RunCreate(name, std::move(jpeg));
-    }));
+    RunCreate(name);
 }
 
 void Menu::ConfirmRename() {
@@ -928,11 +901,11 @@ void Menu::ConfirmExport() {
         });
 }
 
-void Menu::RunCreate(const std::string& nickname, std::vector<u8> jpeg) {
-    App::Push<ProgressBox>(0, "Create user"_i18n, nickname, [nickname, jpeg = std::move(jpeg)](auto pbox) -> Result {
+void Menu::RunCreate(const std::string& nickname) {
+    App::Push<ProgressBox>(0, "Create user"_i18n, nickname, [nickname](auto pbox) -> Result {
         pbox->NewTransfer("Creating user"_i18n);
         AccountUid uid{};
-        R_TRY(account_user::Create(nickname, uid, jpeg));
+        R_TRY(account_user::Create(nickname, uid));
         R_SUCCEED();
     }, [this](Result rc) {
         if (R_FAILED(rc)) {
