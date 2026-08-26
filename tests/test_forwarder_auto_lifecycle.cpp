@@ -52,7 +52,11 @@ struct MockForwarderAutoLifecycle {
         g_thread_active = false;
     }
 
-    bool StartCheck() {
+    bool StartCheck(bool is_emummc) {
+        if (!is_emummc) {
+            return false;
+        }
+
         if (g_thread_created.exchange(true)) {
             return false;
         }
@@ -76,10 +80,10 @@ struct MockForwarderAutoLifecycle {
 int RunTests() {
     MockForwarderAutoLifecycle lc;
 
-    // Test 1: Application mode still creates the thread (cleanup/install may be needed)
+    // Test 1: EmuNAND mode creates and starts the worker thread
     {
         lc.Reset();
-        CHECK(lc.StartCheck());
+        CHECK(lc.StartCheck(true));
         CHECK(lc.mock_create_calls == 1);
         CHECK(lc.g_thread_created);
 
@@ -88,10 +92,23 @@ int RunTests() {
         CHECK(lc.mock_wait_calls == 1);
     }
 
-    // Test 2: Worker exits BEFORE StopCheck() is called -> threadClose must STILL be called!
+    // Test 2: SysNAND mode does not create thread or reserve state
     {
         lc.Reset();
-        CHECK(lc.StartCheck());
+        CHECK(!lc.StartCheck(false));
+        CHECK(lc.mock_create_calls == 0);
+        CHECK(!lc.g_thread_created);
+        CHECK(!lc.g_thread_active);
+
+        lc.StopCheck();
+        CHECK(lc.mock_close_calls == 0);
+        CHECK(lc.mock_wait_calls == 0);
+    }
+
+    // Test 3: Worker exits BEFORE StopCheck() is called -> threadClose must STILL be called!
+    {
+        lc.Reset();
+        CHECK(lc.StartCheck(true));
         CHECK(lc.mock_create_calls == 1);
         CHECK(lc.g_thread_created);
 
@@ -107,11 +124,11 @@ int RunTests() {
         CHECK(!lc.g_thread_created);
     }
 
-    // Test 3: Multiple StartCheck calls are deduplicated
+    // Test 4: Multiple StartCheck calls are deduplicated
     {
         lc.Reset();
-        CHECK(lc.StartCheck());
-        CHECK(!lc.StartCheck()); // Deduplicated
+        CHECK(lc.StartCheck(true));
+        CHECK(!lc.StartCheck(true)); // Deduplicated
         CHECK(lc.mock_create_calls == 1);
 
         lc.StopCheck();
@@ -121,7 +138,7 @@ int RunTests() {
         CHECK(lc.mock_close_calls == 1);
     }
 
-    // Test 4: IsOldHomebrewTitle / IsStaleOwnForwarder / ClassifyLaunch
+    // Test 5: IsOldHomebrewTitle / IsStaleOwnForwarder / ClassifyLaunch
     {
         using sphaira::forwarder_auto::IsOldHomebrewTitle;
         using sphaira::forwarder_auto::IsStaleOwnForwarder;
@@ -172,7 +189,7 @@ int RunTests() {
         CHECK(ClassifyLaunch(true, 0x0100AABBCCDDE000ULL, kefirhub_tid, "Some App") == LaunchSource::Album);
     }
 
-    // Test 5: launch-source plan — never delete the forwarder we launched from
+    // Test 6: launch-source plan — never delete the forwarder we launched from
     {
         using sphaira::forwarder_auto::Decide;
         using sphaira::forwarder_auto::LaunchSource;

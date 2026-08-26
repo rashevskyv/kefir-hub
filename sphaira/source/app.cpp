@@ -1540,7 +1540,7 @@ App::App(const char* argv0) {
 
     // background clock sync & forwarder check: start after graphics initialization
     ntp::Start();
-    forwarder_auto::StartCheck();
+    forwarder_auto::StartCheck(App::IsEmummc());
 
     App::Push<ui::menu::main::MainMenu>();
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());

@@ -2,7 +2,7 @@
 
 namespace sphaira::forwarder_auto {
 
-void StartCheck();
+void StartCheck(bool is_emummc);
 void StopCheck();
 
 } // namespace sphaira::forwarder_auto

@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.635**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.636**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.635 (clarify Nintendo Account link status)
+## Поточний delivery: v0.13.636 (restrict auto-forwarder to EmuNAND)
+
+- [x] `FORWARDER-EMUNAND-ONLY-636` — `forwarder_auto::StartCheck(bool is_emummc)` запускає фоновий потік лише на EmuNAND; на SysNAND виклик є безпечним no-op без виділення ресурсів потоку.
+- [x] `FORWARDER-TESTS-636` — оновлено `tests/test_forwarder_auto_lifecycle.cpp` з перевіркою запуску на EmuNAND та блокування на SysNAND.
+- [x] `DOCS-BUMP-636` — версію піднято до `0.13.636`.
+
+## Попередній delivery: v0.13.635 (clarify Nintendo Account link status)
 
 - [x] `USERS-LINK-STATUS-635` — однозначний статус прив'язки в інтерфейсі Users: «Linked» (офіційні токени), «Not linked · FakeLink» (Linkalho/офлайн-заглушка), «Not linked» (локальний профіль), «Link status unavailable» (не вдалося безпечно перевірити Account save).
 - [x] `USERS-I18N-635` — додано переклади «Not linked», «Not linked · FakeLink», «Link status unavailable» в en.json, uk.json, ru.json.

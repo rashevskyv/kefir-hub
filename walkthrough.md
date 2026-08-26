@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.635** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.636** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.636 — restrict auto-forwarder to EmuNAND
+
+- `forwarder_auto::StartCheck(bool is_emummc)`: додано параметр режиму NAND. При запуску в SysNAND (`!is_emummc`) функція миттєво повертається без захоплення атомарного прапорця створення потоку (`g_thread_created`) та створення фонового воркера. Будь-які автоматичні операції встановлення, перевірки чи видалення форвардерів у SysNAND повністю вимкнені.
+- У середовищі EmuNAND (`is_emummc == true`) збережено попередню автоматичну поведінку: тихе фонове виявлення та встановлення іконки Kefir Hub / Homebrew Menu на стартовому екрані HOME Menu.
+- `sphaira/source/app.cpp`: передає `App::IsEmummc()` у єдиній виробничій точці виклику `forwarder_auto::StartCheck` після ініціалізації графіки.
+- Ручне створення та встановлення форвардерів (Forwarder Editor / опції Homebrew) залишено без змін.
+- `tests/test_forwarder_auto_lifecycle.cpp`: додано явні перевірки життєвого циклу воркера для EmuNAND (потік створюється і запускається) та SysNAND (потік не створюється, атомарні прапорці та стан не резервуються, виклик `StopCheck` є безпечним no-op).
+- Агент не компілює.
 
 ## v0.13.635 — clarify Nintendo Account link status in Users UI
 

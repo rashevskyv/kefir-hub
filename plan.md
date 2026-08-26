@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.635**. Завершені плани збережено в
+Поточний delivery — **v0.13.636**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.635 — Clarify Nintendo Account link status in Users UI
+## Поточний delivery: v0.13.636 — Restrict auto-forwarder to EmuNAND
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. `forwarder_auto::StartCheck` оновлено для прийому булевого параметра `is_emummc`; `sphaira/source/app.cpp` передає поточний стан `App::IsEmummc()`.
+2. У режимі SysNAND (`!is_emummc`) функція `StartCheck` негайно повертає керування без захоплення атомарного прапорця створення потоку та без запуску фонового воркера (автоматичне встановлення, перевірка чи видалення форвардерів повністю вимкнені).
+3. У режимі EmuNAND збережено поточну автоматичну поведінку фонового виявлення та встановлення форвардера Kefir Hub.
+4. Розширено `tests/test_forwarder_auto_lifecycle.cpp` прямими перевірками для EmuNAND та SysNAND режимів.
+5. Ручне встановлення форвардерів (Forwarder Editor) залишено без змін.
+
+## Попередній delivery: v0.13.635 — Clarify Nintendo Account link status in Users UI
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ui/menus/users_menu.cpp` оновлено `StatusLabel()`: відображається «Linked» виключно для офіційної прив'язки з токенами (`LinkKind::Official`), «Not linked · FakeLink» для Linkalho/офлайн-заглушки (`LinkKind::Offline`), «Not linked» для локального профілю (`LinkKind::None`), та «Link status unavailable» коли стан сейву акаунта не вдалося безпечно перевірити (`linked_known == false`).
