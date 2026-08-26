@@ -57,7 +57,7 @@ TE `Save.commit()` у коді *вміє* flush + CMAC з `prod.keys` цілі (
 
 Tools → Users → **Backup profiles & play hours**.
 
-Хаб зупиняє account/BCAT/OLSC (для 0010/0011) і за потреби pdm/ns (для 00F0/0041), монтує system save через FS, копіює **розшифроване** дерево файлів на SD:
+Хаб **не вбиває** процеси. Відкриває system save через FS, копіює **розшифроване** дерево на SD. Якщо сейв зайнятий — пропускає і лишає `dump.te` для TegraExplorer (RCM), замість чорного екрана.
 
 ```
 /config/kefir/nand_transfer/<YYYYMMDD_HHMMSS>/

@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.628** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.629** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.629 — profiles & hours dump never kills Horizon
+
+- Чорний екран на «Бекап профілів і годин»: TryOpen 0010 не вдавався → terminate `account` → AM fatal. Тепер без Kill: зайнятий сейв пропускаємо, прогрес «Профілі» / «Години гри».
+- Якщо години зайняті: `dump.te` у паку і в `sd:/TegraExplorer/scripts/`. RCM → TegraExplorer → скрипт.
+- Backup user ≠ цей пункт: один профіль, новий UID, без годин.
+- Агент не компілює.
 
 ## v0.13.628 — vector folder tiles; avatar presets load; SGDB asks for a name
 

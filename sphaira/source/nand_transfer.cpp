@@ -3,6 +3,7 @@
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 #include "ui/progress_box.hpp"
 
@@ -12,29 +13,20 @@
 #include <string>
 #include <vector>
 
-#include <switch/services/pm.h>
-
 namespace sphaira::nand_transfer {
 namespace {
-
-constexpr u64 TID_BCAT = 0x010000000000000CULL;
-constexpr u64 TID_ACCOUNT = 0x010000000000001EULL;
-constexpr u64 TID_PDM = 0x010000000000002DULL;
-constexpr u64 TID_OLSC = 0x010000000000003EULL;
 
 struct SaveSpec {
     u64 id;
     const char* hex;
-    bool kill_account;
-    bool kill_pdm;
-    bool required;
+    const char* label;
 };
 
 constexpr SaveSpec kSaves[] = {
-    {0x8000000000000010ULL, "8000000000000010", true,  false, true},
-    {0x8000000000000011ULL, "8000000000000011", true,  false, false},
-    {0x80000000000000F0ULL, "80000000000000F0", false, true,  true},
-    {0x8000000000000041ULL, "8000000000000041", false, true,  false},
+    {0x8000000000000010ULL, "8000000000000010", "Profiles"},
+    {0x8000000000000011ULL, "8000000000000011", "User ID generator"},
+    {0x80000000000000F0ULL, "80000000000000F0", "Play hours"},
+    {0x8000000000000041ULL, "8000000000000041", "HOME icons"},
 };
 
 auto Join(const std::string& dir, const char* name) -> std::string {
@@ -77,37 +69,11 @@ auto PackLooksRight(fs::Fs& sd, const std::string& dir) -> bool {
            sd.DirExists((dir + "/8000000000000010").c_str());
 }
 
-void Kill(bool account, bool pdm) {
-    if (R_FAILED(pmshellInitialize())) {
-        return;
-    }
-    if (account) {
-        pmshellTerminateProgram(TID_BCAT);
-        pmshellTerminateProgram(TID_ACCOUNT);
-        pmshellTerminateProgram(TID_OLSC);
-    }
-    if (pdm) {
-        pmshellTerminateProgram(TID_PDM);
-    }
-    pmshellExit();
-    svcSleepThread(200000000);
-}
-
 auto TryOpen(u64 id) -> fs::FsNativeSave {
     FsSaveDataAttribute attr{};
     attr.system_save_data_id = id;
     attr.save_data_type = FsSaveDataType_System;
     return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
-}
-
-auto OpenForWrite(const SaveSpec& spec) -> fs::FsNativeSave {
-    if (spec.kill_account) {
-        Kill(true, false);
-    }
-    if (spec.kill_pdm) {
-        Kill(false, true);
-    }
-    return TryOpen(spec.id);
 }
 
 void WipeRoot(fs::Fs& f) {
@@ -133,25 +99,30 @@ void WipeRoot(fs::Fs& f) {
     }
 }
 
-auto OpenForDump(const SaveSpec& spec) -> fs::FsNativeSave {
-    auto save = TryOpen(spec.id);
-    if (R_SUCCEEDED(save.GetFsOpenResult())) {
-        return save;
+void CopyRomfsScript(fs::Fs& sd, const char* romfs_name, const std::string& pack_name) {
+    std::vector<u8> te;
+    const auto romfs = std::string("romfs:/tegra/") + romfs_name;
+    if (R_FAILED(fs::read_entire_file(romfs.c_str(), te)) || te.empty()) {
+        log_write("[NAND] %s missing from romfs\n", romfs_name);
+        return;
     }
-    if (spec.kill_account) {
-        log_write("[NAND] retry %s after stopping account\n", spec.hex);
-        Kill(true, false);
-        save = TryOpen(spec.id);
-        if (R_SUCCEEDED(save.GetFsOpenResult())) {
-            return save;
-        }
+    sd.CreateDirectoryRecursively("/config/kefir/nand_transfer");
+    sd.write_entire_file((std::string("/config/kefir/nand_transfer/") + pack_name).c_str(), te);
+    sd.CreateDirectoryRecursively("/TegraExplorer/scripts");
+    sd.write_entire_file((std::string("/TegraExplorer/scripts/") + pack_name).c_str(), te);
+}
+
+void WriteScripts(fs::Fs& sd, const std::string& pack_dir) {
+    CopyRomfsScript(sd, "nand_transfer_restore.te", "restore.te");
+    CopyRomfsScript(sd, "nand_transfer_dump.te", "dump.te");
+    std::vector<u8> restore;
+    if (R_SUCCEEDED(fs::read_entire_file("romfs:/tegra/nand_transfer_restore.te", restore)) && !restore.empty()) {
+        sd.write_entire_file((pack_dir + "/restore.te").c_str(), restore);
     }
-    if (spec.kill_pdm) {
-        log_write("[NAND] retry %s after stopping pdm (not ns)\n", spec.hex);
-        Kill(false, true);
-        save = TryOpen(spec.id);
+    std::vector<u8> dump;
+    if (R_SUCCEEDED(fs::read_entire_file("romfs:/tegra/nand_transfer_dump.te", dump)) && !dump.empty()) {
+        sd.write_entire_file((pack_dir + "/dump.te").c_str(), dump);
     }
-    return save;
 }
 
 auto CopyTree(ui::ProgressBox* pbox, fs::Fs& from, const std::string& src, fs::Fs& to, const std::string& dst, u32& files) -> Result {
@@ -194,35 +165,24 @@ auto CopyTree(ui::ProgressBox* pbox, fs::Fs& from, const std::string& src, fs::F
     R_SUCCEED();
 }
 
-void WriteScript(fs::Fs& sd, const std::string& pack_dir) {
-    std::vector<u8> te;
-    if (R_FAILED(fs::read_entire_file("romfs:/tegra/nand_transfer_restore.te", te)) || te.empty()) {
-        log_write("[NAND] restore.te missing from romfs\n");
-        return;
-    }
-    sd.write_entire_file((pack_dir + "/restore.te").c_str(), te);
-    sd.CreateDirectoryRecursively("/config/kefir/nand_transfer");
-    sd.write_entire_file("/config/kefir/nand_transfer/restore.te", te);
-}
-
 void WriteReadme(fs::Fs& sd, const std::string& pack_dir) {
     const char* text =
         "Kefir Hub NAND transfer pack\n"
         "\n"
-        "These folders are DECRYPTED inner files of system saves, not the\n"
-        "encrypted SYSTEM:/save blobs.\n"
+        "Decrypted inner files of system saves (not raw SYSTEM:/save blobs).\n"
         "\n"
-        "Restore on the DESTINATION console (preferred):\n"
-        "  Kefir Hub → Users → Restore profiles & play hours\n"
-        "  Pick this folder. Horizon writes into the existing system saves and\n"
-        "  encrypts/signs with THIS console's keys. Reboot afterwards.\n"
+        "Backup user (Tools → Users) is a different thing: one profile's name,\n"
+        "avatar and Nintendo link. Restore user pack creates a NEW user, no hours.\n"
+        "This pack keeps the same user IDs and play hours.\n"
         "\n"
-        "Fallback if Hub cannot open 00F0 (in use): TegraExplorer restore.te\n"
-        "from this folder. Do NOT copy the raw SYSTEM:/save blob — that bricks.\n"
+        "Restore on the DESTINATION (preferred):\n"
+        "  Kefir Hub → Users → Restore profiles & play hours → pick this folder.\n"
         "\n"
-        "Destination play hours (and profiles, if 0010 is present) are replaced.\n"
-        "Back up the destination SYSTEM partition first.\n"
-        "Do not restore 0120/0121/0124.\n";
+        "If Hub could not open play hours here, run dump.te in TegraExplorer (RCM).\n"
+        "If Hub cannot open 00F0 on the destination, run restore.te.\n"
+        "Scripts are also copied to sd:/TegraExplorer/scripts/.\n"
+        "Do NOT copy raw SYSTEM:/save blobs — that bricks.\n"
+        "Back up the destination SYSTEM partition first.\n";
     const std::vector<u8> body(text, text + std::strlen(text));
     sd.write_entire_file((pack_dir + "/README.txt").c_str(), body);
 }
@@ -268,11 +228,13 @@ auto Export(ui::ProgressBox* pbox, Report& out) -> Result {
     for (const auto& spec : kSaves) {
         if (pbox) {
             R_TRY(pbox->ShouldExitResult());
-            pbox->NewTransfer(spec.hex);
+            pbox->NewTransfer(i18n::get(spec.label));
         }
-        auto save = OpenForDump(spec);
+        log_write("[NAND] opening %s (%s)\n", spec.label, spec.hex);
+        auto save = TryOpen(spec.id);
         if (R_FAILED(save.GetFsOpenResult())) {
-            log_write("[NAND] open %s failed 0x%X\n", spec.hex, save.GetFsOpenResult());
+            log_write("[NAND] %s in use 0x%X (no process kill; use dump.te if this is play hours)\n",
+                spec.label, save.GetFsOpenResult());
             SetFlag(out, spec.hex, false);
             continue;
         }
@@ -289,7 +251,7 @@ auto Export(ui::ProgressBox* pbox, Report& out) -> Result {
         log_write("[NAND] dump %s files=%u\n", spec.hex, files);
     }
 
-    WriteScript(sd, out.dir);
+    WriteScripts(sd, out.dir);
     WriteReadme(sd, out.dir);
     WriteManifest(sd, out.dir, out);
 
@@ -337,9 +299,10 @@ auto Import(ui::ProgressBox* pbox, const std::string& dir, Report& out) -> Resul
         }
         if (pbox) {
             R_TRY(pbox->ShouldExitResult());
-            pbox->NewTransfer(spec.hex);
+            pbox->NewTransfer(i18n::get(spec.label));
         }
-        auto save = OpenForWrite(spec);
+        log_write("[NAND] restore opening %s (%s)\n", spec.label, spec.hex);
+        auto save = TryOpen(spec.id);
         if (R_FAILED(save.GetFsOpenResult())) {
             log_write("[NAND] restore open %s failed 0x%X\n", spec.hex, save.GetFsOpenResult());
             SetFlag(out, spec.hex, false);

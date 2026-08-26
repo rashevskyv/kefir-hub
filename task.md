@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.628**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.629**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.628 (vector folders + avatar search)
+## Поточний delivery: v0.13.629 (NAND dump no-kill + TE dump.te)
+
+- [x] `NAND-NO-KILL-629` — OpenForDump/Write без terminate; зайняте сейви пропускаємо.
+- [x] `NAND-TE-DUMP-629` — dump.te + копія в TegraExplorer/scripts; прогрес словами.
+- [x] `DOCS-BUMP-629` — версію піднято до `0.13.629`.
+
+## Попередній delivery: v0.13.628 (vector folders + avatar search)
 
 - [x] `ICON-FOLDER-VEC-628` — векторний контур папки, без чорних плит, назви по центру.
 - [x] `AVATAR-EMBED-SGDB-628` — пресети #embed; SteamGridDB з клавіатури назви.

@@ -1,0 +1,64 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# Dump play hours when Horizon will not open 00F0 (in use).
+# Run from TegraExplorer in RCM. Prefer emuMMC.
+# Writes decrypted PlayEvent.dat to sd:/config/kefir/nand_transfer/tegra/
+
+clear()
+println("Kefir Hub: dump play hours")
+println("Opens 00F0 with this console keys. Horizon is off.")
+println("")
+
+targets = ["Cancel"].copy()
+targets.add("emuMMC SYSTEM")
+targets.add("sysMMC SYSTEM")
+choice = menu(targets, 0)
+if (!choice) {
+    exit()
+}
+
+if (choice == 1) {
+    if (!emu()) {
+        println("No emuMMC")
+        pause()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    rc = mountsys("SYSTEM")
+}
+
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    pause()
+    exit()
+}
+
+packRoot = "sd:/config/kefir/nand_transfer"
+mkdir(packRoot)
+pack = combinepath(packRoot, "tegra")
+mkdir(pack)
+dst = combinepath(pack, "80000000000000F0")
+mkdir(dst)
+
+bis = "bis:/save/80000000000000F0"
+if (!fsexists(bis)) {
+    println("No play-hours save on this SYSTEM")
+    pause()
+    exit()
+}
+
+println("Opening play hours...")
+saveObj = readsave(bis)
+println("Reading PlayEvent.dat")
+bytes = saveObj.read("PlayEvent.dat")
+out = combinepath(dst, "PlayEvent.dat")
+writefile(out, bytes)
+println("Wrote", out)
+println("")
+println("Done. On the other console: Hub Restore profiles & play hours,")
+println("or restore.te if Hub cannot open 00F0 there either.")
+pause()

@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.628**. Завершені плани збережено в
+Поточний delivery — **v0.13.629**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.628 — vector folder tiles; avatar search; presets actually load
+## Поточний delivery: v0.13.629 — NAND dump never kills services; TE dump.te fallback
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Бекап профілів і годин більше не terminate account/pdm (чорний екран). TryOpen, зайняте пропускаємо.
+2. Прогрес словами (Profiles / Play hours). Якщо години зайняті — dump.te в паку і в TegraExplorer/scripts.
+3. UI пояснює різницю: Backup user = один профіль, новий UID, без годин.
+
+## Попередній delivery: v0.13.628 — vector folder tiles; avatar search; presets actually load
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Макет Icon: папка малюється nanovg-контуром (не 50px PNG); прев’ю без чорних плиток; назви по центру, не з’їжджають вліво.

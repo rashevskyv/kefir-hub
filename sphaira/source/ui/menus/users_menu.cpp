@@ -669,22 +669,22 @@ void Menu::ShowContextMenu() {
         }, true, "Pick a built-in avatar, an SD image, or SteamGridDB."_i18n);
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
-        }, true, "Write name, avatar and Nintendo link to SD. The user stays on this console."_i18n);
+        }, true, "One profile: name, avatar, Nintendo link. Restore makes a new user. No play hours."_i18n);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
         }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
     }
     options->Add<SidebarEntryCallback>("Restore user pack"_i18n, [this](){
         ConfirmRestore();
-    }, true, "Create a new profile from a pack (name, avatar, link). New UID — play hours are not copied. Use Backup profiles & play hours to keep hours."_i18n);
+    }, true, "Create a new profile from a pack. New user ID — play hours stay on the old console. For hours use Backup profiles & play hours."_i18n);
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
         ConfirmNandBackup();
-    }, true, "Decrypt account (0010) and play log (00F0) to SD. Restore on the other console with Restore profiles & play hours. Horizon encrypts with that console's keys. Destination hours are replaced."_i18n);
+    }, true, "All profiles on this console plus play hours, same user IDs. For moving to another console. If a save is locked, Hub skips it and leaves a TegraExplorer script."_i18n);
     options->Add<SidebarEntryCallback>("Restore profiles & play hours"_i18n, [this](){
         ConfirmNandRestore();
-    }, true, "Write a decrypted pack into this console's system saves. Horizon encrypts with this console's keys. Hours and profiles on this NAND are replaced."_i18n);
+    }, true, "Write that pack into this console. Hours and profiles here are replaced. If a save is locked, use restore.te in TegraExplorer."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
@@ -768,7 +768,7 @@ void Menu::ConfirmBackup() {
         return;
     }
     App::Push<OptionBox>(
-        "Write a user pack (name, avatar, Nintendo link) to SD? The user is not deleted."_i18n,
+        "Copy this profile's name, avatar and Nintendo link to SD? Restore creates a new user. Play hours are not included. The user stays on this console."_i18n,
         "Cancel"_i18n, "Backup"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
@@ -779,7 +779,7 @@ void Menu::ConfirmBackup() {
 
 void Menu::ConfirmNandBackup() {
     App::Push<OptionBox>(
-        "Decrypt this NAND's profiles (0010) and play hours (00F0) to SD. On the destination open Restore profiles & play hours and pick the pack. Horizon encrypts with that console's keys. Destination hours and profiles will be replaced. Back up SYSTEM first. emuNAND recommended."_i18n,
+        "Copy every profile on this console plus their play hours to SD (same users, with hours). If the system holds a save, Hub skips it and writes a TegraExplorer script instead of killing services. Not the same as Backup user."_i18n,
         "Cancel"_i18n, "Backup"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
@@ -790,7 +790,7 @@ void Menu::ConfirmNandBackup() {
 
 void Menu::ConfirmNandRestore() {
     App::Push<OptionBox>(
-        "Write a Kefir pack (0010/00F0) into this NAND? Hours and profiles here will be replaced. Back up SYSTEM first. emuNAND recommended. Y selects the pack folder."_i18n,
+        "Write a profiles & play hours pack into this console? Users and hours here will be replaced. If a save is locked, use restore.te in TegraExplorer. Back up SYSTEM first. Y selects the pack folder."_i18n,
         "Cancel"_i18n, "Choose folder"_i18n, 1,
         [this](auto op) {
             if (!op || *op != 1) {
@@ -980,32 +980,32 @@ void Menu::RunNandBackup() {
     auto report = std::make_shared<nand_transfer::Report>();
     App::Push<ProgressBox>(0, "Backup profiles & play hours"_i18n, "Backup profiles & play hours"_i18n,
         [report](auto pbox) -> Result {
-            pbox->NewTransfer("Decrypting system saves"_i18n);
             R_TRY(nand_transfer::Export(pbox, *report));
             R_SUCCEED();
         }, [this, report](Result rc) {
             if (R_FAILED(rc) || report->dir.empty()) {
                 App::Push<OptionBox>(
-                    "Could not dump system saves. Close games and other homebrew, then try again."_i18n,
+                    "Horizon would not open the system saves. Reboot to RCM, open TegraExplorer, run dump.te (also under TegraExplorer/scripts). That dumps play hours without Horizon."_i18n,
                     "OK"_i18n);
                 return;
             }
-            std::string msg = "Wrote decrypted saves to "_i18n + report->dir + ". ";
-            if (!report->save_00F0) {
-                msg += "Play hours (00F0) could not be opened. Close games and retry. "_i18n;
+            std::string msg = "Copied to "_i18n + report->dir + ". ";
+            if (report->save_0010 && report->save_00F0) {
+                msg += "Profiles and play hours are in the pack. On the other console: Restore profiles & play hours."_i18n;
+            } else {
+                if (report->save_0010) {
+                    msg += "Profiles copied. "_i18n;
+                } else {
+                    msg += "Profiles were locked by the system. "_i18n;
+                }
+                if (report->save_00F0) {
+                    msg += "Play hours copied. "_i18n;
+                } else {
+                    msg += "Play hours were locked. Reboot to RCM, TegraExplorer → dump.te (or TegraExplorer/scripts/dump.te). "_i18n;
+                }
+                msg += "On the other console: Restore profiles & play hours, or restore.te if a save stays locked."_i18n;
             }
-            if (!report->save_0010) {
-                msg += "Account save (0010) could not be opened. "_i18n;
-            }
-            msg += "Copy this folder to the destination SD, then Restore profiles & play hours there. Reboot this console."_i18n;
-            App::Push<OptionBox>(
-                msg,
-                "Later"_i18n, "Reboot"_i18n, 1,
-                [](auto op) {
-                    if (op && *op == 1) {
-                        utils::requestForcedReboot();
-                    }
-                });
+            App::Push<OptionBox>(msg, "OK"_i18n);
             Refresh();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
@@ -1013,7 +1013,7 @@ void Menu::RunNandBackup() {
 void Menu::RunNandRestore(const std::string& dir) {
     if (!nand_transfer::IsPack(dir)) {
         App::Push<OptionBox>(
-            "That folder is not a profiles & play hours pack (needs 80000000000000F0 or 8000000000000010)."_i18n,
+            "That folder is not a profiles & play hours pack."_i18n,
             "OK"_i18n);
         return;
     }
@@ -1026,8 +1026,8 @@ void Menu::RunNandRestore(const std::string& dir) {
         }, [this, report](Result rc) {
             if (R_FAILED(rc)) {
                 const auto msg = (rc == Result_FsInvalidType)
-                    ? "That folder is not a profiles & play hours pack (needs 80000000000000F0 or 8000000000000010)."_i18n
-                    : "Could not write system saves. Close games and other homebrew, then try again. If play hours stay locked, TegraExplorer restore.te in the pack is the fallback."_i18n;
+                    ? "That folder is not a profiles & play hours pack."_i18n
+                    : "Horizon would not open the system saves to write. Reboot to RCM and run restore.te from the pack (also under TegraExplorer/scripts)."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
             }
