@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.629**. Завершені плани збережено в
+Поточний delivery — **v0.13.630**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.629 — NAND dump never kills services; TE dump.te fallback
+## Поточний delivery: v0.13.630 — Phase 1: Readable per-user SD backup pack (profile, link, playtime TSV, saves)
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Backup user створює повноцінний пак профілю на SD: profile.json, avatar.jpg, Nintendo link (baas/nas), README.txt та читабельний playtime.tsv.
+2. Вибір ігрових сейвів через SavePickMenu з подальшим бекапом у сумісному ZIP форматі всередині пака під saves/.
+3. Безпечна робота з PDM статистикою (pdmqry) без terminate сервісів та ізольований бекап сейвів для кожного окремого профілю. Відновлення сейвів/часу та ремапінг UID у цій фазі не виконуються.
+
+## Попередній delivery: v0.13.629 — NAND dump never kills services; TE dump.te fallback
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Бекап профілів і годин більше не terminate account/pdm (чорний екран). TryOpen, зайняте пропускаємо.

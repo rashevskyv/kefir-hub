@@ -226,10 +226,10 @@ auto BuildDbiGameFolderName(const Entry& e) -> fs::FsPath {
     return out;
 }
 
-auto BuildDbiSavePath(const Entry& e, const struct tm& tm) -> fs::FsPath {
+auto BuildDbiSavePath(const Entry& e, const struct tm& tm, const fs::FsPath& base) -> fs::FsPath {
     fs::FsPath path;
     std::snprintf(path, sizeof(path), "%s/%s/%04d%02d%02d/%016lX_%c_%04d%02d%02d%02d%02d%02d_%u.zip",
-        DBI_SAVES_PATH, BuildDbiGameFolderName(e).s,
+        base.s, BuildDbiGameFolderName(e).s,
         tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
         e.application_id, GetDbiTypeLetter(e.save_data_type),
         tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,

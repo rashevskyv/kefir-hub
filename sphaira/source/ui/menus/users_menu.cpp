@@ -97,7 +97,7 @@ struct SavePickMenu final : MenuBase {
             }})
         );
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 70.f});
-        SetTitleSubHeading("X marks games to back up. A backs up the marked saves, then deletes the user."_i18n, true);
+        SetTitleSubHeading("X marks games to back up. A backs up the marked saves."_i18n, true);
         SetSubHeading(std::to_string(m_entries.size()));
     }
 
@@ -767,14 +767,17 @@ void Menu::ConfirmBackup() {
     if (uids.empty()) {
         return;
     }
-    App::Push<OptionBox>(
-        "Copy this profile's name, avatar and Nintendo link to SD? Restore creates a new user. Play hours are not included. The user stays on this console."_i18n,
-        "Cancel"_i18n, "Backup"_i18n, 1,
-        [this](auto op) {
-            if (op && *op == 1) {
-                RunBackup();
-            }
-        });
+    auto saves = CollectSaves(uids);
+    if (saves.empty()) {
+        RunBackup({});
+        return;
+    }
+    App::Push<SavePickMenu>(std::move(saves), [this](auto picked) {
+        if (!picked) {
+            return;
+        }
+        RunBackup(std::move(*picked));
+    });
 }
 
 void Menu::ConfirmNandBackup() {
@@ -1050,22 +1053,37 @@ void Menu::RunNandRestore(const std::string& dir) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunBackup() {
+void Menu::RunBackup(std::vector<save::Entry> picked_saves) {
     const auto uids = SelectedUids();
     if (uids.empty()) {
         return;
     }
     auto dirs = std::make_shared<std::vector<std::string>>();
-    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs](auto pbox) -> Result {
+    auto helper = std::make_shared<save::Menu>(MenuFlag_None);
+    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs, picked_saves = std::move(picked_saves), helper](auto pbox) mutable -> Result {
         pbox->NewTransfer("Writing user pack"_i18n);
         R_TRY(account_user::ExportUserPacks(uids, *dirs));
+        for (size_t i = 0; i < uids.size() && i < dirs->size(); i++) {
+            const auto& uid = uids[i];
+            const auto& dir = (*dirs)[i];
+            std::vector<save::Entry> user_saves;
+            for (const auto& s : picked_saves) {
+                if (account_link::UidHex(s.uid) == account_link::UidHex(uid)) {
+                    user_saves.push_back(s);
+                }
+            }
+            if (!user_saves.empty()) {
+                pbox->NewTransfer("Backing up saves"_i18n);
+                R_TRY(helper->BackupSavesOn(pbox, user_saves, fs::FsPath{dir + "/saves"}));
+            }
+        }
         R_SUCCEED();
     }, [this, dirs](Result rc) {
         if (R_FAILED(rc) || dirs->empty()) {
             App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
             return;
         }
-        App::Push<OptionBox>("Exported to "_i18n + dirs->front(), "OK"_i18n);
+        App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes playtime data and selected saves."_i18n, "OK"_i18n);
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }

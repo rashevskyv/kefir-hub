@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.629** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.630** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.630 — phase 1: readable per-user SD backup export
+
+- Реалізовано фазу 1 бекапу користувача (експорт): створення окремого пака на SD (`/config/kefir/user_packs/<timestamp>_<name>`), що містить `profile.json`, `avatar.jpg`, прив'язку Nintendo (`baas/`, `nas/`), `README.txt`, читабельний `playtime.tsv` та збереження гри у теці `saves/`.
+- `playtime.tsv`: структурований TSV-файл (Title ID, Title Name, Playtime ns, Launches, Timestamps), зібраний безпечно через `pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId` та `nsListApplicationRecord` без вбивства чи перезапуску процесів.
+- Потік Backup user перевикористовує `SavePickMenu`: користувач може обрати ігрові сейви для включення в пак (за замовчуванням усі вибрані, Cancel скасовує бекап, відсутність сейвів не блокує експорт профілю).
+- Підтримка мультиселекту: для кожного вибраного профілю створюється свій пак, що містить виключно його сейви без змішування.
+- Відновлення сейвів, відновлення ігрового часу, ремапінг UID, робота з сирою PDM-базою та крос-консольний трансфер у цій фазі не реалізовувалися (лише експорт даних).
+- Агент не компілює.
 
 ## v0.13.629 — profiles & hours dump never kills Horizon
 

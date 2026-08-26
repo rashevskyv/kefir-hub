@@ -39,7 +39,7 @@ auto BuildSavePathName(const Entry& e, bool force_id_path) -> fs::FsPath;
 auto BuildSaveBasePathLegacy(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath;
 auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath;
 auto BuildDbiGameFolderName(const Entry& e) -> fs::FsPath;
-auto BuildDbiSavePath(const Entry& e, const struct tm& tm) -> fs::FsPath;
+auto BuildDbiSavePath(const Entry& e, const struct tm& tm, const fs::FsPath& base = DBI_SAVES_PATH) -> fs::FsPath;
 auto IsDbiBackupName(const Entry& e, const char* name) -> bool;
 auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool;
 auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath>;

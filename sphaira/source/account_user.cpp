@@ -4,6 +4,7 @@
 #include "fs.hpp"
 #include "image.hpp"
 #include "log.hpp"
+#include "title_info.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -291,6 +292,108 @@ auto CopyLinkFiles(fs::FsNativeSd& sd, const std::string& dump_dir, const std::s
     }
 }
 
+struct AppInfo {
+    u64 app_id{};
+    std::string name;
+};
+
+auto CollectInstalledApps() -> std::vector<AppInfo> {
+    std::vector<AppInfo> apps;
+    std::vector<NsApplicationRecord> records(32);
+    s32 offset = 0;
+    while (true) {
+        s32 count = 0;
+        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &count)) || count <= 0) {
+            break;
+        }
+        for (s32 i = 0; i < count; i++) {
+            const auto app_id = records[i].application_id;
+            if (!app_id) {
+                continue;
+            }
+            if ((app_id & 0x0500000000000000) == 0x0500000000000000) {
+                continue;
+            }
+            title::MetaEntries installed_content;
+            if (R_FAILED(title::GetMetaEntries(app_id, installed_content)) || installed_content.empty()) {
+                continue;
+            }
+            std::string name;
+            if (auto* data = title::Get(app_id); data && data->status == title::NacpLoadStatus::Loaded) {
+                name = data->lang.name;
+            }
+            if (name.empty()) {
+                NsApplicationControlData control{};
+                u64 actual_size = 0;
+                if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, &control, sizeof(control), &actual_size))) {
+                    NacpLanguageEntry* lang = nullptr;
+                    if (R_SUCCEEDED(nacpGetLanguageEntry(&control.nacp, &lang)) && lang) {
+                        name = lang->name;
+                    }
+                }
+            }
+            if (name.empty()) {
+                name = "Unknown";
+            }
+            for (char& c : name) {
+                if (c == '\t' || c == '\r' || c == '\n') {
+                    c = ' ';
+                }
+            }
+            apps.push_back({app_id, std::move(name)});
+        }
+        offset += count;
+    }
+    return apps;
+}
+
+void WriteUserReadme(fs::FsNativeSd& sd, const std::string& dir, const std::string& nickname, const std::string& hex) {
+    const std::string readme =
+        "User Backup Pack\n"
+        "================\n\n"
+        "This folder contains the exported backup for user profile: " + nickname + " (" + hex + ").\n\n"
+        "Contents:\n"
+        "- profile.json: Profile metadata (nickname and original UID).\n"
+        "- avatar.jpg: User profile avatar icon.\n"
+        "- baas/, nas/: Official or offline Nintendo Account link tokens and registration data (if linked).\n"
+        "- playtime.tsv: Exported play statistics (playtime, launch counts, timestamps) for installed applications.\n"
+        "- saves/: User-selected game save data backups.\n\n"
+        "Notes:\n"
+        "1. Game saves are stored as ordinary compatible ZIP backups under the saves/ folder.\n"
+        "2. playtime.tsv is an inspection export only in this phase.\n"
+        "3. This phase exports data only; it does not yet restore game saves or playtime statistics to a new user account ID.\n"
+        "4. Unavailable or failing PDM play statistics queries are non-fatal and do not prevent profile or save backup.\n";
+
+    sd.write_entire_file((dir + "/README.txt").c_str(),
+        std::vector<u8>(readme.begin(), readme.end()));
+}
+
+void WriteUserPlaytimeTsv(fs::FsNativeSd& sd, const std::string& dir, const AccountUid& uid, const std::vector<AppInfo>& apps, bool pdm_ok) {
+    std::string tsv = "title_id\ttitle_name\tplaytime_ns\ttotal_launches\tfirst_timestamp_user\tlast_timestamp_user\tfirst_timestamp_network\tlast_timestamp_network\n";
+
+    for (const auto& app : apps) {
+        PdmPlayStatistics stats{};
+        if (pdm_ok) {
+            pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId(app.app_id, uid, true, &stats);
+        }
+        char row[512];
+        std::snprintf(row, sizeof(row),
+            "%016lX\t%s\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu\n",
+            app.app_id,
+            app.name.c_str(),
+            static_cast<unsigned long long>(stats.playtime),
+            static_cast<unsigned long long>(stats.total_launches),
+            static_cast<unsigned long long>(stats.first_timestamp_user),
+            static_cast<unsigned long long>(stats.last_timestamp_user),
+            static_cast<unsigned long long>(stats.first_timestamp_network),
+            static_cast<unsigned long long>(stats.last_timestamp_network));
+        tsv += row;
+    }
+
+    sd.write_entire_file((dir + "/playtime.tsv").c_str(),
+        std::vector<u8>(tsv.begin(), tsv.end()));
+}
+
 auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool terminate_if_needed) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
 
@@ -317,6 +420,12 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     std::string dump_dir;
     account_link::ExportAccountSave(dump_dir, terminate_if_needed);
 
+    title::Init();
+    const auto apps = CollectInstalledApps();
+    title::Exit();
+
+    const bool pdm_ok = R_SUCCEEDED(pdmqryInitialize());
+
     fs::FsNativeSd sd;
     char stamp[32]{};
     const auto t = std::time(nullptr);
@@ -335,9 +444,17 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
         if (!dump_dir.empty()) {
             CopyLinkFiles(sd, dump_dir, dir, r.hex);
         }
+        WriteUserReadme(sd, dir, r.nickname, r.hex);
+        WriteUserPlaytimeTsv(sd, dir, r.uid, apps, pdm_ok);
+
         out_dirs.push_back(dir);
         log_write("[USER] pack written to %s\n", dir.c_str());
     }
+
+    if (pdm_ok) {
+        pdmqryExit();
+    }
+
     R_SUCCEED();
 }
 

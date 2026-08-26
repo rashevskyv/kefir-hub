@@ -83,9 +83,8 @@ void Menu::BackupSaves(std::vector<Entry> entries) {
     BackupSaves(std::move(entries), MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
-auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result {
+auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs::FsPath& backup_root) -> Result {
     const auto location = MakeSdCardDumpLocation();
-    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
     for (auto& e : entries) {
         R_TRY(pbox->ShouldExitResult());
         detail::LoadControlEntry(e);
@@ -1080,8 +1079,12 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     const auto now = std::time(NULL);
     const auto now_tm = *std::localtime(&now);
 
+    const auto dbi_base = (backup_root == "/dumps" || backup_root == DEFAULT_BACKUP_ROOT)
+        ? fs::FsPath{DBI_SAVES_PATH}
+        : backup_root;
+
     const auto path = dbi_format
-        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm))
+        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm, dbi_base))
         : fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
     const auto temp_path = path + ".temp";
 

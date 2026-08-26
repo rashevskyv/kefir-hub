@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.629**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.630**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.629 (NAND dump no-kill + TE dump.te)
+## Поточний delivery: v0.13.630 (readable per-user backup export)
+
+- [x] `USER-BACKUP-PACK-630` — експорт пака профілю: profile.json, avatar.jpg, baas/nas, README.txt.
+- [x] `USER-PLAYTIME-TSV-630` — генерація читабельного playtime.tsv через pdmqry та ns control data без вбивства сервісів.
+- [x] `USER-SAVES-PICK-630` — інтеграція SavePickMenu у Backup user, вивантаження вибраних сейвів у пак під saves/.
+- [x] `DOCS-BUMP-630` — версію піднято до `0.13.630`.
+
+## Попередній delivery: v0.13.629 (NAND dump no-kill + TE dump.te)
 
 - [x] `NAND-NO-KILL-629` — OpenForDump/Write без terminate; зайняте сейви пропускаємо.
 - [x] `NAND-TE-DUMP-629` — dump.te + копія в TegraExplorer/scripts; прогрес словами.

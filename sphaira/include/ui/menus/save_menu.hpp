@@ -99,7 +99,7 @@ struct Menu final : grid::Menu {
     static auto ListAccountSaves(const AccountUid& uid) -> std::vector<Entry>;
     void BackupSaves(std::vector<Entry> entries);
     void DeleteSaves(std::vector<Entry> entries);
-    auto BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result;
+    auto BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs::FsPath& backup_root = "/dumps") -> Result;
     auto DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result;
 
 private:
