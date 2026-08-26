@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.622** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.623** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.623 — play-hour dump must not kill ns
+
+- Бекап 00F0, якщо сейв зайнятий, зупиняв `ns` (0100000000000005) — Horizon падав у чорний екран, виглядало як повне вимкнення.
+- Тепер лише pdm. Якщо F0 не відкрився — пропускаємо його в паку, консоль жива.
+- Агент не компілює.
 
 ## v0.13.622 — user UID, folder mosaics, avatar crop
 

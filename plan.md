@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.622**. Завершені плани збережено в
+Поточний delivery — **v0.13.623**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.622 — UID in all user layouts, icon mosaics, avatar crop
+## Поточний delivery: v0.13.623 — do not kill ns during play-hour dump
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Backup/restore 00F0 більше не зупиняє `ns` (чорний екран / повне вимкнення). Лише pdm, і тільки якщо сейв зайнятий.
+
+## Попередній delivery: v0.13.622 — UID in all user layouts, icon mosaics, avatar crop
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Users: UID у списку та іконках, не лише в сітці.

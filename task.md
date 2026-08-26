@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.622**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.623**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.622 (UID, folder mosaics, avatar crop)
+## Поточний delivery: v0.13.623 (no ns kill on F0 dump)
+
+- [x] `NAND-NO-NS-623` — OpenForDump/OpenForWrite більше не terminate `ns`.
+- [x] `DOCS-BUMP-623` — версію піднято до `0.13.623`.
+
+## Попередній delivery: v0.13.622 (UID, folder mosaics, avatar crop)
 
 - [x] `USERS-UID-622` — UID у List і Icon, не лише Grid.
 - [x] `FILES-ICON-622` — Icon layout: мозаїка папки, contain для картинок; те саме в пікері і файловому менеджері.

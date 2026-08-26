@@ -21,7 +21,6 @@ constexpr u64 TID_BCAT = 0x010000000000000CULL;
 constexpr u64 TID_ACCOUNT = 0x010000000000001EULL;
 constexpr u64 TID_PDM = 0x010000000000002DULL;
 constexpr u64 TID_OLSC = 0x010000000000003EULL;
-constexpr u64 TID_NS = 0x0100000000000005ULL;
 
 struct SaveSpec {
     u64 id;
@@ -78,7 +77,7 @@ auto PackLooksRight(fs::Fs& sd, const std::string& dir) -> bool {
            sd.DirExists((dir + "/8000000000000010").c_str());
 }
 
-void Kill(bool account, bool pdm, bool ns) {
+void Kill(bool account, bool pdm) {
     if (R_FAILED(pmshellInitialize())) {
         return;
     }
@@ -89,9 +88,6 @@ void Kill(bool account, bool pdm, bool ns) {
     }
     if (pdm) {
         pmshellTerminateProgram(TID_PDM);
-    }
-    if (ns) {
-        pmshellTerminateProgram(TID_NS);
     }
     pmshellExit();
     svcSleepThread(200000000);
@@ -106,20 +102,12 @@ auto TryOpen(u64 id) -> fs::FsNativeSave {
 
 auto OpenForWrite(const SaveSpec& spec) -> fs::FsNativeSave {
     if (spec.kill_account) {
-        Kill(true, false, false);
+        Kill(true, false);
     }
     if (spec.kill_pdm) {
-        Kill(false, true, false);
+        Kill(false, true);
     }
-    auto save = TryOpen(spec.id);
-    if (R_SUCCEEDED(save.GetFsOpenResult())) {
-        return save;
-    }
-    if (spec.kill_pdm) {
-        Kill(false, true, true);
-        save = TryOpen(spec.id);
-    }
-    return save;
+    return TryOpen(spec.id);
 }
 
 void WipeRoot(fs::Fs& f) {
@@ -151,19 +139,16 @@ auto OpenForDump(const SaveSpec& spec) -> fs::FsNativeSave {
         return save;
     }
     if (spec.kill_account) {
-        Kill(true, false, false);
+        log_write("[NAND] retry %s after stopping account\n", spec.hex);
+        Kill(true, false);
         save = TryOpen(spec.id);
         if (R_SUCCEEDED(save.GetFsOpenResult())) {
             return save;
         }
     }
     if (spec.kill_pdm) {
-        Kill(false, true, false);
-        save = TryOpen(spec.id);
-        if (R_SUCCEEDED(save.GetFsOpenResult())) {
-            return save;
-        }
-        Kill(false, true, true);
+        log_write("[NAND] retry %s after stopping pdm (not ns)\n", spec.hex);
+        Kill(false, true);
         save = TryOpen(spec.id);
     }
     return save;
