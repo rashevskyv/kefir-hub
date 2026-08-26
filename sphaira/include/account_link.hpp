@@ -18,6 +18,7 @@ struct User {
     std::string uid_hex;
     LinkKind kind{LinkKind::None};
     bool linked_known{};
+    bool horizon_linked{};
 };
 
 auto UidHex(const AccountUid& uid) -> std::string;

@@ -5,13 +5,20 @@ walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
-## v0.13.636 — restrict auto-forwarder to EmuNAND
+## v0.13.636 — query Horizon account link status via read-only IPC
 
-- `forwarder_auto::StartCheck(bool is_emummc)`: додано параметр режиму NAND. При запуску в SysNAND (`!is_emummc`) функція миттєво повертається без захоплення атомарного прапорця створення потоку (`g_thread_created`) та створення фонового воркера. Будь-які автоматичні операції встановлення, перевірки чи видалення форвардерів у SysNAND повністю вимкнені.
-- У середовищі EmuNAND (`is_emummc == true`) збережено попередню автоматичну поведінку: тихе фонове виявлення та встановлення іконки Kefir Hub / Homebrew Menu на стартовому екрані HOME Menu.
-- `sphaira/source/app.cpp`: передає `App::IsEmummc()` у єдиній виробничій точці виклику `forwarder_auto::StartCheck` після ініціалізації графіки.
-- Ручне створення та встановлення форвардерів (Forwarder Editor / опції Homebrew) залишено без змін.
-- `tests/test_forwarder_auto_lifecycle.cpp`: додано явні перевірки життєвого циклу воркера для EmuNAND (потік створюється і запускається) та SysNAND (потік не створюється, атомарні прапорці та стан не резервуються, виклик `StopCheck` є безпечним no-op).
+- Tools → Users: замінено ненадійну перевірку файлів сейву на прямий системний IPC-запит доступності Network Service Account (Nintendo Account) в Horizon OS. Раніше відкриття файлів утримуваного системою сейву акаунта `0x8000000000000010` призводило до постійного статусу «Link status unavailable» для всіх профілів.
+- `sphaira/source/account_link.cpp`: додано приватний хелпер `QueryHorizonLinkStatus(uid, out_linked)`:
+  - тимчасово відкриває системний сервіс `acc:su` (`smGetService`);
+  - через команду 102 (`GetBaasAccountManagerForSystemService`) отримує `IManagerForSystemService` для заданого `AccountUid`;
+  - викликає команду 0 (`CheckAvailability`): успішний Result означає `Linked` (`out_linked = true`), штатний `ResultNetworkServiceAccountRegistrationRequired` (`MAKERESULT(124, 200)`) означає `Not linked` (`out_linked = false`), а всі інші помилки прокидаються як збій IPC (`Link status unavailable`);
+  - гарантовано закриває всі отримані `Service`-об'єкти на кожному шляху виходу (`ON_SCOPE_EXIT`).
+- `account_link::ListUsers()`: стан кожного профілю опитується напряму через `QueryHorizonLinkStatus`. Виклик `TryOpenAccountSave()` повністю прибрано з шляху отримання списку користувачів. При реальному збої IPC помилка логується із зазначенням UID та Result.
+- `sphaira/source/ui/menus/users_menu.cpp`: оновлено `Menu::StatusLabel()`:
+  - `Linked` — Horizon повідомляє про доступність Network Service Account (`horizon_linked == true`);
+  - `Not linked` — Horizon повідомляє про недоступність NSA (`horizon_linked == false`);
+  - `Link status unavailable` — лише коли виклик системного IPC зазнає збою (`!linked_known`).
+- Збережено код FakeLink/Linkalho для подальшої діагностики без перекриття основного статусу Horizon у цій доставці. Жодних мережевих запитів, реєстрацій чи модифікацій сейвів не виконується; `kForceUpdateForTest` залишається `false`.
 - Агент не компілює.
 
 ## v0.13.635 — clarify Nintendo Account link status in Users UI

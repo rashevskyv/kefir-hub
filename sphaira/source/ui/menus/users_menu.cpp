@@ -443,11 +443,8 @@ auto Menu::StatusLabel(const account_link::User& u) const -> std::string {
     if (!u.linked_known) {
         return "Link status unavailable"_i18n;
     }
-    if (u.kind == account_link::LinkKind::Official) {
+    if (u.horizon_linked) {
         return "Linked"_i18n;
-    }
-    if (u.kind == account_link::LinkKind::Offline) {
-        return "Not linked · FakeLink"_i18n;
     }
     return "Not linked"_i18n;
 }

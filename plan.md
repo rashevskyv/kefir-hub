@@ -4,14 +4,15 @@
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.636 — Restrict auto-forwarder to EmuNAND
+## Поточний delivery: v0.13.636 — Query Horizon account link status via read-only IPC
 
 Статус: програмну частину реалізовано. Агент не компілює.
-1. `forwarder_auto::StartCheck` оновлено для прийому булевого параметра `is_emummc`; `sphaira/source/app.cpp` передає поточний стан `App::IsEmummc()`.
-2. У режимі SysNAND (`!is_emummc`) функція `StartCheck` негайно повертає керування без захоплення атомарного прапорця створення потоку та без запуску фонового воркера (автоматичне встановлення, перевірка чи видалення форвардерів повністю вимкнені).
-3. У режимі EmuNAND збережено поточну автоматичну поведінку фонового виявлення та встановлення форвардера Kefir Hub.
-4. Розширено `tests/test_forwarder_auto_lifecycle.cpp` прямими перевірками для EmuNAND та SysNAND режимів.
-5. Ручне встановлення форвардерів (Forwarder Editor) залишено без змін.
+1. У `sphaira/source/account_link.cpp` додано приватний IPC-хелпер `QueryHorizonLinkStatus(uid, out_linked)`, який тимчасово відкриває `acc:su` через `smGetService`, викликає команду 102 (`GetBaasAccountManagerForSystemService`) для отримання `IManagerForSystemService` відповідного UID, та опитує команду 0 (`CheckAvailability`). Успішний результат встановлює `out_linked = true` та повертає успіх, штатний `ResultNetworkServiceAccountRegistrationRequired` (`MAKERESULT(124, 200)`) встановлює `out_linked = false` та повертає успіх, а всі інші помилки прокидаються як збій IPC без змін.
+2. Обидва системні сервісні об'єкти гарантовано закриваються на кожному шляху виконання через `ON_SCOPE_EXIT(serviceClose(...))`.
+3. `account_link::ListUsers()` переведено на пряме опитування Horizon через новий хелпер без монтування та відкриття Account system save (`0x8000000000000010`) та без зупинки Horizon-процесів. При збої IPC помилка логується разом із UID і Result.
+4. Структуру `account_link::User` розширено полем `horizon_linked`.
+5. У `sphaira/source/ui/menus/users_menu.cpp` оновлено `Menu::StatusLabel()`: відображається «Linked» коли Horizon повідомляє про доступність Network Service Account (`horizon_linked == true`), «Not linked» коли NSA недоступний (`horizon_linked == false`), та «Link status unavailable» лише у випадку реального збою IPC (`!linked_known`).
+6. `kForceUpdateForTest` залишається `false`.
 
 ## Попередній delivery: v0.13.635 — Clarify Nintendo Account link status in Users UI
 

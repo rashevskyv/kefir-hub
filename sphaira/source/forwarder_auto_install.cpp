@@ -321,11 +321,7 @@ void ThreadFunc(void*) {
 
 } // namespace
 
-void StartCheck(bool is_emummc) {
-    if (!is_emummc) {
-        return;
-    }
-
+void StartCheck() {
     if (g_thread_created.exchange(true)) {
         return;
     }

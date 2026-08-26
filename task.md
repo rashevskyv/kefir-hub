@@ -6,10 +6,11 @@
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.636 (restrict auto-forwarder to EmuNAND)
+## Поточний delivery: v0.13.636 (query Horizon account link status)
 
-- [x] `FORWARDER-EMUNAND-ONLY-636` — `forwarder_auto::StartCheck(bool is_emummc)` запускає фоновий потік лише на EmuNAND; на SysNAND виклик є безпечним no-op без виділення ресурсів потоку.
-- [x] `FORWARDER-TESTS-636` — оновлено `tests/test_forwarder_auto_lifecycle.cpp` з перевіркою запуску на EmuNAND та блокування на SysNAND.
+- [x] `USERS-IPC-LINK-STATUS-636` — реалізовано приватний хелпер `QueryHorizonLinkStatus` через `acc:su` (команда 102 `GetBaasAccountManagerForSystemService` та команда 0 `CheckAvailability` менеджера).
+- [x] `USERS-HORIZON-STATUS-LABEL-636` — `Menu::StatusLabel()` відображає «Linked» / «Not linked» на основі нативного стану Horizon (`horizon_linked`) та «Link status unavailable» лише при помилці IPC (`!linked_known`).
+- [x] `USERS-NO-RAW-SAVE-PROBE-636` — усунено виклик `TryOpenAccountSave()` з `account_link::ListUsers()`; збережено FakeLink/Linkalho код для діагностики без перекриття системного статусу Horizon.
 - [x] `DOCS-BUMP-636` — версію піднято до `0.13.636`.
 
 ## Попередній delivery: v0.13.635 (clarify Nintendo Account link status)

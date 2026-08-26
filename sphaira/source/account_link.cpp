@@ -213,7 +213,7 @@ auto NasIdFromBaas(fs::Fs& acc, const std::string& baas_path, u64& nas_id) -> bo
     return true;
 }
 
-auto HasOfficialTokens(fs::Fs& acc, u64 nas_id) -> bool {
+[[maybe_unused]] auto HasOfficialTokens(fs::Fs& acc, u64 nas_id) -> bool {
     for (const auto& name : ListDirFiles(acc, "/nas")) {
         if (!NasFileMatches(name, nas_id)) {
             continue;
@@ -418,6 +418,37 @@ auto PickDumpBaas(const std::vector<std::string>& files, const AccountUid& uid) 
     return {};
 }
 
+constexpr Result ResultNetworkServiceAccountRegistrationRequired = MAKERESULT(124, 200);
+
+auto OpenAccSu(Service* out) -> Result {
+    R_TRY(smGetService(out, "acc:su"));
+    R_SUCCEED();
+}
+
+auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
+    out_linked = false;
+    Service accsu{};
+    R_TRY(OpenAccSu(&accsu));
+    ON_SCOPE_EXIT(serviceClose(&accsu));
+
+    Service manager{};
+    R_TRY(serviceDispatchIn(&accsu, 102, uid,
+        .out_num_objects = 1,
+        .out_objects = &manager));
+    ON_SCOPE_EXIT(serviceClose(&manager));
+
+    const auto rc = serviceDispatch(&manager, 0);
+    if (R_SUCCEEDED(rc)) {
+        out_linked = true;
+        R_SUCCEED();
+    }
+    if (rc == ResultNetworkServiceAccountRegistrationRequired) {
+        out_linked = false;
+        R_SUCCEED();
+    }
+    return rc;
+}
+
 } // namespace
 
 auto UidHex(const AccountUid& uid) -> std::string {
@@ -434,23 +465,16 @@ auto ListUsers() -> std::vector<User> {
         out.push_back(std::move(u));
     }
 
-    auto save = TryOpenAccountSave();
-    const bool known = R_SUCCEEDED(save.GetFsOpenResult());
     for (auto& u : out) {
-        u.linked_known = known;
-        if (!known) {
-            continue;
-        }
-        const auto baas = FindBaasPath(save, u.uid);
-        if (baas.empty()) {
-            u.kind = LinkKind::None;
-            continue;
-        }
-        u64 nas_id{};
-        if (NasIdFromBaas(save, baas, nas_id) && HasOfficialTokens(save, nas_id)) {
-            u.kind = LinkKind::Official;
+        bool linked = false;
+        const auto rc = QueryHorizonLinkStatus(u.uid, linked);
+        if (R_SUCCEEDED(rc)) {
+            u.linked_known = true;
+            u.horizon_linked = linked;
         } else {
-            u.kind = LinkKind::Offline;
+            u.linked_known = false;
+            u.horizon_linked = false;
+            log_write("[ACC] Horizon link check failed 0x%X uid %s\n", rc, u.uid_hex.c_str());
         }
     }
     return out;
