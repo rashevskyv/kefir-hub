@@ -18,7 +18,7 @@ struct Pack {
 auto LoadImageJpeg(const AccountUid& uid, std::vector<u8>& out) -> Result;
 auto Rename(const AccountUid& uid, const std::string& nickname) -> Result;
 auto SetImageJpeg(const AccountUid& uid, const std::vector<u8>& jpeg) -> Result;
-auto Create(const std::string& nickname, AccountUid& out_uid) -> Result;
+auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<u8>& jpeg = {}) -> Result;
 auto Delete(const AccountUid& uid) -> Result;
 
 auto ExportUserPack(const AccountUid& uid, std::string& out_dir, bool terminate_if_needed = false) -> Result;

@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
 #include "nand_transfer.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
@@ -22,6 +23,7 @@
 #include "utils/utils.hpp"
 
 #include <algorithm>
+#include <cstdio>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -139,6 +141,195 @@ struct SavePickMenu final : MenuBase {
 
 private:
     std::vector<save::Entry> m_entries;
+    Callback m_cb;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+};
+
+struct AvatarPickMenu final : MenuBase {
+    using Callback = std::function<void(std::vector<u8>)>;
+    enum class Kind { Jpeg, FromSd, Sgdb };
+
+    struct Tile {
+        Kind kind{Kind::Jpeg};
+        std::vector<u8> jpeg;
+        int image{};
+        std::string label;
+    };
+
+    explicit AvatarPickMenu(Callback cb)
+        : MenuBase{"Choose an avatar"_i18n, MenuFlag_None}
+        , m_cb{std::move(cb)}
+    {
+        LoadTiles();
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Select"_i18n, [this](){ Activate(); }}),
+            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){ SetPop(); }})
+        );
+        const Vec4 list_pos{40.f, 110.f, 1200.f, 530.f};
+        const Vec4 item_pos{70.f, 120.f, 160.f, 160.f};
+        m_list = std::make_unique<List>(6, 12, list_pos, item_pos, Vec2{14.f, 14.f});
+        SetTitleSubHeading("A selects. From SD opens the image picker."_i18n, true);
+        SetSubHeading(std::to_string(m_tiles.size()));
+    }
+
+    ~AvatarPickMenu() {
+        auto* vg = App::GetVg();
+        for (auto& t : m_tiles) {
+            if (t.image > 0 && vg) {
+                nvgDeleteImage(vg, t.image);
+                t.image = 0;
+            }
+        }
+    }
+
+    auto GetShortTitle() const -> const char* override { return "Avatar"; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        if (m_tiles.empty()) {
+            return;
+        }
+        m_list->OnUpdate(controller, touch, m_index, m_tiles.size(), [this](bool touched, auto i) {
+            if (touched && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_index = i;
+            }
+        }, this);
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+        m_list->Draw(vg, theme, m_tiles.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+            const auto& t = m_tiles[i];
+            const auto selected = m_index == i;
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            } else {
+                DrawElement(v, ThemeEntryID_GRID);
+            }
+            const Vec4 inner{v.x + 8.f, v.y + 8.f, v.w - 16.f, v.h - 16.f};
+            if (t.kind == Kind::FromSd) {
+                DrawElementContain(inner, ThemeEntryID_ICON_IMAGE);
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 18.f, 14.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                    "%s", "From SD"_i18n.c_str());
+            } else if (t.kind == Kind::Sgdb) {
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h / 2.f - 10.f, 18.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                    "SGDB");
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h / 2.f + 14.f, 13.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO),
+                    "%s", "SteamGridDB"_i18n.c_str());
+            } else {
+                gfx::drawImage(vg, inner, t.image > 0 ? t.image : App::GetDefaultImage(), 5.f);
+            }
+        });
+    }
+
+private:
+    void AddJpegTile(std::vector<u8> jpeg) {
+        if (jpeg.empty()) {
+            return;
+        }
+        Tile t;
+        t.jpeg = std::move(jpeg);
+        t.image = nvgCreateImageMem(App::GetVg(), 0, t.jpeg.data(), static_cast<int>(t.jpeg.size()));
+        m_tiles.push_back(std::move(t));
+    }
+
+    void LoadTiles() {
+        for (int i = 1; i <= 8; i++) {
+            char path[40]{};
+            std::snprintf(path, sizeof(path), "romfs:/avatars/%02d.jpg", i);
+            std::vector<u8> raw;
+            if (R_FAILED(fs::read_entire_file(path, raw)) || raw.empty()) {
+                continue;
+            }
+            auto jpeg = ImageNormalizeAvatar(raw);
+            if (jpeg.empty()) {
+                jpeg = std::move(raw);
+            }
+            AddJpegTile(std::move(jpeg));
+        }
+        for (const auto& base : App::GetAccountList()) {
+            std::vector<u8> jpeg;
+            if (R_SUCCEEDED(account_user::LoadImageJpeg(base.uid, jpeg))) {
+                AddJpegTile(std::move(jpeg));
+            }
+        }
+        m_tiles.push_back(Tile{Kind::FromSd, {}, 0, "From SD"});
+        m_tiles.push_back(Tile{Kind::Sgdb, {}, 0, "SteamGridDB"});
+    }
+
+    void Activate() {
+        if (m_index < 0 || static_cast<size_t>(m_index) >= m_tiles.size()) {
+            return;
+        }
+        auto& t = m_tiles[m_index];
+        if (t.kind == Kind::FromSd) {
+            OpenSd();
+            return;
+        }
+        if (t.kind == Kind::Sgdb) {
+            steamgriddb::ShowIconPicker("avatar", [this](std::vector<u8> icon) {
+                if (icon.empty()) {
+                    return;
+                }
+                auto jpeg = ImageNormalizeIcon(icon);
+                if (jpeg.empty()) {
+                    jpeg = std::move(icon);
+                }
+                Finish(std::move(jpeg));
+            });
+            return;
+        }
+        Finish(t.jpeg);
+    }
+
+    void OpenSd() {
+        App::Push<filepicker::Menu>(
+            filepicker::Callback{[this](const fs::FsPath& path) -> bool {
+                const auto ext = path::Extension(path);
+                const auto flags = path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg")
+                    ? ImageFlag_JPEG : ImageFlag_None;
+                auto raw = ImageLoadFromFile(path, flags);
+                if (raw.data.empty()) {
+                    raw = ImageLoadFromFile(path);
+                }
+                if (raw.data.empty() || raw.w <= 0 || raw.h <= 0) {
+                    App::Push<OptionBox>("Could not read that image."_i18n, "OK"_i18n);
+                    return false;
+                }
+                auto source = path.toString();
+                if (const auto slash = source.find_last_of("/\\"); slash != std::string::npos) {
+                    source.erase(0, slash + 1);
+                }
+                image_crop::Show(std::move(raw), std::move(source),
+                    [this](std::vector<u8> jpeg, std::string) {
+                        if (!jpeg.empty()) {
+                            Finish(std::move(jpeg));
+                        }
+                    });
+                return true;
+            }},
+            std::vector<std::string>{"jpg", "jpeg", "png", "bmp"});
+    }
+
+    void Finish(std::vector<u8> jpeg) {
+        auto cb = m_cb;
+        SetPop();
+        if (cb) {
+            cb(std::move(jpeg));
+        }
+    }
+
+    std::vector<Tile> m_tiles;
     Callback m_cb;
     s64 m_index{};
     std::unique_ptr<List> m_list;
@@ -426,7 +617,7 @@ void Menu::ShowContextMenu() {
         }, true, "Change this profile's display name."_i18n);
         options->Add<SidebarEntryCallback>("Change avatar"_i18n, [this](){
             ConfirmChangeAvatar();
-        }, true, "Set a JPEG avatar from the SD card or SteamGridDB."_i18n);
+        }, true, "Pick a built-in avatar, an SD image, or SteamGridDB."_i18n);
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
         }, true, "Write name, avatar and Nintendo link to SD. The user stays on this console."_i18n);
@@ -492,7 +683,12 @@ void Menu::ConfirmCreate() {
     if (R_FAILED(swkbd::ShowText(name, "New user"_i18n.c_str(), nullptr, 1, 31)) || name.empty()) {
         return;
     }
-    RunCreate(name);
+    App::Push(std::make_unique<AvatarPickMenu>([this, name](std::vector<u8> jpeg) {
+        if (jpeg.empty()) {
+            return;
+        }
+        RunCreate(name, std::move(jpeg));
+    }));
 }
 
 void Menu::ConfirmRename() {
@@ -510,53 +706,11 @@ void Menu::ConfirmChangeAvatar() {
     if (m_items.empty()) {
         return;
     }
-    App::Push<OptionBox>(
-        "Choose an avatar source."_i18n,
-        "SD image"_i18n, "SteamGridDB"_i18n, 0,
-        [this](auto op) {
-            if (!op) {
-                return;
-            }
-            if (*op == 0) {
-                App::Push<filepicker::Menu>(
-                    filepicker::Callback{[this](const fs::FsPath& path) -> bool {
-                        const auto ext = path::Extension(path);
-                        const auto flags = path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg")
-                            ? ImageFlag_JPEG : ImageFlag_None;
-                        auto raw = ImageLoadFromFile(path, flags);
-                        if (raw.data.empty()) {
-                            raw = ImageLoadFromFile(path);
-                        }
-                        if (raw.data.empty() || raw.w <= 0 || raw.h <= 0) {
-                            App::Push<OptionBox>("Could not read that image."_i18n, "OK"_i18n);
-                            return false;
-                        }
-                        auto source = path.toString();
-                        if (const auto slash = source.find_last_of("/\\"); slash != std::string::npos) {
-                            source.erase(0, slash + 1);
-                        }
-                        image_crop::Show(std::move(raw), std::move(source),
-                            [this](std::vector<u8> jpeg, std::string) {
-                                if (!jpeg.empty()) {
-                                    RunSetAvatar(std::move(jpeg));
-                                }
-                            });
-                        return true;
-                    }},
-                    std::vector<std::string>{"jpg", "jpeg", "png", "bmp"});
-                return;
-            }
-            steamgriddb::ShowIconPicker(m_items[m_index].nickname, [this](std::vector<u8> icon) {
-                if (icon.empty()) {
-                    return;
-                }
-                auto jpeg = ImageNormalizeIcon(icon);
-                if (jpeg.empty()) {
-                    jpeg = std::move(icon);
-                }
-                RunSetAvatar(std::move(jpeg));
-            });
-        });
+    App::Push(std::make_unique<AvatarPickMenu>([this](std::vector<u8> jpeg) {
+        if (!jpeg.empty()) {
+            RunSetAvatar(std::move(jpeg));
+        }
+    }));
 }
 
 void Menu::ConfirmBackup() {
@@ -722,11 +876,11 @@ void Menu::ConfirmExport() {
         });
 }
 
-void Menu::RunCreate(const std::string& nickname) {
-    App::Push<ProgressBox>(0, "Create user"_i18n, nickname, [nickname](auto pbox) -> Result {
+void Menu::RunCreate(const std::string& nickname, std::vector<u8> jpeg) {
+    App::Push<ProgressBox>(0, "Create user"_i18n, nickname, [nickname, jpeg = std::move(jpeg)](auto pbox) -> Result {
         pbox->NewTransfer("Creating user"_i18n);
         AccountUid uid{};
-        R_TRY(account_user::Create(nickname, uid));
+        R_TRY(account_user::Create(nickname, uid, jpeg));
         R_SUCCEED();
     }, [this](Result rc) {
         if (R_FAILED(rc)) {
@@ -909,7 +1063,7 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
             if (backup_account) {
                 pbox->NewTransfer("Backing up account"_i18n);
                 std::vector<std::string> dirs;
-                R_TRY(account_user::ExportUserPacks(uids, dirs, true));
+                R_TRY(account_user::ExportUserPacks(uids, dirs, false));
             }
             if (!save_backup.empty()) {
                 pbox->NewTransfer("Backing up saves"_i18n);
@@ -917,7 +1071,6 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
             }
             pbox->NewTransfer("Deleting users"_i18n);
             for (const auto& uid : uids) {
-                account_link::UnlinkUsers({uid});
                 R_TRY(account_user::Delete(uid));
             }
             if (!all_saves.empty()) {

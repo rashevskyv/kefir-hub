@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.626** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.627** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.627 — create avatar picker; delete must not kill account
+
+- Створення користувача: після імені сітка аватарів (romfs пресети, аватари вже існуючих профілів, з SD, SteamGridDB).
+- Видалення: лог показував `[ACC] backup written` з UnlinkUsers → `OpenAccountSave` вбивав `account` (010000000000001E). Список порожнів, вихід у hbmenu робив fatal AM 2011-0301. Тепер лише `acc:su` DeleteUser, без terminate.
+- Агент не компілює.
 
 ## v0.13.626 — folder silhouette around Icon-layout previews
 

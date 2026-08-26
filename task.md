@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.626**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.627**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.626 (folder mosaic silhouette)
+## Поточний delivery: v0.13.627 (create avatar + delete no-kill)
+
+- [x] `USERS-AVATAR-PICK-627` — створення: сітка стандартних аватарів або пікер SD.
+- [x] `USERS-DELETE-NO-KILL-627` — DeleteUser без UnlinkUsers/terminate account.
+- [x] `DOCS-BUMP-627` — версію піднято до `0.13.627`.
+
+## Попередній delivery: v0.13.626 (folder mosaic silhouette)
 
 - [x] `ICON-FOLDER-626` — папка малюється як силует; прев’ю в кишені; type-іконки з contain.
 - [x] `DOCS-BUMP-626` — версію піднято до `0.13.626`.

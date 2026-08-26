@@ -151,7 +151,7 @@ auto SetImageJpeg(const AccountUid& uid, const std::vector<u8>& jpeg) -> Result 
     R_SUCCEED();
 }
 
-auto Create(const std::string& nickname, AccountUid& out_uid) -> Result {
+auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<u8>& jpeg) -> Result {
     Service accsu{};
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
@@ -169,9 +169,21 @@ auto Create(const std::string& nickname, AccountUid& out_uid) -> Result {
     std::memcpy(base.nickname, nickname.data(), n);
 
     AccountUserData data{};
-    auto jpeg = ImageGetDefaultIcon();
+    std::vector<u8> icon = jpeg;
+    if (!icon.empty()) {
+        auto normalized = ImageNormalizeAvatar(icon);
+        if (normalized.empty()) {
+            normalized = ImageNormalizeIcon(icon);
+        }
+        if (!normalized.empty()) {
+            icon = std::move(normalized);
+        }
+    }
+    if (icon.empty()) {
+        icon = ImageGetDefaultIcon();
+    }
     auto store = StoreProfile(uid, base, data,
-        jpeg.empty() ? nullptr : jpeg.data(), jpeg.size());
+        icon.empty() ? nullptr : icon.data(), icon.size());
     if (R_FAILED(store)) {
         log_write("[USER] create store failed 0x%X\n", store);
         cancel();
@@ -197,7 +209,12 @@ auto Delete(const AccountUid& uid) -> Result {
     Service accsu{};
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
-    R_TRY(serviceDispatchIn(&accsu, CMD_DELETE_USER, uid));
+    const auto rc = serviceDispatchIn(&accsu, CMD_DELETE_USER, uid);
+    if (R_FAILED(rc)) {
+        log_write("[USER] DeleteUser 0x%X uid %s\n", rc, account_link::UidHex(uid).c_str());
+        return rc;
+    }
+    log_write("[USER] deleted %s\n", account_link::UidHex(uid).c_str());
     R_SUCCEED();
 }
 

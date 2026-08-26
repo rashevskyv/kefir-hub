@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.626**. Завершені плани збережено в
+Поточний delivery — **v0.13.627**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.626 — Icon layout: folder silhouette around previews
+## Поточний delivery: v0.13.627 — create avatar picker; delete must not kill account
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Create user: після імені сітка аватарів (вбудовані + поточні профілі + SD + SteamGridDB).
+2. Delete user більше не викликає UnlinkUsers/OpenAccountSave (вбивало `account` → порожній список і fatal AM 2011-0301). Бекап пака без terminate.
+
+## Попередній delivery: v0.13.626 — Icon layout: folder silhouette around previews
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Макет Icon (файловий менеджер і пікер): контур папки завжди видно, прев’ю всередині кишені. Іконки типів (відео тощо) без розтягування.

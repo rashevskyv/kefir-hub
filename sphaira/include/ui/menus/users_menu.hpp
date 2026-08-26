@@ -62,7 +62,7 @@ private:
     void RunOffline(bool all);
     void RunImport(bool all, const std::string& dump_dir);
     void RunExport();
-    void RunCreate(const std::string& nickname);
+    void RunCreate(const std::string& nickname, std::vector<u8> jpeg);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup();
