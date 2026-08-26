@@ -116,7 +116,7 @@ private:
     void FreeThumbs();
     auto IsImagePicker() const -> bool;
     auto TryLoadThumb(u32 entry_index) -> bool;
-    auto IsIconLayout() const -> bool { return m_image_layout.Get() == 1; }
+    auto IsIconLayout() -> bool { return m_image_layout.Get() == 1; }
     void OpenPreview();
     void UseCurrentFile();
     auto CollectFolderImages() const -> std::pair<std::vector<fs::FsPath>, s64>;

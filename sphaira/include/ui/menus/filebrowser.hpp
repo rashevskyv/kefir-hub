@@ -591,7 +591,7 @@ private:
         return m_split_screen;
     }
 
-    auto IsIconLayout() const -> bool {
+    auto IsIconLayout() -> bool {
         return m_layout.Get() == 1;
     }
 

@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.623** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.624** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.624 — compile fix for Icon layout
+
+- `OptionLong::Get()` не const. `IsIconLayout()` у filebrowser і file picker без const.
+- `ReleaseWithInstall` зібрано: `build/ReleaseWithInstall/switch/kefir-hub/kefir-hub.nro`.
 
 ## v0.13.623 — play-hour dump must not kill ns
 
