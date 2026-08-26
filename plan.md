@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.618**. Завершені плани збережено в
+Поточний delivery — **v0.13.619**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.618 — Hub encrypts restore; TE is fallback
+## Поточний delivery: v0.13.619 — compile fix: ImageConvertToJpg returns ImageResult
+
+Статус: зібрано `ReleaseWithInstall` (NRO ок).
+1. Users avatar з SD: `ImageConvertToJpg` повертає `ImageResult`, не `vector<u8>`. Аватар нормалізується через `ImageNormalizeIcon`.
+
+## Попередній delivery: v0.13.618 — Hub encrypts restore; TE is fallback
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Restore profiles & play hours на цілі: FS-запис у існуючі 0010/00F0, Horizon шифрує ключами цієї консолі. Сирий blob не копіюємо.

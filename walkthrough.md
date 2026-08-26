@@ -1,9 +1,14 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.618** (2026-08-25). Попередні
+Актуальний delivery — **v0.13.619** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.619 — compile fix for user avatar JPEG
+
+- `ImageConvertToJpg` повертає `ImageResult`. Users → Change avatar з SD тепер через `ImageNormalizeIcon`.
+- `ReleaseWithInstall` зібрано: `build/ReleaseWithInstall/switch/kefir-hub/kefir-hub.nro`.
 
 ## v0.13.618 — Hub restore encrypts; TegraExplorer is fallback
 

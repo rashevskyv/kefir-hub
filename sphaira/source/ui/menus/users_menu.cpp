@@ -453,20 +453,11 @@ void Menu::ConfirmChangeAvatar() {
             if (*op == 0) {
                 App::Push<filepicker::Menu>(
                     filepicker::Callback{[this](const fs::FsPath& path) -> bool {
-                        auto img = ImageLoadFromFile(path);
-                        if (img.data.empty()) {
-                            img = ImageLoadFromFile(path, ImageFlag_JPEG);
-                        }
                         std::vector<u8> jpeg;
-                        if (!img.data.empty()) {
-                            jpeg = ImageConvertToJpg(img.data, img.w, img.h);
-                        }
-                        if (jpeg.empty()) {
-                            fs::FsNativeSd sd;
-                            std::vector<u8> file;
-                            if (R_SUCCEEDED(sd.read_entire_file(path, file))) {
-                                jpeg = ImageNormalizeIcon(file);
-                            }
+                        fs::FsNativeSd sd;
+                        std::vector<u8> file;
+                        if (R_SUCCEEDED(sd.read_entire_file(path, file))) {
+                            jpeg = ImageNormalizeIcon(file);
                         }
                         if (jpeg.empty()) {
                             App::Push<OptionBox>("Could not read that image."_i18n, "OK"_i18n);

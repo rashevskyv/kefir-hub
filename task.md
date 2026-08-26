@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.618**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.619**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.618 (Hub restore encrypts via FS)
+## Поточний delivery: v0.13.619 (compile fix avatar JPEG)
+
+- [x] `USERS-AVATAR-JPG-619` — `ImageNormalizeIcon` замість присвоєння `ImageResult` у `vector<u8>`; ReleaseWithInstall зібрано.
+- [x] `DOCS-BUMP-619` — версію піднято до `0.13.619`.
+
+## Попередній delivery: v0.13.618 (Hub restore encrypts via FS)
 
 - [x] `NAND-RESTORE-618` — Import пака в існуючі system save; Horizon commit = ключі цілі. Wipe вмісту перед копією.
 - [x] `NAND-TE-FALLBACK-618` — `restore.te` як запас, якщо 00F0 зайнятий.
