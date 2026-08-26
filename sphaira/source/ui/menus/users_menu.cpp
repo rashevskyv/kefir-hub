@@ -7,12 +7,14 @@
 #include "nand_transfer.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "path_util.hpp"
 #include "swkbd.hpp"
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/hold_confirm_box.hpp"
+#include "ui/image_crop.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/sidebar.hpp"
@@ -375,11 +377,31 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
             nvgSave(vg);
             nvgIntersectScissor(vg, text_x, v.y, v.w - (text_x - v.x) - 15.f - status_w, v.h);
-            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f, 20.f,
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                 "%s", item.nickname.c_str());
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s", item.uid_hex.c_str());
             nvgRestore(vg);
+        } else if (layout == LayoutType::LayoutType_Grid) {
+            const auto selected = m_index == i;
+            if (!selected) {
+                DrawElement(v, ThemeEntryID_GRID);
+            } else {
+                gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
+            }
+            image_v = v;
+            gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
+            if (selected) {
+                gfx::drawAppLable(vg, theme, m_name_scroll, v.x, v.y, v.w, item.nickname.c_str());
+            }
+            gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 12.f, 12.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s", item.uid_hex.c_str());
         } else {
             image_v = DrawEntry(vg, theme, layout, v, m_index == i, item.image,
                 item.nickname.c_str(), status.c_str(), item.uid_hex.c_str(), item.selected);
@@ -498,17 +520,27 @@ void Menu::ConfirmChangeAvatar() {
             if (*op == 0) {
                 App::Push<filepicker::Menu>(
                     filepicker::Callback{[this](const fs::FsPath& path) -> bool {
-                        std::vector<u8> jpeg;
-                        fs::FsNativeSd sd;
-                        std::vector<u8> file;
-                        if (R_SUCCEEDED(sd.read_entire_file(path, file))) {
-                            jpeg = ImageNormalizeAvatar(file);
+                        const auto ext = path::Extension(path);
+                        const auto flags = path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg")
+                            ? ImageFlag_JPEG : ImageFlag_None;
+                        auto raw = ImageLoadFromFile(path, flags);
+                        if (raw.data.empty()) {
+                            raw = ImageLoadFromFile(path);
                         }
-                        if (jpeg.empty()) {
+                        if (raw.data.empty() || raw.w <= 0 || raw.h <= 0) {
                             App::Push<OptionBox>("Could not read that image."_i18n, "OK"_i18n);
                             return false;
                         }
-                        RunSetAvatar(std::move(jpeg));
+                        auto source = path.toString();
+                        if (const auto slash = source.find_last_of("/\\"); slash != std::string::npos) {
+                            source.erase(0, slash + 1);
+                        }
+                        image_crop::Show(std::move(raw), std::move(source),
+                            [this](std::vector<u8> jpeg, std::string) {
+                                if (!jpeg.empty()) {
+                                    RunSetAvatar(std::move(jpeg));
+                                }
+                            });
                         return true;
                     }},
                     std::vector<std::string>{"jpg", "jpeg", "png", "bmp"});

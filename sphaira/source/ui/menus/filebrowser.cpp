@@ -402,7 +402,61 @@ FsView::FsView(Menu* menu, ViewSide side) : FsView{menu, "", FS_ENTRY_DEFAULT, s
 
 }
 
+void FsView::FreeThumbs() {
+    auto* vg = App::GetVg();
+    for (auto& image : m_thumbs) {
+        if (image > 0 && vg) {
+            nvgDeleteImage(vg, image);
+        }
+        image = 0;
+    }
+    m_thumbs.clear();
+    for (auto& mosaic : m_mosaics) {
+        file_icon::FreeMosaic(mosaic);
+    }
+    m_mosaics.clear();
+}
+
+auto FsView::TryLoadThumb(u32 entry_index) -> bool {
+    if (entry_index >= m_entries.size()) {
+        return false;
+    }
+    auto& e = m_entries[entry_index];
+    if (e.IsDir()) {
+        if (entry_index >= m_mosaics.size()) {
+            return false;
+        }
+        if (!std::strcmp(e.name, "..")) {
+            return false;
+        }
+        auto& mosaic = m_mosaics[entry_index];
+        if (!mosaic.listed) {
+            mosaic = file_icon::ListFolderPreview(m_fs.get(), GetNewPath(e));
+            return true;
+        }
+        for (auto& cell : mosaic.cells) {
+            if (file_icon::TryLoadCell(cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    if (entry_index >= m_thumbs.size() || m_thumbs[entry_index]) {
+        return false;
+    }
+    file_icon::Cell cell;
+    cell.path = GetNewPath(e);
+    cell.ext = e.GetExtension();
+    if (!file_icon::TryLoadCell(cell)) {
+        m_thumbs[entry_index] = cell.image ? cell.image : -1;
+        return false;
+    }
+    m_thumbs[entry_index] = cell.image;
+    return m_thumbs[entry_index] > 0;
+}
+
 FsView::~FsView() {
+    FreeThumbs();
     if (m_title_service) {
         title::Exit();
     }
@@ -454,12 +508,18 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
 
     constexpr float text_xoffset{15.f};
     bool got_dir_count = false;
+    int loaded{};
+    const bool icon_grid = m_menu->IsIconLayout();
 
     nvgSave(vg);
     nvgScissor(vg, m_list_clip.x, m_list_clip.y, m_list_clip.w, m_list_clip.h);
-    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
+        const auto entry_i = m_entries_current.empty() ? 0u : (i < static_cast<s64>(m_entries_current.size()) ? m_entries_current[i] : 0u);
+        if (icon_grid && loaded < 2 && TryLoadThumb(entry_i)) {
+            loaded++;
+        }
 
         auto text_id = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
@@ -476,10 +536,41 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         if (selected) {
             text_id = ThemeEntryID_TEXT_SELECTED;
             gfx::drawRectOutline(vg, theme, 4.f, v);
-        } else {
+        } else if (!icon_grid) {
             if (i != m_entries_current.size() - 1) {
                 gfx::drawRect(vg, Vec4{x, y + h, w, 1.f}, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
             }
+        } else {
+            DrawElement(v, ThemeEntryID_GRID);
+        }
+
+        if (icon_grid) {
+            const Vec4 preview{x + 4.f, y + 4.f, w - 8.f, h - 32.f};
+            if (m_menu->IsFolderPicker() && i == 0) {
+                DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "Select current folder"_i18n.c_str());
+                return;
+            }
+            if (IsParentEntry(i)) {
+                DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "..");
+                return;
+            }
+            if (e.IsDir()) {
+                if (entry_i < m_mosaics.size() && m_mosaics[entry_i].listed) {
+                    file_icon::DrawMosaic(vg, theme, preview, m_mosaics[entry_i]);
+                } else {
+                    DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                }
+            } else {
+                const int thumb = (entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;
+                file_icon::DrawFileThumb(vg, theme, preview, thumb, e.GetExtension());
+            }
+            m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+            return;
         }
 
         const float x_offset = 15.f;
@@ -687,7 +778,16 @@ void FsView::SetSide(ViewSide side) {
         }
     }
 
-    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    if (m_menu->IsIconLayout()) {
+        const float tile = 174.f;
+        const float pad = 10.f;
+        const int cols = std::max(1, static_cast<int>((GetW() - 24.f) / (tile + pad)));
+        const int rows = std::max(2, static_cast<int>((GetH() - 90.f) / (tile + pad)));
+        const Vec4 icon_v{GetX() + 16.f, GetY() + 52.f, tile, tile};
+        m_list = std::make_unique<List>(cols, cols * rows, m_pos, icon_v, Vec2{pad, pad});
+    } else {
+        m_list = std::make_unique<List>(1, 8, m_pos, v);
+    }
     m_list_clip = Vec4{GetX(), v.y - gfx::SELECTION_OUTLINE_PAD, GetW(),
         GetY() + GetH() - (v.y - gfx::SELECTION_OUTLINE_PAD)};
     if (m_menu->IsSplitScreen()) {
@@ -1134,6 +1234,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     m_path = new_path;
+    FreeThumbs();
     mutexLock(&m_metadata_mutex);
     m_metadata_generation++;
     m_metadata_jobs.clear();
@@ -1348,6 +1449,9 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         m_picker_entry_index = static_cast<u32>(m_entries.size());
         m_entries.emplace_back(synth);
     }
+
+    m_thumbs.assign(m_entries.size(), 0);
+    m_mosaics.assign(m_entries.size(), {});
 
     Sort();
     LoadTitleLabels();
@@ -1863,6 +1967,13 @@ void FsView::DisplayOptions() {
 
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    SidebarEntryArray::Items layout_items;
+    layout_items.push_back("List"_i18n);
+    layout_items.push_back("Icon"_i18n);
+    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+        m_menu->SetIconLayout(index_out);
+    }, m_menu->IsIconLayout() ? 1 : 0, "Icon shows file thumbnails and folder previews."_i18n);
 
     const auto is_root = m_fs_entry.type == FsType::Root;
 

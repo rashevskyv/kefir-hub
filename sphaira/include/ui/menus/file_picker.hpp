@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/file_icon.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/scrolling_text.hpp"
@@ -115,6 +116,7 @@ private:
     void FreeThumbs();
     auto IsImagePicker() const -> bool;
     auto TryLoadThumb(u32 entry_index) -> bool;
+    auto IsIconLayout() const -> bool { return m_image_layout.Get() == 1; }
     void OpenPreview();
     void UseCurrentFile();
     auto CollectFolderImages() const -> std::pair<std::vector<fs::FsPath>, s64>;
@@ -139,6 +141,7 @@ private:
 
     std::unique_ptr<List> m_list{};
     std::vector<int> m_thumbs{};
+    std::vector<file_icon::Mosaic> m_mosaics{};
     option::OptionLong m_image_layout{INI_SECTION, "image_layout", 1, false};
 
     // this keeps track of the highlighted file before opening a folder

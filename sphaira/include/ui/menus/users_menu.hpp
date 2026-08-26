@@ -78,6 +78,7 @@ private:
     s64 m_index{};
     s64 m_selected_count{};
     std::unique_ptr<List> m_list;
+    ScrollingText m_name_scroll{};
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_GridDetail};
 };
 

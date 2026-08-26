@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.621** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.622** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.622 — user UID, folder mosaics, avatar crop
+
+- Users: UID видно в списку (під ім’ям) і на іконках (під плиткою), не лише в сітці.
+- Макет Icon у файловому пікері та File Browser: папка показує прев’ю файлів (до 24, остання — …); jpeg/png без розтягування пропорцій.
+- Аватар з SD відкриває Crop Icon (квадрат, зум/пан), як іконки homebrew.
+- Агент не компілює.
 
 ## v0.13.621 — Backup user does not delete
 

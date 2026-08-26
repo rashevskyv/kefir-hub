@@ -812,7 +812,7 @@
   "Reset zoom and pan.": "Сбросить масштаб и сдвиг.",
   "Open the image so you can see it. L/R flips through the folder.": "Открыть изображение. L/R листает папку.",
   "Select the highlighted file.": "Выбрать подсвеченный файл.",
-  "Icon shows image thumbnails.": "Макет «Иконка» показывает миниатюры.",
+  "Icon shows file thumbnails and folder previews.": "Макет «Иконка» показывает миниатюры файлов и превью содержимого папок.",
   "Write a user pack (name, avatar, Nintendo link) to SD? The user is not deleted.": "Записать пак пользователя (имя, аватар, привязка Nintendo) на SD? Пользователя не удаляем.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Удалить этого пользователя? Отменить нельзя. Его игровые сейвы тоже удалятся. Удерживайте A.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Удалить выбранных пользователей? Отменить нельзя. Их игровые сейвы тоже удалятся. Удерживайте A.",

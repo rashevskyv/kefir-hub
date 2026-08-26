@@ -4,6 +4,7 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/error_box.hpp"
+#include "ui/file_icon.hpp"
 #include "ui/menus/file_viewer.hpp"
 
 #include "log.hpp"
@@ -143,6 +144,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         i++;
     }
     m_thumbs.assign(m_entries.size(), 0);
+    m_mosaics.assign(m_entries.size(), {});
 
     Sort();
     SetIndex(0);
@@ -301,7 +303,7 @@ void Menu::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
 
 void Menu::ApplyLayout() {
     const Vec4 content_pos{40, 97, 1200, 539};
-    if (IsImagePicker() && m_image_layout.Get() == 1) {
+    if (IsIconLayout()) {
         const Vec2 pad{10, 10};
         const Vec4 v{93, 186, 174, 174};
         m_list = std::make_unique<List>(6, 6 * 2, content_pos, v, pad);
@@ -320,6 +322,10 @@ void Menu::FreeThumbs() {
         image = 0;
     }
     m_thumbs.clear();
+    for (auto& mosaic : m_mosaics) {
+        file_icon::FreeMosaic(mosaic);
+    }
+    m_mosaics.clear();
 }
 
 auto Menu::IsImagePicker() const -> bool {
@@ -335,38 +341,37 @@ auto Menu::IsImagePicker() const -> bool {
 }
 
 auto Menu::TryLoadThumb(u32 entry_index) -> bool {
-    if (entry_index >= m_entries.size() || entry_index >= m_thumbs.size()) {
+    if (entry_index >= m_entries.size()) {
         return false;
     }
-    if (m_thumbs[entry_index]) {
-        return false;
-    }
-    const auto& e = m_entries[entry_index];
-    if (!e.IsFile() || !path::IsAnyOfIC(e.GetExtension(), IMAGE_EXTENSIONS)) {
-        return false;
-    }
-    if (e.file_size > 8 * 1024 * 1024) {
-        m_thumbs[entry_index] = -1;
-        return false;
-    }
-    const auto path = GetNewPath(e);
-    auto img = ImageLoadFromFile(path, path::EqualsIC(e.GetExtension(), "jpg") ||
-        path::EqualsIC(e.GetExtension(), "jpeg") ? ImageFlag_JPEG : ImageFlag_None);
-    if (img.data.empty()) {
-        m_thumbs[entry_index] = -1;
-        return false;
-    }
-    constexpr int thumb = 174;
-    if (img.w > thumb || img.h > thumb) {
-        const float scale = std::min(thumb / static_cast<float>(img.w), thumb / static_cast<float>(img.h));
-        const int nw = std::max(1, static_cast<int>(img.w * scale));
-        const int nh = std::max(1, static_cast<int>(img.h * scale));
-        auto resized = ImageResize(img.data, img.w, img.h, nw, nh);
-        if (!resized.data.empty()) {
-            img = std::move(resized);
+    auto& e = m_entries[entry_index];
+    if (e.IsDir()) {
+        if (entry_index >= m_mosaics.size()) {
+            return false;
         }
+        auto& mosaic = m_mosaics[entry_index];
+        if (!mosaic.listed) {
+            mosaic = file_icon::ListFolderPreview(m_fs.get(), GetNewPath(e));
+            return true;
+        }
+        for (auto& cell : mosaic.cells) {
+            if (file_icon::TryLoadCell(cell)) {
+                return true;
+            }
+        }
+        return false;
     }
-    m_thumbs[entry_index] = nvgCreateImageRGBA(App::GetVg(), img.w, img.h, 0, img.data.data());
+    if (entry_index >= m_thumbs.size() || m_thumbs[entry_index]) {
+        return false;
+    }
+    file_icon::Cell cell;
+    cell.path = GetNewPath(e);
+    cell.ext = e.GetExtension();
+    if (!file_icon::TryLoadCell(cell)) {
+        m_thumbs[entry_index] = cell.image ? cell.image : -1;
+        return false;
+    }
+    m_thumbs[entry_index] = cell.image;
     return m_thumbs[entry_index] > 0;
 }
 
@@ -428,14 +433,14 @@ void Menu::DisplayOptions() {
                 UseCurrentFile();
             }, true, "Select the highlighted file."_i18n);
         }
-        SidebarEntryArray::Items layout_items;
-        layout_items.push_back("List"_i18n);
-        layout_items.push_back("Icon"_i18n);
-        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-            m_image_layout.Set(index_out);
-            ApplyLayout();
-        }, m_image_layout.Get(), "Icon shows image thumbnails."_i18n);
     }
+    SidebarEntryArray::Items layout_items;
+    layout_items.push_back("List"_i18n);
+    layout_items.push_back("Icon"_i18n);
+    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+        m_image_layout.Set(index_out);
+        ApplyLayout();
+    }, m_image_layout.Get(), "Icon shows file thumbnails and folder previews."_i18n);
 
     SidebarEntryArray::Items mount_items;
     std::vector<FsEntry> fs_entries;
@@ -589,13 +594,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     constexpr float text_xoffset{15.f};
     bool got_dir_count = false;
     int loaded{};
-    const bool image_grid = IsImagePicker() && m_image_layout.Get() == 1;
+    const bool icon_grid = IsIconLayout();
 
-    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, image_grid](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
         const auto entry_i = m_entries_current[i];
-        if (IsImagePicker() && loaded < 2 && TryLoadThumb(entry_i)) {
+        if (loaded < 2 && TryLoadThumb(entry_i)) {
             loaded++;
         }
         const int thumb = (entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;
@@ -605,7 +610,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (selected) {
             text_id = ThemeEntryID_TEXT_SELECTED;
             gfx::drawRectOutline(vg, theme, 4.f, v);
-        } else if (!image_grid) {
+        } else if (!icon_grid) {
             if (i != m_entries_current.size() - 1) {
                 gfx::drawRect(vg, Vec4{x, y + h, w, 1.f}, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
             }
@@ -613,13 +618,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             DrawElement(v, ThemeEntryID_GRID);
         }
 
-        if (image_grid) {
+        if (icon_grid) {
+            const Vec4 preview{x + 4.f, y + 4.f, w - 8.f, h - 32.f};
             if (e.IsDir()) {
-                DrawElement(x + 20, y + 20, w - 40, h - 50, ThemeEntryID_ICON_FOLDER);
-            } else if (thumb > 0) {
-                gfx::drawImage(vg, Vec4{x, y, w, h - 28.f}, thumb, 5);
+                if (entry_i < m_mosaics.size() && m_mosaics[entry_i].listed) {
+                    file_icon::DrawMosaic(vg, theme, preview, m_mosaics[entry_i]);
+                } else {
+                    DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                }
             } else {
-                DrawElement(x + 20, y + 20, w - 40, h - 50, ThemeEntryID_ICON_IMAGE);
+                file_icon::DrawFileThumb(vg, theme, preview, thumb, e.GetExtension());
             }
             m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 15.f,
                 NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
@@ -629,7 +637,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (e.IsDir()) {
             DrawElement(x + text_xoffset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
         } else if (thumb > 0) {
-            gfx::drawImage(vg, Vec4{x + text_xoffset, y + 5, 50, 50}, thumb, 4);
+            file_icon::DrawContain(vg, Vec4{x + text_xoffset, y + 5, 50, 50}, thumb, 4);
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();

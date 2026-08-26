@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.621**. Завершені плани збережено в
+Поточний delivery — **v0.13.622**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.621 — Backup user does not delete
+## Поточний delivery: v0.13.622 — UID in all user layouts, icon mosaics, avatar crop
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Users: UID у списку та іконках, не лише в сітці.
+2. Icon layout файлів: прев’ю вмісту папки (до 24, далі …), картинки без зміни пропорцій.
+3. Вибір аватарки: той самий квадрат-кроп, що для іконок homebrew.
+
+## Попередній delivery: v0.13.621 — Backup user does not delete
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Backup user лише пише пак на SD, не зупиняє account і не видаляє профіль.

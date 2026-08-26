@@ -3,6 +3,7 @@
 #include "ui/menus/menu_base.hpp"
 #include "ui/scrolling_text.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/file_icon.hpp"
 #include "ui/list.hpp"
 #include "fs.hpp"
 #include "option.hpp"
@@ -406,6 +407,8 @@ private:
     void DisplayHash(hash::Type type);
 
     void DisplayOptions();
+    void FreeThumbs();
+    auto TryLoadThumb(u32 entry_index) -> bool;
     void DisplayPickerOptions();
     void DisplayAdvancedOptions();
     void ShowSourcePicker();
@@ -447,6 +450,8 @@ private:
 
     std::unique_ptr<List> m_list{};
     Vec4 m_list_clip{};
+    std::vector<int> m_thumbs{};
+    std::vector<file_icon::Mosaic> m_mosaics{};
     std::optional<fs::FsPath> m_daybreak_path{};
 
     // one synthetic row is pinned to the top of the listing: ".." normally, or
@@ -586,6 +591,20 @@ private:
         return m_split_screen;
     }
 
+    auto IsIconLayout() const -> bool {
+        return m_layout.Get() == 1;
+    }
+
+    void SetIconLayout(s64 index) {
+        m_layout.Set(index);
+        if (view_left) {
+            view_left->SetSide(ViewSide::Left);
+        }
+        if (view_right) {
+            view_right->SetSide(ViewSide::Right);
+        }
+    }
+
     void SetSplitScreen(bool enable);
 
     void RefreshViews();
@@ -624,6 +643,7 @@ private:
     option::OptionBool m_folders_first{INI_SECTION, "folders_first", true};
     option::OptionBool m_hidden_last{INI_SECTION, "hidden_last", false};
     option::OptionBool m_ignore_read_only{INI_SECTION, "ignore_read_only", false};
+    option::OptionLong m_layout{INI_SECTION, "layout", 0};
 
     bool m_loaded_assoc_entries{};
     bool m_split_screen{};

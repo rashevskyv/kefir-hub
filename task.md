@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.621**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.622**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.621 (backup ≠ delete)
+## Поточний delivery: v0.13.622 (UID, folder mosaics, avatar crop)
+
+- [x] `USERS-UID-622` — UID у List і Icon, не лише Grid.
+- [x] `FILES-ICON-622` — Icon layout: мозаїка папки, contain для картинок; те саме в пікері і файловому менеджері.
+- [x] `AVATAR-CROP-622` — вибір аватарки через Crop Icon як у homebrew.
+- [x] `DOCS-BUMP-622` — версію піднято до `0.13.622`.
+
+## Попередній delivery: v0.13.621 (backup ≠ delete)
 
 - [x] `USERS-BACKUP-ONLY-621` — бекап користувача не вбиває account і не видаляє профіль.
 - [x] `USERS-DELETE-HOLD-621` — видалення лише після Hold A, потім опційний бекап.
