@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.633** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.634** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.634 — native Horizon user creator, clean avatar action tiles, SGDB explicit game selection
+
+- Tools → Users → Create user відкриває рідний системний інтерфейс створення користувача Horizon через `pselShowUserCreator()`. Введення імені, вибір аватара та створення профілю виконує сама ОС Horizon. Після закриття аплету викликається `App::ResetTouchAfterApplet()` і меню Users оновлюється. Скасування створення повертає в меню без зайвих повідомлень про помилку (перевірено: `pselShowUserCreator` повертає 0 при відміні користувачем).
+- Change avatar: оновлено відображення плитки «From SD» — використовується піктограма файлового менеджера `ThemeEntryID_ICON_FILE` та зарезервовано нижній рядок підпису так, що текст більше не накладається на саму іконку. Плитка SteamGridDB виводить назву один раз («SteamGridDB») без дублювання «SGDB». Тексти сайдбару та підзаголовка актуалізовано (прибрано згадки про вбудовані аватари та додано точний опис вибору гри).
+- SteamGridDB: ShowIconPicker реалізує обов'язковий двокроковий вибір ігор та іконок (спільно для вибору аватарки та для редактора форвардерів). Пошук за назвою відкриває віджет зі списком знайдених ігор `GameSelect` (чистий список назв ігор без технічних `#ID`). Тільки після вибору конкретної гри завантажуються її іконки та відкривається сітка `IconGrid`.
+- Агент не компілює.
 
 ## v0.13.633 — no invented avatar presets; direct Horizon profile creation
 

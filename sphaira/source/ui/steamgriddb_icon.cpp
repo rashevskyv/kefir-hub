@@ -39,6 +39,16 @@ enum class SearchError {
     NotFound,
 };
 
+struct GameInfo {
+    s64 id{};
+    std::string name;
+};
+
+struct SearchGamesState {
+    SearchError error{SearchError::None};
+    std::vector<GameInfo> games;
+};
+
 struct SearchState {
     SearchError error{SearchError::None};
     std::string match_name;
@@ -205,7 +215,7 @@ auto GetResponseError(const curl::ApiResult& result) -> SearchError {
     return SearchError::None;
 }
 
-auto ParseFirstGame(const std::vector<u8>& data, s64& id, std::string& name) -> bool {
+auto ParseGames(const std::vector<u8>& data, std::vector<GameInfo>& games) -> bool {
     auto doc = yyjson_read(reinterpret_cast<const char*>(data.data()), data.size(), YYJSON_READ_NOFLAG);
     if (!doc) {
         return false;
@@ -213,21 +223,30 @@ auto ParseFirstGame(const std::vector<u8>& data, s64& id, std::string& name) -> 
     ON_SCOPE_EXIT(yyjson_doc_free(doc));
 
     auto root = yyjson_doc_get_root(doc);
-    auto games = root ? yyjson_obj_get(root, "data") : nullptr;
-    auto game = games && yyjson_is_arr(games) ? yyjson_arr_get_first(games) : nullptr;
-    if (!game || !yyjson_is_obj(game)) {
+    auto entries = root ? yyjson_obj_get(root, "data") : nullptr;
+    if (!entries || !yyjson_is_arr(entries)) {
         return false;
     }
 
-    auto id_value = yyjson_obj_get(game, "id");
-    auto name_value = yyjson_obj_get(game, "name");
-    if (!yyjson_is_int(id_value) || !yyjson_is_str(name_value)) {
-        return false;
-    }
+    size_t index, count;
+    yyjson_val* entry;
+    yyjson_arr_foreach(entries, index, count, entry) {
+        if (!yyjson_is_obj(entry)) {
+            continue;
+        }
+        auto id_value = yyjson_obj_get(entry, "id");
+        auto name_value = yyjson_obj_get(entry, "name");
+        if (!yyjson_is_int(id_value) || !yyjson_is_str(name_value)) {
+            continue;
+        }
 
-    id = yyjson_get_sint(id_value);
-    name.assign(yyjson_get_str(name_value), yyjson_get_len(name_value));
-    return id > 0 && !name.empty();
+        const auto id = yyjson_get_sint(id_value);
+        std::string name{yyjson_get_str(name_value), yyjson_get_len(name_value)};
+        if (id > 0 && !name.empty()) {
+            games.push_back({id, std::move(name)});
+        }
+    }
+    return !games.empty();
 }
 
 void AppendUrls(const std::vector<u8>& data, std::vector<std::string>& urls, std::unordered_set<std::string>& seen) {
@@ -288,28 +307,7 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
     R_SUCCEED();
 }
 
-auto FetchIcons(ProgressBox* pbox, const std::string& api_key, const std::string& title, SearchState& state) -> Result {
-    pbox->NewTransfer("Searching for matching titles"_i18n);
-
-    const auto search_url = "https://www.steamgriddb.com/api/v2/search/autocomplete/" + curl::EscapeString(title);
-    const auto search = curl::Api().ToMemory(
-        curl::Url{search_url},
-        curl::Bearer{api_key},
-        curl::StopToken{pbox->GetToken()},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
-    );
-    state.error = GetResponseError(search);
-    if (state.error != SearchError::None) {
-        R_SUCCEED();
-    }
-
-    s64 game_id{};
-    if (!ParseFirstGame(search.data, game_id, state.match_name)) {
-        state.error = SearchError::NotFound;
-        R_SUCCEED();
-    }
-
-    pbox->SetTitle(state.match_name);
+auto DownloadGameIcons(ProgressBox* pbox, const std::string& api_key, s64 game_id, SearchState& state) -> Result {
     pbox->NewTransfer("Loading available icons"_i18n);
 
     const std::string grids_url = "https://www.steamgriddb.com/api/v2/grids/game/" + std::to_string(game_id)
@@ -367,14 +365,152 @@ void ShowSearchError(SearchError error) {
     }
 }
 
+class GameSelect final : public Widget {
+public:
+    GameSelect(std::string title, std::string api_key, std::vector<GameInfo> games, IconCallback callback)
+    : m_title{std::move(title)}
+    , m_api_key{std::move(api_key)}
+    , m_games{std::move(games)}
+    , m_callback{std::move(callback)} {
+        SetActions(
+            std::make_pair(Button::A, Action{"Select"_i18n, [this](){ Activate(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+        );
+
+        const Vec4 list_pos{55.f, 115.f, 1170.f, 510.f};
+        const Vec4 item_pos{75.f, 125.f, 1130.f, 56.f};
+        m_list = std::make_unique<List>(1, 8, list_pos, item_pos, Vec2{0.f, 8.f});
+        m_list->SetScrollBarPos(1240.f, 125.f, 490.f);
+    }
+
+    ~GameSelect() override {
+        *m_alive = false;
+    }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        Widget::Update(controller, touch);
+        m_list->OnUpdate(controller, touch, m_index, m_games.size(), [this](bool touched, s64 index){
+            if (touched && m_index == index) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_index = index;
+            }
+        });
+    }
+
+    auto WantsChrome() const -> bool override { return false; }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        DrawElement(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ThemeEntryID_BACKGROUND);
+        gfx::drawText(vg, 70.f, 55.f, 28.f, theme->GetColour(ThemeEntryID_TEXT), "Choose a Game"_i18n.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        gfx::drawText(vg, 1210.f, 55.f, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), m_title.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+        gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+        gfx::drawRect(vg, 30.f, 646.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
+
+        m_list->Draw(vg, theme, m_games.size(), [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
+            const auto selected = m_index == index;
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, pos);
+            } else {
+                DrawElement(pos, ThemeEntryID_GRID);
+            }
+
+            const auto& game = m_games[index];
+            const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+
+            nvgSave(vg);
+            nvgIntersectScissor(vg, pos.x + 20.f, pos.y, pos.w - 40.f, pos.h);
+            gfx::drawText(vg, pos.x + 20.f, pos.y + pos.h / 2.f, 20.f, colour, game.name.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            nvgRestore(vg);
+        });
+
+        Widget::Draw(vg, theme);
+    }
+
+private:
+    void Activate() {
+        if (m_index < 0 || static_cast<size_t>(m_index) >= m_games.size()) {
+            return;
+        }
+
+        const auto& game = m_games[m_index];
+        const auto game_id = game.id;
+        const auto game_name = game.name;
+
+        auto state = std::make_shared<SearchState>();
+        state->match_name = game_name;
+
+        App::Push<ProgressBox>(
+            0, "Loading available icons"_i18n, game_name,
+            [state, api_key = m_api_key, game_id](auto pbox) -> Result {
+                return DownloadGameIcons(pbox, api_key, game_id, *state);
+            },
+            [weak_alive = std::weak_ptr<bool>(m_alive), this, state, title = m_title, callback = m_callback](Result rc) {
+                const auto alive = weak_alive.lock();
+                if (!alive || !*alive) {
+                    return;
+                }
+                if (R_FAILED(rc)) {
+                    return;
+                }
+                if (state->error != SearchError::None) {
+                    ShowSearchError(state->error);
+                    return;
+                }
+                App::Push<IconGrid>(title, state, [weak_alive, this, callback](std::vector<u8> icon) {
+                    const auto alive_inner = weak_alive.lock();
+                    if (alive_inner && *alive_inner) {
+                        SetPop();
+                    }
+                    if (callback) {
+                        callback(std::move(icon));
+                    }
+                });
+            }
+        );
+    }
+
+    std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)};
+    const std::string m_title;
+    const std::string m_api_key;
+    const std::vector<GameInfo> m_games;
+    IconCallback m_callback;
+    std::unique_ptr<List> m_list;
+    s64 m_index{};
+};
+
+auto SearchGames(ProgressBox* pbox, const std::string& api_key, const std::string& title, SearchGamesState& state) -> Result {
+    pbox->NewTransfer("Searching for matching titles"_i18n);
+
+    const auto search_url = "https://www.steamgriddb.com/api/v2/search/autocomplete/" + curl::EscapeString(title);
+    const auto search = curl::Api().ToMemory(
+        curl::Url{search_url},
+        curl::Bearer{api_key},
+        curl::StopToken{pbox->GetToken()},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
+    state.error = GetResponseError(search);
+    if (state.error != SearchError::None) {
+        R_SUCCEED();
+    }
+
+    if (!ParseGames(search.data, state.games)) {
+        state.error = SearchError::NotFound;
+        R_SUCCEED();
+    }
+
+    R_SUCCEED();
+}
+
 void StartSearch(const std::string& api_key, const std::string& title, const IconCallback& callback) {
-    auto state = std::make_shared<SearchState>();
+    auto state = std::make_shared<SearchGamesState>();
     App::Push<ProgressBox>(
         0, "Searching SteamGridDB"_i18n, title,
         [state, api_key, title](auto pbox) -> Result {
-            return FetchIcons(pbox, api_key, title, *state);
+            return SearchGames(pbox, api_key, title, *state);
         },
-        [state, title, callback](Result rc) {
+        [state, api_key, title, callback](Result rc) {
             if (R_FAILED(rc)) {
                 return;
             }
@@ -382,7 +518,7 @@ void StartSearch(const std::string& api_key, const std::string& title, const Ico
                 ShowSearchError(state->error);
                 return;
             }
-            App::Push<IconGrid>(title, state, callback);
+            App::Push<GameSelect>(title, api_key, std::move(state->games), callback);
         }
     );
 }

@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.633**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.634**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.633 (no embedded avatar presets)
+## Поточний delivery: v0.13.634 (native user creator, avatar action tiles, SGDB game selection)
+
+- [x] `USERS-NATIVE-CREATOR-634` — перехід на нативний Horizon User Creator через `pselShowUserCreator()` без саморобного клавіатурного вводу та без виклику `RunCreate`.
+- [x] `USERS-AVATAR-TILES-634` — оновлено плитку «From SD» (`ThemeEntryID_ICON_FILE` з виділеним місцем підпису без накладання) та плитку SteamGridDB (одинарний чіткий підпис).
+- [x] `SGDB-GAME-SELECTION-634` — спільний двокроковий вибір у SteamGridDB: пошук формує список `GameSelect`, після вибору завантажуються іконки тільки для вибраної гри.
+- [x] `DOCS-BUMP-634` — версію піднято до `0.13.634`.
+
+## Попередній delivery: v0.13.633 (no embedded avatar presets)
 
 - [x] `USERS-NO-EMBED-633` — видалено Avatar 01–08 (`#embed`) і romfs JPEG-пресети.
 - [x] `USERS-CREATE-NO-FAKE-AVATAR-633` — Create через `acc:su` без підставленої картинки.

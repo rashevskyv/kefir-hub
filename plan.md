@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.633**. Завершені плани збережено в
+Поточний delivery — **v0.13.634**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.633 — Remove embedded avatars; create real empty Horizon profile
+## Поточний delivery: v0.13.634 — Native Horizon user creator, clean avatar action tiles, SGDB explicit game selection
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Create user відкриває офіційний системний апаратний інтерфейс створення користувача Horizon через нативний libnx API `pselShowUserCreator()`. Після повернення викликається `App::ResetTouchAfterApplet()` та оновлюється список користувачів.
+2. У Change avatar виправлено макет плиток дій: «From SD» використовує тему `ThemeEntryID_ICON_FILE` з виділеною нижньою зоною підпису (без накладання тексту на іконку), а плитка SteamGridDB виводить назву рівно один раз.
+3. SteamGridDB: спільний двокроковий інтерфейс вибору іконки (в аватарах та редакторі форвардерів). Пошук `/search/autocomplete/` формує повноцінний список ігор `GameSelect`, після вибору конкретної гри завантажуються іконки саме для неї.
+
+## Попередній delivery: v0.13.633 — Remove embedded avatars; create real empty Horizon profile
 
 Статус: програмну частину реалізовано; WSL `ReleaseWithInstall` успішно зібрано.
 1. Видалено вісім `#embed` JPEG-пресетів і romfs-аватари; вони не були системними іконками та ламали GCC-збірку.

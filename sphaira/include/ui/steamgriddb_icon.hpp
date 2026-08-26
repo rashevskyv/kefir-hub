@@ -14,9 +14,9 @@ using IconCallback = std::function<void(std::vector<u8>)>;
 // NCA icon. Returns an empty vector if the image cannot be decoded.
 auto NormalizeIcon(std::span<const u8> icon) -> std::vector<u8>;
 
-// Searches SteamGridDB using the supplied title, then displays a grid of
-// suitable HOME Menu icons. The API key is requested on first use and saved
-// in the config file under [steamgriddb] api_key.
+// Searches SteamGridDB using the supplied title, presents matching games for
+// selection, then displays a grid of suitable HOME Menu icons for the chosen game.
+// The API key is requested on first use and saved in the config file under [steamgriddb] api_key.
 void ShowIconPicker(const std::string& title, const IconCallback& callback);
 
 auto GetApiKey() -> std::string;

@@ -22,6 +22,8 @@
 #include "ui/steamgriddb_icon.hpp"
 #include "utils/utils.hpp"
 
+#include <switch/applets/psel.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <functional>
@@ -171,7 +173,7 @@ struct AvatarPickMenu final : MenuBase {
         const Vec4 list_pos{40.f, 110.f, 1200.f, 530.f};
         const Vec4 item_pos{70.f, 120.f, 160.f, 160.f};
         m_list = std::make_unique<List>(6, 12, list_pos, item_pos, Vec2{14.f, 14.f});
-        SetTitleSubHeading("A selects. SteamGridDB asks for a name to search."_i18n, true);
+        SetTitleSubHeading("A selects. SteamGridDB asks for a game name, then lets you choose a matching game."_i18n, true);
         SetSubHeading(std::to_string(m_tiles.size()));
     }
 
@@ -212,23 +214,20 @@ struct AvatarPickMenu final : MenuBase {
             } else {
                 DrawElement(v, ThemeEntryID_GRID);
             }
-            const Vec4 inner{v.x + 8.f, v.y + 8.f, v.w - 16.f, v.h - 16.f};
             if (t.kind == Kind::FromSd) {
-                DrawElementContain(inner, ThemeEntryID_ICON_IMAGE);
+                const Vec4 icon_rect{v.x + 16.f, v.y + 12.f, v.w - 32.f, v.h - 48.f};
+                DrawElementContain(icon_rect, ThemeEntryID_ICON_FILE);
                 gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 18.f, 14.f,
                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
                     theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                     "%s", "From SD"_i18n.c_str());
             } else if (t.kind == Kind::Sgdb) {
-                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h / 2.f - 10.f, 18.f,
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h / 2.f, 18.f,
                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
                     theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
-                    "SGDB");
-                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h / 2.f + 14.f, 13.f,
-                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO),
-                    "%s", "SteamGridDB"_i18n.c_str());
+                    "SteamGridDB");
             } else {
+                const Vec4 inner{v.x + 8.f, v.y + 8.f, v.w - 16.f, v.h - 16.f};
                 gfx::drawImage(vg, inner, t.image > 0 ? t.image : App::GetDefaultImage(), 5.f);
             }
         });
@@ -644,7 +643,7 @@ void Menu::ShowContextMenu() {
         }, true, "Change this profile's display name."_i18n);
         options->Add<SidebarEntryCallback>("Change avatar"_i18n, [this](){
             ConfirmChangeAvatar();
-        }, true, "Pick a built-in avatar, an SD image, or SteamGridDB."_i18n);
+        }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n);
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
         }, true, "One profile: name, avatar, Nintendo link. Restore makes a new user. No play hours."_i18n);
@@ -706,11 +705,13 @@ void Menu::ConfirmCreate() {
         App::Push<OptionBox>("The console already has 8 user profiles."_i18n, "OK"_i18n);
         return;
     }
-    std::string name;
-    if (R_FAILED(swkbd::ShowText(name, "New user"_i18n.c_str(), nullptr, 1, 31)) || name.empty()) {
+    const auto rc = pselShowUserCreator();
+    App::ResetTouchAfterApplet();
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Could not open user creator."_i18n);
         return;
     }
-    RunCreate(name);
+    Refresh();
 }
 
 void Menu::ConfirmRename() {
@@ -899,21 +900,6 @@ void Menu::ConfirmExport() {
                 RunExport();
             }
         });
-}
-
-void Menu::RunCreate(const std::string& nickname) {
-    App::Push<ProgressBox>(0, "Create user"_i18n, nickname, [nickname](auto pbox) -> Result {
-        pbox->NewTransfer("Creating user"_i18n);
-        AccountUid uid{};
-        R_TRY(account_user::Create(nickname, uid));
-        R_SUCCEED();
-    }, [this](Result rc) {
-        if (R_FAILED(rc)) {
-            App::Push<OptionBox>("Could not create the user."_i18n, "OK"_i18n);
-            return;
-        }
-        Refresh();
-    }, 1, PRIO_PREEMPTIVE, 1024 * 64, false);
 }
 
 void Menu::RunRename(const std::string& nickname) {
