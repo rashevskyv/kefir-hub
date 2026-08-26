@@ -31,9 +31,7 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
     void QueueRemoteEdit() { m_pending_remote_edit = true; }
-    void SetImagePickCallback(std::function<bool(const fs::FsPath&)> cb) {
-        m_image_pick = std::move(cb);
-    }
+    void SetImagePickCallback(std::function<bool(const fs::FsPath&)> cb);
 
     // standard chrome is drawn in normal (non-fullscreen) mode, and hidden in fullscreen.
     auto WantsChrome() const -> bool override {
@@ -99,6 +97,7 @@ private:
     void RecreateList();
     void FreeImage();
     void ResetImageView();
+    void UpdateImageAAction();
     void NextImage(s64 direction);
     void ToggleFullscreen();
     void UpdateFullscreenAction();

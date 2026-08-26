@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.624** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.625** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.625 — image picker A selects; Fit only after zoom
+
+- Передперегляд у пікері ставив A = «Вписати зображення», бо колбек вибору вішався після LoadImageFile.
+- Тепер A = «Взяти це зображення». Якщо зум змінено — A стає «Вписати»; після скидання зуму наступний A знову обирає.
+- Агент не компілює.
 
 ## v0.13.624 — compile fix for Icon layout
 

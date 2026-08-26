@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.624**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.625**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.624 (IsIconLayout compile fix)
+## Поточний delivery: v0.13.625 (image picker A = select)
+
+- [x] `PICKER-A-SELECT-625` — у передперегляді пікера A обирає зображення; Fit Image лише після зуму.
+- [x] `DOCS-BUMP-625` — версію піднято до `0.13.625`.
+
+## Попередній delivery: v0.13.624 (IsIconLayout compile fix)
 
 - [x] `ICON-LAYOUT-CONST-624` — `IsIconLayout()` без `const`; ReleaseWithInstall зібрано.
 - [x] `DOCS-BUMP-624` — версію піднято до `0.13.624`.

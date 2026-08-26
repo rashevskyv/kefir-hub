@@ -1903,18 +1903,14 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
     });
 }
 
-void Menu::LoadImageFile() {
-    if (m_image_pick) {
-        SetAction(Button::A, Action{"Use this image"_i18n, [this](){
-            if (m_image_pick && m_image_pick(m_path)) {
-                SetPop();
-            }
-        }});
-    } else {
-        SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
-            ResetImageView();
-        }});
+void Menu::SetImagePickCallback(std::function<bool(const fs::FsPath&)> cb) {
+    m_image_pick = std::move(cb);
+    if (m_is_image_file) {
+        UpdateImageAAction();
     }
+}
+
+void Menu::LoadImageFile() {
     SetAction(Button::X, Action{"Select"_i18n, [this](){
         ToggleCurrentSelection();
     }});
@@ -1963,6 +1959,27 @@ void Menu::FreeImage() {
 void Menu::ResetImageView() {
     m_viewport.Reset();
     UpdateImageSubHeading();
+    UpdateImageAAction();
+}
+
+void Menu::UpdateImageAAction() {
+    if (!m_is_image_file) {
+        return;
+    }
+
+    // Picker A is select unless zoomed (then Fit, next A selects). Viewer A always fits.
+    if (m_image_pick && !m_viewport.IsZoomed()) {
+        SetAction(Button::A, Action{"Use this image"_i18n, [this](){
+            if (m_image_pick && m_image_pick(m_path)) {
+                SetPop();
+            }
+        }});
+        return;
+    }
+
+    SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
+        ResetImageView();
+    }});
 }
 
 void Menu::NextImage(s64 direction) {
@@ -2300,7 +2317,11 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_is_image_file) {
+        const bool was_zoomed = m_viewport.IsZoomed();
         m_viewport.Update(controller, touch, m_image_w, m_image_h, ImageBounds(m_fullscreen), gfx::ImageFit::Contain);
+        if (m_image_pick && was_zoomed != m_viewport.IsZoomed()) {
+            UpdateImageAAction();
+        }
     } else if (m_scroll_text) {
         m_scroll_text->Update(controller, touch);
     } else {

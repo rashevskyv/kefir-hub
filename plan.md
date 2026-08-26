@@ -1,10 +1,15 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.624**. Завершені плани збережено в
+Поточний delivery — **v0.13.625**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.624 — compile fix: OptionLong::Get is not const
+## Поточний delivery: v0.13.625 — image picker A selects; Fit only after zoom
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Пікер: A за замовчуванням обирає зображення. «Вписати» лише якщо зум змінено; наступний A знову обирає.
+
+## Попередній delivery: v0.13.624 — compile fix: OptionLong::Get is not const
 
 Статус: зібрано `ReleaseWithInstall` (NRO ок).
 1. `IsIconLayout()` більше не `const`: `OptionLong::Get()` мутабельний.
