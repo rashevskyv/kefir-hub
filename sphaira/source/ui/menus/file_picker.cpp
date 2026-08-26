@@ -624,13 +624,21 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 if (entry_i < m_mosaics.size()) {
                     file_icon::DrawMosaic(vg, theme, preview, m_mosaics[entry_i]);
                 } else {
-                    DrawElementContain(preview, ThemeEntryID_ICON_FOLDER);
+                    file_icon::DrawFolderShape(vg, theme, preview);
                 }
             } else {
                 file_icon::DrawFileThumb(vg, theme, preview, thumb, e.GetExtension());
             }
-            m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 15.f,
-                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+            if (selected) {
+                m_scroll_name.Draw(vg, true, x + 6.f, y + h - 14.f, w - 12.f, 15.f,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+            } else {
+                nvgSave(vg);
+                nvgIntersectScissor(vg, x + 4.f, y + h - 26.f, w - 8.f, 24.f);
+                gfx::drawTextArgs(vg, x + w / 2.f, y + h - 14.f, 15.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "%s", e.name);
+                nvgRestore(vg);
+            }
             return;
         }
 

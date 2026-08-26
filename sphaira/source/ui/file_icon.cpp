@@ -106,55 +106,103 @@ void DrawFileThumb(NVGcontext* vg, Theme* theme, const Vec4& dest, int image, st
     }
 }
 
-void DrawMosaic(NVGcontext* vg, Theme* theme, const Vec4& dest, Mosaic& mosaic) {
-    const auto folder = GetThemeContainRect(dest, ThemeEntryID_ICON_FOLDER);
-    DrawElement(folder, ThemeEntryID_ICON_FOLDER);
+namespace {
 
-    const int n = static_cast<int>(mosaic.cells.size());
-    if (n <= 0 || folder.w <= 0.f || folder.h <= 0.f) {
-        return;
+auto FolderStrokeColour(Theme* theme) -> NVGcolor {
+    if (theme->elements[ThemeEntryID_ICON_COLOUR].type == ElementType::Colour) {
+        return theme->GetColour(ThemeEntryID_ICON_COLOUR);
     }
+    return theme->GetColour(ThemeEntryID_TEXT);
+}
 
-    // Inner body of a typical folder silhouette (tab on top, stroke around the pocket).
-    const Vec4 pocket{
-        folder.x + folder.w * 0.12f,
-        folder.y + folder.h * 0.28f,
-        folder.w * 0.76f,
-        folder.h * 0.60f
+struct FolderGeom {
+    Vec4 box;
+    Vec4 tab;
+    Vec4 body;
+    Vec4 pocket;
+    float radius{};
+    float stroke{};
+};
+
+auto MakeFolderGeom(const Vec4& dest) -> FolderGeom {
+    FolderGeom g;
+    const float inset = 3.f;
+    g.box = {dest.x + inset, dest.y + inset, dest.w - inset * 2.f, dest.h - inset * 2.f};
+    g.stroke = std::max(2.4f, std::min(g.box.w, g.box.h) * 0.036f);
+    g.radius = std::max(3.f, std::min(g.box.w, g.box.h) * 0.08f);
+    const float tab_h = g.box.h * 0.20f;
+    const float tab_w = g.box.w * 0.42f;
+    g.tab = {g.box.x, g.box.y, tab_w, tab_h};
+    const float body_y = g.box.y + tab_h * 0.55f;
+    g.body = {g.box.x, body_y, g.box.w, g.box.y + g.box.h - body_y};
+    const float pad = g.stroke * 2.2f;
+    g.pocket = {
+        g.body.x + pad,
+        g.body.y + g.stroke * 1.4f,
+        g.body.w - pad * 2.f,
+        g.body.h - pad - g.stroke * 1.2f
     };
-    if (pocket.w <= 1.f || pocket.h <= 1.f) {
-        return;
-    }
+    return g;
+}
 
-    const auto [cols, rows] = ChooseGrid(n);
-    const float gap = 1.5f;
-    const float cell_w = (pocket.w - gap * static_cast<float>(cols - 1)) / static_cast<float>(cols);
-    const float cell_h = (pocket.h - gap * static_cast<float>(rows - 1)) / static_cast<float>(rows);
+void StrokeFolder(NVGcontext* vg, Theme* theme, const FolderGeom& g) {
+    const auto colour = FolderStrokeColour(theme);
+    nvgLineJoin(vg, NVG_ROUND);
+    nvgLineCap(vg, NVG_ROUND);
 
-    nvgSave(vg);
-    nvgIntersectScissor(vg, pocket.x, pocket.y, pocket.w, pocket.h);
-    for (int i = 0; i < n && i < cols * rows; i++) {
-        const int c = i % cols;
-        const int r = i / cols;
-        const Vec4 cell{
-            pocket.x + static_cast<float>(c) * (cell_w + gap),
-            pocket.y + static_cast<float>(r) * (cell_h + gap),
-            cell_w, cell_h
-        };
-        gfx::drawRect(vg, cell, theme->GetColour(ThemeEntryID_BACKGROUND), 2.f);
-        auto& e = mosaic.cells[static_cast<size_t>(i)];
-        if (e.ellipsis) {
-            gfx::drawText(vg, cell.x + cell.w / 2.f, cell.y + cell.h / 2.f, std::max(10.f, cell.h * 0.45f),
-                theme->GetColour(ThemeEntryID_TEXT_INFO), "…", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            continue;
+    nvgBeginPath(vg);
+    nvgRoundedRectVarying(vg, g.tab.x, g.tab.y, g.tab.w, g.tab.h, g.radius, g.radius, 0.f, 0.f);
+    nvgStrokeColor(vg, colour);
+    nvgStrokeWidth(vg, g.stroke);
+    nvgStroke(vg);
+
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, g.body.x, g.body.y, g.body.w, g.body.h, g.radius);
+    nvgStrokeColor(vg, colour);
+    nvgStrokeWidth(vg, g.stroke);
+    nvgStroke(vg);
+}
+
+} // namespace
+
+void DrawFolderShape(NVGcontext* vg, Theme* theme, const Vec4& dest) {
+    StrokeFolder(vg, theme, MakeFolderGeom(dest));
+}
+
+void DrawMosaic(NVGcontext* vg, Theme* theme, const Vec4& dest, Mosaic& mosaic) {
+    const auto g = MakeFolderGeom(dest);
+    const int n = static_cast<int>(mosaic.cells.size());
+    if (n > 0 && g.pocket.w > 1.f && g.pocket.h > 1.f) {
+        const auto [cols, rows] = ChooseGrid(n);
+        const float gap = 2.f;
+        const float cell_w = (g.pocket.w - gap * static_cast<float>(cols - 1)) / static_cast<float>(cols);
+        const float cell_h = (g.pocket.h - gap * static_cast<float>(rows - 1)) / static_cast<float>(rows);
+
+        nvgSave(vg);
+        nvgIntersectScissor(vg, g.pocket.x, g.pocket.y, g.pocket.w, g.pocket.h);
+        for (int i = 0; i < n && i < cols * rows; i++) {
+            const int c = i % cols;
+            const int r = i / cols;
+            const Vec4 cell{
+                g.pocket.x + static_cast<float>(c) * (cell_w + gap),
+                g.pocket.y + static_cast<float>(r) * (cell_h + gap),
+                cell_w, cell_h
+            };
+            auto& e = mosaic.cells[static_cast<size_t>(i)];
+            if (e.ellipsis) {
+                gfx::drawText(vg, cell.x + cell.w / 2.f, cell.y + cell.h / 2.f, std::max(10.f, cell.h * 0.45f),
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), "…", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+                continue;
+            }
+            if (e.image > 0) {
+                DrawContain(vg, cell, e.image, 2.f);
+            } else {
+                DrawTypeIcon(vg, cell, e.ext);
+            }
         }
-        if (e.image > 0) {
-            DrawContain(vg, cell, e.image, 2.f);
-        } else {
-            DrawTypeIcon(vg, cell, e.ext);
-        }
+        nvgRestore(vg);
     }
-    nvgRestore(vg);
+    StrokeFolder(vg, theme, g);
 }
 
 void FreeMosaic(Mosaic& mosaic) {

@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.627**. Завершені плани збережено в
+Поточний delivery — **v0.13.628**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.627 — create avatar picker; delete must not kill account
+## Поточний delivery: v0.13.628 — vector folder tiles; avatar search; presets actually load
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Макет Icon: папка малюється nanovg-контуром (не 50px PNG); прев’ю без чорних плиток; назви по центру, не з’їжджають вліво.
+2. Пікер аватарів: 8 пресетів убудовані через #embed; SteamGridDB питає назву (напр. Castlevania).
+
+## Попередній delivery: v0.13.627 — create avatar picker; delete must not kill account
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Create user: після імені сітка аватарів (вбудовані + поточні профілі + SD + SteamGridDB).

@@ -625,6 +625,8 @@
   "Choose an avatar": "Choose an avatar",
   "From SD": "From SD",
   "A selects. From SD opens the image picker.": "A selects. From SD opens the image picker.",
+  "A selects. SteamGridDB asks for a name to search.": "A selects. SteamGridDB asks for a name to search.",
+  "Game or icon name": "Game or icon name",
   "Backup user": "Backup user",
   "Write name, avatar and Nintendo link to SD. The user stays on this console.": "Write name, avatar and Nintendo link to SD. The user stays on this console.",
   "Delete user": "Delete user",

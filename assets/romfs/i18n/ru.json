@@ -780,6 +780,8 @@
   "Choose an avatar": "Выбрать аватар",
   "From SD": "С SD",
   "A selects. From SD opens the image picker.": "A выбирает. С SD открывает пикер изображений.",
+  "A selects. SteamGridDB asks for a name to search.": "A выбирает. SteamGridDB спросит название для поиска.",
+  "Game or icon name": "Название игры или иконки",
   "Backup user": "Бэкап пользователя",
   "Write name, avatar and Nintendo link to SD. The user stays on this console.": "Записать имя, аватар и привязку Nintendo на SD. Пользователь остаётся на этой консоли.",
   "Delete user": "Удалить пользователя",

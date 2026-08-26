@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.627** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.628** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.628 — vector folder tiles; avatar presets load; SGDB asks for a name
+
+- Icon layout: папка — nanovg контур, не розтягнутий 50px PNG. Прев’ю без чорного фону (він накривав контур). Назви CENTER на лівому краї — з’їжджали; тепер по центру плитки.
+- Пікер аватарів: 8 пресетів через #embed (romfs-файли в 627 не потрапили в NRO). SteamGridDB відкриває swkbd, щоб ввести Castlevania тощо.
+- Офіційні іконки Nintendo (Mario тощо) живуть у myPage як BNTX; у хаб їх не пакуємо. Додаткові jpeg можна кинути в `/config/kefir/avatars/`.
+- Агент не компілює.
 
 ## v0.13.627 — create avatar picker; delete must not kill account
 

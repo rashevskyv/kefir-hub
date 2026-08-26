@@ -27,11 +27,22 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace sphaira::ui::menu::users {
 namespace {
+
+constexpr u8 PRESET_AVATAR_01[] { #embed <avatars/01.jpg> };
+constexpr u8 PRESET_AVATAR_02[] { #embed <avatars/02.jpg> };
+constexpr u8 PRESET_AVATAR_03[] { #embed <avatars/03.jpg> };
+constexpr u8 PRESET_AVATAR_04[] { #embed <avatars/04.jpg> };
+constexpr u8 PRESET_AVATAR_05[] { #embed <avatars/05.jpg> };
+constexpr u8 PRESET_AVATAR_06[] { #embed <avatars/06.jpg> };
+constexpr u8 PRESET_AVATAR_07[] { #embed <avatars/07.jpg> };
+constexpr u8 PRESET_AVATAR_08[] { #embed <avatars/08.jpg> };
 
 auto CollectSaves(const std::vector<AccountUid>& uids) -> std::vector<save::Entry> {
     title::Init();
@@ -169,7 +180,7 @@ struct AvatarPickMenu final : MenuBase {
         const Vec4 list_pos{40.f, 110.f, 1200.f, 530.f};
         const Vec4 item_pos{70.f, 120.f, 160.f, 160.f};
         m_list = std::make_unique<List>(6, 12, list_pos, item_pos, Vec2{14.f, 14.f});
-        SetTitleSubHeading("A selects. From SD opens the image picker."_i18n, true);
+        SetTitleSubHeading("A selects. SteamGridDB asks for a name to search."_i18n, true);
         SetSubHeading(std::to_string(m_tiles.size()));
     }
 
@@ -233,34 +244,68 @@ struct AvatarPickMenu final : MenuBase {
     }
 
 private:
-    void AddJpegTile(std::vector<u8> jpeg) {
-        if (jpeg.empty()) {
+    void AddDecodedTile(std::span<const u8> raw) {
+        if (raw.empty()) {
+            return;
+        }
+        auto img = ImageLoadFromMemory(raw, ImageFlag_JPEG);
+        if (img.data.empty()) {
+            img = ImageLoadFromMemory(raw);
+        }
+        if (img.data.empty() || img.w <= 0 || img.h <= 0) {
             return;
         }
         Tile t;
-        t.jpeg = std::move(jpeg);
-        t.image = nvgCreateImageMem(App::GetVg(), 0, t.jpeg.data(), static_cast<int>(t.jpeg.size()));
+        t.jpeg = ImageNormalizeAvatar(raw);
+        if (t.jpeg.empty()) {
+            t.jpeg = ImageNormalizeIcon(raw);
+        }
+        if (t.jpeg.empty()) {
+            t.jpeg.assign(raw.begin(), raw.end());
+        }
+        t.image = nvgCreateImageRGBA(App::GetVg(), img.w, img.h, 0, img.data.data());
         m_tiles.push_back(std::move(t));
     }
 
     void LoadTiles() {
-        for (int i = 1; i <= 8; i++) {
-            char path[40]{};
-            std::snprintf(path, sizeof(path), "romfs:/avatars/%02d.jpg", i);
-            std::vector<u8> raw;
-            if (R_FAILED(fs::read_entire_file(path, raw)) || raw.empty()) {
-                continue;
-            }
-            auto jpeg = ImageNormalizeAvatar(raw);
-            if (jpeg.empty()) {
-                jpeg = std::move(raw);
-            }
-            AddJpegTile(std::move(jpeg));
+        const std::pair<const u8*, size_t> presets[] = {
+            {PRESET_AVATAR_01, sizeof(PRESET_AVATAR_01)},
+            {PRESET_AVATAR_02, sizeof(PRESET_AVATAR_02)},
+            {PRESET_AVATAR_03, sizeof(PRESET_AVATAR_03)},
+            {PRESET_AVATAR_04, sizeof(PRESET_AVATAR_04)},
+            {PRESET_AVATAR_05, sizeof(PRESET_AVATAR_05)},
+            {PRESET_AVATAR_06, sizeof(PRESET_AVATAR_06)},
+            {PRESET_AVATAR_07, sizeof(PRESET_AVATAR_07)},
+            {PRESET_AVATAR_08, sizeof(PRESET_AVATAR_08)},
+        };
+        for (const auto& p : presets) {
+            AddDecodedTile(std::span<const u8>{p.first, p.second});
         }
         for (const auto& base : App::GetAccountList()) {
             std::vector<u8> jpeg;
             if (R_SUCCEEDED(account_user::LoadImageJpeg(base.uid, jpeg))) {
-                AddJpegTile(std::move(jpeg));
+                AddDecodedTile(jpeg);
+            }
+        }
+        fs::FsNativeSd sd;
+        fs::Dir dir;
+        const auto extra = paths::DATA_ROOT + "/avatars";
+        if (R_SUCCEEDED(sd.OpenDirectory(extra.c_str(), FsDirOpenMode_ReadFiles, &dir))) {
+            std::vector<FsDirectoryEntry> ents;
+            dir.ReadAll(ents);
+            for (const auto& e : ents) {
+                if (e.type != FsDirEntryType_File) {
+                    continue;
+                }
+                const auto ext = path::Extension(e.name);
+                static constexpr std::string_view kImg[] = {"jpg", "jpeg", "png", "bmp"};
+                if (!path::IsAnyOfIC(ext, kImg)) {
+                    continue;
+                }
+                std::vector<u8> raw;
+                if (R_SUCCEEDED(sd.read_entire_file((extra + "/" + e.name).c_str(), raw))) {
+                    AddDecodedTile(raw);
+                }
             }
         }
         m_tiles.push_back(Tile{Kind::FromSd, {}, 0, "From SD"});
@@ -277,7 +322,11 @@ private:
             return;
         }
         if (t.kind == Kind::Sgdb) {
-            steamgriddb::ShowIconPicker("avatar", [this](std::vector<u8> icon) {
+            std::string query;
+            if (R_FAILED(swkbd::ShowText(query, "Game or icon name"_i18n.c_str(), nullptr, 1, 64)) || query.empty()) {
+                return;
+            }
+            steamgriddb::ShowIconPicker(query, [this](std::vector<u8> icon) {
                 if (icon.empty()) {
                     return;
                 }
