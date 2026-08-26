@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.634**. Завершені плани збережено в
+Поточний delivery — **v0.13.635**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.634 — Native Horizon user creator, clean avatar action tiles, SGDB explicit game selection
+## Поточний delivery: v0.13.635 — Clarify Nintendo Account link status in Users UI
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/ui/menus/users_menu.cpp` оновлено `StatusLabel()`: відображається «Linked» виключно для офіційної прив'язки з токенами (`LinkKind::Official`), «Not linked · FakeLink» для Linkalho/офлайн-заглушки (`LinkKind::Offline`), «Not linked» для локального профілю (`LinkKind::None`), та «Link status unavailable» коли стан сейву акаунта не вдалося безпечно перевірити (`linked_known == false`).
+2. Додано нові локалізовані рядки в словники `en.json`, `uk.json` та `ru.json`.
+3. Збережено незмінними безпечний зонд Account save без зупинки Horizon-процесів, розмітку списків та `kForceUpdateForTest` (false).
+
+## Попередній delivery: v0.13.634 — Native Horizon user creator, clean avatar action tiles, SGDB explicit game selection
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Create user відкриває офіційний системний апаратний інтерфейс створення користувача Horizon через нативний libnx API `pselShowUserCreator()`. Після повернення викликається `App::ResetTouchAfterApplet()` та оновлюється список користувачів.

@@ -441,15 +441,15 @@ void Menu::SetIndex(s64 index) {
 
 auto Menu::StatusLabel(const account_link::User& u) const -> std::string {
     if (!u.linked_known) {
-        return {};
+        return "Link status unavailable"_i18n;
     }
     if (u.kind == account_link::LinkKind::Official) {
         return "Linked"_i18n;
     }
     if (u.kind == account_link::LinkKind::Offline) {
-        return "Offline stub"_i18n;
+        return "Not linked · FakeLink"_i18n;
     }
-    return "Local"_i18n;
+    return "Not linked"_i18n;
 }
 
 auto Menu::TryLoadAvatar(Item& u) -> bool {

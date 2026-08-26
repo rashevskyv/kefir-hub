@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.634**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.635**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.634 (native user creator, avatar action tiles, SGDB game selection)
+## Поточний delivery: v0.13.635 (clarify Nintendo Account link status)
+
+- [x] `USERS-LINK-STATUS-635` — однозначний статус прив'язки в інтерфейсі Users: «Linked» (офіційні токени), «Not linked · FakeLink» (Linkalho/офлайн-заглушка), «Not linked» (локальний профіль), «Link status unavailable» (не вдалося безпечно перевірити Account save).
+- [x] `USERS-I18N-635` — додано переклади «Not linked», «Not linked · FakeLink», «Link status unavailable» в en.json, uk.json, ru.json.
+- [x] `DOCS-BUMP-635` — версію піднято до `0.13.635`.
+
+## Попередній delivery: v0.13.634 (native user creator, avatar action tiles, SGDB game selection)
 
 - [x] `USERS-NATIVE-CREATOR-634` — перехід на нативний Horizon User Creator через `pselShowUserCreator()` без саморобного клавіатурного вводу та без виклику `RunCreate`.
 - [x] `USERS-AVATAR-TILES-634` — оновлено плитку «From SD» (`ThemeEntryID_ICON_FILE` з виділеним місцем підпису без накладання) та плитку SteamGridDB (одинарний чіткий підпис).

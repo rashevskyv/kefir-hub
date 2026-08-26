@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.634** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.635** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.635 — clarify Nintendo Account link status in Users UI
+
+- Tools → Users: оновлено логіку `StatusLabel()` для усунення неоднозначності в статусах профілів користувача:
+  - `Linked` відображається тільки у випадку підтвердженої офіційної прив'язки зі справжніми Nintendo-токенами (`LinkKind::Official`).
+  - `Not linked · FakeLink` відображається для профілів з офлайн-заглушкою Linkalho (`LinkKind::Offline`), щоб чітко попередити про відсутність справжніх токенів без хибного маркування як Linked.
+  - `Not linked` відображається для звичайних локальних профілів без прив'язки (`LinkKind::None`).
+  - `Link status unavailable` виводиться у випадку, коли системний сейв акаунта не вдалося безпечно перевірити (`linked_known == false`), не залишаючи статус порожнім і не стверджуючи хибно, що профіль не прив'язаний.
+- Додано відповідні локалізовані рядки до словників `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json` та `assets/romfs/i18n/ru.json`.
+- Безпечне опитування акаунтів збережено (без вбивства процесів Horizon); `kForceUpdateForTest` залишається `false`.
+- Агент не компілює.
 
 ## v0.13.634 — native Horizon user creator, clean avatar action tiles, SGDB explicit game selection
 
