@@ -21,8 +21,8 @@ auto SetImageJpeg(const AccountUid& uid, const std::vector<u8>& jpeg) -> Result;
 auto Create(const std::string& nickname, AccountUid& out_uid) -> Result;
 auto Delete(const AccountUid& uid) -> Result;
 
-auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result;
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result;
+auto ExportUserPack(const AccountUid& uid, std::string& out_dir, bool terminate_if_needed = false) -> Result;
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool terminate_if_needed = false) -> Result;
 auto ImportUserPack(const std::string& dir, AccountUid& out_uid) -> Result;
 auto FindUserPack(const std::string& dir) -> Pack;
 

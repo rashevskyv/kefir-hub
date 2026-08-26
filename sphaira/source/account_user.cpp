@@ -274,7 +274,7 @@ auto CopyLinkFiles(fs::FsNativeSd& sd, const std::string& dump_dir, const std::s
     }
 }
 
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result {
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool terminate_if_needed) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
 
     struct Ready {
@@ -298,7 +298,7 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     }
 
     std::string dump_dir;
-    account_link::ExportAccountSave(dump_dir);
+    account_link::ExportAccountSave(dump_dir, terminate_if_needed);
 
     fs::FsNativeSd sd;
     char stamp[32]{};
@@ -324,9 +324,9 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     R_SUCCEED();
 }
 
-auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result {
+auto ExportUserPack(const AccountUid& uid, std::string& out_dir, bool terminate_if_needed) -> Result {
     std::vector<std::string> dirs;
-    R_TRY(ExportUserPacks({uid}, dirs));
+    R_TRY(ExportUserPacks({uid}, dirs, terminate_if_needed));
     R_UNLESS(!dirs.empty(), Result_FsEmpty);
     out_dir = dirs.front();
     R_SUCCEED();

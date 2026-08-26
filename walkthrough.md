@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.620** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.621** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.621 — Backup user does not delete
+
+- Бекап користувача більше не зупиняє account (через це список після бекапу виглядав порожнім / «видаленим»).
+- Видалення: Hold A, потім пропозиція бекапу акаунта/сейвів, потім DeleteUser.
+- Агент не компілює.
 
 ## v0.13.620 — Users: no HB layout, create/avatar fixes, image picker
 

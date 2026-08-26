@@ -24,7 +24,7 @@ auto UidHex(const AccountUid& uid) -> std::string;
 auto ListUsers() -> std::vector<User>;
 auto LinkUsers(const std::vector<AccountUid>& uids) -> Result;
 auto UnlinkUsers(const std::vector<AccountUid>& uids) -> Result;
-auto ExportAccountSave(std::string& out_dir) -> Result;
+auto ExportAccountSave(std::string& out_dir, bool terminate_if_needed = false) -> Result;
 auto ImportOfficialLink(const std::vector<AccountUid>& uids, const std::string& dump_dir, bool& had_tokens) -> Result;
 
 } // namespace sphaira::account_link

@@ -480,8 +480,11 @@ auto UnlinkUsers(const std::vector<AccountUid>& uids) -> Result {
     R_SUCCEED();
 }
 
-auto ExportAccountSave(std::string& out_dir) -> Result {
-    auto save = OpenAccountSave();
+auto ExportAccountSave(std::string& out_dir, bool terminate_if_needed) -> Result {
+    auto save = TryOpenAccountSave();
+    if (R_FAILED(save.GetFsOpenResult()) && terminate_if_needed) {
+        save = OpenAccountSave();
+    }
     R_TRY(save.GetFsOpenResult());
 
     fs::FsNativeSd sd;

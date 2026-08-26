@@ -12,6 +12,7 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/nvg_util.hpp"
+#include "ui/hold_confirm_box.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/sidebar.hpp"
@@ -406,10 +407,10 @@ void Menu::ShowContextMenu() {
         }, true, "Set a JPEG avatar from the SD card or SteamGridDB."_i18n);
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
-        }, true, "Write name, avatar and Nintendo link to SD as a user pack."_i18n);
+        }, true, "Write name, avatar and Nintendo link to SD. The user stays on this console."_i18n);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
-        }, true, "Remove the profile. You can back up the account and saves first. Saves are deleted after."_i18n);
+        }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
     }
     options->Add<SidebarEntryCallback>("Restore user pack"_i18n, [this](){
         ConfirmRestore();
@@ -532,7 +533,7 @@ void Menu::ConfirmBackup() {
         return;
     }
     App::Push<OptionBox>(
-        "Write a user pack (name, avatar, Nintendo link) to SD?"_i18n,
+        "Write a user pack (name, avatar, Nintendo link) to SD? The user is not deleted."_i18n,
         "Cancel"_i18n, "Backup"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
@@ -595,46 +596,46 @@ void Menu::ConfirmDelete() {
     if (uids.empty()) {
         return;
     }
-    App::Push<OptionBox>(
-        "Delete the selected user(s)? Game saves for those users will be deleted afterwards."_i18n,
-        "Cancel"_i18n, "Delete"_i18n, 0,
-        [this, uids](auto op) {
-            if (!op || *op != 1) {
-                return;
-            }
-            App::Push<OptionBox>(
-                "Back up the user profile (name, avatar, Nintendo link) first?"_i18n,
-                "Skip"_i18n, "Backup account"_i18n, 1,
-                [this, uids](auto op) {
-                    if (!op) {
-                        return;
-                    }
-                    const bool backup_account = *op == 1;
-                    auto saves = CollectSaves(uids);
-                    if (saves.empty()) {
-                        RunDelete(backup_account, {});
-                        return;
-                    }
-                    App::Push<OptionBox>(
-                        "Back up game saves for these users? You can pick which games."_i18n,
-                        "Skip"_i18n, "Choose saves"_i18n, 1,
-                        [this, backup_account, saves](auto op) mutable {
-                            if (!op) {
+    const auto msg = (uids.size() > 1)
+        ? "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n
+        : "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n;
+    App::Push<HoldConfirmBox>(msg, [this, uids](bool ok) {
+        if (!ok) {
+            return;
+        }
+        App::Push<OptionBox>(
+            "Back up the user profile (name, avatar, Nintendo link) first?"_i18n,
+            "Skip"_i18n, "Backup account"_i18n, 1,
+            [this, uids](auto op) {
+                if (!op) {
+                    return;
+                }
+                const bool backup_account = *op == 1;
+                auto saves = CollectSaves(uids);
+                if (saves.empty()) {
+                    RunDelete(backup_account, {});
+                    return;
+                }
+                App::Push<OptionBox>(
+                    "Back up game saves for these users? You can pick which games."_i18n,
+                    "Skip"_i18n, "Choose saves"_i18n, 1,
+                    [this, backup_account, saves](auto op) mutable {
+                        if (!op) {
+                            return;
+                        }
+                        if (*op == 0) {
+                            RunDelete(backup_account, {});
+                            return;
+                        }
+                        App::Push<SavePickMenu>(std::move(saves), [this, backup_account](auto picked) {
+                            if (!picked) {
                                 return;
                             }
-                            if (*op == 0) {
-                                RunDelete(backup_account, {});
-                                return;
-                            }
-                            App::Push<SavePickMenu>(std::move(saves), [this, backup_account](auto picked) {
-                                if (!picked) {
-                                    return;
-                                }
-                                RunDelete(backup_account, std::move(*picked));
-                            });
+                            RunDelete(backup_account, std::move(*picked));
                         });
-                });
-        });
+                    });
+            });
+    });
 }
 
 void Menu::ConfirmImport(bool all) {
@@ -876,7 +877,7 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
             if (backup_account) {
                 pbox->NewTransfer("Backing up account"_i18n);
                 std::vector<std::string> dirs;
-                R_TRY(account_user::ExportUserPacks(uids, dirs));
+                R_TRY(account_user::ExportUserPacks(uids, dirs, true));
             }
             if (!save_backup.empty()) {
                 pbox->NewTransfer("Backing up saves"_i18n);
