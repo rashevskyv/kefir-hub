@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.631**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.632**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.631 (hardening user backup export)
+## Поточний delivery: v0.13.632 (full UID makes user-pack paths unique)
+
+- [x] `USER-PACK-FULL-UID-632` — повний UID у назві теки пака; 8-символьний префікс міг колізувати.
+- [x] `DOCS-BUMP-632` — версію піднято до `0.13.632`.
+
+## Попередній delivery: v0.13.631 (hardening user backup export)
 
 - [x] `USER-PACK-UID-631` — унікальний суфікс UID у назві папки пака для виключення колізій імен.
 - [x] `USER-TSV-NO-TRUNC-631` — збірка рядків playtime.tsv без статичного буфера і без обрізання.

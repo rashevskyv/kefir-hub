@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.631**. Завершені плани збережено в
+Поточний delivery — **v0.13.632**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.631 — Hardening: unique UID-suffixed user packs, untruncated TSV, accurate no-save copy
+## Поточний delivery: v0.13.632 — Correct unique full-UID user-pack directories
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Повний UID у назві теки (`<stamp>_<name>_<full_uid>`), а не 8-символьний префікс: навіть профілі з однаковими першими 32 бітами UID не можуть розділити пак.
+2. Формат пака, TSV, вибір і сейви не змінено.
+
+## Попередній delivery: v0.13.631 — Hardening: unique UID-suffixed user packs, untruncated TSV, accurate no-save copy
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Унікальні назви папок паків з суфіксом UID (`<stamp>_<name>_<uid_suffix>`): усунено колізію директорій при мультиселекті профілів з однаковими або схожими іменами.

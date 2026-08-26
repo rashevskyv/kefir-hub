@@ -438,8 +438,7 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
 
     for (const auto& r : ready) {
-        const auto uid_suffix = r.hex.size() >= 8 ? r.hex.substr(0, 8) : r.hex;
-        const auto dir = paths::DATA_ROOT + "/user_packs/" + stamp + "_" + SanitizeName(r.nickname) + "_" + uid_suffix;
+        const auto dir = paths::DATA_ROOT + "/user_packs/" + stamp + "_" + SanitizeName(r.nickname) + "_" + r.hex;
         sd.CreateDirectoryRecursively(dir.c_str());
         const auto json = std::string{"{\"nickname\":\""} + JsonEscape(r.nickname) +
             "\",\"uid\":\"" + r.hex + "\"}";
