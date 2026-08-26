@@ -144,6 +144,9 @@ private:
 } // namespace
 
 Menu::Menu() : grid::Menu{"Users"_i18n, MenuFlag_None} {
+    if (m_layout.Get() == LayoutType::LayoutType_HbMenu) {
+        m_layout.Set(LayoutType::LayoutType_GridDetail);
+    }
     this->SetActions(
         std::make_pair(Button::A, Action{"Options"_i18n, [this](){ ShowContextMenu(); }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
@@ -340,8 +343,46 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
         const auto layout = m_layout.Get();
         const auto status = StatusLabel(item);
-        const auto image_v = DrawEntry(vg, theme, layout, v, m_index == i, item.image,
-            item.nickname.c_str(), status.c_str(), item.uid_hex.c_str(), item.selected);
+        Vec4 image_v;
+        if (layout == LayoutType::LayoutType_List) {
+            const auto selected = m_index == i;
+            if (!selected) {
+                DrawElement(v, ThemeEntryID_GRID);
+            } else {
+                gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
+            }
+            if (item.selected) {
+                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+                tint.a *= 0.35f;
+                gfx::drawRect(vg, v, tint, 5.f);
+            }
+            const float icon_size = 46.f;
+            const float icon_x = v.x + 10.f;
+            const float icon_y = v.y + (v.h - icon_size) / 2.f;
+            gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size},
+                item.image ?: App::GetDefaultImage(), 4);
+            image_v = Vec4{icon_x, icon_y, icon_size, icon_size};
+            const float text_x = icon_x + icon_size + 14.f;
+            float status_w = 0.f;
+            if (!status.empty()) {
+                float bounds[4]{};
+                gfx::textBounds(vg, 0, 0, bounds, status.c_str());
+                status_w = bounds[2] - bounds[0] + 20.f;
+                gfx::drawText(vg, v.x + v.w - 15.f, v.y + v.h / 2.f, 16.f,
+                    theme->GetColour(ThemeEntryID_TEXT_INFO), status.c_str(),
+                    NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+            }
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, v.y, v.w - (text_x - v.x) - 15.f - status_w, v.h);
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f, 20.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                "%s", item.nickname.c_str());
+            nvgRestore(vg);
+        } else {
+            image_v = DrawEntry(vg, theme, layout, v, m_index == i, item.image,
+                item.nickname.c_str(), status.c_str(), item.uid_hex.c_str(), item.selected);
+        }
         DrawSelectionMark(vg, theme, layout, v, image_v, item.selected, m_selected_count > 0);
     });
 }
@@ -409,11 +450,14 @@ void Menu::ShowContextMenu() {
     layout_items.push_back("List"_i18n);
     layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
-    layout_items.push_back("HB Menu"_i18n);
+    auto layout_index = m_layout.Get();
+    if (layout_index > LayoutType::LayoutType_GridDetail) {
+        layout_index = LayoutType::LayoutType_GridDetail;
+    }
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
         m_layout.Set(index_out);
         OnLayoutChange();
-    }, m_layout.Get(), "Choose how user profiles are displayed."_i18n);
+    }, layout_index, "Choose how user profiles are displayed."_i18n);
 }
 
 void Menu::ConfirmCreate() {
@@ -457,11 +501,11 @@ void Menu::ConfirmChangeAvatar() {
                         fs::FsNativeSd sd;
                         std::vector<u8> file;
                         if (R_SUCCEEDED(sd.read_entire_file(path, file))) {
-                            jpeg = ImageNormalizeIcon(file);
+                            jpeg = ImageNormalizeAvatar(file);
                         }
                         if (jpeg.empty()) {
                             App::Push<OptionBox>("Could not read that image."_i18n, "OK"_i18n);
-                            return true;
+                            return false;
                         }
                         RunSetAvatar(std::move(jpeg));
                         return true;

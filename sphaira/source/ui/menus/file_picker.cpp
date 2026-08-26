@@ -4,9 +4,11 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/error_box.hpp"
+#include "ui/menus/file_viewer.hpp"
 
 #include "log.hpp"
 #include "app.hpp"
+#include "image.hpp"
 #include "ui/nvg_util.hpp"
 #include "fs.hpp"
 #include "defines.hpp"
@@ -23,6 +25,7 @@
 #include <span>
 #include <utility>
 #include <ranges>
+#include <algorithm>
 
 namespace sphaira::ui::menu::filepicker {
 namespace {
@@ -90,6 +93,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     }
 
     m_path = new_path;
+    FreeThumbs();
     m_entries.clear();
     m_index = 0;
     m_list->SetYoff(0);
@@ -138,6 +142,7 @@ auto Menu::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         m_entries.emplace_back(e);
         i++;
     }
+    m_thumbs.assign(m_entries.size(), 0);
 
     Sort();
     SetIndex(0);
@@ -294,9 +299,143 @@ void Menu::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
     }
 }
 
+void Menu::ApplyLayout() {
+    const Vec4 content_pos{40, 97, 1200, 539};
+    if (IsImagePicker() && m_image_layout.Get() == 1) {
+        const Vec2 pad{10, 10};
+        const Vec4 v{93, 186, 174, 174};
+        m_list = std::make_unique<List>(6, 6 * 2, content_pos, v, pad);
+    } else {
+        const Vec4 v{75, GetY() + 1.f + 42.f, 1220.f - 45.f * 2, 60};
+        m_list = std::make_unique<List>(1, 8, m_pos, v);
+    }
+}
+
+void Menu::FreeThumbs() {
+    auto* vg = App::GetVg();
+    for (auto& image : m_thumbs) {
+        if (image > 0 && vg) {
+            nvgDeleteImage(vg, image);
+        }
+        image = 0;
+    }
+    m_thumbs.clear();
+}
+
+auto Menu::IsImagePicker() const -> bool {
+    for (const auto& filter : m_filter) {
+        const char* ext = (!filter.empty() && filter[0] == '.') ? filter.c_str() + 1 : filter.c_str();
+        if (path::EqualsIC(ext, "jpg") || path::EqualsIC(ext, "jpeg") ||
+            path::EqualsIC(ext, "png") || path::EqualsIC(ext, "bmp") ||
+            path::EqualsIC(ext, "gif")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+auto Menu::TryLoadThumb(u32 entry_index) -> bool {
+    if (entry_index >= m_entries.size() || entry_index >= m_thumbs.size()) {
+        return false;
+    }
+    if (m_thumbs[entry_index]) {
+        return false;
+    }
+    const auto& e = m_entries[entry_index];
+    if (!e.IsFile() || !path::IsAnyOfIC(e.GetExtension(), IMAGE_EXTENSIONS)) {
+        return false;
+    }
+    if (e.file_size > 8 * 1024 * 1024) {
+        m_thumbs[entry_index] = -1;
+        return false;
+    }
+    const auto path = GetNewPath(e);
+    auto img = ImageLoadFromFile(path, path::EqualsIC(e.GetExtension(), "jpg") ||
+        path::EqualsIC(e.GetExtension(), "jpeg") ? ImageFlag_JPEG : ImageFlag_None);
+    if (img.data.empty()) {
+        m_thumbs[entry_index] = -1;
+        return false;
+    }
+    constexpr int thumb = 174;
+    if (img.w > thumb || img.h > thumb) {
+        const float scale = std::min(thumb / static_cast<float>(img.w), thumb / static_cast<float>(img.h));
+        const int nw = std::max(1, static_cast<int>(img.w * scale));
+        const int nh = std::max(1, static_cast<int>(img.h * scale));
+        auto resized = ImageResize(img.data, img.w, img.h, nw, nh);
+        if (!resized.data.empty()) {
+            img = std::move(resized);
+        }
+    }
+    m_thumbs[entry_index] = nvgCreateImageRGBA(App::GetVg(), img.w, img.h, 0, img.data.data());
+    return m_thumbs[entry_index] > 0;
+}
+
+auto Menu::CollectFolderImages() const -> std::pair<std::vector<fs::FsPath>, s64> {
+    std::vector<fs::FsPath> paths;
+    s64 current = 0;
+    for (u64 i = 0; i < m_entries_current.size(); i++) {
+        const auto& e = GetEntry(i);
+        if (!e.IsFile() || !path::IsAnyOfIC(e.GetExtension(), IMAGE_EXTENSIONS)) {
+            continue;
+        }
+        if (static_cast<s64>(i) == m_index) {
+            current = static_cast<s64>(paths.size());
+        }
+        paths.push_back(GetNewPath(e));
+    }
+    return {std::move(paths), current};
+}
+
+void Menu::OpenPreview() {
+    if (m_entries_current.empty() || !GetEntry().IsFile()) {
+        return;
+    }
+    auto [paths, index] = CollectFolderImages();
+    if (paths.empty()) {
+        paths.push_back(GetNewPathCurrent());
+        index = 0;
+    }
+    auto viewer = std::make_unique<fileview::Menu>(GetNewPathCurrent(), std::move(paths), index);
+    viewer->SetImagePickCallback([this](const fs::FsPath& path) {
+        if (m_callback(path, m_fs_entry)) {
+            SetPop();
+            return true;
+        }
+        return false;
+    });
+    App::Push(std::move(viewer));
+}
+
+void Menu::UseCurrentFile() {
+    if (m_entries_current.empty() || !GetEntry().IsFile()) {
+        return;
+    }
+    if (m_callback(GetNewPathCurrent(), m_fs_entry)) {
+        SetPop();
+    }
+}
+
 void Menu::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    if (IsImagePicker()) {
+        options->Add<SidebarEntryCallback>("Preview"_i18n, [this](){
+            OpenPreview();
+        }, true, "Open the image so you can see it. L/R flips through the folder."_i18n);
+        if (!m_pick_directory) {
+            options->Add<SidebarEntryCallback>("Use this image"_i18n, [this](){
+                UseCurrentFile();
+            }, true, "Select the highlighted file."_i18n);
+        }
+        SidebarEntryArray::Items layout_items;
+        layout_items.push_back("List"_i18n);
+        layout_items.push_back("Icon"_i18n);
+        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+            m_image_layout.Set(index_out);
+            ApplyLayout();
+        }, m_image_layout.Get(), "Icon shows image thumbnails."_i18n);
+    }
 
     SidebarEntryArray::Items mount_items;
     std::vector<FsEntry> fs_entries;
@@ -353,7 +492,9 @@ Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, c
             if (entry.type == FsDirEntryType_Dir) {
                 Scan(GetNewPathCurrent());
             } else if (!m_pick_directory) {
-                if (m_callback(GetNewPathCurrent(), m_fs_entry)) {
+                if (IsImagePicker()) {
+                    OpenPreview();
+                } else if (m_callback(GetNewPathCurrent(), m_fs_entry)) {
                     SetPop();
                 }
             }
@@ -393,10 +534,13 @@ Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, c
                 SetPop();
             }
         }});
+    } else if (IsImagePicker()) {
+        SetAction(Button::Y, Action{"Use this image"_i18n, [this](){
+            UseCurrentFile();
+        }});
     }
 
-    const Vec4 v{75, GetY() + 1.f + 42.f, 1220.f-45.f*2, 60};
-    m_list = std::make_unique<List>(1, 8, m_pos, v);
+    ApplyLayout();
 
     auto buf = path;
     if (path.empty()) {
@@ -407,6 +551,7 @@ Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, c
 }
 
 Menu::~Menu() {
+    FreeThumbs();
     // don't store mount points for non-sd card paths.
     if (IsSd()) {
         ini_puts(INI_SECTION, "last_path", m_path, App::CONFIG_PATH);
@@ -443,24 +588,48 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     constexpr float text_xoffset{15.f};
     bool got_dir_count = false;
+    int loaded{};
+    const bool image_grid = IsImagePicker() && m_image_layout.Get() == 1;
 
-    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, image_grid](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
+        const auto entry_i = m_entries_current[i];
+        if (IsImagePicker() && loaded < 2 && TryLoadThumb(entry_i)) {
+            loaded++;
+        }
+        const int thumb = (entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;
 
         auto text_id = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
         if (selected) {
             text_id = ThemeEntryID_TEXT_SELECTED;
             gfx::drawRectOutline(vg, theme, 4.f, v);
-        } else {
+        } else if (!image_grid) {
             if (i != m_entries_current.size() - 1) {
                 gfx::drawRect(vg, Vec4{x, y + h, w, 1.f}, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
             }
+        } else {
+            DrawElement(v, ThemeEntryID_GRID);
+        }
+
+        if (image_grid) {
+            if (e.IsDir()) {
+                DrawElement(x + 20, y + 20, w - 40, h - 50, ThemeEntryID_ICON_FOLDER);
+            } else if (thumb > 0) {
+                gfx::drawImage(vg, Vec4{x, y, w, h - 28.f}, thumb, 5);
+            } else {
+                DrawElement(x + 20, y + 20, w - 40, h - 50, ThemeEntryID_ICON_IMAGE);
+            }
+            m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 15.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), e.name);
+            return;
         }
 
         if (e.IsDir()) {
             DrawElement(x + text_xoffset, y + 5, 50, 50, ThemeEntryID_ICON_FOLDER);
+        } else if (thumb > 0) {
+            gfx::drawImage(vg, Vec4{x + text_xoffset, y + 5, 50, 50}, thumb, 4);
         } else {
             auto icon = ThemeEntryID_ICON_FILE;
             const auto ext = e.GetExtension();
@@ -471,7 +640,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             } else if (path::IsAnyOfIC(ext, IMAGE_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_IMAGE;
             } else if (path::IsAnyOfIC(ext, INSTALL_EXTENSIONS)) {
-                // todo: maybe replace this icon with something else?
                 icon = ThemeEntryID_ICON_NRO;
             } else if (path::IsAnyOfIC(ext, ZIP_EXTENSIONS)) {
                 icon = ThemeEntryID_ICON_ZIP;
@@ -526,10 +694,12 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
 
     if (m_entries.empty()) {
-        if (m_path.empty()) {
+        auto path = m_path.empty() ? m_fs->Root() : m_path;
+        if (m_fs && !m_fs->DirExists(path)) {
+            path = m_fs->Root();
+        }
+        if (R_FAILED(Scan(path))) {
             Scan(m_fs->Root());
-        } else {
-            Scan(m_path);
         }
 
         if (IsSd() && !m_entries.empty()) {

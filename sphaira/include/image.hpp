@@ -33,6 +33,10 @@ auto ImageLoadIcon(std::span<const u8> data) -> ImageResult;
 // Returns empty vector on failure.
 auto ImageNormalizeIcon(std::span<const u8> data) -> std::vector<u8>;
 
+// Same output as ImageNormalizeIcon, but photos may be larger than 1024px
+// (file-viewer load path, then resize). For avatars from the SD picker.
+auto ImageNormalizeAvatar(std::span<const u8> data) -> std::vector<u8>;
+
 // Returns a normalized 256x256 JPEG default icon, falling back to raw default bytes.
 auto ImageGetDefaultIcon() -> std::vector<u8>;
 

@@ -7,6 +7,7 @@
 #include "ui/list.hpp"
 #include "fs.hpp"
 #include "text_helper.hpp"
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -30,6 +31,9 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
     void QueueRemoteEdit() { m_pending_remote_edit = true; }
+    void SetImagePickCallback(std::function<bool(const fs::FsPath&)> cb) {
+        m_image_pick = std::move(cb);
+    }
 
     // standard chrome is drawn in normal (non-fullscreen) mode, and hidden in fullscreen.
     auto WantsChrome() const -> bool override {
@@ -177,6 +181,7 @@ private:
     std::map<s64, text_helper::Page> m_page_cache{};
 
     bool m_is_image_file{};
+    std::function<bool(const fs::FsPath&)> m_image_pick{};
     int m_image{};
     int m_image_w{};
     int m_image_h{};

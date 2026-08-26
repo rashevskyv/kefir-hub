@@ -1904,9 +1904,17 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::LoadImageFile() {
-    SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
-        ResetImageView();
-    }});
+    if (m_image_pick) {
+        SetAction(Button::A, Action{"Use this image"_i18n, [this](){
+            if (m_image_pick && m_image_pick(m_path)) {
+                SetPop();
+            }
+        }});
+    } else {
+        SetAction(Button::A, Action{"Fit Image"_i18n, [this](){
+            ResetImageView();
+        }});
+    }
     SetAction(Button::X, Action{"Select"_i18n, [this](){
         ToggleCurrentSelection();
     }});
@@ -2024,6 +2032,21 @@ void Menu::InvertSelection() {
 
 void Menu::DisplayImageOptions() {
     auto options = std::make_unique<Sidebar>("Image Options"_i18n, Sidebar::Side::RIGHT);
+
+    if (m_image_pick) {
+        options->Add<SidebarEntryCallback>("Use this image"_i18n, [this](){
+            App::PopToMenu();
+            if (m_image_pick && m_image_pick(m_path)) {
+                SetPop();
+            }
+        }, "Use the image on screen as the selection."_i18n);
+        options->Add<SidebarEntryCallback>("Fit Image"_i18n, [this](){
+            App::PopToMenu();
+            ResetImageView();
+        }, "Reset zoom and pan."_i18n);
+        App::Push(std::move(options));
+        return;
+    }
 
     options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
         App::PopToMenu();

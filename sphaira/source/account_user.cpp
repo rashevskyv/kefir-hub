@@ -158,15 +158,38 @@ auto Create(const std::string& nickname, AccountUid& out_uid) -> Result {
 
     AccountUid uid{};
     R_TRY(serviceDispatchOut(&accsu, CMD_BEGIN_REG, uid));
+
+    auto cancel = [&]() {
+        serviceDispatchIn(&accsu, 202, uid);
+    };
+
+    AccountProfileBase base{};
+    base.uid = uid;
+    const auto n = std::min(nickname.size(), sizeof(base.nickname) - 1);
+    std::memcpy(base.nickname, nickname.data(), n);
+
+    AccountUserData data{};
+    auto jpeg = ImageGetDefaultIcon();
+    auto store = StoreProfile(uid, base, data,
+        jpeg.empty() ? nullptr : jpeg.data(), jpeg.size());
+    if (R_FAILED(store)) {
+        log_write("[USER] create store failed 0x%X\n", store);
+        cancel();
+        R_TRY(store);
+    }
+
     auto complete = serviceDispatchIn(&accsu, CMD_COMPLETE_REG, uid);
     if (R_FAILED(complete)) {
-        serviceDispatchIn(&accsu, 202, uid); // CancelUserRegistration
+        complete = serviceDispatchIn(&accsu, 206, uid); // CompleteUserRegistrationForcibly
+    }
+    if (R_FAILED(complete)) {
+        log_write("[USER] create complete failed 0x%X\n", complete);
+        cancel();
         R_TRY(complete);
     }
+
     out_uid = uid;
-    if (!nickname.empty()) {
-        R_TRY(Rename(uid, nickname));
-    }
+    log_write("[USER] created %s\n", nickname.c_str());
     R_SUCCEED();
 }
 

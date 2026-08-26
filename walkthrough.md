@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.619** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.620** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.620 — Users: no HB layout, create/avatar fixes, image picker
+
+- Макет «головне меню» прибрано з Користувачів. Список: нікнейм по центру рядка по вертикалі.
+- Створення юзера: Begin → Store (ім’я + дефолтний jpeg) → Complete (інакше Complete падав на порожньому профілі).
+- Аватар: фото більші за 1024px тепер нормалізуються. Пікер — макет Icon з мініатюрами; A відкриває перегляд (L/R по теці), Y або контекст «Взяти це зображення».
+- Агент не компілює.
 
 ## v0.13.619 — compile fix for user avatar JPEG
 

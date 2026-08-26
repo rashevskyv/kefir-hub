@@ -317,6 +317,30 @@ auto ImageNormalizeIcon(std::span<const u8> data) -> std::vector<u8> {
     return jpg.data;
 }
 
+auto ImageNormalizeAvatar(std::span<const u8> data) -> std::vector<u8> {
+    if (data.empty()) {
+        return {};
+    }
+
+    auto img = ImageLoadFromMemory(data, ImageFlag_JPEG);
+    if (img.data.empty()) {
+        img = ImageLoadFromMemory(data);
+    }
+    if (img.data.empty()) {
+        img = ImageLoadIcon(data);
+    }
+    if (img.data.empty()) {
+        return {};
+    }
+    if (img.w != ICON_TARGET_DIM || img.h != ICON_TARGET_DIM) {
+        img = ImageResize(img.data, img.w, img.h, ICON_TARGET_DIM, ICON_TARGET_DIM);
+    }
+    if (img.data.empty() || img.w != ICON_TARGET_DIM || img.h != ICON_TARGET_DIM) {
+        return {};
+    }
+    return ImageConvertToJpg(img.data, img.w, img.h).data;
+}
+
 auto ImageGetDefaultIcon() -> std::vector<u8> {
     const auto raw = App::GetDefaultImageData();
     if (raw.empty()) {

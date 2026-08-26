@@ -7,6 +7,7 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include <span>
+#include <utility>
 
 namespace sphaira::ui::menu::filepicker {
 
@@ -110,6 +111,13 @@ private:
     }
 
     void DisplayOptions();
+    void ApplyLayout();
+    void FreeThumbs();
+    auto IsImagePicker() const -> bool;
+    auto TryLoadThumb(u32 entry_index) -> bool;
+    void OpenPreview();
+    void UseCurrentFile();
+    auto CollectFolderImages() const -> std::pair<std::vector<fs::FsPath>, s64>;
 
     void UpdateSubheading();
     void PromptIfShouldExit();
@@ -130,6 +138,8 @@ private:
     std::span<u32> m_entries_current{};
 
     std::unique_ptr<List> m_list{};
+    std::vector<int> m_thumbs{};
+    option::OptionLong m_image_layout{INI_SECTION, "image_layout", 1, false};
 
     // this keeps track of the highlighted file before opening a folder
     // if the user presses B to go back to the previous dir
