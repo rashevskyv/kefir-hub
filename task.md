@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.625**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.626**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.625 (image picker A = select)
+## Поточний delivery: v0.13.626 (folder mosaic silhouette)
+
+- [x] `ICON-FOLDER-626` — папка малюється як силует; прев’ю в кишені; type-іконки з contain.
+- [x] `DOCS-BUMP-626` — версію піднято до `0.13.626`.
+
+## Попередній delivery: v0.13.625 (image picker A = select)
 
 - [x] `PICKER-A-SELECT-625` — у передперегляді пікера A обирає зображення; Fit Image лише після зуму.
 - [x] `DOCS-BUMP-625` — версію піднято до `0.13.625`.

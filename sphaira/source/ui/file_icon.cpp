@@ -93,8 +93,8 @@ void DrawContain(NVGcontext* vg, const Vec4& dest, int image, float rounded) {
 }
 
 void DrawTypeIcon(NVGcontext* vg, const Vec4& dest, std::string_view ext) {
-    const float pad = std::max(2.f, std::min(dest.w, dest.h) * 0.12f);
-    DrawElement(dest.x + pad, dest.y + pad, dest.w - pad * 2.f, dest.h - pad * 2.f, TypeIcon(ext));
+    const float pad = std::max(2.f, std::min(dest.w, dest.h) * 0.08f);
+    DrawElementContain({dest.x + pad, dest.y + pad, dest.w - pad * 2.f, dest.h - pad * 2.f}, TypeIcon(ext));
 }
 
 void DrawFileThumb(NVGcontext* vg, Theme* theme, const Vec4& dest, int image, std::string_view ext) {
@@ -107,21 +107,38 @@ void DrawFileThumb(NVGcontext* vg, Theme* theme, const Vec4& dest, int image, st
 }
 
 void DrawMosaic(NVGcontext* vg, Theme* theme, const Vec4& dest, Mosaic& mosaic) {
+    const auto folder = GetThemeContainRect(dest, ThemeEntryID_ICON_FOLDER);
+    DrawElement(folder, ThemeEntryID_ICON_FOLDER);
+
     const int n = static_cast<int>(mosaic.cells.size());
-    if (n <= 0) {
-        DrawElement(dest.x + 20.f, dest.y + 20.f, dest.w - 40.f, dest.h - 40.f, ThemeEntryID_ICON_FOLDER);
+    if (n <= 0 || folder.w <= 0.f || folder.h <= 0.f) {
         return;
     }
+
+    // Inner body of a typical folder silhouette (tab on top, stroke around the pocket).
+    const Vec4 pocket{
+        folder.x + folder.w * 0.12f,
+        folder.y + folder.h * 0.28f,
+        folder.w * 0.76f,
+        folder.h * 0.60f
+    };
+    if (pocket.w <= 1.f || pocket.h <= 1.f) {
+        return;
+    }
+
     const auto [cols, rows] = ChooseGrid(n);
     const float gap = 1.5f;
-    const float cell_w = (dest.w - gap * static_cast<float>(cols - 1)) / static_cast<float>(cols);
-    const float cell_h = (dest.h - gap * static_cast<float>(rows - 1)) / static_cast<float>(rows);
+    const float cell_w = (pocket.w - gap * static_cast<float>(cols - 1)) / static_cast<float>(cols);
+    const float cell_h = (pocket.h - gap * static_cast<float>(rows - 1)) / static_cast<float>(rows);
+
+    nvgSave(vg);
+    nvgIntersectScissor(vg, pocket.x, pocket.y, pocket.w, pocket.h);
     for (int i = 0; i < n && i < cols * rows; i++) {
         const int c = i % cols;
         const int r = i / cols;
         const Vec4 cell{
-            dest.x + static_cast<float>(c) * (cell_w + gap),
-            dest.y + static_cast<float>(r) * (cell_h + gap),
+            pocket.x + static_cast<float>(c) * (cell_w + gap),
+            pocket.y + static_cast<float>(r) * (cell_h + gap),
             cell_w, cell_h
         };
         gfx::drawRect(vg, cell, theme->GetColour(ThemeEntryID_BACKGROUND), 2.f);
@@ -137,6 +154,7 @@ void DrawMosaic(NVGcontext* vg, Theme* theme, const Vec4& dest, Mosaic& mosaic) 
             DrawTypeIcon(vg, cell, e.ext);
         }
     }
+    nvgRestore(vg);
 }
 
 void FreeMosaic(Mosaic& mosaic) {

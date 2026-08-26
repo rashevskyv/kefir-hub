@@ -47,6 +47,8 @@ struct AmsEmummcPaths {
 // todo: why is this global???
 void DrawElement(float x, float y, float w, float h, ThemeEntryID id);
 void DrawElement(const Vec4&, ThemeEntryID id);
+auto GetThemeContainRect(const Vec4& dest, ThemeEntryID id) -> Vec4;
+void DrawElementContain(const Vec4& dest, ThemeEntryID id);
 class App {
 public:
     App(const char* argv0);

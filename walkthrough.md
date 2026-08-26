@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.625** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.626** (2026-08-26). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.626 — folder silhouette around Icon-layout previews
+
+- Макет Icon у файловому менеджері і пікері: спочатку силует папки (пропорції іконки), прев’ю лише в її кишені.
+- Іконки відео/аудіо/файлу більше не розтягуються в клітинку — contain.
+- Агент не компілює.
 
 ## v0.13.625 — image picker A selects; Fit only after zoom
 

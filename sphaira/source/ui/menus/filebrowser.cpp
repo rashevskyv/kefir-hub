@@ -547,22 +547,22 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         if (icon_grid) {
             const Vec4 preview{x + 4.f, y + 4.f, w - 8.f, h - 32.f};
             if (m_menu->IsFolderPicker() && i == 0) {
-                DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                DrawElementContain(preview, ThemeEntryID_ICON_FOLDER);
                 m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "Select current folder"_i18n.c_str());
                 return;
             }
             if (IsParentEntry(i)) {
-                DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                DrawElementContain(preview, ThemeEntryID_ICON_FOLDER);
                 m_scroll_name.Draw(vg, selected, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "..");
                 return;
             }
             if (e.IsDir()) {
-                if (entry_i < m_mosaics.size() && m_mosaics[entry_i].listed) {
+                if (entry_i < m_mosaics.size()) {
                     file_icon::DrawMosaic(vg, theme, preview, m_mosaics[entry_i]);
                 } else {
-                    DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                    DrawElementContain(preview, ThemeEntryID_ICON_FOLDER);
                 }
             } else {
                 const int thumb = (entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;

@@ -621,10 +621,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         if (icon_grid) {
             const Vec4 preview{x + 4.f, y + 4.f, w - 8.f, h - 32.f};
             if (e.IsDir()) {
-                if (entry_i < m_mosaics.size() && m_mosaics[entry_i].listed) {
+                if (entry_i < m_mosaics.size()) {
                     file_icon::DrawMosaic(vg, theme, preview, m_mosaics[entry_i]);
                 } else {
-                    DrawElement(preview.x + 16.f, preview.y + 16.f, preview.w - 32.f, preview.h - 32.f, ThemeEntryID_ICON_FOLDER);
+                    DrawElementContain(preview, ThemeEntryID_ICON_FOLDER);
                 }
             } else {
                 file_icon::DrawFileThumb(vg, theme, preview, thumb, e.GetExtension());

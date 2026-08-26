@@ -1173,6 +1173,29 @@ void DrawElement(const Vec4& v, ThemeEntryID id) {
     }
 }
 
+auto GetThemeContainRect(const Vec4& dest, ThemeEntryID id) -> Vec4 {
+    if (!g_app || dest.w <= 0.f || dest.h <= 0.f) {
+        return dest;
+    }
+    const auto& e = g_app->m_theme.elements[id];
+    if (e.type != ElementType::Texture) {
+        return dest;
+    }
+    int iw{}, ih{};
+    nvgImageSize(g_app->vg, e.texture, &iw, &ih);
+    if (iw <= 0 || ih <= 0) {
+        return dest;
+    }
+    const float scale = std::min(dest.w / static_cast<float>(iw), dest.h / static_cast<float>(ih));
+    const float dw = static_cast<float>(iw) * scale;
+    const float dh = static_cast<float>(ih) * scale;
+    return {dest.x + (dest.w - dw) / 2.f, dest.y + (dest.h - dh) / 2.f, dw, dh};
+}
+
+void DrawElementContain(const Vec4& dest, ThemeEntryID id) {
+    DrawElement(GetThemeContainRect(dest, id), id);
+}
+
 
 App::App(const char* argv0) {
     TimeStamp ts;
