@@ -852,6 +852,7 @@
   "Backup saves": "Бэкап сейвов",
   "X marks games to back up. A backs up the marked saves.": "X отмечает игры для бэкапа. A бэкапит отмеченные сохранения.",
   "Includes playtime data and selected saves.": "Содержит данные игрового времени и выбранные сохранения.",
+  "Includes playtime data.": "Содержит данные игрового времени.",
   "No saves on this account": "На этом аккаунте нет сейвов",
   "Creating user": "Создание пользователя",
   "Could not create the user.": "Не удалось создать пользователя.",

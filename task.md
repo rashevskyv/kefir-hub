@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.630**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.631**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.630 (readable per-user backup export)
+## Поточний delivery: v0.13.631 (hardening user backup export)
+
+- [x] `USER-PACK-UID-631` — унікальний суфікс UID у назві папки пака для виключення колізій імен.
+- [x] `USER-TSV-NO-TRUNC-631` — збірка рядків playtime.tsv без статичного буфера і без обрізання.
+- [x] `USER-ACCURATE-COPY-631` — точний текст завершення (повідомлення про сейви лише при їх наявності).
+- [x] `DOCS-BUMP-631` — версію піднято до `0.13.631`.
+
+## Попередній delivery: v0.13.630 (readable per-user backup export)
 
 - [x] `USER-BACKUP-PACK-630` — експорт пака профілю: profile.json, avatar.jpg, baas/nas, README.txt.
 - [x] `USER-PLAYTIME-TSV-630` — генерація читабельного playtime.tsv через pdmqry та ns control data без вбивства сервісів.

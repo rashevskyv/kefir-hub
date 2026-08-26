@@ -1058,6 +1058,7 @@ void Menu::RunBackup(std::vector<save::Entry> picked_saves) {
     if (uids.empty()) {
         return;
     }
+    const bool has_saves = !picked_saves.empty();
     auto dirs = std::make_shared<std::vector<std::string>>();
     auto helper = std::make_shared<save::Menu>(MenuFlag_None);
     App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs, picked_saves = std::move(picked_saves), helper](auto pbox) mutable -> Result {
@@ -1078,12 +1079,15 @@ void Menu::RunBackup(std::vector<save::Entry> picked_saves) {
             }
         }
         R_SUCCEED();
-    }, [this, dirs](Result rc) {
+    }, [this, dirs, has_saves](Result rc) {
         if (R_FAILED(rc) || dirs->empty()) {
             App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
             return;
         }
-        App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes playtime data and selected saves."_i18n, "OK"_i18n);
+        const auto detail = has_saves
+            ? "\n" + "Includes playtime data and selected saves."_i18n
+            : "\n" + "Includes playtime data."_i18n;
+        App::Push<OptionBox>("Exported to "_i18n + dirs->front() + detail, "OK"_i18n);
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }

@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.630**. Завершені плани збережено в
+Поточний delivery — **v0.13.631**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.630 — Phase 1: Readable per-user SD backup pack (profile, link, playtime TSV, saves)
+## Поточний delivery: v0.13.631 — Hardening: unique UID-suffixed user packs, untruncated TSV, accurate no-save copy
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Унікальні назви папок паків з суфіксом UID (`<stamp>_<name>_<uid_suffix>`): усунено колізію директорій при мультиселекті профілів з однаковими або схожими іменами.
+2. Необмежена довжина рядків `playtime.tsv`: заміна фіксованого буфера snprintf на динамічну збірку `std::string` без обрізання довгих назв ігор з NACP.
+3. Точний текст завершення Backup user: повідомлення про наявність сейвів показується лише коли сейви дійсно були обрані.
+
+## Попередній delivery: v0.13.630 — Phase 1: Readable per-user SD backup pack (profile, link, playtime TSV, saves)
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Backup user створює повноцінний пак профілю на SD: profile.json, avatar.jpg, Nintendo link (baas/nas), README.txt та читабельний playtime.tsv.

@@ -376,18 +376,24 @@ void WriteUserPlaytimeTsv(fs::FsNativeSd& sd, const std::string& dir, const Acco
         if (pdm_ok) {
             pdmqryQueryPlayStatisticsByApplicationIdAndUserAccountId(app.app_id, uid, true, &stats);
         }
-        char row[512];
-        std::snprintf(row, sizeof(row),
-            "%016lX\t%s\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu\n",
-            app.app_id,
-            app.name.c_str(),
-            static_cast<unsigned long long>(stats.playtime),
-            static_cast<unsigned long long>(stats.total_launches),
-            static_cast<unsigned long long>(stats.first_timestamp_user),
-            static_cast<unsigned long long>(stats.last_timestamp_user),
-            static_cast<unsigned long long>(stats.first_timestamp_network),
-            static_cast<unsigned long long>(stats.last_timestamp_network));
-        tsv += row;
+        char id_buf[17]{};
+        std::snprintf(id_buf, sizeof(id_buf), "%016lX", app.app_id);
+        tsv.append(id_buf);
+        tsv.push_back('\t');
+        tsv.append(app.name);
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.playtime)));
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.total_launches)));
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.first_timestamp_user)));
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.last_timestamp_user)));
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.first_timestamp_network)));
+        tsv.push_back('\t');
+        tsv.append(std::to_string(static_cast<unsigned long long>(stats.last_timestamp_network)));
+        tsv.push_back('\n');
     }
 
     sd.write_entire_file((dir + "/playtime.tsv").c_str(),
@@ -432,7 +438,8 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
 
     for (const auto& r : ready) {
-        const auto dir = paths::DATA_ROOT + "/user_packs/" + stamp + "_" + SanitizeName(r.nickname);
+        const auto uid_suffix = r.hex.size() >= 8 ? r.hex.substr(0, 8) : r.hex;
+        const auto dir = paths::DATA_ROOT + "/user_packs/" + stamp + "_" + SanitizeName(r.nickname) + "_" + uid_suffix;
         sd.CreateDirectoryRecursively(dir.c_str());
         const auto json = std::string{"{\"nickname\":\""} + JsonEscape(r.nickname) +
             "\",\"uid\":\"" + r.hex + "\"}";
