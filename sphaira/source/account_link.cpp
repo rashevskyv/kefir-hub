@@ -209,10 +209,16 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
         .out_objects = &manager));
     ON_SCOPE_EXIT(serviceClose(&manager));
 
-    u8 has_link = 0;
-    R_TRY(serviceDispatchOut(&manager, 0, has_link));
-    out_linked = (has_link != 0);
-    R_SUCCEED();
+    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
+    if (R_SUCCEEDED(rc)) {
+        out_linked = true;
+        R_SUCCEED();
+    }
+    if (rc == ResultNetworkServiceAccountRegistrationRequired) {
+        out_linked = false;
+        R_SUCCEED();
+    }
+    return rc;
 }
 
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {

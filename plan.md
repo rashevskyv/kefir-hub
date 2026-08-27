@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.640**. Завершені плани збережено в
+Поточний delivery — **v0.13.641**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.640 — Build fixes and verification
+## Поточний delivery: v0.13.641 — Restore account link status semantics
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Виправлено регресію статусу прив'язки Nintendo Account: у `QueryHorizonLinkStatus()` відновлено перевірку результату виклику команди 0 (`CheckAvailability`) замість читання IPC bool.
+2. `R_SUCCEEDED(rc)` позначає наявність прив'язки (`out_linked = true`), `rc == ResultNetworkServiceAccountRegistrationRequired` позначає відсутність прив'язки (`out_linked = false`), усі інші помилки прокидаються далі для встановлення `linked_known = false`.
+
+## Попередній delivery: v0.13.640 — Build fixes and verification
 
 Статус: програмну частину зібрано та верифіковано.
 1. Виправлено компіляцію `account_link.cpp`: замінено неіснуючі константи `Result_FsAlreadyExists`/`Result_FsInvalidPath` на `FsError_PathAlreadyExists`/`FsError_PathNotFound`.

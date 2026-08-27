@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.640** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.641** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.641 — restore account link status semantics
+
+- Виправлено регресію відображення статусу прив'язки профілів (всі показувалися як «Not linked»):
+  - `account_link::QueryHorizonLinkStatus()` переведено на `serviceDispatch(&manager, 0)` (CheckAvailability) без читання вигаданого IPC bool.
+  - `R_SUCCEEDED(rc)` встановлює `out_linked = true; R_SUCCEED();`.
+  - `rc == ResultNetworkServiceAccountRegistrationRequired` (код `MAKERESULT(124, 200)`) встановлює `out_linked = false; R_SUCCEED();`.
+  - Будь-які інші коди помилок повертаються без змін, що переводить стан профілю в `linked_known = false` (Link status unavailable).
+- Агент не компілює.
 
 ## v0.13.640 — build fixes and verification
 

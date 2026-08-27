@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.640**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.641**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.640 (build fixes and verification)
+## Поточний delivery: v0.13.641 (restore account link status semantics)
+
+- [x] `ACC-LINK-STATUS-SEMANTICS-641` — у `QueryHorizonLinkStatus()` відновлено Result-based семантику команди 0 (`serviceDispatch`), де `R_SUCCEEDED(rc)` -> `out_linked = true`, `ResultNetworkServiceAccountRegistrationRequired` -> `out_linked = false`, а інші помилки прокидаються як збій запиту.
+- [x] `DOCS-BUMP-641` — версію піднято до `0.13.641`.
+
+## Попередній delivery: v0.13.640 (build fixes and verification)
 
 - [x] `BUILD-FIX-RESULT-CODES-640` — замінено помилкові назви кодів результатів у `account_link.cpp` на валідні `FsError_PathAlreadyExists`/`FsError_PathNotFound`.
 - [x] `BUILD-FIX-EXCEPTIONS-640` — замінено try-catch на `std::strtoull` для сумісності з `-fno-exceptions`.
