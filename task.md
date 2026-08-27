@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.644**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.645**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.644 (read account link data from su directory)
+## Поточний delivery: v0.13.645 (pair TegraExplorer save-directory iterator fix with account-link probe)
+
+- [x] `TE-DIR-ITERATOR-645` — TegraExplorer зберігає позиції `save_data_directory` за значенням, тож `readdir()` не використовує адресу локальної змінної, що вже вийшла з області видимості.
+- [x] `DOCS-BUMP-645` — версію Sphaira піднято до `0.13.645` для обов'язкового TegraExplorer-виправлення.
+
+## Попередній delivery: v0.13.644 (read account link data from su directory)
 
 - [x] `TE-SU-DIR-PATHS-644` — виправлено шляхи доступу до даних прив'язки у системному сейві 0010 на `/su/baas` та `/su/nas` у `PrepareOfficialLinkExport()`.
 - [x] `DOCS-BUMP-644` — версію піднято до `0.13.644`.

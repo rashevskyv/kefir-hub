@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.644**. Завершені плани збережено в
+Поточний delivery — **v0.13.645**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.644 — Read account link data from su directory in export script
+## Поточний delivery: v0.13.645 — Pair TegraExplorer save-directory iterator fix with account-link probe
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У TegraExplorer виправлено час життя позицій ітератора каталогу системного сейву: `save_data_directory_ctx_t` тепер зберігає позиції за значенням, а не вказівники на локальний стек `open_directory`.
+2. Виправлення потрібне для достовірного `saveObj.readdir()` під час безпечного лістингу `/su/baas` і `/su/nas` у сейві 0010.
+3. Генератор Sphaira та операція експорту в цьому delivery не змінювались: спочатку необхідно повторити лише read-only probe з новим TegraExplorer.
+
+## Попередній delivery: v0.13.644 — Read account link data from su directory in export script
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Виправлено шляхи доступу до системного сейву 0x8000000000000010 у згенерованому скрипті `PrepareOfficialLinkExport()`: за апаратними даними директорії розташовані за шляхами `/su/baas` та `/su/nas` (замість кореневих `/baas` та `/nas`).

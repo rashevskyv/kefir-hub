@@ -1,9 +1,19 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.644** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.645** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.645 — pair TegraExplorer save-directory iterator fix with account-link probe
+
+- TegraExplorer виправлено окремим комітом `2cd2635ee1f9c90d27fd11a653c5ecdd666f1311`:
+  - `save_data_directory_ctx_t` зберігав вказівники на локальну `save_find_position_t` з `save_data_file_system_core_open_directory()`.
+  - Після повернення з функції `saveObj.readdir()` міг отримувати висячий вказівник і віддавати порожній/недостовірний список попри успішний код результату.
+  - Контекст каталогу тепер володіє початковою та поточною позиціями за значенням.
+- Kefir Hub піднято до v0.13.645 на вимогу узгодження з потрібною зміною TegraExplorer. Код генератора експорту та запис системних сейвів не змінювались.
+- Наступна дія на консолі — лише повторний read-only лістинг `/su/baas` і `/su/nas` після збирання TegraExplorer; експорт та застосування пакета поки не запускати.
+- Агент не компілює.
 
 ## v0.13.644 — read account link data from su directory
 
