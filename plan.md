@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.637**. Завершені плани збережено в
+Поточний delivery — **v0.13.638**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.637 — Export selected official account link (read-only, no kill)
+## Поточний delivery: v0.13.638 — Respect system timezone after clock sync
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/ntp.cpp` та `sphaira/include/ntp.hpp` повністю видалено локальне процесне зміщення часу (`g_display_offset`) та публічну функцію `ntp::GetDisplayOffset()`. NTP та системні годинники Horizon використовують POSIX UTC таймстемпи; зміщення часового поясу та літнього часу застосовується виключно нативним шаром libnx / Horizon `localtime_r()`.
+2. У `sphaira/source/ui/menus/menu_base.cpp` (`MenuBase::GetPolledData()`) годинник формується безпосередньо з `std::time(NULL)` з подальшим викликом `localtime_r(&t, &data.tm)` без додавання ручних зміщень процесу. Вилучено застарілий заголовок `ntp.hpp`.
+3. У `sphaira/source/ntp.cpp` (`RunSync()`):
+   - Розрахунок різниці часу виконується прямим порівнянням мережевого та системного часу: `offset = network_time - current_time`.
+   - Функція `SetSystemTime(timestamp)` спрощена: повертає тільки `Result`, вилучено параметр `used_fallback`.
+   - І прямий запис через `time:su`/`time:s`, і fallback через `set:sys` зводяться до єдиного шляху успішного завершення `RunSync()`, який ставить у чергу виклик `evman::push` з `__libnx_init_time()` та показом сповіщення «Clock synced».
+4. Збережено поведінку fallback через `set:sys`: налаштування `NetworkSystemClockContext` на основі UTC NTP таймстемпу та увімкнення `UserSystemClockAutomaticCorrection`.
+5. `kForceUpdateForTest` залишається `false`.
+
+## Попередній delivery: v0.13.637 — Export selected official account link (read-only, no kill)
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/include/fs.hpp` виправлено конструктор `FsNativeSave`: параметр `read_only = true` тепер безумовно викликає `fsOpenReadOnlySaveDataFileSystem(&m_fs, save_data_space_id, attr)` для всіх типів сейвів (включно із `FsSaveDataType_System` та `FsSaveDataType_SystemBcat`), замість примусового виклику `fsOpenSaveDataFileSystemBySystemSaveDataId` на запис.

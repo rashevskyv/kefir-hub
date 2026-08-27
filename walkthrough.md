@@ -1,9 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.637** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.638** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.638 — respect system timezone after clock sync
+
+- Виправлено регресію відображення часу після NTP-синхронізації: повністю усунено збереження локального процесного зміщення `g_display_offset` та вилучено функцію `ntp::GetDisplayOffset()` (`sphaira/include/ntp.hpp`, `sphaira/source/ntp.cpp`).
+- Рендеринг годинника в інтерфейсі (`sphaira/source/ui/menus/menu_base.cpp`): `MenuBase::GetPolledData()` отримує час виключно через `std::time(NULL)` та транслює його в локальний час через стандартний `localtime_r()`. Всі налаштування часового поясу та літнього часу беруться безпосередньо з системних налаштувань Horizon через libnx. Зайвий include `ntp.hpp` вилучено.
+- У `sphaira/source/ntp.cpp`:
+  - `RunSync()` обчислює різницю між отриманим мережевим часом та системним часом Horizon безпосередньо: `offset = network_time - current_time`.
+  - Функцію `SetSystemTime` спрощено: повертає тільки `Result`, вилучено застарілий параметр `used_fallback`.
+  - Обидва шляхи запису часу (прямий запис `time:su`/`time:s` та fallback через `set:sys`) тепер уніфіковано завершуються єдиним викликом черги подій `evman::push` з реініціалізацією часу libnx `__libnx_init_time()` та показом спливаючого сповіщення «Clock synced».
+  - Збережено коректну поведінку fallback через `set:sys`: налаштування `NetworkSystemClockContext` з UTC POSIX таймстемпу та увімкнення `UserSystemClockAutomaticCorrection`.
+- Системні налаштування таймзон Horizon не змінюються і не перезаписуються; видалення користувачів, робота з акаунтами та TegraExplorer залишилися без змін.
+- Агент не компілює.
 
 ## v0.13.637 — export selected official account link (read-only, no kill)
 

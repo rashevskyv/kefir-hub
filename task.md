@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.637**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.638**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.637 (export selected official account link)
+## Поточний delivery: v0.13.638 (respect system timezone after clock sync)
+
+- [x] `NTP-REMOVE-DISPLAY-OFFSET-638` — видалено змінну `g_display_offset` та публічну функцію `ntp::GetDisplayOffset()` з `ntp.hpp`/`ntp.cpp`.
+- [x] `NTP-DIRECT-DIFF-638` — у `RunSync()` розрахунок зміщення переведено на пряме порівняння `network_time - current_time`.
+- [x] `NTP-CONVERGE-CALLBACK-638` — спрощено `SetSystemTime(timestamp)` (без `out_used_fallback`); прямий запис і fallback через `set:sys` викликають єдиний `evman` колбек з `__libnx_init_time()` та показом сповіщення.
+- [x] `UI-CLOCK-NATIVE-TIMEZONE-638` — у `MenuBase::GetPolledData()` годинник рендериться напряму через `std::time(NULL)` та `localtime_r()`, вилучено застарілий include `ntp.hpp`.
+- [x] `DOCS-BUMP-638` — версію піднято до `0.13.638`.
+
+## Попередній delivery: v0.13.637 (export selected official account link)
 
 - [x] `FS-READONLY-SYSTEM-SAVE-637` — у `FsNativeSave` виправлено обробку `read_only = true` для виклику `fsOpenReadOnlySaveDataFileSystem` також для системних сейвів.
 - [x] `ACC-TRYOPEN-READONLY-637` — `TryOpenAccountSave()` переведено на відкриття `read_only = true` без завершення процесів Horizon.
