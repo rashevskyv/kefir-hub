@@ -1,9 +1,19 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.639** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.640** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.640 — build fixes and verification
+
+- Виправлено помилки компіляції та лінкування в `sphaira/source/account_link.cpp`:
+  - Замінено неоголошені ідентифікатори `Result_FsAlreadyExists` та `Result_FsInvalidPath` на стандартизовані коди помилок libnx `FsError_PathAlreadyExists` та `FsError_PathNotFound`.
+  - Замінено конструкцію `try...catch` на безпечний виклик `std::strtoull` для відповідності прапорцю компілятора `-fno-exceptions`.
+  - Виправлено конкатенацію рядків для змінної `nfile` у згенерованому коді скрипту TegraExplorer.
+  - Відновлено визначення функції `ExportAccountSave(std::string& out_dir)` для успішного лінкування `ExportUserPacks`.
+- Успішно скомпільовано цільовий Switch NRO `build/ReleaseWithInstall/switch/kefir-hub/kefir-hub.nro` (`sphaira_nro`) у WSL.
+- Усі 27 хост-тестів `tests/run.sh` успішно виконано та пройдено в паралельному режимі (зокрема dead symbol guard та перевірки патчів libhaze/ftpsrv).
 
 ## v0.13.639 — prepare offline official link transfer
 

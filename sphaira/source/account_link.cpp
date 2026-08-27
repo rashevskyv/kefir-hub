@@ -181,7 +181,7 @@ auto OpenAccSu(Service* out) -> Result {
 
 auto CheckHandoffPreconditions(fs::FsNativeSd& sd) -> Result {
     if (sd.FileExists("/startup.te") || sd.FileExists("/payload.bak")) {
-        return Result_FsAlreadyExists;
+        return FsError_PathAlreadyExists;
     }
     if (!sd.FileExists("/payload.bin") ||
         !sd.FileExists("/bootloader/payloads/TegraExplorer.bin") ||
@@ -209,16 +209,10 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
         .out_objects = &manager));
     ON_SCOPE_EXIT(serviceClose(&manager));
 
-    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
-    if (R_SUCCEEDED(rc)) {
-        out_linked = true;
-        R_SUCCEED();
-    }
-    if (rc == ResultNetworkServiceAccountRegistrationRequired) {
-        out_linked = false;
-        R_SUCCEED();
-    }
-    return rc;
+    u8 has_link = 0;
+    R_TRY(serviceDispatchOut(&manager, 0, has_link));
+    out_linked = (has_link != 0);
+    R_SUCCEED();
 }
 
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {
@@ -300,23 +294,23 @@ auto ExportAccountSave(std::string& out_dir) -> Result {
 auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vector<std::string>& out_nas_files) -> Result {
     out_nas_id = 0;
     out_nas_files.clear();
-    R_UNLESS(!pkg_dir.empty(), Result_FsInvalidPath);
+    R_UNLESS(!pkg_dir.empty(), FsError_PathNotFound);
 
     auto norm_path = pkg_dir;
     while (!norm_path.empty() && (norm_path.back() == '/' || norm_path.back() == '\\')) {
         norm_path.pop_back();
     }
-    R_UNLESS(!norm_path.empty(), Result_FsInvalidPath);
+    R_UNLESS(!norm_path.empty(), FsError_PathNotFound);
 
     if (norm_path.find("..") != std::string::npos || norm_path.find('\\') != std::string::npos || norm_path.find("//") != std::string::npos) {
-        return Result_FsInvalidPath;
+        return FsError_PathNotFound;
     }
 
     const auto pkg_name = BaseName(norm_path);
-    R_UNLESS(!pkg_name.empty(), Result_FsInvalidPath);
+    R_UNLESS(!pkg_name.empty(), FsError_PathNotFound);
     for (char c : pkg_name) {
         if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
-            return Result_FsInvalidPath;
+            return FsError_PathNotFound;
         }
     }
 
@@ -326,7 +320,7 @@ auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vecto
     const auto expected_kefir = allowed_root_kefir + "/" + pkg_name;
 
     if (norm_path != expected_app && norm_path != expected_kefir) {
-        return Result_FsInvalidPath;
+        return FsError_PathNotFound;
     }
 
     fs::FsNativeSd sd;
@@ -369,13 +363,9 @@ auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vecto
         R_UNLESS(std::isxdigit(static_cast<unsigned char>(c)), Result_FsInvalidType);
     }
 
-    try {
-        size_t idx = 0;
-        out_nas_id = std::stoull(nas_hex, &idx, 16);
-        R_UNLESS(idx == nas_hex.size() && out_nas_id != 0, Result_FsInvalidType);
-    } catch (...) {
-        return Result_FsInvalidType;
-    }
+    char* end = nullptr;
+    out_nas_id = std::strtoull(nas_hex.c_str(), &end, 16);
+    R_UNLESS(end && *end == '\0' && out_nas_id != 0, Result_FsInvalidType);
 
     const auto baas_path = norm_path + "/baas/link.dat";
     R_UNLESS(sd.FileExists(baas_path.c_str()), Result_FsInvalidType);
@@ -476,7 +466,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     const auto pkg_name = BaseName(out_pkg_dir);
     for (char c : pkg_name) {
         if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
-            return Result_FsInvalidPath;
+            return FsError_PathNotFound;
         }
     }
 
@@ -628,7 +618,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "        }\n";
     te += "    }\n";
     te += "    if (match) {\n";
-    te += "        ndata = saveObj.read(\"/nas/" + nfile + "\")\n";
+    te += "        ndata = saveObj.read(\"/nas/\" + nfile)\n";
     te += "        writefile(combinepath(pkg, \"nas/\" + nfile), ndata)\n";
     te += "        nasCopied = nasCopied + 1\n";
     te += "    }\n";
@@ -674,7 +664,7 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     const auto pkg_name = BaseName(pkg_dir);
     for (char c : pkg_name) {
         if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
-            return Result_FsInvalidPath;
+            return FsError_PathNotFound;
         }
     }
 

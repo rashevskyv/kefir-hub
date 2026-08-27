@@ -1,12 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.639**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.640**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.639 (prepare offline official link transfer)
+## Поточний delivery: v0.13.640 (build fixes and verification)
+
+- [x] `BUILD-FIX-RESULT-CODES-640` — замінено помилкові назви кодів результатів у `account_link.cpp` на валідні `FsError_PathAlreadyExists`/`FsError_PathNotFound`.
+- [x] `BUILD-FIX-EXCEPTIONS-640` — замінено try-catch на `std::strtoull` для сумісності з `-fno-exceptions`.
+- [x] `BUILD-FIX-TE-STRING-640` — виправлено екранування рядка скрипту TegraExplorer у `account_link.cpp`.
+- [x] `BUILD-FIX-EXPORT-LINK-640` — відновлено визначення `ExportAccountSave(std::string& out_dir)`.
+- [x] `BUILD-VERIFY-NRO-640` — успішна компіляція NRO та проходження всіх паралельних тестів.
+- [x] `DOCS-BUMP-640` — версію піднято до `0.13.640`.
+
+## Попередній delivery: v0.13.639 (prepare offline official link transfer)
 
 - [x] `ACC-REMOVE-LIVE-WRITE-639` — повністю вилучено небезпечний запис у системний сейв `0010` з живої ОС Horizon, видалено `pmshellTerminateProgram`, `ShutdownAccountServices`, `OpenAccountSave`, `LinkOneOffline`, `UnlinkOne`, `LinkUsers`, `UnlinkUsers`, `ImportOfficialLink` та `<switch/services/pm.h>`.
 - [x] `ACC-REMOVE-TERMINATE-BACKUP-639` — вилучено параметр `terminate_if_needed` із `ExportAccountSave` та `ExportUserPack(s)`, прибрано виклик `ImportOfficialLink` із `ImportUserPack()`.

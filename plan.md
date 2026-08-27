@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.639**. Завершені плани збережено в
+Поточний delivery — **v0.13.640**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.639 — Prepare offline official link transfer
+## Поточний delivery: v0.13.640 — Build fixes and verification
+
+Статус: програмну частину зібрано та верифіковано.
+1. Виправлено компіляцію `account_link.cpp`: замінено неіснуючі константи `Result_FsAlreadyExists`/`Result_FsInvalidPath` на `FsError_PathAlreadyExists`/`FsError_PathNotFound`.
+2. Замінено `try...catch` у `ValidateLinkPackage` на `std::strtoull` (сумісність із `-fno-exceptions`).
+3. Виправлено екранування змінної `nfile` у генераторі TegraExplorer скриптів для офлайн-експорту прив'язки.
+4. Відновлено визначення `ExportAccountSave(std::string& out_dir)`.
+5. Успішно зібрано повноцінний NRO `ReleaseWithInstall` у WSL та пройдено всі тести `tests/run.sh`.
+
+## Попередній delivery: v0.13.639 — Prepare offline official link transfer
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Повністю прибрано небезпечний прямий запис у системний сейв `0x8000000000000010` з живої ОС Horizon та вилучено механізм завершення системних процесів (`pmshellTerminateProgram`, `ShutdownAccountServices`, `OpenAccountSave`, `LinkOneOffline`, `UnlinkOne`, `LinkUsers`, `UnlinkUsers`, `ImportOfficialLink`).
