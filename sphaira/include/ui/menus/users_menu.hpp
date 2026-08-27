@@ -61,7 +61,7 @@ private:
     void RunUnlink(bool all);
     void RunOffline(bool all);
     void RunImport(bool all, const std::string& dump_dir);
-    void RunExport();
+    void RunExport(const AccountUid& uid);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup(std::vector<save::Entry> picked_saves = {});

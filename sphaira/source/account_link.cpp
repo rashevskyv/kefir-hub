@@ -142,7 +142,7 @@ auto TryOpenAccountSave() -> fs::FsNativeSave {
     FsSaveDataAttribute attr{};
     attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
-    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
+    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
 }
 
 auto ListDirFiles(fs::Fs& f, const std::string& dir) -> std::vector<std::string> {
@@ -531,6 +531,100 @@ auto ExportAccountSave(std::string& out_dir, bool terminate_if_needed) -> Result
     }
     R_UNLESS(any, Result_FsEmpty);
     log_write("[ACC] export written to %s\n", out_dir.c_str());
+    R_SUCCEED();
+}
+
+auto ExportOfficialLink(const AccountUid& uid, std::string& out_dir) -> Result {
+    auto save = TryOpenAccountSave();
+    const auto open_rc = save.GetFsOpenResult();
+    if (R_FAILED(open_rc)) {
+        log_write("[ACC] TryOpenAccountSave failed 0x%X for uid %s\n", open_rc, UidHex(uid).c_str());
+        return open_rc;
+    }
+
+    const auto baas_path = FindBaasPath(save, uid);
+    if (baas_path.empty()) {
+        log_write("[ACC] no baas file found for uid %s\n", UidHex(uid).c_str());
+        return FsError_PathNotFound;
+    }
+
+    u64 nas_id{};
+    if (!NasIdFromBaas(save, baas_path, nas_id) || nas_id == 0) {
+        log_write("[ACC] invalid baas file %s for uid %s\n", baas_path.c_str(), UidHex(uid).c_str());
+        return Result_FsInvalidType;
+    }
+
+    fs::FsNativeSd sd;
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    char uid_suffix[9]{};
+    std::snprintf(uid_suffix, sizeof(uid_suffix), "%08x", static_cast<unsigned>(uid.uid[0] & 0xffffffffu));
+    const auto base_dir = paths::DATA_ROOT + "/account_links/" + stamp + "_" + uid_suffix;
+    out_dir = base_dir;
+    for (u32 collision = 1; sd.DirExists(out_dir.c_str()); collision++) {
+        out_dir = base_dir + "_" + std::to_string(collision);
+    }
+
+    std::vector<std::string> copied_nas;
+    for (const auto& name : ListDirFiles(save, "/nas")) {
+        if (NasFileMatches(name, nas_id)) {
+            copied_nas.push_back(name);
+        }
+    }
+    if (copied_nas.empty()) {
+        log_write("[ACC] no nas files matching nas_id %016llx for uid %s\n",
+            static_cast<unsigned long long>(nas_id), UidHex(uid).c_str());
+        return Result_FsEmpty;
+    }
+
+    R_TRY(sd.CreateDirectoryRecursively(out_dir.c_str()));
+
+    R_TRY(sd.CreateDirectoryRecursively((out_dir + "/baas").c_str()));
+    const auto baas_name = BaseName(baas_path);
+    R_TRY(CopyFile(save, baas_path, sd, out_dir + "/baas/" + baas_name));
+
+    R_TRY(sd.CreateDirectoryRecursively((out_dir + "/nas").c_str()));
+    for (const auto& name : copied_nas) {
+        R_TRY(CopyFile(save, "/nas/" + name, sd, out_dir + "/nas/" + name));
+    }
+
+    std::string manifest;
+    manifest += "format=kefir_account_link\n";
+    manifest += "version=1\n";
+    manifest += "system_save=8000000000000010\n";
+    manifest += "idgen_0011_included=false\n";
+    manifest += "source_uid=" + UidHex(uid) + "\n";
+    manifest += "nintendo_account_id=" + NasHex(nas_id) + "\n";
+    manifest += "baas_file=baas/" + baas_name + "\n";
+    for (const auto& nas_name : copied_nas) {
+        manifest += "nas_file=nas/" + nas_name + "\n";
+    }
+    R_TRY(sd.write_entire_file((out_dir + "/manifest.txt").c_str(),
+        std::vector<u8>(manifest.begin(), manifest.end())));
+
+    const std::string readme =
+        "Kefir Hub official Nintendo Account link export\n"
+        "Format version: 1\n"
+        "\n"
+        "This bundle contains a local official Nintendo Account link export for the selected user profile.\n"
+        "Decrypted inner files were extracted from system save 0x8000000000000010.\n"
+        "\n"
+        "idgen_0011_included=false\n"
+        "System save 0x8000000000000011 (idgen:/context.bin) is intentionally omitted because it contains\n"
+        "console-specific UID generator state, not an individual user's Nintendo Account linkage.\n"
+        "\n"
+        "SECURITY WARNING:\n"
+        "Files under baas/ and nas/ may contain private Nintendo Account identifiers or cached credentials.\n"
+        "Do NOT share these files, publish them, or embed them in a distributable application or NRO.\n"
+        "\n"
+        "NOTE:\n"
+        "This export format is not yet a supported round-trip restore workflow in v0.13.637.\n";
+    R_TRY(sd.write_entire_file((out_dir + "/README.txt").c_str(),
+        std::vector<u8>(readme.begin(), readme.end())));
+
+    log_write("[ACC] official link export for uid %s written to %s (nas files=%zu)\n",
+        UidHex(uid).c_str(), out_dir.c_str(), copied_nas.size());
     R_SUCCEED();
 }
 

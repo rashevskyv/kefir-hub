@@ -671,10 +671,10 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Offline stub (Linkalho)"_i18n, [this](){
             ConfirmOffline(false);
         }, true, "Write fake baas/nas IDs with no Nintendo tokens. Games may retry Nintendo servers."_i18n);
+        options->Add<SidebarEntryCallback>("Export official link"_i18n, [this](){
+            ConfirmExport();
+        }, true, "Export this profile's official baas/nas linkage from 0010 to SD."_i18n);
     }
-    options->Add<SidebarEntryCallback>("Export account save"_i18n, [this](){
-        ConfirmExport();
-    }, true, "Write this NAND's baas/nas to SD so you can import them on emuNAND."_i18n);
     options->Add<SidebarEntryCallback>("Import official link to all"_i18n, [this](){
         ConfirmImport(true);
     }, true, "Graft the dumped Nintendo Account onto every profile."_i18n);
@@ -889,12 +889,20 @@ void Menu::ConfirmUnlink(bool all) {
 }
 
 void Menu::ConfirmExport() {
+    if (m_items.empty()) {
+        return;
+    }
+    const auto& user = m_items[m_index];
+    if (user.linked_known && !user.horizon_linked) {
+        App::Push<OptionBox>("This user profile is not linked to a Nintendo Account."_i18n, "OK"_i18n);
+        return;
+    }
     App::Push<OptionBox>(
-        "Export baas/ and nas/ from this NAND to SD. On a clean sysNAND with a real Nintendo Account, export here, then import that folder on emuNAND."_i18n,
+        "Export the official Nintendo Account linkage for this profile from system save 0010 to SD? The data contains private credentials and should not be shared."_i18n,
         "Cancel"_i18n, "Export"_i18n, 1,
-        [this](auto op) {
+        [this, uid = user.uid](auto op) {
             if (op && *op == 1) {
-                RunExport();
+                RunExport(uid);
             }
         });
 }
@@ -1206,22 +1214,25 @@ void Menu::RunImport(bool all, const std::string& dump_dir) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
-void Menu::RunExport() {
+void Menu::RunExport(const AccountUid& uid) {
     auto out_dir = std::make_shared<std::string>();
-    App::Push<ProgressBox>(0, "Export account save"_i18n, "Export account save"_i18n,
-        [out_dir](auto pbox) -> Result {
-            pbox->NewTransfer("Exporting account save"_i18n);
-            R_TRY(account_link::ExportAccountSave(*out_dir));
+    App::Push<ProgressBox>(0, "Export official link"_i18n, "Export official link"_i18n,
+        [uid, out_dir](auto pbox) -> Result {
+            pbox->NewTransfer("Exporting official link"_i18n);
+            R_TRY(account_link::ExportOfficialLink(uid, *out_dir));
             R_SUCCEED();
         }, [this, out_dir](Result rc) {
             if (R_FAILED(rc)) {
-                const auto msg = (rc == Result_FsEmpty)
-                    ? "Nothing to export. This NAND has no baas/nas account data."_i18n
-                    : "Could not export the account save. Close other homebrew and try again."_i18n;
+                const auto msg = (rc == Result_FsEmpty || rc == FsError_PathNotFound)
+                    ? "Nothing to export. No matching baas/nas official linkage data found for this profile."_i18n
+                    : "Could not export the official link. Close other homebrew and try again."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
             }
-            App::Push<OptionBox>("Exported to "_i18n + *out_dir, "OK"_i18n);
+            App::Push<OptionBox>(
+                "Exported to "_i18n + *out_dir + "\n\n" +
+                "This operation only exported data to SD. No account settings or profiles were modified."_i18n,
+                "OK"_i18n);
             Refresh();
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }

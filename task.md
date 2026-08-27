@@ -1,12 +1,22 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.636**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.637**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.636 (query Horizon account link status)
+## Поточний delivery: v0.13.637 (export selected official account link)
+
+- [x] `FS-READONLY-SYSTEM-SAVE-637` — у `FsNativeSave` виправлено обробку `read_only = true` для виклику `fsOpenReadOnlySaveDataFileSystem` також для системних сейвів.
+- [x] `ACC-TRYOPEN-READONLY-637` — `TryOpenAccountSave()` переведено на відкриття `read_only = true` без завершення процесів Horizon.
+- [x] `ACC-EXPORT-OFFICIAL-LINK-637` — реалізовано `account_link::ExportOfficialLink`: експорт baas та всіх matching nas файлів обраного користувача в `/config/kefir/account_links/` без `0011`.
+- [x] `USERS-EXPORT-LINK-UI-637` — у меню Users дію перейменовано на «Export official link», додано перевірку статусу прив'язки, діалог підтвердження та точний звіт про результат.
+- [x] `USERS-I18N-637` — додано повні переклади нових та змінених UI-рядків у `en.json`, `uk.json`, `ru.json`.
+- [x] `DOCS-TRANSFER-637` — актуалізовано документацію `docs/account-transfer.md`.
+- [x] `DOCS-BUMP-637` — версію піднято до `0.13.637`.
+
+## Попередній delivery: v0.13.636 (query Horizon account link status)
 
 - [x] `USERS-IPC-LINK-STATUS-636` — реалізовано приватний хелпер `QueryHorizonLinkStatus` через `acc:su` (команда 102 `GetBaasAccountManagerForSystemService` та команда 0 `CheckAvailability` менеджера).
 - [x] `USERS-HORIZON-STATUS-LABEL-636` — `Menu::StatusLabel()` відображає «Linked» / «Not linked» на основі нативного стану Horizon (`horizon_linked`) та «Link status unavailable» лише при помилці IPC (`!linked_known`).

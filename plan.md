@@ -1,10 +1,34 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.636**. Завершені плани збережено в
+Поточний delivery — **v0.13.637**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.636 — Query Horizon account link status via read-only IPC
+## Поточний delivery: v0.13.637 — Export selected official account link (read-only, no kill)
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/include/fs.hpp` виправлено конструктор `FsNativeSave`: параметр `read_only = true` тепер безумовно викликає `fsOpenReadOnlySaveDataFileSystem(&m_fs, save_data_space_id, attr)` для всіх типів сейвів (включно із `FsSaveDataType_System` та `FsSaveDataType_SystemBcat`), замість примусового виклику `fsOpenSaveDataFileSystemBySystemSaveDataId` на запис.
+2. У `sphaira/source/account_link.cpp` функцію `TryOpenAccountSave()` переведено на передачу `read_only = true` в `FsNativeSave`. Тепер зонд та читання системного сейву акаунта `0x8000000000000010` справді використовують read-only режим Horizon FS без завершення системних процесів (`account`, `ns`, `pdm`, `bcat`, `olsc`) і повертають фактичний Result, якщо Horizon не надає доступ.
+3. Реалізовано функцію `account_link::ExportOfficialLink(uid, out_dir)`:
+   - Відкриває системний сейв `0010` у режимі read-only через `TryOpenAccountSave()`.
+   - Знаходить `baas/<UID>.dat` обраного користувача через існуючу логіку `FindBaasPath`.
+   - Зчитує `NintendoAccountId` (nas_id) за допомогою `NasIdFromBaas`.
+   - Створює каталог `/config/kefir/account_links/<stamp>_<uid_suffix>/`.
+   - Копіює `baas/<source UID filename>.dat` та всі регулярні файли `nas/`, назви яких відповідають префіксу `NintendoAccountId` (включно із `_id.token`, `_refresh.token`, `_user.json` тощо).
+   - Створює текстовий `manifest.txt` (метадані, UID, nas_id, перелік скопійованих файлів, `system_save=8000000000000010`, `idgen_0011_included=false`) без секретів і токенів.
+   - Створює `README.txt` із застереженням щодо конфіденційності, поясненням неприпустимості публікації та роз'ясненням щодо консолеспецифічності `0011` (`context.bin`).
+   - Системний сейв `0011` (`idgen:/context.bin`) свідомо не включається до бандлу прив'язки.
+   - При відсутності даних або помилці чесно повертає Result та логує помилку.
+4. У `sphaira/source/ui/menus/users_menu.cpp`:
+   - Дію сайдбару оновлено: «Export official link» доступна для обраного профілю (`if (!m_items.empty())`).
+   - Якщо Horizon повідомляє, що профіль не прив'язаний (`user.linked_known && !user.horizon_linked`), виводиться зрозуміла помилка без створення бандлу.
+   - Якщо статус невідомий, спроба дозволяється за вмістом сейву.
+   - Після експорту показується діалог із шляхом до бандлу та явним поясненням, що ця доставка лише експортувала дані без зміни налаштувань акаунтів.
+5. Оновлено файли локалізації `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json`, `assets/romfs/i18n/ru.json`.
+6. Оновлено `docs/account-transfer.md`.
+7. `kForceUpdateForTest` залишається `false`.
+
+## Попередній delivery: v0.13.636 — Query Horizon account link status via read-only IPC
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/account_link.cpp` додано приватний IPC-хелпер `QueryHorizonLinkStatus(uid, out_linked)`, який тимчасово відкриває `acc:su` через `smGetService`, викликає команду 102 (`GetBaasAccountManagerForSystemService`) для отримання `IManagerForSystemService` відповідного UID, та опитує команду 0 (`CheckAvailability`). Успішний результат встановлює `out_linked = true` та повертає успіх, штатний `ResultNetworkServiceAccountRegistrationRequired` (`MAKERESULT(124, 200)`) встановлює `out_linked = false` та повертає успіх, а всі інші помилки прокидаються як збій IPC без змін.

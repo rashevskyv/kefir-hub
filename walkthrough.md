@@ -1,11 +1,30 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.636** (2026-08-26). Попередні
+Актуальний delivery — **v0.13.637** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
-## v0.13.636 — query Horizon account link status via read-only IPC
+## v0.13.637 — export selected official account link (read-only, no kill)
+
+- Виправлено нативний доступ `FsNativeSave` для системних сейвів (`sphaira/include/fs.hpp`): прапорець `read_only = true` тепер безумовно викликає нативну функцію `fsOpenReadOnlySaveDataFileSystem` замість відкриття системних сейвів на запис через `fsOpenSaveDataFileSystemBySystemSaveDataId`. Операції зондування та читання системних сейвів (зокрема `0x8000000000000010` та `nand_transfer::TryOpen`) тепер справді використовують read-only шлях і чесно повертають Result, якщо Horizon все ще не дає доступ.
+- `sphaira/source/account_link.cpp`: `TryOpenAccountSave()` переведено на відкриття `read_only = true`. Експорт не завершує системні процеси `account`, `ns`, `pdm`, `bcat`, `olsc`; доступ залежить від фактичного Result Horizon.
+- Реалізовано функцію `account_link::ExportOfficialLink(uid, out_dir)`:
+  - Читає системний сейв `0010` у режимі read-only через `TryOpenAccountSave()`.
+  - Знаходить `baas/<source UID>.dat` обраного користувача та зчитує 64-бітний `NintendoAccountId` (nas_id).
+  - Створює структуру бандлу в директорії `/config/kefir/account_links/<stamp>_<uid_suffix>/`.
+  - Копіює файл `baas/<source UID>.dat` та всі регулярні файли з каталогу `/nas`, назви яких починаються з префікса `NintendoAccountId` (включаючи `_id.token`, `_refresh.token`, `_user.json` тощо).
+  - Генерує читабельний файл маніфесту `manifest.txt` із метаданими (UID, `nintendo_account_id`, перелік скопійованих файлів, `system_save=8000000000000010`, `idgen_0011_included=false`) без розкриття секретних токенів.
+  - Генерує `README.txt` із попередженням про конфіденційність, забороною публікації та поясненням, що `0011` (`idgen:/context.bin`) навмисно не включено до бандлу прив'язки, оскільки є внутрішнім станом генератора UID конкретної консолі.
+  - Ця доставка є суто експортною фазою (export-only) для верифікації структури експортованих даних.
+- Меню Tools → Users:
+  - Дію сайдбару «Export account save» оновлено до «Export official link» та переміщено в контекст обраного користувача.
+  - Якщо Horizon чітко звітує, що профіль не прив'язаний (`user.linked_known && !user.horizon_linked`), показується відповідне повідомлення про помилку без створення бандлу на SD.
+  - Якщо статус прив'язки недоступний, спроба експорту дозволяється (вміст сейву є авторитетним).
+  - Після успішного експорту відображається точний шлях до бандлу та пояснення, що налаштування акаунтів на консолі не змінювалися.
+- Додано повні переклади для нових та змінених UI-рядків у `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json` та `assets/romfs/i18n/ru.json`.
+- Актуалізовано документацію `docs/account-transfer.md`.
+- Агент не компілює.
 
 - Tools → Users: замінено ненадійну перевірку файлів сейву на прямий системний IPC-запит доступності Network Service Account (Nintendo Account) в Horizon OS. Раніше відкриття файлів утримуваного системою сейву акаунта `0x8000000000000010` призводило до постійного статусу «Link status unavailable» для всіх профілів.
 - `sphaira/source/account_link.cpp`: додано приватний хелпер `QueryHorizonLinkStatus(uid, out_linked)`:
