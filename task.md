@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.643**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.644**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.643 (fix account transfer script diagnostics)
+## Поточний delivery: v0.13.644 (read account link data from su directory)
+
+- [x] `TE-SU-DIR-PATHS-644` — виправлено шляхи доступу до даних прив'язки у системному сейві 0010 на `/su/baas` та `/su/nas` у `PrepareOfficialLinkExport()`.
+- [x] `DOCS-BUMP-644` — версію піднято до `0.13.644`.
+
+## Попередній delivery: v0.13.643 (fix account transfer script diagnostics)
 
 - [x] `TE-INT-STR-CONCAT-643` — додано `.str()` до всіх числових `Int` значень у згенерованих скриптах TegraExplorer для коректної конкатенації `String + Int`.
 - [x] `DOCS-BUMP-643` — версію піднято до `0.13.643`.

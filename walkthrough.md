@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.643** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.644** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.644 — read account link data from su directory
+
+- Виправлено доступ до директорій системного сейву 0x8000000000000010 у `account_link::PrepareOfficialLinkExport`:
+  - Замінено шляхи `/baas` та `/nas` на підтверджені апаратно `/su/baas` та `/su/nas` (відповідно до монтування Linkalho `account:/su`).
+  - Оновлено діагностичні повідомлення помилок читання директорій та файлів на `/su/baas` та `/su/nas`.
+  - Збережено структуру вихідного SD-пакета (`baas/link.dat`, `nas/`) та маніфесту без змін.
+- Агент не компілює.
 
 ## v0.13.643 — fix account transfer script diagnostics
 

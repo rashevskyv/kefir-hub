@@ -551,10 +551,10 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "saveObj = readsave(bis)\n\n";
 
-    te += "baasListing = saveObj.readdir(\"/baas\")\n";
+    te += "baasListing = saveObj.readdir(\"/su/baas\")\n";
     te += "if (baasListing.result) {\n";
-    te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /baas in save 0010 (\" + baasListing.result.str() + \")\\nstage=read_baas\\n\").bytes())\n";
+    te += "    println(\"Error: cannot read /su/baas in save 0010\", baasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /su/baas in save 0010 (\" + baasListing.result.str() + \")\\nstage=read_baas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -573,7 +573,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "foundBaas = 0\n";
     te += "cands.foreach(\"cand\") {\n";
     te += "    if (!foundBaas && baasListing.files.contains(cand)) {\n";
-    te += "        bbytes = saveObj.read(\"/baas/\" + cand)\n";
+    te += "        bbytes = saveObj.read(\"/su/baas/\" + cand)\n";
     te += "        if (bbytes.len() >= 24) {\n";
     te += "            writefile(combinepath(pkg, \"baas/link.dat\"), bbytes)\n";
     te += "            foundBaas = 1\n";
@@ -589,10 +589,10 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += "nasListing = saveObj.readdir(\"/nas\")\n";
+    te += "nasListing = saveObj.readdir(\"/su/nas\")\n";
     te += "if (nasListing.result) {\n";
-    te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /nas in save 0010 (\" + nasListing.result.str() + \")\\nstage=read_nas\\n\").bytes())\n";
+    te += "    println(\"Error: cannot read /su/nas in save 0010\", nasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /su/nas in save 0010 (\" + nasListing.result.str() + \")\\nstage=read_nas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -620,7 +620,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "        }\n";
     te += "    }\n";
     te += "    if (match) {\n";
-    te += "        ndata = saveObj.read(\"/nas/\" + nfile)\n";
+    te += "        ndata = saveObj.read(\"/su/nas/\" + nfile)\n";
     te += "        writefile(combinepath(pkg, \"nas/\" + nfile), ndata)\n";
     te += "        nasCopied = nasCopied + 1\n";
     te += "    }\n";

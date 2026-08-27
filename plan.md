@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.643**. Завершені плани збережено в
+Поточний delivery — **v0.13.644**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.643 — Fix account transfer script diagnostics string concatenation
+## Поточний delivery: v0.13.644 — Read account link data from su directory in export script
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Виправлено шляхи доступу до системного сейву 0x8000000000000010 у згенерованому скрипті `PrepareOfficialLinkExport()`: за апаратними даними директорії розташовані за шляхами `/su/baas` та `/su/nas` (замість кореневих `/baas` та `/nas`).
+2. Оновлено діагностичні повідомлення скрипта для коректного відображення `/su/baas` та `/su/nas`.
+3. Структура вихідного SD-пакета (`baas/link.dat` та `nas/`) та маніфест збережені без змін.
+
+## Попередній delivery: v0.13.643 — Fix account transfer script diagnostics string concatenation
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Виправлено типи у згенерованих скриптах TegraExplorer: додано `.str()` до всіх числових значень `Int` (`rc`, `baasListing.result`, `nasListing.result`, `nasCopied`, `nasWritten`, `commitRc`, `errors`), які конкатенуються з `String`.
