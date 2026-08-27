@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.642**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.643**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.642 (auto-select NAND and fix ByteArray writefile in TegraExplorer scripts)
+## Поточний delivery: v0.13.643 (fix account transfer script diagnostics)
+
+- [x] `TE-INT-STR-CONCAT-643` — додано `.str()` до всіх числових `Int` значень у згенерованих скриптах TegraExplorer для коректної конкатенації `String + Int`.
+- [x] `DOCS-BUMP-643` — версію піднято до `0.13.643`.
+
+## Попередній delivery: v0.13.642 (auto-select NAND and fix ByteArray writefile in TegraExplorer scripts)
 
 - [x] `TE-AUTO-NAND-642` — автоматичне визначення та монтування `emuMMC`/`sysMMC` у скриптах TegraExplorer через `App::IsEmummc()` без показу меню вибору.
 - [x] `TE-WRITEFILE-BYTES-642` — виправлено виклики `writefile()` у згенерованих скриптах TegraExplorer додаванням `.bytes()` до рядків.

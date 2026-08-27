@@ -1,10 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.642**. Завершені плани збережено в
+Поточний delivery — **v0.13.643**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.642 — Auto-select NAND and fix ByteArray writefile in TegraExplorer scripts
+## Поточний delivery: v0.13.643 — Fix account transfer script diagnostics string concatenation
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Виправлено типи у згенерованих скриптах TegraExplorer: додано `.str()` до всіх числових значень `Int` (`rc`, `baasListing.result`, `nasListing.result`, `nasCopied`, `nasWritten`, `commitRc`, `errors`), які конкатенуються з `String`.
+2. Усунено помилки парсера/рантайму TegraExplorer `String + Int`, забезпечено коректний вихід і очищення `/startup.te` на всіх гілках виконання.
+
+## Попередній delivery: v0.13.642 — Auto-select NAND and fix ByteArray writefile in TegraExplorer scripts
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Автоматичний вибір NAND: скрипти TegraExplorer більше не запитують користувача про вибір `emuMMC/sysMMC`. Контекст монтування фіксується під час генерації скрипту за допомогою `App::IsEmummc()`.

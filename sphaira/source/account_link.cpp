@@ -534,7 +534,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "if (rc) {\n";
     te += "    println(\"SYSTEM mount failed\", rc)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: SYSTEM mount failed (\" + rc + \")\\nstage=mount_system\\n\").bytes())\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: SYSTEM mount failed (\" + rc.str() + \")\\nstage=mount_system\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -554,7 +554,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "baasListing = saveObj.readdir(\"/baas\")\n";
     te += "if (baasListing.result) {\n";
     te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /baas in save 0010 (\" + baasListing.result + \")\\nstage=read_baas\\n\").bytes())\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /baas in save 0010 (\" + baasListing.result.str() + \")\\nstage=read_baas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -592,7 +592,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "nasListing = saveObj.readdir(\"/nas\")\n";
     te += "if (nasListing.result) {\n";
     te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /nas in save 0010 (\" + nasListing.result + \")\\nstage=read_nas\\n\").bytes())\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /nas in save 0010 (\" + nasListing.result.str() + \")\\nstage=read_nas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -634,7 +634,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += R"(resReport = "Export completed successfully\nsource_uid=" + ")" + source_uid_str + R"(\nsource_nand=)" + nand_str + R"(\nbaas=baas/link.dat\nnas_copied=" + nasCopied + "\n")" "\n";
+    te += R"(resReport = "Export completed successfully\nsource_uid=" + ")" + source_uid_str + R"(\nsource_nand=)" + nand_str + R"(\nbaas=baas/link.dat\nnas_copied=" + nasCopied.str() + "\n")" "\n";
     te += "writefile(combinepath(pkg, \"result.txt\"), resReport.bytes())\n\n";
 
     te += "println(\"Export completed successfully.\")\n";
@@ -722,7 +722,7 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
 
     te += "if (rc) {\n";
     te += "    println(\"SYSTEM mount failed\", rc)\n";
-    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), (\"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=mount_system\\nerror=SYSTEM mount failed (\" + rc + \")\\n\").bytes())\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), (\"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=mount_system\\nerror=SYSTEM mount failed (\" + rc.str() + \")\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -741,7 +741,7 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "baasListing = saveObj.readdir(\"/baas\")\n";
     te += "if (baasListing.result) {\n";
     te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_baas\\nerror=cannot read /baas in save 0010 (\" + baasListing.result + \")\\n\"\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_baas\\nerror=cannot read /baas in save 0010 (\" + baasListing.result.str() + \")\\n\"\n";
     te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
@@ -751,7 +751,7 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "nasListing = saveObj.readdir(\"/nas\")\n";
     te += "if (nasListing.result) {\n";
     te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_nas\\nerror=cannot read /nas in save 0010 (\" + nasListing.result + \")\\n\"\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_nas\\nerror=cannot read /nas in save 0010 (\" + nasListing.result.str() + \")\\n\"\n";
     te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
@@ -871,19 +871,19 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "    commitRc = saveObj.commit()\n";
     te += "    if (!commitRc) {\n";
     te += "        println(\"Commit succeeded!\")\n";
-    te += "        rep = \"Apply succeeded\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nnas_written=" + nasWritten + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        rep = \"Apply succeeded\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nnas_written=" + nasWritten.str() + "\nrollback=" + rollback + "\n")" + "\n";
     te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "        println(\"Official Nintendo Account link applied successfully.\")\n";
     te += "        println(\"Wrote baas file and\", nasWritten, \"NAS file(s).\")\n";
     te += "        println(\"Rollback backup saved to:\", rollback)\n";
     te += "    } .else() {\n";
     te += "        println(\"Commit failed with error:\", commitRc)\n";
-    te += "        rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=commit\nnas_written=" + nasWritten + "\ncommit_error=" + commitRc + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=commit\nnas_written=" + nasWritten.str() + "\ncommit_error=" + commitRc.str() + "\nrollback=" + rollback + "\n")" + "\n";
     te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    }\n";
     te += "} .else() {\n";
     te += "    println(\"Errors occurred during apply. Changes were NOT committed.\")\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=apply_files\nnas_written=" + nasWritten + "\nerrors=" + errors + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=apply_files\nnas_written=" + nasWritten.str() + "\nerrors=" + errors.str() + "\nrollback=" + rollback + "\n")" + "\n";
     te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "}\n\n";
 

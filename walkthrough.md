@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.642** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.643** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.643 — fix account transfer script diagnostics
+
+- Виправлено вирази конкатенації рядків у згенерованих скриптах TegraExplorer (`account_link.cpp`):
+  - Додано `.str()` до всіх числових змінних `Int` (`rc`, `baasListing.result`, `nasListing.result`, `nasCopied`, `nasWritten`, `commitRc`, `errors`), що використовуються у конкатенації `String + Int`.
+  - Усунено синтаксичні/рантайм помилки скриптового рушія TegraExplorer, запобігаючи перериванню скрипта до виклику `cleanup()`.
+- Агент не компілює.
 
 ## v0.13.642 — auto-select NAND and fix ByteArray writefile in TegraExplorer scripts
 
