@@ -4,27 +4,22 @@
 #include "defines.hpp"
 #include "fs.hpp"
 #include "log.hpp"
+#include "utils/utils.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
-#include <random>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-#include <switch/services/pm.h>
 
 namespace sphaira::account_link {
 namespace {
 
 constexpr u64 ACCOUNT_SAVE_ID = 0x8000000000000010ULL;
-constexpr u64 TID_BCAT = 0x010000000000000CULL;
-constexpr u64 TID_ACCOUNT = 0x010000000000001EULL;
-constexpr u64 TID_OLSC = 0x010000000000003EULL;
-constexpr u64 BAAS_HEADER2 = 0x0000006E00000001ULL;
-constexpr u64 BAAS_HEADER3 = 0x0000000100000001ULL;
+constexpr Result ResultNetworkServiceAccountRegistrationRequired = MAKERESULT(124, 200);
 
 auto ToLowerCopy(std::string s) -> std::string {
     for (auto& c : s) {
@@ -33,29 +28,11 @@ auto ToLowerCopy(std::string s) -> std::string {
     return s;
 }
 
-auto FileStem(const std::string& name) -> std::string {
-    const auto dot = name.find_last_of('.');
-    if (dot == std::string::npos || dot == 0) {
-        return name;
+auto ToUpperCopy(std::string s) -> std::string {
+    for (auto& c : s) {
+        c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
     }
-    return name.substr(0, dot);
-}
-
-auto RandomU64() -> u64 {
-    static std::mt19937_64 rng{std::random_device{}()};
-    return rng();
-}
-
-auto RandomAlnum(size_t len) -> std::string {
-    static constexpr char kChars[] =
-        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    static std::mt19937_64 rng{std::random_device{}()};
-    std::uniform_int_distribution<size_t> dist(0, sizeof(kChars) - 2);
-    std::string out(len, '\0');
-    for (size_t i = 0; i < len; i++) {
-        out[i] = kChars[dist(rng)];
-    }
-    return out;
+    return s;
 }
 
 auto NasHex(u64 nas_id) -> std::string {
@@ -70,7 +47,6 @@ auto NasHexShort(u64 nas_id) -> std::string {
     return buf;
 }
 
-// Linkalho's baas filename (last 12 nibbles are high32 then mid16).
 auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
     char buf[40]{};
     std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%02x%02x-%08x%04x",
@@ -84,7 +60,6 @@ auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
     return buf;
 }
 
-// Official sample / RFC-style UUID (last 12 nibbles are mid16 then high32).
 auto UidDashedRfc(const AccountUid& uid) -> std::string {
     char buf[40]{};
     std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%04x-%04x%08x",
@@ -105,37 +80,63 @@ auto UidHexRaw(const AccountUid& uid) -> std::string {
     return buf;
 }
 
-auto BaasCandidates(const AccountUid& uid) -> std::vector<std::string> {
+auto BaasCandidateNames(const AccountUid& uid) -> std::vector<std::string> {
     const auto dashed_l = UidDashedLinkalho(uid);
     const auto dashed_r = UidDashedRfc(uid);
     const auto raw = UidHexRaw(uid);
-    return {
-        "/baas/" + dashed_r + ".dat",
-        "/baas/" + dashed_l + ".dat",
-        "/baas/" + raw + ".dat",
-        "/baas/" + ToLowerCopy(raw) + ".dat",
-        "/baas/" + ToLowerCopy(dashed_r) + ".dat",
-        "/baas/" + ToLowerCopy(dashed_l) + ".dat",
+    std::vector<std::string> cands;
+    auto add_cand = [&](const std::string& name) {
+        if (!name.empty() && std::find(cands.begin(), cands.end(), name) == cands.end()) {
+            cands.push_back(name);
+        }
     };
+    add_cand(dashed_r + ".dat");
+    add_cand(dashed_l + ".dat");
+    add_cand(raw + ".dat");
+    add_cand(ToLowerCopy(raw) + ".dat");
+    add_cand(ToLowerCopy(dashed_r) + ".dat");
+    add_cand(ToLowerCopy(dashed_l) + ".dat");
+    return cands;
 }
 
-void ShutdownAccountServices() {
-    if (R_FAILED(pmshellInitialize())) {
-        return;
+auto BaseName(const std::string& path) -> std::string {
+    auto p = path;
+    while (!p.empty() && (p.back() == '/' || p.back() == '\\')) {
+        p.pop_back();
     }
-    pmshellTerminateProgram(TID_BCAT);
-    pmshellTerminateProgram(TID_ACCOUNT);
-    pmshellTerminateProgram(TID_OLSC);
-    pmshellExit();
-    svcSleepThread(200000000);
+    const auto slash = p.find_last_of("/\\");
+    if (slash == std::string::npos) {
+        return p;
+    }
+    return p.substr(slash + 1);
 }
 
-auto OpenAccountSave() -> fs::FsNativeSave {
-    ShutdownAccountServices();
-    FsSaveDataAttribute attr{};
-    attr.system_save_data_id = ACCOUNT_SAVE_ID;
-    attr.save_data_type = FsSaveDataType_System;
-    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
+auto NasPrefixes(u64 nas_id) -> std::vector<std::string> {
+    std::vector<std::string> out;
+    const auto hex16_l = ToLowerCopy(NasHex(nas_id));
+    const auto hex16_u = ToUpperCopy(NasHex(nas_id));
+    const auto hex_sh_l = ToLowerCopy(NasHexShort(nas_id));
+    const auto hex_sh_u = ToUpperCopy(NasHexShort(nas_id));
+    auto add_unique = [&](const std::string& s) {
+        if (!s.empty() && std::find(out.begin(), out.end(), s) == out.end()) {
+            out.push_back(s);
+        }
+    };
+    add_unique(hex16_l);
+    add_unique(hex16_u);
+    add_unique(hex_sh_l);
+    add_unique(hex_sh_u);
+    return out;
+}
+
+auto NasFileMatches(const std::string& name, u64 nas_id) -> bool {
+    const auto lower = ToLowerCopy(name);
+    for (const auto& prefix : NasPrefixes(nas_id)) {
+        if (lower.rfind(ToLowerCopy(prefix), 0) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 auto TryOpenAccountSave() -> fs::FsNativeSave {
@@ -166,150 +167,6 @@ auto ListDirFiles(fs::Fs& f, const std::string& dir) -> std::vector<std::string>
     return out;
 }
 
-auto FindBaasPath(fs::Fs& acc, const AccountUid& uid) -> std::string {
-    for (const auto& p : BaasCandidates(uid)) {
-        if (acc.FileExists(p.c_str())) {
-            return p;
-        }
-    }
-    return {};
-}
-
-auto NasPrefixes(u64 nas_id) -> std::vector<std::string> {
-    std::vector<std::string> out;
-    out.push_back(NasHex(nas_id));
-    const auto sh = NasHexShort(nas_id);
-    if (sh != out.front()) {
-        out.push_back(sh);
-    }
-    return out;
-}
-
-auto NasFileMatches(const std::string& name, u64 nas_id) -> bool {
-    const auto lower = ToLowerCopy(name);
-    for (const auto& prefix : NasPrefixes(nas_id)) {
-        if (lower.rfind(prefix, 0) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void DeleteNasForId(fs::Fs& acc, u64 nas_id) {
-    for (const auto& name : ListDirFiles(acc, "/nas")) {
-        if (!NasFileMatches(name, nas_id)) {
-            continue;
-        }
-        acc.DeleteFile(("/nas/" + name).c_str());
-    }
-}
-
-auto NasIdFromBaas(fs::Fs& acc, const std::string& baas_path, u64& nas_id) -> bool {
-    std::vector<u8> data;
-    if (R_FAILED(acc.read_entire_file(baas_path.c_str(), data)) || data.size() < 24) {
-        return false;
-    }
-    std::memcpy(&nas_id, data.data() + 16, sizeof(nas_id));
-    return true;
-}
-
-[[maybe_unused]] auto HasOfficialTokens(fs::Fs& acc, u64 nas_id) -> bool {
-    for (const auto& name : ListDirFiles(acc, "/nas")) {
-        if (!NasFileMatches(name, nas_id)) {
-            continue;
-        }
-        const auto lower = ToLowerCopy(name);
-        if (lower.find("_id.token") != std::string::npos ||
-            lower.find("_refresh.token") != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
-}
-
-auto BackupAccountSave(fs::Fs& acc) -> Result {
-    fs::FsNativeSd sd;
-    char stamp[32]{};
-    const auto t = std::time(nullptr);
-    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
-    const auto root = paths::DATA_ROOT + "/account_backups/" + stamp;
-
-    for (const char* dir : {"/baas", "/nas"}) {
-        if (!acc.DirExists(dir)) {
-            continue;
-        }
-        const auto dst_dir = root + dir;
-        sd.CreateDirectoryRecursively(dst_dir.c_str());
-        for (const auto& name : ListDirFiles(acc, dir)) {
-            std::vector<u8> data;
-            const auto src = std::string(dir) + "/" + name;
-            if (R_SUCCEEDED(acc.read_entire_file(src.c_str(), data))) {
-                sd.write_entire_file((dst_dir + "/" + name).c_str(), data);
-            }
-        }
-    }
-    log_write("[ACC] backup written to %s\n", root.c_str());
-    R_SUCCEED();
-}
-
-auto UnlinkOne(fs::Fs& acc, const AccountUid& uid) -> void {
-    const auto baas = FindBaasPath(acc, uid);
-    if (!baas.empty()) {
-        u64 nas_id{};
-        if (NasIdFromBaas(acc, baas, nas_id)) {
-            DeleteNasForId(acc, nas_id);
-        }
-    }
-    for (const auto& p : BaasCandidates(uid)) {
-        if (acc.FileExists(p.c_str())) {
-            acc.DeleteFile(p.c_str());
-        }
-    }
-}
-
-auto ProfileJson(const std::string& nas_hex) -> std::string {
-    return std::string{"{\"id\":\""} + nas_hex +
-        "\",\"language\":\"en-US\",\"timezone\":\"Europe/London\",\"country\":\"US\""
-        ",\"analyticsOptedIn\":false,\"gender\":\"male\",\"emailOptedIn\":false"
-        ",\"birthday\":\"1980-01-01\",\"isChild\":false,\"email\":\"-\""
-        ",\"screenName\":\"-\",\"region\":\"\",\"loginId\":\"-\",\"nickname\":\"-\""
-        ",\"isNnLinked\":false,\"isTwitterLinked\":false,\"isFacebookLinked\":false"
-        ",\"isGoogleLinked\":false}";
-}
-
-auto LinkOneOffline(fs::Fs& acc, const AccountUid& uid) -> Result {
-    UnlinkOne(acc, uid);
-
-    R_TRY(acc.CreateDirectoryRecursively("/baas"));
-    R_TRY(acc.CreateDirectoryRecursively("/nas"));
-
-    const u64 account_id = RandomU64();
-    const u64 nas_id = RandomU64();
-    const u64 baas_user = RandomU64();
-    const auto password = RandomAlnum(40);
-    const auto nas_hex = NasHex(nas_id);
-
-    std::vector<u8> baas(8 * 5 + 40);
-    std::memcpy(baas.data() + 0, &account_id, 8);
-    std::memcpy(baas.data() + 8, &BAAS_HEADER2, 8);
-    std::memcpy(baas.data() + 16, &nas_id, 8);
-    std::memcpy(baas.data() + 24, &BAAS_HEADER3, 8);
-    std::memcpy(baas.data() + 32, &baas_user, 8);
-    std::memcpy(baas.data() + 40, password.data(), 40);
-    const auto baas_path = "/baas/" + UidDashedLinkalho(uid) + ".dat";
-    R_TRY(acc.write_entire_file(baas_path.c_str(), baas));
-
-    const auto dat = RandomAlnum(128);
-    R_TRY(acc.write_entire_file(("/nas/" + nas_hex + ".dat").c_str(),
-        std::vector<u8>(dat.begin(), dat.end())));
-
-    const auto json = ProfileJson(nas_hex);
-    R_TRY(acc.write_entire_file(("/nas/" + nas_hex + "_user.json").c_str(),
-        std::vector<u8>(json.begin(), json.end())));
-
-    R_SUCCEED();
-}
-
 auto CopyFile(fs::Fs& from, const std::string& src, fs::Fs& to, const std::string& dst) -> Result {
     std::vector<u8> data;
     R_TRY(from.read_entire_file(src.c_str(), data));
@@ -317,112 +174,27 @@ auto CopyFile(fs::Fs& from, const std::string& src, fs::Fs& to, const std::strin
     R_SUCCEED();
 }
 
-auto DirHasBaas(fs::Fs& f, const std::string& dir) -> bool {
-    if (!f.DirExists(dir.c_str())) {
-        return false;
-    }
-    for (const auto& name : ListDirFiles(f, dir)) {
-        const auto lower = ToLowerCopy(name);
-        if (lower.size() >= 4 && lower.substr(lower.size() - 4) == ".dat") {
-            return true;
-        }
-    }
-    return false;
-}
-
-struct DumpLayout {
-    std::string baas_dir;
-    std::string nas_dir;
-};
-
-auto ParentDir(const std::string& path) -> std::string {
-    auto p = path;
-    while (!p.empty() && (p.back() == '/' || p.back() == '\\')) {
-        p.pop_back();
-    }
-    const auto slash = p.find_last_of("/\\");
-    if (slash == std::string::npos) {
-        return "/";
-    }
-    if (slash == 0) {
-        return "/";
-    }
-    return p.substr(0, slash);
-}
-
-auto BaseName(const std::string& path) -> std::string {
-    auto p = path;
-    while (!p.empty() && (p.back() == '/' || p.back() == '\\')) {
-        p.pop_back();
-    }
-    const auto slash = p.find_last_of("/\\");
-    if (slash == std::string::npos) {
-        return p;
-    }
-    return p.substr(slash + 1);
-}
-
-auto ResolveDumpLayout(fs::Fs& sd, const std::string& path) -> DumpLayout {
-    const char* tails[] = {
-        "",
-        "/su",
-        "/save/su",
-        "/8000000000000010",
-        "/8000000000000010/su",
-    };
-    for (const auto* tail : tails) {
-        const auto base = path + tail;
-        const auto baas = base + "/baas";
-        const auto nas = base + "/nas";
-        if (DirHasBaas(sd, baas) && sd.DirExists(nas.c_str())) {
-            return {baas, nas};
-        }
-    }
-
-    const auto name = ToLowerCopy(BaseName(path));
-    if (name == "baas") {
-        const auto parent = ParentDir(path);
-        const auto nas = parent + "/nas";
-        if (DirHasBaas(sd, path) && sd.DirExists(nas.c_str())) {
-            return {path, nas};
-        }
-    }
-    return {};
-}
-
-auto DumpBaasFiles(fs::Fs& sd, const std::string& baas_dir) -> std::vector<std::string> {
-    std::vector<std::string> out;
-    for (const auto& name : ListDirFiles(sd, baas_dir)) {
-        const auto lower = ToLowerCopy(name);
-        if (lower.size() >= 4 && lower.substr(lower.size() - 4) == ".dat") {
-            out.push_back(name);
-        }
-    }
-    return out;
-}
-
-auto PickDumpBaas(const std::vector<std::string>& files, const AccountUid& uid) -> std::string {
-    std::vector<std::string> want;
-    for (const auto& p : BaasCandidates(uid)) {
-        want.push_back(ToLowerCopy(BaseName(p)));
-    }
-    for (const auto& name : files) {
-        const auto lower = ToLowerCopy(name);
-        if (std::find(want.begin(), want.end(), lower) != want.end()) {
-            return name;
-        }
-    }
-    if (!files.empty()) {
-        return files.front();
-    }
-    return {};
-}
-
-constexpr Result ResultNetworkServiceAccountRegistrationRequired = MAKERESULT(124, 200);
-
 auto OpenAccSu(Service* out) -> Result {
     R_TRY(smGetService(out, "acc:su"));
     R_SUCCEED();
+}
+
+auto CheckHandoffPreconditions(fs::FsNativeSd& sd) -> Result {
+    if (sd.FileExists("/startup.te") || sd.FileExists("/payload.bak")) {
+        return Result_FsAlreadyExists;
+    }
+    if (!sd.FileExists("/payload.bin") ||
+        !sd.FileExists("/bootloader/payloads/TegraExplorer.bin") ||
+        !sd.FileExists("/bootloader/update.bin")) {
+        return FsError_PathNotFound;
+    }
+    R_SUCCEED();
+}
+
+} // namespace
+
+auto UidHex(const AccountUid& uid) -> std::string {
+    return UidDashedRfc(uid);
 }
 
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
@@ -437,7 +209,7 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
         .out_objects = &manager));
     ON_SCOPE_EXIT(serviceClose(&manager));
 
-    const auto rc = serviceDispatch(&manager, 0);
+    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
     if (R_SUCCEEDED(rc)) {
         out_linked = true;
         R_SUCCEED();
@@ -449,10 +221,28 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
     return rc;
 }
 
-} // namespace
+auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {
+    out_nas_id = 0;
+    Service accsu{};
+    R_TRY(OpenAccSu(&accsu));
+    ON_SCOPE_EXIT(serviceClose(&accsu));
 
-auto UidHex(const AccountUid& uid) -> std::string {
-    return UidDashedRfc(uid);
+    Service manager{};
+    R_TRY(serviceDispatchIn(&accsu, 102, uid,
+        .out_num_objects = 1,
+        .out_objects = &manager));
+    ON_SCOPE_EXIT(serviceClose(&manager));
+
+    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
+    if (R_FAILED(rc)) {
+        return rc;
+    }
+
+    R_TRY(serviceDispatchOut(&manager, 120, out_nas_id));
+    if (out_nas_id == 0) {
+        return ResultNetworkServiceAccountRegistrationRequired;
+    }
+    R_SUCCEED();
 }
 
 auto ListUsers() -> std::vector<User> {
@@ -480,35 +270,8 @@ auto ListUsers() -> std::vector<User> {
     return out;
 }
 
-auto LinkUsers(const std::vector<AccountUid>& uids) -> Result {
-    R_UNLESS(!uids.empty(), Result_FsEmpty);
-    auto save = OpenAccountSave();
-    R_TRY(save.GetFsOpenResult());
-    BackupAccountSave(save);
-    for (const auto& uid : uids) {
-        R_TRY(LinkOneOffline(save, uid));
-    }
-    R_TRY(save.Commit());
-    R_SUCCEED();
-}
-
-auto UnlinkUsers(const std::vector<AccountUid>& uids) -> Result {
-    R_UNLESS(!uids.empty(), Result_FsEmpty);
-    auto save = OpenAccountSave();
-    R_TRY(save.GetFsOpenResult());
-    BackupAccountSave(save);
-    for (const auto& uid : uids) {
-        UnlinkOne(save, uid);
-    }
-    R_TRY(save.Commit());
-    R_SUCCEED();
-}
-
-auto ExportAccountSave(std::string& out_dir, bool terminate_if_needed) -> Result {
+auto ExportAccountSave(std::string& out_dir) -> Result {
     auto save = TryOpenAccountSave();
-    if (R_FAILED(save.GetFsOpenResult()) && terminate_if_needed) {
-        save = OpenAccountSave();
-    }
     R_TRY(save.GetFsOpenResult());
 
     fs::FsNativeSd sd;
@@ -534,81 +297,171 @@ auto ExportAccountSave(std::string& out_dir, bool terminate_if_needed) -> Result
     R_SUCCEED();
 }
 
-auto ExportOfficialLink(const AccountUid& uid, std::string& out_dir) -> Result {
-    auto save = TryOpenAccountSave();
-    const auto open_rc = save.GetFsOpenResult();
-    if (R_FAILED(open_rc)) {
-        log_write("[ACC] TryOpenAccountSave failed 0x%X for uid %s\n", open_rc, UidHex(uid).c_str());
-        return open_rc;
+auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vector<std::string>& out_nas_files) -> Result {
+    out_nas_id = 0;
+    out_nas_files.clear();
+    R_UNLESS(!pkg_dir.empty(), Result_FsInvalidPath);
+
+    auto norm_path = pkg_dir;
+    while (!norm_path.empty() && (norm_path.back() == '/' || norm_path.back() == '\\')) {
+        norm_path.pop_back();
+    }
+    R_UNLESS(!norm_path.empty(), Result_FsInvalidPath);
+
+    if (norm_path.find("..") != std::string::npos || norm_path.find('\\') != std::string::npos || norm_path.find("//") != std::string::npos) {
+        return Result_FsInvalidPath;
     }
 
-    const auto baas_path = FindBaasPath(save, uid);
-    if (baas_path.empty()) {
-        log_write("[ACC] no baas file found for uid %s\n", UidHex(uid).c_str());
-        return FsError_PathNotFound;
+    const auto pkg_name = BaseName(norm_path);
+    R_UNLESS(!pkg_name.empty(), Result_FsInvalidPath);
+    for (char c : pkg_name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+            return Result_FsInvalidPath;
+        }
     }
 
-    u64 nas_id{};
-    if (!NasIdFromBaas(save, baas_path, nas_id) || nas_id == 0) {
-        log_write("[ACC] invalid baas file %s for uid %s\n", baas_path.c_str(), UidHex(uid).c_str());
-        return Result_FsInvalidType;
+    const auto allowed_root_app = paths::DATA_ROOT + "/account_links";
+    const auto allowed_root_kefir = std::string("/config/kefir/account_links");
+    const auto expected_app = allowed_root_app + "/" + pkg_name;
+    const auto expected_kefir = allowed_root_kefir + "/" + pkg_name;
+
+    if (norm_path != expected_app && norm_path != expected_kefir) {
+        return Result_FsInvalidPath;
     }
 
     fs::FsNativeSd sd;
+    const auto manifest_path = norm_path + "/manifest.txt";
+    R_UNLESS(sd.FileExists(manifest_path.c_str()), Result_FsInvalidType);
+
+    std::vector<u8> manifest_bytes;
+    R_TRY(sd.read_entire_file(manifest_path.c_str(), manifest_bytes));
+    const std::string manifest_str(manifest_bytes.begin(), manifest_bytes.end());
+
+    std::unordered_map<std::string, std::string> kv;
+    size_t line_start = 0;
+    while (line_start < manifest_str.size()) {
+        auto line_end = manifest_str.find('\n', line_start);
+        if (line_end == std::string::npos) {
+            line_end = manifest_str.size();
+        }
+        auto line = manifest_str.substr(line_start, line_end - line_start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        const auto eq = line.find('=');
+        if (eq != std::string::npos) {
+            const auto k = line.substr(0, eq);
+            const auto v = line.substr(eq + 1);
+            kv[k] = v;
+        }
+        line_start = line_end + 1;
+    }
+
+    R_UNLESS(kv["format"] == "kefir_account_link", Result_FsInvalidType);
+    R_UNLESS(kv["version"] == "2", Result_FsInvalidType);
+    R_UNLESS(kv["system_save"] == "8000000000000010", Result_FsInvalidType);
+    R_UNLESS(kv["idgen_0011_included"] == "false", Result_FsInvalidType);
+    R_UNLESS(kv["baas_file"] == "baas/link.dat", Result_FsInvalidType);
+
+    const auto& nas_hex = kv["nintendo_account_id"];
+    R_UNLESS(!nas_hex.empty() && nas_hex.size() <= 16, Result_FsInvalidType);
+    for (char c : nas_hex) {
+        R_UNLESS(std::isxdigit(static_cast<unsigned char>(c)), Result_FsInvalidType);
+    }
+
+    try {
+        size_t idx = 0;
+        out_nas_id = std::stoull(nas_hex, &idx, 16);
+        R_UNLESS(idx == nas_hex.size() && out_nas_id != 0, Result_FsInvalidType);
+    } catch (...) {
+        return Result_FsInvalidType;
+    }
+
+    const auto baas_path = norm_path + "/baas/link.dat";
+    R_UNLESS(sd.FileExists(baas_path.c_str()), Result_FsInvalidType);
+
+    std::vector<u8> baas_sample;
+    R_TRY(sd.read_entire_file(baas_path.c_str(), baas_sample));
+    R_UNLESS(baas_sample.size() >= 24, Result_FsInvalidType);
+
+    u64 baas_nas_id = 0;
+    std::memcpy(&baas_nas_id, baas_sample.data() + 16, sizeof(u64));
+    R_UNLESS(baas_nas_id == out_nas_id, Result_FsInvalidType);
+
+    const auto nas_dir = norm_path + "/nas";
+    R_UNLESS(sd.DirExists(nas_dir.c_str()), Result_FsInvalidType);
+
+    fs::Dir d;
+    R_TRY(sd.OpenDirectory(nas_dir.c_str(), FsDirOpenMode_ReadFiles, &d));
+    std::vector<FsDirectoryEntry> entries;
+    R_TRY(d.ReadAll(entries));
+
+    for (const auto& e : entries) {
+        if (e.type != FsDirEntryType_File) {
+            continue;
+        }
+        std::string fname = e.name;
+        bool safe = !fname.empty();
+        for (char c : fname) {
+            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+                safe = false;
+                break;
+            }
+        }
+        if (!safe) {
+            continue;
+        }
+        if (NasFileMatches(fname, out_nas_id)) {
+            out_nas_files.push_back(fname);
+        }
+    }
+
+    R_UNLESS(!out_nas_files.empty(), Result_FsInvalidType);
+    R_SUCCEED();
+}
+
+auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) -> Result {
+    fs::FsNativeSd sd;
+    R_TRY(CheckHandoffPreconditions(sd));
+
+    u64 nas_id = 0;
+    R_TRY(QueryNintendoAccountId(uid, nas_id));
+
     char stamp[32]{};
     const auto t = std::time(nullptr);
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
     char uid_suffix[9]{};
     std::snprintf(uid_suffix, sizeof(uid_suffix), "%08x", static_cast<unsigned>(uid.uid[0] & 0xffffffffu));
     const auto base_dir = paths::DATA_ROOT + "/account_links/" + stamp + "_" + uid_suffix;
-    out_dir = base_dir;
-    for (u32 collision = 1; sd.DirExists(out_dir.c_str()); collision++) {
-        out_dir = base_dir + "_" + std::to_string(collision);
+    out_pkg_dir = base_dir;
+    for (u32 collision = 1; sd.DirExists(out_pkg_dir.c_str()); collision++) {
+        out_pkg_dir = base_dir + "_" + std::to_string(collision);
     }
 
-    std::vector<std::string> copied_nas;
-    for (const auto& name : ListDirFiles(save, "/nas")) {
-        if (NasFileMatches(name, nas_id)) {
-            copied_nas.push_back(name);
-        }
-    }
-    if (copied_nas.empty()) {
-        log_write("[ACC] no nas files matching nas_id %016llx for uid %s\n",
-            static_cast<unsigned long long>(nas_id), UidHex(uid).c_str());
-        return Result_FsEmpty;
-    }
+    R_TRY(sd.CreateDirectoryRecursively(out_pkg_dir.c_str()));
+    R_TRY(sd.CreateDirectoryRecursively((out_pkg_dir + "/baas").c_str()));
+    R_TRY(sd.CreateDirectoryRecursively((out_pkg_dir + "/nas").c_str()));
 
-    R_TRY(sd.CreateDirectoryRecursively(out_dir.c_str()));
-
-    R_TRY(sd.CreateDirectoryRecursively((out_dir + "/baas").c_str()));
-    const auto baas_name = BaseName(baas_path);
-    R_TRY(CopyFile(save, baas_path, sd, out_dir + "/baas/" + baas_name));
-
-    R_TRY(sd.CreateDirectoryRecursively((out_dir + "/nas").c_str()));
-    for (const auto& name : copied_nas) {
-        R_TRY(CopyFile(save, "/nas/" + name, sd, out_dir + "/nas/" + name));
-    }
+    const auto source_uid_str = UidHex(uid);
+    const auto nas_hex_str = NasHex(nas_id);
 
     std::string manifest;
     manifest += "format=kefir_account_link\n";
-    manifest += "version=1\n";
+    manifest += "version=2\n";
     manifest += "system_save=8000000000000010\n";
     manifest += "idgen_0011_included=false\n";
-    manifest += "source_uid=" + UidHex(uid) + "\n";
-    manifest += "nintendo_account_id=" + NasHex(nas_id) + "\n";
-    manifest += "baas_file=baas/" + baas_name + "\n";
-    for (const auto& nas_name : copied_nas) {
-        manifest += "nas_file=nas/" + nas_name + "\n";
-    }
-    R_TRY(sd.write_entire_file((out_dir + "/manifest.txt").c_str(),
+    manifest += "source_uid=" + source_uid_str + "\n";
+    manifest += "nintendo_account_id=" + nas_hex_str + "\n";
+    manifest += "baas_file=baas/link.dat\n";
+    R_TRY(sd.write_entire_file((out_pkg_dir + "/manifest.txt").c_str(),
         std::vector<u8>(manifest.begin(), manifest.end())));
 
     const std::string readme =
         "Kefir Hub official Nintendo Account link export\n"
-        "Format version: 1\n"
+        "Format version: 2\n"
         "\n"
-        "This bundle contains a local official Nintendo Account link export for the selected user profile.\n"
-        "Decrypted inner files were extracted from system save 0x8000000000000010.\n"
+        "This bundle contains a local official Nintendo Account link export prepared for the selected user profile.\n"
+        "System save 0x8000000000000010 data will be extracted offline via TegraExplorer.\n"
         "\n"
         "idgen_0011_included=false\n"
         "System save 0x8000000000000011 (idgen:/context.bin) is intentionally omitted because it contains\n"
@@ -616,78 +469,450 @@ auto ExportOfficialLink(const AccountUid& uid, std::string& out_dir) -> Result {
         "\n"
         "SECURITY WARNING:\n"
         "Files under baas/ and nas/ may contain private Nintendo Account identifiers or cached credentials.\n"
-        "Do NOT share these files, publish them, or embed them in a distributable application or NRO.\n"
-        "\n"
-        "NOTE:\n"
-        "This export format is not yet a supported round-trip restore workflow in v0.13.637.\n";
-    R_TRY(sd.write_entire_file((out_dir + "/README.txt").c_str(),
+        "Do NOT share these files, publish them, or embed them in a distributable application or NRO.\n";
+    R_TRY(sd.write_entire_file((out_pkg_dir + "/README.txt").c_str(),
         std::vector<u8>(readme.begin(), readme.end())));
 
-    log_write("[ACC] official link export for uid %s written to %s (nas files=%zu)\n",
-        UidHex(uid).c_str(), out_dir.c_str(), copied_nas.size());
-    R_SUCCEED();
-}
-
-auto ImportOfficialLink(const std::vector<AccountUid>& uids, const std::string& dump_dir, bool& had_tokens) -> Result {
-    had_tokens = false;
-    R_UNLESS(!uids.empty(), Result_FsEmpty);
-    R_UNLESS(!dump_dir.empty(), Result_FsEmpty);
-
-    fs::FsNativeSd sd;
-    const auto layout = ResolveDumpLayout(sd, dump_dir);
-    R_UNLESS(!layout.baas_dir.empty(), Result_FsInvalidType);
-
-    const auto dump_baas = DumpBaasFiles(sd, layout.baas_dir);
-    R_UNLESS(!dump_baas.empty(), Result_FsInvalidType);
-
-    auto save = OpenAccountSave();
-    R_TRY(save.GetFsOpenResult());
-    BackupAccountSave(save);
-    R_TRY(save.CreateDirectoryRecursively("/baas"));
-    R_TRY(save.CreateDirectoryRecursively("/nas"));
-
-    for (const auto& uid : uids) {
-        const auto src_name = PickDumpBaas(dump_baas, uid);
-        R_UNLESS(!src_name.empty(), Result_FsInvalidType);
-
-        std::vector<u8> baas;
-        R_TRY(sd.read_entire_file((layout.baas_dir + "/" + src_name).c_str(), baas));
-        R_UNLESS(baas.size() >= 24, Result_FsInvalidType);
-
-        u64 nas_id{};
-        std::memcpy(&nas_id, baas.data() + 16, sizeof(nas_id));
-
-        UnlinkOne(save, uid);
-
-        auto dest_name = FileStem(src_name);
-        bool matched_name{};
-        for (const auto& cand : BaasCandidates(uid)) {
-            if (ToLowerCopy(BaseName(cand)) == ToLowerCopy(src_name)) {
-                dest_name = FileStem(src_name);
-                matched_name = true;
-                break;
-            }
-        }
-        if (!matched_name) {
-            dest_name = UidDashedRfc(uid);
-        }
-        R_TRY(save.write_entire_file(("/baas/" + dest_name + ".dat").c_str(), baas));
-
-        for (const auto& name : ListDirFiles(sd, layout.nas_dir)) {
-            if (!NasFileMatches(name, nas_id)) {
-                continue;
-            }
-            R_TRY(CopyFile(sd, layout.nas_dir + "/" + name, save, "/nas/" + name));
-            const auto lower = ToLowerCopy(name);
-            if (lower.find("_id.token") != std::string::npos ||
-                lower.find("_refresh.token") != std::string::npos) {
-                had_tokens = true;
-            }
+    const auto pkg_name = BaseName(out_pkg_dir);
+    for (char c : pkg_name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+            return Result_FsInvalidPath;
         }
     }
 
-    R_TRY(save.Commit());
-    log_write("[ACC] imported official link from %s (tokens=%d)\n", dump_dir.c_str(), had_tokens ? 1 : 0);
+    const auto cands = BaasCandidateNames(uid);
+
+    std::vector<std::string> prefixes;
+    auto add_pfx = [&](const std::string& p) {
+        if (!p.empty() && std::find(prefixes.begin(), prefixes.end(), p) == prefixes.end()) {
+            prefixes.push_back(p);
+        }
+    };
+    add_pfx(ToLowerCopy(NasHex(nas_id)));
+    add_pfx(ToUpperCopy(NasHex(nas_id)));
+    add_pfx(ToLowerCopy(NasHexShort(nas_id)));
+    add_pfx(ToUpperCopy(NasHexShort(nas_id)));
+
+    std::string te;
+    te += "# REQUIRE SD\n";
+    te += "# REQUIRE KEYS\n";
+    te += "# REQUIRE MINERVA\n";
+    te += "# REQUIRE VER 4.0.0\n\n";
+
+    te += "cleanup = {\n";
+    te += "    if (fsexists(\"sd:/payload.bak\")) {\n";
+    te += "        writefile(\"sd:/payload.bin\", readfile(\"sd:/payload.bak\"))\n";
+    te += "        delfile(\"sd:/payload.bak\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/startup.te\")) {\n";
+    te += "        delfile(\"sd:/startup.te\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/bootloader/update.bin\")) {\n";
+    te += "        payload(\"sd:/bootloader/update.bin\")\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "clear()\n";
+    te += "println(\"Kefir Hub: export official account link\")\n";
+    te += "println(\"\")\n\n";
+
+    te += "targets = [\"Cancel\"].copy()\n";
+    te += "targets.add(\"emuMMC SYSTEM\")\n";
+    te += "targets.add(\"sysMMC SYSTEM\")\n";
+    te += "choice = menu(targets, 0)\n";
+    te += "if (!choice) {\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "if (choice == 1) {\n";
+    te += "    if (!emu()) {\n";
+    te += "        println(\"No emuMMC\")\n";
+    te += "        pause()\n";
+    te += "        cleanup()\n";
+    te += "        exit()\n";
+    te += "    }\n";
+    te += "    rc = mountemu(\"SYSTEM\")\n";
+    te += "} .else() {\n";
+    te += "    rc = mountsys(\"SYSTEM\")\n";
+    te += "}\n\n";
+
+    te += "if (rc) {\n";
+    te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "bis = \"bis:/save/8000000000000010\"\n";
+    te += "if (!fsexists(bis)) {\n";
+    te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
+    te += "mkdir(pkg)\n";
+    te += "mkdir(combinepath(pkg, \"baas\"))\n";
+    te += "mkdir(combinepath(pkg, \"nas\"))\n\n";
+
+    te += "saveObj = readsave(bis)\n\n";
+
+    te += "baasListing = saveObj.readdir(\"/baas\")\n";
+    te += "if (baasListing.result) {\n";
+    te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: cannot read /baas in save 0010\\n\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "cands = [\n";
+    for (size_t i = 0; i < cands.size(); i++) {
+        te += "    \"" + cands[i] + "\"";
+        if (i + 1 < cands.size()) {
+            te += ",";
+        }
+        te += "\n";
+    }
+    te += "]\n\n";
+
+    te += "foundBaas = 0\n";
+    te += "cands.foreach(\"cand\") {\n";
+    te += "    if (!foundBaas && baasListing.files.contains(cand)) {\n";
+    te += "        bbytes = saveObj.read(\"/baas/\" + cand)\n";
+    te += "        if (bbytes.len() >= 24) {\n";
+    te += "            writefile(combinepath(pkg, \"baas/link.dat\"), bbytes)\n";
+    te += "            foundBaas = 1\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "if (!foundBaas) {\n";
+    te += "    println(\"Error: source baas file not found in 0010\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: source baas file not found in 0010\\n\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "nasListing = saveObj.readdir(\"/nas\")\n";
+    te += "if (nasListing.result) {\n";
+    te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: cannot read /nas in save 0010\\n\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "pfxList = [\n";
+    for (size_t i = 0; i < prefixes.size(); i++) {
+        te += "    \"" + prefixes[i] + "\".bytes()";
+        if (i + 1 < prefixes.size()) {
+            te += ",";
+        }
+        te += "\n";
+    }
+    te += "]\n\n";
+
+    te += "nasCopied = 0\n";
+    te += "nasListing.files.foreach(\"nfile\") {\n";
+    te += "    nbytes = nfile.bytes()\n";
+    te += "    match = 0\n";
+    te += "    pfxList.foreach(\"pfx\") {\n";
+    te += "        if (!match && nbytes.len() >= pfx.len()) {\n";
+    te += "            if (nbytes.slice(0, pfx.len()) == pfx) {\n";
+    te += "                match = 1\n";
+    te += "            }\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "    if (match) {\n";
+    te += "        ndata = saveObj.read(\"/nas/" + nfile + "\")\n";
+    te += "        writefile(combinepath(pkg, \"nas/\" + nfile), ndata)\n";
+    te += "        nasCopied = nasCopied + 1\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "if (!nasCopied) {\n";
+    te += "    println(\"Error: no matching NAS files found in 0010\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: no matching NAS files found in 0010\\n\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += R"(resReport = "Export completed successfully\nbaas=baas/link.dat\nnas_copied=" + nasCopied + "\n")" "\n";
+    te += "writefile(combinepath(pkg, \"result.txt\"), resReport)\n\n";
+
+    te += "println(\"Export completed successfully.\")\n";
+    te += "println(\"Exported baas/link.dat and\", nasCopied, \"NAS file(s).\")\n";
+    te += "println(\"Press any button to return.\")\n";
+    te += "pause()\n";
+    te += "cleanup()\n";
+
+    R_TRY(sd.write_entire_file("/startup.te", std::vector<u8>(te.begin(), te.end())));
+    fsdevCommitDevice("sdmc");
+
+    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+        sd.DeleteFile("/startup.te");
+        fsdevCommitDevice("sdmc");
+        return FsError_PathNotFound;
+    }
+
+    R_SUCCEED();
+}
+
+auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& pkg_dir) -> Result {
+    fs::FsNativeSd sd;
+    R_TRY(CheckHandoffPreconditions(sd));
+
+    u64 nas_id = 0;
+    std::vector<std::string> nas_files;
+    R_TRY(ValidateLinkPackage(pkg_dir, nas_id, nas_files));
+
+    const auto pkg_name = BaseName(pkg_dir);
+    for (char c : pkg_name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+            return Result_FsInvalidPath;
+        }
+    }
+
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+
+    const auto target_cands = BaasCandidateNames(target_uid);
+    const auto target_rfc = UidDashedRfc(target_uid);
+
+    std::string te;
+    te += "# REQUIRE SD\n";
+    te += "# REQUIRE KEYS\n";
+    te += "# REQUIRE MINERVA\n";
+    te += "# REQUIRE VER 4.0.0\n\n";
+
+    te += "cleanup = {\n";
+    te += "    if (fsexists(\"sd:/payload.bak\")) {\n";
+    te += "        writefile(\"sd:/payload.bin\", readfile(\"sd:/payload.bak\"))\n";
+    te += "        delfile(\"sd:/payload.bak\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/startup.te\")) {\n";
+    te += "        delfile(\"sd:/startup.te\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/bootloader/update.bin\")) {\n";
+    te += "        payload(\"sd:/bootloader/update.bin\")\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "clear()\n";
+    te += "println(\"Kefir Hub: apply official account link\")\n";
+    te += "println(\"\")\n\n";
+
+    te += "targets = [\"Cancel\"].copy()\n";
+    te += "targets.add(\"emuMMC SYSTEM\")\n";
+    te += "targets.add(\"sysMMC SYSTEM\")\n";
+    te += "choice = menu(targets, 0)\n";
+    te += "if (!choice) {\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "if (choice == 1) {\n";
+    te += "    if (!emu()) {\n";
+    te += "        println(\"No emuMMC\")\n";
+    te += "        pause()\n";
+    te += "        cleanup()\n";
+    te += "        exit()\n";
+    te += "    }\n";
+    te += "    rc = mountemu(\"SYSTEM\")\n";
+    te += "} .else() {\n";
+    te += "    rc = mountsys(\"SYSTEM\")\n";
+    te += "}\n\n";
+
+    te += "if (rc) {\n";
+    te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "bis = \"bis:/save/8000000000000010\"\n";
+    te += "if (!fsexists(bis)) {\n";
+    te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
+    te += "rollback = combinepath(pkg, \"rollback_" + std::string(stamp) + "\")\n";
+    te += "mkdir(rollback)\n";
+    te += "mkdir(combinepath(rollback, \"baas\"))\n";
+    te += "mkdir(combinepath(rollback, \"nas\"))\n\n";
+
+    te += "saveObj = readsave(bis)\n";
+    te += "baasListing = saveObj.readdir(\"/baas\")\n";
+    te += "if (baasListing.result) {\n";
+    te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\nerror=cannot read /baas in save 0010\\n\"\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "nasListing = saveObj.readdir(\"/nas\")\n";
+    te += "if (nasListing.result) {\n";
+    te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\nerror=cannot read /nas in save 0010\\n\"\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "errors = 0\n";
+    te += "nasWritten = 0\n\n";
+
+    te += "# 1. Backup and delete any existing target baas candidates\n";
+    te += "cands = [\n";
+    for (size_t i = 0; i < target_cands.size(); i++) {
+        te += "    \"" + target_cands[i] + "\"";
+        if (i + 1 < target_cands.size()) {
+            te += ",";
+        }
+        te += "\n";
+    }
+    te += "]\n\n";
+
+    te += "cands.foreach(\"cand\") {\n";
+    te += "    candPath = \"/baas/\" + cand\n";
+    te += "    if (baasListing.files.contains(cand)) {\n";
+    te += "        oldBytes = saveObj.read(candPath)\n";
+    te += "        wrc = writefile(combinepath(rollback, \"baas/\" + cand), oldBytes)\n";
+    te += "        if (wrc) {\n";
+    te += "            println(\"Failed to write rollback for\", candPath, wrc)\n";
+    te += "            errors = errors + 1\n";
+    te += "        } .else() {\n";
+    te += "            drc = saveObj.delete(candPath)\n";
+    te += "            if (drc) {\n";
+    te += "                println(\"Failed to delete\", candPath, drc)\n";
+    te += "                errors = errors + 1\n";
+    te += "            }\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "# 2. Read source baas/link.dat and write target baas file\n";
+    te += "baasSrc = combinepath(pkg, \"baas/link.dat\")\n";
+    te += "baasData = readfile(baasSrc)\n";
+    te += "if (baasData.len() < 24) {\n";
+    te += "    println(\"Error: invalid baas/link.dat in package\")\n";
+    te += "    errors = errors + 1\n";
+    te += "} .else() {\n";
+    te += "    if (!errors) {\n";
+    te += "        dstBaas = \"/baas/" + target_rfc + ".dat\"\n";
+    te += "        crc = saveObj.create(dstBaas, baasData.len())\n";
+    te += "        if (crc) {\n";
+    te += "            println(\"Failed to create\", dstBaas, crc)\n";
+    te += "            errors = errors + 1\n";
+    te += "        } .else() {\n";
+    te += "            wrc = saveObj.write(dstBaas, baasData)\n";
+    te += "            if (wrc) {\n";
+    te += "                println(\"Failed to write\", dstBaas, wrc)\n";
+    te += "                errors = errors + 1\n";
+    te += "            }\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "# 3. Copy matching NAS files\n";
+    te += "nasFiles = [\n";
+    for (size_t i = 0; i < nas_files.size(); i++) {
+        te += "    \"" + nas_files[i] + "\"";
+        if (i + 1 < nas_files.size()) {
+            te += ",";
+        }
+        te += "\n";
+    }
+    te += "]\n\n";
+
+    te += "nasFiles.foreach(\"nname\") {\n";
+    te += "    if (!errors) {\n";
+    te += "        srcPath = combinepath(pkg, \"nas/\" + nname)\n";
+    te += "        dstPath = \"/nas/\" + nname\n";
+    te += "        ndata = readfile(srcPath)\n";
+    te += "        if (!ndata.len()) {\n";
+    te += "            println(\"Failed to read\", srcPath)\n";
+    te += "            errors = errors + 1\n";
+    te += "        } .else() {\n";
+    te += "            if (nasListing.files.contains(nname)) {\n";
+    te += "                oldNas = saveObj.read(dstPath)\n";
+    te += "                wrc = writefile(combinepath(rollback, \"nas/\" + nname), oldNas)\n";
+    te += "                if (wrc) {\n";
+    te += "                    println(\"Failed to write rollback for\", dstPath, wrc)\n";
+    te += "                    errors = errors + 1\n";
+    te += "                } .else() {\n";
+    te += "                    drc = saveObj.delete(dstPath)\n";
+    te += "                    if (drc) {\n";
+    te += "                        println(\"Failed to delete\", dstPath, drc)\n";
+    te += "                        errors = errors + 1\n";
+    te += "                    }\n";
+    te += "                }\n";
+    te += "            }\n";
+    te += "            if (!errors) {\n";
+    te += "                crc = saveObj.create(dstPath, ndata.len())\n";
+    te += "                if (crc) {\n";
+    te += "                    println(\"Failed to create\", dstPath, crc)\n";
+    te += "                    errors = errors + 1\n";
+    te += "                } .else() {\n";
+    te += "                    wrc = saveObj.write(dstPath, ndata)\n";
+    te += "                    if (wrc) {\n";
+    te += "                        println(\"Failed to write\", dstPath, wrc)\n";
+    te += "                        errors = errors + 1\n";
+    te += "                    } .else() {\n";
+    te += "                        nasWritten = nasWritten + 1\n";
+    te += "                    }\n";
+    te += "                }\n";
+    te += "            }\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "if (!errors && nasWritten > 0) {\n";
+    te += "    println(\"Writing changes to save 0010...\")\n";
+    te += "    commitRc = saveObj.commit()\n";
+    te += "    if (!commitRc) {\n";
+    te += "        println(\"Commit succeeded!\")\n";
+    te += "        rep = \"Apply succeeded\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "        println(\"Official Nintendo Account link applied successfully.\")\n";
+    te += "        println(\"Wrote baas file and\", nasWritten, \"NAS file(s).\")\n";
+    te += "        println(\"Rollback backup saved to:\", rollback)\n";
+    te += "    } .else() {\n";
+    te += "        println(\"Commit failed with error:\", commitRc)\n";
+    te += "        rep = \"Apply failed\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\ncommit_error=" + commitRc + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    }\n";
+    te += "} .else() {\n";
+    te += "    println(\"Errors occurred during apply. Changes were NOT committed.\")\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\nerrors=" + errors + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "}\n\n";
+
+    te += "println(\"Press any button to return.\")\n";
+    te += "pause()\n";
+    te += "cleanup()\n";
+
+    R_TRY(sd.write_entire_file("/startup.te", std::vector<u8>(te.begin(), te.end())));
+    fsdevCommitDevice("sdmc");
+
+    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+        sd.DeleteFile("/startup.te");
+        fsdevCommitDevice("sdmc");
+        return FsError_PathNotFound;
+    }
+
     R_SUCCEED();
 }
 

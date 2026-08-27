@@ -1,9 +1,35 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.638** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.639** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.639 — prepare offline official link transfer
+
+- Повністю вилучено небезпечний прямий запис у системний сейв `0x8000000000000010` з живої ОС Horizon та припинено будь-яке завершення системних процесів (`account`, `ns`, `pdm`, `bcat`, `olsc`):
+  - Вилучено функції `ShutdownAccountServices`, `OpenAccountSave`, `LinkOneOffline`, `UnlinkOne`, `LinkUsers`, `UnlinkUsers`, `ImportOfficialLink`, `pmshellTerminateProgram` та заголовок `<switch/services/pm.h>` (`sphaira/source/account_link.cpp`, `sphaira/include/account_link.hpp`).
+  - Вилучено виклик `ImportOfficialLink` із функції відновлення пака `account_user::ImportUserPack()`.
+  - Вилучено прапорець `terminate_if_needed` із `account_link::ExportAccountSave` та `account_user::ExportUserPack(s)`.
+- Реалізовано безпечне отримання `NintendoAccountId` (nas_id) через системний IPC Horizon `acc:su` (`account_link::QueryNintendoAccountId`), що відкриває `acc:su` (команда 102) та опитує команду 120 лише після підтвердження наявності прив'язки через `CheckAvailability` (команда 0), із гарантованим закриттям усіх сервісних сесій через `ON_SCOPE_EXIT`.
+- Реалізовано підготовку офлайн-експорту офіційної прив'язки (`account_link::PrepareOfficialLinkExport`):
+  - Читає `NintendoAccountId` через IPC без відкриття утримуваних сейвів.
+  - Формує структуру каталогу `/config/kefir/account_links/<stamp>_<uid_suffix>/` з підкаталогами `baas/` та `nas/`.
+  - Записує структурований маніфест `manifest.txt` (версія 2, `system_save=8000000000000010`, `idgen_0011_included=false`, `source_uid`, `nintendo_account_id`, `baas_file=baas/link.dat`) та `README.txt`.
+  - Генерує безпечний одноразовий TegraScript `/startup.te`, який у TegraExplorer запитує джерело (`emuMMC SYSTEM` / `sysMMC SYSTEM` / `Cancel`), монтує SYSTEM, відкриває `bis:/save/8000000000000010`, копіює `baas/link.dat` та відповідні файли `nas/<nas_id>*` через `saveObj.readdir("/nas")`, записує `result.txt`, відновлює `payload.bin` із `payload.bak`, видаляє `/startup.te` та завантажує `bootloader/update.bin`.
+  - Ініціює перезавантаження в `TegraExplorer.bin` через `utils::rebootToPayload`.
+- Реалізовано валідацію пакетів прив'язки (`account_link::ValidateLinkPackage`) та підготовку застосування (`account_link::PrepareOfficialLinkApply`):
+  - Працює суворо в режимі «один донор -> один локальний профіль» на неприв'язаному профілі (`user.linked_known && !user.horizon_linked`).
+  - Перевіряє розташування пакета, маніфест v2, цілісність `baas/link.dat` та безпечні імена файлів `nas/`.
+  - Усунено дублікати кандидатних імен `BaasCandidateNames()`.
+  - Генерує TegraScript `/startup.te`, який у TegraExplorer запитує цільовий розділ, створює бекап відкату `rollback_<stamp>/`, виконує `saveObj.delete()` лише після успішного запису бекапу відкату з обов'язковою перевіркою кодів помилок `drc`/`wrc`/`crc`, записує `/baas/<target_uid_rfc>.dat` і файли `/nas/`, та викликає `saveObj.commit()` лише при `!errors && nasWritten > 0` з перевіркою `commitRc`.
+  - Ініціює перезавантаження в `TegraExplorer.bin`.
+- Меню Tools → Users (`sphaira/source/ui/menus/users_menu.cpp`, `sphaira/include/ui/menus/users_menu.hpp`):
+  - Додано нові пункти сайдбару «Prepare official-link export» та «Prepare official-link apply» з вибором локального неприв'язаного профілю та пакета на SD.
+  - Вилучено небезпечні дії «Import official link», «Unlink Nintendo Account», «Offline stub (Linkalho)», «Export official link», «Import official link to all», «Unlink all».
+- Додано повні переклади нових рядків інтерфейсу до `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json`, `assets/romfs/i18n/ru.json`.
+- Актуалізовано документацію `docs/account-transfer.md`.
+- Агент не компілює.
 
 ## v0.13.638 — respect system timezone after clock sync
 

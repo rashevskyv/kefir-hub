@@ -397,7 +397,7 @@ void WriteUserPlaytimeTsv(fs::FsNativeSd& sd, const std::string& dir, const Acco
         std::vector<u8>(tsv.begin(), tsv.end()));
 }
 
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool terminate_if_needed) -> Result {
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
 
     struct Ready {
@@ -421,7 +421,7 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     }
 
     std::string dump_dir;
-    account_link::ExportAccountSave(dump_dir, terminate_if_needed);
+    account_link::ExportAccountSave(dump_dir);
 
     title::Init();
     const auto apps = CollectInstalledApps();
@@ -461,9 +461,9 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     R_SUCCEED();
 }
 
-auto ExportUserPack(const AccountUid& uid, std::string& out_dir, bool terminate_if_needed) -> Result {
+auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result {
     std::vector<std::string> dirs;
-    R_TRY(ExportUserPacks({uid}, dirs, terminate_if_needed));
+    R_TRY(ExportUserPacks({uid}, dirs));
     R_UNLESS(!dirs.empty(), Result_FsEmpty);
     out_dir = dirs.front();
     R_SUCCEED();
@@ -526,14 +526,6 @@ auto ImportUserPack(const std::string& dir, AccountUid& out_uid) -> Result {
             normalized = jpeg;
         }
         SetImageJpeg(out_uid, normalized);
-    }
-
-    if (sd.DirExists((pack.dir + "/baas").c_str()) || sd.DirExists((pack.dir + "/nas").c_str())) {
-        bool tokens{};
-        const auto rc = account_link::ImportOfficialLink({out_uid}, pack.dir, tokens);
-        if (R_FAILED(rc)) {
-            log_write("[USER] pack link import failed 0x%X\n", rc);
-        }
     }
 
     R_SUCCEED();

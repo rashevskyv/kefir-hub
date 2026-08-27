@@ -1,10 +1,33 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.638**. Завершені плани збережено в
+Поточний delivery — **v0.13.639**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.638 — Respect system timezone after clock sync
+## Поточний delivery: v0.13.639 — Prepare offline official link transfer
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Повністю прибрано небезпечний прямий запис у системний сейв `0x8000000000000010` з живої ОС Horizon та вилучено механізм завершення системних процесів (`pmshellTerminateProgram`, `ShutdownAccountServices`, `OpenAccountSave`, `LinkOneOffline`, `UnlinkOne`, `LinkUsers`, `UnlinkUsers`, `ImportOfficialLink`).
+2. Вилучено застарілий заголовок `<switch/services/pm.h>` та виклик `account_link::ImportOfficialLink` із `account_user::ImportUserPack()`. Видалено параметр `terminate_if_needed` із шляхів бекапу акаунтів (`ExportAccountSave`, `ExportUserPack`, `ExportUserPacks`).
+3. Реалізовано безпечне опитування Nintendo Account ID (`QueryNintendoAccountId`) через IPC `acc:su` (команда 102 -> команда 120) із гарантованим закриттям сервісів через `ON_SCOPE_EXIT`.
+4. Реалізовано підготовку офлайн-експорту прив'язки (`PrepareOfficialLinkExport`):
+   - Отримує `NintendoAccountId` обраного профілю через IPC.
+   - Створює структуру бандлу `/config/kefir/account_links/<stamp>_<uid_suffix>/` з підкаталогами `baas/` і `nas/`, файлом маніфесту `manifest.txt` (версія 2, `system_save=8000000000000010`, `idgen_0011_included=false`, `source_uid`, `nintendo_account_id`, `baas_file=baas/link.dat`) та `README.txt`.
+   - Генерує безпечний одноразовий скрипт `/startup.te` для TegraExplorer із запитом вибору розділу (`emuMMC SYSTEM` / `sysMMC SYSTEM` / `Cancel`), вилученням файлів через `saveObj.read()`, копіюванням супутніх файлів `nas/`, записом `result.txt`, відновленням `payload.bin`, видаленням `/startup.te` і ланцюговим завантаженням `bootloader/update.bin`.
+   - Виконує перезавантаження в `TegraExplorer.bin` через `utils::rebootToPayload`.
+5. Реалізовано валідацію пакетів прив'язки (`ValidateLinkPackage`) та підготовку перенесення (`PrepareOfficialLinkApply`):
+   - Працює суворо в режимі «один донор -> один локальний профіль» на неприв'язаному профілі (`user.linked_known && !user.horizon_linked`).
+   - Суворо перевіряє розташування пакета, маніфест v2, цілісність `baas/link.dat` та безпечні імена файлів `nas/`.
+   - Дедупліковано кандидатні імена `BaasCandidateNames()`.
+   - Генерує скрипт `/startup.te` для TegraExplorer, який створює бекап відкату `rollback_<stamp>/`, виконує видалення старих кандидатних файлів baas цілі та цільових файлів nas лише після успішного запису бекапу відкату з обов'язковою перевіркою кодів помилок `drc`/`wrc`/`crc`, записує `/baas/<target_uid_rfc>.dat` і супутні файли `/nas/`, та фіксує зміни через `saveObj.commit()` лише за умови `!errors && nasWritten > 0` з контролем `commitRc`.
+   - Виконує перезавантаження в `TegraExplorer.bin`.
+6. Оновлено меню Tools → Users:
+   - Додано нові пункти сайдбару «Prepare official-link export» та «Prepare official-link apply».
+   - Вилучено небезпечні старі дії «Import official link», «Unlink Nintendo Account», «Offline stub (Linkalho)», «Export official link», «Import official link to all», «Unlink all».
+7. Оновлено файли локалізації `assets/romfs/i18n/en.json`, `assets/romfs/i18n/uk.json`, `assets/romfs/i18n/ru.json` та документацію `docs/account-transfer.md`.
+8. `kForceUpdateForTest` залишається `false`.
+
+## Попередній delivery: v0.13.638 — Respect system timezone after clock sync
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ntp.cpp` та `sphaira/include/ntp.hpp` повністю видалено локальне процесне зміщення часу (`g_display_offset`) та публічну функцію `ntp::GetDisplayOffset()`. NTP та системні годинники Horizon використовують POSIX UTC таймстемпи; зміщення часового поясу та літнього часу застосовується виключно нативним шаром libnx / Horizon `localtime_r()`.

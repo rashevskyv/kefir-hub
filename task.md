@@ -1,12 +1,24 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.638**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.639**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.638 (respect system timezone after clock sync)
+## Поточний delivery: v0.13.639 (prepare offline official link transfer)
+
+- [x] `ACC-REMOVE-LIVE-WRITE-639` — повністю вилучено небезпечний запис у системний сейв `0010` з живої ОС Horizon, видалено `pmshellTerminateProgram`, `ShutdownAccountServices`, `OpenAccountSave`, `LinkOneOffline`, `UnlinkOne`, `LinkUsers`, `UnlinkUsers`, `ImportOfficialLink` та `<switch/services/pm.h>`.
+- [x] `ACC-REMOVE-TERMINATE-BACKUP-639` — вилучено параметр `terminate_if_needed` із `ExportAccountSave` та `ExportUserPack(s)`, прибрано виклик `ImportOfficialLink` із `ImportUserPack()`.
+- [x] `ACC-IPC-NAS-ID-639` — реалізовано `account_link::QueryNintendoAccountId` через безпечний системний IPC-запит Horizon `acc:su` (команда 102 -> команда 120).
+- [x] `ACC-OFFLINE-EXPORT-PREP-639` — реалізовано `account_link::PrepareOfficialLinkExport` із генерацією маніфесту v2, безпечного скрипту `/startup.te` для TegraExplorer та ребутом у payload.
+- [x] `ACC-OFFLINE-APPLY-PREP-639` — реалізовано `account_link::ValidateLinkPackage` та `account_link::PrepareOfficialLinkApply` (один донор -> один локальний профіль) із дедуплікованими кандидатами `BaasCandidateNames()`, захищеним бекапом відкату `rollback_<stamp>/`, перевіреними операціями `saveObj.delete()`, комітом через `saveObj.commit()` та ребутом у payload.
+- [x] `USERS-OFFLINE-LINK-UI-639` — у меню Users додано «Prepare official-link export» та «Prepare official-link apply», вилучено всі старі небезпечні дії роботи з акаунтами.
+- [x] `USERS-I18N-639` — додано повні переклади нових UI-рядків у `en.json`, `uk.json`, `ru.json`.
+- [x] `DOCS-TRANSFER-639` — оновлено документацію `docs/account-transfer.md`.
+- [x] `DOCS-BUMP-639` — версію піднято до `0.13.639`.
+
+## Попередній delivery: v0.13.638 (respect system timezone after clock sync)
 
 - [x] `NTP-REMOVE-DISPLAY-OFFSET-638` — видалено змінну `g_display_offset` та публічну функцію `ntp::GetDisplayOffset()` з `ntp.hpp`/`ntp.cpp`.
 - [x] `NTP-DIRECT-DIFF-638` — у `RunSync()` розрахунок зміщення переведено на пряме порівняння `network_time - current_time`.

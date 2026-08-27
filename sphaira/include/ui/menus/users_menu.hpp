@@ -46,10 +46,8 @@ private:
     auto SelectedUsers() const -> std::vector<account_link::User>;
     auto SelectedUids(bool all = false) const -> std::vector<AccountUid>;
 
-    void ConfirmImport(bool all);
-    void ConfirmOffline(bool all);
-    void ConfirmUnlink(bool all);
-    void ConfirmExport();
+    void ConfirmPrepareExport();
+    void ConfirmPrepareApply();
     void ConfirmCreate();
     void ConfirmRename();
     void ConfirmChangeAvatar();
@@ -58,10 +56,8 @@ private:
     void ConfirmNandRestore();
     void ConfirmRestore();
     void ConfirmDelete();
-    void RunUnlink(bool all);
-    void RunOffline(bool all);
-    void RunImport(bool all, const std::string& dump_dir);
-    void RunExport(const AccountUid& uid);
+    void RunPrepareExport(const AccountUid& uid);
+    void RunPrepareApply(const AccountUid& target_uid, const std::string& pkg_dir);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup(std::vector<save::Entry> picked_saves = {});
