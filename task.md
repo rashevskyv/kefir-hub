@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.641**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.642**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.641 (restore account link status semantics)
+## Поточний delivery: v0.13.642 (auto-select NAND and fix ByteArray writefile in TegraExplorer scripts)
+
+- [x] `TE-AUTO-NAND-642` — автоматичне визначення та монтування `emuMMC`/`sysMMC` у скриптах TegraExplorer через `App::IsEmummc()` без показу меню вибору.
+- [x] `TE-WRITEFILE-BYTES-642` — виправлено виклики `writefile()` у згенерованих скриптах TegraExplorer додаванням `.bytes()` до рядків.
+- [x] `TE-DIAGNOSTIC-RECORD-642` — початковий запис діагностики `stage=starting` до монтування SYSTEM та фіксація `source_nand`/`target_nand`.
+- [x] `DOCS-BUMP-642` — версію піднято до `0.13.642`.
+
+## Попередній delivery: v0.13.641 (restore account link status semantics)
 
 - [x] `ACC-LINK-STATUS-SEMANTICS-641` — у `QueryHorizonLinkStatus()` відновлено Result-based семантику команди 0 (`serviceDispatch`), де `R_SUCCEEDED(rc)` -> `out_linked = true`, `ResultNetworkServiceAccountRegistrationRequired` -> `out_linked = false`, а інші помилки прокидаються як збій запиту.
 - [x] `DOCS-BUMP-641` — версію піднято до `0.13.641`.

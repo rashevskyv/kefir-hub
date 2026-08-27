@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.641** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.642** (2026-08-27). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.642 — auto-select NAND and fix ByteArray writefile in TegraExplorer scripts
+
+- Виправлено генерацію скриптів TegraExplorer у `account_link::PrepareOfficialLinkExport` та `account_link::PrepareOfficialLinkApply`:
+  - Усі рядкові аргументи функції `writefile(path, data)` перетворюються на `ByteArray` за допомогою `.bytes()`, що усуває фатальну помилку парсера TegraExplorer `Arguments do not match function definitions`.
+  - Автоматичний вибір контексту NAND: за допомогою `App::IsEmummc()` генерується точний виклик `mountemu("SYSTEM")` або `mountsys("SYSTEM")` без ручного меню вибору.
+  - Додано початковий запис діагностики `result.txt` / `result_apply.txt` із `stage=starting` до монтування SYSTEM.
+  - У маніфест експорту додано поле `source_nand`, а у результат застосування — `target_nand`.
+- Агент не компілює.
 
 ## v0.13.641 — restore account link status semantics
 

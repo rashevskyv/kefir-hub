@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.641**. Завершені плани збережено в
+Поточний delivery — **v0.13.642**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.641 — Restore account link status semantics
+## Поточний delivery: v0.13.642 — Auto-select NAND and fix ByteArray writefile in TegraExplorer scripts
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Автоматичний вибір NAND: скрипти TegraExplorer більше не запитують користувача про вибір `emuMMC/sysMMC`. Контекст монтування фіксується під час генерації скрипту за допомогою `App::IsEmummc()`.
+2. Виправлено виклики `writefile()` у згенерованих скриптах: рядкові дані та діагностичні звіти тепер перетворюються на `ByteArray` за допомогою `.bytes()`.
+3. Початковий запис діагностики `result.txt` / `result_apply.txt` зі станом `stage=starting` до спроби монтування SYSTEM, фіксація `source_nand` у маніфесті та `target_nand` у результаті застосування.
+
+## Попередній delivery: v0.13.641 — Restore account link status semantics
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Виправлено регресію статусу прив'язки Nintendo Account: у `QueryHorizonLinkStatus()` відновлено перевірку результату виклику команди 0 (`CheckAvailability`) замість читання IPC bool.

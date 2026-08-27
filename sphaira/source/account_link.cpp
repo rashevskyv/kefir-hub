@@ -423,6 +423,8 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     u64 nas_id = 0;
     R_TRY(QueryNintendoAccountId(uid, nas_id));
 
+    const bool is_emummc = App::IsEmummc();
+
     char stamp[32]{};
     const auto t = std::time(nullptr);
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
@@ -440,12 +442,14 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     const auto source_uid_str = UidHex(uid);
     const auto nas_hex_str = NasHex(nas_id);
+    const auto nand_str = std::string(is_emummc ? "emummc" : "sysmmc");
 
     std::string manifest;
     manifest += "format=kefir_account_link\n";
     manifest += "version=2\n";
     manifest += "system_save=8000000000000010\n";
     manifest += "idgen_0011_included=false\n";
+    manifest += "source_nand=" + nand_str + "\n";
     manifest += "source_uid=" + source_uid_str + "\n";
     manifest += "nintendo_account_id=" + nas_hex_str + "\n";
     manifest += "baas_file=baas/link.dat\n";
@@ -510,31 +514,27 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "clear()\n";
     te += "println(\"Kefir Hub: export official account link\")\n";
-    te += "println(\"\")\n\n";
+    if (is_emummc) {
+        te += "println(\"Source SYSTEM: emuMMC\")\n\n";
+    } else {
+        te += "println(\"Source SYSTEM: sysMMC\")\n\n";
+    }
 
-    te += "targets = [\"Cancel\"].copy()\n";
-    te += "targets.add(\"emuMMC SYSTEM\")\n";
-    te += "targets.add(\"sysMMC SYSTEM\")\n";
-    te += "choice = menu(targets, 0)\n";
-    te += "if (!choice) {\n";
-    te += "    cleanup()\n";
-    te += "    exit()\n";
-    te += "}\n\n";
+    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
+    te += "mkdir(pkg)\n";
+    te += "mkdir(combinepath(pkg, \"baas\"))\n";
+    te += "mkdir(combinepath(pkg, \"nas\"))\n";
+    te += "writefile(combinepath(pkg, \"result.txt\"), (\"operation=export\\nsource_uid=" + source_uid_str + "\\nsource_nand=" + nand_str + "\\nstage=starting\\n\").bytes())\n\n";
 
-    te += "if (choice == 1) {\n";
-    te += "    if (!emu()) {\n";
-    te += "        println(\"No emuMMC\")\n";
-    te += "        pause()\n";
-    te += "        cleanup()\n";
-    te += "        exit()\n";
-    te += "    }\n";
-    te += "    rc = mountemu(\"SYSTEM\")\n";
-    te += "} .else() {\n";
-    te += "    rc = mountsys(\"SYSTEM\")\n";
-    te += "}\n\n";
+    if (is_emummc) {
+        te += "rc = mountemu(\"SYSTEM\")\n";
+    } else {
+        te += "rc = mountsys(\"SYSTEM\")\n";
+    }
 
     te += "if (rc) {\n";
     te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: SYSTEM mount failed (\" + rc + \")\\nstage=mount_system\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -543,22 +543,18 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "bis = \"bis:/save/8000000000000010\"\n";
     te += "if (!fsexists(bis)) {\n";
     te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: Save 8000000000000010 not found on SYSTEM\\nstage=check_save\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
     te += "}\n\n";
-
-    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
-    te += "mkdir(pkg)\n";
-    te += "mkdir(combinepath(pkg, \"baas\"))\n";
-    te += "mkdir(combinepath(pkg, \"nas\"))\n\n";
 
     te += "saveObj = readsave(bis)\n\n";
 
     te += "baasListing = saveObj.readdir(\"/baas\")\n";
     te += "if (baasListing.result) {\n";
     te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: cannot read /baas in save 0010\\n\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /baas in save 0010 (\" + baasListing.result + \")\\nstage=read_baas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -587,7 +583,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "if (!foundBaas) {\n";
     te += "    println(\"Error: source baas file not found in 0010\")\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: source baas file not found in 0010\\n\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: source baas file not found in 0010\\nstage=find_baas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -596,7 +592,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "nasListing = saveObj.readdir(\"/nas\")\n";
     te += "if (nasListing.result) {\n";
     te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: cannot read /nas in save 0010\\n\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: cannot read /nas in save 0010 (\" + nasListing.result + \")\\nstage=read_nas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -632,14 +628,14 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "if (!nasCopied) {\n";
     te += "    println(\"Error: no matching NAS files found in 0010\")\n";
-    te += "    writefile(combinepath(pkg, \"result.txt\"), \"Export failed: no matching NAS files found in 0010\\n\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: no matching NAS files found in 0010\\nstage=find_nas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += R"(resReport = "Export completed successfully\nbaas=baas/link.dat\nnas_copied=" + nasCopied + "\n")" "\n";
-    te += "writefile(combinepath(pkg, \"result.txt\"), resReport)\n\n";
+    te += R"(resReport = "Export completed successfully\nsource_uid=" + ")" + source_uid_str + R"(\nsource_nand=)" + nand_str + R"(\nbaas=baas/link.dat\nnas_copied=" + nasCopied + "\n")" "\n";
+    te += "writefile(combinepath(pkg, \"result.txt\"), resReport.bytes())\n\n";
 
     te += "println(\"Export completed successfully.\")\n";
     te += "println(\"Exported baas/link.dat and\", nasCopied, \"NAS file(s).\")\n";
@@ -667,6 +663,8 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     std::vector<std::string> nas_files;
     R_TRY(ValidateLinkPackage(pkg_dir, nas_id, nas_files));
 
+    const bool is_emummc = App::IsEmummc();
+
     const auto pkg_name = BaseName(pkg_dir);
     for (char c : pkg_name) {
         if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
@@ -680,6 +678,7 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
 
     const auto target_cands = BaasCandidateNames(target_uid);
     const auto target_rfc = UidDashedRfc(target_uid);
+    const auto nand_str = std::string(is_emummc ? "emummc" : "sysmmc");
 
     std::string te;
     te += "# REQUIRE SD\n";
@@ -702,31 +701,28 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
 
     te += "clear()\n";
     te += "println(\"Kefir Hub: apply official account link\")\n";
-    te += "println(\"\")\n\n";
+    if (is_emummc) {
+        te += "println(\"Target SYSTEM: emuMMC\")\n\n";
+    } else {
+        te += "println(\"Target SYSTEM: sysMMC\")\n\n";
+    }
 
-    te += "targets = [\"Cancel\"].copy()\n";
-    te += "targets.add(\"emuMMC SYSTEM\")\n";
-    te += "targets.add(\"sysMMC SYSTEM\")\n";
-    te += "choice = menu(targets, 0)\n";
-    te += "if (!choice) {\n";
-    te += "    cleanup()\n";
-    te += "    exit()\n";
-    te += "}\n\n";
+    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
+    te += "rollback = combinepath(pkg, \"rollback_" + std::string(stamp) + "\")\n";
+    te += "mkdir(rollback)\n";
+    te += "mkdir(combinepath(rollback, \"baas\"))\n";
+    te += "mkdir(combinepath(rollback, \"nas\"))\n";
+    te += "writefile(combinepath(pkg, \"result_apply.txt\"), (\"operation=apply\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=starting\\n\").bytes())\n\n";
 
-    te += "if (choice == 1) {\n";
-    te += "    if (!emu()) {\n";
-    te += "        println(\"No emuMMC\")\n";
-    te += "        pause()\n";
-    te += "        cleanup()\n";
-    te += "        exit()\n";
-    te += "    }\n";
-    te += "    rc = mountemu(\"SYSTEM\")\n";
-    te += "} .else() {\n";
-    te += "    rc = mountsys(\"SYSTEM\")\n";
-    te += "}\n\n";
+    if (is_emummc) {
+        te += "rc = mountemu(\"SYSTEM\")\n";
+    } else {
+        te += "rc = mountsys(\"SYSTEM\")\n";
+    }
 
     te += "if (rc) {\n";
     te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), (\"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=mount_system\\nerror=SYSTEM mount failed (\" + rc + \")\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -735,23 +731,18 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "bis = \"bis:/save/8000000000000010\"\n";
     te += "if (!fsexists(bis)) {\n";
     te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), (\"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=check_save\\nerror=Save 8000000000000010 not found on SYSTEM\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += "pkg = \"sd:/config/kefir/account_links/" + pkg_name + "\"\n";
-    te += "rollback = combinepath(pkg, \"rollback_" + std::string(stamp) + "\")\n";
-    te += "mkdir(rollback)\n";
-    te += "mkdir(combinepath(rollback, \"baas\"))\n";
-    te += "mkdir(combinepath(rollback, \"nas\"))\n\n";
-
     te += "saveObj = readsave(bis)\n";
     te += "baasListing = saveObj.readdir(\"/baas\")\n";
     te += "if (baasListing.result) {\n";
     te += "    println(\"Error: cannot read /baas in save 0010\", baasListing.result)\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\nerror=cannot read /baas in save 0010\\n\"\n";
-    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_baas\\nerror=cannot read /baas in save 0010 (\" + baasListing.result + \")\\n\"\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -760,8 +751,8 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "nasListing = saveObj.readdir(\"/nas\")\n";
     te += "if (nasListing.result) {\n";
     te += "    println(\"Error: cannot read /nas in save 0010\", nasListing.result)\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\nerror=cannot read /nas in save 0010\\n\"\n";
-    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + "\\nstage=read_nas\\nerror=cannot read /nas in save 0010 (\" + nasListing.result + \")\\n\"\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
@@ -880,20 +871,20 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     te += "    commitRc = saveObj.commit()\n";
     te += "    if (!commitRc) {\n";
     te += "        println(\"Commit succeeded!\")\n";
-    te += "        rep = \"Apply succeeded\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\nrollback=" + rollback + "\n")" + "\n";
-    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "        rep = \"Apply succeeded\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nnas_written=" + nasWritten + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "        println(\"Official Nintendo Account link applied successfully.\")\n";
     te += "        println(\"Wrote baas file and\", nasWritten, \"NAS file(s).\")\n";
     te += "        println(\"Rollback backup saved to:\", rollback)\n";
     te += "    } .else() {\n";
     te += "        println(\"Commit failed with error:\", commitRc)\n";
-    te += "        rep = \"Apply failed\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\ncommit_error=" + commitRc + "\nrollback=" + rollback + "\n")" + "\n";
-    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "        rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=commit\nnas_written=" + nasWritten + "\ncommit_error=" + commitRc + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "        writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "    }\n";
     te += "} .else() {\n";
     te += "    println(\"Errors occurred during apply. Changes were NOT committed.\")\n";
-    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + R"(\nnas_written=" + nasWritten + "\nerrors=" + errors + "\nrollback=" + rollback + "\n")" + "\n";
-    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep)\n";
+    te += "    rep = \"Apply failed\\ntarget_uid=" + target_rfc + "\\ntarget_nand=" + nand_str + R"(\nstage=apply_files\nnas_written=" + nasWritten + "\nerrors=" + errors + "\nrollback=" + rollback + "\n")" + "\n";
+    te += "    writefile(combinepath(pkg, \"result_apply.txt\"), rep.bytes())\n";
     te += "}\n\n";
 
     te += "println(\"Press any button to return.\")\n";
