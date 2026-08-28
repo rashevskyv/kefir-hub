@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.655**. Завершені плани збережено в
+Поточний delivery — **v0.13.656**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.655 — Continue DBI USB installation queue on package skip
+## Поточний delivery: v0.13.656 — Opt-in live DBI Backend Qt queue-selection synchronization
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/include/yati/source/usb.hpp` та `sphaira/source/yati/source/usb.cpp` додано підтримку розширення запиту списку `'SPHQ'` (`0x51485053`), парсинг трипольного формату (`filename|size|selected`), збереження прапорця переговорів `m_dbi_selection_sync` та метод `FetchLiveSelection()`.
+2. У `sphaira/include/ui/menus/dbi_menu.hpp` та `sphaira/source/ui/menus/dbi_menu.cpp` реалізовано фонове опитування live-вибору бекенда під час `State::ReviewQueue` (з інтервалом ~300 мс без busy loop), фінальне оновлення перед запуском інсталяції (`State::Installing`) та перевірку перед стартом кожного окремого пакета.
+3. Скасування вибору пакета в DBI Backend Qt під час очікування або виконання черги автоматично вимикає його в Sphaira без відправлення `InstallFromCollections` або запитів `FileRange`. Локальний вибір користувача на консолі захищено від примусового увімкнення бекендом.
+4. Збережено повну сумісність зі старими хостами (двопільний `SPHA` або звичайний список вимикають синхронізацію без повторних запитів), ручним пропуском (кнопка B) та reconnect-логікою.
+5. Версію Sphaira піднято до `0.13.656`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.655 — Continue DBI USB installation queue on package skip
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ui/menus/dbi_menu.cpp` у гілці обробки пропуску пакета користувачем (`if (user_skipped)`) в `Menu::ThreadFunction()` (USB install queue) видалено виклик `ReestablishUsbLink()` та аварійне переривання сесії (`session_failed = true`).

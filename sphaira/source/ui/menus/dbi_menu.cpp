@@ -1270,9 +1270,49 @@ void Menu::ThreadFunction() {
             m_actions_dirty = true;
             m_install_requested = false; // Reset request flag
 
-            while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) svcSleepThread(1e+6);
+            const bool sync_supported = m_usb_source && m_usb_source->HasSelectionSync();
+            TimeStamp last_poll{};
+
+            while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) {
+                if (sync_supported && last_poll.GetNs() >= 300'000'000) {
+                    last_poll.Reset();
+                    std::unordered_map<std::string, bool> selections;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
+                        ApplyLiveSelection(selections);
+                    }
+                }
+                svcSleepThread(10'000'000);
+            }
             if (m_cancel_requested || GetToken().stop_requested()) {
                 break;
+            }
+
+            if (sync_supported) {
+                std::unordered_map<std::string, bool> selections;
+                if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
+                    SCOPED_MUTEX(&m_mutex);
+                    bool changed = false;
+                    for (auto& entry : m_queue) {
+                        if (entry.selected) {
+                            auto it = selections.find(entry.file_name);
+                            if (it != selections.end() && !it->second) {
+                                entry.selected = false;
+                                changed = true;
+                            }
+                        }
+                    }
+                    if (changed) {
+                        RecomputePlan();
+                        m_plan_total_bytes = 0;
+                        for (auto& entry : m_queue) {
+                            entry.install_selected = entry.selected && R_SUCCEEDED(entry.analysis_result);
+                            entry.install_sd = entry.planned_sd;
+                            if (entry.install_selected) {
+                                AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
+                            }
+                        }
+                    }
+                }
             }
 
             m_state = State::Installing;
@@ -1280,6 +1320,21 @@ void Menu::ThreadFunction() {
             BeginSessionStats();
             bool session_failed{};
             for (size_t i = 0; i < m_queue.size(); i++) {
+                if (sync_supported) {
+                    std::unordered_map<std::string, bool> selections;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
+                        SCOPED_MUTEX(&m_mutex);
+                        for (size_t j = i; j < m_queue.size(); j++) {
+                            if (m_queue[j].selected) {
+                                auto it = selections.find(m_queue[j].file_name);
+                                if (it != selections.end() && !it->second) {
+                                    m_queue[j].selected = false;
+                                    m_queue[j].install_selected = false;
+                                }
+                            }
+                        }
+                    }
+                }
                 bool selected{};
                 yati::InstallAnalysis analysis{};
                 bool plan_sd{};
@@ -1681,6 +1736,25 @@ void Menu::RecomputePlan() {
         e.planned_sd = PlanPickSd(loc, size, free_sd, free_nand);
         PlanTake(e.planned_sd ? free_sd : free_nand, size);
     }
+}
+
+bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections) {
+    SCOPED_MUTEX(&m_mutex);
+    bool changed = false;
+    for (auto& entry : m_queue) {
+        if (entry.selected) {
+            auto it = selections.find(entry.file_name);
+            if (it != selections.end() && !it->second) {
+                entry.selected = false;
+                changed = true;
+            }
+        }
+    }
+    if (changed) {
+        RecomputePlan();
+        m_actions_dirty = true;
+    }
+    return changed;
 }
 
 void Menu::ConfirmInstallPlan() {

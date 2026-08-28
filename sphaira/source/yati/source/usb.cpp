@@ -21,8 +21,10 @@ namespace goldleaf = usb::goldleaf;
 constexpr u64 DETECT_TIMEOUT = 1e+9; // 1 second.
 
 // sphaira's extension to the dbi list request: a backend that recognises
-// 'SPHA' in data_size appends "|<size>" to every name it returns.
+// 'SPHA' in data_size appends "|<size>" to every name it returns;
+// a backend that recognises 'SPHQ' appends "|<size>|<selected>".
 constexpr u32 DBI_LIST_SIZE_EXT = 0x53504841; // 'SPHA'
+constexpr u32 DBI_LIST_QUEUE_EXT = 0x51485053; // 'SPHQ'
 
 using goldleaf::BlockReader;
 using goldleaf::BlockWriter;
@@ -77,7 +79,7 @@ Result Usb::WaitForConnection(u64 timeout, std::vector<std::string>& out_names) 
     //    each other: a host that is running but has not been started by its
     //    user yet is not reading, so this never leaves the console and the
     //    round ends here rather than going on to push a goldleaf block at it.
-    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_SIZE_EXT, DETECT_TIMEOUT));
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_QUEUE_EXT, DETECT_TIMEOUT));
 
     dbi::CmdHeader header{};
     u32 transferred{};
@@ -124,6 +126,7 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
 
     out_names.clear();
     m_file_sizes.clear();
+    m_dbi_selection_sync = false;
 
     if (list_len > 0) {
         R_TRY(SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
@@ -131,24 +134,30 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
         std::vector<char> names(list_len);
         R_TRY(m_usb->TransferAll(true, names.data(), names.size(), timeout));
 
+        bool has_sync_data = false;
         for (const auto& part : std::views::split(names, '\n')) {
             if (part.empty()) {
                 continue;
             }
 
             std::string entry(part.data(), part.size());
-            // backends that understand the 'SPHA' request append "|<size>".
-            const auto pipe = entry.find('|');
-            if (pipe == std::string::npos) {
+            // backends that understand the 'SPHA' or 'SPHQ' request append "|<size>" and optionally "|<selected>".
+            const auto pipe1 = entry.find('|');
+            if (pipe1 == std::string::npos) {
                 m_file_sizes[entry] = 0;
                 out_names.emplace_back(std::move(entry));
                 continue;
             }
 
-            auto name = entry.substr(0, pipe);
-            m_file_sizes[name] = std::strtoll(entry.c_str() + pipe + 1, nullptr, 10);
+            const auto pipe2 = entry.find('|', pipe1 + 1);
+            auto name = entry.substr(0, pipe1);
+            m_file_sizes[name] = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
+            if (pipe2 != std::string::npos) {
+                has_sync_data = true;
+            }
             out_names.emplace_back(std::move(name));
         }
+        m_dbi_selection_sync = has_sync_data;
     }
 
     for (const auto& name : out_names) {
@@ -157,7 +166,7 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
 
     R_UNLESS(!out_names.empty(), Result_UsbBadCount);
     m_protocol = UsbProtocol::Dbi;
-    log_write("[USB] Connection success (Protocol: DBI)\n");
+    log_write("[USB] Connection success (Protocol: DBI, selection sync: %s)\n", m_dbi_selection_sync ? "enabled" : "disabled");
     R_SUCCEED();
 }
 
@@ -202,6 +211,50 @@ Result Usb::DbiRead(void* buf, s64 off, s64 size, u64* bytes_read) {
     R_TRY(m_usb->TransferAll(true, buf, response.data_size, timeout));
 
     *bytes_read = response.data_size;
+    R_SUCCEED();
+}
+
+Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout) {
+    R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
+
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_QUEUE_EXT, timeout));
+
+    dbi::CmdHeader response{};
+    R_TRY(m_usb->TransferAll(true, &response, sizeof(response), timeout));
+    R_UNLESS(response.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(response.id == dbi::CmdId::List, Result_UsbBadMagic);
+    R_UNLESS(response.type == dbi::CmdType::Response, Result_UsbBadMagic);
+
+    const u32 list_len = response.data_size;
+    out_selections.clear();
+
+    if (list_len > 0) {
+        R_TRY(SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
+
+        std::vector<char> names(list_len);
+        R_TRY(m_usb->TransferAll(true, names.data(), names.size(), timeout));
+
+        for (const auto& part : std::views::split(names, '\n')) {
+            if (part.empty()) {
+                continue;
+            }
+
+            std::string entry(part.data(), part.size());
+            const auto pipe1 = entry.find('|');
+            if (pipe1 == std::string::npos) {
+                continue;
+            }
+            const auto pipe2 = entry.find('|', pipe1 + 1);
+            if (pipe2 == std::string::npos) {
+                continue;
+            }
+
+            auto name = entry.substr(0, pipe1);
+            bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
+            out_selections[name] = selected;
+        }
+    }
+
     R_SUCCEED();
 }
 

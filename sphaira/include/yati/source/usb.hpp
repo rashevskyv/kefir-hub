@@ -49,8 +49,14 @@ struct Usb final : Base {
     void SetFileNameForTranfser(const std::string& name);
 
     // size the host reported for a listed file, or 0 when it did not say.
-    // Only dbi backends that understand the 'SPHA' list request report sizes.
+    // Only dbi backends that understand the 'SPHA' or 'SPHQ' list request report sizes.
     s64 GetFileSize(const std::string& name) const;
+
+    bool HasSelectionSync() const {
+        return m_dbi_selection_sync;
+    }
+
+    Result FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout = 1e+9);
 
     auto GetProtocol() const {
         return m_protocol;
@@ -86,6 +92,7 @@ private:
     std::unordered_map<std::string, s64> m_file_sizes{};
     u8 m_flags{};
     UsbProtocol m_protocol{UsbProtocol::None};
+    bool m_dbi_selection_sync{false};
 
     // goldleaf request blocks are built in m_gl_req and replies land in
     // m_gl_res. Both live here rather than on the stack: Read() runs on

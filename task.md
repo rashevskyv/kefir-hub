@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.655**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.656**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.655 (continue DBI queue after package skip)
+## Поточний delivery: v0.13.656 (sync DBI backend queue selection)
+
+- [x] `DBI-LIVE-SELECTION-656` — реалізовано підтримку розширення запиту `'SPHQ'` (`0x51485053`), парсинг трипольного формату (`filename|size|selected`), фонове опитування live-вибору бекенда в `State::ReviewQueue`, синхронізацію перед початком встановлення та перед кожним окремим пакетом у черзі без відправлення зайвих FileRange запитів.
+- [x] `DOCS-BUMP-656` — версія `0.13.656`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.655 (continue DBI queue after package skip)
 
 - [x] `DBI-SKIP-CONTINUE-655` — усунено виклик `ReestablishUsbLink()` та аварійне завершення сесії при пропуску пакета користувачем у USB черзі `dbi_menu.cpp`; черга коректно продовжує встановлення наступних пакетів.
 - [x] `DOCS-BUMP-655` — версія `0.13.655`, plan/task/walkthrough/audit.
