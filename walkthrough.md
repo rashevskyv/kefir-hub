@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.658** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.659** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.659 — Fix live DBI queue compatibility and metrics
+
+- Усунення блокування (deadlock) у черзі (`sphaira/source/ui/menus/dbi_menu.cpp`):
+  - У циклі завершення черги опитування відхилених через нестачу вільного місця пакетів перенесено збір імен файлів під дію `m_mutex`, а виклики `AddLog()` переміщено за межі м'ютекса, що повністю запобігає повторному блокуванню `m_mutex` зсередини `AddLog()`.
+- Корекція початкового узгодження SPHQ (`sphaira/source/yati/source/usb.cpp`):
+  - У `Usb::DbiWaitForConnection()` до списку `out_names` додаються виключно записи з `selected != 0`, уникаючи початкового аналізу невибраних користувачем файлів.
+  - Дозволено початкове успішне підключення при порожньому списку вибраних файлів, якщо хост підтримує SPHQ-синхронізацію (`m_dbi_selection_sync`).
+- Верифікація:
+  - Виконано перевірку чистоти форматування `git diff --check`.
+  - Запущено модульний тест `test_install_plan` у WSL.
 
 ## v0.13.658 — Sync live DBI queue additions and metrics
 

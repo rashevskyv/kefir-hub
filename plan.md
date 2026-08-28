@@ -1,12 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.658**. Завершені плани збережено в
+Поточний delivery — **v0.13.659**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.658 — Sync live DBI queue additions and metrics
+## Поточний delivery: v0.13.659 — Fix live DBI queue compatibility and metrics
 
-Статус: програмну частину реалізовано; верифікація збірки WSL.
+Статус: програмну частину виправлено та верифіковано.
+1. У `sphaira/source/ui/menus/dbi_menu.cpp` виправлено дедлок у фінальному звіті про відхилені через нестачу місця пакети: збір імен відхилених файлів виконується під м'ютексом `m_mutex`, після чого м'ютекс звільняється і виклики `AddLog()` відбуваються безпечно без блокування черги.
+2. У `sphaira/source/yati/source/usb.cpp` у методі `DbiWaitForConnection()` виправлено первинну обробку SPHQ: до початкового списку черги `out_names` додаються лише записи з `selected != 0`, що виключає зайвий початковий аналіз невибраних ігор, а для протоколу SPHQ дозволяється початково порожній список черги з подальшим live-додаванням. Для SPHA та звичайного списку збережено повну сумісність.
+3. Версію Sphaira піднято до `0.13.659`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.658 — Sync live DBI queue additions and metrics
+
+Статус: програмну частину реалізовано (збірку WSL скасовано користувачем).
 1. У `sphaira/source/yati/source/usb.cpp` розширено `FetchLiveSelection()`: розмір файлу з відповіді SPHQ тепер оновлює внутрішній кеш `m_file_sizes`, забезпечуючи точний `source_size` для динамічно доданих ігор.
 2. У `sphaira/include/ui/menus/install_plan.hpp` додано чистий хелпер `PlanEvaluateCandidate()` для перевірки місткості та вибору SD/NAND для нових пакетів з урахуванням політики розташування та резервів пам'яті. Додано модульні тести у `tests/test_install_plan.cpp`.
 3. У `sphaira/include/ui/menus/dbi_menu.hpp` та `sphaira/source/ui/menus/dbi_menu.cpp`:

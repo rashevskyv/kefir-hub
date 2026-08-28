@@ -1528,14 +1528,18 @@ void Menu::ThreadFunction() {
                 }
             }
 
+            std::vector<std::string> rejected_names;
             {
                 SCOPED_MUTEX(&m_mutex);
                 m_stats.elapsed_ns = m_session_timestamp.GetNs();
                 for (const auto& entry : m_queue) {
                     if (entry.rejected_no_space) {
-                        AddLog("Not installed: "_i18n + entry.file_name + " — " + "not enough free space"_i18n, LogKind::Error);
+                        rejected_names.push_back(entry.file_name);
                     }
                 }
+            }
+            for (const auto& name : rejected_names) {
+                AddLog("Not installed: "_i18n + name + " — " + "not enough free space"_i18n, LogKind::Error);
             }
             if (m_cancel_requested) {
                 AddLog("Session cancelled; completed installs were kept."_i18n, LogKind::Warning);

@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.658**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.659**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.658 (sync live DBI queue additions and metrics)
+## Поточний delivery: v0.13.659 (fix live DBI queue compatibility and metrics)
+
+- [x] `DBI-DEADLOCK-FIX-659` — усунено взаємне блокування (deadlock) у `dbi_menu.cpp`: імена відхилених пакетів збираються під `m_mutex`, а виклики `AddLog()` виконуються після виходу зі скоупу м'ютекса.
+- [x] `DBI-SPHQ-INIT-SELECT-659` — у `DbiWaitForConnection()` до початкової черги `out_names` додаються виключно записи з `selected != 0`; дозволено початково порожній список черги для протоколу SPHQ.
+- [x] `DOCS-BUMP-659` — версія `0.13.659`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.658 (sync live DBI queue additions and metrics)
 
 - [x] `DBI-LIVE-QUEUE-ADD-658` — розширено `FetchLiveSelection()` оновленням `m_file_sizes`; реалізовано прийом нових обраних пакетів з бекенда в `ReviewQueue` та між пакетами в `Installing` з аналізом `AnalyzeSource` та політикою `InstallTarget::Auto`.
 - [x] `DBI-CAPACITY-POLICY-658` — реалізовано `PlanEvaluateCandidate()` для валідації місткості нових ігор без витіснення існуючої черги; відхилені через нестачу пам'яті пакети безпечно фіксуються в черзі, а після завершення виводиться помилка `Not installed: <file> — not enough free space`.

@@ -154,8 +154,13 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
             m_file_sizes[name] = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
             if (pipe2 != std::string::npos) {
                 has_sync_data = true;
+                bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
+                if (selected) {
+                    out_names.emplace_back(std::move(name));
+                }
+            } else {
+                out_names.emplace_back(std::move(name));
             }
-            out_names.emplace_back(std::move(name));
         }
         m_dbi_selection_sync = has_sync_data;
     }
@@ -164,7 +169,7 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
         log_write("[USB] got name: %s (size: %lld)\n", name.c_str(), (long long)m_file_sizes[name]);
     }
 
-    R_UNLESS(!out_names.empty(), Result_UsbBadCount);
+    R_UNLESS(!out_names.empty() || m_dbi_selection_sync, Result_UsbBadCount);
     m_protocol = UsbProtocol::Dbi;
     log_write("[USB] Connection success (Protocol: DBI, selection sync: %s)\n", m_dbi_selection_sync ? "enabled" : "disabled");
     R_SUCCEED();
