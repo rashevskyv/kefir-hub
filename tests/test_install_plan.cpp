@@ -9,6 +9,7 @@
 
 using sphaira::ui::menu::dbi::PlanPickSd;
 using sphaira::ui::menu::dbi::PlanTake;
+using sphaira::ui::menu::dbi::PlanEvaluateCandidate;
 
 namespace {
 
@@ -71,6 +72,29 @@ int main() {
         int64_t budget = 1 * GB;
         PlanTake(budget, 500 * GB);
         assert(budget == 0);
+    }
+
+    // PlanEvaluateCandidate checks capacity against location policy.
+    {
+        // Fits SD
+        auto r1 = PlanEvaluateCandidate(4, 5 * GB, 10 * GB, 2 * GB);
+        assert(r1.fits && r1.is_sd);
+
+        // Fits NAND in Auto mode when SD is full
+        auto r2 = PlanEvaluateCandidate(4, 5 * GB, 2 * GB, 10 * GB);
+        assert(r2.fits && !r2.is_sd);
+
+        // SD-only mode (loc = 0) does not spill to NAND
+        auto r3 = PlanEvaluateCandidate(0, 5 * GB, 2 * GB, 10 * GB);
+        assert(!r3.fits);
+
+        // NAND-only mode (loc = 1) does not spill to SD
+        auto r4 = PlanEvaluateCandidate(1, 5 * GB, 10 * GB, 2 * GB);
+        assert(!r4.fits);
+
+        // Does not fit either
+        auto r5 = PlanEvaluateCandidate(4, 15 * GB, 10 * GB, 10 * GB);
+        assert(!r5.fits);
     }
 
     std::puts("install plan: ok");

@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.657** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.658** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.658 — Sync live DBI queue additions and metrics
+
+- Динамічне додавання та синхронізація черги (`sphaira/source/yati/source/usb.cpp`, `sphaira/include/ui/menus/dbi_menu.hpp`, `sphaira/source/ui/menus/dbi_menu.cpp`):
+  - Розширено метод `Usb::FetchLiveSelection()`: розмір пакета з SPHQ-відповіді зберігається в `m_file_sizes`, забезпечуючи валідний `analysis.source_size` для доданих на льоту ігор.
+  - У `Menu::ApplyLiveSelection()` додано створення нового `QueueEntry` для раніше невідомих файлів з `selected=1`: виконання стандартного аналізу (`yati::AnalyzeSource`), автоматична ціль встановлення (`InstallTarget::Auto`), безпечне додавання до черги без повторів та негайний перерахунок плану інсталяції (`RecomputePlan()`). Невідомі неактивні файли (`selected=0`) ігноруються до моменту їх вибору користувачем.
+- Управління чергою та місткістю під час інсталяції (`sphaira/include/ui/menus/install_plan.hpp`, `sphaira/source/ui/menus/dbi_menu.cpp`, `tests/test_install_plan.cpp`):
+  - Додано чистий алгоритм `PlanEvaluateCandidate(loc, size, free_sd, free_nand)` для перевірки достатності пам'яті з урахуванням конфігурації розташування та резервів.
+  - У стані `State::Installing` між пакетами здійснюється live-опитування бекенда: нові обрані ігри проходять валідацію щодо залишкового вільного місця SD/NAND після виконання всіх запланованих пакетів черги; якщо місця недостатньо, пакет залишається у видимому списку як відхилений (`install_selected = false`, `rejected_no_space = true`), а після закінчення черги виводиться запис у лог `Not installed: <file> — not enough free space`.
+  - Зняття вибору з пакетів, що ще не почали встановлюватися, негайно вимикає їх із плану (`install_selected = false`).
+  - Відновлення `m_plan_total_bytes` із зафіксованого `m_plan_done_bytes` та решти запланованих пакетів для точного розрахунку загального прогресу та ETA.
+- Верифікація:
+  - Додано модульні тести `PlanEvaluateCandidate` у `tests/test_install_plan.cpp`.
+  - Виконано перевірку чистоти форматування `git diff --check`.
 
 ## v0.13.657 — Fix TimeStamp update method & successful WSL build
 

@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.657**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.658**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.657 (build fixes and successful WSL compilation)
+## Поточний delivery: v0.13.658 (sync live DBI queue additions and metrics)
+
+- [x] `DBI-LIVE-QUEUE-ADD-658` — розширено `FetchLiveSelection()` оновленням `m_file_sizes`; реалізовано прийом нових обраних пакетів з бекенда в `ReviewQueue` та між пакетами в `Installing` з аналізом `AnalyzeSource` та політикою `InstallTarget::Auto`.
+- [x] `DBI-CAPACITY-POLICY-658` — реалізовано `PlanEvaluateCandidate()` для валідації місткості нових ігор без витіснення існуючої черги; відхилені через нестачу пам'яті пакети безпечно фіксуються в черзі, а після завершення виводиться помилка `Not installed: <file> — not enough free space`.
+- [x] `DBI-PROGRESS-RECALC-658` — реалізовано динамічний перерахунок `m_plan_total_bytes` із зафіксованого `m_plan_done_bytes` та решти запланованих пакетів для точного відображення відсотка та ETA при додаванні/знятті вибору.
+- [x] `DOCS-BUMP-658` — версія `0.13.658`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.657 (build fixes and successful WSL compilation)
 
 - [x] `DBI-BUILD-FIX-657` — виправлено виклик таймера в `dbi_menu.cpp` (`last_poll.Update()` замість `last_poll.Reset()`); здійснено повну збірку `sphaira_nro` у WSL за пресетом `ReleaseWithInstall` без помилок.
 - [x] `DOCS-BUMP-657` — версія `0.13.657`, plan/task/walkthrough/audit.

@@ -28,4 +28,24 @@ constexpr void PlanTake(int64_t& budget, int64_t size) {
     budget = budget > size ? budget - size : 0;
 }
 
+// Evaluates whether a new candidate package fits into available storage given location policy,
+// and if so, whether it should go to SD.
+struct PlanCandidateResult {
+    bool fits;
+    bool is_sd;
+};
+
+constexpr PlanCandidateResult PlanEvaluateCandidate(long loc, int64_t size, int64_t free_sd, int64_t free_nand) {
+    const bool pick_sd = PlanPickSd(loc, size, free_sd, free_nand);
+    if (pick_sd) {
+        if (free_sd >= size) return {true, true};
+        if (loc != 0 && free_nand >= size) return {true, false}; // spill to NAND if not SD-only
+        return {false, true};
+    } else {
+        if (free_nand >= size) return {true, false};
+        if (loc != 1 && free_sd >= size) return {true, true}; // spill to SD if not NAND-only
+        return {false, false};
+    }
+}
+
 } // namespace sphaira::ui::menu::dbi

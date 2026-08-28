@@ -43,6 +43,7 @@ struct QueueEntry {
     // obeys, so the run lands exactly where the review screen promised.
     bool planned_sd{};
     bool install_sd{};
+    bool rejected_no_space{};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.

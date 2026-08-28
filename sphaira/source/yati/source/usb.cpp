@@ -250,6 +250,7 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
             }
 
             auto name = entry.substr(0, pipe1);
+            m_file_sizes[name] = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
             bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
             out_selections[name] = selected;
         }

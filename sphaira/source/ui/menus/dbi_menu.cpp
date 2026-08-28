@@ -1290,19 +1290,8 @@ void Menu::ThreadFunction() {
             if (sync_supported) {
                 std::unordered_map<std::string, bool> selections;
                 if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
-                    SCOPED_MUTEX(&m_mutex);
-                    bool changed = false;
-                    for (auto& entry : m_queue) {
-                        if (entry.selected) {
-                            auto it = selections.find(entry.file_name);
-                            if (it != selections.end() && !it->second) {
-                                entry.selected = false;
-                                changed = true;
-                            }
-                        }
-                    }
-                    if (changed) {
-                        RecomputePlan();
+                    if (ApplyLiveSelection(selections)) {
+                        SCOPED_MUTEX(&m_mutex);
                         m_plan_total_bytes = 0;
                         for (auto& entry : m_queue) {
                             entry.install_selected = entry.selected && R_SUCCEEDED(entry.analysis_result);
@@ -1323,15 +1312,126 @@ void Menu::ThreadFunction() {
                 if (sync_supported) {
                     std::unordered_map<std::string, bool> selections;
                     if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
-                        SCOPED_MUTEX(&m_mutex);
-                        for (size_t j = i; j < m_queue.size(); j++) {
-                            if (m_queue[j].selected) {
-                                auto it = selections.find(m_queue[j].file_name);
-                                if (it != selections.end() && !it->second) {
-                                    m_queue[j].selected = false;
-                                    m_queue[j].install_selected = false;
+                        bool changed = false;
+                        {
+                            SCOPED_MUTEX(&m_mutex);
+                            for (size_t j = i; j < m_queue.size(); j++) {
+                                if (m_queue[j].selected || m_queue[j].install_selected) {
+                                    auto it = selections.find(m_queue[j].file_name);
+                                    if (it != selections.end() && !it->second) {
+                                        m_queue[j].selected = false;
+                                        m_queue[j].install_selected = false;
+                                        changed = true;
+                                    }
                                 }
                             }
+                        }
+
+                        std::vector<std::string> new_names;
+                        {
+                            SCOPED_MUTEX(&m_mutex);
+                            for (const auto& [name, selected] : selections) {
+                                if (!selected) continue;
+                                bool exists = false;
+                                for (const auto& entry : m_queue) {
+                                    if (entry.file_name == name) {
+                                        exists = true;
+                                        break;
+                                    }
+                                }
+                                if (!exists) {
+                                    new_names.push_back(name);
+                                }
+                            }
+                        }
+
+                        for (const auto& name : new_names) {
+                            QueueEntry entry{};
+                            entry.file_name = name;
+                            if (m_usb_source) {
+                                m_usb_source->SetFileNameForTranfser(name);
+                                entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
+                                s64 pc_size = m_usb_source->GetFileSize(name);
+                                if (pc_size > 0) {
+                                    entry.analysis.source_size = pc_size;
+                                }
+                            }
+                            entry.target = InstallTarget::Auto;
+                            entry.selected = R_SUCCEEDED(entry.analysis_result);
+                            if (R_FAILED(entry.analysis_result)) {
+                                AddError(name, "Analysis"_i18n, entry.analysis_result);
+                                entry.install_selected = false;
+                            }
+
+                            {
+                                SCOPED_MUTEX(&m_mutex);
+                                bool exists = false;
+                                for (const auto& existing : m_queue) {
+                                    if (existing.file_name == name) {
+                                        exists = true;
+                                        break;
+                                    }
+                                }
+                                if (exists) continue;
+
+                                if (entry.selected) {
+                                    const auto spaces = GetPolledData();
+                                    const bool global = App::GetSaveSettingsGlobally();
+                                    const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+                                    const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
+                                    const long loc = global ? App::GetInstallLocation() : m_session_install_location;
+
+                                    s64 avail_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
+                                    s64 avail_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
+
+                                    // Subtract packages still planned from index i onward
+                                    for (size_t k = i; k < m_queue.size(); k++) {
+                                        if (m_queue[k].install_selected && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(m_queue[k]))) {
+                                            const auto ksize = PlanSize(m_queue[k]);
+                                            if (m_queue[k].install_sd) {
+                                                PlanTake(avail_sd, ksize);
+                                            } else {
+                                                PlanTake(avail_nand, ksize);
+                                            }
+                                        }
+                                    }
+
+                                    if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
+                                        entry.planned_sd = PlanPickSd(loc, PlanSize(entry), avail_sd, avail_nand);
+                                        entry.install_sd = entry.planned_sd;
+                                        entry.install_selected = true;
+                                    } else {
+                                        const auto size = PlanSize(entry);
+                                        const auto cand = PlanEvaluateCandidate(loc, size, avail_sd, avail_nand);
+                                        if (cand.fits) {
+                                            entry.planned_sd = cand.is_sd;
+                                            entry.install_sd = cand.is_sd;
+                                            entry.install_selected = true;
+                                            PlanTake(cand.is_sd ? avail_sd : avail_nand, size);
+                                        } else {
+                                            entry.planned_sd = cand.is_sd;
+                                            entry.install_sd = cand.is_sd;
+                                            entry.install_selected = false;
+                                            entry.selected = false;
+                                            entry.rejected_no_space = true;
+                                        }
+                                    }
+                                }
+
+                                m_queue.emplace_back(std::move(entry));
+                                changed = true;
+                            }
+                        }
+
+                        if (changed) {
+                            SCOPED_MUTEX(&m_mutex);
+                            m_plan_total_bytes = m_plan_done_bytes;
+                            for (size_t j = i; j < m_queue.size(); j++) {
+                                if (m_queue[j].install_selected) {
+                                    AddSizeSaturated(m_plan_total_bytes, PlanSize(m_queue[j]));
+                                }
+                            }
+                            m_actions_dirty = true;
                         }
                     }
                 }
@@ -1431,6 +1531,11 @@ void Menu::ThreadFunction() {
             {
                 SCOPED_MUTEX(&m_mutex);
                 m_stats.elapsed_ns = m_session_timestamp.GetNs();
+                for (const auto& entry : m_queue) {
+                    if (entry.rejected_no_space) {
+                        AddLog("Not installed: "_i18n + entry.file_name + " — " + "not enough free space"_i18n, LogKind::Error);
+                    }
+                }
             }
             if (m_cancel_requested) {
                 AddLog("Session cancelled; completed installs were kept."_i18n, LogKind::Warning);
@@ -1739,18 +1844,72 @@ void Menu::RecomputePlan() {
 }
 
 bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections) {
-    SCOPED_MUTEX(&m_mutex);
     bool changed = false;
-    for (auto& entry : m_queue) {
-        if (entry.selected) {
-            auto it = selections.find(entry.file_name);
-            if (it != selections.end() && !it->second) {
-                entry.selected = false;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        for (auto& entry : m_queue) {
+            if (entry.selected) {
+                auto it = selections.find(entry.file_name);
+                if (it != selections.end() && !it->second) {
+                    entry.selected = false;
+                    changed = true;
+                }
+            }
+        }
+    }
+
+    std::vector<std::string> new_names;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        for (const auto& [name, selected] : selections) {
+            if (!selected) continue;
+            bool exists = false;
+            for (const auto& entry : m_queue) {
+                if (entry.file_name == name) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                new_names.push_back(name);
+            }
+        }
+    }
+
+    for (const auto& name : new_names) {
+        QueueEntry entry{};
+        entry.file_name = name;
+        if (m_usb_source) {
+            m_usb_source->SetFileNameForTranfser(name);
+            entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
+            s64 pc_size = m_usb_source->GetFileSize(name);
+            if (pc_size > 0) {
+                entry.analysis.source_size = pc_size;
+            }
+        }
+        entry.target = InstallTarget::Auto;
+        entry.selected = R_SUCCEEDED(entry.analysis_result);
+        if (R_FAILED(entry.analysis_result)) {
+            AddError(name, "Analysis"_i18n, entry.analysis_result);
+        }
+        {
+            SCOPED_MUTEX(&m_mutex);
+            bool exists = false;
+            for (const auto& existing : m_queue) {
+                if (existing.file_name == name) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                m_queue.emplace_back(std::move(entry));
                 changed = true;
             }
         }
     }
+
     if (changed) {
+        SCOPED_MUTEX(&m_mutex);
         RecomputePlan();
         m_actions_dirty = true;
     }

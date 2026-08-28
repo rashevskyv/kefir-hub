@@ -1,10 +1,23 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.657**. Завершені плани збережено в
+Поточний delivery — **v0.13.658**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.657 — Fix TimeStamp update method & successful WSL build
+## Поточний delivery: v0.13.658 — Sync live DBI queue additions and metrics
+
+Статус: програмну частину реалізовано; верифікація збірки WSL.
+1. У `sphaira/source/yati/source/usb.cpp` розширено `FetchLiveSelection()`: розмір файлу з відповіді SPHQ тепер оновлює внутрішній кеш `m_file_sizes`, забезпечуючи точний `source_size` для динамічно доданих ігор.
+2. У `sphaira/include/ui/menus/install_plan.hpp` додано чистий хелпер `PlanEvaluateCandidate()` для перевірки місткості та вибору SD/NAND для нових пакетів з урахуванням політики розташування та резервів пам'яті. Додано модульні тести у `tests/test_install_plan.cpp`.
+3. У `sphaira/include/ui/menus/dbi_menu.hpp` та `sphaira/source/ui/menus/dbi_menu.cpp`:
+   - `ApplyLiveSelection()` розширено підтримкою динамічного додавання раніше невідомих файлів з `selected=1`: виконання аналізу (`AnalyzeSource`), автоматичний вибір цілі (`InstallTarget::Auto`), безпечне додавання до черги без дублювання та негайний перерахунок плану (`RecomputePlan()`). Невідомі файли з `selected=0` ігноруються до їх вибору.
+   - У стані `State::Installing` між пакетами реалізовано прийом нових обраних ігор: валідація місткості щодо залишку вільного місця SD/NAND після виконання всіх запланованих пакетів черги; якщо місця недостатньо, пакет відхиляється (`install_selected = false`, `rejected_no_space = true`), а після завершення всієї черги виводиться повідомлення про помилку `Not installed: <file> — not enough free space`.
+   - Зняття вибору з ще не розпочатих пакетів під час інсталяції вимикає їх із плану встановлення.
+   - Перебудова `m_plan_total_bytes` із зафіксованого `m_plan_done_bytes` та решти запланованих пакетів для точного динамічного оновлення загального прогресу та ETA.
+   - Збережено поведінку пропуску кнопки B, reconnect та сумісність зі старими бекендами.
+4. Версію Sphaira піднято до `0.13.658`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.657 — Fix TimeStamp update method & successful WSL build
 
 Статус: успішно скомпільовано в WSL (ReleaseWithInstall).
 1. У `sphaira/source/ui/menus/dbi_menu.cpp` у фоновому опитуванні `State::ReviewQueue` виправлено виклик таймера: замінено неіснуючий `last_poll.Reset()` на коректний метод `last_poll.Update()`.
