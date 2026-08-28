@@ -1,12 +1,28 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.649**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.651**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.649 (visual downgrade warning dialog with guide QR code)
+## Поточний delivery: v0.13.651 (unified manual firmware file & folder picker)
+
+- [x] `MANUAL-FW-UNIFIED-PICKER-651` — усунено зайвий PopupList ("Folder" / "ZIP archive"); "Install manually" одразу відкриває `filebrowser::Menu`.
+- [x] `FILEBROWSER-ZIP-PICK-651` — у режимі `IsFolderPicker()` вибір `.zip` файлу безпосередньо підтверджує шлях до архіву з відповідним діалогом ("Install firmware from this archive?").
+- [x] `AUTO-SOURCE-ROUTING-651` — `kefir_menu` автоматично визначає ZIP архів або теку та запускає відповідний пайплайн встановлення.
+- [x] `I18N-ARCHIVE-PROMPT-651` — локалізовано "Install firmware from this archive?" у `en.json`, `uk.json`, `ru.json`.
+- [x] `DOCS-BUMP-651` — версія `0.13.651`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.650 (build fixes and downgrade warning timing correction)
+
+- [x] `FW-DOWNGRADE-TIMING-650` — виправлено таймінг у `PromptInstallFirmware`: попередження показується одразу після валідації до загального діалогу підтвердження встановлення.
+- [x] `QR-INCLUDE-PATH-650` — виправлено відносний шлях `#include "../../web_qr.hpp"` у `kefir_menu.cpp`.
+- [x] `FILEBROWSER-BUILD-FIX-650` — виправлено `FsOpenMode_Read` у `IdentifyPayload` (`filebrowser.cpp`).
+- [x] `WSL-BUILD-SUCCESS-650` — успішна збірка `sphaira_nro` та RomFS у WSL без помилок.
+- [x] `DOCS-BUMP-650` — версія `0.13.650`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.649 (visual downgrade warning dialog with guide QR code)
 
 - [x] `FW-DOWNGRADE-DIALOG-649` — виділений `DowngradeWarningBox` з напівжирними мітками `Current:`, `Target:`, `Fix path:`, `Guide:`, вирівнюванням стовпчиків версій та приглушеним шляхом виправлення.
 - [x] `FW-DOWNGRADE-QR-649` — сканований QR-код з URL `https://bit.ly/fw_downgrade` через вбудований `QrCode::Encode` безпосередньо у NanoVG з білим quiet zone border.

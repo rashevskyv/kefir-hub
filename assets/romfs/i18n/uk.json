@@ -2115,5 +2115,6 @@
   "Fix path:": "Шлях виправлення:",
   "Guide:": "Інструкція:",
   "By continuing, you accept full responsibility.": "Продовжуючи, ти береш на себе повну відповідальність.",
-  "Scan QR code to open guide on mobile device.": "Відскануй QR-код, щоб відкрити інструкцію на телефоні."
+  "Scan QR code to open guide on mobile device.": "Відскануй QR-код, щоб відкрити інструкцію на телефоні.",
+  "Install firmware from this archive?": "Встановити прошивку з цього архіву?"
 }

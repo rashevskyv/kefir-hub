@@ -1,9 +1,35 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.649** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.651** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.651 — Unified manual firmware file & folder picker
+
+- Прямий вибір файлів/папок для ручного встановлення:
+  - Усунено проміжний `PopupList` з вибором «Folder» / «ZIP archive». Натискання на «Install manually» відразу відкриває повнофункціональний провідник файлів `filebrowser::Menu`.
+- Автоматичне розпізнавання вибору у `filebrowser::Menu`:
+  - Навігація папками дозволяє заглиблюватись у дерево каталогів.
+  - Вибір рядка 0 («Select current folder») або вибір будь-якого файлу всередині папки з прошивкою підтверджує встановлення з папки.
+  - Вибір файлу `.zip` безпосередньо вибирає цей архів та відображає підтвердження «Install firmware from this archive?».
+- Автоматичний роутинг у `kefir_menu`:
+  - `OnFocusGained` автоматично визначає, чи є вибраний шлях ZIP-архівом (`path::EqualsIC`), і запускає або фонове розпакування у staging, або пряму валідацію/встановлення з папки.
+- Локалізація:
+  - Додано рядок `"Install firmware from this archive?"` у `en.json`, `uk.json`, `ru.json`.
+
+## v0.13.650 — Build fixes and downgrade warning timing correction
+
+- Виправлення таймінгу попередження про пониження прошивки (`PromptInstallFirmware` у `kefir_menu.cpp`):
+  - При ручному встановленні (папка або ZIP) або при невідомій версії завантаження попередження `DowngradeWarningBox` тепер показується одразу після завершення `ValidateFirmware`.
+  - Лише після підтвердження попередження користувачем виводиться стандартне підтвердження встановлення («Install firmware ...?»).
+  - Усі гілки скасування коректно очищають тимчасову директорію `/config/kefir-updater/firmware_manual` та зберігають вихідний ZIP.
+- Виправлення помилок збірки:
+  - Виправлено відносний шлях включення заголовка `#include "../../web_qr.hpp"` у `sphaira/source/ui/menus/kefir_menu.cpp`.
+  - Виправлено `IdentifyPayload` у `sphaira/source/ui/menus/filebrowser.cpp`: замінено `FsFileOpenMode_Read` на `FsOpenMode_Read`.
+- Верифікація та компіляція:
+  - Виконано повну збірку проєкту (`ReleaseWithInstall`) у WSL із випуском цільового бінарника `sphaira.nro` та генерацією RomFS.
+  - Збірка завершилась успішно з кодом `0`.
 
 ## v0.13.649 — Visual downgrade warning dialog with guide QR code
 

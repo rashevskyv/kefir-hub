@@ -32,9 +32,10 @@
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
 #include "ui/menus/filebrowser.hpp"
-#include "ui/menus/file_picker.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/hold_confirm_box.hpp"
+#include "text_helper.hpp"
+#include "path_util.hpp"
 #include "../../web_qr.hpp"
 
 
@@ -1129,38 +1130,14 @@ void Menu::OpenSelected() {
 }
 
 void Menu::OpenManualFirmwarePicker() {
-    PopupList::Items items{
-        "Folder"_i18n,
-        "ZIP archive"_i18n,
-    };
-
-    auto popup = std::make_unique<PopupList>("Manual firmware install"_i18n, items, [this](auto op_index) {
-        if (!op_index) {
-            return;
-        }
-
-        if (*op_index == 0) {
-            auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
-            browser->SetFolderPicker([this](const fs::FsPath& folder) {
-                // record the choice; consumed in OnFocusGained once the browser closes,
-                // so nothing is pushed over the soon-to-be-popped file browser.
-                m_pending_manual_firmware = folder;
-                m_pending_manual_firmware_is_zip = false;
-            });
-            App::Push(std::move(browser));
-        } else if (*op_index == 1) {
-            App::Push<filepicker::Menu>(
-                [this](const fs::FsPath& zip_path) -> bool {
-                    m_pending_manual_firmware = zip_path;
-                    m_pending_manual_firmware_is_zip = true;
-                    return true;
-                },
-                std::vector<std::string>{"zip"}
-            );
-        }
+    auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
+    browser->SetFolderPicker([this](const fs::FsPath& selected_path) {
+        // record the choice; consumed in OnFocusGained once the browser closes,
+        // so nothing is pushed over the soon-to-be-popped file browser.
+        m_pending_manual_firmware = selected_path;
+        m_pending_manual_firmware_is_zip = ::sphaira::path::EqualsIC(text_helper::GetExtension(selected_path.s), "zip");
     });
-    popup->SetMenuStyle(true);
-    App::Push(std::move(popup));
+    App::Push(std::move(browser));
 }
 
 void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {

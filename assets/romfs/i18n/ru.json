@@ -2070,5 +2070,6 @@
   "Fix path:": "Путь исправления:",
   "Guide:": "Инструкция:",
   "By continuing, you accept full responsibility.": "Продолжая, ты принимаешь на себя полную ответственность.",
-  "Scan QR code to open guide on mobile device.": "Отсканируй QR-код, чтобы открыть инструкцию на телефоне."
+  "Scan QR code to open guide on mobile device.": "Отсканируй QR-код, чтобы открыть инструкцию на телефоне.",
+  "Install firmware from this archive?": "Установить прошивку из этого архива?"
 }

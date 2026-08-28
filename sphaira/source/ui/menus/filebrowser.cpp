@@ -210,7 +210,7 @@ auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& path) -> std::string {
     }
 
     fs::File f;
-    if (R_FAILED(fs->OpenFile(path, FsFileOpenMode_Read, &f))) {
+    if (R_FAILED(fs->OpenFile(path, FsOpenMode_Read, &f))) {
         return {};
     }
 
@@ -293,10 +293,20 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
             }
 
             // folder-picker mode: row 0 (the synthetic "select current folder"
-            // action) or opening any file commits the current folder;
-            // directories keep navigating so the user can drill down.
+            // action) commits the current folder; opening a .zip file selects
+            // the archive directly; opening any other file commits the current
+            // folder; directories keep navigating so the user can drill down.
             if (m_menu->IsFolderPicker()) {
-                if (m_index == 0 || GetEntry().IsFile()) {
+                if (m_index == 0) {
+                    m_menu->ConfirmFolderPick(m_path);
+                    return;
+                }
+                const auto& entry = GetEntry();
+                if (entry.IsFile()) {
+                    if (path::EqualsIC(entry.GetExtension(), "zip")) {
+                        m_menu->ConfirmFolderPick(GetNewPathCurrent());
+                        return;
+                    }
                     m_menu->ConfirmFolderPick(m_path);
                     return;
                 }
@@ -3061,8 +3071,12 @@ void Menu::ConfirmFolderPick(const fs::FsPath& folder) {
     }
 
     const std::string path_str = folder.s[0] ? folder.s : "/";
+    std::string prompt = m_folder_pick_confirm;
+    if (m_folder_pick_confirm == "Install firmware from this folder?"_i18n && path::EqualsIC(text_helper::GetExtension(folder.s), "zip")) {
+        prompt = "Install firmware from this archive?"_i18n;
+    }
     App::Push<OptionBox>(
-        m_folder_pick_confirm + "\n\n" + path_str,
+        prompt + "\n\n" + path_str,
         "Cancel"_i18n, "Select"_i18n, 1,
         [this, folder](auto op_index) {
             if (op_index && *op_index == 1 && m_on_folder_picked) {
