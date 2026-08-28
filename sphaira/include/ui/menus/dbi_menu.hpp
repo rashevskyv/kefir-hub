@@ -119,6 +119,7 @@ private:
     // assigns every selected package to NAND or SD up front, honouring the
     // per-target reserve and the install-location priority. Call with the mutex.
     void RecomputePlan();
+    void SetIndex(s64 index);
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
     void AddLog(const std::string& text, LogKind kind = LogKind::Normal);

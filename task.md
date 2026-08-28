@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.653**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.654**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.653 (system tools focus border draw order)
+## Поточний delivery: v0.13.654 (queue scrolling and screen-off options)
+
+- [x] `DBI-QUEUE-SCROLL-CONTEXT-654` — реалізовано `Menu::SetIndex(s64 index)` з патерном `EnsureVisible(m_index + 1, count)` та `EnsureVisible(m_index - 1, count)` для Review Queue (навігація D-pad та X auto-advance).
+- [x] `DBI-INSTALL-OPTIONS-ACTION-654` — додано кнопку START ("Options") у стан `State::Installing` для відкриття налаштувань під час активної інсталяції.
+- [x] `DBI-SCREEN-OFF-SUBMENU-654` — додано підменю «Screen off (Minus)» у сайдбар налаштувань черги з підтримкою вибору режиму, таймауту, яскравості, OLED-режиму та 11 перемикачів полів скрінсейвера.
+- [x] `DOCS-BUMP-654` — версія `0.13.654`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.653 (system tools focus border draw order)
 
 - [x] `SYS-TOOLS-BORDER-LAYER-653` — розділено `DrawToolsList()` на два проходи `List::Draw()` для малювання фону й тексту всіх рядків першим проходом і рамки виділення поверх них другим проходом.
 - [x] `DOCS-BUMP-653` — версія `0.13.653`, plan/task/walkthrough/audit.

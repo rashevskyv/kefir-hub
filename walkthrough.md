@@ -1,9 +1,30 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.653** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.654** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.654 — Improve DBI installation queue scrolling & screen-off options
+
+- Поведінка скролінгу черги встановлення (`sphaira/source/ui/menus/dbi_menu.cpp`, `sphaira/include/ui/menus/dbi_menu.hpp`):
+  - Додано метод `Menu::SetIndex(s64 index)`, що використовує патерн `m_list->EnsureVisible(m_index + 1, count)` та `m_list->EnsureVisible(m_index - 1, count)`.
+  - У списку Review Queue скролінг починається за один рядок до досягнення верхньої/нижньої межі списку, зберігаючи видимим один рядок контексту зверху або знизу від сфокусованого елемента (якщо такий рядок існує).
+  - Оновлено як обробник навігації D-pad у `m_list->OnUpdate`, так і дію кнопки X («Select»), де автоперехід на наступний пункт тепер також викликає `SetIndex(m_index + 1)`.
+- Доступність налаштувань під час встановлення (`Menu::UpdateActions`):
+  - У стан `State::Installing` додано дію кнопки START («Options»), яка відкриває сайдбар налаштувань без зупинки або скасування процесу інсталяції. Дії кнопок X («Cancel queue») та B («Skip package») збережено без змін.
+- Підменю налаштувань Screen off у сайдбарі черги (`Menu::DisplayQueueOptions`):
+  - Додано пункт «Screen off (Minus)» з прапорцем `HasSubmenu = true`, що відкриває підменю швидких налаштувань екранного режиму.
+  - Підменю включає:
+    - «Minus button»: вибір режиму («Lower brightness», «Turn off backlight», «Screensaver»);
+    - «Inactivity timeout»: вибір таймауту неактивності (Off, 30 s, 1 min, 2 min, 5 min, 10 min);
+    - «Brightness»: вибір яскравості (1%, 5%, 10%, 20%, 30%, 50%);
+    - «OLED mode»: тумблер вимкнення підсвітки порожньої частини прогрес-бару;
+    - Заголовок «Show on screensaver» та 11 тумблерів полів скрінсейвера (Clock, Status, Package counter, Current file, Progress bar, Average speed, Time remaining, Elapsed time, Battery, Errors, Speed graph).
+  - Усі зміни підменю негайно застосовуються до глобальних налаштувань `App` (`App::SetBlankMode`, `App::SetBlankTimeout`, `App::SetBlankBrightness`, `App::SetSaverOled`, `App::SetSaverField`).
+- Верифікація:
+  - Виконано статичний аналіз `git diff --check`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.653 — Fix System Tools list focus border rendering layer
 

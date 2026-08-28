@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.653**. Завершені плани збережено в
+Поточний delivery — **v0.13.654**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.653 — Fix System Tools list focus border rendering layer
+## Поточний delivery: v0.13.654 — Improve DBI installation queue scrolling & screen-off options
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/include/ui/menus/dbi_menu.hpp` та `sphaira/source/ui/menus/dbi_menu.cpp` додано метод `Menu::SetIndex(s64 index)`, який забезпечує збереження контексту одного видимого рядка зверху та знизу від фокусу (`m_list->EnsureVisible(m_index + 1, count)` та `m_list->EnsureVisible(m_index - 1, count)`), повторюючи патерн із `filebrowser.cpp`.
+2. Оновлено обидва шляхи переміщення фокусу в черзі встановлення (Review Queue): стандартну навігацію D-pad (`m_list->OnUpdate`) та автоматичний перехід на наступний елемент при виборі кнопкою X («Select»). Скролінг списку починається за один рядок до досягнення верхньої/нижньої межі.
+3. У `Menu::UpdateActions()` додано дію кнопки START («Options») під час активного процесу встановлення (`State::Installing`), що дозволяє відкривати сайдбар налаштувань без зупинки та скасування інсталяції. При цьому кнопки X («Cancel queue») та B («Skip package») збережено без змін.
+4. У сайдбар налаштувань черги (`Menu::DisplayQueueOptions`) додано підменю «Screen off (Minus)» (`SidebarEntryCallback` з `SetHasSubmenu(true)`), що дозволяє змінювати режим кнопки Minus («Lower brightness», «Turn off backlight», «Screensaver»), таймаут неактивності (Off, 30 s, 1 min, 2 min, 5 min, 10 min), яскравість (1%, 5%, 10%, 20%, 30%, 50%), режим OLED та всі 11 перемикачів полів відображення на скрінсейвері (Clock, Status, Package counter, Current file, Progress bar, Average speed, Time remaining, Elapsed time, Battery, Errors, Speed graph) безпосередньо під час встановлення з негайним збереженням у глобальні налаштування `App`.
+5. Версію Sphaira піднято до `0.13.654`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.653 — Fix System Tools list focus border rendering layer
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ui/menus/tools_menu.cpp` оптимізовано порядок малювання списку `DrawToolsList()` (System Tools menu): розділено відмальовування вмісту та рамки виділення на два проходи `List::Draw()`.
