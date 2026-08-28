@@ -219,7 +219,8 @@ auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& path) -> std::string {
         return {};
     }
 
-    std::vector<u8> buf(std::min<size_t>(file_size, 65536));
+    constexpr size_t kMaxScanSize = 256 * 1024;
+    std::vector<u8> buf(std::min<size_t>(file_size, kMaxScanSize));
     u64 bytes_read = 0;
     if (R_FAILED(f.Read(0, buf.data(), buf.size(), FsReadOption_None, &bytes_read)) || bytes_read < 512) {
         return {};

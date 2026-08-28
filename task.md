@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.651**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.652**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.651 (unified manual firmware file & folder picker)
+## Поточний delivery: v0.13.652 (extended bounded payload content scan)
+
+- [x] `PAYLOAD-LABEL-SCAN-652` — розширено стелю обмеженого сканування RCM `.bin` payload у `IdentifyPayload` з 64 KiB до 256 KiB (`kMaxScanSize`) для надійного розпізнавання `Lockpick_RCM`, `TegraExplorer` тощо.
+- [x] `DOCS-BUMP-652` — версія `0.13.652`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.651 (unified manual firmware file & folder picker)
 
 - [x] `MANUAL-FW-UNIFIED-PICKER-651` — усунено зайвий PopupList ("Folder" / "ZIP archive"); "Install manually" одразу відкриває `filebrowser::Menu`.
 - [x] `FILEBROWSER-ZIP-PICK-651` — у режимі `IsFolderPicker()` вибір `.zip` файлу безпосередньо підтверджує шлях до архіву з відповідним діалогом ("Install firmware from this archive?").

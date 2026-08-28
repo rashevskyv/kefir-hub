@@ -1,9 +1,18 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.651** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.652** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.652 — Extended bounded payload content scan in File Browser
+
+- Збільшення ліміту сканування RCM `.bin` payload (`filebrowser.cpp`):
+  - У функції `IdentifyPayload()` межу зчитування для пошуку сигнатур піднято з 64 KiB до 256 KiB за допомогою локальної константи `constexpr size_t kMaxScanSize = 256 * 1024;`.
+  - Це дозволяє розпізнавати назви корисних навантажень на кшталт `Lockpick_RCM.bin` та `TegraExplorer.bin`, чиї текстові ідентифікатори розміщені після перших 64 KiB бінарного файлу.
+  - Збережено обмежене зчитування (`std::min<size_t>(file_size, kMaxScanSize)`), що запобігає завантаженню великих `.bin` файлів повністю в пам'ять.
+  - Збережено всі існуючі перевірки мінімального розміру (512 байт), перелік маркерів розпізнавання, поведінку кешування в `FileEntry::title_label` та відображення імені файлу за замовчуванням.
+  - Рендеринг інтерфейсу залишається суворо read-only (використовує попередньо закешовані мітки, жодних викликів читання файлів під час `Draw()` немає).
 
 ## v0.13.651 — Unified manual firmware file & folder picker
 

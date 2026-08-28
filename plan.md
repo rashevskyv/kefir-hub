@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.651**. Завершені плани збережено в
+Поточний delivery — **v0.13.652**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.651 — Unified manual firmware file & folder picker
+## Поточний delivery: v0.13.652 — Extended bounded payload content scan in File Browser
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/ui/menus/filebrowser.cpp` збільшено обмеження зчитування при розпізнаванні назв RCM `.bin` payload (`IdentifyPayload`) із 64 KiB до 256 KiB (`kMaxScanSize = 256 * 1024`).
+2. Забезпечено надійну ідентифікацію корисних навантажень (зокрема `Lockpick_RCM.bin`, `TegraExplorer.bin`), у яких двійкові сигнатури розташовані за межами перших 64 KiB.
+3. Збережено консервативне обмежене читання: файли, більші за 256 KiB, не зчитуються повністю; збережено мінімальний поріг 512 байт, список двійкових маркерів, кешування у `FileEntry::title_label` та виведення імені файлу для невідомих payload.
+4. Версію Sphaira піднято до `0.13.652`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.651 — Unified manual firmware file & folder picker
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Уніфіковано вибір ручного джерела встановлення прошивки: при натисканні «Install manually» більше не показується проміжне меню вибору типу («Folder» / «ZIP archive»), а відразу відкривається провідник файлів `filebrowser::Menu`.
