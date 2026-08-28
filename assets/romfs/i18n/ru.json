@@ -2060,5 +2060,9 @@
   "Reboot console into this payload via Hekate.": "Перезагрузить консоль в этот payload через Hekate.",
   "Reboot to payload ": "Перезагрузить в payload ",
   "Failed to prepare payload launch!": "Не удалось подготовить запуск payload!",
-  "Hekate payload API is not available or payload is invalid.": "Hekate payload API недоступен или payload недействителен."
+  "Hekate payload API is not available or payload is invalid.": "Hekate payload API недоступен или payload недействителен.",
+  "Folder": "Папка",
+  "ZIP archive": "ZIP архив",
+  "Manual firmware install": "Ручная установка прошивки",
+  "Delete original firmware archive?\n\n": "Удалить исходный архив прошивки?\n\n"
 }

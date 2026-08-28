@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.647**. Завершені плани збережено в
+Поточний delivery — **v0.13.648**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.647 — Safe one-shot Hekate payload handoff
+## Поточний delivery: v0.13.648 — Manual firmware ZIP install & staging cleanup safety
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У Kefir Updater пункт «Install manually» розширено вибором джерела через `PopupList`: вибір існуючої папки з прошивкою або вибір ZIP-архіву через `filepicker::Menu` з фільтром `.zip`.
+2. Для ZIP-архівів реалізовано розпакування у фіксовану тимчасову директорію програми `/config/kefir-updater/firmware_manual` через `thread::TransferUnzipAll()`.
+3. Виправлено критичний баг рекурсивного видалення вибраної користувачем папки у `CleanupFirmwareFiles`: очищення тепер суворо обмежене виключно шляхами програми (`/firmware`, `/config/kefir-updater/firmware.zip`, `/config/kefir-updater/firmware_manual`), користувацькі папки ніколи не видаляються.
+4. Тимчасовий каталог розпакування ZIP тихо видаляється на всіх гілках завершення (скасування користувачем, помилка видобування, помилка валідації, помилка встановлення, успішне встановлення), а також очищається перед кожною новою екстракцією.
+5. Вихідний ZIP-архів ніколи не видаляється тихо і зберігається у разі помилок/скасування. Після успішного встановлення та очищення тимчасових файлів користувачеві пропонується діалог «Keep» / «Delete» для оригінального ZIP-файлу.
+6. Версію Sphaira піднято до `0.13.648`, оновлено локалізацію та плани.
+
+## Попередній delivery: v0.13.647 — Safe one-shot Hekate payload handoff
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У Kefirosphere підготовлено окремий Hekate patch для читання й валідації одноразового запиту `/config/kefir/hekate-payload-request.ini` (API v1) та capability marker `/config/kefir/hekate-payload-api.ini`.

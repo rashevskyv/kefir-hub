@@ -2092,5 +2092,9 @@
   "Reboot console into this payload via Hekate.": "Reboot console into this payload via Hekate.",
   "Reboot to payload ": "Reboot to payload ",
   "Failed to prepare payload launch!": "Failed to prepare payload launch!",
-  "Hekate payload API is not available or payload is invalid.": "Hekate payload API is not available or payload is invalid."
+  "Hekate payload API is not available or payload is invalid.": "Hekate payload API is not available or payload is invalid.",
+  "Folder": "Folder",
+  "ZIP archive": "ZIP archive",
+  "Manual firmware install": "Manual firmware install",
+  "Delete original firmware archive?\n\n": "Delete original firmware archive?\n\n"
 }

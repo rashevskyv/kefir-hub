@@ -12,6 +12,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 
 namespace sphaira::ui::menu::kefir {
@@ -245,15 +246,38 @@ void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
     if (firmware_path.s[0] == '\0') {
         firmware_path = FIRMWARE_DEST;
     }
-    pbox->NewTransfer("Removing firmware files...");
+
+    // Only clean app-owned staging locations. Never remove user-selected folders.
+    const bool is_download_dest = (std::strcmp(firmware_path.s, FIRMWARE_DEST) == 0);
+    const bool is_manual_staging = (std::strcmp(firmware_path.s, MANUAL_FIRMWARE_DEST) == 0);
+
+    if (!is_download_dest && !is_manual_staging) {
+        return;
+    }
+
+    if (pbox) {
+        pbox->NewTransfer("Removing firmware files...");
+    }
 
     if (fs.DirExists(firmware_path)) {
         fs.DeleteDirectoryRecursively(firmware_path);
     }
-    if (fs.FileExists(FIRMWARE_ZIP)) {
+    if (is_download_dest && fs.FileExists(FIRMWARE_ZIP)) {
         fs.DeleteFile(FIRMWARE_ZIP);
     }
     fs.Commit();
+}
+
+void CleanupManualFirmwareStaging() {
+    fs::FsNativeSd fs;
+    if (R_FAILED(fs.GetFsOpenResult())) {
+        return;
+    }
+
+    if (fs.DirExists(MANUAL_FIRMWARE_DEST)) {
+        fs.DeleteDirectoryRecursively(MANUAL_FIRMWARE_DEST);
+        fs.Commit();
+    }
 }
 
 auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix) -> Result {
@@ -382,6 +406,31 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
 
     if (fs.FileExists(FIRMWARE_ZIP)) {
         fs.DeleteFile(FIRMWARE_ZIP);
+    }
+    R_TRY(fs.Commit());
+
+    R_SUCCEED();
+}
+
+auto ExtractManualFirmwareZip(ProgressBox* pbox, const fs::FsPath& zip_path) -> Result {
+    fs::FsNativeSd fs;
+    R_TRY(fs.GetFsOpenResult());
+
+    R_TRY(fs.CreateDirectoryRecursively(CACHE_DIR));
+
+    if (fs.DirExists(MANUAL_FIRMWARE_DEST)) {
+        R_TRY(fs.DeleteDirectoryRecursively(MANUAL_FIRMWARE_DEST));
+    }
+    R_TRY(fs.CreateDirectoryRecursively(MANUAL_FIRMWARE_DEST));
+
+    pbox->NewTransfer("Extracting firmware...");
+    const Result rc = thread::TransferUnzipAll(pbox, zip_path, &fs, MANUAL_FIRMWARE_DEST);
+    if (R_FAILED(rc)) {
+        if (fs.DirExists(MANUAL_FIRMWARE_DEST)) {
+            fs.DeleteDirectoryRecursively(MANUAL_FIRMWARE_DEST);
+            fs.Commit();
+        }
+        return rc;
     }
     R_TRY(fs.Commit());
 

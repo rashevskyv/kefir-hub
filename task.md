@@ -1,12 +1,21 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.647**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.648**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.647 (safe one-shot Hekate payload handoff)
+## Поточний delivery: v0.13.648 (manual firmware ZIP install & staging cleanup safety)
+
+- [x] `MANUAL-FW-SOURCE-PICKER-648` — «Install manually» відкриває `PopupList` з вибором «Folder» або «ZIP archive».
+- [x] `MANUAL-FW-ZIP-EXTRACT-648` — вибір `.zip` через `filepicker::Menu`, розпакування у `/config/kefir-updater/firmware_manual` через `thread::TransferUnzipAll()`.
+- [x] `MANUAL-FW-CLEANUP-SAFETY-648` — `CleanupFirmwareFiles()` очищає виключно app-owned директорії (`/firmware`, `firmware.zip`, `firmware_manual`); користувацькі папки ніколи не видаляються.
+- [x] `MANUAL-FW-STAGING-CLEANUP-648` — гарантоване очищення тимчасового каталогу `firmware_manual` на всіх шляхах помилок/скасування та перед новим розпакуванням.
+- [x] `MANUAL-FW-ZIP-KEEP-PROMPT-648` — збереження оригінального ZIP при збоях та діалог Keep/Delete після успішного встановлення.
+- [x] `DOCS-BUMP-648` — версія `0.13.648`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.647 (safe one-shot Hekate payload handoff)
 
 - [x] `HEKATE-PAYLOAD-API-647` — додати Kefirosphere patch після чинного Hekate autokeys patch; temporary request читається, валідовується, видаляється до chainload і надає capability marker API v1.
 - [x] `HUB-PAYLOAD-HANDOFF-647` — `utils::rebootToPayload()` у Kefir Hub створює request і робить звичайний reboot без запису в `/payload.bin` або `hekate_ipl.ini`.

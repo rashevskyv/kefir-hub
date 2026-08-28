@@ -32,6 +32,8 @@
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/file_picker.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/hold_confirm_box.hpp"
 
 
@@ -644,21 +646,27 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
     RefreshSystemInfo();
 
-    // a folder was chosen in the manual-install file browser; now that it has
+    // a folder or zip was chosen in the manual-install picker; now that it has
     // closed and we are the top menu again, kick off validation/installation.
     if (m_pending_manual_firmware) {
-        const auto folder = *m_pending_manual_firmware;
+        const auto path = *m_pending_manual_firmware;
+        const bool is_zip = m_pending_manual_firmware_is_zip;
         m_pending_manual_firmware.reset();
+        m_pending_manual_firmware_is_zip = false;
 
-        std::string name = folder.s;
-        if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
-            name = name.substr(slash + 1);
-        }
-        if (name.empty()) {
-            name = "Firmware";
-        }
+        if (is_zip) {
+            StartManualZipFirmware(path);
+        } else {
+            std::string name = path.s;
+            if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
+                name = name.substr(slash + 1);
+            }
+            if (name.empty()) {
+                name = "Firmware";
+            }
 
-        PromptInstallFirmware(name, folder);
+            PromptInstallFirmware(name, path);
+        }
         return;
     }
 
@@ -884,13 +892,65 @@ void Menu::OpenSelected() {
 }
 
 void Menu::OpenManualFirmwarePicker() {
-    auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
-    browser->SetFolderPicker([this](const fs::FsPath& folder) {
-        // record the choice; consumed in OnFocusGained once the browser closes,
-        // so nothing is pushed over the soon-to-be-popped file browser.
-        m_pending_manual_firmware = folder;
+    PopupList::Items items{
+        "Folder"_i18n,
+        "ZIP archive"_i18n,
+    };
+
+    auto popup = std::make_unique<PopupList>("Manual firmware install"_i18n, items, [this](auto op_index) {
+        if (!op_index) {
+            return;
+        }
+
+        if (*op_index == 0) {
+            auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
+            browser->SetFolderPicker([this](const fs::FsPath& folder) {
+                // record the choice; consumed in OnFocusGained once the browser closes,
+                // so nothing is pushed over the soon-to-be-popped file browser.
+                m_pending_manual_firmware = folder;
+                m_pending_manual_firmware_is_zip = false;
+            });
+            App::Push(std::move(browser));
+        } else if (*op_index == 1) {
+            App::Push<filepicker::Menu>(
+                [this](const fs::FsPath& zip_path) -> bool {
+                    m_pending_manual_firmware = zip_path;
+                    m_pending_manual_firmware_is_zip = true;
+                    return true;
+                },
+                std::vector<std::string>{"zip"}
+            );
+        }
     });
-    App::Push(std::move(browser));
+    popup->SetMenuStyle(true);
+    App::Push(std::move(popup));
+}
+
+void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {
+    std::string name = zip_path.s;
+    if (const auto slash = name.find_last_of('/'); slash != std::string::npos) {
+        name = name.substr(slash + 1);
+    }
+    if (name.empty()) {
+        name = "Firmware";
+    }
+
+    App::Push<ProgressBox>(0, "Extracting"_i18n, name,
+        [zip_path](auto pbox) -> Result {
+            return detail::ExtractManualFirmwareZip(pbox, zip_path);
+        },
+        [this, name, zip_path](Result rc) {
+            if (R_FAILED(rc)) {
+                detail::CleanupManualFirmwareStaging();
+                if (rc == Result_TransferCancelled) {
+                    return;
+                }
+                App::Push<ErrorBox>(rc, "Failed to extract " + name);
+                return;
+            }
+
+            PromptInstallFirmware(name, detail::MANUAL_FIRMWARE_DEST, std::nullopt, zip_path);
+        });
 }
 
 void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success) {
@@ -982,7 +1042,7 @@ void Menu::StartFirmwareDownload(const UpdaterEntry& entry, std::optional<bool> 
         });
 }
 
-bool Menu::PromptDowngradeAck(const std::string& target_version, const std::string& confirm_label, std::function<void(bool)> on_ack) {
+bool Menu::PromptDowngradeAck(const std::string& target_version, const std::string& confirm_label, std::function<void(bool)> on_ack, std::function<void()> on_cancel) {
     if (!IsDowngrade(target_version)) {
         return false;
     }
@@ -996,8 +1056,11 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
     warning += "By continuing, you accept full responsibility.";
 
     App::Push<OptionBox>(warning, "Cancel"_i18n, confirm_label, 1,
-        [this, on_ack = std::move(on_ack)](auto op_index) {
+        [this, on_ack = std::move(on_ack), on_cancel = std::move(on_cancel)](auto op_index) {
             if (!op_index || *op_index != 1) {
+                if (on_cancel) {
+                    on_cancel();
+                }
                 return;
             }
 
@@ -1021,8 +1084,14 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
                     msg += "This deletes the system save 8000000000000073 after installing.\n\n";
                     msg += "Choose No to install without it.";
                     App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0,
-                        [on_ack](auto fix_index) {
-                            on_ack(fix_index && *fix_index == 1);
+                        [on_ack, on_cancel](auto fix_index) {
+                            if (!fix_index) {
+                                if (on_cancel) {
+                                    on_cancel();
+                                }
+                                return;
+                            }
+                            on_ack(*fix_index == 1);
                         });
                     break;
                 }
@@ -1032,15 +1101,18 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
     return true;
 }
 
-void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path, std::optional<bool> acked_downgrade_fix) {
+void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path, std::optional<bool> acked_downgrade_fix, std::optional<fs::FsPath> origin_zip) {
     auto validation = std::make_shared<FirmwareValidation>();
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
             pbox->NewTransfer("Validating firmware contents...");
             return detail::ValidateFirmware(validation.get(), path);
         },
-        [this, display_name, path, validation, acked_downgrade_fix](Result rc) {
+        [this, display_name, path, validation, acked_downgrade_fix, origin_zip](Result rc) {
             if (R_FAILED(rc)) {
+                if (origin_zip) {
+                    detail::CleanupManualFirmwareStaging();
+                }
                 App::Push<ErrorBox>(rc, "Firmware validation failed");
                 return;
             }
@@ -1053,37 +1125,45 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
             message += "Do not power off the console during installation.";
 
             App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-                [this, display_name, path, version, acked_downgrade_fix](auto op_index) {
+                [this, display_name, path, version, acked_downgrade_fix, origin_zip](auto op_index) {
                     if (!op_index || *op_index != 1) {
+                        if (origin_zip) {
+                            detail::CleanupManualFirmwareStaging();
+                        }
                         return;
                     }
 
                     // the downgrade fix (deleting system save 8000000000000073)
                     // is only relevant when installing a LOWER firmware.
                     if (!IsDowngrade(version)) {
-                        InstallFirmware(display_name, path, false);
+                        InstallFirmware(display_name, path, false, origin_zip);
                         return;
                     }
 
                     // downloaded firmware already asked before fetching it, so
                     // the warning is not repeated here.
                     if (acked_downgrade_fix.has_value()) {
-                        InstallFirmware(display_name, path, *acked_downgrade_fix);
+                        InstallFirmware(display_name, path, *acked_downgrade_fix, origin_zip);
                         return;
                     }
 
                     // manual install: nothing was downloaded, so ask now.
                     if (!PromptDowngradeAck(version, "Continue"_i18n,
-                            [this, display_name, path](bool apply_fix) {
-                                InstallFirmware(display_name, path, apply_fix);
+                            [this, display_name, path, origin_zip](bool apply_fix) {
+                                InstallFirmware(display_name, path, apply_fix, origin_zip);
+                            },
+                            [origin_zip]() {
+                                if (origin_zip) {
+                                    detail::CleanupManualFirmwareStaging();
+                                }
                             })) {
-                        InstallFirmware(display_name, path, false);
+                        InstallFirmware(display_name, path, false, origin_zip);
                     }
                 });
         });
 }
 
-void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix) {
+void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix, std::optional<fs::FsPath> origin_zip) {
     auto fix = std::make_shared<DowngradeFixResult>();
 
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
@@ -1094,27 +1174,58 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                                    R_SUCCEEDED(validation.validation.exfat_result);
             return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix, fix.get());
         },
-        [fix](Result rc) {
+        [fix, origin_zip](Result rc) {
             if (R_FAILED(rc)) {
+                if (origin_zip) {
+                    detail::CleanupManualFirmwareStaging();
+                }
                 App::Push<ErrorBox>(rc, "Firmware update failed");
                 return;
             }
 
-            std::string message = "Firmware update applied successfully.";
-            const auto fix_note = detail::DescribeDowngradeFix(*fix);
-            if (!fix_note.empty()) {
-                message += "\n\n" + fix_note;
-            }
-            message += "\n\nReboot now?";
+            auto prompt_reboot = [fix]() {
+                std::string message = "Firmware update applied successfully.";
+                const auto fix_note = detail::DescribeDowngradeFix(*fix);
+                if (!fix_note.empty()) {
+                    message += "\n\n" + fix_note;
+                }
+                message += "\n\nReboot now?";
 
-            App::Push<OptionBox>(
-                message,
-                "Later"_i18n, "Reboot"_i18n, 1,
-                [](auto op_index) {
-                    if (op_index && *op_index == 1) {
-                        utils::requestForcedReboot();
-                    }
-                });
+                App::Push<OptionBox>(
+                    message,
+                    "Later"_i18n, "Reboot"_i18n, 1,
+                    [](auto op_index) {
+                        if (op_index && *op_index == 1) {
+                            utils::requestForcedReboot();
+                        }
+                    });
+            };
+
+            if (origin_zip) {
+                const auto zip = *origin_zip;
+                std::string zip_name = zip.s;
+                if (const auto slash = zip_name.find_last_of('/'); slash != std::string::npos) {
+                    zip_name = zip_name.substr(slash + 1);
+                }
+                std::string zip_msg = "Delete original firmware archive?\n\n"_i18n + zip_name;
+                App::Push<OptionBox>(
+                    zip_msg,
+                    "Keep"_i18n, "Delete"_i18n, 0,
+                    [zip, prompt_reboot = std::move(prompt_reboot)](auto op_index) {
+                        if (op_index && *op_index == 1) {
+                            fs::FsNativeSd fs;
+                            if (R_SUCCEEDED(fs.GetFsOpenResult())) {
+                                if (fs.FileExists(zip)) {
+                                    fs.DeleteFile(zip);
+                                    fs.Commit();
+                                }
+                            }
+                        }
+                        prompt_reboot();
+                    });
+            } else {
+                prompt_reboot();
+            }
         }, false);
 }
 

@@ -30,7 +30,7 @@ struct DowngradeFixResult {
 
 namespace detail {
 
-
+constexpr const char* MANUAL_FIRMWARE_DEST = "/config/kefir-updater/firmware_manual";
 
 auto ReadLineNumber(const char* path, size_t line_index) -> std::string;
 auto ReadFirstLine(const char* path) -> std::string;
@@ -51,6 +51,9 @@ auto BuildFirmwareServicePath(const fs::FsPath& path) -> std::string;
 auto FormatFirmwareVersion(u32 version) -> std::string;
 auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result;
 auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix = nullptr) -> Result;
+void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path);
+auto ExtractManualFirmwareZip(ProgressBox* pbox, const fs::FsPath& zip_path) -> Result;
+void CleanupManualFirmwareStaging();
 // false while the fix has no working implementation: the system save cannot be
 // deleted from a running console (FsError_TargetLocked).
 auto IsDowngradeFixAvailable() -> bool;
