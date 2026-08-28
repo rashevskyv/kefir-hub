@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.654**. Завершені плани збережено в
+Поточний delivery — **v0.13.655**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.654 — Improve DBI installation queue scrolling & screen-off options
+## Поточний delivery: v0.13.655 — Continue DBI USB installation queue on package skip
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/ui/menus/dbi_menu.cpp` у гілці обробки пропуску пакета користувачем (`if (user_skipped)`) в `Menu::ThreadFunction()` (USB install queue) видалено виклик `ReestablishUsbLink()` та аварійне переривання сесії (`session_failed = true`).
+2. Збережено успішне логування `AddLog("Skipped: "_i18n + name, LogKind::Success)` та перехід до наступного обраного пакета в черзі зі скиданням стану пропуску (`m_skip_requested = false`) на початку нової ітерації.
+3. Повністю збережено поведінку повторних спроб і відновлення зв'язку при справжніх помилках транспорту (`usb::IsLinkError`) або критичних помилках DBI сесії (`IsDbiSessionError`).
+4. Версію Sphaira піднято до `0.13.655`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.654 — Improve DBI installation queue scrolling & screen-off options
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/include/ui/menus/dbi_menu.hpp` та `sphaira/source/ui/menus/dbi_menu.cpp` додано метод `Menu::SetIndex(s64 index)`, який забезпечує збереження контексту одного видимого рядка зверху та знизу від фокусу (`m_list->EnsureVisible(m_index + 1, count)` та `m_list->EnsureVisible(m_index - 1, count)`), повторюючи патерн із `filebrowser.cpp`.

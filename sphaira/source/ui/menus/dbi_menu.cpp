@@ -1345,13 +1345,6 @@ void Menu::ThreadFunction() {
                     m_total_read.load() - read_before, m_total_write.load() - write_before);
                 if (user_skipped) {
                     AddLog("Skipped: "_i18n + name, LogKind::Success);
-                    // The USB transfer was cancelled mid-stream; resynchronize the link before next package.
-                    if (R_FAILED(ReestablishUsbLink())) {
-                        session_failed = true;
-                        m_session_failed = true;
-                        AddLog("USB session failed; remaining packages were skipped."_i18n, LogKind::Error);
-                        break;
-                    }
                 } else if (R_SUCCEEDED(install_rc)) {
                     if (m_current_file_skipped) {
                         AddLog("Skipped: "_i18n + name + " — " + "already installed"_i18n, LogKind::Success);

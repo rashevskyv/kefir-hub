@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.654** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.655** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.655 — Continue DBI USB installation queue on package skip
+
+- Продовження черги DBI після пропуску пакета (`sphaira/source/ui/menus/dbi_menu.cpp`):
+  - У `Menu::ThreadFunction()` для USB-черги виправлено обробку гілки `user_skipped`: видалено виклик `ReestablishUsbLink()` та аварійне виставлення `session_failed = true`.
+  - Тепер при пропуску пакета користувачем (кнопка B / Skip) поточний пакет успішно фіксується як пропущений (`Skipped: <name>`), а цикл черги продовжує роботу і переходить до наступного обраного пакета без помилкового повідомлення `USB session failed; remaining packages were skipped.`
+  - Стан `m_skip_requested` скидається на початку кожної наступної ітерації пакета (`m_skip_requested = false`), повертаючи чергу до штатного режиму встановлення.
+  - Повністю збережено перевірки та відновлення зв'язку (`ReestablishUsbLink()`) при справжніх обривах з'єднання (`usb::IsLinkError`) або системних помилках DBI сесії (`IsDbiSessionError`).
+- Верифікація:
+  - Виконано статичний аналіз `git diff --check`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.654 — Improve DBI installation queue scrolling & screen-off options
 

@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.654**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.655**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.654 (queue scrolling and screen-off options)
+## Поточний delivery: v0.13.655 (continue DBI queue after package skip)
+
+- [x] `DBI-SKIP-CONTINUE-655` — усунено виклик `ReestablishUsbLink()` та аварійне завершення сесії при пропуску пакета користувачем у USB черзі `dbi_menu.cpp`; черга коректно продовжує встановлення наступних пакетів.
+- [x] `DOCS-BUMP-655` — версія `0.13.655`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.654 (queue scrolling and screen-off options)
 
 - [x] `DBI-QUEUE-SCROLL-CONTEXT-654` — реалізовано `Menu::SetIndex(s64 index)` з патерном `EnsureVisible(m_index + 1, count)` та `EnsureVisible(m_index - 1, count)` для Review Queue (навігація D-pad та X auto-advance).
 - [x] `DBI-INSTALL-OPTIONS-ACTION-654` — додано кнопку START ("Options") у стан `State::Installing` для відкриття налаштувань під час активної інсталяції.
