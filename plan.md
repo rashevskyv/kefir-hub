@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.645**. Завершені плани збережено в
+Поточний delivery — **v0.13.646**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.645 — Pair TegraExplorer save-directory iterator fix with account-link probe
+## Поточний delivery: v0.13.646 — Fix NAS filename matching in export script
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Виправлено порівняння префіксів файлів NAS у згенерованому скрипті TegraExplorer (`account_link::PrepareOfficialLinkExport`): небезпечний зріз `ByteArray.slice` замінено на рядкове порівняння префікса `namePrefix = nfile - (nfile.len() - pfx.len())` після перевірки довжини `nfile.len() >= pfx.len()`.
+2. Список префіксів `pfxList` генерується як звичайні рядкові літерали на основі C++ помічника `NasPrefixes(nas_id)` без `.bytes()`.
+3. Логіка застосування прив'язки, запис у системний сейв, шляхи `/su/baas` і `/su/nas` та вихідний SD-пакет збережені без змін.
+
+## Попередній delivery: v0.13.645 — Pair TegraExplorer save-directory iterator fix with account-link probe
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У TegraExplorer виправлено час життя позицій ітератора каталогу системного сейву: `save_data_directory_ctx_t` тепер зберігає позиції за значенням, а не вказівники на локальний стек `open_directory`.

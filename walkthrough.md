@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.645** (2026-08-27). Попередні
+Актуальний delivery — **v0.13.646** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.646 — fix NAS filename matching in export script
+
+- Виправлено збій парсера/рантайму TegraExplorer під час експорту файлів NAS (`account_link::PrepareOfficialLinkExport`):
+  - Попередній механізм використовував `ByteArray.slice(0, pfx.len())`, що призводило до фатальної помилки `[FATAL] Slicing out of range of array with len 24` на реальних файлах.
+  - Механізм переведено на рядкове префіксне порівняння: `pfxList` генерується як звичайні рядки з виклику `NasPrefixes(nas_id)`, а виділення префікса імені файлу виконується через рядкову операцію `namePrefix = nfile - (nfile.len() - pfx.len())` після перевірки `nfile.len() >= pfx.len()`.
+  - Логіка застосування прив'язки (`PrepareOfficialLinkApply`), запис у системний сейв та вихідний формат SD-пакета збережені без змін.
+- Агент не компілює.
 
 ## v0.13.645 — pair TegraExplorer save-directory iterator fix with account-link probe
 

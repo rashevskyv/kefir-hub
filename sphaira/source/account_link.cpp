@@ -481,17 +481,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     }
 
     const auto cands = BaasCandidateNames(uid);
-
-    std::vector<std::string> prefixes;
-    auto add_pfx = [&](const std::string& p) {
-        if (!p.empty() && std::find(prefixes.begin(), prefixes.end(), p) == prefixes.end()) {
-            prefixes.push_back(p);
-        }
-    };
-    add_pfx(ToLowerCopy(NasHex(nas_id)));
-    add_pfx(ToUpperCopy(NasHex(nas_id)));
-    add_pfx(ToLowerCopy(NasHexShort(nas_id)));
-    add_pfx(ToUpperCopy(NasHexShort(nas_id)));
+    const auto prefixes = NasPrefixes(nas_id);
 
     std::string te;
     te += "# REQUIRE SD\n";
@@ -600,7 +590,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "pfxList = [\n";
     for (size_t i = 0; i < prefixes.size(); i++) {
-        te += "    \"" + prefixes[i] + "\".bytes()";
+        te += "    \"" + prefixes[i] + "\"";
         if (i + 1 < prefixes.size()) {
             te += ",";
         }
@@ -610,11 +600,11 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
 
     te += "nasCopied = 0\n";
     te += "nasListing.files.foreach(\"nfile\") {\n";
-    te += "    nbytes = nfile.bytes()\n";
     te += "    match = 0\n";
     te += "    pfxList.foreach(\"pfx\") {\n";
-    te += "        if (!match && nbytes.len() >= pfx.len()) {\n";
-    te += "            if (nbytes.slice(0, pfx.len()) == pfx) {\n";
+    te += "        if (!match && nfile.len() >= pfx.len()) {\n";
+    te += "            namePrefix = nfile - (nfile.len() - pfx.len())\n";
+    te += "            if (namePrefix == pfx) {\n";
     te += "                match = 1\n";
     te += "            }\n";
     te += "        }\n";
