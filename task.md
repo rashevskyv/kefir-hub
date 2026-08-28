@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.656**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.657**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.656 (sync DBI backend queue selection)
+## Поточний delivery: v0.13.657 (build fixes and successful WSL compilation)
+
+- [x] `DBI-BUILD-FIX-657` — виправлено виклик таймера в `dbi_menu.cpp` (`last_poll.Update()` замість `last_poll.Reset()`); здійснено повну збірку `sphaira_nro` у WSL за пресетом `ReleaseWithInstall` без помилок.
+- [x] `DOCS-BUMP-657` — версія `0.13.657`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.656 (sync DBI backend queue selection)
 
 - [x] `DBI-LIVE-SELECTION-656` — реалізовано підтримку розширення запиту `'SPHQ'` (`0x51485053`), парсинг трипольного формату (`filename|size|selected`), фонове опитування live-вибору бекенда в `State::ReviewQueue`, синхронізацію перед початком встановлення та перед кожним окремим пакетом у черзі без відправлення зайвих FileRange запитів.
 - [x] `DOCS-BUMP-656` — версія `0.13.656`, plan/task/walkthrough/audit.

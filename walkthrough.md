@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.656** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.657** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.657 — Fix TimeStamp update method & successful WSL build
+
+- Виправлення помилки компіляції (`sphaira/source/ui/menus/dbi_menu.cpp`):
+  - У методі `Menu::ThreadFunction()` у циклі опитування стану черги `State::ReviewQueue` замінено виклик неіснуючого методу `last_poll.Reset()` на коректний `last_poll.Update()`.
+- Верифікація:
+  - Здійснено повну збірку проєкту (`sphaira_nro`, RomFS) у WSL за пресетом `ReleaseWithInstall` без помилок (`[100%] Built target sphaira_nro`).
+  - Виконано перевірку чистоти форматування `git diff --check`.
 
 ## v0.13.656 — Opt-in live DBI Backend Qt queue-selection synchronization
 

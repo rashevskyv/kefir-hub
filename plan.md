@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.656**. Завершені плани збережено в
+Поточний delivery — **v0.13.657**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.656 — Opt-in live DBI Backend Qt queue-selection synchronization
+## Поточний delivery: v0.13.657 — Fix TimeStamp update method & successful WSL build
+
+Статус: успішно скомпільовано в WSL (ReleaseWithInstall).
+1. У `sphaira/source/ui/menus/dbi_menu.cpp` у фоновому опитуванні `State::ReviewQueue` виправлено виклик таймера: замінено неіснуючий `last_poll.Reset()` на коректний метод `last_poll.Update()`.
+2. Здійснено повну успішну збірку проєкту (`sphaira_nro`, RomFS) у WSL за пресетом `ReleaseWithInstall` без помилок.
+3. Версію Sphaira піднято до `0.13.657`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.656 — Opt-in live DBI Backend Qt queue-selection synchronization
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/include/yati/source/usb.hpp` та `sphaira/source/yati/source/usb.cpp` додано підтримку розширення запиту списку `'SPHQ'` (`0x51485053`), парсинг трипольного формату (`filename|size|selected`), збереження прапорця переговорів `m_dbi_selection_sync` та метод `FetchLiveSelection()`.

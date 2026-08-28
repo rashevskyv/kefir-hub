@@ -1275,7 +1275,7 @@ void Menu::ThreadFunction() {
 
             while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) {
                 if (sync_supported && last_poll.GetNs() >= 300'000'000) {
-                    last_poll.Reset();
+                    last_poll.Update();
                     std::unordered_map<std::string, bool> selections;
                     if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
                         ApplyLiveSelection(selections);
