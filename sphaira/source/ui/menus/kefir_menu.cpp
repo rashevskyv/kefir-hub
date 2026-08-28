@@ -35,12 +35,249 @@
 #include "ui/menus/file_picker.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/hold_confirm_box.hpp"
+#include "../../web_qr.hpp"
 
 
 namespace sphaira::ui::menu::kefir {
 using namespace detail;
 
 namespace {
+
+constexpr float DOWNGRADE_BUTTON_HEIGHT = 70.f;
+
+class DowngradeWarningBox final : public Widget {
+public:
+    using Callback = std::function<void(std::optional<s64>)>;
+
+    DowngradeWarningBox(
+        const std::string& current_version,
+        const std::string& target_version,
+        const std::string& confirm_label,
+        Callback cb
+    )
+    : m_current_version{current_version}
+    , m_target_version{target_version}
+    , m_callback{std::move(cb)}
+    , m_qr{QrCode::Encode("https://bit.ly/fw_downgrade")}
+    {
+        m_pos.w = 780.f;
+        m_pos.h = 420.f;
+        m_pos.x = (SCREEN_WIDTH - m_pos.w) / 2.f;
+        m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
+
+        const std::string text_a = "\uE0E1 " + "Cancel"_i18n;
+        const std::string text_b = "\uE0EF " + confirm_label;
+
+        auto box = m_pos;
+        box.w /= 2.f;
+        box.y = m_pos.y + m_pos.h - DOWNGRADE_BUTTON_HEIGHT;
+        box.h = DOWNGRADE_BUTTON_HEIGHT;
+
+        m_entries.emplace_back(text_a, box);
+        box.x += box.w;
+        m_entries.emplace_back(text_b, box);
+
+        m_index = 1;
+        m_entries[0].Selected(false);
+        m_entries[1].Selected(true);
+        LayoutButtons();
+
+        SetActions(
+            std::make_pair(Button::LEFT, Action{[this](){
+                SetIndex(0);
+            }}),
+            std::make_pair(Button::RIGHT, Action{[this](){
+                SetIndex(1);
+            }}),
+            std::make_pair(Button::A, Action{[this](){
+                m_callback(m_index);
+                SetPop();
+            }}),
+            std::make_pair(Button::B, Action{[this](){
+                m_callback(0);
+                SetPop();
+            }}),
+            std::make_pair(Button::START, Action{[this](){
+                m_callback(1);
+                SetPop();
+            }})
+        );
+    }
+
+    auto Update(Controller* controller, TouchInfo* touch) -> void override {
+        Widget::Update(controller, touch);
+
+        if (touch->is_clicked) {
+            for (s64 i = 0; i < static_cast<s64>(m_entries.size()); i++) {
+                if (touch->in_range(m_entries[i].GetPos())) {
+                    SetIndex(i);
+                    m_callback(i);
+                    SetPop();
+                    break;
+                }
+            }
+        }
+    }
+
+    auto Draw(NVGcontext* vg, Theme* theme) -> void override {
+        gfx::dimBackground(vg);
+        gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
+
+        // 1. Title
+        const std::string title = "Firmware downgrade warning"_i18n;
+        gfx::drawTextBold(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 20.f, 23.f,
+            theme->GetColour(ThemeEntryID_TEXT_SELECTED), title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+
+        constexpr float pad_x = 36.f;
+        const float col1_x = m_pos.x + pad_x;
+        const float content_w = m_pos.w - pad_x * 2.f;
+
+        // 2. Compact version rows: Current and Target bold labels in column 1, values in column 2
+        const std::string current_label = "Current:"_i18n;
+        const std::string target_label = "Target:"_i18n;
+
+        nvgSave(vg);
+        nvgFontSize(vg, 17.f);
+        float b1[4]{}, b2[4]{};
+        nvgTextBounds(vg, 0.f, 0.f, current_label.c_str(), nullptr, b1);
+        nvgTextBounds(vg, 0.f, 0.f, target_label.c_str(), nullptr, b2);
+        const float max_label_w = std::max(b1[2] - b1[0], b2[2] - b2[0]);
+        nvgRestore(vg);
+
+        const float col2_x = col1_x + max_label_w + 12.f;
+        const float y1 = m_pos.y + 56.f;
+        const float y2 = y1 + 22.f;
+
+        gfx::drawTextBold(vg, col1_x, y1, 17.f, theme->GetColour(ThemeEntryID_TEXT), current_label.c_str());
+        gfx::drawText(vg, col2_x, y1, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_current_version.c_str());
+
+        gfx::drawTextBold(vg, col1_x, y2, 17.f, theme->GetColour(ThemeEntryID_TEXT), target_label.c_str());
+        gfx::drawText(vg, col2_x, y2, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_target_version.c_str());
+
+        // 3. Risk warning text
+        const std::string risk_text = "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup."_i18n;
+        const float risk_y = y2 + 28.f;
+        gfx::drawTextBox(vg, col1_x, risk_y, 15.f, content_w, theme->GetColour(ThemeEntryID_TEXT), risk_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.35f);
+
+        nvgSave(vg);
+        nvgFontSize(vg, 15.f);
+        nvgTextLineHeight(vg, 1.35f);
+        float risk_b[4]{};
+        nvgTextBoxBounds(vg, 0.f, 0.f, content_w, risk_text.c_str(), nullptr, risk_b);
+        const float risk_h = risk_b[3] - risk_b[1];
+        nvgRestore(vg);
+
+        // 4. Fix path row: bold label + muted secondary value
+        const float fix_y = risk_y + risk_h + 12.f;
+        const std::string fix_label = "Fix path:"_i18n;
+        gfx::drawTextBold(vg, col1_x, fix_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
+
+        nvgSave(vg);
+        nvgFontSize(vg, 15.f);
+        float fix_b[4]{};
+        nvgTextBounds(vg, 0.f, 0.f, fix_label.c_str(), nullptr, fix_b);
+        const float fix_lbl_w = fix_b[2] - fix_b[0];
+        nvgRestore(vg);
+
+        const std::string fix_val = "hekate > Payloads > TegraExplorer > DowngradeFix.te";
+        gfx::drawText(vg, col1_x + fix_lbl_w + 8.f, fix_y + 1.f, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), fix_val.c_str());
+
+        // 5. Guide & QR code section + Responsibility note
+        const float guide_y = fix_y + 24.f;
+
+        constexpr int qr_border = 3;
+        constexpr float qr_scale = 3.f;
+        constexpr float qr_total_w = (QrCode::SIZE + qr_border * 2) * qr_scale;
+        const float qr_x = m_pos.x + m_pos.w - pad_x - qr_total_w;
+        const float qr_y = guide_y;
+
+        // Draw scan-ready QR code with white quiet zone border
+        gfx::drawRect(vg, qr_x, qr_y, qr_total_w, qr_total_w, nvgRGBA(255, 255, 255, 255), 4.f);
+        nvgBeginPath(vg);
+        for (int qy = 0; qy < QrCode::SIZE; qy++) {
+            for (int qx = 0; qx < QrCode::SIZE; qx++) {
+                if (m_qr.Get(qx, qy)) {
+                    nvgRect(vg, qr_x + (qx + qr_border) * qr_scale, qr_y + (qy + qr_border) * qr_scale, qr_scale, qr_scale);
+                }
+            }
+        }
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgFill(vg);
+
+        // Left text next to QR
+        const float left_w = qr_x - col1_x - 18.f;
+        const std::string resp_text = "By continuing, you accept full responsibility."_i18n;
+        gfx::drawTextBox(vg, col1_x, guide_y, 15.f, left_w, theme->GetColour(ThemeEntryID_TEXT), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.35f);
+
+        const std::string guide_label = "Guide:"_i18n;
+        const float guide_lbl_y = guide_y + 32.f;
+        gfx::drawTextBold(vg, col1_x, guide_lbl_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str());
+
+        nvgSave(vg);
+        nvgFontSize(vg, 15.f);
+        float guide_b[4]{};
+        nvgTextBounds(vg, 0.f, 0.f, guide_label.c_str(), nullptr, guide_b);
+        const float guide_lbl_w = guide_b[2] - guide_b[0];
+        nvgRestore(vg);
+
+        gfx::drawText(vg, col1_x + guide_lbl_w + 8.f, guide_lbl_y + 1.f, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://bit.ly/fw_downgrade");
+
+        const std::string scan_hint = "Scan QR code to open guide on mobile device."_i18n;
+        gfx::drawTextBox(vg, col1_x, guide_lbl_y + 24.f, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        // 6. Separator line and buttons
+        gfx::drawRect(vg, m_spacer_line, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        for (auto& entry : m_entries) {
+            entry.Draw(vg, theme);
+        }
+    }
+
+    auto OnFocusGained() noexcept -> void override {
+        Widget::OnFocusGained();
+        SetHidden(false);
+    }
+
+    auto OnFocusLost() noexcept -> void override {
+        Widget::OnFocusLost();
+        SetHidden(true);
+    }
+
+    auto IsModal() const -> bool override {
+        return true;
+    }
+
+private:
+    void SetIndex(s64 index) {
+        if (m_index != index && index >= 0 && index < static_cast<s64>(m_entries.size())) {
+            m_entries[m_index].Selected(false);
+            m_index = index;
+            m_entries[m_index].Selected(true);
+        }
+    }
+
+    void LayoutButtons() {
+        m_spacer_line = Vec4{m_pos.x, m_pos.y + m_pos.h - DOWNGRADE_BUTTON_HEIGHT - 2.f, m_pos.w, 2.f};
+
+        auto box = m_pos;
+        box.w = m_pos.w / 2.f;
+        box.y = m_pos.y + m_pos.h - DOWNGRADE_BUTTON_HEIGHT;
+        box.h = DOWNGRADE_BUTTON_HEIGHT;
+
+        m_entries[0].UpdateLayout(box);
+        box.x += box.w;
+        m_entries[1].UpdateLayout(box);
+    }
+
+private:
+    const std::string m_current_version;
+    const std::string m_target_version;
+    const Callback m_callback;
+    const QrCode m_qr;
+
+    s64 m_index{1};
+    Vec4 m_spacer_line{};
+    std::vector<OptionBoxEntry> m_entries{};
+};
 
 constexpr const char* NXLINKS_URL = "https://raw.githubusercontent.com/rashevskyv/nx-links/master/nx-links.json";
 
@@ -1047,15 +1284,10 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
         return false;
     }
 
-    std::string warning = "Firmware downgrade warning\n\n";
-    warning += "Current: " + m_current_firmware + "\n";
-    warning += "Target: " + target_version + "\n\n";
-    warning += "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.\n\n";
-    warning += "Fix path: hekate > Payloads > TegraExplorer > DowngradeFix.te\n";
-    warning += "Guide: https://bit.ly/fw_downgrade\n\n";
-    warning += "By continuing, you accept full responsibility.";
-
-    App::Push<OptionBox>(warning, "Cancel"_i18n, confirm_label, 1,
+    App::Push<DowngradeWarningBox>(
+        m_current_firmware,
+        target_version,
+        confirm_label,
         [this, on_ack = std::move(on_ack), on_cancel = std::move(on_cancel)](auto op_index) {
             if (!op_index || *op_index != 1) {
                 if (on_cancel) {
@@ -1120,46 +1352,50 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
             const auto version = detail::FormatFirmwareVersion(validation->info.version);
             const bool use_exfat = validation->info.exfat_supported &&
                                    R_SUCCEEDED(validation->validation.exfat_result);
-            std::string message = "Install firmware " + version + " on " + detail::GetFirmwareTargetName() + "?\n\n";
-            message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
-            message += "Do not power off the console during installation.";
 
-            App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-                [this, display_name, path, version, acked_downgrade_fix, origin_zip](auto op_index) {
-                    if (!op_index || *op_index != 1) {
+            auto prompt_install_confirm = [this, display_name, path, version, use_exfat, origin_zip](bool apply_fix) {
+                std::string message = "Install firmware " + version + " on " + detail::GetFirmwareTargetName() + "?\n\n";
+                message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
+                message += "Do not power off the console during installation.";
+
+                App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
+                    [this, display_name, path, apply_fix, origin_zip](auto op_index) {
+                        if (!op_index || *op_index != 1) {
+                            if (origin_zip) {
+                                detail::CleanupManualFirmwareStaging();
+                            }
+                            return;
+                        }
+
+                        InstallFirmware(display_name, path, apply_fix, origin_zip);
+                    });
+            };
+
+            // the downgrade warning/fix is only relevant when installing a LOWER firmware.
+            if (!IsDowngrade(version)) {
+                prompt_install_confirm(false);
+                return;
+            }
+
+            // downloaded firmware already warned before fetching it, so
+            // the warning is not repeated here.
+            if (acked_downgrade_fix.has_value()) {
+                prompt_install_confirm(*acked_downgrade_fix);
+                return;
+            }
+
+            // manual install or initially unknown download: warn immediately after validation.
+            if (!PromptDowngradeAck(version, "Continue"_i18n,
+                    [prompt_install_confirm](bool apply_fix) {
+                        prompt_install_confirm(apply_fix);
+                    },
+                    [origin_zip]() {
                         if (origin_zip) {
                             detail::CleanupManualFirmwareStaging();
                         }
-                        return;
-                    }
-
-                    // the downgrade fix (deleting system save 8000000000000073)
-                    // is only relevant when installing a LOWER firmware.
-                    if (!IsDowngrade(version)) {
-                        InstallFirmware(display_name, path, false, origin_zip);
-                        return;
-                    }
-
-                    // downloaded firmware already asked before fetching it, so
-                    // the warning is not repeated here.
-                    if (acked_downgrade_fix.has_value()) {
-                        InstallFirmware(display_name, path, *acked_downgrade_fix, origin_zip);
-                        return;
-                    }
-
-                    // manual install: nothing was downloaded, so ask now.
-                    if (!PromptDowngradeAck(version, "Continue"_i18n,
-                            [this, display_name, path, origin_zip](bool apply_fix) {
-                                InstallFirmware(display_name, path, apply_fix, origin_zip);
-                            },
-                            [origin_zip]() {
-                                if (origin_zip) {
-                                    detail::CleanupManualFirmwareStaging();
-                                }
-                            })) {
-                        InstallFirmware(display_name, path, false, origin_zip);
-                    }
-                });
+                    })) {
+                prompt_install_confirm(false);
+            }
         });
 }
 

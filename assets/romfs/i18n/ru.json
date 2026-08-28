@@ -2064,5 +2064,11 @@
   "Folder": "Папка",
   "ZIP archive": "ZIP архив",
   "Manual firmware install": "Ручная установка прошивки",
-  "Delete original firmware archive?\n\n": "Удалить исходный архив прошивки?\n\n"
+  "Delete original firmware archive?\n\n": "Удалить исходный архив прошивки?\n\n",
+  "Firmware downgrade warning": "Предупреждение о понижении прошивки",
+  "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.": "Понижение версии системной прошивки может вызвать проблемы с загрузкой и привести к невозможности запуска консоли до выполнения сброса к заводским настройкам. Убедись, что у тебя есть резервная копия NAND или emuMMC.",
+  "Fix path:": "Путь исправления:",
+  "Guide:": "Инструкция:",
+  "By continuing, you accept full responsibility.": "Продолжая, ты принимаешь на себя полную ответственность.",
+  "Scan QR code to open guide on mobile device.": "Отсканируй QR-код, чтобы открыть инструкцию на телефоне."
 }

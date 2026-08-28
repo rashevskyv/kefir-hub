@@ -1,12 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.648**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.649**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.648 (manual firmware ZIP install & staging cleanup safety)
+## Поточний delivery: v0.13.649 (visual downgrade warning dialog with guide QR code)
+
+- [x] `FW-DOWNGRADE-DIALOG-649` — виділений `DowngradeWarningBox` з напівжирними мітками `Current:`, `Target:`, `Fix path:`, `Guide:`, вирівнюванням стовпчиків версій та приглушеним шляхом виправлення.
+- [x] `FW-DOWNGRADE-QR-649` — сканований QR-код з URL `https://bit.ly/fw_downgrade` через вбудований `QrCode::Encode` безпосередньо у NanoVG з білим quiet zone border.
+- [x] `FW-DOWNGRADE-TIMING-649` — збереження одноразового попередження (перед завантаженням або після валідації для manual) без повторів завдяки `acked_downgrade_fix` та з повним збереженням логіки скасування.
+- [x] `DOCS-BUMP-649` — версія `0.13.649`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.648 (manual firmware ZIP install & staging cleanup safety)
 
 - [x] `MANUAL-FW-SOURCE-PICKER-648` — «Install manually» відкриває `PopupList` з вибором «Folder» або «ZIP archive».
 - [x] `MANUAL-FW-ZIP-EXTRACT-648` — вибір `.zip` через `filepicker::Menu`, розпакування у `/config/kefir-updater/firmware_manual` через `thread::TransferUnzipAll()`.
