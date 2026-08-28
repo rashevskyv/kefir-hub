@@ -170,6 +170,16 @@ void DrawToolsList(NVGcontext* vg, Theme* theme, List& list, s64 selected, const
             gfx::drawRectOutline(vg, theme, 4.f, v);
         }
     });
+
+    list.Draw(vg, theme, items.size(), [vg, theme, selected, &items](auto*, auto*, Vec4 v, auto i) {
+        if (selected == static_cast<s64>(i)) {
+            const auto& item = items[i];
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
+                theme->GetColour(ThemeEntryID_TEXT_SELECTED), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        }
+    });
 }
 
 } // namespace

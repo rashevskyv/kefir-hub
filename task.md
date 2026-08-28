@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.659**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.660**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.659 (fix live DBI queue compatibility and metrics)
+## Поточний delivery: v0.13.660 (draw system tools focus text above border)
+
+- [x] `SYS-TOOLS-FOCUS-TEXT-660` — додано третій прохід `List::Draw()` у `DrawToolsList()` для рендерингу заголовка й опису вибраного рядка поверх заливки рамки виділення.
+- [x] `DOCS-BUMP-660` — версія `0.13.660`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.659 (fix live DBI queue compatibility and metrics)
 
 - [x] `DBI-DEADLOCK-FIX-659` — усунено взаємне блокування (deadlock) у `dbi_menu.cpp`: імена відхилених пакетів збираються під `m_mutex`, а виклики `AddLog()` виконуються після виходу зі скоупу м'ютекса.
 - [x] `DBI-SPHQ-INIT-SELECT-659` — у `DbiWaitForConnection()` до початкової черги `out_names` додаються виключно записи з `selected != 0`; дозволено початково порожній список черги для протоколу SPHQ.
