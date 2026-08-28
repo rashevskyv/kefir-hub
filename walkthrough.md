@@ -1,9 +1,21 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.652** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.653** (2026-08-28). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.653 — Fix System Tools list focus border rendering layer
+
+- Порядок відмальовування рамки виділення у списку System Tools (`sphaira/source/ui/menus/tools_menu.cpp`):
+  - У функції `DrawToolsList()` рендеринг списку розділено на два проходи `List::Draw()`:
+    1. Перший прохід відображає базові елементи: фон неактивних рядків (`DrawElement(v, ThemeEntryID_GRID)`), заголовки та описи всіх елементів списку.
+    2. Другий прохід малює контур фокусу `gfx::drawRectOutline(vg, theme, 4.f, v)` виключно для обраного елемента (`selected == i`).
+  - Завдяки цьому контур виділення (включно з його нижньою межею та тінню) гарантовано малюється поверх фону будь-яких наступних рядків списку при навігації вниз.
+  - Повністю збережено геометрію списку, колірну схему, прокручування, скролбар та обробку подій.
+- Верифікація:
+  - Виконано статичний аналіз `git diff --check`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.652 — Extended bounded payload content scan in File Browser
 

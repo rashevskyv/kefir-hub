@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.652**. Завершені плани збережено в
+Поточний delivery — **v0.13.653**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.652 — Extended bounded payload content scan in File Browser
+## Поточний delivery: v0.13.653 — Fix System Tools list focus border rendering layer
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/ui/menus/tools_menu.cpp` оптимізовано порядок малювання списку `DrawToolsList()` (System Tools menu): розділено відмальовування вмісту та рамки виділення на два проходи `List::Draw()`.
+2. У першому проході малюються фони неактивних елементів (`DrawElement(v, ThemeEntryID_GRID)`), текстові мітки та описи всіх пунктів.
+3. У другому проході поверх усіх елементів малюється виділена рамка фокусу `gfx::drawRectOutline(vg, theme, 4.f, v)` для обраного пункту (`selected == i`).
+4. Забезпечено повну видимість нижньої межі рамки виділення активного рядка над фоном наступного рядка при навігації вниз. Збережено геометрію, колірну схему, прокручування та інтерактивність.
+5. Версію Sphaira піднято до `0.13.653`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.652 — Extended bounded payload content scan in File Browser
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ui/menus/filebrowser.cpp` збільшено обмеження зчитування при розпізнаванні назв RCM `.bin` payload (`IdentifyPayload`) із 64 KiB до 256 KiB (`kMaxScanSize = 256 * 1024`).

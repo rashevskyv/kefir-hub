@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.652**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.653**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.652 (extended bounded payload content scan)
+## Поточний delivery: v0.13.653 (system tools focus border draw order)
+
+- [x] `SYS-TOOLS-BORDER-LAYER-653` — розділено `DrawToolsList()` на два проходи `List::Draw()` для малювання фону й тексту всіх рядків першим проходом і рамки виділення поверх них другим проходом.
+- [x] `DOCS-BUMP-653` — версія `0.13.653`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.652 (extended bounded payload content scan)
 
 - [x] `PAYLOAD-LABEL-SCAN-652` — розширено стелю обмеженого сканування RCM `.bin` payload у `IdentifyPayload` з 64 KiB до 256 KiB (`kMaxScanSize`) для надійного розпізнавання `Lockpick_RCM`, `TegraExplorer` тощо.
 - [x] `DOCS-BUMP-652` — версія `0.13.652`, plan/task/walkthrough/audit.
