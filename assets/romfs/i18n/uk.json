@@ -2100,5 +2100,10 @@
   "Kefir Hub already has a HOME Menu icon. Next time, launch from that icon. This old Homebrew Menu forwarder cannot be removed while you are using it; it will be removed automatically afterwards.": "Іконка Kefir Hub на HOME Menu уже є. Наступного разу запускай з неї. Цей старий форвардер Homebrew Menu не можна видалити, поки з нього запущено програму — він зникне автоматично після запуску з нової іконки.",
   "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album. An old Homebrew Menu forwarder is being removed now because it can cause errors.": "Зараз встановлюємо іконку Kefir Hub на HOME Menu, щоб відкривати його як звичайну програму, без альбому. Старий форвардер Homebrew Menu зараз видаляємо, бо він може викликати помилки.",
   "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album.": "Зараз встановлюємо іконку Kefir Hub на HOME Menu, щоб відкривати його як звичайну програму, без альбому.",
-  "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.": "Старий форвардер Homebrew Menu зараз видаляємо з HOME Menu, бо він може викликати помилки. Наступного разу відкривай Kefir Hub з іконки на HOME Menu, не з альбому."
+  "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.": "Старий форвардер Homebrew Menu зараз видаляємо з HOME Menu, бо він може викликати помилки. Наступного разу відкривай Kefir Hub з іконки на HOME Menu, не з альбому.",
+  "Launch payload": "Запустити payload",
+  "Reboot console into this payload via Hekate.": "Перезавантажити консоль у цей payload через Hekate.",
+  "Reboot to payload ": "Перезавантажити в payload ",
+  "Failed to prepare payload launch!": "Не вдалося підготувати запуск payload!",
+  "Hekate payload API is not available or payload is invalid.": "Hekate payload API недоступний або payload є недійсним."
 }

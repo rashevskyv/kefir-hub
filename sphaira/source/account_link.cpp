@@ -183,8 +183,7 @@ auto CheckHandoffPreconditions(fs::FsNativeSd& sd) -> Result {
     if (sd.FileExists("/startup.te") || sd.FileExists("/payload.bak")) {
         return FsError_PathAlreadyExists;
     }
-    if (!sd.FileExists("/payload.bin") ||
-        !sd.FileExists("/bootloader/payloads/TegraExplorer.bin") ||
+    if (!sd.FileExists("/bootloader/payloads/TegraExplorer.bin") ||
         !sd.FileExists("/bootloader/update.bin")) {
         return FsError_PathNotFound;
     }

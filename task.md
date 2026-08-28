@@ -8,11 +8,11 @@
 
 ## Поточний delivery: v0.13.647 (safe one-shot Hekate payload handoff)
 
-- [ ] `HEKATE-PAYLOAD-API-647` — додати Kefirosphere patch після чинного Hekate autokeys patch; temporary request читається, валідовується, видаляється до chainload і надає capability marker API v1.
-- [ ] `HUB-PAYLOAD-HANDOFF-647` — `utils::rebootToPayload()` у Kefir Hub створює request і робить звичайний reboot без запису в `/payload.bin` або `hekate_ipl.ini`.
-- [ ] `FILEBROWSER-PAYLOAD-647` — надійна назва відомого `.bin`, фактична назва для невідомого, явний confirm + launch у context menu.
-- [ ] `HOLD-TOUCH-647` — утримання екранної кнопки A працює і скидається так само, як фізична A.
-- [ ] `DOCS-BUMP-647` — версія `0.13.647`, plan/task/walkthrough/audit і локальний commit.
+- [x] `HEKATE-PAYLOAD-API-647` — додати Kefirosphere patch після чинного Hekate autokeys patch; temporary request читається, валідовується, видаляється до chainload і надає capability marker API v1.
+- [x] `HUB-PAYLOAD-HANDOFF-647` — `utils::rebootToPayload()` у Kefir Hub створює request і робить звичайний reboot без запису в `/payload.bin` або `hekate_ipl.ini`.
+- [x] `FILEBROWSER-PAYLOAD-647` — надійна назва відомого `.bin`, фактична назва для невідомого, явний confirm + launch у context menu.
+- [x] `HOLD-TOUCH-647` — утримання екранної кнопки A працює і скидається так само, як фізична A.
+- [x] `DOCS-BUMP-647` — версія `0.13.647`, plan/task/walkthrough/audit.
 
 ## Попередній delivery: v0.13.646 (fix NAS filename matching in export script)
 

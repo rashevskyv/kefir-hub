@@ -1,6 +1,7 @@
 #include "utils/utils.hpp"
 #include "log.hpp"
 #include "fs.hpp"
+#include "path_util.hpp"
 
 #include <cstring>
 #include <cstdio>
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <string_view>
 
 namespace sphaira::utils {
 namespace {
@@ -433,153 +435,186 @@ Result requestForcedReboot() {
     return rc;
 }
 
-// Swap payload.bin with HATS installer and reboot
-// This works on both Erista and Mariko since the system loads sd:\payload.bin
+namespace {
+
+constexpr const char* HEKATE_API_MARKER_PATH = "/config/kefir/hekate-payload-api.ini";
+constexpr const char* HEKATE_REQUEST_PATH = "/config/kefir/hekate-payload-request.ini";
+constexpr const char* HEKATE_REQUEST_TMP_PATH = "/config/kefir/hekate-payload-request.ini.tmp";
+
+bool isHekatePayloadApiSupported() {
+    fs::FsNativeSd sd;
+    std::vector<u8> data;
+    if (R_FAILED(sd.read_entire_file(HEKATE_API_MARKER_PATH, data)) || data.empty()) {
+        log_write("isHekatePayloadApiSupported: capability marker %s not found or empty\n", HEKATE_API_MARKER_PATH);
+        return false;
+    }
+
+    std::string_view content(reinterpret_cast<const char*>(data.data()), data.size());
+    bool in_api_section = false;
+    bool version_1 = false;
+
+    size_t start = 0;
+    while (start < content.size()) {
+        size_t end = content.find_first_of("\r\n", start);
+        if (end == std::string_view::npos) {
+            end = content.size();
+        }
+        std::string_view line = content.substr(start, end - start);
+        while (!line.empty() && (line.front() == ' ' || line.front() == '\t')) {
+            line.remove_prefix(1);
+        }
+        while (!line.empty() && (line.back() == ' ' || line.back() == '\t')) {
+            line.remove_suffix(1);
+        }
+
+        if (!line.empty() && line.front() != ';' && line.front() != '#') {
+            if (line.front() == '[' && line.back() == ']') {
+                std::string_view sec = line.substr(1, line.size() - 2);
+                in_api_section = (sec == "api");
+            } else if (in_api_section) {
+                auto eq = line.find('=');
+                if (eq != std::string_view::npos) {
+                    std::string_view key = line.substr(0, eq);
+                    std::string_view val = line.substr(eq + 1);
+                    while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.remove_suffix(1);
+                    while (!val.empty() && (val.front() == ' ' || val.front() == '\t')) val.remove_prefix(1);
+                    if (key == "version" && val == "1") {
+                        version_1 = true;
+                    }
+                }
+            }
+        }
+
+        start = content.find_first_not_of("\r\n", end);
+        if (start == std::string_view::npos) {
+            break;
+        }
+    }
+
+    if (!version_1) {
+        log_write("isHekatePayloadApiSupported: capability marker missing valid version=1 in [api]\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool normalizeAndValidatePayloadPath(std::string_view raw_path, std::string& out_rel_path, std::string& out_abs_sd_path) {
+    if (raw_path.empty()) {
+        return false;
+    }
+
+    if (raw_path.starts_with("sdmc:/")) {
+        raw_path.remove_prefix(6);
+    } else if (raw_path.starts_with("sdmc:")) {
+        raw_path.remove_prefix(5);
+    } else if (raw_path.starts_with("sd:/")) {
+        raw_path.remove_prefix(4);
+    } else if (raw_path.starts_with("sd:")) {
+        raw_path.remove_prefix(3);
+    }
+
+    while (!raw_path.empty() && (raw_path.front() == '/' || raw_path.front() == '\\')) {
+        if (raw_path.front() == '\\') {
+            return false;
+        }
+        raw_path.remove_prefix(1);
+    }
+
+    if (raw_path.empty()) {
+        return false;
+    }
+
+    for (char c : raw_path) {
+        if (c == '\\' || c == ':' || c == '*' || c == '?' || static_cast<unsigned char>(c) < 32 || c == 127) {
+            return false;
+        }
+    }
+
+    size_t seg_start = 0;
+    while (seg_start < raw_path.size()) {
+        size_t seg_end = raw_path.find('/', seg_start);
+        if (seg_end == std::string_view::npos) {
+            seg_end = raw_path.size();
+        }
+        std::string_view segment = raw_path.substr(seg_start, seg_end - seg_start);
+        if (segment.empty() || segment == "." || segment == "..") {
+            return false;
+        }
+        seg_start = seg_end + 1;
+    }
+
+    if (raw_path.size() < 4) {
+        return false;
+    }
+    std::string_view ext = raw_path.substr(raw_path.size() - 4);
+    if (!path::EqualsIC(ext, ".bin")) {
+        return false;
+    }
+
+    out_rel_path = std::string(raw_path);
+    out_abs_sd_path = "/" + out_rel_path;
+    return true;
+}
+
+} // namespace
+
+// Reboot to a payload file via Hekate one-shot payload API.
+// Returns true on success, false on failure
 bool rebootToPayload(const char* path) {
-    constexpr const char* PAYLOAD_BIN = "/payload.bin";
-    constexpr const char* PAYLOAD_BAK = "/payload.bak";
-
-    log_write("rebootToPayload: launching HATS installer from: %s\n", path);
-
-    // Step 1: Check if payload.bin exists
-    FILE* f_existing = fopen(PAYLOAD_BIN, "rb");
-    if (!f_existing) {
-        log_write("rebootToPayload: ERROR - %s not found! This system may not be configured correctly.\n", PAYLOAD_BIN);
-        log_write("rebootToPayload: sd:\\payload.bin should contain hekate for normal boot.\n");
-        return false;
-    }
-    fclose(f_existing);
-
-    // Step 2: Backup original payload.bin to payload.bak
-    log_write("rebootToPayload: backing up %s to %s\n", PAYLOAD_BIN, PAYLOAD_BAK);
-
-    // Read payload.bin (original hekate)
-    FILE* f_src = fopen(PAYLOAD_BIN, "rb");
-    if (!f_src) {
-        log_write("rebootToPayload: failed to open %s for reading\n", PAYLOAD_BIN);
+    if (!path || !*path) {
+        log_write("rebootToPayload: invalid null/empty path\n");
         return false;
     }
 
-    fseek(f_src, 0, SEEK_END);
-    long original_size = ftell(f_src);
-    fseek(f_src, 0, SEEK_SET);
+    log_write("rebootToPayload: requested payload launch for: %s\n", path);
 
-    if (original_size <= 0) {
-        log_write("rebootToPayload: invalid payload.bin size: %ld\n", original_size);
-        fclose(f_src);
+    if (!isHekatePayloadApiSupported()) {
+        log_write("rebootToPayload: Hekate payload API marker missing or unsupported\n");
         return false;
     }
 
-    std::vector<u8> original_payload(original_size);
-    size_t bytes_read = fread(original_payload.data(), 1, original_size, f_src);
-    fclose(f_src);
-
-    if (bytes_read != (size_t)original_size) {
-        log_write("rebootToPayload: failed to read %s\n", PAYLOAD_BIN);
+    std::string rel_path;
+    std::string abs_path;
+    if (!normalizeAndValidatePayloadPath(path, rel_path, abs_path)) {
+        log_write("rebootToPayload: path normalization/validation failed for: %s\n", path);
         return false;
     }
 
-    // Write backup
-    FILE* f_bak = fopen(PAYLOAD_BAK, "wb");
-    if (!f_bak) {
-        log_write("rebootToPayload: failed to create %s\n", PAYLOAD_BAK);
+    fs::FsNativeSd sd;
+    if (!sd.FileExists(abs_path.c_str())) {
+        log_write("rebootToPayload: payload file does not exist: %s\n", abs_path.c_str());
         return false;
     }
 
-    size_t bytes_written = fwrite(original_payload.data(), 1, original_size, f_bak);
-    fclose(f_bak);
+    std::string request = "[launch]\nversion=1\npayload=" + rel_path + "\n";
 
-    if (bytes_written != (size_t)original_size) {
-        log_write("rebootToPayload: failed to write backup\n");
-        remove(PAYLOAD_BAK);
+    sd.CreateDirectoryRecursively("/config/kefir");
+    sd.DeleteFile(HEKATE_REQUEST_TMP_PATH);
+
+    if (R_FAILED(sd.write_entire_file(HEKATE_REQUEST_TMP_PATH, std::vector<u8>(request.begin(), request.end())))) {
+        log_write("rebootToPayload: failed to write temporary request file\n");
         return false;
     }
 
-    log_write("rebootToPayload: backup created (%ld bytes)\n", original_size);
-
-    // Step 3: Copy HATS installer to payload.bin
-    log_write("rebootToPayload: copying HATS installer to %s\n", PAYLOAD_BIN);
-
-    FILE* f_installer = fopen(path, "rb");
-    if (!f_installer) {
-        log_write("rebootToPayload: failed to open HATS installer: %s\n", path);
-        // Restore backup before returning
-        FILE* f_restore = fopen(PAYLOAD_BIN, "wb");
-        fwrite(original_payload.data(), 1, original_size, f_restore);
-        fclose(f_restore);
-        remove(PAYLOAD_BAK);
+    sd.DeleteFile(HEKATE_REQUEST_PATH);
+    if (R_FAILED(sd.RenameFile(HEKATE_REQUEST_TMP_PATH, HEKATE_REQUEST_PATH))) {
+        log_write("rebootToPayload: failed to rename temporary request file to %s\n", HEKATE_REQUEST_PATH);
+        sd.DeleteFile(HEKATE_REQUEST_TMP_PATH);
         return false;
     }
 
-    fseek(f_installer, 0, SEEK_END);
-    long installer_size = ftell(f_installer);
-    fseek(f_installer, 0, SEEK_SET);
-
-    if (installer_size <= 0) {
-        log_write("rebootToPayload: invalid HATS installer size: %ld\n", installer_size);
-        fclose(f_installer);
-        // Restore backup
-        FILE* f_restore = fopen(PAYLOAD_BIN, "wb");
-        fwrite(original_payload.data(), 1, original_size, f_restore);
-        fclose(f_restore);
-        remove(PAYLOAD_BAK);
-        return false;
-    }
-
-    std::vector<u8> installer_data(installer_size);
-    bytes_read = fread(installer_data.data(), 1, installer_size, f_installer);
-    fclose(f_installer);
-
-    if (bytes_read != (size_t)installer_size) {
-        log_write("rebootToPayload: failed to read HATS installer\n");
-        // Restore backup
-        FILE* f_restore = fopen(PAYLOAD_BIN, "wb");
-        fwrite(original_payload.data(), 1, original_size, f_restore);
-        fclose(f_restore);
-        remove(PAYLOAD_BAK);
-        return false;
-    }
-
-    // Write HATS installer to payload.bin
-    FILE* f_dst = fopen(PAYLOAD_BIN, "wb");
-    if (!f_dst) {
-        log_write("rebootToPayload: failed to open %s for writing\n", PAYLOAD_BIN);
-        // Restore backup
-        FILE* f_restore = fopen(PAYLOAD_BIN, "wb");
-        fwrite(original_payload.data(), 1, original_size, f_restore);
-        fclose(f_restore);
-        remove(PAYLOAD_BAK);
-        return false;
-    }
-
-    bytes_written = fwrite(installer_data.data(), 1, installer_size, f_dst);
-    fclose(f_dst);
-
-    if (bytes_written != (size_t)installer_size) {
-        log_write("rebootToPayload: failed to write HATS installer\n");
-        // Restore backup
-        FILE* f_restore = fopen(PAYLOAD_BIN, "wb");
-        fwrite(original_payload.data(), 1, original_size, f_restore);
-        fclose(f_restore);
-        remove(PAYLOAD_BAK);
-        return false;
-    }
-
-    // Step 4: Sync filesystem
     fsdevCommitDevice("sdmc");
 
-    // Small delay to ensure SD card finishes writing (important for Erista)
-    svcSleepThread(500'000'000ULL); // 500ms
+    log_write("rebootToPayload: Hekate payload request written for %s, rebooting...\n", rel_path.c_str());
 
-    log_write("rebootToPayload: payload swapped (%ld bytes), rebooting...\n", installer_size);
+    const Result rc = requestForcedReboot();
+    if (R_FAILED(rc)) {
+        log_write("rebootToPayload: requestForcedReboot failed: 0x%x\n", rc);
+        return false;
+    }
 
-    // Step 5: Reboot - system will load sd:\payload.bin (which is now HATS installer)
-    log_write("rebootToPayload: HATS installer will restore hekate after installation\n");
-
-    requestForcedReboot();
-
-    // Should not reach here
-    return false;
+    return true;
 }
 
 std::string Trim(std::string str) {

@@ -36,10 +36,21 @@ HoldConfirmBox::HoldConfirmBox(std::string message, float hold_seconds, Callback
     );
 }
 
+auto HoldConfirmBox::GetButtonRect() const -> Vec4 {
+    const float btn_h = m_compact ? 82.f : 86.f;
+    const Vec4 button{m_pos.x, m_pos.y + m_pos.h - btn_h, m_pos.w, btn_h};
+    return m_compact
+        ? Vec4{button.x + 160.f, button.y + 10.f, button.w - 320.f, button.h - 20.f}
+        : Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f};
+}
+
 void HoldConfirmBox::Update(Controller* controller, TouchInfo* touch) {
     Widget::Update(controller, touch);
 
-    if (controller->GotHeld(Button::A)) {
+    const bool touch_held = touch && touch->is_touching && touch->in_range(GetButtonRect());
+    const bool is_holding = controller->GotHeld(Button::A) || touch_held;
+
+    if (is_holding) {
         if (!m_holding) {
             m_holding = true;
             m_hold_start = armTicksToNs(armGetSystemTick());
@@ -95,8 +106,10 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     const Vec4 button{m_pos.x, m_pos.y + m_pos.h - btn_h, m_pos.w, btn_h};
     gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
     
+    const Vec4 button_box = GetButtonRect();
+    gfx::drawRectOutline(vg, theme, 4.f, button_box);
+
     if (m_compact) {
-        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 160.f, button.y + 10.f, button.w - 320.f, button.h - 20.f});
         const Vec4 bar{button.x + 180.f, button.y + button.h - 22.f, button.w - 360.f, 6.f};
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
@@ -108,7 +121,6 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
             hold_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
         );
     } else {
-        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 150.f, button.y + 10.f, button.w - 300.f, button.h - 20.f});
         const Vec4 bar{button.x + 178.f, button.y + button.h - 22.f, button.w - 356.f, 6.f};
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);

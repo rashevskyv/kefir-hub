@@ -6,12 +6,12 @@
 
 ## Поточний delivery: v0.13.647 — Safe one-shot Hekate payload handoff
 
-Статус: активна реалізація. Агент не компілює.
-1. У Kefirosphere додати окремий Hekate patch після `0001-KEFIR-Add-preboot-autokeys-handoff.patch`. Patch має читати та видаляти одноразовий запит `/config/kefir/hekate-payload-request.ini`, перевіряти API v1 і шлях до SD payload, після чого використовувати штатний Hekate launcher. Робочу теку `D:\git\dev\hekate` не змінювати.
-2. У Kefir Hub перевести спільний `utils::rebootToPayload()` з підміни `/payload.bin` на запис request-файла й звичайний reboot. Наявні TegraExplorer/8 GB handoff caller-и мають використати цей самий шлях.
-3. У File Browser показувати зрозумілу назву `.bin` лише за надійним розпізнаванням вмісту; без збігу показувати реальне ім'я. Додати підтверджену дію запуску через спільний Hekate handoff.
-4. У `HoldConfirmBox` додати безперервне утримання пальцем у межах екранної кнопки A з тією самою логікою progress/reset, що й для фізичної A.
-5. Підняти Sphaira до `0.13.647`, оновити delivery-документи, перевірити patch order та створити локальний commit без push.
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У Kefirosphere підготовлено окремий Hekate patch для читання й валідації одноразового запиту `/config/kefir/hekate-payload-request.ini` (API v1) та capability marker `/config/kefir/hekate-payload-api.ini`.
+2. У Sphaira спільний `utils::rebootToPayload()` переведено з небезпечної підміни `/payload.bin` на валідацію capability marker `[api]` `version=1`, нормалізацію SD-relative шляху, перевірку існування файлу, атомарний запис request-файлу та штатний reboot.
+3. У File Browser реалізовано консервативне розпізнавання відомих `.bin` payload за двійковими сигнатурами вмісту з відображенням мітки назви та додано підтверджену дію запуску payload у context menu з перевіркою працездатності API.
+4. У `HoldConfirmBox` реалізовано сенсорне утримання екранної кнопки A з тим самим хітбоксом і логікою скидання прогресу при відпусканні або виході за межі кнопки.
+5. Версію Sphaira піднято до `0.13.647`, актуалізовано документацію та плани.
 
 ## Попередній delivery: v0.13.646 — Fix NAS filename matching in export script
 

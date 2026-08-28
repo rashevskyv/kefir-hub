@@ -2087,5 +2087,10 @@
   "Kefir Hub already has a HOME Menu icon. Next time, launch from that icon. This old Homebrew Menu forwarder cannot be removed while you are using it; it will be removed automatically afterwards.": "Kefir Hub already has a HOME Menu icon. Next time, launch from that icon. This old Homebrew Menu forwarder cannot be removed while you are using it; it will be removed automatically afterwards.",
   "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album. An old Homebrew Menu forwarder is being removed now because it can cause errors.": "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album. An old Homebrew Menu forwarder is being removed now because it can cause errors.",
   "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album.": "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album.",
-  "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.": "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album."
+  "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.": "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.",
+  "Launch payload": "Launch payload",
+  "Reboot console into this payload via Hekate.": "Reboot console into this payload via Hekate.",
+  "Reboot to payload ": "Reboot to payload ",
+  "Failed to prepare payload launch!": "Failed to prepare payload launch!",
+  "Hekate payload API is not available or payload is invalid.": "Hekate payload API is not available or payload is invalid."
 }

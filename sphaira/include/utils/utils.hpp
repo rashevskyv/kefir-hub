@@ -54,8 +54,7 @@ bool revertPayloadSwap();
 // Force reboot with service fallbacks.
 Result requestForcedReboot();
 
-// Reboot to a payload file (HATS installer)
-// Swaps sd:\payload.bin with the installer, then reboots
+// Reboot to a payload file via Hekate one-shot payload API.
 // Returns true on success, false on failure
 bool rebootToPayload(const char* path);
 

@@ -2055,5 +2055,10 @@
   "homebrew unstarred": "Homebrew удалён из избранного",
   "homebrew starred": "Homebrew в избранном",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store, DBI и утилиты для модов.",
-  "System tools and sysmodule manager.": "Системные инструменты и менеджер модулей."
+  "System tools and sysmodule manager.": "Системные инструменты и менеджер модулей.",
+  "Launch payload": "Запустить payload",
+  "Reboot console into this payload via Hekate.": "Перезагрузить консоль в этот payload через Hekate.",
+  "Reboot to payload ": "Перезагрузить в payload ",
+  "Failed to prepare payload launch!": "Не удалось подготовить запуск payload!",
+  "Hekate payload API is not available or payload is invalid.": "Hekate payload API недоступен или payload недействителен."
 }

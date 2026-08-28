@@ -26,6 +26,8 @@ private:
     u64 m_hold_start{};
     float m_progress{};
     bool m_compact{false};
+
+    auto GetButtonRect() const -> Vec4;
 };
 
 } // namespace sphaira::ui

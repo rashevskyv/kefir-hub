@@ -204,6 +204,56 @@ namespace {
 // only touched from the main thread (ui callbacks).
 std::unordered_map<std::string, ConnectionStatus> g_source_status;
 
+auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& path) -> std::string {
+    if (!fs) {
+        return {};
+    }
+
+    fs::File f;
+    if (R_FAILED(fs->OpenFile(path, FsFileOpenMode_Read, &f))) {
+        return {};
+    }
+
+    s64 file_size = 0;
+    if (R_FAILED(f.GetSize(&file_size)) || file_size < 512) {
+        return {};
+    }
+
+    std::vector<u8> buf(std::min<size_t>(file_size, 65536));
+    u64 bytes_read = 0;
+    if (R_FAILED(f.Read(0, buf.data(), buf.size(), FsReadOption_None, &bytes_read)) || bytes_read < 512) {
+        return {};
+    }
+
+    std::string_view data(reinterpret_cast<const char*>(buf.data()), bytes_read);
+
+    if (data.find("TegraExplorer") != std::string_view::npos) {
+        return "TegraExplorer";
+    }
+    if (data.find("Lockpick_RCM") != std::string_view::npos) {
+        return "Lockpick_RCM";
+    }
+    if (data.find("Incognito_RCM") != std::string_view::npos) {
+        return "Incognito_RCM";
+    }
+    if (data.find("Atmosphere") != std::string_view::npos || data.find("Atmosph\xc3\xa8re") != std::string_view::npos) {
+        if (data.find("fusee") != std::string_view::npos || data.find("FUSEE") != std::string_view::npos) {
+            return "Atmosphère Fusee";
+        }
+    }
+    if (data.find("CTCaer") != std::string_view::npos || data.find("HEKATE") != std::string_view::npos || data.find("CTCBOOT") != std::string_view::npos) {
+        return "Hekate";
+    }
+    if (data.find("SX OS") != std::string_view::npos || data.find("Team Xecuter") != std::string_view::npos) {
+        return "SX OS Bootloader";
+    }
+    if (data.find("biskeydump") != std::string_view::npos) {
+        return "Biskeydump";
+    }
+
+    return {};
+}
+
 } // namespace
 
 void SetSourceConnectionStatus(const std::string& url, bool connected) {
@@ -578,7 +628,12 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
                 const int thumb = (entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;
                 file_icon::DrawFileThumb(vg, theme, preview, thumb, e.GetExtension());
             }
-            draw_name(e.name);
+            if (e.IsFile() && path::EqualsIC(e.GetExtension(), "bin")) {
+                const auto title_label = GetTitleLabel(e);
+                draw_name(!title_label.empty() ? title_label.c_str() : e.name);
+            } else {
+                draw_name(e.name);
+            }
             return;
         }
 
@@ -1488,27 +1543,35 @@ void FsView::LoadTitleLabels() {
         path.remove_suffix(1);
     }
 
-    if (!IsSd() || !path::EqualsIC(path, "/atmosphere/contents")) {
+    if (!IsSd()) {
         return;
     }
 
-    for (auto& e : m_entries) {
-        const auto id = e.IsDir() ? path::ParseTitleIdName(e.name) : 0;
-        if (!id) {
-            continue;
-        }
+    if (path::EqualsIC(path, "/atmosphere/contents")) {
+        for (auto& e : m_entries) {
+            const auto id = e.IsDir() ? path::ParseTitleIdName(e.name) : 0;
+            if (!id) {
+                continue;
+            }
 
-        // sysmodules name themselves; games need the control nacp, which is slow
-        // enough to read that it happens on the title:: thread instead.
-        e.title_label = hats::GetModuleName(id);
-        if (e.title_label.empty()) {
-            if (!m_title_service) {
-                m_title_service = R_SUCCEEDED(title::Init());
+            // sysmodules name themselves; games need the control nacp, which is slow
+            // enough to read that it happens on the title:: thread instead.
+            e.title_label = hats::GetModuleName(id);
+            if (e.title_label.empty()) {
+                if (!m_title_service) {
+                    m_title_service = R_SUCCEEDED(title::Init());
+                }
+                if (m_title_service) {
+                    title::PushAsync(id);
+                    e.title_id = id;
+                }
             }
-            if (m_title_service) {
-                title::PushAsync(id);
-                e.title_id = id;
-            }
+        }
+    }
+
+    for (auto& e : m_entries) {
+        if (e.IsFile() && path::EqualsIC(e.GetExtension(), "bin")) {
+            e.title_label = IdentifyPayload(m_fs.get(), GetNewPath(e));
         }
     }
 }
@@ -2153,6 +2216,28 @@ void FsView::DisplayOptions() {
                 InstallForwarder();
             }, "Install a forwarder shortcut for this file."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+        }
+        if (GetEntry().IsFile() && path::EqualsIC(GetEntry().GetExtension(), "bin")) {
+            auto launch_entry = options->Add<SidebarEntryCallback>("Launch payload"_i18n, [this](){
+                const auto path = GetNewPathCurrent();
+                const auto entry_name = GetEntry().GetName();
+                App::Push<OptionBox>(
+                    "Reboot to payload "_i18n + entry_name + "?\n\n" + path.s,
+                    "Cancel"_i18n, "Reboot"_i18n, 1,
+                    [path](auto op_index) {
+                        if (op_index && *op_index == 1) {
+                            if (!utils::rebootToPayload(path)) {
+                                App::Push<OptionBox>(
+                                    "Failed to prepare payload launch!"_i18n + "\n" +
+                                    "Hekate payload API is not available or payload is invalid."_i18n,
+                                    "OK"_i18n
+                                );
+                            }
+                        }
+                    }
+                );
+            }, "Reboot console into this payload via Hekate."_i18n);
+            launch_entry->SetIcon(ActionIcon::Launch);
         }
     }
 
