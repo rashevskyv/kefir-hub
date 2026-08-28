@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.646**. Завершені плани збережено в
+Поточний delivery — **v0.13.647**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.646 — Fix NAS filename matching in export script
+## Поточний delivery: v0.13.647 — Safe one-shot Hekate payload handoff
+
+Статус: активна реалізація. Агент не компілює.
+1. У Kefirosphere додати окремий Hekate patch після `0001-KEFIR-Add-preboot-autokeys-handoff.patch`. Patch має читати та видаляти одноразовий запит `/config/kefir/hekate-payload-request.ini`, перевіряти API v1 і шлях до SD payload, після чого використовувати штатний Hekate launcher. Робочу теку `D:\git\dev\hekate` не змінювати.
+2. У Kefir Hub перевести спільний `utils::rebootToPayload()` з підміни `/payload.bin` на запис request-файла й звичайний reboot. Наявні TegraExplorer/8 GB handoff caller-и мають використати цей самий шлях.
+3. У File Browser показувати зрозумілу назву `.bin` лише за надійним розпізнаванням вмісту; без збігу показувати реальне ім'я. Додати підтверджену дію запуску через спільний Hekate handoff.
+4. У `HoldConfirmBox` додати безперервне утримання пальцем у межах екранної кнопки A з тією самою логікою progress/reset, що й для фізичної A.
+5. Підняти Sphaira до `0.13.647`, оновити delivery-документи, перевірити patch order та створити локальний commit без push.
+
+## Попередній delivery: v0.13.646 — Fix NAS filename matching in export script
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Виправлено порівняння префіксів файлів NAS у згенерованому скрипті TegraExplorer (`account_link::PrepareOfficialLinkExport`): небезпечний зріз `ByteArray.slice` замінено на рядкове порівняння префікса `namePrefix = nfile - (nfile.len() - pfx.len())` після перевірки довжини `nfile.len() >= pfx.len()`.

@@ -1,12 +1,20 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.646**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.647**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.646 (fix NAS filename matching in export script)
+## Поточний delivery: v0.13.647 (safe one-shot Hekate payload handoff)
+
+- [ ] `HEKATE-PAYLOAD-API-647` — додати Kefirosphere patch після чинного Hekate autokeys patch; temporary request читається, валідовується, видаляється до chainload і надає capability marker API v1.
+- [ ] `HUB-PAYLOAD-HANDOFF-647` — `utils::rebootToPayload()` у Kefir Hub створює request і робить звичайний reboot без запису в `/payload.bin` або `hekate_ipl.ini`.
+- [ ] `FILEBROWSER-PAYLOAD-647` — надійна назва відомого `.bin`, фактична назва для невідомого, явний confirm + launch у context menu.
+- [ ] `HOLD-TOUCH-647` — утримання екранної кнопки A працює і скидається так само, як фізична A.
+- [ ] `DOCS-BUMP-647` — версія `0.13.647`, plan/task/walkthrough/audit і локальний commit.
+
+## Попередній delivery: v0.13.646 (fix NAS filename matching in export script)
 
 - [x] `TE-NAS-STR-MATCH-646` — замінено `ByteArray.slice` на рядкове префіксне порівняння `namePrefix = nfile - (nfile.len() - pfx.len())` з перевіркою довжини та використанням `NasPrefixes(nas_id)`.
 - [x] `DOCS-BUMP-646` — версію піднято до `0.13.646`.
