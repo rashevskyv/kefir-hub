@@ -392,12 +392,92 @@ auto ListUsers() -> std::vector<User> {
         if (R_SUCCEEDED(rc)) {
             u.linked_known = true;
             u.horizon_linked = linked;
+            u.kind = linked ? LinkKind::Offline : LinkKind::None;
         } else {
             u.linked_known = false;
             u.horizon_linked = false;
-            log_write("[ACC] Horizon link check failed 0x%X uid %s\n", rc, u.uid_hex.c_str());
+            u.kind = LinkKind::None;
+            log_write("[ACC] Horizon link check failed 0x%X\n", rc);
         }
     }
+
+    auto save = TryOpenAccountSave();
+    if (R_SUCCEEDED(save.GetFsOpenResult())) {
+        std::string baas_dir;
+        if (save.DirExists("/su/baas")) {
+            baas_dir = "/su/baas";
+        } else if (save.DirExists("/baas")) {
+            baas_dir = "/baas";
+        }
+
+        std::string nas_dir;
+        if (save.DirExists("/su/nas")) {
+            nas_dir = "/su/nas";
+        } else if (save.DirExists("/nas")) {
+            nas_dir = "/nas";
+        }
+
+        const auto baas_files = !baas_dir.empty() ? ListDirFiles(save, baas_dir) : std::vector<std::string>{};
+        const auto nas_files = !nas_dir.empty() ? ListDirFiles(save, nas_dir) : std::vector<std::string>{};
+
+        for (auto& u : out) {
+            if (!u.horizon_linked) {
+                u.kind = LinkKind::None;
+                continue;
+            }
+
+            u64 nas_id = 0;
+
+            const auto cands = BaasCandidateNames(u.uid);
+            std::string matched_baas;
+            for (const auto& cand : cands) {
+                for (const auto& bf : baas_files) {
+                    if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                        matched_baas = bf;
+                        break;
+                    }
+                }
+                if (!matched_baas.empty()) {
+                    break;
+                }
+            }
+
+            if (!matched_baas.empty()) {
+                std::vector<u8> baas_data;
+                if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + matched_baas).c_str(), baas_data)) && baas_data.size() >= 24) {
+                    std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
+                }
+            }
+
+            if (nas_id == 0) {
+                QueryNintendoAccountId(u.uid, nas_id);
+            }
+
+            if (nas_id != 0) {
+                bool has_id_token = false;
+                bool has_refresh_token = false;
+                for (const auto& nf : nas_files) {
+                    if (NasFileMatches(nf, nas_id)) {
+                        const auto lower = ToLowerCopy(nf);
+                        if (EndsWith(lower, "_id.token")) {
+                            has_id_token = true;
+                        } else if (EndsWith(lower, "_refresh.token")) {
+                            has_refresh_token = true;
+                        }
+                    }
+                }
+
+                if (has_id_token && has_refresh_token) {
+                    u.kind = LinkKind::Official;
+                } else {
+                    u.kind = LinkKind::Offline;
+                }
+            } else {
+                u.kind = LinkKind::Offline;
+            }
+        }
+    }
+
     return out;
 }
 

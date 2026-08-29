@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.667** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.668** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.668 — LinkKind classification + Fake linked status
+
+- `ListUsers()` (`account_link.cpp`): після Horizon `CheckAvailability` один RO-прохід сейву 0010; Official лише з `_id.token`+`_refresh.token`; інакше linked без токенів = Offline (Fake).
+- Users `StatusLabel`: Linked / Fake linked / Not linked; i18n en/uk/ru.
+- Повну збірку на цьому кроці не запускали.
 
 ## v0.13.667 — ROMFS Kefir donor + LoadRomfsDonorPackage
 

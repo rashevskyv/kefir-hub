@@ -1,16 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.667** (romfs donor loader; далі LinkKind/live/UX). Завершені плани збережено в
+Поточний delivery — **v0.13.668** (LinkKind status; далі live/UX). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.667 — ROMFS Kefir donor + LoadRomfsDonorPackage
+## Поточний delivery: v0.13.668 — LinkKind classification + Fake linked status
 
-Статус: прийнято сеньйором (Gemini junior, chat `Romfs official link`). Збірку WSL користувач скасував («не збирай»); байтова перевірка донора vs dump OK.
-1. У `assets/romfs/account_link/` ушито official-пакет Kefir: `manifest.txt` v3 (`romfs=true`), `baas/link.dat` (80 B), чотири `nas/*` (plain.dat, id/refresh tokens, user.json). Без aux/op2.
-2. Додано `LoadRomfsDonorPackage` + структури `DonorNasFile` / `RomfsDonorPackage`: валідація manifest v3, збіг nas_id з baas[0x10], `NasFileMatches` + обов’язкові обидва токени; `romfsInit`/`romfsExit` як у інших читачах romfs.
-3. Версію Sphaira піднято до `0.13.667`.
-4. Черга в тому ж Gemini chat: LinkKind/status → live apply усіх None/Offline → launch prompt + Users Link → прибрати TE debug → i18n/docs.
+Статус: прийнято сеньйором (Gemini junior, chat `Romfs official link`). Повну збірку не ганяли за інструкцією.
+1. `ListUsers()` виставляє `LinkKind`: None якщо не linked; один RO-прохід `/su/baas`+`/su/nas` (fallback `/baas`/`/nas`); Official лише за наявності `_id.token`+`_refresh.token`; інакше Offline/fake.
+2. `StatusLabel`: Linked / Fake linked / Not linked / Link status unavailable.
+3. i18n en/uk/ru для `Fake linked`. Версія `0.13.668`.
+4. Далі: live apply → UX/launch → прибрати TE debug → docs.
+
+## Попередній delivery: v0.13.667 — ROMFS Kefir donor + LoadRomfsDonorPackage
+
+Статус: прийнято. Ушито Kefir official у romfs + `LoadRomfsDonorPackage`; версія `0.13.667`.
 
 ## Попередній delivery: v0.13.666 — Complete 0010 /su dump copy lists
 

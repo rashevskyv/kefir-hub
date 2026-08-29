@@ -794,6 +794,7 @@
   "Exported to ": "Экспортировано в ",
   "Offline stub": "Офлайн-заглушка",
   "Linked": "Привязан",
+  "Fake linked": "Фейково привязан",
   "Not linked": "Не привязан",
   "Not linked · FakeLink": "Не привязан · FakeLink",
   "Link status unavailable": "Статус привязки недоступен",

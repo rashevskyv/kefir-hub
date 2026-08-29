@@ -638,6 +638,7 @@
   "Exported to ": "Exported to ",
   "Offline stub": "Offline stub",
   "Linked": "Linked",
+  "Fake linked": "Fake linked",
   "Not linked": "Not linked",
   "Not linked · FakeLink": "Not linked · FakeLink",
   "Link status unavailable": "Link status unavailable",
