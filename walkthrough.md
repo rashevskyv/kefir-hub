@@ -1,9 +1,24 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.664** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.665** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.665 — Dumb dump of account save 0010 /su
+
+- Дослідницький зліпок усіх профілів з сейву акаунта (`sphaira/source/account_link.cpp`, `users_menu.cpp`):
+  - Нова `PrepareAccountSaveDump(bool& out_rebooted)` і пункт Users «Dump account save 0010».
+  - Спершу read-only відкриття 0010 у Horizon і копія файлів `/su`, `/su/baas`, `/su/nas`, `/su/avators`, `/su/cache` на `/config/kefir/account_save_dump/<stamp>/` зі збереженням імен.
+  - Якщо Horizon відкрився, але `su+baas+nas+avators == 0`, успіх не повертається і йде one-shot TegraExplorer (підтверджений корінь `/su` у сирому сейві).
+  - TE лише читає сейв, чотири невкладені `foreach`, без `create`/`write`/`delete`/`commit`; NAND з `App::IsEmummc()`.
+  - `result.txt`: `method=horizon|tegra` і лічильники, без UID/Nintendo Account ID.
+  - Тост «dumped to SD» лише коли Horizon уже записав файли; після reboot у TE — як export, без фальшивого успіху.
+  - Surgical export/apply/probe не змінювались; apply як і раніше не запускати.
+- Верифікація:
+  - Перевірено fallthrough порожнього Horizon-дампу і `out_rebooted`.
+  - Перевірено `kForceUpdateForTest = false`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.664 — Read-only official-link save layout probe
 

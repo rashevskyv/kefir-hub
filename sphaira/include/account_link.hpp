@@ -30,5 +30,6 @@ auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vecto
 auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) -> Result;
 auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& pkg_dir) -> Result;
 auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result;
+auto PrepareAccountSaveDump(bool& out_rebooted) -> Result;
 
 } // namespace sphaira::account_link

@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.664**. Завершені плани збережено в
+Поточний delivery — **v0.13.665**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.664 — Read-only official-link save layout probe
+## Поточний delivery: v0.13.665 — Dumb dump of account save 0010 /su
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Додано `account_link::PrepareAccountSaveDump(bool& out_rebooted)` і пункт Users «Dump account save 0010»: німий зліпок усього `/su` з сейву `0x8000000000000010` для всіх профілів, без відбору BaaS/NAS за ID.
+2. Horizon-first: read-only `TryOpenAccountSave()`, копія файлів `/su`, `/su/baas`, `/su/nas`, `/su/avators`, `/su/cache` на `/config/kefir/account_save_dump/<stamp>/`. Якщо сума `su+baas+nas+avators` дорівнює 0 — не успіх, fallthrough у TegraExplorer.
+3. TE-шлях: one-shot `/startup.te`, NAND з `App::IsEmummc()`, чотири послідовні `foreach` без вкладеності, без `saveObj.create` / `write` / `delete` / `commit`. `result.txt` — лише counts і `method=horizon|tegra`.
+4. UI показує «dumped to SD» лише коли Horizon уже скопіював файли; після handoff у TE тост успіху немає.
+5. `PrepareOfficialLinkExport` / `Apply` / layout probe не змінювались.
+6. Версію Sphaira піднято до `0.13.665`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.664 — Read-only official-link save layout probe
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Додано `account_link::PrepareOfficialLinkLayoutProbe()`: one-shot `/startup.te` для TegraExplorer, той самий handoff і `cleanup()`, що в експорті, NAND фіксується з `App::IsEmummc()` під час генерації.

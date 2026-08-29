@@ -190,6 +190,18 @@ auto CheckHandoffPreconditions(fs::FsNativeSd& sd) -> Result {
     R_SUCCEED();
 }
 
+auto IsSafeDumpFileName(const std::string& name) -> bool {
+    if (name.empty()) {
+        return false;
+    }
+    for (char c : name) {
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace
 
 auto UidHex(const AccountUid& uid) -> std::string {
@@ -1123,6 +1135,257 @@ auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result {
         return FsError_PathNotFound;
     }
 
+    R_SUCCEED();
+}
+
+auto PrepareAccountSaveDump(bool& out_rebooted) -> Result {
+    out_rebooted = false;
+    fs::FsNativeSd sd;
+    const bool is_emummc = App::IsEmummc();
+    const auto nand_str = std::string(is_emummc ? "emummc" : "sysmmc");
+
+    auto save = TryOpenAccountSave();
+    if (R_SUCCEEDED(save.GetFsOpenResult())) {
+        char stamp[32]{};
+        const auto t = std::time(nullptr);
+        std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+        const auto base_dir = paths::DATA_ROOT + "/account_save_dump/" + stamp;
+        auto out_dump_dir = base_dir;
+        for (u32 collision = 1; sd.DirExists(out_dump_dir.c_str()); collision++) {
+            out_dump_dir = base_dir + "_" + std::to_string(collision);
+        }
+
+        R_TRY(sd.CreateDirectoryRecursively(out_dump_dir.c_str()));
+        sd.CreateDirectoryRecursively((out_dump_dir + "/su").c_str());
+        sd.CreateDirectoryRecursively((out_dump_dir + "/su/baas").c_str());
+        sd.CreateDirectoryRecursively((out_dump_dir + "/su/nas").c_str());
+        sd.CreateDirectoryRecursively((out_dump_dir + "/su/avators").c_str());
+        sd.CreateDirectoryRecursively((out_dump_dir + "/su/cache").c_str());
+
+        const std::string readme = "WARNING: Research dump of account save 0x8000000000000010 (/su tree). Contains account tokens and identifiers for all local profiles. Do not share.\n";
+        sd.write_entire_file(out_dump_dir + "/README.txt", std::vector<u8>(readme.begin(), readme.end()));
+
+        u32 su_file_count = 0;
+        u32 baas_file_count = 0;
+        u32 nas_file_count = 0;
+        u32 avators_file_count = 0;
+        u32 cache_file_count = 0;
+        u32 skipped_unsafe_names = 0;
+
+        auto copy_dir = [&](const std::string& dir, u32& count) {
+            if (!save.DirExists(dir.c_str())) {
+                return;
+            }
+            for (const auto& name : ListDirFiles(save, dir)) {
+                if (!IsSafeDumpFileName(name)) {
+                    skipped_unsafe_names++;
+                    continue;
+                }
+                if (R_SUCCEEDED(CopyFile(save, dir + "/" + name, sd, out_dump_dir + dir + "/" + name))) {
+                    count++;
+                }
+            }
+        };
+
+        copy_dir("/su", su_file_count);
+        copy_dir("/su/baas", baas_file_count);
+        copy_dir("/su/nas", nas_file_count);
+        copy_dir("/su/avators", avators_file_count);
+        copy_dir("/su/cache", cache_file_count);
+
+        if ((su_file_count + baas_file_count + nas_file_count + avators_file_count) > 0) {
+            std::string result_txt;
+            result_txt += "operation=account_save_dump\n";
+            result_txt += "method=horizon\n";
+            result_txt += "target_nand=" + nand_str + "\n";
+            result_txt += "su_file_count=" + std::to_string(su_file_count) + "\n";
+            result_txt += "baas_file_count=" + std::to_string(baas_file_count) + "\n";
+            result_txt += "nas_file_count=" + std::to_string(nas_file_count) + "\n";
+            result_txt += "avators_file_count=" + std::to_string(avators_file_count) + "\n";
+            result_txt += "cache_file_count=" + std::to_string(cache_file_count) + "\n";
+            result_txt += "skipped_unsafe_names=" + std::to_string(skipped_unsafe_names) + "\n";
+            sd.write_entire_file(out_dump_dir + "/result.txt", std::vector<u8>(result_txt.begin(), result_txt.end()));
+            fsdevCommitDevice("sdmc");
+
+            out_rebooted = false;
+            R_SUCCEED();
+        }
+    }
+
+    R_TRY(CheckHandoffPreconditions(sd));
+
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    const auto base_dir = paths::DATA_ROOT + "/account_save_dump/" + stamp;
+    auto out_dump_dir = base_dir;
+    for (u32 collision = 1; sd.DirExists(out_dump_dir.c_str()); collision++) {
+        out_dump_dir = base_dir + "_" + std::to_string(collision);
+    }
+
+    R_TRY(sd.CreateDirectoryRecursively(out_dump_dir.c_str()));
+
+    const auto dump_name = BaseName(out_dump_dir);
+    for (char c : dump_name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+            return FsError_PathNotFound;
+        }
+    }
+
+    const std::string readme = "WARNING: Research dump of account save 0x8000000000000010 (/su tree). Contains account tokens and identifiers for all local profiles. Do not share.\n";
+    sd.write_entire_file(out_dump_dir + "/README.txt", std::vector<u8>(readme.begin(), readme.end()));
+
+    std::string te;
+    te += "# REQUIRE SD\n";
+    te += "# REQUIRE KEYS\n";
+    te += "# REQUIRE MINERVA\n";
+    te += "# REQUIRE VER 4.0.0\n\n";
+
+    te += "cleanup = {\n";
+    te += "    if (fsexists(\"sd:/payload.bak\")) {\n";
+    te += "        writefile(\"sd:/payload.bin\", readfile(\"sd:/payload.bak\"))\n";
+    te += "        delfile(\"sd:/payload.bak\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/startup.te\")) {\n";
+    te += "        delfile(\"sd:/startup.te\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/bootloader/update.bin\")) {\n";
+    te += "        payload(\"sd:/bootloader/update.bin\")\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "clear()\n";
+    te += "println(\"Kefir Hub: dump account save 0010\")\n";
+    if (is_emummc) {
+        te += "println(\"Dump SYSTEM: emuMMC\")\n\n";
+    } else {
+        te += "println(\"Dump SYSTEM: sysMMC\")\n\n";
+    }
+
+    te += "pkg = \"sd:/config/kefir/account_save_dump/" + dump_name + "\"\n";
+    te += "mkdir(pkg)\n";
+    te += "mkdir(combinepath(pkg, \"su\"))\n";
+    te += "mkdir(combinepath(pkg, \"su/baas\"))\n";
+    te += "mkdir(combinepath(pkg, \"su/nas\"))\n";
+    te += "mkdir(combinepath(pkg, \"su/avators\"))\n";
+    te += "mkdir(combinepath(pkg, \"su/cache\"))\n";
+    te += "writefile(combinepath(pkg, \"result.txt\"), (\"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nstage=starting\\n\").bytes())\n\n";
+
+    if (is_emummc) {
+        te += "rc = mountemu(\"SYSTEM\")\n";
+    } else {
+        te += "rc = mountsys(\"SYSTEM\")\n";
+    }
+
+    te += "if (rc) {\n";
+    te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nstage=mount_system\\nerror=SYSTEM mount failed (\" + rc.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "bis = \"bis:/save/8000000000000010\"\n";
+    te += "if (!fsexists(bis)) {\n";
+    te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nstage=check_save\\nerror=Save 8000000000000010 not found on SYSTEM\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "saveObj = readsave(bis)\n\n";
+
+    te += "suListing = saveObj.readdir(\"/su\")\n";
+    te += "if (suListing.result) {\n";
+    te += "    println(\"Error: cannot read /su in save 0010\", suListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nstage=read_su\\nerror=cannot read /su in save 0010 (\" + suListing.result.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "su_file_count = 0\n";
+    te += "suListing.files.foreach(\"name\") {\n";
+    te += "    data = saveObj.read(\"/su/\" + name)\n";
+    te += "    wrc = writefile(combinepath(pkg, \"su/\" + name), data)\n";
+    te += "    if (!wrc) {\n";
+    te += "        su_file_count = (su_file_count + 1)\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "baas_file_count = 0\n";
+    te += "baasListing = saveObj.readdir(\"/su/baas\")\n";
+    te += "if (!baasListing.result) {\n";
+    te += "    baasListing.files.foreach(\"name\") {\n";
+    te += "        data = saveObj.read(\"/su/baas/\" + name)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/baas/\" + name), data)\n";
+    te += "        if (!wrc) {\n";
+    te += "            baas_file_count = (baas_file_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "nas_file_count = 0\n";
+    te += "nasListing = saveObj.readdir(\"/su/nas\")\n";
+    te += "if (!nasListing.result) {\n";
+    te += "    nasListing.files.foreach(\"name\") {\n";
+    te += "        data = saveObj.read(\"/su/nas/\" + name)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/nas/\" + name), data)\n";
+    te += "        if (!wrc) {\n";
+    te += "            nas_file_count = (nas_file_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "avators_file_count = 0\n";
+    te += "avatorsListing = saveObj.readdir(\"/su/avators\")\n";
+    te += "if (!avatorsListing.result) {\n";
+    te += "    avatorsListing.files.foreach(\"name\") {\n";
+    te += "        data = saveObj.read(\"/su/avators/\" + name)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/avators/\" + name), data)\n";
+    te += "        if (!wrc) {\n";
+    te += "            avators_file_count = (avators_file_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "cache_file_count = 0\n";
+    te += "cacheListing = saveObj.readdir(\"/su/cache\")\n";
+    te += "if (!cacheListing.result) {\n";
+    te += "    cacheListing.files.foreach(\"name\") {\n";
+    te += "        data = saveObj.read(\"/su/cache/\" + name)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/cache/\" + name), data)\n";
+    te += "        if (!wrc) {\n";
+    te += "            cache_file_count = (cache_file_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "resReport = \"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nsu_file_count=\" + su_file_count.str() + \"\\nbaas_file_count=\" + baas_file_count.str() + \"\\nnas_file_count=\" + nas_file_count.str() + \"\\navators_file_count=\" + avators_file_count.str() + \"\\ncache_file_count=\" + cache_file_count.str() + \"\\nskipped_unsafe_names=0\\nstage=done\\n\"\n";
+    te += "writefile(combinepath(pkg, \"result.txt\"), resReport.bytes())\n\n";
+
+    te += "println(\"Account save dump completed successfully.\")\n";
+    te += "println(\"su files:\", su_file_count)\n";
+    te += "println(\"baas files:\", baas_file_count)\n";
+    te += "println(\"nas files:\", nas_file_count)\n";
+    te += "println(\"avators files:\", avators_file_count)\n";
+    te += "println(\"cache files:\", cache_file_count)\n";
+    te += "println(\"\")\n";
+    te += "println(\"Press any button to return.\")\n";
+    te += "pause()\n";
+    te += "cleanup()\n";
+
+    R_TRY(sd.write_entire_file("/startup.te", std::vector<u8>(te.begin(), te.end())));
+    fsdevCommitDevice("sdmc");
+
+    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+        sd.DeleteFile("/startup.te");
+        fsdevCommitDevice("sdmc");
+        return FsError_PathNotFound;
+    }
+
+    out_rebooted = true;
     R_SUCCEED();
 }
 

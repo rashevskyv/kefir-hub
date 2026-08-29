@@ -671,6 +671,9 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Probe official-link save layout"_i18n, [this](){
             ConfirmPrepareLayoutProbe();
         }, true, "Probe save 0010 layout for official Nintendo Account link files in TegraExplorer (read-only)."_i18n);
+        options->Add<SidebarEntryCallback>("Dump account save 0010"_i18n, [this](){
+            ConfirmPrepareAccountSaveDump();
+        }, true, "Dump account save 0010 tree to SD for research (read-only)."_i18n);
     }
 
     options->Add<SidebarEntryHeader>("VIEW"_i18n);
@@ -903,6 +906,17 @@ void Menu::ConfirmPrepareLayoutProbe() {
         [this, uid = user.uid](auto op) {
             if (op && *op == 1) {
                 RunPrepareLayoutProbe(uid);
+            }
+        });
+}
+
+void Menu::ConfirmPrepareAccountSaveDump() {
+    App::Push<OptionBox>(
+        "Dump save 0010 (/su tree) to SD for research? This copies all profiles' account files to SD. If Horizon holds the save, the console will reboot to TegraExplorer (read-only)."_i18n,
+        "Cancel"_i18n, "Dump account save"_i18n, 1,
+        [this](auto op) {
+            if (op && *op == 1) {
+                RunPrepareAccountSaveDump();
             }
         });
 }
@@ -1150,6 +1164,16 @@ void Menu::RunPrepareLayoutProbe(const AccountUid& uid) {
     const auto rc = account_link::PrepareOfficialLinkLayoutProbe(uid);
     if (R_FAILED(rc)) {
         App::Push<OptionBox>("Could not prepare the layout probe script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
+    }
+}
+
+void Menu::RunPrepareAccountSaveDump() {
+    bool rebooted = false;
+    const auto rc = account_link::PrepareAccountSaveDump(rebooted);
+    if (R_FAILED(rc)) {
+        App::Push<OptionBox>("Could not prepare the account save dump. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
+    } else if (!rebooted) {
+        App::Push<OptionBox>("Account save 0010 dumped to SD."_i18n, "OK"_i18n);
     }
 }
 
