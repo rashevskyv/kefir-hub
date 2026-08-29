@@ -39,6 +39,7 @@ auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
 auto ExportAccountSave(std::string& out_dir) -> Result;
 auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vector<std::string>& out_nas_files) -> Result;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
+auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result;
 auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) -> Result;
 auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& pkg_dir) -> Result;
 auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result;

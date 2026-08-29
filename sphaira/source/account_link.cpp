@@ -6,6 +6,8 @@
 #include "log.hpp"
 #include "utils/utils.hpp"
 
+#include <switch/services/pm.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -144,6 +146,13 @@ auto TryOpenAccountSave() -> fs::FsNativeSave {
     attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
     return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
+}
+
+auto OpenAccountSaveWritable() -> fs::FsNativeSave {
+    FsSaveDataAttribute attr{};
+    attr.system_save_data_id = ACCOUNT_SAVE_ID;
+    attr.save_data_type = FsSaveDataType_System;
+    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
 }
 
 auto ListDirFiles(fs::Fs& f, const std::string& dir) -> std::vector<std::string> {
@@ -321,6 +330,174 @@ auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
     out_pkg.nas_id = nas_id;
     out_pkg.baas_data = std::move(baas_data);
     out_pkg.nas_files = std::move(loaded_nas_files);
+    R_SUCCEED();
+}
+
+auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
+    out_linked_count = 0;
+
+    RomfsDonorPackage donor_pkg;
+    R_TRY(LoadRomfsDonorPackage(donor_pkg));
+
+    const auto all_users = ListUsers();
+    std::vector<User> targets;
+    for (const auto& u : all_users) {
+        if (!u.linked_known) {
+            continue;
+        }
+        if (u.kind == LinkKind::Offline || (u.kind == LinkKind::None && !u.horizon_linked)) {
+            targets.push_back(u);
+        }
+    }
+
+    if (targets.empty()) {
+        R_SUCCEED();
+    }
+
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        ON_SCOPE_EXIT(pmshellExit());
+        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
+        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
+        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+    }
+
+    auto save = OpenAccountSaveWritable();
+    R_TRY(save.GetFsOpenResult());
+
+    if (!save.DirExists("/su")) {
+        R_TRY(save.CreateDirectoryRecursively("/su"));
+    }
+    if (!save.DirExists("/su/baas")) {
+        R_TRY(save.CreateDirectoryRecursively("/su/baas"));
+    }
+    if (!save.DirExists("/su/nas")) {
+        R_TRY(save.CreateDirectoryRecursively("/su/nas"));
+    }
+
+    fs::FsNativeSd sd;
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    const auto rollback_dir = std::string("/config/kefir/account_link_rollback/") + stamp;
+    sd.CreateDirectoryRecursively(rollback_dir.c_str());
+    sd.CreateDirectoryRecursively((rollback_dir + "/baas").c_str());
+    sd.CreateDirectoryRecursively((rollback_dir + "/nas").c_str());
+
+    auto backup_save_file = [&](const std::string& src_path, const std::string& dst_subpath) {
+        std::vector<u8> data;
+        if (R_SUCCEEDED(save.read_entire_file(src_path.c_str(), data)) && !data.empty()) {
+            sd.write_entire_file((rollback_dir + "/" + dst_subpath).c_str(), data);
+        }
+    };
+
+    const auto existing_baas_files = ListDirFiles(save, "/su/baas");
+    const auto existing_nas_files = ListDirFiles(save, "/su/nas");
+
+    std::vector<User> final_targets;
+    for (const auto& target : targets) {
+        if (target.kind == LinkKind::None && target.linked_known && !target.horizon_linked) {
+            final_targets.push_back(target);
+            continue;
+        }
+
+        if (target.kind == LinkKind::Offline) {
+            u64 nas_id = 0;
+            const auto cands = BaasCandidateNames(target.uid);
+            for (const auto& cand : cands) {
+                for (const auto& bf : existing_baas_files) {
+                    if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                        const auto baas_full = "/su/baas/" + bf;
+                        std::vector<u8> baas_data;
+                        if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), baas_data)) && baas_data.size() >= 24) {
+                            std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
+                        }
+                        break;
+                    }
+                }
+                if (nas_id != 0) {
+                    break;
+                }
+            }
+
+            if (nas_id != 0) {
+                bool has_id_token = false;
+                bool has_refresh_token = false;
+                for (const auto& nf : existing_nas_files) {
+                    if (NasFileMatches(nf, nas_id)) {
+                        const auto lower = ToLowerCopy(nf);
+                        if (EndsWith(lower, "_id.token")) {
+                            has_id_token = true;
+                        } else if (EndsWith(lower, "_refresh.token")) {
+                            has_refresh_token = true;
+                        }
+                    }
+                }
+
+                if (has_id_token && has_refresh_token) {
+                    continue;
+                }
+            }
+
+            final_targets.push_back(target);
+        }
+    }
+
+    if (final_targets.empty()) {
+        R_SUCCEED();
+    }
+
+    std::vector<u64> old_nas_ids_to_clean;
+
+    for (const auto& target : final_targets) {
+        const auto cands = BaasCandidateNames(target.uid);
+        for (const auto& cand : cands) {
+            for (const auto& bf : existing_baas_files) {
+                if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                    const auto baas_full = "/su/baas/" + bf;
+                    backup_save_file(baas_full, "baas/" + bf);
+
+                    std::vector<u8> old_baas;
+                    if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), old_baas)) && old_baas.size() >= 24) {
+                        u64 old_nas_id = 0;
+                        std::memcpy(&old_nas_id, old_baas.data() + 16, sizeof(u64));
+                        if (old_nas_id != 0 && old_nas_id != donor_pkg.nas_id) {
+                            if (std::find(old_nas_ids_to_clean.begin(), old_nas_ids_to_clean.end(), old_nas_id) == old_nas_ids_to_clean.end()) {
+                                old_nas_ids_to_clean.push_back(old_nas_id);
+                            }
+                        }
+                    }
+                    save.DeleteFile(baas_full.c_str());
+                }
+            }
+        }
+
+        const auto new_baas_path = "/su/baas/" + UidDashedLinkalho(target.uid) + ".dat";
+        R_TRY(save.write_entire_file(new_baas_path.c_str(), donor_pkg.baas_data));
+    }
+
+    for (const auto old_id : old_nas_ids_to_clean) {
+        for (const auto& nf : existing_nas_files) {
+            if (NasFileMatches(nf, old_id)) {
+                const auto nas_full = "/su/nas/" + nf;
+                backup_save_file(nas_full, "nas/" + nf);
+                save.DeleteFile(nas_full.c_str());
+            }
+        }
+    }
+
+    for (const auto& nf : donor_pkg.nas_files) {
+        const auto nas_dst = "/su/nas/" + nf.filename;
+        if (save.FileExists(nas_dst.c_str())) {
+            backup_save_file(nas_dst, "nas/" + nf.filename);
+            save.DeleteFile(nas_dst.c_str());
+        }
+        R_TRY(save.write_entire_file(nas_dst.c_str(), nf.data));
+    }
+
+    R_TRY(save.Commit());
+
+    out_linked_count = static_cast<u32>(final_targets.size());
+    log_write("[ACC] LinkAllFromRomfsDonor completed for %u profile(s)\n", out_linked_count);
     R_SUCCEED();
 }
 

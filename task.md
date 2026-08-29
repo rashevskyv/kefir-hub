@@ -1,18 +1,22 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.668** (LinkKind; далі live/UX). Завершені задачі збережено в
+Актуальний delivery — **v0.13.669** (live apply; далі UX). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.668 (LinkKind + Fake linked)
+## Поточний delivery: v0.13.669 (LinkAllFromRomfsDonor)
 
-- [x] `ACC-LINKKIND-STATUS` — `ListUsers` заповнює `LinkKind`; UI Fake linked / Linked / Not linked; i18n; bump `0.13.668`.
-- [x] `DOCS-BUMP-668` — plan/task/walkthrough/audit + commit.
-- [ ] `ACC-LIVE-LINK-ALL` — kill BCAT/ACCOUNT/OLSC → write `/su/baas`+`/su/nas` → Commit → soft reboot.
-- [ ] `ACC-UX-LAUNCH-USERS` — launch prompt + Users «Link Nintendo Account»; прибрати TE export/apply/probe/dump.
+- [x] `ACC-LIVE-LINK-ALL` — kill BCAT/ACCOUNT/OLSC → `/su` write + token re-check + Commit; bump `0.13.669`.
+- [x] `DOCS-BUMP-669` — plan/task/walkthrough/audit + commit.
+- [ ] `ACC-UX-LAUNCH-USERS` — launch prompt + Users «Link Nintendo Account» + soft reboot; прибрати TE export/apply/probe/dump.
 - [ ] `ACC-I18N-DOCS` — launch/link strings + `docs/account-transfer.md`.
+
+## Попередній delivery: v0.13.668 (LinkKind + Fake linked)
+
+- [x] `ACC-LINKKIND-STATUS` — `ListUsers`/`StatusLabel` Fake vs Official; i18n; bump `0.13.668`.
+- [x] `DOCS-BUMP-668` — plan/task/walkthrough/audit + commit.
 
 ## Попередній delivery: v0.13.667 (romfs Kefir donor + loader)
 

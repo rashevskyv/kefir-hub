@@ -1,9 +1,15 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.668** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.669** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.669 — LinkAllFromRomfsDonor live apply
+
+- `account_link::LinkAllFromRomfsDonor`: romfs-донор → цілі unbound/fake (`!linked_known` і Official skip) → terminate BCAT/ACCOUNT/OLSC → RW `/su/baas`+`/su/nas` → повторна перевірка токенів для offline → rollback на SD → запис → `Commit`.
+- Soft reboot / Users UI / launch prompt — наступний handoff.
+- Збірку на цьому кроці не запускали.
 
 ## v0.13.668 — LinkKind classification + Fake linked status
 
