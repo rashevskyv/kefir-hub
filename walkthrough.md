@@ -1,9 +1,20 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.665** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.666** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.666 — Complete 0010 /su dump copy lists
+
+- Дамп 0010 більше не покладається на живий `readdir` під час `foreach` (`sphaira/source/account_link.cpp`):
+  - Для кожної теки `/su`, baas, nas, avators, cache скрипт робить `files.copy()`, рахує `listed = copy.len()` і копіює в окремому `foreach` з унікальним ім’ям змінної.
+  - `result.txt` і екран показують listed і copied; Int на екрані через `.str()`.
+- TegraExplorer (репозиторій TegraExplorer, не Sphaira):
+  - `array.foreach` тримає масив у GC і дублює рядок ітератора.
+  - `array.copy()` глибоко копіює StringArray.
+  - Меню: з першого пункту вгору — на останній, з останнього вниз — на перший.
+- Агент не компілює ні Sphaira, ні TE.
 
 ## v0.13.665 — Dumb dump of account save 0010 /su
 

@@ -1165,18 +1165,19 @@ auto PrepareAccountSaveDump(bool& out_rebooted) -> Result {
         const std::string readme = "WARNING: Research dump of account save 0x8000000000000010 (/su tree). Contains account tokens and identifiers for all local profiles. Do not share.\n";
         sd.write_entire_file(out_dump_dir + "/README.txt", std::vector<u8>(readme.begin(), readme.end()));
 
-        u32 su_file_count = 0;
-        u32 baas_file_count = 0;
-        u32 nas_file_count = 0;
-        u32 avators_file_count = 0;
-        u32 cache_file_count = 0;
+        u32 su_listed = 0, su_file_count = 0;
+        u32 baas_listed = 0, baas_file_count = 0;
+        u32 nas_listed = 0, nas_file_count = 0;
+        u32 avators_listed = 0, avators_file_count = 0;
+        u32 cache_listed = 0, cache_file_count = 0;
         u32 skipped_unsafe_names = 0;
 
-        auto copy_dir = [&](const std::string& dir, u32& count) {
+        auto copy_dir = [&](const std::string& dir, u32& listed, u32& count) {
             if (!save.DirExists(dir.c_str())) {
                 return;
             }
             for (const auto& name : ListDirFiles(save, dir)) {
+                listed++;
                 if (!IsSafeDumpFileName(name)) {
                     skipped_unsafe_names++;
                     continue;
@@ -1187,21 +1188,26 @@ auto PrepareAccountSaveDump(bool& out_rebooted) -> Result {
             }
         };
 
-        copy_dir("/su", su_file_count);
-        copy_dir("/su/baas", baas_file_count);
-        copy_dir("/su/nas", nas_file_count);
-        copy_dir("/su/avators", avators_file_count);
-        copy_dir("/su/cache", cache_file_count);
+        copy_dir("/su", su_listed, su_file_count);
+        copy_dir("/su/baas", baas_listed, baas_file_count);
+        copy_dir("/su/nas", nas_listed, nas_file_count);
+        copy_dir("/su/avators", avators_listed, avators_file_count);
+        copy_dir("/su/cache", cache_listed, cache_file_count);
 
         if ((su_file_count + baas_file_count + nas_file_count + avators_file_count) > 0) {
             std::string result_txt;
             result_txt += "operation=account_save_dump\n";
             result_txt += "method=horizon\n";
             result_txt += "target_nand=" + nand_str + "\n";
+            result_txt += "su_listed=" + std::to_string(su_listed) + "\n";
             result_txt += "su_file_count=" + std::to_string(su_file_count) + "\n";
+            result_txt += "baas_listed=" + std::to_string(baas_listed) + "\n";
             result_txt += "baas_file_count=" + std::to_string(baas_file_count) + "\n";
+            result_txt += "nas_listed=" + std::to_string(nas_listed) + "\n";
             result_txt += "nas_file_count=" + std::to_string(nas_file_count) + "\n";
+            result_txt += "avators_listed=" + std::to_string(avators_listed) + "\n";
             result_txt += "avators_file_count=" + std::to_string(avators_file_count) + "\n";
+            result_txt += "cache_listed=" + std::to_string(cache_listed) + "\n";
             result_txt += "cache_file_count=" + std::to_string(cache_file_count) + "\n";
             result_txt += "skipped_unsafe_names=" + std::to_string(skipped_unsafe_names) + "\n";
             sd.write_entire_file(out_dump_dir + "/result.txt", std::vector<u8>(result_txt.begin(), result_txt.end()));
@@ -1305,72 +1311,86 @@ auto PrepareAccountSaveDump(bool& out_rebooted) -> Result {
     te += "    exit()\n";
     te += "}\n\n";
 
+    te += "suFiles = suListing.files.copy()\n";
+    te += "su_listed = suFiles.len()\n";
     te += "su_file_count = 0\n";
-    te += "suListing.files.foreach(\"name\") {\n";
-    te += "    data = saveObj.read(\"/su/\" + name)\n";
-    te += "    wrc = writefile(combinepath(pkg, \"su/\" + name), data)\n";
+    te += "suFiles.foreach(\"suName\") {\n";
+    te += "    data = saveObj.read(\"/su/\" + suName)\n";
+    te += "    wrc = writefile(combinepath(pkg, \"su/\" + suName), data)\n";
     te += "    if (!wrc) {\n";
     te += "        su_file_count = (su_file_count + 1)\n";
     te += "    }\n";
     te += "}\n\n";
 
+    te += "baas_listed = 0\n";
     te += "baas_file_count = 0\n";
     te += "baasListing = saveObj.readdir(\"/su/baas\")\n";
     te += "if (!baasListing.result) {\n";
-    te += "    baasListing.files.foreach(\"name\") {\n";
-    te += "        data = saveObj.read(\"/su/baas/\" + name)\n";
-    te += "        wrc = writefile(combinepath(pkg, \"su/baas/\" + name), data)\n";
+    te += "    baasFiles = baasListing.files.copy()\n";
+    te += "    baas_listed = baasFiles.len()\n";
+    te += "    baasFiles.foreach(\"baasName\") {\n";
+    te += "        data = saveObj.read(\"/su/baas/\" + baasName)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/baas/\" + baasName), data)\n";
     te += "        if (!wrc) {\n";
     te += "            baas_file_count = (baas_file_count + 1)\n";
     te += "        }\n";
     te += "    }\n";
     te += "}\n\n";
 
+    te += "nas_listed = 0\n";
     te += "nas_file_count = 0\n";
     te += "nasListing = saveObj.readdir(\"/su/nas\")\n";
     te += "if (!nasListing.result) {\n";
-    te += "    nasListing.files.foreach(\"name\") {\n";
-    te += "        data = saveObj.read(\"/su/nas/\" + name)\n";
-    te += "        wrc = writefile(combinepath(pkg, \"su/nas/\" + name), data)\n";
+    te += "    nasFiles = nasListing.files.copy()\n";
+    te += "    nas_listed = nasFiles.len()\n";
+    te += "    nasFiles.foreach(\"nasName\") {\n";
+    te += "        data = saveObj.read(\"/su/nas/\" + nasName)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/nas/\" + nasName), data)\n";
     te += "        if (!wrc) {\n";
     te += "            nas_file_count = (nas_file_count + 1)\n";
     te += "        }\n";
     te += "    }\n";
     te += "}\n\n";
 
+    te += "avators_listed = 0\n";
     te += "avators_file_count = 0\n";
     te += "avatorsListing = saveObj.readdir(\"/su/avators\")\n";
     te += "if (!avatorsListing.result) {\n";
-    te += "    avatorsListing.files.foreach(\"name\") {\n";
-    te += "        data = saveObj.read(\"/su/avators/\" + name)\n";
-    te += "        wrc = writefile(combinepath(pkg, \"su/avators/\" + name), data)\n";
+    te += "    avFiles = avatorsListing.files.copy()\n";
+    te += "    avators_listed = avFiles.len()\n";
+    te += "    avFiles.foreach(\"avName\") {\n";
+    te += "        data = saveObj.read(\"/su/avators/\" + avName)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/avators/\" + avName), data)\n";
     te += "        if (!wrc) {\n";
     te += "            avators_file_count = (avators_file_count + 1)\n";
     te += "        }\n";
     te += "    }\n";
     te += "}\n\n";
 
+    te += "cache_listed = 0\n";
     te += "cache_file_count = 0\n";
     te += "cacheListing = saveObj.readdir(\"/su/cache\")\n";
     te += "if (!cacheListing.result) {\n";
-    te += "    cacheListing.files.foreach(\"name\") {\n";
-    te += "        data = saveObj.read(\"/su/cache/\" + name)\n";
-    te += "        wrc = writefile(combinepath(pkg, \"su/cache/\" + name), data)\n";
+    te += "    cacheFiles = cacheListing.files.copy()\n";
+    te += "    cache_listed = cacheFiles.len()\n";
+    te += "    cacheFiles.foreach(\"cacheName\") {\n";
+    te += "        data = saveObj.read(\"/su/cache/\" + cacheName)\n";
+    te += "        wrc = writefile(combinepath(pkg, \"su/cache/\" + cacheName), data)\n";
     te += "        if (!wrc) {\n";
     te += "            cache_file_count = (cache_file_count + 1)\n";
     te += "        }\n";
     te += "    }\n";
     te += "}\n\n";
 
-    te += "resReport = \"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nsu_file_count=\" + su_file_count.str() + \"\\nbaas_file_count=\" + baas_file_count.str() + \"\\nnas_file_count=\" + nas_file_count.str() + \"\\navators_file_count=\" + avators_file_count.str() + \"\\ncache_file_count=\" + cache_file_count.str() + \"\\nskipped_unsafe_names=0\\nstage=done\\n\"\n";
+    te += "resReport = \"operation=account_save_dump\\nmethod=tegra\\ntarget_nand=" + nand_str + "\\nsu_listed=\" + su_listed.str() + \"\\nsu_file_count=\" + su_file_count.str() + \"\\nbaas_listed=\" + baas_listed.str() + \"\\nbaas_file_count=\" + baas_file_count.str() + \"\\nnas_listed=\" + nas_listed.str() + \"\\nnas_file_count=\" + nas_file_count.str() + \"\\navators_listed=\" + avators_listed.str() + \"\\navators_file_count=\" + avators_file_count.str() + \"\\ncache_listed=\" + cache_listed.str() + \"\\ncache_file_count=\" + cache_file_count.str() + \"\\nskipped_unsafe_names=0\\nstage=done\\n\"\n";
     te += "writefile(combinepath(pkg, \"result.txt\"), resReport.bytes())\n\n";
 
     te += "println(\"Account save dump completed successfully.\")\n";
-    te += "println(\"su files:\", su_file_count)\n";
-    te += "println(\"baas files:\", baas_file_count)\n";
-    te += "println(\"nas files:\", nas_file_count)\n";
-    te += "println(\"avators files:\", avators_file_count)\n";
-    te += "println(\"cache files:\", cache_file_count)\n";
+    te += "println(\"su listed: \" + su_listed.str() + \" copied: \" + su_file_count.str())\n";
+    te += "println(\"baas listed: \" + baas_listed.str() + \" copied: \" + baas_file_count.str())\n";
+    te += "println(\"nas listed: \" + nas_listed.str() + \" copied: \" + nas_file_count.str())\n";
+    te += "println(\"avators listed: \" + avators_listed.str() + \" copied: \" + avators_file_count.str())\n";
+    te += "println(\"cache listed: \" + cache_listed.str() + \" copied: \" + cache_file_count.str())\n";
     te += "println(\"\")\n";
     te += "println(\"Press any button to return.\")\n";
     te += "pause()\n";

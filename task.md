@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.665**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.666**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.665 (dumb dump of account save 0010 /su)
+## Поточний delivery: v0.13.666 (complete 0010 /su dump copy lists)
+
+- [x] `ACCOUNT-SAVE-DUMP-COPY-666` — TE-дамп 0010 копіює `files.copy()` і пише `listed`/`copied`; println через `.str()`.
+- [x] `DOCS-BUMP-666` — версія `0.13.666`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.665 (dumb dump of account save 0010 /su)
 
 - [x] `ACCOUNT-SAVE-DUMP-665` — додано `PrepareAccountSaveDump()`: Horizon-first копія `/su` з 0010, порожній зліпок падає в one-shot TegraExplorer dump без відбору акаунта; `result.txt` лише counts; UI тост успіху тільки без reboot.
 - [x] `DOCS-BUMP-665` — версія `0.13.665`, plan/task/walkthrough/audit.

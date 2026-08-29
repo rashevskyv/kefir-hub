@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.665**. Завершені плани збережено в
+Поточний delivery — **v0.13.666**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.665 — Dumb dump of account save 0010 /su
+## Поточний delivery: v0.13.666 — Complete 0010 /su dump copy lists
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `PrepareAccountSaveDump()` TE-скрипт копіює `listing.files.copy()` і рахує `listed` vs `copied` для `/su`, baas, nas, avators, cache. Екран друкує counts через `.str()`, не зайві аргументи `println`.
+2. Horizon-шлях теж пише `*_listed` у `result.txt`.
+3. У TegraExplorer (окремий репозиторій): `array.foreach` тримає масив у GC і копіює рядки ітератора; `array.copy()` глибоко копіює StringArray; меню `newMenu` прокручується по колу (перший ↔ останній пункт).
+4. Версію Sphaira піднято до `0.13.666`. TE користувач збирає сам.
+
+## Попередній delivery: v0.13.665 — Dumb dump of account save 0010 /su
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. Додано `account_link::PrepareAccountSaveDump(bool& out_rebooted)` і пункт Users «Dump account save 0010»: німий зліпок усього `/su` з сейву `0x8000000000000010` для всіх профілів, без відбору BaaS/NAS за ID.
