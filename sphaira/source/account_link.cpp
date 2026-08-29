@@ -592,7 +592,7 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "    match = 0\n";
     for (const auto& pfx : prefixes) {
         const auto len_str = std::to_string(pfx.length());
-        te += "    if (!match && nfile.len() >= " + len_str + ") {\n";
+        te += "    if (!match && (nfile.len() >= " + len_str + ")) {\n";
         te += "        namePrefix = nfile - (nfile.len() - " + len_str + ")\n";
         te += "        if (namePrefix == \"" + pfx + "\") {\n";
         te += "            match = 1\n";

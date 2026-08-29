@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.661**. Завершені плани збережено в
+Поточний delivery — **v0.13.662**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.661 — Avoid nested NAS prefix loop in export
+## Поточний delivery: v0.13.662 — Fix TegraExplorer NAS export condition precedence
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` виправлено пріоритет операторів у генерованому скрипті TegraExplorer для перевірки довжини імені NAS-файлу: умову змінено з `!match && nfile.len() >= <length>` на `!match && (nfile.len() >= <length>)`.
+2. Запобігли некоректному лівоасоціативному обчисленню виразу `((!match && nfile.len()) >= <length>)` інтерпретатором TegraExplorer, що призводило до хибного результату перевірки для реальних файлів NAS.
+3. Збережено всі механізми захисту: прапорець `match`, вилучення префікса, пряме порівняння літералів, зчитування, копіювання, очищення та обробку помилок.
+4. Версію Sphaira піднято до `0.13.662`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.661 — Avoid nested NAS prefix loop in export
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` повністю видалено генерацію та використання списку `pfxList` і вкладеного циклу `pfxList.foreach()`, щоб запобігти нестабільній поведінці TegraExplorer при вкладених ітераціях.

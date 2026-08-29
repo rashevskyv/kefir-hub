@@ -1,9 +1,23 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.661** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.662** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.662 — Fix TegraExplorer NAS export condition precedence
+
+- Виправлення пріоритету операторів у скрипті TegraExplorer (`sphaira/source/account_link.cpp`):
+  - У функції `PrepareOfficialLinkExport()` умову перевірки довжини NAS-файлу змінено з `if (!match && nfile.len() >= <length>)` на `if (!match && (nfile.len() >= <length>))`.
+  - Причина: інтерпретатор скриптів TegraExplorer обчислює оператори строго зліва направо без урахування стандартного пріоритету операторів, через що первинний вираз інтерпретувався як `((!match && nfile.len()) >= <length>)`, що давало хибний результат (false) для дійсних файлів.
+  - Додавання дужок явно задає коректний порядок обчислення `!match && (nfile.len() >= <length>)`.
+  - Збережено прапорець `match`, вилучення префікса, точне рядкове порівняння, копіювання файлів, одноразовий handoff та обробку помилок.
+- Верифікація:
+  - Виконано перевірку чистоти форматування `git diff --check`.
+  - Перевірено точний згенерований синтаксис умови в `PrepareOfficialLinkExport()`.
+  - Перевірено незмінність функції `PrepareOfficialLinkApply()`.
+  - Перевірено збереження прапорця `kForceUpdateForTest = false`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.661 — Avoid nested NAS prefix loop in export
 
