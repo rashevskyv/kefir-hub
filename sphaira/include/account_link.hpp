@@ -37,12 +37,10 @@ auto ListUsers() -> std::vector<User>;
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
 auto ExportAccountSave(std::string& out_dir) -> Result;
-auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vector<std::string>& out_nas_files) -> Result;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
 auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result;
-auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) -> Result;
-auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& pkg_dir) -> Result;
-auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result;
-auto PrepareAccountSaveDump(bool& out_rebooted) -> Result;
+auto CanOfferLaunchLink() -> bool;
+auto IsLinkGated(std::string& out_reason) -> bool;
+void SetLaunchLinkPrompted(bool val = true);
 
 } // namespace sphaira::account_link

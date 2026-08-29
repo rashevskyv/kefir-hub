@@ -13,13 +13,16 @@
 #include "ui/menus/save/save_hub_menu.hpp"
 #include "ui/menus/appstore.hpp"
 #include "ui/option_box.hpp"
+#include "ui/progress_box.hpp"
 
+#include "account_link.hpp"
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "log.hpp"
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "utils/utils.hpp"
 #include "version_compare.hpp"
 
 #include <yyjson.h>
@@ -75,6 +78,39 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "You do not need to exit the menu." },
 };
 
+void CheckLaunchAccountLinkPrompt() {
+    if (!account_link::CanOfferLaunchLink()) {
+        return;
+    }
+    account_link::SetLaunchLinkPrompted(true);
+
+    App::Push<OptionBox>(
+        "One or more user profiles are not linked to a Nintendo Account. Link all unlinked profiles to the official Kefir donor now? The console will reboot immediately."_i18n,
+        "Later"_i18n, "Link and reboot"_i18n, 1,
+        [](auto op) {
+            if (op && *op == 1) {
+                App::Push<ProgressBox>(0, "Link Nintendo Account"_i18n, "Linking account..."_i18n,
+                    [](auto pbox) -> Result {
+                        pbox->NewTransfer("Applying Nintendo Account link"_i18n);
+                        u32 count = 0;
+                        R_TRY(account_link::LinkAllFromRomfsDonor(count));
+                        R_SUCCEED();
+                    },
+                    [](Result rc) {
+                        if (R_FAILED(rc)) {
+                            App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
+                        } else {
+                            utils::requestForcedReboot();
+                        }
+                    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+            } else {
+                App::Push<OptionBox>(
+                    "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start."_i18n,
+                    "OK"_i18n);
+            }
+        });
+}
+
 } // namespace
 
 auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry> {
@@ -82,6 +118,8 @@ auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry> {
 }
 
 MainMenu::MainMenu() {
+    CheckLaunchAccountLinkPrompt();
+
     const auto update_mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
     if (update_mode != auto_update::Mode::Off) {
         auto_update::SetJobState(auto_update::JobState::Checking);

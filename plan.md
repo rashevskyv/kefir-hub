@@ -1,15 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.669** (live LinkAllFromRomfsDonor; далі UX). Завершені плани збережено в
+Поточний delivery — **v0.13.670** (romfs official link UX). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.669 — LinkAllFromRomfsDonor live apply
+## Поточний delivery: v0.13.670 — Launch/Users Link Nintendo Account
 
-Статус: прийнято сеньйором (Gemini junior). Збірку не ганяли.
-1. `LinkAllFromRomfsDonor`: romfs-донор → targets (skip linked_known false) → kill BCAT/ACCOUNT/OLSC → RW /su/baas+/su/nas → on-disk token re-check для offline → rollback SD → write → Commit.
-2. Offline з токенами на диску не чіпають. Версія `0.13.669`.
-3. Далі: launch/Users Link + reboot; прибрати TE debug; i18n/docs.
+Статус: прийнято сеньйором (Gemini junior, chat Romfs official link). Збірку не ганяли.
+1. Launch OptionBox (раз за сесію): unbound/fake → Later tip або Link and reboot → LinkAllFromRomfsDonor → soft reboot лише на success.
+2. Users: один пункт Link Nintendo Account; TE export/apply/probe/dump API прибрано.
+3. Gate: applet + suspended (або pmdmnt fail) блокує offer і ручний лінк.
+4. i18n en/uk/ru; docs/account-transfer.md §3.3 оновлено. Версія 0.13.670.
+
+## Попередній delivery: v0.13.669 — LinkAllFromRomfsDonor live apply
+
+Статус: прийнято. Live apply з safety filters; версія 0.13.669.
 
 ## Попередній delivery: v0.13.668 — LinkKind classification + Fake linked status
 

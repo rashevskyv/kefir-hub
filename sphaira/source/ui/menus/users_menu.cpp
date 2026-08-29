@@ -667,18 +667,9 @@ void Menu::ShowContextMenu() {
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
-        options->Add<SidebarEntryCallback>("Prepare official-link export"_i18n, [this](){
-            ConfirmPrepareExport();
-        }, true, "Export this profile's official Nintendo Account link to SD via TegraExplorer."_i18n);
-        options->Add<SidebarEntryCallback>("Prepare official-link apply"_i18n, [this](){
-            ConfirmPrepareApply();
-        }, true, "Apply an exported official Nintendo Account link package onto this unlinked profile in TegraExplorer."_i18n);
-        options->Add<SidebarEntryCallback>("Probe official-link save layout"_i18n, [this](){
-            ConfirmPrepareLayoutProbe();
-        }, true, "Probe save 0010 layout for official Nintendo Account link files in TegraExplorer (read-only)."_i18n);
-        options->Add<SidebarEntryCallback>("Dump account save 0010"_i18n, [this](){
-            ConfirmPrepareAccountSaveDump();
-        }, true, "Dump account save 0010 tree to SD for research (read-only)."_i18n);
+        options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
+            ConfirmLinkNintendoAccount();
+        }, true, "Link all unlinked and fake-linked profiles to the official Nintendo Account donor. Console will reboot."_i18n);
     }
 
     options->Add<SidebarEntryHeader>("VIEW"_i18n);
@@ -846,82 +837,31 @@ void Menu::ConfirmDelete() {
     });
 }
 
-void Menu::ConfirmPrepareExport() {
-    if (m_items.empty()) {
+void Menu::ConfirmLinkNintendoAccount() {
+    std::string gate_reason;
+    if (account_link::IsLinkGated(gate_reason)) {
+        App::Push<OptionBox>(gate_reason, "OK"_i18n);
         return;
     }
-    const auto& user = m_items[m_index];
-    if (!user.linked_known) {
-        App::Push<OptionBox>("Link status unavailable"_i18n, "OK"_i18n);
-        return;
-    }
-    if (!user.horizon_linked) {
-        App::Push<OptionBox>("This user profile is not linked to a Nintendo Account."_i18n, "OK"_i18n);
-        return;
-    }
-    App::Push<OptionBox>(
-        "Prepare TegraExplorer to export this profile's official Nintendo Account link to SD? The console will reboot to TegraExplorer to extract save 0010 offline."_i18n,
-        "Cancel"_i18n, "Reboot to TegraExplorer"_i18n, 1,
-        [this, uid = user.uid](auto op) {
-            if (op && *op == 1) {
-                RunPrepareExport(uid);
-            }
-        });
-}
 
-void Menu::ConfirmPrepareApply() {
-    if (m_items.empty()) {
+    bool any_needed = false;
+    for (const auto& u : m_items) {
+        if (u.linked_known && (u.kind == account_link::LinkKind::Offline || (u.kind == account_link::LinkKind::None && !u.horizon_linked))) {
+            any_needed = true;
+            break;
+        }
+    }
+    if (!any_needed) {
+        App::Push<OptionBox>("All user profiles are already linked."_i18n, "OK"_i18n);
         return;
     }
-    const auto& user = m_items[m_index];
-    if (!user.linked_known) {
-        App::Push<OptionBox>("Link status unavailable"_i18n, "OK"_i18n);
-        return;
-    }
-    if (user.horizon_linked) {
-        App::Push<OptionBox>("The target profile is already linked. Apply requires an unlinked local profile."_i18n, "OK"_i18n);
-        return;
-    }
-    App::Push<OptionBox>(
-        "Select an official link package folder under /config/kefir/account_links/. The console will reboot to TegraExplorer to apply the link offline."_i18n,
-        "Cancel"_i18n, "Choose folder"_i18n, 1,
-        [this, uid = user.uid](auto op) {
-            if (!op || *op != 1) {
-                return;
-            }
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[this, uid](const fs::FsPath& path, const filebrowser::FsEntry&) -> bool {
-                    RunPrepareApply(uid, path.toString());
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{paths::DATA_ROOT + "/account_links"},
-                true);
-        });
-}
 
-void Menu::ConfirmPrepareLayoutProbe() {
-    if (m_items.empty()) {
-        return;
-    }
-    const auto& user = m_items[m_index];
     App::Push<OptionBox>(
-        "Probe save 0010 layout for official Nintendo Account link files? This check is read-only and will not write to SYSTEM. The console will reboot to TegraExplorer."_i18n,
-        "Cancel"_i18n, "Reboot to TegraExplorer"_i18n, 1,
-        [this, uid = user.uid](auto op) {
-            if (op && *op == 1) {
-                RunPrepareLayoutProbe(uid);
-            }
-        });
-}
-
-void Menu::ConfirmPrepareAccountSaveDump() {
-    App::Push<OptionBox>(
-        "Dump save 0010 (/su tree) to SD for research? This copies all profiles' account files to SD. If Horizon holds the save, the console will reboot to TegraExplorer (read-only)."_i18n,
-        "Cancel"_i18n, "Dump account save"_i18n, 1,
+        "Link all unlinked and fake-linked profiles to the official Nintendo Account donor? The console will reboot immediately."_i18n,
+        "Cancel"_i18n, "Link and reboot"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
-                RunPrepareAccountSaveDump();
+                RunLinkNintendoAccount();
             }
         });
 }
@@ -1143,43 +1083,21 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
-void Menu::RunPrepareExport(const AccountUid& uid) {
-    std::string pkg_dir;
-    const auto rc = account_link::PrepareOfficialLinkExport(uid, pkg_dir);
-    if (R_FAILED(rc)) {
-        App::Push<OptionBox>("Could not prepare the export script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
-    }
-}
-
-void Menu::RunPrepareApply(const AccountUid& target_uid, const std::string& pkg_dir) {
-    u64 nas_id = 0;
-    std::vector<std::string> nas_files;
-    const auto val_rc = account_link::ValidateLinkPackage(pkg_dir, nas_id, nas_files);
-    if (R_FAILED(val_rc)) {
-        App::Push<OptionBox>("Selected folder is not a valid official link package (missing manifest or tokens)."_i18n, "OK"_i18n);
-        return;
-    }
-    const auto rc = account_link::PrepareOfficialLinkApply(target_uid, pkg_dir);
-    if (R_FAILED(rc)) {
-        App::Push<OptionBox>("Could not prepare the apply script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
-    }
-}
-
-void Menu::RunPrepareLayoutProbe(const AccountUid& uid) {
-    const auto rc = account_link::PrepareOfficialLinkLayoutProbe(uid);
-    if (R_FAILED(rc)) {
-        App::Push<OptionBox>("Could not prepare the layout probe script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
-    }
-}
-
-void Menu::RunPrepareAccountSaveDump() {
-    bool rebooted = false;
-    const auto rc = account_link::PrepareAccountSaveDump(rebooted);
-    if (R_FAILED(rc)) {
-        App::Push<OptionBox>("Could not prepare the account save dump. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
-    } else if (!rebooted) {
-        App::Push<OptionBox>("Account save 0010 dumped to SD."_i18n, "OK"_i18n);
-    }
+void Menu::RunLinkNintendoAccount() {
+    App::Push<ProgressBox>(0, "Link Nintendo Account"_i18n, "Linking account..."_i18n,
+        [](auto pbox) -> Result {
+            pbox->NewTransfer("Applying Nintendo Account link"_i18n);
+            u32 count = 0;
+            R_TRY(account_link::LinkAllFromRomfsDonor(count));
+            R_SUCCEED();
+        },
+        [this](Result rc) {
+            if (R_FAILED(rc)) {
+                App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
+            } else {
+                utils::requestForcedReboot();
+            }
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
 } // namespace sphaira::ui::menu::users

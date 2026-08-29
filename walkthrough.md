@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.669** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.670** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.670 — Launch/Users Link Nintendo Account
+
+- Launch: OptionBox для unbound/fake (раз за сесію); Later tip; Link → LinkAllFromRomfsDonor → requestForcedReboot лише на success.
+- Users: один пункт Link Nintendo Account; TE Prepare export/apply/probe/dump прибрано з API й меню.
+- Gate: applet + suspended game, або pmdmnt init/query fail → блок.
+- i18n en/uk/ru; docs/account-transfer.md §3.3 під RomFS live link.
+- Збірку на цьому кроці не запускали.
 
 ## v0.13.669 — LinkAllFromRomfsDonor live apply
 
