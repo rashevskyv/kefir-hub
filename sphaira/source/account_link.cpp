@@ -479,7 +479,6 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
         }
     }
 
-    const auto cands = BaasCandidateNames(uid);
     const auto prefixes = NasPrefixes(nas_id);
 
     std::string te;
@@ -549,34 +548,45 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += "cands = [\n";
-    for (size_t i = 0; i < cands.size(); i++) {
-        te += "    \"" + cands[i] + "\"";
-        if (i + 1 < cands.size()) {
-            te += ",";
-        }
-        te += "\n";
+    te += "baasMatchCount = 0\n";
+    te += "selectedIndex = 0\n";
+    te += "curIndex = 0\n";
+    te += "baasListing.files.foreach(\"bfile\") {\n";
+    te += "    bbytes = saveObj.read(\"/su/baas/\" + bfile)\n";
+    te += "    if (bbytes.len() >= 24) {\n";
+    te += "        match = 1\n";
+    for (int i = 0; i < 8; i++) {
+        const auto byte_val = static_cast<unsigned>((nas_id >> (8 * i)) & 0xffu);
+        te += "        if (!(bbytes[" + std::to_string(16 + i) + "] == " + std::to_string(byte_val) + ")) {\n";
+        te += "            match = 0\n";
+        te += "        }\n";
     }
-    te += "]\n\n";
-
-    te += "foundBaas = 0\n";
-    te += "cands.foreach(\"cand\") {\n";
-    te += "    if (!foundBaas && baasListing.files.contains(cand)) {\n";
-    te += "        bbytes = saveObj.read(\"/su/baas/\" + cand)\n";
-    te += "        if (bbytes.len() >= 24) {\n";
-    te += "            writefile(combinepath(pkg, \"baas/link.dat\"), bbytes)\n";
-    te += "            foundBaas = 1\n";
+    te += "        if (match) {\n";
+    te += "            baasMatchCount = baasMatchCount + 1\n";
+    te += "            selectedIndex = curIndex\n";
     te += "        }\n";
     te += "    }\n";
+    te += "    curIndex = curIndex + 1\n";
     te += "}\n\n";
 
-    te += "if (!foundBaas) {\n";
+    te += "if (!(baasMatchCount == 1)) {\n";
     te += "    println(\"Error: source baas file not found in 0010\")\n";
     te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: source baas file not found in 0010\\nstage=find_baas\\n\").bytes())\n";
     te += "    pause()\n";
     te += "    cleanup()\n";
     te += "    exit()\n";
     te += "}\n\n";
+
+    te += "selectedBaas = baasListing.files[selectedIndex]\n";
+    te += "bbytes = saveObj.read(\"/su/baas/\" + selectedBaas)\n";
+    te += "if (!(bbytes.len() >= 24)) {\n";
+    te += "    println(\"Error: source baas file not found in 0010\")\n";
+    te += "    writefile(combinepath(pkg, \"result.txt\"), (\"Export failed: source baas file not found in 0010\\nstage=find_baas\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+    te += "writefile(combinepath(pkg, \"baas/link.dat\"), bbytes)\n\n";
 
     te += "nasListing = saveObj.readdir(\"/su/nas\")\n";
     te += "if (nasListing.result) {\n";

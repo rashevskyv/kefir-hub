@@ -1,10 +1,19 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.662**. Завершені плани збережено в
+Поточний delivery — **v0.13.663**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.662 — Fix TegraExplorer NAS export condition precedence
+## Поточний delivery: v0.13.663 — Match BaaS export by verified Nintendo Account ID content
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` вилучено використання списку імен-кандидатів `BaasCandidateNames(uid)` та масиву `cands` для експорту (хелпер залишено для застосування лінку).
+2. Реалізовано однопрохідний обхід списку файлів `/su/baas` у скрипті TegraExplorer: для кожного файлу розміром щонайменше 24 байти виконується пряме побайтове порівняння байтів `bbytes[16]..bbytes[23]` (зсув 0x10) з 8 байтами вибраного `nas_id` у little-endian порядку.
+3. Усі перевірки рівності та заперечення явно взято в дужки (наприклад, `if (!(bbytes[16] == <byte>))`) для гарантування коректності за лівоасоціативної семантики інтерпретатора TegraExplorer.
+4. Додано підрахунок збігів `baasMatchCount` та збереження індексу `selectedIndex`: експорт вимагає рівно одного збігу за вмістом (`if (!(baasMatchCount == 1))`), а повторне зчитування обраного файлу перевіряє `if (!(bbytes.len() >= 24))`. У разі 0 або >1 збігів, або невідповідності довжини відбувається безпечне аварійне завершення на етапі `stage=find_baas` без переходу до NAS чи запису пошкодженого файлу. Після підтвердження єдиного збігу файл зчитується з `baasListing.files[selectedIndex]`, перевіряється та записується як `baas/link.dat`.
+5. Версію Sphaira піднято до `0.13.663`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.662 — Fix TegraExplorer NAS export condition precedence
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` виправлено пріоритет операторів у генерованому скрипті TegraExplorer для перевірки довжини імені NAS-файлу: умову змінено з `!match && nfile.len() >= <length>` на `!match && (nfile.len() >= <length>)`.

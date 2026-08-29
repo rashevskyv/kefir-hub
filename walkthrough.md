@@ -1,9 +1,26 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.662** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.663** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.663 — Match BaaS export by verified Nintendo Account ID content
+
+- Співставлення файлів BaaS за перевіреним вмістом (`sphaira/source/account_link.cpp`):
+  - У функції `PrepareOfficialLinkExport()` припинено використання списку імен-кандидатів `BaasCandidateNames(uid)` та масиву `cands`. Справжні імена файлів у системному збереженні 0010 є незалежними ключами, тому пошук за похідними від UID іменами не знаходив файл.
+  - У генерованому скрипті TegraExplorer реалізовано однопрохідний обхід каталогу `/su/baas` (`baasListing.files.foreach("bfile")`).
+  - Для кожного файлу розміром `bbytes.len() >= 24` байти виконується пряме порівняння байтів `bbytes[16]..bbytes[23]` (зсув 0x10) із 8 байтами вибраного `nas_id` у порядку little-endian.
+  - Усі перевірки рівності та заперечення оформлено з явними дужками `if (!(bbytes[N] == <byte>))` для гарантування коректності за лівоасоціативної семантики TegraExplorer.
+  - Додано лічильник збігів `baasMatchCount` та фіксацію індексу `selectedIndex`. Експорт вимагає рівно одного збігу (`if (!(baasMatchCount == 1))`), а повторне зчитування перед копіюванням суворо перевіряє `if (!(bbytes.len() >= 24))`. У разі 0 або >1 збігів або помилки читання процес негайно й безпечно переривається зі статусом `stage=find_baas` без запису цільових файлів чи переходу до експорту NAS.
+  - Після верифікації єдиного збігу та успішного зчитування файл з `baasListing.files[selectedIndex]` зберігається у пакет як `baas/link.dat`, після чого скрипт переходить до обробки NAS.
+  - Збережено доступність і незмінність функції `BaasCandidateNames(uid)` та процесу застосування лінку `PrepareOfficialLinkApply()`.
+- Верифікація:
+  - Виконано перевірку чистоти форматування `git diff --check`.
+  - Перевірено точний згенерований синтаксис скрипту TegraExplorer у `PrepareOfficialLinkExport()`.
+  - Підтверджено повну відсутність змін у `PrepareOfficialLinkApply()`.
+  - Перевірено збереження прапорця `kForceUpdateForTest = false`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.662 — Fix TegraExplorer NAS export condition precedence
 

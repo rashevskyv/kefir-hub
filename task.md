@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.662**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.663**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.662 (fix TegraExplorer NAS export condition precedence)
+## Поточний delivery: v0.13.663 (match BaaS export by verified content)
+
+- [x] `ACCOUNT-LINK-EXPORT-BAAS-CONTENT-663` — у `PrepareOfficialLinkExport()` замінено пошук за іменами файлів на прямий однопрохідний аналіз вмісту `/su/baas` за зсувом 0x10..0x17 (little-endian `nas_id`), з вимогою рівно одного збігу, суворою перевіркою довжини при повторному зчитуванні та безпечним завершенням `stage=find_baas` у разі колізії, відсутності або пошкодження файлу.
+- [x] `DOCS-BUMP-663` — версія `0.13.663`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.662 (fix TegraExplorer NAS export condition precedence)
 
 - [x] `ACCOUNT-LINK-EXPORT-NAS-PRECEDENCE-662` — у `PrepareOfficialLinkExport()` додано дужки навколо перевірки довжини `(nfile.len() >= <length>)` для запобігання лівоасоціативному обчисленню інтерпретатором TegraExplorer.
 - [x] `DOCS-BUMP-662` — версія `0.13.662`, plan/task/walkthrough/audit.
