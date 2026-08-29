@@ -1,10 +1,22 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.666**. Завершені плани збережено в
+Поточний delivery — **v0.13.667+** (romfs official link, Gemini junior). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.666 — Complete 0010 /su dump copy lists
+## Поточний delivery: v0.13.667+ — ROMFS official link + launch prompt
+
+Статус: в роботі через `gemini-junior-review` (Target chat: `Romfs official link`). Сеньйор не пише product-код і не компілює; Gemini білдить у WSL.
+Мета: один official-донор (Kefir) у `assets/romfs/account_link/`; live apply на всі None/Offline; soft reboot; прибрати TE debug у Users; launch prompt.
+Кроки Gemini (послідовно):
+1. **Handoff 1 (зараз):** ушити донор у romfs + `LoadRomfsDonorPackage` (лише читання) + bump `0.13.667`.
+2. Класифікація `LinkKind` у `ListUsers` + статус Fake linked.
+3. Live writer (kill BCAT/ACCOUNT/OLSC → `/su` write → Commit).
+4. UX: launch prompt + Users «Link Nintendo Account»; видалити TE export/apply/probe/dump.
+5. i18n en/uk/ru + `docs/account-transfer.md` §3.3.
+Після accept кроку сеньйор оновлює plan/task/walkthrough/audit і комітить.
+
+## Попередній delivery: v0.13.666 — Complete 0010 /su dump copy lists
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `PrepareAccountSaveDump()` TE-скрипт копіює `listing.files.copy()` і рахує `listed` vs `copied` для `/su`, baas, nas, avators, cache. Екран друкує counts через `.str()`, не зайві аргументи `println`.
