@@ -1,10 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.663**. Завершені плани збережено в
+Поточний delivery — **v0.13.664**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.663 — Match BaaS export by verified Nintendo Account ID content
+## Поточний delivery: v0.13.664 — Read-only official-link save layout probe
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. Додано `account_link::PrepareOfficialLinkLayoutProbe()`: one-shot `/startup.te` для TegraExplorer, той самий handoff і `cleanup()`, що в експорті, NAND фіксується з `App::IsEmummc()` під час генерації.
+2. Скрипт лише читає `bis:/save/8000000000000010`: `readdir("/su")`, `/su/baas`, `/su/nas`, за потреби `/su/avators`. Жодних `saveObj.create` / `write` / `delete` / `commit`.
+3. `has_registry` і `has_profiles` визначаються через listing save-object (`files.contains` / `folders.contains`), не через FatFS `fsexists`.
+4. Звіт `result_probe.txt` містить лише counts/booleans (`baas_file_count`, UID-name counters для RFC/Linkalho/raw у обох регістрах, NAS content-match якщо відомий Nintendo Account ID, `has_registry`, `has_profiles`). Імена файлів, UID і Nintendo Account ID у звіт не пишуться.
+5. `PrepareOfficialLinkApply()` не змінювався і досі не готовий до запуску.
+6. Версію Sphaira піднято до `0.13.664`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.663 — Match BaaS export by verified Nintendo Account ID content
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` вилучено використання списку імен-кандидатів `BaasCandidateNames(uid)` та масиву `cands` для експорту (хелпер залишено для застосування лінку).

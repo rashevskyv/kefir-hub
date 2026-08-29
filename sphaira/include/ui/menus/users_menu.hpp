@@ -48,6 +48,7 @@ private:
 
     void ConfirmPrepareExport();
     void ConfirmPrepareApply();
+    void ConfirmPrepareLayoutProbe();
     void ConfirmCreate();
     void ConfirmRename();
     void ConfirmChangeAvatar();
@@ -58,6 +59,7 @@ private:
     void ConfirmDelete();
     void RunPrepareExport(const AccountUid& uid);
     void RunPrepareApply(const AccountUid& target_uid, const std::string& pkg_dir);
+    void RunPrepareLayoutProbe(const AccountUid& uid);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup(std::vector<save::Entry> picked_saves = {});

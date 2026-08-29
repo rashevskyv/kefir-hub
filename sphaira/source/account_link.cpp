@@ -893,4 +893,237 @@ auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& p
     R_SUCCEED();
 }
 
+auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result {
+    fs::FsNativeSd sd;
+    R_TRY(CheckHandoffPreconditions(sd));
+
+    u64 nas_id = 0;
+    bool nas_id_known = false;
+    if (R_SUCCEEDED(QueryNintendoAccountId(uid, nas_id)) && nas_id != 0) {
+        nas_id_known = true;
+    }
+
+    const bool is_emummc = App::IsEmummc();
+
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    const auto base_dir = paths::DATA_ROOT + "/account_links/layout_probe_" + stamp;
+    auto out_probe_dir = base_dir;
+    for (u32 collision = 1; sd.DirExists(out_probe_dir.c_str()); collision++) {
+        out_probe_dir = base_dir + "_" + std::to_string(collision);
+    }
+
+    R_TRY(sd.CreateDirectoryRecursively(out_probe_dir.c_str()));
+
+    const auto probe_name = BaseName(out_probe_dir);
+    for (char c : probe_name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
+            return FsError_PathNotFound;
+        }
+    }
+
+    const auto nand_str = std::string(is_emummc ? "emummc" : "sysmmc");
+    const auto rfc_lower_name = ToLowerCopy(UidDashedRfc(uid)) + ".dat";
+    const auto rfc_upper_name = ToUpperCopy(UidDashedRfc(uid)) + ".dat";
+    const auto linkalho_lower_name = ToLowerCopy(UidDashedLinkalho(uid)) + ".dat";
+    const auto linkalho_upper_name = ToUpperCopy(UidDashedLinkalho(uid)) + ".dat";
+    const auto raw_upper_name = UidHexRaw(uid) + ".dat";
+    const auto raw_lower_name = ToLowerCopy(UidHexRaw(uid)) + ".dat";
+
+    std::string te;
+    te += "# REQUIRE SD\n";
+    te += "# REQUIRE KEYS\n";
+    te += "# REQUIRE MINERVA\n";
+    te += "# REQUIRE VER 4.0.0\n\n";
+
+    te += "cleanup = {\n";
+    te += "    if (fsexists(\"sd:/payload.bak\")) {\n";
+    te += "        writefile(\"sd:/payload.bin\", readfile(\"sd:/payload.bak\"))\n";
+    te += "        delfile(\"sd:/payload.bak\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/startup.te\")) {\n";
+    te += "        delfile(\"sd:/startup.te\")\n";
+    te += "    }\n";
+    te += "    if (fsexists(\"sd:/bootloader/update.bin\")) {\n";
+    te += "        payload(\"sd:/bootloader/update.bin\")\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "clear()\n";
+    te += "println(\"Kefir Hub: probe official-link save layout\")\n";
+    if (is_emummc) {
+        te += "println(\"Probe SYSTEM: emuMMC\")\n\n";
+    } else {
+        te += "println(\"Probe SYSTEM: sysMMC\")\n\n";
+    }
+
+    te += "pkg = \"sd:/config/kefir/account_links/" + probe_name + "\"\n";
+    te += "mkdir(pkg)\n";
+    te += "writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=starting\\n\").bytes())\n\n";
+
+    if (is_emummc) {
+        te += "rc = mountemu(\"SYSTEM\")\n";
+    } else {
+        te += "rc = mountsys(\"SYSTEM\")\n";
+    }
+
+    te += "if (rc) {\n";
+    te += "    println(\"SYSTEM mount failed\", rc)\n";
+    te += "    writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=mount_system\\nerror=SYSTEM mount failed (\" + rc.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "bis = \"bis:/save/8000000000000010\"\n";
+    te += "if (!fsexists(bis)) {\n";
+    te += "    println(\"Save 8000000000000010 not found on SYSTEM\")\n";
+    te += "    writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=check_save\\nerror=Save 8000000000000010 not found on SYSTEM\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "saveObj = readsave(bis)\n\n";
+
+    te += "suListing = saveObj.readdir(\"/su\")\n";
+    te += "if (suListing.result) {\n";
+    te += "    println(\"Error: cannot read /su in save 0010\", suListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=read_su\\nerror=cannot read /su in save 0010 (\" + suListing.result.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "has_registry = 0\n";
+    te += "if ((suListing.files.contains(\"registry.dat\"))) {\n";
+    te += "    has_registry = 1\n";
+    te += "}\n\n";
+
+    te += "has_profiles = 0\n";
+    te += "if ((suListing.folders.contains(\"avators\"))) {\n";
+    te += "    avListing = saveObj.readdir(\"/su/avators\")\n";
+    te += "    if (!avListing.result) {\n";
+    te += "        if ((avListing.files.contains(\"profiles.dat\"))) {\n";
+    te += "            has_profiles = 1\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "}\n\n";
+
+    te += "baasListing = saveObj.readdir(\"/su/baas\")\n";
+    te += "if (baasListing.result) {\n";
+    te += "    println(\"Error: cannot read /su/baas in save 0010\", baasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=read_baas\\nerror=cannot read /su/baas in save 0010 (\" + baasListing.result.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "nasListing = saveObj.readdir(\"/su/nas\")\n";
+    te += "if (nasListing.result) {\n";
+    te += "    println(\"Error: cannot read /su/nas in save 0010\", nasListing.result)\n";
+    te += "    writefile(combinepath(pkg, \"result_probe.txt\"), (\"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nstage=read_nas\\nerror=cannot read /su/nas in save 0010 (\" + nasListing.result.str() + \")\\n\").bytes())\n";
+    te += "    pause()\n";
+    te += "    cleanup()\n";
+    te += "    exit()\n";
+    te += "}\n\n";
+
+    te += "baas_file_count = baasListing.files.len()\n";
+    te += "baas_uid_rfc_name_count = 0\n";
+    te += "baas_uid_linkalho_name_count = 0\n";
+    te += "baas_uid_raw_name_count = 0\n";
+    te += "baas_nas_content_match_count = 0\n\n";
+
+    te += "baasListing.files.foreach(\"bfile\") {\n";
+    te += "    if ((bfile == \"" + rfc_lower_name + "\")) {\n";
+    te += "        baas_uid_rfc_name_count = (baas_uid_rfc_name_count + 1)\n";
+    te += "    } .else() {\n";
+    te += "        if ((bfile == \"" + rfc_upper_name + "\")) {\n";
+    te += "            baas_uid_rfc_name_count = (baas_uid_rfc_name_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "    if ((bfile == \"" + linkalho_lower_name + "\")) {\n";
+    te += "        baas_uid_linkalho_name_count = (baas_uid_linkalho_name_count + 1)\n";
+    te += "    } .else() {\n";
+    te += "        if ((bfile == \"" + linkalho_upper_name + "\")) {\n";
+    te += "            baas_uid_linkalho_name_count = (baas_uid_linkalho_name_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    te += "    if ((bfile == \"" + raw_upper_name + "\")) {\n";
+    te += "        baas_uid_raw_name_count = (baas_uid_raw_name_count + 1)\n";
+    te += "    } .else() {\n";
+    te += "        if ((bfile == \"" + raw_lower_name + "\")) {\n";
+    te += "            baas_uid_raw_name_count = (baas_uid_raw_name_count + 1)\n";
+    te += "        }\n";
+    te += "    }\n";
+    if (nas_id_known) {
+        te += "    bbytes = saveObj.read(\"/su/baas/\" + bfile)\n";
+        te += "    if ((bbytes.len() >= 24)) {\n";
+        te += "        match = 1\n";
+        for (int i = 0; i < 8; i++) {
+            const auto byte_val = static_cast<unsigned>((nas_id >> (8 * i)) & 0xffu);
+            te += "        if (!(bbytes[" + std::to_string(16 + i) + "] == " + std::to_string(byte_val) + ")) {\n";
+            te += "            match = 0\n";
+            te += "        }\n";
+        }
+        te += "        if (match) {\n";
+        te += "            baas_nas_content_match_count = (baas_nas_content_match_count + 1)\n";
+        te += "        }\n";
+        te += "    }\n";
+    }
+    te += "}\n\n";
+
+    te += "nas_file_count = nasListing.files.len()\n";
+    te += "nas_prefix_match_count = 0\n\n";
+
+    if (nas_id_known) {
+        const auto prefixes = NasPrefixes(nas_id);
+        te += "nasListing.files.foreach(\"nfile\") {\n";
+        te += "    match = 0\n";
+        for (const auto& pfx : prefixes) {
+            const auto len_str = std::to_string(pfx.length());
+            te += "    if ((!match) && ((nfile.len() >= " + len_str + "))) {\n";
+            te += "        namePrefix = (nfile - (nfile.len() - " + len_str + "))\n";
+            te += "        if ((namePrefix == \"" + pfx + "\")) {\n";
+            te += "            match = 1\n";
+            te += "        }\n";
+            te += "    }\n";
+        }
+        te += "    if (match) {\n";
+        te += "        nas_prefix_match_count = (nas_prefix_match_count + 1)\n";
+        te += "    }\n";
+        te += "}\n\n";
+    }
+
+    te += "resReport = \"operation=layout_probe\\ntarget_nand=" + nand_str + "\\nnas_id_known=" + (nas_id_known ? "1" : "0") + "\\nbaas_file_count=\" + baas_file_count.str() + \"\\nbaas_uid_rfc_name_count=\" + baas_uid_rfc_name_count.str() + \"\\nbaas_uid_linkalho_name_count=\" + baas_uid_linkalho_name_count.str() + \"\\nbaas_uid_raw_name_count=\" + baas_uid_raw_name_count.str() + \"\\nbaas_nas_content_match_count=\" + baas_nas_content_match_count.str() + \"\\nnas_file_count=\" + nas_file_count.str() + \"\\nnas_prefix_match_count=\" + nas_prefix_match_count.str() + \"\\nhas_registry=\" + has_registry.str() + \"\\nhas_profiles=\" + has_profiles.str() + \"\\n\"\n";
+    te += "writefile(combinepath(pkg, \"result_probe.txt\"), resReport.bytes())\n\n";
+
+    te += "println(\"Layout probe completed successfully.\")\n";
+    te += "println(\"baas files:\", baas_file_count)\n";
+    te += "println(\"baas RFC name matches:\", baas_uid_rfc_name_count)\n";
+    te += "println(\"baas Linkalho name matches:\", baas_uid_linkalho_name_count)\n";
+    te += "println(\"baas raw hex matches:\", baas_uid_raw_name_count)\n";
+    te += "println(\"baas NAS content matches:\", baas_nas_content_match_count)\n";
+    te += "println(\"nas files:\", nas_file_count)\n";
+    te += "println(\"nas prefix matches:\", nas_prefix_match_count)\n";
+    te += "println(\"has registry:\", has_registry)\n";
+    te += "println(\"has profiles:\", has_profiles)\n";
+    te += "println(\"\")\n";
+    te += "println(\"Press any button to return.\")\n";
+    te += "pause()\n";
+    te += "cleanup()\n";
+
+    R_TRY(sd.write_entire_file("/startup.te", std::vector<u8>(te.begin(), te.end())));
+    fsdevCommitDevice("sdmc");
+
+    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+        sd.DeleteFile("/startup.te");
+        fsdevCommitDevice("sdmc");
+        return FsError_PathNotFound;
+    }
+
+    R_SUCCEED();
+}
+
 } // namespace sphaira::account_link

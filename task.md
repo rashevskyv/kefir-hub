@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.663**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.664**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.663 (match BaaS export by verified content)
+## Поточний delivery: v0.13.664 (read-only official-link save layout probe)
+
+- [x] `ACCOUNT-LINK-LAYOUT-PROBE-664` — додано `PrepareOfficialLinkLayoutProbe()` і пункт Users «Probe official-link save layout»: read-only TegraExplorer обхід сейву 0010 з підрахунком `/su/baas`, `/su/nas`, UID-іменованих BaaS-кандидатів, NAS content-match і наявності `registry.dat`/`profiles.dat` без мутації сейву.
+- [x] `DOCS-BUMP-664` — версія `0.13.664`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.663 (match BaaS export by verified content)
 
 - [x] `ACCOUNT-LINK-EXPORT-BAAS-CONTENT-663` — у `PrepareOfficialLinkExport()` замінено пошук за іменами файлів на прямий однопрохідний аналіз вмісту `/su/baas` за зсувом 0x10..0x17 (little-endian `nas_id`), з вимогою рівно одного збігу, суворою перевіркою довжини при повторному зчитуванні та безпечним завершенням `stage=find_baas` у разі колізії, відсутності або пошкодження файлу.
 - [x] `DOCS-BUMP-663` — версія `0.13.663`, plan/task/walkthrough/audit.

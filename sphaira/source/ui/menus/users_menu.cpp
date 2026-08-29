@@ -668,6 +668,9 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Prepare official-link apply"_i18n, [this](){
             ConfirmPrepareApply();
         }, true, "Apply an exported official Nintendo Account link package onto this unlinked profile in TegraExplorer."_i18n);
+        options->Add<SidebarEntryCallback>("Probe official-link save layout"_i18n, [this](){
+            ConfirmPrepareLayoutProbe();
+        }, true, "Probe save 0010 layout for official Nintendo Account link files in TegraExplorer (read-only)."_i18n);
     }
 
     options->Add<SidebarEntryHeader>("VIEW"_i18n);
@@ -886,6 +889,21 @@ void Menu::ConfirmPrepareApply() {
                 std::vector<std::string>{},
                 fs::FsPath{paths::DATA_ROOT + "/account_links"},
                 true);
+        });
+}
+
+void Menu::ConfirmPrepareLayoutProbe() {
+    if (m_items.empty()) {
+        return;
+    }
+    const auto& user = m_items[m_index];
+    App::Push<OptionBox>(
+        "Probe save 0010 layout for official Nintendo Account link files? This check is read-only and will not write to SYSTEM. The console will reboot to TegraExplorer."_i18n,
+        "Cancel"_i18n, "Reboot to TegraExplorer"_i18n, 1,
+        [this, uid = user.uid](auto op) {
+            if (op && *op == 1) {
+                RunPrepareLayoutProbe(uid);
+            }
         });
 }
 
@@ -1125,6 +1143,13 @@ void Menu::RunPrepareApply(const AccountUid& target_uid, const std::string& pkg_
     const auto rc = account_link::PrepareOfficialLinkApply(target_uid, pkg_dir);
     if (R_FAILED(rc)) {
         App::Push<OptionBox>("Could not prepare the apply script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
+    }
+}
+
+void Menu::RunPrepareLayoutProbe(const AccountUid& uid) {
+    const auto rc = account_link::PrepareOfficialLinkLayoutProbe(uid);
+    if (R_FAILED(rc)) {
+        App::Push<OptionBox>("Could not prepare the layout probe script. Make sure TegraExplorer is installed."_i18n, "OK"_i18n);
     }
 }
 

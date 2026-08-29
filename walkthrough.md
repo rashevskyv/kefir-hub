@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.663** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.664** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.664 — Read-only official-link save layout probe
+
+- Діагностика layout сейву 0010 перед apply (`sphaira/source/account_link.cpp`, `users_menu.cpp`):
+  - Нова функція `PrepareOfficialLinkLayoutProbe()` генерує one-shot `/startup.te` з тим самим payload-handoff і `cleanup()`, що експорт.
+  - NAND цілі фіксується під час генерації з `App::IsEmummc()` (`mountemu` / `mountsys`), без запиту в TegraExplorer.
+  - Скрипт відкриває лише `bis:/save/8000000000000010` на читання і не викликає `create` / `write` / `delete` / `commit`.
+  - Наявність `registry.dat` і `avators/profiles.dat` перевіряється через `saveObj.readdir("/su")` (і за потреби `/su/avators`) та `contains`, не через FatFS `fsexists`.
+  - Один цикл по `/su/baas` рахує файли та збіги імен RFC/Linkalho/raw (обидва регістри); content-match за offset 0x10 виконується лише якщо Horizon повернув Nintendo Account ID.
+  - Звіт `layout_probe_<stamp>/result_probe.txt` і println містять лише counts/booleans, без UID, Nintendo Account ID і імен файлів.
+  - У Users додано дію «Probe official-link save layout» (en/uk/ru) з підтвердженням, що перевірка read-only.
+  - `PrepareOfficialLinkApply()` не змінювався; apply запускати не можна.
+- Верифікація:
+  - Перевірено згенеровані етапи `read_su` / `read_baas` / `read_nas` і відсутність `fsexists` для шляхів усередині сейву.
+  - Перевірено `kForceUpdateForTest = false`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.663 — Match BaaS export by verified Nintendo Account ID content
 
