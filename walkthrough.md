@@ -1,9 +1,25 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.660** (2026-08-28). Попередні
+Актуальний delivery — **v0.13.661** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.661 — Avoid nested NAS prefix loop in export
+
+- Пряме співставлення префіксів NAS у скрипті TegraExplorer (`sphaira/source/account_link.cpp`):
+  - У `PrepareOfficialLinkExport()` повністю прибрано створення масиву `pfxList` та вкладений цикл `pfxList.foreach()`, оскільки механізм `arrayForEach` у TegraExplorer має нестабільну роботу при вкладених ітераціях.
+  - Зовнішній цикл `nasListing.files.foreach("nfile")` збережено як єдиний цикл для обходу файлів директорії `/su/nas`.
+  - Усередині циклу генеруються послідовні прямі перевірки для кожного префікса з вектора `NasPrefixes(nas_id)`:
+    - перевірка довжини `nfile.len() >= <literal-length>`;
+    - вилучення префікса за допомогою виразу `namePrefix = nfile - (nfile.len() - <literal-length>)`;
+    - пряме порівняння `if (namePrefix == "<literal-prefix>")` та встановлення `match = 1`;
+    - захист `!match` для кожної наступної перевірки, що виключає повторну обробку та дублювання копіювання файлу.
+- Верифікація:
+  - Виконано перевірку чистоти форматування `git diff --check`.
+  - Перевірено відсутність масиву `pfxList` та вкладеного циклу в `PrepareOfficialLinkExport()`.
+  - Перевірено збереження прапорця `kForceUpdateForTest = false` та незмінність `PrepareOfficialLinkApply()`.
+  - Збірка NRO та тести не виконувалися, оскільки політика проєкту забороняє компіляцію агентом.
 
 ## v0.13.660 — Draw System Tools focus text above border
 

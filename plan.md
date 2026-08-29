@@ -1,10 +1,18 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.660**. Завершені плани збережено в
+Поточний delivery — **v0.13.661**. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.660 — Draw System Tools focus text above border
+## Поточний delivery: v0.13.661 — Avoid nested NAS prefix loop in export
+
+Статус: програмну частину реалізовано. Агент не компілює.
+1. У `sphaira/source/account_link.cpp` у функції `PrepareOfficialLinkExport()` повністю видалено генерацію та використання списку `pfxList` і вкладеного циклу `pfxList.foreach()`, щоб запобігти нестабільній поведінці TegraExplorer при вкладених ітераціях.
+2. Єдиним циклом для обробки файлів NAS залишено зовнішній `nasListing.files.foreach("nfile")`.
+3. Усередині зовнішнього циклу генерується послідовність прямих перевірок для кожного префікса з вектора `NasPrefixes(nas_id)` із захистом довжини `nfile.len() >= <literal-length>`, виділенням префікса через `namePrefix = nfile - (nfile.len() - <literal-length>)`, прямим порівнянням із рядковим літералом префікса та захистом `!match`, що гарантує одноразове копіювання знайденого файлу.
+4. Версію Sphaira піднято до `0.13.661`, актуалізовано документацію та плани.
+
+## Попередній delivery: v0.13.660 — Draw System Tools focus text above border
 
 Статус: програмну частину реалізовано. Агент не компілює.
 1. У `sphaira/source/ui/menus/tools_menu.cpp` у функції `DrawToolsList()` (System Tools menu) додано третій прохід `List::Draw()` після малювання рамки виділення.

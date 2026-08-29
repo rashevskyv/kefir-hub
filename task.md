@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.660**. Завершені задачі збережено в
+Актуальний delivery — **v0.13.661**. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.660 (draw system tools focus text above border)
+## Поточний delivery: v0.13.661 (avoid nested NAS prefix loop in export)
+
+- [x] `ACCOUNT-LINK-EXPORT-NAS-FLAT-661` — у `PrepareOfficialLinkExport()` замінено вкладений цикл `pfxList.foreach()` на пряму послідовність перевірок префіксів у зовнішньому циклі `nasListing.files.foreach()`.
+- [x] `DOCS-BUMP-661` — версія `0.13.661`, plan/task/walkthrough/audit.
+
+## Попередній delivery: v0.13.660 (draw system tools focus text above border)
 
 - [x] `SYS-TOOLS-FOCUS-TEXT-660` — додано третій прохід `List::Draw()` у `DrawToolsList()` для рендерингу заголовка й опису вибраного рядка поверх заливки рамки виділення.
 - [x] `DOCS-BUMP-660` — версія `0.13.660`, plan/task/walkthrough/audit.

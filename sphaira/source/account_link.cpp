@@ -587,27 +587,18 @@ auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) 
     te += "    exit()\n";
     te += "}\n\n";
 
-    te += "pfxList = [\n";
-    for (size_t i = 0; i < prefixes.size(); i++) {
-        te += "    \"" + prefixes[i] + "\"";
-        if (i + 1 < prefixes.size()) {
-            te += ",";
-        }
-        te += "\n";
-    }
-    te += "]\n\n";
-
     te += "nasCopied = 0\n";
     te += "nasListing.files.foreach(\"nfile\") {\n";
     te += "    match = 0\n";
-    te += "    pfxList.foreach(\"pfx\") {\n";
-    te += "        if (!match && nfile.len() >= pfx.len()) {\n";
-    te += "            namePrefix = nfile - (nfile.len() - pfx.len())\n";
-    te += "            if (namePrefix == pfx) {\n";
-    te += "                match = 1\n";
-    te += "            }\n";
-    te += "        }\n";
-    te += "    }\n";
+    for (const auto& pfx : prefixes) {
+        const auto len_str = std::to_string(pfx.length());
+        te += "    if (!match && nfile.len() >= " + len_str + ") {\n";
+        te += "        namePrefix = nfile - (nfile.len() - " + len_str + ")\n";
+        te += "        if (namePrefix == \"" + pfx + "\") {\n";
+        te += "            match = 1\n";
+        te += "        }\n";
+        te += "    }\n";
+    }
     te += "    if (match) {\n";
     te += "        ndata = saveObj.read(\"/su/nas/\" + nfile)\n";
     te += "        writefile(combinepath(pkg, \"nas/\" + nfile), ndata)\n";
