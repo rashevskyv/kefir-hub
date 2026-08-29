@@ -21,12 +21,24 @@ struct User {
     bool horizon_linked{};
 };
 
+struct DonorNasFile {
+    std::string filename;
+    std::vector<u8> data;
+};
+
+struct RomfsDonorPackage {
+    u64 nas_id{};
+    std::vector<u8> baas_data;
+    std::vector<DonorNasFile> nas_files;
+};
+
 auto UidHex(const AccountUid& uid) -> std::string;
 auto ListUsers() -> std::vector<User>;
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
 auto ExportAccountSave(std::string& out_dir) -> Result;
 auto ValidateLinkPackage(const std::string& pkg_dir, u64& out_nas_id, std::vector<std::string>& out_nas_files) -> Result;
+auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
 auto PrepareOfficialLinkExport(const AccountUid& uid, std::string& out_pkg_dir) -> Result;
 auto PrepareOfficialLinkApply(const AccountUid& target_uid, const std::string& pkg_dir) -> Result;
 auto PrepareOfficialLinkLayoutProbe(const AccountUid& uid) -> Result;

@@ -1,20 +1,16 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.667+** (romfs official link, Gemini junior). Завершені плани збережено в
+Поточний delivery — **v0.13.667** (romfs donor loader; далі LinkKind/live/UX). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.667+ — ROMFS official link + launch prompt
+## Поточний delivery: v0.13.667 — ROMFS Kefir donor + LoadRomfsDonorPackage
 
-Статус: в роботі через `gemini-junior-review` (Target chat: `Romfs official link`). Сеньйор не пише product-код і не компілює; Gemini білдить у WSL.
-Мета: один official-донор (Kefir) у `assets/romfs/account_link/`; live apply на всі None/Offline; soft reboot; прибрати TE debug у Users; launch prompt.
-Кроки Gemini (послідовно):
-1. **Handoff 1 (зараз):** ушити донор у romfs + `LoadRomfsDonorPackage` (лише читання) + bump `0.13.667`.
-2. Класифікація `LinkKind` у `ListUsers` + статус Fake linked.
-3. Live writer (kill BCAT/ACCOUNT/OLSC → `/su` write → Commit).
-4. UX: launch prompt + Users «Link Nintendo Account»; видалити TE export/apply/probe/dump.
-5. i18n en/uk/ru + `docs/account-transfer.md` §3.3.
-Після accept кроку сеньйор оновлює plan/task/walkthrough/audit і комітить.
+Статус: прийнято сеньйором (Gemini junior, chat `Romfs official link`). Збірку WSL користувач скасував («не збирай»); байтова перевірка донора vs dump OK.
+1. У `assets/romfs/account_link/` ушито official-пакет Kefir: `manifest.txt` v3 (`romfs=true`), `baas/link.dat` (80 B), чотири `nas/*` (plain.dat, id/refresh tokens, user.json). Без aux/op2.
+2. Додано `LoadRomfsDonorPackage` + структури `DonorNasFile` / `RomfsDonorPackage`: валідація manifest v3, збіг nas_id з baas[0x10], `NasFileMatches` + обов’язкові обидва токени; `romfsInit`/`romfsExit` як у інших читачах romfs.
+3. Версію Sphaira піднято до `0.13.667`.
+4. Черга в тому ж Gemini chat: LinkKind/status → live apply усіх None/Offline → launch prompt + Users Link → прибрати TE debug → i18n/docs.
 
 ## Попередній delivery: v0.13.666 — Complete 0010 /su dump copy lists
 

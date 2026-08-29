@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.666** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.667** (2026-08-29). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.667 — ROMFS Kefir donor + LoadRomfsDonorPackage
+
+- Ушито official-донор Kefir у `assets/romfs/account_link/` (manifest v3, `baas/link.dat`, чотири `nas/*` з токенами; без aux/op2).
+- Додано `account_link::LoadRomfsDonorPackage` (`account_link.hpp` / `account_link.cpp`): читає romfs, валідує manifest v3 і збіг nas_id з baas[0x10], вимагає `_id.token` і `_refresh.token`.
+- Байти донора звірені з `.codex-tmp/save0010_pc_after_linkalho` (Kefir). WSL-збірку для цього кроку користувач скасував.
+- UI / live-write / видалення TE debug — ще не в цьому релізі (наступні handoff).
 
 ## v0.13.666 — Complete 0010 /su dump copy lists
 

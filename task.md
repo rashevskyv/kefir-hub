@@ -1,19 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.667+** (romfs official link). Завершені задачі збережено в
+Актуальний delivery — **v0.13.667** (romfs donor; далі live/UX). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.667+ (romfs official link + launch prompt)
+## Поточний delivery: v0.13.667 (romfs Kefir donor + loader)
 
-- [ ] `ACC-ROMFS-DONOR-667` — ушити Kefir official пакет у `assets/romfs/account_link/` + `LoadRomfsDonorPackage` (read-only); bump `0.13.667`.
+- [x] `ACC-ROMFS-DONOR-667` — Kefir official у `assets/romfs/account_link/` + `LoadRomfsDonorPackage`; bump `0.13.667`.
+- [x] `DOCS-BUMP-667` — plan/task/walkthrough/audit + commit.
 - [ ] `ACC-LINKKIND-STATUS` — `ListUsers` заповнює `LinkKind`; UI Fake linked / Linked / Not linked.
 - [ ] `ACC-LIVE-LINK-ALL` — kill BCAT/ACCOUNT/OLSC → write `/su/baas`+`/su/nas` → Commit → soft reboot.
 - [ ] `ACC-UX-LAUNCH-USERS` — launch prompt + Users «Link Nintendo Account»; прибрати TE export/apply/probe/dump.
 - [ ] `ACC-I18N-DOCS` — en/uk/ru + `docs/account-transfer.md`.
-- [ ] `DOCS-BUMP-667` — plan/task/walkthrough/audit + commit після accept (сеньйор).
 
 ## Попередній delivery: v0.13.666 (complete 0010 /su dump copy lists)
 

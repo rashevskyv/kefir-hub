@@ -202,7 +202,127 @@ auto IsSafeDumpFileName(const std::string& name) -> bool {
     return true;
 }
 
+auto EndsWith(const std::string& str, const std::string& suffix) -> bool {
+    if (str.size() < suffix.size()) {
+        return false;
+    }
+    return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 } // namespace
+
+auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
+    out_pkg = {};
+
+    R_TRY(romfsInit());
+    ON_SCOPE_EXIT(romfsExit());
+
+    std::vector<u8> manifest_bytes;
+    R_TRY(fs::read_entire_file("romfs:/account_link/manifest.txt", manifest_bytes));
+    R_UNLESS(!manifest_bytes.empty(), Result_FsInvalidType);
+
+    const std::string manifest_str(manifest_bytes.begin(), manifest_bytes.end());
+    std::unordered_map<std::string, std::string> kv;
+    size_t line_start = 0;
+    while (line_start < manifest_str.size()) {
+        auto line_end = manifest_str.find('\n', line_start);
+        if (line_end == std::string::npos) {
+            line_end = manifest_str.size();
+        }
+        auto line = manifest_str.substr(line_start, line_end - line_start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        const auto eq = line.find('=');
+        if (eq != std::string::npos) {
+            const auto k = line.substr(0, eq);
+            const auto v = line.substr(eq + 1);
+            kv[k] = v;
+        }
+        line_start = line_end + 1;
+    }
+
+    R_UNLESS(kv["format"] == "kefir_account_link", Result_FsInvalidType);
+    R_UNLESS(kv["version"] == "3", Result_FsInvalidType);
+    R_UNLESS(kv["romfs"] == "true", Result_FsInvalidType);
+    R_UNLESS(kv["system_save"] == "8000000000000010", Result_FsInvalidType);
+    R_UNLESS(kv["idgen_0011_included"] == "false", Result_FsInvalidType);
+    R_UNLESS(kv["baas_file"] == "baas/link.dat", Result_FsInvalidType);
+
+    const auto& nas_hex = kv["nintendo_account_id"];
+    R_UNLESS(!nas_hex.empty() && nas_hex.size() <= 16, Result_FsInvalidType);
+    for (char c : nas_hex) {
+        R_UNLESS(std::isxdigit(static_cast<unsigned char>(c)), Result_FsInvalidType);
+    }
+
+    char* end = nullptr;
+    const u64 nas_id = std::strtoull(nas_hex.c_str(), &end, 16);
+    R_UNLESS(end && *end == '\0' && nas_id != 0, Result_FsInvalidType);
+
+    const auto& nas_files_csv = kv["nas_files"];
+    R_UNLESS(!nas_files_csv.empty(), Result_FsInvalidType);
+
+    const auto baas_path = "romfs:/account_link/" + kv["baas_file"];
+    std::vector<u8> baas_data;
+    R_TRY(fs::read_entire_file(baas_path.c_str(), baas_data));
+    R_UNLESS(baas_data.size() >= 24, Result_FsInvalidType);
+
+    u64 baas_nas_id = 0;
+    std::memcpy(&baas_nas_id, baas_data.data() + 16, sizeof(u64));
+    R_UNLESS(baas_nas_id == nas_id, Result_FsInvalidType);
+
+    std::vector<std::string> file_list;
+    size_t csv_start = 0;
+    while (csv_start < nas_files_csv.size()) {
+        auto comma = nas_files_csv.find(',', csv_start);
+        if (comma == std::string::npos) {
+            comma = nas_files_csv.size();
+        }
+        auto fname = nas_files_csv.substr(csv_start, comma - csv_start);
+        while (!fname.empty() && std::isspace(static_cast<unsigned char>(fname.front()))) {
+            fname.erase(fname.begin());
+        }
+        while (!fname.empty() && std::isspace(static_cast<unsigned char>(fname.back()))) {
+            fname.pop_back();
+        }
+        if (!fname.empty()) {
+            file_list.push_back(fname);
+        }
+        csv_start = comma + 1;
+    }
+    R_UNLESS(!file_list.empty(), Result_FsInvalidType);
+
+    bool has_id_token = false;
+    bool has_refresh_token = false;
+    std::vector<DonorNasFile> loaded_nas_files;
+    loaded_nas_files.reserve(file_list.size());
+
+    for (const auto& fname : file_list) {
+        R_UNLESS(IsSafeDumpFileName(fname), Result_FsInvalidType);
+        R_UNLESS(NasFileMatches(fname, nas_id), Result_FsInvalidType);
+
+        const auto fpath = "romfs:/account_link/nas/" + fname;
+        std::vector<u8> fdata;
+        R_TRY(fs::read_entire_file(fpath.c_str(), fdata));
+        R_UNLESS(!fdata.empty(), Result_FsInvalidType);
+
+        const auto lower = ToLowerCopy(fname);
+        if (EndsWith(lower, "_id.token")) {
+            has_id_token = true;
+        } else if (EndsWith(lower, "_refresh.token")) {
+            has_refresh_token = true;
+        }
+
+        loaded_nas_files.push_back(DonorNasFile{fname, std::move(fdata)});
+    }
+
+    R_UNLESS(has_id_token && has_refresh_token, Result_FsInvalidType);
+
+    out_pkg.nas_id = nas_id;
+    out_pkg.baas_data = std::move(baas_data);
+    out_pkg.nas_files = std::move(loaded_nas_files);
+    R_SUCCEED();
+}
 
 auto UidHex(const AccountUid& uid) -> std::string {
     return UidDashedRfc(uid);
