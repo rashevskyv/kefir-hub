@@ -1,12 +1,16 @@
-# Активні задачі
-
-Актуальний delivery — **v0.13.673** (direct paste + confirmed replacement). Завершені задачі збережено в
+Актуальний delivery — **v0.13.674** (Official vs Fake + colours). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.673 (direct paste + confirmed replacement)
+## Поточний delivery: v0.13.674 (Official vs Fake + status colours)
+
+- [ ] `ACC-CLASSIFY-OFFICIAL-674` — надійно відрізняти Official від Fake (IPC LoadIdTokenCache + disk token fallback).
+- [ ] `ACC-STATUS-COLOURS-674` — Official зелений, Fake жовтий, Not linked червоний у Users.
+- [ ] `DOCS-BUMP-674` — plan/task/walkthrough/audit + commit після accept.
+
+## Попередній delivery: v0.13.673 (direct paste + confirmed replacement)
 
 - [x] `PASTE-DIRECT-REPLACE-673` — «Paste» більше не питає вдруге; за конфлікту показує лише Replace/Cancel, а видалення destination-файлів відбувається лише після Replace.
 - [x] `DOCS-BUMP-673` — версія `0.13.673`, plan/task/walkthrough/audit і локальний commit.

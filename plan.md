@@ -1,10 +1,15 @@
-# Актуальний план
-
-Поточний delivery — **v0.13.673** (direct paste + confirmed replacement). Завершені плани збережено в
+Поточний delivery — **v0.13.674** (fix Official vs Fake status + colors). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.673 — Direct paste and explicitly confirmed replacement
+## Поточний delivery: v0.13.674 — Official vs Fake classification + status colours
+
+Статус: в роботі (Gemini junior, chat `Romfs official link`). Сеньйор не пише product-код.
+1. На скріні Official (Nintendo/Kefir) показуються як Fake linked — виправити `ListUsers` класифікацію.
+2. Кольори в Users: Official зелений, Fake жовтий, Not linked червоний (title subheading теж).
+3. Bump `0.13.674`.
+
+## Попередній delivery: v0.13.673 — Direct paste and explicitly confirmed replacement
 
 Статус: прийнято сеньйором. Агент не компілює.
 1. Натискання Paste одразу запускає операцію, якщо конфліктів немає; попередній діалог `Paste file(s)?` прибрано.
