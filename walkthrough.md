@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.690** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.691** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.691 — Backup user / Restore Backup in Options again
+
+- L/R з 690 прибрали Backup/Restore з Options; на консолі лишився лише CONSOLE MOVE. Пункти повернуто в PROFILE (Backup user, Restore Backup, Delete), без окремого підзаголовка. Restore Backup є і на порожньому списку.
+- Фікс стеку 690 не чіпали. Версія `0.13.691`. Збірку агент не запускав.
 
 ## v0.13.690 — User backup crash + L/R Backup Restore
 

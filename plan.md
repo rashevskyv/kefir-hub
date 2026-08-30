@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.690** (Fix user backup stack overflow + Users Backup/Restore actions). Завершені плани збережено в
+Поточний delivery — **v0.13.691** (Restore Backup user in Users Options). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.690 — Fix user backup crash and move Backup/Restore
+## Поточний delivery: v0.13.691 — Backup user / Restore Backup back in Options
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. L/R Backup/Restore з 690 ховали дії з контекстного меню — користувач їх не бачив. Пункти повернуто в Options під PROFILE, підряд, без окремого підзаголовка Backup and Restore.
+2. Restore Backup доступний і коли список профілів порожній. CONSOLE MOVE (profiles & play hours) не чіпали. Фікс стеку 690 лишається.
+3. Версія `0.13.691`.
+
+## Попередній delivery: v0.13.690 — Fix user backup crash and move Backup/Restore
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

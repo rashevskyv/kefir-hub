@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.690** (Fix user backup stack overflow + Users L/R Backup Restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.691** (Backup user / Restore Backup back in Users Options). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.690 (fix user backup crash + L/R Backup Restore)
+## Поточний delivery: v0.13.691 (Backup/Restore visible in Options)
+
+- [x] `USERS-BACKUP-OPTIONS-691` — Backup user і Restore Backup знову в контекстному меню PROFILE, без L/R і без підзаголовка Backup and Restore.
+- [x] `DOCS-BUMP-691` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.690 (fix user backup crash + L/R Backup Restore)
 
 - [x] `USERS-BACKUP-STACK-690` — `CollectInstalledApps` більше не кладе `NsApplicationControlData` на стек ProgressBox; crash dump Build ID збігся з ELF 689.
 - [x] `USERS-BACKUP-CURSOR-690` — без галочок бекапиться лише профіль під курсором; зі зняттям UID у момент дії.

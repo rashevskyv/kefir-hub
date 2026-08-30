@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.690**. Дата: 2026-08-30.
+Канонічний робочий файл. Версія коду: **v0.13.691**. Дата: 2026-08-30.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.691 поза ponytail-чергою: Backup user / Restore Backup знову в Users Options (PROFILE), L/R прибрано. Не закриває чергу §2.
 
 v0.13.690 поза ponytail-чергою: crash Backup user — `NsApplicationControlData` зі стеку ProgressBox на купу; Users L/R Backup/Restore поза Options. Не закриває чергу §2.
 

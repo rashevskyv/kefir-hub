@@ -592,8 +592,6 @@ Menu::Menu() : grid::Menu{"Users"_i18n, MenuFlag_None} {
         }}),
         std::make_pair(Button::X, Action{"Select"_i18n, [this](){ ToggleCurrentSelection(); }}),
         std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ InvertSelection(); }}),
-        std::make_pair(Button::L, Action{"Backup"_i18n, [this](){ ConfirmBackup(); }}),
-        std::make_pair(Button::R, Action{"Restore"_i18n, [this](){ ConfirmRestoreBackup(); }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){ ShowContextMenu(); }})
     );
     OnLayoutChange();
@@ -905,9 +903,19 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Change avatar"_i18n, [this](){
             ConfirmChangeAvatar();
         }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n);
+        options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
+            ConfirmBackup();
+        }, true, "Back up profile metadata, avatar, Nintendo Account link and playtime to SD."_i18n);
+        options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
+            ConfirmRestoreBackup();
+        }, true, "Restore one or more profile backups as new users. Restores avatar and Nintendo Account link."_i18n);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
         }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
+    } else {
+        options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
+            ConfirmRestoreBackup();
+        }, true, "Restore one or more profile backups as new users. Restores avatar and Nintendo Account link."_i18n);
     }
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
