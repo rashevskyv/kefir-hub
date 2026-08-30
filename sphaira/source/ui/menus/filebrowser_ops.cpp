@@ -711,21 +711,25 @@ auto FsView::HasPasteConflicts() -> bool {
     return false;
 }
 
-void FsView::OnPasteCallback() {
+void FsView::OnPasteCallback(bool replace_existing) {
     // check if we only have 1 file / folder and is cut (rename)
     if (m_menu->m_selected.SameFs(this) && m_menu->m_selected.m_files.size() == 1 && m_menu->m_selected.m_type == SelectedType::Cut) {
         const auto& entry = m_menu->m_selected.m_files[0];
         const auto full_path = GetNewPath(m_menu->m_selected.m_path, entry.name);
+        const auto dst_path = GetNewPath(entry);
 
         if (entry.IsDir()) {
-            m_fs->RenameDirectory(full_path, GetNewPath(entry));
+            m_fs->RenameDirectory(full_path, dst_path);
         } else {
-            m_fs->RenameFile(full_path, GetNewPath(entry));
+            if (replace_existing && full_path != dst_path && m_fs->FileExists(dst_path)) {
+                m_fs->DeleteFile(dst_path);
+            }
+            m_fs->RenameFile(full_path, dst_path);
         }
 
         m_menu->RefreshViews();
     } else {
-        App::Push<ProgressBox>(0, "Pasting"_i18n, "", [this](auto pbox) -> Result {
+        App::Push<ProgressBox>(0, "Pasting"_i18n, "", [this, replace_existing](auto pbox) -> Result {
             auto& selected = m_menu->m_selected;
             auto src_fs = selected.SrcFs();
             const auto is_same_fs = selected.SameFs(this);
@@ -744,6 +748,9 @@ void FsView::OnPasteCallback() {
                     if (p.IsDir()) {
                         m_fs->RenameDirectory(src_path, dst_path);
                     } else {
+                        if (replace_existing && src_path != dst_path && m_fs->FileExists(dst_path)) {
+                            R_TRY(m_fs->DeleteFile(dst_path));
+                        }
                         m_fs->RenameFile(src_path, dst_path);
                     }
                 }
@@ -793,6 +800,9 @@ void FsView::OnPasteCallback() {
                     } else {
                         pbox->SetTitle(p.name);
                         pbox->NewTransfer("Copying "_i18n + src_path);
+                        if (replace_existing && m_fs->FileExists(dst_path)) {
+                            R_TRY(m_fs->DeleteFile(dst_path));
+                        }
                         R_TRY(pbox->CopyFile(src_fs, m_fs.get(), src_path, dst_path, is_same_fs));
                         R_TRY(on_paste_file(src_path, dst_path));
                     }
@@ -823,6 +833,9 @@ void FsView::OnPasteCallback() {
 
                         pbox->SetTitle(p.name);
                         pbox->NewTransfer("Copying "_i18n + src_path);
+                        if (replace_existing && m_fs->FileExists(dst_path)) {
+                            R_TRY(m_fs->DeleteFile(dst_path));
+                        }
                         R_TRY(pbox->CopyFile(src_fs, m_fs.get(), src_path, dst_path, is_same_fs));
                         R_TRY(on_paste_file(src_path, dst_path));
                     }

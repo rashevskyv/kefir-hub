@@ -1,9 +1,16 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.672** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.673** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.673 — Direct paste and confirmed file replacement
+
+- Paste у File Browser більше не відкриває зайве загальне підтвердження. Без конфлікту операція стартує одразу.
+- За наявності destination-файлу показується тільки локалізований Replace/Cancel prompt. Відмова не видаляє файл і не запускає transfer.
+- Дозвіл `replace_existing` передається до paste-worker лише після Replace; усі нові `DeleteFile` у copy та same-filesystem cut/rename обмежені цим прапорцем. Рекурсивна перевірка конфліктів у вибраних теках збережена.
+- Версія Sphaira — `0.13.673`. Виконано static review і `git diff --check`; збірку й тести не запускали відповідно до політики checkout.
 
 ## v0.13.672 — Conservative DBI translation-file label
 

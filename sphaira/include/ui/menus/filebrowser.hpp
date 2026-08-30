@@ -381,7 +381,7 @@ private:
     void SetIndexFromLastFile(const LastFile& last_file);
 
     void OnDeleteCallback();
-    void OnPasteCallback();
+    void OnPasteCallback(bool replace_existing = false);
     auto HasPasteConflicts() -> bool;
     auto CheckIfUpdateFolder() -> Result;
 

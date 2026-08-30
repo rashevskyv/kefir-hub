@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.672** (DBI translation-file label). Завершені плани збережено в
+Поточний delivery — **v0.13.673** (direct paste + confirmed replacement). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.672 — Conservative DBI translation-file label
+## Поточний delivery: v0.13.673 — Direct paste and explicitly confirmed replacement
+
+Статус: прийнято сеньйором. Агент не компілює.
+1. Натискання Paste одразу запускає операцію, якщо конфліктів немає; попередній діалог `Paste file(s)?` прибрано.
+2. `HasPasteConflicts()` зберігає перевірку файлів у вибраних теках і cut/rename. За конфлікту показується лише наявний Replace/Cancel prompt.
+3. `OnPasteCallback(bool replace_existing)` отримує дозвіл лише з Replace; видаляє destination-файли перед копіюванням або rename лише за цим прапорцем. Sphaira піднято до `0.13.673`; static review і `git diff --check` виконано, збірку не запускали.
+
+## Попередній delivery: v0.13.672 — Conservative DBI translation-file label
 
 Статус: прийнято сеньйором. Агент не компілює.
 1. File Browser показує `DBI translation file` лише для точного шляху `/switch/DBI/translation.bin`, коли в цій самій файловій системі є `/switch/DBI/DBI.nro`.

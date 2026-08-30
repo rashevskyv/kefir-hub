@@ -2317,25 +2317,20 @@ void FsView::DisplayOptions() {
 
     if (!is_root && !m_menu->m_selected.Empty() && (m_menu->m_selected.Type() == SelectedType::Cut || m_menu->m_selected.Type() == SelectedType::Copy)) {
         auto paste_entry = options->Add<SidebarEntryCallback>("Paste"_i18n, [this](){
-            const std::string buf = "Paste file(s)?"_i18n;
-            App::Push<OptionBox>(
-                buf, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
-                if (op_index && *op_index) {
-                    App::PopToMenu();
-                    if (HasPasteConflicts()) {
-                        App::Push<OptionBox>(
-                            "One or more files already exist in the destination. Replace existing files?"_i18n,
-                            "Cancel"_i18n, "Replace"_i18n, 0, [this](auto replace_op){
-                                if (replace_op && *replace_op) {
-                                    OnPasteCallback();
-                                }
-                            }
-                        );
-                    } else {
-                        OnPasteCallback();
+            if (HasPasteConflicts()) {
+                App::Push<OptionBox>(
+                    "One or more files already exist in the destination. Replace existing files?"_i18n,
+                    "Cancel"_i18n, "Replace"_i18n, 0, [this](auto replace_op){
+                        if (replace_op && *replace_op) {
+                            App::PopToMenu();
+                            OnPasteCallback(true);
+                        }
                     }
-                }
-            });
+                );
+            } else {
+                App::PopToMenu();
+                OnPasteCallback(false);
+            }
         }, "Paste the clipboard contents into the current folder."_i18n);
         paste_entry->SetIcon(ActionIcon::Paste);
         paste_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Destination folder is read-only"_i18n);

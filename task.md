@@ -1,12 +1,17 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.672** (DBI translation-file label). Завершені задачі збережено в
+Актуальний delivery — **v0.13.673** (direct paste + confirmed replacement). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.672 (DBI translation-file label)
+## Поточний delivery: v0.13.673 (direct paste + confirmed replacement)
+
+- [x] `PASTE-DIRECT-REPLACE-673` — «Paste» більше не питає вдруге; за конфлікту показує лише Replace/Cancel, а видалення destination-файлів відбувається лише після Replace.
+- [x] `DOCS-BUMP-673` — версія `0.13.673`, plan/task/walkthrough/audit і локальний commit.
+
+## Попередній delivery: v0.13.672 (DBI translation-file label)
 
 - [x] `PAYLOAD-DBI-TRANSLATION-LABEL-672` — лише `/switch/DBI/translation.bin` із sibling `/switch/DBI/DBI.nro` має мітку `DBI translation file`; в усіх інших випадках лишається фактична назва.
 - [x] `DOCS-BUMP-672` — версія `0.13.672`, plan/task/walkthrough/audit і локальний commit.
