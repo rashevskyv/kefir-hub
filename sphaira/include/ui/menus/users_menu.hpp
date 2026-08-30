@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 
+namespace sphaira::account_user {
+struct Pack;
+}
+
 namespace sphaira::ui::menu::save {
 struct Entry;
 }
@@ -54,16 +58,16 @@ private:
     void ConfirmBackup();
     void ConfirmNandBackup();
     void ConfirmNandRestore();
-    void ConfirmRestore();
+    void ConfirmRestoreBackup();
     void ConfirmDelete();
     void RunLinkNintendoAccount();
     void RunUnlinkNintendoAccount(std::vector<AccountUid> uids);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
-    void RunBackup(std::vector<save::Entry> picked_saves = {});
+    void RunBackup();
     void RunNandBackup();
     void RunNandRestore(const std::string& dir);
-    void RunRestore(const std::string& dir);
+    void RunRestoreBackup(std::vector<account_user::Pack> picked_packs);
     void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
 
     auto StatusLabel(const account_link::User& u) const -> std::string;

@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.687** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.688** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.688 — Complete User Backup + Restore Backup
+
+- `Backup user` експортує поточний або виділені профілі до окремих папок `/config/kefir/user_packs/`: profile metadata, avatar, читабельний `playtime.tsv` і повний BaaS/NAS link-набір, коли він доступний. Game saves не входять: UI та README прямо відсилають до окремого **Backup saves**.
+- Старий `Restore user pack` прибрано. **Restore Backup** показує список SD-бекапів з multi-select, статусом `Linked`/`Local` і перевіркою вільних слотів. Кожен вибраний пак створює новий Horizon UID і відновлює avatar; повний валідний link-набір застосовується одним `0010` Commit. Існуючі профілі, `0011`, `00F0` та game saves не змінюються.
+- BaaS визначається за NAS ID у байтах 16..23 little-endian, а не за ім’ям файлу; NAS names/payloads і пара токенів перевіряються до запису. До будь-якої зміни `0010` створюється перевірений SD rollback, а помилка SD-запису або читання NAS не маскується як успішний бекап. Новий early-return шлях також коректно завершує PDM.
+- Версія `0.13.688`. Пройшли `git diff --check`, синтаксичний JSON parsing усіх 14 локалізацій, повнота нових i18n ключів та статичний review safety-invariants. Збірку й тести не запускали; потрібна перевірка на emuNAND.
 
 ## v0.13.687 — Users Icon labels above tiles
 

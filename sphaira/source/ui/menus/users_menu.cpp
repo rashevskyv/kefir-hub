@@ -150,6 +150,206 @@ private:
     std::unique_ptr<List> m_list;
 };
 
+struct RestoreBackupMenu final : MenuBase {
+    using Callback = std::function<void(std::optional<std::vector<account_user::Pack>>)>;
+
+    struct Entry {
+        account_user::Pack pack;
+        int image{};
+        bool selected{};
+        bool avatar_tried{};
+    };
+
+    RestoreBackupMenu(std::vector<account_user::Pack> packs, Callback cb)
+        : MenuBase{"Restore Backup"_i18n, MenuFlag_None}
+        , m_cb{std::move(cb)}
+    {
+        for (auto& p : packs) {
+            Entry e;
+            e.pack = std::move(p);
+            m_entries.push_back(std::move(e));
+        }
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Restore"_i18n, [this](){
+                std::vector<account_user::Pack> picked;
+                for (const auto& e : m_entries) {
+                    if (e.selected) {
+                        picked.push_back(e.pack);
+                    }
+                }
+                if (picked.empty() && !m_entries.empty()) {
+                    picked.push_back(m_entries[m_index].pack);
+                }
+                auto cb = m_cb;
+                SetPop();
+                if (cb) {
+                    cb(std::move(picked));
+                }
+            }}),
+            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
+                auto cb = m_cb;
+                SetPop();
+                if (cb) {
+                    cb(std::nullopt);
+                }
+            }}),
+            std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+                if (m_entries.empty()) {
+                    return;
+                }
+                m_entries[m_index].selected ^= 1;
+                m_selected_count += m_entries[m_index].selected ? 1 : -1;
+                if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+                    m_index++;
+                    m_list->EnsureVisible(m_index, m_entries.size());
+                }
+                UpdateSubHeading();
+            }}),
+            std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+                m_selected_count = 0;
+                for (auto& e : m_entries) {
+                    e.selected ^= 1;
+                    if (e.selected) {
+                        m_selected_count++;
+                    }
+                }
+                UpdateSubHeading();
+            }})
+        );
+        m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 70.f});
+        SetTitleSubHeading("X marks backups to restore. A restores the selected profiles."_i18n, true);
+        UpdateSubHeading();
+    }
+
+    ~RestoreBackupMenu() {
+        auto* vg = App::GetVg();
+        for (auto& e : m_entries) {
+            if (e.image > 0 && vg) {
+                nvgDeleteImage(vg, e.image);
+                e.image = 0;
+            }
+        }
+    }
+
+    auto GetShortTitle() const -> const char* override { return "Restore"; }
+
+    void UpdateSubHeading() {
+        if (m_entries.empty()) {
+            SetSubHeading("0");
+        } else if (m_selected_count > 0) {
+            SetSubHeading(std::to_string(m_selected_count) + " / " + std::to_string(m_entries.size()));
+        } else {
+            SetSubHeading(std::to_string(m_entries.size()));
+        }
+    }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        if (m_entries.empty()) {
+            return;
+        }
+        m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::X);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                m_index = i;
+            }
+        }, this);
+    }
+
+    auto TryLoadAvatar(Entry& e) -> bool {
+        if (e.avatar_tried) {
+            return false;
+        }
+        e.avatar_tried = true;
+        fs::FsNativeSd sd;
+        std::vector<u8> jpeg;
+        if (R_FAILED(sd.read_entire_file((e.pack.dir + "/avatar.jpg").c_str(), jpeg)) || jpeg.empty()) {
+            return false;
+        }
+        auto img = ImageLoadFromMemory(jpeg, ImageFlag_JPEG);
+        if (img.data.empty()) {
+            img = ImageLoadIcon(jpeg);
+        }
+        if (img.data.empty()) {
+            return false;
+        }
+        e.image = nvgCreateImageRGBA(App::GetVg(), img.w, img.h, 0, img.data.data());
+        return true;
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+        if (m_entries.empty()) {
+            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 22.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s", "No user backups found"_i18n.c_str());
+            return;
+        }
+        int loaded = 0;
+        m_list->Draw(vg, theme, m_entries.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+            auto& e = m_entries[i];
+            if (loaded < 2 && TryLoadAvatar(e)) {
+                loaded++;
+            }
+            const auto selected = m_index == i;
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
+            } else {
+                DrawElement(v, ThemeEntryID_GRID);
+            }
+            if (e.selected) {
+                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+                tint.a *= 0.35f;
+                gfx::drawRect(vg, v, tint, 5.f);
+            }
+
+            gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
+                gfx::CHECKBOX_SIZE, e.selected);
+
+            const float icon_size = 46.f;
+            const float icon_x = v.x + 50.f;
+            const float icon_y = v.y + (v.h - icon_size) / 2.f;
+            gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size},
+                e.image > 0 ? e.image : App::GetDefaultImage(), 4);
+
+            const float text_x = icon_x + icon_size + 14.f;
+            const auto link_status_str = e.pack.link_valid ? "Linked"_i18n : "Local"_i18n;
+            const auto link_color = e.pack.link_valid ? nvgRGBA(80, 200, 120, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+            float bounds[4]{};
+            gfx::textBounds(vg, 0, 0, bounds, link_status_str.c_str());
+            const float status_w = bounds[2] - bounds[0] + 20.f;
+            gfx::drawText(vg, v.x + v.w - 15.f, v.y + v.h / 2.f, 16.f,
+                link_color, link_status_str.c_str(),
+                NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, v.y, v.w - (text_x - v.x) - 15.f - status_w, v.h);
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                "%s", e.pack.nickname.c_str());
+
+            const auto detail_str = e.pack.folder_name;
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s", detail_str.c_str());
+            nvgRestore(vg);
+        });
+    }
+
+private:
+    std::vector<Entry> m_entries;
+    Callback m_cb;
+    s64 m_index{};
+    s64 m_selected_count{};
+    std::unique_ptr<List> m_list;
+};
+
 struct AvatarPickMenu final : MenuBase {
     using Callback = std::function<void(std::vector<u8>)>;
     enum class Kind { Existing, FromSd, Sgdb };
@@ -704,14 +904,14 @@ void Menu::ShowContextMenu() {
         }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n);
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
-        }, true, "One profile: name, avatar, Nintendo link. Restore makes a new user. No play hours."_i18n);
+        }, true, "Back up profile metadata, avatar, Nintendo Account link and playtime to SD."_i18n);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
         }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
     }
-    options->Add<SidebarEntryCallback>("Restore user pack"_i18n, [this](){
-        ConfirmRestore();
-    }, true, "Create a new profile from a pack. New user ID — play hours stay on the old console. For hours use Backup profiles & play hours."_i18n);
+    options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
+        ConfirmRestoreBackup();
+    }, true, "Restore one or more profile backups as new users. Restores avatar and Nintendo Account link."_i18n);
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
@@ -787,17 +987,7 @@ void Menu::ConfirmBackup() {
     if (uids.empty()) {
         return;
     }
-    auto saves = CollectSaves(uids);
-    if (saves.empty()) {
-        RunBackup({});
-        return;
-    }
-    App::Push<SavePickMenu>(std::move(saves), [this](auto picked) {
-        if (!picked) {
-            return;
-        }
-        RunBackup(std::move(*picked));
-    });
+    RunBackup();
 }
 
 void Menu::ConfirmNandBackup() {
@@ -830,23 +1020,42 @@ void Menu::ConfirmNandRestore() {
         });
 }
 
-void Menu::ConfirmRestore() {
-    App::Push<OptionBox>(
-        "Pick a user pack folder (profile.json + avatar.jpg). A new local profile is created (new UID, no play hours). Y selects the folder."_i18n,
-        "Cancel"_i18n, "Choose folder"_i18n, 1,
-        [this](auto op) {
-            if (!op || *op != 1) {
-                return;
+void Menu::ConfirmRestoreBackup() {
+    if (m_items.size() >= ACC_USER_LIST_SIZE) {
+        App::Push<OptionBox>("The console already has 8 user profiles."_i18n, "OK"_i18n);
+        return;
+    }
+    const auto packs = account_user::ListUserPacks();
+    if (packs.empty()) {
+        App::Push<OptionBox>("No user backups found under /config/kefir/user_packs."_i18n, "OK"_i18n);
+        return;
+    }
+    App::Push<RestoreBackupMenu>(packs, [this](auto picked) {
+        if (!picked || picked->empty()) {
+            return;
+        }
+        const auto available_slots = ACC_USER_LIST_SIZE - m_items.size();
+        if (picked->size() > available_slots) {
+            App::Push<OptionBox>(
+                "Cannot restore: selecting " + std::to_string(picked->size()) +
+                " profile(s) would exceed the maximum of 8 users (available: " +
+                std::to_string(available_slots) + ")."_i18n, "OK"_i18n);
+            return;
+        }
+        bool any_link = false;
+        for (const auto& p : *picked) {
+            if (p.link_valid) {
+                any_link = true;
+                break;
             }
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[this](const fs::FsPath& path, const filebrowser::FsEntry&) -> bool {
-                    RunRestore(path.toString());
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{paths::DATA_ROOT + "/user_packs"},
-                true);
-        });
+        }
+        std::string gate_reason;
+        if (any_link && account_link::IsLinkGated(gate_reason)) {
+            App::Push<OptionBox>(gate_reason, "OK"_i18n);
+            return;
+        }
+        RunRestoreBackup(std::move(*picked));
+    });
 }
 
 void Menu::ConfirmDelete() {
@@ -1035,73 +1244,125 @@ void Menu::RunNandRestore(const std::string& dir) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunBackup(std::vector<save::Entry> picked_saves) {
+void Menu::RunBackup() {
     const auto uids = SelectedUids();
     if (uids.empty()) {
         return;
     }
-    const bool has_saves = !picked_saves.empty();
     auto dirs = std::make_shared<std::vector<std::string>>();
-    auto helper = std::make_shared<save::Menu>(MenuFlag_None);
-    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs, picked_saves = std::move(picked_saves), helper](auto pbox) mutable -> Result {
+    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs](auto pbox) -> Result {
         pbox->NewTransfer("Writing user pack"_i18n);
         R_TRY(account_user::ExportUserPacks(uids, *dirs));
-        for (size_t i = 0; i < uids.size() && i < dirs->size(); i++) {
-            const auto& uid = uids[i];
-            const auto& dir = (*dirs)[i];
-            std::vector<save::Entry> user_saves;
-            for (const auto& s : picked_saves) {
-                if (account_link::UidHex(s.uid) == account_link::UidHex(uid)) {
-                    user_saves.push_back(s);
-                }
-            }
-            if (!user_saves.empty()) {
-                pbox->NewTransfer("Backing up saves"_i18n);
-                R_TRY(helper->BackupSavesOn(pbox, user_saves, fs::FsPath{dir + "/saves"}));
-            }
-        }
         R_SUCCEED();
-    }, [this, dirs, has_saves](Result rc) {
+    }, [this, dirs](Result rc) {
         if (R_FAILED(rc) || dirs->empty()) {
             App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
             return;
         }
-        const auto detail = has_saves
-            ? "\n" + "Includes playtime data and selected saves."_i18n
-            : "\n" + "Includes playtime data."_i18n;
-        App::Push<OptionBox>("Exported to "_i18n + dirs->front() + detail, "OK"_i18n);
+        if (dirs->size() == 1) {
+            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes playtime data."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+        } else {
+            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + "Includes playtime data."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+        }
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
-void Menu::RunRestore(const std::string& dir) {
-    if (m_items.size() >= ACC_USER_LIST_SIZE) {
-        App::Push<OptionBox>("The console already has 8 user profiles."_i18n, "OK"_i18n);
-        return;
-    }
-    App::Push<ProgressBox>(0, "Restore user pack"_i18n, "Restore user pack"_i18n, [dir](auto pbox) -> Result {
-        pbox->NewTransfer("Creating user from pack"_i18n);
-        AccountUid uid{};
-        R_TRY(account_user::ImportUserPack(dir, uid));
-        R_SUCCEED();
-    }, [this](Result rc) {
-        if (R_FAILED(rc)) {
-            const auto msg = (rc == Result_FsInvalidType)
-                ? "That folder is not a user pack (needs profile.json or avatar.jpg)."_i18n
-                : "Could not restore the user pack."_i18n;
-            App::Push<OptionBox>(msg, "OK"_i18n);
-            return;
-        }
-        App::Push<OptionBox>(
-            "User restored. Reboot if the Nintendo link does not show yet."_i18n,
-            "Later"_i18n, "Reboot"_i18n, 1,
-            [](auto op) {
-                if (op && *op == 1) {
-                    utils::requestForcedReboot();
+namespace {
+
+struct RestoreReport {
+    u32 profiles_restored{};
+    u32 links_restored{};
+    u32 unlinked_restored{};
+    u32 link_malformed_count{};
+    u32 failed_creations{};
+    bool link_apply_failed{};
+};
+
+} // namespace
+
+void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
+    auto report = std::make_shared<RestoreReport>();
+    App::Push<ProgressBox>(0, "Restore Backup"_i18n, "Restoring profiles..."_i18n,
+        [picked_packs = std::move(picked_packs), report](auto pbox) -> Result {
+            fs::FsNativeSd sd;
+            std::vector<account_link::TargetLink> links_to_apply;
+
+            for (size_t i = 0; i < picked_packs.size(); i++) {
+                const auto& p = picked_packs[i];
+                pbox->NewTransfer("Creating user profile"_i18n);
+
+                std::vector<u8> jpeg;
+                sd.read_entire_file((p.dir + "/avatar.jpg").c_str(), jpeg);
+
+                AccountUid new_uid{};
+                const std::string name = !p.nickname.empty() ? p.nickname : "User";
+                const auto create_rc = account_user::Create(name, new_uid, jpeg);
+                if (R_FAILED(create_rc)) {
+                    log_write("[USER] Create user failed 0x%X\n", create_rc);
+                    report->failed_creations++;
+                    continue;
                 }
-            });
-        Refresh();
-    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+                report->profiles_restored++;
+
+                account_link::LinkPackage pkg;
+                const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
+                if (R_SUCCEEDED(link_load_rc)) {
+                    links_to_apply.push_back({new_uid, std::move(pkg)});
+                } else if (link_load_rc == Result_FsPathNotFound || !sd.DirExists((p.dir + "/baas").c_str())) {
+                    report->unlinked_restored++;
+                } else {
+                    log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
+                    report->link_malformed_count++;
+                    report->unlinked_restored++;
+                }
+            }
+
+            if (!links_to_apply.empty()) {
+                pbox->NewTransfer("Applying Nintendo Account link"_i18n);
+                u32 count = 0;
+                const auto apply_rc = account_link::ApplyLinkPackages(links_to_apply, count);
+                if (R_SUCCEEDED(apply_rc)) {
+                    report->links_restored = count;
+                } else {
+                    log_write("[USER] ApplyLinkPackages failed 0x%X\n", apply_rc);
+                    report->link_apply_failed = true;
+                }
+            }
+
+            R_SUCCEED();
+        },
+        [this, report](Result /*rc*/) {
+            if (report->profiles_restored == 0) {
+                App::Push<OptionBox>("Could not restore user profiles."_i18n, "OK"_i18n);
+                Refresh();
+                return;
+            }
+
+            if (report->links_restored > 0) {
+                std::string msg = "Restored " + std::to_string(report->profiles_restored) +
+                    " user profile(s) (" + std::to_string(report->links_restored) +
+                    " with Nintendo Account link). Reboot required."_i18n;
+                if (report->unlinked_restored > 0) {
+                    msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
+                }
+                App::Push<OptionBox>(
+                    msg,
+                    "Later"_i18n, "Reboot"_i18n, 1,
+                    [](auto op) {
+                        if (op && *op == 1) {
+                            utils::requestForcedReboot();
+                        }
+                    });
+            } else {
+                std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
+                if (report->link_malformed_count > 0 || report->link_apply_failed) {
+                    msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
+                }
+                App::Push<OptionBox>(msg, "OK"_i18n);
+            }
+            Refresh();
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
 void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) {

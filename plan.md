@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.687** (Users Icon labels above tiles). Завершені плани збережено в
+Поточний delivery — **v0.13.688** (complete User Backup + Restore Backup). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.687 — Users Icon labels above tiles
+## Поточний delivery: v0.13.688 — Complete User Backup + Restore Backup
+
+Статус: реалізовано в primary checkout. Пройшли `git diff --check`, парсинг усіх 14 i18n JSON і статичний safety-review; збірку агент не ганяє.
+
+1. `Backup user` бере один поточний або всі виділені профілі через наявний `SelectedUids()` і пише окремий SD-пак із profile/avatar, читабельним playtime export та повним link-набором. Game saves не входять у цей delivery: для них залишається окремий Backup saves.
+2. Link export читає підтверджені директорії account save `/su/baas` і `/su/nas`. Файл BaaS визначається за NAS ID у байтах 16..23 little-endian, а не за його ненадійним іменем; до пака потрапляють тільки BaaS і пов'язані NAS-файли. Пак валідний і без link-даних для локального профілю.
+3. Замість `Restore user pack` Users показує `Restore Backup`: локальний список валідних папок із `/config/kefir/user_packs`, multi-select та перевірку вільних profile slots. Для кожного пака створюється новий Horizon UID, відновлюється avatar і, за наявності повного валідованого BaaS/NAS набору, link застосовується до нового UID через наявний account-save write path з SD rollback та Commit. Існуючі профілі не замінюються.
+4. `0011`/UID-generator state, спільний PDM playtime `00F0` і game saves не переносяться цим шляхом. UI/README мають повідомляти лише фактично відновлені profile/avatar/Nintendo link та прямо вказувати окремий Backup saves. Перед прийняттям: `git diff --check` і перевірка синтаксису всіх i18n JSON; компіляцію не запускати.
+
+## Попередній delivery: v0.13.687 — Users Icon labels above tiles
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Users → Icon знову малює повнорозмірний avatar у межах своєї плитки; внутрішню caption-смугу та зменшення avatar прибрано.

@@ -26,18 +26,27 @@ struct DonorNasFile {
     std::vector<u8> data;
 };
 
-struct RomfsDonorPackage {
+struct LinkPackage {
     u64 nas_id{};
     std::vector<u8> baas_data;
     std::vector<DonorNasFile> nas_files;
+};
+
+using RomfsDonorPackage = LinkPackage;
+
+struct TargetLink {
+    AccountUid uid{};
+    LinkPackage pkg;
 };
 
 auto UidHex(const AccountUid& uid) -> std::string;
 auto ListUsers() -> std::vector<User>;
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
-auto ExportAccountSave(std::string& out_dir) -> Result;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
+auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) -> Result;
+auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_count) -> Result;
+auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, std::string& out_link_status) -> Result;
 auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result;
 auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked_count) -> Result;
 auto CanOfferLaunchLink() -> bool;

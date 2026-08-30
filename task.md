@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.687** (Users Icon labels above tiles). Завершені задачі збережено в
+Актуальний delivery — **v0.13.688** (complete User Backup + Restore Backup). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.687 (Users Icon labels above tiles)
+## Поточний delivery: v0.13.688 (complete User Backup + Restore Backup)
+
+- [x] `USERS-BACKUP-PROFILE-688` — Backup user для одного або виділених профілів зберігає profile, avatar, повний валідований Nintendo Account link export і читабельний playtime export; ігрові сейви лишаються в окремому Backup saves.
+- [x] `USERS-BACKUP-LINK-688` — BaaS/NAS беруться з підтверджених `/su/baas` і `/su/nas`, BaaS обирається за NAS ID у вмісті, а не за застарілим UID-іменем файлу.
+- [x] `USERS-RESTORE-BACKUP-PICK-688` — Restore user pack замінено на Restore Backup: список наявних user backup-паків, multi-select і перевірка ліміту восьми профілів.
+- [x] `USERS-RESTORE-BACKUP-LINK-688` — для кожного вибраного пака створюється новий profile, повертається avatar і застосовується перевірений BaaS/NAS набір до нового UID через account-save rollback + Commit, без зміни наявних профілів.
+- [x] `USERS-RESTORE-SAFE-LIMIT-688` — не переносяться `0011` UID-generator state, `00F0` playtime та game saves; пак без link лишається валідним profile/avatar backup.
+- [x] `USERS-BACKUP-I18N-688` — точні тексти в усіх i18n JSON: Backup saves окремо, Restore Backup повертає profile/avatar/Nintendo link за наявності, але не UID або години.
+- [x] `DOCS-BUMP-688` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.687 (Users Icon labels above tiles)
 
 - [x] `USERS-ICON-FULL-AVATAR-687` — повнорозмірний avatar повернуто; caption-смугу та shrink прибрано.
 - [x] `USERS-ICON-ABOVE-LABEL-687` — nickname непоточних плиток над outline; локальний міжрядковий gap захищає avatar іншого ряду.

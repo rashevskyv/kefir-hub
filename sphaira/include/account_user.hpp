@@ -10,9 +10,11 @@ namespace sphaira::account_user {
 
 struct Pack {
     std::string dir;
+    std::string folder_name;
     std::string nickname;
     std::string uid_hex;
-    bool has_tokens{};
+    bool has_avatar{};
+    bool link_valid{};
 };
 
 auto LoadImageJpeg(const AccountUid& uid, std::vector<u8>& out) -> Result;
@@ -23,7 +25,7 @@ auto Delete(const AccountUid& uid) -> Result;
 
 auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result;
 auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result;
-auto ImportUserPack(const std::string& dir, AccountUid& out_uid) -> Result;
 auto FindUserPack(const std::string& dir) -> Pack;
+auto ListUserPacks() -> std::vector<Pack>;
 
 } // namespace sphaira::account_user
