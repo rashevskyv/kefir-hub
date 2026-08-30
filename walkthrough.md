@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.685** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.686** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.686 — Account-link safety copy in all locales
+
+- Англійський launch-текст прив’язки профілів тепер прямо каже, що дія безпечна для ігрових сейвів: не видаляє та не змінює їх.
+- Текст також пояснює, що деякі ігри потребують linked Nintendo Account для запуску; новий ключ перекладено для кожної з 13 інших локалей.
+- Версія `0.13.686`; JSON parsing і `git diff --check` пройшли. Збірку й тести не запускали.
 
 ## v0.13.685 — Users Icon caption band
 

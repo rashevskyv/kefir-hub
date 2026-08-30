@@ -1876,5 +1876,6 @@
   "homebrew unstarred": "已取消收藏 Homebrew",
   "homebrew starred": "已收藏自制软件",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store、DBI 和模组工具。",
-  "System tools and sysmodule manager.": "系统工具和系统模块管理器。"
+  "System tools and sysmodule manager.": "系统工具和系统模块管理器。",
+  "Some user profiles are not linked to a Nintendo Account.\n\nKefir Hub can safely link them to the official Kefir donor. This does not delete or modify game saves. Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\nThe console will reboot after linking.": "部分用户档案未关联 Nintendo Account。\n\nKefir Hub 可以将它们安全地关联到官方 Kefir 供体。这不会删除或修改游戏存档。一些游戏需要关联 Nintendo Account 才能启动。已关联的用户档案不会被更改。\n\n关联完成后主机将自动重启。"
 }

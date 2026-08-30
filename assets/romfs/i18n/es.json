@@ -1821,5 +1821,6 @@
   "homebrew unstarred": "Homebrew quitado de favoritos",
   "homebrew starred": "Homebrew favorito",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store, DBI y utilidades para mods.",
-  "System tools and sysmodule manager.": "Herramientas del sistema y gestor de sysmodules."
+  "System tools and sysmodule manager.": "Herramientas del sistema y gestor de sysmodules.",
+  "Some user profiles are not linked to a Nintendo Account.\n\nKefir Hub can safely link them to the official Kefir donor. This does not delete or modify game saves. Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\nThe console will reboot after linking.": "Algunos perfiles de usuario no están vinculados a una cuenta de Nintendo.\n\nKefir Hub puede vincularlos de forma segura al donante oficial de Kefir. Esto no elimina ni modifica los datos de guardado. Algunos juegos requieren una cuenta de Nintendo vinculada para iniciar. Los perfiles ya vinculados no se modificarán.\n\nLa consola se reiniciará después de la vinculación."
 }

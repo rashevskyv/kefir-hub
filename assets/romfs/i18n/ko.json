@@ -1821,5 +1821,6 @@
   "homebrew unstarred": "Homebrew 즐겨찾기 해제됨",
   "homebrew starred": "즐겨찾기한 홈브류",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store, DBI 및 모드 유틸리티.",
-  "System tools and sysmodule manager.": "시스템 도구 및 시스템 모듈 관리자."
+  "System tools and sysmodule manager.": "시스템 도구 및 시스템 모듈 관리자.",
+  "Some user profiles are not linked to a Nintendo Account.\n\nKefir Hub can safely link them to the official Kefir donor. This does not delete or modify game saves. Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\nThe console will reboot after linking.": "일부 사용자 프로필이 닌텐도 계정에 연동되어 있지 않습니다.\n\nKefir Hub를 통해 공식 Kefir 공여자 계정에 안전하게 연동할 수 있습니다. 저장 데이터는 삭제되거나 수정되지 않습니다. 일부 게임은 시작하려면 연동된 닌텐도 계정이 필요합니다. 이미 연동된 프로필은 변경되지 않습니다.\n\n연동 후 본체가 재부팅됩니다."
 }

@@ -104,8 +104,8 @@ void CheckLaunchAccountLinkPrompt() {
     // 3-button layout matches updates: top Minus = don't remind; bottom B = Later, + = Link.
     App::Push<OptionBox>(
         "Some user profiles are not linked to a Nintendo Account.\n\n"
-        "Kefir Hub can link them to the official Kefir donor so games that require a Nintendo Account can start. "
-        "Already linked profiles are left unchanged.\n\n"
+        "Kefir Hub can safely link them to the official Kefir donor. This does not delete or modify game saves. "
+        "Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\n"
         "The console will reboot after linking."_i18n,
         "Later"_i18n, "Don't remind again"_i18n, "Link and reboot"_i18n, 2,
         [](auto op) {

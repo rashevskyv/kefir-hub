@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.685** (Users Icon caption band). Завершені плани збережено в
+Поточний delivery — **v0.13.686** (account-link safety copy in all locales). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.685 — Users Icon caption band
+## Поточний delivery: v0.13.686 — Account-link safety copy in all locales
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Англійський launch-текст прив’язки тепер є базовим i18n-ключем: safe, без видалення чи зміни ігрових сейвів, а також пояснення потреби деяких ігор у linked Nintendo Account.
+2. Новий ключ і локалізоване повідомлення додано до всіх 14 i18n-файлів; already-linked профілі лишаються без змін.
+3. Версія `0.13.686`; JSON parsing і `git diff --check` пройшли.
+
+## Попередній delivery: v0.13.685 — Users Icon caption band
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Users → Icon: nickname винесено у власну clipped верхню смугу плитки, тому текст більше не зливається з avatar.

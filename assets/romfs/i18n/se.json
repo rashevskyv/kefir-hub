@@ -1821,5 +1821,6 @@
   "homebrew unstarred": "Homebrew borttagen från favoriter",
   "homebrew starred": "Homebrew markerad som favorit",
   "Homebrew App Store, DBI and mod utilities.": "Homebrew App Store, DBI och moddverktyg.",
-  "System tools and sysmodule manager.": "Systemverktyg och sysmodulhanterare."
+  "System tools and sysmodule manager.": "Systemverktyg och sysmodulhanterare.",
+  "Some user profiles are not linked to a Nintendo Account.\n\nKefir Hub can safely link them to the official Kefir donor. This does not delete or modify game saves. Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\nThe console will reboot after linking.": "Vissa användarprofiler är inte kopplade till ett Nintendo-konto.\n\nKefir Hub kan säkert koppla dem till den officiella Kefir-donatorn. Detta raderar eller ändrar inte spardata. Vissa spel kräver ett kopplat Nintendo-konto för att starta. Redan kopplade profiler lämnas oförändrade.\n\nKonsolen kommer att starta om efter kopplingen."
 }
