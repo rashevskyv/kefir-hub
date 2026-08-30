@@ -831,17 +831,42 @@ auto ExportAccountSave(std::string& out_dir) -> Result {
 
 namespace {
 
-auto HasSuspendedApplication() -> bool {
+// Same source EdiZon / dmnt use: pm:dmnt GetApplicationProcessId.
+// Success + non-zero PID => an application (usually the suspended game under album) exists.
+// ProcessNotFound / failed query => no application — do NOT treat as suspended.
+auto QueryBackgroundApplication(u64& out_pid, u64& out_program_id) -> bool {
+    out_pid = 0;
+    out_program_id = 0;
+
     if (R_FAILED(pmdmntInitialize())) {
-        return true;
+        log_write("[ACC] pmdmntInitialize failed\n");
+        return false;
     }
     ON_SCOPE_EXIT(pmdmntExit());
-    u64 application_pid = 0;
-    const auto rc = pmdmntGetApplicationProcessId(&application_pid);
-    if (R_FAILED(rc)) {
-        return true;
+
+    const auto rc = pmdmntGetApplicationProcessId(&out_pid);
+    if (R_FAILED(rc) || out_pid == 0) {
+        log_write("[ACC] background application: none (rc=0x%X pid=%llu)\n",
+            rc, static_cast<unsigned long long>(out_pid));
+        out_pid = 0;
+        return false;
     }
-    return application_pid != 0;
+
+    if (R_SUCCEEDED(pmdmntGetProgramId(&out_program_id, out_pid))) {
+        log_write("[ACC] background application: pid=%llu program=%016llX\n",
+            static_cast<unsigned long long>(out_pid),
+            static_cast<unsigned long long>(out_program_id));
+    } else {
+        log_write("[ACC] background application: pid=%llu program=unknown\n",
+            static_cast<unsigned long long>(out_pid));
+    }
+    return true;
+}
+
+auto HasSuspendedApplication() -> bool {
+    u64 pid = 0;
+    u64 program_id = 0;
+    return QueryBackgroundApplication(pid, program_id);
 }
 
 bool g_launch_link_prompted = false;
@@ -858,9 +883,14 @@ auto CanOfferLaunchLink() -> bool {
         return false;
     }
     // Album/applet with a suspended game: skip offer (link needs reboot; gated).
-    if (App::IsApplet() && HasSuspendedApplication()) {
-        log_write("[ACC] CanOfferLaunchLink: gated applet+suspended\n");
-        return false;
+    if (App::IsApplet()) {
+        u64 pid = 0;
+        u64 program_id = 0;
+        if (QueryBackgroundApplication(pid, program_id)) {
+            log_write("[ACC] CanOfferLaunchLink: gated applet+suspended program=%016llX\n",
+                static_cast<unsigned long long>(program_id));
+            return false;
+        }
     }
     const auto users = ListUsers();
     u32 unlinked = 0;

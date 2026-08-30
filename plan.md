@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.681** (fix launch account-link prompt stacking). Завершені плани збережено в
+Поточний delivery — **v0.13.682** (fix applet suspended-app detection). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.681 — Fix launch account-link prompt
+## Поточний delivery: v0.13.682 — Fix applet suspended-app detection
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. `HasSuspendedApplication` більше не трактує `pmdmntGetApplicationProcessId` failure (немає application) як «є згорнута гра» — це ламало launch prompt у album без гри.
+2. Як EdiZon: suspended лише якщо SUCCESS і PID ≠ 0; опційно `pmdmntGetProgramId` для логу program id.
+3. Версія `0.13.682`.
+
+## Попередній delivery: v0.13.681 — Fix launch account-link prompt
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Launch OptionBox більше не Push-иться з конструктора MainMenu (там він опинявся під MainMenu і не отримував input).

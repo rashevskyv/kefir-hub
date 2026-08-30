@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.681** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.682** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.682 — Fix applet suspended-app detection
+
+- Bug: `HasSuspendedApplication` повертав `true` коли `pmdmntGetApplicationProcessId` fail (немає application) — album без згорнутої гри помилково gating-ив launch prompt.
+- Fix як у EdiZon/cheats: suspended лише SUCCESS + PID ≠ 0; `pmdmntGetProgramId` у лог. Title mode не залежав від цього (`!IsApplet`). Версія `0.13.682`. Збірку не запускали.
 
 ## v0.13.681 — Fix launch account-link prompt stacking
 

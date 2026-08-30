@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.681** (fix launch account-link prompt stacking). Завершені задачі збережено в
+Актуальний delivery — **v0.13.682** (fix applet suspended-app detection). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.681 (fix launch account-link prompt)
+## Поточний delivery: v0.13.682 (fix applet suspended-app detection)
+
+- [x] `ACC-SUSPEND-DETECT-682` — `pmdmntGetApplicationProcessId` failure = no app (EdiZon-style); не gate applet без гри.
+- [x] `ACC-SUSPEND-PROGRAM-LOG-682` — лог pid + program id фонового application.
+- [x] `DOCS-BUMP-682` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.681 (fix launch account-link prompt)
 
 - [x] `ACC-LAUNCH-PROMPT-STACK-681` — defer OptionBox to MainMenu::OnFocusGained so it is not buried under MainMenu.
 - [x] `ACC-LAUNCH-OFFER-LOG-681` — aggregate CanOfferLaunchLink log.
