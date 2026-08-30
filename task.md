@@ -1,14 +1,19 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.671** (safe payload labels and paste replacement). Завершені задачі збережено в
+Актуальний delivery — **v0.13.672** (DBI translation-file label). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.671 (safe payload labels and paste replacement)
+## Поточний delivery: v0.13.672 (DBI translation-file label)
 
-- [x] `PAYLOAD-DBI-FALSE-LABEL-671` — DBI `transmission.bin` не отримує фальшиву мітку `Lockpick_RCM`; для ненадійного збігу лишається фактична назва.
+- [x] `PAYLOAD-DBI-TRANSLATION-LABEL-672` — лише `/switch/DBI/translation.bin` із sibling `/switch/DBI/DBI.nro` має мітку `DBI translation file`; в усіх інших випадках лишається фактична назва.
+- [x] `DOCS-BUMP-672` — версія `0.13.672`, plan/task/walkthrough/audit і локальний commit.
+
+## Попередній delivery: v0.13.671 (safe payload labels and paste replacement)
+
+- [x] `PAYLOAD-DBI-FALSE-LABEL-671` — DBI `translation.bin` не отримує фальшиву мітку `Lockpick_RCM`; для ненадійного збігу лишається фактична назва.
 - [x] `PASTE-REPLACE-CONFIRM-671` — paste із destination-файлами того самого імені окремо питає про заміну, включно з файлами в обраних теках; відмова нічого не перезаписує.
 - [x] `DOCS-BUMP-671` — версія `0.13.671`, plan/task/walkthrough/audit і локальний commit.
 

@@ -1,13 +1,19 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.671** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.672** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
+## v0.13.672 — Conservative DBI translation-file label
+
+- `IdentifyPayload()` визначає `DBI translation file` без читання вмісту лише за повним доказом розкладки SD: точний (case-insensitive) шлях `/switch/DBI/translation.bin` і наявний sibling `/switch/DBI/DBI.nro`.
+- Перевірка стоїть до `OpenFile()` та bounded payload scan. `translation.bin` в іншій теці, у вкладеній теці або без `DBI.nro` не вгадується та показується під фактичною назвою.
+- Версія Sphaira — `0.13.672`. Виконано static review і `git diff --check`; збірку й тести не запускали відповідно до політики checkout.
+
 ## v0.13.671 — Safe payload labels and paste replacement confirmation
 
-- `IdentifyPayload()` більше не вважає одиничний рядок `Lockpick_RCM` достатнім доказом: DBI `transmission.bin` не отримує хибну мітку, а показує фактичну назву.
+- `IdentifyPayload()` більше не вважає одиничний рядок `Lockpick_RCM` достатнім доказом: DBI `translation.bin` не отримує хибну мітку, а показує фактичну назву.
 - Після наявного підтвердження Paste File Browser перевіряє destination-файли з тим самим шляхом, включно з файлами в обраних теках.
   - Без конфліктів paste працює як раніше.
   - За наявності конфлікту показується окремий prompt про заміну; `Cancel` є default і не запускає transfer, `Replace` запускає наявний copy/cross-filesystem move flow.

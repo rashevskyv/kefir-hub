@@ -204,13 +204,17 @@ namespace {
 // only touched from the main thread (ui callbacks).
 std::unordered_map<std::string, ConnectionStatus> g_source_status;
 
-auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& path) -> std::string {
+auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& file_path) -> std::string {
     if (!fs) {
         return {};
     }
 
+    if (path::EqualsIC(file_path, "/switch/DBI/translation.bin") && fs->FileExists("/switch/DBI/DBI.nro")) {
+        return "DBI translation file";
+    }
+
     fs::File f;
-    if (R_FAILED(fs->OpenFile(path, FsOpenMode_Read, &f))) {
+    if (R_FAILED(fs->OpenFile(file_path, FsOpenMode_Read, &f))) {
         return {};
     }
 

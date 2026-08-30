@@ -1,13 +1,20 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.671** (safe payload labels and paste replacement). Завершені плани збережено в
+Поточний delivery — **v0.13.672** (DBI translation-file label). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.671 — Safe payload labels and paste replacement prompt
+## Поточний delivery: v0.13.672 — Conservative DBI translation-file label
 
 Статус: прийнято сеньйором. Агент не компілює.
-1. Прибрано ненадійний single-string detector `Lockpick_RCM`: DBI `transmission.bin` більше не отримує фальшиву мітку, а нерозпізнаний payload лишається з фактичною назвою.
+1. File Browser показує `DBI translation file` лише для точного шляху `/switch/DBI/translation.bin`, коли в цій самій файловій системі є `/switch/DBI/DBI.nro`.
+2. Перевірка виконується до відкриття й bounded content-scan payload; однойменні файли в інших місцях, вкладених теках або без `DBI.nro` лишаються з фактичною назвою.
+3. Sphaira піднято до `0.13.672`; проведено static review і `git diff --check`; збірку не запускали.
+
+## Попередній delivery: v0.13.671 — Safe payload labels and paste replacement prompt
+
+Статус: прийнято сеньйором. Агент не компілює.
+1. Прибрано ненадійний single-string detector `Lockpick_RCM`: DBI `translation.bin` більше не отримує фальшиву мітку, а нерозпізнаний payload лишається з фактичною назвою.
 2. Перед paste, що може перезаписати destination-файл із тим самим шляхом, виявляються конфлікти також усередині обраних тек. Відмова в окремому confirm скасовує весь paste до запуску transfer; без конфліктів потік не змінюється.
 3. Sphaira піднято до `0.13.671`, додано i18n prompt і проведено static review; збірку не запускали.
 
