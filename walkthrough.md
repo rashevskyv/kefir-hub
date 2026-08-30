@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.679** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.680** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.680 — Remove account diagnostics + Linkalho-style Unlink
+
+- Прибрано розділ DIAGNOSTICS у Users і весь `RunDiagnostic` / probe код; `ListUsers` більше не ганяє AdminProbe.
+- Додано `account_link::UnlinkLinkedProfiles`: як Linkalho — terminate BCAT/ACCOUNT/OLSC, rollback на SD, видалення baas цілей, nas лише якщо немає інших посилань, Commit.
+- Users → Unlink Nintendo Account: якщо є selection — лише вибрані linked; інакше всі linked; confirm + soft reboot; той самий applet+suspended gate.
+- Очищено мертві i18n (diagnostics, TE export/dump/stub). Docs §3.3. Версія `0.13.680`. Збірку не запускали.
 
 ## v0.13.679 — MainMenu B back + launch account-link warning
 

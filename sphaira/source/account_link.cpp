@@ -196,26 +196,6 @@ auto OpenAccSu(Service* out) -> Result {
     R_SUCCEED();
 }
 
-auto QueryAdministratorNintendoLink(const AccountUid& uid, bool& out_linked) -> Result {
-    out_linked = false;
-
-    Service accsu{};
-    R_TRY(OpenAccSu(&accsu));
-    ON_SCOPE_EXIT(serviceClose(&accsu));
-
-    Service administrator{};
-    R_TRY(serviceDispatchIn(&accsu, 250, uid,
-        .out_num_objects = 1,
-        .out_objects = &administrator));
-    ON_SCOPE_EXIT(serviceClose(&administrator));
-
-    u8 is_linked = 0;
-    R_TRY(serviceDispatchOut(&administrator, 250, is_linked));
-
-    out_linked = (is_linked != 0);
-    R_SUCCEED();
-}
-
 auto IsSafeDumpFileName(const std::string& name) -> bool {
     if (name.empty()) {
         return false;
@@ -478,6 +458,137 @@ auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
     R_SUCCEED();
 }
 
+auto ResolveSuDirs(fs::Fs& save, std::string& baas_dir, std::string& nas_dir) -> void {
+    baas_dir.clear();
+    nas_dir.clear();
+    if (save.DirExists("/su/baas")) {
+        baas_dir = "/su/baas";
+    } else if (save.DirExists("/baas")) {
+        baas_dir = "/baas";
+    }
+    if (save.DirExists("/su/nas")) {
+        nas_dir = "/su/nas";
+    } else if (save.DirExists("/nas")) {
+        nas_dir = "/nas";
+    }
+}
+
+auto BaasStillReferencesNas(fs::Fs& save, const std::string& baas_dir, u64 nas_id) -> bool {
+    if (baas_dir.empty() || nas_id == 0) {
+        return false;
+    }
+    for (const auto& bf : ListDirFiles(save, baas_dir)) {
+        std::vector<u8> data;
+        if (R_FAILED(save.read_entire_file((baas_dir + "/" + bf).c_str(), data)) || data.size() < 24) {
+            continue;
+        }
+        u64 id = 0;
+        std::memcpy(&id, data.data() + 16, sizeof(u64));
+        if (id == nas_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked_count) -> Result {
+    out_unlinked_count = 0;
+    R_UNLESS(!uids.empty(), Result_FsEmpty);
+
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        ON_SCOPE_EXIT(pmshellExit());
+        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
+        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
+        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+    }
+
+    auto save = OpenAccountSaveWritable();
+    const auto save_rc = save.GetFsOpenResult();
+    if (R_FAILED(save_rc)) {
+        log_write("[ACC] Unlink OpenAccountSaveWritable failed 0x%X\n", save_rc);
+        return save_rc;
+    }
+
+    std::string baas_dir;
+    std::string nas_dir;
+    ResolveSuDirs(save, baas_dir, nas_dir);
+    R_UNLESS(!baas_dir.empty(), Result_FsEmpty);
+
+    fs::FsNativeSd sd;
+    char stamp[32]{};
+    const auto t = std::time(nullptr);
+    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    const auto rollback_dir = std::string("/config/kefir/account_link_rollback/") + stamp;
+    sd.CreateDirectoryRecursively(rollback_dir.c_str());
+    sd.CreateDirectoryRecursively((rollback_dir + "/baas").c_str());
+    sd.CreateDirectoryRecursively((rollback_dir + "/nas").c_str());
+
+    auto backup_save_file = [&](const std::string& src_path, const std::string& dst_subpath) {
+        std::vector<u8> data;
+        if (R_SUCCEEDED(save.read_entire_file(src_path.c_str(), data)) && !data.empty()) {
+            sd.write_entire_file((rollback_dir + "/" + dst_subpath).c_str(), data);
+        }
+    };
+
+    const auto existing_baas = ListDirFiles(save, baas_dir);
+    const auto existing_nas = nas_dir.empty() ? std::vector<std::string>{} : ListDirFiles(save, nas_dir);
+    std::vector<u64> nas_ids_to_clean;
+
+    for (const auto& uid : uids) {
+        const auto cands = BaasCandidateNames(uid);
+        bool removed_any = false;
+        for (const auto& cand : cands) {
+            for (const auto& bf : existing_baas) {
+                if (strcasecmp(bf.c_str(), cand.c_str()) != 0) {
+                    continue;
+                }
+                const auto baas_full = baas_dir + "/" + bf;
+                backup_save_file(baas_full, "baas/" + bf);
+
+                std::vector<u8> baas_data;
+                if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), baas_data)) && baas_data.size() >= 24) {
+                    u64 nas_id = 0;
+                    std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
+                    if (nas_id != 0 &&
+                        std::find(nas_ids_to_clean.begin(), nas_ids_to_clean.end(), nas_id) == nas_ids_to_clean.end()) {
+                        nas_ids_to_clean.push_back(nas_id);
+                    }
+                }
+
+                save.DeleteFile(baas_full.c_str());
+                removed_any = true;
+            }
+        }
+        if (removed_any) {
+            out_unlinked_count++;
+        }
+    }
+
+    if (!nas_dir.empty()) {
+        for (const auto nas_id : nas_ids_to_clean) {
+            if (BaasStillReferencesNas(save, baas_dir, nas_id)) {
+                continue;
+            }
+            for (const auto& nf : existing_nas) {
+                if (!NasFileMatches(nf, nas_id)) {
+                    continue;
+                }
+                const auto nas_full = nas_dir + "/" + nf;
+                backup_save_file(nas_full, "nas/" + nf);
+                save.DeleteFile(nas_full.c_str());
+            }
+        }
+    }
+
+    const auto commit_rc = save.Commit();
+    if (R_FAILED(commit_rc)) {
+        log_write("[ACC] Unlink Commit failed 0x%X\n", commit_rc);
+        return commit_rc;
+    }
+    log_write("[ACC] UnlinkLinkedProfiles completed for %u profile(s)\n", out_unlinked_count);
+    R_SUCCEED();
+}
+
 auto UidHex(const AccountUid& uid) -> std::string {
     return UidDashedRfc(uid);
 }
@@ -606,45 +717,13 @@ auto ListUsers() -> std::vector<User> {
         }
     }
 
-    u32 admin_probed = 0;
-    u32 admin_true = 0;
-    u32 admin_false = 0;
-    u32 admin_failed = 0;
-    for (const auto& u : out) {
-        if (u.linked_known && u.horizon_linked) {
-            admin_probed++;
-            bool admin_linked = false;
-            if (R_SUCCEEDED(QueryAdministratorNintendoLink(u.uid, admin_linked))) {
-                if (admin_linked) {
-                    admin_true++;
-                } else {
-                    admin_false++;
-                }
-            } else {
-                admin_failed++;
-            }
-        }
-    }
-    log_write("[ACC] AdminProbe: linked=%u true=%u false=%u failed=%u\n",
-        admin_probed, admin_true, admin_false, admin_failed);
-
     bool save_open = false;
     auto save = TryOpenAccountSave();
     if (R_SUCCEEDED(save.GetFsOpenResult())) {
         save_open = true;
         std::string baas_dir;
-        if (save.DirExists("/su/baas")) {
-            baas_dir = "/su/baas";
-        } else if (save.DirExists("/baas")) {
-            baas_dir = "/baas";
-        }
-
         std::string nas_dir;
-        if (save.DirExists("/su/nas")) {
-            nas_dir = "/su/nas";
-        } else if (save.DirExists("/nas")) {
-            nas_dir = "/nas";
-        }
+        ResolveSuDirs(save, baas_dir, nas_dir);
 
         const auto baas_files = !baas_dir.empty() ? ListDirFiles(save, baas_dir) : std::vector<std::string>{};
         const auto nas_files = !nas_dir.empty() ? ListDirFiles(save, nas_dir) : std::vector<std::string>{};
@@ -802,281 +881,6 @@ auto IsLinkGated(std::string& out_reason) -> bool {
 
 void SetLaunchLinkPrompted(bool val) {
     g_launch_link_prompted = val;
-}
-
-namespace {
-
-auto RunProbeSaveLock() -> Result {
-    u32 save_before = 0;
-    {
-        auto save = TryOpenAccountSave();
-        if (R_SUCCEEDED(save.GetFsOpenResult())) {
-            save_before = 1;
-        }
-    }
-
-    u32 suspend_ok = 0;
-    Result suspend_rc = 0;
-    u32 save_after = 0;
-
-    Service accsu{};
-    Result accsu_rc = OpenAccSu(&accsu);
-    if (R_SUCCEEDED(accsu_rc)) {
-        ON_SCOPE_EXIT(serviceClose(&accsu));
-        Service daemon_session{};
-        suspend_rc = serviceDispatch(&accsu, 299,
-            .out_num_objects = 1,
-            .out_objects = &daemon_session);
-        if (R_SUCCEEDED(suspend_rc)) {
-            suspend_ok = 1;
-            ON_SCOPE_EXIT(serviceClose(&daemon_session));
-            auto save = TryOpenAccountSave();
-            if (R_SUCCEEDED(save.GetFsOpenResult())) {
-                save_after = 1;
-            }
-        }
-    } else {
-        suspend_rc = accsu_rc;
-    }
-
-    log_write("[ACC] SuspendSaveProbe: suspend_ok=%u suspend_rc=0x%X save_before=%u save_after=%u\n",
-        suspend_ok, suspend_rc, save_before, save_after);
-    R_SUCCEED();
-}
-
-auto RunProbeIdTokenCache() -> Result {
-    u32 linked_count = 0;
-    u32 present_count = 0;
-    u32 empty_count = 0;
-    u32 failed_count = 0;
-
-    Service accsu{};
-    if (R_FAILED(OpenAccSu(&accsu))) {
-        failed_count++;
-    } else {
-        ON_SCOPE_EXIT(serviceClose(&accsu));
-
-        for (const auto& base : App::GetAccountList()) {
-            Service manager{};
-            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
-                .out_num_objects = 1,
-                .out_objects = &manager);
-            if (R_FAILED(rc)) {
-                failed_count++;
-                continue;
-            }
-            ON_SCOPE_EXIT(serviceClose(&manager));
-
-            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
-            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
-                continue;
-            }
-            if (R_FAILED(avail_rc)) {
-                failed_count++;
-                continue;
-            }
-
-            linked_count++;
-            u32 actual_size = 0;
-            Result cache_rc = QueryIdTokenCacheRaw(&manager, actual_size);
-            if (R_SUCCEEDED(cache_rc)) {
-                if (actual_size > 0) {
-                    present_count++;
-                } else {
-                    empty_count++;
-                }
-            } else {
-                failed_count++;
-            }
-        }
-    }
-
-    log_write("[ACC] IdTokenCacheProbe: linked=%u present=%u empty=%u failed=%u\n",
-        linked_count, present_count, empty_count, failed_count);
-    R_SUCCEED();
-}
-
-auto RunProbeUserResource() -> Result {
-    u32 linked_count = 0;
-    u32 ok_count = 0;
-    u32 base_nonempty_count = 0;
-    u32 image_nonempty_count = 0;
-    u32 failed_count = 0;
-
-    Service accsu{};
-    if (R_FAILED(OpenAccSu(&accsu))) {
-        failed_count++;
-    } else {
-        ON_SCOPE_EXIT(serviceClose(&accsu));
-
-        for (const auto& base : App::GetAccountList()) {
-            Service manager{};
-            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
-                .out_num_objects = 1,
-                .out_objects = &manager);
-            if (R_FAILED(rc)) {
-                failed_count++;
-                continue;
-            }
-            ON_SCOPE_EXIT(serviceClose(&manager));
-
-            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
-            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
-                continue;
-            }
-            if (R_FAILED(avail_rc)) {
-                failed_count++;
-                continue;
-            }
-
-            linked_count++;
-
-            u64 nas_id = 0;
-            std::vector<u8> base_buf(0x24F, 0);
-            std::vector<u8> image_buf(0x20000, 0);
-
-            Result res_rc = serviceDispatchOut(&manager, 130, nas_id,
-                .buffer_attrs = {
-                    SfBufferAttr_HipcMapAlias | SfBufferAttr_Out | SfBufferAttr_FixedSize,
-                    SfBufferAttr_HipcMapAlias | SfBufferAttr_Out,
-                },
-                .buffers = {
-                    { base_buf.data(), base_buf.size() },
-                    { image_buf.data(), image_buf.size() },
-                });
-
-            if (R_SUCCEEDED(res_rc)) {
-                ok_count++;
-                bool base_nonempty = false;
-                for (u8 b : base_buf) {
-                    if (b != 0) {
-                        base_nonempty = true;
-                        break;
-                    }
-                }
-                bool image_nonempty = false;
-                for (u8 b : image_buf) {
-                    if (b != 0) {
-                        image_nonempty = true;
-                        break;
-                    }
-                }
-                if (base_nonempty) {
-                    base_nonempty_count++;
-                }
-                if (image_nonempty) {
-                    image_nonempty_count++;
-                }
-            } else {
-                failed_count++;
-            }
-        }
-    }
-
-    log_write("[ACC] UserResourceProbe: linked=%u ok=%u base_nonempty=%u image_nonempty=%u failed=%u\n",
-        linked_count, ok_count, base_nonempty_count, image_nonempty_count, failed_count);
-    R_SUCCEED();
-}
-
-auto RunProbeTokenUpdate() -> Result {
-    // IManagerForSystemService cmd 160 RequiresUpdateNetworkServiceAccountIdTokenCache
-    // exists on HOS 15.0.0+, but its IPC parameter / buffer ABI is not formally
-    // confirmed in available project and platform headers. To ensure safety without
-    // speculative IPC layout guesses, we do not invoke cmd 160 and report unavailable.
-    log_write("[ACC] TokenUpdateProbe: supported=0 linked=0 update=0 current=0 failed=0 unavailable=1\n");
-    R_SUCCEED();
-}
-
-auto RunProbeAdminState() -> Result {
-    u32 linked_count = 0;
-    u32 registered_true = 0;
-    u32 registered_false = 0;
-    u32 link_true = 0;
-    u32 link_false = 0;
-    u32 failed_count = 0;
-
-    Service accsu{};
-    if (R_FAILED(OpenAccSu(&accsu))) {
-        failed_count++;
-    } else {
-        ON_SCOPE_EXIT(serviceClose(&accsu));
-
-        for (const auto& base : App::GetAccountList()) {
-            Service manager{};
-            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
-                .out_num_objects = 1,
-                .out_objects = &manager);
-            if (R_FAILED(rc)) {
-                failed_count++;
-                continue;
-            }
-            ON_SCOPE_EXIT(serviceClose(&manager));
-
-            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
-            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
-                continue;
-            }
-            if (R_FAILED(avail_rc)) {
-                failed_count++;
-                continue;
-            }
-
-            linked_count++;
-
-            Service administrator{};
-            Result admin_rc = serviceDispatchIn(&accsu, 250, base.uid,
-                .out_num_objects = 1,
-                .out_objects = &administrator);
-            if (R_FAILED(admin_rc)) {
-                failed_count++;
-                continue;
-            }
-            ON_SCOPE_EXIT(serviceClose(&administrator));
-
-            u8 is_registered = 0;
-            Result reg_rc = serviceDispatchOut(&administrator, 200, is_registered);
-
-            u8 is_linked = 0;
-            Result link_rc = serviceDispatchOut(&administrator, 250, is_linked);
-
-            if (R_SUCCEEDED(reg_rc) && R_SUCCEEDED(link_rc)) {
-                if (is_registered != 0) {
-                    registered_true++;
-                } else {
-                    registered_false++;
-                }
-                if (is_linked != 0) {
-                    link_true++;
-                } else {
-                    link_false++;
-                }
-            } else {
-                failed_count++;
-            }
-        }
-    }
-
-    log_write("[ACC] AdminStateProbe: linked=%u registered_true=%u registered_false=%u link_true=%u link_false=%u failed=%u\n",
-        linked_count, registered_true, registered_false, link_true, link_false, failed_count);
-    R_SUCCEED();
-}
-
-} // namespace
-
-auto RunDiagnostic(DiagnosticKind kind) -> Result {
-    switch (kind) {
-        case DiagnosticKind::SaveLock:
-            return RunProbeSaveLock();
-        case DiagnosticKind::IdTokenCache:
-            return RunProbeIdTokenCache();
-        case DiagnosticKind::UserResource:
-            return RunProbeUserResource();
-        case DiagnosticKind::TokenUpdate:
-            return RunProbeTokenUpdate();
-        case DiagnosticKind::AdminState:
-            return RunProbeAdminState();
-    }
-    R_SUCCEED();
 }
 
 } // namespace sphaira::account_link

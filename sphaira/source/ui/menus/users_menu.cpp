@@ -711,24 +711,10 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
             ConfirmLinkNintendoAccount();
         }, true, "Link all currently unlinked profiles to the official Nintendo Account donor. Already linked profiles will not be changed. Console will reboot."_i18n);
+        options->Add<SidebarEntryCallback>("Unlink Nintendo Account"_i18n, [this](){
+            ConfirmUnlinkNintendoAccount();
+        }, true, "Remove Nintendo Account link data from selected profiles, or from all linked profiles if none are selected. Console will reboot."_i18n);
     }
-
-    options->Add<SidebarEntryHeader>("DIAGNOSTICS"_i18n);
-    options->Add<SidebarEntryCallback>("Probe account save lock"_i18n, [this](){
-        RunDiagnosticProbe(account_link::DiagnosticKind::SaveLock);
-    }, true, "Read-only test of account save accessibility before and during daemon suspension. Does not contact Nintendo servers."_i18n);
-    options->Add<SidebarEntryCallback>("Probe ID token cache"_i18n, [this](){
-        RunDiagnosticProbe(account_link::DiagnosticKind::IdTokenCache);
-    }, true, "Read-only test for cached ID tokens across linked accounts. Does not contact Nintendo servers."_i18n);
-    options->Add<SidebarEntryCallback>("Probe cached Nintendo profile"_i18n, [this](){
-        RunDiagnosticProbe(account_link::DiagnosticKind::UserResource);
-    }, true, "Read-only test for cached profile resources in system services. Does not contact Nintendo servers."_i18n);
-    options->Add<SidebarEntryCallback>("Probe token update state"_i18n, [this](){
-        RunDiagnosticProbe(account_link::DiagnosticKind::TokenUpdate);
-    }, true, "Read-only test for token update requirements. Does not contact Nintendo servers."_i18n);
-    options->Add<SidebarEntryCallback>("Probe registration and link state"_i18n, [this](){
-        RunDiagnosticProbe(account_link::DiagnosticKind::AdminState);
-    }, true, "Read-only test of administrator registration and link status flags. Does not contact Nintendo servers."_i18n);
 
     options->Add<SidebarEntryHeader>("VIEW"_i18n);
     SidebarEntryArray::Items layout_items;
@@ -1158,18 +1144,60 @@ void Menu::RunLinkNintendoAccount() {
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
-void Menu::RunDiagnosticProbe(account_link::DiagnosticKind kind) {
-    App::Push<ProgressBox>(0, "Diagnostics"_i18n, "Running diagnostic probe..."_i18n,
-        [kind](auto pbox) -> Result {
-            pbox->NewTransfer("Running diagnostic probe..."_i18n);
-            R_TRY(account_link::RunDiagnostic(kind));
+void Menu::ConfirmUnlinkNintendoAccount() {
+    std::string gate_reason;
+    if (account_link::IsLinkGated(gate_reason)) {
+        App::Push<OptionBox>(gate_reason, "OK"_i18n);
+        return;
+    }
+
+    std::vector<AccountUid> targets;
+    if (m_selected_count > 0) {
+        for (const auto& u : m_items) {
+            if (u.selected && u.linked_known && u.horizon_linked) {
+                targets.push_back(u.uid);
+            }
+        }
+    } else {
+        for (const auto& u : m_items) {
+            if (u.linked_known && u.horizon_linked) {
+                targets.push_back(u.uid);
+            }
+        }
+    }
+
+    if (targets.empty()) {
+        App::Push<OptionBox>("No linked profiles to unlink."_i18n, "OK"_i18n);
+        return;
+    }
+
+    const auto msg = (m_selected_count > 0)
+        ? "Unlink Nintendo Account from the selected linked profiles? Link data is removed from the system save. The console will reboot immediately."_i18n
+        : "Unlink Nintendo Account from all linked profiles? Link data is removed from the system save. The console will reboot immediately."_i18n;
+
+    App::Push<OptionBox>(
+        msg,
+        "Cancel"_i18n, "Unlink and reboot"_i18n, 1,
+        [this, targets = std::move(targets)](auto op) mutable {
+            if (op && *op == 1) {
+                RunUnlinkNintendoAccount(std::move(targets));
+            }
+        });
+}
+
+void Menu::RunUnlinkNintendoAccount(std::vector<AccountUid> uids) {
+    App::Push<ProgressBox>(0, "Unlink Nintendo Account"_i18n, "Unlinking account..."_i18n,
+        [uids = std::move(uids)](auto pbox) -> Result {
+            pbox->NewTransfer("Removing Nintendo Account link"_i18n);
+            u32 count = 0;
+            R_TRY(account_link::UnlinkLinkedProfiles(uids, count));
             R_SUCCEED();
         },
         [](Result rc) {
             if (R_FAILED(rc)) {
-                App::Push<OptionBox>("Diagnostic probe failed. Check the log for details."_i18n, "OK"_i18n);
+                App::Push<OptionBox>("Failed to unlink Nintendo Account."_i18n, "OK"_i18n);
             } else {
-                App::Push<OptionBox>("Diagnostic probe completed. Check the log for results."_i18n, "OK"_i18n);
+                utils::requestForcedReboot();
             }
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }

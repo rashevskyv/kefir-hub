@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.679**. Дата: 2026-08-30.
+Канонічний робочий файл. Версія коду: **v0.13.680**. Дата: 2026-08-30.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -9,7 +9,7 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 
 Далі працюємо тільки з чергою в §2.
 
-v0.13.679 поза ponytail-чергою: MainMenu B з Tools повертає на Homebrew; launch account-link warning з Don't remind (`account_link_prompt_skip`). Не закриває чергу §2.
+v0.13.680 поза ponytail-чергою: прибрано account diagnostics; додано Linkalho-style Unlink. Не закриває чергу §2.
 
 ## 1. Що перевірено
 

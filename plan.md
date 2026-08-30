@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.679** (MainMenu B back + launch account-link warning). Завершені плани збережено в
+Поточний delivery — **v0.13.680** (remove account diagnostics + Linkalho-style Unlink). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.679 — MainMenu B back + launch account-link warning
+## Поточний delivery: v0.13.680 — Remove account diagnostics + Unlink
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Прибрано Users DIAGNOSTICS (усі Probe*) і API `RunDiagnostic` / AdminProbe у `ListUsers`.
+2. Додано `UnlinkLinkedProfiles` (Linkalho-стиль): terminate BCAT/ACCOUNT/OLSC → rollback → delete baas цілей → nas лише якщо ніхто більше не посилається → Commit → reboot.
+3. Users: Unlink Nintendo Account — вибрані linked, або всі linked якщо selection порожній; той самий applet+suspended gate.
+4. Прибрано мертві i18n ключі diagnostics/TE-export/dump; docs §3.3; версія `0.13.680`.
+
+## Попередній delivery: v0.13.679 — MainMenu B back + launch account-link warning
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. На вкладці Tools кнопка B повертає на Homebrew (`Back`); повторне B на Homebrew виходить (`Exit`).

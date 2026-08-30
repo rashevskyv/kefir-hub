@@ -47,6 +47,7 @@ private:
     auto SelectedUids(bool all = false) const -> std::vector<AccountUid>;
 
     void ConfirmLinkNintendoAccount();
+    void ConfirmUnlinkNintendoAccount();
     void ConfirmCreate();
     void ConfirmRename();
     void ConfirmChangeAvatar();
@@ -56,6 +57,7 @@ private:
     void ConfirmRestore();
     void ConfirmDelete();
     void RunLinkNintendoAccount();
+    void RunUnlinkNintendoAccount(std::vector<AccountUid> uids);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup(std::vector<save::Entry> picked_saves = {});
@@ -63,7 +65,6 @@ private:
     void RunNandRestore(const std::string& dir);
     void RunRestore(const std::string& dir);
     void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
-    void RunDiagnosticProbe(account_link::DiagnosticKind kind);
 
     auto StatusLabel(const account_link::User& u) const -> std::string;
     auto TryLoadAvatar(Item& u) -> bool;

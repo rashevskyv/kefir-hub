@@ -39,18 +39,9 @@ auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
 auto ExportAccountSave(std::string& out_dir) -> Result;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
 auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result;
+auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked_count) -> Result;
 auto CanOfferLaunchLink() -> bool;
 auto IsLinkGated(std::string& out_reason) -> bool;
 void SetLaunchLinkPrompted(bool val = true);
-
-enum class DiagnosticKind {
-    SaveLock,
-    IdTokenCache,
-    UserResource,
-    TokenUpdate,
-    AdminState,
-};
-
-auto RunDiagnostic(DiagnosticKind kind) -> Result;
 
 } // namespace sphaira::account_link

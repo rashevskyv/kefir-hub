@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.679** (MainMenu B back + launch account-link warning). Завершені задачі збережено в
+Актуальний delivery — **v0.13.680** (remove account diagnostics + Unlink). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.679 (MainMenu B back + launch account-link warning)
+## Поточний delivery: v0.13.680 (remove account diagnostics + Unlink)
+
+- [x] `ACC-REMOVE-DIAG-680` — прибрано Users DIAGNOSTICS / RunDiagnostic / AdminProbe.
+- [x] `ACC-UNLINK-680` — `UnlinkLinkedProfiles` Linkalho-стиль + Users Unlink (selected або всі linked) + reboot + gate.
+- [x] `ACC-UNLINK-I18N-680` — en/uk/ru; strip dead diagnostic/export i18n; docs §3.3.
+- [x] `DOCS-BUMP-680` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.679 (MainMenu B back + launch account-link warning)
 
 - [x] `MAIN-B-BACK-679` — Tools → B → Homebrew; Homebrew → B → Exit; hint Back/Exit.
 - [x] `ACC-LAUNCH-WARN-679` — launch OptionBox з поясненням, reboot warning, Later / Don't remind (Minus) / Link and reboot; skip applet+suspended; persist `account_link_prompt_skip`.
