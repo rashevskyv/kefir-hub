@@ -495,8 +495,37 @@ auto UidHex(const AccountUid& uid) -> std::string {
     return UidDashedRfc(uid);
 }
 
-auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
+auto QueryIdTokenCache(Service* manager) -> bool {
+    u32 actual_size = 0;
+    alignas(16) u8 buf[0xC00]{};
+
+    const auto try_cmd = [&](u32 cmd_id) -> Result {
+        actual_size = 0;
+        return serviceDispatchOut(manager, cmd_id, actual_size,
+            .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_Out },
+            .buffers = { { buf, sizeof(buf) } });
+    };
+
+    Result rc = MAKERESULT(Module_Libnx, LibnxError_NotInitialized);
+    if (hosversionAtLeast(19, 0, 0)) {
+        rc = try_cmd(4);
+        if (R_FAILED(rc)) {
+            rc = try_cmd(3);
+        }
+    } else {
+        rc = try_cmd(3);
+        if (R_FAILED(rc)) {
+            rc = try_cmd(4);
+        }
+    }
+
+    return R_SUCCEEDED(rc) && actual_size > 0;
+}
+
+auto QueryHorizonUserLink(const AccountUid& uid, bool& out_linked, LinkKind& out_kind) -> Result {
     out_linked = false;
+    out_kind = LinkKind::None;
+
     Service accsu{};
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
@@ -508,15 +537,30 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
     ON_SCOPE_EXIT(serviceClose(&manager));
 
     const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
-    if (R_SUCCEEDED(rc)) {
-        out_linked = true;
-        R_SUCCEED();
-    }
     if (rc == ResultNetworkServiceAccountRegistrationRequired) {
         out_linked = false;
+        out_kind = LinkKind::None;
         R_SUCCEED();
     }
-    return rc;
+    if (R_FAILED(rc)) {
+        out_linked = false;
+        out_kind = LinkKind::None;
+        return rc;
+    }
+
+    out_linked = true;
+    if (QueryIdTokenCache(&manager)) {
+        out_kind = LinkKind::Official;
+    } else {
+        out_kind = LinkKind::Offline;
+    }
+
+    R_SUCCEED();
+}
+
+auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {
+    LinkKind kind = LinkKind::None;
+    return QueryHorizonUserLink(uid, out_linked, kind);
 }
 
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {
@@ -555,11 +599,12 @@ auto ListUsers() -> std::vector<User> {
 
     for (auto& u : out) {
         bool linked = false;
-        const auto rc = QueryHorizonLinkStatus(u.uid, linked);
+        LinkKind kind = LinkKind::None;
+        const auto rc = QueryHorizonUserLink(u.uid, linked, kind);
         if (R_SUCCEEDED(rc)) {
             u.linked_known = true;
             u.horizon_linked = linked;
-            u.kind = linked ? LinkKind::Offline : LinkKind::None;
+            u.kind = kind;
         } else {
             u.linked_known = false;
             u.horizon_linked = false;
@@ -568,8 +613,10 @@ auto ListUsers() -> std::vector<User> {
         }
     }
 
+    bool save_open = false;
     auto save = TryOpenAccountSave();
     if (R_SUCCEEDED(save.GetFsOpenResult())) {
+        save_open = true;
         std::string baas_dir;
         if (save.DirExists("/su/baas")) {
             baas_dir = "/su/baas";
@@ -590,6 +637,9 @@ auto ListUsers() -> std::vector<User> {
         for (auto& u : out) {
             if (!u.horizon_linked) {
                 u.kind = LinkKind::None;
+                continue;
+            }
+            if (u.kind == LinkKind::Official) {
                 continue;
             }
 
@@ -644,6 +694,21 @@ auto ListUsers() -> std::vector<User> {
             }
         }
     }
+
+    u32 count_official = 0;
+    u32 count_offline = 0;
+    u32 count_none = 0;
+    for (const auto& u : out) {
+        if (u.kind == LinkKind::Official) {
+            count_official++;
+        } else if (u.kind == LinkKind::Offline) {
+            count_offline++;
+        } else {
+            count_none++;
+        }
+    }
+    log_write("[ACC] ListUsers: save_open=%d official=%u offline=%u none=%u\n",
+        save_open ? 1 : 0, count_official, count_offline, count_none);
 
     return out;
 }

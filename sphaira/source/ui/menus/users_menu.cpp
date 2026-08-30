@@ -361,6 +361,21 @@ private:
     std::unique_ptr<List> m_list;
 };
 
+auto StatusColour(Theme* theme, const account_link::User& u) -> NVGcolor {
+    if (!u.linked_known) {
+        return theme->GetColour(ThemeEntryID_TEXT_INFO);
+    }
+    switch (u.kind) {
+        case account_link::LinkKind::Official:
+            return nvgRGBA(80, 200, 120, 255);
+        case account_link::LinkKind::Offline:
+            return nvgRGBA(230, 190, 50, 255);
+        case account_link::LinkKind::None:
+        default:
+            return nvgRGBA(230, 60, 60, 255);
+    }
+}
+
 } // namespace
 
 Menu::Menu() : grid::Menu{"Users"_i18n, MenuFlag_None} {
@@ -406,6 +421,9 @@ void Menu::FreeImages() {
 
 void Menu::OnLayoutChange() {
     m_index = 0;
+    m_name_scroll.Reset();
+    m_status_scroll.Reset();
+    m_uid_scroll.Reset();
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
     SetIndex(0);
 }
@@ -591,7 +609,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 gfx::textBounds(vg, 0, 0, bounds, status.c_str());
                 status_w = bounds[2] - bounds[0] + 20.f;
                 gfx::drawText(vg, v.x + v.w - 15.f, v.y + v.h / 2.f, 16.f,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO), status.c_str(),
+                    StatusColour(theme, item), status.c_str(),
                     NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
             nvgSave(vg);
@@ -621,6 +639,31 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),
                 "%s", item.uid_hex.c_str());
+        } else if (layout == LayoutType::LayoutType_GridDetail) {
+            const auto selected = m_index == i;
+            auto text_id = ThemeEntryID_TEXT;
+            if (selected) {
+                text_id = ThemeEntryID_TEXT_SELECTED;
+                gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
+            } else {
+                DrawElement(v, ThemeEntryID_GRID);
+            }
+
+            image_v = v;
+            image_v.x += 20;
+            image_v.y += 20;
+            image_v.w = 115;
+            image_v.h = 115;
+
+            const auto text_off = 148;
+            const auto text_x = v.x + text_off;
+            const auto text_clip_w = v.w - 30.f - text_off;
+            const float font_size = 18;
+            m_name_scroll.Draw(vg, selected, text_x, v.y + 45, text_clip_w, font_size, NVG_ALIGN_LEFT, theme->GetColour(text_id), item.nickname.c_str());
+            m_status_scroll.Draw(vg, selected, text_x, v.y + 80, text_clip_w, font_size, NVG_ALIGN_LEFT, StatusColour(theme, item), status.c_str());
+            m_uid_scroll.Draw(vg, selected, text_x, v.y + 115, text_clip_w, font_size, NVG_ALIGN_LEFT, theme->GetColour(ThemeEntryID_TEXT_INFO), item.uid_hex.c_str());
+
+            gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
         } else {
             image_v = DrawEntry(vg, theme, layout, v, m_index == i, item.image,
                 item.nickname.c_str(), status.c_str(), item.uid_hex.c_str(), item.selected);

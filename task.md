@@ -6,9 +6,9 @@
 
 ## Поточний delivery: v0.13.674 (Official vs Fake + status colours)
 
-- [ ] `ACC-CLASSIFY-OFFICIAL-674` — надійно відрізняти Official від Fake (IPC LoadIdTokenCache + disk token fallback).
-- [ ] `ACC-STATUS-COLOURS-674` — Official зелений, Fake жовтий, Not linked червоний у Users.
-- [ ] `DOCS-BUMP-674` — plan/task/walkthrough/audit + commit після accept.
+- [x] `ACC-CLASSIFY-OFFICIAL-674` — LoadIdTokenCache + disk token fallback.
+- [x] `ACC-STATUS-COLOURS-674` — зелений/жовтий/червоний у картках Users.
+- [x] `DOCS-BUMP-674` — plan/task/walkthrough/audit + commit.
 
 ## Попередній delivery: v0.13.673 (direct paste + confirmed replacement)
 

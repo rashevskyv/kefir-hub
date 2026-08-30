@@ -1,9 +1,13 @@
-# Поточний walkthrough
-
-Актуальний delivery — **v0.13.673** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.674** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.674 — Official vs Fake classification + status colours
+
+- `ListUsers`: IPC `LoadIdTokenCache` (cmd 4/3) → Official; інакше RO-скан nas tokens; без proof → Fake linked.
+- Users картки: статус Official зелений, Fake жовтий, Not linked червоний.
+- Збірку на цьому кроці не запускали; перевірка на консолі — наступний крок користувача.
 
 ## v0.13.673 — Direct paste and confirmed file replacement
 

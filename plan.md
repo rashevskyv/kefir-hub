@@ -1,13 +1,13 @@
-Поточний delivery — **v0.13.674** (fix Official vs Fake status + colors). Завершені плани збережено в
+Поточний delivery — **v0.13.674** (Official vs Fake + status colours). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
 ## Поточний delivery: v0.13.674 — Official vs Fake classification + status colours
 
-Статус: в роботі (Gemini junior, chat `Romfs official link`). Сеньйор не пише product-код.
-1. На скріні Official (Nintendo/Kefir) показуються як Fake linked — виправити `ListUsers` класифікацію.
-2. Кольори в Users: Official зелений, Fake жовтий, Not linked червоний (title subheading теж).
-3. Bump `0.13.674`.
+Статус: прийнято сеньйором (Gemini junior, chat `Romfs official link`). Збірку не ганяли.
+1. `QueryIdTokenCache` (LoadIdTokenCache cmd 4/3) + fallback RO-скан `/su/baas`+`/su/nas` для Official; Fake лишається без token proof.
+2. Кольори статусу в картках Users: Official зелений, Fake жовтий, Not linked червоний.
+3. Версія `0.13.674`.
 
 ## Попередній delivery: v0.13.673 — Direct paste and explicitly confirmed replacement
 
