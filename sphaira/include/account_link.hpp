@@ -43,4 +43,14 @@ auto CanOfferLaunchLink() -> bool;
 auto IsLinkGated(std::string& out_reason) -> bool;
 void SetLaunchLinkPrompted(bool val = true);
 
+enum class DiagnosticKind {
+    SaveLock,
+    IdTokenCache,
+    UserResource,
+    TokenUpdate,
+    AdminState,
+};
+
+auto RunDiagnostic(DiagnosticKind kind) -> Result;
+
 } // namespace sphaira::account_link

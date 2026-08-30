@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.676** (Administrator official-link probe). Завершені задачі збережено в
+Актуальний delivery — **v0.13.677** (manual Nintendo Account diagnostics). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.676 (Administrator probe)
+## Поточний delivery: v0.13.677 (manual Nintendo Account diagnostics)
+
+- [x] `ACC-MANUAL-DIAGNOSTICS-677` — Users має окремі кнопки safe IPC probes, що виконуються тільки вручну та логують aggregate result без секретів.
+- [x] `ACC-SUSPEND-SAVE-PROBE-677` — cmd 299 suspend daemon + повторне read-only відкриття 0010; save/LinkKind не змінюються.
+- [x] `ACC-CACHE-STATE-PROBES-677` — local resource-cache, token-cache update та administrator registration/link probes без network refresh/reauth.
+- [x] `ACC-DIAGNOSTICS-I18N-677` — en/uk/ru labels і пояснення для Users actions.
+- [x] `DOCS-BUMP-677` — plan/task/walkthrough/audit + локальний commit після прийняття.
+
+## Попередній delivery: v0.13.676 (Administrator probe)
 
 - [x] `ACC-ADMIN-PROBE-676` — для Horizon-linked профілів aggregate probe `IAdministrator::IsLinkedWithNintendoAccount`; UI/LinkKind не змінюються.
 - [x] `DOCS-BUMP-676` — plan/task/walkthrough/audit + локальний commit.

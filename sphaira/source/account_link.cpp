@@ -522,13 +522,13 @@ auto UidHex(const AccountUid& uid) -> std::string {
     return UidDashedRfc(uid);
 }
 
-auto QueryIdTokenCache(Service* manager) -> bool {
-    u32 actual_size = 0;
+auto QueryIdTokenCacheRaw(Service* manager, u32& out_size) -> Result {
+    out_size = 0;
     alignas(16) u8 buf[0xC00]{};
 
     const auto try_cmd = [&](u32 cmd_id) -> Result {
-        actual_size = 0;
-        return serviceDispatchOut(manager, cmd_id, actual_size,
+        out_size = 0;
+        return serviceDispatchOut(manager, cmd_id, out_size,
             .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_Out },
             .buffers = { { buf, sizeof(buf) } });
     };
@@ -546,6 +546,12 @@ auto QueryIdTokenCache(Service* manager) -> bool {
         }
     }
 
+    return rc;
+}
+
+auto QueryIdTokenCache(Service* manager) -> bool {
+    u32 actual_size = 0;
+    const auto rc = QueryIdTokenCacheRaw(manager, actual_size);
     return R_SUCCEEDED(rc) && actual_size > 0;
 }
 
@@ -832,6 +838,281 @@ auto IsLinkGated(std::string& out_reason) -> bool {
 
 void SetLaunchLinkPrompted(bool val) {
     g_launch_link_prompted = val;
+}
+
+namespace {
+
+auto RunProbeSaveLock() -> Result {
+    u32 save_before = 0;
+    {
+        auto save = TryOpenAccountSave();
+        if (R_SUCCEEDED(save.GetFsOpenResult())) {
+            save_before = 1;
+        }
+    }
+
+    u32 suspend_ok = 0;
+    Result suspend_rc = 0;
+    u32 save_after = 0;
+
+    Service accsu{};
+    Result accsu_rc = OpenAccSu(&accsu);
+    if (R_SUCCEEDED(accsu_rc)) {
+        ON_SCOPE_EXIT(serviceClose(&accsu));
+        Service daemon_session{};
+        suspend_rc = serviceDispatch(&accsu, 299,
+            .out_num_objects = 1,
+            .out_objects = &daemon_session);
+        if (R_SUCCEEDED(suspend_rc)) {
+            suspend_ok = 1;
+            ON_SCOPE_EXIT(serviceClose(&daemon_session));
+            auto save = TryOpenAccountSave();
+            if (R_SUCCEEDED(save.GetFsOpenResult())) {
+                save_after = 1;
+            }
+        }
+    } else {
+        suspend_rc = accsu_rc;
+    }
+
+    log_write("[ACC] SuspendSaveProbe: suspend_ok=%u suspend_rc=0x%X save_before=%u save_after=%u\n",
+        suspend_ok, suspend_rc, save_before, save_after);
+    R_SUCCEED();
+}
+
+auto RunProbeIdTokenCache() -> Result {
+    u32 linked_count = 0;
+    u32 present_count = 0;
+    u32 empty_count = 0;
+    u32 failed_count = 0;
+
+    Service accsu{};
+    if (R_FAILED(OpenAccSu(&accsu))) {
+        failed_count++;
+    } else {
+        ON_SCOPE_EXIT(serviceClose(&accsu));
+
+        for (const auto& base : App::GetAccountList()) {
+            Service manager{};
+            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
+                .out_num_objects = 1,
+                .out_objects = &manager);
+            if (R_FAILED(rc)) {
+                failed_count++;
+                continue;
+            }
+            ON_SCOPE_EXIT(serviceClose(&manager));
+
+            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
+            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
+                continue;
+            }
+            if (R_FAILED(avail_rc)) {
+                failed_count++;
+                continue;
+            }
+
+            linked_count++;
+            u32 actual_size = 0;
+            Result cache_rc = QueryIdTokenCacheRaw(&manager, actual_size);
+            if (R_SUCCEEDED(cache_rc)) {
+                if (actual_size > 0) {
+                    present_count++;
+                } else {
+                    empty_count++;
+                }
+            } else {
+                failed_count++;
+            }
+        }
+    }
+
+    log_write("[ACC] IdTokenCacheProbe: linked=%u present=%u empty=%u failed=%u\n",
+        linked_count, present_count, empty_count, failed_count);
+    R_SUCCEED();
+}
+
+auto RunProbeUserResource() -> Result {
+    u32 linked_count = 0;
+    u32 ok_count = 0;
+    u32 base_nonempty_count = 0;
+    u32 image_nonempty_count = 0;
+    u32 failed_count = 0;
+
+    Service accsu{};
+    if (R_FAILED(OpenAccSu(&accsu))) {
+        failed_count++;
+    } else {
+        ON_SCOPE_EXIT(serviceClose(&accsu));
+
+        for (const auto& base : App::GetAccountList()) {
+            Service manager{};
+            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
+                .out_num_objects = 1,
+                .out_objects = &manager);
+            if (R_FAILED(rc)) {
+                failed_count++;
+                continue;
+            }
+            ON_SCOPE_EXIT(serviceClose(&manager));
+
+            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
+            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
+                continue;
+            }
+            if (R_FAILED(avail_rc)) {
+                failed_count++;
+                continue;
+            }
+
+            linked_count++;
+
+            u64 nas_id = 0;
+            std::vector<u8> base_buf(0x24F, 0);
+            std::vector<u8> image_buf(0x20000, 0);
+
+            Result res_rc = serviceDispatchOut(&manager, 130, nas_id,
+                .buffer_attrs = {
+                    SfBufferAttr_HipcMapAlias | SfBufferAttr_Out | SfBufferAttr_FixedSize,
+                    SfBufferAttr_HipcMapAlias | SfBufferAttr_Out,
+                },
+                .buffers = {
+                    { base_buf.data(), base_buf.size() },
+                    { image_buf.data(), image_buf.size() },
+                });
+
+            if (R_SUCCEEDED(res_rc)) {
+                ok_count++;
+                bool base_nonempty = false;
+                for (u8 b : base_buf) {
+                    if (b != 0) {
+                        base_nonempty = true;
+                        break;
+                    }
+                }
+                bool image_nonempty = false;
+                for (u8 b : image_buf) {
+                    if (b != 0) {
+                        image_nonempty = true;
+                        break;
+                    }
+                }
+                if (base_nonempty) {
+                    base_nonempty_count++;
+                }
+                if (image_nonempty) {
+                    image_nonempty_count++;
+                }
+            } else {
+                failed_count++;
+            }
+        }
+    }
+
+    log_write("[ACC] UserResourceProbe: linked=%u ok=%u base_nonempty=%u image_nonempty=%u failed=%u\n",
+        linked_count, ok_count, base_nonempty_count, image_nonempty_count, failed_count);
+    R_SUCCEED();
+}
+
+auto RunProbeTokenUpdate() -> Result {
+    // IManagerForSystemService cmd 160 RequiresUpdateNetworkServiceAccountIdTokenCache
+    // exists on HOS 15.0.0+, but its IPC parameter / buffer ABI is not formally
+    // confirmed in available project and platform headers. To ensure safety without
+    // speculative IPC layout guesses, we do not invoke cmd 160 and report unavailable.
+    log_write("[ACC] TokenUpdateProbe: supported=0 linked=0 update=0 current=0 failed=0 unavailable=1\n");
+    R_SUCCEED();
+}
+
+auto RunProbeAdminState() -> Result {
+    u32 linked_count = 0;
+    u32 registered_true = 0;
+    u32 registered_false = 0;
+    u32 link_true = 0;
+    u32 link_false = 0;
+    u32 failed_count = 0;
+
+    Service accsu{};
+    if (R_FAILED(OpenAccSu(&accsu))) {
+        failed_count++;
+    } else {
+        ON_SCOPE_EXIT(serviceClose(&accsu));
+
+        for (const auto& base : App::GetAccountList()) {
+            Service manager{};
+            Result rc = serviceDispatchIn(&accsu, 102, base.uid,
+                .out_num_objects = 1,
+                .out_objects = &manager);
+            if (R_FAILED(rc)) {
+                failed_count++;
+                continue;
+            }
+            ON_SCOPE_EXIT(serviceClose(&manager));
+
+            Result avail_rc = serviceDispatch(&manager, 0); // CheckAvailability
+            if (avail_rc == ResultNetworkServiceAccountRegistrationRequired) {
+                continue;
+            }
+            if (R_FAILED(avail_rc)) {
+                failed_count++;
+                continue;
+            }
+
+            linked_count++;
+
+            Service administrator{};
+            Result admin_rc = serviceDispatchIn(&accsu, 250, base.uid,
+                .out_num_objects = 1,
+                .out_objects = &administrator);
+            if (R_FAILED(admin_rc)) {
+                failed_count++;
+                continue;
+            }
+            ON_SCOPE_EXIT(serviceClose(&administrator));
+
+            u8 is_registered = 0;
+            Result reg_rc = serviceDispatchOut(&administrator, 200, is_registered);
+
+            u8 is_linked = 0;
+            Result link_rc = serviceDispatchOut(&administrator, 250, is_linked);
+
+            if (R_SUCCEEDED(reg_rc) && R_SUCCEEDED(link_rc)) {
+                if (is_registered != 0) {
+                    registered_true++;
+                } else {
+                    registered_false++;
+                }
+                if (is_linked != 0) {
+                    link_true++;
+                } else {
+                    link_false++;
+                }
+            } else {
+                failed_count++;
+            }
+        }
+    }
+
+    log_write("[ACC] AdminStateProbe: linked=%u registered_true=%u registered_false=%u link_true=%u link_false=%u failed=%u\n",
+        linked_count, registered_true, registered_false, link_true, link_false, failed_count);
+    R_SUCCEED();
+}
+
+} // namespace
+
+auto RunDiagnostic(DiagnosticKind kind) -> Result {
+    switch (kind) {
+        case DiagnosticKind::SaveLock:
+            return RunProbeSaveLock();
+        case DiagnosticKind::IdTokenCache:
+            return RunProbeIdTokenCache();
+        case DiagnosticKind::UserResource:
+            return RunProbeUserResource();
+        case DiagnosticKind::TokenUpdate:
+            return RunProbeTokenUpdate();
+        case DiagnosticKind::AdminState:
+            return RunProbeAdminState();
+    }
+    R_SUCCEED();
 }
 
 } // namespace sphaira::account_link

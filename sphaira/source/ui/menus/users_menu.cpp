@@ -715,6 +715,23 @@ void Menu::ShowContextMenu() {
         }, true, "Link all unlinked and fake-linked profiles to the official Nintendo Account donor. Console will reboot."_i18n);
     }
 
+    options->Add<SidebarEntryHeader>("DIAGNOSTICS"_i18n);
+    options->Add<SidebarEntryCallback>("Probe account save lock"_i18n, [this](){
+        RunDiagnosticProbe(account_link::DiagnosticKind::SaveLock);
+    }, true, "Read-only test of account save accessibility before and during daemon suspension. Does not contact Nintendo servers."_i18n);
+    options->Add<SidebarEntryCallback>("Probe ID token cache"_i18n, [this](){
+        RunDiagnosticProbe(account_link::DiagnosticKind::IdTokenCache);
+    }, true, "Read-only test for cached ID tokens across linked accounts. Does not contact Nintendo servers."_i18n);
+    options->Add<SidebarEntryCallback>("Probe cached Nintendo profile"_i18n, [this](){
+        RunDiagnosticProbe(account_link::DiagnosticKind::UserResource);
+    }, true, "Read-only test for cached profile resources in system services. Does not contact Nintendo servers."_i18n);
+    options->Add<SidebarEntryCallback>("Probe token update state"_i18n, [this](){
+        RunDiagnosticProbe(account_link::DiagnosticKind::TokenUpdate);
+    }, true, "Read-only test for token update requirements. Does not contact Nintendo servers."_i18n);
+    options->Add<SidebarEntryCallback>("Probe registration and link state"_i18n, [this](){
+        RunDiagnosticProbe(account_link::DiagnosticKind::AdminState);
+    }, true, "Read-only test of administrator registration and link status flags. Does not contact Nintendo servers."_i18n);
+
     options->Add<SidebarEntryHeader>("VIEW"_i18n);
     SidebarEntryArray::Items layout_items;
     layout_items.push_back("List"_i18n);
@@ -1139,6 +1156,22 @@ void Menu::RunLinkNintendoAccount() {
                 App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
             } else {
                 utils::requestForcedReboot();
+            }
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+}
+
+void Menu::RunDiagnosticProbe(account_link::DiagnosticKind kind) {
+    App::Push<ProgressBox>(0, "Diagnostics"_i18n, "Running diagnostic probe..."_i18n,
+        [kind](auto pbox) -> Result {
+            pbox->NewTransfer("Running diagnostic probe..."_i18n);
+            R_TRY(account_link::RunDiagnostic(kind));
+            R_SUCCEED();
+        },
+        [](Result rc) {
+            if (R_FAILED(rc)) {
+                App::Push<OptionBox>("Diagnostic probe failed. Check the log for details."_i18n, "OK"_i18n);
+            } else {
+                App::Push<OptionBox>("Diagnostic probe completed. Check the log for results."_i18n, "OK"_i18n);
             }
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }

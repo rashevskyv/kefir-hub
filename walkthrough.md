@@ -3,6 +3,13 @@ walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
 
+## v0.13.677 — Manual Nintendo Account diagnostics
+
+- Users > Nintendo Account > Diagnostics отримав п’ять ручних проб: доступ до 0010 до/під час `SuspendBackgroundDaemon`, локальний ID-token cache, cached Nintendo profile resource, token-update state та Administrator registration/link state.
+- Кожна проба виконується тільки після натискання кнопки в `ProgressBox`, не refresh-ить Users, не змінює `LinkKind` і пише один `[ACC]` aggregate log line без UID, Nintendo Account/NAS ID, токенів, email, filename чи profile payload.
+- User-resource probe викликає лише відомий cmd 130 із type-0x1A fixed-size MapAlias output (`0x24F`) і type-0x6 MapAlias output для image; refresh/reauth/network/debug IPC не викликаються. cmd 160 лишається явним `unavailable`, доки його ABI не підтверджено.
+- Версія Sphaira — `0.13.677`. Виконано `git diff --check`, static IPC/service-lifetime/log audit і JSON syntax validation для en/uk/ru. Збірку й тести не запускали; кожну кнопку потрібно перевірити на Switch.
+
 ## v0.13.676 — Administrator official-link hardware probe
 
 - `ListUsers()` для кожного профілю, що вже пройшов Horizon `CheckAvailability`, читає `acc:su` cmd 250 → `IAdministrator` cmd 250 `IsLinkedWithNintendoAccount`.

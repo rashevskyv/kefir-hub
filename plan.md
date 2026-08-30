@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.676** (Administrator official-link probe). Завершені плани збережено в
+Поточний delivery — **v0.13.677** (manual Nintendo Account diagnostics). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.676 — Administrator official-link probe
+## Поточний delivery: v0.13.677 — Manual Nintendo Account diagnostics
+
+Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
+1. Users > Nintendo Account отримує окремі ручні, read-only diagnostic actions для безпечних IPC-перевірок: lock/save після suspend daemon, cached Nintendo profile resource, token-cache update state, administrator registration/link state.
+2. Кожна дія запускається лише кнопкою користувача, не змінює `LinkKind`, токени, профілі, save або мережевий стан і пише у log лише aggregate counts/booleans/Result без UID, NAS ID, email, filename чи payload.
+3. Сумнівний fingerprint IPC не викликається, доки не підтверджено його ABI; network refresh/reauth/debug commands не входять у діагностику.
+4. Версію піднято до `0.13.677`; `git diff --check` і JSON parsing пройшли. Збірку й тести не запускали, потрібна перевірка кожної кнопки на Switch.
+
+## Попередній delivery: v0.13.676 — Administrator official-link probe
 
 Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
 1. Для кожного Horizon-linked профілю `acc:su` → `IAdministrator::IsLinkedWithNintendoAccount` читається без доступу до мережі, save або зміни UI-класифікації.

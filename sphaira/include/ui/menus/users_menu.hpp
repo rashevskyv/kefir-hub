@@ -63,6 +63,7 @@ private:
     void RunNandRestore(const std::string& dir);
     void RunRestore(const std::string& dir);
     void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
+    void RunDiagnosticProbe(account_link::DiagnosticKind kind);
 
     auto StatusLabel(const account_link::User& u) const -> std::string;
     auto TryLoadAvatar(Item& u) -> bool;
