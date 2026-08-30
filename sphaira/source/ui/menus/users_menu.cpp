@@ -367,9 +367,8 @@ auto StatusColour(Theme* theme, const account_link::User& u) -> NVGcolor {
     }
     switch (u.kind) {
         case account_link::LinkKind::Official:
-            return nvgRGBA(80, 200, 120, 255);
         case account_link::LinkKind::Offline:
-            return nvgRGBA(230, 190, 50, 255);
+            return nvgRGBA(80, 200, 120, 255);
         case account_link::LinkKind::None:
         default:
             return nvgRGBA(230, 60, 60, 255);
@@ -463,9 +462,8 @@ auto Menu::StatusLabel(const account_link::User& u) const -> std::string {
     }
     switch (u.kind) {
         case account_link::LinkKind::Official:
-            return "Linked"_i18n;
         case account_link::LinkKind::Offline:
-            return "Fake linked"_i18n;
+            return "Linked"_i18n;
         case account_link::LinkKind::None:
         default:
             return "Not linked"_i18n;
@@ -712,7 +710,7 @@ void Menu::ShowContextMenu() {
     if (!m_items.empty()) {
         options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
             ConfirmLinkNintendoAccount();
-        }, true, "Link all unlinked and fake-linked profiles to the official Nintendo Account donor. Console will reboot."_i18n);
+        }, true, "Link all currently unlinked profiles to the official Nintendo Account donor. Already linked profiles will not be changed. Console will reboot."_i18n);
     }
 
     options->Add<SidebarEntryHeader>("DIAGNOSTICS"_i18n);
@@ -906,7 +904,7 @@ void Menu::ConfirmLinkNintendoAccount() {
 
     bool any_needed = false;
     for (const auto& u : m_items) {
-        if (u.linked_known && (u.kind == account_link::LinkKind::Offline || (u.kind == account_link::LinkKind::None && !u.horizon_linked))) {
+        if (u.linked_known && !u.horizon_linked) {
             any_needed = true;
             break;
         }
@@ -917,7 +915,7 @@ void Menu::ConfirmLinkNintendoAccount() {
     }
 
     App::Push<OptionBox>(
-        "Link all unlinked and fake-linked profiles to the official Nintendo Account donor? The console will reboot immediately."_i18n,
+        "Link all currently unlinked profiles to the official Nintendo Account donor? Already linked profiles will not be changed. The console will reboot immediately."_i18n,
         "Cancel"_i18n, "Link and reboot"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {

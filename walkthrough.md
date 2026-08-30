@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.676** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.678** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.678 — Safe unlinked-only Nintendo Account donor link
+
+- Hardware diagnostics на трьох Horizon-linked профілях не відрізнили Official від Linkalho: `IAdministrator` registration/link true для всіх, ID-token та user-resource caches failed для всіх, а save `0010` лишився locked навіть після suspend daemon. Тому Users більше не стверджує, що `Offline` є fake.
+- `Official` і `Offline` тепер однаково показуються зеленим `Linked`; `Not linked` лишається для Horizon `not linked`. Disk-token evidence і ручні diagnostics лишилися internal/read-only, aggregate `ListUsers` log називає непідтверджені linked-профілі `linked_unverified`.
+- `LinkAllFromRomfsDonor`, `CanOfferLaunchLink` і Users confirm беруть тільки `linked_known && !horizon_linked`: наявні linked-профілі не входять у write path. При цьому збережено romfs manifest validation, process termination, rollback, BaaS mapping для кожної цілі, NAS donor files і один Commit.
+- Операція логує лише безпечні aggregate stages: donor load, eligible unlinked count, writable-save result, Commit result і completed count. Немає UID, Nintendo/NAS ID, token data чи filenames.
+- Версія Sphaira — `0.13.678`. Виконано `git diff --check`, JSON syntax validation і static caller/log review. Збірку й тести не запускали; hardware-перевірка потрібна на Switch.
 
 ## v0.13.677 — Manual Nintendo Account diagnostics
 

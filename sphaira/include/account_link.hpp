@@ -8,7 +8,7 @@ namespace sphaira::account_link {
 
 enum class LinkKind {
     None,
-    Offline,   // baas/nas present, no Nintendo tokens (Linkalho-style)
+    Offline,   // Horizon-linked account without locally available official-token proof
     Official,  // baas/nas plus id.token / refresh.token
 };
 

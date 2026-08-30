@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.677** (manual Nintendo Account diagnostics). Завершені плани збережено в
+Поточний delivery — **v0.13.678** (safe unlinked-only Nintendo Account donor link). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.677 — Manual Nintendo Account diagnostics
+## Поточний delivery: v0.13.678 — Safe unlinked-only Nintendo Account donor link
+
+Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
+1. Hardware probes не дали надійного локального доказу для розрізнення official і Linkalho: cached resource/token IPC однаково недоступні, Administrator flags однакові, а read-only save `0010` заблокований. `Offline` більше не означає «Fake» у UI.
+2. Users показує будь-який Horizon-linked профіль зеленим `Linked`; red `Not linked` лишається лише для профілю, який Horizon прямо повернув як unlinked. Внутрішній disk-token evidence і diagnostics збережено, aggregate log перейменовано на `linked_unverified`.
+3. `LinkAllFromRomfsDonor`, launch prompt і Users confirm обирають тільки `linked_known && !horizon_linked`. Уже прив'язані профілі не модифікуються; romfs donor, rollback, BaaS-per-target, NAS copy і один Commit збережені.
+4. Link flow пише aggregate-only stage logs для donor load, кількості цілей, writable save, Commit і completed count без UID, Nintendo/NAS ID, filename чи токенів. Версію піднято до `0.13.678`; `git diff --check` і JSON parsing пройшли. Збірку й тести не запускали, потрібна hardware-перевірка на Switch.
+
+## Попередній delivery: v0.13.677 — Manual Nintendo Account diagnostics
 
 Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
 1. Users > Nintendo Account отримує окремі ручні, read-only diagnostic actions для безпечних IPC-перевірок: lock/save після suspend daemon, cached Nintendo profile resource, token-cache update state, administrator registration/link state.

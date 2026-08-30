@@ -354,18 +354,21 @@ auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
     out_linked_count = 0;
 
     RomfsDonorPackage donor_pkg;
-    R_TRY(LoadRomfsDonorPackage(donor_pkg));
+    const auto load_rc = LoadRomfsDonorPackage(donor_pkg);
+    if (R_FAILED(load_rc)) {
+        log_write("[ACC] LoadRomfsDonorPackage failed 0x%X\n", load_rc);
+        return load_rc;
+    }
+    log_write("[ACC] LoadRomfsDonorPackage ok\n");
 
     const auto all_users = ListUsers();
     std::vector<User> targets;
     for (const auto& u : all_users) {
-        if (!u.linked_known) {
-            continue;
-        }
-        if (u.kind == LinkKind::Offline || (u.kind == LinkKind::None && !u.horizon_linked)) {
+        if (u.linked_known && !u.horizon_linked) {
             targets.push_back(u);
         }
     }
+    log_write("[ACC] LinkAllFromRomfsDonor eligible unlinked=%u\n", static_cast<u32>(targets.size()));
 
     if (targets.empty()) {
         R_SUCCEED();
@@ -379,7 +382,12 @@ auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
     }
 
     auto save = OpenAccountSaveWritable();
-    R_TRY(save.GetFsOpenResult());
+    const auto save_rc = save.GetFsOpenResult();
+    if (R_FAILED(save_rc)) {
+        log_write("[ACC] OpenAccountSaveWritable failed 0x%X\n", save_rc);
+        return save_rc;
+    }
+    log_write("[ACC] OpenAccountSaveWritable ok\n");
 
     if (!save.DirExists("/su")) {
         R_TRY(save.CreateDirectoryRecursively("/su"));
@@ -410,62 +418,9 @@ auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
     const auto existing_baas_files = ListDirFiles(save, "/su/baas");
     const auto existing_nas_files = ListDirFiles(save, "/su/nas");
 
-    std::vector<User> final_targets;
-    for (const auto& target : targets) {
-        if (target.kind == LinkKind::None && target.linked_known && !target.horizon_linked) {
-            final_targets.push_back(target);
-            continue;
-        }
-
-        if (target.kind == LinkKind::Offline) {
-            u64 nas_id = 0;
-            const auto cands = BaasCandidateNames(target.uid);
-            for (const auto& cand : cands) {
-                for (const auto& bf : existing_baas_files) {
-                    if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
-                        const auto baas_full = "/su/baas/" + bf;
-                        std::vector<u8> baas_data;
-                        if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), baas_data)) && baas_data.size() >= 24) {
-                            std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
-                        }
-                        break;
-                    }
-                }
-                if (nas_id != 0) {
-                    break;
-                }
-            }
-
-            if (nas_id != 0) {
-                bool has_id_token = false;
-                bool has_refresh_token = false;
-                for (const auto& nf : existing_nas_files) {
-                    if (NasFileMatches(nf, nas_id)) {
-                        const auto lower = ToLowerCopy(nf);
-                        if (EndsWith(lower, "_id.token")) {
-                            has_id_token = true;
-                        } else if (EndsWith(lower, "_refresh.token")) {
-                            has_refresh_token = true;
-                        }
-                    }
-                }
-
-                if (has_id_token && has_refresh_token) {
-                    continue;
-                }
-            }
-
-            final_targets.push_back(target);
-        }
-    }
-
-    if (final_targets.empty()) {
-        R_SUCCEED();
-    }
-
     std::vector<u64> old_nas_ids_to_clean;
 
-    for (const auto& target : final_targets) {
+    for (const auto& target : targets) {
         const auto cands = BaasCandidateNames(target.uid);
         for (const auto& cand : cands) {
             for (const auto& bf : existing_baas_files) {
@@ -511,9 +466,14 @@ auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
         R_TRY(save.write_entire_file(nas_dst.c_str(), nf.data));
     }
 
-    R_TRY(save.Commit());
+    const auto commit_rc = save.Commit();
+    if (R_FAILED(commit_rc)) {
+        log_write("[ACC] Commit failed 0x%X\n", commit_rc);
+        return commit_rc;
+    }
+    log_write("[ACC] Commit ok\n");
 
-    out_linked_count = static_cast<u32>(final_targets.size());
+    out_linked_count = static_cast<u32>(targets.size());
     log_write("[ACC] LinkAllFromRomfsDonor completed for %u profile(s)\n", out_linked_count);
     R_SUCCEED();
 }
@@ -757,7 +717,7 @@ auto ListUsers() -> std::vector<User> {
             count_none++;
         }
     }
-    log_write("[ACC] ListUsers: save_open=%d official=%u offline=%u none=%u\n",
+    log_write("[ACC] ListUsers: save_open=%d official=%u linked_unverified=%u none=%u\n",
         save_open ? 1 : 0, count_official, count_offline, count_none);
 
     return out;
@@ -821,7 +781,7 @@ auto CanOfferLaunchLink() -> bool {
         if (!u.linked_known) {
             continue;
         }
-        if (u.kind == LinkKind::Offline || (u.kind == LinkKind::None && !u.horizon_linked)) {
+        if (!u.horizon_linked) {
             return true;
         }
     }

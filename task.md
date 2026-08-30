@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.677** (manual Nintendo Account diagnostics). Завершені задачі збережено в
+Актуальний delivery — **v0.13.678** (safe unlinked-only Nintendo Account donor link). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.677 (manual Nintendo Account diagnostics)
+## Поточний delivery: v0.13.678 (safe unlinked-only Nintendo Account donor link)
+
+- [x] `ACC-UNLINKED-ONLY-678` — donor write, launch offer і Users confirm обирають лише `linked_known && !horizon_linked`; already-linked profiles не змінюються.
+- [x] `ACC-NEUTRAL-LINKED-678` — `Official` і `Offline` відображаються як зелений `Linked`; `Offline` більше не є непідтвердженим «Fake» у UI.
+- [x] `ACC-LINK-STAGE-LOGS-678` — aggregate-only donor/save/commit/completed logs без account identifiers або secrets.
+- [x] `ACC-LINK-I18N-678` — en/uk/ru wording гарантує, що already-linked profiles не буде змінено.
+- [x] `DOCS-BUMP-678` — plan/task/walkthrough/audit + локальний commit після прийняття.
+
+## Попередній delivery: v0.13.677 (manual Nintendo Account diagnostics)
 
 - [x] `ACC-MANUAL-DIAGNOSTICS-677` — Users має окремі кнопки safe IPC probes, що виконуються тільки вручну та логують aggregate result без секретів.
 - [x] `ACC-SUSPEND-SAVE-PROBE-677` — cmd 299 suspend daemon + повторне read-only відкриття 0010; save/LinkKind не змінюються.
