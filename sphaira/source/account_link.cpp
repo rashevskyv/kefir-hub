@@ -133,10 +133,17 @@ auto NasPrefixes(u64 nas_id) -> std::vector<std::string> {
 }
 
 auto NasFileMatches(const std::string& name, u64 nas_id) -> bool {
+    if (nas_id == 0) {
+        return false;
+    }
     const auto lower = ToLowerCopy(name);
     for (const auto& prefix : NasPrefixes(nas_id)) {
-        if (lower.rfind(ToLowerCopy(prefix), 0) == 0) {
-            return true;
+        const auto lower_prefix = ToLowerCopy(prefix);
+        if (lower.size() > lower_prefix.size() && lower.rfind(lower_prefix, 0) == 0) {
+            const char next = lower[lower_prefix.size()];
+            if (next == '.' || next == '_') {
+                return true;
+            }
         }
     }
     return false;
@@ -146,7 +153,7 @@ auto TryOpenAccountSave() -> fs::FsNativeSave {
     FsSaveDataAttribute attr{};
     attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
-    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
+    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
 }
 
 auto OpenAccountSaveWritable() -> fs::FsNativeSave {
@@ -639,35 +646,30 @@ auto ListUsers() -> std::vector<User> {
                 u.kind = LinkKind::None;
                 continue;
             }
-            if (u.kind == LinkKind::Official) {
-                continue;
-            }
 
             u64 nas_id = 0;
-
-            const auto cands = BaasCandidateNames(u.uid);
-            std::string matched_baas;
-            for (const auto& cand : cands) {
-                for (const auto& bf : baas_files) {
-                    if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
-                        matched_baas = bf;
+            if (R_FAILED(QueryNintendoAccountId(u.uid, nas_id)) || nas_id == 0) {
+                nas_id = 0;
+                const auto cands = BaasCandidateNames(u.uid);
+                std::string matched_baas;
+                for (const auto& cand : cands) {
+                    for (const auto& bf : baas_files) {
+                        if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                            matched_baas = bf;
+                            break;
+                        }
+                    }
+                    if (!matched_baas.empty()) {
                         break;
                     }
                 }
+
                 if (!matched_baas.empty()) {
-                    break;
+                    std::vector<u8> baas_data;
+                    if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + matched_baas).c_str(), baas_data)) && baas_data.size() >= 24) {
+                        std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
+                    }
                 }
-            }
-
-            if (!matched_baas.empty()) {
-                std::vector<u8> baas_data;
-                if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + matched_baas).c_str(), baas_data)) && baas_data.size() >= 24) {
-                    std::memcpy(&nas_id, baas_data.data() + 16, sizeof(u64));
-                }
-            }
-
-            if (nas_id == 0) {
-                QueryNintendoAccountId(u.uid, nas_id);
             }
 
             if (nas_id != 0) {

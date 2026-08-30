@@ -1,13 +1,16 @@
-Актуальний delivery — **v0.13.675** (token detect + Icon/Grid UI). Завершені задачі збережено в
+Актуальний delivery — **v0.13.675** (token Official detect). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.675 (token Official + Icon/Grid)
+## Поточний delivery: v0.13.675 (token Official)
 
-- [ ] `ACC-DISK-TOKEN-DETECT-675` — Official лише якщо на диску є `_id.token` і `_refresh.token` для nas_id.
-- [ ] `USERS-ICON-GRID-LABELS-675` — Icon: завжди нік, UID лише focus; Grid: UID без overlap/overflow.
-- [ ] `DOCS-BUMP-675` — після accept.
+- [x] `ACC-DISK-TOKEN-DETECT-675` — SystemSaveData opener; Official лише якщо на диску є `_id.token` і `_refresh.token` для nas_id, незалежно від IPC cache при відкритому save.
+- [x] `DOCS-BUMP-675` — plan/task/walkthrough/audit + локальний commit.
+
+## Наступне, не delivery v0.13.675
+
+- [ ] `USERS-ICON-GRID-LABELS` — Icon: завжди nickname, UID лише focus; Grid Detail: UID без overlap/overflow.
 
 ## Попередній delivery: v0.13.674 (Official vs Fake + status colours)
 

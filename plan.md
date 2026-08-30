@@ -1,13 +1,16 @@
-Поточний delivery — **v0.13.675** (token-based Official detect + Icon/Grid UI). Завершені плани збережено в
+Поточний delivery — **v0.13.675** (token-based Official detect). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.675 — Disk token Official detection + Icon/Grid labels
+## Поточний delivery: v0.13.675 — Disk token Official detection
 
-Статус: в роботі (Gemini junior). 
-1. Official vs Fake: наявність `_id.token`+`_refresh.token` у nas (через nas_id з IPC), не покладатись на порожній LoadIdTokenCache.
-2. Icon: завжди нікнейм; UID лише для фокусу. Grid: UID не роз'їжджає картку.
-3. Bump 0.13.675.
+Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
+1. System save `0010` відкривається SystemSaveData API; scan не пише, не видаляє й не commit-ить save.
+2. Official лише за парою `_id.token` + `_refresh.token` для `nas_id` на диску; при відкритому save цей доказ сильніший за LoadIdTokenCache.
+3. Короткий hex `nas_id` не може збігтися з початком чужого filename; версію піднято до `0.13.675`.
+4. Збірку й тести не запускали; потрібна перевірка на Switch.
+
+Наступне, не входить у v0.13.675: optional Icon/Grid labels — завжди показувати nickname, UID лише для focus і не давати йому переповнювати Grid Detail.
 
 ## Попередній delivery: v0.13.674 — Official vs Fake classification + status colours
 

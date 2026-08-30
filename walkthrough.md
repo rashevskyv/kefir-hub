@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.674** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.675** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.675 — Official token proof from SystemSaveData
+
+- `TryOpenAccountSave()` використовує SystemSaveData opener для `0010`; `ListUsers()` та export лише читають цей save.
+- Коли save відкрито, `ListUsers()` визначає `Official` тільки за обома matching `_id.token` і `_refresh.token`; IPC `LoadIdTokenCache` більше не може зберегти хибний Official без disk proof.
+- `QueryNintendoAccountId()` тепер перший спосіб отримати `nas_id`; BaaS filename/content лишається fallback. `NasFileMatches()` вимагає після ID `.` або `_`, тому short-hex ID не перехоплює чужі NAS-файли.
+- Версія Sphaira — `0.13.675`. Виконано static review і `git diff --check`; збірку й тести не запускали. Потрібна перевірка Users на Switch перед live Link and reboot.
 
 ## v0.13.674 — Official vs Fake classification + status colours
 
