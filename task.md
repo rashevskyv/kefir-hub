@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.686** (account-link safety copy in all locales). Завершені задачі збережено в
+Актуальний delivery — **v0.13.687** (Users Icon labels above tiles). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.686 (account-link safety copy in all locales)
+## Поточний delivery: v0.13.687 (Users Icon labels above tiles)
+
+- [x] `USERS-ICON-FULL-AVATAR-687` — повнорозмірний avatar повернуто; caption-смугу та shrink прибрано.
+- [x] `USERS-ICON-ABOVE-LABEL-687` — nickname непоточних плиток над outline; локальний міжрядковий gap захищає avatar іншого ряду.
+- [x] `USERS-ICON-FOCUS-ID-687` — focus лишає comic-хмаринку, один `ID` під сіткою збережено.
+- [x] `DOCS-BUMP-687` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.686 (account-link safety copy in all locales)
 
 - [x] `ACC-LINK-EN-BASE-686` — англійський source/key містить safety для ігрових сейвів і вимогу деяких ігор до linked Nintendo Account.
 - [x] `ACC-LINK-I18N-ALL-686` — новий ключ перекладено в усі 13 неанглійських i18n-файлів.

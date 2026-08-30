@@ -424,6 +424,12 @@ void Menu::OnLayoutChange() {
     m_status_scroll.Reset();
     m_uid_scroll.Reset();
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
+    if (m_layout.Get() == LayoutType::LayoutType_Grid) {
+        const Vec4 content_pos{40, 97, 1200, 539};
+        const Vec2 pad{10, 40};
+        const Vec4 v{93, 150, 174, 174};
+        m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
+    }
     SetIndex(0);
 }
 
@@ -626,8 +632,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             if (!selected) {
                 DrawElement(v, ThemeEntryID_GRID);
                 nvgSave(vg);
-                nvgIntersectScissor(vg, v.x + 4.f, v.y, v.w - 8.f, 28.f);
-                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + 14.f, 15.f,
+                nvgIntersectScissor(vg, v.x + 4.f, v.y - 28.f, v.w - 8.f, 26.f);
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y - 14.f, 15.f,
                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
                     theme->GetColour(ThemeEntryID_TEXT),
                     "%s", item.nickname.c_str());
@@ -636,7 +642,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
                 gfx::drawAppLable(vg, theme, m_name_scroll, v.x, v.y, v.w, item.nickname.c_str());
             }
-            image_v = Vec4{v.x + 14.f, v.y + 28.f, v.w - 28.f, v.h - 28.f};
+            image_v = v;
             gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
         } else if (layout == LayoutType::LayoutType_GridDetail) {
             const auto selected = m_index == i;

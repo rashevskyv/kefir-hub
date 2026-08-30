@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.686** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.687** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.687 — Users Icon labels above tiles
+
+- Users → Icon повернув повнорозмірні avatar: зменшену внутрішню caption-смугу прибрано.
+- Nickname непоточних профілів показується clipped над рамкою їхньої плитки. Icon має локально більший вертикальний gap, тому підпис другого ряду не лягає на avatar першого.
+- Для focus лишається тільки чинна comic-хмаринка `drawAppLable`; `ID: <uid>` поточного профілю лишається під сіткою. Версія `0.13.687`; `git diff --check` пройшов. Збірку й тести не запускали.
 
 ## v0.13.686 — Account-link safety copy in all locales
 

@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.686** (account-link safety copy in all locales). Завершені плани збережено в
+Поточний delivery — **v0.13.687** (Users Icon labels above tiles). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.686 — Account-link safety copy in all locales
+## Поточний delivery: v0.13.687 — Users Icon labels above tiles
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Users → Icon знову малює повнорозмірний avatar у межах своєї плитки; внутрішню caption-смугу та зменшення avatar прибрано.
+2. Nickname непоточних плиток тепер clipped і над їхньою рамкою; локально збільшений проміжок між рядами не дає підписам накладатися на avatar іншого ряду.
+3. Focus лишає тільки чинну comic-хмаринку; UID поточного профілю збережено під сіткою. Версія `0.13.687`; `git diff --check` пройшов.
+
+## Попередній delivery: v0.13.686 — Account-link safety copy in all locales
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Англійський launch-текст прив’язки тепер є базовим i18n-ключем: safe, без видалення чи зміни ігрових сейвів, а також пояснення потреби деяких ігор у linked Nintendo Account.
