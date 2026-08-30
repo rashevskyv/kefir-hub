@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.684** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.685** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.685 — Users Icon caption band
+
+- Users → Icon має окрему верхню caption-смугу з обрізаним nickname для кожної непоточної плитки; текст більше не друкується поверх avatar.
+- Avatar зміщено нижче й зменшено до компактного квадрату. У focus звичайний підпис приховано, тому лишається тільки чинна comic-хмаринка `drawAppLable`.
+- Єдиний `ID: <uid>` поточного профілю під сіткою збережено. List і Grid Detail не змінювалися. Версія `0.13.685`; `git diff --check` пройшов. Збірку й тести не запускали.
 
 ## v0.13.684 — Safe account-link copy
 

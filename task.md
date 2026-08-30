@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.684** (safe account-link copy). Завершені задачі збережено в
+Актуальний delivery — **v0.13.685** (Users Icon caption band). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.684 (safe account-link copy)
+## Поточний delivery: v0.13.685 (Users Icon caption band)
+
+- [x] `USERS-ICON-CAPTION-685` — nickname непоточних плиток у clipped верхній смузі, окремо від avatar.
+- [x] `USERS-ICON-FOCUS-685` — focus ховає звичайний підпис і лишає чинну comic-хмаринку; обраний `ID` під сіткою збережено.
+- [x] `DOCS-BUMP-685` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.684 (safe account-link copy)
 
 - [x] `ACC-LINK-SAVE-SAFETY-684` — український launch-текст прямо каже, що прив’язка не видаляє й не змінює ігрові сейви.
 - [x] `ACC-LINK-GAME-REQUIREMENT-684` — збережено пояснення, що деяким іграм потрібен прив’язаний Nintendo Account для запуску.

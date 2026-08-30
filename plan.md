@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.684** (safe account-link copy). Завершені плани збережено в
+Поточний delivery — **v0.13.685** (Users Icon caption band). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.684 — Safe account-link copy
+## Поточний delivery: v0.13.685 — Users Icon caption band
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Users → Icon: nickname винесено у власну clipped верхню смугу плитки, тому текст більше не зливається з avatar.
+2. Avatar зменшено та опущено під смугу; у focus звичайний підпис приховано, лишається лише чинна comic-хмаринка `drawAppLable`.
+3. Один UID поточного профілю під сіткою збережено; List і Grid Detail не змінювалися. Версія `0.13.685`; `git diff --check` пройшов.
+
+## Попередній delivery: v0.13.684 — Safe account-link copy
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Український launch-текст прив’язки пояснює, що вона безпечна для ігрових сейвів: не видаляє й не змінює їх.

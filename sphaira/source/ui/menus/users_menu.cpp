@@ -625,21 +625,19 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const auto selected = m_index == i;
             if (!selected) {
                 DrawElement(v, ThemeEntryID_GRID);
+                nvgSave(vg);
+                nvgIntersectScissor(vg, v.x + 4.f, v.y, v.w - 8.f, 28.f);
+                gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + 14.f, 15.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                    theme->GetColour(ThemeEntryID_TEXT),
+                    "%s", item.nickname.c_str());
+                nvgRestore(vg);
             } else {
                 gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
-            }
-            image_v = v;
-            gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
-            if (selected) {
                 gfx::drawAppLable(vg, theme, m_name_scroll, v.x, v.y, v.w, item.nickname.c_str());
             }
-            nvgSave(vg);
-            nvgIntersectScissor(vg, v.x + 4.f, v.y + v.h - 26.f, v.w - 8.f, 24.f);
-            gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 14.f, 15.f,
-                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
-                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
-                "%s", item.nickname.c_str());
-            nvgRestore(vg);
+            image_v = Vec4{v.x + 14.f, v.y + 28.f, v.w - 28.f, v.h - 28.f};
+            gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
         } else if (layout == LayoutType::LayoutType_GridDetail) {
             const auto selected = m_index == i;
             auto text_id = ThemeEntryID_TEXT;
