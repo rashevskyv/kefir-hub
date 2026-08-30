@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.682** (fix applet suspended-app detection). Завершені плани збережено в
+Поточний delivery — **v0.13.683** (readable Users Icon labels). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.682 — Fix applet suspended-app detection
+## Поточний delivery: v0.13.683 — Readable Users Icon labels
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. У Users → Icon nickname тепер є на кожній іконці як звичайний обрізаний підпис; поточна focus-хмаринка `drawAppLable` лишилась без змін.
+2. UID більше не друкується на аватарах: показується один читабельний `ID` профілю у фокусі під сіткою.
+3. Макети List і Grid Detail не змінювалися. Версія `0.13.683`; `git diff --check` пройшов.
+
+## Попередній delivery: v0.13.682 — Fix applet suspended-app detection
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. `HasSuspendedApplication` більше не трактує `pmdmntGetApplicationProcessId` failure (немає application) як «є згорнута гра» — це ламало launch prompt у album без гри.

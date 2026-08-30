@@ -633,10 +633,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             if (selected) {
                 gfx::drawAppLable(vg, theme, m_name_scroll, v.x, v.y, v.w, item.nickname.c_str());
             }
-            gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 12.f, 12.f,
+            nvgSave(vg);
+            nvgIntersectScissor(vg, v.x + 4.f, v.y + v.h - 26.f, v.w - 8.f, 24.f);
+            gfx::drawTextArgs(vg, v.x + v.w / 2.f, v.y + v.h - 14.f, 15.f,
                 NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
-                theme->GetColour(ThemeEntryID_TEXT_INFO),
-                "%s", item.uid_hex.c_str());
+                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                "%s", item.nickname.c_str());
+            nvgRestore(vg);
         } else if (layout == LayoutType::LayoutType_GridDetail) {
             const auto selected = m_index == i;
             auto text_id = ThemeEntryID_TEXT;
@@ -668,6 +671,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
         DrawSelectionMark(vg, theme, layout, v, image_v, item.selected, m_selected_count > 0);
     });
+
+    if (m_layout.Get() == LayoutType::LayoutType_Grid && m_index >= 0 && m_index < static_cast<s64>(m_items.size())) {
+        const auto& cur = m_items[m_index];
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, 580.f, 16.f,
+            NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+            theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "ID: %s", cur.uid_hex.c_str());
+    }
 }
 
 void Menu::ShowContextMenu() {

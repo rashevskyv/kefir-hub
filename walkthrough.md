@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.682** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.683** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.683 — Readable Users Icon labels
+
+- Users → Icon: nickname тепер завжди видно як звичайний підпис у межах своєї іконки; для поточного профілю лишилася існуюча comic-хмаринка `drawAppLable`.
+- UID прибрано з кожного avatar tile. Тепер один читабельний `ID: <uid>` показується під сіткою тільки для профілю у фокусі.
+- Макети List і Grid Detail не змінювалися. Версія `0.13.683`; `git diff --check` пройшов. Збірку й тести не запускали.
 
 ## v0.13.682 — Fix applet suspended-app detection
 

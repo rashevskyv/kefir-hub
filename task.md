@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.682** (fix applet suspended-app detection). Завершені задачі збережено в
+Актуальний delivery — **v0.13.683** (readable Users Icon labels). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.682 (fix applet suspended-app detection)
+## Поточний delivery: v0.13.683 (readable Users Icon labels)
+
+- [x] `USERS-ICON-NAMES-683` — Icon завжди показує обрізаний nickname; для focus збережена наявна comic-хмаринка.
+- [x] `USERS-ICON-SELECTED-ID-683` — UID не накладається на avatar; один `ID` поточного профілю під сіткою.
+- [x] `DOCS-BUMP-683` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.682 (fix applet suspended-app detection)
 
 - [x] `ACC-SUSPEND-DETECT-682` — `pmdmntGetApplicationProcessId` failure = no app (EdiZon-style); не gate applet без гри.
 - [x] `ACC-SUSPEND-PROGRAM-LOG-682` — лог pid + program id фонового application.
@@ -56,9 +62,9 @@
 - [x] `ACC-DISK-TOKEN-DETECT-675` — SystemSaveData opener; Official лише якщо на диску є `_id.token` і `_refresh.token` для nas_id, незалежно від IPC cache при відкритому save.
 - [x] `DOCS-BUMP-675` — plan/task/walkthrough/audit + локальний commit.
 
-## Наступне, не delivery v0.13.675
+## Залишилось, не delivery
 
-- [ ] `USERS-ICON-GRID-LABELS` — Icon: завжди nickname, UID лише focus; Grid Detail: UID без overlap/overflow.
+- [ ] `USERS-GRIDDETAIL-UID` — якщо знадобиться окремо: перевірити Grid Detail UID на overlap/overflow. Icon-частину закрито у v0.13.683.
 
 ## Попередній delivery: v0.13.674 (Official vs Fake + status colours)
 
