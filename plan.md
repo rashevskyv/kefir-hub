@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.674** (Official vs Fake + status colours). Завершені плани збережено в
+Поточний delivery — **v0.13.675** (token-based Official detect + Icon/Grid UI). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.674 — Official vs Fake classification + status colours
+## Поточний delivery: v0.13.675 — Disk token Official detection + Icon/Grid labels
+
+Статус: в роботі (Gemini junior). 
+1. Official vs Fake: наявність `_id.token`+`_refresh.token` у nas (через nas_id з IPC), не покладатись на порожній LoadIdTokenCache.
+2. Icon: завжди нікнейм; UID лише для фокусу. Grid: UID не роз'їжджає картку.
+3. Bump 0.13.675.
+
+## Попередній delivery: v0.13.674 — Official vs Fake classification + status colours
 
 Статус: прийнято сеньйором (Gemini junior, chat `Romfs official link`). Збірку не ганяли.
 1. `QueryIdTokenCache` (LoadIdTokenCache cmd 4/3) + fallback RO-скан `/su/baas`+`/su/nas` для Official; Fake лишається без token proof.

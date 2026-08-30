@@ -1,10 +1,15 @@
-Актуальний delivery — **v0.13.674** (Official vs Fake + colours). Завершені задачі збережено в
+Актуальний delivery — **v0.13.675** (token detect + Icon/Grid UI). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
-та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
-у [`plan.md`](plan.md), результат останнього delivery — у
-[`walkthrough.md`](walkthrough.md).
+та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
+у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.674 (Official vs Fake + status colours)
+## Поточний delivery: v0.13.675 (token Official + Icon/Grid)
+
+- [ ] `ACC-DISK-TOKEN-DETECT-675` — Official лише якщо на диску є `_id.token` і `_refresh.token` для nas_id.
+- [ ] `USERS-ICON-GRID-LABELS-675` — Icon: завжди нік, UID лише focus; Grid: UID без overlap/overflow.
+- [ ] `DOCS-BUMP-675` — після accept.
+
+## Попередній delivery: v0.13.674 (Official vs Fake + status colours)
 
 - [x] `ACC-CLASSIFY-OFFICIAL-674` — LoadIdTokenCache + disk token fallback.
 - [x] `ACC-STATUS-COLOURS-674` — зелений/жовтий/червоний у картках Users.
