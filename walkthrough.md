@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.680** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.681** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.681 — Fix launch account-link prompt stacking
+
+- Bug: `CheckLaunchAccountLinkPrompt()` викликався з конструктора MainMenu під час `App::Push<MainMenu>()`, тож OptionBox потрапляв у стек раніше за MainMenu і опинявся під ним без input.
+- Fix: показ на першому `MainMenu::OnFocusGained` (MainMenu уже top, OptionBox Push-иться зверху).
+- Config на SD не містив `account_link_prompt_skip`. Додано aggregate log у `CanOfferLaunchLink`. Версія `0.13.681`. Збірку не запускали.
 
 ## v0.13.680 — Remove account diagnostics + Linkalho-style Unlink
 

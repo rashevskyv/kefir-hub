@@ -850,25 +850,33 @@ bool g_launch_link_prompted = false;
 
 auto CanOfferLaunchLink() -> bool {
     if (g_launch_link_prompted) {
+        log_write("[ACC] CanOfferLaunchLink: already prompted this session\n");
         return false;
     }
     if (App::GetAccountLinkPromptSkip()) {
+        log_write("[ACC] CanOfferLaunchLink: skipped by config\n");
         return false;
     }
     // Album/applet with a suspended game: skip offer (link needs reboot; gated).
     if (App::IsApplet() && HasSuspendedApplication()) {
+        log_write("[ACC] CanOfferLaunchLink: gated applet+suspended\n");
         return false;
     }
     const auto users = ListUsers();
+    u32 unlinked = 0;
+    u32 unknown = 0;
     for (const auto& u : users) {
         if (!u.linked_known) {
+            unknown++;
             continue;
         }
         if (!u.horizon_linked) {
-            return true;
+            unlinked++;
         }
     }
-    return false;
+    log_write("[ACC] CanOfferLaunchLink: users=%u unlinked=%u unknown=%u offer=%d\n",
+        static_cast<u32>(users.size()), unlinked, unknown, unlinked > 0 ? 1 : 0);
+    return unlinked > 0;
 }
 
 auto IsLinkGated(std::string& out_reason) -> bool {

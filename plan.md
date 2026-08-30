@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.680** (remove account diagnostics + Linkalho-style Unlink). Завершені плани збережено в
+Поточний delivery — **v0.13.681** (fix launch account-link prompt stacking). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.680 — Remove account diagnostics + Unlink
+## Поточний delivery: v0.13.681 — Fix launch account-link prompt
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Launch OptionBox більше не Push-иться з конструктора MainMenu (там він опинявся під MainMenu і не отримував input).
+2. Показ перенесено на перший `OnFocusGained` MainMenu — OptionBox стає top-of-stack.
+3. `CanOfferLaunchLink` пише aggregate log (skip/gated/unlinked counts). На SD `account_link_prompt_skip` не був увімкнений.
+4. Версія `0.13.681`.
+
+## Попередній delivery: v0.13.680 — Remove account diagnostics + Unlink
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. Прибрано Users DIAGNOSTICS (усі Probe*) і API `RunDiagnostic` / AdminProbe у `ListUsers`.

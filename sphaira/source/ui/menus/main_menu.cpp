@@ -134,7 +134,9 @@ auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry> {
 }
 
 MainMenu::MainMenu() {
-    CheckLaunchAccountLinkPrompt();
+    // Launch account-link prompt is deferred to OnFocusGained: Push from this
+    // constructor would emplace OptionBox before MainMenu is on the stack, so
+    // MainMenu would cover the dialog and it would never receive input.
 
     const auto update_mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
     if (update_mode != auto_update::Mode::Off) {
@@ -298,6 +300,11 @@ void MainMenu::Draw(NVGcontext* vg, Theme* theme) {
 void MainMenu::OnFocusGained() {
     Widget::OnFocusGained();
     m_current_menu->OnFocusGained();
+
+    if (!m_launch_link_prompt_checked) {
+        m_launch_link_prompt_checked = true;
+        CheckLaunchAccountLinkPrompt();
+    }
 }
 
 void MainMenu::OnFocusLost() {

@@ -83,6 +83,7 @@ private:
     std::string m_update_version{};
     std::string m_update_description{};
     UpdateState m_update_state{UpdateState::Pending};
+    bool m_launch_link_prompt_checked{};
 };
 
 } // namespace sphaira::ui::menu::main
