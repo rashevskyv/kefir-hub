@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.675** (token Official detect). Завершені задачі збережено в
+Актуальний delivery — **v0.13.676** (Administrator official-link probe). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.675 (token Official)
+## Поточний delivery: v0.13.676 (Administrator probe)
+
+- [x] `ACC-ADMIN-PROBE-676` — для Horizon-linked профілів aggregate probe `IAdministrator::IsLinkedWithNintendoAccount`; UI/LinkKind не змінюються.
+- [x] `DOCS-BUMP-676` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.675 (token Official)
 
 - [x] `ACC-DISK-TOKEN-DETECT-675` — SystemSaveData opener; Official лише якщо на диску є `_id.token` і `_refresh.token` для nas_id, незалежно від IPC cache при відкритому save.
 - [x] `DOCS-BUMP-675` — plan/task/walkthrough/audit + локальний commit.

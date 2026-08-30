@@ -196,6 +196,26 @@ auto OpenAccSu(Service* out) -> Result {
     R_SUCCEED();
 }
 
+auto QueryAdministratorNintendoLink(const AccountUid& uid, bool& out_linked) -> Result {
+    out_linked = false;
+
+    Service accsu{};
+    R_TRY(OpenAccSu(&accsu));
+    ON_SCOPE_EXIT(serviceClose(&accsu));
+
+    Service administrator{};
+    R_TRY(serviceDispatchIn(&accsu, 250, uid,
+        .out_num_objects = 1,
+        .out_objects = &administrator));
+    ON_SCOPE_EXIT(serviceClose(&administrator));
+
+    u8 is_linked = 0;
+    R_TRY(serviceDispatchOut(&administrator, 250, is_linked));
+
+    out_linked = (is_linked != 0);
+    R_SUCCEED();
+}
+
 auto IsSafeDumpFileName(const std::string& name) -> bool {
     if (name.empty()) {
         return false;
@@ -619,6 +639,28 @@ auto ListUsers() -> std::vector<User> {
             log_write("[ACC] Horizon link check failed 0x%X\n", rc);
         }
     }
+
+    u32 admin_probed = 0;
+    u32 admin_true = 0;
+    u32 admin_false = 0;
+    u32 admin_failed = 0;
+    for (const auto& u : out) {
+        if (u.linked_known && u.horizon_linked) {
+            admin_probed++;
+            bool admin_linked = false;
+            if (R_SUCCEEDED(QueryAdministratorNintendoLink(u.uid, admin_linked))) {
+                if (admin_linked) {
+                    admin_true++;
+                } else {
+                    admin_false++;
+                }
+            } else {
+                admin_failed++;
+            }
+        }
+    }
+    log_write("[ACC] AdminProbe: linked=%u true=%u false=%u failed=%u\n",
+        admin_probed, admin_true, admin_false, admin_failed);
 
     bool save_open = false;
     auto save = TryOpenAccountSave();

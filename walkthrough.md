@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.675** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.676** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.676 — Administrator official-link hardware probe
+
+- `ListUsers()` для кожного профілю, що вже пройшов Horizon `CheckAvailability`, читає `acc:su` cmd 250 → `IAdministrator` cmd 250 `IsLinkedWithNintendoAccount`.
+- Probe не відкриває save і не змінює `LinkKind`, Users UI, auto-link targets або account data. Лог містить тільки totals: `linked`, `true`, `false`, `failed`.
+- Версія Sphaira — `0.13.676`. Виконано static review і `git diff --check`; збірку й тести не запускали. Наступне рішення залежить від hardware result на Official та Linkalho.
 
 ## v0.13.675 — Official token proof from SystemSaveData
 

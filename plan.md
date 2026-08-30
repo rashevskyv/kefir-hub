@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.675** (token-based Official detect). Завершені плани збережено в
+Поточний delivery — **v0.13.676** (Administrator official-link probe). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.675 — Disk token Official detection
+## Поточний delivery: v0.13.676 — Administrator official-link probe
+
+Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
+1. Для кожного Horizon-linked профілю `acc:su` → `IAdministrator::IsLinkedWithNintendoAccount` читається без доступу до мережі, save або зміни UI-класифікації.
+2. Лог — лише aggregate `AdminProbe: linked/true/false/failed`, без UID, NAS ID, email, filename чи токенів.
+3. Версію піднято до `0.13.676`; значення bool має бути підтверджене на Nintendo/Kefir/Linkalho до використання як product classification.
+4. Збірку й тести не запускали; потрібна перевірка на Switch.
+
+## Попередній delivery: v0.13.675 — Disk token Official detection
 
 Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
 1. System save `0010` відкривається SystemSaveData API; scan не пише, не видаляє й не commit-ить save.
