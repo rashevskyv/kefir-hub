@@ -163,6 +163,14 @@ void App::SetAutoUpdateSkip(std::string version) {
     g_app->m_auto_update_skip.Set(std::move(version));
 }
 
+auto App::GetAccountLinkPromptSkip() -> bool {
+    return g_app->m_account_link_prompt_skip.Get();
+}
+
+void App::SetAccountLinkPromptSkip(bool skip) {
+    g_app->m_account_link_prompt_skip.Set(skip);
+}
+
 auto App::GetReplaceHbmenuEnable() -> bool {
     return g_app->m_replace_hbmenu.Get();
 }

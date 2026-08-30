@@ -773,6 +773,10 @@ auto CanOfferLaunchLink() -> bool {
     if (g_launch_link_prompted) {
         return false;
     }
+    if (App::GetAccountLinkPromptSkip()) {
+        return false;
+    }
+    // Album/applet with a suspended game: skip offer (link needs reboot; gated).
     if (App::IsApplet() && HasSuspendedApplication()) {
         return false;
     }

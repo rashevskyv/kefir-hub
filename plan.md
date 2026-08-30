@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.678** (safe unlinked-only Nintendo Account donor link). Завершені плани збережено в
+Поточний delivery — **v0.13.679** (MainMenu B back + launch account-link warning). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.678 — Safe unlinked-only Nintendo Account donor link
+## Поточний delivery: v0.13.679 — MainMenu B back + launch account-link warning
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. На вкладці Tools кнопка B повертає на Homebrew (`Back`); повторне B на Homebrew виходить (`Exit`).
+2. Launch OptionBox для нелінкованих профілів: повне пояснення (що/навіщо/переваги + reboot); 3 кнопки як у оновленні — Later (B), Don't remind again (Minus), Link and reboot (+).
+3. Offer лише коли є unlinked і не (applet + suspended game); `account_link_prompt_skip` у config вимикає нагадування; після Minus — підказка про ручний шлях Tools → Users → Link Nintendo Account.
+4. i18n en/uk/ru, docs §3.3, версія `0.13.679`.
+
+## Попередній delivery: v0.13.678 — Safe unlinked-only Nintendo Account donor link
 
 Статус: прийнято сеньйором (Gemini junior, chat `Official vs Fake Nintendo Account status in Kefir Hub (Sphaira)`).
 1. Hardware probes не дали надійного локального доказу для розрізнення official і Linkalho: cached resource/token IPC однаково недоступні, Administrator flags однакові, а read-only save `0010` заблокований. `Offline` більше не означає «Fake» у UI.

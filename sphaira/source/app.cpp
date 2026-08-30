@@ -1260,6 +1260,7 @@ App::App(const char* argv0) {
             else if (app->m_hdd_enabled.LoadFrom(Key, Value)) {}
             else if (app->m_hdd_write_protect.LoadFrom(Key, Value)) {}
             else if (app->m_log_enabled.LoadFrom(Key, Value)) {}
+            else if (app->m_account_link_prompt_skip.LoadFrom(Key, Value)) {}
             else if (app->m_replace_hbmenu.LoadFrom(Key, Value)) {}
             else if (app->m_theme_path.LoadFrom(Key, Value)) {}
             else if (app->m_12hour_time.LoadFrom(Key, Value)) {}

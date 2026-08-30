@@ -78,31 +78,47 @@ const MiscMenuEntry MISC_MENU_ENTRIES[] = {
         "You do not need to exit the menu." },
 };
 
+void StartLaunchAccountLink() {
+    App::Push<ProgressBox>(0, "Link Nintendo Account"_i18n, "Linking account..."_i18n,
+        [](auto pbox) -> Result {
+            pbox->NewTransfer("Applying Nintendo Account link"_i18n);
+            u32 count = 0;
+            R_TRY(account_link::LinkAllFromRomfsDonor(count));
+            R_SUCCEED();
+        },
+        [](Result rc) {
+            if (R_FAILED(rc)) {
+                App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
+            } else {
+                utils::requestForcedReboot();
+            }
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+}
+
 void CheckLaunchAccountLinkPrompt() {
     if (!account_link::CanOfferLaunchLink()) {
         return;
     }
     account_link::SetLaunchLinkPrompted(true);
 
+    // 3-button layout matches updates: top Minus = don't remind; bottom B = Later, + = Link.
     App::Push<OptionBox>(
-        "One or more user profiles are not linked to a Nintendo Account. Link all unlinked profiles to the official Kefir donor now? The console will reboot immediately."_i18n,
-        "Later"_i18n, "Link and reboot"_i18n, 1,
+        "Some user profiles are not linked to a Nintendo Account.\n\n"
+        "Kefir Hub can link them to the official Kefir donor so games that require a Nintendo Account can start. "
+        "Already linked profiles are left unchanged.\n\n"
+        "The console will reboot after linking."_i18n,
+        "Later"_i18n, "Don't remind again"_i18n, "Link and reboot"_i18n, 2,
         [](auto op) {
-            if (op && *op == 1) {
-                App::Push<ProgressBox>(0, "Link Nintendo Account"_i18n, "Linking account..."_i18n,
-                    [](auto pbox) -> Result {
-                        pbox->NewTransfer("Applying Nintendo Account link"_i18n);
-                        u32 count = 0;
-                        R_TRY(account_link::LinkAllFromRomfsDonor(count));
-                        R_SUCCEED();
-                    },
-                    [](Result rc) {
-                        if (R_FAILED(rc)) {
-                            App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
-                        } else {
-                            utils::requestForcedReboot();
-                        }
-                    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+            if (!op) {
+                return;
+            }
+            if (*op == 2) {
+                StartLaunchAccountLink();
+            } else if (*op == 1) {
+                App::SetAccountLinkPromptSkip(true);
+                App::Push<OptionBox>(
+                    "You won't be asked again at launch. To link manually later: Tools → Users → Link Nintendo Account."_i18n,
+                    "OK"_i18n);
             } else {
                 App::Push<OptionBox>(
                     "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start."_i18n,
@@ -250,7 +266,6 @@ MainMenu::MainMenu() {
                 m_current_menu->FireAction(Button::START);
             }
         }}),
-        std::make_pair(Button::B, Action{"Exit"_i18n, App::Exit}),
         std::make_pair(Button::SELECT, Action{App::Exit})
     );
 
@@ -258,6 +273,7 @@ MainMenu::MainMenu() {
     m_tools_menu = std::make_unique<tools::Menu>();
     m_current_menu = m_centre_menu.get();
 
+    UpdateBackAction();
     AddOnLRPress();
 
     for (auto [button, action] : m_actions) {
@@ -296,6 +312,7 @@ void MainMenu::SwitchTo(MenuBase* menu) {
 
     m_current_menu->OnFocusLost();
     m_current_menu = menu;
+    UpdateBackAction();
     AddOnLRPress();
     m_current_menu->OnFocusGained();
 
@@ -303,6 +320,16 @@ void MainMenu::SwitchTo(MenuBase* menu) {
         if (button != Button::START) {
             m_current_menu->SetAction(button, action);
         }
+    }
+}
+
+void MainMenu::UpdateBackAction() {
+    if (m_current_menu == m_tools_menu.get()) {
+        SetAction(Button::B, Action{"Back"_i18n, [this]{
+            SwitchTo(m_centre_menu.get());
+        }});
+    } else {
+        SetAction(Button::B, Action{"Exit"_i18n, App::Exit});
     }
 }
 

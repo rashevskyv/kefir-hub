@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.678** (safe unlinked-only Nintendo Account donor link). Завершені задачі збережено в
+Актуальний delivery — **v0.13.679** (MainMenu B back + launch account-link warning). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.678 (safe unlinked-only Nintendo Account donor link)
+## Поточний delivery: v0.13.679 (MainMenu B back + launch account-link warning)
+
+- [x] `MAIN-B-BACK-679` — Tools → B → Homebrew; Homebrew → B → Exit; hint Back/Exit.
+- [x] `ACC-LAUNCH-WARN-679` — launch OptionBox з поясненням, reboot warning, Later / Don't remind (Minus) / Link and reboot; skip applet+suspended; persist `account_link_prompt_skip`.
+- [x] `ACC-LAUNCH-MANUAL-TIP-679` — після Later і Don't remind — підказка Tools → Users → Link Nintendo Account.
+- [x] `ACC-LAUNCH-I18N-679` — en/uk/ru + docs §3.3.
+- [x] `DOCS-BUMP-679` — plan/task/walkthrough/audit + локальний commit.
+
+## Попередній delivery: v0.13.678 (safe unlinked-only Nintendo Account donor link)
 
 - [x] `ACC-UNLINKED-ONLY-678` — donor write, launch offer і Users confirm обирають лише `linked_known && !horizon_linked`; already-linked profiles не змінюються.
 - [x] `ACC-NEUTRAL-LINKED-678` — `Official` і `Offline` відображаються як зелений `Linked`; `Offline` більше не є непідтвердженим «Fake» у UI.

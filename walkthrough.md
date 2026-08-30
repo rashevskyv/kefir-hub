@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.678** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.679** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.679 — MainMenu B back + launch account-link warning
+
+- MainMenu: на вкладці Tools B = Back → Homebrew; на Homebrew B = Exit. SELECT як і раніше виходить.
+- Launch prompt для unlinked: довге пояснення (що робить лінк, навіщо, reboot); 3 кнопки як у auto-update — Later (B), Don't remind again (Minus), Link and reboot (+).
+- `CanOfferLaunchLink` також поважає `account_link_prompt_skip` у config і як раніше не пропонує в applet зі згорнутою грою.
+- Після Don't remind — tip як зробити вручну (Tools → Users → Link Nintendo Account); те саме після Later.
+- i18n en/uk/ru, docs/account-transfer.md §3.3. Версія `0.13.679`. Збірку й тести не запускали.
 
 ## v0.13.678 — Safe unlinked-only Nintendo Account donor link
 

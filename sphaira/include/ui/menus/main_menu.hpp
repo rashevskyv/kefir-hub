@@ -72,6 +72,7 @@ struct MainMenu final : Widget {
 private:
     void SwitchTo(MenuBase* menu);
     void AddOnLRPress();
+    void UpdateBackAction();
 
 private:
     std::unique_ptr<MenuBase> m_centre_menu{};
