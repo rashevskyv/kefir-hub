@@ -421,7 +421,7 @@ auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) 
     const auto baas_dir = pack_dir + "/baas";
     const auto nas_dir = pack_dir + "/nas";
     if (!sd.DirExists(baas_dir.c_str()) || !sd.DirExists(nas_dir.c_str())) {
-        return Result_FsPathNotFound;
+        return Result_FsInvalidType;
     }
 
     fs::Dir bd;

@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.688** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.689** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.689 — Fix User Backup Restore build
+
+- `Result_FsPathNotFound` не існує в libnx цього checkout, тому C++ build зупинявся в loader і Restore Backup UI. Loader тепер повертає наявний `Result_FsInvalidType` для неповної BaaS/NAS структури, а UI визначає local package без `baas/` лише перевіркою теки.
+- Версія `0.13.689`. Виконано static search на відсутню константу й `git diff --check`; збірку агент не запускав. Користувач має повторити свою WSL-збірку.
 
 ## v0.13.688 — Complete User Backup + Restore Backup
 

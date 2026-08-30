@@ -1,8 +1,12 @@
-Поточний delivery — **v0.13.688** (complete User Backup + Restore Backup). Завершені плани збережено в
+Поточний delivery — **v0.13.689** (Fix user backup restore build). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.688 — Complete User Backup + Restore Backup
+## Поточний delivery: v0.13.689 — Fix user backup restore build
+
+Статус: реалізовано в primary checkout. `LoadUserPackLinkPackage()` не використовує відсутній у цьому libnx `Result_FsPathNotFound`; відсутня `baas/` лишається local backup, а наявний неповний BaaS/NAS набір — malformed link package. Збірку агент не ганяє.
+
+## Попередній delivery: v0.13.688 — Complete User Backup + Restore Backup
 
 Статус: реалізовано в primary checkout. Пройшли `git diff --check`, парсинг усіх 14 i18n JSON і статичний safety-review; збірку агент не ганяє.
 

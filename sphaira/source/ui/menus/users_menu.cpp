@@ -1309,7 +1309,7 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
                 if (R_SUCCEEDED(link_load_rc)) {
                     links_to_apply.push_back({new_uid, std::move(pkg)});
-                } else if (link_load_rc == Result_FsPathNotFound || !sd.DirExists((p.dir + "/baas").c_str())) {
+                } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
                     report->unlinked_restored++;
                 } else {
                     log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);

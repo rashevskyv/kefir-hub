@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.688** (complete User Backup + Restore Backup). Завершені задачі збережено в
+Актуальний delivery — **v0.13.689** (Fix user backup restore build). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.688 (complete User Backup + Restore Backup)
+## Поточний delivery: v0.13.689 (Fix user backup restore build)
+
+- [x] `USERS-RESTORE-BUILD-689` — замінено відсутній `Result_FsPathNotFound` на наявний `Result_FsInvalidType`; Restore Backup визначає local package за відсутньою `baas/`, не за неіснуючим libnx result.
+- [x] `DOCS-BUMP-689` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.688 (complete User Backup + Restore Backup)
 
 - [x] `USERS-BACKUP-PROFILE-688` — Backup user для одного або виділених профілів зберігає profile, avatar, повний валідований Nintendo Account link export і читабельний playtime export; ігрові сейви лишаються в окремому Backup saves.
 - [x] `USERS-BACKUP-LINK-688` — BaaS/NAS беруться з підтверджених `/su/baas` і `/su/nas`, BaaS обирається за NAS ID у вмісті, а не за застарілим UID-іменем файлу.
