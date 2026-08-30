@@ -592,6 +592,8 @@ Menu::Menu() : grid::Menu{"Users"_i18n, MenuFlag_None} {
         }}),
         std::make_pair(Button::X, Action{"Select"_i18n, [this](){ ToggleCurrentSelection(); }}),
         std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ InvertSelection(); }}),
+        std::make_pair(Button::L, Action{"Backup"_i18n, [this](){ ConfirmBackup(); }}),
+        std::make_pair(Button::R, Action{"Restore"_i18n, [this](){ ConfirmRestoreBackup(); }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){ ShowContextMenu(); }})
     );
     OnLayoutChange();
@@ -734,7 +736,8 @@ auto Menu::SelectedUsers() const -> std::vector<account_link::User> {
         }
     }
     if (out.empty() && !m_items.empty()) {
-        out.push_back(m_items[m_index]);
+        const auto i = (m_index >= 0 && static_cast<size_t>(m_index) < m_items.size()) ? m_index : 0;
+        out.push_back(m_items[i]);
     }
     return out;
 }
@@ -902,16 +905,10 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryCallback>("Change avatar"_i18n, [this](){
             ConfirmChangeAvatar();
         }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n);
-        options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
-            ConfirmBackup();
-        }, true, "Back up profile metadata, avatar, Nintendo Account link and playtime to SD."_i18n);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
         }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
     }
-    options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
-        ConfirmRestoreBackup();
-    }, true, "Restore one or more profile backups as new users. Restores avatar and Nintendo Account link."_i18n);
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
@@ -987,7 +984,7 @@ void Menu::ConfirmBackup() {
     if (uids.empty()) {
         return;
     }
-    RunBackup();
+    RunBackup(uids);
 }
 
 void Menu::ConfirmNandBackup() {
@@ -1244,13 +1241,12 @@ void Menu::RunNandRestore(const std::string& dir) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunBackup() {
-    const auto uids = SelectedUids();
+void Menu::RunBackup(std::vector<AccountUid> uids) {
     if (uids.empty()) {
         return;
     }
     auto dirs = std::make_shared<std::vector<std::string>>();
-    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids, dirs](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids = std::move(uids), dirs](auto pbox) -> Result {
         pbox->NewTransfer("Writing user pack"_i18n);
         R_TRY(account_user::ExportUserPacks(uids, *dirs));
         R_SUCCEED();
@@ -1265,7 +1261,7 @@ void Menu::RunBackup() {
             App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + "Includes playtime data."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
         }
         Refresh();
-    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+    }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
 namespace {
@@ -1400,7 +1396,7 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
             }
             App::Push<OptionBox>("User deleted."_i18n, "OK"_i18n);
             Refresh();
-        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+        }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
 void Menu::RunLinkNintendoAccount() {

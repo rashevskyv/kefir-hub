@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -247,11 +248,11 @@ auto CollectInstalledApps() -> std::vector<AppInfo> {
                 name = data->lang.name;
             }
             if (name.empty()) {
-                NsApplicationControlData control{};
+                auto control = std::make_unique<NsApplicationControlData>();
                 u64 actual_size = 0;
-                if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, &control, sizeof(control), &actual_size))) {
+                if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, control.get(), sizeof(NsApplicationControlData), &actual_size))) {
                     NacpLanguageEntry* lang = nullptr;
-                    if (R_SUCCEEDED(nacpGetLanguageEntry(&control.nacp, &lang)) && lang) {
+                    if (R_SUCCEEDED(nacpGetLanguageEntry(&control->nacp, &lang)) && lang) {
                         name = lang->name;
                     }
                 }
@@ -328,6 +329,7 @@ auto WriteUserPlaytimeTsv(fs::FsNativeSd& sd, const std::string& dir, const Acco
 
 auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
+    log_write("[USER] backup start count=%zu\n", uids.size());
 
     struct Ready {
         AccountUid uid{};

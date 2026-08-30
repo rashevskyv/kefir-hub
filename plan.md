@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.689** (Fix user backup restore build). Завершені плани збережено в
+Поточний delivery — **v0.13.690** (Fix user backup stack overflow + Users Backup/Restore actions). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.689 — Fix user backup restore build
+## Поточний delivery: v0.13.690 — Fix user backup crash and move Backup/Restore
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Crash `I:\atmosphere\crash_reports\01788103076_054956fb30c19000.log` (Build ID `C011EEF2…`, v0.13.689): Data Abort, SP нижче стеку ProgressBox. `addr2line`: `CollectInstalledApps` ← `ExportUserPacks:354` ← `ProgressBox` thread. Причина — `NsApplicationControlData` (~144 KiB) на стеку 128 KiB. Тепер структура на купі, як у `title_info.cpp`.
+2. `Backup user` / `Restore Backup` прибрано з Options (Create/Rename/Delete). На екрані Users: **L Backup**, **R Restore**. Без окремого підзаголовка Backup and Restore.
+3. Якщо галочок немає — бекап лише профілю під курсором (`SelectedUsers` fallback); виділені галочками — усі виділені. UID знімаються в момент L, не пізніше.
+4. Версія `0.13.690`.
+
+## Попередній delivery: v0.13.689 — Fix user backup restore build
 
 Статус: реалізовано в primary checkout. `LoadUserPackLinkPackage()` не використовує відсутній у цьому libnx `Result_FsPathNotFound`; відсутня `baas/` лишається local backup, а наявний неповний BaaS/NAS набір — malformed link package. Збірку агент не ганяє.
 

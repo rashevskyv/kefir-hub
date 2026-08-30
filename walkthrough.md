@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.689** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.690** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.690 — User backup crash + L/R Backup Restore
+
+- SD crash `01788103076_054956fb30c19000.log`: Application Data Abort, module sphaira, Build ID `c011eef2901c8662e484ca43cea1cf1d9ce2269e` = ELF 0.13.689. PC `CollectInstalledApps`, LR `ExportUserPacks` (`account_user.cpp:354`), caller ProgressBox thread. SP був ~18 KiB нижче регіону стеку — `NsApplicationControlData` (NACP+icon ≈ 144 KiB) на стеку 128 KiB.
+- Fix: `std::make_unique<NsApplicationControlData>()` як у `title_info` / `game_menu`. Стек ProgressBox для backup/delete піднято до 256 KiB.
+- Users: Backup і Restore більше не в Options разом із Create/Rename/Delete і без підзаголовка Backup and Restore. L = Backup, R = Restore. Без галочок — лише профіль під курсором.
+- Версія `0.13.690`. Збірку агент не запускав.
 
 ## v0.13.689 — Fix User Backup Restore build
 

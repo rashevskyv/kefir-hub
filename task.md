@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.689** (Fix user backup restore build). Завершені задачі збережено в
+Актуальний delivery — **v0.13.690** (Fix user backup stack overflow + Users L/R Backup Restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.689 (Fix user backup restore build)
+## Поточний delivery: v0.13.690 (fix user backup crash + L/R Backup Restore)
+
+- [x] `USERS-BACKUP-STACK-690` — `CollectInstalledApps` більше не кладе `NsApplicationControlData` на стек ProgressBox; crash dump Build ID збігся з ELF 689.
+- [x] `USERS-BACKUP-CURSOR-690` — без галочок бекапиться лише профіль під курсором; зі зняттям UID у момент дії.
+- [x] `USERS-BACKUP-ACTIONS-690` — Backup/Restore прибрано з Options; L Backup, R Restore на екрані Users, без підзаголовка Backup and Restore.
+- [x] `DOCS-BUMP-690` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.689 (Fix user backup restore build)
 
 - [x] `USERS-RESTORE-BUILD-689` — замінено відсутній `Result_FsPathNotFound` на наявний `Result_FsInvalidType`; Restore Backup визначає local package за відсутньою `baas/`, не за неіснуючим libnx result.
 - [x] `DOCS-BUMP-689` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

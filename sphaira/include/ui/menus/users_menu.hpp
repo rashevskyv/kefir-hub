@@ -64,7 +64,7 @@ private:
     void RunUnlinkNintendoAccount(std::vector<AccountUid> uids);
     void RunRename(const std::string& nickname);
     void RunSetAvatar(std::vector<u8> jpeg);
-    void RunBackup();
+    void RunBackup(std::vector<AccountUid> uids);
     void RunNandBackup();
     void RunNandRestore(const std::string& dir);
     void RunRestoreBackup(std::vector<account_user::Pack> picked_packs);
