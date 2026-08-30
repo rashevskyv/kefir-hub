@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.683** (readable Users Icon labels). Завершені плани збережено в
+Поточний delivery — **v0.13.684** (safe account-link copy). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.683 — Readable Users Icon labels
+## Поточний delivery: v0.13.684 — Safe account-link copy
+
+Статус: реалізовано в primary checkout; збірку агент не ганяв.
+1. Український launch-текст прив’язки пояснює, що вона безпечна для ігрових сейвів: не видаляє й не змінює їх.
+2. Збережено наявне пояснення, що деяким іграм для запуску потрібен Nintendo Account; already-linked профілі не змінюються.
+3. Версія `0.13.684`; JSON parsing і `git diff --check` пройшли.
+
+## Попередній delivery: v0.13.683 — Readable Users Icon labels
 
 Статус: реалізовано в primary checkout; збірку агент не ганяв.
 1. У Users → Icon nickname тепер є на кожній іконці як звичайний обрізаний підпис; поточна focus-хмаринка `drawAppLable` лишилась без змін.
