@@ -1,9 +1,17 @@
 # Поточний walkthrough
 
-Актуальний delivery — **v0.13.670** (2026-08-29). Попередні
+Актуальний delivery — **v0.13.671** (2026-08-30). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.671 — Safe payload labels and paste replacement confirmation
+
+- `IdentifyPayload()` більше не вважає одиничний рядок `Lockpick_RCM` достатнім доказом: DBI `transmission.bin` не отримує хибну мітку, а показує фактичну назву.
+- Після наявного підтвердження Paste File Browser перевіряє destination-файли з тим самим шляхом, включно з файлами в обраних теках.
+  - Без конфліктів paste працює як раніше.
+  - За наявності конфлікту показується окремий prompt про заміну; `Cancel` є default і не запускає transfer, `Replace` запускає наявний copy/cross-filesystem move flow.
+- Додано en/uk/ru локалізацію цього prompt. Версія Sphaira — `0.13.671`; збірку не запускали відповідно до політики checkout.
 
 ## v0.13.670 — Launch/Users Link Nintendo Account
 

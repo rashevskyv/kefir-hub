@@ -657,6 +657,60 @@ void FsView::OnDeleteCallback() {
     }
 }
 
+auto FsView::HasPasteConflicts() -> bool {
+    auto& selected = m_menu->m_selected;
+    if (selected.Empty()) {
+        return false;
+    }
+
+    auto src_fs = selected.SrcFs();
+    if (!src_fs || !m_fs) {
+        return false;
+    }
+
+    const auto is_same_fs = selected.SameFs(this);
+    const bool is_cut = (selected.m_type == SelectedType::Cut);
+
+    if (is_same_fs && is_cut) {
+        for (const auto& p : selected.m_files) {
+            const auto src_path = GetNewPath(selected.m_path, p.name);
+            const auto dst_path = GetNewPath(m_path, p.name);
+            if (src_path == dst_path) {
+                continue;
+            }
+            if (p.IsFile() && m_fs->FileExists(dst_path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    for (const auto& p : selected.m_files) {
+        if (p.IsFile()) {
+            const auto dst_path = GetNewPath(m_path, p.name);
+            if (m_fs->FileExists(dst_path)) {
+                return true;
+            }
+        } else if (p.IsDir()) {
+            const auto full_path = GetNewPath(selected.m_path, p.name);
+            FsDirCollections collections;
+            if (R_SUCCEEDED(get_collections(src_fs, full_path, p.name, collections, false))) {
+                for (const auto& c : collections) {
+                    const auto base_dst_path = GetNewPath(m_path, c.parent_name);
+                    for (const auto& f : c.files) {
+                        const auto dst_path = GetNewPath(base_dst_path, f.name);
+                        if (m_fs->FileExists(dst_path)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 void FsView::OnPasteCallback() {
     // check if we only have 1 file / folder and is cut (rename)
     if (m_menu->m_selected.SameFs(this) && m_menu->m_selected.m_files.size() == 1 && m_menu->m_selected.m_type == SelectedType::Cut) {

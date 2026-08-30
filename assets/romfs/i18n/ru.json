@@ -329,6 +329,7 @@
   "Copying ": "Копирование ",
   "Paste": "Вставить",
   "Paste file(s)?": "Вставить файл(ы)?",
+  "One or more files already exist in the destination. Replace existing files?": "Один или несколько файлов уже существуют в месте назначения. Заменить существующие файлы?",
   "Pasting ": "Вставка ",
   "Pasting": "Вставка",
   "Rename": "Переименовать",

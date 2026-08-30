@@ -1,10 +1,17 @@
 # Актуальний план
 
-Поточний delivery — **v0.13.670** (romfs official link UX). Завершені плани збережено в
+Поточний delivery — **v0.13.671** (safe payload labels and paste replacement). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.670 — Launch/Users Link Nintendo Account
+## Поточний delivery: v0.13.671 — Safe payload labels and paste replacement prompt
+
+Статус: прийнято сеньйором. Агент не компілює.
+1. Прибрано ненадійний single-string detector `Lockpick_RCM`: DBI `transmission.bin` більше не отримує фальшиву мітку, а нерозпізнаний payload лишається з фактичною назвою.
+2. Перед paste, що може перезаписати destination-файл із тим самим шляхом, виявляються конфлікти також усередині обраних тек. Відмова в окремому confirm скасовує весь paste до запуску transfer; без конфліктів потік не змінюється.
+3. Sphaira піднято до `0.13.671`, додано i18n prompt і проведено static review; збірку не запускали.
+
+## Попередній delivery: v0.13.670 — Launch/Users Link Nintendo Account
 
 Статус: прийнято сеньйором (Gemini junior, chat Romfs official link). Збірку не ганяли.
 1. Launch OptionBox (раз за сесію): unbound/fake → Later tip або Link and reboot → LinkAllFromRomfsDonor → soft reboot лише на success.

@@ -301,6 +301,7 @@
   "Copying ": "Copying ",
   "Paste": "Paste",
   "Paste file(s)?": "Paste file(s)?",
+  "One or more files already exist in the destination. Replace existing files?": "One or more files already exist in the destination. Replace existing files?",
   "Pasting ": "Pasting ",
   "Pasting": "Pasting",
   "Rename": "Rename",

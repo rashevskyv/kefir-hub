@@ -231,9 +231,6 @@ auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& path) -> std::string {
     if (data.find("TegraExplorer") != std::string_view::npos) {
         return "TegraExplorer";
     }
-    if (data.find("Lockpick_RCM") != std::string_view::npos) {
-        return "Lockpick_RCM";
-    }
     if (data.find("Incognito_RCM") != std::string_view::npos) {
         return "Incognito_RCM";
     }
@@ -2321,7 +2318,18 @@ void FsView::DisplayOptions() {
                 buf, "No"_i18n, "Yes"_i18n, 0, [this](auto op_index){
                 if (op_index && *op_index) {
                     App::PopToMenu();
-                    OnPasteCallback();
+                    if (HasPasteConflicts()) {
+                        App::Push<OptionBox>(
+                            "One or more files already exist in the destination. Replace existing files?"_i18n,
+                            "Cancel"_i18n, "Replace"_i18n, 0, [this](auto replace_op){
+                                if (replace_op && *replace_op) {
+                                    OnPasteCallback();
+                                }
+                            }
+                        );
+                    } else {
+                        OnPasteCallback();
+                    }
                 }
             });
         }, "Paste the clipboard contents into the current folder."_i18n);

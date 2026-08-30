@@ -1,12 +1,18 @@
 # Активні задачі
 
-Актуальний delivery — **v0.13.670** (romfs official link UX). Завершені задачі збережено в
+Актуальний delivery — **v0.13.671** (safe payload labels and paste replacement). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок виконання —
 у [`plan.md`](plan.md), результат останнього delivery — у
 [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.670 (launch + Users Link)
+## Поточний delivery: v0.13.671 (safe payload labels and paste replacement)
+
+- [x] `PAYLOAD-DBI-FALSE-LABEL-671` — DBI `transmission.bin` не отримує фальшиву мітку `Lockpick_RCM`; для ненадійного збігу лишається фактична назва.
+- [x] `PASTE-REPLACE-CONFIRM-671` — paste із destination-файлами того самого імені окремо питає про заміну, включно з файлами в обраних теках; відмова нічого не перезаписує.
+- [x] `DOCS-BUMP-671` — версія `0.13.671`, plan/task/walkthrough/audit і локальний commit.
+
+## Попередній delivery: v0.13.670 (launch + Users Link)
 
 - [x] `ACC-UX-LAUNCH-USERS` — launch prompt + Users Link + soft reboot; TE debug removed; applet/pmdmnt gate.
 - [x] `ACC-I18N-DOCS` — en/uk/ru + docs/account-transfer.md §3.3.
