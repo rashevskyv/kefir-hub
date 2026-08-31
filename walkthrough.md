@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.691** (2026-08-30). Попередні
+Актуальний delivery — **v0.13.692** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.692 — Backup & Restore User heading
+
+- Users Options: Create/Rename/Avatar/Delete лишаються під PROFILE. Backup user і Restore Backup — окремий підзаголовок BACKUP & RESTORE USER (не CONSOLE MOVE).
+- i18n en/uk/ru. Версія `0.13.692`. Збірку агент не запускав.
 
 ## v0.13.691 — Backup user / Restore Backup in Options again
 

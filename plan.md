@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.691** (Restore Backup user in Users Options). Завершені плани збережено в
+Поточний delivery — **v0.13.692** (Users Options: Backup & Restore User heading). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.691 — Backup user / Restore Backup back in Options
+## Поточний delivery: v0.13.692 — Backup & Restore User as own Options heading
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `Backup user` і `Restore Backup` винесено з PROFILE (Create/Rename/Avatar/Delete) під окремий підзаголовок `BACKUP & RESTORE USER`.
+2. CONSOLE MOVE не змінювали. Restore Backup лишається на порожньому списку. i18n en/uk/ru.
+3. Версія `0.13.692`.
+
+## Попередній delivery: v0.13.691 — Backup user / Restore Backup back in Options
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 
