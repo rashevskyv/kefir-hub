@@ -3,10 +3,8 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# Emergency rollback of account save 0010 after a failed Restore Backup.
-# Writes the snapshot from sd:/config/kefir/restore_pending/0010/
-# Clears the pending restore so Hub will not apply it again.
-# Deletes this script afterwards.
+# If Restore Backup left the console unable to boot, run this from
+# TegraExplorer Scripts. Puts the old profiles back and cancels restore.
 
 writeDir = {
     src = srcRoot
@@ -50,13 +48,13 @@ writeDir = {
 }
 
 clear()
-println("Kefir Hub: ROLLBACK account save 0010")
-println("Use this if Restore Backup left the console in a bootloop.")
+println("Kefir Hub: undo Restore Backup")
+println("Puts old profiles back if the console will not boot.")
 println("")
 
 srcRoot = "sd:/config/kefir/restore_pending/0010"
 if (!fsexists(srcRoot)) {
-    println("No 0010 snapshot at")
+    println("No profile snapshot on SD.")
     println(srcRoot)
     pause()
     exit()
@@ -92,7 +90,7 @@ if (!fsexists(bis)) {
     exit()
 }
 
-println("Opening 0010")
+println("Writing old profiles back")
 saveObj = readsave(bis)
 rel = ""
 wrote = 0
@@ -106,6 +104,7 @@ writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
 delfile(combinepath(pending, "state.json"))
 
 println("Removing this script")
+delfile("sd:/TegraExplorer/scripts/Undo_restore_if_wont_boot.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_rollback.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_dump.te")
 

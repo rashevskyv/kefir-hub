@@ -230,6 +230,7 @@ auto ClearPending() -> Result {
     }
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + RollbackTeName()).c_str());
+    sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
     R_SUCCEED();
 }
 
@@ -296,9 +297,11 @@ auto WriteExpectedFileList() -> Result {
 
 auto InstallRestoreTeScripts() -> void {
     fs::FsNativeSd sd;
-    CopyTe(sd, "account_0010_rollback.te", RollbackTeName());
+    CopyTe(sd, RollbackTeName(), RollbackTeName());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
+    sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
     sd.DeleteFile((std::string(PendingDir()) + "/" + DumpTeName()).c_str());
+    sd.DeleteFile((std::string(PendingDir()) + "/account_0010_rollback.te").c_str());
 }
 
 auto LaunchTegraDump() -> bool {

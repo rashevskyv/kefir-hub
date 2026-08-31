@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.705** (дамп лише /startup.te). Завершені задачі збережено в
+Актуальний delivery — **v0.13.706** (назва скрипта відкату). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.705 (dump only via /startup.te)
+## Поточний delivery: v0.13.706 (readable rollback script name)
+
+- [x] `USERS-TE-ROLLBACK-NAME-706` — відкат у Scripts: `Undo_restore_if_wont_boot.te`.
+- [x] `DOCS-BUMP-706` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.705 (dump only via /startup.te)
 
 - [x] `USERS-TE-STARTUP-ONLY-705` — зайнятий 0010 дампиться через `/startup.te`, без `account_0010_dump.te` у Scripts.
 - [x] `DOCS-BUMP-705` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

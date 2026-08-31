@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.705** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.706** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.706 — rollback script named Undo_restore_if_wont_boot.te
+
+- Якщо консоль не бутиться після рестору: hekate > payloads > tegraexplorer → Scripts → `Undo_restore_if_wont_boot.te`. Назва каже що робити. Версія `0.13.706`. Збірку агент не запускав.
 
 ## v0.13.705 — dump only via /startup.te
 

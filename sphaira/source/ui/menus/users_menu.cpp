@@ -1223,7 +1223,7 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
             if (*live_ok) {
                 App::Push<OptionBox>(
                     "The account save (0010) is copied to SD.\n\n"
-                    "• Rollback if boot fails: TegraExplorer/scripts/account_0010_rollback.te\n"
+                    "• If it does not boot: Scripts → Undo_restore_if_wont_boot.te\n"
                     "• Next step: open Kefir Hub yourself. We will continue the restore from there."_i18n,
                     "OK"_i18n);
                 return;
@@ -1310,8 +1310,8 @@ void OfferPendingRestore() {
         "Continue will create the profile, then reboot the console.\n\n"
         "If it does not boot:\n"
         "• hekate > payloads > tegraexplorer\n"
-        "• Scripts → account_0010_rollback.te\n"
-        "• That puts the old 0010 back and cancels this restore."_i18n,
+        "• Scripts → Undo_restore_if_wont_boot.te\n"
+        "• That puts the old profiles back and cancels this restore."_i18n,
         "Later"_i18n, "Cancel restore"_i18n, "Continue"_i18n, 2,
         [packs = std::move(packs)](auto op) mutable {
             if (!op) {

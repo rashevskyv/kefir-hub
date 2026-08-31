@@ -13,7 +13,7 @@ inline const char* SnapshotDir() { return "/config/kefir/restore_pending/0010"; 
 inline const char* StatePath() { return "/config/kefir/restore_pending/state.json"; }
 inline const char* FilesPath() { return "/config/kefir/restore_pending/files.txt"; }
 inline const char* RolledBackPath() { return "/config/kefir/restore_pending/rolled_back.ok"; }
-inline const char* RollbackTeName() { return "account_0010_rollback.te"; }
+inline const char* RollbackTeName() { return "Undo_restore_if_wont_boot.te"; }
 inline const char* DumpTeName() { return "account_0010_dump.te"; }
 
 struct Pending {
