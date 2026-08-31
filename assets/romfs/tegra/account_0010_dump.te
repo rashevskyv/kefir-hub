@@ -4,7 +4,33 @@
 # REQUIRE VER 4.0.0
 
 # One-shot: Hub copies this to sd:/startup.te and reboots into TegraExplorer.
-# Dumps account save 0010, deletes startup.te, returns to CFW.
+# Dumps account save 0010, deletes startup.te, loads hekate.
+
+goHekate = {
+    saveObj = dict()
+    raw = ["BYTE[]"]
+    text = ""
+    lines = []
+    bytes = ["BYTE[]"]
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+    }
+    println("Loading hekate")
+    rc = 1
+    if (fsexists("sd:/bootloader/update.bin")) {
+        rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc && fsexists("sd:/payload.bin")) {
+        rc = payload("sd:/payload.bin")
+    }
+    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
+        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    }
+    if (rc) {
+        println("Could not load hekate", rc)
+        pause()
+    }
+}
 
 clear()
 println("Kefir Hub: dumping account save 0010")
@@ -21,8 +47,7 @@ if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
 
 if (!fsexists(listf)) {
     println("No file list from Kefir Hub.")
-    pause()
-    payload("sd:/bootloader/update.bin")
+    goHekate()
     exit()
 }
 
@@ -33,16 +58,14 @@ if (emu()) {
 }
 if (rc) {
     println("SYSTEM mount failed", rc)
-    pause()
-    payload("sd:/bootloader/update.bin")
+    goHekate()
     exit()
 }
 
 bis = "bis:/save/8000000000000010"
 if (!fsexists(bis)) {
     println("No account save on this SYSTEM")
-    pause()
-    payload("sd:/bootloader/update.bin")
+    goHekate()
     exit()
 }
 
@@ -77,4 +100,4 @@ lines.foreach("line") {
 writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
 println("wrote", wrote)
 println("Open Kefir Hub to continue restore.")
-payload("sd:/bootloader/update.bin")
+goHekate()

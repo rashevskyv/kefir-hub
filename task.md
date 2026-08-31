@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.706** (назва скрипта відкату). Завершені задачі збережено в
+Актуальний delivery — **v0.13.707** (після дампу — hekate). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.706 (readable rollback script name)
+## Поточний delivery: v0.13.707 (load hekate after TE dump)
+
+- [x] `USERS-TE-HEKATE-707` — після dump/rollback вантажимо hekate, не лишаємо TegraExplorer.
+- [x] `DOCS-BUMP-707` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.706 (readable rollback script name)
 
 - [x] `USERS-TE-ROLLBACK-NAME-706` — відкат у Scripts: `Undo_restore_if_wont_boot.te`.
 - [x] `DOCS-BUMP-706` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
