@@ -297,7 +297,8 @@ auto WriteExpectedFileList() -> Result {
 auto InstallRestoreTeScripts() -> void {
     fs::FsNativeSd sd;
     CopyTe(sd, "account_0010_rollback.te", RollbackTeName());
-    CopyTe(sd, "account_0010_dump.te", DumpTeName());
+    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
+    sd.DeleteFile((std::string(PendingDir()) + "/" + DumpTeName()).c_str());
 }
 
 auto LaunchTegraDump() -> bool {

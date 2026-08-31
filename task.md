@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.704** (romfsInit для dump.te). Завершені задачі збережено в
+Актуальний delivery — **v0.13.705** (дамп лише /startup.te). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.704 (romfsInit before dump.te)
+## Поточний delivery: v0.13.705 (dump only via /startup.te)
+
+- [x] `USERS-TE-STARTUP-ONLY-705` — зайнятий 0010 дампиться через `/startup.te`, без `account_0010_dump.te` у Scripts.
+- [x] `DOCS-BUMP-705` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.704 (romfsInit before dump.te)
 
 - [x] `USERS-TE-ROMFS-704` — читати `romfs:/tegra/*.te` лише після `romfsInit()` (як account_link).
 - [x] `DOCS-BUMP-704` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.704** (romfsInit перед читанням dump.te). Завершені плани збережено в
+Поточний delivery — **v0.13.705** (дамп лише через /startup.te). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.704 — Mount romfs before reading dump.te
+## Поточний delivery: v0.13.705 — Dump locked 0010 only via /startup.te
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Зайнятий 0010: Хаб пише скрипт у `/startup.te` і стартує TegraExplorer. Не кладе `account_0010_dump.te` у Scripts.
+2. Відкат бутлупу лишається `TegraExplorer/scripts/account_0010_rollback.te`.
+3. Версія `0.13.705`.
+
+## Попередній delivery: v0.13.704 — Mount romfs before reading dump.te
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

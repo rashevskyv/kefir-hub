@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.704** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.705** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.705 — dump only via /startup.te
+
+- Зайнятий 0010: скрипт лише `sd:/startup.te` (TE підхоплює сам). `account_0010_dump.te` більше не копіюється в Scripts. Відкат бутлупу — `account_0010_rollback.te`. Версія `0.13.705`. Збірку агент не запускав.
 
 ## v0.13.704 — romfsInit before reading TegraExplorer scripts
 
