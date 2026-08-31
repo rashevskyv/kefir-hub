@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.694** (user pack link export, overwrite, dates, delete). Завершені плани збережено в
+Поточний delivery — **v0.13.695** (Backup Restore з переїздом плейтайму). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.694 — Linked backup export + overwrite/delete/dates
+## Поточний delivery: v0.13.695 — Backup Restore includes per-user play hours
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Identity-only Restore Backup не лишаємо: пак пише зріз `PlayEvent` цього UID (`pdm/PlayEvent.dat`), не весь 00F0.
+2. Restore створює новий UID, ремапить account-події на нього і **дописує** в `PlayEvent.dat` цілі з SD rollback. Години інших профілів не замінюються (це не Console Move).
+3. UI чесний: список бекапів показує play hours / no play hours; після рестору — скільки годин записано, чи пак старий без годин, чи 00F0 зайнятий. Ребут якщо записано link або години.
+4. Версія `0.13.695`. Старі паки без `pdm/PlayEvent.dat` треба перезібрати. Console Move не чіпали.
+
+## Попередній delivery: v0.13.694 — Linked backup export + overwrite/delete/dates
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

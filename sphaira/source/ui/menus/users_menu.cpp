@@ -1,6 +1,7 @@
 #include "ui/menus/users_menu.hpp"
 
 #include "account_user.hpp"
+#include "account_playtime.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
@@ -8,6 +9,7 @@
 #include "nand_transfer.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "log.hpp"
 #include "path_util.hpp"
 #include "swkbd.hpp"
 #include "ui/menus/file_picker.hpp"
@@ -336,7 +338,8 @@ struct RestoreBackupMenu final : MenuBase {
                 theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                 "%s", e.pack.nickname.c_str());
 
-            const auto detail_str = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.folder_name;
+            std::string detail_str = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.folder_name;
+            detail_str += e.pack.has_playtime ? " · play hours"_i18n : " · no play hours"_i18n;
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),
@@ -983,11 +986,11 @@ void Menu::ShowContextMenu() {
     if (!m_items.empty()) {
         options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
             ConfirmBackup();
-        }, true, "Back up profile metadata, avatar, Nintendo Account link and playtime to SD."_i18n);
+        }, true, "Back up name, avatar, Nintendo Account link and this user's play hours to SD."_i18n);
     }
     options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
         ConfirmRestoreBackup();
-    }, true, "Restore one or more profile backups as new users. Restores avatar and Nintendo Account link."_i18n);
+    }, true, "Restore backups as new users: name, avatar, Nintendo link and play hours. Other users' hours stay."_i18n);
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
@@ -1368,9 +1371,9 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
             return;
         }
         if (dirs->size() == 1) {
-            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes playtime data."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes this user's play hours for Restore Backup."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
         } else {
-            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + "Includes playtime data."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + "Includes this user's play hours for Restore Backup."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
         }
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
@@ -1384,7 +1387,10 @@ struct RestoreReport {
     u32 unlinked_restored{};
     u32 link_malformed_count{};
     u32 failed_creations{};
+    u32 play_hours_applied{};
+    u32 play_hours_missing{};
     bool link_apply_failed{};
+    bool play_hours_locked{};
 };
 
 } // namespace
@@ -1395,6 +1401,11 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
         [picked_packs = std::move(picked_packs), report](auto pbox) -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_apply;
+            struct PlayJob {
+                AccountUid uid{};
+                std::vector<PdmPlayEvent> events;
+            };
+            std::vector<PlayJob> play_jobs;
 
             for (size_t i = 0; i < picked_packs.size(); i++) {
                 const auto& p = picked_packs[i];
@@ -1424,6 +1435,13 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     report->link_malformed_count++;
                     report->unlinked_restored++;
                 }
+
+                std::vector<PdmPlayEvent> play_events;
+                if (R_SUCCEEDED(account_playtime::LoadPackPlayEvents(p.dir, play_events)) && !play_events.empty()) {
+                    play_jobs.push_back({new_uid, std::move(play_events)});
+                } else {
+                    report->play_hours_missing++;
+                }
             }
 
             if (!links_to_apply.empty()) {
@@ -1438,6 +1456,19 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 }
             }
 
+            if (!play_jobs.empty()) {
+                pbox->NewTransfer("Writing play hours"_i18n);
+                for (const auto& job : play_jobs) {
+                    const auto play_rc = account_playtime::AppendPlayEventsForUser(job.uid, job.events);
+                    if (R_SUCCEEDED(play_rc)) {
+                        report->play_hours_applied++;
+                    } else {
+                        log_write("[USER] play hours append 0x%X\n", play_rc);
+                        report->play_hours_locked = true;
+                    }
+                }
+            }
+
             R_SUCCEED();
         },
         [this, report](Result /*rc*/) {
@@ -1447,13 +1478,30 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 return;
             }
 
+            std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
             if (report->links_restored > 0) {
-                std::string msg = "Restored " + std::to_string(report->profiles_restored) +
-                    " user profile(s) (" + std::to_string(report->links_restored) +
-                    " with Nintendo Account link). Reboot required."_i18n;
-                if (report->unlinked_restored > 0) {
-                    msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
-                }
+                msg += " " + std::to_string(report->links_restored) + " with Nintendo Account link."_i18n;
+            }
+            if (report->unlinked_restored > 0) {
+                msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
+            }
+            if (report->link_malformed_count > 0 || report->link_apply_failed) {
+                msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
+            }
+            if (report->play_hours_applied > 0) {
+                msg += " " + "Play hours written for "_i18n + std::to_string(report->play_hours_applied) +
+                    " profile(s)."_i18n;
+            }
+            if (report->play_hours_missing > 0) {
+                msg += " " + "A pack had no play hours — make a new backup."_i18n;
+            }
+            if (report->play_hours_locked) {
+                msg += " " + "Play hours could not be written (00F0 locked). Close games and retry Restore Backup."_i18n;
+            }
+
+            const bool need_reboot = report->links_restored > 0 || report->play_hours_applied > 0;
+            if (need_reboot) {
+                msg += " " + "Reboot required."_i18n;
                 App::Push<OptionBox>(
                     msg,
                     "Later"_i18n, "Reboot"_i18n, 1,
@@ -1463,10 +1511,6 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                         }
                     });
             } else {
-                std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
-                if (report->link_malformed_count > 0 || report->link_apply_failed) {
-                    msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
-                }
                 App::Push<OptionBox>(msg, "OK"_i18n);
             }
             Refresh();

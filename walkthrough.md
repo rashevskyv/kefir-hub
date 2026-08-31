@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.694** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.695** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.695 — Backup Restore with per-user play hours
+
+- Backup user більше не лишає години лише в `playtime.tsv`. У пак іде зріз системного журналу цього UID: `pdm/PlayEvent.dat` (account-події юзера + applet/power, поки він залогінений). Читання через `pdmqryQueryPlayEvent`; якщо pdm:qry немає — RO 00F0.
+- Restore Backup створює новий профіль як раніше (avatar + link з UID remap), потім ремапить UID у зрізі і **дописує** в `PlayEvent.dat` цілі. Інші юзери на цілі не затираються. Перед записом — копія файлу на `/config/kefir/playtime_rollback/<stamp>/`. Це не Console Move (той замінює весь 00F0 і тримає UID).
+- Якщо 00F0 не відкрився на запис — профіль уже створений, години ні; повторний Restore Backup зробить ще один профіль. Старі паки без `pdm/` показують «no play hours». Ребут пропонується якщо записано link або години. Збірку агент не запускав.
 
 ## v0.13.694 — Linked user backup export + overwrite/delete/dates
 

@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.694** (user pack link export, overwrite, dates, delete). Завершені задачі збережено в
+Актуальний delivery — **v0.13.695** (Backup Restore з переїздом плейтайму). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.694 (linked export + backup manage)
+## Поточний delivery: v0.13.695 (play hours in Backup Restore)
+
+- [x] `USERS-PLAY-EXPORT-695` — Backup user знімає зріз PlayEvent цього UID у `pdm/PlayEvent.dat` (pdmqry, fallback 00F0 RO).
+- [x] `USERS-PLAY-APPEND-695` — Restore Backup ремапить UID і дописує події в 00F0 з rollback; чужі години не затирає.
+- [x] `USERS-PLAY-I18N-695` — тексти/README: години їдуть з бекапом; старий пак без зрізу; 00F0 locked.
+- [x] `DOCS-BUMP-695` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.694 (linked export + backup manage)
 
 - [x] `USERS-EXPORT-SAVE-RO-694` — експорт лінку читає 0010 read-only; якщо зайнято — terminate ACCOUNT і повтор.
 - [x] `USERS-BACKUP-OVERWRITE-694` — якщо пак цього UID уже є, Overwrite / Keep both; overwrite замінює.

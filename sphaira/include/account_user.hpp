@@ -16,6 +16,7 @@ struct Pack {
     std::string created_label;
     bool has_avatar{};
     bool link_valid{};
+    bool has_playtime{};
 };
 
 auto LoadImageJpeg(const AccountUid& uid, std::vector<u8>& out) -> Result;
