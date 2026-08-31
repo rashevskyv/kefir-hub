@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.701** (Hekate → Payloads → TegraExplorer, без RCM). Завершені плани збережено в
+Поточний delivery — **v0.13.702** (hekate > payloads > tegraexplorer). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.701 — Say Hekate → Payloads → TegraExplorer, not RCM
+## Поточний delivery: v0.13.702 — Path text: hekate > payloads > tegraexplorer
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. У Users шлях до TegraExplorer: `hekate > payloads > tegraexplorer`.
+2. Версія `0.13.702`.
+
+## Попередній delivery: v0.13.701 — Say Hekate → Payloads → TegraExplorer, not RCM
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

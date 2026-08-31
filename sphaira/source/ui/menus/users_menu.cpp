@@ -1309,7 +1309,7 @@ void OfferPendingRestore() {
         "Unfinished restore is ready (0010 snapshot is on SD).\n\n"
         "Continue will create the profile, then reboot the console.\n\n"
         "If it does not boot:\n"
-        "• Hekate → Payloads → TegraExplorer\n"
+        "• hekate > payloads > tegraexplorer\n"
         "• Scripts → account_0010_rollback.te\n"
         "• That puts the old 0010 back and cancels this restore."_i18n,
         "Later"_i18n, "Cancel restore"_i18n, "Continue"_i18n, 2,
@@ -1449,7 +1449,7 @@ void Menu::RunNandBackup() {
         }, [this, report](Result rc) {
             if (R_FAILED(rc) || report->dir.empty()) {
                 App::Push<OptionBox>(
-                    "Horizon would not open the system saves. Hekate → Payloads → TegraExplorer, run dump.te (also under TegraExplorer/scripts). That dumps play hours without Horizon."_i18n,
+                    "Horizon would not open the system saves. hekate > payloads > tegraexplorer, run dump.te (also under TegraExplorer/scripts). That dumps play hours without Horizon."_i18n,
                     "OK"_i18n);
                 return;
             }
@@ -1465,7 +1465,7 @@ void Menu::RunNandBackup() {
                 if (report->save_00F0) {
                     msg += "Play hours copied. "_i18n;
                 } else {
-                    msg += "Play hours were locked. Hekate → Payloads → TegraExplorer → dump.te (or TegraExplorer/scripts/dump.te). "_i18n;
+                    msg += "Play hours were locked. hekate > payloads > tegraexplorer, dump.te (or TegraExplorer/scripts/dump.te). "_i18n;
                 }
                 msg += "On the other console: Restore profiles & play hours, or restore.te if a save stays locked."_i18n;
             }
@@ -1491,7 +1491,7 @@ void Menu::RunNandRestore(const std::string& dir) {
             if (R_FAILED(rc)) {
                 const auto msg = (rc == Result_FsInvalidType)
                     ? "That folder is not a profiles & play hours pack."_i18n
-                    : "Horizon would not open the system saves to write. Hekate → Payloads → TegraExplorer, run restore.te from the pack (also under TegraExplorer/scripts)."_i18n;
+                    : "Horizon would not open the system saves to write. hekate > payloads > tegraexplorer, run restore.te from the pack (also under TegraExplorer/scripts)."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
             }

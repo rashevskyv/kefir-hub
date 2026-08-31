@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.701** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.702** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.702 — hekate > payloads > tegraexplorer
+
+- Users: шлях до TegraExplorer саме `hekate > payloads > tegraexplorer`. Версія `0.13.702`. Збірку агент не запускав.
 
 ## v0.13.701 — Hekate → Payloads → TegraExplorer (no RCM in UI)
 
