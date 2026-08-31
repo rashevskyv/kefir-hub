@@ -76,6 +76,10 @@ constexpr const u8 ICON_ADVANCED_OPTIONS[]{
     #embed <icons/advanced-options.png>
 };
 
+constexpr const u8 ICON_NETWORK[]{
+    #embed <icons/network.png>
+};
+
 auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
     int width{};
     int height{};
@@ -210,13 +214,16 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Settings"_i18n, "Open Kefir Hub application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
+        { "Console Transfer"_i18n, "Share files, backups and installed content with another device."_i18n, 0, [this](){
+            DisplayConnectionOptions();
+        }},
     };
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             OnSelect();
         }}),
-        std::make_pair(Button::START, Action{"Install & Share"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Console Transfer"_i18n, [this](){
             DisplayConnectionOptions();
         }})
     );
@@ -285,6 +292,7 @@ void Menu::LoadIcons() {
         { ICON_ADVANCED_OPTIONS, sizeof(ICON_ADVANCED_OPTIONS) },
         { ICON_KEFIR_SETTINGS, sizeof(ICON_KEFIR_SETTINGS) },
         { ICON_SETTINGS, sizeof(ICON_SETTINGS) },
+        { ICON_NETWORK, sizeof(ICON_NETWORK) },
     };
 
     const auto count = std::min(m_items.size(), std::size(icons));
@@ -316,9 +324,10 @@ void Menu::OnSelect() {
 }
 
 void Menu::DisplayConnectionOptions() {
-    auto options = std::make_unique<Sidebar>("Install & Share"_i18n, Sidebar::Side::RIGHT);
+    auto options = std::make_unique<Sidebar>("Console Transfer"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
+    AddConsoleTransferOptions(options.get());
     AddInstallShareOptions(options.get());
     AddSettingsOption(options.get());
 }

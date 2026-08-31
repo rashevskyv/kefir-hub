@@ -95,6 +95,55 @@ void StartShareServerFromTools() {
 
 } // namespace
 
+void AddConsoleTransferOptions(Sidebar* options) {
+    auto show_coming_soon = [](){
+        App::Push<OptionBox>("Coming soon"_i18n, "OK"_i18n);
+    };
+
+    options->Add<SidebarEntryHeader>("CONNECT"_i18n);
+
+    options->Add<SidebarEntryCallback>("Connect to Console"_i18n, show_coming_soon,
+        "Connect to another console and browse its shared content."_i18n);
+
+    options->Add<SidebarEntryHeader>("SHARE"_i18n);
+
+    options->Add<SidebarEntryCallback>("Share Entire microSD"_i18n, show_coming_soon,
+        "Share all files and folders on the microSD card."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share Save Backups"_i18n, show_coming_soon,
+        "Share save data backups from configured locations, including DBI backups."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share User Backups"_i18n, show_coming_soon,
+        "Share user packages and profile backups."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share Profiles & Play Hours"_i18n, show_coming_soon,
+        "Share user profiles and play time statistics."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share Installed Games"_i18n, show_coming_soon,
+        "Stream installed games and updates directly from console storage."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share Screenshots & Videos"_i18n, show_coming_soon,
+        "Share album screenshots and captured gameplay videos."_i18n);
+
+    options->Add<SidebarEntryCallback>("Share switch Folder"_i18n, show_coming_soon,
+        "Share homebrew applications and tools from the selected source."_i18n);
+
+    options->Add<SidebarEntryCallback>("Choose Folder..."_i18n, show_coming_soon,
+        "Select a custom folder on the microSD card to share."_i18n);
+
+    options->Add<SidebarEntryHeader>("PHONE"_i18n);
+
+    options->Add<SidebarEntryCallback>("Install from Phone"_i18n, show_coming_soon,
+        "Transfer and install games directly from a mobile device."_i18n);
+
+    options->Add<SidebarEntryCallback>("Phone Installation Guide"_i18n, [](){
+        App::Push<OptionBox>(
+            "Phone installation is planned over the same local network. Detailed instructions will appear here when the transfer feature is available."_i18n,
+            "OK"_i18n
+        );
+    }, "Instructions on how to transfer and install content from a mobile device."_i18n);
+}
+
 void AddInstallShareOptions(Sidebar* options) {
     options->Add<SidebarEntryHeader>("INSTALL & SHARE"_i18n);
 

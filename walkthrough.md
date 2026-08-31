@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.711** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.712** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.712 — Console Transfer hub placeholder
+
+- У Tools з'явилася дев'ята плитка `Console Transfer` з наявною network-іконкою. Вона й START відкривають той самий sidebar.
+- CONNECT / SHARE / PHONE містять тільки видимі заглушки для майбутнього з'єднання консолей, бекапів (включно з DBI), профілів, альбому, switch-джерела, телефона й прямого стриму встановлених ігор. Немає нового HTTP-протоколу, доступу до файлів, заданих шляхів чи інсталяції.
+- Наявні Web Server, MTP і PC Install лишилися робочими пунктами нижче в тому ж меню. Рядки локалізовано en/uk/ru; версія `0.13.712`. Перевірено `git diff --check` і JSON, збірку агент не запускав.
 
 ## v0.13.711 — Same-console restore matches pack UID to the live user
 

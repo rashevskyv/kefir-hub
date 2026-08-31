@@ -4,6 +4,10 @@
 
 namespace sphaira::ui::menu {
 
+// Appends the placeholder Console Transfer options (CONNECT, SHARE, PHONE sections)
+// to the given sidebar.
+void AddConsoleTransferOptions(Sidebar* sidebar);
+
 // Appends the "Install & Share" group (Web Server, MTP, PC Install over USB)
 // to the given sidebar, preceded by a section header. Shared between the
 // Tools and Homebrew menus so both can reach the web server / installer from

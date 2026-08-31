@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.711** (рестор пізнає той самий UID). Завершені плани збережено в
+Поточний delivery — **v0.13.712** (Console Transfer як чесний хаб-заглушка). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.711 — Same-console restore matches live UID, never clones
+## Поточний delivery: v0.13.712 — Console Transfer hub placeholder
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. У Tools є дев'ята плитка `Console Transfer` з наявною network-іконкою; плитка й START відкривають один sidebar.
+2. Sidebar має заглушки CONNECT / SHARE / PHONE та після них лишає наявні робочі Web Server, MTP і PC Install. Адреси, мережевий протокол, читання файлів і стрим встановлених ігор тут не реалізовані.
+3. Версія `0.13.712`.
+
+## Попередній delivery: v0.13.711 — Same-console restore matches live UID, never clones
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

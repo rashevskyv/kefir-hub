@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.711** (рестор пізнає UID). Завершені задачі збережено в
+Актуальний delivery — **v0.13.712** (Console Transfer як чесний хаб-заглушка). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.711 (match live UID, do not clone)
+## Поточний delivery: v0.13.712 (Console Transfer hub placeholder)
+
+- [x] `CONSOLE-TRANSFER-HUB-712` — дев'ята плитка Tools, спільний Console Transfer sidebar; CONNECT / SHARE / PHONE показують лише Coming soon.
+- [x] `CONSOLE-TRANSFER-I18N-712` — нові рядки додано до en/uk/ru; жодних шляхів бекапів чи джерел не зашито в дії заглушки.
+- [x] `DOCS-BUMP-712` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.711 (match live UID, do not clone)
 
 - [x] `USERS-RESTORE-UID-711` — той самий акаунт: збіг UID з бекапу з живим юзером, Replace, без клона.
 - [x] `DOCS-BUMP-711` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
