@@ -84,7 +84,7 @@ private:
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_GridDetail};
 };
 
-void OfferPendingRestore();
+auto OfferPendingRestore() -> bool;
 void StartRestoreBackup(std::vector<account_user::Pack> picked_packs);
 
 } // namespace sphaira::ui::menu::users

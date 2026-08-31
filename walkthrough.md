@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.707** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.708** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.708 — rollback path + restore dialog before link prompt
+
+- Відкат: `hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te`. У TE — живлення і гучність.
+- Поки рестор незавершений, при запуску Хаба не питаємо прив'язати профіль. Версія `0.13.708`. Збірку агент не запускав.
 
 ## v0.13.707 — load hekate after dump/rollback, do not stay in TegraExplorer
 

@@ -204,6 +204,14 @@ auto LoadPending() -> Pending {
     return p;
 }
 
+auto HasUnfinishedRestore() -> bool {
+    const auto p = LoadPending();
+    if (p.rolled_back) {
+        return true;
+    }
+    return p.present && p.phase != "applied";
+}
+
 auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok) -> Result {
     fs::FsNativeSd sd;
     R_TRY(sd.CreateDirectoryRecursively(PendingDir()));

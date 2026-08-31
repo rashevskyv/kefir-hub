@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.707** (після дампу — hekate, не TegraExplorer). Завершені плани збережено в
+Поточний delivery — **v0.13.708** (шлях відкату + рестор раніше за лінк). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.707 — After dump/rollback load hekate
+## Поточний delivery: v0.13.708 — Rollback path + restore before link prompt
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Якщо не завантажиться: `hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te`. У TE — кнопки живлення та гучності.
+2. Незавершений рестор показується раніше за «прив'яжи профіль».
+3. Версія `0.13.708`.
+
+## Попередній delivery: v0.13.707 — After dump/rollback load hekate
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

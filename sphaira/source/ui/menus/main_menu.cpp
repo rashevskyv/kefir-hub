@@ -304,8 +304,9 @@ void MainMenu::OnFocusGained() {
 
     if (!m_launch_link_prompt_checked) {
         m_launch_link_prompt_checked = true;
-        users::OfferPendingRestore();
-        CheckLaunchAccountLinkPrompt();
+        if (!users::OfferPendingRestore()) {
+            CheckLaunchAccountLinkPrompt();
+        }
     }
 }
 

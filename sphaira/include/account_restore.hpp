@@ -25,6 +25,7 @@ struct Pending {
 };
 
 auto LoadPending() -> Pending;
+auto HasUnfinishedRestore() -> bool;
 auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok) -> Result;
 auto ClearPending() -> Result;
 auto SnapshotOk() -> bool;

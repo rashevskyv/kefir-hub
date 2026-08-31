@@ -1223,8 +1223,10 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
             if (*live_ok) {
                 App::Push<OptionBox>(
                     "The account save (0010) is copied to SD.\n\n"
-                    "• If it does not boot: Scripts → Undo_restore_if_wont_boot.te\n"
-                    "• Next step: open Kefir Hub yourself. We will continue the restore from there."_i18n,
+                    "If it does not boot:\n"
+                    "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n"
+                    "• TegraExplorer is controlled with the power and volume buttons.\n\n"
+                    "Next step: open Kefir Hub yourself. We will continue the restore from there."_i18n,
                     "OK"_i18n);
                 return;
             }
@@ -1249,10 +1251,10 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void OfferPendingRestore() {
+auto OfferPendingRestore() -> bool {
     static bool s_offered = false;
     if (s_offered) {
-        return;
+        return false;
     }
     auto pending = account_restore::LoadPending();
     if (pending.rolled_back) {
@@ -1261,10 +1263,10 @@ void OfferPendingRestore() {
         App::Push<OptionBox>(
             "Account save 0010 was rolled back. Restore was cancelled."_i18n,
             "OK"_i18n);
-        return;
+        return true;
     }
     if (!pending.present || pending.phase == "applied") {
-        return;
+        return false;
     }
     if (pending.phase == "wait_dump" && account_restore::SnapshotOk()) {
         account_restore::SavePending(pending.pack_dirs, "ready", true);
@@ -1288,10 +1290,10 @@ void OfferPendingRestore() {
                         "OK"_i18n);
                 }
             });
-        return;
+        return true;
     }
     if (pending.phase != "ready" || pending.pack_dirs.empty()) {
-        return;
+        return false;
     }
     s_offered = true;
     std::vector<account_user::Pack> packs;
@@ -1303,14 +1305,14 @@ void OfferPendingRestore() {
     }
     if (packs.empty()) {
         App::Push<OptionBox>("Pending restore packs are missing from SD."_i18n, "OK"_i18n);
-        return;
+        return true;
     }
     App::Push<OptionBox>(
         "Unfinished restore is ready (0010 snapshot is on SD).\n\n"
         "Continue will create the profile, then reboot the console.\n\n"
         "If it does not boot:\n"
-        "• hekate > payloads > tegraexplorer\n"
-        "• Scripts → Undo_restore_if_wont_boot.te\n"
+        "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n"
+        "• TegraExplorer is controlled with the power and volume buttons.\n"
         "• That puts the old profiles back and cancels this restore."_i18n,
         "Later"_i18n, "Cancel restore"_i18n, "Continue"_i18n, 2,
         [packs = std::move(packs)](auto op) mutable {
@@ -1326,6 +1328,7 @@ void OfferPendingRestore() {
                 StartRestoreBackup(std::move(packs));
             }
         });
+    return true;
 }
 
 void Menu::ConfirmDelete() {

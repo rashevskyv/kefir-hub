@@ -1,4 +1,5 @@
 #include "account_link.hpp"
+#include "account_restore.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
@@ -1120,6 +1121,10 @@ auto ConsumeAccountDaemonsTerminated() -> bool {
 auto CanOfferLaunchLink() -> bool {
     if (g_launch_link_prompted) {
         log_write("[ACC] CanOfferLaunchLink: already prompted this session\n");
+        return false;
+    }
+    if (account_restore::HasUnfinishedRestore()) {
+        log_write("[ACC] CanOfferLaunchLink: unfinished restore takes priority\n");
         return false;
     }
     if (App::GetAccountLinkPromptSkip()) {
