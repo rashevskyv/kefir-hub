@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.708** (шлях відкату + рестор раніше за лінк). Завершені плани збережено в
+Поточний delivery — **v0.13.709** (лінк і години при Restore Backup). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.708 — Rollback path + restore before link prompt
+## Поточний delivery: v0.13.709 — Restore Backup keeps NA link and play hours
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Якщо цей Nintendo Account уже є — не створюємо розлінкований клон, а пишемо ім'я/аватар/години на існуючий UID.
+2. Якщо NA немає на консолі — Create + baas/nas як раніше.
+3. Години після рестору самі йдуть у TegraExplorer через `/startup.te` (`playtime_restore.te`), потім hekate. Не лишаємо ручний скрипт.
+4. Версія `0.13.709`.
+
+## Попередній delivery: v0.13.708 — Rollback path + restore before link prompt
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

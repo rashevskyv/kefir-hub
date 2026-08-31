@@ -3,54 +3,63 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# Writes Hub-merged PlayEvent.dat into 00F0. Horizon cannot open 00F0
-# writable — that User-Breaks ns. Run from TegraExplorer in RCM.
-# Does not replace profiles. Other users' hours stay (file is dest+slice).
-# Back up SYSTEM first. Prefer emuMMC.
+# Hub copies this to sd:/startup.te after Restore Backup.
+# Writes merged PlayEvent.dat into 00F0, then loads hekate.
+
+goHekate = {
+    saveObj = dict()
+    bytes = ["BYTE[]"]
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+    }
+    println("Loading hekate")
+    rc = 1
+    if (fsexists("sd:/bootloader/update.bin")) {
+        rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc && fsexists("sd:/payload.bin")) {
+        rc = payload("sd:/payload.bin")
+    }
+    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
+        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    }
+    if (rc) {
+        println("Could not load hekate", rc)
+        pause()
+    }
+}
 
 clear()
-println("Kefir Hub: restore one-user play hours")
-println("Writes pending PlayEvent.dat into 00F0, then commit.")
+println("Kefir Hub: restore play hours")
 println("")
+
+delfile("sd:/startup.te")
+if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+}
 
 pending = "sd:/config/kefir/playtime_pending/PlayEvent.dat"
 if (!fsexists(pending)) {
-    println("No pending file:")
-    println(pending)
-    println("Run Restore Backup in Hub first.")
-    pause()
+    println("No pending PlayEvent.dat")
+    goHekate()
     exit()
 }
 
-targets = ["Cancel"].copy()
-targets.add("emuMMC SYSTEM")
-targets.add("sysMMC SYSTEM")
-choice = menu(targets, 0)
-if (!choice) {
-    exit()
-}
-
-if (choice == 1) {
-    if (!emu()) {
-        println("No emuMMC")
-        pause()
-        exit()
-    }
+if (emu()) {
     rc = mountemu("SYSTEM")
 } .else() {
     rc = mountsys("SYSTEM")
 }
-
 if (rc) {
     println("SYSTEM mount failed", rc)
-    pause()
+    goHekate()
     exit()
 }
 
 bis = "bis:/save/80000000000000F0"
 if (!fsexists(bis)) {
     println("No play-hours save on this SYSTEM")
-    pause()
+    goHekate()
     exit()
 }
 
@@ -62,11 +71,10 @@ println("Writing PlayEvent.dat")
 rc = saveObj.write("/PlayEvent.dat", bytes)
 if (rc) {
     println("write fail", rc)
-    pause()
+    goHekate()
     exit()
 }
 println("commit")
 saveObj.commit()
-println("")
-println("Done. Reboot CFW. Check Activity Log.")
-pause()
+println("Play hours written. Loading hekate.")
+goHekate()

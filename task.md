@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.708** (шлях відкату + рестор першим). Завершені задачі збережено в
+Актуальний delivery — **v0.13.709** (лінк і години в Restore Backup). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.708 (rollback path + restore first)
+## Поточний delivery: v0.13.709 (restore keeps NA link and play hours)
+
+- [x] `USERS-RESTORE-SAME-NAS-709` — якщо NA вже є, рестор на існуючий UID, без розлінкованого клона.
+- [x] `USERS-RESTORE-HOURS-TE-709` — години після рестору через `/startup.te` + TegraExplorer, потім hekate.
+- [x] `DOCS-BUMP-709` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.708 (rollback path + restore first)
 
 - [x] `USERS-TE-PATH-708` — відкат: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te; кнопки живлення/гучності.
 - [x] `USERS-RESTORE-FIRST-708` — вікно рестору раніше за прив'язку профілю.

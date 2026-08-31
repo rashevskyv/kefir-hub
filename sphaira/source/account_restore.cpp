@@ -312,7 +312,7 @@ auto InstallRestoreTeScripts() -> void {
     sd.DeleteFile((std::string(PendingDir()) + "/account_0010_rollback.te").c_str());
 }
 
-auto LaunchTegraDump() -> bool {
+auto LaunchTegraRomfs(const char* romfs_name) -> bool {
     fs::FsPath te_bin;
     if (!utils::findTegraExplorerPayload(te_bin)) {
         log_write("[RESTORE] TegraExplorer payload not found in /bootloader/payloads\n");
@@ -321,8 +321,9 @@ auto LaunchTegraDump() -> bool {
 
     fs::FsNativeSd sd;
     std::vector<u8> te;
-    if (!ReadRomfsTe("romfs:/tegra/account_0010_dump.te", te)) {
-        log_write("[RESTORE] dump te missing from romfs\n");
+    const auto romfs = std::string("romfs:/tegra/") + romfs_name;
+    if (!ReadRomfsTe(romfs.c_str(), te)) {
+        log_write("[RESTORE] %s missing from romfs\n", romfs_name);
         return false;
     }
     sd.DeleteFile("/startup.te");
@@ -331,7 +332,8 @@ auto LaunchTegraDump() -> bool {
         return false;
     }
     fsdevCommitDevice("sdmc");
-    log_write("[RESTORE] wrote /startup.te, launching %s\n", static_cast<const char*>(te_bin));
+    log_write("[RESTORE] wrote /startup.te from %s, launching %s\n",
+        romfs_name, static_cast<const char*>(te_bin));
 
     if (utils::rebootToPayload(static_cast<const char*>(te_bin))) {
         return true;
@@ -346,6 +348,10 @@ auto LaunchTegraDump() -> bool {
         return false;
     }
     return true;
+}
+
+auto LaunchTegraDump() -> bool {
+    return LaunchTegraRomfs("account_0010_dump.te");
 }
 
 } // namespace sphaira::account_restore

@@ -35,6 +35,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -1563,15 +1564,15 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
 
 void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
     auto report = std::make_shared<RestoreReport>();
-    std::unordered_set<u64> taken_nas;
+    std::unordered_map<u64, AccountUid> nas_to_uid;
     for (const auto& u : account_link::ListUsers()) {
         u64 nas = 0;
         if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
-            taken_nas.insert(nas);
+            nas_to_uid.emplace(nas, u.uid);
         }
     }
     App::Push<ProgressBox>(0, "Restore Backup"_i18n, "Restoring profiles..."_i18n,
-        [picked_packs = std::move(picked_packs), report, taken_nas](auto pbox) mutable -> Result {
+        [picked_packs = std::move(picked_packs), report, nas_to_uid](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_apply;
             struct PlayJob {
@@ -1586,41 +1587,59 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
 
                 std::vector<u8> jpeg;
                 sd.read_entire_file((p.dir + "/avatar.jpg").c_str(), jpeg);
-
-                AccountUid new_uid{};
                 const std::string name = !p.nickname.empty() ? p.nickname : "User";
-                const auto create_rc = account_user::Create(name, new_uid, jpeg);
-                if (R_FAILED(create_rc)) {
-                    log_write("[USER] Create user failed 0x%X\n", create_rc);
-                    report->failed_creations++;
-                    continue;
-                }
-                report->profiles_restored++;
 
                 account_link::LinkPackage pkg;
                 const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
-                if (R_SUCCEEDED(link_load_rc)) {
-                    if (pkg.nas_id != 0 && taken_nas.count(pkg.nas_id)) {
-                        log_write("[USER] skip link, nas %llx already on this console\n",
+                AccountUid dest_uid{};
+                bool have_dest = false;
+
+                if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
+                    const auto it = nas_to_uid.find(pkg.nas_id);
+                    if (it != nas_to_uid.end()) {
+                        dest_uid = it->second;
+                        have_dest = true;
+                        log_write("[USER] restore onto existing uid, nas %llx already on this console\n",
                             static_cast<unsigned long long>(pkg.nas_id));
+                        const auto rename_rc = account_user::Rename(dest_uid, name);
+                        if (R_FAILED(rename_rc)) {
+                            log_write("[USER] rename existing 0x%X\n", rename_rc);
+                        }
+                        if (!jpeg.empty()) {
+                            const auto av_rc = account_user::SetImageJpeg(dest_uid, jpeg);
+                            if (R_FAILED(av_rc)) {
+                                log_write("[USER] avatar existing 0x%X\n", av_rc);
+                            }
+                        }
+                        report->profiles_restored++;
+                        report->links_restored++;
+                    }
+                }
+
+                if (!have_dest) {
+                    const auto create_rc = account_user::Create(name, dest_uid, jpeg);
+                    if (R_FAILED(create_rc)) {
+                        log_write("[USER] Create user failed 0x%X\n", create_rc);
+                        report->failed_creations++;
+                        continue;
+                    }
+                    have_dest = true;
+                    report->profiles_restored++;
+                    if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
+                        nas_to_uid.emplace(pkg.nas_id, dest_uid);
+                        links_to_apply.push_back({dest_uid, std::move(pkg)});
+                    } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
                         report->unlinked_restored++;
                     } else {
-                        if (pkg.nas_id != 0) {
-                            taken_nas.insert(pkg.nas_id);
-                        }
-                        links_to_apply.push_back({new_uid, std::move(pkg)});
+                        log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
+                        report->link_malformed_count++;
+                        report->unlinked_restored++;
                     }
-                } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
-                    report->unlinked_restored++;
-                } else {
-                    log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
-                    report->link_malformed_count++;
-                    report->unlinked_restored++;
                 }
 
                 std::vector<PdmPlayEvent> play_events;
                 if (R_SUCCEEDED(account_playtime::LoadPackPlayEvents(p.dir, play_events)) && !play_events.empty()) {
-                    play_jobs.push_back({new_uid, std::move(play_events)});
+                    play_jobs.push_back({dest_uid, std::move(play_events)});
                 } else {
                     report->play_hours_missing++;
                 }
@@ -1647,7 +1666,7 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 u32 count = 0;
                 const auto apply_rc = account_link::ApplyLinkPackages(links_to_apply, count);
                 if (R_SUCCEEDED(apply_rc)) {
-                    report->links_restored = count;
+                    report->links_restored += count;
                 } else {
                     log_write("[USER] ApplyLinkPackages failed 0x%X\n", apply_rc);
                     report->link_apply_failed = true;
@@ -1665,6 +1684,10 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
             auto pending = account_restore::LoadPending();
             if (pending.present) {
                 account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            }
+            if (report->play_hours_applied &&
+                account_restore::LaunchTegraRomfs("playtime_restore.te")) {
+                return;
             }
             utils::requestForcedReboot();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);

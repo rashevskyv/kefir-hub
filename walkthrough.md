@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.708** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.709** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.709 — Restore Backup keeps Nintendo link and play hours
+
+- Раніше на тій самій консолі Create + skip link давав розлінкований клон; години лишались у `playtime_restore.te` без запуску. Тепер якщо NA вже є — оновлюємо існуючий профіль. Години пише TE зі `startup.te`, потім hekate. Версія `0.13.709`. Збірку агент не запускав.
 
 ## v0.13.708 — rollback path + restore dialog before link prompt
 
