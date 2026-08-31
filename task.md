@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.700** (0010 dump через startup.te). Завершені задачі збережено в
+Актуальний delivery — **v0.13.701** (Hekate → Payloads → TegraExplorer). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.700 (startup.te 0010 dump)
+## Поточний delivery: v0.13.701 (Hekate Payloads TegraExplorer wording)
+
+- [x] `USERS-TE-WORDING-701` — у UI Users немає «RCM»; шлях Hekate → Payloads → TegraExplorer.
+- [x] `DOCS-BUMP-701` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.700 (startup.te 0010 dump)
 
 - [x] `USERS-RESTORE-STARTUP-TE-700` — зайнятий 0010: `/startup.te` + reboot TegraExplorer, без ручного dump.te.
 - [x] `USERS-RESTORE-COPY-700` — пояснювальні тексти; після дампу користувач сам відкриває Хаб.

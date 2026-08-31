@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.700** (0010 dump через startup.te + TegraExplorer). Завершені плани збережено в
+Поточний delivery — **v0.13.701** (Hekate → Payloads → TegraExplorer, без RCM). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.700 — Locked 0010 dump via startup.te and TegraExplorer
+## Поточний delivery: v0.13.701 — Say Hekate → Payloads → TegraExplorer, not RCM
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. У Users (рестор 0010 і console-move dump/restore) замість «RCM» — Hekate → Payloads → TegraExplorer.
+2. Версія `0.13.701`.
+
+## Попередній delivery: v0.13.700 — Locked 0010 dump via startup.te and TegraExplorer
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 
