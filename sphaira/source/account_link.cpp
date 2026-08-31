@@ -159,10 +159,13 @@ void TerminateAccountDaemons() {
     if (R_SUCCEEDED(pmshellInitialize())) {
         ON_SCOPE_EXIT(pmshellExit());
         pmshellTerminateProgram(0x010000000000000CULL); // BCAT
+        pmshellTerminateProgram(0x010000000000000EULL); // friends (FW 20 crash name)
+        pmshellTerminateProgram(0x0100000000000015ULL); // ns (classic)
         pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
+        pmshellTerminateProgram(0x010000000000001FULL); // ns on FW 20.5 (Process Name: ns)
         pmshellTerminateProgram(0x010000000000003EULL); // OLSC
         g_daemons_terminated = true;
-        log_write("[ACC] terminated BCAT/ACCOUNT/OLSC (reboot needed)\n");
+        log_write("[ACC] terminated BCAT/friends/ns/ACCOUNT/OLSC (reboot needed)\n");
     }
 }
 
@@ -631,43 +634,73 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         R_SUCCEED();
     };
 
-    const auto existing_baas_files = ListDirFiles(save, baas_dir);
     const auto existing_nas_files = ListDirFiles(save, nas_dir);
 
     std::vector<u64> old_nas_ids_to_clean;
+    std::vector<u64> incoming_nas;
+    for (const auto& target : targets) {
+        if (std::find(incoming_nas.begin(), incoming_nas.end(), target.pkg.nas_id) != incoming_nas.end()) {
+            log_write("[ACC] ApplyLinkPackages refused: two targets share nas %llx\n",
+                static_cast<unsigned long long>(target.pkg.nas_id));
+            return Result_FsInvalidType;
+        }
+        incoming_nas.push_back(target.pkg.nas_id);
+    }
+
+    auto delete_baas = [&](const std::string& bf) -> Result {
+        const auto baas_full = baas_dir + "/" + bf;
+        if (!save.FileExists(baas_full.c_str())) {
+            R_SUCCEED();
+        }
+        R_TRY(backup_save_file(baas_full, "baas/" + bf));
+        std::vector<u8> old_baas;
+        if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), old_baas)) && old_baas.size() >= 24) {
+            u64 old_nas_id = 0;
+            std::memcpy(&old_nas_id, old_baas.data() + 16, sizeof(u64));
+            if (old_nas_id != 0 &&
+                std::find(incoming_nas.begin(), incoming_nas.end(), old_nas_id) == incoming_nas.end() &&
+                std::find(old_nas_ids_to_clean.begin(), old_nas_ids_to_clean.end(), old_nas_id) == old_nas_ids_to_clean.end()) {
+                old_nas_ids_to_clean.push_back(old_nas_id);
+            }
+        }
+        log_write("[ACC] removing baas %s\n", bf.c_str());
+        R_TRY(save.DeleteFile(baas_full.c_str()));
+        R_SUCCEED();
+    };
 
     for (const auto& target : targets) {
         const auto cands = BaasCandidateNames(target.uid);
-        for (const auto& cand : cands) {
-            for (const auto& bf : existing_baas_files) {
+        const auto live_baas = ListDirFiles(save, baas_dir);
+        for (const auto& bf : live_baas) {
+            bool drop = false;
+            for (const auto& cand : cands) {
                 if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
-                    const auto baas_full = baas_dir + "/" + bf;
-                    R_TRY(backup_save_file(baas_full, "baas/" + bf));
-
-                    std::vector<u8> old_baas;
-                    if (R_SUCCEEDED(save.read_entire_file(baas_full.c_str(), old_baas)) && old_baas.size() >= 24) {
-                        u64 old_nas_id = 0;
-                        std::memcpy(&old_nas_id, old_baas.data() + 16, sizeof(u64));
-                        if (old_nas_id != 0 && old_nas_id != target.pkg.nas_id) {
-                            if (std::find(old_nas_ids_to_clean.begin(), old_nas_ids_to_clean.end(), old_nas_id) == old_nas_ids_to_clean.end()) {
-                                old_nas_ids_to_clean.push_back(old_nas_id);
-                            }
-                        }
-                    }
-                    R_TRY(save.DeleteFile(baas_full.c_str()));
+                    drop = true;
+                    break;
                 }
+            }
+            if (!drop) {
+                std::vector<u8> data;
+                if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + bf).c_str(), data)) && data.size() >= 24) {
+                    u64 id = 0;
+                    std::memcpy(&id, data.data() + 16, sizeof(u64));
+                    if (id == target.pkg.nas_id) {
+                        drop = true;
+                    }
+                }
+            }
+            if (drop) {
+                R_TRY(delete_baas(bf));
             }
         }
 
         const auto new_baas_path = baas_dir + "/" + UidDashedLinkalho(target.uid) + ".dat";
-        if (save.FileExists(new_baas_path.c_str())) {
-            R_TRY(backup_save_file(new_baas_path, "baas/" + UidDashedLinkalho(target.uid) + ".dat"));
-            R_TRY(save.DeleteFile(new_baas_path.c_str()));
-        }
         auto baas_for_uid = target.pkg.baas_data;
         std::memcpy(baas_for_uid.data(), &target.uid, sizeof(AccountUid));
         R_TRY(save.write_entire_file(new_baas_path.c_str(), baas_for_uid));
-        log_write("[ACC] baas bound to %s\n", UidDashedRfc(target.uid).c_str());
+        log_write("[ACC] baas bound to %s nas %llx (one file)\n",
+            UidDashedRfc(target.uid).c_str(),
+            static_cast<unsigned long long>(target.pkg.nas_id));
 
         for (const auto& nf : target.pkg.nas_files) {
             const auto nas_dst = nas_dir + "/" + nf.filename;
@@ -851,6 +884,79 @@ auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {
         return ResultNetworkServiceAccountRegistrationRequired;
     }
     R_SUCCEED();
+}
+
+auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
+    out_uid = {};
+    if (nas_id == 0) {
+        return false;
+    }
+
+    const auto live = App::GetAccountList();
+    for (const auto& base : live) {
+        u64 ipc_nas = 0;
+        if (R_SUCCEEDED(QueryNintendoAccountId(base.uid, ipc_nas)) && ipc_nas == nas_id) {
+            out_uid = base.uid;
+            log_write("[ACC] nas %llx is IPC-linked to %s\n",
+                static_cast<unsigned long long>(nas_id), UidDashedRfc(base.uid).c_str());
+            return true;
+        }
+    }
+
+    auto save = TryOpenAccountSave();
+    if (R_FAILED(save.GetFsOpenResult())) {
+        return false;
+    }
+    std::string baas_dir;
+    std::string nas_dir;
+    ResolveSuDirs(save, baas_dir, nas_dir);
+    if (baas_dir.empty()) {
+        return false;
+    }
+
+    auto uid_is_live = [&](const AccountUid& uid) -> bool {
+        for (const auto& base : live) {
+            if (base.uid.uid[0] == uid.uid[0] && base.uid.uid[1] == uid.uid[1]) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (const auto& bf : ListDirFiles(save, baas_dir)) {
+        std::vector<u8> data;
+        if (R_FAILED(save.read_entire_file((baas_dir + "/" + bf).c_str(), data)) || data.size() < 24) {
+            continue;
+        }
+        u64 file_nas = 0;
+        std::memcpy(&file_nas, data.data() + 16, sizeof(u64));
+        if (file_nas != nas_id) {
+            continue;
+        }
+        AccountUid file_uid{};
+        std::memcpy(&file_uid, data.data(), sizeof(AccountUid));
+        if (uid_is_live(file_uid)) {
+            out_uid = file_uid;
+            log_write("[ACC] nas %llx is in baas %s for live %s\n",
+                static_cast<unsigned long long>(nas_id), bf.c_str(), UidDashedRfc(file_uid).c_str());
+            return true;
+        }
+        for (const auto& base : live) {
+            const auto cands = BaasCandidateNames(base.uid);
+            for (const auto& cand : cands) {
+                if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                    out_uid = base.uid;
+                    log_write("[ACC] nas %llx baas filename %s matches live %s\n",
+                        static_cast<unsigned long long>(nas_id), bf.c_str(),
+                        UidDashedRfc(base.uid).c_str());
+                    return true;
+                }
+            }
+        }
+        log_write("[ACC] nas %llx baas %s is orphan (uid not live)\n",
+            static_cast<unsigned long long>(nas_id), bf.c_str());
+    }
+    return false;
 }
 
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result {

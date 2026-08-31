@@ -33,5 +33,7 @@ auto ListUserPacks() -> std::vector<Pack>;
 auto ListUserPacks(const std::string& root) -> std::vector<Pack>;
 auto DeleteUserPack(const std::string& dir) -> Result;
 auto GetUserPacksRoot() -> std::string;
+auto FormatPackCreated(const std::string& folder_name, const std::string& json_created) -> std::string;
+auto ReadJsonField(const std::string& json, const char* key) -> std::string;
 
 } // namespace sphaira::account_user

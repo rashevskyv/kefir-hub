@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.716** (Restore Backup отримує user pack з іншої консолі). Завершені задачі збережено в
+Актуальний delivery — **v0.13.717** (Restore Backup: one Nintendo Account per baas). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.716 (Receive User Backup from another console)
+## Поточний delivery: v0.13.717 (one Nintendo Account per baas)
+
+- [x] `USERS-RESTORE-NAS-UNIQUE-717` — ApplyLink стирає всі baas з тим самим nas_id і пише один файл; FindLiveUid бачить NA в baas, навіть якщо IPC каже unlinked.
+- [x] `USERS-RESTORE-NS-TERM-717` — перед записом 0010 зупиняємо ns (0015/001F) разом з ACCOUNT, щоб не було 2011-0301.
+- [x] `USERS-TE-UNDO-WIPE-717` — Undo_restore_if_wont_boot.te чистить baas/nas у сейві, потім пише знімок.
+- [x] `DOCS-BUMP-717` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.716 (Receive User Backup from another console)
 
 - [x] `USERS-REMOTE-LIST-716` — Other console за IP показує повноекранний список user packs відправника, без PIN, URL чи QR для користувача.
 - [x] `USERS-REMOTE-IMPORT-716` — один вибраний пак завантажується в configured user-packs root і переходить у наявний restore flow.

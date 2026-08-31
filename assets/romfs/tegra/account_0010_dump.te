@@ -12,8 +12,10 @@ goHekate = {
     text = ""
     lines = []
     bytes = ["BYTE[]"]
+    delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
         copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
     }
     println("Loading hekate")
     rc = 1
@@ -26,9 +28,11 @@ goHekate = {
     if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
         rc = payload("sd:/atmosphere/reboot_payload.bin")
     }
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    }
     if (rc) {
-        println("Could not load hekate", rc)
-        pause()
+        reboot()
     }
 }
 
@@ -96,6 +100,34 @@ lines.foreach("line") {
         }
     }
 }
+
+dumpSaveFolder = {
+    listing = saveObj.readdir(saveRel)
+    if (!listing.result) {
+        files = listing.files.copy()
+        files.foreach("fname") {
+            fpath = saveRel + "/" + fname
+            bytes = saveObj.read(fpath)
+            if (bytes.len()) {
+                out = dst + fpath
+                parent = escapepath(out)
+                mkdir(parent)
+                rc = writefile(out, bytes)
+                if (!rc) {
+                    wrote = wrote + 1
+                }
+            }
+        }
+    }
+}
+saveRel = "/su/baas"
+dumpSaveFolder()
+saveRel = "/su/nas"
+dumpSaveFolder()
+saveRel = "/baas"
+dumpSaveFolder()
+saveRel = "/nas"
+dumpSaveFolder()
 
 writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
 println("wrote", wrote)

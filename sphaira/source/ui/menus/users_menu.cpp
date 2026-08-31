@@ -84,13 +84,11 @@ auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid
         }
     }
     if (p.nas_id != 0) {
-        for (const auto& u : users) {
-            u64 nas = 0;
-            if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas == p.nas_id) {
-                log_write("[USER] pack nas %llx is already on this console\n",
-                    static_cast<unsigned long long>(p.nas_id));
-                return u.uid;
-            }
+        AccountUid by_nas{};
+        if (account_link::FindLiveUidByNasId(p.nas_id, by_nas)) {
+            log_write("[USER] pack nas %llx is already on this console\n",
+                static_cast<unsigned long long>(p.nas_id));
+            return by_nas;
         }
     }
     return std::nullopt;
@@ -763,26 +761,77 @@ inline auto ParseManifestResponse(const std::string& json, const std::string& re
 struct RemoteUserPacksMenu final : MenuBase {
     using Callback = std::function<void(std::vector<account_user::Pack>)>;
 
-    RemoteUserPacksMenu(std::string base_url, std::vector<RemotePackEntry> entries, Callback on_restore)
+    struct Entry {
+        account_user::Pack pack;
+        int image{};
+        bool selected{};
+        bool avatar_tried{};
+    };
+
+    RemoteUserPacksMenu(std::string base_url, std::vector<account_user::Pack> packs, Callback on_restore)
         : MenuBase{"User Backups on Other Console"_i18n, MenuFlag_None}
         , m_base_url{std::move(base_url)}
-        , m_entries{std::move(entries)}
         , m_on_restore{std::move(on_restore)}
     {
+        for (auto& p : packs) {
+            Entry e;
+            e.pack = std::move(p);
+            m_entries.push_back(std::move(e));
+        }
+
         this->SetActions(
-            std::make_pair(Button::A, Action{"Select"_i18n, [this](){ OnSelect(); }}),
-            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+            std::make_pair(Button::A, Action{"Restore"_i18n, [this](){ OnRestore(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
+            std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+                if (m_entries.empty()) {
+                    return;
+                }
+                m_entries[m_index].selected ^= 1;
+                m_selected_count += m_entries[m_index].selected ? 1 : -1;
+                if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+                    m_index++;
+                    m_list->EnsureVisible(m_index, m_entries.size());
+                }
+                UpdateSubHeading();
+            }}),
+            std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+                m_selected_count = 0;
+                for (auto& e : m_entries) {
+                    e.selected ^= 1;
+                    if (e.selected) {
+                        m_selected_count++;
+                    }
+                }
+                UpdateSubHeading();
+            }})
         );
 
-        m_list = std::make_unique<List>(1, 6, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
-        m_list->SetLayout(List::Layout::GRID);
-        m_list->SetPageJump(false);
-        SetIndex(0);
+        SetTitleSubHeading("X marks backups to restore. A restores the selected profiles."_i18n, true);
+        m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
+        UpdateSubHeading();
     }
 
-    ~RemoteUserPacksMenu() = default;
+    ~RemoteUserPacksMenu() {
+        auto* vg = App::GetVg();
+        for (auto& e : m_entries) {
+            if (e.image > 0 && vg) {
+                nvgDeleteImage(vg, e.image);
+                e.image = 0;
+            }
+        }
+    }
 
     auto GetShortTitle() const -> const char* override { return "Remote Backups"; }
+
+    void UpdateSubHeading() {
+        if (m_entries.empty()) {
+            SetSubHeading("0");
+        } else if (m_selected_count > 0) {
+            SetSubHeading(std::to_string(m_selected_count) + " / " + std::to_string(m_entries.size()));
+        } else {
+            SetSubHeading(std::to_string(m_entries.size()));
+        }
+    }
 
     void Update(Controller* controller, TouchInfo* touch) override {
         MenuBase::Update(controller, touch);
@@ -791,12 +840,38 @@ struct RemoteUserPacksMenu final : MenuBase {
         }
         m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
             if (touch && m_index == i) {
-                FireAction(Button::A);
+                FireAction(Button::X);
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
-                SetIndex(i);
+                m_index = i;
             }
         }, this);
+    }
+
+    auto TryLoadAvatar(Entry& e) -> bool {
+        if (e.avatar_tried) {
+            return false;
+        }
+        e.avatar_tried = true;
+        if (!e.pack.has_avatar) {
+            return false;
+        }
+        const std::string url = m_base_url + "/download?path=" + curl::EscapeString(e.pack.dir + "/avatar.jpg");
+        curl::Api api;
+        api.SetOption(curl::Url{url});
+        const auto res = curl::ToMemory(api);
+        if (!res.success || res.data.empty()) {
+            return false;
+        }
+        auto img = ImageLoadFromMemory(res.data, ImageFlag_JPEG);
+        if (img.data.empty()) {
+            img = ImageLoadIcon(res.data);
+        }
+        if (img.data.empty()) {
+            return false;
+        }
+        e.image = nvgCreateImageRGBA(App::GetVg(), img.w, img.h, 0, img.data.data());
+        return true;
     }
 
     void Draw(NVGcontext* vg, Theme* theme) override {
@@ -810,172 +885,223 @@ struct RemoteUserPacksMenu final : MenuBase {
             return;
         }
 
-        m_list->Draw(vg, theme, m_entries.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
-            const auto& item = m_entries[i];
-            const auto is_selected = m_index == static_cast<s64>(i);
-            const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-            if (is_selected) {
-                gfx::drawRectOutline(vg, theme, 4.f, v);
+        int loaded = 0;
+        m_list->Draw(vg, theme, m_entries.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+            auto& e = m_entries[i];
+            if (loaded < 2 && TryLoadAvatar(e)) {
+                loaded++;
+            }
+            const auto selected = m_index == i;
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
             } else {
                 DrawElement(v, ThemeEntryID_GRID);
             }
-            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
-                theme->GetColour(text_id), item.name.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+            if (e.selected) {
+                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+                tint.a *= 0.35f;
+                gfx::drawRect(vg, v, tint, 5.f);
+            }
+
+            gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
+                gfx::CHECKBOX_SIZE, e.selected);
+
+            const float icon_size = 46.f;
+            const float icon_x = v.x + 50.f;
+            const float icon_y = v.y + (v.h - icon_size) / 2.f;
+            gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size},
+                e.image > 0 ? e.image : App::GetDefaultImage(), 4);
+
+            const float text_x = icon_x + icon_size + 14.f;
+            const auto link_status_str = e.pack.link_valid ? "Linked"_i18n : "Local"_i18n;
+            const auto link_color = e.pack.link_valid ? nvgRGBA(80, 200, 120, 255) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+            float bounds[4]{};
+            gfx::textBounds(vg, 0, 0, bounds, link_status_str.c_str());
+            const float status_w = bounds[2] - bounds[0] + 20.f;
+            gfx::drawText(vg, v.x + v.w - 15.f, v.y + v.h / 2.f, 16.f,
+                link_color, link_status_str.c_str(),
+                NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, v.y, v.w - (text_x - v.x) - 15.f - status_w, v.h);
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                "%s", e.pack.nickname.c_str());
+
+            std::string detail_str = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.folder_name;
+            detail_str += e.pack.has_playtime ? " · play hours"_i18n : " · no play hours"_i18n;
+            gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),
-                "Download and restore this user backup"_i18n.c_str(),
-                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                "%s", detail_str.c_str());
+            nvgRestore(vg);
         });
     }
 
 private:
-    void SetIndex(s64 index) {
+    void OnRestore() {
         if (m_entries.empty()) {
-            m_index = 0;
             return;
         }
-        m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_entries.size() - 1));
-        if (!m_index) {
-            m_list->SetYoff(0);
+        std::vector<account_user::Pack> picked;
+        for (const auto& e : m_entries) {
+            if (e.selected) {
+                picked.push_back(e.pack);
+            }
         }
-        SetTitleSubHeading("Download and restore this user backup"_i18n, true);
-        SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
+        if (picked.empty() && !m_entries.empty()) {
+            picked.push_back(m_entries[m_index].pack);
+        }
+        DownloadRemotePacks(std::move(picked));
     }
 
-    void OnSelect() {
-        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
-            return;
-        }
-        DownloadRemotePack(m_entries[m_index]);
-    }
-
-    void DownloadRemotePack(const RemotePackEntry& entry) {
-        auto imported_pack = std::make_shared<account_user::Pack>();
+    void DownloadRemotePacks(std::vector<account_user::Pack> picked) {
+        auto imported_packs = std::make_shared<std::vector<account_user::Pack>>();
         auto download_err = std::make_shared<std::string>();
 
         const std::string base_url = m_base_url;
-        const std::string entry_name = entry.name;
-        const std::string remote_path = entry.remote_path;
 
         App::Push<ProgressBox>(
             0,
             "Downloading User Backup..."_i18n,
-            entry_name,
-            [base_url, entry_name, remote_path, imported_pack, download_err](ProgressBox* pbox) -> Result {
-                pbox->SetTransfer("Fetching file list..."_i18n);
-
-                const std::string manifest_url = base_url + "/list-recursive?path=" + curl::EscapeString(remote_path);
-                curl::Api manifest_api;
-                manifest_api.SetOption(curl::Url{manifest_url});
-                manifest_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
-                    return !pbox->ShouldExit();
-                }});
-
-                const auto manifest_res = curl::ToMemory(manifest_api);
-                if (pbox->ShouldExit()) {
-                    return Result_TransferCancelled;
-                }
-                if (!manifest_res.success || manifest_res.data.empty()) {
-                    *download_err = "Could not retrieve the file manifest from the sending console."_i18n;
-                    return Result_FsInvalidType;
-                }
-
-                const std::string manifest_json(manifest_res.data.begin(), manifest_res.data.end());
-                const auto files_opt = ParseManifestResponse(manifest_json, remote_path);
-                if (!files_opt || files_opt->empty()) {
-                    *download_err = "Invalid backup files received from the sending console."_i18n;
-                    return Result_FsInvalidType;
-                }
-                const auto& files = *files_opt;
-
+            picked.size() == 1 ? picked.front().nickname : (std::to_string(picked.size()) + " backups"),
+            [base_url, picked, imported_packs, download_err](ProgressBox* pbox) -> Result {
                 fs::FsNativeSd sd;
                 const std::string root_dst = account_user::GetUserPacksRoot();
                 R_TRY(sd.CreateDirectoryRecursively(root_dst.c_str()));
 
-                std::string safe_folder = entry_name;
-                while (!safe_folder.empty() && (safe_folder.back() == '/' || safe_folder.back() == '\\')) {
-                    safe_folder.pop_back();
-                }
-                if (const auto slash = safe_folder.find_last_of("/\\"); slash != std::string::npos) {
-                    safe_folder.erase(0, slash + 1);
-                }
-                if (safe_folder.empty()) {
-                    safe_folder = "User_Backup";
-                }
-
-                std::string target_dir = root_dst + "/" + safe_folder;
-                int suffix = 1;
-                while (sd.DirExists(target_dir.c_str()) || sd.FileExists(target_dir.c_str())) {
-                    target_dir = root_dst + "/" + safe_folder + "_" + std::to_string(suffix++);
-                }
-
-                R_TRY(sd.CreateDirectoryRecursively(target_dir.c_str()));
-
+                std::vector<std::string> created_dirs;
                 bool success = false;
                 ON_SCOPE_EXIT({
                     if (!success) {
-                        sd.DeleteDirectoryRecursively(target_dir.c_str());
+                        for (const auto& dir : created_dirs) {
+                            sd.DeleteDirectoryRecursively(dir.c_str());
+                        }
                     }
                 });
 
-                for (size_t i = 0; i < files.size(); ++i) {
+                for (size_t p_idx = 0; p_idx < picked.size(); ++p_idx) {
                     if (pbox->ShouldExit()) {
                         return Result_TransferCancelled;
                     }
 
-                    const auto& f = files[i];
-                    const std::string dest_file_path = target_dir + "/" + f.rel_path;
-                    R_TRY(sd.CreateDirectoryRecursivelyWithPath(dest_file_path.c_str()));
+                    const auto& pack_info = picked[p_idx];
+                    const std::string remote_path = pack_info.dir;
+                    const std::string entry_name = pack_info.folder_name;
 
-                    pbox->NewTransfer(f.rel_path);
+                    const std::string prefix = (picked.size() > 1)
+                        ? ("[" + std::to_string(p_idx + 1) + "/" + std::to_string(picked.size()) + "] ")
+                        : "";
 
-                    const std::string download_url = base_url + "/download?path=" + curl::EscapeString(f.remote_path);
+                    pbox->SetTransfer(prefix + "Fetching file list..."_i18n);
 
-                    curl::Api dl_api;
-                    dl_api.SetOption(curl::Url{download_url});
-                    dl_api.SetOption(curl::Path{dest_file_path});
-                    dl_api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+                    const std::string manifest_url = base_url + "/list-recursive?path=" + curl::EscapeString(remote_path);
+                    curl::Api manifest_api;
+                    manifest_api.SetOption(curl::Url{manifest_url});
+                    manifest_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                        return !pbox->ShouldExit();
+                    }});
 
-                    const auto dl_res = curl::ToFile(dl_api);
-
+                    const auto manifest_res = curl::ToMemory(manifest_api);
                     if (pbox->ShouldExit()) {
                         return Result_TransferCancelled;
                     }
-
-                    if (!dl_res.success) {
-                        log_write("[USER_TRANSFER] Failed download %s -> %s\n", download_url.c_str(), dest_file_path.c_str());
-                        *download_err = "Failed to download backup files from the sending console."_i18n;
+                    if (!manifest_res.success || manifest_res.data.empty()) {
+                        *download_err = "Could not retrieve the file manifest from the sending console."_i18n;
                         return Result_FsInvalidType;
                     }
 
-                    fs::File file;
-                    s64 written_size = 0;
-                    if (R_FAILED(sd.OpenFile(dest_file_path.c_str(), FsOpenMode_Read, &file)) ||
-                        R_FAILED(file.GetSize(&written_size)) ||
-                        written_size != f.size) {
-                        log_write("[USER_TRANSFER] Size mismatch for %s: expected %ld, got %ld\n",
-                            dest_file_path.c_str(), f.size, written_size);
-                        *download_err = "Failed to download backup files from the sending console."_i18n;
+                    const std::string manifest_json(manifest_res.data.begin(), manifest_res.data.end());
+                    const auto files_opt = ParseManifestResponse(manifest_json, remote_path);
+                    if (!files_opt || files_opt->empty()) {
+                        *download_err = "Invalid backup files received from the sending console."_i18n;
                         return Result_FsInvalidType;
                     }
+                    const auto& files = *files_opt;
+
+                    std::string safe_folder = entry_name;
+                    while (!safe_folder.empty() && (safe_folder.back() == '/' || safe_folder.back() == '\\')) {
+                        safe_folder.pop_back();
+                    }
+                    if (const auto slash = safe_folder.find_last_of("/\\"); slash != std::string::npos) {
+                        safe_folder.erase(0, slash + 1);
+                    }
+                    if (safe_folder.empty()) {
+                        safe_folder = "User_Backup";
+                    }
+
+                    std::string target_dir = root_dst + "/" + safe_folder;
+                    int suffix = 1;
+                    while (sd.DirExists(target_dir.c_str()) || sd.FileExists(target_dir.c_str()) ||
+                           std::ranges::find(created_dirs, target_dir) != created_dirs.end()) {
+                        target_dir = root_dst + "/" + safe_folder + "_" + std::to_string(suffix++);
+                    }
+
+                    R_TRY(sd.CreateDirectoryRecursively(target_dir.c_str()));
+                    created_dirs.push_back(target_dir);
+
+                    for (size_t i = 0; i < files.size(); ++i) {
+                        if (pbox->ShouldExit()) {
+                            return Result_TransferCancelled;
+                        }
+
+                        const auto& f = files[i];
+                        const std::string dest_file_path = target_dir + "/" + f.rel_path;
+                        R_TRY(sd.CreateDirectoryRecursivelyWithPath(dest_file_path.c_str()));
+
+                        pbox->NewTransfer(prefix + f.rel_path);
+
+                        const std::string download_url = base_url + "/download?path=" + curl::EscapeString(f.remote_path);
+
+                        curl::Api dl_api;
+                        dl_api.SetOption(curl::Url{download_url});
+                        dl_api.SetOption(curl::Path{dest_file_path});
+                        dl_api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+
+                        const auto dl_res = curl::ToFile(dl_api);
+
+                        if (pbox->ShouldExit()) {
+                            return Result_TransferCancelled;
+                        }
+
+                        if (!dl_res.success) {
+                            log_write("[USER_TRANSFER] Failed download %s -> %s\n", download_url.c_str(), dest_file_path.c_str());
+                            *download_err = "Failed to download backup files from the sending console."_i18n;
+                            return Result_FsInvalidType;
+                        }
+
+                        fs::File file;
+                        s64 written_size = 0;
+                        if (R_FAILED(sd.OpenFile(dest_file_path.c_str(), FsOpenMode_Read, &file)) ||
+                            R_FAILED(file.GetSize(&written_size)) ||
+                            written_size != f.size) {
+                            log_write("[USER_TRANSFER] Size mismatch for %s: expected %ld, got %ld\n",
+                                dest_file_path.c_str(), f.size, written_size);
+                            *download_err = "Failed to download backup files from the sending console."_i18n;
+                            return Result_FsInvalidType;
+                        }
+                    }
+
+                    const auto pack = account_user::FindUserPack(target_dir);
+                    if (pack.dir.empty()) {
+                        log_write("[USER_TRANSFER] FindUserPack failed on target %s\n", target_dir.c_str());
+                        *download_err = "Downloaded backup is incomplete or invalid."_i18n;
+                        return Result_FsInvalidType;
+                    }
+
+                    imported_packs->push_back(pack);
                 }
 
-                const auto pack = account_user::FindUserPack(target_dir);
-                if (pack.dir.empty()) {
-                    log_write("[USER_TRANSFER] FindUserPack failed on target %s\n", target_dir.c_str());
-                    *download_err = "Downloaded backup is incomplete or invalid."_i18n;
-                    return Result_FsInvalidType;
-                }
-
-                *imported_pack = pack;
                 success = true;
                 R_SUCCEED();
             },
-            [this, imported_pack, download_err](Result rc) {
+            [this, imported_packs, download_err](Result rc) {
                 if (rc == Result_TransferCancelled) {
                     return;
                 }
-                if (R_FAILED(rc) || imported_pack->dir.empty()) {
+                if (R_FAILED(rc) || imported_packs->empty()) {
                     const std::string msg = !download_err->empty()
                         ? *download_err
                         : "Failed to transfer user backup from the sending console."_i18n;
@@ -983,20 +1109,21 @@ private:
                     return;
                 }
 
-                auto pack = std::move(*imported_pack);
+                auto packs = std::move(*imported_packs);
                 auto on_restore = m_on_restore;
                 SetPop();
                 if (on_restore) {
-                    on_restore({ std::move(pack) });
+                    on_restore(std::move(packs));
                 }
             }
         );
     }
 
     std::string m_base_url;
-    std::vector<RemotePackEntry> m_entries;
+    std::vector<Entry> m_entries;
     Callback m_on_restore;
     s64 m_index{};
+    s64 m_selected_count{};
     std::unique_ptr<List> m_list;
 };
 
@@ -1142,8 +1269,18 @@ private:
 
     void ProbeOtherConsole() {
         net::RequireConnection([this](){
+            u32 ip{};
+            std::string initial_prefix;
+            if (R_SUCCEEDED(nifmGetCurrentIpAddress(&ip)) && ip != 0) {
+                char prefix[32]{};
+                std::snprintf(prefix, sizeof(prefix), "%u.%u.%u.",
+                    ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF);
+                initial_prefix = prefix;
+            }
+
             std::string input;
-            if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str())) || input.empty()) {
+            if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str(),
+                    initial_prefix.empty() ? nullptr : initial_prefix.c_str())) || input.empty()) {
                 return;
             }
             while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
@@ -1159,14 +1296,14 @@ private:
             auto responding_url = std::make_shared<std::string>();
             auto probed_ok = std::make_shared<bool>(false);
             auto list_ok = std::make_shared<bool>(false);
-            auto candidates = std::make_shared<std::vector<RemotePackEntry>>();
+            auto remote_packs = std::make_shared<std::vector<account_user::Pack>>();
             auto on_restore = m_on_restore;
 
             App::Push<ProgressBox>(
                 0,
                 "Testing Connection..."_i18n,
                 input,
-                [input, responding_url, probed_ok, list_ok, candidates](auto pbox) -> Result {
+                [input, responding_url, probed_ok, list_ok, remote_packs](auto pbox) -> Result {
                     std::string base_input = input;
                     while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
                         base_input.pop_back();
@@ -1231,10 +1368,69 @@ private:
                     }
 
                     *list_ok = true;
-                    *candidates = parsed->second;
+                    const auto& candidates = parsed->second;
+                    for (const auto& cand : candidates) {
+                        if (pbox->ShouldExit()) {
+                            return Result_TransferCancelled;
+                        }
+                        pbox->SetTransfer(cand.name);
+
+                        account_user::Pack pack;
+                        pack.folder_name = cand.name;
+                        pack.dir = cand.remote_path;
+
+                        const std::string prof_url = *responding_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/profile.json");
+                        curl::Api prof_api;
+                        prof_api.SetOption(curl::Url{prof_url});
+                        prof_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                            return !pbox->ShouldExit();
+                        }});
+                        const auto prof_res = curl::ToMemory(prof_api);
+                        if (prof_res.success && !prof_res.data.empty()) {
+                            const std::string prof_json(prof_res.data.begin(), prof_res.data.end());
+                            pack.nickname = account_user::ReadJsonField(prof_json, "nickname");
+                            pack.uid_hex = account_user::ReadJsonField(prof_json, "uid");
+                            const std::string created = account_user::ReadJsonField(prof_json, "created");
+                            pack.created_label = account_user::FormatPackCreated(cand.name, created);
+                            const std::string link_status = account_user::ReadJsonField(prof_json, "link_status");
+                            pack.link_valid = (link_status == "linked");
+                        }
+                        if (pack.created_label.empty()) {
+                            pack.created_label = account_user::FormatPackCreated(cand.name, {});
+                        }
+                        if (pack.nickname.empty()) {
+                            pack.nickname = "User";
+                        }
+
+                        const std::string manifest_url = *responding_url + "/list-recursive?path=" + curl::EscapeString(cand.remote_path);
+                        curl::Api m_api;
+                        m_api.SetOption(curl::Url{manifest_url});
+                        m_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                            return !pbox->ShouldExit();
+                        }});
+                        const auto m_res = curl::ToMemory(m_api);
+                        if (m_res.success && !m_res.data.empty()) {
+                            const std::string m_json(m_res.data.begin(), m_res.data.end());
+                            const auto files_opt = ParseManifestResponse(m_json, cand.remote_path);
+                            if (files_opt) {
+                                for (const auto& f : *files_opt) {
+                                    if (f.rel_path == "avatar.jpg") {
+                                        pack.has_avatar = true;
+                                    } else if (f.rel_path == "pdm/PlayEvent.dat" || f.rel_path == "PlayEvent.dat") {
+                                        pack.has_playtime = true;
+                                    } else if (!pack.link_valid && (f.rel_path.starts_with("baas/") || f.rel_path.starts_with("nas/"))) {
+                                        pack.link_valid = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        remote_packs->push_back(std::move(pack));
+                    }
+
                     R_SUCCEED();
                 },
-                [responding_url, probed_ok, list_ok, candidates, on_restore](Result rc) {
+                [responding_url, probed_ok, list_ok, remote_packs, on_restore](Result rc) {
                     if (rc == Result_TransferCancelled) {
                         return;
                     }
@@ -1253,7 +1449,7 @@ private:
                         );
                         return;
                     }
-                    if (candidates->empty()) {
+                    if (remote_packs->empty()) {
                         App::Push<OptionBox>(
                             "No user backups found on the sending console."_i18n,
                             "OK"_i18n
@@ -1261,7 +1457,7 @@ private:
                         return;
                     }
 
-                    App::Push<RemoteUserPacksMenu>(*responding_url, std::move(*candidates), on_restore);
+                    App::Push<RemoteUserPacksMenu>(*responding_url, std::move(*remote_packs), on_restore);
                 }
             );
         });
@@ -2505,9 +2701,6 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                         }
                     }
                     report->profiles_restored++;
-                    if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
-                        report->links_restored++;
-                    }
                 }
 
                 if (!have_dest) {
@@ -2519,15 +2712,16 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     }
                     have_dest = true;
                     report->profiles_restored++;
-                    if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
-                        links_to_apply.push_back({dest_uid, std::move(pkg)});
-                    } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
-                        report->unlinked_restored++;
-                    } else {
-                        log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
-                        report->link_malformed_count++;
-                        report->unlinked_restored++;
-                    }
+                }
+
+                if (have_dest && R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
+                    links_to_apply.push_back({dest_uid, std::move(pkg)});
+                } else if (have_dest && !sd.DirExists((p.dir + "/baas").c_str())) {
+                    report->unlinked_restored++;
+                } else if (have_dest) {
+                    log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
+                    report->link_malformed_count++;
+                    report->unlinked_restored++;
                 }
 
                 std::vector<PdmPlayEvent> play_events;

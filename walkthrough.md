@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.716** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.717** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.717 — Other-console restore: one Nintendo Account per baas
+
+- Лог `17:27:10` v0.13.716: Create `nin10do` (новий UID `a9f4ed6b-…`) поряд із живим `3433be8d-…` (`ListUsers none=1`). ApplyLink вписав baas пака (`nas bdf0f34e64c7dfb8`) і впав: fatal `ns` 2011-0301 (001F), далі bootloop `account` 2168-0006. Дублікат — той самий Nintendo Account у двох baas, не UID джерела `31164ac7-…`.
+- IPC не бачить NA, якщо профіль «unlinked», а файли baas лишились. Тепер збіг і по baas; якщо NA вже є — Replace. Перед записом усі baas з цим nas_id стираються, лишається один файл. ns зупиняється разом з ACCOUNT.
+- Undo тепер спочатку чистить baas/nas у 0010, інакше знімок без цих тек не знімає цеглу. На SD покладено `/startup.te` для відкату цієї цегли. Версія `0.13.717`. Збірку агент не запускав.
 
 ## v0.13.716 — Receive User Backup from another console
 

@@ -43,6 +43,7 @@ auto UidHex(const AccountUid& uid) -> std::string;
 auto ListUsers() -> std::vector<User>;
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
+auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
 auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) -> Result;
 auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_count) -> Result;

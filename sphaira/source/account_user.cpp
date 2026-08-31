@@ -52,6 +52,8 @@ auto SanitizeName(std::string name) -> std::string {
     return out;
 }
 
+} // namespace
+
 auto FormatPackCreated(const std::string& folder_name, const std::string& json_created) -> std::string {
     std::string stamp = json_created;
     if (stamp.size() < 15 && folder_name.size() >= 15) {
@@ -64,20 +66,6 @@ auto FormatPackCreated(const std::string& folder_name, const std::string& json_c
     char buf[40]{};
     std::snprintf(buf, sizeof(buf), "%02d.%02d.%04d, %02d:%02d", d, mo, y, h, mi);
     return buf;
-}
-
-auto JsonEscape(const std::string& s) -> std::string {
-    std::string out;
-    out.reserve(s.size());
-    for (char c : s) {
-        if (c == '"' || c == '\\') {
-            out += '\\';
-        }
-        if (c != '\n' && c != '\r') {
-            out += c;
-        }
-    }
-    return out;
 }
 
 auto ReadJsonField(const std::string& json, const char* key) -> std::string {
@@ -93,6 +81,22 @@ auto ReadJsonField(const std::string& json, const char* key) -> std::string {
             i++;
         }
         out += json[i++];
+    }
+    return out;
+}
+
+namespace {
+
+auto JsonEscape(const std::string& s) -> std::string {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) {
+        if (c == '"' || c == '\\') {
+            out += '\\';
+        }
+        if (c != '\n' && c != '\r') {
+            out += c;
+        }
     }
     return out;
 }

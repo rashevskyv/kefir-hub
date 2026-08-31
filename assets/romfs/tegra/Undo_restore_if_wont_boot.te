@@ -112,6 +112,25 @@ if (!fsexists(bis)) {
 
 println("Writing old profiles back")
 saveObj = readsave(bis)
+wipeSaveFolder = {
+    listing = saveObj.readdir(saveRel)
+    if (!listing.result) {
+        files = listing.files.copy()
+        files.foreach("fname") {
+            fpath = saveRel + "/" + fname
+            println("delete", fpath)
+            saveObj.delete(fpath)
+        }
+    }
+}
+saveRel = "/su/baas"
+wipeSaveFolder()
+saveRel = "/su/nas"
+wipeSaveFolder()
+saveRel = "/baas"
+wipeSaveFolder()
+saveRel = "/nas"
+wipeSaveFolder()
 rel = ""
 wrote = 0
 errors = 0
