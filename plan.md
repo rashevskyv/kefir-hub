@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.719** (Restore Backup: no Create when NA unproven; keep ns/friends). Завершені плани збережено в
+Поточний delivery — **v0.13.720** (Restore Backup = one user + official NA; no playtime; proven Replace only). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.719 — Restore Backup: Replace when NA unproven; do not kill ns/friends
+## Поточний delivery: v0.13.720 — Restore Backup: one user + NA; no playtime; proven Replace only
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Restore Backup знову лише один юзер: nickname, avatar, official Nintendo Account (baas/nas). Не чіпає playtime / 00F0 / `playtime_restore.te` (окремий майбутній «clone all + hours»).
+2. Revert евристики v0.13.719: Replace лише коли pack nas **доказаний** (IPC nas == pack nas, або baas file nas == pack nas). Якщо Query fail і 0010 closed → Create дозволений. Якщо 0010 відкритий і baas має інший nas → Create; той самий nas → Replace. Nickname не є критерієм збігу.
+3. Після ApplyLink — негайний reboot (BCAT/ACCOUNT/OLSC; ns/friends не чіпаємо). Без ApplyLink — success UI. Confirm/sidebar більше не обіцяють години. Version `0.13.720`.
+
+## Попередній delivery: v0.13.719 — Restore Backup: Replace when NA unproven; do not kill ns/friends
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

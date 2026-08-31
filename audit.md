@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.719**. Дата: 2026-08-31.
+Канонічний робочий файл. Версія коду: **v0.13.720**. Дата: 2026-08-31.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.720 поза ponytail-чергою: Restore Backup = nickname/avatar/official NA; без playtime/00F0; Replace лише при доказаному nas (IPC або baas); евристику unproven-Replace з 719 скасовано. Не закриває чергу §2.
 
 v0.13.719 поза ponytail-чергою: Restore Backup — Replace коли pack nas недоведений (0010 closed + Query fail) замість Create на новий uid; TerminateAccountDaemons більше не вбиває ns/friends. Не закриває чергу §2.
 

@@ -1,7 +1,6 @@
 #include "ui/menus/users_menu.hpp"
 
 #include "account_user.hpp"
-#include "account_playtime.hpp"
 #include "account_restore.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
@@ -86,11 +85,11 @@ auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid
     if (p.nas_id != 0) {
         AccountUid by_nas{};
         if (account_link::FindLiveUidByNasId(p.nas_id, by_nas)) {
-            log_write("[USER] Replace: pack nas %llx maps to live uid (matched or unproven-unique)\n",
+            log_write("[USER] Replace: pack nas %llx proven on live uid\n",
                 static_cast<unsigned long long>(p.nas_id));
             return by_nas;
         }
-        log_write("[USER] Create: pack nas %llx not on this console (or linked users have different proven nas)\n",
+        log_write("[USER] Create: pack nas %llx not proven on this console\n",
             static_cast<unsigned long long>(p.nas_id));
     }
     return std::nullopt;
@@ -2061,7 +2060,7 @@ void Menu::ShowContextMenu() {
     }
     options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
         ConfirmRestoreBackup();
-    }, true, "Restore backups as new users: name, avatar, Nintendo link and play hours. Other users' hours stay."_i18n);
+    }, true, "Restore backups: name, avatar and Nintendo Account link. Play hours are not restored by this action."_i18n);
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
@@ -2266,7 +2265,7 @@ void Menu::ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked) {
         App::Push<OptionBox>(
             "This user is already on this console"_i18n +
             (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
-            "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\n\n"
+            "Restore will replace that profile: name, avatar and Nintendo Account link. It will not add a second user.\n\n"
             "We still copy the current account save to SD first, in case something goes wrong."_i18n,
             "Cancel"_i18n, "Replace"_i18n, 1, std::move(go));
         return;
@@ -2648,10 +2647,7 @@ struct RestoreReport {
     u32 unlinked_restored{};
     u32 link_malformed_count{};
     u32 failed_creations{};
-    u32 play_hours_applied{};
-    u32 play_hours_missing{};
     bool link_apply_failed{};
-    bool play_hours_locked{};
 };
 
 } // namespace
@@ -2666,11 +2662,6 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
         [picked_packs = std::move(picked_packs), report](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_apply;
-            struct PlayJob {
-                AccountUid uid{};
-                std::vector<PdmPlayEvent> events;
-            };
-            std::vector<PlayJob> play_jobs;
 
             for (size_t i = 0; i < picked_packs.size(); i++) {
                 const auto& p = picked_packs[i];
@@ -2728,29 +2719,7 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     report->link_malformed_count++;
                     report->unlinked_restored++;
                 }
-
-                std::vector<PdmPlayEvent> play_events;
-                if (R_SUCCEEDED(account_playtime::LoadPackPlayEvents(p.dir, play_events)) && !play_events.empty()) {
-                    play_jobs.push_back({dest_uid, std::move(play_events)});
-                } else {
-                    report->play_hours_missing++;
-                }
-            }
-
-            if (!play_jobs.empty()) {
-                pbox->NewTransfer("Preparing play hours"_i18n);
-                std::vector<account_playtime::PlaySlice> slices;
-                slices.reserve(play_jobs.size());
-                for (auto& job : play_jobs) {
-                    slices.push_back({job.uid, std::move(job.events)});
-                }
-                const auto play_rc = account_playtime::PreparePlayHours(slices);
-                if (R_SUCCEEDED(play_rc)) {
-                    report->play_hours_applied = static_cast<u32>(slices.size());
-                } else {
-                    log_write("[USER] play hours prepare 0x%X\n", play_rc);
-                    report->play_hours_locked = true;
-                }
+                // Pack may still contain pdm/playtime; Restore Backup ignores it.
             }
 
             if (!links_to_apply.empty()) {
@@ -2777,16 +2746,24 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
             if (pending.present) {
                 account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
             }
-            // After ApplyLink (ACCOUNT terminated), do not keep Hub UI on am/ns —
-            // reboot immediately (playtime TE path also reboots via LaunchTegraRomfs).
+            // After ApplyLink (ACCOUNT terminated), reboot immediately — do not keep Hub UI.
             if (terminated) {
                 log_write("[USER] ApplyLink done; rebooting immediately\n");
-            }
-            if (report->play_hours_applied &&
-                account_restore::LaunchTegraRomfs("playtime_restore.te")) {
+                utils::requestForcedReboot();
                 return;
             }
-            utils::requestForcedReboot();
+
+            std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
+            if (report->links_restored > 0) {
+                msg += " " + std::to_string(report->links_restored) + " with Nintendo Account link."_i18n;
+            }
+            if (report->unlinked_restored > 0) {
+                msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
+            }
+            if (report->link_apply_failed || report->link_malformed_count) {
+                msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
+            }
+            App::Push<OptionBox>(msg, "OK"_i18n);
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 

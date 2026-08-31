@@ -900,8 +900,6 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
     }
 
     const auto live = App::GetAccountList();
-    AccountUid unproven_linked{};
-    bool have_unproven_linked = false;
 
     for (const auto& base : live) {
         u64 ipc_nas = 0;
@@ -910,6 +908,7 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
             UidDashedRfc(base.uid).c_str(), qrc,
             static_cast<unsigned long long>(ipc_nas));
 
+        // Replace only when pack nas is proven equal (IPC nas == pack nas).
         if (R_SUCCEEDED(qrc) && ipc_nas != 0 && ipc_nas == nas_id) {
             out_uid = base.uid;
             log_write("[ACC] nas %llx is IPC-linked to %s\n",
@@ -926,11 +925,8 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
                     static_cast<unsigned long long>(ipc_nas),
                     static_cast<unsigned long long>(nas_id));
             } else if (R_FAILED(qrc) || ipc_nas == 0) {
-                if (!have_unproven_linked) {
-                    unproven_linked = base.uid;
-                    have_unproven_linked = true;
-                }
-                log_write("[ACC] linked uid %s nas unproven (Query rc=0x%X)\n",
+                // Unproven Query is not Replace: need baas proof or Create.
+                log_write("[ACC] linked uid %s nas unproven (Query rc=0x%X); Create allowed until baas proves match\n",
                     UidDashedRfc(base.uid).c_str(), qrc);
             }
         }
@@ -938,16 +934,9 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
 
     auto save = TryOpenAccountSave();
     if (R_FAILED(save.GetFsOpenResult())) {
-        log_write("[ACC] FindLiveUidByNasId: account save closed 0x%X\n", save.GetFsOpenResult());
-        if (have_unproven_linked) {
-            // 0010 closed and QueryNintendoAccountId failed: cannot prove pack nas
-            // is unique vs the existing horizon-linked profile → Replace, not Create.
-            out_uid = unproven_linked;
-            log_write("[ACC] nas %llx uniqueness unproven; Replace linked %s\n",
-                static_cast<unsigned long long>(nas_id),
-                UidDashedRfc(unproven_linked).c_str());
-            return true;
-        }
+        // Query failed and 0010 closed → cannot prove equality; Create allowed.
+        log_write("[ACC] FindLiveUidByNasId: account save closed 0x%X (Create allowed)\n",
+            save.GetFsOpenResult());
         return false;
     }
     std::string baas_dir;
@@ -1002,11 +991,9 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
             static_cast<unsigned long long>(nas_id), bf.c_str());
     }
 
-    // Save open and no baas carries this nas → proven unique even if Query failed.
-    if (have_unproven_linked) {
-        log_write("[ACC] nas %llx not in baas; Create allowed despite unproven Query on linked uid\n",
-            static_cast<unsigned long long>(nas_id));
-    }
+    // Save open and no baas carries this nas → Create allowed.
+    log_write("[ACC] nas %llx not in baas; Create allowed\n",
+        static_cast<unsigned long long>(nas_id));
     return false;
 }
 

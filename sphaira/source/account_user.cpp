@@ -301,11 +301,11 @@ auto WriteUserReadme(fs::FsNativeSd& sd, const std::string& dir, const std::stri
         "- avatar.jpg: User profile avatar icon.\n"
         "- baas/, nas/: Nintendo Account link tokens and credentials (if linked and complete).\n"
         "- playtime.tsv: Readable play statistics for installed titles (inspection).\n"
-        "- pdm/PlayEvent.dat: This user's play-hour events, restored into 00F0.\n\n"
+        "- pdm/PlayEvent.dat: This user's play-hour events (exported; not applied by Restore Backup).\n\n"
         "Notes:\n"
-        "1. Restore Backup creates a new profile and restores avatar, Nintendo link if complete, and play hours.\n"
-        "2. Horizon generates a new UID; play events are remapped to that UID and appended. Other users' hours are not replaced.\n"
-        "3. playtime.tsv is inspection-only. System hours come from pdm/PlayEvent.dat.\n"
+        "1. Restore Backup restores nickname, avatar, and Nintendo Account link if complete.\n"
+        "2. Play hours (00F0) are not restored by Restore Backup. Use Backup/Restore profiles & play hours for a full console move.\n"
+        "3. playtime.tsv is inspection-only.\n"
         "4. Game saves are not included. Back those up separately through Backup saves.\n"
         "5. To replace every profile and the whole play log (same UIDs), use Backup profiles & play hours.\n";
 

@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.719** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.720** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.720 — Restore Backup: one user + NA; no playtime; proven Replace only
+
+- Dest H `0010`: stub nas `1aaa105e469e2cfc` ≠ pack official `bdf0f34e64c7dfb8` — Create+ApplyLink правильний шлях; Replace «бо nas недоведений» з 719 скасовано.
+- `FindLiveUidByNasId`: Replace лише при IPC nas == pack nas або baas file nas == pack nas. Query fail + 0010 closed → Create. Відкритий 0010 з іншим baas nas → Create; з тим самим → Replace. Нікнейм не матчить.
+- `StartRestoreBackup` більше не викликає `PreparePlayHours` / `playtime_restore.te` (файл у romfs лишається для інших flow). Після ApplyLink — негайний reboot; без terminate — success UI. Sidebar/Replace Confirm en/uk/ru без обіцянки годин. Версія `0.13.720`. Збірку агент не запускав.
 
 ## v0.13.719 — Restore Backup: Replace when NA unproven; keep ns/friends
 

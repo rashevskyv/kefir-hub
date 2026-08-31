@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.719** (Restore Backup: Replace when NA unproven; keep ns/friends). Завершені задачі збережено в
+Актуальний delivery — **v0.13.720** (Restore Backup: one user + NA; no playtime; proven Replace only). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.719 (Replace when NA unproven; keep ns/friends)
+## Поточний delivery: v0.13.720 (one user + NA; no playtime; proven Replace only)
+
+- [x] `USERS-RESTORE-PROVEN-NAS-720` — Replace лише при доказаному pack nas (IPC або baas); Query fail + 0010 closed → Create; різний baas nas → Create.
+- [x] `USERS-RESTORE-NO-PLAYTIME-720` — `StartRestoreBackup` не готує години і не запускає `playtime_restore.te`; pdm у паку ігнорується.
+- [x] `USERS-RESTORE-UI-720` — після ApplyLink негайний reboot; інакше success UI; Confirm/sidebar en/uk/ru без обіцянки годин.
+- [x] `DOCS-BUMP-720` — plan/task/walkthrough/audit; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.719 (Replace when NA unproven; keep ns/friends)
 
 - [x] `USERS-RESTORE-UNPROVEN-NAS-719` — якщо 0010 закритий і QueryNintendoAccountId не доводить інший nas за horizon-linked профілем — Replace той uid, не Create+ApplyLink на новий.
 - [x] `USERS-RESTORE-KEEP-NS-719` — `TerminateAccountDaemons` лишає ns/friends; після ApplyLink негайний reboot (не UI на зламаному am).
