@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.713** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.714** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.714 — Restore Backup sources and console probe
+
+- `Users → Restore Backup` тепер починається з окремого повноекранного меню, а не зі списку лише `/config/kefir/user_packs`. `Local backup library` лишає старий потік без змін.
+- `Browse folder…` використовує наявний File Browser і приймає теку, яка є одним user pack, або містить теки паків. Зовнішні паки відновлюються наявною логікою, але не мають небезпечної дії Delete.
+- `Other console…` просить IP або HTTP URL, перевіряє реальну HTTP-відповідь; для IP без порту перебирає `8080–8090`. Перевірку можна скасувати. Вона ще не приймає, не завантажує і не відновлює віддалені паки — це наступний delivery. Версія `0.13.714`; пройдено `git diff --check` та JSON-парсинг, збірку агент не запускав.
 
 ## v0.13.713 — Console Transfer Share sources over HTTP
 

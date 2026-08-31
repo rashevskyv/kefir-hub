@@ -2123,6 +2123,19 @@
   "Share Screenshots & Videos": "Общий доступ к скриншотам и видео",
   "Share album screenshots and captured gameplay videos.": "Общий доступ к снимкам экрана и сохранённым видеозаписям игры.",
   "Share switch Folder": "Общий доступ к папке switch",
-  "Share homebrew applications and tools from the selected source.": "Общий доступ к homebrew-приложениям и утилитам из выбранного источника.",
-  "Select a custom folder on the microSD card to share.": "Выбрать произвольную папку на карте microSD для общего доступа."
+  "Select a custom folder on the microSD card to share.": "Выбрать произвольную папку на карте microSD для общего доступа.",
+  "Restore User Backup": "Восстановление бекапа пользователя",
+  "Local backup library": "Локальная библиотека бекапов",
+  "Restore user backups from the default library (/config/kefir/user_packs).": "Восстановить бекапы пользователей из стандартной библиотеки (/config/kefir/user_packs).",
+  "Browse folder...": "Обзор папки...",
+  "Select a folder or user backup package on the microSD card.": "Выберите папку или пакет бекапа пользователя на карте microSD.",
+  "Select user backup folder": "Выберите папку с бекапами пользователей",
+  "Restore user backups from this folder?": "Восстановить бекапы пользователей из этой папки?",
+  "No user backups found in the selected folder.": "В выбранной папке не найдено бекапов пользователей.",
+  "Other console...": "Другая консоль...",
+  "Check connection to another console running Share User Backups.": "Проверить подключение к другой консоли с включенным общим доступом к бекапам.",
+  "IP address or HTTP URL": "IP-адрес или HTTP URL",
+  "HTTP server responded at ": "HTTP-сервер ответил по адресу ",
+  "Make sure the sending console has Share User Backups active.": "Убедитесь, что на консоли-отправителе включен «Общий доступ к бекапам пользователей».",
+  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не удалось подключиться к удаленной консоли.\n\nУбедитесь, что обе консоли подключены к одной локальной сети и на исходной консоли включен общий доступ к бекапам пользователей."
 }

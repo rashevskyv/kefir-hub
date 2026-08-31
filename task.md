@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.713** (Console Transfer розшарює обрані HTTP-джерела). Завершені задачі збережено в
+Актуальний delivery — **v0.13.714** (Restore Backup обирає джерело та перевіряє іншу консоль). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.713 (Console Transfer Share sources over HTTP)
+## Поточний delivery: v0.13.714 (Restore Backup sources and console probe)
+
+- [x] `USERS-RESTORE-SOURCES-714` — `Restore Backup` відкриває повноекранний список: локальна бібліотека, вибір теки та інша консоль.
+- [x] `USERS-RESTORE-FOLDER-714` — folder picker знаходить один пак або паки в дочірніх теках; у зовнішньому джерелі немає Delete, а чинна логіка restore не змінюється.
+- [x] `CONSOLE-TRANSFER-PROBE-714` — IP/HTTP URL проходить cancellable HTTP-probe; для голого IP перевіряються 8080–8090, результат не видає перевірку за передачу чи рестор.
+- [x] `DOCS-BUMP-714` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.713 (Console Transfer Share sources over HTTP)
 
 - [x] `CONSOLE-TRANSFER-MENU-713` — окреме повноекранне меню із шістьма Share-діями; sidebar та непроєктовані Connect/Phone/Games/Hours прибрано.
 - [x] `CONSOLE-TRANSFER-SOURCES-713` — HTTP share використовує resolver-и сейвів (стандартні, DBI, додаткові), user packs, emuMMC album, homebrew-шляхи й folder picker; відсутнє джерело не скидає чинні mount-и.

@@ -30,6 +30,7 @@ auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result;
 auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing = false) -> Result;
 auto FindUserPack(const std::string& dir) -> Pack;
 auto ListUserPacks() -> std::vector<Pack>;
+auto ListUserPacks(const std::string& root) -> std::vector<Pack>;
 auto DeleteUserPack(const std::string& dir) -> Result;
 auto GetUserPacksRoot() -> std::string;
 

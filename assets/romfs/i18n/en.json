@@ -2139,6 +2139,19 @@
   "Share Screenshots & Videos": "Share Screenshots & Videos",
   "Share album screenshots and captured gameplay videos.": "Share album screenshots and captured gameplay videos.",
   "Share switch Folder": "Share switch Folder",
-  "Share homebrew applications and tools from the selected source.": "Share homebrew applications and tools from the selected source.",
-  "Select a custom folder on the microSD card to share.": "Select a custom folder on the microSD card to share."
+  "Select a custom folder on the microSD card to share.": "Select a custom folder on the microSD card to share.",
+  "Restore User Backup": "Restore User Backup",
+  "Local backup library": "Local backup library",
+  "Restore user backups from the default library (/config/kefir/user_packs).": "Restore user backups from the default library (/config/kefir/user_packs).",
+  "Browse folder...": "Browse folder...",
+  "Select a folder or user backup package on the microSD card.": "Select a folder or user backup package on the microSD card.",
+  "Select user backup folder": "Select user backup folder",
+  "Restore user backups from this folder?": "Restore user backups from this folder?",
+  "No user backups found in the selected folder.": "No user backups found in the selected folder.",
+  "Other console...": "Other console...",
+  "Check connection to another console running Share User Backups.": "Check connection to another console running Share User Backups.",
+  "IP address or HTTP URL": "IP address or HTTP URL",
+  "HTTP server responded at ": "HTTP server responded at ",
+  "Make sure the sending console has Share User Backups active.": "Make sure the sending console has Share User Backups active.",
+  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active."
 }

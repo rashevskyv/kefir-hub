@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.713** (Console Transfer розшарює обрані HTTP-джерела). Завершені плани збережено в
+Поточний delivery — **v0.13.714** (Restore Backup обирає локальне або перевіряє іншу консоль). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.713 — Console Transfer Share sources over HTTP
+## Поточний delivery: v0.13.714 — Restore Backup sources and console probe
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `Restore Backup` відкриває повноекранний список джерел: стандартна локальна бібліотека, вибір теки через File Browser або інша консоль.
+2. Вибрана тека може бути одним user pack або містити кілька паків; для такого зовнішнього джерела видалення вимкнено. Сам restore, його перевірки та rollback лишаються наявним шляхом.
+3. Інша консоль приймає IP або HTTP URL, шукає HTTP-відповідь на портах 8080–8090 для голого IP і показує чесний результат. Це ще не передає і не відновлює віддалені дані; перевірку можна скасувати.
+4. Version `0.13.714`.
+
+## Попередній delivery: v0.13.713 — Console Transfer Share sources over HTTP
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

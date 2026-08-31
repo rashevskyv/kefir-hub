@@ -435,6 +435,9 @@ auto FindUserPack(const std::string& dir) -> Pack {
     Pack p;
     fs::FsNativeSd sd;
     auto root = dir;
+    while (root.size() > 1 && (root.back() == '/' || root.back() == '\\')) {
+        root.pop_back();
+    }
     if (sd.FileExists((root + "/profile.json").c_str())) {
         p.dir = root;
     } else if (sd.FileExists((root + "/avatar.jpg").c_str()) &&
@@ -479,15 +482,26 @@ auto FindUserPack(const std::string& dir) -> Pack {
     return p;
 }
 
-auto ListUserPacks() -> std::vector<Pack> {
+auto ListUserPacks(const std::string& root) -> std::vector<Pack> {
     std::vector<Pack> packs;
+    if (root.empty()) {
+        return packs;
+    }
+    auto base = root;
+    while (base.size() > 1 && (base.back() == '/' || base.back() == '\\')) {
+        base.pop_back();
+    }
+    const auto single = FindUserPack(base);
+    if (!single.dir.empty()) {
+        packs.push_back(single);
+        return packs;
+    }
     fs::FsNativeSd sd;
-    const auto root = paths::DATA_ROOT + "/user_packs";
-    if (!sd.DirExists(root.c_str())) {
+    if (!sd.DirExists(base.c_str())) {
         return packs;
     }
     fs::Dir d;
-    if (R_FAILED(sd.OpenDirectory(root.c_str(), FsDirOpenMode_ReadDirs, &d))) {
+    if (R_FAILED(sd.OpenDirectory(base.c_str(), FsDirOpenMode_ReadDirs, &d))) {
         return packs;
     }
     std::vector<FsDirectoryEntry> entries;
@@ -498,7 +512,7 @@ auto ListUserPacks() -> std::vector<Pack> {
         if (e.type != FsDirEntryType_Dir) {
             continue;
         }
-        const auto pack_path = root + "/" + e.name;
+        const auto pack_path = base + "/" + e.name;
         const auto pack = FindUserPack(pack_path);
         if (!pack.dir.empty()) {
             packs.push_back(pack);
@@ -508,6 +522,10 @@ auto ListUserPacks() -> std::vector<Pack> {
         return a.folder_name > b.folder_name;
     });
     return packs;
+}
+
+auto ListUserPacks() -> std::vector<Pack> {
+    return ListUserPacks(GetUserPacksRoot());
 }
 
 auto DeleteUserPack(const std::string& dir) -> Result {

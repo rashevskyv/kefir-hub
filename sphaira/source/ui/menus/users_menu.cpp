@@ -14,8 +14,11 @@
 #include "path_util.hpp"
 #include "swkbd.hpp"
 #include "ui/menus/file_picker.hpp"
+#include "ui/menus/filebrowser.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "download.hpp"
+#include "net.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/hold_confirm_box.hpp"
 #include "ui/image_crop.hpp"
@@ -210,7 +213,7 @@ struct RestoreBackupMenu final : MenuBase {
         bool avatar_tried{};
     };
 
-    RestoreBackupMenu(std::vector<account_user::Pack> packs, Callback cb)
+    RestoreBackupMenu(std::vector<account_user::Pack> packs, Callback cb, bool allow_delete = true)
         : MenuBase{"Restore Backup"_i18n, MenuFlag_None}
         , m_cb{std::move(cb)}
     {
@@ -269,8 +272,13 @@ struct RestoreBackupMenu final : MenuBase {
                 ConfirmDeletePacks();
             }})
         );
+        if (!allow_delete) {
+            this->RemoveAction(Button::SELECT);
+            SetTitleSubHeading("X marks backups to restore. A restores the selected profiles."_i18n, true);
+        } else {
+            SetTitleSubHeading("X marks backups. Minus deletes. A restores."_i18n, true);
+        }
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
-        SetTitleSubHeading("X marks backups. Minus deletes. A restores."_i18n, true);
         UpdateSubHeading();
     }
 
@@ -447,6 +455,235 @@ private:
     s64 m_index{};
     s64 m_selected_count{};
     std::unique_ptr<List> m_list;
+};
+
+struct RestoreSourceItem {
+    std::string label;
+    std::string description;
+    std::function<void()> action;
+};
+
+struct RestoreSourceMenu final : MenuBase {
+    using Callback = std::function<void(std::vector<account_user::Pack>)>;
+
+    RestoreSourceMenu(Callback on_restore)
+        : MenuBase{"Restore User Backup"_i18n, MenuFlag_None}
+        , m_on_restore{std::move(on_restore)}
+    {
+        m_items = {
+            {
+                "Local backup library"_i18n,
+                "Restore user backups from the default library (/config/kefir/user_packs)."_i18n,
+                [this]() { OpenLocalLibrary(); }
+            },
+            {
+                "Browse folder..."_i18n,
+                "Select a folder or user backup package on the microSD card."_i18n,
+                [this]() { OpenBrowseFolder(); }
+            },
+            {
+                "Other console..."_i18n,
+                "Check connection to another console running Share User Backups."_i18n,
+                [this]() { ProbeOtherConsole(); }
+            },
+        };
+
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+        );
+
+        m_list = std::make_unique<List>(1, 6, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+        m_list->SetLayout(List::Layout::GRID);
+        m_list->SetPageJump(false);
+        SetIndex(0);
+    }
+
+    ~RestoreSourceMenu() = default;
+
+    auto GetShortTitle() const -> const char* override { return "Restore"; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        }, this);
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+
+        m_list->Draw(vg, theme, m_items.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
+            const auto& item = m_items[i];
+            const auto is_selected = m_index == static_cast<s64>(i);
+            const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+            if (is_selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            } else {
+                DrawElement(v, ThemeEntryID_GRID);
+            }
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
+                theme->GetColour(text_id), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        });
+    }
+
+    void OnFocusGained() override {
+        MenuBase::OnFocusGained();
+        SetIndex(m_index);
+        if (m_pending_browse_folder) {
+            const auto folder = *m_pending_browse_folder;
+            m_pending_browse_folder.reset();
+            const auto packs = account_user::ListUserPacks(folder.toString());
+            if (packs.empty()) {
+                App::Push<OptionBox>("No user backups found in the selected folder."_i18n, "OK"_i18n);
+            } else {
+                OpenPacksRestore(packs, false);
+            }
+        }
+    }
+
+private:
+    void SetIndex(s64 index) {
+        if (m_items.empty()) {
+            m_index = 0;
+            return;
+        }
+        m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+        if (!m_index) {
+            m_list->SetYoff(0);
+        }
+        SetTitleSubHeading(m_items[m_index].description, true);
+        SetSubHeading("");
+    }
+
+    void OnSelect() {
+        if (!m_items.empty() && m_items[m_index].action) {
+            m_items[m_index].action();
+        }
+    }
+
+    void OpenLocalLibrary() {
+        const auto packs = account_user::ListUserPacks();
+        if (packs.empty()) {
+            App::Push<OptionBox>("No user backups found under /config/kefir/user_packs."_i18n, "OK"_i18n);
+            return;
+        }
+        OpenPacksRestore(packs, true);
+    }
+
+    void OpenBrowseFolder() {
+        auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
+        browser->SetFolderPicker([this](const fs::FsPath& folder) {
+            m_pending_browse_folder = folder;
+        }, "Select user backup folder"_i18n, "Restore user backups from this folder?"_i18n);
+        App::Push(std::move(browser));
+    }
+
+    void OpenPacksRestore(std::vector<account_user::Pack> packs, bool allow_delete) {
+        App::Push<RestoreBackupMenu>(std::move(packs), [this](auto picked) {
+            if (!picked || picked->empty()) {
+                return;
+            }
+            if (m_on_restore) {
+                m_on_restore(std::move(*picked));
+            }
+        }, allow_delete);
+    }
+
+    void ProbeOtherConsole() {
+        net::RequireConnection([](){
+            std::string input;
+            if (R_FAILED(swkbd::ShowText(input, "IP address or HTTP URL"_i18n.c_str())) || input.empty()) {
+                return;
+            }
+            while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
+                input.erase(input.begin());
+            }
+            while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
+                input.pop_back();
+            }
+            if (input.empty()) {
+                return;
+            }
+
+            auto responding_url = std::make_shared<std::string>();
+            auto probed_ok = std::make_shared<bool>(false);
+
+            App::Push<ProgressBox>(
+                0,
+                "Testing Connection..."_i18n,
+                input,
+                [input, responding_url, probed_ok](auto pbox) -> Result {
+                    std::string base_input = input;
+                    while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
+                        base_input.pop_back();
+                    }
+
+                    std::vector<std::string> candidate_urls;
+                    if (base_input.rfind("http://", 0) == 0 || base_input.rfind("https://", 0) == 0) {
+                        candidate_urls.push_back(base_input);
+                    } else if (base_input.find(':') != std::string::npos) {
+                        candidate_urls.push_back("http://" + base_input);
+                    } else {
+                        for (u16 port = 8080; port <= 8090; ++port) {
+                            candidate_urls.push_back("http://" + base_input + ":" + std::to_string(port));
+                        }
+                    }
+
+                    for (const auto& url : candidate_urls) {
+                        if (pbox->ShouldExit()) {
+                            return pbox->ShouldExitResult();
+                        }
+                        pbox->SetTransfer(url);
+                        curl::Api api;
+                        api.SetOption(curl::Url{url});
+                        api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                            return !pbox->ShouldExit();
+                        }});
+                        const auto res = curl::Probe(api, curl::ProbeType::Http);
+                        if (res.success) {
+                            *responding_url = url;
+                            *probed_ok = true;
+                            R_SUCCEED();
+                        }
+                        if (pbox->ShouldExit()) {
+                            return pbox->ShouldExitResult();
+                        }
+                    }
+                    return Result_FsEmpty;
+                },
+                [responding_url, probed_ok](Result rc) {
+                    if (*probed_ok && !responding_url->empty()) {
+                        App::Push<OptionBox>(
+                            "HTTP server responded at "_i18n + *responding_url + ".\n\n" +
+                            "Make sure the sending console has Share User Backups active."_i18n,
+                            "OK"_i18n
+                        );
+                    } else if (rc != Result_TransferCancelled) {
+                        App::Push<OptionBox>(
+                            "Could not connect to the remote console.\n\n"
+                            "Confirm that both consoles are connected to the same local network and that the source console has Share User Backups active."_i18n,
+                            "OK"_i18n
+                        );
+                    }
+                }
+            );
+        });
+    }
+
+private:
+    Callback m_on_restore;
+    std::vector<RestoreSourceItem> m_items;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+    std::optional<fs::FsPath> m_pending_browse_folder;
 };
 
 struct AvatarPickMenu final : MenuBase {
@@ -1188,84 +1425,83 @@ void Menu::ConfirmNandRestore() {
 }
 
 void Menu::ConfirmRestoreBackup() {
-    const auto packs = account_user::ListUserPacks();
-    if (packs.empty()) {
-        App::Push<OptionBox>("No user backups found under /config/kefir/user_packs."_i18n, "OK"_i18n);
+    App::Push<RestoreSourceMenu>([this](std::vector<account_user::Pack> picked) {
+        ConfirmPickedRestorePacks(std::move(picked));
+    });
+}
+
+void Menu::ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked) {
+    if (picked.empty()) {
         return;
     }
-    App::Push<RestoreBackupMenu>(packs, [this](auto picked) {
-        if (!picked || picked->empty()) {
-            return;
-        }
-        u32 new_slots = 0;
-        u32 replace_slots = 0;
-        std::string existing_name;
-        for (const auto& p : *picked) {
-            if (const auto live = FindLiveUidForPack(p)) {
-                replace_slots++;
+    u32 new_slots = 0;
+    u32 replace_slots = 0;
+    std::string existing_name;
+    for (const auto& p : picked) {
+        if (const auto live = FindLiveUidForPack(p)) {
+            replace_slots++;
+            if (existing_name.empty()) {
+                existing_name = LiveNameForUid(*live);
                 if (existing_name.empty()) {
-                    existing_name = LiveNameForUid(*live);
-                    if (existing_name.empty()) {
-                        existing_name = p.nickname;
-                    }
+                    existing_name = p.nickname;
                 }
-            } else {
-                new_slots++;
             }
+        } else {
+            new_slots++;
         }
-        const auto available_slots = ACC_USER_LIST_SIZE - m_items.size();
-        if (new_slots > available_slots) {
-            App::Push<OptionBox>(
-                "Cannot restore: selecting " + std::to_string(new_slots) +
-                " new profile(s) would exceed the maximum of 8 users (available: " +
-                std::to_string(available_slots) + ")."_i18n, "OK"_i18n);
-            return;
-        }
-        bool any_new_link = false;
-        for (const auto& p : *picked) {
-            if (p.link_valid && !FindLiveUidForPack(p)) {
-                any_new_link = true;
-                break;
-            }
-        }
-        std::string gate_reason;
-        if (any_new_link && account_link::IsLinkGated(gate_reason)) {
-            App::Push<OptionBox>(gate_reason, "OK"_i18n);
-            return;
-        }
-        auto picked_packs = std::move(*picked);
-        auto go = [this, picked_packs](auto op) mutable {
-            if (op && *op == 1) {
-                RunPrepareRestoreSnapshot(std::move(picked_packs));
-            }
-        };
-        if (replace_slots && !new_slots) {
-            App::Push<OptionBox>(
-                "This user is already on this console"_i18n +
-                (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
-                "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\n\n"
-                "We still copy the current account save to SD first, in case something goes wrong."_i18n,
-                "Cancel"_i18n, "Replace"_i18n, 1, std::move(go));
-            return;
-        }
-        if (replace_slots && new_slots) {
-            App::Push<OptionBox>(
-                std::to_string(replace_slots) + " " +
-                "backup(s) match accounts already on this console and will replace them. "_i18n +
-                std::to_string(new_slots) + " " +
-                "will be added as new profiles.\n\n"
-                "We copy the current account save to SD first, in case something goes wrong."_i18n,
-                "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
-            return;
-        }
+    }
+    const auto available_slots = ACC_USER_LIST_SIZE - m_items.size();
+    if (new_slots > available_slots) {
         App::Push<OptionBox>(
-            "Restore will add a profile and may change the account save (0010).\n\n"
-            "Before that, we copy the current 0010 to SD. That copy is the rollback if something goes wrong.\n\n"
-            "• If Hub can read 0010 now, the copy happens here.\n"
-            "• If not, TegraExplorer will dump it automatically after OK.\n\n"
-            "Then open Kefir Hub yourself to continue the restore."_i18n,
+            "Cannot restore: selecting " + std::to_string(new_slots) +
+            " new profile(s) would exceed the maximum of 8 users (available: " +
+            std::to_string(available_slots) + ")."_i18n, "OK"_i18n);
+        return;
+    }
+    bool any_new_link = false;
+    for (const auto& p : picked) {
+        if (p.link_valid && !FindLiveUidForPack(p)) {
+            any_new_link = true;
+            break;
+        }
+    }
+    std::string gate_reason;
+    if (any_new_link && account_link::IsLinkGated(gate_reason)) {
+        App::Push<OptionBox>(gate_reason, "OK"_i18n);
+        return;
+    }
+    auto picked_packs = std::move(picked);
+    auto go = [this, picked_packs](auto op) mutable {
+        if (op && *op == 1) {
+            RunPrepareRestoreSnapshot(std::move(picked_packs));
+        }
+    };
+    if (replace_slots && !new_slots) {
+        App::Push<OptionBox>(
+            "This user is already on this console"_i18n +
+            (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
+            "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\n\n"
+            "We still copy the current account save to SD first, in case something goes wrong."_i18n,
+            "Cancel"_i18n, "Replace"_i18n, 1, std::move(go));
+        return;
+    }
+    if (replace_slots && new_slots) {
+        App::Push<OptionBox>(
+            std::to_string(replace_slots) + " " +
+            "backup(s) match accounts already on this console and will replace them. "_i18n +
+            std::to_string(new_slots) + " " +
+            "will be added as new profiles.\n\n"
+            "We copy the current account save to SD first, in case something goes wrong."_i18n,
             "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
-    });
+        return;
+    }
+    App::Push<OptionBox>(
+        "Restore will add a profile and may change the account save (0010).\n\n"
+        "Before that, we copy the current 0010 to SD. That copy is the rollback if something goes wrong.\n\n"
+        "• If Hub can read 0010 now, the copy happens here.\n"
+        "• If not, TegraExplorer will dump it automatically after OK.\n\n"
+        "Then open Kefir Hub yourself to continue the restore."_i18n,
+        "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
 }
 
 void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
