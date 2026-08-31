@@ -142,7 +142,7 @@ auto TryOpenAccountSave() -> fs::FsNativeSave {
     FsSaveDataAttribute attr{};
     attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
-    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
+    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
 }
 
 auto OpenAccountSaveWritable() -> fs::FsNativeSave {
@@ -150,6 +150,25 @@ auto OpenAccountSaveWritable() -> fs::FsNativeSave {
     attr.system_save_data_id = ACCOUNT_SAVE_ID;
     attr.save_data_type = FsSaveDataType_System;
     return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, false);
+}
+
+void TerminateAccountDaemons() {
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        ON_SCOPE_EXIT(pmshellExit());
+        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
+        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
+        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+    }
+}
+
+auto OpenAccountSaveForExport() -> fs::FsNativeSave {
+    auto save = TryOpenAccountSave();
+    if (R_SUCCEEDED(save.GetFsOpenResult())) {
+        return save;
+    }
+    log_write("[ACC] account save read-only failed 0x%X, terminating daemons\n", save.GetFsOpenResult());
+    TerminateAccountDaemons();
+    return OpenAccountSaveWritable();
 }
 
 auto ListDirFiles(fs::Fs& f, const std::string& dir) -> std::vector<std::string> {
@@ -431,21 +450,30 @@ auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) 
 
     std::vector<std::string> baas_files;
     for (const auto& e : baas_entries) {
-        if (e.type == FsDirEntryType_File) {
+        if (e.type == FsDirEntryType_File && IsSafeDumpFileName(e.name)) {
             baas_files.push_back(e.name);
         }
     }
-    if (baas_files.size() != 1) {
-        return Result_FsInvalidType;
-    }
-
-    const auto& baas_fname = baas_files.front();
-    if (!IsSafeDumpFileName(baas_fname)) {
+    if (baas_files.empty()) {
         return Result_FsInvalidType;
     }
 
     std::vector<u8> baas_data;
-    R_TRY(sd.read_entire_file((baas_dir + "/" + baas_fname).c_str(), baas_data));
+    std::string baas_fname;
+    for (const auto& name : baas_files) {
+        std::vector<u8> candidate;
+        if (R_FAILED(sd.read_entire_file((baas_dir + "/" + name).c_str(), candidate)) || candidate.size() < 24) {
+            continue;
+        }
+        u64 cand_nas = 0;
+        std::memcpy(&cand_nas, candidate.data() + 16, sizeof(u64));
+        if (cand_nas == 0) {
+            continue;
+        }
+        baas_fname = name;
+        baas_data = std::move(candidate);
+        break;
+    }
     if (baas_data.size() < 24) {
         return Result_FsInvalidType;
     }
@@ -470,16 +498,12 @@ auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) 
             continue;
         }
         const std::string fname = e.name;
-        if (!IsSafeDumpFileName(fname)) {
-            return Result_FsInvalidType;
-        }
-        if (!NasFileMatches(fname, nas_id)) {
-            return Result_FsInvalidType;
+        if (!IsSafeDumpFileName(fname) || !NasFileMatches(fname, nas_id)) {
+            continue;
         }
         std::vector<u8> fdata;
-        R_TRY(sd.read_entire_file((nas_dir + "/" + fname).c_str(), fdata));
-        if (fdata.empty()) {
-            return Result_FsInvalidType;
+        if (R_FAILED(sd.read_entire_file((nas_dir + "/" + fname).c_str(), fdata)) || fdata.empty()) {
+            continue;
         }
         const auto lower = ToLowerCopy(fname);
         if (EndsWith(lower, "_id.token")) {
@@ -553,12 +577,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         }
     }
 
-    if (R_SUCCEEDED(pmshellInitialize())) {
-        ON_SCOPE_EXIT(pmshellExit());
-        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
-        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
-        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
-    }
+    TerminateAccountDaemons();
 
     auto save = OpenAccountSaveWritable();
     const auto save_rc = save.GetFsOpenResult();
@@ -711,12 +730,7 @@ auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked
     out_unlinked_count = 0;
     R_UNLESS(!uids.empty(), Result_FsEmpty);
 
-    if (R_SUCCEEDED(pmshellInitialize())) {
-        ON_SCOPE_EXIT(pmshellExit());
-        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
-        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
-        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
-    }
+    TerminateAccountDaemons();
 
     auto save = OpenAccountSaveWritable();
     const auto save_rc = save.GetFsOpenResult();
@@ -956,8 +970,9 @@ auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, st
     u64 nas_id = 0;
     QueryNintendoAccountId(uid, nas_id);
 
-    auto save = TryOpenAccountSave();
+    auto save = OpenAccountSaveForExport();
     if (R_FAILED(save.GetFsOpenResult())) {
+        log_write("[ACC] ExportUserLinkPackage save open failed 0x%X\n", save.GetFsOpenResult());
         out_link_status = (nas_id != 0) ? "unavailable" : "none";
         R_SUCCEED();
     }

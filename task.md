@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.693** (Restore Backup remaps baas UID; Icon link dots). Завершені задачі збережено в
+Актуальний delivery — **v0.13.694** (user pack link export, overwrite, dates, delete). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.693 (restore link remap + Icon dots)
+## Поточний delivery: v0.13.694 (linked export + backup manage)
+
+- [x] `USERS-EXPORT-SAVE-RO-694` — експорт лінку читає 0010 read-only; якщо зайнято — terminate ACCOUNT і повтор.
+- [x] `USERS-BACKUP-OVERWRITE-694` — якщо пак цього UID уже є, Overwrite / Keep both; overwrite замінює.
+- [x] `USERS-BACKUP-DATE-DEL-694` — Restore Backup показує дату; Minus видаляє пак з SD.
+- [x] `DOCS-BUMP-694` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.693 (restore link remap + Icon dots)
 
 - [x] `USERS-RESTORE-BAAS-UID-693` — ApplyLinkPackages записує UID нового профілю в baas[0..15] перед write.
 - [x] `USERS-EXPORT-BAAS-FALLBACK-693` — ExportUserLinkPackage знаходить baas за UID-іменем, якщо nas_id IPC не збігся.

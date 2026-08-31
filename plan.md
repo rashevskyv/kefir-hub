@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.693** (Restore Backup remaps baas UID; Icon link dots). Завершені плани збережено в
+Поточний delivery — **v0.13.694** (user pack link export, overwrite, dates, delete). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.693 — Restore Backup link + Icon status dots
+## Поточний delivery: v0.13.694 — Linked backup export + overwrite/delete/dates
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Restore без reboot = пак Local: `TryOpenAccountSave` відкривав 0010 RW і падав, поки ACCOUNT тримає сейв. Тепер read-only, а якщо зайнято — terminate BCAT/ACCOUNT/OLSC і повтор. LoadUserPackLinkPackage ігнорує зайві nas-файли.
+2. Якщо бекап цього UID уже є — запит Overwrite / Keep both / Cancel; overwrite стирає старі паки цього UID.
+3. Restore Backup: дата `ДД.ММ.РРРР, ГГ:ХХ` замість імені теки; Minus видаляє пак з SD.
+4. Версія `0.13.694`. Старий Local-пак треба перезібрати новим Backup user.
+
+## Попередній delivery: v0.13.693 — Restore Backup link + Icon status dots
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

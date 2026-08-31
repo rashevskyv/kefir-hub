@@ -117,7 +117,7 @@ Tools → Users → Опції бічної панелі:
 
 ### B. Новий UID (Restore Backup)
 
-Tools → Users → Options → **BACKUP & RESTORE USER**: **Backup user** (поточний профіль, або виділені галочками) і **Restore Backup**. Не в PROFILE і не в CONSOLE MOVE.
+Tools → Users → Options → **BACKUP & RESTORE USER**: **Backup user** (поточний профіль, або виділені галочками) і **Restore Backup**. Не в PROFILE і не в CONSOLE MOVE. Якщо пак цього UID уже є — Overwrite або Keep both. У списку рестору дата бекапу; Minus видаляє пак з SD. Для Nintendo link пак має бути Linked (експорт читає 0010; якщо зайнято — terminate ACCOUNT).
 
 Хаб створює **нового** юзера, відновлює ім'я, аватар та валідний пакет прив'язки Nintendo Account на новий UID (за наявності). У `baas` перед записом підставляється UID нового профілю (байти 0..15), інакше Horizon лишає Not linked. Стан генератора 0011 та системні години 00F0 зі старого UID не переносяться (00F0 зі старим UID дасть Unknown Players або нуль годин; години лишаються в експорті `playtime.tsv` лише для перегляду). Для повного переїзду консолі зі збереженням UID та годин використовуйте пункт **Backup profiles & play hours**.
 

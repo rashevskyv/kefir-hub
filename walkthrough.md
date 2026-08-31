@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.693** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.694** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.694 — Linked user backup export + overwrite/delete/dates
+
+- Restore без пропозиції reboot: пак був Local, бо експорт не відкрив `0010` (RW, поки ACCOUNT тримає сейв). Read-only open; якщо fail — terminate BCAT/ACCOUNT/OLSC і повтор. Зайві файли в `nas/` більше не валять увесь пак.
+- Backup user, якщо пак цього UID уже є: Cancel / Overwrite / Keep both. Overwrite стирає старі паки цього UID і пише один новий.
+- Restore Backup: рядок з датою `ДД.ММ.РРРР, ГГ:ХХ`; Minus видаляє пак з SD. Версія `0.13.694`. Збірку агент не запускав. Старий Local-пак треба перебекапити.
 
 ## v0.13.693 — Restore Backup remaps baas UID; Icon link dots
 

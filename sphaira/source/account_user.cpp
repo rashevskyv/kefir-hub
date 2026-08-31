@@ -51,6 +51,20 @@ auto SanitizeName(std::string name) -> std::string {
     return out;
 }
 
+auto FormatPackCreated(const std::string& folder_name, const std::string& json_created) -> std::string {
+    std::string stamp = json_created;
+    if (stamp.size() < 15 && folder_name.size() >= 15) {
+        stamp = folder_name.substr(0, 15);
+    }
+    int y = 0, mo = 0, d = 0, h = 0, mi = 0, s = 0;
+    if (std::sscanf(stamp.c_str(), "%4d%2d%2d_%2d%2d%2d", &y, &mo, &d, &h, &mi, &s) != 6) {
+        return {};
+    }
+    char buf[40]{};
+    std::snprintf(buf, sizeof(buf), "%02d.%02d.%04d, %02d:%02d", d, mo, y, h, mi);
+    return buf;
+}
+
 auto JsonEscape(const std::string& s) -> std::string {
     std::string out;
     out.reserve(s.size());
@@ -327,9 +341,9 @@ auto WriteUserPlaytimeTsv(fs::FsNativeSd& sd, const std::string& dir, const Acco
     R_SUCCEED();
 }
 
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result {
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
-    log_write("[USER] backup start count=%zu\n", uids.size());
+    log_write("[USER] backup start count=%zu overwrite=%d\n", uids.size(), overwrite_existing ? 1 : 0);
 
     struct Ready {
         AccountUid uid{};
@@ -364,6 +378,13 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
 
     for (const auto& r : ready) {
+        if (overwrite_existing) {
+            for (const auto& p : ListUserPacks()) {
+                if (!p.uid_hex.empty() && p.uid_hex == r.hex) {
+                    sd.DeleteDirectoryRecursively(p.dir.c_str());
+                }
+            }
+        }
         const auto dir = paths::DATA_ROOT + "/user_packs/" + stamp + "_" + SanitizeName(r.nickname) + "_" + r.hex;
         R_TRY(sd.CreateDirectoryRecursively(dir.c_str()));
 
@@ -376,6 +397,7 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
 
         const auto json = std::string{"{\"nickname\":\""} + JsonEscape(r.nickname) +
             "\",\"uid\":\"" + r.hex +
+            "\",\"created\":\"" + stamp +
             "\",\"link_status\":\"" + link_status + "\"}";
         R_TRY(sd.write_entire_file((dir + "/profile.json").c_str(),
             std::vector<u8>(json.begin(), json.end())));
@@ -425,6 +447,10 @@ auto FindUserPack(const std::string& dir) -> Pack {
         const std::string s(json.begin(), json.end());
         p.nickname = ReadJsonField(s, "nickname");
         p.uid_hex = ReadJsonField(s, "uid");
+        p.created_label = FormatPackCreated(p.folder_name, ReadJsonField(s, "created"));
+    }
+    if (p.created_label.empty()) {
+        p.created_label = FormatPackCreated(p.folder_name, {});
     }
     if (p.nickname.empty()) {
         p.nickname = "User";
@@ -469,6 +495,15 @@ auto ListUserPacks() -> std::vector<Pack> {
         return a.folder_name > b.folder_name;
     });
     return packs;
+}
+
+auto DeleteUserPack(const std::string& dir) -> Result {
+    const auto root = paths::DATA_ROOT + "/user_packs/";
+    R_UNLESS(!dir.empty() && dir.find(root) == 0, Result_FsInvalidType);
+    fs::FsNativeSd sd;
+    R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
+    log_write("[USER] deleted pack %s\n", dir.c_str());
+    R_SUCCEED();
 }
 
 } // namespace sphaira::account_user

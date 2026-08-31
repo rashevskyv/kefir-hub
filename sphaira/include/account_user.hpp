@@ -13,6 +13,7 @@ struct Pack {
     std::string folder_name;
     std::string nickname;
     std::string uid_hex;
+    std::string created_label;
     bool has_avatar{};
     bool link_valid{};
 };
@@ -24,8 +25,9 @@ auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<
 auto Delete(const AccountUid& uid) -> Result;
 
 auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result;
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs) -> Result;
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing = false) -> Result;
 auto FindUserPack(const std::string& dir) -> Pack;
 auto ListUserPacks() -> std::vector<Pack>;
+auto DeleteUserPack(const std::string& dir) -> Result;
 
 } // namespace sphaira::account_user

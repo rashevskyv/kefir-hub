@@ -214,10 +214,13 @@ struct RestoreBackupMenu final : MenuBase {
                     }
                 }
                 UpdateSubHeading();
+            }}),
+            std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){
+                ConfirmDeletePacks();
             }})
         );
-        m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 70.f});
-        SetTitleSubHeading("X marks backups to restore. A restores the selected profiles."_i18n, true);
+        m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
+        SetTitleSubHeading("X marks backups. Minus deletes. A restores."_i18n, true);
         UpdateSubHeading();
     }
 
@@ -333,7 +336,7 @@ struct RestoreBackupMenu final : MenuBase {
                 theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                 "%s", e.pack.nickname.c_str());
 
-            const auto detail_str = e.pack.folder_name;
+            const auto detail_str = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.folder_name;
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),
@@ -343,6 +346,51 @@ struct RestoreBackupMenu final : MenuBase {
     }
 
 private:
+    void ConfirmDeletePacks() {
+        if (m_entries.empty()) {
+            return;
+        }
+        std::vector<s64> idxs;
+        if (m_selected_count > 0) {
+            for (s64 i = 0; i < static_cast<s64>(m_entries.size()); i++) {
+                if (m_entries[i].selected) {
+                    idxs.push_back(i);
+                }
+            }
+        } else {
+            idxs.push_back(m_index);
+        }
+        const auto msg = (idxs.size() > 1)
+            ? "Delete the selected backups from the SD card?"_i18n
+            : "Delete this backup from the SD card?"_i18n;
+        App::Push<OptionBox>(msg, "Cancel"_i18n, "Delete"_i18n, 1, [this, idxs](auto op) {
+            if (!op || *op != 1) {
+                return;
+            }
+            for (auto it = idxs.rbegin(); it != idxs.rend(); ++it) {
+                const auto i = *it;
+                if (i < 0 || static_cast<size_t>(i) >= m_entries.size()) {
+                    continue;
+                }
+                if (R_FAILED(account_user::DeleteUserPack(m_entries[i].pack.dir))) {
+                    App::Push<OptionBox>("Could not delete the backup."_i18n, "OK"_i18n);
+                    return;
+                }
+                if (m_entries[i].image > 0) {
+                    nvgDeleteImage(App::GetVg(), m_entries[i].image);
+                }
+                if (m_entries[i].selected) {
+                    m_selected_count--;
+                }
+                m_entries.erase(m_entries.begin() + i);
+            }
+            if (m_index >= static_cast<s64>(m_entries.size())) {
+                m_index = m_entries.empty() ? 0 : static_cast<s64>(m_entries.size()) - 1;
+            }
+            UpdateSubHeading();
+        });
+    }
+
     std::vector<Entry> m_entries;
     Callback m_cb;
     s64 m_index{};
@@ -1015,7 +1063,39 @@ void Menu::ConfirmBackup() {
     if (uids.empty()) {
         return;
     }
-    RunBackup(uids);
+    const auto packs = account_user::ListUserPacks();
+    std::string existing_when;
+    u32 existing_users = 0;
+    for (const auto& uid : uids) {
+        const auto hex = account_link::UidHex(uid);
+        for (const auto& p : packs) {
+            if (!p.uid_hex.empty() && p.uid_hex == hex) {
+                existing_users++;
+                if (existing_when.empty()) {
+                    existing_when = !p.created_label.empty() ? p.created_label : p.folder_name;
+                }
+                break;
+            }
+        }
+    }
+    if (existing_users == 0) {
+        RunBackup(uids, false);
+        return;
+    }
+    std::string msg;
+    if (uids.size() == 1) {
+        msg = "A backup of this user already exists"_i18n + " (" + existing_when + "). " +
+            "Overwrite it, or keep both?"_i18n;
+    } else {
+        msg = "One or more of these users already have a backup. Overwrite, or keep both?"_i18n;
+    }
+    App::Push<OptionBox>(msg, "Cancel"_i18n, "Overwrite"_i18n, "Keep both"_i18n, 1,
+        [this, uids](auto op) {
+            if (!op || *op == 0) {
+                return;
+            }
+            RunBackup(uids, *op == 1);
+        });
 }
 
 void Menu::ConfirmNandBackup() {
@@ -1272,14 +1352,15 @@ void Menu::RunNandRestore(const std::string& dir) {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunBackup(std::vector<AccountUid> uids) {
+void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
     if (uids.empty()) {
         return;
     }
     auto dirs = std::make_shared<std::vector<std::string>>();
-    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n, [uids = std::move(uids), dirs](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n,
+        [uids = std::move(uids), dirs, overwrite_existing](auto pbox) -> Result {
         pbox->NewTransfer("Writing user pack"_i18n);
-        R_TRY(account_user::ExportUserPacks(uids, *dirs));
+        R_TRY(account_user::ExportUserPacks(uids, *dirs, overwrite_existing));
         R_SUCCEED();
     }, [this, dirs](Result rc) {
         if (R_FAILED(rc) || dirs->empty()) {
