@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.709** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.710** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.710 — Same-console Restore Backup asks to replace the existing profile
+
+- Бекап і рестор на тій самій консолі: «цей Nintendo Account уже тут (ім'я). Replace — ім'я, аватар, години, без другого юзера». На іншій консолі — новий профіль з лінком. Версія `0.13.710`. Збірку агент не запускав.
 
 ## v0.13.709 — Restore Backup keeps Nintendo link and play hours
 

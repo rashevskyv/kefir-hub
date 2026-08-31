@@ -163,7 +163,7 @@
   "No GameCard inserted": "未插入游戏卡",
   "GameCard is already trimmed!": "游戏卡已被修剪！",
   "WARNING: GameCard is already trimmed!": "警告：游戏卡已被修剪！",
-  "Continue": "继续",
+  "Continue": "Continue",
   "Gc install success!": "游戏安装成功。",
   "Gc install failed!": "游戏安装失败。",
   "IRS (Infrared Joycon Camera)": "IRS(Joycon红外摄像头)",
@@ -1925,7 +1925,6 @@
   "Pending restore packs are missing from SD.": "Pending restore packs are missing from SD.",
   "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te": "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te",
   "Cancel restore": "Cancel restore",
-  "Continue": "Continue",
   "Restore cancelled. The 0010 snapshot was removed.": "Restore cancelled. The 0010 snapshot was removed.",
   "This backup will reboot the console.": "This backup will reboot the console.",
   "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.",
@@ -1947,5 +1946,9 @@
   " user profile(s).": " 个用户。",
   " user profiles to SD.": " 个用户到SD卡。",
   "Nintendo Account link data was invalid or could not be applied.": "Nintendo Account关联数据无效或无法应用。",
-  "Game saves are backed up separately through Backup saves.": "游戏存档通过「备份存档」单独备份。"
+  "Game saves are backed up separately through Backup saves.": "游戏存档通过「备份存档」单独备份。",
+  "This Nintendo Account is already on this console": "This Nintendo Account is already on this console",
+  "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
+  "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong."
 }

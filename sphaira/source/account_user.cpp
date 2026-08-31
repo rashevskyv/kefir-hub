@@ -473,6 +473,7 @@ auto FindUserPack(const std::string& dir) -> Pack {
     account_link::LinkPackage pkg;
     if (R_SUCCEEDED(account_link::LoadUserPackLinkPackage(p.dir, pkg))) {
         p.link_valid = true;
+        p.nas_id = pkg.nas_id;
     }
 
     return p;

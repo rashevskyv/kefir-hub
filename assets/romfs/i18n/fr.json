@@ -129,7 +129,7 @@
   "No GameCard inserted": "Aucune cartouche de jeu insérée !",
   "GameCard is already trimmed!": "La carte du jeu est déjà trimmer !",
   "WARNING: GameCard is already trimmed!": "AVERTISSEMENT : la carte du jeu est déjà trimmer ! ",
-  "Continue": "Continuer",
+  "Continue": "Continue",
   "Gc install success!": "Installation de la cartouche réussie !",
   "Gc install failed!": "Installation de la cartouche échouée !",
   "IRS (Infrared Joycon Camera)": "IRS (infrarouge de la cam du Joycon",
@@ -1871,7 +1871,6 @@
   "Pending restore packs are missing from SD.": "Pending restore packs are missing from SD.",
   "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te": "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te",
   "Cancel restore": "Cancel restore",
-  "Continue": "Continue",
   "Restore cancelled. The 0010 snapshot was removed.": "Restore cancelled. The 0010 snapshot was removed.",
   "This backup will reboot the console.": "This backup will reboot the console.",
   "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.",
@@ -1893,5 +1892,9 @@
   " user profile(s).": " profil(s) utilisateur.",
   " user profiles to SD.": " profils utilisateurs sur la SD.",
   "Nintendo Account link data was invalid or could not be applied.": "Les données d'association Compte Nintendo étaient invalides ou n'ont pas pu être appliquées.",
-  "Game saves are backed up separately through Backup saves.": "Les sauvegardes de jeu sont sauvegardées séparément via «Sauvegarder les données»."
+  "Game saves are backed up separately through Backup saves.": "Les sauvegardes de jeu sont sauvegardées séparément via «Sauvegarder les données».",
+  "This Nintendo Account is already on this console": "This Nintendo Account is already on this console",
+  "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
+  "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong."
 }

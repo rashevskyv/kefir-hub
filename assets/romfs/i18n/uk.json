@@ -2132,7 +2132,6 @@
   "Pending restore packs are missing from SD.": "Паки незавершеного рестору зникли з SD.",
   "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te": "Незавершений рестор. Продовжити? Консоль перезавантажиться. Якщо не завантажиться: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te",
   "Cancel restore": "Скасувати рестор",
-  "Continue": "Продовжити",
   "Restore cancelled. The 0010 snapshot was removed.": "Рестор скасовано. Знімок 0010 видалено.",
   "This backup will reboot the console.": "Після цього бекапу консоль перезавантажиться.",
   "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "Після відновлення консоль перезавантажиться. Якщо цей Nintendo Account уже є на консолі, лінк буде пропущено.",
@@ -2152,5 +2151,9 @@
   " user profile(s).": " профілів користувачів.",
   " user profiles to SD.": " профілів користувачів на SD.",
   "Nintendo Account link data was invalid or could not be applied.": "Дані прив'язки Nintendo Account були недійсними або їх не вдалося застосувати.",
-  "Game saves are backed up separately through Backup saves.": "Ігрові збереження зберігаються окремо через «Зберегти сейви»."
+  "Game saves are backed up separately through Backup saves.": "Ігрові збереження зберігаються окремо через «Зберегти сейви».",
+  "This Nintendo Account is already on this console": "Цей Nintendo Account уже є на цій консолі",
+  "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Рестор замінить цей профіль: імʼя, аватар і години гри. Другого користувача не створимо.\\n\\nСпочатку скопіюємо поточний сейв акаунтів на SD, якщо щось піде не так.",
+  "backup(s) match accounts already on this console and will replace them. ": "бекап(и) збігаються з акаунтами вже на цій консолі і замінять їх. ",
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "буде додано як нові профілі.\\n\\nСпочатку скопіюємо поточний сейв акаунтів на SD, якщо щось піде не так."
 }

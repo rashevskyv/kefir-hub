@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.709** (лінк і години при Restore Backup). Завершені плани збережено в
+Поточний delivery — **v0.13.710** (рестор на тій самій консолі = замінити). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.709 — Restore Backup keeps NA link and play hours
+## Поточний delivery: v0.13.710 — Same-console restore asks to replace existing profile
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Бекап і рестор на тій самій консолі: якщо цей Nintendo Account уже є — питаємо Replace (ім'я, аватар, години), не створюємо другого юзера.
+2. На іншій консолі лишається додавання нового профілю з лінком.
+3. Версія `0.13.710`.
+
+## Попередній delivery: v0.13.709 — Restore Backup keeps NA link and play hours
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

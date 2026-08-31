@@ -129,7 +129,7 @@
   "No GameCard inserted": "카트리지가 없습니다",
   "GameCard is already trimmed!": "카트리지를 이미 트림했습니다",
   "WARNING: GameCard is already trimmed!": "경고: 카트리지를 이미 트림했습니다",
-  "Continue": "계속",
+  "Continue": "Continue",
   "Gc install success!": "카트리지 설치 완료!",
   "Gc install failed!": "카트리지 설치 실패!",
   "IRS (Infrared Joycon Camera)": "조이콘 적외선 카메라",
@@ -1870,7 +1870,6 @@
   "Pending restore packs are missing from SD.": "Pending restore packs are missing from SD.",
   "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te": "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te",
   "Cancel restore": "Cancel restore",
-  "Continue": "Continue",
   "Restore cancelled. The 0010 snapshot was removed.": "Restore cancelled. The 0010 snapshot was removed.",
   "This backup will reboot the console.": "This backup will reboot the console.",
   "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.",
@@ -1892,5 +1891,9 @@
   " user profile(s).": " 개 사용자 프로필.",
   " user profiles to SD.": " 개 사용자 프로필을 SD에 저장했습니다.",
   "Nintendo Account link data was invalid or could not be applied.": "닌텐도 어카운트 연동 데이터가 잘못되었거나 적용할 수 없습니다.",
-  "Game saves are backed up separately through Backup saves.": "게임 세이브는 「세이브 백업」을 통해 별도로 백업됩니다."
+  "Game saves are backed up separately through Backup saves.": "게임 세이브는 「세이브 백업」을 통해 별도로 백업됩니다.",
+  "This Nintendo Account is already on this console": "This Nintendo Account is already on this console",
+  "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
+  "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong."
 }

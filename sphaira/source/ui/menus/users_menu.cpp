@@ -57,6 +57,21 @@ auto CollectSaves(const std::vector<AccountUid>& uids) -> std::vector<save::Entr
     return out;
 }
 
+auto LiveNasToUid() -> std::unordered_map<u64, AccountUid> {
+    std::unordered_map<u64, AccountUid> out;
+    for (const auto& u : account_link::ListUsers()) {
+        u64 nas = 0;
+        if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
+            out.emplace(nas, u.uid);
+        }
+    }
+    return out;
+}
+
+auto PackMatchesLiveAccount(const account_user::Pack& p, const std::unordered_map<u64, AccountUid>& nas_to_uid) -> bool {
+    return p.link_valid && p.nas_id != 0 && nas_to_uid.find(p.nas_id) != nas_to_uid.end();
+}
+
 struct SavePickMenu final : MenuBase {
     using Callback = std::function<void(std::optional<std::vector<save::Entry>>)>;
 
@@ -1143,10 +1158,6 @@ void Menu::ConfirmNandRestore() {
 }
 
 void Menu::ConfirmRestoreBackup() {
-    if (m_items.size() >= ACC_USER_LIST_SIZE) {
-        App::Push<OptionBox>("The console already has 8 user profiles."_i18n, "OK"_i18n);
-        return;
-    }
     const auto packs = account_user::ListUserPacks();
     if (packs.empty()) {
         App::Push<OptionBox>("No user backups found under /config/kefir/user_packs."_i18n, "OK"_i18n);
@@ -1156,39 +1167,83 @@ void Menu::ConfirmRestoreBackup() {
         if (!picked || picked->empty()) {
             return;
         }
+        const auto nas_map = LiveNasToUid();
+        u32 new_slots = 0;
+        u32 replace_slots = 0;
+        std::string existing_name;
+        for (const auto& p : *picked) {
+            if (PackMatchesLiveAccount(p, nas_map)) {
+                replace_slots++;
+                if (existing_name.empty()) {
+                    const auto it = nas_map.find(p.nas_id);
+                    for (const auto& u : account_link::ListUsers()) {
+                        if (it != nas_map.end() &&
+                            u.uid.uid[0] == it->second.uid[0] &&
+                            u.uid.uid[1] == it->second.uid[1]) {
+                            existing_name = u.nickname;
+                            break;
+                        }
+                    }
+                    if (existing_name.empty()) {
+                        existing_name = p.nickname;
+                    }
+                }
+            } else {
+                new_slots++;
+            }
+        }
         const auto available_slots = ACC_USER_LIST_SIZE - m_items.size();
-        if (picked->size() > available_slots) {
+        if (new_slots > available_slots) {
             App::Push<OptionBox>(
-                "Cannot restore: selecting " + std::to_string(picked->size()) +
-                " profile(s) would exceed the maximum of 8 users (available: " +
+                "Cannot restore: selecting " + std::to_string(new_slots) +
+                " new profile(s) would exceed the maximum of 8 users (available: " +
                 std::to_string(available_slots) + ")."_i18n, "OK"_i18n);
             return;
         }
-        bool any_link = false;
+        bool any_new_link = false;
         for (const auto& p : *picked) {
-            if (p.link_valid) {
-                any_link = true;
+            if (p.link_valid && !PackMatchesLiveAccount(p, nas_map)) {
+                any_new_link = true;
                 break;
             }
         }
         std::string gate_reason;
-        if (any_link && account_link::IsLinkGated(gate_reason)) {
+        if (any_new_link && account_link::IsLinkGated(gate_reason)) {
             App::Push<OptionBox>(gate_reason, "OK"_i18n);
             return;
         }
         auto picked_packs = std::move(*picked);
+        auto go = [this, picked_packs](auto op) mutable {
+            if (op && *op == 1) {
+                RunPrepareRestoreSnapshot(std::move(picked_packs));
+            }
+        };
+        if (replace_slots && !new_slots) {
+            App::Push<OptionBox>(
+                "This Nintendo Account is already on this console"_i18n +
+                (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
+                "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\n\n"
+                "We still copy the current account save to SD first, in case something goes wrong."_i18n,
+                "Cancel"_i18n, "Replace"_i18n, 1, std::move(go));
+            return;
+        }
+        if (replace_slots && new_slots) {
+            App::Push<OptionBox>(
+                std::to_string(replace_slots) + " " +
+                "backup(s) match accounts already on this console and will replace them. "_i18n +
+                std::to_string(new_slots) + " " +
+                "will be added as new profiles.\n\n"
+                "We copy the current account save to SD first, in case something goes wrong."_i18n,
+                "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
+            return;
+        }
         App::Push<OptionBox>(
             "Restore will add a profile and may change the account save (0010).\n\n"
             "Before that, we copy the current 0010 to SD. That copy is the rollback if something goes wrong.\n\n"
             "• If Hub can read 0010 now, the copy happens here.\n"
             "• If not, TegraExplorer will dump it automatically after OK.\n\n"
             "Then open Kefir Hub yourself to continue the restore."_i18n,
-            "Cancel"_i18n, "Continue"_i18n, 1,
-            [this, picked_packs = std::move(picked_packs)](auto op) mutable {
-                if (op && *op == 1) {
-                    RunPrepareRestoreSnapshot(std::move(picked_packs));
-                }
-            });
+            "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
     });
 }
 

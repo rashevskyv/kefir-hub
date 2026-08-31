@@ -129,7 +129,7 @@
   "No GameCard inserted": "Không có GameCard",
   "GameCard is already trimmed!": "GameCard đã được xén rồi!",
   "WARNING: GameCard is already trimmed!": "CẢNH BÁO: GameCard đã được cắt gọt!",
-  "Continue": "Tiếp tục",
+  "Continue": "Continue",
   "Gc install success!": "Cài đặt Gc thành công!",
   "Gc install failed!": "Cài đặt GC thất bại!",
   "IRS (Infrared Joycon Camera)": "IRS (Camera hồng ngoại Joycon)",
@@ -1870,7 +1870,6 @@
   "Pending restore packs are missing from SD.": "Pending restore packs are missing from SD.",
   "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te": "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/Undo_restore_if_wont_boot.te",
   "Cancel restore": "Cancel restore",
-  "Continue": "Continue",
   "Restore cancelled. The 0010 snapshot was removed.": "Restore cancelled. The 0010 snapshot was removed.",
   "This backup will reboot the console.": "This backup will reboot the console.",
   "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.",
@@ -1892,5 +1891,9 @@
   " user profile(s).": " hồ sơ người dùng.",
   " user profiles to SD.": " hồ sơ người dùng vào thẻ nhớ SD.",
   "Nintendo Account link data was invalid or could not be applied.": "Dữ liệu liên kết Nintendo Account không hợp lệ hoặc không thể áp dụng.",
-  "Game saves are backed up separately through Backup saves.": "Dữ liệu lưu trò chơi được sao lưu riêng qua «Sao lưu dữ liệu lưu»."
+  "Game saves are backed up separately through Backup saves.": "Dữ liệu lưu trò chơi được sao lưu riêng qua «Sao lưu dữ liệu lưu».",
+  "This Nintendo Account is already on this console": "This Nintendo Account is already on this console",
+  "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
+  "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong."
 }
