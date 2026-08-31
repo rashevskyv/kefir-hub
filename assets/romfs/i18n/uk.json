@@ -2182,5 +2182,18 @@
   "Enter sending console IP address": "Введіть IP-адресу консолі-відправника",
   "HTTP server responded at ": "HTTP-сервер відповів за адресою ",
   "Make sure the sending console has Share User Backups active.": "Переконайтеся, що на консолі-відправнику увімкнено «Спільний доступ до бекапів користувачів».",
-  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не вдалося підключитися до віддаленої консолі.\n\nПереконайтеся, що обидві консолі підключені до однієї локальної мережі і на вихідній консолі увімкнено спільний доступ до бекапів користувачів."
+  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не вдалося підключитися до віддаленої консолі.\n\nПереконайтеся, що обидві консолі підключені до однієї локальної мережі і на вихідній консолі увімкнено спільний доступ до бекапів користувачів.",
+  "Restore user backups from another console running Share User Backups.": "Відновити бекапи користувачів з іншої консолі, на якій запущено спільний доступ.",
+  "User Backups on Other Console": "Бекапи користувачів на іншій консолі",
+  "Download and restore this user backup": "Завантажити та відновити цей бекап користувача",
+  "Fetching backup list...": "Отримання списку бекапів...",
+  "Could not retrieve the user backup list from the sending console.": "Не вдалося отримати список бекапів користувачів із консолі-відправника.",
+  "No user backups found on the sending console.": "На консолі-відправнику не знайдено бекапів користувачів.",
+  "Downloading User Backup...": "Завантаження бекапу користувача...",
+  "Fetching file list...": "Отримання списку файлів...",
+  "Could not retrieve the file manifest from the sending console.": "Не вдалося отримати маніфест файлів із консолі-відправника.",
+  "Invalid backup files received from the sending console.": "Отримано некоректний список файлів бекапу від консолі-відправника.",
+  "Failed to download backup files from the sending console.": "Не вдалося завантажити файли бекапу з консолі-відправника.",
+  "Downloaded backup is incomplete or invalid.": "Завантажений бекап неповний або пошкоджений.",
+  "Failed to transfer user backup from the sending console.": "Не вдалося передати бекап користувача з консолі-відправника."
 }

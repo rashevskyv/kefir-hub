@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.715** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.716** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.716 — Receive User Backup from another console
+
+- `Users → Restore Backup → Other console…` приймає лише IP і після з'єднання показує повноекранний список user packs на консолі-відправнику. PIN, QR і ручне введення URL/шляху не потрібні.
+- Після вибору один пак завантажується до `account_user::GetUserPacksRoot()` приймальної консолі через наявні HTTP `/list`, `/list-recursive` і `/download`, після чого переходить у той самий safe Restore Backup confirmation flow.
+- Імпорт приймає лише маніфестовані шляхи всередині вибраного пака, перевіряє кожний файл за точним розміром, не перезаписує наявну теку й прибирає тільки щойно створену неповну теку на cancel/error. Версія `0.13.716`; пройдено `git diff --check` та JSON-парсинг, збірку агент не запускав.
 
 ## v0.13.715 — Short User Backups server address
 

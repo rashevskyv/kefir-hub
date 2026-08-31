@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.715** (Share User Backups має коротку адресу для другої консолі). Завершені задачі збережено в
+Актуальний delivery — **v0.13.716** (Restore Backup отримує user pack з іншої консолі). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.715 (Short User Backups server address)
+## Поточний delivery: v0.13.716 (Receive User Backup from another console)
+
+- [x] `USERS-REMOTE-LIST-716` — Other console за IP показує повноекранний список user packs відправника, без PIN, URL чи QR для користувача.
+- [x] `USERS-REMOTE-IMPORT-716` — один вибраний пак завантажується в configured user-packs root і переходить у наявний restore flow.
+- [x] `USERS-REMOTE-SAFETY-716` — маніфест/шляхи/розміри перевіряються; імпорт не перезаписує пак і прибирає лише нову неповну теку при cancel/error.
+- [x] `DOCS-BUMP-716` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.715 (Short User Backups server address)
 
 - [x] `CONSOLE-TRANSFER-SHORT-URL-715` — Share User Backups показує `http://IP:port` без query path, а цей root одразу віддає user packs.
 - [x] `USERS-CONSOLE-IP-715` — Other console просить IP відправника, не довгий URL; пошук 8080–8090 і скасування probe збережено.

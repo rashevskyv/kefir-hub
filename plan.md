@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.715** (Share User Backups дає коротку адресу для другої консолі). Завершені плани збережено в
+Поточний delivery — **v0.13.716** (Restore Backup отримує user pack з іншої консолі). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.715 — Short User Backups server address
+## Поточний delivery: v0.13.716 — Receive User Backup from another console
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Приймальна консоль за введеним IP отримує список user packs від увімкненого `Share User Backups`, показує його повноекранно та дає вибрати один пак.
+2. Вибраний пак завантажується до налаштованого user-packs root через наявні `/list`, `/list-recursive` і `/download`; далі запускається чинний safe Restore Backup flow без дублювання перевірок.
+3. Маніфест жорстко обмежений обраним паком, шляхи й розмір кожного файла перевіряються, колізії не перезаписуються, а скасування/помилка прибирає тільки нову неповну теку. PIN не потрібен.
+4. Version `0.13.716`.
+
+## Попередній delivery: v0.13.715 — Short User Backups server address
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

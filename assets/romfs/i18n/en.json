@@ -2153,5 +2153,18 @@
   "Enter sending console IP address": "Enter sending console IP address",
   "HTTP server responded at ": "HTTP server responded at ",
   "Make sure the sending console has Share User Backups active.": "Make sure the sending console has Share User Backups active.",
-  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active."
+  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.",
+  "Restore user backups from another console running Share User Backups.": "Restore user backups from another console running Share User Backups.",
+  "User Backups on Other Console": "User Backups on Other Console",
+  "Download and restore this user backup": "Download and restore this user backup",
+  "Fetching backup list...": "Fetching backup list...",
+  "Could not retrieve the user backup list from the sending console.": "Could not retrieve the user backup list from the sending console.",
+  "No user backups found on the sending console.": "No user backups found on the sending console.",
+  "Downloading User Backup...": "Downloading User Backup...",
+  "Fetching file list...": "Fetching file list...",
+  "Could not retrieve the file manifest from the sending console.": "Could not retrieve the file manifest from the sending console.",
+  "Invalid backup files received from the sending console.": "Invalid backup files received from the sending console.",
+  "Failed to download backup files from the sending console.": "Failed to download backup files from the sending console.",
+  "Downloaded backup is incomplete or invalid.": "Downloaded backup is incomplete or invalid.",
+  "Failed to transfer user backup from the sending console.": "Failed to transfer user backup from the sending console."
 }

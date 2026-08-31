@@ -2137,5 +2137,18 @@
   "Enter sending console IP address": "Введите IP-адрес консоли-отправителя",
   "HTTP server responded at ": "HTTP-сервер ответил по адресу ",
   "Make sure the sending console has Share User Backups active.": "Убедитесь, что на консоли-отправителе включен «Общий доступ к бекапам пользователей».",
-  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не удалось подключиться к удаленной консоли.\n\nУбедитесь, что обе консоли подключены к одной локальной сети и на исходной консоли включен общий доступ к бекапам пользователей."
+  "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не удалось подключиться к удаленной консоли.\n\nУбедитесь, что обе консоли подключены к одной локальной сети и на исходной консоли включен общий доступ к бекапам пользователей.",
+  "Restore user backups from another console running Share User Backups.": "Восстановить бэкапы пользователей с другой консоли с включенным общим доступом.",
+  "User Backups on Other Console": "Бэкапы пользователей на другой консоли",
+  "Download and restore this user backup": "Скачать и восстановить этот бэкап пользователя",
+  "Fetching backup list...": "Получение списка бэкапов...",
+  "Could not retrieve the user backup list from the sending console.": "Не удалось получить список бэкапов пользователей с консоли-отправителя.",
+  "No user backups found on the sending console.": "На консоли-отправителе не найдено бэкапов пользователей.",
+  "Downloading User Backup...": "Скачивание бэкапа пользователя...",
+  "Fetching file list...": "Получение списка файлов...",
+  "Could not retrieve the file manifest from the sending console.": "Не удалось получить манифест файлов с консоли-отправителя.",
+  "Invalid backup files received from the sending console.": "Получен некорректный список файлов бэкапа от консоли-отправителя.",
+  "Failed to download backup files from the sending console.": "Не удалось скачать файлы бэкапа с консоли-отправителя.",
+  "Downloaded backup is incomplete or invalid.": "Скачанный бэкап неполный или поврежден.",
+  "Failed to transfer user backup from the sending console.": "Не удалось передать бэкап пользователя с консоли-отправителя."
 }

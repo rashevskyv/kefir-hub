@@ -457,6 +457,549 @@ private:
     std::unique_ptr<List> m_list;
 };
 
+struct RemotePackEntry {
+    std::string name;
+    std::string remote_path;
+};
+
+inline void SkipJsonWhitespace(const std::string& s, size_t& pos) {
+    while (pos < s.size() && (s[pos] == ' ' || s[pos] == '\t' || s[pos] == '\r' || s[pos] == '\n')) {
+        pos++;
+    }
+}
+
+inline auto ParseJsonString(const std::string& s, size_t& pos) -> std::optional<std::string> {
+    SkipJsonWhitespace(s, pos);
+    if (pos >= s.size() || s[pos] != '"') {
+        return std::nullopt;
+    }
+    pos++;
+    std::string out;
+    while (pos < s.size()) {
+        char c = s[pos++];
+        if (c == '"') {
+            return out;
+        }
+        if (c == '\\') {
+            if (pos >= s.size()) {
+                return std::nullopt;
+            }
+            char esc = s[pos++];
+            switch (esc) {
+                case '"': out += '"'; break;
+                case '\\': out += '\\'; break;
+                case '/': out += '/'; break;
+                case 'b': out += '\b'; break;
+                case 'f': out += '\f'; break;
+                case 'n': out += '\n'; break;
+                case 'r': out += '\r'; break;
+                case 't': out += '\t'; break;
+                default: out += esc; break;
+            }
+        } else {
+            out += c;
+        }
+    }
+    return std::nullopt;
+}
+
+inline auto ParseJsonInt(const std::string& s, size_t& pos) -> std::optional<s64> {
+    SkipJsonWhitespace(s, pos);
+    if (pos >= s.size()) {
+        return std::nullopt;
+    }
+    size_t start = pos;
+    if (s[pos] == '-' || s[pos] == '+') {
+        pos++;
+    }
+    if (pos >= s.size() || !std::isdigit(static_cast<unsigned char>(s[pos]))) {
+        return std::nullopt;
+    }
+    while (pos < s.size() && std::isdigit(static_cast<unsigned char>(s[pos]))) {
+        pos++;
+    }
+    const auto num_str = s.substr(start, pos - start);
+    char* endptr = nullptr;
+    const auto val = std::strtoll(num_str.c_str(), &endptr, 10);
+    if (endptr == num_str.c_str()) {
+        return std::nullopt;
+    }
+    return val;
+}
+
+inline auto ParseRemoteListResponse(const std::string& json) -> std::optional<std::pair<std::string, std::vector<RemotePackEntry>>> {
+    size_t path_pos = json.find("\"path\"");
+    if (path_pos == std::string::npos) {
+        return std::nullopt;
+    }
+    size_t colon_pos = json.find(':', path_pos + 6);
+    if (colon_pos == std::string::npos) {
+        return std::nullopt;
+    }
+    colon_pos++;
+    auto root_path_opt = ParseJsonString(json, colon_pos);
+    if (!root_path_opt) {
+        return std::nullopt;
+    }
+    std::string root_path = *root_path_opt;
+
+    size_t entries_pos = json.find("\"entries\"", colon_pos);
+    if (entries_pos == std::string::npos) {
+        entries_pos = json.find("\"entries\"");
+        if (entries_pos == std::string::npos) {
+            return std::nullopt;
+        }
+    }
+    size_t array_open = json.find('[', entries_pos);
+    if (array_open == std::string::npos) {
+        return std::nullopt;
+    }
+
+    std::vector<RemotePackEntry> out_entries;
+    size_t pos = array_open + 1;
+    while (pos < json.size()) {
+        SkipJsonWhitespace(json, pos);
+        if (pos >= json.size() || json[pos] == ']') {
+            break;
+        }
+        if (json[pos] == ',') {
+            pos++;
+            continue;
+        }
+        if (json[pos] != '{') {
+            pos++;
+            continue;
+        }
+        pos++;
+
+        std::string entry_name;
+        int entry_type = -1;
+        while (pos < json.size() && json[pos] != '}') {
+            SkipJsonWhitespace(json, pos);
+            if (pos >= json.size() || json[pos] == '}') {
+                break;
+            }
+            if (json[pos] == ',') {
+                pos++;
+                continue;
+            }
+            auto key_opt = ParseJsonString(json, pos);
+            if (!key_opt) {
+                break;
+            }
+            SkipJsonWhitespace(json, pos);
+            if (pos < json.size() && json[pos] == ':') {
+                pos++;
+            }
+            SkipJsonWhitespace(json, pos);
+            if (*key_opt == "name") {
+                auto name_val = ParseJsonString(json, pos);
+                if (name_val) {
+                    entry_name = *name_val;
+                }
+            } else if (*key_opt == "type") {
+                auto type_val = ParseJsonInt(json, pos);
+                if (type_val) {
+                    entry_type = static_cast<int>(*type_val);
+                }
+            } else if (*key_opt == "size") {
+                ParseJsonInt(json, pos);
+            } else if (pos < json.size() && json[pos] == '"') {
+                ParseJsonString(json, pos);
+            } else {
+                while (pos < json.size() && json[pos] != ',' && json[pos] != '}') {
+                    pos++;
+                }
+            }
+        }
+        if (pos < json.size() && json[pos] == '}') {
+            pos++;
+        }
+
+        if (entry_type == static_cast<int>(FsDirEntryType_Dir) && !entry_name.empty()) {
+            if (entry_name != "." && entry_name != ".." &&
+                entry_name.find('/') == std::string::npos &&
+                entry_name.find('\\') == std::string::npos) {
+                std::string rem_path = root_path;
+                if (!rem_path.empty() && rem_path.back() != '/') {
+                    rem_path += '/';
+                }
+                rem_path += entry_name;
+                out_entries.push_back({entry_name, rem_path});
+            }
+        }
+    }
+
+    std::sort(out_entries.begin(), out_entries.end(), [](const auto& a, const auto& b) {
+        return a.name > b.name;
+    });
+
+    return std::make_pair(root_path, out_entries);
+}
+
+struct ManifestFile {
+    std::string remote_path;
+    std::string rel_path;
+    s64 size{};
+};
+
+inline auto ParseManifestResponse(const std::string& json, const std::string& remote_pack_root) -> std::optional<std::vector<ManifestFile>> {
+    size_t array_open = json.find('[');
+    if (array_open == std::string::npos) {
+        return std::nullopt;
+    }
+
+    std::string root_prefix = remote_pack_root;
+    if (!root_prefix.empty() && root_prefix.back() != '/') {
+        root_prefix += '/';
+    }
+
+    std::vector<ManifestFile> files;
+    size_t pos = array_open + 1;
+    while (pos < json.size()) {
+        SkipJsonWhitespace(json, pos);
+        if (pos >= json.size() || json[pos] == ']') {
+            break;
+        }
+        if (json[pos] == ',') {
+            pos++;
+            continue;
+        }
+        if (json[pos] != '{') {
+            pos++;
+            continue;
+        }
+        pos++;
+
+        std::string file_path;
+        std::optional<s64> file_size;
+
+        while (pos < json.size() && json[pos] != '}') {
+            SkipJsonWhitespace(json, pos);
+            if (pos >= json.size() || json[pos] == '}') {
+                break;
+            }
+            if (json[pos] == ',') {
+                pos++;
+                continue;
+            }
+            auto key_opt = ParseJsonString(json, pos);
+            if (!key_opt) {
+                break;
+            }
+            SkipJsonWhitespace(json, pos);
+            if (pos < json.size() && json[pos] == ':') {
+                pos++;
+            }
+            SkipJsonWhitespace(json, pos);
+            if (*key_opt == "path") {
+                auto path_val = ParseJsonString(json, pos);
+                if (path_val) {
+                    file_path = *path_val;
+                }
+            } else if (*key_opt == "size") {
+                auto size_val = ParseJsonInt(json, pos);
+                if (size_val && *size_val >= 0) {
+                    file_size = *size_val;
+                }
+            } else if (pos < json.size() && json[pos] == '"') {
+                ParseJsonString(json, pos);
+            } else {
+                while (pos < json.size() && json[pos] != ',' && json[pos] != '}') {
+                    pos++;
+                }
+            }
+        }
+        if (pos < json.size() && json[pos] == '}') {
+            pos++;
+        }
+
+        if (file_path.empty() || !file_size.has_value() || *file_size < 0) {
+            return std::nullopt;
+        }
+
+        if (!file_path.starts_with(root_prefix)) {
+            log_write("[USER_TRANSFER] Manifest path %s does not start with root %s\n",
+                file_path.c_str(), root_prefix.c_str());
+            return std::nullopt;
+        }
+
+        std::string rel = file_path.substr(root_prefix.size());
+        if (rel.empty() || rel.front() == '/' || rel.back() == '/' ||
+            rel.find('\\') != std::string::npos || rel.find(':') != std::string::npos) {
+            log_write("[USER_TRANSFER] Invalid relative path: %s\n", rel.c_str());
+            return std::nullopt;
+        }
+
+        size_t start = 0;
+        bool valid_comps = true;
+        while (start < rel.size()) {
+            size_t slash = rel.find('/', start);
+            std::string comp = (slash == std::string::npos) ? rel.substr(start) : rel.substr(start, slash - start);
+            if (comp.empty() || comp == "." || comp == "..") {
+                valid_comps = false;
+                break;
+            }
+            if (slash == std::string::npos) {
+                break;
+            }
+            start = slash + 1;
+        }
+        if (!valid_comps) {
+            log_write("[USER_TRANSFER] Invalid relative component in: %s\n", rel.c_str());
+            return std::nullopt;
+        }
+
+        files.push_back({file_path, rel, *file_size});
+    }
+
+    if (files.empty()) {
+        return std::nullopt;
+    }
+
+    return files;
+}
+
+struct RemoteUserPacksMenu final : MenuBase {
+    using Callback = std::function<void(std::vector<account_user::Pack>)>;
+
+    RemoteUserPacksMenu(std::string base_url, std::vector<RemotePackEntry> entries, Callback on_restore)
+        : MenuBase{"User Backups on Other Console"_i18n, MenuFlag_None}
+        , m_base_url{std::move(base_url)}
+        , m_entries{std::move(entries)}
+        , m_on_restore{std::move(on_restore)}
+    {
+        this->SetActions(
+            std::make_pair(Button::A, Action{"Select"_i18n, [this](){ OnSelect(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+        );
+
+        m_list = std::make_unique<List>(1, 6, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+        m_list->SetLayout(List::Layout::GRID);
+        m_list->SetPageJump(false);
+        SetIndex(0);
+    }
+
+    ~RemoteUserPacksMenu() = default;
+
+    auto GetShortTitle() const -> const char* override { return "Remote Backups"; }
+
+    void Update(Controller* controller, TouchInfo* touch) override {
+        MenuBase::Update(controller, touch);
+        if (m_entries.empty()) {
+            return;
+        }
+        m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
+            if (touch && m_index == i) {
+                FireAction(Button::A);
+            } else {
+                App::PlaySoundEffect(SoundEffect_Focus);
+                SetIndex(i);
+            }
+        }, this);
+    }
+
+    void Draw(NVGcontext* vg, Theme* theme) override {
+        MenuBase::Draw(vg, theme);
+
+        if (m_entries.empty()) {
+            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 22.f,
+                NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s", "No user backups found on the sending console."_i18n.c_str());
+            return;
+        }
+
+        m_list->Draw(vg, theme, m_entries.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
+            const auto& item = m_entries[i];
+            const auto is_selected = m_index == static_cast<s64>(i);
+            const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+            if (is_selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v);
+            } else {
+                DrawElement(v, ThemeEntryID_GRID);
+            }
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
+                theme->GetColour(text_id), item.name.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "Download and restore this user backup"_i18n.c_str(),
+                NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        });
+    }
+
+private:
+    void SetIndex(s64 index) {
+        if (m_entries.empty()) {
+            m_index = 0;
+            return;
+        }
+        m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_entries.size() - 1));
+        if (!m_index) {
+            m_list->SetYoff(0);
+        }
+        SetTitleSubHeading("Download and restore this user backup"_i18n, true);
+        SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_entries.size()));
+    }
+
+    void OnSelect() {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
+            return;
+        }
+        DownloadRemotePack(m_entries[m_index]);
+    }
+
+    void DownloadRemotePack(const RemotePackEntry& entry) {
+        auto imported_pack = std::make_shared<account_user::Pack>();
+        auto download_err = std::make_shared<std::string>();
+
+        const std::string base_url = m_base_url;
+        const std::string entry_name = entry.name;
+        const std::string remote_path = entry.remote_path;
+
+        App::Push<ProgressBox>(
+            0,
+            "Downloading User Backup..."_i18n,
+            entry_name,
+            [base_url, entry_name, remote_path, imported_pack, download_err](ProgressBox* pbox) -> Result {
+                pbox->SetTransfer("Fetching file list..."_i18n);
+
+                const std::string manifest_url = base_url + "/list-recursive?path=" + curl::EscapeString(remote_path);
+                curl::Api manifest_api;
+                manifest_api.SetOption(curl::Url{manifest_url});
+                manifest_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                    return !pbox->ShouldExit();
+                }});
+
+                const auto manifest_res = curl::ToMemory(manifest_api);
+                if (pbox->ShouldExit()) {
+                    return Result_TransferCancelled;
+                }
+                if (!manifest_res.success || manifest_res.data.empty()) {
+                    *download_err = "Could not retrieve the file manifest from the sending console."_i18n;
+                    return Result_FsInvalidType;
+                }
+
+                const std::string manifest_json(manifest_res.data.begin(), manifest_res.data.end());
+                const auto files_opt = ParseManifestResponse(manifest_json, remote_path);
+                if (!files_opt || files_opt->empty()) {
+                    *download_err = "Invalid backup files received from the sending console."_i18n;
+                    return Result_FsInvalidType;
+                }
+                const auto& files = *files_opt;
+
+                fs::FsNativeSd sd;
+                const std::string root_dst = account_user::GetUserPacksRoot();
+                R_TRY(sd.CreateDirectoryRecursively(root_dst.c_str()));
+
+                std::string safe_folder = entry_name;
+                while (!safe_folder.empty() && (safe_folder.back() == '/' || safe_folder.back() == '\\')) {
+                    safe_folder.pop_back();
+                }
+                if (const auto slash = safe_folder.find_last_of("/\\"); slash != std::string::npos) {
+                    safe_folder.erase(0, slash + 1);
+                }
+                if (safe_folder.empty()) {
+                    safe_folder = "User_Backup";
+                }
+
+                std::string target_dir = root_dst + "/" + safe_folder;
+                int suffix = 1;
+                while (sd.DirExists(target_dir.c_str()) || sd.FileExists(target_dir.c_str())) {
+                    target_dir = root_dst + "/" + safe_folder + "_" + std::to_string(suffix++);
+                }
+
+                R_TRY(sd.CreateDirectoryRecursively(target_dir.c_str()));
+
+                bool success = false;
+                ON_SCOPE_EXIT({
+                    if (!success) {
+                        sd.DeleteDirectoryRecursively(target_dir.c_str());
+                    }
+                });
+
+                for (size_t i = 0; i < files.size(); ++i) {
+                    if (pbox->ShouldExit()) {
+                        return Result_TransferCancelled;
+                    }
+
+                    const auto& f = files[i];
+                    const std::string dest_file_path = target_dir + "/" + f.rel_path;
+                    R_TRY(sd.CreateDirectoryRecursivelyWithPath(dest_file_path.c_str()));
+
+                    pbox->NewTransfer(f.rel_path);
+
+                    const std::string download_url = base_url + "/download?path=" + curl::EscapeString(f.remote_path);
+
+                    curl::Api dl_api;
+                    dl_api.SetOption(curl::Url{download_url});
+                    dl_api.SetOption(curl::Path{dest_file_path});
+                    dl_api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+
+                    const auto dl_res = curl::ToFile(dl_api);
+
+                    if (pbox->ShouldExit()) {
+                        return Result_TransferCancelled;
+                    }
+
+                    if (!dl_res.success) {
+                        log_write("[USER_TRANSFER] Failed download %s -> %s\n", download_url.c_str(), dest_file_path.c_str());
+                        *download_err = "Failed to download backup files from the sending console."_i18n;
+                        return Result_FsInvalidType;
+                    }
+
+                    fs::File file;
+                    s64 written_size = 0;
+                    if (R_FAILED(sd.OpenFile(dest_file_path.c_str(), FsOpenMode_Read, &file)) ||
+                        R_FAILED(file.GetSize(&written_size)) ||
+                        written_size != f.size) {
+                        log_write("[USER_TRANSFER] Size mismatch for %s: expected %ld, got %ld\n",
+                            dest_file_path.c_str(), f.size, written_size);
+                        *download_err = "Failed to download backup files from the sending console."_i18n;
+                        return Result_FsInvalidType;
+                    }
+                }
+
+                const auto pack = account_user::FindUserPack(target_dir);
+                if (pack.dir.empty()) {
+                    log_write("[USER_TRANSFER] FindUserPack failed on target %s\n", target_dir.c_str());
+                    *download_err = "Downloaded backup is incomplete or invalid."_i18n;
+                    return Result_FsInvalidType;
+                }
+
+                *imported_pack = pack;
+                success = true;
+                R_SUCCEED();
+            },
+            [this, imported_pack, download_err](Result rc) {
+                if (rc == Result_TransferCancelled) {
+                    return;
+                }
+                if (R_FAILED(rc) || imported_pack->dir.empty()) {
+                    const std::string msg = !download_err->empty()
+                        ? *download_err
+                        : "Failed to transfer user backup from the sending console."_i18n;
+                    App::Push<OptionBox>(msg, "OK"_i18n);
+                    return;
+                }
+
+                auto pack = std::move(*imported_pack);
+                auto on_restore = m_on_restore;
+                SetPop();
+                if (on_restore) {
+                    on_restore({ std::move(pack) });
+                }
+            }
+        );
+    }
+
+    std::string m_base_url;
+    std::vector<RemotePackEntry> m_entries;
+    Callback m_on_restore;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+};
+
 struct RestoreSourceItem {
     std::string label;
     std::string description;
@@ -483,7 +1026,7 @@ struct RestoreSourceMenu final : MenuBase {
             },
             {
                 "Other console..."_i18n,
-                "Check connection to another console running Share User Backups."_i18n,
+                "Restore user backups from another console running Share User Backups."_i18n,
                 [this]() { ProbeOtherConsole(); }
             },
         };
@@ -598,7 +1141,7 @@ private:
     }
 
     void ProbeOtherConsole() {
-        net::RequireConnection([](){
+        net::RequireConnection([this](){
             std::string input;
             if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str())) || input.empty()) {
                 return;
@@ -615,12 +1158,15 @@ private:
 
             auto responding_url = std::make_shared<std::string>();
             auto probed_ok = std::make_shared<bool>(false);
+            auto list_ok = std::make_shared<bool>(false);
+            auto candidates = std::make_shared<std::vector<RemotePackEntry>>();
+            auto on_restore = m_on_restore;
 
             App::Push<ProgressBox>(
                 0,
                 "Testing Connection..."_i18n,
                 input,
-                [input, responding_url, probed_ok](auto pbox) -> Result {
+                [input, responding_url, probed_ok, list_ok, candidates](auto pbox) -> Result {
                     std::string base_input = input;
                     while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
                         base_input.pop_back();
@@ -651,32 +1197,77 @@ private:
                         if (res.success) {
                             *responding_url = url;
                             *probed_ok = true;
-                            R_SUCCEED();
+                            break;
                         }
                         if (pbox->ShouldExit()) {
                             return pbox->ShouldExitResult();
                         }
                     }
-                    return Result_FsEmpty;
+
+                    if (!*probed_ok || responding_url->empty()) {
+                        return Result_FsEmpty;
+                    }
+
+                    pbox->SetTransfer("Fetching backup list..."_i18n);
+
+                    curl::Api list_api;
+                    list_api.SetOption(curl::Url{*responding_url + "/list"});
+                    list_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                        return !pbox->ShouldExit();
+                    }});
+
+                    const auto list_res = curl::ToMemory(list_api);
+                    if (pbox->ShouldExit()) {
+                        return Result_TransferCancelled;
+                    }
+                    if (!list_res.success || list_res.data.empty()) {
+                        return Result_FsInvalidType;
+                    }
+
+                    const std::string list_json(list_res.data.begin(), list_res.data.end());
+                    const auto parsed = ParseRemoteListResponse(list_json);
+                    if (!parsed) {
+                        return Result_FsInvalidType;
+                    }
+
+                    *list_ok = true;
+                    *candidates = parsed->second;
+                    R_SUCCEED();
                 },
-                [responding_url, probed_ok](Result rc) {
-                    if (*probed_ok && !responding_url->empty()) {
-                        App::Push<OptionBox>(
-                            "HTTP server responded at "_i18n + *responding_url + ".\n\n" +
-                            "Make sure the sending console has Share User Backups active."_i18n,
-                            "OK"_i18n
-                        );
-                    } else if (rc != Result_TransferCancelled) {
+                [responding_url, probed_ok, list_ok, candidates, on_restore](Result rc) {
+                    if (rc == Result_TransferCancelled) {
+                        return;
+                    }
+                    if (!*probed_ok) {
                         App::Push<OptionBox>(
                             "Could not connect to the remote console.\n\n"
                             "Confirm that both consoles are connected to the same local network and that the source console has Share User Backups active."_i18n,
                             "OK"_i18n
                         );
+                        return;
                     }
+                    if (!*list_ok) {
+                        App::Push<OptionBox>(
+                            "Could not retrieve the user backup list from the sending console."_i18n,
+                            "OK"_i18n
+                        );
+                        return;
+                    }
+                    if (candidates->empty()) {
+                        App::Push<OptionBox>(
+                            "No user backups found on the sending console."_i18n,
+                            "OK"_i18n
+                        );
+                        return;
+                    }
+
+                    App::Push<RemoteUserPacksMenu>(*responding_url, std::move(*candidates), on_restore);
                 }
             );
         });
     }
+
+
 
 private:
     Callback m_on_restore;
