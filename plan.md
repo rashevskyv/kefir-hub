@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.697** (не писати 00F0 під Horizon; ребут після ACCOUNT terminate). Завершені плани збережено в
+Поточний delivery — **v0.13.698** (попередження про ребут; не дублювати NA). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.697 — Do not write 00F0 under Horizon; reboot after ACCOUNT stop
+## Поточний delivery: v0.13.698 — Warn then auto-reboot; skip duplicate Nintendo Account
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Backup user / Restore Backup: спочатку діалог «консоль перезавантажиться», після успіху — `requestForcedReboot()` без Later і без Refresh.
+2. Restore на ту саму консоль, де вже є цей NA: лінк не пишеться (два baas на один nas_id валили `account` на буті, 2168-0006 + bootloop 001e/000c/003e/001f).
+3. Лінк застосовується після підготовки годин. Після terminate ACCOUNT UI більше не малює список юзерів.
+4. Версія `0.13.698`. Цеглу з 697 знімають бекапом SYSTEM у Hekate.
+
+## Попередній delivery: v0.13.697 — Do not write 00F0 under Horizon; reboot after ACCOUNT stop
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

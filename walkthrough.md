@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.697** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.698** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.698 — Auto-reboot after backup/restore; skip duplicate NA
+
+- Лог 697 `11:18:42`: Create `nin10do` → terminate ACCOUNT → baas на новий UID `f8e1928c-…` з тим самим nas, що в живого nin10do → Commit → Refresh при мертвому ACCOUNT → fatal. Після авторебуту bootloop: `account` 2168-0006, далі 001e/000c/003e/001f.
+- Backup/Restore: спочатку «консоль перезавантажиться», після роботи — ребут одразу, без Later/Refresh.
+- Restore не вішає Nintendo Account, якщо цей nas_id уже є. Цеглу з 697 знімають restore SYSTEM у Hekate (rollback 0010 неповний: новий baas лишиться). Збірку агент не запускав.
 
 ## v0.13.697 — Atmosphere crash on restore; empty Users after backup
 

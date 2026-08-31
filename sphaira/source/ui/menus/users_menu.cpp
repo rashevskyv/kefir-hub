@@ -34,6 +34,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <utility>
 
 namespace sphaira::ui::menu::users {
@@ -1066,38 +1067,46 @@ void Menu::ConfirmBackup() {
     if (uids.empty()) {
         return;
     }
-    const auto packs = account_user::ListUserPacks();
-    std::string existing_when;
-    u32 existing_users = 0;
-    for (const auto& uid : uids) {
-        const auto hex = account_link::UidHex(uid);
-        for (const auto& p : packs) {
-            if (!p.uid_hex.empty() && p.uid_hex == hex) {
-                existing_users++;
-                if (existing_when.empty()) {
-                    existing_when = !p.created_label.empty() ? p.created_label : p.folder_name;
-                }
-                break;
-            }
-        }
-    }
-    if (existing_users == 0) {
-        RunBackup(uids, false);
-        return;
-    }
-    std::string msg;
-    if (uids.size() == 1) {
-        msg = "A backup of this user already exists"_i18n + " (" + existing_when + "). " +
-            "Overwrite it, or keep both?"_i18n;
-    } else {
-        msg = "One or more of these users already have a backup. Overwrite, or keep both?"_i18n;
-    }
-    App::Push<OptionBox>(msg, "Cancel"_i18n, "Overwrite"_i18n, "Keep both"_i18n, 1,
+    App::Push<OptionBox>(
+        "This backup will reboot the console."_i18n,
+        "Cancel"_i18n, "Backup"_i18n, 1,
         [this, uids](auto op) {
-            if (!op || *op == 0) {
+            if (!op || *op != 1) {
                 return;
             }
-            RunBackup(uids, *op == 1);
+            const auto packs = account_user::ListUserPacks();
+            std::string existing_when;
+            u32 existing_users = 0;
+            for (const auto& uid : uids) {
+                const auto hex = account_link::UidHex(uid);
+                for (const auto& p : packs) {
+                    if (!p.uid_hex.empty() && p.uid_hex == hex) {
+                        existing_users++;
+                        if (existing_when.empty()) {
+                            existing_when = !p.created_label.empty() ? p.created_label : p.folder_name;
+                        }
+                        break;
+                    }
+                }
+            }
+            if (existing_users == 0) {
+                RunBackup(uids, false);
+                return;
+            }
+            std::string msg;
+            if (uids.size() == 1) {
+                msg = "A backup of this user already exists"_i18n + " (" + existing_when + "). " +
+                    "Overwrite it, or keep both?"_i18n;
+            } else {
+                msg = "One or more of these users already have a backup. Overwrite, or keep both?"_i18n;
+            }
+            App::Push<OptionBox>(msg, "Cancel"_i18n, "Overwrite"_i18n, "Keep both"_i18n, 1,
+                [this, uids](auto op2) {
+                    if (!op2 || *op2 == 0) {
+                        return;
+                    }
+                    RunBackup(uids, *op2 == 1);
+                });
         });
 }
 
@@ -1165,7 +1174,15 @@ void Menu::ConfirmRestoreBackup() {
             App::Push<OptionBox>(gate_reason, "OK"_i18n);
             return;
         }
-        RunRestoreBackup(std::move(*picked));
+        auto picked_packs = std::move(*picked);
+        App::Push<OptionBox>(
+            "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped."_i18n,
+            "Cancel"_i18n, "Restore"_i18n, 1,
+            [this, picked_packs = std::move(picked_packs)](auto op) mutable {
+                if (op && *op == 1) {
+                    RunRestoreBackup(std::move(picked_packs));
+                }
+            });
     });
 }
 
@@ -1365,47 +1382,17 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
         pbox->NewTransfer("Writing user pack"_i18n);
         R_TRY(account_user::ExportUserPacks(uids, *dirs, overwrite_existing));
         R_SUCCEED();
-    }, [this, dirs](Result rc) {
+    }, [dirs](Result rc) {
+        const bool terminated = account_link::ConsumeAccountDaemonsTerminated();
         if (R_FAILED(rc) || dirs->empty()) {
+            if (terminated) {
+                utils::requestForcedReboot();
+                return;
+            }
             App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
             return;
         }
-        u32 with_hours = 0;
-        for (const auto& d : *dirs) {
-            if (account_playtime::PackHasPlayEvents(d)) {
-                with_hours++;
-            }
-        }
-        std::string hours_line;
-        if (with_hours == dirs->size()) {
-            hours_line = "Includes this user's play hours for Restore Backup."_i18n;
-        } else if (with_hours == 0) {
-            hours_line = "Could not capture play hours. Restore will not write hours from this pack."_i18n;
-        } else {
-            hours_line = "Play hours captured for some of the selected profiles."_i18n;
-        }
-        std::string msg;
-        if (dirs->size() == 1) {
-            msg = "Exported to "_i18n + dirs->front() + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n;
-        } else {
-            msg = "Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n;
-        }
-        if (account_link::ConsumeAccountDaemonsTerminated()) {
-            msg += "\n" + "The account service was stopped to read the Nintendo link. The user list is empty until reboot."_i18n;
-            App::Push<OptionBox>(
-                msg,
-                "Later"_i18n, "Reboot"_i18n, 1,
-                [this](auto op) {
-                    if (op && *op == 1) {
-                        utils::requestForcedReboot();
-                    } else {
-                        Refresh();
-                    }
-                });
-            return;
-        }
-        App::Push<OptionBox>(msg, "OK"_i18n);
-        Refresh();
+        utils::requestForcedReboot();
     }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
@@ -1427,8 +1414,15 @@ struct RestoreReport {
 
 void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
     auto report = std::make_shared<RestoreReport>();
+    std::unordered_set<u64> taken_nas;
+    for (const auto& u : m_items) {
+        u64 nas = 0;
+        if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
+            taken_nas.insert(nas);
+        }
+    }
     App::Push<ProgressBox>(0, "Restore Backup"_i18n, "Restoring profiles..."_i18n,
-        [picked_packs = std::move(picked_packs), report](auto pbox) -> Result {
+        [picked_packs = std::move(picked_packs), report, taken_nas](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_apply;
             struct PlayJob {
@@ -1457,7 +1451,16 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 account_link::LinkPackage pkg;
                 const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
                 if (R_SUCCEEDED(link_load_rc)) {
-                    links_to_apply.push_back({new_uid, std::move(pkg)});
+                    if (pkg.nas_id != 0 && taken_nas.count(pkg.nas_id)) {
+                        log_write("[USER] skip link, nas %llx already on this console\n",
+                            static_cast<unsigned long long>(pkg.nas_id));
+                        report->unlinked_restored++;
+                    } else {
+                        if (pkg.nas_id != 0) {
+                            taken_nas.insert(pkg.nas_id);
+                        }
+                        links_to_apply.push_back({new_uid, std::move(pkg)});
+                    }
                 } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
                     report->unlinked_restored++;
                 } else {
@@ -1471,18 +1474,6 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     play_jobs.push_back({new_uid, std::move(play_events)});
                 } else {
                     report->play_hours_missing++;
-                }
-            }
-
-            if (!links_to_apply.empty()) {
-                pbox->NewTransfer("Applying Nintendo Account link"_i18n);
-                u32 count = 0;
-                const auto apply_rc = account_link::ApplyLinkPackages(links_to_apply, count);
-                if (R_SUCCEEDED(apply_rc)) {
-                    report->links_restored = count;
-                } else {
-                    log_write("[USER] ApplyLinkPackages failed 0x%X\n", apply_rc);
-                    report->link_apply_failed = true;
                 }
             }
 
@@ -1502,50 +1493,27 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 }
             }
 
+            if (!links_to_apply.empty()) {
+                pbox->NewTransfer("Applying Nintendo Account link"_i18n);
+                u32 count = 0;
+                const auto apply_rc = account_link::ApplyLinkPackages(links_to_apply, count);
+                if (R_SUCCEEDED(apply_rc)) {
+                    report->links_restored = count;
+                } else {
+                    log_write("[USER] ApplyLinkPackages failed 0x%X\n", apply_rc);
+                    report->link_apply_failed = true;
+                }
+            }
+
             R_SUCCEED();
         },
-        [this, report](Result /*rc*/) {
-            if (report->profiles_restored == 0) {
+        [report](Result /*rc*/) {
+            const bool terminated = account_link::ConsumeAccountDaemonsTerminated();
+            if (report->profiles_restored == 0 && !terminated) {
                 App::Push<OptionBox>("Could not restore user profiles."_i18n, "OK"_i18n);
-                Refresh();
                 return;
             }
-
-            std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
-            if (report->links_restored > 0) {
-                msg += " " + std::to_string(report->links_restored) + " with Nintendo Account link."_i18n;
-            }
-            if (report->unlinked_restored > 0) {
-                msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
-            }
-            if (report->link_malformed_count > 0 || report->link_apply_failed) {
-                msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
-            }
-            if (report->play_hours_applied > 0) {
-                msg += " " + "Play hours are on SD. Reboot to RCM, TegraExplorer → playtime_restore.te (also under TegraExplorer/scripts)."_i18n;
-            }
-            if (report->play_hours_missing > 0) {
-                msg += " " + "A pack had no play hours — make a new backup."_i18n;
-            }
-            if (report->play_hours_locked) {
-                msg += " " + "Could not read play hours (00F0 busy). Profile is restored. Close games and run Restore Backup only after deleting the extra profile."_i18n;
-            }
-
-            const bool need_reboot = report->links_restored > 0 || account_link::ConsumeAccountDaemonsTerminated();
-            if (need_reboot) {
-                msg += " " + "Reboot required."_i18n;
-                App::Push<OptionBox>(
-                    msg,
-                    "Later"_i18n, "Reboot"_i18n, 1,
-                    [](auto op) {
-                        if (op && *op == 1) {
-                            utils::requestForcedReboot();
-                        }
-                    });
-            } else {
-                App::Push<OptionBox>(msg, "OK"_i18n);
-            }
-            Refresh();
+            utils::requestForcedReboot();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 

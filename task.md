@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.697** (00F0 не писати під Horizon; ребут після ACCOUNT). Завершені задачі збережено в
+Актуальний delivery — **v0.13.698** (попередження про ребут; skip duplicate NA). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.697 (00F0 crash + empty Users after backup)
+## Поточний delivery: v0.13.698 (warn+auto reboot; no duplicate NA)
+
+- [x] `USERS-REBOOT-WARN-698` — Backup/Restore спочатку попереджають про ребут; після успіху ребут без запиту.
+- [x] `USERS-NO-DUP-NAS-698` — Restore не пише baas, якщо цей nas_id уже є на консолі.
+- [x] `DOCS-BUMP-698` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.697 (00F0 crash + empty Users after backup)
 
 - [x] `USERS-NO-F0-RW-697` — Restore Backup більше не відкриває 00F0 на запис; merge на SD + playtime_restore.te.
 - [x] `USERS-BACKUP-REBOOT-697` — після terminate ACCOUNT на Backup user — ребут, не порожній список.

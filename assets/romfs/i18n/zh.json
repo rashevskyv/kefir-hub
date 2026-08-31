@@ -1898,6 +1898,8 @@
   "A pack had no play hours — make a new backup.": "A pack had no play hours — make a new backup.",
   "Play hours could not be written (00F0 locked). Close games and retry Restore Backup.": "Play hours could not be written (00F0 locked). Close games and retry Restore Backup.",
   "Reboot required.": "Reboot required.",
+  "This backup will reboot the console.": "This backup will reboot the console.",
+  "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.",
   "The account service was stopped to read the Nintendo link. The user list is empty until reboot.": "The account service was stopped to read the Nintendo link. The user list is empty until reboot.",
   "Preparing play hours": "Preparing play hours",
   "Play hours are on SD. Reboot to RCM, TegraExplorer → playtime_restore.te (also under TegraExplorer/scripts).": "Play hours are on SD. Reboot to RCM, TegraExplorer → playtime_restore.te (also under TegraExplorer/scripts).",

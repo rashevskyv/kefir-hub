@@ -2060,6 +2060,8 @@
   "A pack had no play hours — make a new backup.": "В паке нет часов — сделайте новый бэкап.",
   "Play hours could not be written (00F0 locked). Close games and retry Restore Backup.": "Не удалось записать часы (00F0 занят). Закройте игры и повторите Restore Backup.",
   "Reboot required.": "Нужна перезагрузка.",
+  "This backup will reboot the console.": "После этого бэкапа консоль перезагрузится.",
+  "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped.": "После восстановления консоль перезагрузится. Если этот Nintendo Account уже есть на консоли, линк будет пропущен.",
   "The account service was stopped to read the Nintendo link. The user list is empty until reboot.": "Сервис аккаунтов остановлен, чтобы прочитать линк. Список юзеров пуст до ребута.",
   "Preparing play hours": "Подготовка часов",
   "Play hours are on SD. Reboot to RCM, TegraExplorer → playtime_restore.te (also under TegraExplorer/scripts).": "Часы на SD. RCM → TegraExplorer → playtime_restore.te (также TegraExplorer/scripts).",
