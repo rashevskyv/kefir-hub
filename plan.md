@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.718** (Restore Backup: сирий знімок 0010 для Undo). Завершені плани збережено в
+Поточний delivery — **v0.13.719** (Restore Backup: no Create when NA unproven; keep ns/friends). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.718 — Raw 0010 snapshot for Undo (no unpack)
+## Поточний delivery: v0.13.719 — Restore Backup: Replace when NA unproven; do not kill ns/friends
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Dest H: з horizon-linked профілем + закритим 0010: `FindLiveUidByNasId` не бачив pack nas → Create + ApplyLink на новий uid → fatal `am` 2011-0301 і bootloop `account` 2168-0006.
+2. Якщо QueryNintendoAccountId не доводить інший nas, а 0010 закритий — Replace існуючий linked uid (ім'я/аватар/години + ApplyLink), не Create. Якщо Query повертає *інший* nas — Create лишається дозволеним.
+3. `TerminateAccountDaemons` більше не вбиває ns (0015/001F) і friends (000E) з Hub applet (ламало `am`). Лишаються BCAT/ACCOUNT/OLSC; після ApplyLink — негайний reboot. Логи: Query rc/nas, Create vs Replace, чи знімали baas. Version `0.13.719`.
+
+## Попередній delivery: v0.13.718 — Raw 0010 snapshot for Undo (no unpack)
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

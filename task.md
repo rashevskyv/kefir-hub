@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.718** (Restore Backup: сирий знімок 0010 для Undo). Завершені задачі збережено в
+Актуальний delivery — **v0.13.719** (Restore Backup: Replace when NA unproven; keep ns/friends). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.718 (raw 0010 Undo snapshot)
+## Поточний delivery: v0.13.719 (Replace when NA unproven; keep ns/friends)
+
+- [x] `USERS-RESTORE-UNPROVEN-NAS-719` — якщо 0010 закритий і QueryNintendoAccountId не доводить інший nas за horizon-linked профілем — Replace той uid, не Create+ApplyLink на новий.
+- [x] `USERS-RESTORE-KEEP-NS-719` — `TerminateAccountDaemons` лишає ns/friends; після ApplyLink негайний reboot (не UI на зламаному am).
+- [x] `USERS-RESTORE-LOG-719` — лог Query rc/nas на live user, Create vs Replace, чи знімали baas.
+- [x] `DOCS-BUMP-719` — plan/task/walkthrough/audit; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.718 (raw 0010 Undo snapshot)
 
 - [x] `USERS-RESTORE-RAW-SNAP-718` — `Dump0010ReadOnly` копіює сирий BIS `/save/8000000000000010` у `restore_pending/8000000000000010`; прибрано unpack/`0010/su`.
 - [x] `USERS-RESTORE-NAND-FLAG-718` — прапорець `restore_pending/nand` (`emu`|`sys`); TE dump/Undo без меню NAND, mount за прапорцем.

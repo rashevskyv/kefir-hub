@@ -78,7 +78,7 @@ auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid
         const auto want = NormUidHex(p.uid_hex);
         for (const auto& u : users) {
             if (!u.uid_hex.empty() && NormUidHex(u.uid_hex) == want) {
-                log_write("[USER] pack uid %s is already on this console\n", p.uid_hex.c_str());
+                log_write("[USER] Replace: pack uid %s is already on this console\n", p.uid_hex.c_str());
                 return u.uid;
             }
         }
@@ -86,10 +86,12 @@ auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid
     if (p.nas_id != 0) {
         AccountUid by_nas{};
         if (account_link::FindLiveUidByNasId(p.nas_id, by_nas)) {
-            log_write("[USER] pack nas %llx is already on this console\n",
+            log_write("[USER] Replace: pack nas %llx maps to live uid (matched or unproven-unique)\n",
                 static_cast<unsigned long long>(p.nas_id));
             return by_nas;
         }
+        log_write("[USER] Create: pack nas %llx not on this console (or linked users have different proven nas)\n",
+            static_cast<unsigned long long>(p.nas_id));
     }
     return std::nullopt;
 }
@@ -2686,7 +2688,10 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 if (const auto live = FindLiveUidForPack(p)) {
                     dest_uid = *live;
                     have_dest = true;
-                    log_write("[USER] restore onto existing uid %s\n", p.uid_hex.c_str());
+                    log_write("[USER] Replace onto live uid %s (pack uid %s nas %llx)\n",
+                        account_link::UidHex(dest_uid).c_str(),
+                        p.uid_hex.c_str(),
+                        static_cast<unsigned long long>(p.nas_id));
                     const auto rename_rc = account_user::Rename(dest_uid, name);
                     if (R_FAILED(rename_rc)) {
                         log_write("[USER] rename existing 0x%X\n", rename_rc);
@@ -2701,6 +2706,9 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 }
 
                 if (!have_dest) {
+                    log_write("[USER] Create new uid for pack %s nas %llx\n",
+                        p.uid_hex.c_str(),
+                        static_cast<unsigned long long>(p.nas_id));
                     const auto create_rc = account_user::Create(name, dest_uid, jpeg);
                     if (R_FAILED(create_rc)) {
                         log_write("[USER] Create user failed 0x%X\n", create_rc);
@@ -2768,6 +2776,11 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
             auto pending = account_restore::LoadPending();
             if (pending.present) {
                 account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            }
+            // After ApplyLink (ACCOUNT terminated), do not keep Hub UI on am/ns —
+            // reboot immediately (playtime TE path also reboots via LaunchTegraRomfs).
+            if (terminated) {
+                log_write("[USER] ApplyLink done; rebooting immediately\n");
             }
             if (report->play_hours_applied &&
                 account_restore::LaunchTegraRomfs("playtime_restore.te")) {

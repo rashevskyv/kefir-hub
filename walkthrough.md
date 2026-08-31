@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.718** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.719** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.719 — Restore Backup: Replace when NA unproven; keep ns/friends
+
+- Dest H: (Hub v0.13.718): той самий air pack, що на I:; `ListUsers save_open=0 linked_unverified=1`; Create `nin10do` + ApplyLink на *новий* uid при вже horizon-linked профілі → fatal `am` `0100000000000023` 2011-0301, після ребуту bootloop `account` 2168-0006. Нікнейм не був причиною (другий `nin10do` Create ок).
+- `FindLiveUidByNasId` тепер логує QueryNintendoAccountId rc/nas на кожного live user. Якщо pack nas збігається, або 0010 закритий і nas у linked-профілю недоведений — Replace той uid. Якщо Query повертає *інший* nas — Create+ApplyLink лишається.
+- `TerminateAccountDaemons` більше не вбиває ns/friends з Hub (ламало am); лишаються BCAT/ACCOUNT/OLSC. Після ApplyLink — негайний reboot. Лог: чи знімали baas, Create vs Replace. Версія `0.13.719`. Збірку агент не запускав.
 
 ## v0.13.718 — Raw 0010 snapshot for Restore Backup Undo
 

@@ -158,14 +158,13 @@ auto OpenAccountSaveWritable() -> fs::FsNativeSave {
 void TerminateAccountDaemons() {
     if (R_SUCCEEDED(pmshellInitialize())) {
         ON_SCOPE_EXIT(pmshellExit());
+        // Do not kill ns (0015/001F) or friends (000E): from the Hub applet that
+        // User-Breaks am (0100000000000023) and can bootloop after ApplyLink.
         pmshellTerminateProgram(0x010000000000000CULL); // BCAT
-        pmshellTerminateProgram(0x010000000000000EULL); // friends (FW 20 crash name)
-        pmshellTerminateProgram(0x0100000000000015ULL); // ns (classic)
         pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
-        pmshellTerminateProgram(0x010000000000001FULL); // ns on FW 20.5 (Process Name: ns)
         pmshellTerminateProgram(0x010000000000003EULL); // OLSC
         g_daemons_terminated = true;
-        log_write("[ACC] terminated BCAT/friends/ns/ACCOUNT/OLSC (reboot needed)\n");
+        log_write("[ACC] terminated BCAT/ACCOUNT/OLSC (reboot needed; ns/friends kept)\n");
     }
 }
 
@@ -647,6 +646,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         incoming_nas.push_back(target.pkg.nas_id);
     }
 
+    u32 baas_removed = 0;
     auto delete_baas = [&](const std::string& bf) -> Result {
         const auto baas_full = baas_dir + "/" + bf;
         if (!save.FileExists(baas_full.c_str())) {
@@ -665,6 +665,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         }
         log_write("[ACC] removing baas %s\n", bf.c_str());
         R_TRY(save.DeleteFile(baas_full.c_str()));
+        baas_removed++;
         R_SUCCEED();
     };
 
@@ -710,6 +711,12 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
             }
             R_TRY(save.write_entire_file(nas_dst.c_str(), nf.data));
         }
+    }
+
+    if (baas_removed == 0) {
+        log_write("[ACC] ApplyLinkPackages: no existing baas removed\n");
+    } else {
+        log_write("[ACC] ApplyLinkPackages: removed %u baas file(s)\n", baas_removed);
     }
 
     for (const auto old_id : old_nas_ids_to_clean) {
@@ -893,24 +900,62 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
     }
 
     const auto live = App::GetAccountList();
+    AccountUid unproven_linked{};
+    bool have_unproven_linked = false;
+
     for (const auto& base : live) {
         u64 ipc_nas = 0;
-        if (R_SUCCEEDED(QueryNintendoAccountId(base.uid, ipc_nas)) && ipc_nas == nas_id) {
+        const auto qrc = QueryNintendoAccountId(base.uid, ipc_nas);
+        log_write("[ACC] QueryNintendoAccountId uid=%s rc=0x%X nas=%llx\n",
+            UidDashedRfc(base.uid).c_str(), qrc,
+            static_cast<unsigned long long>(ipc_nas));
+
+        if (R_SUCCEEDED(qrc) && ipc_nas != 0 && ipc_nas == nas_id) {
             out_uid = base.uid;
             log_write("[ACC] nas %llx is IPC-linked to %s\n",
                 static_cast<unsigned long long>(nas_id), UidDashedRfc(base.uid).c_str());
             return true;
         }
+
+        bool horizon_linked = false;
+        const auto hrc = QueryHorizonLinkStatus(base.uid, horizon_linked);
+        if (R_SUCCEEDED(hrc) && horizon_linked) {
+            if (R_SUCCEEDED(qrc) && ipc_nas != 0 && ipc_nas != nas_id) {
+                log_write("[ACC] linked uid %s has different nas %llx (pack %llx); Create still allowed\n",
+                    UidDashedRfc(base.uid).c_str(),
+                    static_cast<unsigned long long>(ipc_nas),
+                    static_cast<unsigned long long>(nas_id));
+            } else if (R_FAILED(qrc) || ipc_nas == 0) {
+                if (!have_unproven_linked) {
+                    unproven_linked = base.uid;
+                    have_unproven_linked = true;
+                }
+                log_write("[ACC] linked uid %s nas unproven (Query rc=0x%X)\n",
+                    UidDashedRfc(base.uid).c_str(), qrc);
+            }
+        }
     }
 
     auto save = TryOpenAccountSave();
     if (R_FAILED(save.GetFsOpenResult())) {
+        log_write("[ACC] FindLiveUidByNasId: account save closed 0x%X\n", save.GetFsOpenResult());
+        if (have_unproven_linked) {
+            // 0010 closed and QueryNintendoAccountId failed: cannot prove pack nas
+            // is unique vs the existing horizon-linked profile → Replace, not Create.
+            out_uid = unproven_linked;
+            log_write("[ACC] nas %llx uniqueness unproven; Replace linked %s\n",
+                static_cast<unsigned long long>(nas_id),
+                UidDashedRfc(unproven_linked).c_str());
+            return true;
+        }
         return false;
     }
     std::string baas_dir;
     std::string nas_dir;
     ResolveSuDirs(save, baas_dir, nas_dir);
     if (baas_dir.empty()) {
+        // Save open but no baas tree → nothing can hold this nas; Create is safe.
+        log_write("[ACC] FindLiveUidByNasId: baas dir missing (Create allowed)\n");
         return false;
     }
 
@@ -955,6 +1000,12 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
         }
         log_write("[ACC] nas %llx baas %s is orphan (uid not live)\n",
             static_cast<unsigned long long>(nas_id), bf.c_str());
+    }
+
+    // Save open and no baas carries this nas → proven unique even if Query failed.
+    if (have_unproven_linked) {
+        log_write("[ACC] nas %llx not in baas; Create allowed despite unproven Query on linked uid\n",
+            static_cast<unsigned long long>(nas_id));
     }
     return false;
 }
