@@ -2,20 +2,29 @@
 
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/filebrowser.hpp"
+#include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/nvg_util.hpp"
 #include "haze_helper.hpp"
 
+#include "account_user.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
 #include "i18n.hpp"
 #include "net.hpp"
 #include "nro.hpp"
 #include "nacp_util.hpp"
 #include "web.hpp"
+#include "web_screenshots.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <vector>
 
 namespace sphaira::ui::menu {
 namespace {
@@ -39,6 +48,59 @@ void StartShareServerNow() {
 
         WebPushServerProgressBox(result.url, result.qr_image, "Web Sharing Server"_i18n);
     });
+}
+
+void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
+    if (targets.empty()) {
+        App::PushErrorBox(Result_FsEmpty, "Failed to start folder server"_i18n);
+        return;
+    }
+
+    net::RequireConnection([targets]() {
+        fs::FsNativeSd fs;
+        std::vector<fs::FsPath> valid_targets;
+        for (const auto& target : targets) {
+            const auto s = target.toString();
+            if (s == "/" || fs.DirExists(target)) {
+                valid_targets.push_back(target);
+            }
+        }
+
+        if (valid_targets.empty()) {
+            App::PushErrorBox(Result_FsInvalidType, "Failed to start folder server"_i18n);
+            return;
+        }
+
+        const auto& primary = valid_targets.front();
+        App::SetMountedFolders(valid_targets);
+
+        WebShareResult result;
+        if (const auto rc = WebShareFolder(primary, result); R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Failed to start folder server"_i18n);
+            return;
+        }
+
+        if (!result.listener_self_test) {
+            App::Notify("Web listener started, but its local self-test failed; check the log or use Title Mode"_i18n);
+        }
+
+        if (WebGetProgressBox()) {
+            nvgDeleteImage(App::GetVg(), result.qr_image);
+            App::Notify("Mounted over HTTP: "_i18n + result.url);
+            return;
+        }
+
+        WebPushServerProgressBox(result.url, result.qr_image, "Console Transfer"_i18n);
+    });
+}
+
+void StartConsoleTransferShare(const std::vector<std::string>& roots) {
+    std::vector<fs::FsPath> targets;
+    targets.reserve(roots.size());
+    for (const auto& r : roots) {
+        targets.emplace_back(r);
+    }
+    StartConsoleTransferShare(targets);
 }
 
 void InstallTitleModeForwarder() {
@@ -95,53 +157,120 @@ void StartShareServerFromTools() {
 
 } // namespace
 
-void AddConsoleTransferOptions(Sidebar* options) {
-    auto show_coming_soon = [](){
-        App::Push<OptionBox>("Coming soon"_i18n, "OK"_i18n);
+ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, MenuFlag_None} {
+    m_items = {
+        {
+            "Share Entire microSD"_i18n,
+            "Share all files and folders on the microSD card."_i18n,
+            [](){
+                StartConsoleTransferShare(std::vector<fs::FsPath>{ fs::FsPath{"/"} });
+            }
+        },
+        {
+            "Share Save Backups"_i18n,
+            "Share save data backups from configured locations, including DBI backups."_i18n,
+            [](){
+                StartConsoleTransferShare(save::GetShareableSaveBackupRoots());
+            }
+        },
+        {
+            "Share User Backups"_i18n,
+            "Share user packages and profile backups."_i18n,
+            [](){
+                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() });
+            }
+        },
+        {
+            "Share Screenshots & Videos"_i18n,
+            "Share album screenshots and captured gameplay videos."_i18n,
+            [](){
+                StartConsoleTransferShare(std::vector<std::string>{ GetAlbumRoot() });
+            }
+        },
+        {
+            "Share switch Folder"_i18n,
+            "Share homebrew applications and tools from the selected source."_i18n,
+            [](){
+                StartConsoleTransferShare(homebrew::GetShareableHomebrewRoots());
+            }
+        },
+        {
+            "Choose Folder..."_i18n,
+            "Select a custom folder on the microSD card to share."_i18n,
+            [](){
+                auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
+                browser->SetFolderPicker([](const fs::FsPath& folder){
+                    StartConsoleTransferShare(std::vector<fs::FsPath>{ folder });
+                });
+                App::Push(std::move(browser));
+            }
+        },
     };
 
-    options->Add<SidebarEntryHeader>("CONNECT"_i18n);
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+    );
 
-    options->Add<SidebarEntryCallback>("Connect to Console"_i18n, show_coming_soon,
-        "Connect to another console and browse its shared content."_i18n);
+    m_list = std::make_unique<List>(1, 6, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    SetIndex(0);
+}
 
-    options->Add<SidebarEntryHeader>("SHARE"_i18n);
+void ConsoleTransferMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    }, this);
+}
 
-    options->Add<SidebarEntryCallback>("Share Entire microSD"_i18n, show_coming_soon,
-        "Share all files and folders on the microSD card."_i18n);
+void ConsoleTransferMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
 
-    options->Add<SidebarEntryCallback>("Share Save Backups"_i18n, show_coming_soon,
-        "Share save data backups from configured locations, including DBI backups."_i18n);
+    m_list->Draw(vg, theme, m_items.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
+        const auto& item = m_items[i];
+        const auto is_selected = m_index == static_cast<s64>(i);
+        const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+        if (is_selected) {
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+        } else {
+            DrawElement(v, ThemeEntryID_GRID);
+        }
+        gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
+            theme->GetColour(text_id), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    });
+}
 
-    options->Add<SidebarEntryCallback>("Share User Backups"_i18n, show_coming_soon,
-        "Share user packages and profile backups."_i18n);
+void ConsoleTransferMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+    SetIndex(m_index);
+}
 
-    options->Add<SidebarEntryCallback>("Share Profiles & Play Hours"_i18n, show_coming_soon,
-        "Share user profiles and play time statistics."_i18n);
+void ConsoleTransferMenu::SetIndex(s64 index) {
+    if (m_items.empty()) {
+        m_index = 0;
+        return;
+    }
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    if (!m_index) {
+        m_list->SetYoff(0);
+    }
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
+}
 
-    options->Add<SidebarEntryCallback>("Share Installed Games"_i18n, show_coming_soon,
-        "Stream installed games and updates directly from console storage."_i18n);
-
-    options->Add<SidebarEntryCallback>("Share Screenshots & Videos"_i18n, show_coming_soon,
-        "Share album screenshots and captured gameplay videos."_i18n);
-
-    options->Add<SidebarEntryCallback>("Share switch Folder"_i18n, show_coming_soon,
-        "Share homebrew applications and tools from the selected source."_i18n);
-
-    options->Add<SidebarEntryCallback>("Choose Folder..."_i18n, show_coming_soon,
-        "Select a custom folder on the microSD card to share."_i18n);
-
-    options->Add<SidebarEntryHeader>("PHONE"_i18n);
-
-    options->Add<SidebarEntryCallback>("Install from Phone"_i18n, show_coming_soon,
-        "Transfer and install games directly from a mobile device."_i18n);
-
-    options->Add<SidebarEntryCallback>("Phone Installation Guide"_i18n, [](){
-        App::Push<OptionBox>(
-            "Phone installation is planned over the same local network. Detailed instructions will appear here when the transfer feature is available."_i18n,
-            "OK"_i18n
-        );
-    }, "Instructions on how to transfer and install content from a mobile device."_i18n);
+void ConsoleTransferMenu::OnSelect() {
+    if (!m_items.empty() && m_items[m_index].action) {
+        m_items[m_index].action();
+    }
 }
 
 void AddInstallShareOptions(Sidebar* options) {

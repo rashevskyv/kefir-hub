@@ -41,6 +41,7 @@ void NotifyDirectoryDeleted(std::string_view path);
 void NotifyRename(std::string_view old_path, std::string_view new_path, bool is_directory = false);
 void NotifyPathChanged(std::string_view path, bool is_directory = false);
 auto GetSearchPaths() -> std::vector<std::string>;
+auto GetShareableHomebrewRoots() -> std::vector<std::string>;
 auto IsSearchPath(const fs::FsPath& path) -> bool;
 auto AddSearchPath(const fs::FsPath& path) -> bool;
 auto RemoveSearchPath(const fs::FsPath& path) -> bool;

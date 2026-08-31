@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.712** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.713** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.713 — Console Transfer Share sources over HTTP
+
+- Console Transfer більше не sidebar: плитка Tools і START відкривають окремий повноекранний список із описами. У ньому рівно шість робочих дій: уся microSD, бекапи сейвів, user packs, screenshots/videos, switch/homebrew та обрана папка.
+- Усі дії перевикористовують наявний HTTP server, QR і progress box. Save resolver збирає стандартний, DBI та налаштовані додаткові корені; user/album/homebrew отримані з їхніх власних resolver-ів. Якщо такого джерела ще немає на SD, помилка не скидає вже активне розшарювання.
+- Для не-root папки `WebShareFolder` формує URL з `?path=`, тому QR одразу відкриває вибране джерело. Connect, Phone, Games і Profiles & Play Hours не показуються до окремого проєктування. Версія `0.13.713`; перевірено `git diff --check` і JSON, збірку агент не запускав.
 
 ## v0.13.712 — Console Transfer hub placeholder
 

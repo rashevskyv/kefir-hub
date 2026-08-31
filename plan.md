@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.712** (Console Transfer як чесний хаб-заглушка). Завершені плани збережено в
+Поточний delivery — **v0.13.713** (Console Transfer розшарює обрані HTTP-джерела). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.712 — Console Transfer hub placeholder
+## Поточний delivery: v0.13.713 — Console Transfer Share sources over HTTP
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Console Transfer відкривається як повноекранне меню, не як sidebar. Є рівно шість робочих Share-дій: microSD, save backups, user backups, album, switch/homebrew і вибрана папка.
+2. Дії перевикористовують наявний HTTP-сервер, QR/progress flow та file-browser picker. Шляхи save/user/album/homebrew беруться з їхніх власних resolver-ів/налаштувань; QR не-root папки відкриває саме її.
+3. Version `0.13.713`.
+
+## Попередній delivery: v0.13.712 — Console Transfer hub placeholder
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

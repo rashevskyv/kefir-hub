@@ -4,6 +4,7 @@
 
 namespace sphaira {
 
+auto GetAlbumRoot() -> const std::string&;
 auto BuildScreenshotGalleryPage(const std::string& query) -> std::string;
 
 } // namespace sphaira

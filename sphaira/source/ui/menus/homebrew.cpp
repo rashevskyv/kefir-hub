@@ -452,6 +452,27 @@ auto GetSearchPaths() -> std::vector<std::string> {
     return LoadSearchPaths();
 }
 
+auto GetShareableHomebrewRoots() -> std::vector<std::string> {
+    std::vector<std::string> roots;
+    auto add_unique = [&](const std::string& p) {
+        if (p.empty()) {
+            return;
+        }
+        for (const auto& existing : roots) {
+            if (path::EqualsIC(existing, p)) {
+                return;
+            }
+        }
+        roots.push_back(p);
+    };
+
+    add_unique(DEFAULT_SEARCH_PATH);
+    for (const auto& extra : LoadSearchPaths()) {
+        add_unique(extra);
+    }
+    return roots;
+}
+
 auto IsSearchPath(const fs::FsPath& path) -> bool {
     const auto normalized = NormalizeSearchPath(path.s);
     if (!normalized) {

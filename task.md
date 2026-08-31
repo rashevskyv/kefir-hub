@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.712** (Console Transfer як чесний хаб-заглушка). Завершені задачі збережено в
+Актуальний delivery — **v0.13.713** (Console Transfer розшарює обрані HTTP-джерела). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.712 (Console Transfer hub placeholder)
+## Поточний delivery: v0.13.713 (Console Transfer Share sources over HTTP)
+
+- [x] `CONSOLE-TRANSFER-MENU-713` — окреме повноекранне меню із шістьма Share-діями; sidebar та непроєктовані Connect/Phone/Games/Hours прибрано.
+- [x] `CONSOLE-TRANSFER-SOURCES-713` — HTTP share використовує resolver-и сейвів (стандартні, DBI, додаткові), user packs, emuMMC album, homebrew-шляхи й folder picker; відсутнє джерело не скидає чинні mount-и.
+- [x] `CONSOLE-TRANSFER-URL-713` — QR не-root джерела веде у вибрану папку.
+- [x] `DOCS-BUMP-713` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.712 (Console Transfer hub placeholder)
 
 - [x] `CONSOLE-TRANSFER-HUB-712` — дев'ята плитка Tools, спільний Console Transfer sidebar; CONNECT / SHARE / PHONE показують лише Coming soon.
 - [x] `CONSOLE-TRANSFER-I18N-712` — нові рядки додано до en/uk/ru; жодних шляхів бекапів чи джерел не зашито в дії заглушки.

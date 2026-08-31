@@ -214,8 +214,8 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Settings"_i18n, "Open Kefir Hub application settings."_i18n, 0, [](){
             App::Push<ui::menu::settings::Menu>();
         }},
-        { "Console Transfer"_i18n, "Share files, backups and installed content with another device."_i18n, 0, [this](){
-            DisplayConnectionOptions();
+        { "Console Transfer"_i18n, "Share files, backups and installed content with another device."_i18n, 0, [](){
+            App::Push<ConsoleTransferMenu>();
         }},
     };
 
@@ -223,8 +223,8 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
             OnSelect();
         }}),
-        std::make_pair(Button::START, Action{"Console Transfer"_i18n, [this](){
-            DisplayConnectionOptions();
+        std::make_pair(Button::START, Action{"Console Transfer"_i18n, [](){
+            App::Push<ConsoleTransferMenu>();
         }})
     );
 
@@ -321,15 +321,6 @@ void Menu::OnSelect() {
     }
 
     m_items[m_index].action();
-}
-
-void Menu::DisplayConnectionOptions() {
-    auto options = std::make_unique<Sidebar>("Console Transfer"_i18n, Sidebar::Side::RIGHT);
-    ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-    AddConsoleTransferOptions(options.get());
-    AddInstallShareOptions(options.get());
-    AddSettingsOption(options.get());
 }
 
 GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {

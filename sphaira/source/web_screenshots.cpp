@@ -16,6 +16,17 @@ namespace sphaira {
 using namespace webpages;
 using namespace web::detail;
 
+// screenshots are stored in the album of the *booted* nand, which on emummc is the
+// redirected nintendo folder from emummc.ini, eg /emuMMC/SD00/Nintendo/Album.
+auto GetAlbumRoot() -> const std::string& {
+    static const std::string root = [] {
+        const auto nintendo = App::GetEmummcNintendoPath();
+        return nintendo.empty() ? std::string{"/Nintendo/Album"} : nintendo + "/Album";
+    }();
+
+    return root;
+}
+
 namespace {
 
 struct ScreenshotEntry {
@@ -28,17 +39,6 @@ struct ScreenshotEntry {
     std::string raw_timestamp; // YYYYMMDDHHMMSS00 (for sorting)
     bool is_video{};
 };
-
-// screenshots are stored in the album of the *booted* nand, which on emummc is the
-// redirected nintendo folder from emummc.ini, eg /emuMMC/SD00/Nintendo/Album.
-auto GetAlbumRoot() -> const std::string& {
-    static const std::string root = [] {
-        const auto nintendo = App::GetEmummcNintendoPath();
-        return nintendo.empty() ? std::string{"/Nintendo/Album"} : nintendo + "/Album";
-    }();
-
-    return root;
-}
 
 // the hex after the '-' in an album filename is an obfuscated id, *not* the title id.
 // caps:a is what maps a file back to the application that took it; its datetime is

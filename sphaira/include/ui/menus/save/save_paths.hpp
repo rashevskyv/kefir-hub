@@ -46,6 +46,7 @@ auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath>;
 auto IsDisaSaveFile(fs::Fs* fs, const fs::FsPath& path) -> bool;
 auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view name) -> bool;
 auto GetBackupSearchPaths() -> std::vector<std::string>;
+auto GetShareableSaveBackupRoots() -> std::vector<std::string>;
 auto AddBackupSearchPath(const fs::FsPath& path) -> bool;
 auto RemoveBackupSearchPath(const fs::FsPath& path) -> bool;
 auto NormalizeBackupRoot(const fs::FsPath& path, const filebrowser::FsEntry& fs_entry) -> fs::FsPath;

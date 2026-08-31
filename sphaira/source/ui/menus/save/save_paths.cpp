@@ -400,6 +400,28 @@ auto GetBackupSearchPaths() -> std::vector<std::string> {
     return search_paths;
 }
 
+auto GetShareableSaveBackupRoots() -> std::vector<std::string> {
+    std::vector<std::string> roots;
+    auto add_unique = [&](const std::string& p) {
+        if (p.empty()) {
+            return;
+        }
+        for (const auto& existing : roots) {
+            if (path::EqualsIC(existing, p)) {
+                return;
+            }
+        }
+        roots.push_back(p);
+    };
+
+    add_unique(DEFAULT_BACKUP_ROOT);
+    add_unique(DBI_SAVES_PATH);
+    for (const auto& extra : GetBackupSearchPaths()) {
+        add_unique(extra);
+    }
+    return roots;
+}
+
 static auto SaveBackupSearchPaths(const std::vector<std::string>& search_paths) -> bool {
     if (!ini_puts(BACKUP_PATHS_INI_SECTION, nullptr, nullptr, App::CONFIG_PATH)) {
         return false;

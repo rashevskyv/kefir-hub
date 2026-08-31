@@ -519,4 +519,8 @@ auto DeleteUserPack(const std::string& dir) -> Result {
     R_SUCCEED();
 }
 
+auto GetUserPacksRoot() -> std::string {
+    return paths::DATA_ROOT + "/user_packs";
+}
+
 } // namespace sphaira::account_user

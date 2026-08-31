@@ -30,7 +30,6 @@ private:
     void LoadIcons();
     void SetIndex(s64 index);
     void OnSelect();
-    void DisplayConnectionOptions();
 
 private:
     std::vector<ToolItem> m_items;

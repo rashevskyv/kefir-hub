@@ -31,5 +31,6 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
 auto FindUserPack(const std::string& dir) -> Pack;
 auto ListUserPacks() -> std::vector<Pack>;
 auto DeleteUserPack(const std::string& dir) -> Result;
+auto GetUserPacksRoot() -> std::string;
 
 } // namespace sphaira::account_user

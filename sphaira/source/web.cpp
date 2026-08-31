@@ -1744,7 +1744,12 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
     fs::FsNativeSd fs;
     R_UNLESS(fs.DirExists(path), Result_FsInvalidType);
 
-    R_TRY(WebStartServer({}, out));
+    std::string page_path;
+    if (path.s[0] != '\0' && !(path.s[0] == '/' && path.s[1] == '\0')) {
+        page_path = "/?path=" + web::detail::UrlEncode(path.s);
+    }
+
+    R_TRY(WebStartServer(page_path, out));
 
     R_SUCCEED();
 }
