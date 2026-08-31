@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.696** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.697** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.697 — Atmosphere crash on restore; empty Users after backup
+
+- SD crash `01788163471_010000000000001f.log`: process **ns**, User Break, Result `0x25A0B` (2011-0301). `playtime_rollback/` немає — впало на writable open 00F0, до rollback. Hub більше не відкриває 00F0 на запис. Рестор мерджить read-only у `playtime_pending/PlayEvent.dat` і кладе `playtime_restore.te` (RCM / TegraExplorer/scripts).
+- Backup Overwrite зупиняв ACCOUNT (RO 0010 fail → terminate), Refresh бачив 0 юзерів. Після terminate — «Reboot»; список порожній, доки ACCOUNT не підніметься.
+- Пак `20260831_110333_nin10do_*` валідний (848 подій, UID encode збігся з log). Збірку агент не запускав.
 
 ## v0.13.696 — Play-hours Backup Restore review
 

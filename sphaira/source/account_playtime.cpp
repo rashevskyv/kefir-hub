@@ -203,6 +203,20 @@ auto RemapTo(std::vector<PdmPlayEvent>& events, const AccountUid& to) -> void {
     }
 }
 
+auto InstallPlaytimeTe(fs::FsNativeSd& sd) -> void {
+    std::vector<u8> te;
+    if (R_FAILED(fs::read_entire_file("romfs:/tegra/playtime_restore.te", te)) || te.empty()) {
+        log_write("[PLAY] playtime_restore.te missing from romfs\n");
+        return;
+    }
+    sd.CreateDirectoryRecursively("/config/kefir/playtime_pending");
+    sd.CreateDirectoryRecursively("/config/kefir/nand_transfer");
+    sd.CreateDirectoryRecursively("/TegraExplorer/scripts");
+    sd.write_entire_file("/config/kefir/playtime_pending/playtime_restore.te", te);
+    sd.write_entire_file("/config/kefir/nand_transfer/playtime_restore.te", te);
+    sd.write_entire_file("/TegraExplorer/scripts/playtime_restore.te", te);
+}
+
 } // namespace
 
 auto CollectUserPlayEvents(const AccountUid& uid, std::vector<PdmPlayEvent>& out) -> Result {
@@ -253,33 +267,30 @@ auto PackHasPlayEvents(const std::string& dir) -> bool {
     return sd.FileExists((dir + "/pdm/PlayEvent.dat").c_str());
 }
 
-auto AppendPlayEventsForUser(const AccountUid& new_uid, const std::vector<PdmPlayEvent>& events) -> Result {
-    R_UNLESS(!events.empty(), Result_FsEmpty);
-    auto incoming = events;
-    RemapTo(incoming, new_uid);
+auto PreparePlayHours(const std::vector<PlaySlice>& slices) -> Result {
+    std::vector<PdmPlayEvent> incoming;
+    for (const auto& s : slices) {
+        if (s.events.empty()) {
+            continue;
+        }
+        auto part = s.events;
+        RemapTo(part, s.uid);
+        incoming.insert(incoming.end(), part.begin(), part.end());
+    }
+    R_UNLESS(!incoming.empty(), Result_FsEmpty);
 
-    auto save = OpenPdmSave(false);
+    // Read-only. Writable open of 00F0 under Horizon User-Breaks ns (2011-0301).
+    auto save = OpenPdmSave(true);
     const auto open_rc = save.GetFsOpenResult();
     if (R_FAILED(open_rc)) {
-        log_write("[PLAY] 00F0 writable open 0x%X\n", open_rc);
+        log_write("[PLAY] 00F0 read-only open 0x%X (no writable fallback)\n", open_rc);
         return open_rc;
     }
 
     const auto path = FindPlayEventPath(save);
     std::vector<u8> original;
-    const bool had_file = save.FileExists(path.c_str());
-    if (had_file) {
+    if (save.FileExists(path.c_str())) {
         R_TRY(save.read_entire_file(path.c_str(), original));
-    }
-
-    fs::FsNativeSd sd;
-    char stamp[32]{};
-    const auto t = std::time(nullptr);
-    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
-    const auto rollback_dir = std::string("/config/kefir/playtime_rollback/") + stamp;
-    R_TRY(sd.CreateDirectoryRecursively(rollback_dir.c_str()));
-    if (!original.empty()) {
-        R_TRY(sd.write_entire_file((rollback_dir + "/PlayEvent.dat").c_str(), original));
     }
 
     std::vector<PdmPlayEvent> dest;
@@ -288,35 +299,18 @@ auto AppendPlayEventsForUser(const AccountUid& new_uid, const std::vector<PdmPla
     }
     const auto dest_before = dest.size();
     if (dest.size() + incoming.size() > kMaxEvents) {
-        log_write("[PLAY] append would exceed cap dest=%zu in=%zu\n", dest.size(), incoming.size());
+        log_write("[PLAY] merge would exceed cap dest=%zu in=%zu\n", dest.size(), incoming.size());
         return Result_FsInvalidType;
     }
     dest.insert(dest.end(), incoming.begin(), incoming.end());
     const auto blob = SerializeBlob(dest, original.size());
 
-    auto restore_original = [&]() {
-        if (had_file) {
-            save.write_entire_file(path.c_str(), original);
-        } else {
-            save.DeleteFile(path.c_str());
-        }
-        save.Commit();
-    };
-
-    auto wr = save.write_entire_file(path.c_str(), blob);
-    if (R_FAILED(wr)) {
-        log_write("[PLAY] write PlayEvent.dat 0x%X\n", wr);
-        restore_original();
-        return wr;
-    }
-    auto cr = save.Commit();
-    if (R_FAILED(cr)) {
-        log_write("[PLAY] commit 00F0 0x%X\n", cr);
-        restore_original();
-        return cr;
-    }
-    log_write("[PLAY] appended %zu events for new user (dest was %zu, now %zu) path=%s\n",
-        incoming.size(), dest_before, dest.size(), path.c_str());
+    fs::FsNativeSd sd;
+    R_TRY(sd.CreateDirectoryRecursively("/config/kefir/playtime_pending"));
+    R_TRY(sd.write_entire_file("/config/kefir/playtime_pending/PlayEvent.dat", blob));
+    InstallPlaytimeTe(sd);
+    log_write("[PLAY] pending merge dest=%zu + in=%zu -> %zu (TE playtime_restore.te)\n",
+        dest_before, incoming.size(), dest.size());
     R_SUCCEED();
 }
 

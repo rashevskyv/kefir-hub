@@ -1384,11 +1384,27 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
         } else {
             hours_line = "Play hours captured for some of the selected profiles."_i18n;
         }
+        std::string msg;
         if (dirs->size() == 1) {
-            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+            msg = "Exported to "_i18n + dirs->front() + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n;
         } else {
-            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+            msg = "Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n;
         }
+        if (account_link::ConsumeAccountDaemonsTerminated()) {
+            msg += "\n" + "The account service was stopped to read the Nintendo link. The user list is empty until reboot."_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Later"_i18n, "Reboot"_i18n, 1,
+                [this](auto op) {
+                    if (op && *op == 1) {
+                        utils::requestForcedReboot();
+                    } else {
+                        Refresh();
+                    }
+                });
+            return;
+        }
+        App::Push<OptionBox>(msg, "OK"_i18n);
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
@@ -1471,15 +1487,18 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
             }
 
             if (!play_jobs.empty()) {
-                pbox->NewTransfer("Writing play hours"_i18n);
-                for (const auto& job : play_jobs) {
-                    const auto play_rc = account_playtime::AppendPlayEventsForUser(job.uid, job.events);
-                    if (R_SUCCEEDED(play_rc)) {
-                        report->play_hours_applied++;
-                    } else {
-                        log_write("[USER] play hours append 0x%X\n", play_rc);
-                        report->play_hours_locked = true;
-                    }
+                pbox->NewTransfer("Preparing play hours"_i18n);
+                std::vector<account_playtime::PlaySlice> slices;
+                slices.reserve(play_jobs.size());
+                for (auto& job : play_jobs) {
+                    slices.push_back({job.uid, std::move(job.events)});
+                }
+                const auto play_rc = account_playtime::PreparePlayHours(slices);
+                if (R_SUCCEEDED(play_rc)) {
+                    report->play_hours_applied = static_cast<u32>(slices.size());
+                } else {
+                    log_write("[USER] play hours prepare 0x%X\n", play_rc);
+                    report->play_hours_locked = true;
                 }
             }
 
@@ -1503,17 +1522,16 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
             }
             if (report->play_hours_applied > 0) {
-                msg += " " + "Play hours written for "_i18n + std::to_string(report->play_hours_applied) +
-                    " profile(s)."_i18n;
+                msg += " " + "Play hours are on SD. Reboot to RCM, TegraExplorer → playtime_restore.te (also under TegraExplorer/scripts)."_i18n;
             }
             if (report->play_hours_missing > 0) {
                 msg += " " + "A pack had no play hours — make a new backup."_i18n;
             }
             if (report->play_hours_locked) {
-                msg += " " + "Play hours could not be written. Close games. Restoring again creates another profile."_i18n;
+                msg += " " + "Could not read play hours (00F0 busy). Profile is restored. Close games and run Restore Backup only after deleting the extra profile."_i18n;
             }
 
-            const bool need_reboot = report->links_restored > 0 || report->play_hours_applied > 0;
+            const bool need_reboot = report->links_restored > 0 || account_link::ConsumeAccountDaemonsTerminated();
             if (need_reboot) {
                 msg += " " + "Reboot required."_i18n;
                 App::Push<OptionBox>(

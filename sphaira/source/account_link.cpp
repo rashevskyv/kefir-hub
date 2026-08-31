@@ -20,6 +20,8 @@
 
 namespace sphaira::account_link {
 
+bool g_daemons_terminated = false;
+
 namespace {
 
 constexpr u64 ACCOUNT_SAVE_ID = 0x8000000000000010ULL;
@@ -158,6 +160,8 @@ void TerminateAccountDaemons() {
         pmshellTerminateProgram(0x010000000000000CULL); // BCAT
         pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
         pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+        g_daemons_terminated = true;
+        log_write("[ACC] terminated BCAT/ACCOUNT/OLSC (reboot needed)\n");
     }
 }
 
@@ -1106,6 +1110,12 @@ auto HasSuspendedApplication() -> bool {
 bool g_launch_link_prompted = false;
 
 } // namespace
+
+auto ConsumeAccountDaemonsTerminated() -> bool {
+    const bool v = g_daemons_terminated;
+    g_daemons_terminated = false;
+    return v;
+}
 
 auto CanOfferLaunchLink() -> bool {
     if (g_launch_link_prompted) {

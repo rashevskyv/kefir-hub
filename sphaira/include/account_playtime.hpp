@@ -6,16 +6,19 @@
 
 namespace sphaira::account_playtime {
 
-// Raw PDM PlayEvent.dat entries for one Horizon user (account events for
-// that UID plus applet/power events while they were logged in).
+struct PlaySlice {
+    AccountUid uid{};
+    std::vector<PdmPlayEvent> events;
+};
+
 auto CollectUserPlayEvents(const AccountUid& uid, std::vector<PdmPlayEvent>& out) -> Result;
 auto WritePackPlayEvents(const std::string& dir, const std::vector<PdmPlayEvent>& events) -> Result;
 auto LoadPackPlayEvents(const std::string& dir, std::vector<PdmPlayEvent>& out) -> Result;
 auto PackHasPlayEvents(const std::string& dir) -> bool;
 
-// Rewrite account-event UIDs in the slice to the restored profile, then
-// append into this console's 00F0 PlayEvent.dat. Other users' events stay.
-// SD rollback of the dest file before any write.
-auto AppendPlayEventsForUser(const AccountUid& new_uid, const std::vector<PdmPlayEvent>& events) -> Result;
+// Remap slices to the new UIDs, read dest PlayEvent.dat read-only, append,
+// write /config/kefir/playtime_pending/PlayEvent.dat and playtime_restore.te.
+// Never opens 00F0 writable — that User-Breaks ns under Horizon.
+auto PreparePlayHours(const std::vector<PlaySlice>& slices) -> Result;
 
 } // namespace sphaira::account_playtime

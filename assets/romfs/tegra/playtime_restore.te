@@ -1,0 +1,72 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# Writes Hub-merged PlayEvent.dat into 00F0. Horizon cannot open 00F0
+# writable — that User-Breaks ns. Run from TegraExplorer in RCM.
+# Does not replace profiles. Other users' hours stay (file is dest+slice).
+# Back up SYSTEM first. Prefer emuMMC.
+
+clear()
+println("Kefir Hub: restore one-user play hours")
+println("Writes pending PlayEvent.dat into 00F0, then commit.")
+println("")
+
+pending = "sd:/config/kefir/playtime_pending/PlayEvent.dat"
+if (!fsexists(pending)) {
+    println("No pending file:")
+    println(pending)
+    println("Run Restore Backup in Hub first.")
+    pause()
+    exit()
+}
+
+targets = ["Cancel"].copy()
+targets.add("emuMMC SYSTEM")
+targets.add("sysMMC SYSTEM")
+choice = menu(targets, 0)
+if (!choice) {
+    exit()
+}
+
+if (choice == 1) {
+    if (!emu()) {
+        println("No emuMMC")
+        pause()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    rc = mountsys("SYSTEM")
+}
+
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    pause()
+    exit()
+}
+
+bis = "bis:/save/80000000000000F0"
+if (!fsexists(bis)) {
+    println("No play-hours save on this SYSTEM")
+    pause()
+    exit()
+}
+
+println("Reading pending PlayEvent.dat")
+bytes = readfile(pending)
+println("Opening 00F0")
+saveObj = readsave(bis)
+println("Writing PlayEvent.dat")
+rc = saveObj.write("/PlayEvent.dat", bytes)
+if (rc) {
+    println("write fail", rc)
+    pause()
+    exit()
+}
+println("commit")
+saveObj.commit()
+println("")
+println("Done. Reboot CFW. Check Activity Log.")
+pause()

@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.696** (перевірка Backup Restore play hours). Завершені плани збережено в
+Поточний delivery — **v0.13.697** (не писати 00F0 під Horizon; ребут після ACCOUNT terminate). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.696 — Review fixes for play-hours Backup Restore
+## Поточний delivery: v0.13.697 — Do not write 00F0 under Horizon; reboot after ACCOUNT stop
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Restore Backup відкривав 00F0 **writable**, поки `ns` тримає сейв → Atmosphere User Break `2011-0301` (процес ns / 010000000000001f), rollback не встиг з'явитися. Тепер лише read-only merge у `/config/kefir/playtime_pending/PlayEvent.dat` + `playtime_restore.te` (RCM).
+2. Backup user після Overwrite зупиняв ACCOUNT, щоб прочитати лінк, і Refresh показував порожній список. Після terminate — діалог ребуту.
+3. Версія `0.13.697`. sysNAND: не писати 00F0 з Horizon.
+
+## Попередній delivery: v0.13.696 — Review fixes for play-hours Backup Restore
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

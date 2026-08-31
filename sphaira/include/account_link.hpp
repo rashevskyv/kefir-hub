@@ -52,5 +52,6 @@ auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked
 auto CanOfferLaunchLink() -> bool;
 auto IsLinkGated(std::string& out_reason) -> bool;
 void SetLaunchLinkPrompted(bool val = true);
+auto ConsumeAccountDaemonsTerminated() -> bool;
 
 } // namespace sphaira::account_link
