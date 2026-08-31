@@ -1370,10 +1370,24 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
             App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
             return;
         }
-        if (dirs->size() == 1) {
-            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + "Includes this user's play hours for Restore Backup."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+        u32 with_hours = 0;
+        for (const auto& d : *dirs) {
+            if (account_playtime::PackHasPlayEvents(d)) {
+                with_hours++;
+            }
+        }
+        std::string hours_line;
+        if (with_hours == dirs->size()) {
+            hours_line = "Includes this user's play hours for Restore Backup."_i18n;
+        } else if (with_hours == 0) {
+            hours_line = "Could not capture play hours. Restore will not write hours from this pack."_i18n;
         } else {
-            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + "Includes this user's play hours for Restore Backup."_i18n + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+            hours_line = "Play hours captured for some of the selected profiles."_i18n;
+        }
+        if (dirs->size() == 1) {
+            App::Push<OptionBox>("Exported to "_i18n + dirs->front() + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
+        } else {
+            App::Push<OptionBox>("Exported " + std::to_string(dirs->size()) + " user profiles to SD."_i18n + "\n" + hours_line + "\n" + "Game saves are backed up separately through Backup saves."_i18n, "OK"_i18n);
         }
         Refresh();
     }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
@@ -1496,7 +1510,7 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 msg += " " + "A pack had no play hours — make a new backup."_i18n;
             }
             if (report->play_hours_locked) {
-                msg += " " + "Play hours could not be written (00F0 locked). Close games and retry Restore Backup."_i18n;
+                msg += " " + "Play hours could not be written. Close games. Restoring again creates another profile."_i18n;
             }
 
             const bool need_reboot = report->links_restored > 0 || report->play_hours_applied > 0;

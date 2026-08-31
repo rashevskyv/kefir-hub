@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.695** (Backup Restore з переїздом плейтайму). Завершені задачі збережено в
+Актуальний delivery — **v0.13.696** (перевірка Backup Restore play hours). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.695 (play hours in Backup Restore)
+## Поточний delivery: v0.13.696 (play-hours review)
+
+- [x] `USERS-PLAY-PARSE-EMPTY-696` — PlayEvent.dat з count=0 парситься як порожній журнал, не як помилка.
+- [x] `USERS-PLAY-BACKUP-HONEST-696` — діалог Backup user залежить від наявності `pdm/PlayEvent.dat`.
+- [x] `USERS-PLAY-RESTORE-MSG-696` — помилка запису годин не каже «locked»; повторний restore = новий профіль.
+- [x] `DOCS-BUMP-696` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.695 (play hours in Backup Restore)
 
 - [x] `USERS-PLAY-EXPORT-695` — Backup user знімає зріз PlayEvent цього UID у `pdm/PlayEvent.dat` (pdmqry, fallback 00F0 RO).
 - [x] `USERS-PLAY-APPEND-695` — Restore Backup ремапить UID і дописує події в 00F0 з rollback; чужі години не затирає.

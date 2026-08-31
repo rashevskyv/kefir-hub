@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.695** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.696** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.696 — Play-hours Backup Restore review
+
+- Порожній `PlayEvent.dat` (`count=0`) більше не валить append: раніше `ParseBlob` вимагав count>0 і міг не записати години на ціль з порожнім журналом.
+- Успіх Backup user більше не завжди обіцяє години — лише якщо в паку є `pdm/PlayEvent.dat`.
+- Якщо години не записались, текст більше не завжди каже «00F0 locked» і прямо каже: повторний Restore Backup створить ще один профіль. Збірку агент не запускав.
 
 ## v0.13.695 — Backup Restore with per-user play hours
 

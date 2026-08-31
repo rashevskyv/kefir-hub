@@ -37,14 +37,16 @@ auto ParseBlob(const std::vector<u8>& data, std::vector<PdmPlayEvent>& out) -> b
     if (data.size() < 8) {
         return false;
     }
-    u32 unk = 0;
     u32 count = 0;
-    std::memcpy(&unk, data.data(), sizeof(unk));
     std::memcpy(&count, data.data() + 4, sizeof(count));
     const u64 need = 8ull + static_cast<u64>(count) * sizeof(PdmPlayEvent);
-    if (count > 0 && count <= kMaxEvents && need <= data.size()) {
-        out.resize(count);
-        std::memcpy(out.data(), data.data() + 8, static_cast<size_t>(count) * sizeof(PdmPlayEvent));
+    // Header is u32 unk + u32 count (GBAtemp / on-disk PlayEvent.dat). count=0 is a
+    // valid empty log; do not fall through to a raw 0x38-stride parse of padding.
+    if (count <= kMaxEvents && need <= data.size()) {
+        if (count > 0) {
+            out.resize(count);
+            std::memcpy(out.data(), data.data() + 8, static_cast<size_t>(count) * sizeof(PdmPlayEvent));
+        }
         return true;
     }
     if (data.size() % sizeof(PdmPlayEvent) == 0) {

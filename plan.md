@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.695** (Backup Restore з переїздом плейтайму). Завершені плани збережено в
+Поточний delivery — **v0.13.696** (перевірка Backup Restore play hours). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.695 — Backup Restore includes per-user play hours
+## Поточний delivery: v0.13.696 — Review fixes for play-hours Backup Restore
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `ParseBlob` приймає порожній журнал (`count=0`); раніше падав і не дописував години в порожній/обнулений `PlayEvent.dat`.
+2. Backup більше не завжди каже «години в паку»: дивиться, чи реально є `pdm/PlayEvent.dat`.
+3. Помилка запису 00F0 більше не маскується під «locked»; текст попереджає, що повторний Restore Backup створить ще один профіль.
+4. Версія `0.13.696`.
+
+## Попередній delivery: v0.13.695 — Backup Restore includes per-user play hours
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 
