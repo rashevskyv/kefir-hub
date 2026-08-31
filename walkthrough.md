@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.692** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.693** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.693 — Restore Backup remaps baas UID; Icon link dots
+
+- Restore Backup створює новий UID, але baas лишався зі старим UID у вмісті — Horizon `CheckAvailability` давав Not linked. Тепер `ApplyLinkPackages` підставляє UID цілі в перші 16 байт baas перед записом (як Linkalho).
+- Експорт лінку додатково шукає baas за іменем файлу UID, якщо nas_id з IPC не збігся з вмістом.
+- Users → Icon: зелена крапка = Linked, червона = Not linked, сіра = статус невідомий; лівий верх аватарки. Версія `0.13.693`. Збірку агент не запускав.
 
 ## v0.13.692 — Backup & Restore User heading
 

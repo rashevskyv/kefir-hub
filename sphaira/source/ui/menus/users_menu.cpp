@@ -575,6 +575,28 @@ auto StatusColour(Theme* theme, const account_link::User& u) -> NVGcolor {
     }
 }
 
+void DrawLinkDot(NVGcontext* vg, const Vec4& image_v, const account_link::User& u) {
+    NVGcolor fill = nvgRGBA(160, 160, 160, 255);
+    if (u.linked_known) {
+        if (u.kind == account_link::LinkKind::Official || u.kind == account_link::LinkKind::Offline) {
+            fill = nvgRGBA(80, 200, 120, 255);
+        } else {
+            fill = nvgRGBA(230, 60, 60, 255);
+        }
+    }
+    const float r = std::min(6.f, image_v.w * 0.08f);
+    const float cx = image_v.x + r + 5.f;
+    const float cy = image_v.y + r + 5.f;
+    nvgBeginPath(vg);
+    nvgCircle(vg, cx, cy, r + 1.6f);
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, 190));
+    nvgFill(vg);
+    nvgBeginPath(vg);
+    nvgCircle(vg, cx, cy, r);
+    nvgFillColor(vg, fill);
+    nvgFill(vg);
+}
+
 } // namespace
 
 Menu::Menu() : grid::Menu{"Users"_i18n, MenuFlag_None} {
@@ -845,6 +867,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
             image_v = v;
             gfx::drawImage(vg, image_v, item.image ?: App::GetDefaultImage(), 5);
+            DrawLinkDot(vg, image_v, item);
         } else if (layout == LayoutType::LayoutType_GridDetail) {
             const auto selected = m_index == i;
             auto text_id = ThemeEntryID_TEXT;
@@ -1366,7 +1389,7 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 App::Push<OptionBox>(msg, "OK"_i18n);
             }
             Refresh();
-        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
+        }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
 void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) {

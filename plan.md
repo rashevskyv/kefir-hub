@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.692** (Users Options: Backup & Restore User heading). Завершені плани збережено в
+Поточний delivery — **v0.13.693** (Restore Backup remaps baas UID; Icon link dots). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.692 — Backup & Restore User as own Options heading
+## Поточний delivery: v0.13.693 — Restore Backup link + Icon status dots
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Restore Backup писав baas нового профілю зі старим UID у байтах 0..15 — Horizon CheckAvailability лишав Not linked. `ApplyLinkPackages` тепер копіює `AccountUid` цілі в baas перед записом (як Linkalho).
+2. `ExportUserLinkPackage` шукає baas також за іменем UID, якщо IPC nas_id не збігся з файлом.
+3. Users → Icon (LayoutType_Grid): зелена/червона крапка в лівому верхньому куті аватарки (linked / not linked). Не в заголовку.
+4. Версія `0.13.693`.
+
+## Попередній delivery: v0.13.692 — Backup & Restore User as own Options heading
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.692** (Users Options: Backup & Restore User heading). Завершені задачі збережено в
+Актуальний delivery — **v0.13.693** (Restore Backup remaps baas UID; Icon link dots). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.692 (Backup & Restore User heading)
+## Поточний delivery: v0.13.693 (restore link remap + Icon dots)
+
+- [x] `USERS-RESTORE-BAAS-UID-693` — ApplyLinkPackages записує UID нового профілю в baas[0..15] перед write.
+- [x] `USERS-EXPORT-BAAS-FALLBACK-693` — ExportUserLinkPackage знаходить baas за UID-іменем, якщо nas_id IPC не збігся.
+- [x] `USERS-ICON-LINK-DOT-693` — Icon: зелена/червона крапка linked/not linked у лівому верхньому куті аватарки.
+- [x] `DOCS-BUMP-693` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.692 (Backup & Restore User heading)
 
 - [x] `USERS-BACKUP-HEADING-692` — Backup user / Restore Backup під окремим підзаголовком BACKUP & RESTORE USER, не в PROFILE.
 - [x] `DOCS-BUMP-692` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

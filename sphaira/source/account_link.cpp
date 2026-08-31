@@ -640,7 +640,10 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
             R_TRY(backup_save_file(new_baas_path, "baas/" + UidDashedLinkalho(target.uid) + ".dat"));
             R_TRY(save.DeleteFile(new_baas_path.c_str()));
         }
-        R_TRY(save.write_entire_file(new_baas_path.c_str(), target.pkg.baas_data));
+        auto baas_for_uid = target.pkg.baas_data;
+        std::memcpy(baas_for_uid.data(), &target.uid, sizeof(AccountUid));
+        R_TRY(save.write_entire_file(new_baas_path.c_str(), baas_for_uid));
+        log_write("[ACC] baas bound to %s\n", UidDashedRfc(target.uid).c_str());
 
         for (const auto& nf : target.pkg.nas_files) {
             const auto nas_dst = nas_dir + "/" + nf.filename;
@@ -951,15 +954,11 @@ auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, st
 {
     out_link_status = "none";
     u64 nas_id = 0;
-    const auto nas_rc = QueryNintendoAccountId(uid, nas_id);
-    if (R_FAILED(nas_rc) || nas_id == 0) {
-        out_link_status = "none";
-        R_SUCCEED();
-    }
+    QueryNintendoAccountId(uid, nas_id);
 
     auto save = TryOpenAccountSave();
     if (R_FAILED(save.GetFsOpenResult())) {
-        out_link_status = "unavailable";
+        out_link_status = (nas_id != 0) ? "unavailable" : "none";
         R_SUCCEED();
     }
 
@@ -967,27 +966,50 @@ auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, st
     std::string nas_dir;
     ResolveSuDirs(save, baas_dir, nas_dir);
     if (baas_dir.empty()) {
-        out_link_status = "unavailable";
+        out_link_status = (nas_id != 0) ? "unavailable" : "none";
         R_SUCCEED();
     }
 
+    const auto baas_files = ListDirFiles(save, baas_dir);
     std::string matched_baas_name;
     std::vector<u8> matched_baas_data;
-    for (const auto& bf : ListDirFiles(save, baas_dir)) {
-        std::vector<u8> bdata;
-        if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + bf).c_str(), bdata)) && bdata.size() >= 24) {
-            u64 file_nas_id = 0;
-            std::memcpy(&file_nas_id, bdata.data() + 16, sizeof(u64));
-            if (file_nas_id == nas_id) {
-                matched_baas_name = bf;
-                matched_baas_data = std::move(bdata);
+    if (nas_id != 0) {
+        for (const auto& bf : baas_files) {
+            std::vector<u8> bdata;
+            if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + bf).c_str(), bdata)) && bdata.size() >= 24) {
+                u64 file_nas_id = 0;
+                std::memcpy(&file_nas_id, bdata.data() + 16, sizeof(u64));
+                if (file_nas_id == nas_id) {
+                    matched_baas_name = bf;
+                    matched_baas_data = std::move(bdata);
+                    break;
+                }
+            }
+        }
+    }
+    if (matched_baas_data.empty()) {
+        const auto cands = BaasCandidateNames(uid);
+        for (const auto& cand : cands) {
+            for (const auto& bf : baas_files) {
+                if (strcasecmp(bf.c_str(), cand.c_str()) != 0) {
+                    continue;
+                }
+                std::vector<u8> bdata;
+                if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + bf).c_str(), bdata)) && bdata.size() >= 24) {
+                    matched_baas_name = bf;
+                    matched_baas_data = std::move(bdata);
+                    std::memcpy(&nas_id, matched_baas_data.data() + 16, sizeof(u64));
+                }
+                break;
+            }
+            if (!matched_baas_data.empty()) {
                 break;
             }
         }
     }
 
     if (matched_baas_data.empty()) {
-        out_link_status = "unavailable";
+        out_link_status = (nas_id != 0) ? "unavailable" : "none";
         R_SUCCEED();
     }
     R_UNLESS(IsSafeDumpFileName(matched_baas_name), Result_FsInvalidType);
