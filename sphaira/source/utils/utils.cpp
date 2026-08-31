@@ -216,6 +216,45 @@ bool findLockpickPayload(fs::FsPath& out) {
     return findLockpickPayloadInDir(LOCKPICK_PAYLOAD_DIR, out);
 }
 
+bool findTegraExplorerPayload(fs::FsPath& out) {
+    fs::FsNativeSd fs;
+    fs::Dir dir;
+    if (R_FAILED(fs.OpenDirectory(LOCKPICK_PAYLOAD_DIR, FsDirOpenMode_ReadFiles | FsDirOpenMode_NoFileSize, &dir))) {
+        log_write("findTegraExplorerPayload: cannot open %s\n", LOCKPICK_PAYLOAD_DIR);
+        return false;
+    }
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(dir.ReadAll(entries))) {
+        return false;
+    }
+    fs::FsPath exact;
+    fs::FsPath any;
+    for (const auto& entry : entries) {
+        const auto lower = toLower(entry.name);
+        if (lower.size() < 4 || lower.compare(lower.size() - 4, 4, ".bin") != 0) {
+            continue;
+        }
+        if (lower.find("tegraexplorer") == std::string::npos && lower.find("tegra_explorer") == std::string::npos) {
+            continue;
+        }
+        const auto path = fs::AppendPath(LOCKPICK_PAYLOAD_DIR, entry.name);
+        if (lower == "tegraexplorer.bin") {
+            exact = path;
+            break;
+        }
+        if (any.empty()) {
+            any = path;
+        }
+    }
+    out = !exact.empty() ? exact : any;
+    if (out.empty()) {
+        log_write("findTegraExplorerPayload: no TegraExplorer .bin in %s\n", LOCKPICK_PAYLOAD_DIR);
+        return false;
+    }
+    log_write("findTegraExplorerPayload: %s\n", static_cast<const char*>(out));
+    return true;
+}
+
 // Restore hekate_ipl.ini from backup
 bool restoreHekateIni() {
     FILE* f_bak = fopen(HEKATE_INI_BAK_PATH, "rb");

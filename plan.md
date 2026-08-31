@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.702** (hekate > payloads > tegraexplorer). Завершені плани збережено в
+Поточний delivery — **v0.13.703** (запуск TegraExplorer без hekate-payload-api). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.702 — Path text: hekate > payloads > tegraexplorer
+## Поточний delivery: v0.13.703 — Launch TegraExplorer without payload-api marker
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `Could not start TegraExplorer`: `rebootToPayload` вимагав `/config/kefir/hekate-payload-api.ini`, якого на консолі немає. З Hekate > Payloads файл запускається.
+2. Шукаємо `.bin` у `/bootloader/payloads` (будь-який регістр імені). Спочатку one-shot API, якщо ні — `setHekateAutobootPayload` + ребут (як Lockpick). dump.te повертає `hekate_ipl.ini.bak`.
+3. Версія `0.13.703`.
+
+## Попередній delivery: v0.13.702 — Path text: hekate > payloads > tegraexplorer
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

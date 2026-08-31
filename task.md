@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.702** (hekate > payloads > tegraexplorer). Завершені задачі збережено в
+Актуальний delivery — **v0.13.703** (запуск TegraExplorer як з Hekate Payloads). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.702 (hekate > payloads > tegraexplorer)
+## Поточний delivery: v0.13.703 (TegraExplorer launch fallback)
+
+- [x] `USERS-TE-LAUNCH-703` — знайти TegraExplorer.bin у payloads; якщо немає hekate-payload-api — autoboot + reboot.
+- [x] `DOCS-BUMP-703` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.702 (hekate > payloads > tegraexplorer)
 
 - [x] `USERS-TE-PATH-702` — у UI Users шлях `hekate > payloads > tegraexplorer`.
 - [x] `DOCS-BUMP-702` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

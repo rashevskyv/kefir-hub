@@ -37,6 +37,9 @@ bool setHekateAutobootPayload(const char* payload_path);
 // Prefers lockpick_rcm_pro.bin, then any lockpick_rcm*.bin match.
 bool findLockpickPayload(fs::FsPath& out);
 
+// Find TegraExplorer.bin under /bootloader/payloads (any casing).
+bool findTegraExplorerPayload(fs::FsPath& out);
+
 // Restore hekate_ipl.ini from backup
 // Returns true if restored, false if no backup existed
 bool restoreHekateIni();

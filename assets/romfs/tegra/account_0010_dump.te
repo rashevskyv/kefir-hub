@@ -15,6 +15,9 @@ dst = combinepath(pending, "0010")
 listf = combinepath(pending, "files.txt")
 
 delfile("sd:/startup.te")
+if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+}
 
 if (!fsexists(listf)) {
     println("No file list from Kefir Hub.")

@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.702** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.703** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.703 — TegraExplorer launch without payload-api.ini
+
+- `rebootToPayload` падав без `/config/kefir/hekate-payload-api.ini`, хоча hekate > payloads > tegraexplorer працює руками. Тепер шукаємо bin у `/bootloader/payloads`, пробуємо API, інакше той самий autoboot, що для Lockpick. dump.te відновлює `hekate_ipl.ini.bak`. Версія `0.13.703`. Збірку агент не запускав.
 
 ## v0.13.702 — hekate > payloads > tegraexplorer
 

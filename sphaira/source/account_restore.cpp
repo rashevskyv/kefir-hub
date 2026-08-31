@@ -292,6 +292,12 @@ auto InstallRestoreTeScripts() -> void {
 }
 
 auto LaunchTegraDump() -> bool {
+    fs::FsPath te_bin;
+    if (!utils::findTegraExplorerPayload(te_bin)) {
+        log_write("[RESTORE] TegraExplorer payload not found in /bootloader/payloads\n");
+        return false;
+    }
+
     fs::FsNativeSd sd;
     std::vector<u8> te;
     if (R_FAILED(fs::read_entire_file("romfs:/tegra/account_0010_dump.te", te)) || te.empty()) {
@@ -304,9 +310,18 @@ auto LaunchTegraDump() -> bool {
         return false;
     }
     fsdevCommitDevice("sdmc");
-    log_write("[RESTORE] wrote /startup.te, launching TegraExplorer\n");
-    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
-        log_write("[RESTORE] rebootToPayload TegraExplorer.bin failed\n");
+    log_write("[RESTORE] wrote /startup.te, launching %s\n", static_cast<const char*>(te_bin));
+
+    if (utils::rebootToPayload(static_cast<const char*>(te_bin))) {
+        return true;
+    }
+    log_write("[RESTORE] rebootToPayload failed, hekate autoboot fallback\n");
+    if (!utils::setHekateAutobootPayload(static_cast<const char*>(te_bin))) {
+        log_write("[RESTORE] setHekateAutobootPayload failed\n");
+        return false;
+    }
+    if (R_FAILED(utils::requestForcedReboot())) {
+        log_write("[RESTORE] requestForcedReboot failed after autoboot\n");
         return false;
     }
     return true;
