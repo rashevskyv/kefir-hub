@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.714** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.715** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.715 — Short User Backups server address
+
+- `Console Transfer → Share User Backups` більше не показує `/?path=%2Fuser_packs`: сервер показує короткий `http://IP:port`, а корінь цієї адреси одразу є списком user packs.
+- На приймальній консолі напис прямо просить IP відправника. Достатньо ввести, наприклад, `192.168.50.112`: пошук портів `8080–8090` вже виконується сам. QR і URL із шляхом не потрібні.
+- Це ще лише з'єднання: віддалені user packs не завантажуються та не відновлюються цим delivery. Версія `0.13.715`; пройдено `git diff --check` та JSON-парсинг, збірку агент не запускав.
 
 ## v0.13.714 — Restore Backup sources and console probe
 

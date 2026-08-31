@@ -205,16 +205,18 @@ auto BuildRootSelectionPage(const std::vector<RootSource>& sources) -> std::stri
 }
 
 auto BuildFolderPage(std::string path_str) -> std::string {
-    const auto sources = GetRootSources();
-    // one source is not a choice: with only the card mounted the root page is a
-    // click in the way, so the card *is* the root.
-    const bool has_root = sources.size() > 1;
-
+    const auto mounts = GetMountRoots();
+    // With one app mount, the server root is that mount rather than a source
+    // selector; there is nowhere useful for its parent link to go.
+    const bool has_root = mounts.size() != 1 && GetRootSources().size() > 1;
     if (path_str.empty()) {
-        if (has_root) {
-            return BuildRootSelectionPage(sources);
+        if (mounts.size() == 1) {
+            path_str = mounts.front();
+        } else if (has_root) {
+            return BuildRootSelectionPage(GetRootSources());
+        } else {
+            path_str = "/";
         }
-        path_str = "/";
     }
     const auto abs_path = CanonicalizeAbsolutePath(path_str);
     const auto source_root = SourceRootFor(abs_path);

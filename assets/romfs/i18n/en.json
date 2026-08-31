@@ -2150,7 +2150,7 @@
   "No user backups found in the selected folder.": "No user backups found in the selected folder.",
   "Other console...": "Other console...",
   "Check connection to another console running Share User Backups.": "Check connection to another console running Share User Backups.",
-  "IP address or HTTP URL": "IP address or HTTP URL",
+  "Enter sending console IP address": "Enter sending console IP address",
   "HTTP server responded at ": "HTTP server responded at ",
   "Make sure the sending console has Share User Backups active.": "Make sure the sending console has Share User Backups active.",
   "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active."

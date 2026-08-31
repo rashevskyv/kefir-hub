@@ -600,7 +600,7 @@ private:
     void ProbeOtherConsole() {
         net::RequireConnection([](){
             std::string input;
-            if (R_FAILED(swkbd::ShowText(input, "IP address or HTTP URL"_i18n.c_str())) || input.empty()) {
+            if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str())) || input.empty()) {
                 return;
             }
             while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {

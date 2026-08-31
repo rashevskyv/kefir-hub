@@ -50,13 +50,13 @@ void StartShareServerNow() {
     });
 }
 
-void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
+void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets, bool plain_root = false) {
     if (targets.empty()) {
         App::PushErrorBox(Result_FsEmpty, "Failed to start folder server"_i18n);
         return;
     }
 
-    net::RequireConnection([targets]() {
+    net::RequireConnection([targets, plain_root]() {
         fs::FsNativeSd fs;
         std::vector<fs::FsPath> valid_targets;
         for (const auto& target : targets) {
@@ -75,7 +75,8 @@ void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
         App::SetMountedFolders(valid_targets);
 
         WebShareResult result;
-        if (const auto rc = WebShareFolder(primary, result); R_FAILED(rc)) {
+        const auto rc = plain_root ? WebStartServer("", result) : WebShareFolder(primary, result);
+        if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Failed to start folder server"_i18n);
             return;
         }
@@ -94,13 +95,13 @@ void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
     });
 }
 
-void StartConsoleTransferShare(const std::vector<std::string>& roots) {
+void StartConsoleTransferShare(const std::vector<std::string>& roots, bool plain_root = false) {
     std::vector<fs::FsPath> targets;
     targets.reserve(roots.size());
     for (const auto& r : roots) {
         targets.emplace_back(r);
     }
-    StartConsoleTransferShare(targets);
+    StartConsoleTransferShare(targets, plain_root);
 }
 
 void InstallTitleModeForwarder() {
@@ -177,7 +178,7 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             "Share User Backups"_i18n,
             "Share user packages and profile backups."_i18n,
             [](){
-                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() });
+                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() }, true);
             }
         },
         {

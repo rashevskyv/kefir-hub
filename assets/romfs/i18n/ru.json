@@ -2134,7 +2134,7 @@
   "No user backups found in the selected folder.": "В выбранной папке не найдено бекапов пользователей.",
   "Other console...": "Другая консоль...",
   "Check connection to another console running Share User Backups.": "Проверить подключение к другой консоли с включенным общим доступом к бекапам.",
-  "IP address or HTTP URL": "IP-адрес или HTTP URL",
+  "Enter sending console IP address": "Введите IP-адрес консоли-отправителя",
   "HTTP server responded at ": "HTTP-сервер ответил по адресу ",
   "Make sure the sending console has Share User Backups active.": "Убедитесь, что на консоли-отправителе включен «Общий доступ к бекапам пользователей».",
   "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не удалось подключиться к удаленной консоли.\n\nУбедитесь, что обе консоли подключены к одной локальной сети и на исходной консоли включен общий доступ к бекапам пользователей."

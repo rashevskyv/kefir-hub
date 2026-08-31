@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.714** (Restore Backup обирає джерело та перевіряє іншу консоль). Завершені задачі збережено в
+Актуальний delivery — **v0.13.715** (Share User Backups має коротку адресу для другої консолі). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.714 (Restore Backup sources and console probe)
+## Поточний delivery: v0.13.715 (Short User Backups server address)
+
+- [x] `CONSOLE-TRANSFER-SHORT-URL-715` — Share User Backups показує `http://IP:port` без query path, а цей root одразу віддає user packs.
+- [x] `USERS-CONSOLE-IP-715` — Other console просить IP відправника, не довгий URL; пошук 8080–8090 і скасування probe збережено.
+- [x] `DOCS-BUMP-715` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.714 (Restore Backup sources and console probe)
 
 - [x] `USERS-RESTORE-SOURCES-714` — `Restore Backup` відкриває повноекранний список: локальна бібліотека, вибір теки та інша консоль.
 - [x] `USERS-RESTORE-FOLDER-714` — folder picker знаходить один пак або паки в дочірніх теках; у зовнішньому джерелі немає Delete, а чинна логіка restore не змінюється.

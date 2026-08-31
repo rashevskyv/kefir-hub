@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.714** (Restore Backup обирає локальне або перевіряє іншу консоль). Завершені плани збережено в
+Поточний delivery — **v0.13.715** (Share User Backups дає коротку адресу для другої консолі). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.714 — Restore Backup sources and console probe
+## Поточний delivery: v0.13.715 — Short User Backups server address
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `Console Transfer → Share User Backups` показує лише коротку адресу `http://IP:port`, без `?path=` та encoded шляху.
+2. За цією адресою корінь сервера одразу віддає один розшарений user-packs mount; generic root/source selection лишається для нуля або кількох mount-ів.
+3. Приймальна консоль просить лише IP відправника й сама шукає порт у діапазоні 8080–8090. Це ще connection probe, не передавання паків.
+4. Version `0.13.715`.
+
+## Попередній delivery: v0.13.714 — Restore Backup sources and console probe
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

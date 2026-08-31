@@ -2179,7 +2179,7 @@
   "No user backups found in the selected folder.": "У вибраній папці не знайдено бекапів користувачів.",
   "Other console...": "Інша консоль...",
   "Check connection to another console running Share User Backups.": "Перевірити підключення до іншої консолі з увімкненим спільним доступом до бекапів.",
-  "IP address or HTTP URL": "IP-адреса або HTTP URL",
+  "Enter sending console IP address": "Введіть IP-адресу консолі-відправника",
   "HTTP server responded at ": "HTTP-сервер відповів за адресою ",
   "Make sure the sending console has Share User Backups active.": "Переконайтеся, що на консолі-відправнику увімкнено «Спільний доступ до бекапів користувачів».",
   "Could not connect to the remote console.\n\nConfirm that both consoles are connected to the same local network and that the source console has Share User Backups active.": "Не вдалося підключитися до віддаленої консолі.\n\nПереконайтеся, що обидві консолі підключені до однієї локальної мережі і на вихідній консолі увімкнено спільний доступ до бекапів користувачів."
