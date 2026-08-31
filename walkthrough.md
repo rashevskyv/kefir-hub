@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.710** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.711** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.711 — Same-console restore matches pack UID to the live user
+
+- Клон з'являвся, бо збіг був лише по nas IPC. Тепер той самий юзер — UID з `profile.json` проти живого списку. Replace, без другого профілю. Версія `0.13.711`. Збірку агент не запускав.
 
 ## v0.13.710 — Same-console Restore Backup asks to replace the existing profile
 

@@ -1,9 +1,14 @@
-Актуальний delivery — **v0.13.710** (рестор на тій самій консолі). Завершені задачі збережено в
+Актуальний delivery — **v0.13.711** (рестор пізнає UID). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.710 (same-console restore = replace)
+## Поточний delivery: v0.13.711 (match live UID, do not clone)
+
+- [x] `USERS-RESTORE-UID-711` — той самий акаунт: збіг UID з бекапу з живим юзером, Replace, без клона.
+- [x] `DOCS-BUMP-711` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.710 (same-console restore = replace)
 
 - [x] `USERS-RESTORE-REPLACE-710` — якщо NA вже на консолі: діалог Replace, не новий слот.
 - [x] `DOCS-BUMP-710` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.

@@ -2155,5 +2155,6 @@
   "This Nintendo Account is already on this console": "Цей Nintendo Account уже є на цій консолі",
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Рестор замінить цей профіль: імʼя, аватар і години гри. Другого користувача не створимо.\\n\\nСпочатку скопіюємо поточний сейв акаунтів на SD, якщо щось піде не так.",
   "backup(s) match accounts already on this console and will replace them. ": "бекап(и) збігаються з акаунтами вже на цій консолі і замінять їх. ",
-  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "буде додано як нові профілі.\\n\\nСпочатку скопіюємо поточний сейв акаунтів на SD, якщо щось піде не так."
+  "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "буде додано як нові профілі.\\n\\nСпочатку скопіюємо поточний сейв акаунтів на SD, якщо щось піде не так.",
+  "This user is already on this console": "Цей користувач уже є на цій консолі"
 }

@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.710** (рестор на тій самій консолі = замінити). Завершені плани збережено в
+Поточний delivery — **v0.13.711** (рестор пізнає той самий UID). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.710 — Same-console restore asks to replace existing profile
+## Поточний delivery: v0.13.711 — Same-console restore matches live UID, never clones
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Бекап+рестор на тій самій консолі пізнає юзера за UID з пака (не лише nas IPC). Replace існуючого, без другого аватара без лінку.
+2. Версія `0.13.711`.
+
+## Попередній delivery: v0.13.710 — Same-console restore asks to replace existing profile
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

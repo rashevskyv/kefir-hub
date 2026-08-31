@@ -28,6 +28,7 @@
 #include <switch/applets/psel.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <functional>
 #include <memory>
@@ -57,19 +58,48 @@ auto CollectSaves(const std::vector<AccountUid>& uids) -> std::vector<save::Entr
     return out;
 }
 
-auto LiveNasToUid() -> std::unordered_map<u64, AccountUid> {
-    std::unordered_map<u64, AccountUid> out;
-    for (const auto& u : account_link::ListUsers()) {
-        u64 nas = 0;
-        if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
-            out.emplace(nas, u.uid);
+auto NormUidHex(std::string s) -> std::string {
+    std::string out;
+    out.reserve(s.size());
+    for (unsigned char c : s) {
+        if (c != '-') {
+            out += static_cast<char>(std::tolower(c));
         }
     }
     return out;
 }
 
-auto PackMatchesLiveAccount(const account_user::Pack& p, const std::unordered_map<u64, AccountUid>& nas_to_uid) -> bool {
-    return p.link_valid && p.nas_id != 0 && nas_to_uid.find(p.nas_id) != nas_to_uid.end();
+auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid> {
+    const auto users = account_link::ListUsers();
+    if (!p.uid_hex.empty()) {
+        const auto want = NormUidHex(p.uid_hex);
+        for (const auto& u : users) {
+            if (!u.uid_hex.empty() && NormUidHex(u.uid_hex) == want) {
+                log_write("[USER] pack uid %s is already on this console\n", p.uid_hex.c_str());
+                return u.uid;
+            }
+        }
+    }
+    if (p.nas_id != 0) {
+        for (const auto& u : users) {
+            u64 nas = 0;
+            if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas == p.nas_id) {
+                log_write("[USER] pack nas %llx is already on this console\n",
+                    static_cast<unsigned long long>(p.nas_id));
+                return u.uid;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+auto LiveNameForUid(const AccountUid& uid) -> std::string {
+    for (const auto& u : account_link::ListUsers()) {
+        if (u.uid.uid[0] == uid.uid[0] && u.uid.uid[1] == uid.uid[1]) {
+            return u.nickname;
+        }
+    }
+    return {};
 }
 
 struct SavePickMenu final : MenuBase {
@@ -1167,23 +1197,14 @@ void Menu::ConfirmRestoreBackup() {
         if (!picked || picked->empty()) {
             return;
         }
-        const auto nas_map = LiveNasToUid();
         u32 new_slots = 0;
         u32 replace_slots = 0;
         std::string existing_name;
         for (const auto& p : *picked) {
-            if (PackMatchesLiveAccount(p, nas_map)) {
+            if (const auto live = FindLiveUidForPack(p)) {
                 replace_slots++;
                 if (existing_name.empty()) {
-                    const auto it = nas_map.find(p.nas_id);
-                    for (const auto& u : account_link::ListUsers()) {
-                        if (it != nas_map.end() &&
-                            u.uid.uid[0] == it->second.uid[0] &&
-                            u.uid.uid[1] == it->second.uid[1]) {
-                            existing_name = u.nickname;
-                            break;
-                        }
-                    }
+                    existing_name = LiveNameForUid(*live);
                     if (existing_name.empty()) {
                         existing_name = p.nickname;
                     }
@@ -1202,7 +1223,7 @@ void Menu::ConfirmRestoreBackup() {
         }
         bool any_new_link = false;
         for (const auto& p : *picked) {
-            if (p.link_valid && !PackMatchesLiveAccount(p, nas_map)) {
+            if (p.link_valid && !FindLiveUidForPack(p)) {
                 any_new_link = true;
                 break;
             }
@@ -1220,7 +1241,7 @@ void Menu::ConfirmRestoreBackup() {
         };
         if (replace_slots && !new_slots) {
             App::Push<OptionBox>(
-                "This Nintendo Account is already on this console"_i18n +
+                "This user is already on this console"_i18n +
                 (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
                 "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\n\n"
                 "We still copy the current account save to SD first, in case something goes wrong."_i18n,
@@ -1619,15 +1640,8 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
 
 void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
     auto report = std::make_shared<RestoreReport>();
-    std::unordered_map<u64, AccountUid> nas_to_uid;
-    for (const auto& u : account_link::ListUsers()) {
-        u64 nas = 0;
-        if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
-            nas_to_uid.emplace(nas, u.uid);
-        }
-    }
     App::Push<ProgressBox>(0, "Restore Backup"_i18n, "Restoring profiles..."_i18n,
-        [picked_packs = std::move(picked_packs), report, nas_to_uid](auto pbox) mutable -> Result {
+        [picked_packs = std::move(picked_packs), report](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_apply;
             struct PlayJob {
@@ -1638,7 +1652,7 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
 
             for (size_t i = 0; i < picked_packs.size(); i++) {
                 const auto& p = picked_packs[i];
-                pbox->NewTransfer("Creating user profile"_i18n);
+                pbox->NewTransfer("Restoring user profile"_i18n);
 
                 std::vector<u8> jpeg;
                 sd.read_entire_file((p.dir + "/avatar.jpg").c_str(), jpeg);
@@ -1649,24 +1663,22 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 AccountUid dest_uid{};
                 bool have_dest = false;
 
-                if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
-                    const auto it = nas_to_uid.find(pkg.nas_id);
-                    if (it != nas_to_uid.end()) {
-                        dest_uid = it->second;
-                        have_dest = true;
-                        log_write("[USER] restore onto existing uid, nas %llx already on this console\n",
-                            static_cast<unsigned long long>(pkg.nas_id));
-                        const auto rename_rc = account_user::Rename(dest_uid, name);
-                        if (R_FAILED(rename_rc)) {
-                            log_write("[USER] rename existing 0x%X\n", rename_rc);
+                if (const auto live = FindLiveUidForPack(p)) {
+                    dest_uid = *live;
+                    have_dest = true;
+                    log_write("[USER] restore onto existing uid %s\n", p.uid_hex.c_str());
+                    const auto rename_rc = account_user::Rename(dest_uid, name);
+                    if (R_FAILED(rename_rc)) {
+                        log_write("[USER] rename existing 0x%X\n", rename_rc);
+                    }
+                    if (!jpeg.empty()) {
+                        const auto av_rc = account_user::SetImageJpeg(dest_uid, jpeg);
+                        if (R_FAILED(av_rc)) {
+                            log_write("[USER] avatar existing 0x%X\n", av_rc);
                         }
-                        if (!jpeg.empty()) {
-                            const auto av_rc = account_user::SetImageJpeg(dest_uid, jpeg);
-                            if (R_FAILED(av_rc)) {
-                                log_write("[USER] avatar existing 0x%X\n", av_rc);
-                            }
-                        }
-                        report->profiles_restored++;
+                    }
+                    report->profiles_restored++;
+                    if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
                         report->links_restored++;
                     }
                 }
@@ -1681,7 +1693,6 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     have_dest = true;
                     report->profiles_restored++;
                     if (R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
-                        nas_to_uid.emplace(pkg.nas_id, dest_uid);
                         links_to_apply.push_back({dest_uid, std::move(pkg)});
                     } else if (!sd.DirExists((p.dir + "/baas").c_str())) {
                         report->unlinked_restored++;
