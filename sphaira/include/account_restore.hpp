@@ -33,5 +33,6 @@ auto SnapshotOk() -> bool;
 auto Dump0010ReadOnly(ui::ProgressBox* pbox) -> Result;
 auto WriteExpectedFileList() -> Result;
 auto InstallRestoreTeScripts() -> void;
+auto LaunchTegraDump() -> bool;
 
 } // namespace sphaira::account_restore

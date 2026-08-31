@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.699** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.700** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.700 — TegraExplorer auto-dump when 0010 is locked
+
+- Якщо Horizon не віддав 0010, після ОК Хаб кладе дамп-скрипт у `/startup.te` і `rebootToPayload(TegraExplorer.bin)`. Скрипт сам знімає 0010 (emu/sys без меню), стирає startup.te і вантажить `bootloader/update.bin`.
+- Користувачу не кажемо «йди в RCM і запускай dump.te». Після дампу він сам відкриває Хаб — там pending ready.
+- Версія `0.13.700`. Збірку агент не запускав.
 
 ## v0.13.699 — Snapshot 0010 before Restore Backup
 

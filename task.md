@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.699** (знімок 0010 перед рестором). Завершені задачі збережено в
+Актуальний delivery — **v0.13.700** (0010 dump через startup.te). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.699 (0010 snapshot before restore)
+## Поточний delivery: v0.13.700 (startup.te 0010 dump)
+
+- [x] `USERS-RESTORE-STARTUP-TE-700` — зайнятий 0010: `/startup.te` + reboot TegraExplorer, без ручного dump.te.
+- [x] `USERS-RESTORE-COPY-700` — пояснювальні тексти; після дампу користувач сам відкриває Хаб.
+- [x] `DOCS-BUMP-700` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.699 (0010 snapshot before restore)
 
 - [x] `USERS-RESTORE-SNAP-699` — перед рестором RO-знімок 0010; якщо зайнятий — TE dump.
 - [x] `USERS-RESTORE-PENDING-699` — прапор на SD; наступний запуск Хаба продовжує рестор.

@@ -3,37 +3,27 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# Fallback dump of account save 0010 when Horizon will not open it.
-# Writes inner files to sd:/config/kefir/restore_pending/0010/
-# Then reopen Kefir Hub to continue restore.
+# One-shot: Hub copies this to sd:/startup.te and reboots into TegraExplorer.
+# Dumps account save 0010, deletes startup.te, returns to CFW.
 
 clear()
-println("Kefir Hub: dump account save 0010")
-println("Horizon is off. Dump for restore rollback.")
+println("Kefir Hub: dumping account save 0010")
 println("")
 
 pending = "sd:/config/kefir/restore_pending"
 dst = combinepath(pending, "0010")
 listf = combinepath(pending, "files.txt")
+
+delfile("sd:/startup.te")
+
 if (!fsexists(listf)) {
-    println("No file list. Start Restore Backup in Hub first.")
+    println("No file list from Kefir Hub.")
     pause()
+    payload("sd:/bootloader/update.bin")
     exit()
 }
 
-targets = ["Cancel"].copy()
-targets.add("emuMMC SYSTEM")
-targets.add("sysMMC SYSTEM")
-choice = menu(targets, 0)
-if (!choice) {
-    exit()
-}
-if (choice == 1) {
-    if (!emu()) {
-        println("No emuMMC")
-        pause()
-        exit()
-    }
+if (emu()) {
     rc = mountemu("SYSTEM")
 } .else() {
     rc = mountsys("SYSTEM")
@@ -41,6 +31,7 @@ if (choice == 1) {
 if (rc) {
     println("SYSTEM mount failed", rc)
     pause()
+    payload("sd:/bootloader/update.bin")
     exit()
 }
 
@@ -48,6 +39,7 @@ bis = "bis:/save/8000000000000010"
 if (!fsexists(bis)) {
     println("No account save on this SYSTEM")
     pause()
+    payload("sd:/bootloader/update.bin")
     exit()
 }
 
@@ -66,7 +58,6 @@ lines = text.split("\n")
 wrote = 0
 lines.foreach("line") {
     if (line.len()) {
-        println(line)
         bytes = saveObj.read(line)
         if (bytes.len()) {
             out = dst + line
@@ -80,9 +71,7 @@ lines.foreach("line") {
     }
 }
 
-ok = combinepath(pending, "dumped.ok")
-writefile(ok, ["BYTE[]", 79, 75])
-println("")
+writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
 println("wrote", wrote)
-println("Reopen Kefir Hub to finish restore.")
-pause()
+println("Open Kefir Hub to continue restore.")
+payload("sd:/bootloader/update.bin")

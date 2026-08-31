@@ -5,6 +5,7 @@
 #include "fs.hpp"
 #include "log.hpp"
 #include "ui/progress_box.hpp"
+#include "utils/utils.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -288,6 +289,27 @@ auto InstallRestoreTeScripts() -> void {
     fs::FsNativeSd sd;
     CopyTe(sd, "account_0010_rollback.te", RollbackTeName());
     CopyTe(sd, "account_0010_dump.te", DumpTeName());
+}
+
+auto LaunchTegraDump() -> bool {
+    fs::FsNativeSd sd;
+    std::vector<u8> te;
+    if (R_FAILED(fs::read_entire_file("romfs:/tegra/account_0010_dump.te", te)) || te.empty()) {
+        log_write("[RESTORE] dump te missing from romfs\n");
+        return false;
+    }
+    sd.DeleteFile("/startup.te");
+    if (R_FAILED(sd.write_entire_file("/startup.te", te))) {
+        log_write("[RESTORE] write /startup.te failed\n");
+        return false;
+    }
+    fsdevCommitDevice("sdmc");
+    log_write("[RESTORE] wrote /startup.te, launching TegraExplorer\n");
+    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+        log_write("[RESTORE] rebootToPayload TegraExplorer.bin failed\n");
+        return false;
+    }
+    return true;
 }
 
 } // namespace sphaira::account_restore

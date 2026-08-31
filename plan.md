@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.699** (знімок 0010 перед рестором). Завершені плани збережено в
+Поточний delivery — **v0.13.700** (0010 dump через startup.te + TegraExplorer). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.699 — Snapshot 0010 before Restore Backup
+## Поточний delivery: v0.13.700 — Locked 0010 dump via startup.te and TegraExplorer
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Якщо Horizon не віддав 0010 — після ОК Хаб пише `/startup.te` і запускає TegraExplorer.bin. Скрипт сам знімає 0010, видаляє startup.te, повертає CFW.
+2. Тексти пояснюють навіщо знімок і що користувач сам знову відкриває Хаб для продовження рестору. Без інструкції «йди в RCM і запускай dump.te».
+3. Версія `0.13.700`.
+
+## Попередній delivery: v0.13.699 — Snapshot 0010 before Restore Backup
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

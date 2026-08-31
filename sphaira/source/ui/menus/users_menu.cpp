@@ -1177,8 +1177,12 @@ void Menu::ConfirmRestoreBackup() {
         }
         auto picked_packs = std::move(*picked);
         App::Push<OptionBox>(
-            "Before restore we snapshot the account save (0010) to SD and put a TegraExplorer rollback script in TegraExplorer/scripts. Restore starts the next time you open Kefir Hub. Continue?"_i18n,
-            "Cancel"_i18n, "Snapshot 0010"_i18n, 1,
+            "Restore will add a profile and may change the account save (0010).\n\n"
+            "Before that, we copy the current 0010 to SD. That copy is the rollback if something goes wrong.\n\n"
+            "• If Hub can read 0010 now, the copy happens here.\n"
+            "• If not, TegraExplorer will dump it automatically after OK.\n\n"
+            "Then open Kefir Hub yourself to continue the restore."_i18n,
+            "Cancel"_i18n, "Continue"_i18n, 1,
             [this, picked_packs = std::move(picked_packs)](auto op) mutable {
                 if (op && *op == 1) {
                     RunPrepareRestoreSnapshot(std::move(picked_packs));
@@ -1218,13 +1222,30 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
             }
             if (*live_ok) {
                 App::Push<OptionBox>(
-                    "Account save 0010 is on SD. Rollback script: TegraExplorer/scripts/account_0010_rollback.te. Open Kefir Hub again to finish restore."_i18n,
+                    "The account save (0010) is copied to SD.\n\n"
+                    "• Rollback if boot fails: TegraExplorer/scripts/account_0010_rollback.te\n"
+                    "• Next step: open Kefir Hub yourself. We will continue the restore from there."_i18n,
                     "OK"_i18n);
                 return;
             }
             App::Push<OptionBox>(
-                "Could not read 0010 (in use). RCM → TegraExplorer → account_0010_dump.te, then open Kefir Hub again. Rollback script is already in TegraExplorer/scripts."_i18n,
-                "OK"_i18n);
+                "Hub could not copy the account save (0010) while the system is running. Horizon is holding it.\n\n"
+                "We still need that copy before restore. It is the rollback if the console later fails to boot.\n\n"
+                "After OK:\n"
+                "• TegraExplorer starts and dumps 0010 by itself.\n"
+                "• When it finishes, the console returns to CFW.\n"
+                "• Open Kefir Hub yourself. We will continue the restore."_i18n,
+                "OK"_i18n,
+                [](auto op) {
+                    if (!op) {
+                        return;
+                    }
+                    if (!account_restore::LaunchTegraDump()) {
+                        App::Push<OptionBox>(
+                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try Restore Backup again."_i18n,
+                            "OK"_i18n);
+                    }
+                });
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
@@ -1253,8 +1274,20 @@ void OfferPendingRestore() {
     if (pending.phase == "wait_dump") {
         s_offered = true;
         App::Push<OptionBox>(
-            "Restore is waiting for the 0010 dump. RCM → TegraExplorer → account_0010_dump.te, then reopen Kefir Hub."_i18n,
-            "OK"_i18n);
+            "The account save dump is not on SD yet.\n\n"
+            "After OK, TegraExplorer will dump 0010 automatically.\n"
+            "When it finishes, open Kefir Hub yourself to continue the restore."_i18n,
+            "OK"_i18n,
+            [](auto op) {
+                if (!op) {
+                    return;
+                }
+                if (!account_restore::LaunchTegraDump()) {
+                    App::Push<OptionBox>(
+                        "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                        "OK"_i18n);
+                }
+            });
         return;
     }
     if (pending.phase != "ready" || pending.pack_dirs.empty()) {
@@ -1273,7 +1306,11 @@ void OfferPendingRestore() {
         return;
     }
     App::Push<OptionBox>(
-        "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/account_0010_rollback.te"_i18n,
+        "Unfinished restore is ready (0010 snapshot is on SD).\n\n"
+        "Continue will create the profile, then reboot the console.\n\n"
+        "If it does not boot:\n"
+        "• RCM → TegraExplorer/scripts/account_0010_rollback.te\n"
+        "• That puts the old 0010 back and cancels this restore."_i18n,
         "Later"_i18n, "Cancel restore"_i18n, "Continue"_i18n, 2,
         [packs = std::move(packs)](auto op) mutable {
             if (!op) {
