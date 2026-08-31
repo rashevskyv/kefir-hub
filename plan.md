@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.703** (запуск TegraExplorer без hekate-payload-api). Завершені плани збережено в
+Поточний delivery — **v0.13.704** (romfsInit перед читанням dump.te). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.703 — Launch TegraExplorer without payload-api marker
+## Поточний delivery: v0.13.704 — Mount romfs before reading dump.te
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Лог 703: `findTegraExplorerPayload: /bootloader/payloads/TegraExplorer.bin`, потім `dump te missing from romfs`. Файл є в NRO; `fopen(romfs:/tegra/...)` без `romfsInit()`.
+2. CopyTe / LaunchTegraDump / playtime / nand-transfer скрипти монтують romfs як account_link.
+3. Версія `0.13.704`.
+
+## Попередній delivery: v0.13.703 — Launch TegraExplorer without payload-api marker
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

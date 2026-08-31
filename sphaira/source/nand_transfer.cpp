@@ -99,10 +99,19 @@ void WipeRoot(fs::Fs& f) {
     }
 }
 
+auto ReadRomfsTe(const char* path, std::vector<u8>& te) -> bool {
+    if (R_FAILED(romfsInit())) {
+        log_write("[NAND] romfsInit failed for %s\n", path);
+        return false;
+    }
+    ON_SCOPE_EXIT(romfsExit());
+    return R_SUCCEEDED(fs::read_entire_file(path, te)) && !te.empty();
+}
+
 void CopyRomfsScript(fs::Fs& sd, const char* romfs_name, const std::string& pack_name) {
     std::vector<u8> te;
     const auto romfs = std::string("romfs:/tegra/") + romfs_name;
-    if (R_FAILED(fs::read_entire_file(romfs.c_str(), te)) || te.empty()) {
+    if (!ReadRomfsTe(romfs.c_str(), te)) {
         log_write("[NAND] %s missing from romfs\n", romfs_name);
         return;
     }
@@ -116,11 +125,11 @@ void WriteScripts(fs::Fs& sd, const std::string& pack_dir) {
     CopyRomfsScript(sd, "nand_transfer_restore.te", "restore.te");
     CopyRomfsScript(sd, "nand_transfer_dump.te", "dump.te");
     std::vector<u8> restore;
-    if (R_SUCCEEDED(fs::read_entire_file("romfs:/tegra/nand_transfer_restore.te", restore)) && !restore.empty()) {
+    if (ReadRomfsTe("romfs:/tegra/nand_transfer_restore.te", restore)) {
         sd.write_entire_file((pack_dir + "/restore.te").c_str(), restore);
     }
     std::vector<u8> dump;
-    if (R_SUCCEEDED(fs::read_entire_file("romfs:/tegra/nand_transfer_dump.te", dump)) && !dump.empty()) {
+    if (ReadRomfsTe("romfs:/tegra/nand_transfer_dump.te", dump)) {
         sd.write_entire_file((pack_dir + "/dump.te").c_str(), dump);
     }
 }

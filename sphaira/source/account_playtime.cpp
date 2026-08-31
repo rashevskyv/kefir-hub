@@ -205,9 +205,16 @@ auto RemapTo(std::vector<PdmPlayEvent>& events, const AccountUid& to) -> void {
 
 auto InstallPlaytimeTe(fs::FsNativeSd& sd) -> void {
     std::vector<u8> te;
-    if (R_FAILED(fs::read_entire_file("romfs:/tegra/playtime_restore.te", te)) || te.empty()) {
-        log_write("[PLAY] playtime_restore.te missing from romfs\n");
+    if (R_FAILED(romfsInit())) {
+        log_write("[PLAY] romfsInit failed for playtime_restore.te\n");
         return;
+    }
+    {
+        ON_SCOPE_EXIT(romfsExit());
+        if (R_FAILED(fs::read_entire_file("romfs:/tegra/playtime_restore.te", te)) || te.empty()) {
+            log_write("[PLAY] playtime_restore.te missing from romfs\n");
+            return;
+        }
     }
     sd.CreateDirectoryRecursively("/config/kefir/playtime_pending");
     sd.CreateDirectoryRecursively("/config/kefir/nand_transfer");

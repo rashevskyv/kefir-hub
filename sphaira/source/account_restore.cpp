@@ -126,10 +126,19 @@ auto UidDashedRfc(const AccountUid& uid) -> std::string {
     return buf;
 }
 
+auto ReadRomfsTe(const char* path, std::vector<u8>& te) -> bool {
+    if (R_FAILED(romfsInit())) {
+        log_write("[RESTORE] romfsInit failed for %s\n", path);
+        return false;
+    }
+    ON_SCOPE_EXIT(romfsExit());
+    return R_SUCCEEDED(fs::read_entire_file(path, te)) && !te.empty();
+}
+
 auto CopyTe(fs::FsNativeSd& sd, const char* romfs_name, const char* dest_name) -> void {
     std::vector<u8> te;
     const auto romfs = std::string("romfs:/tegra/") + romfs_name;
-    if (R_FAILED(fs::read_entire_file(romfs.c_str(), te)) || te.empty()) {
+    if (!ReadRomfsTe(romfs.c_str(), te)) {
         log_write("[RESTORE] %s missing from romfs\n", romfs_name);
         return;
     }
@@ -300,7 +309,7 @@ auto LaunchTegraDump() -> bool {
 
     fs::FsNativeSd sd;
     std::vector<u8> te;
-    if (R_FAILED(fs::read_entire_file("romfs:/tegra/account_0010_dump.te", te)) || te.empty()) {
+    if (!ReadRomfsTe("romfs:/tegra/account_0010_dump.te", te)) {
         log_write("[RESTORE] dump te missing from romfs\n");
         return false;
     }

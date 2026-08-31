@@ -1,7 +1,11 @@
-Актуальний delivery — **v0.13.703** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.704** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.704 — romfsInit before reading TegraExplorer scripts
+
+- Лог 703 `12:36:46`: payload знайдено, `dump te missing from romfs`. Скрипт у NRO є; `fopen(romfs:/…)` без монтування. Тепер `romfsInit`/`romfsExit` як у account_link. Версія `0.13.704`. Збірку агент не запускав.
 
 ## v0.13.703 — TegraExplorer launch without payload-api.ini
 
