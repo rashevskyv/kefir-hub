@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.717** (Restore Backup: one Nintendo Account per baas). Завершені задачі збережено в
+Актуальний delivery — **v0.13.718** (Restore Backup: сирий знімок 0010 для Undo). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.717 (one Nintendo Account per baas)
+## Поточний delivery: v0.13.718 (raw 0010 Undo snapshot)
+
+- [x] `USERS-RESTORE-RAW-SNAP-718` — `Dump0010ReadOnly` копіює сирий BIS `/save/8000000000000010` у `restore_pending/8000000000000010`; прибрано unpack/`0010/su`.
+- [x] `USERS-RESTORE-NAND-FLAG-718` — прапорець `restore_pending/nand` (`emu`|`sys`); TE dump/Undo без меню NAND, mount за прапорцем.
+- [x] `USERS-TE-RAW-COPY-718` — `account_0010_dump.te` і `Undo_restore_if_wont_boot.te` через `copyfile`, без `readsave` для знімка.
+- [x] `DOCS-BUMP-718` — plan/task/walkthrough/audit + `docs/account-transfer.md`; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.717 (one Nintendo Account per baas)
 
 - [x] `USERS-RESTORE-NAS-UNIQUE-717` — ApplyLink стирає всі baas з тим самим nas_id і пише один файл; FindLiveUid бачить NA в baas, навіть якщо IPC каже unlinked.
 - [x] `USERS-RESTORE-NS-TERM-717` — перед записом 0010 зупиняємо ns (0015/001F) разом з ACCOUNT, щоб не було 2011-0301.

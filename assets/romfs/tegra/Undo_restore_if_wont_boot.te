@@ -4,51 +4,18 @@
 # REQUIRE VER 4.0.0
 
 # If Restore Backup left the console unable to boot, run this from
-# TegraExplorer Scripts. Puts the old profiles back and cancels restore.
-
-writeDir = {
-    src = srcRoot
-    if (rel.len()) {
-        src = combinepath(srcRoot, rel)
-    }
-    listing = readdir(src)
-    if (listing.result) {
-        println("readdir fail", src)
-        errors = errors + 1
-    } .else() {
-        files = listing.files.copy()
-        subs = listing.folders.copy()
-        files.foreach("fname") {
-            fsrc = combinepath(src, fname)
-            fdst = "/" + fname
-            if (rel.len()) {
-                fdst = "/" + rel + "/" + fname
-            }
-            println(fdst)
-            bytes = readfile(fsrc)
-            rc = saveObj.write(fdst, bytes)
-            if (rc) {
-                println("write fail", fdst, rc)
-                errors = errors + 1
-            } .else() {
-                wrote = wrote + 1
-            }
-        }
-        subs.foreach("dname") {
-            oldrel = rel
-            if (rel.len()) {
-                rel = rel + "/" + dname
-            } .else() {
-                rel = dname
-            }
-            writeDir()
-            rel = oldrel
-        }
-    }
-}
+# TegraExplorer Scripts. Puts the raw 0010 snapshot back on the same NAND
+# it was taken from (flag file restore_pending/nand = emu|sys).
 
 goHekate = {
     saveObj = dict()
+    raw = ["BYTE[]"]
+    text = ""
+    delfile("sd:/startup.te")
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
     println("Loading hekate")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
@@ -60,34 +27,41 @@ goHekate = {
     if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
         rc = payload("sd:/atmosphere/reboot_payload.bin")
     }
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    }
     if (rc) {
-        println("Could not load hekate", rc)
-        pause()
+        reboot()
     }
 }
 
 clear()
 println("Kefir Hub: undo Restore Backup")
-println("Puts old profiles back if the console will not boot.")
+println("Puts the raw account save back if the console will not boot.")
 println("")
 
-srcRoot = "sd:/config/kefir/restore_pending/0010"
-if (!fsexists(srcRoot)) {
-    println("No profile snapshot on SD.")
-    println(srcRoot)
+pending = "sd:/config/kefir/restore_pending"
+snap = combinepath(pending, "8000000000000010")
+nandf = combinepath(pending, "nand")
+bis = "bis:/save/8000000000000010"
+
+if (!fsexists(snap)) {
+    println("No raw profile snapshot on SD.")
+    println(snap)
+    goHekate()
+    exit()
+}
+if (!fsexists(nandf)) {
+    println("No NAND flag (emu/sys) next to the snapshot.")
+    println(nandf)
     goHekate()
     exit()
 }
 
-targets = ["Cancel"].copy()
-targets.add("emuMMC SYSTEM")
-targets.add("sysMMC SYSTEM")
-choice = menu(targets, 0)
-if (!choice) {
-    goHekate()
-    exit()
-}
-if (choice == 1) {
+raw = readfile(nandf)
+text = raw.bytestostr()
+if (text == "emu") {
+    println("NAND flag: emuMMC SYSTEM")
     if (!emu()) {
         println("No emuMMC")
         goHekate()
@@ -95,6 +69,12 @@ if (choice == 1) {
     }
     rc = mountemu("SYSTEM")
 } .else() {
+    if (text != "sys") {
+        println("Bad NAND flag", text)
+        goHekate()
+        exit()
+    }
+    println("NAND flag: sysMMC SYSTEM")
     rc = mountsys("SYSTEM")
 }
 if (rc) {
@@ -103,42 +83,23 @@ if (rc) {
     exit()
 }
 
-bis = "bis:/save/8000000000000010"
+if (fsexists(bis)) {
+    delfile(bis)
+}
+
+println("Restoring raw", snap)
+rc = copyfile(snap, bis)
+if (rc) {
+    println("copyfile failed", rc)
+    goHekate()
+    exit()
+}
 if (!fsexists(bis)) {
-    println("No account save on this SYSTEM")
+    println("BIS save missing after copy")
     goHekate()
     exit()
 }
 
-println("Writing old profiles back")
-saveObj = readsave(bis)
-wipeSaveFolder = {
-    listing = saveObj.readdir(saveRel)
-    if (!listing.result) {
-        files = listing.files.copy()
-        files.foreach("fname") {
-            fpath = saveRel + "/" + fname
-            println("delete", fpath)
-            saveObj.delete(fpath)
-        }
-    }
-}
-saveRel = "/su/baas"
-wipeSaveFolder()
-saveRel = "/su/nas"
-wipeSaveFolder()
-saveRel = "/baas"
-wipeSaveFolder()
-saveRel = "/nas"
-wipeSaveFolder()
-rel = ""
-wrote = 0
-errors = 0
-writeDir()
-println("commit")
-saveObj.commit()
-
-pending = "sd:/config/kefir/restore_pending"
 writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
 delfile(combinepath(pending, "state.json"))
 
@@ -148,6 +109,6 @@ delfile("sd:/TegraExplorer/scripts/account_0010_rollback.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_dump.te")
 
 println("")
-println("wrote", wrote, "errors", errors)
+println("Raw 0010 restored.")
 println("Loading hekate. Hub will not continue the restore.")
 goHekate()

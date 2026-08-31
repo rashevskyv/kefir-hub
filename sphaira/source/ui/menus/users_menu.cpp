@@ -763,22 +763,18 @@ struct RemoteUserPacksMenu final : MenuBase {
 
     struct Entry {
         account_user::Pack pack;
+        std::vector<u8> avatar_bytes;
         int image{};
         bool selected{};
-        bool avatar_tried{};
+        bool avatar_decoded{};
     };
 
-    RemoteUserPacksMenu(std::string base_url, std::vector<account_user::Pack> packs, Callback on_restore)
+    RemoteUserPacksMenu(std::string base_url, std::vector<Entry> entries, Callback on_restore)
         : MenuBase{"User Backups on Other Console"_i18n, MenuFlag_None}
         , m_base_url{std::move(base_url)}
+        , m_entries{std::move(entries)}
         , m_on_restore{std::move(on_restore)}
     {
-        for (auto& p : packs) {
-            Entry e;
-            e.pack = std::move(p);
-            m_entries.push_back(std::move(e));
-        }
-
         this->SetActions(
             std::make_pair(Button::A, Action{"Restore"_i18n, [this](){ OnRestore(); }}),
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
@@ -849,23 +845,16 @@ struct RemoteUserPacksMenu final : MenuBase {
     }
 
     auto TryLoadAvatar(Entry& e) -> bool {
-        if (e.avatar_tried) {
+        if (e.avatar_decoded) {
             return false;
         }
-        e.avatar_tried = true;
-        if (!e.pack.has_avatar) {
+        e.avatar_decoded = true;
+        if (e.avatar_bytes.empty()) {
             return false;
         }
-        const std::string url = m_base_url + "/download?path=" + curl::EscapeString(e.pack.dir + "/avatar.jpg");
-        curl::Api api;
-        api.SetOption(curl::Url{url});
-        const auto res = curl::ToMemory(api);
-        if (!res.success || res.data.empty()) {
-            return false;
-        }
-        auto img = ImageLoadFromMemory(res.data, ImageFlag_JPEG);
+        auto img = ImageLoadFromMemory(e.avatar_bytes, ImageFlag_JPEG);
         if (img.data.empty()) {
-            img = ImageLoadIcon(res.data);
+            img = ImageLoadIcon(e.avatar_bytes);
         }
         if (img.data.empty()) {
             return false;
@@ -885,12 +874,9 @@ struct RemoteUserPacksMenu final : MenuBase {
             return;
         }
 
-        int loaded = 0;
-        m_list->Draw(vg, theme, m_entries.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
             auto& e = m_entries[i];
-            if (loaded < 2 && TryLoadAvatar(e)) {
-                loaded++;
-            }
+            TryLoadAvatar(e);
             const auto selected = m_index == i;
             if (selected) {
                 gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
@@ -1296,14 +1282,14 @@ private:
             auto responding_url = std::make_shared<std::string>();
             auto probed_ok = std::make_shared<bool>(false);
             auto list_ok = std::make_shared<bool>(false);
-            auto remote_packs = std::make_shared<std::vector<account_user::Pack>>();
+            auto remote_entries = std::make_shared<std::vector<RemoteUserPacksMenu::Entry>>();
             auto on_restore = m_on_restore;
 
             App::Push<ProgressBox>(
                 0,
                 "Testing Connection..."_i18n,
                 input,
-                [input, responding_url, probed_ok, list_ok, remote_packs](auto pbox) -> Result {
+                [input, responding_url, probed_ok, list_ok, remote_entries](auto pbox) -> Result {
                     std::string base_input = input;
                     while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
                         base_input.pop_back();
@@ -1375,9 +1361,9 @@ private:
                         }
                         pbox->SetTransfer(cand.name);
 
-                        account_user::Pack pack;
-                        pack.folder_name = cand.name;
-                        pack.dir = cand.remote_path;
+                        RemoteUserPacksMenu::Entry item;
+                        item.pack.folder_name = cand.name;
+                        item.pack.dir = cand.remote_path;
 
                         const std::string prof_url = *responding_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/profile.json");
                         curl::Api prof_api;
@@ -1388,18 +1374,18 @@ private:
                         const auto prof_res = curl::ToMemory(prof_api);
                         if (prof_res.success && !prof_res.data.empty()) {
                             const std::string prof_json(prof_res.data.begin(), prof_res.data.end());
-                            pack.nickname = account_user::ReadJsonField(prof_json, "nickname");
-                            pack.uid_hex = account_user::ReadJsonField(prof_json, "uid");
+                            item.pack.nickname = account_user::ReadJsonField(prof_json, "nickname");
+                            item.pack.uid_hex = account_user::ReadJsonField(prof_json, "uid");
                             const std::string created = account_user::ReadJsonField(prof_json, "created");
-                            pack.created_label = account_user::FormatPackCreated(cand.name, created);
+                            item.pack.created_label = account_user::FormatPackCreated(cand.name, created);
                             const std::string link_status = account_user::ReadJsonField(prof_json, "link_status");
-                            pack.link_valid = (link_status == "linked");
+                            item.pack.link_valid = (link_status == "linked");
                         }
-                        if (pack.created_label.empty()) {
-                            pack.created_label = account_user::FormatPackCreated(cand.name, {});
+                        if (item.pack.created_label.empty()) {
+                            item.pack.created_label = account_user::FormatPackCreated(cand.name, {});
                         }
-                        if (pack.nickname.empty()) {
-                            pack.nickname = "User";
+                        if (item.pack.nickname.empty()) {
+                            item.pack.nickname = "User";
                         }
 
                         const std::string manifest_url = *responding_url + "/list-recursive?path=" + curl::EscapeString(cand.remote_path);
@@ -1415,22 +1401,35 @@ private:
                             if (files_opt) {
                                 for (const auto& f : *files_opt) {
                                     if (f.rel_path == "avatar.jpg") {
-                                        pack.has_avatar = true;
+                                        item.pack.has_avatar = true;
                                     } else if (f.rel_path == "pdm/PlayEvent.dat" || f.rel_path == "PlayEvent.dat") {
-                                        pack.has_playtime = true;
-                                    } else if (!pack.link_valid && (f.rel_path.starts_with("baas/") || f.rel_path.starts_with("nas/"))) {
-                                        pack.link_valid = true;
+                                        item.pack.has_playtime = true;
+                                    } else if (!item.pack.link_valid && (f.rel_path.starts_with("baas/") || f.rel_path.starts_with("nas/"))) {
+                                        item.pack.link_valid = true;
                                     }
                                 }
                             }
                         }
 
-                        remote_packs->push_back(std::move(pack));
+                        if (item.pack.has_avatar) {
+                            const std::string av_url = *responding_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/avatar.jpg");
+                            curl::Api av_api;
+                            av_api.SetOption(curl::Url{av_url});
+                            av_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                                return !pbox->ShouldExit();
+                            }});
+                            const auto av_res = curl::ToMemory(av_api);
+                            if (av_res.success && !av_res.data.empty()) {
+                                item.avatar_bytes = std::move(av_res.data);
+                            }
+                        }
+
+                        remote_entries->push_back(std::move(item));
                     }
 
                     R_SUCCEED();
                 },
-                [responding_url, probed_ok, list_ok, remote_packs, on_restore](Result rc) {
+                [responding_url, probed_ok, list_ok, remote_entries, on_restore](Result rc) {
                     if (rc == Result_TransferCancelled) {
                         return;
                     }
@@ -1449,7 +1448,7 @@ private:
                         );
                         return;
                     }
-                    if (remote_packs->empty()) {
+                    if (remote_entries->empty()) {
                         App::Push<OptionBox>(
                             "No user backups found on the sending console."_i18n,
                             "OK"_i18n
@@ -1457,13 +1456,11 @@ private:
                         return;
                     }
 
-                    App::Push<RemoteUserPacksMenu>(*responding_url, std::move(*remote_packs), on_restore);
+                    App::Push<RemoteUserPacksMenu>(*responding_url, std::move(*remote_entries), on_restore);
                 }
             );
         });
     }
-
-
 
 private:
     Callback m_on_restore;
@@ -2284,9 +2281,9 @@ void Menu::ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked) {
     }
     App::Push<OptionBox>(
         "Restore will add a profile and may change the account save (0010).\n\n"
-        "Before that, we copy the current 0010 to SD. That copy is the rollback if something goes wrong.\n\n"
-        "• If Hub can read 0010 now, the copy happens here.\n"
-        "• If not, TegraExplorer will dump it automatically after OK.\n\n"
+        "Before that, we copy the raw 0010 save file to SD. That file is the rollback if something goes wrong.\n\n"
+        "• If Hub can read it now, the copy happens here.\n"
+        "• If not, TegraExplorer will copy it automatically after OK.\n\n"
         "Then open Kefir Hub yourself to continue the restore."_i18n,
         "Cancel"_i18n, "Continue"_i18n, 1, std::move(go));
 }
@@ -2311,7 +2308,7 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
                 R_SUCCEED();
             }
             log_write("[RESTORE] live 0010 dump failed 0x%X, TE fallback\n", dump_rc);
-            R_TRY(account_restore::WriteExpectedFileList());
+            R_TRY(account_restore::WriteNandFlag());
             R_TRY(account_restore::SavePending(*dirs, "wait_dump", false));
             R_SUCCEED();
         },
@@ -2322,7 +2319,7 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
             }
             if (*live_ok) {
                 App::Push<OptionBox>(
-                    "The account save (0010) is copied to SD.\n\n"
+                    "The raw account save (8000000000000010) is copied to SD.\n\n"
                     "If it does not boot:\n"
                     "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n"
                     "• TegraExplorer is controlled with the power and volume buttons.\n\n"
@@ -2331,10 +2328,10 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
                 return;
             }
             App::Push<OptionBox>(
-                "Hub could not copy the account save (0010) while the system is running. Horizon is holding it.\n\n"
-                "We still need that copy before restore. It is the rollback if the console later fails to boot.\n\n"
+                "Hub could not copy the raw account save while the system is running. Horizon is holding it.\n\n"
+                "We still need that file before restore. It is the rollback if the console later fails to boot.\n\n"
                 "After OK:\n"
-                "• TegraExplorer starts and dumps 0010 by itself.\n"
+                "• TegraExplorer starts and copies 8000000000000010 by itself.\n"
                 "• When it finishes, the console returns to CFW.\n"
                 "• Open Kefir Hub yourself. We will continue the restore."_i18n,
                 "OK"_i18n,

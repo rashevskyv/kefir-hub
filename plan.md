@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.717** (Restore Backup: one Nintendo Account per baas). Завершені плани збережено в
+Поточний delivery — **v0.13.718** (Restore Backup: сирий знімок 0010 для Undo). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.717 — One Nintendo Account per baas; other-console restore no bootloop
+## Поточний delivery: v0.13.718 — Raw 0010 snapshot for Undo (no unpack)
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Знімок перед Restore Backup — сирий `SYSTEM:/save/8000000000000010` у `/config/kefir/restore_pending/8000000000000010`, не дерево `0010/su/`.
+2. Прапорець `restore_pending/nand` (`emu`|`sys`) пишеться під час дампу (Horizon через `App::IsEmummc()`, TE через `emu()`). Undo без меню NAND монтує той самий розділ і кладе файл назад через `copyfile`.
+3. Horizon-дамп іде через `FsNativeBis`; якщо зайнято — TE `/startup.te` з тим самим сирим `copyfile` + hekate. `user_packs` не змінювались. Version `0.13.718`.
+
+## Попередній delivery: v0.13.717 — One Nintendo Account per baas; other-console restore no bootloop
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

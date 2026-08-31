@@ -1,6 +1,6 @@
 #include "account_restore.hpp"
 
-#include "account_link.hpp"
+#include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -16,54 +16,6 @@ namespace sphaira::account_restore {
 namespace {
 
 constexpr u64 ACCOUNT_SAVE_ID = 0x8000000000000010ULL;
-
-auto Join(const std::string& dir, const char* name) -> std::string {
-    if (dir.empty() || dir == "/") {
-        return std::string("/") + name;
-    }
-    if (dir.back() == '/') {
-        return dir + name;
-    }
-    return dir + "/" + name;
-}
-
-auto CopyTree(ui::ProgressBox* pbox, fs::Fs& from, const std::string& src, fs::Fs& to, const std::string& dst, u32& files) -> Result {
-    if (pbox) {
-        R_TRY(pbox->ShouldExitResult());
-    }
-    if (dst != "/" && !dst.empty()) {
-        R_TRY(to.CreateDirectoryRecursively(dst.c_str()));
-    }
-    fs::Dir d;
-    auto rc = from.OpenDirectory(src.c_str(), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d);
-    if (R_FAILED(rc) && (src.empty() || src == "/")) {
-        rc = from.OpenDirectory("", FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d);
-    }
-    R_TRY(rc);
-    std::vector<FsDirectoryEntry> ents;
-    R_TRY(d.ReadAll(ents));
-    for (const auto& e : ents) {
-        if (pbox) {
-            R_TRY(pbox->ShouldExitResult());
-        }
-        const auto child_src = Join(src, e.name);
-        const auto child_dst = dst + "/" + e.name;
-        if (e.type == FsDirEntryType_Dir) {
-            R_TRY(CopyTree(pbox, from, child_src, to, child_dst, files));
-            continue;
-        }
-        if (pbox) {
-            pbox->NewTransfer(e.name);
-            R_TRY(pbox->CopyFile(&from, &to, child_src.c_str(), child_dst.c_str()));
-        } else {
-            std::vector<u8> data;
-            R_TRY(from.read_entire_file(child_src.c_str(), data));
-            R_TRY(to.write_entire_file(child_dst.c_str(), data));
-        }
-        files++;
-    }
-    R_SUCCEED();
-}
 
 auto ReadJsonField(const std::string& json, const char* key) -> std::string {
     const auto needle = std::string{"\""} + key + "\":\"";
@@ -94,38 +46,6 @@ auto ReadJsonField(const std::string& json, const char* key) -> std::string {
     return out;
 }
 
-auto Open0010Ro() -> fs::FsNativeSave {
-    FsSaveDataAttribute attr{};
-    attr.system_save_data_id = ACCOUNT_SAVE_ID;
-    attr.save_data_type = FsSaveDataType_System;
-    return fs::FsNativeSave(FsSaveDataType_System, FsSaveDataSpaceId_System, &attr, true);
-}
-
-auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
-    char buf[40]{};
-    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%02x%02x-%08x%04x",
-        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
-        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
-        static_cast<unsigned>(uid.uid[1] & 0xffu),
-        static_cast<unsigned>((uid.uid[1] >> 8) & 0xffu),
-        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu));
-    return buf;
-}
-
-auto UidDashedRfc(const AccountUid& uid) -> std::string {
-    char buf[40]{};
-    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%04x-%04x%08x",
-        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
-        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
-        static_cast<unsigned>(uid.uid[1] & 0xffffu),
-        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu),
-        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu));
-    return buf;
-}
-
 auto ReadRomfsTe(const char* path, std::vector<u8>& te) -> bool {
     if (R_FAILED(romfsInit())) {
         log_write("[RESTORE] romfsInit failed for %s\n", path);
@@ -148,19 +68,45 @@ auto CopyTe(fs::FsNativeSd& sd, const char* romfs_name, const char* dest_name) -
     sd.write_entire_file((std::string(PendingDir()) + "/" + dest_name).c_str(), te);
 }
 
+auto RemoveLegacyUnpackedSnapshot(fs::FsNativeSd& sd) -> void {
+    if (sd.DirExists(LegacySnapshotDir())) {
+        sd.DeleteDirectoryRecursively(LegacySnapshotDir());
+        log_write("[RESTORE] removed legacy unpacked snapshot dir\n");
+    }
+    sd.DeleteFile((std::string(PendingDir()) + "/files.txt").c_str());
+}
+
+auto SnapshotFileOk(fs::FsNativeSd& sd) -> bool {
+    if (!sd.FileExists(SnapshotPath())) {
+        return false;
+    }
+    fs::File f;
+    if (R_FAILED(sd.OpenFile(SnapshotPath(), FsOpenMode_Read, &f))) {
+        return false;
+    }
+    s64 size = 0;
+    if (R_FAILED(f.GetSize(&size)) || size < 0x200) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 auto SnapshotOk() -> bool {
     fs::FsNativeSd sd;
-    const auto root = std::string(SnapshotDir());
-    if (sd.FileExists((root + "/su/registry.dat").c_str()) ||
-        sd.FileExists((root + "/registry.dat").c_str())) {
-        return true;
-    }
-    if (sd.DirExists((root + "/su/baas").c_str()) || sd.DirExists((root + "/baas").c_str())) {
-        return true;
-    }
-    return sd.FileExists((std::string(PendingDir()) + "/dumped.ok").c_str()) && sd.DirExists(root.c_str());
+    return SnapshotFileOk(sd);
+}
+
+auto WriteNandFlag() -> Result {
+    fs::FsNativeSd sd;
+    R_TRY(sd.CreateDirectoryRecursively(PendingDir()));
+    RemoveLegacyUnpackedSnapshot(sd);
+    const char* tag = App::IsEmummc() ? "emu" : "sys";
+    const std::vector<u8> bytes(tag, tag + std::strlen(tag));
+    R_TRY(sd.write_entire_file(NandFlagPath(), bytes));
+    log_write("[RESTORE] nand flag=%s\n", tag);
+    R_SUCCEED();
 }
 
 auto LoadPending() -> Pending {
@@ -243,63 +189,48 @@ auto ClearPending() -> Result {
 }
 
 auto Dump0010ReadOnly(ui::ProgressBox* pbox) -> Result {
-    auto save = Open0010Ro();
-    const auto rc = save.GetFsOpenResult();
-    if (R_FAILED(rc)) {
-        log_write("[RESTORE] 0010 read-only open 0x%X (no terminate)\n", rc);
-        return rc;
+    fs::FsNativeBis bis{FsBisPartitionId_System};
+    const auto bis_rc = bis.GetFsOpenResult();
+    if (R_FAILED(bis_rc)) {
+        log_write("[RESTORE] SYSTEM BIS open 0x%X\n", bis_rc);
+        return bis_rc;
     }
-    fs::FsNativeSd sd;
-    const auto dst = std::string(SnapshotDir());
-    if (sd.DirExists(dst.c_str())) {
-        sd.DeleteDirectoryRecursively(dst.c_str());
-    }
-    R_TRY(sd.CreateDirectoryRecursively(dst.c_str()));
-    u32 files = 0;
-    R_TRY(CopyTree(pbox, save, "/", sd, dst, files));
-    R_UNLESS(files > 0, Result_FsEmpty);
-    log_write("[RESTORE] 0010 snapshot files=%u\n", files);
-    R_SUCCEED();
-}
 
-auto WriteExpectedFileList() -> Result {
+    char src[64]{};
+    std::snprintf(src, sizeof(src), "/save/%016llX", static_cast<unsigned long long>(ACCOUNT_SAVE_ID));
+    if (!bis.FileExists(src)) {
+        log_write("[RESTORE] raw 0010 missing on BIS (%s)\n", src);
+        return Result_FsInvalidType;
+    }
+
     fs::FsNativeSd sd;
     R_TRY(sd.CreateDirectoryRecursively(PendingDir()));
-    std::string list;
-    auto add = [&](const std::string& path) {
-        list += path;
-        list += '\n';
-    };
-    add("/su/registry.dat");
-    add("/su/avators/profiles.dat");
-    add("/registry.dat");
-    for (const auto& u : account_link::ListUsers()) {
-        const auto l = UidDashedLinkalho(u.uid);
-        const auto r = UidDashedRfc(u.uid);
-        const auto hex = account_link::UidHex(u.uid);
-        add("/su/avators/" + l + ".jpg");
-        add("/su/avators/" + r + ".jpg");
-        add("/su/baas/" + l + ".dat");
-        add("/su/baas/" + r + ".dat");
-        add("/su/baas/" + hex + ".dat");
-        u64 nas = 0;
-        if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas) {
-            char nbuf[17]{};
-            std::snprintf(nbuf, sizeof(nbuf), "%016llx", static_cast<unsigned long long>(nas));
-            const std::string n = nbuf;
-            add("/su/nas/" + n + ".dat");
-            add("/su/nas/" + n + "_id.token");
-            add("/su/nas/" + n + "_refresh.token");
-            add("/su/nas/" + n + "_user.json");
-            char nshort[17]{};
-            std::snprintf(nshort, sizeof(nshort), "%llx", static_cast<unsigned long long>(nas));
-            add(std::string("/su/nas/") + nshort + ".dat");
-            add(std::string("/su/nas/") + nshort + "_id.token");
-            add(std::string("/su/nas/") + nshort + "_refresh.token");
-            add(std::string("/su/nas/") + nshort + "_user.json");
-        }
+    RemoveLegacyUnpackedSnapshot(sd);
+
+    if (sd.FileExists(SnapshotPath())) {
+        sd.DeleteFile(SnapshotPath());
     }
-    R_TRY(sd.write_entire_file(FilesPath(), std::vector<u8>(list.begin(), list.end())));
+
+    R_TRY(WriteNandFlag());
+
+    if (pbox) {
+        pbox->NewTransfer("8000000000000010");
+        R_TRY(pbox->CopyFile(&bis, &sd, src, SnapshotPath()));
+    } else {
+        std::vector<u8> data;
+        R_TRY(bis.read_entire_file(src, data));
+        R_UNLESS(!data.empty(), Result_FsEmpty);
+        R_TRY(sd.write_entire_file(SnapshotPath(), data));
+    }
+
+    R_UNLESS(SnapshotFileOk(sd), Result_FsEmpty);
+    fs::File f;
+    s64 size = 0;
+    if (R_SUCCEEDED(sd.OpenFile(SnapshotPath(), FsOpenMode_Read, &f))) {
+        f.GetSize(&size);
+    }
+    log_write("[RESTORE] raw 0010 snapshot bytes=%lld nand=%s\n",
+        static_cast<long long>(size), App::IsEmummc() ? "emu" : "sys");
     R_SUCCEED();
 }
 

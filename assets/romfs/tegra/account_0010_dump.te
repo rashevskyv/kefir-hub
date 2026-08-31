@@ -4,7 +4,7 @@
 # REQUIRE VER 4.0.0
 
 # One-shot: Hub copies this to sd:/startup.te and reboots into TegraExplorer.
-# Dumps account save 0010, deletes startup.te, loads hekate.
+# Copies raw BIS account save 8000000000000010 (no unpack), then loads hekate.
 
 goHekate = {
     saveObj = dict()
@@ -41,23 +41,24 @@ println("Kefir Hub: dumping account save 0010")
 println("")
 
 pending = "sd:/config/kefir/restore_pending"
-dst = combinepath(pending, "0010")
-listf = combinepath(pending, "files.txt")
+snap = combinepath(pending, "8000000000000010")
+nandf = combinepath(pending, "nand")
+bis = "bis:/save/8000000000000010"
 
 delfile("sd:/startup.te")
 if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
     copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
 }
 
-if (!fsexists(listf)) {
-    println("No file list from Kefir Hub.")
-    goHekate()
-    exit()
-}
+mkdir(pending)
 
 if (emu()) {
+    println("NAND: emuMMC SYSTEM")
+    writefile(nandf, ["BYTE[]", 101, 109, 117])
     rc = mountemu("SYSTEM")
 } .else() {
+    println("NAND: sysMMC SYSTEM")
+    writefile(nandf, ["BYTE[]", 115, 121, 115])
     rc = mountsys("SYSTEM")
 }
 if (rc) {
@@ -66,70 +67,30 @@ if (rc) {
     exit()
 }
 
-bis = "bis:/save/8000000000000010"
 if (!fsexists(bis)) {
     println("No account save on this SYSTEM")
     goHekate()
     exit()
 }
 
-mkdir(pending)
-mkdir(dst)
-mkdir(combinepath(dst, "su"))
-mkdir(combinepath(dst, "su/baas"))
-mkdir(combinepath(dst, "su/nas"))
-mkdir(combinepath(dst, "su/avators"))
-
-println("Opening 0010")
-saveObj = readsave(bis)
-raw = readfile(listf)
-text = raw.bytestostr()
-lines = text.split("\n")
-wrote = 0
-lines.foreach("line") {
-    if (line.len()) {
-        bytes = saveObj.read(line)
-        if (bytes.len()) {
-            out = dst + line
-            parent = escapepath(out)
-            mkdir(parent)
-            rc = writefile(out, bytes)
-            if (!rc) {
-                wrote = wrote + 1
-            }
-        }
-    }
+if (fsexists(snap)) {
+    delfile(snap)
 }
 
-dumpSaveFolder = {
-    listing = saveObj.readdir(saveRel)
-    if (!listing.result) {
-        files = listing.files.copy()
-        files.foreach("fname") {
-            fpath = saveRel + "/" + fname
-            bytes = saveObj.read(fpath)
-            if (bytes.len()) {
-                out = dst + fpath
-                parent = escapepath(out)
-                mkdir(parent)
-                rc = writefile(out, bytes)
-                if (!rc) {
-                    wrote = wrote + 1
-                }
-            }
-        }
-    }
+println("Copying raw", bis)
+rc = copyfile(bis, snap)
+if (rc) {
+    println("copyfile failed", rc)
+    goHekate()
+    exit()
 }
-saveRel = "/su/baas"
-dumpSaveFolder()
-saveRel = "/su/nas"
-dumpSaveFolder()
-saveRel = "/baas"
-dumpSaveFolder()
-saveRel = "/nas"
-dumpSaveFolder()
+if (!fsexists(snap)) {
+    println("Snapshot missing after copy")
+    goHekate()
+    exit()
+}
 
 writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
-println("wrote", wrote)
+println("Raw 0010 copied to SD.")
 println("Open Kefir Hub to continue restore.")
 goHekate()

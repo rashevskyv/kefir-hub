@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.717** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.718** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.718 — Raw 0010 snapshot for Restore Backup Undo
+
+- Знімок перед рестором більше не розпаковує сейв у `restore_pending/0010/su/`. Хаб (або TE fallback) копіює сирий `8000000000000010` у `/config/kefir/restore_pending/8000000000000010` і пише `nand` = `emu`|`sys`.
+- `Undo_restore_if_wont_boot.te` без меню Cancel/emu/sys: читає прапорець, монтує той самий SYSTEM і кладе файл назад через `copyfile`.
+- Також у цьому ж commit: remote avatar байти тягнуться на probe, а `Draw()` лише декодує з RAM (без HTTP у рендері).
+- `user_packs` і міжконсольний формат паків не чіпали. Версія `0.13.718`. Збірку агент не запускав.
 
 ## v0.13.717 — Other-console restore: one Nintendo Account per baas
 
