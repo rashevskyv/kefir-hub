@@ -59,6 +59,7 @@ private:
     void ConfirmNandBackup();
     void ConfirmNandRestore();
     void ConfirmRestoreBackup();
+    void RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs);
     void ConfirmDelete();
     void RunLinkNintendoAccount();
     void RunUnlinkNintendoAccount(std::vector<AccountUid> uids);
@@ -82,5 +83,8 @@ private:
     ScrollingText m_uid_scroll{};
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_GridDetail};
 };
+
+void OfferPendingRestore();
+void StartRestoreBackup(std::vector<account_user::Pack> picked_packs);
 
 } // namespace sphaira::ui::menu::users

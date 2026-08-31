@@ -2,6 +2,7 @@
 
 #include "account_user.hpp"
 #include "account_playtime.hpp"
+#include "account_restore.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
@@ -1176,14 +1177,117 @@ void Menu::ConfirmRestoreBackup() {
         }
         auto picked_packs = std::move(*picked);
         App::Push<OptionBox>(
-            "This restore will reboot the console. If this Nintendo Account is already on this console, the link will be skipped."_i18n,
-            "Cancel"_i18n, "Restore"_i18n, 1,
+            "Before restore we snapshot the account save (0010) to SD and put a TegraExplorer rollback script in TegraExplorer/scripts. Restore starts the next time you open Kefir Hub. Continue?"_i18n,
+            "Cancel"_i18n, "Snapshot 0010"_i18n, 1,
             [this, picked_packs = std::move(picked_packs)](auto op) mutable {
                 if (op && *op == 1) {
-                    RunRestoreBackup(std::move(picked_packs));
+                    RunPrepareRestoreSnapshot(std::move(picked_packs));
                 }
             });
     });
+}
+
+void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
+    if (packs.empty()) {
+        return;
+    }
+    auto dirs = std::make_shared<std::vector<std::string>>();
+    for (const auto& p : packs) {
+        dirs->push_back(p.dir);
+    }
+    auto live_ok = std::make_shared<bool>(false);
+    App::Push<ProgressBox>(0, "Snapshot account save"_i18n, "Snapshot account save"_i18n,
+        [dirs, live_ok](auto pbox) -> Result {
+            pbox->NewTransfer("Copying 0010"_i18n);
+            account_restore::InstallRestoreTeScripts();
+            const auto dump_rc = account_restore::Dump0010ReadOnly(pbox);
+            if (R_SUCCEEDED(dump_rc) && account_restore::SnapshotOk()) {
+                *live_ok = true;
+                R_TRY(account_restore::SavePending(*dirs, "ready", true));
+                R_SUCCEED();
+            }
+            log_write("[RESTORE] live 0010 dump failed 0x%X, TE fallback\n", dump_rc);
+            R_TRY(account_restore::WriteExpectedFileList());
+            R_TRY(account_restore::SavePending(*dirs, "wait_dump", false));
+            R_SUCCEED();
+        },
+        [live_ok](Result rc) {
+            if (R_FAILED(rc)) {
+                App::Push<OptionBox>("Could not prepare the 0010 snapshot."_i18n, "OK"_i18n);
+                return;
+            }
+            if (*live_ok) {
+                App::Push<OptionBox>(
+                    "Account save 0010 is on SD. Rollback script: TegraExplorer/scripts/account_0010_rollback.te. Open Kefir Hub again to finish restore."_i18n,
+                    "OK"_i18n);
+                return;
+            }
+            App::Push<OptionBox>(
+                "Could not read 0010 (in use). RCM → TegraExplorer → account_0010_dump.te, then open Kefir Hub again. Rollback script is already in TegraExplorer/scripts."_i18n,
+                "OK"_i18n);
+        }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
+}
+
+void OfferPendingRestore() {
+    static bool s_offered = false;
+    if (s_offered) {
+        return;
+    }
+    auto pending = account_restore::LoadPending();
+    if (pending.rolled_back) {
+        s_offered = true;
+        account_restore::ClearPending();
+        App::Push<OptionBox>(
+            "Account save 0010 was rolled back. Restore was cancelled."_i18n,
+            "OK"_i18n);
+        return;
+    }
+    if (!pending.present || pending.phase == "applied") {
+        return;
+    }
+    if (pending.phase == "wait_dump" && account_restore::SnapshotOk()) {
+        account_restore::SavePending(pending.pack_dirs, "ready", true);
+        pending.phase = "ready";
+        pending.snapshot_ok = true;
+    }
+    if (pending.phase == "wait_dump") {
+        s_offered = true;
+        App::Push<OptionBox>(
+            "Restore is waiting for the 0010 dump. RCM → TegraExplorer → account_0010_dump.te, then reopen Kefir Hub."_i18n,
+            "OK"_i18n);
+        return;
+    }
+    if (pending.phase != "ready" || pending.pack_dirs.empty()) {
+        return;
+    }
+    s_offered = true;
+    std::vector<account_user::Pack> packs;
+    for (const auto& dir : pending.pack_dirs) {
+        auto pack = account_user::FindUserPack(dir);
+        if (!pack.dir.empty()) {
+            packs.push_back(std::move(pack));
+        }
+    }
+    if (packs.empty()) {
+        App::Push<OptionBox>("Pending restore packs are missing from SD."_i18n, "OK"_i18n);
+        return;
+    }
+    App::Push<OptionBox>(
+        "Unfinished restore. Continue? The console will reboot. If it does not boot: RCM → TegraExplorer/scripts/account_0010_rollback.te"_i18n,
+        "Later"_i18n, "Cancel restore"_i18n, "Continue"_i18n, 2,
+        [packs = std::move(packs)](auto op) mutable {
+            if (!op) {
+                return;
+            }
+            if (*op == 1) {
+                account_restore::ClearPending();
+                App::Push<OptionBox>("Restore cancelled. The 0010 snapshot was removed."_i18n, "OK"_i18n);
+                return;
+            }
+            if (*op == 2) {
+                StartRestoreBackup(std::move(packs));
+            }
+        });
 }
 
 void Menu::ConfirmDelete() {
@@ -1413,9 +1517,13 @@ struct RestoreReport {
 } // namespace
 
 void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
+    StartRestoreBackup(std::move(picked_packs));
+}
+
+void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
     auto report = std::make_shared<RestoreReport>();
     std::unordered_set<u64> taken_nas;
-    for (const auto& u : m_items) {
+    for (const auto& u : account_link::ListUsers()) {
         u64 nas = 0;
         if (R_SUCCEEDED(account_link::QueryNintendoAccountId(u.uid, nas)) && nas != 0) {
             taken_nas.insert(nas);
@@ -1512,6 +1620,10 @@ void Menu::RunRestoreBackup(std::vector<account_user::Pack> picked_packs) {
             if (report->profiles_restored == 0 && !terminated) {
                 App::Push<OptionBox>("Could not restore user profiles."_i18n, "OK"_i18n);
                 return;
+            }
+            auto pending = account_restore::LoadPending();
+            if (pending.present) {
+                account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
             }
             utils::requestForcedReboot();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);

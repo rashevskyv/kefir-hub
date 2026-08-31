@@ -1,0 +1,88 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# Fallback dump of account save 0010 when Horizon will not open it.
+# Writes inner files to sd:/config/kefir/restore_pending/0010/
+# Then reopen Kefir Hub to continue restore.
+
+clear()
+println("Kefir Hub: dump account save 0010")
+println("Horizon is off. Dump for restore rollback.")
+println("")
+
+pending = "sd:/config/kefir/restore_pending"
+dst = combinepath(pending, "0010")
+listf = combinepath(pending, "files.txt")
+if (!fsexists(listf)) {
+    println("No file list. Start Restore Backup in Hub first.")
+    pause()
+    exit()
+}
+
+targets = ["Cancel"].copy()
+targets.add("emuMMC SYSTEM")
+targets.add("sysMMC SYSTEM")
+choice = menu(targets, 0)
+if (!choice) {
+    exit()
+}
+if (choice == 1) {
+    if (!emu()) {
+        println("No emuMMC")
+        pause()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    rc = mountsys("SYSTEM")
+}
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    pause()
+    exit()
+}
+
+bis = "bis:/save/8000000000000010"
+if (!fsexists(bis)) {
+    println("No account save on this SYSTEM")
+    pause()
+    exit()
+}
+
+mkdir(pending)
+mkdir(dst)
+mkdir(combinepath(dst, "su"))
+mkdir(combinepath(dst, "su/baas"))
+mkdir(combinepath(dst, "su/nas"))
+mkdir(combinepath(dst, "su/avators"))
+
+println("Opening 0010")
+saveObj = readsave(bis)
+raw = readfile(listf)
+text = raw.bytestostr()
+lines = text.split("\n")
+wrote = 0
+lines.foreach("line") {
+    if (line.len()) {
+        println(line)
+        bytes = saveObj.read(line)
+        if (bytes.len()) {
+            out = dst + line
+            parent = escapepath(out)
+            mkdir(parent)
+            rc = writefile(out, bytes)
+            if (!rc) {
+                wrote = wrote + 1
+            }
+        }
+    }
+}
+
+ok = combinepath(pending, "dumped.ok")
+writefile(ok, ["BYTE[]", 79, 75])
+println("")
+println("wrote", wrote)
+println("Reopen Kefir Hub to finish restore.")
+pause()

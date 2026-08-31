@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.698** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.699** (2026-08-31). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.699 — Snapshot 0010 before Restore Backup
+
+- Restore Backup спочатку знімає 0010 read-only на `/config/kefir/restore_pending/0010/` і кладе `account_0010_rollback.te` у `TegraExplorer/scripts`. Сам Create/лінк — після наступного запуску Хаба.
+- Якщо 0010 зайнятий: `account_0010_dump.te` (RCM), потім знову Хаб.
+- Продовження рестору: ребут без Later. Бутлуп → TE rollback відновлює 0010, пише `rolled_back.ok`, знімає pending і видаляє скрипт, щоб Хаб не повторив рестор. Збірку агент не запускав.
 
 ## v0.13.698 — Auto-reboot after backup/restore; skip duplicate NA
 

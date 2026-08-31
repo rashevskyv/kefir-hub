@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.698** (попередження про ребут; skip duplicate NA). Завершені задачі збережено в
+Актуальний delivery — **v0.13.699** (знімок 0010 перед рестором). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.698 (warn+auto reboot; no duplicate NA)
+## Поточний delivery: v0.13.699 (0010 snapshot before restore)
+
+- [x] `USERS-RESTORE-SNAP-699` — перед рестором RO-знімок 0010; якщо зайнятий — TE dump.
+- [x] `USERS-RESTORE-PENDING-699` — прапор на SD; наступний запуск Хаба продовжує рестор.
+- [x] `USERS-RESTORE-ROLLBACK-TE-699` — account_0010_rollback.te відкочує 0010, чистить pending, видаляє себе.
+- [x] `DOCS-BUMP-699` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.698 (warn+auto reboot; no duplicate NA)
 
 - [x] `USERS-REBOOT-WARN-698` — Backup/Restore спочатку попереджають про ребут; після успіху ребут без запиту.
 - [x] `USERS-NO-DUP-NAS-698` — Restore не пише baas, якщо цей nas_id уже є на консолі.

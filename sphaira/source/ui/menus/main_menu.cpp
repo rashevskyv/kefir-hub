@@ -3,6 +3,7 @@
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/tools_menu.hpp"
+#include "ui/menus/users_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/themezer.hpp"
 #include "ui/menus/ghdl.hpp"
@@ -303,6 +304,7 @@ void MainMenu::OnFocusGained() {
 
     if (!m_launch_link_prompt_checked) {
         m_launch_link_prompt_checked = true;
+        users::OfferPendingRestore();
         CheckLaunchAccountLinkPrompt();
     }
 }

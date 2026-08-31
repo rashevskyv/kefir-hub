@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.698** (попередження про ребут; не дублювати NA). Завершені плани збережено в
+Поточний delivery — **v0.13.699** (знімок 0010 перед рестором). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.698 — Warn then auto-reboot; skip duplicate Nintendo Account
+## Поточний delivery: v0.13.699 — Snapshot 0010 before Restore Backup
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Перед рестором — знімок 0010 read-only (ACCOUNT не вбиваємо). Якщо зайнятий — `account_0010_dump.te`.
+2. Прапор `/config/kefir/restore_pending/`; скрипт відкату `TegraExplorer/scripts/account_0010_rollback.te`.
+3. Наступний запуск Хаба пропонує продовжити рестор (ребут) або скасувати. Якщо бутлуп — TE rollback пише 0010 назад, знімає pending і видаляє себе.
+4. Версія `0.13.699`.
+
+## Попередній delivery: v0.13.698 — Warn then auto-reboot; skip duplicate Nintendo Account
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

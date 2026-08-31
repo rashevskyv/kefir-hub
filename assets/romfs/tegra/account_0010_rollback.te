@@ -1,0 +1,115 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# Emergency rollback of account save 0010 after a failed Restore Backup.
+# Writes the snapshot from sd:/config/kefir/restore_pending/0010/
+# Clears the pending restore so Hub will not apply it again.
+# Deletes this script afterwards.
+
+writeDir = {
+    src = srcRoot
+    if (rel.len()) {
+        src = combinepath(srcRoot, rel)
+    }
+    listing = readdir(src)
+    if (listing.result) {
+        println("readdir fail", src)
+        errors = errors + 1
+    } .else() {
+        files = listing.files.copy()
+        subs = listing.folders.copy()
+        files.foreach("fname") {
+            fsrc = combinepath(src, fname)
+            fdst = "/" + fname
+            if (rel.len()) {
+                fdst = "/" + rel + "/" + fname
+            }
+            println(fdst)
+            bytes = readfile(fsrc)
+            rc = saveObj.write(fdst, bytes)
+            if (rc) {
+                println("write fail", fdst, rc)
+                errors = errors + 1
+            } .else() {
+                wrote = wrote + 1
+            }
+        }
+        subs.foreach("dname") {
+            oldrel = rel
+            if (rel.len()) {
+                rel = rel + "/" + dname
+            } .else() {
+                rel = dname
+            }
+            writeDir()
+            rel = oldrel
+        }
+    }
+}
+
+clear()
+println("Kefir Hub: ROLLBACK account save 0010")
+println("Use this if Restore Backup left the console in a bootloop.")
+println("")
+
+srcRoot = "sd:/config/kefir/restore_pending/0010"
+if (!fsexists(srcRoot)) {
+    println("No 0010 snapshot at")
+    println(srcRoot)
+    pause()
+    exit()
+}
+
+targets = ["Cancel"].copy()
+targets.add("emuMMC SYSTEM")
+targets.add("sysMMC SYSTEM")
+choice = menu(targets, 0)
+if (!choice) {
+    exit()
+}
+if (choice == 1) {
+    if (!emu()) {
+        println("No emuMMC")
+        pause()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    rc = mountsys("SYSTEM")
+}
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    pause()
+    exit()
+}
+
+bis = "bis:/save/8000000000000010"
+if (!fsexists(bis)) {
+    println("No account save on this SYSTEM")
+    pause()
+    exit()
+}
+
+println("Opening 0010")
+saveObj = readsave(bis)
+rel = ""
+wrote = 0
+errors = 0
+writeDir()
+println("commit")
+saveObj.commit()
+
+pending = "sd:/config/kefir/restore_pending"
+writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
+delfile(combinepath(pending, "state.json"))
+
+println("Removing this script")
+delfile("sd:/TegraExplorer/scripts/account_0010_rollback.te")
+delfile("sd:/TegraExplorer/scripts/account_0010_dump.te")
+
+println("")
+println("wrote", wrote, "errors", errors)
+println("Reboot CFW. Hub will not continue the restore.")
+pause()
