@@ -1143,6 +1143,10 @@ auto App::GetApp() -> App* {
     return g_app;
 }
 
+auto App::IsExiting() -> bool {
+    return !g_app || g_app->m_quit;
+}
+
 auto App::GetVg() -> NVGcontext* {
     return g_app->vg;
 }
@@ -1550,6 +1554,8 @@ App::App(const char* argv0) {
 void App::PlaySoundEffect(SoundEffect) {}
 
 App::~App() {
+    m_quit = true;
+
     // boost mode is disabled in userAppExit().
     App::SetBoostMode(true);
 

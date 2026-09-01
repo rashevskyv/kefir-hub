@@ -88,6 +88,13 @@ private:
     CURLSH* m_curl_share{};
     RwLock m_rwlocks[CURL_LOCK_DATA_LAST]{};
     bool m_mounted{};
+
+    enum class SphairaShareState {
+        Unknown,
+        Detected,
+        NotSphaira,
+    };
+    SphairaShareState m_sphaira_state{SphairaShareState::Unknown};
 };
 
 } // namespace sphaira::devoptab::common

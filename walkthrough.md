@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.723** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.724** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.724 — Console Transfer: HTTP-source browse і teardown crash
+
+- Atmosphère crash `2168-0003` (`PC=0x81`) був teardown race: `App::~App` знищував `ProgressBox`, його completion callback ще викликав `FsView::SetFs`. `App::IsExiting()` та `m_quit=true` на початку деструктора не дають callback-у або compatibility warning push торкнутися UI під час shutdown; скасування потоку, join і cleanup лишилися виконуватись завжди.
+- HTTP/HTTPS source автоматично пізнає вебсервер Sphaira за строгим JSON `/list?path=...`. Після цього каталоги будуються з `name/type/size`, а файли читаються через URL-encoded `/download?path=...`, включно з HEAD/range fallback. Невалідна відповідь лишає generic HTTP fallback при probe або повертає контрольований `-EIO` для вже пізнаного share. WebDAV/WebDAVS/FTP не probe-яться й працюють попереднім шляхом.
+- Версія `0.13.724`; пройдено `git diff --check`. Агент не компілював і не запускав NRO відповідно до політики checkout.
 
 ## v0.13.723 — Console Transfer: IP:port only
 

@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.723** (Console Transfer: коротка адреса без шляху). Завершені плани збережено в
+Поточний delivery — **v0.13.724** (Console Transfer: перегляд HTTP-source). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.723 — Console Transfer: IP:port only
+## Поточний delivery: v0.13.724 — Console Transfer HTTP-source
+
+Статус: реалізовано в primary checkout; `git diff --check` пройдено. Збірку агент не ганяє.
+
+1. Atmosphère report `01788265802_054956fb30c19000.log` для build ID `7392d995...` символізувався як `ProgressBox::~ProgressBox` → completion callback → `FsView::SetFs` → alignment fault `PC=0x81` під час `App::~App`. `App::IsExiting()` і ранній `m_quit=true` відсікають callback/warning push тільки під час teardown; cancel, join і cleanup ProgressBox лишаються безумовними.
+2. HTTP/HTTPS mount один раз перевіряє JSON `/list?path=...`; лише валідні Sphaira `path` + `entries(name,type,size)` вмикають Sphaira-режим. Каталоги тоді читаються через `/list`, файли, HEAD/range і streaming read — через URL-encoded `/download?path=...`; invalid JSON дає log + контрольований `-EIO`.
+3. WebDAV/WebDAVS, FTP і plain-HTML HTTP не отримують нового протоколу: WebDAV не має навіть probe `/list`; failed/non-Sphaira HTTP probe повертається до чинного PROPFIND/HTML fallback. Version `0.13.724`; пройдено `git diff --check`, без компіляції.
+
+## Попередній delivery: v0.13.723 — Console Transfer: IP:port only
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

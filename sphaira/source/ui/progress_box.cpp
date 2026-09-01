@@ -87,11 +87,13 @@ ProgressBox::~ProgressBox() {
     }
 
     FreeImage();
-    m_done(m_thread_data.result);
+    if (!App::IsExiting()) {
+        m_done(m_thread_data.result);
 
-    if (R_SUCCEEDED(m_thread_data.result)) {
-        for (const auto& w : m_compat_warnings) {
-            App::Push<OptionBox>(FormatCompatibilityWarning(w), "OK"_i18n);
+        if (R_SUCCEEDED(m_thread_data.result)) {
+            for (const auto& w : m_compat_warnings) {
+                App::Push<OptionBox>(FormatCompatibilityWarning(w), "OK"_i18n);
+            }
         }
     }
 

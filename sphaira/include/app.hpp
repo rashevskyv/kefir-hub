@@ -59,6 +59,7 @@ public:
 
     static void Exit();
     static void ExitRestart();
+    static auto IsExiting() -> bool;
     static auto GetVg() -> NVGcontext*;
 
     static void Push(std::unique_ptr<ui::Widget>&&);

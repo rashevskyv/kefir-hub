@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.723** (Console Transfer: коротка адреса). Завершені задачі збережено в
+Актуальний delivery — **v0.13.724** (Console Transfer: HTTP-source browse). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.723 (Console Transfer: IP:port only)
+## Поточний delivery: v0.13.724 (Console Transfer HTTP-source)
+
+- [x] `PROGRESSBOX-EXIT-CALLBACK-724` — `ProgressBox` не викликає done callback під час `App::~App`; normal completion лишається без змін. Закриває Atmosphère alignment fault `ProgressBox::~ProgressBox` → `FsView::SetFs` (`PC=0x81`).
+- [x] `CONSOLE-TRANSFER-HTTP-LIST-724` — HTTP-source розпізнає Kefir Hub `/list`, будує каталог з JSON name/type/size і повертає керовану помилку на invalid response.
+- [x] `CONSOLE-TRANSFER-HTTP-DOWNLOAD-724` — open/HEAD/range/read для такого source використовують `/download?path=...`; WebDAV/FTP/plain HTML без регресій.
+- [x] `CMAKELISTS-VERSION-BUMP-724` — піднято `sphaira_VERSION` до `0.13.724`.
+- [x] `DOCS-BUMP-724` — plan/task/walkthrough/audit оновлено; delivery зафіксовано окремим commit.
+
+## Попередній delivery: v0.13.723 (Console Transfer: IP:port only)
 
 - [x] `CONSOLE-TRANSFER-ROOT-URL-723` — усі шість дій Console Transfer показують і кодують QR лише з `http://IP:port`, без `/?path=…`; звичайний Share Folder у File Browser не змінюється.
 - [x] `CMAKELISTS-VERSION-BUMP-723` — піднято `sphaira_VERSION` до `0.13.723`.
