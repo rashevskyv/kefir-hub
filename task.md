@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.721** (TE dump SnapshotOk + auto-continue restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.722** (Restore Backup Create→SD link + TE apply). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.721 (TE dump SnapshotOk + auto-continue)
+## Поточний delivery: v0.13.722 (TE apply link; no Horizon 0010 write)
+
+- [x] `USERS-RESTORE-NO-HORIZON-LINK-722` — `StartRestoreBackup` не викликає `ApplyLinkPackages`/`TerminateAccountDaemons`; Create+valid link → SD staging + `wait_link`; Replace = name/avatar only.
+- [x] `USERS-RESTORE-TE-APPLY-LINK-722` — romfs `account_0010_apply_link.te`: nand flag, readsave 0010, write staged baas/nas, commit, `link_applied.ok`; raw snapshot не чіпає.
+- [x] `USERS-RESTORE-WAIT-LINK-722` — `OfferPendingRestore`/`HasUnfinishedRestore` для `wait_link`; ok → applied UI; без ok → warning + Undo hint; i18n en/uk/ru.
+- [x] `DOCS-BUMP-722` — plan/task/walkthrough/audit; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.721 (TE dump SnapshotOk + auto-continue)
 
 - [x] `USERS-RESTORE-SNAPOK-721` — `SnapshotOk` приймає raw blob через OpenFile, stat або dir listing (`8000000000000010` size≥0x200); лог на fail; `dumped.ok` у пробах.
 - [x] `USERS-RESTORE-AUTO-CONT-721` — `wait_dump`→`ready` після TE: SavePending + auto `StartRestoreBackup`; live dump продовжує restore в тій самій сесії Hub.

@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -2265,7 +2266,7 @@ void Menu::ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked) {
         App::Push<OptionBox>(
             "This user is already on this console"_i18n +
             (existing_name.empty() ? std::string(".") : (" (" + existing_name + ").")) + "\n\n" +
-            "Restore will replace that profile: name, avatar and Nintendo Account link. It will not add a second user.\n\n"
+            "Restore will replace that profile: name and avatar only. The existing Nintendo Account link is left as-is. It will not add a second user.\n\n"
             "We still copy the current account save to SD first, in case something goes wrong."_i18n,
             "Cancel"_i18n, "Replace"_i18n, 1, std::move(go));
         return;
@@ -2360,6 +2361,24 @@ auto OfferPendingRestore() -> bool {
     }
     if (!pending.present || pending.phase == "applied") {
         return false;
+    }
+
+    if (pending.phase == "wait_link") {
+        s_offered = true;
+        fs::FsNativeSd sd;
+        if (sd.FileExists(account_restore::LinkAppliedOkPath())) {
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            App::Push<OptionBox>(
+                "Profile created and Nintendo Account link applied. Reboot is done."_i18n,
+                "OK"_i18n);
+        } else {
+            App::Push<OptionBox>(
+                "TegraExplorer did not apply the Nintendo Account link.\n\n"
+                "An extra unlinked profile may exist on this console.\n"
+                "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te"_i18n,
+                "OK"_i18n);
+        }
+        return true;
     }
 
     bool upgraded_from_wait_dump = false;
@@ -2657,12 +2676,47 @@ namespace {
 
 struct RestoreReport {
     u32 profiles_restored{};
-    u32 links_restored{};
+    u32 created_count{};
+    u32 replaced_count{};
+    u32 links_staged{};
     u32 unlinked_restored{};
     u32 link_malformed_count{};
     u32 failed_creations{};
-    bool link_apply_failed{};
+    bool link_stage_failed{};
+    bool needs_te_link{};
 };
+
+auto StageCreateLinkForTe(fs::FsNativeSd& sd, const AccountUid& dest_uid, const account_link::LinkPackage& pkg) -> Result {
+    R_TRY(sd.CreateDirectoryRecursively(account_restore::LinkBaasDir()));
+    R_TRY(sd.CreateDirectoryRecursively(account_restore::LinkNasDir()));
+
+    if (pkg.baas_data.size() < 24) {
+        log_write("[USER] StageCreateLinkForTe: baas too small\n");
+        return Result_FsInvalidType;
+    }
+    auto baas_for_uid = pkg.baas_data;
+    std::memcpy(baas_for_uid.data(), &dest_uid, sizeof(AccountUid));
+    const auto baas_name = account_link::UidDashedLinkalho(dest_uid) + ".dat";
+    const auto baas_path = std::string(account_restore::LinkBaasDir()) + "/" + baas_name;
+    R_TRY(sd.write_entire_file(baas_path.c_str(), baas_for_uid));
+
+    for (const auto& nf : pkg.nas_files) {
+        const auto nas_path = std::string(account_restore::LinkNasDir()) + "/" + nf.filename;
+        R_TRY(sd.write_entire_file(nas_path.c_str(), nf.data));
+    }
+
+    const auto uid_txt =
+        "rfc=" + account_link::UidDashedRfc(dest_uid) + "\n" +
+        "linkalho=" + account_link::UidDashedLinkalho(dest_uid) + "\n" +
+        "baas=" + baas_name + "\n";
+    R_TRY(sd.write_entire_file(
+        (std::string(account_restore::LinkStagingDir()) + "/uid.txt").c_str(),
+        std::vector<u8>(uid_txt.begin(), uid_txt.end())));
+
+    log_write("[USER] staged TE link baas=%s nas_files=%zu\n",
+        baas_name.c_str(), pkg.nas_files.size());
+    R_SUCCEED();
+}
 
 } // namespace
 
@@ -2675,7 +2729,13 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
     App::Push<ProgressBox>(0, "Restore Backup"_i18n, "Restoring profiles..."_i18n,
         [picked_packs = std::move(picked_packs), report](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
-            std::vector<account_link::TargetLink> links_to_apply;
+            std::vector<account_link::TargetLink> links_to_stage;
+
+            // Fresh staging dir; never leave stale baas/nas for TE.
+            if (sd.DirExists(account_restore::LinkStagingDir())) {
+                sd.DeleteDirectoryRecursively(account_restore::LinkStagingDir());
+            }
+            sd.DeleteFile(account_restore::LinkAppliedOkPath());
 
             for (size_t i = 0; i < picked_packs.size(); i++) {
                 const auto& p = picked_packs[i];
@@ -2689,11 +2749,12 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
                 AccountUid dest_uid{};
                 bool have_dest = false;
+                bool created = false;
 
                 if (const auto live = FindLiveUidForPack(p)) {
                     dest_uid = *live;
                     have_dest = true;
-                    log_write("[USER] Replace onto live uid %s (pack uid %s nas %llx)\n",
+                    log_write("[USER] Replace onto live uid %s (pack uid %s nas %llx); name/avatar only, no TE link\n",
                         account_link::UidHex(dest_uid).c_str(),
                         p.uid_hex.c_str(),
                         static_cast<unsigned long long>(p.nas_id));
@@ -2708,6 +2769,7 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                         }
                     }
                     report->profiles_restored++;
+                    report->replaced_count++;
                 }
 
                 if (!have_dest) {
@@ -2721,11 +2783,17 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                         continue;
                     }
                     have_dest = true;
+                    created = true;
                     report->profiles_restored++;
+                    report->created_count++;
                 }
 
-                if (have_dest && R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
-                    links_to_apply.push_back({dest_uid, std::move(pkg)});
+                // Create + valid baas/nas → SD staging for TE. Never ApplyLinkPackages / Horizon 0010 write.
+                // Replace (proven nas): name/avatar only — no TE link, no 0010 write.
+                if (created && R_SUCCEEDED(link_load_rc) && pkg.nas_id != 0) {
+                    links_to_stage.push_back({dest_uid, std::move(pkg)});
+                } else if (have_dest && !created) {
+                    // Replace path intentionally skips link rewrite.
                 } else if (have_dest && !sd.DirExists((p.dir + "/baas").c_str())) {
                     report->unlinked_restored++;
                 } else if (have_dest) {
@@ -2736,46 +2804,78 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 // Pack may still contain pdm/playtime; Restore Backup ignores it.
             }
 
-            if (!links_to_apply.empty()) {
-                pbox->NewTransfer("Applying Nintendo Account link"_i18n);
-                u32 count = 0;
-                const auto apply_rc = account_link::ApplyLinkPackages(links_to_apply, count);
-                if (R_SUCCEEDED(apply_rc)) {
-                    report->links_restored += count;
-                } else {
-                    log_write("[USER] ApplyLinkPackages failed 0x%X\n", apply_rc);
-                    report->link_apply_failed = true;
+            if (!links_to_stage.empty()) {
+                pbox->NewTransfer("Staging Nintendo Account link for TegraExplorer"_i18n);
+                for (const auto& target : links_to_stage) {
+                    const auto stage_rc = StageCreateLinkForTe(sd, target.uid, target.pkg);
+                    if (R_FAILED(stage_rc)) {
+                        log_write("[USER] StageCreateLinkForTe failed 0x%X\n", stage_rc);
+                        report->link_stage_failed = true;
+                        R_TRY(stage_rc);
+                    }
+                    report->links_staged++;
                 }
+                auto pending = account_restore::LoadPending();
+                const auto pack_dirs = pending.present ? pending.pack_dirs : std::vector<std::string>{};
+                const bool snap_ok = pending.present ? pending.snapshot_ok : account_restore::SnapshotOk();
+                if (!pack_dirs.empty()) {
+                    R_TRY(account_restore::SavePending(pack_dirs, "wait_link", snap_ok));
+                } else {
+                    // Snapshot prep should have written packs; keep wait_link even if state was cleared.
+                    std::vector<std::string> dirs;
+                    for (const auto& p : picked_packs) {
+                        dirs.push_back(p.dir);
+                    }
+                    R_TRY(account_restore::SavePending(dirs, "wait_link", snap_ok));
+                }
+                report->needs_te_link = true;
+                log_write("[USER] Create link staged; wait_link for TE apply (%u)\n", report->links_staged);
             }
 
             R_SUCCEED();
         },
         [report](Result /*rc*/) {
-            const bool terminated = account_link::ConsumeAccountDaemonsTerminated();
-            if (report->profiles_restored == 0 && !terminated) {
+            if (report->profiles_restored == 0) {
                 App::Push<OptionBox>("Could not restore user profiles."_i18n, "OK"_i18n);
                 return;
             }
+
+            if (report->needs_te_link && !report->link_stage_failed) {
+                log_write("[USER] launching account_0010_apply_link.te\n");
+                if (!account_restore::LaunchTegraRomfs(account_restore::ApplyLinkTeName())) {
+                    App::Push<OptionBox>(
+                        "Profile was created, but TegraExplorer could not start to apply the Nintendo Account link.\n\n"
+                        "Put TegraExplorer.bin in /bootloader/payloads/ and open Kefir Hub again, or run Undo if the console will not boot."_i18n,
+                        "OK"_i18n);
+                }
+                return;
+            }
+
             auto pending = account_restore::LoadPending();
             if (pending.present) {
                 account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
             }
-            // After ApplyLink (ACCOUNT terminated), reboot immediately — do not keep Hub UI.
-            if (terminated) {
-                log_write("[USER] ApplyLink done; rebooting immediately\n");
+
+            if (report->link_stage_failed || report->link_malformed_count) {
+                std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
+                msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+                return;
+            }
+
+            // Create without link: reboot for a clean user list. Replace-only: stay in Hub.
+            if (report->created_count > 0) {
+                log_write("[USER] Create without TE link; rebooting for clean user list\n");
                 utils::requestForcedReboot();
                 return;
             }
 
             std::string msg = "Restored " + std::to_string(report->profiles_restored) + " user profile(s)."_i18n;
-            if (report->links_restored > 0) {
-                msg += " " + std::to_string(report->links_restored) + " with Nintendo Account link."_i18n;
+            if (report->replaced_count > 0) {
+                msg += " " + "Name and avatar updated on existing profile(s)."_i18n;
             }
             if (report->unlinked_restored > 0) {
                 msg += " " + std::to_string(report->unlinked_restored) + " profile(s) restored without link."_i18n;
-            }
-            if (report->link_apply_failed || report->link_malformed_count) {
-                msg += " " + "Nintendo Account link data was invalid or could not be applied."_i18n;
             }
             App::Push<OptionBox>(msg, "OK"_i18n);
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);

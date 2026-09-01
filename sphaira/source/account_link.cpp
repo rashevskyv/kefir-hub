@@ -23,6 +23,31 @@ namespace sphaira::account_link {
 
 bool g_daemons_terminated = false;
 
+auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
+    char buf[40]{};
+    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%02x%02x-%08x%04x",
+        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
+        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
+        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
+        static_cast<unsigned>(uid.uid[1] & 0xffu),
+        static_cast<unsigned>((uid.uid[1] >> 8) & 0xffu),
+        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu),
+        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu));
+    return buf;
+}
+
+auto UidDashedRfc(const AccountUid& uid) -> std::string {
+    char buf[40]{};
+    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%04x-%04x%08x",
+        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
+        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
+        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
+        static_cast<unsigned>(uid.uid[1] & 0xffffu),
+        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu),
+        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu));
+    return buf;
+}
+
 namespace {
 
 constexpr u64 ACCOUNT_SAVE_ID = 0x8000000000000010ULL;
@@ -51,31 +76,6 @@ auto NasHex(u64 nas_id) -> std::string {
 auto NasHexShort(u64 nas_id) -> std::string {
     char buf[17]{};
     std::snprintf(buf, sizeof(buf), "%llx", static_cast<unsigned long long>(nas_id));
-    return buf;
-}
-
-auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
-    char buf[40]{};
-    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%02x%02x-%08x%04x",
-        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
-        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
-        static_cast<unsigned>(uid.uid[1] & 0xffu),
-        static_cast<unsigned>((uid.uid[1] >> 8) & 0xffu),
-        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu));
-    return buf;
-}
-
-auto UidDashedRfc(const AccountUid& uid) -> std::string {
-    char buf[40]{};
-    std::snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%04x-%04x%08x",
-        static_cast<unsigned>(uid.uid[0] & 0xffffffffu),
-        static_cast<unsigned>((uid.uid[0] >> 32) & 0xffffu),
-        static_cast<unsigned>((uid.uid[0] >> 48) & 0xffffu),
-        static_cast<unsigned>(uid.uid[1] & 0xffffu),
-        static_cast<unsigned>((uid.uid[1] >> 16) & 0xffffu),
-        static_cast<unsigned>((uid.uid[1] >> 32) & 0xffffffffu));
     return buf;
 }
 

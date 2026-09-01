@@ -293,6 +293,7 @@ auto ClearPending() -> Result {
         sd.DeleteDirectoryRecursively(PendingDir());
     }
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
+    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + ApplyLinkTeName()).c_str());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + RollbackTeName()).c_str());
     sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
     R_SUCCEED();

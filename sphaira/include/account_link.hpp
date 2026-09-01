@@ -40,6 +40,9 @@ struct TargetLink {
 };
 
 auto UidHex(const AccountUid& uid) -> std::string;
+// Linkalho baas filename stem (no .dat): used when staging Restore Backup link for TE.
+auto UidDashedLinkalho(const AccountUid& uid) -> std::string;
+auto UidDashedRfc(const AccountUid& uid) -> std::string;
 auto ListUsers() -> std::vector<User>;
 auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;

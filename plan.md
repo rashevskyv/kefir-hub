@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.721** (SnapshotOk accepts TE dump; auto-continue restore). Завершені плани збережено в
+Поточний delivery — **v0.13.722** (Restore Backup Create→SD link + TE apply; no Horizon 0010 write). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.721 — TE dump SnapshotOk + auto-continue restore
+## Поточний delivery: v0.13.722 — Restore Backup: TE apply link (no Horizon 0010 write)
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Other-console Restore: Create + Horizon `OpenAccountSaveWritable`/ApplyLink ламав `ns` (2011-0301); kill ns ламав `am`. Same-console Replace працював, бо не інжектив новий nas у живий 0010.
+2. `StartRestoreBackup` більше не викликає `ApplyLinkPackages` / `TerminateAccountDaemons`. Create з валідним baas/nas: remap UID → SD `/config/kefir/restore_pending/link/{baas,nas}/`, `phase=wait_link`, `LaunchTegraRomfs(account_0010_apply_link.te)`. Replace (доказаний nas): лише name/avatar. Create без лінку: reboot без відкриття 0010.
+3. TE `account_0010_apply_link.te`: mount за `nand`, `readsave` живого 0010 (raw blob не замінює), пише staged baas/nas у `/su/baas|/baas` і `/su/nas|/nas`, `commit()`, `link_applied.ok`. Hub: `wait_link`+ok → applied; без ok — попередження про unlinked профіль / Undo. Version `0.13.722`.
+
+## Попередній delivery: v0.13.721 — TE dump SnapshotOk + auto-continue restore
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

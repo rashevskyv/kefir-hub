@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.721** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.722** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.722 — Restore Backup: TE apply link (no Horizon 0010 write)
+
+- Other-console Create + Horizon ApplyLink ламав `ns`/`am`. Restore Backup більше не пише baas/nas через `OpenAccountSaveWritable` і не викликає `TerminateAccountDaemons`.
+- Create з валідним паком: remap baas[0..15] на новий UID, файли на SD `restore_pending/link/baas|nas`, `phase=wait_link`, `account_0010_apply_link.te` (readsave + write + commit, raw 0010 snapshot лишається для Undo).
+- Replace (доказаний nas): лише nickname/avatar. Create без лінку: reboot без 0010. `OfferPendingRestore`: `wait_link`+`link_applied.ok` → applied; без ok — warning. i18n en/uk/ru. Версія `0.13.722`. Збірку агент не запускав.
 
 ## v0.13.721 — TE dump SnapshotOk + auto-continue restore
 

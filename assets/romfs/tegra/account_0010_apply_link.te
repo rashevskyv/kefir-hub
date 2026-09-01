@@ -1,0 +1,171 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# One-shot: Hub stages remapped baas/nas under restore_pending/link/, then
+# copies this to sd:/startup.te. Opens live 0010 with readsave, writes pack
+# files only (does not replace the raw blob, does not delete stub baas),
+# commit() re-signs with this console's prod.keys, then loads hekate.
+
+goHekate = {
+    saveObj = dict()
+    raw = ["BYTE[]"]
+    text = ""
+    lines = []
+    bytes = ["BYTE[]"]
+    delfile("sd:/startup.te")
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
+    println("Loading hekate")
+    rc = 1
+    if (fsexists("sd:/bootloader/update.bin")) {
+        rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc && fsexists("sd:/payload.bin")) {
+        rc = payload("sd:/payload.bin")
+    }
+    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
+        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    }
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    }
+    if (rc) {
+        reboot()
+    }
+}
+
+writeLinkDir = {
+    if (!fsexists(srcDir)) {
+        println("skip missing", srcDir)
+    } .else() {
+        listing = readdir(srcDir)
+        if (listing.result) {
+            println("readdir fail", srcDir)
+            errors = errors + 1
+        } .else() {
+            listing.files.foreach("fname") {
+                fsrc = combinepath(srcDir, fname)
+                fdst = destDir + "/" + fname
+                println(fdst)
+                bytes = readfile(fsrc)
+                rc = saveObj.write(fdst, bytes)
+                if (rc) {
+                    println("write fail", fdst, rc)
+                    errors = errors + 1
+                } .else() {
+                    wrote = wrote + 1
+                }
+            }
+        }
+    }
+}
+
+clear()
+println("Kefir Hub: apply Nintendo Account link into 0010")
+println("Adds baas/nas from SD. Does not replace the raw save blob.")
+println("")
+
+delfile("sd:/startup.te")
+if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+}
+
+pending = "sd:/config/kefir/restore_pending"
+nandf = combinepath(pending, "nand")
+linkBaas = combinepath(pending, "link/baas")
+linkNas = combinepath(pending, "link/nas")
+bis = "bis:/save/8000000000000010"
+
+if (!fsexists(nandf)) {
+    println("No NAND flag (emu/sys) next to the snapshot.")
+    println(nandf)
+    goHekate()
+    exit()
+}
+if (!fsexists(linkBaas) && !fsexists(linkNas)) {
+    println("No staged link files under restore_pending/link/")
+    goHekate()
+    exit()
+}
+
+raw = readfile(nandf)
+text = raw.bytestostr()
+if (text == "emu") {
+    println("NAND flag: emuMMC SYSTEM")
+    if (!emu()) {
+        println("No emuMMC")
+        goHekate()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    if (text != "sys") {
+        println("Bad NAND flag", text)
+        goHekate()
+        exit()
+    }
+    println("NAND flag: sysMMC SYSTEM")
+    rc = mountsys("SYSTEM")
+}
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    goHekate()
+    exit()
+}
+
+if (!fsexists(bis)) {
+    println("No account save on this SYSTEM")
+    println(bis)
+    goHekate()
+    exit()
+}
+
+println("Opening live 0010 (readsave, keep raw blob)")
+saveObj = readsave(bis)
+
+baasDir = "/su/baas"
+nasDir = "/su/nas"
+bl = saveObj.readdir(baasDir)
+if (bl.result) {
+    println("/su/baas missing, trying /baas")
+    baasDir = "/baas"
+}
+nl = saveObj.readdir(nasDir)
+if (nl.result) {
+    println("/su/nas missing, trying /nas")
+    nasDir = "/nas"
+}
+println("baas dest", baasDir)
+println("nas dest", nasDir)
+
+wrote = 0
+errors = 0
+srcDir = linkBaas
+destDir = baasDir
+writeLinkDir()
+srcDir = linkNas
+destDir = nasDir
+writeLinkDir()
+
+if (errors) {
+    println("errors", errors, "wrote", wrote)
+    println("Skipping commit. Raw 0010 snapshot kept for Undo.")
+    goHekate()
+    exit()
+}
+if (!wrote) {
+    println("Nothing written")
+    goHekate()
+    exit()
+}
+
+println("commit")
+saveObj.commit()
+writefile(combinepath(pending, "link_applied.ok"), ["BYTE[]", 79, 75])
+println("wrote", wrote, "link file(s). Raw 0010 snapshot kept for Undo.")
+println("Loading hekate.")
+goHekate()

@@ -107,6 +107,7 @@ println("Removing this script")
 delfile("sd:/TegraExplorer/scripts/Undo_restore_if_wont_boot.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_rollback.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_dump.te")
+delfile("sd:/TegraExplorer/scripts/account_0010_apply_link.te")
 
 println("")
 println("Raw 0010 restored.")

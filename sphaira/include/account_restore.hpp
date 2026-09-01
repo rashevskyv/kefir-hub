@@ -14,6 +14,12 @@ inline const char* SnapshotFileName() { return "8000000000000010"; }
 inline const char* SnapshotPath() { return "/config/kefir/restore_pending/8000000000000010"; }
 // Written by account_0010_dump.te after a successful raw copy.
 inline const char* DumpedOkPath() { return "/config/kefir/restore_pending/dumped.ok"; }
+// Written by account_0010_apply_link.te after baas/nas commit into live 0010.
+inline const char* LinkAppliedOkPath() { return "/config/kefir/restore_pending/link_applied.ok"; }
+// Hub stages remapped baas + nas here; TE writes them into 0010 (no Horizon OpenAccountSaveWritable).
+inline const char* LinkStagingDir() { return "/config/kefir/restore_pending/link"; }
+inline const char* LinkBaasDir() { return "/config/kefir/restore_pending/link/baas"; }
+inline const char* LinkNasDir() { return "/config/kefir/restore_pending/link/nas"; }
 // Legacy unpacked tree from older builds; deleted on new snapshots.
 inline const char* LegacySnapshotDir() { return "/config/kefir/restore_pending/0010"; }
 // "emu" or "sys" — written at dump time; Undo mounts the same NAND.
@@ -22,12 +28,13 @@ inline const char* StatePath() { return "/config/kefir/restore_pending/state.jso
 inline const char* RolledBackPath() { return "/config/kefir/restore_pending/rolled_back.ok"; }
 inline const char* RollbackTeName() { return "Undo_restore_if_wont_boot.te"; }
 inline const char* DumpTeName() { return "account_0010_dump.te"; }
+inline const char* ApplyLinkTeName() { return "account_0010_apply_link.te"; }
 
 struct Pending {
     bool present{};
     bool snapshot_ok{};
     bool rolled_back{};
-    std::string phase; // wait_dump | ready | applied
+    std::string phase; // wait_dump | ready | wait_link | applied
     std::vector<std::string> pack_dirs;
 };
 
