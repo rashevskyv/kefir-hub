@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.720** (Restore Backup = one user + official NA; no playtime; proven Replace only). Завершені плани збережено в
+Поточний delivery — **v0.13.721** (SnapshotOk accepts TE dump; auto-continue restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.720 — Restore Backup: one user + NA; no playtime; proven Replace only
+## Поточний delivery: v0.13.721 — TE dump SnapshotOk + auto-continue restore
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. Dest SD (Hub v0.13.720): TE успішно скопіював raw `8000000000000010` + `dumped.ok`, але `SnapshotOk()` повернув false → `OfferPendingRestore` показав «dump is not on SD yet», Create/ApplyLink не стартували.
+2. `SnapshotOk`: ок через OpenFile; інакше `FileGetSizeAndTimestamp`; інакше listing `restore_pending` з файлом `8000000000000010` size≥0x200; лог exists/size/dir на fail. `dumped.ok` враховується в логах/пробах.
+3. `wait_dump`→`ready` після успішного дампу: `SavePending(ready)` + auto `StartRestoreBackup` (користувач уже підтвердив Restore перед TE). Live Horizon-дамп теж одразу продовжує restore в тій самій сесії. Create коли dest nas ≠ pack nas; без playtime; ns не вбиваємо; Replace лише при доказаному nas. Version `0.13.721`.
+
+## Попередній delivery: v0.13.720 — Restore Backup: one user + NA; no playtime; proven Replace only
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 

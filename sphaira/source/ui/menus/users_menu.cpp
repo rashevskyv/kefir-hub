@@ -2313,19 +2313,14 @@ void Menu::RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs) {
             R_TRY(account_restore::SavePending(*dirs, "wait_dump", false));
             R_SUCCEED();
         },
-        [live_ok](Result rc) {
+        [live_ok, packs = std::move(packs)](Result rc) mutable {
             if (R_FAILED(rc)) {
                 App::Push<OptionBox>("Could not prepare the 0010 snapshot."_i18n, "OK"_i18n);
                 return;
             }
             if (*live_ok) {
-                App::Push<OptionBox>(
-                    "The raw account save (8000000000000010) is copied to SD.\n\n"
-                    "If it does not boot:\n"
-                    "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n"
-                    "• TegraExplorer is controlled with the power and volume buttons.\n\n"
-                    "Next step: open Kefir Hub yourself. We will continue the restore from there."_i18n,
-                    "OK"_i18n);
+                log_write("[RESTORE] live dump ok; continuing restore in same session\n");
+                StartRestoreBackup(std::move(packs));
                 return;
             }
             App::Push<OptionBox>(
@@ -2366,33 +2361,44 @@ auto OfferPendingRestore() -> bool {
     if (!pending.present || pending.phase == "applied") {
         return false;
     }
-    if (pending.phase == "wait_dump" && account_restore::SnapshotOk()) {
-        account_restore::SavePending(pending.pack_dirs, "ready", true);
-        pending.phase = "ready";
-        pending.snapshot_ok = true;
-    }
+
+    bool upgraded_from_wait_dump = false;
     if (pending.phase == "wait_dump") {
-        s_offered = true;
-        App::Push<OptionBox>(
-            "The account save dump is not on SD yet.\n\n"
-            "After OK, TegraExplorer will dump 0010 automatically.\n"
-            "When it finishes, open Kefir Hub yourself to continue the restore."_i18n,
-            "OK"_i18n,
-            [](auto op) {
-                if (!op) {
-                    return;
-                }
-                if (!account_restore::LaunchTegraDump()) {
-                    App::Push<OptionBox>(
-                        "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
-                        "OK"_i18n);
-                }
-            });
-        return true;
+        if (account_restore::SnapshotOk()) {
+            account_restore::SavePending(pending.pack_dirs, "ready", true);
+            pending.phase = "ready";
+            pending.snapshot_ok = true;
+            upgraded_from_wait_dump = true;
+            log_write("[RESTORE] wait_dump→ready (snapshot on SD)\n");
+        } else {
+            s_offered = true;
+            App::Push<OptionBox>(
+                "The account save dump is not on SD yet.\n\n"
+                "After OK, TegraExplorer will dump 0010 automatically.\n"
+                "When it finishes, open Kefir Hub yourself to continue the restore."_i18n,
+                "OK"_i18n,
+                [](auto op) {
+                    if (!op) {
+                        return;
+                    }
+                    if (!account_restore::LaunchTegraDump()) {
+                        App::Push<OptionBox>(
+                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                            "OK"_i18n);
+                    }
+                });
+            return true;
+        }
     }
+
     if (pending.phase != "ready" || pending.pack_dirs.empty()) {
         return false;
     }
+    // Persist ready if state still had has_0010=false from an older Hub.
+    if (pending.snapshot_ok) {
+        account_restore::SavePending(pending.pack_dirs, "ready", true);
+    }
+
     s_offered = true;
     std::vector<account_user::Pack> packs;
     for (const auto& dir : pending.pack_dirs) {
@@ -2405,6 +2411,14 @@ auto OfferPendingRestore() -> bool {
         App::Push<OptionBox>("Pending restore packs are missing from SD."_i18n, "OK"_i18n);
         return true;
     }
+
+    // User already confirmed Restore before TE; dump is on SD — continue without re-prompt.
+    if (upgraded_from_wait_dump) {
+        log_write("[RESTORE] auto-continuing StartRestoreBackup after TE dump\n");
+        StartRestoreBackup(std::move(packs));
+        return true;
+    }
+
     App::Push<OptionBox>(
         "Unfinished restore is ready (0010 snapshot is on SD).\n\n"
         "Continue will create the profile, then reboot the console.\n\n"

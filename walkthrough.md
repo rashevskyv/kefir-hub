@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.720** (2026-08-31). Попередні
+Актуальний delivery — **v0.13.721** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.721 — TE dump SnapshotOk + auto-continue restore
+
+- Dest SD / Hub v0.13.720: TE о 10:17 скопіював raw `restore_pending/8000000000000010` (11 862 016) + `dumped.ok` + `nand=emu`, але `state.json` лишився `phase=wait_dump has_0010=false`. Наступний запуск Hub (10:32) лише `ListUsers`, без Create/ApplyLink — `SnapshotOk()` був false, UI сказав «dump not on SD».
+- `SnapshotOk` тепер: OpenFile+size; fallback `FileGetSizeAndTimestamp`; fallback dir listing імені `8000000000000010` з size≥0x200; на fail — лог exists/open/stat/listing. `LoadPending` більше не підміняє phase мовчки.
+- Після `wait_dump`→`ready` (дамп на SD) Hub одразу `StartRestoreBackup` без повторного «Continue». Live Horizon-дамп теж продовжує restore в тій самій сесії. Логіка Create/Replace/playtime/ns з 720 без змін. Версія `0.13.721`. Збірку агент не запускав.
 
 ## v0.13.720 — Restore Backup: one user + NA; no playtime; proven Replace only
 

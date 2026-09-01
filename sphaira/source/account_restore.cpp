@@ -91,11 +91,123 @@ auto SnapshotFileOk(fs::FsNativeSd& sd) -> bool {
     return true;
 }
 
+// Size from directory entry when OpenFile/FileExists fails for TE-written blobs.
+auto SnapshotSizeFromDir(fs::FsNativeSd& sd, s64* out_size, std::string* listing) -> bool {
+    if (out_size) {
+        *out_size = -1;
+    }
+    if (!sd.DirExists(PendingDir())) {
+        if (listing) {
+            *listing = "(pending dir missing)";
+        }
+        return false;
+    }
+    fs::Dir d;
+    if (R_FAILED(sd.OpenDirectory(PendingDir(), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d))) {
+        if (listing) {
+            *listing = "(opendir failed)";
+        }
+        return false;
+    }
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(d.ReadAll(entries))) {
+        if (listing) {
+            *listing = "(readdir failed)";
+        }
+        return false;
+    }
+    bool found = false;
+    s64 found_size = -1;
+    if (listing) {
+        listing->clear();
+    }
+    for (const auto& e : entries) {
+        if (listing) {
+            if (!listing->empty()) {
+                *listing += ", ";
+            }
+            *listing += e.name;
+            if (e.type == FsDirEntryType_File) {
+                *listing += ":" + std::to_string(static_cast<long long>(e.file_size));
+            } else {
+                *listing += "/";
+            }
+        }
+        if (e.type == FsDirEntryType_File && !std::strcmp(e.name, SnapshotFileName()) && e.file_size >= 0x200) {
+            found = true;
+            found_size = e.file_size;
+        }
+    }
+    if (listing && listing->empty()) {
+        *listing = "(empty)";
+    }
+    if (found && out_size) {
+        *out_size = found_size;
+    }
+    return found;
+}
+
 } // namespace
 
 auto SnapshotOk() -> bool {
     fs::FsNativeSd sd;
-    return SnapshotFileOk(sd);
+    if (SnapshotFileOk(sd)) {
+        return true;
+    }
+
+    const bool dumped_ok = sd.FileExists(DumpedOkPath());
+    const bool path_exists = sd.FileExists(SnapshotPath());
+    s64 open_size = -1;
+    Result open_rc = 0xFFFFFFFF;
+    Result size_rc = 0xFFFFFFFF;
+    if (path_exists) {
+        fs::File f;
+        open_rc = sd.OpenFile(SnapshotPath(), FsOpenMode_Read, &f);
+        if (R_SUCCEEDED(open_rc)) {
+            size_rc = f.GetSize(&open_size);
+        }
+    }
+
+    FsTimeStampRaw ts{};
+    s64 st_size = -1;
+    const auto st_rc = sd.FileGetSizeAndTimestamp(SnapshotPath(), &ts, &st_size);
+    if (R_SUCCEEDED(st_rc) && st_size >= 0x200) {
+        log_write("[RESTORE] SnapshotOk via stat size=%lld dumped.ok=%d exists=%d\n",
+            static_cast<long long>(st_size), dumped_ok ? 1 : 0, path_exists ? 1 : 0);
+        return true;
+    }
+
+    s64 listed_size = -1;
+    std::string listing;
+    const bool listed_ok = SnapshotSizeFromDir(sd, &listed_size, &listing);
+    if (listed_ok) {
+        log_write("[RESTORE] SnapshotOk via dir listing size=%lld dumped.ok=%d exists=%d open=0x%X getsize=0x%X/%lld stat=0x%X/%lld dir=[%s]\n",
+            static_cast<long long>(listed_size),
+            dumped_ok ? 1 : 0,
+            path_exists ? 1 : 0,
+            open_rc,
+            size_rc, static_cast<long long>(open_size),
+            st_rc, static_cast<long long>(st_size),
+            listing.c_str());
+        return true;
+    }
+
+    // TE success marker + any size probe that reached >= 0x200.
+    if (dumped_ok && ((R_SUCCEEDED(st_rc) && st_size >= 0x200) ||
+                      (R_SUCCEEDED(size_rc) && open_size >= 0x200))) {
+        log_write("[RESTORE] SnapshotOk via dumped.ok + size probe\n");
+        return true;
+    }
+
+    log_write("[RESTORE] SnapshotOk FAILED dumped.ok=%d exists=%d open=0x%X getsize=0x%X/%lld stat=0x%X/%lld listed=%d/%lld dir=[%s]\n",
+        dumped_ok ? 1 : 0,
+        path_exists ? 1 : 0,
+        open_rc,
+        size_rc, static_cast<long long>(open_size),
+        st_rc, static_cast<long long>(st_size),
+        listed_ok ? 1 : 0, static_cast<long long>(listed_size),
+        listing.c_str());
+    return false;
 }
 
 auto WriteNandFlag() -> Result {
@@ -128,10 +240,8 @@ auto LoadPending() -> Pending {
     p.present = true;
     p.phase = ReadJsonField(s, "phase");
     const auto has = ReadJsonField(s, "has_0010");
+    // Keep on-disk phase as-is; OfferPendingRestore owns wait_dump→ready + auto-continue.
     p.snapshot_ok = (has == "true") || SnapshotOk();
-    if (p.snapshot_ok && p.phase == "wait_dump") {
-        p.phase = "ready";
-    }
     const auto packs = ReadJsonField(s, "packs");
     std::string cur;
     for (char c : packs) {

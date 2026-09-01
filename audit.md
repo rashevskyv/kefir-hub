@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.720**. Дата: 2026-08-31.
+Канонічний робочий файл. Версія коду: **v0.13.721**. Дата: 2026-09-01.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.721 поза ponytail-чергою: SnapshotOk приймає TE raw dump (stat/dir listing); wait_dump→ready auto-continue StartRestoreBackup; live dump same-session. Не закриває чергу §2.
 
 v0.13.720 поза ponytail-чергою: Restore Backup = nickname/avatar/official NA; без playtime/00F0; Replace лише при доказаному nas (IPC або baas); евристику unproven-Replace з 719 скасовано. Не закриває чергу §2.
 

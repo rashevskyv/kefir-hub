@@ -10,7 +10,10 @@ namespace sphaira::account_restore {
 
 inline const char* PendingDir() { return "/config/kefir/restore_pending"; }
 // Raw BIS save blob (not an unpacked /su tree).
+inline const char* SnapshotFileName() { return "8000000000000010"; }
 inline const char* SnapshotPath() { return "/config/kefir/restore_pending/8000000000000010"; }
+// Written by account_0010_dump.te after a successful raw copy.
+inline const char* DumpedOkPath() { return "/config/kefir/restore_pending/dumped.ok"; }
 // Legacy unpacked tree from older builds; deleted on new snapshots.
 inline const char* LegacySnapshotDir() { return "/config/kefir/restore_pending/0010"; }
 // "emu" or "sys" — written at dump time; Undo mounts the same NAND.

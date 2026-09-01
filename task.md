@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.720** (Restore Backup: one user + NA; no playtime; proven Replace only). Завершені задачі збережено в
+Актуальний delivery — **v0.13.721** (TE dump SnapshotOk + auto-continue restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.720 (one user + NA; no playtime; proven Replace only)
+## Поточний delivery: v0.13.721 (TE dump SnapshotOk + auto-continue)
+
+- [x] `USERS-RESTORE-SNAPOK-721` — `SnapshotOk` приймає raw blob через OpenFile, stat або dir listing (`8000000000000010` size≥0x200); лог на fail; `dumped.ok` у пробах.
+- [x] `USERS-RESTORE-AUTO-CONT-721` — `wait_dump`→`ready` після TE: SavePending + auto `StartRestoreBackup`; live dump продовжує restore в тій самій сесії Hub.
+- [x] `DOCS-BUMP-721` — plan/task/walkthrough/audit; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.720 (one user + NA; no playtime; proven Replace only)
 
 - [x] `USERS-RESTORE-PROVEN-NAS-720` — Replace лише при доказаному pack nas (IPC або baas); Query fail + 0010 closed → Create; різний baas nas → Create.
 - [x] `USERS-RESTORE-NO-PLAYTIME-720` — `StartRestoreBackup` не готує години і не запускає `playtime_restore.te`; pdm у паку ігнорується.
