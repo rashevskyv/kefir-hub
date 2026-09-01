@@ -50,13 +50,13 @@ void StartShareServerNow() {
     });
 }
 
-void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets, bool plain_root = false) {
+void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
     if (targets.empty()) {
         App::PushErrorBox(Result_FsEmpty, "Failed to start folder server"_i18n);
         return;
     }
 
-    net::RequireConnection([targets, plain_root]() {
+    net::RequireConnection([targets]() {
         fs::FsNativeSd fs;
         std::vector<fs::FsPath> valid_targets;
         for (const auto& target : targets) {
@@ -71,11 +71,10 @@ void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets, bool plai
             return;
         }
 
-        const auto& primary = valid_targets.front();
         App::SetMountedFolders(valid_targets);
 
         WebShareResult result;
-        const auto rc = plain_root ? WebStartServer("", result) : WebShareFolder(primary, result);
+        const auto rc = WebStartServer("", result);
         if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Failed to start folder server"_i18n);
             return;
@@ -95,13 +94,13 @@ void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets, bool plai
     });
 }
 
-void StartConsoleTransferShare(const std::vector<std::string>& roots, bool plain_root = false) {
+void StartConsoleTransferShare(const std::vector<std::string>& roots) {
     std::vector<fs::FsPath> targets;
     targets.reserve(roots.size());
     for (const auto& r : roots) {
         targets.emplace_back(r);
     }
-    StartConsoleTransferShare(targets, plain_root);
+    StartConsoleTransferShare(targets);
 }
 
 void InstallTitleModeForwarder() {
@@ -178,7 +177,7 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             "Share User Backups"_i18n,
             "Share user packages and profile backups."_i18n,
             [](){
-                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() }, true);
+                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() });
             }
         },
         {

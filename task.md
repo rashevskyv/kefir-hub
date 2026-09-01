@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.722** (Restore Backup Create→SD link + TE apply). Завершені задачі збережено в
+Актуальний delivery — **v0.13.723** (Console Transfer: коротка адреса). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.722 (TE apply link; no Horizon 0010 write)
+## Поточний delivery: v0.13.723 (Console Transfer: IP:port only)
+
+- [x] `CONSOLE-TRANSFER-ROOT-URL-723` — усі шість дій Console Transfer показують і кодують QR лише з `http://IP:port`, без `/?path=…`; звичайний Share Folder у File Browser не змінюється.
+- [x] `CMAKELISTS-VERSION-BUMP-723` — піднято `sphaira_VERSION` до `0.13.723`.
+- [x] `DOCS-BUMP-723` — plan/task/walkthrough/audit та commit delivery.
+
+## Попередній delivery: v0.13.722 (TE apply link; no Horizon 0010 write)
 
 - [x] `USERS-RESTORE-NO-HORIZON-LINK-722` — `StartRestoreBackup` не викликає `ApplyLinkPackages`/`TerminateAccountDaemons`; Create+valid link → SD staging + `wait_link`; Replace = name/avatar only.
 - [x] `USERS-RESTORE-TE-APPLY-LINK-722` — romfs `account_0010_apply_link.te`: nand flag, readsave 0010, write staged baas/nas, commit, `link_applied.ok`; raw snapshot не чіпає.

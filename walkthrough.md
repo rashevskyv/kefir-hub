@@ -1,7 +1,12 @@
-Актуальний delivery — **v0.13.722** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.723** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.723 — Console Transfer: IP:port only
+
+- Усі шість дій Console Transfer — Entire microSD, Save Backups, User Backups, Screenshots & Videos, switch Folder і Choose Folder — після монтування джерел запускають сервер через `WebStartServer("")`. Progress box і QR тепер мають лише `http://IP:port`, без `/?path=…`.
+- `plain_root` більше не потрібен і видалений з обох overload-ів helper-а. `WebShareFolder` та File Browser не змінювалися, тож звичайне розшарювання вибраної теки все ще відкриває її напряму. Версія `0.13.723`; пройдено `git diff --check`, збірку агент не запускав.
 
 ## v0.13.722 — Restore Backup: TE apply link (no Horizon 0010 write)
 

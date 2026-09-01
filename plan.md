@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.722** (Restore Backup Create→SD link + TE apply; no Horizon 0010 write). Завершені плани збережено в
+Поточний delivery — **v0.13.723** (Console Transfer: коротка адреса без шляху). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.722 — Restore Backup: TE apply link (no Horizon 0010 write)
+## Поточний delivery: v0.13.723 — Console Transfer: IP:port only
+
+Статус: реалізовано в primary checkout. Збірку агент не ганяє.
+
+1. `StartConsoleTransferShare` після `App::SetMountedFolders` запускає web server з порожнім шляхом для кожного з шести пунктів Console Transfer: Entire microSD, Save Backups, User Backups, Screenshots & Videos, switch Folder і Choose Folder.
+2. Progress box і QR показують тільки `http://IP:port`; непотрібний `plain_root` прибрано. `WebShareFolder` та File Browser не змінено, тому його явне розшарювання теки як і раніше відкриває саме цю теку.
+3. Version `0.13.723`; пройдено `git diff --check`. Компіляцію не запускали.
+
+## Попередній delivery: v0.13.722 — Restore Backup: TE apply link (no Horizon 0010 write)
 
 Статус: реалізовано в primary checkout. Збірку агент не ганяє.
 
