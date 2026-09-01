@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.726** (File Browser: native recursive delete та описи KefirHub). Завершені задачі збережено в
+Актуальний delivery — **v0.13.727** (Account Backup ZIP: один профіль — один архів). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.726 (File Browser: видалення та описи KefirHub)
+## Поточний delivery: v0.13.727 (Account Backup ZIP і зрозуміла бібліотека)
+
+- [x] `ACCOUNT-BACKUP-ROOT-727` — canonical root `/config/kefir/account_backups`; legacy `user_packs` мігрує тільки коли destination відсутній, інакше обидва roots discovery-only.
+- [x] `ACCOUNT-BACKUP-ZIP-EXPORT-727` — один profile → один атомарний `.kefir-user.zip` з датою/name/status, manifest і без чутливих даних у filename; кілька вибраних users → незалежні архіви.
+- [x] `ACCOUNT-BACKUP-ZIP-COMPAT-727` — local/remote discovery, restore та delete працюють і з новим ZIP, і з наявними legacy directory packs.
+- [x] `FILEBROWSER-ACCOUNT-BACKUPS-LABEL-727` — `/config/kefir/account_backups` та legacy `user_packs` мають чесні пояснення у File Browser.
+- [x] `I18N-ACCOUNT-BACKUP-727` — нові user-visible тексти у наявному i18n механізмі.
+- [x] `CMAKELISTS-VERSION-BUMP-727` — `sphaira_VERSION` піднято до `0.13.727`.
+- [x] `DOCS-BUMP-727` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.726 (File Browser: видалення та описи KefirHub)
 
 - [x] `FILEBROWSER-NATIVE-RECURSIVE-DELETE-726` — вибрана native-папка, включно з непорожньою, видаляється через наявний `DeleteDirectoryRecursively()` усередині `ProgressBox`; між вибраними елементами є progress/cancel checks.
 - [x] `FILEBROWSER-NONNATIVE-DELETE-726` — не-native filesystem providers зберегли старий безпечний empty-dir/manual collection walker.

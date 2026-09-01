@@ -2564,3 +2564,8 @@ walkthrough збережено в
   форвардер для звичайного ядра й ядра із системним аргументом.
 - [ ] Перевірити на реальній Switch межі руху, керування яскравістю,
   регулювання дрейфу та пробудження кнопкою.
+## v0.13.727 — Account Backup ZIP і зрозуміла бібліотека
+
+- `Tools → Users → Backup user` тепер створює незалежний переносимий ZIP для кожного вибраного профілю в `/config/kefir/account_backups`: `<YYYYMMDD_HHMMSS>_<name>_<linked|unlinked|link-unavailable>.kefir-user.zip`. Це робить сам KefirHub до штатного reboot; TegraExplorer лишається лише для protected 0010 restore/handoff.
+- Кожен ZIP атомарний (`.part` → close → rename), містить `manifest.json` version 1, `profile.json`, README, avatar/playtime та валідний BaaS/NAS link-пак. Ім'я не містить email, UID або токенів. Архів валідовується за safe entry paths, manifest/type/version і profile до list/restore; Console Transfer звіряє точний byte size до rename.
+- Старі папкові паки підтримано. Якщо існує тільки `/config/kefir/user_packs`, її перейменовано у canonical root; якщо існують обидві — обидві читаються без merge. Local/remote discovery, restore, temporary archive staging і delete працюють з обома форматами; File Browser пояснює нову та legacy теки. Версія `0.13.727`; пройдено `git diff --check` і JSON parsing `en`/`uk`/`ru`, збірку агент не запускав.

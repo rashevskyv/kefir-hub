@@ -324,9 +324,8 @@ struct RestoreBackupMenu final : MenuBase {
             return false;
         }
         e.avatar_tried = true;
-        fs::FsNativeSd sd;
         std::vector<u8> jpeg;
-        if (R_FAILED(sd.read_entire_file((e.pack.dir + "/avatar.jpg").c_str(), jpeg)) || jpeg.empty()) {
+        if (!account_user::ReadPackAvatar(e.pack, jpeg) || jpeg.empty()) {
             return false;
         }
         auto img = ImageLoadFromMemory(jpeg, ImageFlag_JPEG);
@@ -460,6 +459,8 @@ private:
 struct RemotePackEntry {
     std::string name;
     std::string remote_path;
+    bool is_archive{};
+    s64 size{};
 };
 
 inline void SkipJsonWhitespace(const std::string& s, size_t& pos) {
@@ -574,6 +575,7 @@ inline auto ParseRemoteListResponse(const std::string& json) -> std::optional<st
 
         std::string entry_name;
         int entry_type = -1;
+        s64 entry_size = 0;
         while (pos < json.size() && json[pos] != '}') {
             SkipJsonWhitespace(json, pos);
             if (pos >= json.size() || json[pos] == '}') {
@@ -603,7 +605,10 @@ inline auto ParseRemoteListResponse(const std::string& json) -> std::optional<st
                     entry_type = static_cast<int>(*type_val);
                 }
             } else if (*key_opt == "size") {
-                ParseJsonInt(json, pos);
+                auto size_val = ParseJsonInt(json, pos);
+                if (size_val && *size_val >= 0) {
+                    entry_size = *size_val;
+                }
             } else if (pos < json.size() && json[pos] == '"') {
                 ParseJsonString(json, pos);
             } else {
@@ -625,7 +630,20 @@ inline auto ParseRemoteListResponse(const std::string& json) -> std::optional<st
                     rem_path += '/';
                 }
                 rem_path += entry_name;
-                out_entries.push_back({entry_name, rem_path});
+                out_entries.push_back({entry_name, rem_path, false, 0});
+            }
+        } else if (entry_type == static_cast<int>(FsDirEntryType_File) && !entry_name.empty()) {
+            std::string_view name_view{entry_name};
+            if (name_view.ends_with(".kefir-user.zip")) {
+                if (entry_name.find('/') == std::string::npos &&
+                    entry_name.find('\\') == std::string::npos) {
+                    std::string rem_path = root_path;
+                    if (!rem_path.empty() && rem_path.back() != '/') {
+                        rem_path += '/';
+                    }
+                    rem_path += entry_name;
+                    out_entries.push_back({entry_name, rem_path, true, entry_size});
+                }
             }
         }
     }
@@ -961,11 +979,15 @@ private:
                 R_TRY(sd.CreateDirectoryRecursively(root_dst.c_str()));
 
                 std::vector<std::string> created_dirs;
+                std::vector<std::string> created_files;
                 bool success = false;
                 ON_SCOPE_EXIT({
                     if (!success) {
                         for (const auto& dir : created_dirs) {
                             sd.DeleteDirectoryRecursively(dir.c_str());
+                        }
+                        for (const auto& file : created_files) {
+                            sd.DeleteFile(file.c_str());
                         }
                     }
                 });
@@ -982,6 +1004,87 @@ private:
                     const std::string prefix = (picked.size() > 1)
                         ? ("[" + std::to_string(p_idx + 1) + "/" + std::to_string(picked.size()) + "] ")
                         : "";
+
+                    if (pack_info.is_archive) {
+                        if (pack_info.remote_size <= 0) {
+                            log_write("[USER_TRANSFER] Invalid remote archive size %lld for %s\n",
+                                static_cast<long long>(pack_info.remote_size), remote_path.c_str());
+                            *download_err = "Invalid backup files received from the sending console."_i18n;
+                            return Result_FsInvalidType;
+                        }
+
+                        pbox->NewTransfer(prefix + entry_name);
+
+                        std::string safe_file = entry_name;
+                        while (!safe_file.empty() && (safe_file.back() == '/' || safe_file.back() == '\\')) {
+                            safe_file.pop_back();
+                        }
+                        if (const auto slash = safe_file.find_last_of("/\\"); slash != std::string::npos) {
+                            safe_file.erase(0, slash + 1);
+                        }
+                        if (safe_file.empty()) {
+                            safe_file = "user_backup.kefir-user.zip";
+                        }
+
+                        std::string stem = safe_file;
+                        if (stem.ends_with(".kefir-user.zip")) {
+                            stem.erase(stem.size() - 15);
+                        }
+
+                        std::string target_file = root_dst + "/" + safe_file;
+                        int suffix = 1;
+                        while (sd.FileExists(target_file.c_str()) || sd.DirExists(target_file.c_str()) ||
+                               std::ranges::find(created_files, target_file) != created_files.end()) {
+                            target_file = root_dst + "/" + stem + "_" + std::to_string(suffix++) + ".kefir-user.zip";
+                        }
+
+                        const std::string part_path = target_file + ".part";
+                        created_files.push_back(part_path);
+                        created_files.push_back(target_file);
+
+                        const std::string download_url = base_url + "/download?path=" + curl::EscapeString(remote_path);
+
+                        curl::Api dl_api;
+                        dl_api.SetOption(curl::Url{download_url});
+                        dl_api.SetOption(curl::Path{part_path});
+                        dl_api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
+
+                        const auto dl_res = curl::ToFile(dl_api);
+
+                        if (pbox->ShouldExit()) {
+                            return Result_TransferCancelled;
+                        }
+
+                        if (!dl_res.success) {
+                            log_write("[USER_TRANSFER] Failed download %s -> %s\n", download_url.c_str(), part_path.c_str());
+                            *download_err = "Failed to download backup files from the sending console."_i18n;
+                            return Result_FsInvalidType;
+                        }
+
+                        // Open downloaded .part and verify size matches declared remote size
+                        fs::File part_file;
+                        s64 written_size = 0;
+                        if (R_FAILED(sd.OpenFile(part_path.c_str(), FsOpenMode_Read, &part_file)) ||
+                            R_FAILED(part_file.GetSize(&written_size)) ||
+                            written_size != pack_info.remote_size) {
+                            log_write("[USER_TRANSFER] Archive size mismatch for %s: expected %lld, got %lld\n",
+                                part_path.c_str(), static_cast<long long>(pack_info.remote_size), static_cast<long long>(written_size));
+                            *download_err = "Downloaded backup is incomplete or invalid."_i18n;
+                            return Result_FsInvalidType;
+                        }
+
+                        R_TRY(sd.RenameFile(part_path.c_str(), target_file.c_str()));
+
+                        const auto pack = account_user::FindUserPack(target_file);
+                        if (pack.dir.empty()) {
+                            log_write("[USER_TRANSFER] FindUserPack failed on target %s\n", target_file.c_str());
+                            *download_err = "Downloaded backup is incomplete or invalid."_i18n;
+                            return Result_FsInvalidType;
+                        }
+
+                        imported_packs->push_back(pack);
+                        continue;
+                    }
 
                     pbox->SetTransfer(prefix + "Fetching file list..."_i18n);
 
@@ -1131,7 +1234,7 @@ struct RestoreSourceMenu final : MenuBase {
         m_items = {
             {
                 "Local backup library"_i18n,
-                "Restore user backups from the default library (/config/kefir/user_packs)."_i18n,
+                "Restore user backups from the default library (/config/kefir/account_backups)."_i18n,
                 [this]() { OpenLocalLibrary(); }
             },
             {
@@ -1230,7 +1333,7 @@ private:
     void OpenLocalLibrary() {
         const auto packs = account_user::ListUserPacks();
         if (packs.empty()) {
-            App::Push<OptionBox>("No user backups found under /config/kefir/user_packs."_i18n, "OK"_i18n);
+            App::Push<OptionBox>("No user backups found under /config/kefir/account_backups."_i18n, "OK"_i18n);
             return;
         }
         OpenPacksRestore(packs, true);
@@ -1362,6 +1465,42 @@ private:
                             return Result_TransferCancelled;
                         }
                         pbox->SetTransfer(cand.name);
+
+                        if (cand.is_archive) {
+                            if (cand.size <= 0) {
+                                continue;
+                            }
+                            RemoteUserPacksMenu::Entry item;
+                            item.pack.folder_name = cand.name;
+                            item.pack.dir = cand.remote_path;
+                            item.pack.is_archive = true;
+                            item.pack.remote_size = cand.size;
+                            item.pack.created_label = account_user::FormatPackCreated(cand.name, {});
+
+                            std::string base_name = cand.name;
+                            if (base_name.ends_with(".kefir-user.zip")) {
+                                base_name.erase(base_name.size() - 15);
+                            }
+                            const auto first_under = base_name.find('_');
+                            const auto last_under = base_name.rfind('_');
+                            if (first_under != std::string::npos && last_under != std::string::npos && last_under > first_under) {
+                                const auto second_under = base_name.find('_', first_under + 1);
+                                if (second_under != std::string::npos && last_under > second_under) {
+                                    item.pack.nickname = base_name.substr(second_under + 1, last_under - second_under - 1);
+                                } else {
+                                    item.pack.nickname = base_name.substr(first_under + 1, last_under - first_under - 1);
+                                }
+                                std::string status = base_name.substr(last_under + 1);
+                                if (status == "linked") {
+                                    item.pack.link_valid = true;
+                                }
+                            }
+                            if (item.pack.nickname.empty()) {
+                                item.pack.nickname = "User";
+                            }
+                            remote_entries->push_back(std::move(item));
+                            continue;
+                        }
 
                         RemoteUserPacksMenu::Entry item;
                         item.pack.folder_name = cand.name;
@@ -2655,7 +2794,7 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
     auto dirs = std::make_shared<std::vector<std::string>>();
     App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n,
         [uids = std::move(uids), dirs, overwrite_existing](auto pbox) -> Result {
-        pbox->NewTransfer("Writing user pack"_i18n);
+        pbox->NewTransfer("Writing account backup"_i18n);
         R_TRY(account_user::ExportUserPacks(uids, *dirs, overwrite_existing));
         R_SUCCEED();
     }, [dirs](Result rc) {
@@ -2665,7 +2804,7 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
                 utils::requestForcedReboot();
                 return;
             }
-            App::Push<OptionBox>("Could not write the user pack."_i18n, "OK"_i18n);
+            App::Push<OptionBox>("Could not write the account backup."_i18n, "OK"_i18n);
             return;
         }
         utils::requestForcedReboot();
@@ -2730,6 +2869,13 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
         [picked_packs = std::move(picked_packs), report](auto pbox) mutable -> Result {
             fs::FsNativeSd sd;
             std::vector<account_link::TargetLink> links_to_stage;
+            std::vector<std::string> temp_extracted_dirs;
+
+            ON_SCOPE_EXIT({
+                for (const auto& td : temp_extracted_dirs) {
+                    sd.DeleteDirectoryRecursively(td.c_str());
+                }
+            });
 
             // Fresh staging dir; never leave stale baas/nas for TE.
             if (sd.DirExists(account_restore::LinkStagingDir())) {
@@ -2741,12 +2887,21 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                 const auto& p = picked_packs[i];
                 pbox->NewTransfer("Restoring user profile"_i18n);
 
+                std::string effective_dir = p.dir;
+                if (p.is_archive) {
+                    const std::string staging_dir = paths::DATA_ROOT + "/restore_pending/staging_pack_" + std::to_string(i);
+                    sd.DeleteDirectoryRecursively(staging_dir.c_str());
+                    R_TRY(account_user::ExtractPackToDirectory(p, staging_dir, pbox));
+                    temp_extracted_dirs.push_back(staging_dir);
+                    effective_dir = staging_dir;
+                }
+
                 std::vector<u8> jpeg;
-                sd.read_entire_file((p.dir + "/avatar.jpg").c_str(), jpeg);
+                sd.read_entire_file((effective_dir + "/avatar.jpg").c_str(), jpeg);
                 const std::string name = !p.nickname.empty() ? p.nickname : "User";
 
                 account_link::LinkPackage pkg;
-                const auto link_load_rc = account_link::LoadUserPackLinkPackage(p.dir, pkg);
+                const auto link_load_rc = account_link::LoadUserPackLinkPackage(effective_dir, pkg);
                 AccountUid dest_uid{};
                 bool have_dest = false;
                 bool created = false;
@@ -2794,10 +2949,10 @@ void StartRestoreBackup(std::vector<account_user::Pack> picked_packs) {
                     links_to_stage.push_back({dest_uid, std::move(pkg)});
                 } else if (have_dest && !created) {
                     // Replace path intentionally skips link rewrite.
-                } else if (have_dest && !sd.DirExists((p.dir + "/baas").c_str())) {
+                } else if (have_dest && !sd.DirExists((effective_dir + "/baas").c_str())) {
                     report->unlinked_restored++;
                 } else if (have_dest) {
-                    log_write("[USER] Link package invalid in %s (0x%X)\n", p.dir.c_str(), link_load_rc);
+                    log_write("[USER] Link package invalid in %s (0x%X)\n", effective_dir.c_str(), link_load_rc);
                     report->link_malformed_count++;
                     report->unlinked_restored++;
                 }

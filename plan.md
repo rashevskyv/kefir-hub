@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.726** (File Browser: native recursive delete та описи папок KefirHub). Завершені плани збережено в
+Поточний delivery — **v0.13.727** (Account Backup ZIP: один профіль — один переносимий архів). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.726 — File Browser: видалення та описи KefirHub
+## Поточний delivery: v0.13.727 — Account Backup ZIP і зрозуміла бібліотека
+
+Статус: реалізовано й прийнято після senior-review у primary checkout. `git diff --check` пройдено, змінені `en`/`uk`/`ru` JSON валідовано; збірку агент не ганяє.
+
+1. Новий canonical root — `/config/kefir/account_backups`, не технічний `user_packs`. Якщо нового root немає, а legacy є — його безпечно перейменовано; коли обидва roots на SD існують, Hub читає обидва без автоматичного merge/delete.
+2. Backup User створює один атомарний `.kefir-user.zip` на кожен вибраний профіль до завершення ProgressBox/reboot. Ім’я — дата, безпечне ім’я, `linked`/`unlinked`/`link-unavailable`; email, UID і токени не потрапляють у filename. `.part` стає фінальним ZIP лише після успішного close; write/read помилки не створюють неповний backup.
+3. ZIP містить перевірювані `manifest.json` (`type=account_backup`, numeric `version=1`) і `profile.json`, поточні avatar/playtime/link entries та безпечні archive paths. Restore, local library, delete і Console Transfer приймають новий ZIP та legacy directory packs; remote ZIP звіряється за точним розміром до rename. Кілька профілів — кілька незалежних архівів.
+
+## Попередній delivery: v0.13.726 — File Browser: видалення та описи KefirHub
 
 Статус: реалізовано й прийнято senior-review у primary checkout; `git diff --check` пройдено, змінені `en`/`uk`/`ru` JSON валідовано. Збірку агент не ганяє.
 

@@ -1594,8 +1594,10 @@ void FsView::LoadTitleLabels() {
                 e.title_label = "Legacy read-only dump of account save 0010"_i18n;
             } else if (path::EqualsIC(e.name, "restore_pending")) {
                 e.title_label = "Staged account restore and rollback state"_i18n;
+            } else if (path::EqualsIC(e.name, "account_backups")) {
+                e.title_label = "KefirHub account backup library"_i18n;
             } else if (path::EqualsIC(e.name, "user_packs")) {
-                e.title_label = "Local user profile backup library"_i18n;
+                e.title_label = "Legacy KefirHub account backup library"_i18n;
             } else if (path::EqualsIC(e.name, "playtime_pending")) {
                 e.title_label = "Files awaiting TegraExplorer play time restoration"_i18n;
             } else if (path::EqualsIC(e.name, "nand_transfer")) {

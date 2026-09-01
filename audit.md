@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.726**. Дата: 2026-09-01.
+Канонічний робочий файл. Версія коду: **v0.13.727**. Дата: 2026-09-01.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.727 поза ponytail-чергою: User Backup зберігається як один атомарний `.kefir-user.zip` на профіль у `/config/kefir/account_backups`, з manifest/profile validation, safe archive paths, legacy directory compatibility і remote exact-size verification. `user_packs` лишається безпечно сумісним legacy root; не закриває чергу §2.
 
 v0.13.726 поза ponytail-чергою: File Browser на native SD видаляє папки через наявний `DeleteDirectoryRecursively()` всередині ProgressBox, без ручного recursive walker і хибного `FsError_TargetLocked`; `/config/kefir` показує локалізовані пояснення власних папок через наявний другий рядок. Не закриває чергу §2.
 
