@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.725** (HTTP-source launch progress lifetime). Завершені задачі збережено в
+Актуальний delivery — **v0.13.726** (File Browser: native recursive delete та описи KefirHub). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.725 (HTTP-source launch progress lifetime)
+## Поточний delivery: v0.13.726 (File Browser: видалення та описи KefirHub)
+
+- [x] `FILEBROWSER-NATIVE-RECURSIVE-DELETE-726` — вибрана native-папка, включно з непорожньою, видаляється через наявний `DeleteDirectoryRecursively()` усередині `ProgressBox`; між вибраними елементами є progress/cancel checks.
+- [x] `FILEBROWSER-NONNATIVE-DELETE-726` — не-native filesystem providers зберегли старий безпечний empty-dir/manual collection walker.
+- [x] `FILEBROWSER-KEFIR-DIR-LABELS-726` — у `/config/kefir` папки KefirHub мають локалізований другий рядок через наявний `title_label`; rollback/dump/pending user/playtime/NAND та звичайні app-папки охоплено.
+- [x] `I18N-KEFIR-DIR-LABELS-726` — додано природні en/uk/ru описи; інші мови беруть existing English fallback.
+- [x] `CMAKELISTS-VERSION-BUMP-726` — `sphaira_VERSION` піднято до `0.13.726`.
+- [x] `DOCS-BUMP-726` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.725 (HTTP-source launch progress lifetime)
 
 - [x] `FILEBROWSER-DEFER-LAUNCH-CONNECT-725` — constructor лише зберігає одноразовий pending connect; перший `OnFocusGained` споживає його після додавання Menu у widget stack і запускає ProgressBox над owner menu.
 - [x] `FILEBROWSER-CONNECT-LIFETIME-725` — Menu більше не опиняється над власним launch ProgressBox, тому його не можна передчасно закрити до done callback; root-view connect і v0.13.724 shutdown guard не змінено.

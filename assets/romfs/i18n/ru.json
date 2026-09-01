@@ -2156,5 +2156,20 @@
   "Invalid backup files received from the sending console.": "Получен некорректный список файлов бэкапа от консоли-отправителя.",
   "Failed to download backup files from the sending console.": "Не удалось скачать файлы бэкапа с консоли-отправителя.",
   "Downloaded backup is incomplete or invalid.": "Скачанный бэкап неполный или поврежден.",
-  "Failed to transfer user backup from the sending console.": "Не удалось передать бэкап пользователя с консоли-отправителя."
+  "Failed to transfer user backup from the sending console.": "Не удалось передать бэкап пользователя с консоли-отправителя.",
+  "Safety snapshots created before changing Nintendo Account link data": "Резервные копии перед изменением привязки аккаунта Nintendo",
+  "Legacy read-only dump of account save 0010": "Устаревший дамп сохранения аккаунтов 0010",
+  "Staged account restore and rollback state": "Подготовленное состояние восстановления и отката аккаунтов",
+  "Local user profile backup library": "Локальная библиотека резервных копий профилей пользователей",
+  "Files awaiting TegraExplorer play time restoration": "Файлы для восстановления времени игры через TegraExplorer",
+  "Temporary files and scripts for NAND transfer": "Временные файлы и скрипты для переноса NAND",
+  "File type associations": "Ассоциации типов файлов",
+  "Custom user interface themes": "Пользовательские темы интерфейса",
+  "Downloaded GitHub packages and repositories": "Загруженные пакеты и репозитории GitHub",
+  "Custom interface translations": "Пользовательские переводы интерфейса",
+  "Downloaded files and updates": "Загруженные файлы и обновления",
+  "Package definitions and metadata": "Определения и метаданные пакетов",
+  "Custom startup logo and animation": "Пользовательский логотип и анимация запуска",
+  "Application cache files": "Файлы кэша приложения",
+  "Custom user avatar images": "Пользовательские изображения аватаров"
 }

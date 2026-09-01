@@ -2201,5 +2201,20 @@
   "Invalid backup files received from the sending console.": "Отримано некоректний список файлів бекапу від консолі-відправника.",
   "Failed to download backup files from the sending console.": "Не вдалося завантажити файли бекапу з консолі-відправника.",
   "Downloaded backup is incomplete or invalid.": "Завантажений бекап неповний або пошкоджений.",
-  "Failed to transfer user backup from the sending console.": "Не вдалося передати бекап користувача з консолі-відправника."
+  "Failed to transfer user backup from the sending console.": "Не вдалося передати бекап користувача з консолі-відправника.",
+  "Safety snapshots created before changing Nintendo Account link data": "Резервні знімки перед зміною прив'язки облікового запису Nintendo",
+  "Legacy read-only dump of account save 0010": "Застарілий дамп збереження акаунтів 0010",
+  "Staged account restore and rollback state": "Підготовлений стан відновлення та відкату акаунтів",
+  "Local user profile backup library": "Локальна бібліотека резервних копій профілів користувачів",
+  "Files awaiting TegraExplorer play time restoration": "Файли для відновлення часу гри через TegraExplorer",
+  "Temporary files and scripts for NAND transfer": "Тимчасові файли та скрипти для перенесення NAND",
+  "File type associations": "Асоціації типів файлів",
+  "Custom user interface themes": "Користувацькі теми інтерфейсу",
+  "Downloaded GitHub packages and repositories": "Завантажені пакунки та репозиторії GitHub",
+  "Custom interface translations": "Користувацькі переклади інтерфейсу",
+  "Downloaded files and updates": "Завантажені файли та оновлення",
+  "Package definitions and metadata": "Визначення та метадані пакунків",
+  "Custom startup logo and animation": "Користувацький логотип та анімація запуску",
+  "Application cache files": "Кеш-файли програми",
+  "Custom user avatar images": "Користувацькі зображення аватарів"
 }

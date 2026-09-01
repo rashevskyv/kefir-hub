@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.725** (HTTP-source: правильний lifetime launch progress). Завершені плани збережено в
+Поточний delivery — **v0.13.726** (File Browser: native recursive delete та описи папок KefirHub). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.725 — HTTP-source launch progress lifetime
+## Поточний delivery: v0.13.726 — File Browser: видалення та описи KefirHub
+
+Статус: реалізовано й прийнято senior-review у primary checkout; `git diff --check` пройдено, змінені `en`/`uk`/`ru` JSON валідовано. Збірку агент не ганяє.
+
+1. Непорожні теки на native microSD більше не проходять ручний обхід файлового менеджера: `ProgressBox` викликає наявний `Fs::DeleteDirectoryRecursively()`. Це прибирає хибний `FsError_TargetLocked` для SD-артефактів KefirHub на кшталт `account_link_rollback` і старого `account_save_dump`; перед стартом і між вибраними елементами збережені progress/cancel checks. Файли та не-native файлові системи лишаються на попередньому шляху.
+2. При перегляді саме `/config/kefir` File Browser використовує наявний приглушений другий рядок для коротких локалізованих пояснень власних папок KefirHub: rollback/dump/restore, user packs, playtime/NAND staging, а також assoc/themes/github/i18n/downloads/packages/logo/cache/avatars. Нового UI або metadata-шару немає.
+3. Version `0.13.726`; змінено `en`/`uk`/`ru`, тому інші вбудовані мови штатно отримують англійський fallback. `git diff --check` і JSON parsing пройдено; без компіляції.
+
+## Попередній delivery: v0.13.725 — HTTP-source launch progress lifetime
 
 Статус: реалізовано й прийнято senior-review у primary checkout; `git diff --check` пройдено. Збірку агент не ганяє.
 

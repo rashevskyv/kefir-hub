@@ -607,13 +607,15 @@ void FsView::OnDeleteCallback() {
         const auto full_path = GetNewPath(m_menu->m_selected.m_path, entry.name);
 
         if (entry.IsDir()) {
-            bool empty{};
-            m_fs->IsDirEmpty(full_path, &empty);
-            if (empty) {
-                if (auto rc = m_fs->DeleteDirectory(full_path); R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Failed to delete directory"_i18n);
+            if (!m_fs->IsNative()) {
+                bool empty{};
+                m_fs->IsDirEmpty(full_path, &empty);
+                if (empty) {
+                    if (auto rc = m_fs->DeleteDirectory(full_path); R_FAILED(rc)) {
+                        App::PushErrorBox(rc, "Failed to delete directory"_i18n);
+                    }
+                    use_progress_box = false;
                 }
-                use_progress_box = false;
             }
         } else {
             if (auto rc = m_fs->DeleteFile(full_path); R_FAILED(rc)) {
@@ -628,15 +630,35 @@ void FsView::OnDeleteCallback() {
         log_write("did delete\n");
     } else {
         App::Push<ProgressBox>(0, "Deleting"_i18n, "", [this](auto pbox) -> Result {
-            FsDirCollections collections;
             auto& selected = m_menu->m_selected;
             auto src_fs = selected.m_view->GetFs();
             if (selected.m_view->IsSd()) {
                 src_fs->SetIgnoreReadOnly(m_menu->m_ignore_read_only.Get());
             }
 
+            if (src_fs->IsNative()) {
+                for (const auto& p : selected.m_files) {
+                    pbox->Yield();
+                    R_TRY(pbox->ShouldExitResult());
+
+                    const auto full_path = GetNewPath(selected.m_path, p.name);
+                    pbox->SetTitle(p.name);
+                    pbox->NewTransfer("Deleting "_i18n + full_path.toString());
+
+                    if (p.IsDir()) {
+                        log_write("deleting dir: %s\n", full_path.s);
+                        R_TRY(src_fs->DeleteDirectoryRecursively(full_path));
+                    } else {
+                        log_write("deleting file: %s\n", full_path.s);
+                        R_TRY(src_fs->DeleteFile(full_path));
+                    }
+                }
+                R_SUCCEED();
+            }
+
+            FsDirCollections collections;
             // build list of dirs / files
-            for (const auto&p : selected.m_files) {
+            for (const auto& p : selected.m_files) {
                 pbox->Yield();
                 R_TRY(pbox->ShouldExitResult());
 

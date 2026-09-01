@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.725** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.726** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.726 — File Browser: безпечне видалення та пояснення папок KefirHub
+
+- Видалення непорожньої папки на microSD більше не сканує й не видаляє її вручну по одному дочірньому entry: File Browser запускає наявний native `DeleteDirectoryRecursively()` усередині `ProgressBox`. Це прибирає `FsError_TargetLocked`, який з’являвся для звичайних SD-папок KefirHub, зокрема `account_link_rollback` та застарілої `account_save_dump`. Одиночні й множинні папки показують progress; між пунктами зберігається можливість cancel. Не-native джерела не змінено.
+- У `/config/kefir` File Browser вже умів показувати приглушений підпис під назвою папки. Тепер він пояснює власні артефакти KefirHub: знімки перед зміною Nintendo Account link, legacy dump 0010, pending restore, user backup library, playtime/NAND staging, association/theme/GitHub/language/download/package/logo/cache/avatar папки. Додано en/uk/ru переклади, інші локалі автоматично використовують English fallback.
+- Версія `0.13.726`; пройдено `git diff --check` і JSON parsing змінених локалей. Агент не компілював, не запускав NRO й не виконував hardware verification відповідно до політики checkout.
 
 ## v0.13.725 — HTTP-source launch ProgressBox lifetime
 

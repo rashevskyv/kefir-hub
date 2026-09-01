@@ -2172,5 +2172,20 @@
   "Invalid backup files received from the sending console.": "Invalid backup files received from the sending console.",
   "Failed to download backup files from the sending console.": "Failed to download backup files from the sending console.",
   "Downloaded backup is incomplete or invalid.": "Downloaded backup is incomplete or invalid.",
-  "Failed to transfer user backup from the sending console.": "Failed to transfer user backup from the sending console."
+  "Failed to transfer user backup from the sending console.": "Failed to transfer user backup from the sending console.",
+  "Safety snapshots created before changing Nintendo Account link data": "Safety snapshots created before changing Nintendo Account link data",
+  "Legacy read-only dump of account save 0010": "Legacy read-only dump of account save 0010",
+  "Staged account restore and rollback state": "Staged account restore and rollback state",
+  "Local user profile backup library": "Local user profile backup library",
+  "Files awaiting TegraExplorer play time restoration": "Files awaiting TegraExplorer play time restoration",
+  "Temporary files and scripts for NAND transfer": "Temporary files and scripts for NAND transfer",
+  "File type associations": "File type associations",
+  "Custom user interface themes": "Custom user interface themes",
+  "Downloaded GitHub packages and repositories": "Downloaded GitHub packages and repositories",
+  "Custom interface translations": "Custom interface translations",
+  "Downloaded files and updates": "Downloaded files and updates",
+  "Package definitions and metadata": "Package definitions and metadata",
+  "Custom startup logo and animation": "Custom startup logo and animation",
+  "Application cache files": "Application cache files",
+  "Custom user avatar images": "Custom user avatar images"
 }
