@@ -3011,7 +3011,10 @@ Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuB
     ueventCreate(&g_change_uevent, true);
 
     if (launch_location) {
-        ConnectToLocation(*launch_location);
+        const auto loc = *launch_location;
+        m_pending_launch_connect = [this, loc]() {
+            ConnectToLocation(loc);
+        };
     }
 }
 
@@ -3172,6 +3175,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+
+    if (m_pending_launch_connect) {
+        auto action = std::move(m_pending_launch_connect);
+        m_pending_launch_connect = nullptr;
+        action();
+        return;
+    }
 
     if (IsSplitScreen()) {
         view_left->OnFocusGained();

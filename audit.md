@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.724**. Дата: 2026-09-01.
+Канонічний робочий файл. Версія коду: **v0.13.725**. Дата: 2026-09-01.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.725 поза ponytail-чергою: launch-time network connect File Browser відкладено до першого focus, щоб ProgressBox був над живим owner menu й completion не звертався до знищеного `FsView`. Не закриває чергу §2.
 
 v0.13.724 поза ponytail-чергою: crash під час закриття прибрано спільним ProgressBox teardown guard; HTTP/HTTPS source автоматично використовує Sphaira JSON `/list` і `/download`, без впливу на WebDAV/WebDAVS/FTP/plain HTML. Не закриває чергу §2.
 

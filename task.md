@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.724** (Console Transfer: HTTP-source browse). Завершені задачі збережено в
+Актуальний delivery — **v0.13.725** (HTTP-source launch progress lifetime). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.724 (Console Transfer HTTP-source)
+## Поточний delivery: v0.13.725 (HTTP-source launch progress lifetime)
+
+- [x] `FILEBROWSER-DEFER-LAUNCH-CONNECT-725` — constructor лише зберігає одноразовий pending connect; перший `OnFocusGained` споживає його після додавання Menu у widget stack і запускає ProgressBox над owner menu.
+- [x] `FILEBROWSER-CONNECT-LIFETIME-725` — Menu більше не опиняється над власним launch ProgressBox, тому його не можна передчасно закрити до done callback; root-view connect і v0.13.724 shutdown guard не змінено.
+- [x] `CMAKELISTS-VERSION-BUMP-725` — `sphaira_VERSION` піднято до `0.13.725`.
+- [x] `DOCS-BUMP-725` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.724 (Console Transfer HTTP-source)
 
 - [x] `PROGRESSBOX-EXIT-CALLBACK-724` — `ProgressBox` не викликає done callback під час `App::~App`; normal completion лишається без змін. Закриває Atmosphère alignment fault `ProgressBox::~ProgressBox` → `FsView::SetFs` (`PC=0x81`).
 - [x] `CONSOLE-TRANSFER-HTTP-LIST-724` — HTTP-source розпізнає Kefir Hub `/list`, будує каталог з JSON name/type/size і повертає керовану помилку на invalid response.

@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.724** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.725** (2026-09-01). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.725 — HTTP-source launch ProgressBox lifetime
+
+- Новий Atmosphère crash `2168-0002` у v0.13.724 був не shutdown: символікація показала normal `App::Update` → `ProgressBox::~ProgressBox` → done callback → `FsView::SetFs`, а app log — знищення File Browser і network mount раніше за completion. Порожній teal screen був самим Menu, що помилково стояло над progress modal.
+- Причина була в `Menu(flags, launch_location)`: він запускав `ConnectToLocation` ще під час `std::make_unique<Menu>`, тобто до додавання Menu у widget stack. Тепер constructor лише зберігає одноразову closure з копією location. Перший `OnFocusGained` очищає її до виклику, запускає connect і повертається; ProgressBox додається над уже живим Menu. Після completion наступний focus виконує звичайний scan та assoc loading.
+- Root-view connect, App/ProgressBox teardown guard і Sphaira HTTP `/list`/`/download` не змінювалися. Версія `0.13.725`; пройдено `git diff --check`. Агент не компілював, не запускав NRO і не виконував hardware verification відповідно до політики checkout.
 
 ## v0.13.724 — Console Transfer: HTTP-source browse і teardown crash
 

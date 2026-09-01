@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.724** (Console Transfer: перегляд HTTP-source). Завершені плани збережено в
+Поточний delivery — **v0.13.725** (HTTP-source: правильний lifetime launch progress). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.724 — Console Transfer HTTP-source
+## Поточний delivery: v0.13.725 — HTTP-source launch progress lifetime
+
+Статус: реалізовано й прийнято senior-review у primary checkout; `git diff --check` пройдено. Збірку агент не ганяє.
+
+1. Свіжий Atmosphère report `01788272108_054956fb30c19000.log` (`2168-0002`, build ID `b4464776...`, v0.13.724) символізується як `ProgressBox::~ProgressBox` → done callback → `FsView::SetFs` з `App::Update`, не `App::~App`. Лог о 17:14:41 показує `Menu::~Menu` → `UmountAllNeworkDevices`, а вже потім прихований ProgressBox викликає `SetFs` для знищеного view.
+2. Причина — `Menu(u32, launch_location)` викликає `ConnectToLocation` у конструкторі. Вкладений `App::Push<ProgressBox>` виконується до того, як зовнішній `App::Push<Menu>` додасть меню, тому progress опиняється під меню: користувач бачить порожній teal background і може закрити owner раніше callback.
+3. Початковий connect тепер один раз відкладається до першого `Menu::OnFocusGained`: pending closure копіює `location::Entry` за значенням, очищається до виклику й одразу повертає керування після `ConnectToLocation`. Menu на цей момент уже в widget stack, тому ProgressBox стає над owner menu; після його pop другий focus запускає звичайний scan та assoc loading. Root-view connect, v0.13.724 shutdown guard і HTTP/JSON код не змінено. Version `0.13.725`; `git diff --check`, без компіляції.
+
+## Попередній delivery: v0.13.724 — Console Transfer HTTP-source
 
 Статус: реалізовано в primary checkout; `git diff --check` пройдено. Збірку агент не ганяє.
 

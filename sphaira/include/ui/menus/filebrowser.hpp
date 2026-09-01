@@ -637,6 +637,7 @@ private:
     FolderPickCallback m_on_folder_picked{};
     std::string m_folder_pick_confirm{};
     std::string m_picker_create_name{};
+    std::function<void()> m_pending_launch_connect{};
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_Alphabetical};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};
