@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.728** (керована бібліотека user backup і симетричний край списків). Завершені плани збережено в
+Поточний delivery — **v0.13.729** (Restore profiles & play hours через TegraExplorer auto). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.728 — Manage Backups у Tools → Users
+## Поточний delivery: v0.13.729 — Restore profiles & play hours via TE auto
+
+Статус: реалізовано в primary checkout. Parsing `en`/`uk`/`ru` JSON пройдено; збірку агент не запускає за політикою checkout.
+
+1. **Backup profiles & play hours** лишається Horizon RO `nand_transfer::Export` у `/config/kefir/nand_transfer/<stamp>/`; при lock 0010/00F0 — як і раніше `dump.te`, без нового формату пака.
+2. **Restore profiles & play hours** більше не викликає `nand_transfer::Import` (Horizon write+Commit = та сама стіна, що ApplyLink). Hub пише `restore_pending/nand` (`emu`|`sys`), `nand_pack.txt` (unix шлях пака), best-effort сирі знімки `8000000000000010`/`00F0` для Undo, `phase=wait_nand_restore`, і `LaunchTegraRomfs(nand_transfer_restore_auto.te)`.
+3. Новий auto-скрипт (без меню/pause): REQUIRE SD/KEYS/MINERVA/VER 4.0.0, mount за nand flag, `readsave` + `writeDir` (`listing.files.copy()` / `folders.copy()`) для 0010/0011/00F0/0041 з пака, `commit()`, `nand_restored.ok`, `goHekate`. Сирі blob на BIS не копіює. Меню-`restore.te` лишається для ручного запуску.
+4. `OfferPendingRestore` / `HasUnfinishedRestore` знають `wait_nand_restore` (не віддають фокус link-prompt). ok → success; без ok — чесне попередження про SYSTEM restore / Undo. Той самий текст у pre-TE діалозі. i18n en/uk/ru. Version `0.13.729`.
+
+## Попередній delivery: v0.13.728 — Manage Backups у Tools → Users
 
 Статус: реалізовано й прийнято після senior-review у primary checkout. Пройдено `git diff --check` і parsing усіх 14 i18n JSON; збірку агент не запускає за політикою checkout.
 

@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.728** (Manage Backups і симетрична прокрутка списків). Завершені задачі збережено в
+Актуальний delivery — **v0.13.729** (Restore profiles & play hours через TE auto). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.728 (Manage Backups і симетрична прокрутка списків)
+## Поточний delivery: v0.13.729 (Restore profiles & play hours via TE auto)
+
+- [x] `NAND-RESTORE-NO-IMPORT-729` — Hub Restore profiles & play hours більше не викликає `nand_transfer::Import`; Export/backup path без змін.
+- [x] `NAND-RESTORE-PENDING-729` — `restore_pending/nand`, `nand_pack.txt`, `phase=wait_nand_restore`; best-effort raw 0010+00F0 snapshot для Undo.
+- [x] `NAND-RESTORE-TE-AUTO-729` — romfs `nand_transfer_restore_auto.te`: mount за flag, writeDir+commit для 0010/0011/00F0/0041, `nand_restored.ok`, goHekate; menu `restore.te` лишається.
+- [x] `NAND-RESTORE-OFFER-729` — `OfferPendingRestore`/`HasUnfinishedRestore` для `wait_nand_restore`; ok/fail UI; pre-TE діалог з SYSTEM/Undo hint.
+- [x] `I18N-NAND-RESTORE-729` — нові рядки en/uk/ru.
+- [x] `CMAKELISTS-VERSION-BUMP-729` — `sphaira_VERSION` піднято до `0.13.729`.
+- [x] `DOCS-BUMP-729` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.728 (Manage Backups і симетрична прокрутка списків)
 
 - [x] `USERS-MANAGE-BACKUPS-728` — окремий пункт Tools → Users показує всі local archive/legacy user packs та дає restore/delete/duplicate/rename/share.
 - [x] `USERS-BACKUP-MANAGE-SAFETY-728` — duplicate/rename не перезаписують дані, тримають archive extension, перевіряють результат; legacy packs не ламаються.

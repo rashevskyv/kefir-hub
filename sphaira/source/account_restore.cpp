@@ -16,6 +16,7 @@ namespace sphaira::account_restore {
 namespace {
 
 constexpr u64 ACCOUNT_SAVE_ID = 0x8000000000000010ULL;
+constexpr u64 PLAYTIME_SAVE_ID = 0x80000000000000F0ULL;
 
 auto ReadJsonField(const std::string& json, const char* key) -> std::string {
     const auto needle = std::string{"\""} + key + "\":\"";
@@ -294,9 +295,58 @@ auto ClearPending() -> Result {
     }
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + ApplyLinkTeName()).c_str());
+    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandRestoreTeName()).c_str());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + RollbackTeName()).c_str());
     sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
     R_SUCCEED();
+}
+
+auto CopyRawBisSave(ui::ProgressBox* pbox, fs::FsNativeBis& bis, fs::FsNativeSd& sd,
+    u64 id, const char* dest) -> bool {
+    char src[64]{};
+    std::snprintf(src, sizeof(src), "/save/%016llX", static_cast<unsigned long long>(id));
+    if (!bis.FileExists(src)) {
+        log_write("[RESTORE] raw %016llX missing on BIS\n", static_cast<unsigned long long>(id));
+        return false;
+    }
+    if (sd.FileExists(dest)) {
+        sd.DeleteFile(dest);
+    }
+    Result rc = 0;
+    if (pbox) {
+        char label[32]{};
+        std::snprintf(label, sizeof(label), "%016llX", static_cast<unsigned long long>(id));
+        pbox->NewTransfer(label);
+        rc = pbox->CopyFile(&bis, &sd, src, dest);
+    } else {
+        std::vector<u8> data;
+        rc = bis.read_entire_file(src, data);
+        if (R_SUCCEEDED(rc) && !data.empty()) {
+            rc = sd.write_entire_file(dest, data);
+        } else if (R_SUCCEEDED(rc)) {
+            rc = Result_FsEmpty;
+        }
+    }
+    if (R_FAILED(rc)) {
+        log_write("[RESTORE] raw %016llX copy failed 0x%X\n",
+            static_cast<unsigned long long>(id), rc);
+        sd.DeleteFile(dest);
+        return false;
+    }
+    fs::File f;
+    s64 size = 0;
+    if (R_SUCCEEDED(sd.OpenFile(dest, FsOpenMode_Read, &f))) {
+        f.GetSize(&size);
+    }
+    if (size < 0x200) {
+        log_write("[RESTORE] raw %016llX too small (%lld)\n",
+            static_cast<unsigned long long>(id), static_cast<long long>(size));
+        sd.DeleteFile(dest);
+        return false;
+    }
+    log_write("[RESTORE] raw %016llX snapshot bytes=%lld\n",
+        static_cast<unsigned long long>(id), static_cast<long long>(size));
+    return true;
 }
 
 auto Dump0010ReadOnly(ui::ProgressBox* pbox) -> Result {
@@ -307,47 +357,41 @@ auto Dump0010ReadOnly(ui::ProgressBox* pbox) -> Result {
         return bis_rc;
     }
 
-    char src[64]{};
-    std::snprintf(src, sizeof(src), "/save/%016llX", static_cast<unsigned long long>(ACCOUNT_SAVE_ID));
-    if (!bis.FileExists(src)) {
-        log_write("[RESTORE] raw 0010 missing on BIS (%s)\n", src);
-        return Result_FsInvalidType;
-    }
-
     fs::FsNativeSd sd;
     R_TRY(sd.CreateDirectoryRecursively(PendingDir()));
     RemoveLegacyUnpackedSnapshot(sd);
-
-    if (sd.FileExists(SnapshotPath())) {
-        sd.DeleteFile(SnapshotPath());
-    }
-
     R_TRY(WriteNandFlag());
 
-    if (pbox) {
-        pbox->NewTransfer("8000000000000010");
-        R_TRY(pbox->CopyFile(&bis, &sd, src, SnapshotPath()));
-    } else {
-        std::vector<u8> data;
-        R_TRY(bis.read_entire_file(src, data));
-        R_UNLESS(!data.empty(), Result_FsEmpty);
-        R_TRY(sd.write_entire_file(SnapshotPath(), data));
+    if (!CopyRawBisSave(pbox, bis, sd, ACCOUNT_SAVE_ID, SnapshotPath())) {
+        return Result_FsEmpty;
     }
-
-    R_UNLESS(SnapshotFileOk(sd), Result_FsEmpty);
-    fs::File f;
-    s64 size = 0;
-    if (R_SUCCEEDED(sd.OpenFile(SnapshotPath(), FsOpenMode_Read, &f))) {
-        f.GetSize(&size);
-    }
-    log_write("[RESTORE] raw 0010 snapshot bytes=%lld nand=%s\n",
-        static_cast<long long>(size), App::IsEmummc() ? "emu" : "sys");
+    log_write("[RESTORE] raw 0010 snapshot nand=%s\n", App::IsEmummc() ? "emu" : "sys");
     R_SUCCEED();
+}
+
+auto TrySnapshotRawSystemSaves(ui::ProgressBox* pbox, RawSnapshotReport& out) -> void {
+    out = {};
+    fs::FsNativeBis bis{FsBisPartitionId_System};
+    const auto bis_rc = bis.GetFsOpenResult();
+    if (R_FAILED(bis_rc)) {
+        log_write("[RESTORE] TrySnapshot SYSTEM BIS open 0x%X (skip raw undo snaps)\n", bis_rc);
+        return;
+    }
+    fs::FsNativeSd sd;
+    if (R_FAILED(sd.CreateDirectoryRecursively(PendingDir()))) {
+        return;
+    }
+    RemoveLegacyUnpackedSnapshot(sd);
+    out.save_0010 = CopyRawBisSave(pbox, bis, sd, ACCOUNT_SAVE_ID, SnapshotPath());
+    out.save_00F0 = CopyRawBisSave(pbox, bis, sd, PLAYTIME_SAVE_ID, Snapshot00F0Path());
+    log_write("[RESTORE] TrySnapshot 0010=%d 00F0=%d nand=%s\n",
+        out.save_0010 ? 1 : 0, out.save_00F0 ? 1 : 0, App::IsEmummc() ? "emu" : "sys");
 }
 
 auto InstallRestoreTeScripts() -> void {
     fs::FsNativeSd sd;
     CopyTe(sd, RollbackTeName(), RollbackTeName());
+    CopyTe(sd, NandRestoreTeName(), NandRestoreTeName());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
     sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
     sd.DeleteFile((std::string(PendingDir()) + "/" + DumpTeName()).c_str());

@@ -2728,7 +2728,7 @@ void Menu::ShowContextMenu() {
     }, true, "All profiles on this console plus play hours, same user IDs. For moving to another console. If a save is locked, Hub skips it and leaves a TegraExplorer script."_i18n);
     options->Add<SidebarEntryCallback>("Restore profiles & play hours"_i18n, [this](){
         ConfirmNandRestore();
-    }, true, "Write that pack into this console. Hours and profiles here are replaced. If a save is locked, use restore.te in TegraExplorer."_i18n);
+    }, true, "Write that pack into this console via TegraExplorer. Hours and profiles here are replaced. Back up SYSTEM first."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
@@ -2852,7 +2852,13 @@ void Menu::ConfirmNandBackup() {
 
 void Menu::ConfirmNandRestore() {
     App::Push<OptionBox>(
-        "Write a profiles & play hours pack into this console? Users and hours here will be replaced. If a save is locked, use restore.te in TegraExplorer. Back up SYSTEM first. Y selects the pack folder."_i18n,
+        "Write a profiles & play hours pack into this console?\n\n"
+        "Users and hours here will be replaced. Hub stages the pack, then TegraExplorer writes and signs the system saves.\n\n"
+        "Back up SYSTEM in hekate first.\n"
+        "If the console will not boot after restore:\n"
+        "• hekate > restore SYSTEM backup, or\n"
+        "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot was taken).\n"
+        "Y selects the pack folder."_i18n,
         "Cancel"_i18n, "Choose folder"_i18n, 1,
         [this](auto op) {
             if (!op || *op != 1) {
@@ -3041,6 +3047,25 @@ auto OfferPendingRestore() -> bool {
                 "TegraExplorer did not apply the Nintendo Account link.\n\n"
                 "An extra unlinked profile may exist on this console.\n"
                 "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te"_i18n,
+                "OK"_i18n);
+        }
+        return true;
+    }
+
+    if (pending.phase == "wait_nand_restore") {
+        s_offered = true;
+        fs::FsNativeSd sd;
+        if (sd.FileExists(account_restore::NandRestoredOkPath())) {
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            App::Push<OptionBox>(
+                "Profiles and play hours were restored. Reboot is done."_i18n,
+                "OK"_i18n);
+        } else {
+            App::Push<OptionBox>(
+                "TegraExplorer did not finish restoring profiles & play hours.\n\n"
+                "If the console will not boot:\n"
+                "• hekate > restore your SYSTEM backup, or\n"
+                "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot is on SD)."_i18n,
                 "OK"_i18n);
         }
         return true;
@@ -3280,36 +3305,88 @@ void Menu::RunNandRestore(const std::string& dir) {
             "OK"_i18n);
         return;
     }
-    auto report = std::make_shared<nand_transfer::Report>();
-    App::Push<ProgressBox>(0, "Restore profiles & play hours"_i18n, "Restore profiles & play hours"_i18n,
-        [dir, report](auto pbox) -> Result {
-            pbox->NewTransfer("Writing system saves"_i18n);
-            R_TRY(nand_transfer::Import(pbox, dir, *report));
+
+    auto pack = std::make_shared<std::string>(dir);
+    auto snap = std::make_shared<account_restore::RawSnapshotReport>();
+    App::Push<ProgressBox>(0, "Restore profiles & play hours"_i18n, "Preparing TegraExplorer restore"_i18n,
+        [pack, snap](auto pbox) -> Result {
+            fs::FsNativeSd sd;
+            auto resolved = *pack;
+            if (!sd.DirExists((resolved + "/80000000000000F0").c_str()) &&
+                !sd.DirExists((resolved + "/8000000000000010").c_str()) &&
+                !sd.FileExists((resolved + "/manifest.json").c_str())) {
+                // Picker may land inside a save subfolder; climb one level.
+                auto parent = resolved;
+                while (!parent.empty() && (parent.back() == '/' || parent.back() == '\\')) {
+                    parent.pop_back();
+                }
+                const auto slash = parent.find_last_of("/\\");
+                if (slash != std::string::npos && slash > 0) {
+                    parent = parent.substr(0, slash);
+                }
+                if (nand_transfer::IsPack(parent)) {
+                    resolved = parent;
+                }
+            }
+            R_UNLESS(nand_transfer::IsPack(resolved), Result_FsInvalidType);
+            *pack = resolved;
+
+            pbox->NewTransfer("Staging restore"_i18n);
+            R_TRY(sd.CreateDirectoryRecursively(account_restore::PendingDir()));
+            sd.DeleteFile(account_restore::NandRestoredOkPath());
+            sd.DeleteFile(account_restore::LinkAppliedOkPath());
+            sd.DeleteFile(account_restore::DumpedOkPath());
+            sd.DeleteFile(account_restore::RolledBackPath());
+
+            R_TRY(account_restore::WriteNandFlag());
+            {
+                const std::vector<u8> body(resolved.begin(), resolved.end());
+                R_TRY(sd.write_entire_file(account_restore::NandPackPath(), body));
+            }
+
+            account_restore::TrySnapshotRawSystemSaves(pbox, *snap);
+            account_restore::InstallRestoreTeScripts();
+            R_TRY(account_restore::SavePending({resolved}, "wait_nand_restore", snap->save_0010));
             R_SUCCEED();
-        }, [this, report](Result rc) {
+        }, [this, pack, snap](Result rc) {
             if (R_FAILED(rc)) {
                 const auto msg = (rc == Result_FsInvalidType)
                     ? "That folder is not a profiles & play hours pack."_i18n
-                    : "Horizon would not open the system saves to write. hekate > payloads > tegraexplorer, run restore.te from the pack (also under TegraExplorer/scripts)."_i18n;
+                    : "Could not stage the profiles & play hours restore on SD."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
             }
-            std::string msg = "Wrote pack into this NAND. Reboot required. "_i18n;
-            if (!report->save_00F0) {
-                msg += "Play hours (00F0) could not be opened. Close games and retry, or use restore.te. "_i18n;
+
+            std::string msg =
+                "Ready to restore profiles & play hours through TegraExplorer.\n\n"
+                "The console will reboot into TegraExplorer, write the pack, then return to hekate.\n"
+                "Open Kefir Hub again afterward to confirm the result.\n\n"_i18n;
+            if (snap->save_0010 || snap->save_00F0) {
+                msg += "A raw undo snapshot was saved on SD. If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n\n"_i18n;
+            } else {
+                msg += "Could not snapshot raw 0010/00F0 for Undo. Keep a hekate SYSTEM backup before continuing.\n\n"_i18n;
             }
-            if (!report->save_0010) {
-                msg += "Account save (0010) could not be opened. "_i18n;
-            }
+            msg += "If TegraExplorer does not finish and the console will not boot: restore SYSTEM in hekate, or use Undo if a snapshot exists."_i18n;
+
             App::Push<OptionBox>(
                 msg,
-                "Later"_i18n, "Reboot"_i18n, 1,
-                [](auto op) {
-                    if (op && *op == 1) {
-                        utils::requestForcedReboot();
+                "Cancel"_i18n, "Launch TegraExplorer"_i18n, 1,
+                [this, pack](auto op) {
+                    if (!op || *op != 1) {
+                        account_restore::ClearPending();
+                        App::Push<OptionBox>("Restore cancelled."_i18n, "OK"_i18n);
+                        return;
                     }
+                    if (!account_restore::LaunchTegraRomfs(account_restore::NandRestoreTeName())) {
+                        App::Push<OptionBox>(
+                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n +
+                            "\n\n" +
+                            "Pending restore stays on SD (phase wait_nand_restore)."_i18n,
+                            "OK"_i18n);
+                        return;
+                    }
+                    Refresh();
                 });
-            Refresh();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 

@@ -42,11 +42,13 @@ println("")
 
 pending = "sd:/config/kefir/restore_pending"
 snap = combinepath(pending, "8000000000000010")
+snapF0 = combinepath(pending, "80000000000000F0")
 nandf = combinepath(pending, "nand")
 bis = "bis:/save/8000000000000010"
+bisF0 = "bis:/save/80000000000000F0"
 
-if (!fsexists(snap)) {
-    println("No raw profile snapshot on SD.")
+if (!fsexists(snap) && !fsexists(snapF0)) {
+    println("No raw 0010/00F0 snapshot on SD.")
     println(snap)
     goHekate()
     exit()
@@ -83,21 +85,44 @@ if (rc) {
     exit()
 }
 
-if (fsexists(bis)) {
-    delfile(bis)
+if (fsexists(snap)) {
+    if (fsexists(bis)) {
+        delfile(bis)
+    }
+    println("Restoring raw", snap)
+    rc = copyfile(snap, bis)
+    if (rc) {
+        println("copyfile 0010 failed", rc)
+        goHekate()
+        exit()
+    }
+    if (!fsexists(bis)) {
+        println("BIS 0010 missing after copy")
+        goHekate()
+        exit()
+    }
+} .else() {
+    println("No raw 0010 snapshot; skipping profiles undo")
 }
 
-println("Restoring raw", snap)
-rc = copyfile(snap, bis)
-if (rc) {
-    println("copyfile failed", rc)
-    goHekate()
-    exit()
-}
-if (!fsexists(bis)) {
-    println("BIS save missing after copy")
-    goHekate()
-    exit()
+if (fsexists(snapF0)) {
+    if (fsexists(bisF0)) {
+        delfile(bisF0)
+    }
+    println("Restoring raw", snapF0)
+    rc = copyfile(snapF0, bisF0)
+    if (rc) {
+        println("copyfile 00F0 failed", rc)
+        goHekate()
+        exit()
+    }
+    if (!fsexists(bisF0)) {
+        println("BIS 00F0 missing after copy")
+        goHekate()
+        exit()
+    }
+} .else() {
+    println("No raw 00F0 snapshot; skipping play-hours undo")
 }
 
 writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
@@ -108,8 +133,9 @@ delfile("sd:/TegraExplorer/scripts/Undo_restore_if_wont_boot.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_rollback.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_dump.te")
 delfile("sd:/TegraExplorer/scripts/account_0010_apply_link.te")
+delfile("sd:/TegraExplorer/scripts/nand_transfer_restore_auto.te")
 
 println("")
-println("Raw 0010 restored.")
+println("Raw system save snapshot(s) restored.")
 println("Loading hekate. Hub will not continue the restore.")
 goHekate()

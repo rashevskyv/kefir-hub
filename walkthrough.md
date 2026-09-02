@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.728** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.729** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.729 — Restore profiles & play hours через TegraExplorer auto
+
+- Other-console Horizon write у 0010 (Restore Backup ApplyLink у 722 і `nand_transfer::Import`) не застосовує зміни надійно / bootloop. **Restore profiles & play hours** більше не викликає Import.
+- Hub: обрати пак → `restore_pending/nand` + `nand_pack.txt` + best-effort raw `8000000000000010`/`00F0` → `phase=wait_nand_restore` → `nand_transfer_restore_auto.te` (startup.te, goHekate). Меню `restore.te` лишається для ручного запуску.
+- TE auto: mount SYSTEM за nand flag, `readsave` існуючих сейвів, `writeDir` з `listing.files.copy()`/`folders.copy()`, `commit()`, `nand_restored.ok`. Сирі blob на BIS не кладе.
+- `OfferPendingRestore`: `wait_nand_restore` блокує link-prompt; ok → success; без ok — SYSTEM restore / Undo. Pre-TE діалог містить той самий recovery-текст. Undo вміє повернути 00F0, якщо знімок є. i18n en/uk/ru. Версія `0.13.729`. Збірку агент не запускав.
 
 ## v0.13.728 — Manage Backups і безперервна прокрутка Sidebar
 
