@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.742**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.743**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.743 поза ponytail-чергою: dump one-shot temps — TE `goHekate` чистить startup/dump_auto/dump_result; Hub `CleanDumpHandshake()` після confirmed `wait_nand_dump`. Pack / Undo / reopen_hub.flag / state.json не чіпає. **Не закриває** чергу §2 A1–A7.
 
 v0.13.742 поза ponytail-чергою: TE `nand_transfer_dump_auto.te` RESULT — per-save stats + `color()` green OK / red NOT OK / yellow optional; `dumped.ok` лише 0010+00F0; known-tree dump без змін шляху. Hub C++ / restore / i18n не чіпали. **Не закриває** чергу §2 A1–A7.
 

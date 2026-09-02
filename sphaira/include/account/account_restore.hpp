@@ -74,4 +74,8 @@ auto LaunchTegraDump() -> bool;
 auto ArmReopenHubHint() -> void;
 auto ClearReopenHubHint() -> void;
 
+// After Hub confirms a finished nand dump: drop handshake temps only.
+// Keeps pack folder, state.json (phase applied), nand flag, Undo snapshots.
+auto CleanDumpHandshake() -> void;
+
 } // namespace sphaira::account_restore

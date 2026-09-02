@@ -13,10 +13,17 @@ goHekate = {
     text = ""
     lines = []
     bytes = ["BYTE[]"]
+    println("Cleaning temp files")
     delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
         copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
         delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
+    delfile("sd:/TegraExplorer/scripts/nand_transfer_dump_auto.te")
+    delfile("sd:/config/kefir/restore_pending/nand_transfer_dump_auto.te")
+    delfile("sd:/config/kefir/restore_pending/dump_result.txt")
+    if (pack.len()) {
+        delfile(pack + "/dump_result.txt")
     }
     println("Loading hekate")
     rc = 1
@@ -246,12 +253,14 @@ println("Kefir Hub: dump profiles & play hours")
 println("Decrypts SYSTEM saves with this console keys.")
 println("")
 
+pack = ""
+pending = "sd:/config/kefir/restore_pending"
+
 delfile("sd:/startup.te")
 if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
     copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
 }
 
-pending = "sd:/config/kefir/restore_pending"
 nandf = pending + "/nand"
 packf = pending + "/nand_pack.txt"
 delfile(pending + "/dump_result.txt")

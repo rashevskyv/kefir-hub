@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.742** (TE dump RESULT stats green/red). Завершені задачі збережено в
+Актуальний delivery — **v0.13.743** (dump_auto deletes one-shot temp files). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.742 (TE dump RESULT stats green/red)
+## Поточний delivery: v0.13.743 (dump_auto deletes one-shot temp files)
+
+- [x] `TE-DUMP-CLEAN-TEMPS-743` — `nand_transfer_dump_auto.te` `goHekate`: Cleaning temp files + delfile startup/dump_auto/dump_result; bak restore; `pack=""`/`pending` до failOut; pack/Undo/reopen_hub.flag не чіпає.
+- [x] `HUB-CLEAN-DUMP-HANDSHAKE-743` — `CleanDumpHandshake()` після confirmed `wait_nand_dump`; без `ClearPending()`.
+- [x] `CMAKELISTS-VERSION-BUMP-743` — `sphaira_VERSION` піднято до `0.13.743`.
+- [x] `DOCS-BUMP-743` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.742 (TE dump RESULT stats green/red)
 
 - [x] `TE-DUMP-RESULT-STATS-742` — `nand_transfer_dump_auto.te`: per-save n*/s* counters; `printSave`/`printResult` з color green/red/yellow; NAND+pack; overall OK/NOT OK; `dumped.ok` лише 0010+00F0.
 - [x] `TE-DUMP-KEEP-KNOWN-TREE-742` — dumpFilesIn/dumpKnownTree без змін шляху; PlayEvent.dat fallback лише якщо 00F0 root wrote 0; pause+goHekate.

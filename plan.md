@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.742** (TE dump RESULT stats green/red). Завершені плани збережено в
+Поточний delivery — **v0.13.743** (dump_auto deletes one-shot temp files). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.742 — TE dump RESULT stats green/red
+## Поточний delivery: v0.13.743 — dump_auto deletes one-shot temp files
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Dump script лишав one-shot temps (`startup.te`, dump_auto copies, `dump_result.txt`) після RESULT/failOut; pack backup і Undo safety мають лишатися.
+2. `nand_transfer_dump_auto.te` `goHekate`: перед payload — `Cleaning temp files` + delfile startup / dump_auto copies / dump_result (+ pack dump_result якщо pack відомий); bak→ipl restore як раніше; `pack=""` + `pending` ініціалізуються до будь-якого failOut. Pack folder, `dumped.ok`, nand flag, `nand_pack.txt`, Undo snapshots / Undo.te / reopen_hub.flag **не** чіпає TE.
+3. Hub: після `wait_nand_dump` + `NandDumpLooksComplete` → `SavePending(..., applied)` потім `CleanDumpHandshake()` (dumped.ok, nand_pack.txt, startup.te, dump_auto copies). Без `ClearPending()`.
+4. Version `0.13.743`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.742 — TE dump RESULT stats green/red
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

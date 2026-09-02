@@ -484,6 +484,16 @@ auto ClearReopenHubHint() -> void {
     sd.DeleteFile(kNotifyJsonPath);
 }
 
+auto CleanDumpHandshake() -> void {
+    fs::FsNativeSd sd;
+    sd.DeleteFile(DumpedOkPath());
+    sd.DeleteFile(NandPackPath());
+    sd.DeleteFile("/startup.te");
+    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandDumpTeName()).c_str());
+    sd.DeleteFile((std::string(PendingDir()) + "/" + NandDumpTeName()).c_str());
+    log_write("[RESTORE] cleaned dump handshake temps\n");
+}
+
 auto LaunchTegraRomfs(const char* romfs_name) -> bool {
     fs::FsPath te_bin;
     if (!utils::findTegraExplorerPayload(te_bin)) {

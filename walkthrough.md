@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.742** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.743** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.743 — dump_auto deletes one-shot temp files
+
+- `nand_transfer_dump_auto.te` `goHekate` (успіх RESULT, failOut, mount fail): перед hekate — `Cleaning temp files`; delfile `startup.te`, dump_auto copies у scripts/restore_pending, `dump_result.txt` (+ pack dump_result якщо `pack.len()`); bak→ipl restore як раніше. `pack=""` і `pending` до failOut.
+- Не чіпає: pack `/config/kefir/nand_transfer/<stamp>/`, Undo raw 0010/00F0, Undo.te, `reopen_hub.flag`, `dumped.ok` / nand / nand_pack.txt / state.json (Hub handshake до confirm).
+- Hub: `CleanDumpHandshake()` після confirmed dump (`SavePending` applied → delete dumped.ok, nand_pack.txt, startup.te, dump_auto copies). Без `ClearPending()`.
+- Version `0.13.743`. Збірку агент не запускав у 4.5 turn. A1–A7 не закриті.
 
 ## v0.13.742 — TE dump RESULT stats green/red
 

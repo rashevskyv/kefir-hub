@@ -625,6 +625,7 @@ auto OfferPendingRestore() -> bool {
         const auto pack = pending.pack_dirs.empty() ? std::string{} : pending.pack_dirs.front();
         if (NandDumpLooksComplete(pack)) {
             account_restore::SavePending(pending.pack_dirs, "applied", true);
+            account_restore::CleanDumpHandshake();
             App::Push<OptionBox>(
                 "Profiles and play hours dump is done."_i18n,
                 "OK"_i18n);
