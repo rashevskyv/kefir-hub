@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.745** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.746** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.746 — TE dump: drop busy-wait RESET crash
+
+- `waitFive` busy-loop (`while ((timer() - t0) < 5000) {}`) міг RESET BPMP (немає періодичного minerva training); наступний TE boot — orange Err 18 / E Reset. Користувач бачив це при Backup profiles.
+- `nand_transfer_dump_auto.te`: `waitFive` видалено; після `printResult()` і в `failOut` одразу `goHekate()` (RESULT на екрані до payload; auto reboot без busy-loop).
+- `dumpFilesIn`: `player.vend.dat` → `skip slow` (не read/write; не помилка). Play hours — `PlayEvent.dat`.
+- Known-tree / idx/total / colors / RESULT / dumped.ok / cleanup / skip missing dirs без змін. Hub C++ / Manage Backups / restore не чіпали. Version `0.13.746`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.745 — nand pack list multi-select delete
 

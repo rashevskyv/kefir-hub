@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.745** (nand pack list multi-select delete). Завершені плани збережено в
+Поточний delivery — **v0.13.746** (TE dump: drop busy-wait RESET crash). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.745 — nand pack list multi-select delete
+## Поточний delivery: v0.13.746 — TE dump: drop busy-wait RESET crash
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. `nand_transfer_dump_auto.te` `waitFive` був tight `while ((timer() - t0) < 5000) {}` — без періодичного minerva DRAM training це RESET BPMP; наступний TE boot показує orange Err 18 / E Reset.
+2. Видалено `waitFive` повністю; після `printResult()` і в `failOut` одразу `goHekate()` (RESULT лишається на екрані до payload; auto reboot без busy-loop).
+3. У `dumpFilesIn`: `player.vend.dat` → `skip slow` (не read/write; не помилка). Play hours лишаються на `PlayEvent.dat`.
+4. Known-tree / copy idx/total / colors / RESULT / dumped.ok / goHekate cleanup / skip missing dirs без змін. Hub C++ / Manage Backups / restore не чіпали. Version `0.13.746`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.745 — nand pack list multi-select delete
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

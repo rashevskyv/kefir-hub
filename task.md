@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.745** (nand pack list multi-select delete). Завершені задачі збережено в
+Актуальний delivery — **v0.13.746** (TE dump: drop busy-wait RESET crash). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.745 (nand pack list multi-select delete)
+## Поточний delivery: v0.13.746 (TE dump: drop busy-wait RESET crash)
+
+- [x] `TE-DUMP-DROP-WAITFIVE-746` — `nand_transfer_dump_auto.te`: видалено `waitFive`; після `printResult()` і в `failOut` одразу `goHekate()` (без busy-loop RESET).
+- [x] `TE-DUMP-SKIP-VEND-746` — `dumpFilesIn`: `player.vend.dat` → `skip slow` (не read/write; не помилка).
+- [x] `CMAKELISTS-VERSION-BUMP-746` — `sphaira_VERSION` піднято до `0.13.746`.
+- [x] `DOCS-BUMP-746` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.745 (nand pack list multi-select delete)
 
 - [x] `NAND-PACK-MULTISELECT-745` — `NandPackLibraryMenu`: Entry.selected + m_selected_count; X/Y/B/Minus як ZIP; A Open detail; checkbox + tint; ConfirmDelete multi/single + ProgressBox.
 - [x] `NAND-PACK-I18N-745` — title subheading en/uk/ru: `A opens pack details. X marks backups. Minus deletes.`

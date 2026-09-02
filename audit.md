@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.745**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.746**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.746 поза ponytail-чергою: TE `nand_transfer_dump_auto.te` — видалено `waitFive` busy-loop (RESET BPMP / Err 18); після RESULT і failOut одразу `goHekate()`; skip `player.vend.dat`. Hub C++ / Manage Backups / restore не чіпали. **Не закриває** чергу §2 A1–A7.
 
 v0.13.745 поза ponytail-чергою: `NandPackLibraryMenu` multi-select delete (X/Y/B/Minus як ZIP; A Open detail; ProgressBox multi-dir delete); detail без checkbox; multi-restore nand packs **не** робили. **Не закриває** чергу §2 A1–A7.
 
