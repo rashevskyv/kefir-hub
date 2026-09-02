@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.735)
+set(sphaira_VERSION 0.13.736)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -36,6 +36,9 @@ set(sphaira_VERSION_HASH "${sphaira_VERSION} [${GIT_COMMIT}]")
 add_executable(sphaira
     source/ui/menus/appstore.cpp
     source/ui/menus/file_viewer.cpp
+    source/ui/menus/file_viewer/file_viewer_internal.cpp
+    source/ui/menus/file_viewer/file_viewer_text.cpp
+    source/ui/menus/file_viewer/file_viewer_image.cpp
     source/ui/menus/filebrowser.cpp
     source/ui/menus/filebrowser/filebrowser_internal.cpp
     source/ui/menus/filebrowser/filebrowser_view.cpp
@@ -103,6 +106,12 @@ add_executable(sphaira
     source/ui/menus/cheats/cheat_download_menu.cpp
     source/ui/menus/ghdl.cpp
     source/ui/menus/dbi_menu.cpp
+    source/ui/menus/dbi/dbi_internal.cpp
+    source/ui/menus/dbi/dbi_draw.cpp
+    source/ui/menus/dbi/dbi_usb.cpp
+    source/ui/menus/dbi/dbi_local.cpp
+    source/ui/menus/dbi/dbi_plan.cpp
+    source/ui/menus/dbi/dbi_session.cpp
 
     source/ui/menus/gc_menu.cpp
     source/ui/menus/game_menu.cpp
@@ -166,6 +175,11 @@ add_executable(sphaira
     source/i18n.cpp
     source/ftpsrv_helper.cpp
     source/haze_helper.cpp
+    source/haze/haze_internal.cpp
+    source/haze/haze_fs_proxy.cpp
+    source/haze/haze_install_proxy.cpp
+    source/haze/haze_save_proxy.cpp
+    source/haze/haze_game_proxy.cpp
     source/threaded_file_transfer.cpp
     source/title_info.cpp
     source/title_nsp.cpp

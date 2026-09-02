@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.735** (split Games menu into game/ TUs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.736** (split USB queue, MTP haze, and File Viewer TUs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.735 (split Games menu into game/ TUs)
+## Поточний delivery: v0.13.736 (split USB queue, MTP haze, and File Viewer TUs)
+
+- [x] `DBI-INTERNAL-736` — helpers у `dbi/dbi_internal.{hpp,cpp}` (не в публічному `dbi_menu.hpp`).
+- [x] `DBI-DRAW-USB-LOCAL-736` — `dbi_draw` / `dbi_usb` / `dbi_local` TU.
+- [x] `DBI-PLAN-SESSION-736` — `dbi_plan` / `dbi_session`; slim `dbi_menu.cpp` (ctors/Update/options/saver).
+- [x] `HAZE-INTERNAL-736` — `haze/haze_internal` globals + FsProxyBase/FsProxyVfs/helpers.
+- [x] `HAZE-PROXIES-736` — `haze_fs_proxy` / `haze_install_proxy` (Init/DisableInstallMode) / `haze_save_proxy` / `haze_game_proxy`; slim `haze_helper.cpp`.
+- [x] `FILEVIEWER-SPLIT-736` — `file_viewer_internal` + text/image TUs; slim `file_viewer.cpp`.
+- [x] `CMAKELISTS-VERSION-BUMP-736` — `sphaira_VERSION` піднято до `0.13.736`; нові dbi/haze/file_viewer sources у CMake; `gc_menu` без змін.
+- [x] `DOCS-BUMP-736` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.735 (split Games menu into game/ TUs)
 
 - [x] `GAME-INTERNAL-735` — спільні helpers у `game/game_internal.{hpp,cpp}` (не в публічному `game_menu.hpp`).
 - [x] `GAME-DETAILS-735` — `DbiDetailsMenu` exact body у `game_details.cpp` + `OpenGameDetails` door.

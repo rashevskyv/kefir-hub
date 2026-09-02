@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.735** (split Games menu into game/ TUs). Завершені плани збережено в
+Поточний delivery — **v0.13.736** (split USB queue, MTP haze, and File Viewer TUs). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.735 — split Games menu into game/ TUs
+## Поточний delivery: v0.13.736 — split USB queue, MTP haze, and File Viewer TUs
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка без змін — лише розкладка файлів (architecture slice 5a/5b/5c).
+
+1. USB/DBI install queue: спільні helpers у `dbi/dbi_internal.{hpp,cpp}`; `dbi_draw` / `dbi_usb` / `dbi_local` / `dbi_plan` / `dbi_session`; slim `dbi_menu.cpp`. Публічний `dbi_menu.hpp` без змін. 733 auto-install / yellow-bar логіка збережена byte-for-byte.
+2. MTP haze: `include/haze/haze_internal.hpp` + `source/haze/` (`haze_internal`, `haze_fs_proxy`, `haze_install_proxy` з `InitInstallMode`/`DisableInstallMode`, `haze_save_proxy`, `haze_game_proxy`); slim `haze_helper.cpp`. Публічний `haze_helper.hpp` без змін.
+3. File Viewer: `file_viewer/file_viewer_internal` + `file_viewer_text` + `file_viewer_image`; slim `file_viewer.cpp`. Публічний `file_viewer.hpp` без змін.
+4. Version `0.13.736`. **gc_menu не чіпали.** Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.735 — split Games menu into game/ TUs
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Games без змін — лише розкладка файлів (architecture slice 4).
 

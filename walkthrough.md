@@ -1,7 +1,28 @@
-Актуальний delivery — **v0.13.735** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.736** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.736 — split USB queue, MTP haze, and File Viewer TUs
+
+- Публічні API без змін: `ui/menus/dbi_menu.hpp`, `haze_helper.hpp`, `ui/menus/file_viewer.hpp`.
+- DBI USB/local install queue (логіка скопійована byte-for-byte):
+  - `dbi/dbi_internal.{hpp,cpp}` — ResultText/PlanSize/StatItem/DrawStatRow/thread_func…
+  - `dbi/dbi_draw.cpp` — Draw / DrawBottomList / DrawSummaryPanel
+  - `dbi/dbi_usb.cpp` — ThreadFunction / ReestablishUsbLink
+  - `dbi/dbi_local.cpp` — LocalThreadFunction
+  - `dbi/dbi_plan.cpp` — StartInstall / RecomputePlan / RefreshAutoInstallTarget / ApplyLiveSelection / ConfirmInstallPlan
+  - `dbi/dbi_session.cpp` — Cancel/Skip/log/error/InstallProgress overrides
+  - slim `dbi_menu.cpp` — ctors/Update/UpdateActions/SetIndex/CycleSelectedTarget/DisplayQueueOptions/saver helpers
+- MTP haze:
+  - `include/haze/haze_internal.hpp` + `source/haze/haze_internal.cpp` — globals, FsProxyBase, FsProxyVfs, helpers
+  - `haze_fs_proxy` / `haze_install_proxy` (з InitInstallMode/DisableInstallMode) / `haze_save_proxy` / `haze_game_proxy`
+  - slim `haze_helper.cpp` — on_thing / haze_callback / Init/Exit/MountFs…
+- File Viewer:
+  - `file_viewer/file_viewer_internal` — path/image helpers + `s_line_clipboard`
+  - `file_viewer_text.cpp` / `file_viewer_image.cpp`
+  - slim `file_viewer.cpp` — ctors/LoadCurrentFile/Update/Draw/OnFocusGained
+- **`gc_menu` не чіпали.** Version `0.13.736`. A1–A7 не закриті. Збірку агент не запускав.
 
 ## v0.13.735 — split Games menu into game/ TUs
 
