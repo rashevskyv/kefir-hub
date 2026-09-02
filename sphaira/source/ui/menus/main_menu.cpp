@@ -16,7 +16,7 @@
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 
-#include "account_link.hpp"
+#include "account/account_link.hpp"
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "log.hpp"

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.730)
+set(sphaira_VERSION 0.13.731)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -66,11 +66,18 @@ add_executable(sphaira
     source/ui/menus/tools_menu.cpp
     source/ui/menus/uninstaller_menu.cpp
     source/ui/menus/users_menu.cpp
-    source/account_link.cpp
-    source/account_user.cpp
-    source/account_playtime.cpp
-    source/account_restore.cpp
-    source/nand_transfer.cpp
+    source/ui/menus/users/users_internal.cpp
+    source/ui/menus/users/users_profile.cpp
+    source/ui/menus/users/users_manage.cpp
+    source/ui/menus/users/users_restore.cpp
+    source/ui/menus/users/users_restore_library.cpp
+    source/ui/menus/users/users_restore_remote.cpp
+    source/ui/menus/users/users_nand.cpp
+    source/account/account_link.cpp
+    source/account/account_user.cpp
+    source/account/account_playtime.cpp
+    source/account/account_restore.cpp
+    source/account/nand_transfer.cpp
     source/meminfo.cpp
     source/ui/menus/cheats_menu.cpp
     source/ui/menus/cheats/cheats_dmnt.cpp

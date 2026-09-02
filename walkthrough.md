@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.730** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.731** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.731 — Users menu + account domain folder split
+
+- Account domain: `git mv` у `sphaira/include/account/` і `sphaira/source/account/` для `account_link`, `account_user`, `account_playtime`, `account_restore`, `nand_transfer`. Includes → `"account/...."`. Namespaces без змін.
+- Users split (як `save/`): публічний `ui/menus/users_menu.hpp` без змін API (`Menu`, `OfferPendingRestore`, `StartRestoreBackup`). Нові TU:
+  - `users/users_internal.{hpp,cpp}` — CollectSaves / NormUidHex / StageNandDump / NandDumpLooksComplete / FindLiveUidForPack / LiveNameForUid
+  - `users/users_profile.cpp` — SavePickMenu, AvatarPickMenu, profile Confirm*/Run*
+  - `users/users_manage.cpp` — ManageBackupsMenu, OpenManageBackups
+  - `users/users_restore_library.{hpp,cpp}` — RestoreBackupMenu + `OpenRestoreLibrary`
+  - `users/users_restore_remote.{hpp,cpp}` — hand-rolled JSON + RemoteUserPacksMenu + `OpenRemoteUserPacks`
+  - `users/users_restore.cpp` — RestoreSourceMenu, pending/restore Menu methods, StartRestoreBackup
+  - `users/users_nand.cpp` — NAND Confirm*/Run*
+  - slim `users_menu.cpp` (~435 рядків) — grid/Draw/context dispatch
+- CMake: account paths + вісім users sources. Version `0.13.731`. Поведінка/i18n/A1–A7 не чіпали. Збірку агент не запускав.
 
 ## v0.13.730 — Backup profiles & play hours через TegraExplorer auto
 

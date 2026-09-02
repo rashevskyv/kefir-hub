@@ -1,5 +1,5 @@
-#include "account_user.hpp"
-#include "account_playtime.hpp"
+#include "account/account_user.hpp"
+#include "account/account_playtime.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "fs.hpp"

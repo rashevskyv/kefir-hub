@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.730** (Backup profiles & play hours через TE auto + Ultrahand reopen hint). Завершені плани збережено в
+Поточний delivery — **v0.13.731** (Users/account folder split; без зміни поведінки). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.730 — NAND dump via TE auto + Ultrahand reopen hint
+## Поточний delivery: v0.13.731 — Users menu + account domain folder split
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Users/restore/NAND без змін — лише розкладка файлів.
+
+1. Account domain зібрано під `sphaira/include|source/account/`: `account_link`, `account_user`, `account_playtime`, `account_restore`, `nand_transfer` (git mv, namespaces без змін).
+2. `users_menu.cpp` (~3830) розбито за зразком `save/`: `users_internal`, `users_profile`, `users_manage`, `users_restore` + `users_restore_library` / `users_restore_remote`, `users_nand`; публічний API лишається в `ui/menus/users_menu.hpp`.
+3. Restore library / remote packs експортовані через `OpenRestoreLibrary` / `OpenRemoteUserPacks` (+ parse helpers); hand-rolled JSON не переписувався.
+4. Version `0.13.731`. Черга audit §2 A1–A7 не закрита; наступні architecture slices окремо (filebrowser, settings builders, game/dbi/haze/file_viewer).
+
+## Попередній delivery: v0.13.730 — NAND dump via TE auto + Ultrahand reopen hint
 
 Статус: реалізовано в primary checkout. Parsing `en`/`uk`/`ru` JSON пройдено; збірку агент не запускає за політикою checkout.
 

@@ -2,7 +2,7 @@
 
 #include "ui/menus/grid_menu_base.hpp"
 #include "ui/list.hpp"
-#include "account_link.hpp"
+#include "account/account_link.hpp"
 #include "option.hpp"
 
 #include <memory>

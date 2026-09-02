@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.730** (NAND dump через TE auto + Ultrahand reopen hint). Завершені задачі збережено в
+Актуальний delivery — **v0.13.731** (Users/account folder split). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.730 (NAND dump via TE auto + Ultrahand reopen hint)
+## Поточний delivery: v0.13.731 (Users menu + account domain folder split)
+
+- [x] `ACCOUNT-FOLDER-731` — `account_*` + `nand_transfer` перенесено в `include|source/account/`; includes і CMake оновлено.
+- [x] `USERS-SPLIT-INTERNAL-731` — спільні helpers (`CollectSaves`, NAND stage/complete, FindLiveUid…) у `users/users_internal`.
+- [x] `USERS-SPLIT-PROFILE-731` — create/rename/avatar/delete/link/backup + SavePick/AvatarPick у `users_profile.cpp`.
+- [x] `USERS-SPLIT-MANAGE-731` — ManageBackupsMenu + `OpenManageBackups` у `users_manage.cpp`.
+- [x] `USERS-SPLIT-RESTORE-731` — RestoreSource/OfferPending/StartRestoreBackup + library/remote exports у `users_restore*.`.
+- [x] `USERS-SPLIT-NAND-731` — Confirm/Run NAND backup/restore у `users_nand.cpp`; slim grid у `users_menu.cpp`.
+- [x] `CMAKELISTS-VERSION-BUMP-731` — `sphaira_VERSION` піднято до `0.13.731`.
+- [x] `DOCS-BUMP-731` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.730 (NAND dump via TE auto + Ultrahand reopen hint)
 
 - [x] `NAND-DUMP-TE-AUTO-730` — Backup profiles & play hours: Horizon Export якщо 0010+00F0; інакше `wait_nand_dump` + `nand_transfer_dump_auto.te` (startup.te, goHekate). Без інструкції hekate > payloads > dump.te.
 - [x] `NAND-DUMP-OFFER-730` — `OfferPendingRestore` для `wait_nand_dump`: dumped.ok / повний пак → «dump is done»; інакше retry TE.

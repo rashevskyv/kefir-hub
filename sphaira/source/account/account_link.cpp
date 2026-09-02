@@ -1,5 +1,5 @@
-#include "account_link.hpp"
-#include "account_restore.hpp"
+#include "account/account_link.hpp"
+#include "account/account_restore.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
