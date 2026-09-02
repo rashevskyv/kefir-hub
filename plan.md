@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.734** (split Settings menu into settings/ TUs). Завершені плани збережено в
+Поточний delivery — **v0.13.735** (split Games menu into game/ TUs). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.734 — split Settings menu into settings/ TUs
+## Поточний delivery: v0.13.735 — split Games menu into game/ TUs
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Games без змін — лише розкладка файлів (architecture slice 4).
+
+1. Спільні helpers з anonymous namespace винесені в `game/game_internal.{hpp,cpp}` (named `sphaira::ui::menu::game`: `NspSource`, control/load/dump helpers, badges/draw, move labels, `HeaderItem`/`TAB_*`/`HEADER_*`, `DeleteApplicationKeepSave`). Публічний `game_menu.hpp` і `game_list_info.hpp` без змін API.
+2. Live Game Details: `DbiDetailsMenu` exact class body у `game/game_details.cpp`; `OpenGameDetails(...)` у `game_details.hpp` (Menu ctor Push через цей door).
+3. Scan/ops TUs: `game_scan.cpp` (`AppendGameCardEntries`, `ScanHomebrew`, play stats/playtime, search/sort/free), `game_ops.cpp` (contents folders, delete/dump/repack/saves). Slim `game_menu.cpp` (~591) — ctor/dtor/Update/Draw/focus/selection/layout + live START dump options.
+4. Version `0.13.735`. **gc_menu не чіпали.** Черга audit §2 A1–A7 **не** закрита. Наступний live (optional): `dbi_menu.cpp` USB UI, `haze_helper`, `file_viewer`.
+
+## Попередній delivery: v0.13.734 — split Settings menu into settings/ TUs
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Settings без змін — лише розкладка файлів (architecture slice 3).
 

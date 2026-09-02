@@ -1,7 +1,18 @@
-Актуальний delivery — **v0.13.734** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.735** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.735 — split Games menu into game/ TUs
+
+- Публічний API лишився в `ui/menus/game_menu.hpp` (+ `game_list_info.hpp`). Header не розбивали.
+- Нові TU (логіка скопійована byte-for-byte з колишнього `game_menu.cpp`):
+  - `game/game_internal.{hpp,cpp}` — `NspSource`, Notify/LoadControl*/BuildNsp/Launch/CreateSave, summary/badges/draw, move helpers, `HeaderItem`/`TAB_*`/`HEADER_*`, `DeleteApplicationKeepSave`
+  - `game/game_details.{hpp,cpp}` — exact `DbiDetailsMenu` class body + `OpenGameDetails` door
+  - `game/game_scan.cpp` — `AppendGameCardEntries` (live cartridge row), `ScanHomebrew`, play stats/playtime, search/sort/free
+  - `game/game_ops.cpp` — CreateContentsFolders / DeleteGames / Dump* / CreateRepack / CreateSaves
+  - slim `game_menu.cpp` (~591) — Menu ctor/dtor/Update/Draw/focus/selection/layout; live START → DisplayDumpOptions
+- **`gc_menu` не чіпали.** Version `0.13.735`. A1–A7 не закриті. Збірку агент не запускав. Наступний live (optional): `dbi_menu.cpp` USB UI, `haze_helper`, `file_viewer`.
 
 ## v0.13.734 — split Settings menu into settings/ TUs
 

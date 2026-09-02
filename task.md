@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.734** (split Settings menu into settings/ TUs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.735** (split Games menu into game/ TUs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.734 (split Settings menu into settings/ TUs)
+## Поточний delivery: v0.13.735 (split Games menu into game/ TUs)
+
+- [x] `GAME-INTERNAL-735` — спільні helpers у `game/game_internal.{hpp,cpp}` (не в публічному `game_menu.hpp`).
+- [x] `GAME-DETAILS-735` — `DbiDetailsMenu` exact body у `game_details.cpp` + `OpenGameDetails` door.
+- [x] `GAME-SCAN-735` — `AppendGameCardEntries` / `ScanHomebrew` / play stats / sort/search/free у `game_scan.cpp`.
+- [x] `GAME-OPS-735` — delete/dump/repack/saves/contents folders у `game_ops.cpp`.
+- [x] `GAME-SLIM-MENU-735` — slim `game_menu.cpp` (~591): Menu shell + live START dump options.
+- [x] `CMAKELISTS-VERSION-BUMP-735` — `sphaira_VERSION` піднято до `0.13.735`; нові game sources у CMake; `gc_menu` без змін.
+- [x] `DOCS-BUMP-735` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.734 (split Settings menu into settings/ TUs)
 
 - [x] `SETTINGS-INTERNAL-734` — спільні helpers у `settings/settings_internal.{hpp,cpp}` (не в публічному `settings_menu.hpp`).
 - [x] `SETTINGS-CATEGORIES-734` — category builders + `Menu::BuildCategories` у `settings_categories.cpp`.

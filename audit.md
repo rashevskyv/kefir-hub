@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.734**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.735**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.735 поза ponytail-чергою: architecture slice 4 — live Games split (`game_menu.cpp` → `game/*` TUs + slim Menu). Публічний `game_menu.hpp` / `game_list_info.hpp` без змін; `AppendGameCardEntries` перенесено зі scan; **`gc_menu` не чіпали**. **Не закриває** чергу §2 A1–A7. Наступний live (optional): `dbi_menu.cpp` USB UI, `haze_helper`, `file_viewer`.
 
 v0.13.734 поза ponytail-чергою: architecture slice 3 — live Settings split (`settings_menu.cpp` → `settings/*` TUs + slim Menu). Публічний `settings_menu.hpp` і шість окремих submenu типів без unify. Gray zone не чіпали. **Не закриває** чергу §2 A1–A7. Наступний live slice: `game_menu.cpp` (не `gc_menu`).
 
