@@ -259,6 +259,7 @@ struct NandPackLibraryMenu final : MenuBase {
 
     struct Entry {
         nand_transfer::PackInfo pack;
+        bool selected{};
     };
 
     NandPackLibraryMenu(RestoreCb on_restore)
@@ -267,10 +268,18 @@ struct NandPackLibraryMenu final : MenuBase {
     {
         this->SetActions(
             std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OpenCurrent(); }}),
-            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){
+                if (m_selected_count > 0) {
+                    ClearSelection();
+                } else {
+                    SetPop();
+                }
+            }}),
+            std::make_pair(Button::X, Action{"Select"_i18n, [this](){ ToggleCurrentSelection(); }}),
+            std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ InvertSelection(); }}),
             std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){ ConfirmDelete(); }})
         );
-        SetTitleSubHeading("A opens pack details. Minus deletes the pack folder."_i18n, true);
+        SetTitleSubHeading("A opens pack details. X marks backups. Minus deletes."_i18n, true);
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
         Refresh();
     }
@@ -279,6 +288,7 @@ struct NandPackLibraryMenu final : MenuBase {
 
     void Refresh() {
         m_entries.clear();
+        m_selected_count = 0;
         for (auto& p : nand_transfer::ListPacks()) {
             Entry e;
             e.pack = std::move(p);
@@ -291,7 +301,45 @@ struct NandPackLibraryMenu final : MenuBase {
     }
 
     void UpdateSubHeading() {
-        SetSubHeading(std::to_string(m_entries.size()));
+        if (m_entries.empty()) {
+            SetSubHeading("0");
+        } else if (m_selected_count > 0) {
+            SetSubHeading(std::to_string(m_selected_count) + " / " + std::to_string(m_entries.size()));
+        } else {
+            SetSubHeading(std::to_string(m_entries.size()));
+        }
+    }
+
+    void ToggleCurrentSelection() {
+        if (m_entries.empty()) {
+            return;
+        }
+        m_entries[m_index].selected ^= 1;
+        m_selected_count += m_entries[m_index].selected ? 1 : -1;
+        if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+            m_index++;
+            m_list->EnsureVisible(m_index, m_entries.size());
+        }
+        UpdateSubHeading();
+    }
+
+    void InvertSelection() {
+        m_selected_count = 0;
+        for (auto& e : m_entries) {
+            e.selected ^= 1;
+            if (e.selected) {
+                m_selected_count++;
+            }
+        }
+        UpdateSubHeading();
+    }
+
+    void ClearSelection() {
+        for (auto& e : m_entries) {
+            e.selected = false;
+        }
+        m_selected_count = 0;
+        UpdateSubHeading();
     }
 
     void Update(Controller* controller, TouchInfo* touch) override {
@@ -320,17 +368,25 @@ struct NandPackLibraryMenu final : MenuBase {
         }
         m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
             const auto& e = m_entries[i];
-            const auto selected = m_index == i;
-            if (selected) {
+            const auto focused = m_index == i;
+            if (focused) {
                 gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
             } else {
                 DrawElement(v, ThemeEntryID_GRID);
             }
+            if (e.selected) {
+                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+                tint.a *= 0.35f;
+                gfx::drawRect(vg, v, tint, 5.f);
+            }
 
-            const float text_x = v.x + 20.f;
+            gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
+                gfx::CHECKBOX_SIZE, e.selected);
+
+            const float text_x = v.x + 50.f;
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
+                theme->GetColour(focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                 "%s", e.pack.name.c_str());
 
             std::string detail = std::to_string(e.pack.accounts) + " " + "accounts"_i18n;
@@ -365,20 +421,39 @@ private:
         if (m_entries.empty()) {
             return;
         }
-        const auto dir = m_entries[m_index].pack.dir;
-        const auto name = m_entries[m_index].pack.name;
+        std::vector<std::string> dirs;
+        std::string progress_name;
+        if (m_selected_count > 0) {
+            for (const auto& e : m_entries) {
+                if (e.selected) {
+                    dirs.push_back(e.pack.dir);
+                }
+            }
+            progress_name = std::to_string(dirs.size());
+        } else {
+            dirs.push_back(m_entries[m_index].pack.dir);
+            progress_name = m_entries[m_index].pack.name;
+        }
+        if (dirs.empty()) {
+            return;
+        }
+        const auto msg = (m_selected_count > 0)
+            ? "Delete the selected backups from the SD card?"_i18n
+            : "Delete this profiles & play hours pack from the SD card?"_i18n;
         App::Push<OptionBox>(
-            "Delete this profiles & play hours pack from the SD card?"_i18n,
+            msg,
             "Cancel"_i18n, "Delete"_i18n, 1,
-            [this, dir, name](auto op) {
+            [this, dirs, progress_name](auto op) {
                 if (!op || *op != 1) {
                     return;
                 }
-                App::Push<ProgressBox>(0, "Delete pack"_i18n, name,
-                    [dir](auto pbox) -> Result {
+                App::Push<ProgressBox>(0, "Delete pack"_i18n, progress_name,
+                    [dirs](auto pbox) -> Result {
                         pbox->NewTransfer("Deleting"_i18n);
                         fs::FsNativeSd sd;
-                        R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
+                        for (const auto& dir : dirs) {
+                            R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
+                        }
                         R_SUCCEED();
                     }, [this](Result rc) {
                         if (R_FAILED(rc)) {
@@ -386,6 +461,7 @@ private:
                             return;
                         }
                         Refresh();
+                        m_selected_count = 0;
                     }, 2);
             });
     }
@@ -393,6 +469,7 @@ private:
     std::vector<Entry> m_entries;
     RestoreCb m_on_restore;
     s64 m_index{};
+    s64 m_selected_count{};
     std::unique_ptr<List> m_list;
 };
 

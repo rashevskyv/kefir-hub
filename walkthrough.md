@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.744** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.745** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.745 — nand pack list multi-select delete
+
+- `NandPackLibraryMenu` (список stamp folders): checkbox multi-select як ZIP Manage Backups — X toggle+advance, Y invert, B clears marks else Back, Minus delete, A Open detail (без multi-restore).
+- Subheading `selected / total`; title `A opens pack details. X marks backups. Minus deletes.`; draw checkbox + FOCUS tint; текст зсунуто праворуч (`text_x = v.x + 50`). Без avatar на pack rows.
+- `ConfirmDelete`: marks → selected dirs + `"Delete the selected backups from the SD card?"`; else current pack confirm; ProgressBox `DeleteDirectoryRecursively` по кожному dir; fail → `"Could not delete the pack."`; success → `Refresh()` + `m_selected_count = 0`.
+- `NandPackDetailMenu` без checkbox. i18n en/uk/ru. Version `0.13.745`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.744 — dump progress, pack library, no sticky toast
 

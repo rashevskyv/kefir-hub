@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.744** (dump progress, pack library, no sticky toast). Завершені плани збережено в
+Поточний delivery — **v0.13.745** (nand pack list multi-select delete). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.744 — dump progress, pack library, no sticky toast
+## Поточний delivery: v0.13.745 — nand pack list multi-select delete
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. `NandPackLibraryMenu` (stamp pack list): checkbox multi-select як ZIP Manage Backups — X toggle+advance, Y invert, B clears marks else pop, Minus delete, A opens pack detail.
+2. Subheading `selected / total` коли є marks; title hint `A opens pack details. X marks backups. Minus deletes.`; draw checkbox + FOCUS tint 0.35; текст після checkbox (`text_x = v.x + 50`).
+3. `ConfirmDelete`: selected dirs → `"Delete the selected backups..."`; else current → single-pack confirm; ProgressBox `DeleteDirectoryRecursively` per dir; fail → `"Could not delete the pack."`; success → `Refresh()` + `m_selected_count = 0`.
+4. `NandPackDetailMenu` без checkbox / multi-restore nand packs **не** робимо. i18n en/uk/ru. Version `0.13.745`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.744 — dump progress, pack library, no sticky toast
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

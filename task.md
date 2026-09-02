@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.744** (dump progress, pack library, no sticky toast). Завершені задачі збережено в
+Актуальний delivery — **v0.13.745** (nand pack list multi-select delete). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.744 (dump progress, pack library, no sticky toast)
+## Поточний delivery: v0.13.745 (nand pack list multi-select delete)
+
+- [x] `NAND-PACK-MULTISELECT-745` — `NandPackLibraryMenu`: Entry.selected + m_selected_count; X/Y/B/Minus як ZIP; A Open detail; checkbox + tint; ConfirmDelete multi/single + ProgressBox.
+- [x] `NAND-PACK-I18N-745` — title subheading en/uk/ru: `A opens pack details. X marks backups. Minus deletes.`
+- [x] `CMAKELISTS-VERSION-BUMP-745` — `sphaira_VERSION` піднято до `0.13.745`.
+- [x] `DOCS-BUMP-745` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+- [ ] `NOT-REAL-PER-ACCOUNT-NAND` — per-account select/restore/delete всередині nand pack **не** реалізовано (0010 monolith); multi-restore nand packs **не** робимо.
+
+## Попередній delivery: v0.13.744 (dump progress, pack library, no sticky toast)
 
 - [x] `TE-DUMP-PROGRESS-744` — `dumpFilesIn`: `copy idx/total fname` перед `read`; `waitFive()` + `goHekate()` замість `pause()` після RESULT і в failOut.
 - [x] `HUB-NO-STICKY-TOAST-744` — `LaunchTegraRomfs` без `ArmReopenHubHint`; `ClearReopenHubHint` також знімає Ultrahand boot hook block.

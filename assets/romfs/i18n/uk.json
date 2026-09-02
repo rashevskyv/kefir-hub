@@ -2272,6 +2272,7 @@
   " - profiles": " - профілі",
   "No accounts found in this pack": "У цьому паку немає акаунтів",
   "A opens pack details. Minus deletes the pack folder.": "A відкриває деталі пака. Мінус видаляє теку пака.",
+  "A opens pack details. X marks backups. Minus deletes.": "A відкриває деталі пака. X позначає бекапи. Мінус видаляє.",
   "Restore this profiles & play hours pack?\n\nProfiles (0010) always restore as a whole pack.\n\n": "Відновити цей пак профілів і годин?\n\nПрофілі (0010) завжди відновлюються цілим паком.\n\n",
   "If play hours are restored, this console's play log is replaced by the backup. Old hours here are lost; hours after restore start from the pack.\n\n": "Якщо відновити години, журнал гри цієї консолі заміниться бекапом. Старі години тут зникнуть; після рестору години підуть з пака.\n\n",
   "Profiles only": "Лише профілі",
