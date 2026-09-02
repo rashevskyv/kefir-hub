@@ -176,9 +176,27 @@ if (!fsexists(combinepath(pack, "80000000000000F0")) && !fsexists(combinepath(pa
 wrote = 0
 errors = 0
 restored = 0
+do00F0 = 1
+flagf = combinepath(pending, "restore_00F0")
+if (fsexists(flagf)) {
+    raw = readfile(flagf)
+    text = raw.bytestostr()
+    if (text == "0") {
+        do00F0 = 0
+        println("Play hours flag: skip 00F0")
+    }
+}
 ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
 ids.foreach("saveId") {
-    restoreOne()
+    if (saveId == "80000000000000F0") {
+        if (do00F0) {
+            restoreOne()
+        } .else() {
+            println("skip play hours (restore_00F0=0)")
+        }
+    } .else() {
+        restoreOne()
+    }
 }
 
 println("")

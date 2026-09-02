@@ -1,5 +1,6 @@
 #include "ui/menus/users_menu.hpp"
 #include "ui/menus/users/users_internal.hpp"
+#include "ui/menus/users/users_nand_library.hpp"
 
 #include "account/account_restore.hpp"
 #include "account/nand_transfer.hpp"
@@ -8,7 +9,6 @@
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
-#include "ui/menus/file_picker.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 
@@ -30,28 +30,9 @@ void Menu::ConfirmNandBackup() {
 }
 
 void Menu::ConfirmNandRestore() {
-    App::Push<OptionBox>(
-        "Write a profiles & play hours pack into this console?\n\n"
-        "Users and hours here will be replaced. Hub stages the pack, then TegraExplorer writes and signs the system saves.\n\n"
-        "Back up SYSTEM in hekate first.\n"
-        "If the console will not boot after restore:\n"
-        "• hekate > restore SYSTEM backup, or\n"
-        "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot was taken).\n"
-        "Y selects the pack folder."_i18n,
-        "Cancel"_i18n, "Choose folder"_i18n, 1,
-        [this](auto op) {
-            if (!op || *op != 1) {
-                return;
-            }
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[this](const fs::FsPath& path, const filebrowser::FsEntry&) -> bool {
-                    RunNandRestore(path.toString());
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{paths::DATA_ROOT + "/nand_transfer"},
-                true);
-        });
+    OpenNandPackLibrary([this](const std::string& dir, bool restore_play_hours) {
+        RunNandRestore(dir, restore_play_hours);
+    });
 }
 
 void Menu::RunNandBackup() {
@@ -100,7 +81,7 @@ void Menu::RunNandBackup() {
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunNandRestore(const std::string& dir) {
+void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
     if (!nand_transfer::IsPack(dir)) {
         App::Push<OptionBox>(
             "That folder is not a profiles & play hours pack."_i18n,
@@ -110,8 +91,9 @@ void Menu::RunNandRestore(const std::string& dir) {
 
     auto pack = std::make_shared<std::string>(dir);
     auto snap = std::make_shared<account_restore::RawSnapshotReport>();
+    auto hours = restore_play_hours;
     App::Push<ProgressBox>(0, "Restore profiles & play hours"_i18n, "Preparing TegraExplorer restore"_i18n,
-        [pack, snap](auto pbox) -> Result {
+        [pack, snap, hours](auto pbox) -> Result {
             fs::FsNativeSd sd;
             auto resolved = *pack;
             if (!sd.DirExists((resolved + "/80000000000000F0").c_str()) &&
@@ -144,6 +126,11 @@ void Menu::RunNandRestore(const std::string& dir) {
             {
                 const std::vector<u8> body(resolved.begin(), resolved.end());
                 R_TRY(sd.write_entire_file(account_restore::NandPackPath(), body));
+            }
+            {
+                const char* flag = hours ? "1" : "0";
+                const std::vector<u8> body(flag, flag + 1);
+                R_TRY(sd.write_entire_file(account_restore::Restore00F0Path(), body));
             }
 
             account_restore::TrySnapshotRawSystemSaves(pbox, *snap);

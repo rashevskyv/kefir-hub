@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.743** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.744** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.744 — dump progress, pack library, no sticky toast
+
+- TE dump: `dumpFilesIn` друкує `copy idx/total fname` перед кожним blocking `read`; після RESULT і в failOut — `waitFive()` (5s) → `goHekate()` (без `pause()`). Known-tree / colors / cleanup / dumped.ok без змін.
+- Sticky toast: `LaunchTegraRomfs` більше не кличе `ArmReopenHubHint()`; `ClearReopenHubHint` також прибирає Ultrahand `[on-boot]` hook block (і json/flag як раніше). `OfferPendingRestore` як і раніше чистить leftover.
+- Manage Backups: спочатку Backup user (ZIP library) або Backup profiles & play hours (nand pack library під `/config/kefir/nand_transfer`).
+- Restore profiles & play hours: pack library + detail (акаунти з avators/baas, read-only); Restore з попередженням про заміну play log і вибором Profiles only / Profiles + play hours; `restore_00F0` 1/0; TE skip 00F0 коли 0. Delete — цілий stamp folder. Per-account nand restore **не** робили.
+- Нові: `nand_transfer::ListPacks`/`ListPackUsers`, `users_nand_library.cpp`, i18n en/uk/ru. Version `0.13.744`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.743 — dump_auto deletes one-shot temp files
 

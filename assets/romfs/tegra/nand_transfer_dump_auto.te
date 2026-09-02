@@ -54,13 +54,16 @@ dumpFilesIn = {
             mkdir(dstRoot + savePath)
         }
         files = listing.files.copy()
-        println(" files", files.len())
+        idx = 0
+        total = files.len()
+        println(" files", total)
         files.foreach("fname") {
             fsrc = savePath + "/" + fname
             if (savePath == "/") {
                 fsrc = "/" + fname
             }
-            println(fsrc)
+            idx = idx + 1
+            println("copy", idx, "/", total, fname)
             bytes = saveObj.read(fsrc)
             out = dstRoot + fsrc
             writefile(out, bytes)
@@ -236,13 +239,21 @@ printResult = {
     color(0xFFFFFF)
 }
 
+waitFive = {
+    color(0xFFFFFF)
+    println("Rebooting in 5 seconds")
+    t0 = timer()
+    while ((timer() - t0) < 5000) {
+    }
+}
+
 failOut = {
     color(0xFF0000)
     println("NOT OK")
     color(0xFFFFFF)
     println(failMsg)
     println("Open Kefir Hub to continue.")
-    pause()
+    waitFive()
     goHekate()
     exit()
 }
@@ -324,5 +335,5 @@ ids.foreach("saveId") {
 }
 
 printResult()
-pause()
+waitFive()
 goHekate()

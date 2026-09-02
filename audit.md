@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.743**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.744**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.744 поза ponytail-чергою: TE dump progress + 5s auto reboot; sticky Ultrahand toast вимкнено (`ArmReopenHubHint` не з LaunchTegraRomfs; Clear знімає boot hook); Manage Backups обидва види; nand pack library + restore_00F0 flag; per-account nand restore **не** робили. **Не закриває** чергу §2 A1–A7.
 
 v0.13.743 поза ponytail-чергою: dump one-shot temps — TE `goHekate` чистить startup/dump_auto/dump_result; Hub `CleanDumpHandshake()` після confirmed `wait_nand_dump`. Pack / Undo / reopen_hub.flag / state.json не чіпає. **Не закриває** чергу §2 A1–A7.
 

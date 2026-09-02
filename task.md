@@ -1,9 +1,21 @@
-Актуальний delivery — **v0.13.743** (dump_auto deletes one-shot temp files). Завершені задачі збережено в
+Актуальний delivery — **v0.13.744** (dump progress, pack library, no sticky toast). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.743 (dump_auto deletes one-shot temp files)
+## Поточний delivery: v0.13.744 (dump progress, pack library, no sticky toast)
+
+- [x] `TE-DUMP-PROGRESS-744` — `dumpFilesIn`: `copy idx/total fname` перед `read`; `waitFive()` + `goHekate()` замість `pause()` після RESULT і в failOut.
+- [x] `HUB-NO-STICKY-TOAST-744` — `LaunchTegraRomfs` без `ArmReopenHubHint`; `ClearReopenHubHint` також знімає Ultrahand boot hook block.
+- [x] `NAND-LIST-API-744` — `ListPacks` / `ListPackUsers` / `PackInfo` / `PackUser` у `nand_transfer`.
+- [x] `NAND-PACK-LIBRARY-744` — `users_nand_library`: pack list + detail (accounts read-only); Restore з вибором play hours; Delete whole pack.
+- [x] `MANAGE-BACKUPS-KINDS-744` — Manage Backups: Backup user (ZIP) + Backup profiles & play hours (nand library).
+- [x] `RESTORE-00F0-FLAG-744` — Hub `restore_00F0` 1/0; TE restore skips 00F0 when 0; `RunNandRestore(dir, restore_play_hours)`.
+- [x] `CMAKELISTS-VERSION-BUMP-744` — `sphaira_VERSION` піднято до `0.13.744`; `users_nand_library.cpp` у CMake.
+- [x] `DOCS-BUMP-744` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+- [ ] `NOT-REAL-PER-ACCOUNT-NAND` — per-account restore/delete всередині nand pack **не** реалізовано (0010 monolith).
+
+## Попередній delivery: v0.13.743 (dump_auto deletes one-shot temp files)
 
 - [x] `TE-DUMP-CLEAN-TEMPS-743` — `nand_transfer_dump_auto.te` `goHekate`: Cleaning temp files + delfile startup/dump_auto/dump_result; bak restore; `pack=""`/`pending` до failOut; pack/Undo/reopen_hub.flag не чіпає.
 - [x] `HUB-CLEAN-DUMP-HANDSHAKE-743` — `CleanDumpHandshake()` після confirmed `wait_nand_dump`; без `ClearPending()`.

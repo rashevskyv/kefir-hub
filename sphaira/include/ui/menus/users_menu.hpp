@@ -69,7 +69,7 @@ private:
     void RunSetAvatar(std::vector<u8> jpeg);
     void RunBackup(std::vector<AccountUid> uids, bool overwrite_existing = false);
     void RunNandBackup();
-    void RunNandRestore(const std::string& dir);
+    void RunNandRestore(const std::string& dir, bool restore_play_hours = true);
     void RunRestoreBackup(std::vector<account_user::Pack> picked_packs);
     void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
 

@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.743** (dump_auto deletes one-shot temp files). Завершені плани збережено в
+Поточний delivery — **v0.13.744** (dump progress, pack library, no sticky toast). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.743 — dump_auto deletes one-shot temp files
+## Поточний delivery: v0.13.744 — dump progress, pack library, no sticky toast
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. TE dump: per-file `copy idx/total fname` перед blocking `read`; після RESULT / failOut — `waitFive()` (5s) потім `goHekate()` (без `pause()`). Known-tree / colors / cleanup / dumped.ok без змін.
+2. Sticky Ultrahand toast: `LaunchTegraRomfs` більше не викликає `ArmReopenHubHint()`; `ClearReopenHubHint` також знімає `; kefir-hub-reopen-begin`…`end` з `boot_package.ini`.
+3. Manage Backups: двопунктне меню — Backup user (ZIP) і Backup profiles & play hours (nand pack library).
+4. Restore profiles: бібліотека паків замість folder picker; pack detail (акаунти read-only); вибір restore play hours; `restore_00F0` flag + TE skip 00F0. Per-account nand restore **не** робимо.
+5. API: `nand_transfer::ListPacks` / `ListPackUsers`; UI `users_nand_library.cpp`. Version `0.13.744`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.743 — dump_auto deletes one-shot temp files
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

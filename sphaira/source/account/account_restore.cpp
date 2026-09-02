@@ -461,6 +461,27 @@ auto UpsertUltrahandBootHook(const std::string& message) -> void {
     sd.write_entire_file(kBootPackagePath, std::vector<u8>(text.begin(), text.end()));
 }
 
+auto RemoveUltrahandBootHook() -> void {
+    fs::FsNativeSd sd;
+    std::string text;
+    std::vector<u8> raw;
+    if (R_FAILED(sd.read_entire_file(kBootPackagePath, raw)) || raw.empty()) {
+        return;
+    }
+    text.assign(raw.begin(), raw.end());
+    const auto begin = text.find(kHookBegin);
+    const auto end = text.find(kHookEnd);
+    if (begin == std::string::npos || end == std::string::npos || end < begin) {
+        return;
+    }
+    auto after = end + std::strlen(kHookEnd);
+    while (after < text.size() && (text[after] == '\n' || text[after] == '\r')) {
+        after++;
+    }
+    text.erase(begin, after - begin);
+    sd.write_entire_file(kBootPackagePath, std::vector<u8>(text.begin(), text.end()));
+}
+
 } // namespace
 
 auto ArmReopenHubHint() -> void {
@@ -482,6 +503,7 @@ auto ClearReopenHubHint() -> void {
     fs::FsNativeSd sd;
     sd.DeleteFile(ReopenHubFlagPath());
     sd.DeleteFile(kNotifyJsonPath);
+    RemoveUltrahandBootHook();
 }
 
 auto CleanDumpHandshake() -> void {
@@ -514,7 +536,6 @@ auto LaunchTegraRomfs(const char* romfs_name) -> bool {
         return false;
     }
     fsdevCommitDevice("sdmc");
-    ArmReopenHubHint();
     log_write("[RESTORE] wrote /startup.te from %s, launching %s\n",
         romfs_name, static_cast<const char*>(te_bin));
 

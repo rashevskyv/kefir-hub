@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.743)
+set(sphaira_VERSION 0.13.744)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -91,6 +91,7 @@ add_executable(sphaira
     source/ui/menus/users/users_restore_library.cpp
     source/ui/menus/users/users_restore_remote.cpp
     source/ui/menus/users/users_nand.cpp
+    source/ui/menus/users/users_nand_library.cpp
     source/account/account_link.cpp
     source/account/account_user.cpp
     source/account/account_playtime.cpp
