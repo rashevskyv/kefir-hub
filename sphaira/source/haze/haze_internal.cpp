@@ -27,10 +27,6 @@ namespace sphaira::haze {
 
 #if ENABLE_NETWORK_INSTALL
 InstallSharedData g_shared_data{};
-
-const char* SUPPORTED_EXT[] = {
-    ".nsp", ".xci", ".nsz", ".xcz",
-};
 #endif
 
 std::atomic_bool g_should_exit = false;
@@ -46,10 +42,6 @@ std::atomic<bool> g_mtp_new_transfer{false};
 
 std::vector<PinnedMount> g_pinned{};
 ::haze::FsEntries g_fs_entries{};
-
-const char* NRO_EXT[] = {
-    ".nro",
-};
 
 const RootDropRule ROOT_DROP_RULES[] = {
 #if ENABLE_NETWORK_INSTALL

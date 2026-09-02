@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.738** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.739** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.739 — fix MTP haze split (SUPPORTED_EXT bound, FsSaveProxy members)
+
+- Після v0.13.736 haze split WSL: `std::size(SUPPORTED_EXT)` на incomplete array; `FsSaveProxy` без `};` і без `m_mounts`/`m_mount_tick`/`m_mount_mutex`.
+- `haze_internal.hpp`: `inline constexpr const char* SUPPORTED_EXT[]` / `NRO_EXT[]` з bound; визначення прибрано з `haze_internal.cpp` (`ROOT_DROP_RULES` лишається і посилається на них).
+- `haze_save_proxy.cpp`: відновлено члени mount-кешу, закрито struct, `MakeFsSaveProxy` знову в `namespace sphaira::haze`. MountSave логіку не змінювали.
+- MTP поведінку не рефакторили. Version `0.13.739`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.738 — fix Games split includes for title_nsp/ncm/save_paths
 

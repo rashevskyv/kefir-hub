@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.738** (fix Games split includes for title_nsp/ncm/save_paths). Завершені плани збережено в
+Поточний delivery — **v0.13.739** (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.738 — fix Games split includes for title_nsp/ncm/save_paths
+## Поточний delivery: v0.13.739 — fix MTP haze split (SUPPORTED_EXT bound, FsSaveProxy members)
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Після v0.13.736 haze split WSL ламався на `std::size(SUPPORTED_EXT)` (incomplete array) і на truncated `FsSaveProxy` (відсутні `m_mounts`/`m_mount_tick`/`m_mount_mutex` і `};` перед `MakeFsSaveProxy`).
+2. `haze_internal.hpp`: `SUPPORTED_EXT` і `NRO_EXT` як `inline constexpr` з bound; визначення прибрано з `haze_internal.cpp` (`ROOT_DROP_RULES` лишається).
+3. `haze_save_proxy.cpp`: відновлено три члени кешу mount і закрито struct; `MakeFsSaveProxy` знову поза класом. MountSave логіку не чіпали.
+4. Version `0.13.739`. MTP поведінку не рефакторили. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.738 — fix Games split includes for title_nsp/ncm/save_paths
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

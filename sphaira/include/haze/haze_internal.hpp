@@ -40,7 +40,7 @@ struct InstallSharedData {
 };
 
 extern InstallSharedData g_shared_data;
-extern const char* SUPPORTED_EXT[];
+inline constexpr const char* SUPPORTED_EXT[] = { ".nsp", ".xci", ".nsz", ".xcz" };
 void on_thing();
 #endif
 
@@ -72,7 +72,7 @@ struct RootDropRule {
     bool per_name_subdir;     // RedirectDir: write into target_dir/<file name without ext>/.
 };
 
-extern const char* NRO_EXT[];
+inline constexpr const char* NRO_EXT[] = { ".nro" };
 extern const RootDropRule ROOT_DROP_RULES[];
 
 const char* GetFileName(const char* s);

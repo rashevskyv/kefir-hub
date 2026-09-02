@@ -515,6 +515,10 @@ private:
 
     // lazily mounted saves. cleared by the (default) destructor, which closes
     // every cached save fs when haze::Exit() drops g_fs_entries.
+    std::map<std::string, CachedMount> m_mounts{};
+    u64 m_mount_tick{};
+    Mutex m_mount_mutex{};
+};
 
 std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsSaveProxy(const char* name, const char* display_name) {
     return std::make_shared<FsSaveProxy>(name, display_name);

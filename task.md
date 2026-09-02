@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.738** (fix Games split includes for title_nsp/ncm/save_paths). Завершені задачі збережено в
+Актуальний delivery — **v0.13.739** (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.738 (fix Games split includes for title_nsp/ncm/save_paths)
+## Поточний delivery: v0.13.739 (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members)
+
+- [x] `HAZE-SUPPORTED-EXT-739` — `SUPPORTED_EXT` / `NRO_EXT` як `inline constexpr` з bound у `haze_internal.hpp`; визначення прибрано з `haze_internal.cpp`.
+- [x] `HAZE-FSSAVE-PROXY-739` — відновлено `m_mounts` / `m_mount_tick` / `m_mount_mutex` і `};` у `FsSaveProxy`; `MakeFsSaveProxy` поза struct.
+- [x] `CMAKELISTS-VERSION-BUMP-739` — `sphaira_VERSION` піднято до `0.13.739`.
+- [x] `DOCS-BUMP-739` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.738 (fix Games split includes for title_nsp/ncm/save_paths)
 
 - [x] `GAME-INTERNAL-TITLE-NSP-738` — `#include "title_nsp.hpp"` у `game/game_internal.hpp` (NspEntry/ContentInfoEntry/Build*); wrappers без rename.
 - [x] `GAME-SCAN-NCM-738` — `#include "yati/nx/ncm.hpp"` у `game_scan.cpp` (для `ncm::GetAppId`).
