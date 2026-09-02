@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.741** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.742** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.742 — TE dump RESULT stats green/red
+
+- Після known-tree dump RESULT тепер statistics screen: NAND + pack path; per-save Profiles/User ID/Play hours/HOME icons зі статусом dumped (file count) / empty / missing / skip; overall green OK або red NOT OK; Hub instruction → `pause()` → `goHekate()`.
+- `nand_transfer_dump_auto.te`: `setSaveStat` + `n*/s*` globals; `printSave`/`printResult` через `color(0xFFFFFF|00FF00|FF0000|FFFF00)`; required = 0010+00F0; optional 0011/0041 yellow; `dumped.ok` лише при got0010+got00F0. Dump path style з 741 без змін (concat, no recurse, skip missing dirs).
+- Hub C++ / restore / dump.te menu / i18n не чіпали. Version `0.13.742`. Збірку агент не запускав у 4.5 turn. A1–A7 не закриті.
 
 ## v0.13.741 — TE dump_auto known-tree clear and reboot
 

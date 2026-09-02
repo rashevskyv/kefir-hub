@@ -4,10 +4,8 @@
 # REQUIRE VER 4.0.0
 
 # One-shot: Hub writes restore_pending/nand + nand_pack.txt, copies this to
-# sd:/startup.te. Known-tree dump of 0010/0011/00F0/0041 (test.te style:
-# readdir("/su/baas"), read("/su/"+name), writefile("sd:/...", bytes)).
-# TE 4.2.0 does not scroll: clear() each save and before RESULT.
-# Missing optional dirs are skip, not error. Then pause, then hekate.
+# sd:/startup.te. Known-tree dump. TE 4.2.0 does not scroll: clear() each
+# save and before RESULT. RESULT uses color(): green OK / red NOT OK.
 
 goHekate = {
     saveObj = dict()
@@ -80,15 +78,39 @@ dumpKnownTree = {
     dumpFilesIn()
 }
 
+setSaveStat = {
+    if (saveId == "8000000000000010") {
+        n0010 = nthis
+        s0010 = st
+    }
+    if (saveId == "8000000000000011") {
+        n0011 = nthis
+        s0011 = st
+    }
+    if (saveId == "80000000000000F0") {
+        n00F0 = nthis
+        s00F0 = st
+    }
+    if (saveId == "8000000000000041") {
+        n0041 = nthis
+        s0041 = st
+    }
+}
+
 dumpOne = {
     clear()
+    color(0xFFFFFF)
     println("Kefir Hub: dump profiles & play hours")
     println("save", saveId)
     println("pack:", pack)
     println("")
+    nthis = 0
+    st = 0
     bis = "bis:/save/" + saveId
     if (!fsexists(bis)) {
         println("skip missing", bis)
+        st = 0
+        nthis = 0
     } .else() {
         println("open", bis)
         saveObj = readsave(bis)
@@ -98,14 +120,18 @@ dumpOne = {
         if (saveId == "80000000000000F0") {
             savePath = "/"
             dumpFilesIn()
-            println("PlayEvent.dat")
-            bytes = saveObj.read("PlayEvent.dat")
-            writefile(dstRoot + "/PlayEvent.dat", bytes)
-            wrote = wrote + 1
+            if (wrote == wrote_before) {
+                println("PlayEvent.dat")
+                bytes = saveObj.read("PlayEvent.dat")
+                writefile(dstRoot + "/PlayEvent.dat", bytes)
+                wrote = wrote + 1
+            }
         } .else() {
             dumpKnownTree()
         }
-        if (wrote > wrote_before) {
+        nthis = wrote - wrote_before
+        if (nthis > 0) {
+            st = 1
             dumped = dumped + 1
             if (saveId == "8000000000000010") {
                 got0010 = 1
@@ -113,14 +139,109 @@ dumpOne = {
             if (saveId == "80000000000000F0") {
                 got00F0 = 1
             }
-            println("ok", saveId, "files", wrote - wrote_before)
+            println("ok", saveId, "files", nthis)
         } .else() {
+            st = 2
             println("empty", saveId)
         }
     }
+    setSaveStat()
+}
+
+printSave = {
+    color(0xFFFFFF)
+    println(label)
+    if (st == 1) {
+        color(0x00FF00)
+        println("  dumped ", nfiles, "files")
+    } .else() {
+        if (required) {
+            color(0xFF0000)
+            if (st == 2) {
+                println("  empty")
+            } .else() {
+                println("  missing")
+            }
+        } .else() {
+            color(0xFFFF00)
+            if (st == 2) {
+                println("  empty")
+            } .else() {
+                println("  skip")
+            }
+        }
+    }
+    color(0xFFFFFF)
+}
+
+printResult = {
+    clear()
+    color(0xFFFFFF)
+    println("Kefir Hub: dump profiles & play hours")
+    println("RESULT")
+    println("")
+    println("NAND:", nandName)
+    println("pack:", pack)
+    println("")
+    label = "Profiles (0010)"
+    st = s0010
+    nfiles = n0010
+    required = 1
+    printSave()
+    label = "User ID generator (0011)"
+    st = s0011
+    nfiles = n0011
+    required = 0
+    printSave()
+    label = "Play hours (00F0)"
+    st = s00F0
+    nfiles = n00F0
+    required = 1
+    printSave()
+    label = "HOME icons (0041)"
+    st = s0041
+    nfiles = n0041
+    required = 0
+    printSave()
+    println("")
+    if (got0010) {
+        if (got00F0) {
+            color(0x00FF00)
+            println("OK")
+            color(0xFFFFFF)
+            println("Profiles and play hours dumped.")
+            println("Open Kefir Hub to confirm.")
+            writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
+        } .else() {
+            color(0xFF0000)
+            println("NOT OK")
+            color(0xFFFFFF)
+            println("Play hours (00F0) not dumped.")
+            println("Open Kefir Hub to retry.")
+        }
+    } .else() {
+        color(0xFF0000)
+        println("NOT OK")
+        color(0xFFFFFF)
+        println("Profiles (0010) not dumped.")
+        println("Open Kefir Hub to retry.")
+    }
+    color(0xFFFFFF)
+}
+
+failOut = {
+    color(0xFF0000)
+    println("NOT OK")
+    color(0xFFFFFF)
+    println(failMsg)
+    println("Open Kefir Hub to continue.")
+    pause()
+    goHekate()
+    exit()
 }
 
 clear()
+color(0xFFFFFF)
 println("Kefir Hub: dump profiles & play hours")
 println("Decrypts SYSTEM saves with this console keys.")
 println("")
@@ -135,50 +256,38 @@ nandf = pending + "/nand"
 packf = pending + "/nand_pack.txt"
 delfile(pending + "/dump_result.txt")
 
+nandName = ""
 if (!fsexists(nandf)) {
-    println("No NAND flag (emu/sys)")
-    println("Open Kefir Hub to continue.")
-    pause()
-    goHekate()
-    exit()
+    failMsg = "No NAND flag (emu/sys)"
+    failOut()
 }
 if (!fsexists(packf)) {
-    println("No pack path file")
-    println("Open Kefir Hub to continue.")
-    pause()
-    goHekate()
-    exit()
+    failMsg = "No pack path file"
+    failOut()
 }
 
 raw = readfile(nandf)
 text = raw.bytestostr()
 if (text == "emu") {
+    nandName = "emuMMC SYSTEM"
     println("NAND flag: emuMMC SYSTEM")
     if (!emu()) {
-        println("No emuMMC")
-        println("Open Kefir Hub to continue.")
-        pause()
-        goHekate()
-        exit()
+        failMsg = "No emuMMC"
+        failOut()
     }
     rc = mountemu("SYSTEM")
 } .else() {
     if (text != "sys") {
-        println("Bad NAND flag", text)
-        println("Open Kefir Hub to continue.")
-        pause()
-        goHekate()
-        exit()
+        failMsg = "Bad NAND flag"
+        failOut()
     }
+    nandName = "sysMMC SYSTEM"
     println("NAND flag: sysMMC SYSTEM")
     rc = mountsys("SYSTEM")
 }
 if (rc) {
-    println("SYSTEM mount failed", rc)
-    println("Open Kefir Hub to continue.")
-    pause()
-    goHekate()
-    exit()
+    failMsg = "SYSTEM mount failed"
+    failOut()
 }
 
 raw = readfile(packf)
@@ -192,35 +301,19 @@ wrote = 0
 dumped = 0
 got0010 = 0
 got00F0 = 0
+n0010 = 0
+n0011 = 0
+n00F0 = 0
+n0041 = 0
+s0010 = 0
+s0011 = 0
+s00F0 = 0
+s0041 = 0
 ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
 ids.foreach("saveId") {
     dumpOne()
 }
 
-clear()
-println("Kefir Hub: dump profiles & play hours")
-println("RESULT")
-println("wrote", wrote)
-println("saves", dumped)
-println("got0010", got0010)
-println("got00F0", got00F0)
-if (!got0010) {
-    println("INCOMPLETE: no profiles (0010)")
-    println("Open Kefir Hub to retry.")
-    pause()
-    goHekate()
-    exit()
-}
-if (!got00F0) {
-    println("INCOMPLETE: no play hours (00F0)")
-    println("Open Kefir Hub to retry.")
-    pause()
-    goHekate()
-    exit()
-}
-
-writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
-println("OK  profiles and play hours dumped.")
-println("Open Kefir Hub to confirm.")
+printResult()
 pause()
 goHekate()

@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.741** (TE dump_auto known-tree clear and reboot). Завершені задачі збережено в
+Актуальний delivery — **v0.13.742** (TE dump RESULT stats green/red). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.741 (TE dump_auto known-tree clear and reboot)
+## Поточний delivery: v0.13.742 (TE dump RESULT stats green/red)
+
+- [x] `TE-DUMP-RESULT-STATS-742` — `nand_transfer_dump_auto.te`: per-save n*/s* counters; `printSave`/`printResult` з color green/red/yellow; NAND+pack; overall OK/NOT OK; `dumped.ok` лише 0010+00F0.
+- [x] `TE-DUMP-KEEP-KNOWN-TREE-742` — dumpFilesIn/dumpKnownTree без змін шляху; PlayEvent.dat fallback лише якщо 00F0 root wrote 0; pause+goHekate.
+- [x] `CMAKELISTS-VERSION-BUMP-742` — `sphaira_VERSION` піднято до `0.13.742`.
+- [x] `DOCS-BUMP-742` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.741 (TE dump_auto known-tree clear and reboot)
 
 - [x] `TE-DUMP-AUTO-KNOWN-TREE-741` — `nand_transfer_dump_auto.te`: known-tree dumpFilesIn/dumpKnownTree; skip missing optional dirs; без recurse/combinepath/nested foreach.
 - [x] `TE-DUMP-AUTO-CLEAR-RESULT-741` — `clear()` на кожен save і перед RESULT; `pause()` + `goHekate()`; `dumped.ok` лише при got0010+got00F0.

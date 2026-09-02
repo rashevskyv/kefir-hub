@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.741** (TE dump_auto known-tree clear and reboot). Завершені плани збережено в
+Поточний delivery — **v0.13.742** (TE dump RESULT stats green/red). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.741 — TE dump_auto known-tree clear and reboot
+## Поточний delivery: v0.13.742 — TE dump RESULT stats green/red
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Після dump TE 4.2.0 показував лише plain RESULT без per-save статистики й без кольорів; людина не бачила з першого погляду dumped/empty/missing/skip і OK vs NOT OK.
+2. `nand_transfer_dump_auto.te`: known-tree dump без змін шляху; per-save `n0010/n0011/n00F0/n0041` і `s*` (0 missing / 1 dumped / 2 empty); `printResult` + `printSave` з `color()` — green dumped/OK, red required missing/empty + NOT OK, yellow optional skip/empty; `dumped.ok` лише при got0010+got00F0; потім Hub instruction, `pause()`, `goHekate()`.
+3. Hub C++ / restore / dump.te menu / i18n не чіпали.
+4. Version `0.13.742`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.741 — TE dump_auto known-tree clear and reboot
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 
