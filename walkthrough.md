@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.731** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.732** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.732 — File Browser folder split
+
+- Існуючі TU: `git mv` `filebrowser_ops.cpp` / `filebrowser_assoc.cpp` / `filebrowser_forwarder.cpp` → `source/ui/menus/filebrowser/`. Публічні headers лишилися в `include/ui/menus/` (`filebrowser.hpp`, `filebrowser_assoc.hpp`, `filebrowser_forwarder.hpp`).
+- Нові TU (логіка скопійована byte-for-byte з колишнього `filebrowser.cpp`):
+  - `filebrowser/filebrowser_internal.{hpp,cpp}` — `g_change_uevent`, `FS_ENTRY_*`, network/SMB helpers, `IdentifyPayload`, `MakeLauncherLabel`, `metadata_thread_func`, `HasExtraRootSources`
+  - `filebrowser/filebrowser_view.cpp` — `FsView` ctors/dtor, thumbs, Update/Draw/focus/selection
+  - `filebrowser/filebrowser_scan.cpp` — Scan / WalkUp / Sort / SetFs / OpenArchive
+  - `filebrowser/filebrowser_metadata.cpp` — title labels + remote metadata thread API
+  - `filebrowser/filebrowser_options.cpp` — DisplayOptions / Picker / **живий** DisplayAdvancedOptions / hash / forwarder / image viewer
+  - `filebrowser/filebrowser_share.cpp` — **живі** MountCurrentOverMtp / ShareCurrentFolder / ShareCurrentOverFtp / MountUsbStorage
+  - `filebrowser/filebrowser_sources.cpp` — ConnectToLocation (FsView+Menu), ShowSourcePicker, AddNetworkLocationInteractive, source status
+  - slim `filebrowser.cpp` (~605) — SignalChange, Menu ctor/dtor/Update/Draw, folder picker, assoc loading, split-screen
+- CMake: одинадцять filebrowser sources. Version `0.13.732`. Gray zone (Tools Coming soon, `gc_menu`, dead MTP install) і audit §2 A1–A7 не чіпали. Збірку агент не запускав.
 
 ## v0.13.731 — Users menu + account domain folder split
 

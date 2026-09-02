@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.731** (Users/account folder split; без зміни поведінки). Завершені плани збережено в
+Поточний delivery — **v0.13.732** (File Browser folder split; без зміни поведінки). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.731 — Users menu + account domain folder split
+## Поточний delivery: v0.13.732 — File Browser folder split
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка File Browser без змін — лише розкладка файлів (architecture slice 2).
+
+1. Існуючі TU `filebrowser_ops` / `filebrowser_assoc` / `filebrowser_forwarder` перенесено `git mv` у `source/ui/menus/filebrowser/`. Публічні headers (`filebrowser.hpp`, `filebrowser_assoc.hpp`, `filebrowser_forwarder.hpp`) лишилися на місці.
+2. Спільні helpers винесені в `filebrowser/filebrowser_internal.{hpp,cpp}` (uevent, FS_ENTRIES, network/SMB helpers, IdentifyPayload, MakeLauncherLabel, metadata_thread_func).
+3. Решту `filebrowser.cpp` (~3770) розбито: `filebrowser_view`, `filebrowser_scan`, `filebrowser_metadata`, `filebrowser_options` (вкл. живий `DisplayAdvancedOptions`), `filebrowser_share` (MTP/FTP share поточної теки), `filebrowser_sources`; slim `filebrowser.cpp` (~605) тримає Menu + SignalChange + assoc loading.
+4. Version `0.13.732`. Черга audit §2 A1–A7 **не** закрита; gray-zone Tools Coming soon / `gc_menu` / dead MTP install не чіпали. Наступні live slices: settings_menu category builders, `game_menu` (не `gc_menu`).
+
+## Попередній delivery: v0.13.731 — Users menu + account domain folder split
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Users/restore/NAND без змін — лише розкладка файлів.
 

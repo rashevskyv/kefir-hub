@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.731** (Users/account folder split). Завершені задачі збережено в
+Актуальний delivery — **v0.13.732** (File Browser folder split). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.731 (Users menu + account domain folder split)
+## Поточний delivery: v0.13.732 (File Browser folder split)
+
+- [x] `FILEBROWSER-MV-EXISTING-732` — `filebrowser_ops` / `assoc` / `forwarder` перенесено `git mv` у `source/ui/menus/filebrowser/`.
+- [x] `FILEBROWSER-INTERNAL-732` — спільні helpers у `filebrowser/filebrowser_internal.{hpp,cpp}` (не в публічному `filebrowser.hpp`).
+- [x] `FILEBROWSER-SPLIT-VIEW-SCAN-META-732` — `filebrowser_view` / `scan` / `metadata` TU з `FsView` ctor/Draw/Scan/metadata.
+- [x] `FILEBROWSER-SPLIT-OPTIONS-SHARE-SOURCES-732` — `options` (вкл. живий Advanced), `share` (MTP/FTP поточної теки), `sources` + slim `filebrowser.cpp`.
+- [x] `CMAKELISTS-VERSION-BUMP-732` — `sphaira_VERSION` піднято до `0.13.732`; CMake sources оновлено.
+- [x] `DOCS-BUMP-732` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.731 (Users menu + account domain folder split)
 
 - [x] `ACCOUNT-FOLDER-731` — `account_*` + `nand_transfer` перенесено в `include|source/account/`; includes і CMake оновлено.
 - [x] `USERS-SPLIT-INTERNAL-731` — спільні helpers (`CollectSaves`, NAND stage/complete, FindLiveUid…) у `users/users_internal`.
