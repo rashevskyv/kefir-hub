@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.736** (split USB queue, MTP haze, and File Viewer TUs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.737** (include account_user.hpp in slim users_menu.cpp). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.736 (split USB queue, MTP haze, and File Viewer TUs)
+## Поточний delivery: v0.13.737 (include account_user.hpp in slim users_menu.cpp)
+
+- [x] `USERS-MENU-INCLUDE-737` — `#include "account/account_user.hpp"` у slim `users_menu.cpp` (для `LoadImageJpeg` у `TryLoadAvatar`); публічний header без змін.
+- [x] `CMAKELISTS-VERSION-BUMP-737` — `sphaira_VERSION` піднято до `0.13.737`.
+- [x] `DOCS-BUMP-737` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.736 (split USB queue, MTP haze, and File Viewer TUs)
 
 - [x] `DBI-INTERNAL-736` — helpers у `dbi/dbi_internal.{hpp,cpp}` (не в публічному `dbi_menu.hpp`).
 - [x] `DBI-DRAW-USB-LOCAL-736` — `dbi_draw` / `dbi_usb` / `dbi_local` TU.

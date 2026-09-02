@@ -1,6 +1,7 @@
 #include "ui/menus/users_menu.hpp"
 
 #include "account/account_link.hpp"
+#include "account/account_user.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"

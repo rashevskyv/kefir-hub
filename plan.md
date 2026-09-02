@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.736** (split USB queue, MTP haze, and File Viewer TUs). Завершені плани збережено в
+Поточний delivery — **v0.13.737** (include account_user.hpp in slim users_menu.cpp). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.736 — split USB queue, MTP haze, and File Viewer TUs
+## Поточний delivery: v0.13.737 — include account_user.hpp in slim users_menu.cpp
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Slim `users_menu.cpp` (після v0.13.731 split) викликає `account_user::LoadImageJpeg` у `Menu::TryLoadAvatar`, але включав лише `account/account_link.hpp`.
+2. Додано `#include "account/account_user.hpp"` поруч із `account_link.hpp`. Публічний `users_menu.hpp` не чіпали (там лише forward-declare `account_user::Pack`).
+3. Version `0.13.737`. Packed `CmdHeader` warning у `usb/dbi.hpp` і parallel-compile noise з `save_menu_ops.cpp` ігноровані як pre-existing / не пов’язані. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.736 — split USB queue, MTP haze, and File Viewer TUs
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка без змін — лише розкладка файлів (architecture slice 5a/5b/5c).
 

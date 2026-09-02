@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.736** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.737** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.737 — include account_user.hpp in slim users_menu.cpp
+
+- Slim `users_menu.cpp` після v0.13.731 split викликав `account_user::LoadImageJpeg` у `Menu::TryLoadAvatar` без declaration include.
+- Додано `#include "account/account_user.hpp"` поруч із існуючим `#include "account/account_link.hpp"`.
+- Публічний `users_menu.hpp` не змінювали (лише forward-declare `account_user::Pack`).
+- Version `0.13.737`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.736 — split USB queue, MTP haze, and File Viewer TUs
 
