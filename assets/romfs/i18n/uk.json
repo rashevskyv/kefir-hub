@@ -2251,5 +2251,12 @@
   "Backup file does not exist.": "Файл бекапу не існує.",
   "Send to another console": "Надіслати на іншу консоль",
   "A opens actions. X marks backups. Minus deletes.": "A відкриває дії. X позначає бекапи. Мінус видаляє.",
-  "Could not rename the backup.": "Не вдалося перейменувати бекап."
+  "Could not rename the backup.": "Не вдалося перейменувати бекап.",
+  "Preparing TegraExplorer dump": "Підготовка дампу TegraExplorer",
+  "Profiles and play hours are copied. On the other console: Restore profiles & play hours.": "Профілі та наіграні години скопійовано. На іншій консолі: Restore profiles & play hours.",
+  "Could not stage the profiles & play hours dump on SD.": "Не вдалося підготувати дамп профілів і годин на SD.",
+  "Horizon could not copy profiles and play hours while the system is running.\n\nTegraExplorer will dump them, then return to hekate.\nAfter the console starts, open Kefir Hub to confirm the dump.": "Horizon не віддав профілі та години, поки система запущена.\n\nTegraExplorer їх зніме, потім повернеться в hekate.\nПісля старту консолі відкрийте Kefir Hub, щоб підтвердити дамп.",
+  "Profiles and play hours dump is done.": "Дамп профілів і наіграних годин готовий.",
+  "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again.": "TegraExplorer не закінчив дамп.\n\nПісля ОК спробує ще раз.",
+  "Open Kefir Hub to finish.": "Щоб завершити, відкрийте Kefir Hub."
 }

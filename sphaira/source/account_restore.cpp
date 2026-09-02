@@ -3,6 +3,7 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 #include "ui/progress_box.hpp"
 #include "utils/utils.hpp"
@@ -398,6 +399,91 @@ auto InstallRestoreTeScripts() -> void {
     sd.DeleteFile((std::string(PendingDir()) + "/account_0010_rollback.te").c_str());
 }
 
+namespace {
+
+constexpr const char* kBootPackagePath = "/switch/.packages/boot_package.ini";
+constexpr const char* kNotifyJsonPath = "/config/ultrahand/notifications/kefir-reopen.notify";
+constexpr const char* kHookBegin = "; kefir-hub-reopen-begin";
+constexpr const char* kHookEnd = "; kefir-hub-reopen-end";
+
+auto SanitizeNotifyText(std::string s) -> std::string {
+    for (char& c : s) {
+        if (c == '"' || c == '\n' || c == '\r' || c == '\\') {
+            c = ' ';
+        }
+    }
+    return s;
+}
+
+auto UpsertUltrahandBootHook(const std::string& message) -> void {
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/switch/.packages");
+
+    const auto block = std::string(kHookBegin) + "\ntry:\n"
+        "path_exists /config/kefir/reopen_hub.flag\n"
+        "notify-now \"" + message + "\" 26 center word 0 \"Kefir Hub\" false kefir\n"
+        "delete /config/kefir/reopen_hub.flag\n"
+        + kHookEnd + "\n";
+
+    std::string text;
+    std::vector<u8> raw;
+    if (R_SUCCEEDED(sd.read_entire_file(kBootPackagePath, raw)) && !raw.empty()) {
+        text.assign(raw.begin(), raw.end());
+    }
+
+    const auto begin = text.find(kHookBegin);
+    const auto end = text.find(kHookEnd);
+    if (begin != std::string::npos && end != std::string::npos && end > begin) {
+        auto after = end + std::strlen(kHookEnd);
+        while (after < text.size() && (text[after] == '\n' || text[after] == '\r')) {
+            after++;
+        }
+        text.replace(begin, after - begin, block);
+    } else {
+        auto on_boot = text.find("[on-boot]");
+        if (on_boot == std::string::npos) {
+            if (!text.empty() && text.back() != '\n') {
+                text += '\n';
+            }
+            text += "[on-boot]\n";
+            text += block;
+        } else {
+            auto nl = text.find('\n', on_boot);
+            if (nl == std::string::npos) {
+                text += '\n';
+                text += block;
+            } else {
+                text.insert(nl + 1, block);
+            }
+        }
+    }
+
+    sd.write_entire_file(kBootPackagePath, std::vector<u8>(text.begin(), text.end()));
+}
+
+} // namespace
+
+auto ArmReopenHubHint() -> void {
+    const auto msg = SanitizeNotifyText("Open Kefir Hub to finish."_i18n);
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/config/kefir");
+    sd.CreateDirectoryRecursively("/config/ultrahand/notifications");
+    const std::vector<u8> flag(msg.begin(), msg.end());
+    sd.write_entire_file(ReopenHubFlagPath(), flag);
+
+    const auto json = std::string{"{\"text\":\""} + msg +
+        "\",\"duration\":0,\"title\":\"Kefir Hub\",\"priority\":20}\n";
+    sd.write_entire_file(kNotifyJsonPath, std::vector<u8>(json.begin(), json.end()));
+    UpsertUltrahandBootHook(msg);
+    log_write("[RESTORE] armed Ultrahand reopen-hub hint\n");
+}
+
+auto ClearReopenHubHint() -> void {
+    fs::FsNativeSd sd;
+    sd.DeleteFile(ReopenHubFlagPath());
+    sd.DeleteFile(kNotifyJsonPath);
+}
+
 auto LaunchTegraRomfs(const char* romfs_name) -> bool {
     fs::FsPath te_bin;
     if (!utils::findTegraExplorerPayload(te_bin)) {
@@ -418,6 +504,7 @@ auto LaunchTegraRomfs(const char* romfs_name) -> bool {
         return false;
     }
     fsdevCommitDevice("sdmc");
+    ArmReopenHubHint();
     log_write("[RESTORE] wrote /startup.te from %s, launching %s\n",
         romfs_name, static_cast<const char*>(te_bin));
 

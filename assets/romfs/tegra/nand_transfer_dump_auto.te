@@ -1,0 +1,193 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# One-shot: Hub writes restore_pending/nand + nand_pack.txt, copies this to
+# sd:/startup.te. Mounts that SYSTEM, readsave + dumpDir inner files of
+# 0010/0011/00F0/0041 into the pack folder, dumped.ok, then loads hekate.
+# listing.files.copy() is required (readdir iterators dangle).
+
+goHekate = {
+    saveObj = dict()
+    raw = ["BYTE[]"]
+    text = ""
+    lines = []
+    bytes = ["BYTE[]"]
+    delfile("sd:/startup.te")
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
+    println("Loading hekate")
+    rc = 1
+    if (fsexists("sd:/bootloader/update.bin")) {
+        rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc && fsexists("sd:/payload.bin")) {
+        rc = payload("sd:/payload.bin")
+    }
+    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
+        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    }
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    }
+    if (rc) {
+        reboot()
+    }
+}
+
+dumpDir = {
+    saveRel = "/"
+    if (rel.len()) {
+        saveRel = "/" + rel
+    }
+    listing = saveObj.readdir(saveRel)
+    if (listing.result) {
+        listing = saveObj.readdir(rel)
+    }
+    if (listing.result) {
+        println("readdir fail", saveRel)
+        errors = errors + 1
+    } .else() {
+        files = listing.files.copy()
+        subs = listing.folders.copy()
+        files.foreach("fname") {
+            fsrc = fname
+            if (rel.len()) {
+                fsrc = rel + "/" + fname
+            }
+            println(fsrc)
+            bytes = saveObj.read("/" + fsrc)
+            out = combinepath(dstRoot, fsrc)
+            writefile(out, bytes)
+            wrote = wrote + 1
+        }
+        subs.foreach("dname") {
+            oldrel = rel
+            if (rel.len()) {
+                rel = rel + "/" + dname
+            } .else() {
+                rel = dname
+            }
+            mkdir(combinepath(dstRoot, rel))
+            dumpDir()
+            rel = oldrel
+        }
+    }
+}
+
+dumpOne = {
+    bis = combinepath("bis:/save", saveId)
+    if (!fsexists(bis)) {
+        println("skip missing", bis)
+    } .else() {
+        println("open", bis)
+        saveObj = readsave(bis)
+        dstRoot = combinepath(pack, saveId)
+        mkdir(dstRoot)
+        rel = ""
+        err_before = errors
+        wrote_before = wrote
+        dumpDir()
+        if (saveId == "80000000000000F0" && wrote == wrote_before) {
+            bytes = saveObj.read("PlayEvent.dat")
+            writefile(combinepath(dstRoot, "PlayEvent.dat"), bytes)
+            wrote = wrote + 1
+            println("PlayEvent.dat fallback")
+        }
+        if (errors > err_before) {
+            println("dump errors", saveId)
+        } .else() {
+            if (wrote > wrote_before) {
+                dumped = dumped + 1
+                if (saveId == "8000000000000010") {
+                    got0010 = 1
+                }
+                if (saveId == "80000000000000F0") {
+                    got00F0 = 1
+                }
+            }
+        }
+    }
+}
+
+clear()
+println("Kefir Hub: dump profiles & play hours")
+println("Decrypts SYSTEM saves with this console keys.")
+println("")
+
+delfile("sd:/startup.te")
+if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+}
+
+pending = "sd:/config/kefir/restore_pending"
+nandf = combinepath(pending, "nand")
+packf = combinepath(pending, "nand_pack.txt")
+
+if (!fsexists(nandf)) {
+    println("No NAND flag (emu/sys)")
+    goHekate()
+    exit()
+}
+if (!fsexists(packf)) {
+    println("No pack path file")
+    goHekate()
+    exit()
+}
+
+raw = readfile(nandf)
+text = raw.bytestostr()
+if (text == "emu") {
+    println("NAND flag: emuMMC SYSTEM")
+    if (!emu()) {
+        println("No emuMMC")
+        goHekate()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    if (text != "sys") {
+        println("Bad NAND flag", text)
+        goHekate()
+        exit()
+    }
+    println("NAND flag: sysMMC SYSTEM")
+    rc = mountsys("SYSTEM")
+}
+if (rc) {
+    println("SYSTEM mount failed", rc)
+    goHekate()
+    exit()
+}
+
+raw = readfile(packf)
+rel = raw.bytestostr()
+pack = "sd:" + rel
+println("pack:", pack)
+mkdir(pack)
+
+wrote = 0
+errors = 0
+dumped = 0
+got0010 = 0
+got00F0 = 0
+ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
+ids.foreach("saveId") {
+    dumpOne()
+}
+
+println("")
+println("wrote", wrote, "errors", errors, "saves", dumped)
+if (errors || (!got0010 && !got00F0)) {
+    println("Dump incomplete.")
+    goHekate()
+    exit()
+}
+
+writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
+println("Profiles & play hours dumped.")
+println("Open Kefir Hub to confirm.")
+goHekate()

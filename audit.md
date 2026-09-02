@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.729**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.730**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.730 поза ponytail-чергою: Backup profiles & play hours при lock 0010/00F0 → TE `nand_transfer_dump_auto.te` (не ручний dump.te); `wait_nand_dump` + dumped.ok; Ultrahand `[on-boot]` one-shot notify (overlay не запускає NRO/форвардер). Не закриває чергу §2.
 
 v0.13.729 поза ponytail-чергою: Restore profiles & play hours → TE `nand_transfer_restore_auto.te` (не Horizon Import); `wait_nand_restore` + `nand_restored.ok`; Export без змін. Не закриває чергу §2.
 

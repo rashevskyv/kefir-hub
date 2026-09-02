@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.729** (Restore profiles & play hours через TE auto). Завершені задачі збережено в
+Актуальний delivery — **v0.13.730** (NAND dump через TE auto + Ultrahand reopen hint). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.729 (Restore profiles & play hours via TE auto)
+## Поточний delivery: v0.13.730 (NAND dump via TE auto + Ultrahand reopen hint)
+
+- [x] `NAND-DUMP-TE-AUTO-730` — Backup profiles & play hours: Horizon Export якщо 0010+00F0; інакше `wait_nand_dump` + `nand_transfer_dump_auto.te` (startup.te, goHekate). Без інструкції hekate > payloads > dump.te.
+- [x] `NAND-DUMP-OFFER-730` — `OfferPendingRestore` для `wait_nand_dump`: dumped.ok / повний пак → «dump is done»; інакше retry TE.
+- [x] `NAND-DUMP-UI-730` — success без купи шляхів; pre-TE діалог короткий.
+- [x] `ULTRAHAND-REOPEN-HINT-730` — Ultrahand не запускає NRO/форвардер; one-shot `[on-boot]` notify + JSON toast; Hub чистить flag при відкритті.
+- [x] `I18N-NAND-DUMP-730` — нові рядки en/uk/ru.
+- [x] `CMAKELISTS-VERSION-BUMP-730` — `sphaira_VERSION` піднято до `0.13.730`.
+- [x] `DOCS-BUMP-730` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.729 (Restore profiles & play hours via TE auto)
 
 - [x] `NAND-RESTORE-NO-IMPORT-729` — Hub Restore profiles & play hours більше не викликає `nand_transfer::Import`; Export/backup path без змін.
 - [x] `NAND-RESTORE-PENDING-729` — `restore_pending/nand`, `nand_pack.txt`, `phase=wait_nand_restore`; best-effort raw 0010+00F0 snapshot для Undo.

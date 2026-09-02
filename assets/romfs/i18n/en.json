@@ -2222,5 +2222,12 @@
   "Backup file does not exist.": "Backup file does not exist.",
   "Send to another console": "Send to another console",
   "A opens actions. X marks backups. Minus deletes.": "A opens actions. X marks backups. Minus deletes.",
-  "Could not rename the backup.": "Could not rename the backup."
+  "Could not rename the backup.": "Could not rename the backup.",
+  "Preparing TegraExplorer dump": "Preparing TegraExplorer dump",
+  "Profiles and play hours are copied. On the other console: Restore profiles & play hours.": "Profiles and play hours are copied. On the other console: Restore profiles & play hours.",
+  "Could not stage the profiles & play hours dump on SD.": "Could not stage the profiles & play hours dump on SD.",
+  "Horizon could not copy profiles and play hours while the system is running.\n\nTegraExplorer will dump them, then return to hekate.\nAfter the console starts, open Kefir Hub to confirm the dump.": "Horizon could not copy profiles and play hours while the system is running.\n\nTegraExplorer will dump them, then return to hekate.\nAfter the console starts, open Kefir Hub to confirm the dump.",
+  "Profiles and play hours dump is done.": "Profiles and play hours dump is done.",
+  "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again.": "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again.",
+  "Open Kefir Hub to finish.": "Open Kefir Hub to finish."
 }

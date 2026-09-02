@@ -13,6 +13,7 @@ struct Report {
     bool save_0011{};
     bool save_00F0{};
     bool save_0041{};
+    bool complete{};
 };
 
 auto IsPack(const std::string& dir) -> bool;

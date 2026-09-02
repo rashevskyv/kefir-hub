@@ -36,12 +36,14 @@ inline const char* RollbackTeName() { return "Undo_restore_if_wont_boot.te"; }
 inline const char* DumpTeName() { return "account_0010_dump.te"; }
 inline const char* ApplyLinkTeName() { return "account_0010_apply_link.te"; }
 inline const char* NandRestoreTeName() { return "nand_transfer_restore_auto.te"; }
+inline const char* NandDumpTeName() { return "nand_transfer_dump_auto.te"; }
+inline const char* ReopenHubFlagPath() { return "/config/kefir/reopen_hub.flag"; }
 
 struct Pending {
     bool present{};
     bool snapshot_ok{};
     bool rolled_back{};
-    std::string phase; // wait_dump | ready | wait_link | wait_nand_restore | applied
+    std::string phase; // wait_dump | ready | wait_link | wait_nand_restore | wait_nand_dump | applied
     std::vector<std::string> pack_dirs;
 };
 
@@ -66,5 +68,10 @@ auto TrySnapshotRawSystemSaves(ui::ProgressBox* pbox, RawSnapshotReport& out) ->
 auto InstallRestoreTeScripts() -> void;
 auto LaunchTegraRomfs(const char* romfs_name) -> bool;
 auto LaunchTegraDump() -> bool;
+
+// One-shot Ultrahand [on-boot] toast: overlay cannot launch the HOME forwarder
+// or NRO, so after CFW start the user is told to open Kefir Hub.
+auto ArmReopenHubHint() -> void;
+auto ClearReopenHubHint() -> void;
 
 } // namespace sphaira::account_restore

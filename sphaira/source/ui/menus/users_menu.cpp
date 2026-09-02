@@ -35,6 +35,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -72,6 +73,42 @@ auto NormUidHex(std::string s) -> std::string {
         }
     }
     return out;
+}
+
+auto StageNandDump(nand_transfer::Report& report) -> Result {
+    fs::FsNativeSd sd;
+    if (report.dir.empty()) {
+        char stamp[32]{};
+        const auto t = std::time(nullptr);
+        std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+        report.dir = std::string(paths::DATA_ROOT) + "/nand_transfer/" + stamp;
+    }
+    R_TRY(sd.CreateDirectoryRecursively(report.dir.c_str()));
+    R_TRY(sd.CreateDirectoryRecursively(account_restore::PendingDir()));
+    sd.DeleteFile(account_restore::DumpedOkPath());
+    sd.DeleteFile(account_restore::NandRestoredOkPath());
+    R_TRY(account_restore::WriteNandFlag());
+    {
+        const std::vector<u8> body(report.dir.begin(), report.dir.end());
+        R_TRY(sd.write_entire_file(account_restore::NandPackPath(), body));
+    }
+    R_TRY(account_restore::SavePending({report.dir}, "wait_nand_dump", report.save_0010));
+    log_write("[NAND] staged TE dump pack=%s 0010=%d F0=%d\n",
+        report.dir.c_str(), report.save_0010 ? 1 : 0, report.save_00F0 ? 1 : 0);
+    R_SUCCEED();
+}
+
+auto NandDumpLooksComplete(const std::string& dir) -> bool {
+    if (dir.empty()) {
+        return false;
+    }
+    fs::FsNativeSd sd;
+    if (sd.FileExists(account_restore::DumpedOkPath())) {
+        return sd.DirExists((dir + "/8000000000000010").c_str()) ||
+               sd.DirExists((dir + "/80000000000000F0").c_str());
+    }
+    return sd.DirExists((dir + "/8000000000000010").c_str()) &&
+           sd.DirExists((dir + "/80000000000000F0").c_str());
 }
 
 auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid> {
@@ -3021,6 +3058,7 @@ auto OfferPendingRestore() -> bool {
     if (s_offered) {
         return false;
     }
+    account_restore::ClearReopenHubHint();
     auto pending = account_restore::LoadPending();
     if (pending.rolled_back) {
         s_offered = true;
@@ -3068,6 +3106,32 @@ auto OfferPendingRestore() -> bool {
                 "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot is on SD)."_i18n,
                 "OK"_i18n);
         }
+        return true;
+    }
+
+    if (pending.phase == "wait_nand_dump") {
+        s_offered = true;
+        const auto pack = pending.pack_dirs.empty() ? std::string{} : pending.pack_dirs.front();
+        if (NandDumpLooksComplete(pack)) {
+            account_restore::SavePending(pending.pack_dirs, "applied", true);
+            App::Push<OptionBox>(
+                "Profiles and play hours dump is done."_i18n,
+                "OK"_i18n);
+            return true;
+        }
+        App::Push<OptionBox>(
+            "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again."_i18n,
+            "OK"_i18n,
+            [](auto op) {
+                if (!op) {
+                    return;
+                }
+                if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
+                    App::Push<OptionBox>(
+                        "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                        "OK"_i18n);
+                }
+            });
         return true;
     }
 
@@ -3268,33 +3332,45 @@ void Menu::RunNandBackup() {
     auto report = std::make_shared<nand_transfer::Report>();
     App::Push<ProgressBox>(0, "Backup profiles & play hours"_i18n, "Backup profiles & play hours"_i18n,
         [report](auto pbox) -> Result {
-            R_TRY(nand_transfer::Export(pbox, *report));
+            const auto rc = nand_transfer::Export(pbox, *report);
+            if (R_SUCCEEDED(rc) && report->complete) {
+                R_SUCCEED();
+            }
+            pbox->NewTransfer("Preparing TegraExplorer dump"_i18n);
+            R_TRY(StageNandDump(*report));
             R_SUCCEED();
         }, [this, report](Result rc) {
+            if (R_SUCCEEDED(rc) && report->complete) {
+                App::Push<OptionBox>(
+                    "Profiles and play hours are copied. On the other console: Restore profiles & play hours."_i18n,
+                    "OK"_i18n);
+                Refresh();
+                return;
+            }
             if (R_FAILED(rc) || report->dir.empty()) {
                 App::Push<OptionBox>(
-                    "Horizon would not open the system saves. hekate > payloads > tegraexplorer, run dump.te (also under TegraExplorer/scripts). That dumps play hours without Horizon."_i18n,
+                    "Could not stage the profiles & play hours dump on SD."_i18n,
                     "OK"_i18n);
                 return;
             }
-            std::string msg = "Copied to "_i18n + report->dir + ". ";
-            if (report->save_0010 && report->save_00F0) {
-                msg += "Profiles and play hours are in the pack. On the other console: Restore profiles & play hours."_i18n;
-            } else {
-                if (report->save_0010) {
-                    msg += "Profiles copied. "_i18n;
-                } else {
-                    msg += "Profiles were locked by the system. "_i18n;
-                }
-                if (report->save_00F0) {
-                    msg += "Play hours copied. "_i18n;
-                } else {
-                    msg += "Play hours were locked. hekate > payloads > tegraexplorer, dump.te (or TegraExplorer/scripts/dump.te). "_i18n;
-                }
-                msg += "On the other console: Restore profiles & play hours, or restore.te if a save stays locked."_i18n;
-            }
-            App::Push<OptionBox>(msg, "OK"_i18n);
-            Refresh();
+            App::Push<OptionBox>(
+                "Horizon could not copy profiles and play hours while the system is running.\n\n"
+                "TegraExplorer will dump them, then return to hekate.\n"
+                "After the console starts, open Kefir Hub to confirm the dump."_i18n,
+                "Cancel"_i18n, "Launch TegraExplorer"_i18n, 1,
+                [this](auto op) {
+                    if (!op || *op != 1) {
+                        account_restore::ClearPending();
+                        return;
+                    }
+                    if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
+                        App::Push<OptionBox>(
+                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                            "OK"_i18n);
+                        return;
+                    }
+                    Refresh();
+                });
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 

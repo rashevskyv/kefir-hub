@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.729** (Restore profiles & play hours через TegraExplorer auto). Завершені плани збережено в
+Поточний delivery — **v0.13.730** (Backup profiles & play hours через TE auto + Ultrahand reopen hint). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.729 — Restore profiles & play hours via TE auto
+## Поточний delivery: v0.13.730 — NAND dump via TE auto + Ultrahand reopen hint
+
+Статус: реалізовано в primary checkout. Parsing `en`/`uk`/`ru` JSON пройдено; збірку агент не запускає за політикою checkout.
+
+1. **Backup profiles & play hours** спершу Horizon RO `Export`. Якщо 0010+00F0 відкрились — короткий success, без купи шляхів і без `dump.te`. Якщо ні — Hub сам ставить `wait_nand_dump`, пише nand flag + `nand_pack.txt`, і `LaunchTegraRomfs(nand_transfer_dump_auto.te)`. Користувача не шлють у hekate > payloads.
+2. Auto-скрипт (без меню/pause): mount за nand flag, `readsave` + `dumpDir` з `listing.files.copy()`/`folders.copy()` для 0010/0011/00F0/0041 у пак, `dumped.ok`, `goHekate`. Наступний запуск Hub: dump done / retry TE.
+3. Ultrahand **не вміє** запускати NRO чи HOME-форвардер (`open` лише `.ovl`). Перед TE Hub пише one-shot `/config/kefir/reopen_hub.flag`, JSON notify і вшиває `try:` у `/switch/.packages/boot_package.ini` `[on-boot]`: toast «Щоб завершити, відкрийте Kefir Hub.» Після відкриття Hub прапорці чистяться.
+4. i18n en/uk/ru. Version `0.13.730`.
+
+## Попередній delivery: v0.13.729 — Restore profiles & play hours via TE auto
 
 Статус: реалізовано в primary checkout. Parsing `en`/`uk`/`ru` JSON пройдено; збірку агент не запускає за політикою checkout.
 

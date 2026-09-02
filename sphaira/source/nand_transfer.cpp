@@ -189,7 +189,7 @@ void WriteReadme(fs::Fs& sd, const std::string& pack_dir) {
         "  Kefir Hub → Users → Restore profiles & play hours → pick this folder.\n"
         "  Hub stages the pack, then TegraExplorer writes/signs (auto script).\n"
         "\n"
-        "If Hub could not open play hours here, run dump.te in TegraExplorer (RCM).\n"
+        "If Hub could not open saves here, it launches TegraExplorer itself.\n"
         "Manual fallback on destination: restore.te (menu) in this pack or scripts/.\n"
         "Do NOT copy raw SYSTEM:/save blobs — that bricks.\n"
         "Back up the destination SYSTEM partition first.\n";
@@ -267,8 +267,10 @@ auto Export(ui::ProgressBox* pbox, Report& out) -> Result {
 
     R_UNLESS(dumped > 0, Result_FsEmpty);
     R_UNLESS(out.save_0010 || out.save_00F0, Result_FsEmpty);
-    log_write("[NAND] pack %s 0010=%d 0011=%d F0=%d 41=%d\n",
-        out.dir.c_str(), out.save_0010, out.save_0011, out.save_00F0, out.save_0041);
+    out.complete = out.save_0010 && out.save_00F0;
+    log_write("[NAND] pack %s 0010=%d 0011=%d F0=%d 41=%d complete=%d\n",
+        out.dir.c_str(), out.save_0010, out.save_0011, out.save_00F0, out.save_0041,
+        out.complete ? 1 : 0);
     R_SUCCEED();
 }
 

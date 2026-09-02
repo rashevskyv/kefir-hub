@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.729** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.730** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.730 — Backup profiles & play hours через TegraExplorer auto
+
+- Діалог v0.13.729 «hekate > payloads > tegraexplorer, run dump.te» прибрано. **Backup profiles & play hours** як і раніше пробує Horizon Export; якщо 0010+00F0 відкрились — короткий «скопійовано», без купи шляхів.
+- Якщо Horizon не віддав сейви: Hub пише `wait_nand_dump` + nand flag + `nand_pack.txt` і сам запускає `nand_transfer_dump_auto.te` (як Restore / Backup User). Скрипт без меню: `readsave` + `dumpDir` з `.copy()`, `dumped.ok`, `goHekate`. Наступний запуск Hub каже, що дамп готовий, або ще раз запускає TE.
+- Ultrahand Overlay **не запускає** NRO і не вміє відкрити HOME-форвардер (`open` лише `.ovl`). Перед TE Hub ставить one-shot toast: flag + `/config/ultrahand/notifications/kefir-reopen.notify` + `try:` у `/switch/.packages/boot_package.ini` `[on-boot]`. Після старту CFW Ultrahand пише «Щоб завершити, відкрийте Kefir Hub.» Відкриття Hub знімає hint. i18n en/uk/ru. Версія `0.13.730`. Збірку агент не запускав.
 
 ## v0.13.729 — Restore profiles & play hours через TegraExplorer auto
 
