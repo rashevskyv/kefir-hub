@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.740** (fix TE dump_auto combinepath on nested save files). Завершені задачі збережено в
+Актуальний delivery — **v0.13.741** (TE dump_auto known-tree clear and reboot). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.740 (fix TE dump_auto combinepath on nested save files)
+## Поточний delivery: v0.13.741 (TE dump_auto known-tree clear and reboot)
+
+- [x] `TE-DUMP-AUTO-KNOWN-TREE-741` — `nand_transfer_dump_auto.te`: known-tree dumpFilesIn/dumpKnownTree; skip missing optional dirs; без recurse/combinepath/nested foreach.
+- [x] `TE-DUMP-AUTO-CLEAR-RESULT-741` — `clear()` на кожен save і перед RESULT; `pause()` + `goHekate()`; `dumped.ok` лише при got0010+got00F0.
+- [x] `CMAKELISTS-VERSION-BUMP-741` — `sphaira_VERSION` піднято до `0.13.741`.
+- [x] `DOCS-BUMP-741` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.740 (fix TE dump_auto combinepath on nested save files)
 
 - [x] `TE-DUMP-AUTO-COMBINEPATH-740` — `nand_transfer_dump_auto.te`: nested `fsrc`/`rel` через конкатенацію; `packUnix` замість reuse `rel`.
 - [x] `TE-RESTORE-COMBINEPATH-740` — `nand_transfer_restore_auto.te` / `nand_transfer_restore.te`: `writeDir` nested `rel` через `srcRoot + "/" + rel`.

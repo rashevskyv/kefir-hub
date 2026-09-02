@@ -4,9 +4,10 @@
 # REQUIRE VER 4.0.0
 
 # One-shot: Hub writes restore_pending/nand + nand_pack.txt, copies this to
-# sd:/startup.te. Mounts that SYSTEM, readsave + dumpDir inner files of
-# 0010/0011/00F0/0041 into the pack folder, dumped.ok, then loads hekate.
-# listing.files.copy() is required (readdir iterators dangle).
+# sd:/startup.te. Known-tree dump of 0010/0011/00F0/0041 (test.te style:
+# readdir("/su/baas"), read("/su/"+name), writefile("sd:/...", bytes)).
+# TE 4.2.0 does not scroll: clear() each save and before RESULT.
+# Missing optional dirs are skip, not error. Then pause, then hekate.
 
 goHekate = {
     saveObj = dict()
@@ -38,77 +39,83 @@ goHekate = {
     }
 }
 
-dumpDir = {
-    saveRel = "/"
-    if (rel.len()) {
-        saveRel = "/" + rel
-    }
-    listing = saveObj.readdir(saveRel)
+dumpFilesIn = {
+    println("dir", savePath)
+    listing = saveObj.readdir(savePath)
     if (listing.result) {
-        listing = saveObj.readdir(rel)
-    }
-    if (listing.result) {
-        println("readdir fail", saveRel)
-        errors = errors + 1
+        println("skip", savePath)
     } .else() {
+        if (savePath != "/") {
+            mkdir(dstRoot + savePath)
+        }
         files = listing.files.copy()
-        subs = listing.folders.copy()
+        println(" files", files.len())
         files.foreach("fname") {
-            fsrc = fname
-            if (rel.len()) {
-                fsrc = rel + "/" + fname
+            fsrc = savePath + "/" + fname
+            if (savePath == "/") {
+                fsrc = "/" + fname
             }
             println(fsrc)
-            bytes = saveObj.read("/" + fsrc)
-            out = dstRoot + "/" + fsrc
+            bytes = saveObj.read(fsrc)
+            out = dstRoot + fsrc
             writefile(out, bytes)
             wrote = wrote + 1
-        }
-        subs.foreach("dname") {
-            oldrel = rel
-            if (rel.len()) {
-                rel = rel + "/" + dname
-            } .else() {
-                rel = dname
-            }
-            mkdir(dstRoot + "/" + rel)
-            dumpDir()
-            rel = oldrel
         }
     }
 }
 
+dumpKnownTree = {
+    mkdir(dstRoot)
+    savePath = "/"
+    dumpFilesIn()
+    savePath = "/su"
+    dumpFilesIn()
+    savePath = "/su/baas"
+    dumpFilesIn()
+    savePath = "/su/nas"
+    dumpFilesIn()
+    savePath = "/su/avators"
+    dumpFilesIn()
+    savePath = "/su/cache"
+    dumpFilesIn()
+}
+
 dumpOne = {
-    bis = combinepath("bis:/save", saveId)
+    clear()
+    println("Kefir Hub: dump profiles & play hours")
+    println("save", saveId)
+    println("pack:", pack)
+    println("")
+    bis = "bis:/save/" + saveId
     if (!fsexists(bis)) {
         println("skip missing", bis)
     } .else() {
         println("open", bis)
         saveObj = readsave(bis)
-        dstRoot = combinepath(pack, saveId)
+        dstRoot = pack + "/" + saveId
         mkdir(dstRoot)
-        rel = ""
-        err_before = errors
         wrote_before = wrote
-        dumpDir()
-        if (saveId == "80000000000000F0" && wrote == wrote_before) {
+        if (saveId == "80000000000000F0") {
+            savePath = "/"
+            dumpFilesIn()
+            println("PlayEvent.dat")
             bytes = saveObj.read("PlayEvent.dat")
-            writefile(combinepath(dstRoot, "PlayEvent.dat"), bytes)
+            writefile(dstRoot + "/PlayEvent.dat", bytes)
             wrote = wrote + 1
-            println("PlayEvent.dat fallback")
-        }
-        if (errors > err_before) {
-            println("dump errors", saveId)
         } .else() {
-            if (wrote > wrote_before) {
-                dumped = dumped + 1
-                if (saveId == "8000000000000010") {
-                    got0010 = 1
-                }
-                if (saveId == "80000000000000F0") {
-                    got00F0 = 1
-                }
+            dumpKnownTree()
+        }
+        if (wrote > wrote_before) {
+            dumped = dumped + 1
+            if (saveId == "8000000000000010") {
+                got0010 = 1
             }
+            if (saveId == "80000000000000F0") {
+                got00F0 = 1
+            }
+            println("ok", saveId, "files", wrote - wrote_before)
+        } .else() {
+            println("empty", saveId)
         }
     }
 }
@@ -124,16 +131,21 @@ if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
 }
 
 pending = "sd:/config/kefir/restore_pending"
-nandf = combinepath(pending, "nand")
-packf = combinepath(pending, "nand_pack.txt")
+nandf = pending + "/nand"
+packf = pending + "/nand_pack.txt"
+delfile(pending + "/dump_result.txt")
 
 if (!fsexists(nandf)) {
     println("No NAND flag (emu/sys)")
+    println("Open Kefir Hub to continue.")
+    pause()
     goHekate()
     exit()
 }
 if (!fsexists(packf)) {
     println("No pack path file")
+    println("Open Kefir Hub to continue.")
+    pause()
     goHekate()
     exit()
 }
@@ -144,6 +156,8 @@ if (text == "emu") {
     println("NAND flag: emuMMC SYSTEM")
     if (!emu()) {
         println("No emuMMC")
+        println("Open Kefir Hub to continue.")
+        pause()
         goHekate()
         exit()
     }
@@ -151,6 +165,8 @@ if (text == "emu") {
 } .else() {
     if (text != "sys") {
         println("Bad NAND flag", text)
+        println("Open Kefir Hub to continue.")
+        pause()
         goHekate()
         exit()
     }
@@ -159,6 +175,8 @@ if (text == "emu") {
 }
 if (rc) {
     println("SYSTEM mount failed", rc)
+    println("Open Kefir Hub to continue.")
+    pause()
     goHekate()
     exit()
 }
@@ -168,27 +186,41 @@ packUnix = raw.bytestostr()
 pack = "sd:" + packUnix
 println("pack:", pack)
 mkdir(pack)
+delfile(pack + "/dump_result.txt")
 
 wrote = 0
-errors = 0
 dumped = 0
 got0010 = 0
 got00F0 = 0
-rel = ""
 ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
 ids.foreach("saveId") {
     dumpOne()
 }
 
-println("")
-println("wrote", wrote, "errors", errors, "saves", dumped)
-if (errors || (!got0010 && !got00F0)) {
-    println("Dump incomplete.")
+clear()
+println("Kefir Hub: dump profiles & play hours")
+println("RESULT")
+println("wrote", wrote)
+println("saves", dumped)
+println("got0010", got0010)
+println("got00F0", got00F0)
+if (!got0010) {
+    println("INCOMPLETE: no profiles (0010)")
+    println("Open Kefir Hub to retry.")
+    pause()
+    goHekate()
+    exit()
+}
+if (!got00F0) {
+    println("INCOMPLETE: no play hours (00F0)")
+    println("Open Kefir Hub to retry.")
+    pause()
     goHekate()
     exit()
 }
 
-writefile(combinepath(pending, "dumped.ok"), ["BYTE[]", 79, 75])
-println("Profiles & play hours dumped.")
+writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
+println("OK  profiles and play hours dumped.")
 println("Open Kefir Hub to confirm.")
+pause()
 goHekate()

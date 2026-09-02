@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.740** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.741** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.741 — TE dump_auto known-tree clear and reboot
+
+- TE 4.2.0: recursive/concat dump crash або overlay без scroll; missing `/su/baas` блокував `dumped.ok` після доброго 0010+00F0. Console-proven pack: `/config/kefir/nand_transfer/20260902_180604/`.
+- `nand_transfer_dump_auto.te` замінено known-tree dump (стиль `test.te`): `dumpFilesIn` / `dumpKnownTree` для `/`, `/su`, `/su/baas|nas|avators|cache`; 00F0 — root files + `PlayEvent.dat`.
+- Без recurse, nested foreach, `combinepath` зі `/` у 2-му арг., без `dump_result.txt`. Missing optional dirs = skip. `clear()` кожен save і перед RESULT; `pause()` → `goHekate()`; `dumped.ok` лише якщо got0010+got00F0.
+- Hub C++ / restore / dump.te menu / i18n не чіпали. Version `0.13.741`. Збірку агент не запускав у 4.5 turn. A1–A7 не закриті.
 
 ## v0.13.740 — fix TE dump_auto combinepath on nested save files
 

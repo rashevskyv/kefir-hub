@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.740** (fix TE dump_auto combinepath on nested save files). Завершені плани збережено в
+Поточний delivery — **v0.13.741** (TE dump_auto known-tree clear and reboot). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.740 — fix TE dump_auto combinepath on nested save files
+## Поточний delivery: v0.13.741 — TE dump_auto known-tree clear and reboot
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Recursive `dumpDir` + `combinepath` / concat-only dump на TE 4.2.0: crash або overlay без scroll; missing `/su/baas` трактувався як error і блокував `dumped.ok` навіть після доброго 0010+00F0.
+2. `nand_transfer_dump_auto.te` замінено console-proven known-tree dump (стиль `test.te`): `dumpFilesIn` / `dumpKnownTree` для `/`, `/su`, `/su/baas|nas|avators|cache`; без recurse, без nested foreach, без `combinepath` зі `/` у 2-му арг.; missing optional dirs = skip.
+3. `clear()` на кожен save і перед RESULT; `pause()` потім `goHekate()`; `dumped.ok` лише якщо `got0010` і `got00F0`. Без `dump_result.txt`. Hub C++ / restore / i18n не чіпали.
+4. Version `0.13.741`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.740 — fix TE dump_auto combinepath on nested save files
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 
