@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.733** (USB auto-install balances usable space; live yellow storage bar). Завершені плани збережено в
+Поточний delivery — **v0.13.734** (split Settings menu into settings/ TUs). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.733 — USB auto-install balances usable space; live yellow storage bar
+## Поточний delivery: v0.13.734 — split Settings menu into settings/ TUs
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка Settings без змін — лише розкладка файлів (architecture slice 3).
+
+1. Спільні helpers з anonymous namespace винесені в `settings/settings_internal.{hpp,cpp}` (`OnOff`, `ClampIndex`, `SettingsValueColour`, `MakeHeader`/`MakeFolderItem`/`MakeBoolItem`/`MakeOptionItem`, `ResolveItemIndex`, draw helpers, `LANGUAGE_ITEMS` / `TEXT_SCROLL_SPEED_ITEMS`, `NETWORK_LOCATION_ID`). Публічний `settings_menu.hpp` без змін API.
+2. Builders + submenu TUs: `settings_categories` (`Menu::BuildCategories` + category builders), `settings_software`, `settings_dbi`, `settings_kefir` (+ `MakePackageAction` header), `settings_themes`, `settings_translate`, `settings_sources` (`TestLocationConnection`, `SourceEditMenu`, `BuildSourcesCategoryItems`). Шість окремих типів меню не уніфіковано.
+3. Slim `settings_menu.cpp` (~644) тримає лише `Menu` ctor/dtor/focus/Update/Draw/DrawItemRow/folder/navigation. Існуючі `settings_{fs_utils,translations,tweaks,fancurve}` без змін.
+4. Version `0.13.734`. Черга audit §2 A1–A7 **не** закрита; gray zone не чіпали. Наступний live slice: `game_menu.cpp` (не `gc_menu`).
+
+## Попередній delivery: v0.13.733 — USB auto-install balances usable space; live yellow storage bar
 
 Статус: реалізовано в primary checkout. Збірку й тести агент не запускає за політикою checkout.
 

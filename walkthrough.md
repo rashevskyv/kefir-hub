@@ -1,7 +1,22 @@
-Актуальний delivery — **v0.13.733** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.734** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.734 — split Settings menu into settings/ TUs
+
+- Публічний API лишився в `ui/menus/settings_menu.hpp` (`Menu`, `SoftwareMenu`, `DbiMenu`, `KefirSettingsMenu`, `ThemesMenu`, `TranslateMenu`, `SourceEditMenu`, `TestLocationConnection`, SettingsItem types). Header не розбивали.
+- Нові TU (логіка скопійована byte-for-byte з колишнього `settings_menu.cpp`):
+  - `settings/settings_internal.{hpp,cpp}` — спільні helpers / draw / `LANGUAGE_ITEMS` / `NETWORK_LOCATION_ID`
+  - `settings/settings_categories.cpp` — main Settings builders + `Menu::BuildCategories`
+  - `settings/settings_software.cpp` — `BuildSoftwareItems` + `SoftwareMenu`
+  - `settings/settings_dbi.cpp` — `BuildDbiItems` + settings `DbiMenu`
+  - `settings/settings_kefir.cpp` (+ `settings_kefir.hpp` для `MakePackageAction`) — Kefir toggles/actions + `KefirSettingsMenu`
+  - `settings/settings_themes.cpp` — theme package/favorite rows + `ThemesMenu`
+  - `settings/settings_translate.cpp` — interface translation list + `TranslateMenu`
+  - `settings/settings_sources.cpp` (+ `settings_sources.hpp`) — Sources category, `TestLocationConnection`, `SourceEditMenu`
+  - slim `settings_menu.cpp` (~644) — Settings `Menu` shell only
+- Існуючі `settings_{fs_utils,translations,tweaks,fancurve}` без змін. Version `0.13.734`. A1–A7 / gray zone не чіпали. Збірку агент не запускав. Наступний live: `game_menu.cpp` (не `gc_menu`).
 
 ## v0.13.733 — USB auto-install balances usable space; live yellow storage bar
 

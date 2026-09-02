@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.733** (USB auto-install balances usable space; live yellow storage bar). Завершені задачі збережено в
+Актуальний delivery — **v0.13.734** (split Settings menu into settings/ TUs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.733 (USB auto-install balances usable space; live yellow storage bar)
+## Поточний delivery: v0.13.734 (split Settings menu into settings/ TUs)
+
+- [x] `SETTINGS-INTERNAL-734` — спільні helpers у `settings/settings_internal.{hpp,cpp}` (не в публічному `settings_menu.hpp`).
+- [x] `SETTINGS-CATEGORIES-734` — category builders + `Menu::BuildCategories` у `settings_categories.cpp`.
+- [x] `SETTINGS-SUBMENUS-734` — окремі TU: software / dbi / kefir / themes / translate / sources (шість типів без unify).
+- [x] `SETTINGS-SLIM-MENU-734` — slim `settings_menu.cpp` (~644): Menu shell only.
+- [x] `CMAKELISTS-VERSION-BUMP-734` — `sphaira_VERSION` піднято до `0.13.734`; нові settings sources у CMake.
+- [x] `DOCS-BUMP-734` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.733 (USB auto-install balances usable space; live yellow storage bar)
 
 - [x] `INSTALL-PLAN-AUTO-BALANCE-733` — `PlanPickSd` loc 4 мінімізує gap usable free; AbsDiff helper; reserve лишається в callers.
 - [x] `INSTALL-PLAN-TESTS-733` — оновлено/додано balance cases у `tests/test_install_plan.cpp` (бінарник не ганяли).
