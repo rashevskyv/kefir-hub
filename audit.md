@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.739**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.740**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.740 поза ponytail-чергою: TE `nand_transfer_dump_auto.te` combinepath crash на nested save files (`su/registry.dat`); dump/restore scripts пишуть nested шляхи конкатенацією; pack лишається `/config/kefir/nand_transfer/<stamp>/`. Hub C++ staging не чіпали. **Не закриває** чергу §2 A1–A7.
 
 v0.13.739 поза ponytail-чергою: compile fix після haze split — `SUPPORTED_EXT`/`NRO_EXT` `inline constexpr` з bound; `FsSaveProxy` знову має `m_mounts`/`m_mount_tick`/`m_mount_mutex` і закритий `};` перед `MakeFsSaveProxy`. MTP логіку не рефакторили. **Не закриває** чергу §2 A1–A7.
 

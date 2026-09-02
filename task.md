@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.739** (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members). Завершені задачі збережено в
+Актуальний delivery — **v0.13.740** (fix TE dump_auto combinepath on nested save files). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.739 (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members)
+## Поточний delivery: v0.13.740 (fix TE dump_auto combinepath on nested save files)
+
+- [x] `TE-DUMP-AUTO-COMBINEPATH-740` — `nand_transfer_dump_auto.te`: nested `fsrc`/`rel` через конкатенацію; `packUnix` замість reuse `rel`.
+- [x] `TE-RESTORE-COMBINEPATH-740` — `nand_transfer_restore_auto.te` / `nand_transfer_restore.te`: `writeDir` nested `rel` через `srcRoot + "/" + rel`.
+- [x] `CMAKELISTS-VERSION-BUMP-740` — `sphaira_VERSION` піднято до `0.13.740`.
+- [x] `DOCS-BUMP-740` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.739 (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members)
 
 - [x] `HAZE-SUPPORTED-EXT-739` — `SUPPORTED_EXT` / `NRO_EXT` як `inline constexpr` з bound у `haze_internal.hpp`; визначення прибрано з `haze_internal.cpp`.
 - [x] `HAZE-FSSAVE-PROXY-739` — відновлено `m_mounts` / `m_mount_tick` / `m_mount_mutex` і `};` у `FsSaveProxy`; `MakeFsSaveProxy` поза struct.

@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.739** (fix MTP haze split: SUPPORTED_EXT bound, FsSaveProxy members). Завершені плани збережено в
+Поточний delivery — **v0.13.740** (fix TE dump_auto combinepath on nested save files). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.739 — fix MTP haze split (SUPPORTED_EXT bound, FsSaveProxy members)
+## Поточний delivery: v0.13.740 — fix TE dump_auto combinepath on nested save files
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Backup profiles & play hours через TE: `nand_transfer_dump_auto.te` падав на `su/registry.dat` — `combinepath(dstRoot, fsrc)` не приймає `/` у другому аргументі; після крашу `rel` губився на `mkdir`.
+2. `dumpDir`: `out` / `mkdir` через конкатенацію `dstRoot + "/" + …`; шлях пака з `nand_pack.txt` у `packUnix` (не в `rel`); перед dump `rel = ""`.
+3. Restore scripts: `writeDir` для nested `rel` теж через `srcRoot + "/" + rel` (не `combinepath` з slash). Hub C++ staging не чіпали. Pack лишається `/config/kefir/nand_transfer/<stamp>/`.
+4. Version `0.13.740`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.739 — fix MTP haze split (SUPPORTED_EXT bound, FsSaveProxy members)
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

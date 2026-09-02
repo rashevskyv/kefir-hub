@@ -41,7 +41,7 @@ goHekate = {
 writeDir = {
     src = srcRoot
     if (rel.len()) {
-        src = combinepath(srcRoot, rel)
+        src = srcRoot + "/" + rel
     }
     listing = readdir(src)
     if (listing.result) {

@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.739** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.740** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.740 — fix TE dump_auto combinepath on nested save files
+
+- TE 4.2.0 Backup profiles & play hours: pack folder створювався, dump падав на `su/registry.dat` — `combinepath` не приймає `/` у 2-му аргументі; `dumped.ok` не писався.
+- `nand_transfer_dump_auto.te`: `out = dstRoot + "/" + fsrc`, `mkdir(dstRoot + "/" + rel)`; шлях пака в `packUnix`; перед dump `rel = ""`.
+- `nand_transfer_restore_auto.te` / `nand_transfer_restore.te`: nested `writeDir` через `srcRoot + "/" + rel`; `combinepath(src, fname)` лишився (однорівневе ім’я).
+- Hub C++ dump/restore staging не чіпали. Pack: `/config/kefir/nand_transfer/<stamp>/`. Version `0.13.740`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.739 — fix MTP haze split (SUPPORTED_EXT bound, FsSaveProxy members)
 
