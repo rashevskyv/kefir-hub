@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.732**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.733**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.733 поза ponytail-чергою: USB/DBI Auto install балансує usable free (`PlanPickSd` + `ChooseInstallTarget` + live `RefreshAutoInstallTarget`); під Installing жовтий bar = remaining поточного пакета (без проєкції всієї черги). Не закриває чергу §2.
 
 v0.13.732 поза ponytail-чергою: architecture slice 2 — live File Browser split (`filebrowser.cpp` → `filebrowser/*` TUs + slim Menu). Живі Advanced options і MTP/FTP share поточної теки збережено/перенесено. Gray zone (Tools Coming soon, `gc_menu`, dead MTP install) не чіпали. **Не закриває** чергу §2 A1–A7. Наступні live slices (окремі коміти): settings_menu category builders, `game_menu` (не `gc_menu`).
 

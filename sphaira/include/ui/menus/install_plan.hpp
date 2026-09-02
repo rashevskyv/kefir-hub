@@ -4,6 +4,10 @@
 
 namespace sphaira::ui::menu::dbi {
 
+constexpr int64_t AbsDiff(int64_t a, int64_t b) {
+    return a >= b ? a - b : b - a;
+}
+
 // Which target one package should go to, given the budgets left after the
 // packages before it in the queue were placed. Pure, so the packing rules can
 // be checked without a console (see tests/test_install_plan.cpp).
@@ -11,14 +15,25 @@ namespace sphaira::ui::menu::dbi {
 // loc matches the "Install location" setting:
 //   0 SD only, 1 system only, 2 system first, 3 SD first, 4 automatic.
 // Returns true for microSD.
+// Callers pass usable free (free - reserve); this helper does not bake reserve in.
 constexpr bool PlanPickSd(long loc, int64_t size, int64_t free_sd, int64_t free_nand) {
     switch (loc) {
         case 0: return true;
         case 1: return false;
         case 2: return free_nand < size;   // fill system, spill to SD
         case 3: return free_sd >= size;    // fill SD, spill to system
-        default:                           // automatic: keep filling the roomier one
-            return free_sd >= free_nand ? free_sd >= size : free_nand < size;
+        default: {                         // automatic: balance remaining usable
+            const bool fits_sd = free_sd >= size;
+            const bool fits_nand = free_nand >= size;
+            if (fits_sd && fits_nand) {
+                const auto gap_sd = AbsDiff(free_sd - size, free_nand);
+                const auto gap_nand = AbsDiff(free_nand - size, free_sd);
+                return gap_sd <= gap_nand; // tie → SD
+            }
+            if (fits_sd) return true;
+            if (fits_nand) return false;
+            return free_sd >= free_nand;   // neither fits: roomier (tie → SD)
+        }
     }
 }
 

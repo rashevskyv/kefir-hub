@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.732** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.733** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.733 — USB auto-install balances usable space; live yellow storage bar
+
+- Automatic install location (`PlanPickSd` loc 4) тепер балансує usable free між NAND і SD: обирає dest з меншим gap після пакета; tie → SD; якщо вміщується лише один — він; якщо жоден — roomier. Reserve як і раніше віднімають callers.
+- `yati::ChooseInstallTarget` і fallback `GetInstallSdEnable` (Auto) рахують usable (`free - reserve`) і йдуть через ті самі правила.
+- USB і local DBI черги: перед стартом кожного Auto-пакета `RefreshAutoInstallTarget` свіжо опитує місце і переписує `install_sd`/`planned_sd`; pinned Sd/Nand лишаються; override передається в yati, щоб не було другого stale pick.
+- Під час Installing header NAND/SD: жовтий = remaining поточного пакета на його dest; повну чергу більше не проєктуємо поверх уже зменшеного free (хибний overflow-red). ReviewQueue повний plan без змін.
+- Оновлено `tests/test_install_plan.cpp` (balance 20/10→8GB SD, 11/10→2GB SD). Version `0.13.733`. Збірку й тести агент не запускав.
 
 ## v0.13.732 — File Browser folder split
 

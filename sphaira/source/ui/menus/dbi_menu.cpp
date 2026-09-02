@@ -836,23 +836,33 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (state == State::Installing) {
-        // keep projecting the space still needed by the remaining packages, with
-        // the package actually being written picked out in its own colour.
+        // yellow = remaining bytes of the package being written, on its dest only.
+        // Actual free comes from polled chrome; do not project the rest of the queue.
         s64 sd_required{}, nand_required{};
         s64 sd_focus{}, nand_focus{};
-        for (size_t i = 0; i < m_queue.size(); i++) {
-            const auto& entry = m_queue[i];
-            if (!entry.install_selected || entry.installed || R_FAILED(entry.analysis_result)) continue;
-            const u64 title_id = GetQueueEntryTitleId(entry);
-            if (!IsTitleAlreadyInstalled(title_id)) {
+        bool show = false;
+        if (m_current_package < m_queue.size()) {
+            const auto& entry = m_queue[m_current_package];
+            if (entry.install_selected && !entry.installed
+                && R_SUCCEEDED(entry.analysis_result) && R_SUCCEEDED(entry.install_result)) {
                 const auto size = PlanSize(entry);
-                AddSizeSaturated(entry.install_sd ? sd_required : nand_required, size);
-                if (i == m_current_package) {
-                    (entry.install_sd ? sd_focus : nand_focus) = size;
+                const auto written = std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, size);
+                const auto remaining = size - written;
+                if (remaining > 0) {
+                    if (entry.install_sd) {
+                        sd_required = sd_focus = remaining;
+                    } else {
+                        nand_required = nand_focus = remaining;
+                    }
+                    show = true;
                 }
             }
         }
-        SetStorageProjection(nand_required, sd_required, nand_focus, sd_focus);
+        if (show) {
+            SetStorageProjection(nand_required, sd_required, nand_focus, sd_focus);
+        } else {
+            ClearStorageHighlight();
+        }
     } else {
         ClearStorageHighlight();
     }
@@ -1460,13 +1470,15 @@ void Menu::ThreadFunction() {
                 if (!selected) continue;
                 if (m_cancel_requested) break;
 
+                // Auto re-picks from live usable space; pinned Sd/Nand stay frozen.
+                plan_sd = RefreshAutoInstallTarget(i);
+
                 AddLog("Starting: "_i18n + name, LogKind::Event);
                 yati::ConfigOverride override{};
                 override.skip_if_already_installed = App::GetSaveSettingsGlobally()
                     ? App::GetApp()->m_skip_if_already_installed.Get()
                     : m_session_skip_if_already_installed;
-                // the plan already resolved location mode, reserves and packing;
-                // the install just obeys it.
+                // pass the resolved target so yati does not ChooseInstallTarget again.
                 override.sd_card_install = plan_sd;
                 const auto read_before = m_total_read.load();
                 const auto write_before = m_total_write.load();
@@ -1701,13 +1713,15 @@ void Menu::LocalThreadFunction() {
             if (!selected) continue;
             if (m_cancel_requested) break;
 
+            // Auto re-picks from live usable space; pinned Sd/Nand stay frozen.
+            plan_sd = RefreshAutoInstallTarget(i);
+
             AddLog("Starting: "_i18n + name, LogKind::Event);
             yati::ConfigOverride override{};
             override.skip_if_already_installed = App::GetSaveSettingsGlobally()
                 ? App::GetApp()->m_skip_if_already_installed.Get()
                 : m_session_skip_if_already_installed;
-            // the plan already resolved location mode, reserves and packing;
-            // the install just obeys it.
+            // pass the resolved target so yati does not ChooseInstallTarget again.
             override.sd_card_install = plan_sd;
 
             const auto read_before = m_total_read.load();
@@ -1845,6 +1859,44 @@ void Menu::RecomputePlan() {
         e.planned_sd = PlanPickSd(loc, size, free_sd, free_nand);
         PlanTake(e.planned_sd ? free_sd : free_nand, size);
     }
+}
+
+bool Menu::RefreshAutoInstallTarget(size_t index) {
+    InstallTarget target{InstallTarget::Auto};
+    s64 size{};
+    bool current_sd{};
+    bool selected{};
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (index >= m_queue.size()) return false;
+        const auto& e = m_queue[index];
+        selected = e.install_selected;
+        target = e.target;
+        size = PlanSize(e);
+        current_sd = e.install_sd;
+    }
+    if (!selected || target != InstallTarget::Auto) {
+        return current_sd;
+    }
+
+    const auto spaces = GetPolledData(true);
+    const bool global = App::GetSaveSettingsGlobally();
+    const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+    const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
+    const long loc = global ? App::GetInstallLocation() : m_session_install_location;
+    const s64 usable_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
+    const s64 usable_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
+
+    const auto cand = PlanEvaluateCandidate(loc, size, usable_sd, usable_nand);
+    const bool pick = cand.fits ? cand.is_sd : PlanPickSd(loc, size, usable_sd, usable_nand);
+
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (index >= m_queue.size()) return pick;
+        m_queue[index].install_sd = pick;
+        m_queue[index].planned_sd = pick;
+    }
+    return pick;
 }
 
 bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections) {

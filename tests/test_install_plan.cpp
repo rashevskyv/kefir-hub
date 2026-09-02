@@ -58,6 +58,7 @@ int main() {
         assert(s.sd + s.nand == 105 * GB);
         assert(s.nand >= 10 * GB);
         assert(s.sd <= 90 * GB + 5 * GB); // last package may straddle the edge
+        assert(s.nand <= 10 * GB + 5 * GB);
     }
 
     // automatic with room everywhere still balances rather than dumping it all
@@ -65,6 +66,20 @@ int main() {
     {
         const auto s = Pack(4, {10 * GB, 10 * GB}, 200 * GB, 200 * GB);
         assert(s.sd == 10 * GB && s.nand == 10 * GB);
+    }
+
+    // balance: 20/10 free, 8 GB package → SD (12 vs 10 beats 20 vs 2).
+    {
+        assert(PlanPickSd(4, 8 * GB, 20 * GB, 10 * GB));
+        const auto s = Pack(4, {8 * GB}, 20 * GB, 10 * GB);
+        assert(s.sd == 8 * GB && s.nand == 0);
+    }
+
+    // balance: 11/10 free, 2 GB package → SD (10 vs 10 beats 11 vs 8).
+    {
+        assert(PlanPickSd(4, 2 * GB, 11 * GB, 10 * GB));
+        const auto s = Pack(4, {2 * GB}, 11 * GB, 10 * GB);
+        assert(s.sd == 2 * GB && s.nand == 0);
     }
 
     // budgets never wrap negative.

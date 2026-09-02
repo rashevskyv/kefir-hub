@@ -201,7 +201,9 @@ auto App::GetInstallSdEnable() -> bool {
         s64 free_nand = 0;
         s64 free_sd = 0;
         fs::GetStorageSpaces(&free_nand, nullptr, &free_sd, nullptr);
-        return free_sd > free_nand;
+        const s64 usable_nand = std::max<s64>(0, free_nand - GetInstallReserveMb() * 1024LL * 1024LL);
+        const s64 usable_sd = std::max<s64>(0, free_sd - GetInstallReserveSdMb() * 1024LL * 1024LL);
+        return usable_sd >= usable_nand;
     }
     return true;
 }

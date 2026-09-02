@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.732** (File Browser folder split). Завершені задачі збережено в
+Актуальний delivery — **v0.13.733** (USB auto-install balances usable space; live yellow storage bar). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.732 (File Browser folder split)
+## Поточний delivery: v0.13.733 (USB auto-install balances usable space; live yellow storage bar)
+
+- [x] `INSTALL-PLAN-AUTO-BALANCE-733` — `PlanPickSd` loc 4 мінімізує gap usable free; AbsDiff helper; reserve лишається в callers.
+- [x] `INSTALL-PLAN-TESTS-733` — оновлено/додано balance cases у `tests/test_install_plan.cpp` (бінарник не ганяли).
+- [x] `YATI-CHOOSE-USABLE-733` — `ChooseInstallTarget` → usable + `PlanPickSd`; `GetInstallSdEnable` Auto на usable.
+- [x] `USB-AUTO-REPICK-733` — `RefreshAutoInstallTarget` на старті пакета (USB + local); pinned Sd/Nand без змін.
+- [x] `INSTALLING-BAR-CURRENT-733` — під Installing жовтий = remaining поточного пакета; без проєкції всієї черги.
+- [x] `CMAKELISTS-VERSION-BUMP-733` — `sphaira_VERSION` піднято до `0.13.733`.
+- [x] `DOCS-BUMP-733` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.732 (File Browser folder split)
 
 - [x] `FILEBROWSER-MV-EXISTING-732` — `filebrowser_ops` / `assoc` / `forwarder` перенесено `git mv` у `source/ui/menus/filebrowser/`.
 - [x] `FILEBROWSER-INTERNAL-732` — спільні helpers у `filebrowser/filebrowser_internal.{hpp,cpp}` (не в публічному `filebrowser.hpp`).

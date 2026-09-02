@@ -39,8 +39,8 @@ struct QueueEntry {
     bool install_selected{};
     bool analysis_deferred{};
     // where the queue plan puts this package. planned_sd is recomputed while the
-    // queue is being reviewed; install_sd is the frozen copy the install thread
-    // obeys, so the run lands exactly where the review screen promised.
+    // queue is being reviewed; install_sd is copied at confirm, and Auto entries
+    // are re-picked from live usable space at each package start.
     bool planned_sd{};
     bool install_sd{};
     bool rejected_no_space{};
@@ -120,6 +120,9 @@ private:
     // assigns every selected package to NAND or SD up front, honouring the
     // per-target reserve and the install-location priority. Call with the mutex.
     void RecomputePlan();
+    // For Auto targets, re-picks SD/NAND from fresh usable free space at package
+    // start. Pinned Sd/Nand are left alone. Returns the install_sd to use.
+    bool RefreshAutoInstallTarget(size_t index);
     bool ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections);
     void SetIndex(s64 index);
     void CycleSelectedTarget();

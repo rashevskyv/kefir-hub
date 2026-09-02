@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.732** (File Browser folder split; без зміни поведінки). Завершені плани збережено в
+Поточний delivery — **v0.13.733** (USB auto-install balances usable space; live yellow storage bar). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.732 — File Browser folder split
+## Поточний delivery: v0.13.733 — USB auto-install balances usable space; live yellow storage bar
+
+Статус: реалізовано в primary checkout. Збірку й тести агент не запускає за політикою checkout.
+
+1. `PlanPickSd` automatic (loc 4) балансує usable free: серед destinations де `size <= free_*` обирає менший gap після установки; tie → SD; якщо жоден не вміщує — roomier (`free_sd >= free_nand`). Reserve лишається у callers (`free - reserve`).
+2. `yati::ChooseInstallTarget` і `App::GetInstallSdEnable` (Auto) рахують usable так само і делегують `PlanPickSd`.
+3. USB/local DBI install loops: для `InstallTarget::Auto` перед стартом пакета `RefreshAutoInstallTarget` робить свіжий poll і переобирає dest; pinned Sd/Nand не чіпаються; `override.sd_card_install` лишається, щоб yati не переобирав зі stale snapshot.
+4. Під час `State::Installing` header bars: жовтий сегмент = remaining поточного пакета на його dest; решту черги не проєктуємо (прибирає хибний overflow-red). ReviewQueue повний plan без змін.
+5. Version `0.13.733`. Тести `test_install_plan` оновлено (balance cases); бінарник не ганяли.
+
+## Попередній delivery: v0.13.732 — File Browser folder split
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout. Поведінка File Browser без змін — лише розкладка файлів (architecture slice 2).
 

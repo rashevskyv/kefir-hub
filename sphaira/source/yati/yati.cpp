@@ -14,6 +14,7 @@
 #include "yati/nx/crypto.hpp"
 
 #include "ui/progress_box.hpp"
+#include "ui/menus/install_plan.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -1799,38 +1800,19 @@ bool ChooseInstallTarget(s64 total_size, bool is_compressed) {
 
     const s64 reserve_nand = App::GetInstallReserveMb() * 1024LL * 1024LL;
     const s64 reserve_sd = App::GetInstallReserveSdMb() * 1024LL * 1024LL;
+    const s64 usable_nand = std::max<s64>(0, free_nand - reserve_nand);
+    const s64 usable_sd = std::max<s64>(0, free_sd - reserve_sd);
 
-    bool fits_nand = (free_nand - estimated >= reserve_nand);
-    bool fits_sd = (free_sd - estimated >= reserve_sd);
-
-    long loc = App::GetInstallLocation();
-    switch (loc) {
-        case 0: // SdOnly
-            if (!fits_sd) {
-                log_write("[Install] WARNING: Target SD space is below reserve!\n");
-            }
-            return true;
-        case 1: // NandOnly
-            if (!fits_nand) {
-                log_write("[Install] WARNING: Target NAND space is below reserve!\n");
-            }
-            return false;
-        case 2: // NandThenSd
-            return fits_nand ? false : true;
-        case 3: // SdThenNand
-            return fits_sd ? true : false;
-        case 4: // Auto
-        default:
-            if (fits_nand && fits_sd) {
-                return free_sd > free_nand;
-            } else if (fits_nand) {
-                return false; // NAND
-            } else if (fits_sd) {
-                return true; // SD
-            } else {
-                return free_sd > free_nand; // fallback to where more space is available
-            }
+    const long loc = App::GetInstallLocation();
+    const bool pick_sd = ui::menu::dbi::PlanPickSd(loc, estimated, usable_sd, usable_nand);
+    if (pick_sd) {
+        if (usable_sd < estimated) {
+            log_write("[Install] WARNING: Target SD space is below reserve!\n");
+        }
+    } else if (usable_nand < estimated) {
+        log_write("[Install] WARNING: Target NAND space is below reserve!\n");
     }
+    return pick_sd;
 }
 
 Result InstallFromCollections(ui::InstallProgress* pbox, source::Base* source, const container::Collections& collections, const ConfigOverride& override) {
