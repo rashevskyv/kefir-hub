@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.737** (include account_user.hpp in slim users_menu.cpp). Завершені плани збережено в
+Поточний delivery — **v0.13.738** (fix Games split includes for title_nsp/ncm/save_paths). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.737 — include account_user.hpp in slim users_menu.cpp
+## Поточний delivery: v0.13.738 — fix Games split includes for title_nsp/ncm/save_paths
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Після v0.13.735 Games split WSL ReleaseWithInstall ламався на відсутніх includes: `NspEntry`/`ContentInfoEntry`/`BuildContentEntry` живуть у `title_nsp.hpp`, не в `title_info.hpp`; `ncm::GetAppId` потребує `yati/nx/ncm.hpp`; `save::GetSaveTypeLabel` — `ui/menus/save/save_paths.hpp`.
+2. Додано `#include "title_nsp.hpp"` у `game/game_internal.hpp` (збережено `using title::NspEntry` і wrapper `game::BuildNspEntries`). У `game_scan.cpp` — `#include "yati/nx/ncm.hpp"`. У `game_details.cpp` — `#include "ui/menus/save/save_paths.hpp"`. Існуючі `using title::ContentInfoEntry` / `BuildContentEntry` без змін.
+3. Version `0.13.738`. Логіку dump/scan/details не чіпали; **`gc_menu` не чіпали**. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.737 — include account_user.hpp in slim users_menu.cpp
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

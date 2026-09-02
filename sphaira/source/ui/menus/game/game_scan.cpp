@@ -6,6 +6,7 @@
 #include "i18n.hpp"
 #include "swkbd.hpp"
 #include "ui/progress_box.hpp"
+#include "yati/nx/ncm.hpp"
 
 #include <algorithm>
 #include <cctype>

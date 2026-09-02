@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.737** (include account_user.hpp in slim users_menu.cpp). Завершені задачі збережено в
+Актуальний delivery — **v0.13.738** (fix Games split includes for title_nsp/ncm/save_paths). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.737 (include account_user.hpp in slim users_menu.cpp)
+## Поточний delivery: v0.13.738 (fix Games split includes for title_nsp/ncm/save_paths)
+
+- [x] `GAME-INTERNAL-TITLE-NSP-738` — `#include "title_nsp.hpp"` у `game/game_internal.hpp` (NspEntry/ContentInfoEntry/Build*); wrappers без rename.
+- [x] `GAME-SCAN-NCM-738` — `#include "yati/nx/ncm.hpp"` у `game_scan.cpp` (для `ncm::GetAppId`).
+- [x] `GAME-DETAILS-SAVE-PATHS-738` — `#include "ui/menus/save/save_paths.hpp"` у `game_details.cpp` (для `save::GetSaveTypeLabel`).
+- [x] `CMAKELISTS-VERSION-BUMP-738` — `sphaira_VERSION` піднято до `0.13.738`.
+- [x] `DOCS-BUMP-738` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.737 (include account_user.hpp in slim users_menu.cpp)
 
 - [x] `USERS-MENU-INCLUDE-737` — `#include "account/account_user.hpp"` у slim `users_menu.cpp` (для `LoadImageJpeg` у `TryLoadAvatar`); публічний header без змін.
 - [x] `CMAKELISTS-VERSION-BUMP-737` — `sphaira_VERSION` піднято до `0.13.737`.

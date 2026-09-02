@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.737** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.738** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.738 — fix Games split includes for title_nsp/ncm/save_paths
+
+- Після v0.13.735 Games split WSL ReleaseWithInstall: `NspEntry`/`ContentInfoEntry`/`BuildContentEntry` з `title_nsp.hpp`, `ncm::GetAppId`, `save::GetSaveTypeLabel`.
+- `game/game_internal.hpp`: додано `#include "title_nsp.hpp"`; `using title::NspEntry` і wrapper `BuildNspEntries` без змін.
+- `game_scan.cpp`: `#include "yati/nx/ncm.hpp"`.
+- `game_details.cpp`: `#include "ui/menus/save/save_paths.hpp"`; існуючі `using title::ContentInfoEntry` / `BuildContentEntry` достатні після title_nsp через internal.
+- Dump/scan/details поведінка без змін; **`gc_menu` не чіпали**. Version `0.13.738`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.737 — include account_user.hpp in slim users_menu.cpp
 

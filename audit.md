@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.737**. Дата: 2026-09-02.
+Канонічний робочий файл. Версія коду: **v0.13.738**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.738 поза ponytail-чергою: compile fix після Games split — `game_internal.hpp` → `title_nsp.hpp`; `game_scan.cpp` → `yati/nx/ncm.hpp`; `game_details.cpp` → `save/save_paths.hpp`. Wrappers/поведінка без змін; **`gc_menu` не чіпали**. **Не закриває** чергу §2 A1–A7.
 
 v0.13.737 поза ponytail-чергою: compile fix — slim `users_menu.cpp` включає `account/account_user.hpp` для `LoadImageJpeg` у `TryLoadAvatar` (після 731 split лишався лише `account_link.hpp`). Публічний header без змін. **Не закриває** чергу §2 A1–A7.
 

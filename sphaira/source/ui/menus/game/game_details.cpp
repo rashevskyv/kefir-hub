@@ -3,6 +3,7 @@
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"

@@ -5,6 +5,7 @@
 #include "ui/menus/grid_menu_base.hpp"
 #include "dumper.hpp"
 #include "title_info.hpp"
+#include "title_nsp.hpp"
 #include "ui/types.hpp"
 
 #include <array>
