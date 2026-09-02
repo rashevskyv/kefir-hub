@@ -515,9 +515,10 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
     const bool pdm_ok = R_SUCCEEDED(pdmqryInitialize());
     ON_SCOPE_EXIT(if (pdm_ok) { pdmqryExit(); });
 
-    char stamp[32]{};
+    char stamp_buf[32]{};
     const auto t = std::time(nullptr);
-    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
+    std::strftime(stamp_buf, sizeof(stamp_buf), "%Y%m%d_%H%M%S", std::localtime(&t));
+    const std::string stamp = stamp_buf;
 
     for (const auto& r : ready) {
         if (overwrite_existing) {
@@ -1020,6 +1021,19 @@ auto DeleteUserPack(const std::string& dir) -> Result {
 auto GetUserPacksRoot() -> std::string {
     EnsureRootsMigrated();
     return paths::DATA_ROOT + "/account_backups";
+}
+
+auto GetShareableUserBackupRoots() -> std::vector<std::string> {
+    EnsureRootsMigrated();
+    std::vector<std::string> roots;
+    const auto new_root = paths::DATA_ROOT + "/account_backups";
+    const auto old_root = paths::DATA_ROOT + "/user_packs";
+    roots.push_back(new_root);
+    fs::FsNativeSd sd;
+    if (sd.DirExists(old_root.c_str())) {
+        roots.push_back(old_root);
+    }
+    return roots;
 }
 
 } // namespace sphaira::account_user

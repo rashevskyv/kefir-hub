@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Hantera säkerhetskopior",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspektera, återställ, byt namn på, duplicera, radera eller dela användarsäkerhetskopior.",
+  "Duplicate": "Duplicera",
+  "Duplicate backup": "Duplicera säkerhetskopia",
+  "Duplicating backup...": "Duplicerar säkerhetskopia...",
+  "Could not duplicate the backup.": "Kunde inte duplicera säkerhetskopian.",
+  "Duplicating legacy directory backups is not supported.": "Duplicering av äldre katalogsäkerhetskopior stöds inte.",
+  "Rename backup": "Byt namn på säkerhetskopia",
+  "Renaming legacy directory backups is not supported.": "Namnbyte av äldre katalogsäkerhetskopior stöds inte.",
+  "Renamed backup is invalid.": "Den omdöpta säkerhetskopian är ogiltig.",
+  "A backup with that name already exists.": "En säkerhetskopia med det namnet finns redan.",
+  "Backup file does not exist.": "Säkerhetskopiefilen finns inte.",
+  "Send to another console": "Skicka till en annan konsol",
+  "A opens actions. X marks backups. Minus deletes.": "A öppnar åtgärder. X markerar säkerhetskopior. Minus raderar.",
+  "Could not rename the backup.": "Kunde inte byta namn på säkerhetskopian."
 }

@@ -46,4 +46,7 @@ void AddInstallShareOptions(Sidebar* sidebar);
 // preceded by a section header.
 void AddSettingsOption(Sidebar* sidebar);
 
+// Starts the Console Transfer share server for user backups (/config/kefir/account_backups).
+void StartConsoleTransferShareUserBackups();
+
 } // namespace sphaira::ui::menu

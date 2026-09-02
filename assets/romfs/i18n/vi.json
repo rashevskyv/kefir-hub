@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Quản lý bản sao lưu",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Kiểm tra, khôi phục, đổi tên, nhân bản, xóa hoặc chia sẻ các gói sao lưu người dùng.",
+  "Duplicate": "Nhân bản",
+  "Duplicate backup": "Nhân bản bản sao lưu",
+  "Duplicating backup...": "Đang nhân bản bản sao lưu...",
+  "Could not duplicate the backup.": "Không thể nhân bản bản sao lưu.",
+  "Duplicating legacy directory backups is not supported.": "Không hỗ trợ nhân bản bản sao lưu thư mục cũ.",
+  "Rename backup": "Đổi tên bản sao lưu",
+  "Renaming legacy directory backups is not supported.": "Không hỗ trợ đổi tên bản sao lưu thư mục cũ.",
+  "Renamed backup is invalid.": "Bản sao lưu đã đổi tên không hợp lệ.",
+  "A backup with that name already exists.": "Đã tồn tại bản sao lưu có tên đó.",
+  "Backup file does not exist.": "Tệp sao lưu không tồn tại.",
+  "Send to another console": "Gửi đến máy console khác",
+  "A opens actions. X marks backups. Minus deletes.": "A mở các thao tác. X đánh dấu bản sao lưu. Dấu trừ xóa.",
+  "Could not rename the backup.": "Không thể đổi tên bản sao lưu."
 }

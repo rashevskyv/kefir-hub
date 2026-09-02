@@ -1924,5 +1924,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Gerenciar backups",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspecione, restaure, renomeie, duplique, exclua ou compartilhe pacotes de backup de usuário.",
+  "Duplicate": "Duplicar",
+  "Duplicate backup": "Duplicar backup",
+  "Duplicating backup...": "Duplicando backup...",
+  "Could not duplicate the backup.": "Não foi possível duplicar o backup.",
+  "Duplicating legacy directory backups is not supported.": "A duplicação de backups de diretório legado não é suportada.",
+  "Rename backup": "Renomear backup",
+  "Renaming legacy directory backups is not supported.": "A renomeação de backups de diretório legado não é suportada.",
+  "Renamed backup is invalid.": "O backup renomeado é inválido.",
+  "A backup with that name already exists.": "Já existe um backup com esse nome.",
+  "Backup file does not exist.": "O arquivo de backup não existe.",
+  "Send to another console": "Enviar para outro console",
+  "A opens actions. X marks backups. Minus deletes.": "A abre ações. X marca backups. Menos exclui.",
+  "Could not rename the backup.": "Não foi possível renomear o backup."
 }

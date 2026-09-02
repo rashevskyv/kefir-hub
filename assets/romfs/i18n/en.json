@@ -2193,5 +2193,20 @@
   "Package definitions and metadata": "Package definitions and metadata",
   "Custom startup logo and animation": "Custom startup logo and animation",
   "Application cache files": "Application cache files",
-  "Custom user avatar images": "Custom user avatar images"
+  "Custom user avatar images": "Custom user avatar images",
+  "Manage Backups": "Manage Backups",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspect, restore, rename, duplicate, delete or share user backup packs.",
+  "Duplicate": "Duplicate",
+  "Duplicate backup": "Duplicate backup",
+  "Duplicating backup...": "Duplicating backup...",
+  "Could not duplicate the backup.": "Could not duplicate the backup.",
+  "Duplicating legacy directory backups is not supported.": "Duplicating legacy directory backups is not supported.",
+  "Rename backup": "Rename backup",
+  "Renaming legacy directory backups is not supported.": "Renaming legacy directory backups is not supported.",
+  "Renamed backup is invalid.": "Renamed backup is invalid.",
+  "A backup with that name already exists.": "A backup with that name already exists.",
+  "Backup file does not exist.": "Backup file does not exist.",
+  "Send to another console": "Send to another console",
+  "A opens actions. X marks backups. Minus deletes.": "A opens actions. X marks backups. Minus deletes.",
+  "Could not rename the backup.": "Could not rename the backup."
 }

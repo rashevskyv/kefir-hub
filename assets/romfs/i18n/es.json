@@ -1896,5 +1896,21 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Administrar copias de seguridad",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspeccionar, restaurar, renombrar, duplicar, eliminar o compartir paquetes de copia de seguridad de usuario.",
+  "Duplicate": "Duplicar",
+  "Duplicate backup": "Duplicar copia de seguridad",
+  "Duplicating backup...": "Duplicando copia de seguridad...",
+  "Could not duplicate the backup.": "No se pudo duplicar la copia de seguridad.",
+  "Duplicating legacy directory backups is not supported.": "No se admite la duplicación de copias de seguridad de directorios heredados.",
+  "Rename backup": "Renombrar copia de seguridad",
+  "Renaming legacy directory backups is not supported.": "No se admite el cambio de nombre de copias de seguridad de directorios heredados.",
+  "Renamed backup is invalid.": "La copia de seguridad renombrada no es válida.",
+  "A backup with that name already exists.": "Ya existe una copia de seguridad con ese nombre.",
+  "Backup file does not exist.": "El archivo de copia de seguridad no existe.",
+  "Send to another console": "Enviar a otra consola",
+  "A opens actions. X marks backups. Minus deletes.": "A abre acciones. X marca copias. Menos elimina.",
+  "Could not rename the backup.": "No se pudo renombrar la copia de seguridad.",
+  "A opens actions. X marca copias. Menos elimina.": "A abre acciones. X marca copias. Menos elimina."
 }

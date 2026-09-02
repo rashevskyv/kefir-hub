@@ -2222,5 +2222,20 @@
   "Package definitions and metadata": "Визначення та метадані пакунків",
   "Custom startup logo and animation": "Користувацький логотип та анімація запуску",
   "Application cache files": "Кеш-файли програми",
-  "Custom user avatar images": "Користувацькі зображення аватарів"
+  "Custom user avatar images": "Користувацькі зображення аватарів",
+  "Manage Backups": "Керування бекапами",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Перегляд, відновлення, перейменування, дублювання, видалення або передача бекапів користувачів.",
+  "Duplicate": "Дублювати",
+  "Duplicate backup": "Дублювати бекап",
+  "Duplicating backup...": "Дублювання бекапу...",
+  "Could not duplicate the backup.": "Не вдалося продублювати бекап.",
+  "Duplicating legacy directory backups is not supported.": "Дублювання застарілих папок бекапів не підтримується.",
+  "Rename backup": "Перейменувати бекап",
+  "Renaming legacy directory backups is not supported.": "Перейменування застарілих папок бекапів не підтримується.",
+  "Renamed backup is invalid.": "Перейменований бекап недійсний.",
+  "A backup with that name already exists.": "Бекап з такою назвою вже існує.",
+  "Backup file does not exist.": "Файл бекапу не існує.",
+  "Send to another console": "Надіслати на іншу консоль",
+  "A opens actions. X marks backups. Minus deletes.": "A відкриває дії. X позначає бекапи. Мінус видаляє.",
+  "Could not rename the backup.": "Не вдалося перейменувати бекап."
 }

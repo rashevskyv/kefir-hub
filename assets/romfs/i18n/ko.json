@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "백업 관리",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "사용자 백업 팩을 검사, 복원, 이름 변경, 복제, 삭제 또는 공유합니다.",
+  "Duplicate": "복제",
+  "Duplicate backup": "백업 복제",
+  "Duplicating backup...": "백업 복제 중...",
+  "Could not duplicate the backup.": "백업을 복제할 수 없습니다.",
+  "Duplicating legacy directory backups is not supported.": "레거시 디렉터리 백업 복제는 지원되지 않습니다.",
+  "Rename backup": "백업 이름 바꾸기",
+  "Renaming legacy directory backups is not supported.": "레거시 디렉터리 백업 이름 변경은 지원되지 않습니다.",
+  "Renamed backup is invalid.": "이름이 변경된 백업이 유효하지 않습니다.",
+  "A backup with that name already exists.": "해당 이름의 백업이 이미 존재합니다.",
+  "Backup file does not exist.": "백업 파일이 존재하지 않습니다.",
+  "Send to another console": "다른 본체로 보내기",
+  "A opens actions. X marks backups. Minus deletes.": "A로 작업 열기. X로 백업 선택. -로 삭제.",
+  "Could not rename the backup.": "백업 이름을 바꿀 수 없습니다."
 }

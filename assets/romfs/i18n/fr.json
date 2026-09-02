@@ -1897,5 +1897,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Gérer les sauvegardes",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspecter, restaurer, renommer, dupliquer, supprimer ou partager des packs de sauvegarde utilisateur.",
+  "Duplicate": "Dupliquer",
+  "Duplicate backup": "Dupliquer la sauvegarde",
+  "Duplicating backup...": "Duplication de la sauvegarde...",
+  "Could not duplicate the backup.": "Impossible de dupliquer la sauvegarde.",
+  "Duplicating legacy directory backups is not supported.": "La duplication des sauvegardes de répertoires hérités n'est pas prise en charge.",
+  "Rename backup": "Renommer la sauvegarde",
+  "Renaming legacy directory backups is not supported.": "Le renommage des sauvegardes de répertoires hérités n'est pas pris en charge.",
+  "Renamed backup is invalid.": "La sauvegarde renommée n'est pas valide.",
+  "A backup with that name already exists.": "Une sauvegarde portant ce nom existe déjà.",
+  "Backup file does not exist.": "Le fichier de sauvegarde n'existe pas.",
+  "Send to another console": "Envoyer vers une autre console",
+  "A opens actions. X marks backups. Minus deletes.": "A ouvre les actions. X sélectionne les sauvegardes. Moins supprime.",
+  "Could not rename the backup.": "Impossible de renommer la sauvegarde."
 }

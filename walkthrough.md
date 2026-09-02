@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.726** (2026-09-01). Попередні
+Актуальний delivery — **v0.13.728** (2026-09-02). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.728 — Manage Backups і безперервна прокрутка Sidebar
+
+- `Tools → Users → Manage Backups` показує всі знайдені ZIP і legacy-directory user packs та повторно використовує перевірений restore flow. Доступні restore, delete (включно з multi-select), Duplicate, Rename та Send to another console. ZIP-duplicate копіюється через `.part`, має унікальний `_copy` suffix, і після атомарного rename повторно валідовується; cancel/fail прибирає як `.part`, так і невалідний final file. Rename змінює лише ім’я ZIP і не торкається metadata профілю. Legacy directory packs можна restore/delete; duplicate/rename для них явно не підтримуються.
+- Send to another console стартує з менеджера й монтує всі discoverable user-backup roots для чинного Console Transfer server. Збережено v0.13.727 поведінку lone legacy root: він мігрує у canonical root; якщо вже є обидва roots, share віддає обидва.
+- Загальний `Sidebar` тепер, коли focus переходить на перший пункт після section header, не дозволяє scroll offset сховати цей заголовок над focus-row. `List` не змінювався: попередній snap/стрибок до першої сторінки повністю прибраний. Це діє для всіх sidebar/context menus, а не лише Users.
+- `START` у Tools знову відкриває історичний right sidebar `Install & Share` з Web Server/MTP/USB PC Install і Settings; `A` на плитці Console Transfer як і раніше відкриває hub напряму.
+- Версія `0.13.728`; пройдено `git diff --check` і parsing усіх 14 i18n JSON. Агент не компілював, не запускав NRO і не виконував hardware verification відповідно до політики checkout.
 
 ## v0.13.726 — File Browser: безпечне видалення та пояснення папок KefirHub
 

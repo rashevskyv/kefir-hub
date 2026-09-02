@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.727**. Дата: 2026-09-01.
+Канонічний робочий файл. Версія коду: **v0.13.728**. Дата: 2026-09-02.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.728 поза ponytail-чергою: `Tools → Users → Manage Backups` повторно використовує наявні pack/restore/share шляхи для restore, delete, archive-only duplicate/rename та sender share. `Sidebar` глобально зберігає section header над першим focus-row без зміни generic `List` і без page snap; Tools START повернено до наявного Install & Share sidebar. Не закриває чергу §2.
 
 v0.13.727 поза ponytail-чергою: User Backup зберігається як один атомарний `.kefir-user.zip` на профіль у `/config/kefir/account_backups`, з manifest/profile validation, safe archive paths, legacy directory compatibility і remote exact-size verification. `user_packs` лишається безпечно сумісним legacy root; не закриває чергу §2.
 

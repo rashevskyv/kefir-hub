@@ -572,6 +572,23 @@ void Sidebar::SetIndex(s64 index) {
         m_items[m_index]->OnFocusGained();
         SetupButtons();
     }
+
+    if (m_list && m_index >= 0 && m_index < static_cast<s64>(m_items.size())) {
+        s64 header_idx = m_index - 1;
+        while (header_idx >= 0 && !IsFocusable(header_idx)) {
+            header_idx--;
+        }
+        const s64 first_header = header_idx + 1;
+        if (first_header < m_index) {
+            const float max_y = m_list->GetMaxY();
+            if (max_y > 0.f) {
+                const float max_yoff = static_cast<float>(first_header) * max_y;
+                if (m_list->GetYoff() > max_yoff) {
+                    m_list->SetYoff(max_yoff);
+                }
+            }
+        }
+    }
 }
 
 void Sidebar::SetupButtons() {

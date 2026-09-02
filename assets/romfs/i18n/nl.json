@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Back-ups beheren",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Inspecteer, herstel, hernoem, dupliceer, verwijder of deel gebruikersback-uppakketten.",
+  "Duplicate": "Dupliceren",
+  "Duplicate backup": "Back-up dupliceren",
+  "Duplicating backup...": "Back-up dupliceren...",
+  "Could not duplicate the backup.": "Kon de back-up niet dupliceren.",
+  "Duplicating legacy directory backups is not supported.": "Het dupliceren van verouderde mapback-ups wordt niet ondersteund.",
+  "Rename backup": "Back-up hernoemen",
+  "Renaming legacy directory backups is not supported.": "Het hernoemen van verouderde mapback-ups wordt niet ondersteund.",
+  "Renamed backup is invalid.": "De hernoemde back-up is ongeldig.",
+  "A backup with that name already exists.": "Er bestaat al een back-up met die naam.",
+  "Backup file does not exist.": "Back-upbestand bestaat niet.",
+  "Send to another console": "Verzenden naar een andere console",
+  "A opens actions. X marks backups. Minus deletes.": "A opent acties. X markeert back-ups. Min verwijdert.",
+  "Could not rename the backup.": "Kon de back-up niet hernoemen."
 }

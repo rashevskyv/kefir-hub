@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "バックアップの管理",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "ユーザーバックアップパックの確認、復元、名前変更、複製、削除、または共有を行います。",
+  "Duplicate": "複製",
+  "Duplicate backup": "バックアップを複製",
+  "Duplicating backup...": "バックアップを複製中...",
+  "Could not duplicate the backup.": "バックアップを複製できませんでした。",
+  "Duplicating legacy directory backups is not supported.": "レガシーディレクトリバックアップの複製はサポートされていません。",
+  "Rename backup": "バックアップの名前を変更",
+  "Renaming legacy directory backups is not supported.": "レガシーディレクトリバックアップの名前変更はサポートされていません。",
+  "Renamed backup is invalid.": "名前が変更されたバックアップは無効です。",
+  "A backup with that name already exists.": "その名前のバックアップは既に存在します。",
+  "Backup file does not exist.": "バックアップファイルが存在しません。",
+  "Send to another console": "別の本体に送信",
+  "A opens actions. X marks backups. Minus deletes.": "Aでアクションを開く。Xで選択。-で削除。",
+  "Could not rename the backup.": "バックアップの名前を変更できませんでした。"
 }

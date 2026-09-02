@@ -1896,5 +1896,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Gestisci backup",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Ispeziona, ripristina, rinomina, duplica, elimina o condividi i pacchetti di backup dell'utente.",
+  "Duplicate": "Duplica",
+  "Duplicate backup": "Duplica backup",
+  "Duplicating backup...": "Duplicazione del backup in corso...",
+  "Could not duplicate the backup.": "Impossibile duplicare il backup.",
+  "Duplicating legacy directory backups is not supported.": "La duplicazione dei backup di directory legacy non è supportata.",
+  "Rename backup": "Rinomina backup",
+  "Renaming legacy directory backups is not supported.": "La ridenominazione dei backup di directory legacy non è supportata.",
+  "Renamed backup is invalid.": "Il backup rinominato non è valido.",
+  "A backup with that name already exists.": "Esiste già un backup con questo nome.",
+  "Backup file does not exist.": "Il file di backup non esiste.",
+  "Send to another console": "Invia a un'altra console",
+  "A opens actions. X marks backups. Minus deletes.": "A apre le azioni. X seleziona i backup. Meno elimina.",
+  "Could not rename the backup.": "Impossibile rinominare il backup."
 }

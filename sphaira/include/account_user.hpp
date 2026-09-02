@@ -40,6 +40,7 @@ auto ListUserPacks() -> std::vector<Pack>;
 auto ListUserPacks(const std::string& root) -> std::vector<Pack>;
 auto DeleteUserPack(const std::string& dir) -> Result;
 auto GetUserPacksRoot() -> std::string;
+auto GetShareableUserBackupRoots() -> std::vector<std::string>;
 auto EnsureRootsMigrated() -> void;
 auto ReadPackAvatar(const Pack& pack, std::vector<u8>& out_jpeg) -> bool;
 auto ExtractPackToDirectory(const Pack& pack, const std::string& out_dir, ui::ProgressBox* pbox = nullptr) -> Result;

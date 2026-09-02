@@ -1951,5 +1951,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "管理备份",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "检查、恢复、重命名、复制、删除或共享用户备份包。",
+  "Duplicate": "复制",
+  "Duplicate backup": "复制备份",
+  "Duplicating backup...": "正在复制备份...",
+  "Could not duplicate the backup.": "无法复制备份。",
+  "Duplicating legacy directory backups is not supported.": "不支持复制旧版目录备份。",
+  "Rename backup": "重命名备份",
+  "Renaming legacy directory backups is not supported.": "不支持重命名旧版目录备份。",
+  "Renamed backup is invalid.": "重命名后的备份无效。",
+  "A backup with that name already exists.": "已存在同名备份。",
+  "Backup file does not exist.": "备份文件不存在。",
+  "Send to another console": "发送到另一台主机",
+  "A opens actions. X marks backups. Minus deletes.": "A 打开操作菜单。X 标记备份。减号删除。",
+  "Could not rename the backup.": "无法重命名备份。"
 }

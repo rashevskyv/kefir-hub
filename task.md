@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.727** (Account Backup ZIP: один профіль — один архів). Завершені задачі збережено в
+Актуальний delivery — **v0.13.728** (Manage Backups і симетрична прокрутка списків). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.727 (Account Backup ZIP і зрозуміла бібліотека)
+## Поточний delivery: v0.13.728 (Manage Backups і симетрична прокрутка списків)
+
+- [x] `USERS-MANAGE-BACKUPS-728` — окремий пункт Tools → Users показує всі local archive/legacy user packs та дає restore/delete/duplicate/rename/share.
+- [x] `USERS-BACKUP-MANAGE-SAFETY-728` — duplicate/rename не перезаписують дані, тримають archive extension, перевіряють результат; legacy packs не ламаються.
+- [x] `USERS-BACKUP-SHARE-728` — source-console share запускається з Manage Backups через існуючий console-transfer server; receiver лишається у Tools → Users.
+- [x] `SIDEBAR-SECTION-HEADER-SCROLL-728` — спільний Sidebar не snap-ає до першої сторінки; focus після заголовка лишає цей заголовок видимим над собою.
+- [x] `TOOLS-START-CONTEXT-728` — START у Tools знову відкриває історичний Install & Share context sidebar; A → Console Transfer hub не змінено.
+- [x] `I18N-MANAGE-BACKUPS-728` — усі 14 локалей містять новий UI та помилки.
+- [x] `CMAKELISTS-VERSION-BUMP-728` — `sphaira_VERSION` піднято до `0.13.728`.
+- [x] `DOCS-BUMP-728` — plan/task/walkthrough/audit оновлено після senior review.
+
+## Попередній delivery: v0.13.727 (Account Backup ZIP і зрозуміла бібліотека)
 
 - [x] `ACCOUNT-BACKUP-ROOT-727` — canonical root `/config/kefir/account_backups`; legacy `user_packs` мігрує тільки коли destination відсутній, інакше обидва roots discovery-only.
 - [x] `ACCOUNT-BACKUP-ZIP-EXPORT-727` — один profile → один атомарний `.kefir-user.zip` з датою/name/status, manifest і без чутливих даних у filename; кілька вибраних users → незалежні архіви.

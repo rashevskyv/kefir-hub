@@ -1897,5 +1897,20 @@
   "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Restore will replace that profile: name, avatar and play hours. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.",
   "backup(s) match accounts already on this console and will replace them. ": "backup(s) match accounts already on this console and will replace them. ",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.",
-  "This user is already on this console": "This user is already on this console"
+  "This user is already on this console": "This user is already on this console",
+  "Manage Backups": "Backups verwalten",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Benutzer-Backup-Pakete prüfen, wiederherstellen, umbenennen, duplizieren, löschen oder teilen.",
+  "Duplicate": "Duplizieren",
+  "Duplicate backup": "Backup duplizieren",
+  "Duplicating backup...": "Backup wird dupliziert...",
+  "Could not duplicate the backup.": "Backup konnte nicht dupliziert werden.",
+  "Duplicating legacy directory backups is not supported.": "Das Duplizieren von Legacy-Verzeichnis-Backups wird nicht unterstützt.",
+  "Rename backup": "Backup umbenennen",
+  "Renaming legacy directory backups is not supported.": "Das Umbenennen von Legacy-Verzeichnis-Backups wird nicht unterstützt.",
+  "Renamed backup is invalid.": "Das umbenannte Backup ist ungültig.",
+  "A backup with that name already exists.": "Ein Backup mit diesem Namen existiert bereits.",
+  "Backup file does not exist.": "Backup-Datei existiert nicht.",
+  "Send to another console": "An andere Konsole senden",
+  "A opens actions. X marks backups. Minus deletes.": "A öffnet Aktionen. X markiert Backups. Minus löscht.",
+  "Could not rename the backup.": "Backup konnte nicht umbenannt werden."
 }

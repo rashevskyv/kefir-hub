@@ -177,7 +177,7 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             "Share User Backups"_i18n,
             "Share user packages and profile backups."_i18n,
             [](){
-                StartConsoleTransferShare(std::vector<std::string>{ account_user::GetUserPacksRoot() });
+                StartConsoleTransferShareUserBackups();
             }
         },
         {
@@ -329,6 +329,10 @@ void AddSettingsOption(Sidebar* options) {
     options->Add<SidebarEntryCallback>("Settings"_i18n, [](){
         App::Push<ui::menu::settings::Menu>();
     }, "Open Kefir Hub application settings."_i18n);
+}
+
+void StartConsoleTransferShareUserBackups() {
+    StartConsoleTransferShare(account_user::GetShareableUserBackupRoots());
 }
 
 } // namespace sphaira::ui::menu

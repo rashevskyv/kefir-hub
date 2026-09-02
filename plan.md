@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.727** (Account Backup ZIP: один профіль — один переносимий архів). Завершені плани збережено в
+Поточний delivery — **v0.13.728** (керована бібліотека user backup і симетричний край списків). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.727 — Account Backup ZIP і зрозуміла бібліотека
+## Поточний delivery: v0.13.728 — Manage Backups у Tools → Users
+
+Статус: реалізовано й прийнято після senior-review у primary checkout. Пройдено `git diff --check` і parsing усіх 14 i18n JSON; збірку агент не запускає за політикою checkout.
+
+1. `Tools → Users → Manage Backups` показує валідні local user packs з canonical `/config/kefir/account_backups` і legacy `user_packs`; чинний Restore Backup лишився окремим receiver/source flow.
+2. У менеджері є restore, single/multi-delete, один зрозумілий Duplicate, rename лише filename та Send to another console. Duplicate не залишає `.part`/invalid archive на fail або cancel; rename/copy не перезаписують пакети й валідовують результат. Legacy directory packs зберігають restore/delete, а duplicate/rename чесно кажуть, що формат не підтримується.
+3. Sender ділиться всіма discoverable backup roots через наявний Console Transfer server; для lone legacy root збережена встановлена v0.13.727 migration-семантика, а за наявності обох roots share монтує обидва.
+4. Спільний `Sidebar` тримає рядок заголовка безпосередньо перед focus-row у viewport. Generic `List` не змінено: перехід до першої сторінки не скидає offset і не створює screen jump.
+5. `START` у Tools повернено до sidebar «Install & Share»; плитка Console Transfer під `A` лишилась прямим hub. Версію піднято до `0.13.728`; усі 14 i18n JSON містять нові рядки та валідні.
+
+## Попередній delivery: v0.13.727 — Account Backup ZIP і зрозуміла бібліотека
 
 Статус: реалізовано й прийнято після senior-review у primary checkout. `git diff --check` пройдено, змінені `en`/`uk`/`ru` JSON валідовано; збірку агент не ганяє.
 

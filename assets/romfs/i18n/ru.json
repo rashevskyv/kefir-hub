@@ -2177,5 +2177,20 @@
   "Package definitions and metadata": "Определения и метаданные пакетов",
   "Custom startup logo and animation": "Пользовательский логотип и анимация запуска",
   "Application cache files": "Файлы кэша приложения",
-  "Custom user avatar images": "Пользовательские изображения аватаров"
+  "Custom user avatar images": "Пользовательские изображения аватаров",
+  "Manage Backups": "Управление бэкапами",
+  "Inspect, restore, rename, duplicate, delete or share user backup packs.": "Просмотр, восстановление, переименование, дублирование, удаление или передача бэкапов пользователей.",
+  "Duplicate": "Дублировать",
+  "Duplicate backup": "Дублировать бэкап",
+  "Duplicating backup...": "Дублирование бэкапа...",
+  "Could not duplicate the backup.": "Не удалось продублировать бэкап.",
+  "Duplicating legacy directory backups is not supported.": "Дублирование устаревших папок бэкапов не поддерживается.",
+  "Rename backup": "Переименовать бэкап",
+  "Renaming legacy directory backups is not supported.": "Переименование устаревших папок бэкапов не поддерживается.",
+  "Renamed backup is invalid.": "Переименованный бэкап недействителен.",
+  "A backup with that name already exists.": "Бэкап с таким именем уже существует.",
+  "Backup file does not exist.": "Файл бэкапа не существует.",
+  "Send to another console": "Отправить на другую консоль",
+  "A opens actions. X marks backups. Minus deletes.": "A открывает действия. X отмечает бэкапы. Минус удаляет.",
+  "Could not rename the backup.": "Не удалось переименовать бэкап."
 }
