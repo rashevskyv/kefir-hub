@@ -436,6 +436,27 @@ void Menu::ConfirmDelete() {
     if (uids.empty()) {
         return;
     }
+
+    const auto live = App::GetAccountList();
+    bool covers_all = !live.empty();
+    for (const auto& base : live) {
+        bool found = false;
+        for (const auto& uid : uids) {
+            if (base.uid.uid[0] == uid.uid[0] && base.uid.uid[1] == uid.uid[1]) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            covers_all = false;
+            break;
+        }
+    }
+    if (covers_all) {
+        App::Push<OptionBox>("Cannot delete every user profile. Keep at least one."_i18n, "OK"_i18n);
+        return;
+    }
+
     const auto msg = (uids.size() > 1)
         ? "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n
         : "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n;
@@ -443,37 +464,67 @@ void Menu::ConfirmDelete() {
         if (!ok) {
             return;
         }
+
+        auto ask_saves_then_delete = [this, uids]() {
+            auto saves = CollectSaves(uids);
+            if (saves.empty()) {
+                RunDelete({});
+                return;
+            }
+            App::Push<OptionBox>(
+                "Back up game saves for these users? You can pick which games."_i18n,
+                "Skip"_i18n, "Choose saves"_i18n, 1,
+                [this, saves](auto op) mutable {
+                    if (!op) {
+                        return;
+                    }
+                    if (*op == 0) {
+                        RunDelete({});
+                        return;
+                    }
+                    App::Push<SavePickMenu>(std::move(saves), [this](auto picked) {
+                        if (!picked) {
+                            return;
+                        }
+                        RunDelete(std::move(*picked));
+                    });
+                });
+        };
+
         App::Push<OptionBox>(
-            "Back up the user profile (name, avatar, Nintendo link) first?"_i18n,
-            "Skip"_i18n, "Backup account"_i18n, 1,
-            [this, uids](auto op) {
+            "Back up all user profiles on this console now (name, avatar, Nintendo link)?"_i18n,
+            "Skip"_i18n, "Backup all accounts"_i18n, 1,
+            [this, uids, ask_saves_then_delete](auto op) {
                 if (!op) {
                     return;
                 }
-                const bool backup_account = *op == 1;
-                auto saves = CollectSaves(uids);
-                if (saves.empty()) {
-                    RunDelete(backup_account, {});
+                if (*op != 1) {
+                    ask_saves_then_delete();
                     return;
                 }
-                App::Push<OptionBox>(
-                    "Back up game saves for these users? You can pick which games."_i18n,
-                    "Skip"_i18n, "Choose saves"_i18n, 1,
-                    [this, backup_account, saves](auto op) mutable {
-                        if (!op) {
+
+                std::vector<AccountUid> all_uids;
+                for (const auto& base : App::GetAccountList()) {
+                    all_uids.push_back(base.uid);
+                }
+                if (all_uids.empty()) {
+                    ask_saves_then_delete();
+                    return;
+                }
+
+                auto dirs = std::make_shared<std::vector<std::string>>();
+                App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n,
+                    [all_uids = std::move(all_uids), dirs](auto pbox) -> Result {
+                        pbox->NewTransfer("Writing account backup"_i18n);
+                        R_TRY(account_user::ExportUserPacks(all_uids, *dirs, false, false));
+                        R_SUCCEED();
+                    }, [ask_saves_then_delete, dirs](Result rc) {
+                        if (R_FAILED(rc) || dirs->empty()) {
+                            App::Push<OptionBox>("Could not write the account backup."_i18n, "OK"_i18n);
                             return;
                         }
-                        if (*op == 0) {
-                            RunDelete(backup_account, {});
-                            return;
-                        }
-                        App::Push<SavePickMenu>(std::move(saves), [this, backup_account](auto picked) {
-                            if (!picked) {
-                                return;
-                            }
-                            RunDelete(backup_account, std::move(*picked));
-                        });
-                    });
+                        ask_saves_then_delete();
+                    }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
             });
     });
 }
@@ -567,26 +618,54 @@ void Menu::RunBackup(std::vector<AccountUid> uids, bool overwrite_existing) {
     }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 
-void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) {
+void Menu::RunDelete(std::vector<save::Entry> save_backup) {
     const auto uids = SelectedUids();
     if (uids.empty()) {
         return;
     }
+
+    const auto live = App::GetAccountList();
+    bool covers_all = !live.empty();
+    for (const auto& base : live) {
+        bool found = false;
+        for (const auto& uid : uids) {
+            if (base.uid.uid[0] == uid.uid[0] && base.uid.uid[1] == uid.uid[1]) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            covers_all = false;
+            break;
+        }
+    }
+    if (covers_all) {
+        App::Push<OptionBox>("Cannot delete every user profile. Keep at least one."_i18n, "OK"_i18n);
+        return;
+    }
+
+    std::string title = "Delete user"_i18n;
+    if (uids.size() == 1) {
+        auto nick = LiveNameForUid(uids.front());
+        if (!nick.empty()) {
+            title = std::move(nick);
+        }
+    }
+
     auto all_saves = CollectSaves(uids);
     auto helper = std::make_shared<save::Menu>(MenuFlag_None);
-    App::Push<ProgressBox>(0, "Delete user"_i18n, "Delete user"_i18n,
-        [uids, backup_account, save_backup = std::move(save_backup), all_saves = std::move(all_saves), helper](auto pbox) mutable -> Result {
-            if (backup_account) {
-                pbox->NewTransfer("Backing up account"_i18n);
-                std::vector<std::string> dirs;
-                R_TRY(account_user::ExportUserPacks(uids, dirs));
-            }
+    App::Push<ProgressBox>(0, "Deleting"_i18n, title,
+        [uids, save_backup = std::move(save_backup), all_saves = std::move(all_saves), helper](auto pbox) mutable -> Result {
             if (!save_backup.empty()) {
                 pbox->NewTransfer("Backing up saves"_i18n);
                 R_TRY(helper->BackupSavesOn(pbox, save_backup));
             }
-            pbox->NewTransfer("Deleting users"_i18n);
             for (const auto& uid : uids) {
+                auto nick = LiveNameForUid(uid);
+                if (nick.empty()) {
+                    nick = account_link::UidHex(uid);
+                }
+                pbox->NewTransfer(nick);
                 R_TRY(account_user::Delete(uid));
             }
             if (!all_saves.empty()) {
@@ -596,6 +675,7 @@ void Menu::RunDelete(bool backup_account, std::vector<save::Entry> save_backup) 
             R_SUCCEED();
         }, [this](Result rc) {
             if (R_FAILED(rc)) {
+                log_write("[USER] RunDelete failed 0x%X\n", rc);
                 App::Push<OptionBox>("Could not delete the user."_i18n, "OK"_i18n);
                 Refresh();
                 return;

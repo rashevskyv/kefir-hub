@@ -1,5 +1,6 @@
 #include "account/account_user.hpp"
 #include "account/account_playtime.hpp"
+#include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
@@ -274,9 +275,40 @@ auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<
 }
 
 auto Delete(const AccountUid& uid) -> Result {
+    const auto live = App::GetAccountList();
+    if (live.size() <= 1) {
+        log_write("[USER] refuse DeleteUser: last remaining profile %s\n",
+            account_link::UidHex(uid).c_str());
+        return Result_FsEmpty;
+    }
+
     Service accsu{};
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
+
+    // Best-effort local BAAS unlink so Horizon-linked / linkalho users can DeleteUser.
+    // Keep ACCOUNT alive: do not TerminateAccountDaemons / UnlinkLinkedProfiles / UnregisterAsync.
+    {
+        Service admin{};
+        const auto admin_rc = serviceDispatchIn(&accsu, 250, uid,
+            .out_num_objects = 1,
+            .out_objects = &admin);
+        if (R_SUCCEEDED(admin_rc)) {
+            ON_SCOPE_EXIT(serviceClose(&admin));
+            const auto unlink_rc = serviceDispatch(&admin, 203); // DeleteRegistrationInfoLocally
+            if (R_FAILED(unlink_rc)) {
+                log_write("[USER] DeleteRegistrationInfoLocally 0x%X uid %s (continue)\n",
+                    unlink_rc, account_link::UidHex(uid).c_str());
+            } else {
+                log_write("[USER] DeleteRegistrationInfoLocally ok uid %s\n",
+                    account_link::UidHex(uid).c_str());
+            }
+        } else {
+            log_write("[USER] GetBaasAccountAdministrator 0x%X uid %s (continue)\n",
+                admin_rc, account_link::UidHex(uid).c_str());
+        }
+    }
+
     const auto rc = serviceDispatchIn(&accsu, CMD_DELETE_USER, uid);
     if (R_FAILED(rc)) {
         log_write("[USER] DeleteUser 0x%X uid %s\n", rc, account_link::UidHex(uid).c_str());
@@ -479,9 +511,10 @@ auto EnsureRootsMigrated() -> void {
     }
 }
 
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing) -> Result {
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing, bool may_terminate_account) -> Result {
     R_UNLESS(!uids.empty(), Result_FsEmpty);
-    log_write("[USER] backup start count=%zu overwrite=%d\n", uids.size(), overwrite_existing ? 1 : 0);
+    log_write("[USER] backup start count=%zu overwrite=%d may_terminate=%d\n",
+        uids.size(), overwrite_existing ? 1 : 0, may_terminate_account ? 1 : 0);
 
     EnsureRootsMigrated();
     const std::string root = paths::DATA_ROOT + "/account_backups";
@@ -535,7 +568,7 @@ auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::strin
         ON_SCOPE_EXIT(sd.DeleteDirectoryRecursively(temp_dir.c_str()));
 
         std::string link_status = "none";
-        R_TRY(account_link::ExportUserLinkPackage(r.uid, temp_dir, link_status));
+        R_TRY(account_link::ExportUserLinkPackage(r.uid, temp_dir, link_status, may_terminate_account));
 
         std::string status = "link-unavailable";
         if (link_status == "complete") {

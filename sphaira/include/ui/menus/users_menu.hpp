@@ -71,7 +71,7 @@ private:
     void RunNandBackup();
     void RunNandRestore(const std::string& dir, bool restore_play_hours = true);
     void RunRestoreBackup(std::vector<account_user::Pack> picked_packs);
-    void RunDelete(bool backup_account, std::vector<save::Entry> save_backup);
+    void RunDelete(std::vector<save::Entry> save_backup);
 
     auto StatusLabel(const account_link::User& u) const -> std::string;
     auto TryLoadAvatar(Item& u) -> bool;

@@ -139,7 +139,7 @@ OptionBox::OptionBox(const std::string& message, const Option& a, const Callback
     auto box = m_pos;
     box.y += m_button_yoff;
     box.h -= m_button_yoff;
-    m_entries.emplace_back(a, box);
+    m_entries.emplace_back(AddGlyphIfMissing(a, "\uE0E0"), box); // A (OK)
 
     Setup(0);
 }

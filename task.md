@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.747** (nand pack date, nicknames, delete only from list). Завершені задачі збережено в
+Актуальний delivery — **v0.13.748** (delete linked users; backup all accounts before delete). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.747 (nand pack date, nicknames, delete only from list)
+## Поточний delivery: v0.13.748 (delete linked users; backup all accounts before delete)
+
+- [x] `DELETE-LOCAL-UNLINK-748` — `account_user::Delete`: GetBaasAccountAdministrator + DeleteRegistrationInfoLocally then DeleteUser; last-user refuse; no terminate/UnregisterAsync/UnlinkLinkedProfiles.
+- [x] `EXPORT-NO-KILL-ON-DELETE-748` — `may_terminate_account` through ExportUserPacks / ExportUserLinkPackage / OpenAccountSaveForExport; delete-flow false; RunBackup true.
+- [x] `CONFIRM-DELETE-BACKUP-ALL-748` — ConfirmDelete: backup all live profiles then saves; RunDelete without account export; progress strings; covers-all guard.
+- [x] `OPTIONBOX-OK-A-GLYPH-748` — one-button OptionBox OK shows `\uE0E0`.
+- [x] `I18N-DELETE-BACKUP-ALL-748` — en/uk/ru keys for backup-all question/button + last-profile refuse.
+- [x] `CMAKELISTS-VERSION-BUMP-748` — `sphaira_VERSION` піднято до `0.13.748`.
+- [x] `DOCS-BUMP-748` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.747 (nand pack date, nicknames, delete only from list)
 
 - [x] `NAND-PACK-CREATED-LABEL-747` — `PackInfo.created_label` + `FormatPackCreated` у `MakePackInfo`; list/detail title = label else stamp name.
 - [x] `NAND-PACK-PROFILES-NICK-747` — `CollectPackUsers`: overlay nicknames з `profiles.dat` (robust UID match); fallback uid-as-nickname якщо файл відсутній.

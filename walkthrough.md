@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.747** (2026-09-03). Попередні
+Актуальний delivery — **v0.13.748** (2026-09-03). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.748 — delete linked users; backup all accounts before delete
+
+- Delete-flow більше не вбиває ACCOUNT під час бекапу: `ExportUserPacks(..., may_terminate_account=false)` → TryOpen only; якщо 0010 locked — zip nick+avatar+playtime, `link_status` unavailable, без fail усього export. `RunBackup` лишає terminate+reboot.
+- Linked / linkalho delete: `DeleteRegistrationInfoLocally` через `acc:su` 250 → IAdministrator 203, потім DeleteUser; без network UnregisterAsync / UnlinkLinkedProfiles / TerminateAccountDaemons. Останній профіль — refuse.
+- ConfirmDelete після Hold A: «backup all accounts on console?» (Skip / Backup all accounts) → окремий ProgressBox без reboot; fail → «Could not write the account backup.» і стоп; потім saves question; `RunDelete` лише delete (+ optional save backup).
+- ProgressBox: action `Deleting`, title = nickname / `Delete user`; NewTransfer = per-user nick, потім `Deleting saves`. OptionBox OK з A glyph. i18n en/uk/ru. Version `0.13.748`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.747 — nand pack date, nicknames, delete only from list
 

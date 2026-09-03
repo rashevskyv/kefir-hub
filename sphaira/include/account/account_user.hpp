@@ -34,7 +34,7 @@ auto Create(const std::string& nickname, AccountUid& out_uid, const std::vector<
 auto Delete(const AccountUid& uid) -> Result;
 
 auto ExportUserPack(const AccountUid& uid, std::string& out_dir) -> Result;
-auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing = false) -> Result;
+auto ExportUserPacks(const std::vector<AccountUid>& uids, std::vector<std::string>& out_dirs, bool overwrite_existing = false, bool may_terminate_account = true) -> Result;
 auto FindUserPack(const std::string& path) -> Pack;
 auto ListUserPacks() -> std::vector<Pack>;
 auto ListUserPacks(const std::string& root) -> std::vector<Pack>;

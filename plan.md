@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.747** (nand pack date, nicknames, delete only from list). Завершені плани збережено в
+Поточний delivery — **v0.13.748** (delete linked users; backup all accounts before delete). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.747 — nand pack date, nicknames, delete only from list
+## Поточний delivery: v0.13.748 — delete linked users; backup all accounts before delete
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. `account_user::Delete`: перед `acc:su` DeleteUser — best-effort `GetBaasAccountAdministrator` (250) + `DeleteRegistrationInfoLocally` (203); ACCOUNT живий; без `UnlinkLinkedProfiles` / `UnregisterAsync` / terminate. Refuse last remaining profile (`Result_FsEmpty`).
+2. Export без kill ACCOUNT у delete-flow: `ExportUserPacks` / `ExportUserLinkPackage` / `OpenAccountSaveForExport(may_terminate_account)`; delete-backup `false` (zip nick+avatar+playtime навіть якщо 0010 locked); `RunBackup` лишає `true` + reboot.
+3. ConfirmDelete: після Hold A — backup **all** live profiles (Skip / Backup all accounts), потім saves question; `RunDelete` без account export; ProgressBox action `Deleting`, title = nick / `Delete user`, NewTransfer per nick + `Deleting saves`; UI+RunDelete guard «не всі профілі».
+4. OptionBox one-button OK: A glyph `\uE0E0`. i18n en/uk/ru. Version `0.13.748`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.747 — nand pack date, nicknames, delete only from list
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

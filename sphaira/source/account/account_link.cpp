@@ -168,9 +168,13 @@ void TerminateAccountDaemons() {
     }
 }
 
-auto OpenAccountSaveForExport() -> fs::FsNativeSave {
+auto OpenAccountSaveForExport(bool may_terminate_account) -> fs::FsNativeSave {
     auto save = TryOpenAccountSave();
     if (R_SUCCEEDED(save.GetFsOpenResult())) {
+        return save;
+    }
+    if (!may_terminate_account) {
+        log_write("[ACC] account save read-only failed 0x%X (no terminate)\n", save.GetFsOpenResult());
         return save;
     }
     log_write("[ACC] account save read-only failed 0x%X, terminating daemons\n", save.GetFsOpenResult());
@@ -1113,13 +1117,13 @@ auto ListUsers() -> std::vector<User> {
     return out;
 }
 
-auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, std::string& out_link_status) -> Result
+auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, std::string& out_link_status, bool may_terminate_account) -> Result
 {
     out_link_status = "none";
     u64 nas_id = 0;
     QueryNintendoAccountId(uid, nas_id);
 
-    auto save = OpenAccountSaveForExport();
+    auto save = OpenAccountSaveForExport(may_terminate_account);
     if (R_FAILED(save.GetFsOpenResult())) {
         log_write("[ACC] ExportUserLinkPackage save open failed 0x%X\n", save.GetFsOpenResult());
         out_link_status = (nas_id != 0) ? "unavailable" : "none";
