@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.746** (TE dump: drop busy-wait RESET crash). Завершені задачі збережено в
+Актуальний delivery — **v0.13.747** (nand pack date, nicknames, delete only from list). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.746 (TE dump: drop busy-wait RESET crash)
+## Поточний delivery: v0.13.747 (nand pack date, nicknames, delete only from list)
+
+- [x] `NAND-PACK-CREATED-LABEL-747` — `PackInfo.created_label` + `FormatPackCreated` у `MakePackInfo`; list/detail title = label else stamp name.
+- [x] `NAND-PACK-PROFILES-NICK-747` — `CollectPackUsers`: overlay nicknames з `profiles.dat` (robust UID match); fallback uid-as-nickname якщо файл відсутній.
+- [x] `NAND-PACK-DELETE-LIST-ONLY-747` — detail: A Restore / B Back; прибрано delete з detail; list multi-delete 745 без змін.
+- [x] `CMAKELISTS-VERSION-BUMP-747` — `sphaira_VERSION` піднято до `0.13.747`.
+- [x] `DOCS-BUMP-747` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+- [ ] `NOT-REAL-PER-ACCOUNT-NAND` — per-account select/restore/delete всередині nand pack **не** реалізовано (0010 monolith); multi-restore nand packs **не** робимо.
+
+## Попередній delivery: v0.13.746 (TE dump: drop busy-wait RESET crash)
 
 - [x] `TE-DUMP-DROP-WAITFIVE-746` — `nand_transfer_dump_auto.te`: видалено `waitFive`; після `printResult()` і в `failOut` одразу `goHekate()` (без busy-loop RESET).
 - [x] `TE-DUMP-SKIP-VEND-746` — `dumpFilesIn`: `player.vend.dat` → `skip slow` (не read/write; не помилка).

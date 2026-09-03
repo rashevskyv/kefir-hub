@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.746** (TE dump: drop busy-wait RESET crash). Завершені плани збережено в
+Поточний delivery — **v0.13.747** (nand pack date, nicknames, delete only from list). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.746 — TE dump: drop busy-wait RESET crash
+## Поточний delivery: v0.13.747 — nand pack date, nicknames, delete only from list
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Pack list title = human `created_label` (`FormatPackCreated` з folder stamp `YYYYMMDD_HHMMSS` → `"%02d.%02d.%04d, %02d:%02d"`); subtitle лишається accounts + play hours / profiles. `PackInfo.created_label` у `MakePackInfo`.
+2. Pack detail: nickname з `profiles.dat` (UID 16B + UTF-8 nick at +0x28 у блоках 0xC8); overlay на jpg/baas UID (strip `-`, case-insensitive; match `%02X` bytes і `UidHexRaw` u64 form). UID лишається другим рядком. Title detail = `created_label` else `name`.
+3. Delete whole pack лише зі списку (X/Y/Minus як 745). Detail: A = Restore, B = Back; прибрано SELECT Delete, PromptAction Delete pack, `ConfirmDelete` / `m_on_deleted`. Per-account nand edit **не** робимо.
+4. Version `0.13.747`. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.746 — TE dump: drop busy-wait RESET crash
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

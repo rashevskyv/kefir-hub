@@ -1,5 +1,6 @@
 #include "account/nand_transfer.hpp"
 
+#include "account/account_user.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
@@ -8,6 +9,7 @@
 #include "ui/progress_box.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -301,6 +303,98 @@ auto StemName(std::string_view name) -> std::string {
     return std::string{name.substr(0, dot)};
 }
 
+auto NormalizeUidKey(std::string_view s) -> std::string {
+    std::string out;
+    out.reserve(s.size());
+    for (unsigned char c : s) {
+        if (c == '-') {
+            continue;
+        }
+        out.push_back(static_cast<char>(std::toupper(c)));
+    }
+    return out;
+}
+
+auto UidHexBytes(const u8* bytes16) -> std::string {
+    char buf[33]{};
+    for (int i = 0; i < 16; ++i) {
+        std::snprintf(buf + i * 2, 3, "%02X", bytes16[i]);
+    }
+    return buf;
+}
+
+auto UidHexRawFromBytes(const u8* bytes16) -> std::string {
+    AccountUid uid{};
+    std::memcpy(&uid, bytes16, sizeof(AccountUid));
+    char buf[33]{};
+    std::snprintf(buf, sizeof(buf), "%016llX%016llX",
+        static_cast<unsigned long long>(uid.uid[0]),
+        static_cast<unsigned long long>(uid.uid[1]));
+    return buf;
+}
+
+auto ApplyProfilesNicknames(fs::Fs& sd, const std::string& pack_dir, std::vector<PackUser>& users) -> void {
+    const auto path = pack_dir + "/8000000000000010/su/avators/profiles.dat";
+    std::vector<u8> data;
+    if (R_FAILED(sd.read_entire_file(path.c_str(), data))) {
+        return;
+    }
+    constexpr size_t kHeader = 0x10;
+    constexpr size_t kBlock = 0xC8;
+    constexpr size_t kMaxUsers = 8;
+    if (data.size() < kHeader + kBlock) {
+        return;
+    }
+    const size_t max_i = std::min(kMaxUsers, (data.size() - kHeader) / kBlock);
+    for (size_t i = 0; i < max_i; ++i) {
+        const size_t base = kHeader + i * kBlock;
+        if (base + 0x28 + 0x20 > data.size()) {
+            break;
+        }
+        const u8* uid_bytes = data.data() + base;
+        bool all_zero = true;
+        for (int b = 0; b < 16; ++b) {
+            if (uid_bytes[b] != 0) {
+                all_zero = false;
+                break;
+            }
+        }
+        if (all_zero) {
+            continue;
+        }
+
+        const char* nick_ptr = reinterpret_cast<const char*>(data.data() + base + 0x28);
+        size_t nick_len = 0;
+        while (nick_len < 0x20 && nick_ptr[nick_len] != '\0') {
+            nick_len++;
+        }
+        if (nick_len == 0) {
+            continue;
+        }
+        const std::string nickname(nick_ptr, nick_len);
+        const auto hex_bytes = UidHexBytes(uid_bytes);
+        const auto hex_raw = UidHexRawFromBytes(uid_bytes);
+        const auto key_bytes = NormalizeUidKey(hex_bytes);
+        const auto key_raw = NormalizeUidKey(hex_raw);
+
+        bool matched = false;
+        for (auto& u : users) {
+            const auto key = NormalizeUidKey(u.uid);
+            if (key == key_bytes || key == key_raw) {
+                u.nickname = nickname;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            PackUser u;
+            u.uid = hex_raw;
+            u.nickname = nickname;
+            users.push_back(std::move(u));
+        }
+    }
+}
+
 auto CollectPackUsers(fs::Fs& sd, const std::string& pack_dir) -> std::vector<PackUser> {
     std::vector<PackUser> users;
     const auto avators = pack_dir + "/8000000000000010/su/avators";
@@ -362,6 +456,7 @@ auto CollectPackUsers(fs::Fs& sd, const std::string& pack_dir) -> std::vector<Pa
 
     scan_dir(avators, true);
     scan_dir(baas, false);
+    ApplyProfilesNicknames(sd, pack_dir, users);
     std::sort(users.begin(), users.end(), [](const PackUser& a, const PackUser& b) {
         return a.uid < b.uid;
     });
@@ -372,6 +467,7 @@ auto MakePackInfo(fs::Fs& sd, const std::string& dir) -> PackInfo {
     PackInfo info;
     info.dir = dir;
     info.name = BaseName(dir);
+    info.created_label = account_user::FormatPackCreated(info.name, {});
     info.save_0010 = sd.DirExists((dir + "/8000000000000010").c_str());
     info.save_00F0 = sd.DirExists((dir + "/80000000000000F0").c_str());
     info.accounts = static_cast<u32>(CollectPackUsers(sd, dir).size());

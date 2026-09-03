@@ -20,6 +20,7 @@ struct Report {
 struct PackInfo {
     std::string dir;
     std::string name;
+    std::string created_label;
     bool save_0010{};
     bool save_00F0{};
     u32 accounts{};

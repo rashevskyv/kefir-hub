@@ -10,7 +10,6 @@
 #include "ui/menus/menu_base.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
-#include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 
 #include <functional>
@@ -31,11 +30,10 @@ struct NandPackDetailMenu final : MenuBase {
         bool avatar_tried{};
     };
 
-    NandPackDetailMenu(nand_transfer::PackInfo pack, RestoreCb on_restore, std::function<void()> on_deleted)
-        : MenuBase{"Profiles & play hours pack"_i18n, MenuFlag_None}
+    NandPackDetailMenu(nand_transfer::PackInfo pack, RestoreCb on_restore)
+        : MenuBase{!pack.created_label.empty() ? pack.created_label : pack.name, MenuFlag_None}
         , m_pack{std::move(pack)}
         , m_on_restore{std::move(on_restore)}
-        , m_on_deleted{std::move(on_deleted)}
     {
         for (auto& u : nand_transfer::ListPackUsers(m_pack.dir)) {
             Entry e;
@@ -44,9 +42,8 @@ struct NandPackDetailMenu final : MenuBase {
         }
 
         this->SetActions(
-            std::make_pair(Button::A, Action{"Actions"_i18n, [this](){ PromptAction(); }}),
-            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
-            std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){ ConfirmDelete(); }})
+            std::make_pair(Button::A, Action{"Restore"_i18n, [this](){ ConfirmRestore(); }}),
+            std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
         );
 
         SetTitleSubHeading(
@@ -157,24 +154,6 @@ struct NandPackDetailMenu final : MenuBase {
     }
 
 private:
-    void PromptAction() {
-        PopupList::Items items;
-        items.emplace_back("Restore"_i18n);
-        items.emplace_back("Delete pack"_i18n);
-        items.emplace_back("Back"_i18n);
-        App::Push<PopupList>(m_pack.name, items, [this](auto op_index) {
-            if (!op_index) {
-                return;
-            }
-            switch (*op_index) {
-                case 0: ConfirmRestore(); break;
-                case 1: ConfirmDelete(); break;
-                case 2: SetPop(); break;
-                default: break;
-            }
-        });
-    }
-
     void ConfirmRestore() {
         std::string msg =
             "Restore this profiles & play hours pack?\n\n"
@@ -218,37 +197,8 @@ private:
             });
     }
 
-    void ConfirmDelete() {
-        App::Push<OptionBox>(
-            "Delete this profiles & play hours pack from the SD card?"_i18n,
-            "Cancel"_i18n, "Delete"_i18n, 1,
-            [this](auto op) {
-                if (!op || *op != 1) {
-                    return;
-                }
-                App::Push<ProgressBox>(0, "Delete pack"_i18n, m_pack.name,
-                    [dir = m_pack.dir](auto pbox) -> Result {
-                        pbox->NewTransfer("Deleting"_i18n);
-                        fs::FsNativeSd sd;
-                        R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
-                        R_SUCCEED();
-                    }, [this](Result rc) {
-                        if (R_FAILED(rc)) {
-                            App::Push<OptionBox>("Could not delete the pack."_i18n, "OK"_i18n);
-                            return;
-                        }
-                        auto cb = m_on_deleted;
-                        SetPop();
-                        if (cb) {
-                            cb();
-                        }
-                    }, 2);
-            });
-    }
-
     nand_transfer::PackInfo m_pack;
     RestoreCb m_on_restore;
-    std::function<void()> m_on_deleted;
     std::vector<Entry> m_entries;
     s64 m_index{};
     std::unique_ptr<List> m_list;
@@ -384,10 +334,11 @@ struct NandPackLibraryMenu final : MenuBase {
                 gfx::CHECKBOX_SIZE, e.selected);
 
             const float text_x = v.x + 50.f;
+            const auto& title = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.name;
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
-                "%s", e.pack.name.c_str());
+                "%s", title.c_str());
 
             std::string detail = std::to_string(e.pack.accounts) + " " + "accounts"_i18n;
             detail += e.pack.save_00F0 ? " - play hours"_i18n : " - no play hours"_i18n;
@@ -413,8 +364,7 @@ private:
         }
         App::Push<NandPackDetailMenu>(
             m_entries[m_index].pack,
-            m_on_restore,
-            [this]() { Refresh(); });
+            m_on_restore);
     }
 
     void ConfirmDelete() {

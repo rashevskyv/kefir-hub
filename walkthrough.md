@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.746** (2026-09-02). Попередні
+Актуальний delivery — **v0.13.747** (2026-09-03). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.747 — nand pack date, nicknames, delete only from list
+
+- Pack list (`NandPackLibraryMenu`): title line = `created_label` (`dd.mm.yyyy, HH:MM` з folder stamp), не сирий `YYYYMMDD_HHMMSS`; subtitle = accounts + play hours / profiles.
+- `PackInfo.created_label` заповнюється в `MakePackInfo` через `account_user::FormatPackCreated(name, {})`.
+- Pack detail: nickname з `8000000000000010/su/avators/profiles.dat` (header 0x10, блоки 0xC8, nick UTF-8 at +0x28); UID match strip `-` + case-insensitive до `%02X` bytes і `UidHexRaw` u64 form; без файлу — як раніше uid-as-nickname. UID лишається другим рядком. Window title = label else name.
+- Delete whole pack лише зі списку (X/Y/Minus). Detail: A = Restore напряму, B = Back; прибрано SELECT Delete, Actions popup, `ConfirmDelete` / `m_on_deleted`. Per-account nand edit **не** робили.
+- Version `0.13.747`. Збірку агент не запускав. A1–A7 не закриті.
 
 ## v0.13.746 — TE dump: drop busy-wait RESET crash
 
