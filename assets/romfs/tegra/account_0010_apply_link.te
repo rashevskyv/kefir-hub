@@ -3,7 +3,7 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# One-shot: Hub stages remapped baas/nas under restore_pending/link/, then
+# One-shot: Hub stages unchanged baas under destination UID-derived filename and nas under restore_pending/link/, then
 # copies this to sd:/startup.te. Opens live 0010 with readsave, writes pack
 # files only (does not replace the raw blob, does not delete stub baas),
 # commit() re-signs with this console's prod.keys, then loads hekate.

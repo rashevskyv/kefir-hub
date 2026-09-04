@@ -24,7 +24,7 @@ inline const char* NandRestoredOkPath() { return "/config/kefir/restore_pending/
 inline const char* NandPackPath() { return "/config/kefir/restore_pending/nand_pack.txt"; }
 // "1" or "0" — Hub writes when staging nand restore; TE skips 00F0 when "0".
 inline const char* Restore00F0Path() { return "/config/kefir/restore_pending/restore_00F0"; }
-// Hub stages remapped baas + nas here; TE writes them into 0010 (no Horizon OpenAccountSaveWritable).
+// Hub stages unchanged baas under destination UID-derived filename + nas here; TE writes them into 0010 (no Horizon OpenAccountSaveWritable).
 inline const char* LinkStagingDir() { return "/config/kefir/restore_pending/link"; }
 inline const char* LinkBaasDir() { return "/config/kefir/restore_pending/link/baas"; }
 inline const char* LinkNasDir() { return "/config/kefir/restore_pending/link/nas"; }

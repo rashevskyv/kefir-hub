@@ -700,9 +700,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         }
 
         const auto new_baas_path = baas_dir + "/" + UidDashedLinkalho(target.uid) + ".dat";
-        auto baas_for_uid = target.pkg.baas_data;
-        std::memcpy(baas_for_uid.data(), &target.uid, sizeof(AccountUid));
-        R_TRY(save.write_entire_file(new_baas_path.c_str(), baas_for_uid));
+        R_TRY(save.write_entire_file(new_baas_path.c_str(), target.pkg.baas_data));
         log_write("[ACC] baas bound to %s nas %llx (one file)\n",
             UidDashedRfc(target.uid).c_str(),
             static_cast<unsigned long long>(target.pkg.nas_id));
@@ -952,15 +950,6 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
         return false;
     }
 
-    auto uid_is_live = [&](const AccountUid& uid) -> bool {
-        for (const auto& base : live) {
-            if (base.uid.uid[0] == uid.uid[0] && base.uid.uid[1] == uid.uid[1]) {
-                return true;
-            }
-        }
-        return false;
-    };
-
     for (const auto& bf : ListDirFiles(save, baas_dir)) {
         std::vector<u8> data;
         if (R_FAILED(save.read_entire_file((baas_dir + "/" + bf).c_str(), data)) || data.size() < 24) {
@@ -970,14 +959,6 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
         std::memcpy(&file_nas, data.data() + 16, sizeof(u64));
         if (file_nas != nas_id) {
             continue;
-        }
-        AccountUid file_uid{};
-        std::memcpy(&file_uid, data.data(), sizeof(AccountUid));
-        if (uid_is_live(file_uid)) {
-            out_uid = file_uid;
-            log_write("[ACC] nas %llx is in baas %s for live %s\n",
-                static_cast<unsigned long long>(nas_id), bf.c_str(), UidDashedRfc(file_uid).c_str());
-            return true;
         }
         for (const auto& base : live) {
             const auto cands = BaasCandidateNames(base.uid);

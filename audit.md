@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.748**. Дата: 2026-09-03.
+Канонічний робочий файл. Версія коду: **v0.13.749**. Дата: 2026-09-04.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.749 поза ponytail-чергою: account-link BAAS payload тепер opaque і переноситься byte-for-byte у live `ApplyLinkPackages` та TE staging; UID цілі задається filename, не байтами `0..15`; `FindLiveUidByNasId` більше не читає UID з body. Реальний firmware 18.1.0 bootloop відтворив і підтвердив дефект. **Не закриває** чергу §2 A1–A7.
 
 v0.13.748 поза ponytail-чергою: Tools→Users→Delete — local BAAS unlink then DeleteUser; pre-delete backup **all** accounts without killing ACCOUNT; saves question; clearer ProgressBox/OK glyph. ZIP Manage Backups / nand pack / restore / TE **не** чіпали. **Не закриває** чергу §2 A1–A7.
 

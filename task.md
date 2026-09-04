@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.748** (delete linked users; backup all accounts before delete). Завершені задачі збережено в
+Актуальний delivery — **v0.13.749** (preserve BAAS payload during account linking). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.748 (delete linked users; backup all accounts before delete)
+## Поточний delivery: v0.13.749 (preserve BAAS payload during account linking)
+
+- [x] `ACCOUNT-LINK-PRESERVE-BAAS-749` — `ApplyLinkPackages` пише `target.pkg.baas_data` без зміни байтів; UID цілі лишається тільки в UID-похідному імені BAAS.
+- [x] `ACCOUNT-RESTORE-STAGE-PRESERVE-BAAS-749` — `StageCreateLinkForTe` staging пише `pkg.baas_data` без підміни перших 16 байтів.
+- [x] `ACCOUNT-LINK-FILENAME-UID-749` — `FindLiveUidByNasId` не читає `AccountUid` із BAAS body; після NAS match використовує тільки `BaasCandidateNames` filename proof.
+- [x] `ACCOUNT-LINK-DOCS-749` — account-transfer і TE/header comments фіксують opaque BAAS + UID-derived filename invariant.
+- [x] `CMAKELISTS-VERSION-BUMP-749` — `sphaira_VERSION` піднято до `0.13.749`.
+- [x] `DOCS-BUMP-749` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.748 (delete linked users; backup all accounts before delete)
 
 - [x] `DELETE-LOCAL-UNLINK-748` — `account_user::Delete`: GetBaasAccountAdministrator + DeleteRegistrationInfoLocally then DeleteUser; last-user refuse; no terminate/UnregisterAsync/UnlinkLinkedProfiles.
 - [x] `EXPORT-NO-KILL-ON-DELETE-748` — `may_terminate_account` through ExportUserPacks / ExportUserLinkPackage / OpenAccountSaveForExport; delete-flow false; RunBackup true.

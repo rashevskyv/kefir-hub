@@ -750,11 +750,9 @@ auto StageCreateLinkForTe(fs::FsNativeSd& sd, const AccountUid& dest_uid, const 
         log_write("[USER] StageCreateLinkForTe: baas too small\n");
         return Result_FsInvalidType;
     }
-    auto baas_for_uid = pkg.baas_data;
-    std::memcpy(baas_for_uid.data(), &dest_uid, sizeof(AccountUid));
     const auto baas_name = account_link::UidDashedLinkalho(dest_uid) + ".dat";
     const auto baas_path = std::string(account_restore::LinkBaasDir()) + "/" + baas_name;
-    R_TRY(sd.write_entire_file(baas_path.c_str(), baas_for_uid));
+    R_TRY(sd.write_entire_file(baas_path.c_str(), pkg.baas_data));
 
     for (const auto& nf : pkg.nas_files) {
         const auto nas_path = std::string(account_restore::LinkNasDir()) + "/" + nf.filename;

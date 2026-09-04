@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.748** (delete linked users; backup all accounts before delete). Завершені плани збережено в
+Поточний delivery — **v0.13.749** (preserve BAAS payload during account linking). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.748 — delete linked users; backup all accounts before delete
+## Поточний delivery: v0.13.749 — preserve BAAS payload during account linking
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. `ApplyLinkPackages` і `StageCreateLinkForTe` більше не підміняють перші 16 байтів BAAS локальним `AccountUid`: валідований донорський payload переноситься байт-у-байт, а UID цілі задається лише наявним UID-похідним ім’ям файлу.
+2. `FindLiveUidByNasId` як і раніше перевіряє вбудований `nas_id` за зсувом `0x10`, але більше не десеріалізує `AccountUid` із байтів `0..15`; відповідність живому профілю доводиться тільки через `BaasCandidateNames` і case-insensitive filename match.
+3. Оновлено опис інваріанта у `docs/account-transfer.md`, TE-коментарі та `account_restore.hpp`. Version `0.13.749`. Rollback, NAS cleanup, duplicate cleanup, commit і формат імен без змін.
+4. Gemini виконав `git diff --check` і source-level grep; senior перевірив повний diff та всі залишкові виклики. Компіляцію/NRO-тести не запускали за політикою checkout. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.748 — delete linked users; backup all accounts before delete
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

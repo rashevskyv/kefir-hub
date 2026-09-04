@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.748** (2026-09-03). Попередні
+Актуальний delivery — **v0.13.749** (2026-09-04). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.749 — preserve BAAS payload during account linking
+
+- Реальна консоль на firmware 18.1.0 підтвердила bootloop `account` (`2168-0006 / 0xCA8`) після інжекту: один 80-байтовий донорський BAAS зберігав правильний `nas_id` за `0x10`, але перші 16 байтів були замінені локальним `AccountUid`. Відновлення незміненого BAAS повернуло завантаження.
+- `ApplyLinkPackages`: прибрано копію `baas_for_uid` та `memcpy` UID у payload; `target.pkg.baas_data` записується байт-у-байт у наявний `UidDashedLinkalho(target.uid)` filename.
+- `StageCreateLinkForTe`: той самий інваріант для other-console Restore Backup — staging зберігає `pkg.baas_data` без змін, прив’язка цілі лишається в імені файлу та `uid.txt`.
+- `FindLiveUidByNasId`: видалено хибне читання `AccountUid` із `data[0..15]`; `nas_id` за `0x10` лишається перевіркою вмісту, а live UID визначається лише через `BaasCandidateNames` filename match.
+- Оновлено `docs/account-transfer.md`, `account_0010_apply_link.te`, `account_restore.hpp`; version `0.13.749`. Rollback/NAS cleanup/commit не змінені.
+- Верифікація: Gemini — `git diff --check` та source-level grep без залишкових corruption patterns; senior — повний diff/caller review. Збірку й NRO-тести не запускали за політикою checkout.
 
 ## v0.13.748 — delete linked users; backup all accounts before delete
 
