@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.752** (2026-09-05). Попередні
+Актуальний delivery — **v0.13.753** (2026-09-05). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.753 — persistent account-link diagnostics
+
+- Апаратний прогін `v0.13.751` на Horizon 22.5.0 / Atmosphère 1.11.2 показав 3 profiles (`official=0`, `linked_unverified=2`, `none=1`), примусовий reboot і відсутність `account_link_rollback`; останній 100-ms async log batch не встиг записатися до reboot.
+- `TerminateAccountDaemons` тепер через наявний `log_write_error` синхронно зберігає Result PM init та кожного BCAT/ACCOUNT/OLSC terminate. `ApplyLinkPackages` зберігає milestones/Result для validated entry, writable `0010`, BAAS preflight, rollback dirs, Commit та success count.
+- Телеметрія не містить UID, NAS/donor identities, filenames, tokens, email чи payload. Link selection, strict collision policy, mutation order, rollback і forced reboot не змінені. Гіпотеза — read-only `0010` probe не бачить already-present/orphan donor до terminate, а RW preflight потім відхиляє collision; цей delivery лише доводить/спростовує її.
+- Верифікація: Gemini й senior — `git diff --check`, 22 `[ACC_DIAG]` format strings, caller/security/diff-boundary review. Компіляцію й NRO не запускали за політикою checkout; потрібен один hardware run і читання `/config/kefir/errors.txt`.
 
 ## v0.13.752 — one visible profiles + PlayData backup library
 

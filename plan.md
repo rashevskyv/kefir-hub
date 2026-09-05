@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.752** (single profiles + PlayData backup library). Завершені плани збережено в
+Поточний delivery — **v0.13.753** (persistent account-link diagnostics). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.752 — single profiles + PlayData backup library
+## Поточний delivery: v0.13.753 — persistent account-link diagnostics
+
+Статус: реалізовано й прийнято в primary checkout; потрібен один апаратний прогін. Збірку агент не запускає за політикою checkout.
+
+1. Для `TerminateAccountDaemons` синхронно зберігати в `/config/kefir/errors.txt` Result ініціалізації PM та окремі Result завершення BCAT/ACCOUNT/OLSC.
+2. `ApplyLinkPackages` синхронно фіксує несекретні milestones та Result для RW-open `0010`, BAAS enumeration/preflight, rollback-directory creation і Commit, щоб forced reboot не губив причину збою.
+3. Не зберігати UID, NAS identity, donor identity, filenames, tokens, email чи payload; лише сталі stage labels, Result, booleans, sizes і counts. Link/validation/rollback/reboot семантику не змінювати.
+4. Version `0.13.753`; Gemini й senior підтвердили `git diff --check`, 22 format strings, callers і diff boundary. Compile/NRO не запускалися за policy; collision/orphan гіпотезу до результату апаратного прогону не виправляти.
+
+## Попередній delivery: v0.13.752 — single profiles + PlayData backup library
 
 Статус: реалізовано й прийнято в primary checkout; апаратна перевірка відкладена користувачем. Збірку агент не запускає за політикою checkout.
 

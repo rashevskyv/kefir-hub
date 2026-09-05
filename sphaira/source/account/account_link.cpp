@@ -156,13 +156,18 @@ auto OpenAccountSaveWritable() -> fs::FsNativeSave {
 }
 
 void TerminateAccountDaemons() {
-    if (R_SUCCEEDED(pmshellInitialize())) {
+    const auto pm_rc = pmshellInitialize();
+    log_write_error("[ACC_DIAG] pmshellInitialize rc=0x%X", pm_rc);
+    if (R_SUCCEEDED(pm_rc)) {
         ON_SCOPE_EXIT(pmshellExit());
         // Do not kill ns (0015/001F) or friends (000E): from the Hub applet that
         // User-Breaks am (0100000000000023) and can bootloop after ApplyLink.
-        pmshellTerminateProgram(0x010000000000000CULL); // BCAT
-        pmshellTerminateProgram(0x010000000000001EULL); // ACCOUNT
-        pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+        const auto bcat_rc = pmshellTerminateProgram(0x010000000000000CULL); // BCAT
+        log_write_error("[ACC_DIAG] terminate BCAT rc=0x%X", bcat_rc);
+        const auto acc_rc = pmshellTerminateProgram(0x010000000000001EULL);  // ACCOUNT
+        log_write_error("[ACC_DIAG] terminate ACCOUNT rc=0x%X", acc_rc);
+        const auto olsc_rc = pmshellTerminateProgram(0x010000000000003EULL); // OLSC
+        log_write_error("[ACC_DIAG] terminate OLSC rc=0x%X", olsc_rc);
         g_daemons_terminated = true;
         log_write("[ACC] terminated BCAT/ACCOUNT/OLSC (reboot needed; ns/friends kept)\n");
     }
@@ -702,25 +707,40 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         incoming_nas.push_back(target.pkg.nas_id);
     }
 
+    log_write_error("[ACC_DIAG] enter validated ApplyLinkPackages targets=%u",
+        static_cast<u32>(targets.size()));
+
     TerminateAccountDaemons();
 
     auto save = OpenAccountSaveWritable();
     const auto save_rc = save.GetFsOpenResult();
     if (R_FAILED(save_rc)) {
+        log_write_error("[ACC_DIAG] OpenAccountSaveWritable failed rc=0x%X", save_rc);
         log_write("[ACC] OpenAccountSaveWritable failed 0x%X\n", save_rc);
         return save_rc;
     }
+    log_write_error("[ACC_DIAG] OpenAccountSaveWritable ok rc=0x%X", save_rc);
     log_write("[ACC] OpenAccountSaveWritable ok\n");
 
     std::string existing_baas_dir;
     std::string existing_nas_dir;
     ResolveSuDirs(save, existing_baas_dir, existing_nas_dir);
+    log_write_error("[ACC_DIAG] resolved dirs: baas=%d nas=%d",
+        !existing_baas_dir.empty(), !existing_nas_dir.empty());
 
     if (!existing_baas_dir.empty()) {
         fs::Dir bd;
-        R_TRY(save.OpenDirectory(existing_baas_dir.c_str(), FsDirOpenMode_ReadFiles, &bd));
+        const auto open_dir_rc = save.OpenDirectory(existing_baas_dir.c_str(), FsDirOpenMode_ReadFiles, &bd);
+        if (R_FAILED(open_dir_rc)) {
+            log_write_error("[ACC_DIAG] OpenDirectory baas failed rc=0x%X", open_dir_rc);
+            return open_dir_rc;
+        }
         std::vector<FsDirectoryEntry> baas_entries;
-        R_TRY(bd.ReadAll(baas_entries));
+        const auto read_dir_rc = bd.ReadAll(baas_entries);
+        if (R_FAILED(read_dir_rc)) {
+            log_write_error("[ACC_DIAG] ReadAll baas failed rc=0x%X", read_dir_rc);
+            return read_dir_rc;
+        }
 
         for (const auto& e : baas_entries) {
             if (e.type != FsDirEntryType_File) {
@@ -731,16 +751,19 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
             std::vector<u8> bdata;
             const auto read_rc = save.read_entire_file(bf_path.c_str(), bdata);
             if (R_FAILED(read_rc)) {
+                log_write_error("[ACC_DIAG] baas preflight: read file failed rc=0x%X", read_rc);
                 log_write("[ACC] ApplyLinkPackages preflight: failed reading baas file rc=0x%X\n", read_rc);
                 return read_rc;
             }
             if (bdata.size() < 24) {
+                log_write_error("[ACC_DIAG] baas preflight: record too short size=%zu", bdata.size());
                 log_write("[ACC] ApplyLinkPackages preflight: baas file shorter than 24 bytes (%zu)\n", bdata.size());
                 return Result_FsInvalidType;
             }
             u64 file_nas = 0;
             std::memcpy(&file_nas, bdata.data() + 16, sizeof(u64));
             if (file_nas == 0) {
+                log_write_error("[ACC_DIAG] baas preflight: zero embedded identity");
                 log_write("[ACC] ApplyLinkPackages preflight: baas file nas identity is zero\n");
                 return Result_FsInvalidType;
             }
@@ -755,6 +778,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
                         }
                     }
                     if (!belongs_to_target) {
+                        log_write_error("[ACC_DIAG] baas preflight: collision with incoming identity");
                         log_write("[ACC] ApplyLinkPackages collision: incoming nas already present in baas not belonging to destination uid\n");
                         return Result_FsInvalidType;
                     }
@@ -763,14 +787,29 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         }
     }
 
+    log_write_error("[ACC_DIAG] baas preflight ok");
+
     fs::FsNativeSd sd;
     char stamp[32]{};
     const auto t = std::time(nullptr);
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
     const auto rollback_dir = std::string("/config/kefir/account_link_rollback/") + stamp;
-    R_TRY(sd.CreateDirectoryRecursively(rollback_dir.c_str()));
-    R_TRY(sd.CreateDirectoryRecursively((rollback_dir + "/baas").c_str()));
-    R_TRY(sd.CreateDirectoryRecursively((rollback_dir + "/nas").c_str()));
+    const auto rb_base_rc = sd.CreateDirectoryRecursively(rollback_dir.c_str());
+    if (R_FAILED(rb_base_rc)) {
+        log_write_error("[ACC_DIAG] rollback dir create base failed rc=0x%X", rb_base_rc);
+        return rb_base_rc;
+    }
+    const auto rb_baas_rc = sd.CreateDirectoryRecursively((rollback_dir + "/baas").c_str());
+    if (R_FAILED(rb_baas_rc)) {
+        log_write_error("[ACC_DIAG] rollback dir create baas failed rc=0x%X", rb_baas_rc);
+        return rb_baas_rc;
+    }
+    const auto rb_nas_rc = sd.CreateDirectoryRecursively((rollback_dir + "/nas").c_str());
+    if (R_FAILED(rb_nas_rc)) {
+        log_write_error("[ACC_DIAG] rollback dir create nas failed rc=0x%X", rb_nas_rc);
+        return rb_nas_rc;
+    }
+    log_write_error("[ACC_DIAG] rollback dirs created ok");
 
     std::string baas_dir = existing_baas_dir;
     std::string nas_dir = existing_nas_dir;
@@ -878,12 +917,15 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
 
     const auto commit_rc = save.Commit();
     if (R_FAILED(commit_rc)) {
+        log_write_error("[ACC_DIAG] Commit failed rc=0x%X", commit_rc);
         log_write("[ACC] Commit failed 0x%X\n", commit_rc);
         return commit_rc;
     }
+    log_write_error("[ACC_DIAG] Commit ok rc=0x%X", commit_rc);
     log_write("[ACC] Commit ok\n");
 
     out_linked_count = static_cast<u32>(targets.size());
+    log_write_error("[ACC_DIAG] ApplyLinkPackages completed count=%u", out_linked_count);
     log_write("[ACC] ApplyLinkPackages completed for %u target(s)\n", out_linked_count);
     R_SUCCEED();
 }

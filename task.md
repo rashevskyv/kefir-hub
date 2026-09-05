@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.752** (single profiles + PlayData backup library). Завершені задачі збережено в
+Актуальний delivery — **v0.13.753** (persistent account-link diagnostics). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.752 (single profiles + PlayData backup library)
+## Поточний delivery: v0.13.753 (persistent account-link diagnostics)
+
+- [x] `ACC-DIAG-PM-753` — `errors.txt` синхронно зберігає Result `pmshellInitialize` і BCAT/ACCOUNT/OLSC termination до forced reboot.
+- [x] `ACC-DIAG-PREFLIGHT-753` — `ApplyLinkPackages` фіксує RW-open `0010`, resolved-dir booleans, BAAS directory/read/validation/collision та preflight completion без identities.
+- [x] `ACC-DIAG-ROLLBACK-COMMIT-753` — persistent milestones вказують Result кожного rollback mkdir, Commit та final target count.
+- [x] `ACC-DIAG-SECRETS-753` — 22 `[ACC_DIAG]` format strings містять лише stage/Result/boolean/size/count; UID/NAS/donor/token/email/identity filename не логуються.
+- [x] `CMAKELISTS-VERSION-BUMP-753` — `sphaira_VERSION` піднято до `0.13.753`.
+- [x] `DOCS-BUMP-753` — plan/task/walkthrough/audit оновлено після acceptance; delivery готовий до локального commit на primary `master`.
+
+## Попередній delivery: v0.13.752 (single profiles + PlayData backup library)
 
 - [x] `USERS-REMOVE-INDIVIDUAL-BACKUP-752` — sidebar більше не показує `Backup user`, `Restore Backup` або окрему individual-backup секцію.
 - [x] `USERS-MANAGE-NAND-DIRECT-752` — `Manage Backups` розміщено разом із profiles + PlayData actions і напряму відкриває `NandPackLibraryMenu` без source picker.
