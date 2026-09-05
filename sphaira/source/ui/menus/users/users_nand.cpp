@@ -20,7 +20,7 @@ namespace sphaira::ui::menu::users {
 
 void Menu::ConfirmNandBackup() {
     App::Push<OptionBox>(
-        "Copy every profile on this console plus their play hours to SD (same users, with hours). If the system holds a save, Hub skips it and writes a TegraExplorer script instead of killing services. Not the same as Backup user."_i18n,
+        "Copy every profile on this console plus their play hours to SD (same users, with hours). If the system holds a save, Hub skips it and writes a TegraExplorer script instead of killing services."_i18n,
         "Cancel"_i18n, "Backup"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {

@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.751** (unique embedded donor pool). Завершені задачі збережено в
+Актуальний delivery — **v0.13.752** (single profiles + PlayData backup library). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.751 (unique embedded donor pool)
+## Поточний delivery: v0.13.752 (single profiles + PlayData backup library)
+
+- [x] `USERS-REMOVE-INDIVIDUAL-BACKUP-752` — sidebar більше не показує `Backup user`, `Restore Backup` або окрему individual-backup секцію.
+- [x] `USERS-MANAGE-NAND-DIRECT-752` — `Manage Backups` розміщено разом із profiles + PlayData actions і напряму відкриває `NandPackLibraryMenu` без source picker.
+- [x] `USERS-BACKUP-COPY-752` — актуальний NAND backup/detail UI та en/uk/ru не радять прихований individual Backup/Restore path.
+- [x] `USERS-BACKUP-DOCS-752` — `docs/account-transfer.md` описує єдину видиму бібліотеку profiles + PlayData; legacy recovery backend не видаляється.
+- [x] `CMAKELISTS-VERSION-BUMP-752` — `sphaira_VERSION` піднято до `0.13.752`.
+- [x] `DOCS-BUMP-752` — plan/task/walkthrough/audit оновлено після acceptance; delivery готовий до локального commit на primary `master`.
+
+## Попередній delivery: v0.13.751 (unique embedded donor pool)
 
 - [x] `DONOR-INGEST-751` — останні 8 valid SD archives вшиті як indexed opaque donors з BAAS + 4 core NAS files; profile/avatar/playtime/optional cache не вшиті; legacy Kefir donor збережено.
 - [x] `DONOR-POOL-LOAD-751` — top-level pool manifest + multi-loader валідують всі packages і unique embedded NAS без виведення secret values.

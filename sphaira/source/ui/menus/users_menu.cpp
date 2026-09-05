@@ -387,19 +387,6 @@ void Menu::ShowContextMenu() {
         }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
     }
 
-    options->Add<SidebarEntryHeader>("BACKUP & RESTORE USER"_i18n);
-    if (!m_items.empty()) {
-        options->Add<SidebarEntryCallback>("Backup user"_i18n, [this](){
-            ConfirmBackup();
-        }, true, "Back up name, avatar, Nintendo Account link and this user's play hours to SD."_i18n);
-    }
-    options->Add<SidebarEntryCallback>("Restore Backup"_i18n, [this](){
-        ConfirmRestoreBackup();
-    }, true, "Restore backups: name, avatar and Nintendo Account link. Play hours are not restored by this action."_i18n);
-    options->Add<SidebarEntryCallback>("Manage Backups"_i18n, [this](){
-        OpenManageBackups();
-    }, true, "Inspect, restore, rename, duplicate, delete or share user backup packs."_i18n);
-
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
         ConfirmNandBackup();
@@ -407,6 +394,9 @@ void Menu::ShowContextMenu() {
     options->Add<SidebarEntryCallback>("Restore profiles & play hours"_i18n, [this](){
         ConfirmNandRestore();
     }, true, "Write that pack into this console via TegraExplorer. Hours and profiles here are replaced. Back up SYSTEM first."_i18n);
+    options->Add<SidebarEntryCallback>("Manage Backups"_i18n, [this](){
+        ConfirmNandRestore();
+    }, true, "Browse profiles & play hours packs under /config/kefir/nand_transfer."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {

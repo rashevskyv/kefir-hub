@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.751** (2026-09-05). Попередні
+Актуальний delivery — **v0.13.752** (2026-09-05). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.752 — one visible profiles + PlayData backup library
+
+- Users Options більше не показує секцію `BACKUP & RESTORE USER` або окремі `Backup user` / `Restore Backup`. `Manage Backups` перенесено до `CONSOLE MOVE` поруч із `Backup profiles & play hours` і `Restore profiles & play hours`.
+- `Manage Backups` повторно використовує наявний `ConfirmNandRestore()` і без source picker відкриває `NandPackLibraryMenu` для `/config/kefir/nand_transfer`; заголовок бібліотеки також `Manage Backups`. Нового формату, меню чи callback-шару не додано.
+- Confirm/detail copy більше не посилається на прихований individual-user flow; en/uk/ru та `docs/account-transfer.md` описують актуальну комплексну бібліотеку всіх профілів + PlayData. Старі individual packs не видаляються, legacy/pending recovery backend лишається сумісним, але не доступний зі звичайного sidebar.
+- Nintendo Account linking і donor pool не змінені: цілі як і раніше лише `linked_known && !horizon_linked`, а коли таких немає — показується чинне повідомлення про вже прив’язані профілі.
+- Верифікація: Gemini і senior — case-sensitive JSON parse (`3` locales), `git diff --check`, targeted sidebar/direct-route/stale-copy grep та diff boundary (`0` змін у account/donor paths). Компіляцію/NRO і hardware test не запускали за політикою checkout; користувач відклав перевірку на консолі.
 
 ## v0.13.751 — unique embedded Nintendo Account donor pool
 

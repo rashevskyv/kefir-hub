@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.751** (unique embedded donor pool). Завершені плани збережено в
+Поточний delivery — **v0.13.752** (single profiles + PlayData backup library). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.751 — unique embedded donor pool
+## Поточний delivery: v0.13.752 — single profiles + PlayData backup library
+
+Статус: реалізовано й прийнято в primary checkout; апаратна перевірка відкладена користувачем. Збірку агент не запускає за політикою checkout.
+
+1. У Users Options прибрати окрему секцію/дії `Backup user` і `Restore Backup`; єдиний доступ до бібліотеки — `Manage Backups` у секції комплексного переносу.
+2. `Manage Backups` без проміжного вибору типу одразу відкриває наявний `NandPackLibraryMenu` для `/config/kefir/nand_transfer` (усі профілі + PlayData) і використовує наявний callback `RunNandRestore`.
+3. Прибрати з доступного NAND backup/restore UI згадки «Not the same as Backup user» і «For one user use Restore Backup»; en/uk/ru та `docs/account-transfer.md` описують тільки актуальний комплексний шлях.
+4. Legacy individual-backup/pending-restore backend і формати цього delivery не видаляти: прибирається доступ із меню, без ризикового переписування recovery-flow або даних користувача.
+5. Version `0.13.752`; без compile/NRO за policy. Gemini й senior підтвердили case-sensitive JSON parse, `git diff --check`, caller/string grep, прямий маршрут `Manage Backups` → `ConfirmNandRestore` → `OpenNandPackLibrary` та нуль змін у Nintendo Account/donor коді.
+
+## Попередній delivery: v0.13.751 — unique embedded donor pool
 
 Статус: реалізовано й прийнято в primary checkout; апаратна перевірка на HOS 18.1.0 очікується. Збірку агент не запускає за політикою checkout.
 

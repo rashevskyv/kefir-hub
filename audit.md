@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.751**. Дата: 2026-09-05.
+Канонічний робочий файл. Версія коду: **v0.13.752**. Дата: 2026-09-05.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.752 поза ponytail-чергою: Users sidebar прибрав individual `Backup user`/`Restore Backup`; `Manage Backups` у `CONSOLE MOVE` напряму повторно використовує `ConfirmNandRestore` → комплексну `/config/kefir/nand_transfer` бібліотеку всіх профілів + PlayData. Stale copy/i18n/docs оновлено; legacy/pending backend і дані не видалені; account/donor paths без змін. **Не закриває** чергу §2 A1–A7.
 
 v0.13.751 поза ponytail-чергою: embedded Nintendo Account donor pool = legacy root + 8 byte-exact opaque packages; one unused donor per known-unlinked live profile; unknown/shortage fail до terminate; `ApplyLinkPackages` має duplicate UID/NAS guards і strict fail-closed BAAS collision preflight до rollback/мутацій; failure після daemon termination примусово reboot; raw donor identifiers прибрані з shared lookup logs. Safe validator/JSON/diff/caller checks пройдені, hardware HOS 18.1.0 очікується. **Не закриває** чергу §2 A1–A7.
 

@@ -47,7 +47,7 @@ struct NandPackDetailMenu final : MenuBase {
         );
 
         SetTitleSubHeading(
-            "This pack restores all profiles together. For one user use Restore Backup."_i18n, true);
+            "This pack restores all profiles together. Play hours may be restored with them."_i18n, true);
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
         UpdateSubHeading();
     }
@@ -213,7 +213,7 @@ struct NandPackLibraryMenu final : MenuBase {
     };
 
     NandPackLibraryMenu(RestoreCb on_restore)
-        : MenuBase{"Backup profiles & play hours"_i18n, MenuFlag_None}
+        : MenuBase{"Manage Backups"_i18n, MenuFlag_None}
         , m_on_restore{std::move(on_restore)}
     {
         this->SetActions(
