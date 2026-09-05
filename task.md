@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.753** (persistent account-link diagnostics). Завершені задачі збережено в
+Актуальний delivery — **v0.13.754** (allow zero-identity BAAS placeholders). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.753 (persistent account-link diagnostics)
+## Поточний delivery: v0.13.754 (allow zero-identity BAAS placeholders)
+
+- [x] `ACC-ZERO-BAAS-SKIP-754` — global collision preflight ігнорує existing BAAS з zero embedded identity, бо validated incoming identities завжди nonzero.
+- [x] `ACC-ZERO-BAAS-TARGET-754` — preflight не видаляє placeholder; existing UID-filename replacement loop лише для target видаляє старий BAAS і пише donor BAAS.
+- [x] `ACC-ZERO-BAAS-SAFETY-754` — read failure, BAAS size `<24` і real nonzero incoming collision лишаються fail-closed; `[ACC_DIAG]` пише лише non-secret ignored marker.
+- [x] `CMAKELISTS-VERSION-BUMP-754` — `sphaira_VERSION` піднято до `0.13.754`.
+- [x] `DOCS-BUMP-754` — plan/task/walkthrough/audit оновлено після acceptance; delivery готовий до локального commit на primary `master`.
+
+## Попередній delivery: v0.13.753 (persistent account-link diagnostics)
 
 - [x] `ACC-DIAG-PM-753` — `errors.txt` синхронно зберігає Result `pmshellInitialize` і BCAT/ACCOUNT/OLSC termination до forced reboot.
 - [x] `ACC-DIAG-PREFLIGHT-753` — `ApplyLinkPackages` фіксує RW-open `0010`, resolved-dir booleans, BAAS directory/read/validation/collision та preflight completion без identities.

@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.753**. Дата: 2026-09-05.
+Канонічний робочий файл. Версія коду: **v0.13.754**. Дата: 2026-09-05.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.754 поза ponytail-чергою: hardware `v0.13.753` довів zero-identity existing BAAS як fatal preflight root cause до rollback. Global collision scan тепер пропускає zero placeholder (валідований incoming NAS завжди nonzero); read/short/nonzero collision лишаються fail-closed, а target-specific BAAS replacement без змін. **Не закриває** чергу §2 A1–A7.
 
 v0.13.753 поза ponytail-чергою: persistent `[ACC_DIAG]` у `/config/kefir/errors.txt` переживає forced reboot і фіксує PM/BCAT/ACCOUNT/OLSC Result, RW-open `0010`, BAAS preflight, rollback mkdir та Commit без UID/NAS/donor/token даних. Link/rollback/reboot поведінка не змінена; один hardware run має підтвердити чи спростувати orphan/collision гіпотезу. **Не закриває** чергу §2 A1–A7.
 

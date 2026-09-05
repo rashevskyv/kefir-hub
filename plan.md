@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.753** (persistent account-link diagnostics). Завершені плани збережено в
+Поточний delivery — **v0.13.754** (allow zero-identity BAAS placeholders). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.753 — persistent account-link diagnostics
+## Поточний delivery: v0.13.754 — allow zero-identity BAAS placeholders
+
+Статус: реалізовано й прийнято в primary checkout; потрібен повторний апаратний прогін. Збірку агент не запускає за політикою checkout.
+
+1. Hardware `v0.13.753` довів: PM і BCAT/ACCOUNT/OLSC terminate успішні, RW-open `0010` успішний, BAAS/NAS dirs є; preflight зупинився на existing BAAS з zero embedded identity до rollback/мутації.
+2. У global BAAS collision scan `file_nas == 0` більше не є fatal: validated incoming NAS завжди nonzero, тому zero placeholder не може конфліктувати й пропускається.
+3. Unreadable/короткий BAAS і nonzero incoming collision лишаються fail-closed. Zero BAAS не видаляється preflight-ом; existing target-specific filename loop видаляє/замінює лише BAAS цільового UID.
+4. Version `0.13.754`; persistent `v0.13.753` diagnostics збережені для hardware retest. Gemini й senior підтвердили `git diff --check`, scoped two-file diff і full preflight/replacement flow; compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.753 — persistent account-link diagnostics
 
 Статус: реалізовано й прийнято в primary checkout; потрібен один апаратний прогін. Збірку агент не запускає за політикою checkout.
 

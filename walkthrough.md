@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.753** (2026-09-05). Попередні
+Актуальний delivery — **v0.13.754** (2026-09-05). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.754 — allow zero-identity BAAS placeholders
+
+- Persistent `v0.13.753` hardware log на HOS 22.5.0 локалізував збій: PM init, BCAT/ACCOUNT/OLSC terminate, writable `0010` open і BAAS/NAS resolution пройшли; перший fatal preflight був existing BAAS з zero embedded identity. Rollback не створювався, мутації не починалися.
+- `ApplyLinkPackages` тепер логує zero-identity BAAS як ignored і продовжує scan. Це безпечно: кожен incoming package вже валідує `nas_id != 0`, тому zero не може збігтися з incoming identity.
+- Unreadable/короткий BAAS і nonzero collision з іншим UID/сиротою й далі abort до rollback. Preflight не видаляє unrelated placeholders; наявний target-specific filename loop видаляє/замінює лише BAAS target UID.
+- Верифікація: Gemini й senior — `git diff --check`, exact two-file diff, full preflight та target delete/write inspection. Компіляцію/NRO не запускали за policy; потрібен hardware retest `v0.13.754` і повторне читання `/config/kefir/errors.txt`.
 
 ## v0.13.753 — persistent account-link diagnostics
 

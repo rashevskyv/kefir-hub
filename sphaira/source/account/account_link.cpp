@@ -763,9 +763,9 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
             u64 file_nas = 0;
             std::memcpy(&file_nas, bdata.data() + 16, sizeof(u64));
             if (file_nas == 0) {
-                log_write_error("[ACC_DIAG] baas preflight: zero embedded identity");
-                log_write("[ACC] ApplyLinkPackages preflight: baas file nas identity is zero\n");
-                return Result_FsInvalidType;
+                log_write_error("[ACC_DIAG] baas preflight: zero embedded identity ignored");
+                log_write("[ACC] ApplyLinkPackages preflight: zero embedded identity ignored\n");
+                continue;
             }
             for (const auto& target : targets) {
                 if (file_nas == target.pkg.nas_id) {
