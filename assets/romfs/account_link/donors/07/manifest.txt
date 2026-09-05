@@ -1,0 +1,8 @@
+format=kefir_account_link
+version=3
+romfs=true
+system_save=8000000000000010
+idgen_0011_included=false
+baas_file=baas/link.dat
+nintendo_account_id=83e85267577680f7
+nas_files=83e85267577680f7.dat,83e85267577680f7_id.token,83e85267577680f7_refresh.token,83e85267577680f7_user.json

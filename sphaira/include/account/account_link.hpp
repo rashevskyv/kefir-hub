@@ -48,6 +48,7 @@ auto QueryHorizonLinkStatus(const AccountUid& uid, bool& out_linked) -> Result;
 auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result;
 auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool;
 auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result;
+auto LoadRomfsDonorPackages(std::vector<RomfsDonorPackage>& out_packages) -> Result;
 auto LoadUserPackLinkPackage(const std::string& pack_dir, LinkPackage& out_pkg) -> Result;
 auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_count) -> Result;
 auto ExportUserLinkPackage(const AccountUid& uid, const std::string& out_dir, std::string& out_link_status, bool may_terminate_account = true) -> Result;

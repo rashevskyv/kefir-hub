@@ -549,7 +549,7 @@ void Menu::ConfirmLinkNintendoAccount() {
     }
 
     App::Push<OptionBox>(
-        "Link all currently unlinked profiles to the official Nintendo Account donor? Already linked profiles will not be changed. The console will reboot immediately."_i18n,
+        "Link all currently unlinked profiles using built-in Nintendo Account donors? Each unlinked profile receives a different donor. Already linked profiles will not be changed. The console will reboot immediately."_i18n,
         "Cancel"_i18n, "Link and reboot"_i18n, 1,
         [this](auto op) {
             if (op && *op == 1) {
@@ -695,6 +695,10 @@ void Menu::RunLinkNintendoAccount() {
         },
         [this](Result rc) {
             if (R_FAILED(rc)) {
+                if (account_link::ConsumeAccountDaemonsTerminated()) {
+                    utils::requestForcedReboot();
+                    return;
+                }
                 App::Push<OptionBox>("Failed to link Nintendo Account."_i18n, "OK"_i18n);
             } else {
                 utils::requestForcedReboot();

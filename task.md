@@ -1,9 +1,21 @@
-Актуальний delivery — **v0.13.750** (cumulative NAND/microSD install progress). Завершені задачі збережено в
+Актуальний delivery — **v0.13.751** (unique embedded donor pool). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.750 (cumulative NAND/microSD install progress)
+## Поточний delivery: v0.13.751 (unique embedded donor pool)
+
+- [x] `DONOR-INGEST-751` — останні 8 valid SD archives вшиті як indexed opaque donors з BAAS + 4 core NAS files; profile/avatar/playtime/optional cache не вшиті; legacy Kefir donor збережено.
+- [x] `DONOR-POOL-LOAD-751` — top-level pool manifest + multi-loader валідують всі packages і unique embedded NAS без виведення secret values.
+- [x] `DONOR-ONE-TO-ONE-751` — Link all видає окремий unused donor кожному known-unlinked profile; already-live donors/linked profiles пропускаються; shortage fails before mutation.
+- [x] `LINK-PREFLIGHT-751` — duplicate target UID / incoming NAS відхиляються до daemon termination; strict BAAS scan до rollback/мутацій fail-closed на read/enumeration/malformed і відхиляє collision з іншим UID/сиротою.
+- [x] `LINK-FAIL-REBOOT-751` — Users + launch failure callback робить forced reboot, якщо account daemons вже були terminated.
+- [x] `DONOR-POOL-I18N-DOCS-751` — en/uk/ru і `docs/account-transfer.md` описують unique donor pool та one-per-profile invariant.
+- [x] `DONOR-VALIDATOR-751` — runnable safe validator перевіряє count/BAAS/core NAS/JWT sub/uniqueness і не друкує secrets.
+- [x] `CMAKELISTS-VERSION-BUMP-751` — `sphaira_VERSION` піднято до `0.13.751`.
+- [x] `DOCS-BUMP-751` — plan/task/walkthrough/audit оновлено після acceptance; delivery готовий до локального commit на primary `master`.
+
+## Попередній delivery: v0.13.750 (cumulative NAND/microSD install progress)
 
 - [x] `INSTALL-STORAGE-PROGRESS-750` — під `State::Installing` активний NAND/microSD header показує накопичувальне `written / total` без `+`; total = фіксований `PlanSize` поточного пакета.
 - [x] `INSTALL-STORAGE-REMAINING-BAR-750` — `SetStorageInstallProgress` малює жовтим лише `total - written`, без double-count уже записаного та без проєкції решти черги.

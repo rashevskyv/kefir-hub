@@ -412,7 +412,7 @@ void Menu::ShowContextMenu() {
     if (!m_items.empty()) {
         options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
             ConfirmLinkNintendoAccount();
-        }, true, "Link all currently unlinked profiles to the official Nintendo Account donor. Already linked profiles will not be changed. Console will reboot."_i18n);
+        }, true, "Link all currently unlinked profiles using built-in Nintendo Account donors. Each unlinked profile receives a different donor. Already linked profiles will not be changed. Console will reboot."_i18n);
         options->Add<SidebarEntryCallback>("Unlink Nintendo Account"_i18n, [this](){
             ConfirmUnlinkNintendoAccount();
         }, true, "Remove Nintendo Account link data from selected profiles, or from all linked profiles if none are selected. Console will reboot."_i18n);

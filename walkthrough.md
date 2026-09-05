@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.750** (2026-09-05). Попередні
+Актуальний delivery — **v0.13.751** (2026-09-05). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.751 — unique embedded Nintendo Account donor pool
+
+- Legacy root donor збережено byte-for-byte; остання серія з 8 перевірених SD-бекапів додана як `donors/01`…`donors/08`. У кожному opaque package лише 80-byte BAAS, manifest і чотири core NAS-файли; profile/avatar/playtime та optional cache не вбудовані. `pool.txt` оголошує 9 унікальних packages, тоді як Horizon підтримує максимум 8 live users.
+- `LoadRomfsDonorPackages` повторно використовує наявну package validation, відхиляє unsafe paths і duplicate embedded identity. `LinkAllFromRomfsDonor` працює лише з known-unlinked профілями, пропускає донорів, уже доведених на live profile, і стабільно видає різний unused donor кожній цілі; unknown status або shortage завершуються до зупинки демонів.
+- `ApplyLinkPackages` до `TerminateAccountDaemons` відхиляє duplicate UID/NAS. Після RW-open `0010`, але до rollback і першої мутації, strict BAAS enumeration/read fail-closed відхиляє I/O failure, payload коротший за 24 байти, zero NAS і collision з іншим UID/сиротою. Чужий BAAS не переноситься й не видаляється; донорський payload записується незмінним у UID-derived filename.
+- Users і launch callback примусово перезавантажують консоль після будь-якої помилки, якщо ACCOUNT/BCAT/OLSC уже зупинено. Нові тексти en/uk/ru та `docs/account-transfer.md` пояснюють one donor per profile. `FindLiveUidByNasId` більше не пише raw UID/NAS/BAAS filename у лог.
+- Верифікація: Gemini і senior — safe validator (`9` packages), case-sensitive JSON parse (`3` locales), `git diff --check`, targeted caller/order/log review; senior додатково підтвердив byte-exact відповідність 8 embedded payload-наборів останнім 8 SD-бекапам. Компіляцію/NRO та hardware test не запускали за політикою checkout; HOS 18.1.0 лишається обов’язковою перевіркою на консолі.
 
 ## v0.13.750 — cumulative NAND/microSD install progress
 

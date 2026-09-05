@@ -329,16 +329,11 @@ auto QueryHorizonUserLink(const AccountUid& uid, bool& out_linked, LinkKind& out
     R_SUCCEED();
 }
 
-} // namespace
-
-auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
+auto LoadDonorPackageFromPath(const std::string& base_path, RomfsDonorPackage& out_pkg) -> Result {
     out_pkg = {};
 
-    R_TRY(romfsInit());
-    ON_SCOPE_EXIT(romfsExit());
-
     std::vector<u8> manifest_bytes;
-    R_TRY(fs::read_entire_file("romfs:/account_link/manifest.txt", manifest_bytes));
+    R_TRY(fs::read_entire_file((base_path + "/manifest.txt").c_str(), manifest_bytes));
     R_UNLESS(!manifest_bytes.empty(), Result_FsInvalidType);
 
     const std::string manifest_str(manifest_bytes.begin(), manifest_bytes.end());
@@ -382,7 +377,7 @@ auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
     const auto& nas_files_csv = kv["nas_files"];
     R_UNLESS(!nas_files_csv.empty(), Result_FsInvalidType);
 
-    const auto baas_path = "romfs:/account_link/" + kv["baas_file"];
+    const auto baas_path = base_path + "/" + kv["baas_file"];
     std::vector<u8> baas_data;
     R_TRY(fs::read_entire_file(baas_path.c_str(), baas_data));
     R_UNLESS(baas_data.size() >= 24, Result_FsInvalidType);
@@ -421,7 +416,7 @@ auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
         R_UNLESS(IsSafeDumpFileName(fname), Result_FsInvalidType);
         R_UNLESS(NasFileMatches(fname, nas_id), Result_FsInvalidType);
 
-        const auto fpath = "romfs:/account_link/nas/" + fname;
+        const auto fpath = base_path + "/nas/" + fname;
         std::vector<u8> fdata;
         R_TRY(fs::read_entire_file(fpath.c_str(), fdata));
         R_UNLESS(!fdata.empty(), Result_FsInvalidType);
@@ -441,6 +436,106 @@ auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
     out_pkg.nas_id = nas_id;
     out_pkg.baas_data = std::move(baas_data);
     out_pkg.nas_files = std::move(loaded_nas_files);
+    R_SUCCEED();
+}
+
+} // namespace
+
+auto LoadRomfsDonorPackage(RomfsDonorPackage& out_pkg) -> Result {
+    R_TRY(romfsInit());
+    ON_SCOPE_EXIT(romfsExit());
+    return LoadDonorPackageFromPath("romfs:/account_link", out_pkg);
+}
+
+auto LoadRomfsDonorPackages(std::vector<RomfsDonorPackage>& out_packages) -> Result {
+    out_packages.clear();
+
+    R_TRY(romfsInit());
+    ON_SCOPE_EXIT(romfsExit());
+
+    std::vector<u8> pool_bytes;
+    R_TRY(fs::read_entire_file("romfs:/account_link/pool.txt", pool_bytes));
+    R_UNLESS(!pool_bytes.empty(), Result_FsInvalidType);
+
+    const std::string pool_str(pool_bytes.begin(), pool_bytes.end());
+    std::unordered_map<std::string, std::string> kv;
+    size_t line_start = 0;
+    while (line_start < pool_str.size()) {
+        auto line_end = pool_str.find('\n', line_start);
+        if (line_end == std::string::npos) {
+            line_end = pool_str.size();
+        }
+        auto line = pool_str.substr(line_start, line_end - line_start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        const auto eq = line.find('=');
+        if (eq != std::string::npos) {
+            const auto k = line.substr(0, eq);
+            const auto v = line.substr(eq + 1);
+            kv[k] = v;
+        }
+        line_start = line_end + 1;
+    }
+
+    R_UNLESS(kv["format"] == "kefir_account_pool", Result_FsInvalidType);
+    R_UNLESS(kv["version"] == "1", Result_FsInvalidType);
+    const auto& donors_csv = kv["donors"];
+    R_UNLESS(!donors_csv.empty(), Result_FsInvalidType);
+
+    std::vector<std::string> donor_paths;
+    size_t csv_start = 0;
+    while (csv_start < donors_csv.size()) {
+        auto comma = donors_csv.find(',', csv_start);
+        if (comma == std::string::npos) {
+            comma = donors_csv.size();
+        }
+        auto dpath = donors_csv.substr(csv_start, comma - csv_start);
+        while (!dpath.empty() && std::isspace(static_cast<unsigned char>(dpath.front()))) {
+            dpath.erase(dpath.begin());
+        }
+        while (!dpath.empty() && std::isspace(static_cast<unsigned char>(dpath.back()))) {
+            dpath.pop_back();
+        }
+        if (!dpath.empty()) {
+            donor_paths.push_back(dpath);
+        }
+        csv_start = comma + 1;
+    }
+    R_UNLESS(!donor_paths.empty(), Result_FsInvalidType);
+
+    std::vector<RomfsDonorPackage> loaded_packages;
+    loaded_packages.reserve(donor_paths.size());
+
+    for (const auto& rel_path : donor_paths) {
+        R_UNLESS(!rel_path.empty(), Result_FsInvalidType);
+        R_UNLESS(rel_path.front() != '/', Result_FsInvalidType);
+        R_UNLESS(rel_path.find(':') == std::string::npos, Result_FsInvalidType);
+        R_UNLESS(rel_path.find('\\') == std::string::npos, Result_FsInvalidType);
+        R_UNLESS(rel_path.find("..") == std::string::npos, Result_FsInvalidType);
+
+        const std::string full_path = (rel_path == ".")
+            ? "romfs:/account_link"
+            : "romfs:/account_link/" + rel_path;
+
+        RomfsDonorPackage pkg;
+        R_TRY(LoadDonorPackageFromPath(full_path, pkg));
+        loaded_packages.push_back(std::move(pkg));
+    }
+
+    R_UNLESS(!loaded_packages.empty(), Result_FsInvalidType);
+
+    for (size_t i = 0; i < loaded_packages.size(); i++) {
+        for (size_t j = i + 1; j < loaded_packages.size(); j++) {
+            if (loaded_packages[i].nas_id == loaded_packages[j].nas_id) {
+                log_write("[ACC] LoadRomfsDonorPackages failed: duplicate nas identity across pool\n");
+                return Result_FsInvalidType;
+            }
+        }
+    }
+
+    out_packages = std::move(loaded_packages);
+    log_write("[ACC] LoadRomfsDonorPackages loaded %u donor packages\n", static_cast<u32>(out_packages.size()));
     R_SUCCEED();
 }
 
@@ -588,6 +683,25 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
         }
     }
 
+    for (size_t i = 0; i < targets.size(); i++) {
+        for (size_t j = i + 1; j < targets.size(); j++) {
+            if (targets[i].uid.uid[0] == targets[j].uid.uid[0] &&
+                targets[i].uid.uid[1] == targets[j].uid.uid[1]) {
+                log_write("[ACC] ApplyLinkPackages validation failed: duplicate target UID\n");
+                return Result_FsInvalidType;
+            }
+        }
+    }
+
+    std::vector<u64> incoming_nas;
+    for (const auto& target : targets) {
+        if (std::find(incoming_nas.begin(), incoming_nas.end(), target.pkg.nas_id) != incoming_nas.end()) {
+            log_write("[ACC] ApplyLinkPackages refused: two targets share incoming nas identity\n");
+            return Result_FsInvalidType;
+        }
+        incoming_nas.push_back(target.pkg.nas_id);
+    }
+
     TerminateAccountDaemons();
 
     auto save = OpenAccountSaveWritable();
@@ -598,6 +712,57 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
     }
     log_write("[ACC] OpenAccountSaveWritable ok\n");
 
+    std::string existing_baas_dir;
+    std::string existing_nas_dir;
+    ResolveSuDirs(save, existing_baas_dir, existing_nas_dir);
+
+    if (!existing_baas_dir.empty()) {
+        fs::Dir bd;
+        R_TRY(save.OpenDirectory(existing_baas_dir.c_str(), FsDirOpenMode_ReadFiles, &bd));
+        std::vector<FsDirectoryEntry> baas_entries;
+        R_TRY(bd.ReadAll(baas_entries));
+
+        for (const auto& e : baas_entries) {
+            if (e.type != FsDirEntryType_File) {
+                continue;
+            }
+            const std::string bf = e.name;
+            const auto bf_path = existing_baas_dir + "/" + bf;
+            std::vector<u8> bdata;
+            const auto read_rc = save.read_entire_file(bf_path.c_str(), bdata);
+            if (R_FAILED(read_rc)) {
+                log_write("[ACC] ApplyLinkPackages preflight: failed reading baas file rc=0x%X\n", read_rc);
+                return read_rc;
+            }
+            if (bdata.size() < 24) {
+                log_write("[ACC] ApplyLinkPackages preflight: baas file shorter than 24 bytes (%zu)\n", bdata.size());
+                return Result_FsInvalidType;
+            }
+            u64 file_nas = 0;
+            std::memcpy(&file_nas, bdata.data() + 16, sizeof(u64));
+            if (file_nas == 0) {
+                log_write("[ACC] ApplyLinkPackages preflight: baas file nas identity is zero\n");
+                return Result_FsInvalidType;
+            }
+            for (const auto& target : targets) {
+                if (file_nas == target.pkg.nas_id) {
+                    bool belongs_to_target = false;
+                    const auto cands = BaasCandidateNames(target.uid);
+                    for (const auto& cand : cands) {
+                        if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
+                            belongs_to_target = true;
+                            break;
+                        }
+                    }
+                    if (!belongs_to_target) {
+                        log_write("[ACC] ApplyLinkPackages collision: incoming nas already present in baas not belonging to destination uid\n");
+                        return Result_FsInvalidType;
+                    }
+                }
+            }
+        }
+    }
+
     fs::FsNativeSd sd;
     char stamp[32]{};
     const auto t = std::time(nullptr);
@@ -607,9 +772,8 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
     R_TRY(sd.CreateDirectoryRecursively((rollback_dir + "/baas").c_str()));
     R_TRY(sd.CreateDirectoryRecursively((rollback_dir + "/nas").c_str()));
 
-    std::string baas_dir;
-    std::string nas_dir;
-    ResolveSuDirs(save, baas_dir, nas_dir);
+    std::string baas_dir = existing_baas_dir;
+    std::string nas_dir = existing_nas_dir;
     if (baas_dir.empty()) {
         if (!save.DirExists("/su")) {
             R_TRY(save.CreateDirectoryRecursively("/su"));
@@ -640,16 +804,6 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
     const auto existing_nas_files = ListDirFiles(save, nas_dir);
 
     std::vector<u64> old_nas_ids_to_clean;
-    std::vector<u64> incoming_nas;
-    for (const auto& target : targets) {
-        if (std::find(incoming_nas.begin(), incoming_nas.end(), target.pkg.nas_id) != incoming_nas.end()) {
-            log_write("[ACC] ApplyLinkPackages refused: two targets share nas %llx\n",
-                static_cast<unsigned long long>(target.pkg.nas_id));
-            return Result_FsInvalidType;
-        }
-        incoming_nas.push_back(target.pkg.nas_id);
-    }
-
     u32 baas_removed = 0;
     auto delete_baas = [&](const std::string& bf) -> Result {
         const auto baas_full = baas_dir + "/" + bf;
@@ -667,7 +821,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
                 old_nas_ids_to_clean.push_back(old_nas_id);
             }
         }
-        log_write("[ACC] removing baas %s\n", bf.c_str());
+        log_write("[ACC] removing old baas file for target\n");
         R_TRY(save.DeleteFile(baas_full.c_str()));
         baas_removed++;
         R_SUCCEED();
@@ -684,16 +838,6 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
                     break;
                 }
             }
-            if (!drop) {
-                std::vector<u8> data;
-                if (R_SUCCEEDED(save.read_entire_file((baas_dir + "/" + bf).c_str(), data)) && data.size() >= 24) {
-                    u64 id = 0;
-                    std::memcpy(&id, data.data() + 16, sizeof(u64));
-                    if (id == target.pkg.nas_id) {
-                        drop = true;
-                    }
-                }
-            }
             if (drop) {
                 R_TRY(delete_baas(bf));
             }
@@ -701,9 +845,7 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
 
         const auto new_baas_path = baas_dir + "/" + UidDashedLinkalho(target.uid) + ".dat";
         R_TRY(save.write_entire_file(new_baas_path.c_str(), target.pkg.baas_data));
-        log_write("[ACC] baas bound to %s nas %llx (one file)\n",
-            UidDashedRfc(target.uid).c_str(),
-            static_cast<unsigned long long>(target.pkg.nas_id));
+        log_write("[ACC] baas bound to target uid\n");
 
         for (const auto& nf : target.pkg.nas_files) {
             const auto nas_dst = nas_dir + "/" + nf.filename;
@@ -749,25 +891,53 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
 auto LinkAllFromRomfsDonor(u32& out_linked_count) -> Result {
     out_linked_count = 0;
 
-    RomfsDonorPackage donor_pkg;
-    const auto load_rc = LoadRomfsDonorPackage(donor_pkg);
+    std::vector<RomfsDonorPackage> pool;
+    const auto load_rc = LoadRomfsDonorPackages(pool);
     if (R_FAILED(load_rc)) {
-        log_write("[ACC] LoadRomfsDonorPackage failed 0x%X\n", load_rc);
+        log_write("[ACC] LoadRomfsDonorPackages failed 0x%X\n", load_rc);
         return load_rc;
     }
-    log_write("[ACC] LoadRomfsDonorPackage ok\n");
+    log_write("[ACC] LoadRomfsDonorPackages ok, pool size %u\n", static_cast<u32>(pool.size()));
 
     const auto all_users = ListUsers();
-    std::vector<TargetLink> targets;
     for (const auto& u : all_users) {
-        if (u.linked_known && !u.horizon_linked) {
-            targets.push_back({u.uid, donor_pkg});
+        if (!u.linked_known) {
+            log_write("[ACC] LinkAllFromRomfsDonor refused: live user with unknown link status\n");
+            return Result_FsInvalidType;
         }
     }
-    log_write("[ACC] LinkAllFromRomfsDonor eligible unlinked=%u\n", static_cast<u32>(targets.size()));
 
-    if (targets.empty()) {
+    std::vector<AccountUid> target_uids;
+    for (const auto& u : all_users) {
+        if (u.linked_known && !u.horizon_linked) {
+            target_uids.push_back(u.uid);
+        }
+    }
+    log_write("[ACC] LinkAllFromRomfsDonor eligible unlinked=%u\n", static_cast<u32>(target_uids.size()));
+
+    if (target_uids.empty()) {
         R_SUCCEED();
+    }
+
+    std::vector<RomfsDonorPackage> available_donors;
+    for (const auto& donor : pool) {
+        AccountUid live_uid{};
+        if (!FindLiveUidByNasId(donor.nas_id, live_uid)) {
+            available_donors.push_back(donor);
+        }
+    }
+    log_write("[ACC] LinkAllFromRomfsDonor available unused donors=%u\n", static_cast<u32>(available_donors.size()));
+
+    if (target_uids.size() > available_donors.size()) {
+        log_write("[ACC] LinkAllFromRomfsDonor refused: unlinked targets (%u) > available donors (%u)\n",
+            static_cast<u32>(target_uids.size()), static_cast<u32>(available_donors.size()));
+        return Result_FsInvalidType;
+    }
+
+    std::vector<TargetLink> targets;
+    targets.reserve(target_uids.size());
+    for (size_t i = 0; i < target_uids.size(); i++) {
+        targets.push_back({target_uids[i], available_donors[i]});
     }
 
     return ApplyLinkPackages(targets, out_linked_count);
@@ -906,15 +1076,12 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
     for (const auto& base : live) {
         u64 ipc_nas = 0;
         const auto qrc = QueryNintendoAccountId(base.uid, ipc_nas);
-        log_write("[ACC] QueryNintendoAccountId uid=%s rc=0x%X nas=%llx\n",
-            UidDashedRfc(base.uid).c_str(), qrc,
-            static_cast<unsigned long long>(ipc_nas));
+        log_write("[ACC] QueryNintendoAccountId rc=0x%X\n", qrc);
 
         // Replace only when pack nas is proven equal (IPC nas == pack nas).
         if (R_SUCCEEDED(qrc) && ipc_nas != 0 && ipc_nas == nas_id) {
             out_uid = base.uid;
-            log_write("[ACC] nas %llx is IPC-linked to %s\n",
-                static_cast<unsigned long long>(nas_id), UidDashedRfc(base.uid).c_str());
+            log_write("[ACC] target identity is IPC-linked to live profile\n");
             return true;
         }
 
@@ -922,14 +1089,10 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
         const auto hrc = QueryHorizonLinkStatus(base.uid, horizon_linked);
         if (R_SUCCEEDED(hrc) && horizon_linked) {
             if (R_SUCCEEDED(qrc) && ipc_nas != 0 && ipc_nas != nas_id) {
-                log_write("[ACC] linked uid %s has different nas %llx (pack %llx); Create still allowed\n",
-                    UidDashedRfc(base.uid).c_str(),
-                    static_cast<unsigned long long>(ipc_nas),
-                    static_cast<unsigned long long>(nas_id));
+                log_write("[ACC] linked profile has different identity; Create still allowed\n");
             } else if (R_FAILED(qrc) || ipc_nas == 0) {
                 // Unproven Query is not Replace: need baas proof or Create.
-                log_write("[ACC] linked uid %s nas unproven (Query rc=0x%X); Create allowed until baas proves match\n",
-                    UidDashedRfc(base.uid).c_str(), qrc);
+                log_write("[ACC] linked profile identity unproven (Query rc=0x%X); Create allowed until baas proves match\n", qrc);
             }
         }
     }
@@ -965,20 +1128,16 @@ auto FindLiveUidByNasId(u64 nas_id, AccountUid& out_uid) -> bool {
             for (const auto& cand : cands) {
                 if (strcasecmp(bf.c_str(), cand.c_str()) == 0) {
                     out_uid = base.uid;
-                    log_write("[ACC] nas %llx baas filename %s matches live %s\n",
-                        static_cast<unsigned long long>(nas_id), bf.c_str(),
-                        UidDashedRfc(base.uid).c_str());
+                    log_write("[ACC] identity baas matches live profile\n");
                     return true;
                 }
             }
         }
-        log_write("[ACC] nas %llx baas %s is orphan (uid not live)\n",
-            static_cast<unsigned long long>(nas_id), bf.c_str());
+        log_write("[ACC] orphan baas record found (uid not live)\n");
     }
 
     // Save open and no baas carries this nas → Create allowed.
-    log_write("[ACC] nas %llx not in baas; Create allowed\n",
-        static_cast<unsigned long long>(nas_id));
+    log_write("[ACC] identity not in baas; Create allowed\n");
     return false;
 }
 

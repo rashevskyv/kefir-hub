@@ -1,8 +1,19 @@
-Поточний delivery — **v0.13.750** (cumulative NAND/microSD install progress). Завершені плани збережено в
+Поточний delivery — **v0.13.751** (unique embedded donor pool). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.750 — cumulative NAND/microSD install progress
+## Поточний delivery: v0.13.751 — unique embedded donor pool
+
+Статус: реалізовано й прийнято в primary checkout; апаратна перевірка на HOS 18.1.0 очікується. Збірку агент не запускає за політикою checkout.
+
+1. З SD `F:/config/kefir/account_backups` взяти останню чітку серію з 8 ZIP (2026-09-05 16:39:44–46): кожен має 80-byte BAAS, complete core NAS, valid JWT structure/`sub` matches і унікальні NAS/email. Вшити їх як opaque indexed donors без profile/avatar/playtime та без optional `_aux.dat` / `_op2membership.dat`; старий root Kefir donor зберегти. Разом 9 унікальних packages, використовується до 8.
+2. `LoadRomfsDonorPackage` розширити до pool loader з простим top-level manifest: кожен package проходить наявну BAAS/NAS/token validation; дубль `nas_id` в пулі відхиляє весь pool.
+3. `LinkAllFromRomfsDonor` стабільно призначає кожному `linked_known && !horizon_linked` профілю окремого невикористаного donor; donors, які вже доведено належать live profile, пропускаються. Нестача donor або невідомий link status — fail до terminate/write.
+4. `ApplyLinkPackages` до `TerminateAccountDaemons` валідує також unique target UID і unique incoming NAS. Після RW open, але до rollback/першої мутації, fail-closed відхиляє нечитабельний, короткий або zero-NAS BAAS та incoming NAS, якщо його BAAS належить іншому UID/сироті; чужий donor не переноситься й не видаляється.
+5. Users і launch callbacks: failure після daemon termination → forced reboot; preflight failure до terminate → звичайна помилка без reboot. UI/i18n/docs говорять про пул і one donor per profile, не про one shared donor.
+6. Safe validator для embedded pool не друкує identifiers/credentials. Version `0.13.751`; Gemini й senior підтвердили validator (9 packages), case-sensitive JSON parse, `git diff --check`, targeted caller/order/log review; senior також byte-exact звірив 8 нових payload-наборів з останньою серією SD. Compile/NRO не запускали за policy.
+
+## Попередній delivery: v0.13.750 — cumulative NAND/microSD install progress
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 
