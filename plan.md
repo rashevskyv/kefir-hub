@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.749** (preserve BAAS payload during account linking). Завершені плани збережено в
+Поточний delivery — **v0.13.750** (cumulative NAND/microSD install progress). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.749 — preserve BAAS payload during account linking
+## Поточний delivery: v0.13.750 — cumulative NAND/microSD install progress
+
+Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
+
+1. Під час `State::Installing` активний рядок SysNAND/EmuNAND або microSD показує накопичувальний прогрес `written / total`: перше значення росте від `0 B`, друге лишається повним `PlanSize` поточного пакета; неактивний накопичувач як раніше показує вільне місце.
+2. Новий вузький `SetStorageInstallProgress` відділяє текстовий прогрес від проєкції місткості: жовтий сегмент малює тільки `total - written`, тому зменшується без подвійного врахування вже записаних байтів і без проєкції решти черги.
+3. `ReviewQueue` лишається на `SetStorageProjection` з `+focus / total`, а Games — на `SetStorageHighlight`; version `0.13.750`, нових i18n-рядків або залежностей немає.
+4. Gemini виконав `git diff --check` і перевірку всіх storage-setter callers; senior перевірив повний diff, межі режимів і version bump. Компіляцію/NRO-тести не запускали за політикою checkout. Черга audit §2 A1–A7 **не** закрита.
+
+## Попередній delivery: v0.13.749 — preserve BAAS payload during account linking
 
 Статус: реалізовано в primary checkout. Збірку агент не запускає за політикою checkout.
 

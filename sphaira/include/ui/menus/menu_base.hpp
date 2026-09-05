@@ -79,6 +79,10 @@ struct MenuBase : Widget {
     // package in focus; they are drawn in a second colour at the head of the
     // segment and shown as "+focus / +total".
     void SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus = 0, u64 sd_focus = 0);
+    // Active package progress during installation: draws remaining bytes
+    // (total - written) as a yellow segment on the destination drive,
+    // while the label displays cumulative progress as "written / total".
+    void SetStorageInstallProgress(u64 nand_written, u64 nand_total, u64 sd_written, u64 sd_total);
     void ClearStorageHighlight();
 
     void SetShowStorage(bool show) {
@@ -118,12 +122,13 @@ private:
 
     u64 m_nand_highlight{};
     u64 m_sd_highlight{};
-    // the share of the projection that belongs to the one package in focus
-    // (hovered in the queue, or currently installing). Drawn in its own colour.
+    // in projection mode: the share of the projection for the package in focus;
+    // in install progress mode: cumulative bytes written so far for this package.
     u64 m_nand_focus{};
     u64 m_sd_focus{};
     bool m_storage_highlight_active{};
     bool m_storage_projection{};
+    bool m_storage_install_progress{};
     bool m_show_storage{true};
 
     u32 m_flags{};

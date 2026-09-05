@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.749** (preserve BAAS payload during account linking). Завершені задачі збережено в
+Актуальний delivery — **v0.13.750** (cumulative NAND/microSD install progress). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.749 (preserve BAAS payload during account linking)
+## Поточний delivery: v0.13.750 (cumulative NAND/microSD install progress)
+
+- [x] `INSTALL-STORAGE-PROGRESS-750` — під `State::Installing` активний NAND/microSD header показує накопичувальне `written / total` без `+`; total = фіксований `PlanSize` поточного пакета.
+- [x] `INSTALL-STORAGE-REMAINING-BAR-750` — `SetStorageInstallProgress` малює жовтим лише `total - written`, без double-count уже записаного та без проєкції решти черги.
+- [x] `STORAGE-MODES-REGRESSION-750` — ReviewQueue зберігає `SetStorageProjection`, Games — `SetStorageHighlight`, неактивний накопичувач — free-space label.
+- [x] `CMAKELISTS-VERSION-BUMP-750` — `sphaira_VERSION` піднято до `0.13.750`.
+- [x] `DOCS-BUMP-750` — plan/task/walkthrough/audit оновлено; delivery готовий до локального commit.
+
+## Попередній delivery: v0.13.749 (preserve BAAS payload during account linking)
 
 - [x] `ACCOUNT-LINK-PRESERVE-BAAS-749` — `ApplyLinkPackages` пише `target.pkg.baas_data` без зміни байтів; UID цілі лишається тільки в UID-похідному імені BAAS.
 - [x] `ACCOUNT-RESTORE-STAGE-PRESERVE-BAAS-749` — `StageCreateLinkForTe` staging пише `pkg.baas_data` без підміни перших 16 байтів.

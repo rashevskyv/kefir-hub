@@ -245,10 +245,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (state == State::Installing) {
-        // yellow = remaining bytes of the package being written, on its dest only.
-        // Actual free comes from polled chrome; do not project the rest of the queue.
-        s64 sd_required{}, nand_required{};
-        s64 sd_focus{}, nand_focus{};
+        // yellow bar = remaining bytes of the package being written, on its dest only.
+        // Label displays cumulative written / total progress without projecting the queue.
+        s64 sd_written{}, nand_written{};
+        s64 sd_total{}, nand_total{};
         bool show = false;
         if (m_current_package < m_queue.size()) {
             const auto& entry = m_queue[m_current_package];
@@ -256,19 +256,20 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 && R_SUCCEEDED(entry.analysis_result) && R_SUCCEEDED(entry.install_result)) {
                 const auto size = PlanSize(entry);
                 const auto written = std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, size);
-                const auto remaining = size - written;
-                if (remaining > 0) {
+                if (size > 0) {
                     if (entry.install_sd) {
-                        sd_required = sd_focus = remaining;
+                        sd_written = written;
+                        sd_total = size;
                     } else {
-                        nand_required = nand_focus = remaining;
+                        nand_written = written;
+                        nand_total = size;
                     }
                     show = true;
                 }
             }
         }
         if (show) {
-            SetStorageProjection(nand_required, sd_required, nand_focus, sd_focus);
+            SetStorageInstallProgress(nand_written, nand_total, sd_written, sd_total);
         } else {
             ClearStorageHighlight();
         }

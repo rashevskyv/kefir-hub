@@ -286,10 +286,11 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // column changes, so nothing shifts as the cursor moves between titles.
     // The column is sized from six digits plus a space and the two widest
     // unit letters, measured in the current font so it scales with language.
-    // In projection mode ("+focus / total"), reserve space for both values.
+    // In projection mode ("+focus / total") or install progress mode ("written / total"),
+    // reserve space for both values.
     const float value_col_w = [&]{
         nvgFontSize(vg, storage_font);
-        const char* template_str = (m_storage_projection && m_storage_highlight_active)
+        const char* template_str = ((m_storage_projection || m_storage_install_progress) && m_storage_highlight_active)
             ? "+000000 WW / 000000 WW"
             : "000000 WW";
         gfx::textBounds(vg, 0, 0, bounds, template_str);
@@ -313,7 +314,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float label_x = bar_x - 8.f - label_col_w;
 
     // value shown next to a bar: free space normally, the highlighted size in
-    // highlight mode, "+size" for a projection (planned install usage).
+    // highlight mode, "+size" for a projection (planned install usage), or
+    // "written / total" for active package install progress.
     // A bar with no bytes for this title stays free-space grey: only the
     // storage that actually holds the game (or the planned install) turns blue.
     auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
@@ -321,6 +323,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             return utils::formatSizeStorage(free_bytes);
         }
         const auto value = utils::formatSizeStorage(highlight_bytes);
+        if (m_storage_install_progress) {
+            return utils::formatSizeStorage(focus_bytes) + " / " + value;
+        }
         if (!m_storage_projection) {
             return value;
         }
@@ -432,7 +437,18 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             // title. Anchor the highlighted segment at the end of the used region
             // so it remains proportional without claiming that storage is physically
             // contiguous on disk.
-            if (highlight_bytes && m_storage_projection) {
+            if (highlight_bytes && m_storage_install_progress) {
+                // active install: remaining bytes of the current package shrink toward 0
+                // as bytes are written. Drawn in yellow at the end of the used fill.
+                const u64 remaining = highlight_bytes > focus_bytes ? (highlight_bytes - focus_bytes) : 0;
+                if (remaining > 0) {
+                    const float ratio = static_cast<float>(remaining) / static_cast<float>(total_bytes);
+                    const float seg_w = std::min(bar_w - fill_w, std::max(2.f, bar_w * ratio));
+                    if (seg_w > 0.f) {
+                        gfx::drawRect(vg, bar_x + fill_w, bar_y, seg_w, bar_h, nvgRGBA(255, 200, 60, 255));
+                    }
+                }
+            } else if (highlight_bytes && m_storage_projection) {
                 // planned usage: the segment extends from the end of the used
                 // region into the free space. Red when it does not fit.
                 const float ratio = static_cast<float>(highlight_bytes) / static_cast<float>(total_bytes);
@@ -743,6 +759,7 @@ void MenuBase::SetStorageHighlight(u64 nand_bytes, u64 sd_bytes) {
     m_sd_focus = 0;
     m_storage_highlight_active = true;
     m_storage_projection = false;
+    m_storage_install_progress = false;
 }
 
 void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus, u64 sd_focus) {
@@ -752,6 +769,17 @@ void MenuBase::SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus
     m_sd_focus = std::min(sd_focus, sd_bytes);
     m_storage_highlight_active = true;
     m_storage_projection = true;
+    m_storage_install_progress = false;
+}
+
+void MenuBase::SetStorageInstallProgress(u64 nand_written, u64 nand_total, u64 sd_written, u64 sd_total) {
+    m_nand_highlight = nand_total;
+    m_sd_highlight = sd_total;
+    m_nand_focus = std::min(nand_written, nand_total);
+    m_sd_focus = std::min(sd_written, sd_total);
+    m_storage_highlight_active = (nand_total > 0 || sd_total > 0);
+    m_storage_projection = false;
+    m_storage_install_progress = (nand_total > 0 || sd_total > 0);
 }
 
 void MenuBase::ClearStorageHighlight() {
@@ -761,6 +789,7 @@ void MenuBase::ClearStorageHighlight() {
     m_sd_focus = 0;
     m_storage_highlight_active = false;
     m_storage_projection = false;
+    m_storage_install_progress = false;
 }
 
 } // namespace sphaira::ui::menu

@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.749** (2026-09-04). Попередні
+Актуальний delivery — **v0.13.750** (2026-09-05). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.750 — cumulative NAND/microSD install progress
+
+- Під час активної інсталяції рядок цільового накопичувача в header тепер показує `written / total`: ліве значення накопичується від `0 B` до повного розміру, праве не змінюється протягом пакета. Рядок іншого накопичувача лишається звичайним індикатором вільного місця.
+- `MenuBase::SetStorageInstallProgress` зберігає total і clamped written окремо від звичайної проєкції. Текст не має префікса `+`, а ширина колонки одразу резервується під обидва значення без стрибків layout.
+- Жовтий сегмент як і раніше означає лише залишок поточного пакета: ширина рахується з `total - written`, тому зменшується до нуля, не додає повний пакет поверх уже використаного місця та не включає решту черги.
+- `ReviewQueue` (`SetStorageProjection`) і Games (`SetStorageHighlight`) не змінені. Version `0.13.750`; нових i18n-рядків і залежностей немає.
+- Верифікація: Gemini — `git diff --check`, повний diff і caller grep; senior — повторний `git diff --check`, повний diff, version та всі storage-setter callers. Компіляцію й NRO-тести не запускали за політикою checkout.
 
 ## v0.13.749 — preserve BAAS payload during account linking
 
