@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.754** (2026-09-05). Попередні
+Актуальний delivery — **v0.13.755** (2026-09-06). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.755 — stable Kefir Hub forwarder Title ID
+
+- Власний Kefir Hub HOME-форвардер тепер має сталий Title ID `05C838DF22834000`: auto-install і ручний `Install Title Mode forwarder` передають його явно, тому `sdmc:` більше не міняє identity.
+- Загальний owo generator зберіг стару поведінку: коли `OwoConfig::title_id` не задано, різні NRO/ROM й аргументи й далі отримують різні SHA-256 path+args ID.
+- Раніше створений власний `0x05…` Kefir Hub/Sphaira ікон не мігрується автоматично: `StaleOwn` не ставить другий Title ID. На чистій системі автофорвардер все ще встановлюється; legacy HBL cleanup не змінено.
+- Верифікація: Gemini й senior — `git diff --check`, повний diff, всі `OwoConfig` callers і final-TID usages; числовий ID визначено один раз. Компіляцію, host tests і NRO не запускали за policy; потрібен Switch-check.
 
 ## v0.13.754 — allow zero-identity BAAS placeholders
 

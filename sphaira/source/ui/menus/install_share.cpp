@@ -14,6 +14,7 @@
 #include "account/account_user.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "forwarder_auto_plan.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "net.hpp"
@@ -106,6 +107,7 @@ void StartConsoleTransferShare(const std::vector<std::string>& roots) {
 void InstallTitleModeForwarder() {
     OwoConfig config{};
     config.nro_path = App::GetExePath().toString();
+    config.title_id = forwarder_auto::KEFIR_HUB_FORWARDER_TID;
 
     const auto rc = nro_get_nacp(App::GetExePath(), config.nacp);
     if (R_FAILED(rc)) {

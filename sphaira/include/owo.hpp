@@ -43,6 +43,9 @@ struct OwoConfig {
     std::optional<ForwarderOptions> options{};
 
     std::vector<u8> program_nca{};
+
+    // left unset, derived from SHA-256(nro_path + args).
+    std::optional<u64> title_id{};
 };
 
 auto install_forwarder(OwoConfig& config, NcmStorageId storage_id) -> Result;

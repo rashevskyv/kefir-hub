@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.754**. Дата: 2026-09-05.
+Канонічний робочий файл. Версія коду: **v0.13.755**. Дата: 2026-09-06.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.755 поза ponytail-чергою: власний auto/manual Kefir Hub HOME-форвардер має сталий `05C838DF22834000`; optional `OwoConfig::title_id` лишає generic NRO/ROM path+args hash без змін; `StaleOwn` більше не ставить другий ікон. **Не закриває** чергу §2 A1–A7.
 
 v0.13.754 поза ponytail-чергою: hardware `v0.13.753` довів zero-identity existing BAAS як fatal preflight root cause до rollback. Global collision scan тепер пропускає zero placeholder (валідований incoming NAS завжди nonzero); read/short/nonzero collision лишаються fail-closed, а target-specific BAAS replacement без змін. **Не закриває** чергу §2 A1–A7.
 

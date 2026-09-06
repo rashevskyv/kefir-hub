@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.754** (allow zero-identity BAAS placeholders). Завершені плани збережено в
+Поточний delivery — **v0.13.755** (stable Kefir Hub forwarder Title ID). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.754 — allow zero-identity BAAS placeholders
+## Поточний delivery: v0.13.755 — stable Kefir Hub forwarder Title ID
+
+Статус: реалізовано й прийнято в primary checkout; потрібна апаратна перевірка. Збірку агент не запускає за політикою checkout.
+
+1. Власний Kefir Hub HOME-форвардер має сталий `0x05C838DF22834000`; auto-install і ручний `Install Title Mode forwarder` передають цей самий explicit ID.
+2. `OwoConfig::title_id` опційний: звичайні NRO/ROM-форвардери без override зберігають наявний SHA-256(`nro_path + args`) Title ID.
+3. Запуск з раніше створеного власного `0x05…` Kefir Hub/Sphaira (`StaleOwn`) більше не ставить новий ID; Album/nxlink guard і legacy HBL cleanup без змін.
+4. Version `0.13.755`; Gemini й senior підтвердили `git diff --check`, межі семи продуктових/тестових файлів, всі `OwoConfig` callers та вибір final TID. Compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.754 — allow zero-identity BAAS placeholders
 
 Статус: реалізовано й прийнято в primary checkout; потрібен повторний апаратний прогін. Збірку агент не запускає за політикою checkout.
 

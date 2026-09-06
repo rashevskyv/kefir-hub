@@ -7,6 +7,8 @@
 
 namespace sphaira::forwarder_auto {
 
+inline constexpr std::uint64_t KEFIR_HUB_FORWARDER_TID = 0x05C838DF22834000ULL;
+
 inline auto IsKefirHubName(std::string_view raw_name) -> bool {
     std::string name{raw_name};
     for (char& c : name) {
@@ -124,9 +126,6 @@ inline auto Decide(LaunchSource src, bool new_installed, bool old_installed) -> 
         p.notice = Notice::UseNewNextTime;
         break;
     case LaunchSource::StaleOwn:
-        if (!new_installed) {
-            p.install_new = true;
-        }
         break;
     case LaunchSource::Album:
         if (!new_installed) {

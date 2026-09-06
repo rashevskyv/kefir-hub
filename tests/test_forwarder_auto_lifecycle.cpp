@@ -123,12 +123,13 @@ int RunTests() {
 
     // Test 4: IsOldHomebrewTitle / IsStaleOwnForwarder / ClassifyLaunch
     {
+        using sphaira::forwarder_auto::KEFIR_HUB_FORWARDER_TID;
         using sphaira::forwarder_auto::IsOldHomebrewTitle;
         using sphaira::forwarder_auto::IsStaleOwnForwarder;
         using sphaira::forwarder_auto::ClassifyLaunch;
         using sphaira::forwarder_auto::LaunchSource;
 
-        const uint64_t kefirhub_tid = 0x0500000000123000ULL;
+        const uint64_t kefirhub_tid = KEFIR_HUB_FORWARDER_TID;
         const uint64_t stale_tid = 0x0500000000ABCDEFULL;
 
         CHECK(IsOldHomebrewTitle("Anything", 0x03DB1280BD84000ULL, kefirhub_tid));
@@ -208,8 +209,13 @@ int RunTests() {
         CHECK(!from_album_clean.delete_old);
         CHECK(from_album_clean.notice == Notice::None);
 
+        auto from_album_clean_no_icons = Decide(LaunchSource::Album, false, false);
+        CHECK(from_album_clean_no_icons.install_new);
+        CHECK(!from_album_clean_no_icons.delete_old);
+        CHECK(from_album_clean_no_icons.notice == Notice::PreferHomeIcon);
+
         auto from_stale = Decide(LaunchSource::StaleOwn, false, false);
-        CHECK(from_stale.install_new);
+        CHECK(!from_stale.install_new);
         CHECK(!from_stale.delete_old);
         CHECK(from_stale.notice == Notice::None);
 

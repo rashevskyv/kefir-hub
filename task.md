@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.754** (allow zero-identity BAAS placeholders). Завершені задачі збережено в
+Актуальний delivery — **v0.13.755** (stable Kefir Hub forwarder Title ID). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.754 (allow zero-identity BAAS placeholders)
+## Поточний delivery: v0.13.755 (stable Kefir Hub forwarder Title ID)
+
+- [x] `FORWARDER-FIXED-TID-755` — власний auto/manual Kefir Hub форвардер використовує один `0x05C838DF22834000`, незалежно від `sdmc:` / шляху.
+- [x] `FORWARDER-GENERIC-HASH-755` — optional `OwoConfig::title_id` лишає SHA-256 path+args fallback без змін для звичайних NRO/ROM-форвардерів.
+- [x] `FORWARDER-NO-STALE-MIGRATE-755` — recognized legacy/path-hash `StaleOwn` не створює другий HOME-ікон; Album/nxlink і legacy HBL поведінка збережена.
+- [x] `FORWARDER-PLAN-CHECK-755` — host-test expectations фіксують stable constant, clean Album install і `StaleOwn` without install.
+- [x] `CMAKELISTS-VERSION-BUMP-755` — `sphaira_VERSION` піднято до `0.13.755`.
+- [x] `DOCS-BUMP-755` — plan/task/walkthrough/audit оновлено; compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.754 (allow zero-identity BAAS placeholders)
 
 - [x] `ACC-ZERO-BAAS-SKIP-754` — global collision preflight ігнорує existing BAAS з zero embedded identity, бо validated incoming identities завжди nonzero.
 - [x] `ACC-ZERO-BAAS-TARGET-754` — preflight не видаляє placeholder; existing UID-filename replacement loop лише для target видаляє старий BAAS і пише donor BAAS.

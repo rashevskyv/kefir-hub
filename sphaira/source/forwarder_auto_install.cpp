@@ -9,7 +9,6 @@
 #include "nacp_util.hpp"
 #include "nro.hpp"
 #include "owo.hpp"
-#include "path_util.hpp"
 #include "ui/option_box.hpp"
 #include <switch.h>
 #include <vector>
@@ -224,6 +223,7 @@ auto InstallKefirHubForwarder(u64 kefirhub_tid) -> bool {
     const auto exe_path = App::GetExePath();
     OwoConfig config{};
     config.nro_path = exe_path.toString();
+    config.title_id = kefirhub_tid;
     nro_get_nacp(exe_path, config.nacp);
     config.icon = nro_get_icon(exe_path);
     if (config.icon.empty()) {
@@ -261,15 +261,11 @@ auto InstallKefirHubForwarder(u64 kefirhub_tid) -> bool {
 void ThreadFunc(void*) {
     ON_SCOPE_EXIT(g_thread_active = false);
 
-    const auto exe_path = App::GetExePath().toString();
-    if (exe_path.empty()) {
+    if (App::GetExePath().empty()) {
         return;
     }
 
-    u64 hash_data[SHA256_HASH_SIZE / sizeof(u64)]{};
-    const auto hash_path = exe_path + exe_path;
-    sha256CalculateHash(hash_data, hash_path.data(), hash_path.length());
-    const u64 kefirhub_tid = 0x0500000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
+    const u64 kefirhub_tid = KEFIR_HUB_FORWARDER_TID;
     const u64 own_tid = GetOwnProgramId();
 
     if (R_FAILED(nsInitialize())) {
