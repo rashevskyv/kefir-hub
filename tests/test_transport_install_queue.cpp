@@ -15,6 +15,11 @@ struct Entry {
 }
 
 int main() {
+    assert(HasKnownBatchTotals(TransportOrigin::Dbi));
+    assert(HasKnownBatchTotals(TransportOrigin::Web));
+    assert(!HasKnownBatchTotals(TransportOrigin::Mtp));
+    assert(!HasKnownBatchTotals(TransportOrigin::Ftp));
+
     std::vector<Entry> entries{
         {"first", "same.nsp", std::nullopt},
         {"second", "same.nsp", std::nullopt},

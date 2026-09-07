@@ -751,6 +751,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
             session->SetStream(src);
             session->SetCurrentPackageByName(path_str);
             session->SetState(ui::menu::dbi::State::Installing);
+            session->AddLog("Starting: "_i18n + path_str, ui::menu::dbi::LogKind::Event);
 
             JoinInstallThread();
 
@@ -770,23 +771,29 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                 const auto cur_pkg = c->session->GetCurrentPackageIndex();
                 c->session->MarkPackageComplete(cur_pkg, rc);
 
-                const bool was_cancelled = (rc == Result_TransferCancelled || c->session->IsCancelRequested());
+                const bool user_cancelled = c->session->IsCancelRequested();
+                const bool was_cancelled = rc == Result_TransferCancelled || user_cancelled;
+                const bool source_interrupted = R_FAILED(rc) && !user_cancelled
+                    && (!c->src->m_active || rc == Result_TransferInterrupted || rc == Result_TransferCancelled);
 
                 if (R_FAILED(rc)) {
-                    const bool source_ended = !c->src->m_active && rc != Result_TransferCancelled;
                     INSTALL_STATE = InstallState_None;
                     c->src->Disable();
-                    if (rc == Result_TransferCancelled) {
-                        App::PlaySoundEffect(SoundEffect_Focus);
-                        App::Notify("Install cancelled"_i18n);
-                    } else if (source_ended || rc == Result_TransferInterrupted) {
+                    if (source_interrupted) {
+                        c->session->AddLog("Source disconnected: "_i18n + c->path, ui::menu::dbi::LogKind::Warning);
                         App::PlaySoundEffect(SoundEffect_Focus);
                         App::Notify("Install cancelled: the source stopped sending data"_i18n);
+                    } else if (rc == Result_TransferCancelled) {
+                        c->session->AddLog("Cancelled: "_i18n + c->path, ui::menu::dbi::LogKind::Warning);
+                        App::PlaySoundEffect(SoundEffect_Focus);
+                        App::Notify("Install cancelled"_i18n);
                     } else {
+                        c->session->AddLog("Failed: "_i18n + c->path, ui::menu::dbi::LogKind::Error);
                         App::PlaySoundEffect(SoundEffect_Error);
                         App::PushErrorBox(rc, "Install failed!"_i18n);
                     }
                 } else {
+                    c->session->AddLog("Installed: "_i18n + c->path, ui::menu::dbi::LogKind::Success);
                     INSTALL_STATE = InstallState_Finished;
                     App::PlaySoundEffect(SoundEffect_Install);
                     App::Notify("Install success!"_i18n);
@@ -794,7 +801,8 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
 
                 App::SetAutoSleepDisabled(false);
 
-                const bool needs_mtp_restart = ui::menu::dbi::ShouldRestartMtp(c->origin, was_cancelled, true);
+                const bool needs_mtp_restart = ui::menu::dbi::ShouldRestartMtp(
+                    c->origin, was_cancelled || source_interrupted || rc == Result_TransferInterrupted, true);
 
                 {
                     mutexLock(&s_mutex);
@@ -819,6 +827,10 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                 }
 
                 if (needs_mtp_restart) {
+                    c->session->AddLog("Restarting MTP service..."_i18n, ui::menu::dbi::LogKind::Event);
+                    if (source_interrupted) {
+                        c->session->RequestExit();
+                    }
                     ScheduleMtpRestart();
                 }
 

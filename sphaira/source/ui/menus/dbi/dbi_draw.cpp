@@ -256,6 +256,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 }
 
 void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
+    SCOPED_MUTEX(&m_mutex);
     const float bw = 260.f;
     const float bh = 40.f;
     const float bx = SCREEN_WIDTH - bw - 20.f;
@@ -321,6 +322,7 @@ void InstallSession::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     MenuBase::Draw(vg, theme);
+    SCOPED_MUTEX(&m_mutex);
     const auto state = m_state.load();
     if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
         DrawSummaryPanel(vg, theme, Vec4{70.f, GetY() + 8.f, 1140.f, 214.f});
@@ -411,19 +413,36 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
     } else {
         std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
     }
-    std::vector<StatItem> header{
-        {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
-        {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
-        {"Installed"_i18n, std::to_string(m_stats.installed)},
-        {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
-        // the R/W readout beside the graph is the momentary rate and is where the
-        // eye lands; this is the whole-window average, accented so it is not lost.
-        {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
-    };
-    // "this file / whole queue", so the second number answers "when am I done".
-    if (!file_eta.empty() || !total_eta.empty()) {
-        header.push_back({"Remaining"_i18n,
-            (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
+    const bool known_batch = HasKnownBatchTotals(m_origin);
+    std::vector<StatItem> header;
+    if (known_batch) {
+        header = {
+            {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
+            {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+            {"Installed"_i18n, std::to_string(m_stats.installed)},
+            {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
+            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+        };
+        if (!file_eta.empty() || !total_eta.empty()) {
+            header.push_back({"Remaining"_i18n,
+                (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
+        }
+    } else {
+        const auto mode = m_origin == TransportOrigin::Mtp ? "MTP" : "FTP";
+        header = {
+            {"Mode"_i18n, mode},
+            {"Installed"_i18n, std::to_string(m_stats.installed)},
+            {"Written"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_total_write.load()))},
+            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+        };
+        if (m_progress_size > 0) {
+            auto remaining = utils::formatSizeStorage(std::max<s64>(0, m_progress_size - m_progress_offset));
+            if (!file_eta.empty()) remaining += " · " + file_eta;
+            header.push_back({"Remaining"_i18n, std::move(remaining)});
+        }
+        if (m_stats.failed) {
+            header.push_back({"Failed"_i18n, std::to_string(m_stats.failed), theme->GetColour(ThemeEntryID_ERROR)});
+        }
     }
     DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
     const auto display_title = !m_current_title.empty()

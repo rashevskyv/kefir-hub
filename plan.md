@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.758** (serialize background MTP batch installs). Завершені плани збережено в
+Поточний delivery — **v0.13.759** (repair and complete transport install UI). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.758 — serialize background MTP batch installs
+## Поточний delivery: v0.13.759 — repair and complete transport install UI
+
+Статус: реалізовано після hardware feedback; compile/NRO не запускалися за policy, потрібна апаратна перевірка.
+
+1. Виправити спільну причину бірюзового екрана у PC USB, local/file-manager і external USB install: blocking widget пропускає лише нижні шари, але завжди малює себе.
+2. Detached MTP/FTP/Web `InstallSession` малює штатний header/footer поверх body; underlying panels не occlude його chrome, а реальна modal box тимчасово володіє footer.
+3. MTP/FTP без наперед відомого manifest не показують вигадані `package X/Y` та overall total; показують mode, installed, written, current remaining, speed/ETA. DBI/Web з відомим batch зберігають повні totals. Screensaver MTP показує режим без package counter.
+4. Session log показує start/install/cancel/failure/source disconnect/MTP restart. `B` у MTP скасовує install без непрацюючого Skip modal; cable interruption закриває detached overlay і перезапускає MTP після worker teardown.
+5. Version `0.13.759`; source-level `git diff --check`, dead-symbol check і production helper host-test coverage; без compile/NRO.
+
+## Попередній delivery: v0.13.758 — serialize background MTP batch installs
 
 Статус: реалізовано Gemini й прийнято після senior race/control-flow review. Успішно зібрано через make (16 потоків) у WSL, виправлено супутні помилки компіляції transport/queue; всі тести пройдені паралельно (tests/run.sh); згенеровано sphaira_nro; потрібна апаратна перевірка batch copy з Windows.
 

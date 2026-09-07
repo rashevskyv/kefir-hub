@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.758**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.759**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 11995 nodes, 22048 edges, 724 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.759 поза ponytail-чергою: blocking install widget знову малює себе; detached transport session має chrome, чесні known/unknown totals, session log і безмодальний MTP cancel/disconnect teardown. **Не закриває** чергу §2 A1–A7.
 
 v0.13.758 поза ponytail-чергою: background MTP batch серіалізує наступний Windows file на same-origin `InstallSession` через wait + atomic `s_installing` CAS; cross-origin/unrelated transfer guards, cancel/exit та nonblocking `OnInstallClose` збережені. **Не закриває** чергу §2 A1–A7.
 

@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.758** (serialize background MTP batch installs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.759** (repair and complete transport install UI). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.758 (serialize background MTP batch installs)
+## Поточний delivery: v0.13.759 (repair and complete transport install UI)
+
+- [x] `INSTALL-DRAW-ROOT-759` — blocking DBI/local/USB install widget малює себе й overlays над собою, пропускаючи лише нижні шари; бірюзовий blank-screen root cause прибрано.
+- [x] `INSTALL-CHROME-759` — detached MTP/FTP/Web session малює штатний header/footer; modal dialog коректно перебирає footer ownership.
+- [x] `INSTALL-HONEST-METRICS-759` — MTP/FTP не показують невідомі package/overall totals; DBI/Web показують відомий batch; MTP screensaver має mode без package counter.
+- [x] `INSTALL-LOG-759` — transport log містить start/success/cancel/failure/disconnect/restart.
+- [x] `MTP-CANCEL-LIFECYCLE-759` — MTP `B` скасовує без Skip modal; disconnect прибирає overlay і запускає teardown-safe MTP restart.
+- [x] `CMAKELISTS-VERSION-BUMP-759` — `sphaira_VERSION` піднято до `0.13.759`.
+- [x] `DOCS-BUMP-759` — plan/task/walkthrough/audit синхронізовано; compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.758 (serialize background MTP batch installs)
 
 - [x] `MTP-BATCH-WAIT-758` — background MTP same-origin session чекає завершення попереднього package worker замість abort на наступному Windows MTP file.
 - [x] `MTP-BATCH-CAS-758` — `s_installing` slot захоплюється атомарним CAS; same-origin серіалізується, cross-origin/unrelated busy відхиляються.

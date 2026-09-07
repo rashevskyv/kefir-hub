@@ -12,6 +12,10 @@ enum class TransportOrigin {
     Web,
 };
 
+inline constexpr bool HasKnownBatchTotals(TransportOrigin origin) {
+    return origin == TransportOrigin::Dbi || origin == TransportOrigin::Web;
+}
+
 inline constexpr size_t QueueIndexNotFound = static_cast<size_t>(-1);
 
 template <typename Entries>

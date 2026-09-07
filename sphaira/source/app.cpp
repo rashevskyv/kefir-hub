@@ -577,15 +577,6 @@ auto App::OwnsFooter(const ui::Widget* widget) -> bool {
         return false;
     }
 
-    std::shared_ptr<ui::menu::dbi::InstallSession> session;
-    {
-        SCOPED_MUTEX(&g_app->m_install_session_mutex);
-        session = g_app->m_active_install_session;
-    }
-    if (session && !session->IsMinimized()) {
-        return widget == session.get();
-    }
-
     ui::Widget* top = nullptr;
     for (auto it = g_app->m_widgets.rbegin(); it != g_app->m_widgets.rend(); ++it) {
         if (!(*it)->IsMinimized() && !(*it)->IsHidden()) {
@@ -595,6 +586,17 @@ auto App::OwnsFooter(const ui::Widget* widget) -> bool {
     }
     if (!top) {
         top = g_app->m_widgets.back().get();
+    }
+
+    std::shared_ptr<ui::menu::dbi::InstallSession> session;
+    {
+        SCOPED_MUTEX(&g_app->m_install_session_mutex);
+        session = g_app->m_active_install_session;
+    }
+    // Detached installs own the footer over the menu, but a real modal pushed
+    // above them owns it until the dialog closes.
+    if (session && !session->IsMinimized() && !top->IsModal()) {
+        return widget == session.get();
     }
 
     if (ResolveFooterOwner(top) == widget) {
@@ -616,6 +618,13 @@ auto App::OwnsFooter(const ui::Widget* widget) -> bool {
 auto App::GetChromeOcclusion() -> Vec4 {
     if (!g_app) {
         return {};
+    }
+
+    {
+        SCOPED_MUTEX(&g_app->m_install_session_mutex);
+        if (g_app->m_active_install_session && !g_app->m_active_install_session->IsMinimized()) {
+            return {};
+        }
     }
 
     // only what is stacked above the *active* menu can cover its chrome, and
@@ -1161,21 +1170,12 @@ void App::Draw() {
     // already dims the screen. redrawing the games grid behind it fights ncm
     // for the GPU and freezes B/Stop. detached transfers (web server, MTP)
     // must still paint the menu underneath so the dim is actually translucent.
-    bool skip_under_progress = false;
-    for (const auto& p : m_widgets) {
-        if (p->BlocksDrawUnder()) {
-            skip_under_progress = true;
-            break;
-        }
-    }
     std::shared_ptr<ui::menu::dbi::InstallSession> session;
     {
         SCOPED_MUTEX(&m_install_session_mutex);
         session = m_active_install_session;
     }
-    if (session && session->BlocksDrawUnder()) {
-        skip_under_progress = true;
-    }
+    const bool detached_blocks_under = session && session->BlocksDrawUnder();
 
     // find the last menu in the list, start drawing from there
     auto menu_it = m_widgets.rend();
@@ -1194,8 +1194,21 @@ void App::Draw() {
 
     // reverse itr so loop backwards to go forwarders.
     if (menu_it != m_widgets.rend()) {
-        if (!skip_under_progress) {
+        if (!detached_blocks_under) {
+            // Start at the highest widget that blocks what is underneath it.
+            // The blocker itself must still draw; skipping the whole stack is
+            // what reduced DBI/local/USB install screens to the bare backdrop.
+            auto draw_it = menu_it;
             for (auto it = menu_it; ; it--) {
+                if (!(*it)->IsHidden() && (*it)->BlocksDrawUnder()) {
+                    draw_it = it;
+                }
+                if (it == m_widgets.rbegin()) {
+                    break;
+                }
+            }
+
+            for (auto it = draw_it; ; it--) {
                 const auto& p = *it;
 
                 // draw all normal (non-modal) content/widgets on top of the menu first.
@@ -1210,7 +1223,7 @@ void App::Draw() {
 
             // draw standard header/footer chrome after normal content/widgets if no stacked widget opts out.
             bool allow_chrome = true;
-            for (auto it = menu_it; ; it--) {
+            for (auto it = draw_it; ; it--) {
                 const auto& p = *it;
                 if (!p->IsHidden() && !p->WantsChrome()) {
                     allow_chrome = false;
@@ -1221,8 +1234,8 @@ void App::Draw() {
                 }
             }
 
-            if (allow_chrome && !(*menu_it)->IsHidden()) {
-                if (auto* chrome = (*menu_it)->GetChromeOwner()) {
+            if (allow_chrome && !(*draw_it)->IsHidden()) {
+                if (auto* chrome = (*draw_it)->GetChromeOwner()) {
                     chrome->DrawChrome(vg, &m_theme);
                 }
             }
@@ -1230,6 +1243,9 @@ void App::Draw() {
 
         if (session) {
             session->Draw(vg, &m_theme);
+            if (session->WantsChrome()) {
+                session->DrawChrome(vg, &m_theme);
+            }
             transfer_drawn = true;
         } else {
             if (m_active_transfer_pbox) {
@@ -1256,6 +1272,9 @@ void App::Draw() {
     if (!transfer_drawn) {
         if (session) {
             session->Draw(vg, &m_theme);
+            if (session->WantsChrome()) {
+                session->DrawChrome(vg, &m_theme);
+            }
         } else {
             if (m_active_transfer_pbox) {
                 m_active_transfer_pbox->Draw(vg, &m_theme);

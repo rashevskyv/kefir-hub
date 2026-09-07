@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.758** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.759** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.759 — repair and complete transport install UI
+
+- `App::Draw` тепер починає від highest blocking widget і малює сам blocker: PC USB, local/file-manager та external USB install більше не зникають у бірюзовому backdrop.
+- Detached MTP/FTP/Web session малює власний штатний chrome. Footer показує тільки session actions; modal overlay тимчасово перебирає footer ownership.
+- MTP/FTP показують лише відомі дані: transport mode, installed count, written bytes, remaining current transfer, average speed та ETA. Package/overall totals лишилися тільки для DBI/Web; MTP screensaver не вигадує package counter.
+- Transport session log отримує start, installed, cancelled, failed, source disconnected і MTP restart. MTP `B` виконує cancel без Skip confirmation; фізичний обрив закриває overlay і планує restart після worker teardown.
+- `HasKnownBatchTotals()` використовується production renderer і host check. `git diff --check` та dead-symbol check пройдені; compile/NRO не запускалися за policy.
 
 ## v0.13.758 — serialize background MTP batch installs
 

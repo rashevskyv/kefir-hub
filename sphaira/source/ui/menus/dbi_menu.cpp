@@ -166,30 +166,34 @@ void InstallSession::UpdateActions() {
     RemoveActions();
     const auto state = m_state.load();
     if (state == State::Installing) {
-        SetActions(
-            std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
-                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
-                    if (choice && *choice == 1) {
-                        CancelSession();
+        if (m_origin == TransportOrigin::Mtp) {
+            // MTP cannot skip an in-flight host copy safely. B cancels the
+            // session directly, so no stale confirmation can outlive a cable
+            // disconnect and cover the menu afterwards.
+            SetActions(
+                std::make_pair(Button::B, Action{"Cancel installation"_i18n, [this]() { CancelSession(); }}),
+                std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
+            );
+        } else {
+            SetActions(
+                std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
+                    App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+                        if (choice && *choice == 1) CancelSession();
+                    });
+                }}),
+                std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
+                    size_t active_pkg{};
+                    {
+                        SCOPED_MUTEX(&m_mutex);
+                        active_pkg = m_current_package;
                     }
-                });
-            }}),
-            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
-                size_t active_pkg{};
-                {
-                    SCOPED_MUTEX(&m_mutex);
-                    active_pkg = m_current_package;
-                }
-                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
-                    if (choice && *choice == 1) {
-                        SkipCurrentPackage(active_pkg);
-                    }
-                });
-            }}),
-            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() {
-                ToggleMinimized();
-            }})
-        );
+                    App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
+                        if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
+                    });
+                }}),
+                std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
+            );
+        }
     } else if (state == State::Summary || state == State::Cancelled) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             m_should_exit = true;
@@ -464,7 +468,12 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
             case State::WaitingForList: info.status = "Waiting for PC"_i18n; break;
             case State::Analysing:      info.status = "Analysing"_i18n; break;
             case State::ReviewQueue:    info.status = "Ready to install"_i18n; break;
-            case State::Installing:     info.status = "Installing"_i18n; break;
+            case State::Installing:
+                info.status = m_origin == TransportOrigin::Mtp ? "MTP Install"_i18n
+                    : m_origin == TransportOrigin::Ftp ? "FTP Install"_i18n
+                    : m_origin == TransportOrigin::Web ? "Web Install"_i18n
+                    : "Installing"_i18n;
+                break;
             case State::Cancelled:      info.status = "Cancelled"_i18n; break;
             case State::Failed:         info.status = "Failed"_i18n; break;
             case State::Summary:
@@ -483,8 +492,9 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
             m_current_transfer.find(".ncz") == std::string::npos) {
             info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
         }
-        info.package = std::min(m_current_package + 1, m_queue.size());
-        info.package_count = m_queue.size();
+        const bool known_batch = HasKnownBatchTotals(m_origin);
+        info.package = known_batch ? std::min(m_current_package + 1, m_queue.size()) : 0;
+        info.package_count = known_batch ? m_queue.size() : 0;
         info.installed = m_stats.installed;
         info.failed = m_stats.failed;
         info.is_complete = (state == State::Summary);
@@ -492,11 +502,17 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
 
         const auto bps = AvgWriteBps();
         const auto done = OverallDone();
-        info.ratio = m_plan_total_bytes > 0
-            ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+        info.ratio = known_batch && m_plan_total_bytes > 0
+            ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0)
+            : m_progress_size > 0
+                ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0)
+                : 0.0;
         info.speed_mib = static_cast<double>(bps) / (1024.0 * 1024.0);
         if (m_history_count >= 4) {
-            info.eta = FormatEta(m_plan_total_bytes - done, bps);
+            const auto remaining = known_batch
+                ? m_plan_total_bytes - done
+                : std::max<s64>(0, m_progress_size - m_progress_offset);
+            info.eta = FormatEta(remaining, bps);
         }
         info.elapsed_ns = m_stats.elapsed_ns ? m_stats.elapsed_ns : m_session_timestamp.GetNs();
 
