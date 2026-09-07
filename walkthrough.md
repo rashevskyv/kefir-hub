@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.761** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.762** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.762 — stable install storage legend and target colours
+
+- У ReviewQueue обидва storage-рядки стабільно показують `+поточний пакет / усього заплановано на носій / фактично вільно`; невикористаний носій явно показує `+0 B / 0 B / вільно`.
+- Дубльовані planned totals microSD/NAND прибрано зі stat-row; `Selected`, `Required`, reserve-adjusted free та `Reserve` збережено.
+- Цілі використовують чинні theme roles: microSD — `HIGHLIGHT_1`, NAND — `HIGHLIGHT_2`; `Auto →` має нейтральний префікс і кольоровий resolved destination, pinned target — суцільний destination colour.
+- Planning, sorting, reserve та install execution не змінено. Gemini й senior перевірили всі storage-mode callers, обидві row-гілки та `git diff --check`; compile/tests/NRO не запускалися за policy.
 
 ## v0.13.761 — version correction for install queue delivery
 

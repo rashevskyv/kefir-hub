@@ -321,6 +321,11 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // A bar with no bytes for this title stays free-space grey: only the
     // storage that actually holds the game (or the planned install) turns blue.
     auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
+        if (m_storage_projection && m_storage_highlight_active) {
+            return "+" + utils::formatSizeStorage(focus_bytes) + " / " +
+                   utils::formatSizeStorage(highlight_bytes) + " / " +
+                   utils::formatSizeStorage(free_bytes);
+        }
         if (!m_storage_highlight_active || !highlight_bytes) {
             return utils::formatSizeStorage(free_bytes);
         }
@@ -328,14 +333,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         if (m_storage_install_progress) {
             return utils::formatSizeStorage(focus_bytes) + " / " + value;
         }
-        if (!m_storage_projection) {
-            return value;
-        }
-        // "this package / everything queued / actual free" when one package is in focus.
-        if (focus_bytes) {
-            return "+" + utils::formatSizeStorage(focus_bytes) + " / " + value + " / " + utils::formatSizeStorage(free_bytes);
-        }
-        return "+" + value + " / " + utils::formatSizeStorage(free_bytes);
+        return value;
     };
 
     // Determine the exact rightmost boundary of the NAND storage part on Row 1 (y=48).

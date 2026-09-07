@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.761** (version correction for install queue delivery). Завершені задачі збережено в
+Актуальний delivery — **v0.13.762** (stable install storage legend and target colours). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.761 (version correction for install queue delivery)
+## Поточний delivery: v0.13.762 (stable install storage legend and target colours)
+
+- [x] `QUEUE-STORAGE-LEGEND-762` — projection mode завжди показує `+focus / total / actual free` для обох носіїв, включно з нулями.
+- [x] `QUEUE-STATS-DEDUP-762` — planned microSD/NAND totals не дублюються у stat-row під header.
+- [x] `QUEUE-TARGET-COLOUR-762` — microSD/NAND мають сталі theme colours; Auto відрізняється нейтральним префіксом від суцільного pinned target.
+- [x] `QUEUE-STORAGE-REVIEW-762` — Gemini й senior перевірили projection/highlight/progress callers, обидві row-гілки та `git diff --check`; окремий дубль NanoVG-логіки в host-test не додано.
+- [x] `CMAKELISTS-VERSION-BUMP-762` — `sphaira_VERSION` піднято до `0.13.762`.
+- [x] `DOCS-BUMP-762` — plan/task/walkthrough/audit синхронізовано; compile/tests/NRO не запускалися.
+
+## Попередній delivery: v0.13.761 (version correction for install queue delivery)
 
 - [x] `CMAKELISTS-VERSION-BUMP-761` — `sphaira_VERSION` піднято з `0.13.760` до `0.13.761`.
 - [x] `VERSION-SCOPE-761` — функціонал черги `v0.13.760` не змінено.

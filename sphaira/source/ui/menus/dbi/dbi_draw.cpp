@@ -209,8 +209,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             {"Targets"_i18n, "Per package"_i18n},
             {"Selected"_i18n, std::to_string(selected_count) + " / " + std::to_string(m_queue.size())},
             {"Required"_i18n, utils::formatSizeStorage(selected_size)},
-            {"microSD"_i18n, utils::formatSizeStorage(sd_required)},
-            {"NAND"_i18n, utils::formatSizeStorage(nand_required)},
         });
         DrawStatRow(vg, info_col, 70.f, GetY() + 36.f, 15.f, {
             {"microSD free"_i18n, utils::formatSizeStorage(std::max<s64>(0, spaces.sd_free - reserve_sd))},
@@ -228,27 +226,36 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             if (R_FAILED(entry.analysis_result)) {
                 gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
                     "%s: %s", "Analysis failed"_i18n.c_str(), ResultText(entry.analysis_result).c_str());
-            } else if (entry.analysis_deferred) {
-                const auto source_size = entry.analysis.source_size > 0
-                    ? utils::formatSizeStorage(entry.analysis.source_size) : "Unknown"_i18n;
-                const auto target = entry.target == InstallTarget::Auto
-                    ? TargetName(entry.target) + " → " + (entry.planned_sd ? "microSD"_i18n : "System memory"_i18n)
-                    : TargetName(entry.target);
-                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s    %s: %s",
-                    "Package size"_i18n.c_str(), source_size.c_str(),
-                    "Install size"_i18n.c_str(), "Calculated during install"_i18n.c_str(),
-                    "Target"_i18n.c_str(), target.c_str());
             } else {
-                const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
-                const auto target = entry.target == InstallTarget::Auto
-                    ? TargetName(entry.target) + " → " + (entry.planned_sd ? "microSD"_i18n : "System memory"_i18n)
-                    : TargetName(entry.target);
-                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO), "%s: %s    %s: %s (%s)    %s: %s",
-                    "Package size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.source_size).c_str(),
-                    "Install size"_i18n.c_str(), utils::formatSizeStorage(entry.analysis.install_size).c_str(), kind.c_str(),
-                    "Target"_i18n.c_str(), target.c_str());
+                const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+                std::string prefix;
+                if (entry.analysis_deferred) {
+                    const auto source_size = entry.analysis.source_size > 0
+                        ? utils::formatSizeStorage(entry.analysis.source_size) : "Unknown"_i18n;
+                    prefix = "Package size"_i18n + ": " + source_size + "    " +
+                             "Install size"_i18n + ": " + "Calculated during install"_i18n + "    " +
+                             "Target"_i18n + ": ";
+                } else {
+                    const auto kind = entry.analysis.size_kind == yati::AnalysisSizeKind::Exact ? "Exact"_i18n : "Estimate"_i18n;
+                    prefix = "Package size"_i18n + ": " + utils::formatSizeStorage(entry.analysis.source_size) + "    " +
+                             "Install size"_i18n + ": " + utils::formatSizeStorage(entry.analysis.install_size) +
+                             " (" + kind + ")    " +
+                             "Target"_i18n + ": ";
+                }
+                gfx::drawText(vg, v.x + 42.f, v.y + 40.f, 14.f, info_col, prefix.c_str());
+                nvgFontSize(vg, 14.f);
+                nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+                float x = v.x + 42.f + nvgTextBounds(vg, 0.f, 0.f, prefix.c_str(), nullptr, nullptr);
+
+                const bool is_sd = (entry.target == InstallTarget::Auto) ? entry.planned_sd : (entry.target == InstallTarget::Sd);
+                const auto dest_col = theme->GetColour(is_sd ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_HIGHLIGHT_2);
+                const auto dest_str = is_sd ? "microSD"_i18n : "System memory"_i18n;
+                if (entry.target == InstallTarget::Auto) {
+                    const auto auto_prefix = "Auto"_i18n + " → ";
+                    gfx::drawText(vg, x, v.y + 40.f, 14.f, info_col, auto_prefix.c_str());
+                    x += nvgTextBounds(vg, 0.f, 0.f, auto_prefix.c_str(), nullptr, nullptr);
+                }
+                gfx::drawText(vg, x, v.y + 40.f, 14.f, dest_col, dest_str.c_str());
             }
         });
         return;

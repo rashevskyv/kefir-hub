@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.761** (version correction for install queue delivery). Завершені плани збережено в
+Поточний delivery — **v0.13.762** (stable install storage legend and target colours). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.761 — version correction for install queue delivery
+## Поточний delivery: v0.13.762 — stable install storage legend and target colours
+
+Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
+
+1. У projection mode обидва storage-рядки завжди показують однакові три поля: `+пакет у фокусі / уся запланована черга на носій / фактично вільно`, включно з `0 B` для невикористаного носія.
+2. Прибрати дубльовані `microSD`/`NAND` planned totals зі stat-row черги: ті самі totals уже видно в storage header.
+3. Розрізнити цілі без нової палітри: microSD використовує наявний `HIGHLIGHT_1`, NAND — `HIGHLIGHT_2`; Auto лишається двоколірним (`Auto` нейтральний, resolved destination кольоровий), pinned target — суцільно кольоровим.
+4. Не змінювати `RecomputePlan()`, sorting, reserve semantics або install execution; version `0.13.762`. Окремий host-test не додавати: форматування й малювання локальні для NanoVG UI, а дубль production-логіки в тесті не перевіряв би реальний renderer.
+
+## Попередній delivery: v0.13.761 — version correction for install queue delivery
 
 Статус: виконано локально; функціонал `v0.13.760` без змін, compile/NRO не запускалися.
 
