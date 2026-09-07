@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.760** (install queue sorting and visible free space). Завершені плани збережено в
+Поточний delivery — **v0.13.761** (version correction for install queue delivery). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.760 — install queue sorting and visible free space
+## Поточний delivery: v0.13.761 — version correction for install queue delivery
+
+Статус: виконано локально; функціонал `v0.13.760` без змін, compile/NRO не запускалися.
+
+1. Підняти фактичний `sphaira_VERSION` з `0.13.760` до `0.13.761`.
+2. Не змінювати сортування, Auto planner, storage header або i18n з `v0.13.760`.
+3. Синхронізувати living docs і створити focused commit.
+
+## Попередній delivery: v0.13.760 — install queue sorting and visible free space
 
 Статус: реалізовано Gemini й прийнято після senior review; compile/NRO та host-тести не запускалися за policy, потрібна апаратна перевірка.
 

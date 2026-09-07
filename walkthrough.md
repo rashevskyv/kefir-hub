@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.760** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.761** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.761 — version correction for install queue delivery
+
+- Фактичний `sphaira_VERSION` піднято з `0.13.760` до `0.13.761`, щоб наступна збірка мала новий номер.
+- Сортування install queue, local/PC USB Auto parity, stable source mapping, storage header та i18n з `v0.13.760` не змінювалися.
+- Перевірено `git diff --check`; compile, tests та NRO не запускалися.
 
 ## v0.13.760 — install queue sorting and visible free space
 

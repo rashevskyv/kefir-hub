@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.760**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.761**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 11995 nodes, 22048 edges, 724 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.761 поза ponytail-чергою: version-only correction `0.13.760` → `0.13.761`; продуктова поведінка не змінена, compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.760 поза ponytail-чергою: ReviewQueue має session-local stable sorting за original order/name/package/install size; `source_index` зберігає local/external USB path після сортування; local і PC USB використовують спільний Auto planner/live refresh; projection header додає actual free NAND/microSD. Host assertions додані, але compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.760** (install queue sorting and visible free space). Завершені задачі збережено в
+Актуальний delivery — **v0.13.761** (version correction for install queue delivery). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.760 (install queue sorting and visible free space)
+## Поточний delivery: v0.13.761 (version correction for install queue delivery)
+
+- [x] `CMAKELISTS-VERSION-BUMP-761` — `sphaira_VERSION` піднято з `0.13.760` до `0.13.761`.
+- [x] `VERSION-SCOPE-761` — функціонал черги `v0.13.760` не змінено.
+- [x] `DOCS-BUMP-761` — plan/task/walkthrough/audit синхронізовано; compile/NRO не запускалися.
+
+## Попередній delivery: v0.13.760 (install queue sorting and visible free space)
 
 - [x] `QUEUE-SORT-760` — черга в review сортується за назвою/package size/install size та ascending/descending без втрати фокусу.
 - [x] `QUEUE-AUTO-PARITY-760` — local/external USB та PC USB повторно використовують спільний Auto planner; host regression check додано, але не запускалося за policy.
