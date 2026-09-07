@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.756** (2026-09-06). Попередні
+Актуальний delivery — **v0.13.757** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.757 — unified transport install queue UI
+
+- `InstallSession` виділено з DBI-меню як один спільний renderer/state для DBI, MTP, FTP і Web: дві progress bars, R/W graph, speed/ETA, NAND/microSD, session log і summary більше не залежать від `ProgressBox` transport path.
+- Minus запускає чинний install screensaver, L3 окремо згортає/розгортає кожну з чотирьох черг. Під час Web install сеанс є єдиним input/draw owner; QR `ProgressBox` зберігає worker сервера, але не отримує nullable input і не малюється поверх.
+- Web UI надсилає до 128 entries у bounded manifest з унікальними IDs; duplicate/oversize/invalid manifest зупиняє batch. FTP публікує свою вже відому open queue поза FTP mutex, MTP і manifest-less clients додають записи лише після protocol discovery.
+- MTP Cancel вимикає stream; після завершення owned worker і очищення source окрема UI-подія робить `haze::Exit()` та, якщо MTP все ще enabled, `haze::Init()` + callback registration. FTP/Web/DBI не перезапускають MTP.
+- Senior corrective pass прибрав recursive mutex completion, thread lifetime race, cross-thread `shared_ptr` race, Web QR/session double input, nullable `Widget::Update`, duplicate manifest IDs і паралельну mock-only queue model. `git diff --check` і `check_dead_symbols.py` пройшли; compile, host binary і NRO не запускалися за policy.
 
 ## v0.13.756 — clean TegraExplorer NAND-dump progress
 

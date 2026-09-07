@@ -30,6 +30,11 @@
 
 namespace sphaira::ui::menu::dbi {
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
+    if (m_minimized) {
+        DrawMiniBadge(vg, theme);
+        return;
+    }
+
     // anything stacked above this menu takes Update() with it, so the blank
     // would have no way left to wake: bring the panel back rather than hide a
     // dialog nobody can read behind it.
@@ -42,8 +47,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    MenuBase::Draw(vg, theme);
     const auto state = m_state.load();
+    if (state != State::WaitingForUsb && state != State::WaitingForList && state != State::Analysing && state != State::ReviewQueue) {
+        InstallSession::Draw(vg, theme);
+        return;
+    }
+
+    MenuBase::Draw(vg, theme);
 
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing) {
         UsbState usb_state{UsbState_Detached};
@@ -243,7 +253,86 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         });
         return;
     }
+}
 
+void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
+    const float bw = 260.f;
+    const float bh = 40.f;
+    const float bx = SCREEN_WIDTH - bw - 20.f;
+    const float by = 12.f;
+
+    gfx::drawRect(vg, bx, by, bw, bh, nvgRGBA(25, 25, 30, 230), 6.f);
+    gfx::drawRectOutline(vg, bx, by, bw, bh, nvgRGBA(255, 255, 255, 35), 1.f, 6.f);
+
+    const auto text_col = theme->GetColour(ThemeEntryID_TEXT);
+    const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+    std::string origin_str;
+    switch (m_origin) {
+        case TransportOrigin::Mtp: origin_str = "MTP"; break;
+        case TransportOrigin::Ftp: origin_str = "FTP"; break;
+        case TransportOrigin::Web: origin_str = "Web"; break;
+        default:                   origin_str = "DBI"; break;
+    }
+
+    const auto pkg_str = origin_str + " · " + std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size());
+    gfx::drawText(vg, bx + 10.f, by + 10.f, 13.f, text_col, pkg_str.c_str());
+
+    bool has_deferred_plan = (m_plan_total_bytes <= 0);
+    for (const auto& e : m_queue) {
+        if (e.selected && (e.analysis_deferred || e.source_size <= 0)) {
+            has_deferred_plan = true;
+            break;
+        }
+    }
+
+    const s64 overall_done = OverallDone();
+    const double ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
+        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+    char pct_buf[16]{};
+    if (has_deferred_plan) {
+        std::snprintf(pct_buf, sizeof(pct_buf), "--");
+    } else {
+        std::snprintf(pct_buf, sizeof(pct_buf), "%.0f%%", ratio * 100.0);
+    }
+    gfx::drawText(vg, bx + bw - 10.f, by + 10.f, 13.f, info_col, pct_buf, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+
+    // Mini progress bar
+    const Vec4 bar{bx + 10.f, by + 28.f, bw - 20.f, 4.f};
+    gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 2.f);
+    if (!has_deferred_plan && ratio > 0.0) {
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(ratio), bar.h, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
+    }
+}
+
+void InstallSession::Draw(NVGcontext* vg, Theme* theme) {
+    if (m_minimized) {
+        DrawMiniBadge(vg, theme);
+        return;
+    }
+
+    if (m_screensaver.IsActive() && !App::OwnsFooter(this)) {
+        m_screensaver.Stop();
+    }
+
+    if (m_screensaver.OwnsScreen()) {
+        m_screensaver.Draw(vg, theme, ComputeSaverInfo());
+        return;
+    }
+
+    MenuBase::Draw(vg, theme);
+    const auto state = m_state.load();
+    if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
+        DrawSummaryPanel(vg, theme, Vec4{70.f, GetY() + 8.f, 1140.f, 214.f});
+        DrawBottomList(vg, theme);
+        return;
+    }
+
+    DrawInstalling(vg, theme);
+}
+
+void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
+    const auto state = m_state.load();
     if (state == State::Installing) {
         // yellow bar = remaining bytes of the package being written, on its dest only.
         // Label displays cumulative written / total progress without projecting the queue.
@@ -279,7 +368,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     // once the queue has ended the live header, progress bar and graph have
     // nothing left to say, so that space goes to the session summary instead.
-    if (state == State::Summary || state == State::Cancelled) {
+    if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
         DrawSummaryPanel(vg, theme, Vec4{70.f, GetY() + 8.f, 1140.f, 214.f});
         DrawBottomList(vg, theme);
         return;
@@ -292,8 +381,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const s64 avg_write_bps = AvgWriteBps();
     const double speed_mib = static_cast<double>(avg_write_bps) / (1024.0 * 1024.0);
 
+    bool has_deferred_plan = (m_plan_total_bytes <= 0);
+    for (const auto& e : m_queue) {
+        if (e.selected && (e.analysis_deferred || e.source_size <= 0)) {
+            has_deferred_plan = true;
+            break;
+        }
+    }
+
     const s64 overall_done = OverallDone();
-    const double overall_ratio = m_plan_total_bytes > 0
+    const double overall_ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
         ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
 
     const auto format_eta = [&](s64 bytes_left) -> std::string {
@@ -301,13 +398,19 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // around by minutes between frames.
         return m_history_count < 4 ? std::string{} : FormatEta(bytes_left, avg_write_bps);
     };
-    const auto file_eta = format_eta(m_progress_size - m_progress_offset);
-    const auto total_eta = format_eta(m_plan_total_bytes - overall_done);
+    const auto file_eta = (m_progress_size > 0 && m_progress_size >= m_progress_offset)
+        ? format_eta(m_progress_size - m_progress_offset) : std::string{};
+    const auto total_eta = (!has_deferred_plan && m_plan_total_bytes > overall_done)
+        ? format_eta(m_plan_total_bytes - overall_done) : std::string{};
 
     char avg_buf[32]{};
     std::snprintf(avg_buf, sizeof(avg_buf), "%.2f MiB/s", speed_mib);
     char overall_buf[16]{};
-    std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
+    if (has_deferred_plan) {
+        std::snprintf(overall_buf, sizeof(overall_buf), "--");
+    } else {
+        std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
+    }
     std::vector<StatItem> header{
         {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
         {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
@@ -348,7 +451,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
             theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
     }
-    if (m_plan_total_bytes > 0) {
+    if (!has_deferred_plan && m_plan_total_bytes > 0) {
         const Vec4 bar{70.f, GetY() + 78.f, 1140.f, 10.f};
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(overall_ratio), bar.h,
@@ -476,7 +579,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     DrawBottomList(vg, theme);
 }
 
-void Menu::DrawBottomList(NVGcontext* vg, Theme* theme) {
+void InstallSession::DrawBottomList(NVGcontext* vg, Theme* theme) {
     // caller holds m_mutex.
     if (m_show_errors) {
         const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
@@ -521,7 +624,7 @@ void Menu::DrawBottomList(NVGcontext* vg, Theme* theme) {
     });
 }
 
-void Menu::DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area) {
+void InstallSession::DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area) {
     // caller holds m_mutex.
     gfx::drawRect(vg, area, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
 

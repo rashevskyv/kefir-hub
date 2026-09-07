@@ -15,6 +15,9 @@ using OnInstallClose = std::function<void()>;
 
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close);
 void DisableInstallMode();
+std::vector<std::string> GetQueuedInstallFiles();
+bool HasMoreQueuedFiles();
+bool HasActiveOrQueuedFiles();
 
 bool IsRunning();
 unsigned GetPort();

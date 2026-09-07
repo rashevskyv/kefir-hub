@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <unordered_set>
 
 #include "ui/progress_box.hpp"
 #include "ui/steamgriddb_icon.hpp"
@@ -33,6 +34,8 @@
 #include "ui/menus/homebrew.hpp"
 #include "yati/yati.hpp"
 #include "yati/source/stream.hpp"
+#include "ui/menus/dbi_menu.hpp"
+#include <yyjson.h>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -546,6 +549,153 @@ auto UniqueUploadPath(fs::Fs& sd, const fs::FsPath& dir, const std::string& name
 
 
 
+void HandleUploadManifest(Socket sock, const std::string& req) {
+    const auto length_str = HeaderValue(req, "content-length");
+    if (length_str.empty()) {
+        SendResponse(sock, "411 Length Required", "text/plain", "Missing Content-Length");
+        return;
+    }
+
+    const auto content_length = std::strtoll(length_str.c_str(), nullptr, 10);
+    if (content_length <= 0 || content_length > 1024 * 1024) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Bad Content-Length");
+        return;
+    }
+
+    std::string body;
+    if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
+        body = req.substr(header_end + 4);
+    }
+    body.resize(std::min<size_t>(body.size(), static_cast<size_t>(content_length)));
+
+    for (u32 attempts = 0; attempts < 20000 && (s64)body.size() < content_length; attempts++) {
+        char buf[4096];
+        const auto want = std::min<s64>(sizeof(buf), content_length - (s64)body.size());
+        const auto got = recv(sock, buf, want, 0);
+        if (got > 0) {
+            body.append(buf, got);
+        } else if (got == 0) {
+            break;
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            svcSleepThread(1'000'000);
+        } else {
+            break;
+        }
+    }
+
+    if ((s64)body.size() < content_length) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Truncated manifest body");
+        return;
+    }
+
+    yyjson_doc* doc = yyjson_read(body.data(), body.size(), 0);
+    if (!doc) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Invalid JSON");
+        return;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!yyjson_is_arr(root)) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Expected JSON array");
+        return;
+    }
+
+    const size_t count = yyjson_arr_size(root);
+    if (count == 0 || count > 128) {
+        SendResponse(sock, "400 Bad Request", "text/plain", "Invalid item count");
+        return;
+    }
+
+    struct ManifestItem {
+        std::string id;
+        std::string name;
+        s64 size{0};
+        bool to_sd{true};
+    };
+    std::vector<ManifestItem> items;
+    items.reserve(count);
+    std::unordered_set<std::string> item_ids;
+
+    size_t idx, max;
+    yyjson_val* val;
+    yyjson_arr_foreach(root, idx, max, val) {
+        if (!yyjson_is_obj(val)) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Invalid manifest item");
+            return;
+        }
+        yyjson_val* id_val = yyjson_obj_get(val, "id");
+        yyjson_val* name_val = yyjson_obj_get(val, "name");
+        yyjson_val* size_val = yyjson_obj_get(val, "size");
+        if (!yyjson_is_str(name_val)) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Missing or invalid item name");
+            return;
+        }
+        const char* raw_name = yyjson_get_str(name_val);
+        const std::string name = SanitizeFileName(raw_name ? raw_name : "");
+        if (name.empty() || name.size() > 256) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Invalid item name length");
+            return;
+        }
+        const auto ext = path::Extension(name);
+        if (!path::EqualsIC(ext, "nsp") && !path::EqualsIC(ext, "nsz") &&
+            !path::EqualsIC(ext, "xci") && !path::EqualsIC(ext, "xcz") &&
+            !path::EqualsIC(ext, "nro")) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Unsupported extension");
+            return;
+        }
+
+        s64 size = 0;
+        if (yyjson_is_num(size_val)) {
+            size = yyjson_get_sint(size_val);
+            if (size < 0 || size > 100LL * 1024 * 1024 * 1024) {
+                SendResponse(sock, "400 Bad Request", "text/plain", "Invalid item size");
+                return;
+            }
+        }
+
+        std::string item_id;
+        if (yyjson_is_str(id_val)) {
+            const char* s = yyjson_get_str(id_val);
+            if (s) item_id = s;
+        }
+        if (item_id.empty() || item_id.size() > 64 || !item_ids.emplace(item_id).second) {
+            SendResponse(sock, "400 Bad Request", "text/plain", "Invalid or duplicate item id");
+            return;
+        }
+
+        const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
+        const bool to_sd = yati::ChooseInstallTarget(size, is_compressed);
+
+        items.push_back({item_id, name, size, to_sd});
+    }
+
+    auto session = App::GetActiveInstallSession();
+    if (session && session->GetOrigin() != ui::menu::dbi::TransportOrigin::Web) {
+        SendResponse(sock, "409 Conflict", "text/plain", "Another transport installation is in progress");
+        return;
+    }
+
+    if (!session) {
+        session = std::make_shared<ui::menu::dbi::InstallSession>("Web install"_i18n, 0, ui::menu::dbi::TransportOrigin::Web);
+        for (const auto& item : items) {
+            session->EnqueueFile(item.name, item.size, item.to_sd, item.id);
+        }
+        if (!App::PushInstallSession(session)) {
+            SendResponse(sock, "409 Conflict", "text/plain", "Failed to start install session");
+            return;
+        }
+    } else {
+        for (const auto& item : items) {
+            if (!session->HasQueuedItem(item.id, item.name)) {
+                session->EnqueueFile(item.name, item.size, item.to_sd, item.id);
+            }
+        }
+    }
+
+    SendResponse(sock, "200 OK", "application/json", "{\"status\":\"ok\"}");
+}
+
 void ReceiveUpload(Socket sock, const std::string& req, const std::string& query) {
     const auto length_str = HeaderValue(req, "content-length");
     if (length_str.empty()) {
@@ -590,10 +740,28 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
     const bool direct_install = (install_param == "1");
 
     if (direct_install) {
-        auto pbox = WebGetProgressBox();
-        if (!pbox) {
-            SendResponse(sock, "500 Internal Server Error", "text/plain", "Installation not possible (No active UI)");
+        const auto item_id = GetQueryValue(query, "id");
+        std::shared_ptr<ui::menu::dbi::InstallSession> session = App::GetActiveInstallSession();
+        if (session && session->GetOrigin() != ui::menu::dbi::TransportOrigin::Web) {
+            SendResponse(sock, "409 Conflict", "text/plain", "Another transport installation is in progress");
             return;
+        }
+
+        const auto ext = path::Extension(name);
+        const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
+        const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
+
+        if (!session) {
+            session = std::make_shared<ui::menu::dbi::InstallSession>("Web install"_i18n, 0, ui::menu::dbi::TransportOrigin::Web);
+            session->EnqueueFile(name, content_length, install_to_sd, item_id);
+            if (!App::PushInstallSession(session)) {
+                SendResponse(sock, "500 Internal Server Error", "text/plain", "Installation not possible (Cannot start install session)");
+                return;
+            }
+        } else {
+            if (!session->HasQueuedItem(item_id, name)) {
+                session->EnqueueFile(name, content_length, install_to_sd, item_id);
+            }
         }
 
         std::string initial_body;
@@ -608,10 +776,6 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         }
 
         auto stream_source = std::make_unique<SocketStream>(sock, initial_body, content_length);
-        
-        const auto ext = path::Extension(name);
-        const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
-        const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
 
         const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";
         {
@@ -622,17 +786,22 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         g_upload_state.bytes.store(initial_body.size());
         g_upload_state.active.store(true);
 
+        session->SetCurrentPackage(item_id, name, content_length, install_to_sd);
+        session->SetState(ui::menu::dbi::State::Installing);
+
         fs::FsPath dummy_path = "/";
         dummy_path += name;
 
         yati::ConfigOverride override{};
         override.sd_card_install = install_to_sd;
-        if (pbox) {
-            pbox->Mute(true);
-        }
-        const auto rc = yati::InstallFromSource(pbox, stream_source.get(), dummy_path, override);
-        if (pbox) {
-            pbox->Mute(false);
+
+        const auto rc = yati::InstallFromSource(session.get(), stream_source.get(), dummy_path, override);
+
+        const auto cur_pkg = session->GetCurrentPackageIndex();
+        session->MarkPackageComplete(cur_pkg, rc);
+
+        if (session->AllPackagesTerminal()) {
+            session->TransitionToSummary();
         }
 
         g_upload_state.active.store(false);
@@ -1208,6 +1377,13 @@ void HandleRequest(Socket sock) {
 
     std::string query;
     auto path = SplitPathAndQuery(first_line.substr(path_start, path_end - path_start), query);
+
+    if (method == "POST") {
+        if (path == "/upload" && GetQueryValue(query, "manifest") == "1") {
+            HandleUploadManifest(sock, req);
+            return;
+        }
+    }
 
     if (method == "PUT") {
         if (path == "/upload") {

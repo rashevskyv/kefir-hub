@@ -1,0 +1,45 @@
+#include <ui/menus/dbi/install_queue_state.hpp>
+#include <cassert>
+#include <optional>
+#include <string>
+#include <vector>
+
+using namespace sphaira::ui::menu::dbi;
+
+namespace {
+struct Entry {
+    std::string batch_id;
+    std::string file_name;
+    std::optional<unsigned> install_result;
+};
+}
+
+int main() {
+    std::vector<Entry> entries{
+        {"first", "same.nsp", std::nullopt},
+        {"second", "same.nsp", std::nullopt},
+    };
+
+    assert(FindQueueIndex(entries, "first", "same.nsp") == 0);
+    assert(FindQueueIndex(entries, "second", "same.nsp") == 1);
+    assert(FindQueueIndex(entries, "missing", "same.nsp") == QueueIndexNotFound);
+    assert(!AllQueueEntriesTerminal(entries));
+    assert(!CanTransitionToSummary(TransportOrigin::Web, false, false, 0));
+
+    entries[0].install_result = 0;
+    assert(!AllQueueEntriesTerminal(entries));
+    entries[1].install_result = 0;
+    assert(AllQueueEntriesTerminal(entries));
+    assert(CanTransitionToSummary(TransportOrigin::Web, true, false, 0));
+
+    assert(!CanTransitionToSummary(TransportOrigin::Ftp, false, true, 0));
+    assert(!CanTransitionToSummary(TransportOrigin::Ftp, false, false, 1));
+    assert(CanTransitionToSummary(TransportOrigin::Ftp, false, false, 0));
+
+    assert(ShouldRestartMtp(TransportOrigin::Mtp, true, true));
+    assert(!ShouldRestartMtp(TransportOrigin::Mtp, false, true));
+    assert(!ShouldRestartMtp(TransportOrigin::Mtp, true, false));
+    assert(!ShouldRestartMtp(TransportOrigin::Ftp, true, true));
+    assert(!ShouldRestartMtp(TransportOrigin::Web, true, true));
+    assert(!ShouldRestartMtp(TransportOrigin::Dbi, true, true));
+}

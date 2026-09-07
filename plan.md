@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.756** (clean TegraExplorer NAND-dump progress). Завершені плани збережено в
+Поточний delivery — **v0.13.757** (unified transport install queue UI). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.756 — clean TegraExplorer NAND-dump progress
+## Поточний delivery: v0.13.757 — unified transport install queue UI
+
+Статус: реалізовано й прийнято в primary checkout після Gemini implementation та senior corrective review. Збірку й host-тести агент не запускав за policy; потрібна апаратна перевірка.
+
+1. Фонові встановлення MTP, FTP і Web показують той самий повноекранний сеанс черги з метриками, двома progress bars, R/W graph, NAND/microSD статусом і summary, що й DBI Backend; renderer не дублювати.
+2. Minus у черзі запускає чинний install screensaver. Згортання лишається окремою дією та стає доступним і для звичайної DBI-черги; скрінсейвер і minimize працюють однаково для DBI/MTP/FTP/Web.
+3. Черга показує всі відомі назви файлів. Web UI надсилає batch manifest до першого upload; FTP використовує вже наявну `queued_files`; MTP/FTP без manifest поповнюють UI лише коли файл стає відомим протоколу.
+4. Cancel через MTP спочатку перериває install/stream, повністю викликає `haze::Exit()`, а після teardown знову викликає `haze::Init()` і `BackgroundInstaller::RegisterMtpCallbacks()`, якщо MTP лишається увімкненим. FTP/Web cancel не перезапускають MTP.
+5. Зберегти stream backpressure/timeout, FTP serialization, Web HTTP responses, DBI Skip/Cancel semantics і install settings. Додати одну мінімальну host-перевірку чистої queue/transport-state логіки; version `0.13.757`.
+
+## Попередній delivery: v0.13.756 — clean TegraExplorer NAND-dump progress
 
 Статус: реалізовано й прийнято в primary checkout; потрібна апаратна перевірка разом із виправленим TegraExplorer. Збірку агент не запускає за політикою checkout.
 

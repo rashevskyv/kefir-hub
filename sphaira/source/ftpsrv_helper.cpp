@@ -5,6 +5,8 @@
 #include "log.hpp"
 #include "net.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/install_stream_menu_base.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -314,6 +316,14 @@ int vfs_install_open(void* user, const char* path, enum FtpVfsOpenMode mode) {
         data->valid = true;
     }
 
+    if (auto session = App::GetActiveInstallSession()) {
+        if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Ftp) {
+            if (!session->HasQueuedFile(path)) {
+                session->EnqueueFile(path);
+            }
+        }
+    }
+
     on_thing();
     log_write("[FTP] got file: %s\n", path);
     return 0;
@@ -407,6 +417,10 @@ int vfs_install_close(void* user) {
                 }
 
                 g_shared_data.queued_files.erase(it);
+
+                if (g_shared_data.queued_files.empty()) {
+                    should_check_summary = true;
+                }
             } else {
                 log_write("[FTP] could not find file in queue...\n");
             }
@@ -419,6 +433,14 @@ int vfs_install_close(void* user) {
         }
 
         memset(data, 0, sizeof(*data));
+    }
+
+    if (should_check_summary && !ui::menu::stream::BackgroundInstaller::IsInstalling()) {
+        if (auto session = App::GetActiveInstallSession()) {
+            if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Ftp) {
+                session->TransitionToSummary();
+            }
+        }
     }
 
     on_thing();
@@ -728,6 +750,37 @@ void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstall
 void DisableInstallMode() {
     SCOPED_MUTEX(&g_shared_data.mutex);
     g_shared_data.enabled = false;
+}
+
+std::vector<std::string> GetQueuedInstallFiles() {
+    SCOPED_MUTEX(&g_shared_data.mutex);
+    std::vector<std::string> res;
+    for (const auto& q : g_shared_data.queued_files) {
+        res.push_back(q.path);
+    }
+    return res;
+}
+
+bool HasMoreQueuedFiles() {
+    SCOPED_MUTEX(&g_shared_data.mutex);
+    return g_shared_data.queued_files.size() > 1;
+}
+
+bool HasActiveOrQueuedFiles() {
+    SCOPED_MUTEX(&g_shared_data.mutex);
+    return !g_shared_data.queued_files.empty() || g_shared_data.in_progress;
+}
+#else
+std::vector<std::string> GetQueuedInstallFiles() {
+    return {};
+}
+
+bool HasMoreQueuedFiles() {
+    return false;
+}
+
+bool HasActiveOrQueuedFiles() {
+    return false;
 }
 #endif
 

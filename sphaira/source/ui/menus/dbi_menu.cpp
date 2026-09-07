@@ -29,9 +29,34 @@
 #include <ranges>
 
 namespace sphaira::ui::menu::dbi {
-Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
+InstallSession::InstallSession(const std::string& title, u32 flags, TransportOrigin origin)
+    : MenuBase{title, flags}, m_origin{origin} {
     mutexInit(&m_mutex);
     ueventCreate(&m_cancel_event, false);
+
+    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 310.f};
+    const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
+    m_log_list = std::make_unique<List>(1, 10, log_pos, log_row);
+    m_log_list->SetLayout(List::Layout::GRID);
+    m_error_list = std::make_unique<List>(1, 5, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
+    m_error_list->SetLayout(List::Layout::GRID);
+    m_graph_timestamp.Update();
+    m_inactivity_timestamp.Update();
+    UpdateActions();
+}
+
+InstallSession::~InstallSession() {
+    m_cancel_requested = true;
+    m_stop_source.request_stop();
+    ueventSignal(&m_cancel_event);
+    if (m_stream) {
+        m_stream->Disable();
+    }
+    m_screensaver.FlushPendingBrightness();
+}
+
+Menu::Menu(u32 flags) : InstallSession{"Install queue"_i18n, flags, TransportOrigin::Dbi} {
+    m_state = State::WaitingForUsb;
 
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
     m_session_install_location = App::GetInstallLocation();
@@ -42,12 +67,6 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
     const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 78.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, row);
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 310.f};
-    const Vec4 log_row{log_pos.x, log_pos.y, log_pos.w, 30.f};
-    m_log_list = std::make_unique<List>(1, 10, log_pos, log_row);
-    m_log_list->SetLayout(List::Layout::GRID);
-    m_error_list = std::make_unique<List>(1, 5, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
-    m_error_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
     m_was_mtp_enabled = App::GetMtpEnable();
@@ -83,10 +102,9 @@ Menu::Menu(u32 flags) : MenuBase{"Install queue"_i18n, flags} {
 }
 
 Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes, bool defer_analysis)
-    : MenuBase{"Install queue"_i18n, flags}, m_local_fs{fs}, m_local_paths{std::move(paths)},
+    : InstallSession{"Install queue"_i18n, flags, TransportOrigin::Dbi}, m_local_fs{fs}, m_local_paths{std::move(paths)},
       m_local_source_sizes{std::move(source_sizes)}, m_defer_local_analysis{defer_analysis} {
-    mutexInit(&m_mutex);
-    ueventCreate(&m_cancel_event, false);
+    m_state = State::Analysing;
 
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
     m_session_install_location = App::GetInstallLocation();
@@ -96,12 +114,6 @@ Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64
     const Vec4 queue_pos{70.f, GetY() + 63.f, 1140.f, 470.f};
     m_list = std::make_unique<List>(1, 6, queue_pos, Vec4{queue_pos.x, queue_pos.y, queue_pos.w, 78.f});
     m_list->SetLayout(List::Layout::GRID);
-    const Vec4 log_pos{70.f, GetY() + 235.f, 1140.f, 310.f};
-    m_log_list = std::make_unique<List>(1, 10, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 30.f});
-    m_log_list->SetLayout(List::Layout::GRID);
-    m_error_list = std::make_unique<List>(1, 5, log_pos, Vec4{log_pos.x, log_pos.y, log_pos.w, 55.f});
-    m_error_list->SetLayout(List::Layout::GRID);
-    m_state = State::Analysing;
     UpdateActions();
 
     const auto create_rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1);
@@ -149,10 +161,71 @@ Menu::~Menu() {
     }
 }
 
-void Menu::UpdateActions() {
+void InstallSession::UpdateActions() {
     RemoveActions();
     const auto state = m_state.load();
+    if (state == State::Installing) {
+        SetActions(
+            std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
+                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+                    if (choice && *choice == 1) {
+                        CancelSession();
+                    }
+                });
+            }}),
+            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
+                size_t active_pkg{};
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    active_pkg = m_current_package;
+                }
+                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
+                    if (choice && *choice == 1) {
+                        SkipCurrentPackage(active_pkg);
+                    }
+                });
+            }}),
+            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() {
+                ToggleMinimized();
+            }})
+        );
+    } else if (state == State::Summary || state == State::Cancelled) {
+        SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            m_should_exit = true;
+            SetPop();
+        }});
+        size_t error_count{};
+        {
+            SCOPED_MUTEX(&m_mutex);
+            error_count = m_errors.size();
+        }
+        if (error_count) {
+            const auto label = m_show_errors
+                ? "Session log"_i18n
+                : "Errors"_i18n + " (" + std::to_string(error_count) + ")";
+            SetAction(Button::Y, Action{label, [this]() { ToggleErrorView(); }});
+        }
+    } else if (state == State::Failed) {
+        SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            m_should_exit = true;
+            SetPop();
+        }});
+    } else {
+        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
+    }
+
+    if (state != State::Summary && state != State::Cancelled && state != State::Failed) {
+        SetAction(Button::SELECT, Action{"Screen off"_i18n, [this]() {
+            m_screensaver.Start();
+        }});
+    }
+    m_actions_dirty = false;
+}
+
+void Menu::UpdateActions() {
+    const auto state = m_state.load();
     if (state == State::ReviewQueue) {
+        RemoveActions();
         SetActions(
             std::make_pair(Button::X, Action{"Select"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
@@ -178,72 +251,32 @@ void Menu::UpdateActions() {
             std::make_pair(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }}),
             std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );
-    } else if (state == State::Installing) {
-        SetActions(
-            std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
-                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
-                    if (choice && *choice == 1) {
-                        CancelSession();
-                    }
-                });
-            }}),
-            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
-                size_t active_pkg{};
-                {
-                    SCOPED_MUTEX(&m_mutex);
-                    active_pkg = m_current_package;
-                }
-                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
-                    if (choice && *choice == 1) {
-                        SkipCurrentPackage(active_pkg);
-                    }
-                });
-            }}),
-            std::make_pair(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }})
-        );
-    } else if (state == State::Summary || state == State::Cancelled) {
-        if (state == State::Summary && !m_session_failed) {
-            SetAction(Button::B, Action{"Back"_i18n, [this]() {
-                m_state = State::ReviewQueue;
-                m_actions_dirty = true;
-            }});
-        } else {
-            SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
-        }
-        // m_errors is filled by the worker thread; take the lock rather than
-        // racing it for the count.
-        size_t error_count{};
-        {
-            SCOPED_MUTEX(&m_mutex);
-            error_count = m_errors.size();
-        }
-        if (error_count) {
-            const auto label = m_show_errors
-                ? "Session log"_i18n
-                : "Errors"_i18n + " (" + std::to_string(error_count) + ")";
-            SetAction(Button::Y, Action{label, [this]() { ToggleErrorView(); }});
-        }
-    } else if (state == State::Failed) {
-        SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
-    } else {
-        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
+        m_actions_dirty = false;
+        return;
     }
 
-    // only while the queue still has something to do: once it has ended there
-    // is nothing left to walk away from.
-    if (state != State::Summary && state != State::Cancelled && state != State::Failed) {
-        SetAction(Button::SELECT, Action{"Screen off"_i18n, [this]() {
-            m_screensaver.Start();
+    InstallSession::UpdateActions();
+
+    if (state == State::Installing) {
+        SetAction(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }});
+    } else if (state == State::Summary && !m_session_failed) {
+        SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            m_state = State::ReviewQueue;
+            m_actions_dirty = true;
         }});
     }
-    m_actions_dirty = false;
 }
 
-void Menu::Update(Controller* controller, TouchInfo* touch) {
+void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     if (m_actions_dirty) UpdateActions();
 
     if (m_state.load() != State::Installing) {
         m_screensaver.FlushPendingBrightness();
+    }
+
+    if (controller && controller->GotDown(Button::L3)) {
+        ToggleMinimized();
+        App::PlaySoundEffect(SoundEffect_Focus);
     }
 
     std::shared_ptr<PromptData> prompt{};
@@ -272,6 +305,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         m_history_count = std::min(m_history_count + 1, SPEED_HISTORY);
     }
 
+    // Minimized/background sessions still sample metrics, but Widget::Update
+    // requires real input objects and must not receive null placeholders.
+    if (!controller || !touch) {
+        return;
+    }
+
     const bool is_installing = (m_state.load() == State::Installing);
     const bool is_saver_active = m_screensaver.IsActive();
     const double now_sec = m_inactivity_timestamp.GetSecondsD();
@@ -297,15 +336,11 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_screensaver.IsActive()) {
-        // a question needs an answer, so it wins over a blanked panel: the
-        // option box would otherwise be raised behind a screen nobody can read.
         if (prompt) {
             m_screensaver.Stop();
             m_inactivity_tracker.Reset(now_sec);
         } else {
             m_screensaver.Update(controller, touch);
-            // the press that wakes the panel is spent on waking it -- waking
-            // with B must not also cancel the queue behind it.
             if (m_screensaver.WantsWake(controller, touch)) {
                 m_screensaver.Stop();
                 m_inactivity_tracker.Reset(now_sec);
@@ -344,17 +379,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     const auto state = m_state.load();
-    bool activate{};
-    if (state == State::ReviewQueue && !m_queue.empty()) {
-        {
-            SCOPED_MUTEX(&m_mutex);
-            m_list->OnUpdate(controller, touch, m_index, m_queue.size(), [this, &activate](bool pressed, s64 index) {
-                if (pressed && m_index == index) activate = true;
-                else SetIndex(index);
-            }, this);
-        }
-        if (activate) FireAction(Button::A);
-    } else if (m_show_errors) {
+    if (m_show_errors) {
         SCOPED_MUTEX(&m_mutex);
         m_error_list->OnUpdate(controller, touch, m_error_index, m_errors.size(), [this](bool, s64 index) {
             m_error_index = index;
@@ -388,7 +413,26 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 }
 
-auto Menu::AvgWriteBps() const -> s64 {
+void Menu::Update(Controller* controller, TouchInfo* touch) {
+    if (m_state.load() == State::ReviewQueue) {
+        if (m_actions_dirty) UpdateActions();
+        MenuBase::Update(controller, touch);
+        bool activate = false;
+        if (!m_queue.empty()) {
+            SCOPED_MUTEX(&m_mutex);
+            m_list->OnUpdate(controller, touch, m_index, m_queue.size(), [this, &activate](bool pressed, s64 index) {
+                if (pressed && m_index == index) activate = true;
+                else SetIndex(index);
+            }, this);
+        }
+        if (activate) FireAction(Button::A);
+        return;
+    }
+
+    InstallSession::Update(controller, touch);
+}
+
+auto InstallSession::AvgWriteBps() const -> s64 {
     // caller holds m_mutex.
     if (!m_history_count) {
         return 0;
@@ -401,14 +445,14 @@ auto Menu::AvgWriteBps() const -> s64 {
     return sum / static_cast<s64>(m_history_count);
 }
 
-auto Menu::OverallDone() const -> s64 {
+auto InstallSession::OverallDone() const -> s64 {
     // caller holds m_mutex. The bytes of the packages already off the queue,
     // plus what the one in flight has written so far.
     const s64 current_plan = m_current_package < m_queue.size() ? PlanSize(m_queue[m_current_package]) : 0;
     return m_plan_done_bytes + std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, current_plan);
 }
 
-auto Menu::ComputeSaverInfo() -> SaverInfo {
+auto InstallSession::ComputeSaverInfo() -> SaverInfo {
     if (mutexTryLock(&m_mutex)) {
         ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
 

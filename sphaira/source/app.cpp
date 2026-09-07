@@ -8,6 +8,7 @@
 #include "ui/menus/main_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
+#include "ui/menus/dbi_menu.hpp"
 
 #include "app.hpp"
 #include "log.hpp"
@@ -472,7 +473,40 @@ auto App::Push(std::unique_ptr<ui::Widget>&& widget) -> void {
 }
 
 auto App::HasActiveTransfer() -> bool {
-    return g_app && g_app->m_active_transfer_pbox != nullptr;
+    if (!g_app) return false;
+    if (g_app->m_active_transfer_pbox != nullptr) return true;
+    SCOPED_MUTEX(&g_app->m_install_session_mutex);
+    return g_app->m_active_install_session != nullptr;
+}
+
+auto App::PushInstallSession(std::shared_ptr<ui::menu::dbi::InstallSession> session) -> bool {
+    if (!g_app) return false;
+    SCOPED_MUTEX(&g_app->m_install_session_mutex);
+    if (g_app->m_active_install_session) {
+        log_write("[App] PushInstallSession called while install session active, refusing\n");
+        return false;
+    }
+    g_app->m_active_install_session = std::move(session);
+    return true;
+}
+
+auto App::GetActiveInstallSession() -> std::shared_ptr<ui::menu::dbi::InstallSession> {
+    if (!g_app) return nullptr;
+    SCOPED_MUTEX(&g_app->m_install_session_mutex);
+    return g_app->m_active_install_session;
+}
+
+auto App::HasActiveInstallSession() -> bool {
+    if (!g_app) return false;
+    SCOPED_MUTEX(&g_app->m_install_session_mutex);
+    return g_app->m_active_install_session != nullptr;
+}
+
+void App::CloseActiveInstallSession() {
+    if (g_app) {
+        SCOPED_MUTEX(&g_app->m_install_session_mutex);
+        g_app->m_active_install_session.reset();
+    }
 }
 
 void App::ResetTouchAfterApplet() {
@@ -539,7 +573,31 @@ auto App::OwnsFooter(const ui::Widget* widget) -> bool {
         return true;
     }
 
-    if (ResolveFooterOwner(g_app->m_widgets.back().get()) == widget) {
+    if (widget && widget->IsMinimized()) {
+        return false;
+    }
+
+    std::shared_ptr<ui::menu::dbi::InstallSession> session;
+    {
+        SCOPED_MUTEX(&g_app->m_install_session_mutex);
+        session = g_app->m_active_install_session;
+    }
+    if (session && !session->IsMinimized()) {
+        return widget == session.get();
+    }
+
+    ui::Widget* top = nullptr;
+    for (auto it = g_app->m_widgets.rbegin(); it != g_app->m_widgets.rend(); ++it) {
+        if (!(*it)->IsMinimized() && !(*it)->IsHidden()) {
+            top = it->get();
+            break;
+        }
+    }
+    if (!top) {
+        top = g_app->m_widgets.back().get();
+    }
+
+    if (ResolveFooterOwner(top) == widget) {
         return true;
     }
 
@@ -565,7 +623,7 @@ auto App::GetChromeOcclusion() -> Vec4 {
     // starts drawing from.
     auto begin = g_app->m_widgets.begin();
     for (auto it = g_app->m_widgets.begin(); it != g_app->m_widgets.end(); it++) {
-        if (!(*it)->IsHidden() && (*it)->IsMenu()) {
+        if (!(*it)->IsHidden() && (*it)->IsMenu() && !(*it)->IsMinimized()) {
             begin = it + 1;
         }
     }
@@ -791,21 +849,32 @@ void App::Poll() {
 }
 
 void App::Update() {
-    bool block_background_update = false;
-    if (m_active_transfer_pbox) {
-        if (m_controller.GotDown(Button::L3)) {
-            m_active_transfer_pbox->ToggleMinimized();
-            App::PlaySoundEffect(SoundEffect_Focus);
-        }
+    std::shared_ptr<ui::menu::dbi::InstallSession> session;
+    {
+        SCOPED_MUTEX(&m_install_session_mutex);
+        session = m_active_install_session;
+    }
 
-        if (!m_active_transfer_pbox->IsMinimized()) {
-            if (m_widgets.back()->IsMenu()) {
-                block_background_update = true;
-                m_active_transfer_pbox->Update(&m_controller, &m_touch_info);
-                
-                if (m_controller.GotDown(Button::B)) {
-                    App::PlaySoundEffect(SoundEffect_Focus);
-                    m_active_transfer_pbox->ShowCancelConfirmation();
+    bool block_background_update = false;
+
+    if (m_active_transfer_pbox) {
+        // An install session is the sole input owner even while minimized; the
+        // server box's worker keeps running without calling its input method.
+        if (!session) {
+            if (m_controller.GotDown(Button::L3)) {
+                m_active_transfer_pbox->ToggleMinimized();
+                App::PlaySoundEffect(SoundEffect_Focus);
+            }
+
+            if (!m_active_transfer_pbox->IsMinimized()) {
+                if (m_widgets.back()->IsMenu()) {
+                    block_background_update = true;
+                    m_active_transfer_pbox->Update(&m_controller, &m_touch_info);
+
+                    if (m_controller.GotDown(Button::B)) {
+                        App::PlaySoundEffect(SoundEffect_Focus);
+                        m_active_transfer_pbox->ShowCancelConfirmation();
+                    }
                 }
             }
         }
@@ -818,8 +887,51 @@ void App::Update() {
         }
     }
 
+    if (session) {
+        if (m_controller.GotDown(Button::L3)) {
+            session->ToggleMinimized();
+            App::PlaySoundEffect(SoundEffect_Focus);
+            session->Update(nullptr, nullptr);
+        } else if (!session->IsMinimized()) {
+            block_background_update = true;
+            session->Update(&m_controller, &m_touch_info);
+        } else {
+            session->Update(nullptr, nullptr);
+        }
+
+        if (session->ShouldExit() || session->ShouldPop()) {
+            {
+                SCOPED_MUTEX(&m_install_session_mutex);
+                if (m_active_install_session == session) {
+                    m_active_install_session.reset();
+                }
+            }
+            session.reset();
+            block_background_update = false;
+        }
+    }
+
     if (!block_background_update) {
-        m_widgets.back()->Update(&m_controller, &m_touch_info);
+        if (m_widgets.back()->IsMinimized()) {
+            if (m_controller.GotDown(Button::L3)) {
+                m_widgets.back()->ToggleMinimized();
+                App::PlaySoundEffect(SoundEffect_Focus);
+            }
+            m_widgets.back()->Update(nullptr, nullptr);
+
+            ui::Widget* target = nullptr;
+            for (auto it = m_widgets.rbegin(); it != m_widgets.rend(); ++it) {
+                if (!(*it)->IsMinimized()) {
+                    target = it->get();
+                    break;
+                }
+            }
+            if (target) {
+                target->Update(&m_controller, &m_touch_info);
+            }
+        } else {
+            m_widgets.back()->Update(&m_controller, &m_touch_info);
+        }
     }
 
     bool popped_at_least1 = false;
@@ -1056,12 +1168,20 @@ void App::Draw() {
             break;
         }
     }
+    std::shared_ptr<ui::menu::dbi::InstallSession> session;
+    {
+        SCOPED_MUTEX(&m_install_session_mutex);
+        session = m_active_install_session;
+    }
+    if (session && session->BlocksDrawUnder()) {
+        skip_under_progress = true;
+    }
 
     // find the last menu in the list, start drawing from there
     auto menu_it = m_widgets.rend();
     for (auto it = m_widgets.rbegin(); it != m_widgets.rend(); it++) {
         const auto& p = *it;
-        if (!p->IsHidden() && p->IsMenu()) {
+        if (!p->IsHidden() && p->IsMenu() && !p->IsMinimized()) {
             menu_it = it;
             break;
         }
@@ -1108,9 +1228,14 @@ void App::Draw() {
             }
         }
 
-        if (m_active_transfer_pbox) {
-            m_active_transfer_pbox->Draw(vg, &m_theme);
+        if (session) {
+            session->Draw(vg, &m_theme);
             transfer_drawn = true;
+        } else {
+            if (m_active_transfer_pbox) {
+                m_active_transfer_pbox->Draw(vg, &m_theme);
+                transfer_drawn = true;
+            }
         }
 
         // draw full-screen modal overlays on top.
@@ -1128,8 +1253,14 @@ void App::Draw() {
     }
 
     // no menu on the stack to anchor it to, so it just goes on top.
-    if (m_active_transfer_pbox && !transfer_drawn) {
-        m_active_transfer_pbox->Draw(vg, &m_theme);
+    if (!transfer_drawn) {
+        if (session) {
+            session->Draw(vg, &m_theme);
+        } else {
+            if (m_active_transfer_pbox) {
+                m_active_transfer_pbox->Draw(vg, &m_theme);
+            }
+        }
     }
 
     m_notif_manager.Draw(vg, &m_theme);
@@ -1221,6 +1352,7 @@ App::App(const char* argv0) {
     ON_SCOPE_EXIT(App::SetBoostMode(false));
 
     g_app = this;
+    mutexInit(&m_install_session_mutex);
     log_nxlink_init();
     m_start_timestamp = armGetSystemTick();
     m_app_path = {};
@@ -1634,6 +1766,10 @@ App::~App() {
     }
 
     m_active_transfer_pbox.reset();
+    {
+        SCOPED_MUTEX(&m_install_session_mutex);
+        m_active_install_session.reset();
+    }
     while (!m_widgets.empty()) {
         m_widgets.pop_back();
     }

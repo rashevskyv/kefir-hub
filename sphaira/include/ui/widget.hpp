@@ -66,6 +66,13 @@ struct Widget : public Object {
         return false;
     }
 
+    virtual auto IsMinimized() const -> bool {
+        return false;
+    }
+
+    virtual void ToggleMinimized() {}
+    virtual void SetMinimized(bool) {}
+
     // USB mass-storage unplug: file browsers on that mount pop themselves.
     virtual void OnUsbMountRemoved(std::string_view) {}
 

@@ -28,10 +28,21 @@
 #include <optional>
 #include <ranges>
 
+#include "ui/menus/install_stream_menu_base.hpp"
+
 namespace sphaira::ui::menu::dbi {
-void Menu::CancelSession() {
+void InstallSession::CancelSession() {
     m_cancel_requested = true;
     ueventSignal(&m_cancel_event);
+    if (m_stream) {
+        m_stream->Disable();
+    }
+    m_should_exit = true;
+    SetPop();
+}
+
+void Menu::CancelSession() {
+    InstallSession::CancelSession();
     if (m_local_fs && !m_local_fs->IsNative()) {
         devoptab::common::CancelActiveCurlTransfers();
     }
@@ -39,10 +50,9 @@ void Menu::CancelSession() {
     if (state == State::WaitingForUsb || state == State::WaitingForList || state == State::Analysing || state == State::Installing) {
         if (m_usb_source) m_usb_source->SignalCancel();
     }
-    SetPop();
 }
 
-void Menu::SkipCurrentPackage(size_t expected_package) {
+void InstallSession::SkipCurrentPackage(size_t expected_package) {
     {
         SCOPED_MUTEX(&m_mutex);
         if (m_state.load() != State::Installing || m_current_package != expected_package) {
@@ -51,6 +61,13 @@ void Menu::SkipCurrentPackage(size_t expected_package) {
         m_skip_requested = true;
     }
     ueventSignal(&m_cancel_event);
+    if (m_stream) {
+        m_stream->Disable();
+    }
+}
+
+void Menu::SkipCurrentPackage(size_t expected_package) {
+    InstallSession::SkipCurrentPackage(expected_package);
     if (m_local_fs && !m_local_fs->IsNative()) {
         devoptab::common::CancelActiveCurlTransfers();
     }
@@ -60,13 +77,164 @@ void Menu::SkipCurrentPackage(size_t expected_package) {
     }
 }
 
-auto Menu::TargetName(InstallTarget target) -> std::string {
+void InstallSession::ToggleMinimized() {
+    m_minimized = !m_minimized;
+    m_actions_dirty = true;
+}
+
+void InstallSession::SetMinimized(bool min) {
+    m_minimized = min;
+    m_actions_dirty = true;
+}
+
+void InstallSession::SetState(State state) {
+    m_state = state;
+    m_actions_dirty = true;
+}
+
+void InstallSession::SetInstallTarget(bool to_sd) {
+    SCOPED_MUTEX(&m_mutex);
+    if (m_current_package < m_queue.size()) {
+        m_queue[m_current_package].install_sd = to_sd;
+        m_queue[m_current_package].planned_sd = to_sd;
+        m_queue[m_current_package].target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
+    }
+}
+
+void InstallSession::SetCurrentPackageTarget(bool to_sd) {
+    SetInstallTarget(to_sd);
+}
+
+void InstallSession::EnqueueFile(const std::string& name, s64 size, bool to_sd, const std::string& batch_id) {
+    SCOPED_MUTEX(&m_mutex);
+    if (FindQueueIndex(m_queue, batch_id, name) != QueueIndexNotFound) return;
+    QueueEntry entry{};
+    entry.batch_id = batch_id;
+    entry.file_name = name;
+    entry.source_size = size;
+    entry.selected = true;
+    entry.install_selected = true;
+    entry.target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
+    entry.analysis.source_size = size;
+    entry.analysis.install_size = 0;
+    entry.analysis_deferred = true;
+    entry.planned_sd = to_sd;
+    entry.install_sd = to_sd;
+    AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
+    m_queue.push_back(std::move(entry));
+    m_actions_dirty = true;
+}
+
+bool InstallSession::HasQueuedFile(const std::string& name) const {
+    auto* mut = const_cast<Mutex*>(&m_mutex);
+    SCOPED_MUTEX(mut);
+    return FindQueueIndex(m_queue, "", name) != QueueIndexNotFound;
+}
+
+bool InstallSession::HasQueuedItem(const std::string& batch_id, const std::string& name) const {
+    auto* mut = const_cast<Mutex*>(&m_mutex);
+    SCOPED_MUTEX(mut);
+    return FindQueueIndex(m_queue, batch_id, name) != QueueIndexNotFound;
+}
+
+void InstallSession::SetCurrentPackageIndex(size_t index) {
+    SCOPED_MUTEX(&m_mutex);
+    if (index < m_queue.size()) {
+        m_current_package = index;
+        m_current_title = m_queue[index].file_name;
+        m_package_write_start = m_total_write.load();
+    }
+}
+
+void InstallSession::SetCurrentPackage(const std::string& batch_id, const std::string& name, s64 size, bool to_sd) {
+    SCOPED_MUTEX(&m_mutex);
+    const auto index = FindQueueIndex(m_queue, batch_id, name);
+    if (index != QueueIndexNotFound) {
+        m_current_package = index;
+        m_current_title = m_queue[index].file_name;
+        m_queue[index].install_sd = to_sd;
+        m_queue[index].planned_sd = to_sd;
+        m_queue[index].target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
+        m_package_write_start = m_total_write.load();
+        m_actions_dirty = true;
+        return;
+    }
+    QueueEntry entry{};
+    entry.batch_id = batch_id;
+    entry.file_name = name;
+    entry.source_size = size;
+    entry.selected = true;
+    entry.install_selected = true;
+    entry.target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
+    entry.analysis.source_size = size;
+    entry.analysis.install_size = 0;
+    entry.analysis_deferred = true;
+    entry.planned_sd = to_sd;
+    entry.install_sd = to_sd;
+    AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
+    m_queue.push_back(std::move(entry));
+    m_current_package = m_queue.size() - 1;
+    m_current_title = name;
+    m_package_write_start = m_total_write.load();
+    m_actions_dirty = true;
+}
+
+void InstallSession::SetCurrentPackageByName(const std::string& name) {
+    SetCurrentPackage("", name);
+}
+
+void InstallSession::RecordCurrentPackageResult(Result rc, bool cancelled, bool user_skipped) {
+    SCOPED_MUTEX(&m_mutex);
+    if (m_current_package < m_queue.size()) {
+        bool to_sd = m_queue[m_current_package].install_sd;
+        s64 write_delta = m_total_write.load() - m_package_write_start;
+        if (write_delta < 0) write_delta = 0;
+        RecordPackageResultLocked(m_current_package, rc, cancelled, user_skipped, to_sd, write_delta, write_delta);
+    }
+}
+
+void InstallSession::MarkPackageComplete(size_t index, Result rc, bool user_skipped) {
+    SCOPED_MUTEX(&m_mutex);
+    if (index < m_queue.size()) {
+        bool to_sd = m_queue[index].install_sd;
+        s64 write_delta = m_total_write.load() - m_package_write_start;
+        if (write_delta < 0) write_delta = 0;
+        RecordPackageResultLocked(index, rc, false, user_skipped, to_sd, write_delta, write_delta);
+    }
+}
+
+bool InstallSession::AllPackagesTerminal() const {
+    auto* mut = const_cast<Mutex*>(&m_mutex);
+    SCOPED_MUTEX(mut);
+    return AllQueueEntriesTerminal(m_queue);
+}
+
+void InstallSession::TransitionToSummary(bool failed) {
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (m_state == State::Cancelled) {
+            return;
+        }
+        if (m_state == State::Failed && !failed) {
+            return;
+        }
+        m_session_failed = failed || (m_state == State::Failed) || (m_stats.failed > 0);
+        if (m_session_timestamp.GetElapsedNs() == 0) {
+            m_session_timestamp.Update();
+        }
+        m_stats.elapsed_ns = m_session_timestamp.GetElapsedNs();
+        m_state = m_session_failed ? State::Failed : State::Summary;
+    }
+    m_actions_dirty = true;
+}
+
+auto InstallSession::TargetName(InstallTarget target) -> std::string {
     if (target == InstallTarget::Sd) return "microSD"_i18n;
     if (target == InstallTarget::Nand) return "System memory"_i18n;
     return "Auto"_i18n;
 }
 
-void Menu::ToggleErrorView() {
+void InstallSession::ToggleErrorView() {
     {
         SCOPED_MUTEX(&m_mutex);
         if (m_errors.empty()) {
@@ -81,7 +249,7 @@ void Menu::ToggleErrorView() {
     m_actions_dirty = true;
 }
 
-void Menu::BeginSessionStats() {
+void InstallSession::BeginSessionStats() {
     SCOPED_MUTEX(&m_mutex);
     m_stats = {};
     m_errors.clear();
@@ -93,8 +261,8 @@ void Menu::BeginSessionStats() {
     m_session_timestamp.Update();
 }
 
-void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool user_skipped, bool to_sd, s64 read_delta, s64 write_delta) {
-    SCOPED_MUTEX(&m_mutex);
+void InstallSession::RecordPackageResultLocked(size_t index, Result rc, bool cancelled, bool user_skipped, bool to_sd, s64 read_delta, s64 write_delta) {
+    if (index >= m_queue.size()) return;
     m_queue[index].install_result = rc;
     m_queue[index].installed = !user_skipped && R_SUCCEEDED(rc);
     m_stats.read_bytes += std::max<s64>(0, read_delta);
@@ -120,7 +288,12 @@ void Menu::RecordPackageResult(size_t index, Result rc, bool cancelled, bool use
     }
 }
 
-void Menu::AddError(const std::string& name, const std::string& stage, Result rc) {
+void InstallSession::RecordPackageResult(size_t index, Result rc, bool cancelled, bool user_skipped, bool to_sd, s64 read_delta, s64 write_delta) {
+    SCOPED_MUTEX(&m_mutex);
+    RecordPackageResultLocked(index, rc, cancelled, user_skipped, to_sd, read_delta, write_delta);
+}
+
+void InstallSession::AddError(const std::string& name, const std::string& stage, Result rc) {
     SessionError error{};
     error.name = name;
     error.stage = stage;
@@ -140,7 +313,7 @@ void Menu::AddError(const std::string& name, const std::string& stage, Result rc
     m_errors.emplace_back(std::move(error));
 }
 
-auto Menu::FormatDuration(u64 ns) -> std::string {
+auto InstallSession::FormatDuration(u64 ns) -> std::string {
     const auto total = ns / 1000000000ULL;
     char buf[32]{};
     if (total >= 3600) {
@@ -153,7 +326,7 @@ auto Menu::FormatDuration(u64 ns) -> std::string {
     return buf;
 }
 
-void Menu::AddLog(const std::string& text, LogKind kind) {
+void InstallSession::AddLog(const std::string& text, LogKind kind) {
     SCOPED_MUTEX(&m_mutex);
     const bool follow_tail = m_log.empty() || m_log_index >= static_cast<s64>(m_log.size()) - 1;
     if (m_log.size() == MAX_LOG_LINES) {
@@ -164,23 +337,23 @@ void Menu::AddLog(const std::string& text, LogKind kind) {
     if (follow_tail) m_log_index = m_log.size() - 1;
 }
 
-void Menu::OnInstallSkipped() {
+void InstallSession::OnInstallSkipped() {
     // yati reached a title that is already installed and skipped it. Flag the
     // current queue item so it is logged as skipped rather than installed.
     m_current_file_skipped = true;
 }
 
-Result Menu::CheckCancelled() {
+Result InstallSession::CheckCancelled() {
     R_UNLESS(!m_cancel_requested && !m_skip_requested && !GetToken().stop_requested(), Result_TransferCancelled);
     R_SUCCEED();
 }
 
-void Menu::SetInstallTitle(const std::string& title) {
+void InstallSession::SetInstallTitle(const std::string& title) {
     SCOPED_MUTEX(&m_mutex);
     m_current_title = title;
 }
 
-void Menu::SetInstallTransfer(const std::string& transfer) {
+void InstallSession::SetInstallTransfer(const std::string& transfer) {
     SCOPED_MUTEX(&m_mutex);
     m_current_transfer = transfer;
     m_progress_offset = 0;
@@ -193,13 +366,13 @@ void Menu::SetInstallTransfer(const std::string& transfer) {
     m_progress_timestamp.Update();
 }
 
-void Menu::UpdateInstallTransfer(s64 offset, s64 size) {
+void InstallSession::UpdateInstallTransfer(s64 offset, s64 size) {
     SCOPED_MUTEX(&m_mutex);
     m_progress_offset = offset;
     m_progress_size = size;
 }
 
-void Menu::UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {
+void InstallSession::UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {
     // offsets reset for every nca; fold them into monotonic totals.
     auto delta_read = read_offset - m_last_file_read;
     if (delta_read < 0) {
@@ -215,11 +388,11 @@ void Menu::UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {
     m_total_write += delta_write;
 }
 
-void Menu::InstallYield() {
+void InstallSession::InstallYield() {
     svcSleepThread(1e+6);
 }
 
-bool Menu::PromptReinstall(const std::string& title_name) {
+bool InstallSession::PromptReinstall(const std::string& title_name) {
     {
         SCOPED_MUTEX(&m_mutex);
         if (m_current_file_reinstall_choice.has_value()) {
@@ -257,7 +430,7 @@ bool Menu::PromptReinstall(const std::string& title_name) {
     return result;
 }
 
-void Menu::OnCompatibilityWarning(const CompatibilityWarning& warning) {
+void InstallSession::OnCompatibilityWarning(const CompatibilityWarning& warning) {
     SCOPED_MUTEX(&m_mutex);
     auto w = warning;
     if (w.title_name.empty() && !m_current_title.empty()) {

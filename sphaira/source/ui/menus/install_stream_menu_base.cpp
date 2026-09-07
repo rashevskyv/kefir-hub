@@ -10,6 +10,8 @@
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/dbi/install_queue_state.hpp"
 #include "evman.hpp"
 #include <cstring>
 #include <vector>
@@ -25,6 +27,22 @@ std::atomic<bool> BackgroundInstaller::s_installing{false};
 Mutex BackgroundInstaller::s_mutex{};
 CondVar BackgroundInstaller::s_callback_cond{};
 std::atomic<int> BackgroundInstaller::s_callback_count{0};
+
+static Thread s_install_thread{};
+static bool s_install_thread_created{false};
+
+static void JoinInstallThread() {
+    if (s_install_thread_created) {
+        threadWaitForExit(&s_install_thread);
+        threadClose(&s_install_thread);
+        s_install_thread_created = false;
+    }
+}
+
+void BackgroundInstaller::TeardownWorker() {
+    JoinInstallThread();
+}
+
  
 namespace {
  
@@ -75,7 +93,7 @@ constexpr s64 NRO_GROW_CHUNK = 1024 * 1024 * 4;
 constexpr s64 NRO_COPY_CHUNK = 1024 * 512;
 
 // streams the whole source into /switch/<stem>/<name>.nro.
-Result InstallNroFromStream(ui::ProgressBox* pbox, Stream* source) {
+Result InstallNroFromStream(ui::InstallProgress* pbox, Stream* source) {
     const auto path = source->GetPath();
     const char* slash = std::strrchr(path.s, '/');
     const char* name = slash ? slash + 1 : path.s;
@@ -110,14 +128,15 @@ Result InstallNroFromStream(ui::ProgressBox* pbox, Stream* source) {
         ~Guard() { if (!success) { sd.DeleteFile(path); } }
     } guard{sd, full};
 
-    pbox->NewTransfer(name);
+    pbox->SetInstallTitle(name);
+    pbox->SetInstallTarget(true);
 
     std::vector<u8> buf(NRO_COPY_CHUNK);
     s64 offset{};
     s64 allocated{};
 
     for (;;) {
-        R_TRY(pbox->ShouldExitResult());
+        R_TRY(pbox->CheckCancelled());
 
         u64 bytes_read{};
         R_TRY(source->ReadChunk(buf.data(), buf.size(), &bytes_read));
@@ -137,7 +156,8 @@ Result InstallNroFromStream(ui::ProgressBox* pbox, Stream* source) {
         // bytes received and the speed. reporting offset against itself used to
         // peg it at "100% - 0 seconds remaining" from the first chunk, which
         // read as "done" while the host was still only halfway through sending.
-        pbox->UpdateTransfer(offset, 0);
+        pbox->UpdateInstallTransfer(offset, 0);
+        pbox->UpdateInstallReadWrite(offset, offset);
     }
 
     R_UNLESS(offset > 0, Result_TransferInterrupted);
@@ -155,7 +175,7 @@ Result InstallNroFromStream(ui::ProgressBox* pbox, Stream* source) {
 }
 
 // runs either the yati installer or the homebrew copy, depending on the file.
-Result RunInstall(ui::ProgressBox* pbox, Stream* source) {
+Result RunInstall(ui::InstallProgress* pbox, Stream* source) {
     if (IsNroPath(source->GetPath())) {
         return InstallNroFromStream(pbox, source);
     }
@@ -499,8 +519,32 @@ void BackgroundInstaller::SetActiveMenu(Menu* menu) {
         }
     }
     mutexUnlock(&s_mutex);
+    JoinInstallThread();
 }
- 
+
+static std::atomic<bool> s_restart_scheduled{false};
+
+void ScheduleMtpRestart() {
+    if (s_restart_scheduled.exchange(true)) {
+        return;
+    }
+    evman::push(evman::FunctionalEventData{
+        []() {
+            s_restart_scheduled.store(false);
+            log_write("[MTP] Restarting haze after install cancellation\n");
+            BackgroundInstaller::TeardownWorker();
+            if (haze::IsRunning()) {
+                haze::Exit();
+            }
+            if (App::GetMtpEnable() && !App::IsExiting()) {
+                if (haze::Init()) {
+                    BackgroundInstaller::RegisterMtpCallbacks();
+                }
+            }
+        }
+    }, false);
+}
+
 void BackgroundInstaller::RegisterMtpCallbacks() {
     static bool initialized = false;
     if (!initialized) {
@@ -510,7 +554,7 @@ void BackgroundInstaller::RegisterMtpCallbacks() {
     }
 
     haze::InitInstallMode(
-        [](const char* path) { return OnInstallStart(path); },
+        [](const char* path) { return OnInstallStart(path, ui::menu::dbi::TransportOrigin::Mtp); },
         [](const void* buf, size_t size) { return OnInstallWrite(buf, size); },
         []() { OnInstallClose(); }
     );
@@ -518,13 +562,17 @@ void BackgroundInstaller::RegisterMtpCallbacks() {
     // FTP shares the same background installer, so dropping a file into the FTP
     // "install" folder works whether or not the FTP Install menu is open.
     ftpsrv::InitInstallMode(
-        [](const char* path) { return OnInstallStart(path); },
+        [](const char* path) { return OnInstallStart(path, ui::menu::dbi::TransportOrigin::Ftp); },
         [](const void* buf, size_t size) { return OnInstallWrite(buf, size); },
         []() { OnInstallClose(); }
     );
 }
- 
+
 bool BackgroundInstaller::OnInstallStart(const char* path) {
+    return OnInstallStart(path, ui::menu::dbi::TransportOrigin::Mtp);
+}
+
+bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin) {
     log_write("[BackgroundInstaller::OnInstallStart] inside for path: %s\n", path);
     Menu* active = nullptr;
     {
@@ -546,12 +594,11 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
         mutexUnlock(&s_mutex);
         return res;
     }
- 
-    // HasActiveTransfer() is checked as well as GetProgressActive(): the detached
-    // box is reclaimed a frame after its thread finishes, and pushing a second
-    // one is refused (App::PushTransfer), which would leave the transport
-    // streaming into a source no install thread ever reads.
-    if (App::GetProgressActive() || App::HasActiveTransfer() || s_installing) {
+
+    auto existing_session = App::GetActiveInstallSession();
+    const bool can_reuse_session = (existing_session && existing_session->GetOrigin() == origin && !s_installing);
+
+    if (!can_reuse_session && (App::GetProgressActive() || App::HasActiveTransfer() || s_installing)) {
         log_write("[BackgroundInstaller] Already installing, rejecting start\n");
         // the transport may retry the same file while it waits for the installer
         // (see on_thing() in ftpsrv_helper.cpp), so don't toast every refusal.
@@ -569,7 +616,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
         }
         return false;
     }
- 
+
     const char* ext = std::strrchr(path, '.');
     if (!ext) return false;
     bool valid_ext = false;
@@ -582,7 +629,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
         }
     }
     if (!valid_ext) return false;
- 
+
     s_installing = true;
     s_stop_source = std::stop_source();
     {
@@ -591,18 +638,14 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
         mutexUnlock(&s_mutex);
     }
     INSTALL_STATE = InstallState_None;
- 
-    evman::push(evman::FunctionalEventData {
-        [path_str = std::string(path)]() {
-            log_write("[BackgroundInstaller] UI event triggered, creating ProgressBox\n");
 
-            // the slot was free when the start was accepted but isn't any more.
-            // unwind instead of handing PushTransfer a box it will destroy: the
-            // transport is already streaming into s_source, and with no install
-            // thread to drain it the transfer would crawl on buffer timeouts
-            // until the client gave up and started the whole upload again.
-            if (App::HasActiveTransfer()) {
-                log_write("[BackgroundInstaller] transfer slot taken, aborting install\n");
+    evman::push(evman::FunctionalEventData {
+        [path_str = std::string(path), origin]() {
+            log_write("[BackgroundInstaller] UI event triggered, creating InstallSession\n");
+
+            std::shared_ptr<ui::menu::dbi::InstallSession> session = App::GetActiveInstallSession();
+            if (session && session->GetOrigin() != origin) {
+                log_write("[BackgroundInstaller] transfer slot taken by different transport, aborting install\n");
                 std::shared_ptr<Stream> src;
                 {
                     mutexLock(&s_mutex);
@@ -618,59 +661,157 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
                 return;
             }
 
+            if (!session) {
+                const std::string title = (origin == ui::menu::dbi::TransportOrigin::Mtp)
+                    ? "MTP Install"_i18n
+                    : (origin == ui::menu::dbi::TransportOrigin::Ftp)
+                        ? "FTP Install"_i18n
+                        : "Web Install"_i18n;
+                session = std::make_shared<ui::menu::dbi::InstallSession>(title, 0, origin);
+                if (origin == ui::menu::dbi::TransportOrigin::Ftp) {
+                    for (const auto& f : ftpsrv::GetQueuedInstallFiles()) {
+                        session->EnqueueFile(f);
+                    }
+                }
+                if (!session->HasQueuedFile(path_str)) {
+                    session->EnqueueFile(path_str);
+                }
+                if (!App::PushInstallSession(session)) {
+                    log_write("[BackgroundInstaller] PushInstallSession refused, aborting\n");
+                    std::shared_ptr<Stream> src;
+                    {
+                        mutexLock(&s_mutex);
+                        src = s_source;
+                        s_source.reset();
+                        mutexUnlock(&s_mutex);
+                    }
+                    if (src) src->Disable();
+                    s_installing = false;
+                    App::Notify("Install failed: another installation is in progress."_i18n);
+                    return;
+                }
+            } else {
+                if (!session->HasQueuedFile(path_str)) {
+                    session->EnqueueFile(path_str);
+                }
+            }
+
             App::SetAutoSleepDisabled(true);
-            // detached: doesn't block the widget stack, so the user can keep
-            // navigating menus while this install runs. minimise/expand via L3.
-            App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Installing "_i18n, path_str, [](auto pbox) -> Result {
-                INSTALL_STATE = InstallState_Progress;
+
+            std::shared_ptr<Stream> src;
+            {
+                mutexLock(&s_mutex);
+                src = s_source;
+                mutexUnlock(&s_mutex);
+            }
+            if (!src) {
+                s_installing = false;
+                return;
+            }
+
+            session->SetStream(src);
+            session->SetCurrentPackageByName(path_str);
+            session->SetState(ui::menu::dbi::State::Installing);
+
+            JoinInstallThread();
+
+            struct WorkerContext {
+                std::shared_ptr<ui::menu::dbi::InstallSession> session;
                 std::shared_ptr<Stream> src;
-                {
-                    mutexLock(&s_mutex);
-                    src = s_source;
-                    mutexUnlock(&s_mutex);
-                }
-                if (!src) R_THROW(Result_TransferCancelled);
-                const auto rc = RunInstall(pbox, src.get());
+                std::string path;
+                ui::menu::dbi::TransportOrigin origin;
+            };
+            auto ctx = std::make_unique<WorkerContext>(WorkerContext{session, src, path_str, origin});
+
+            Result rc_thread = threadCreate(&s_install_thread, [](void* arg) {
+                auto* c = static_cast<WorkerContext*>(arg);
+                INSTALL_STATE = InstallState_Progress;
+                const auto rc = RunInstall(c->session.get(), c->src.get());
+
+                const auto cur_pkg = c->session->GetCurrentPackageIndex();
+                c->session->MarkPackageComplete(cur_pkg, rc);
+
+                const bool was_cancelled = (rc == Result_TransferCancelled || c->session->IsCancelRequested());
+
                 if (R_FAILED(rc)) {
-                    // if the source (PC) closed the transfer early the stream is
-                    // already disabled and yati failed on truncated data -- surface
-                    // that as a friendly "interrupted", not a raw Fs error.
-                    const bool source_ended = !src->m_active && rc != Result_TransferCancelled;
-                    // do NOT enter the Finished "swallow" state; reset to idle and
-                    // disable so further writes are rejected and the transport aborts.
+                    const bool source_ended = !c->src->m_active && rc != Result_TransferCancelled;
                     INSTALL_STATE = InstallState_None;
-                    src->Disable();
-                    R_THROW(source_ended ? Result_TransferInterrupted : rc);
-                }
-                // clean finish: the installer read only the ncas it needed and
-                // finished before the host sent the whole file; swallow the tail.
-                INSTALL_STATE = InstallState_Finished;
-                R_SUCCEED();
-            }, [](Result rc) {
-                App::SetAutoSleepDisabled(false);
-                if (R_SUCCEEDED(rc)) {
+                    c->src->Disable();
+                    if (rc == Result_TransferCancelled) {
+                        App::PlaySoundEffect(SoundEffect_Focus);
+                        App::Notify("Install cancelled"_i18n);
+                    } else if (source_ended || rc == Result_TransferInterrupted) {
+                        App::PlaySoundEffect(SoundEffect_Focus);
+                        App::Notify("Install cancelled: the source stopped sending data"_i18n);
+                    } else {
+                        App::PlaySoundEffect(SoundEffect_Error);
+                        App::PushErrorBox(rc, "Install failed!"_i18n);
+                    }
+                } else {
+                    INSTALL_STATE = InstallState_Finished;
                     App::PlaySoundEffect(SoundEffect_Install);
                     App::Notify("Install success!"_i18n);
-                } else if (rc == Result_TransferCancelled) {
-                    App::PlaySoundEffect(SoundEffect_Focus);
-                    App::Notify("Install cancelled"_i18n);
-                } else if (rc == Result_TransferInterrupted) {
-                    App::PlaySoundEffect(SoundEffect_Focus);
-                    App::Notify("Install cancelled: the source stopped sending data"_i18n);
-                } else {
-                    App::PlaySoundEffect(SoundEffect_Error);
-                    App::PushErrorBox(rc, "Install failed!"_i18n);
                 }
+
+                App::SetAutoSleepDisabled(false);
+
+                const bool needs_mtp_restart = ui::menu::dbi::ShouldRestartMtp(c->origin, was_cancelled, true);
+
+                {
+                    mutexLock(&s_mutex);
+                    while (s_callback_count > 0) {
+                        condvarWait(&s_callback_cond, &s_mutex);
+                    }
+                    s_source.reset();
+                    s_installing = false;
+                    mutexUnlock(&s_mutex);
+                }
+
+                if (c->origin == ui::menu::dbi::TransportOrigin::Ftp) {
+                    const size_t queued = ftpsrv::HasActiveOrQueuedFiles() ? 1 : 0;
+                    if (ui::menu::dbi::CanTransitionToSummary(c->origin, false, false, queued)) {
+                        c->session->TransitionToSummary();
+                    }
+                } else if (c->origin == ui::menu::dbi::TransportOrigin::Mtp) {
+                    if (cur_pkg + 1 >= c->session->GetQueueSize()
+                        && ui::menu::dbi::CanTransitionToSummary(c->origin, false, false, 0)) {
+                        c->session->TransitionToSummary();
+                    }
+                }
+
+                if (needs_mtp_restart) {
+                    ScheduleMtpRestart();
+                }
+
+                delete c;
+            }, ctx.get(), nullptr, 1024 * 128, PRIO_NORMAL, 1);
+
+            if (R_SUCCEEDED(rc_thread)) {
+                rc_thread = threadStart(&s_install_thread);
+                if (R_SUCCEEDED(rc_thread)) {
+                    s_install_thread_created = true;
+                    ctx.release();
+                } else {
+                    threadClose(&s_install_thread);
+                }
+            }
+
+            if (!s_install_thread_created) {
+                log_write("[BackgroundInstaller] Failed to create or start worker thread: 0x%x\n", rc_thread);
+                src->Disable();
                 {
                     mutexLock(&s_mutex);
                     s_source.reset();
                     mutexUnlock(&s_mutex);
                 }
                 s_installing = false;
-            }));
+                App::SetAutoSleepDisabled(false);
+                App::Notify("Install failed: unable to start worker thread."_i18n);
+                return;
+            }
         }
     }, false);
- 
+
     return true;
 }
  
@@ -761,11 +902,14 @@ void BackgroundInstaller::OnInstallClose() {
 
 namespace sphaira::ui::menu::stream {
 
+void ScheduleMtpRestart() {}
 void BackgroundInstaller::RegisterMtpCallbacks() {}
 void BackgroundInstaller::SetActiveMenu(Menu* menu) {}
+bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin) { return false; }
 bool BackgroundInstaller::OnInstallStart(const char* path) { return false; }
 bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) { return false; }
 void BackgroundInstaller::OnInstallClose() {}
+void BackgroundInstaller::TeardownWorker() {}
 
 } // namespace sphaira::ui::menu::stream
 

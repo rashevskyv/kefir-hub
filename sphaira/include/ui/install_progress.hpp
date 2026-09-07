@@ -76,6 +76,7 @@ struct InstallProgress {
     virtual void OnCompatibilityWarning(const CompatibilityWarning& warning) {}
     // called when a title is successfully registered with its application record
     virtual void OnTitleInstalled(u64 title_id) {}
+    virtual void SetInstallTarget(bool to_sd) {}
 };
 
 } // namespace sphaira::ui

@@ -21,6 +21,10 @@
 #include <optional>
 #include <utility>
 
+namespace sphaira::ui::menu::dbi {
+struct InstallSession;
+}
+
 namespace sphaira {
 
 enum SoundEffect {
@@ -79,6 +83,11 @@ public:
     // check HasActiveTransfer() first if the caller has state to unwind.
     static auto PushTransfer(std::unique_ptr<ui::ProgressBox>&& pbox) -> bool;
     static auto HasActiveTransfer() -> bool;
+
+    static auto PushInstallSession(std::shared_ptr<ui::menu::dbi::InstallSession> session) -> bool;
+    static auto GetActiveInstallSession() -> std::shared_ptr<ui::menu::dbi::InstallSession>;
+    static auto HasActiveInstallSession() -> bool;
+    static void CloseActiveInstallSession();
 
     // Drop a click/drag that started before a blocking applet (swkbd) so the
     // same finger-up is not delivered to the menu underneath on return.
@@ -423,6 +432,8 @@ public:
     u32 m_pop_count{};
     ui::NotifMananger m_notif_manager{};
     std::unique_ptr<ui::ProgressBox> m_active_transfer_pbox{};
+    Mutex m_install_session_mutex{};
+    std::shared_ptr<ui::menu::dbi::InstallSession> m_active_install_session{};
 
     AppletHookCookie m_appletHookCookie{};
 

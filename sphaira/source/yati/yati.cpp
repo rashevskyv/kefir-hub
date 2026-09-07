@@ -963,6 +963,9 @@ Result Yati::Setup(const ConfigOverride& override) {
     config.lower_master_key = override.lower_master_key.value_or(App::GetApp()->m_lower_master_key.Get());
     config.lower_system_version = override.lower_system_version.value_or(App::GetApp()->m_lower_system_version.Get());
     storage_id = config.sd_card_install ? NcmStorageId_SdCard : NcmStorageId_BuiltInUser;
+    if (pbox) {
+        pbox->SetInstallTarget(config.sd_card_install);
+    }
 
     R_TRY(source->GetOpenResult());
     R_TRY(splCryptoInitialize());

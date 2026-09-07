@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.756** (clean TegraExplorer NAND-dump progress). Завершені задачі збережено в
+Актуальний delivery — **v0.13.757** (unified transport install queue UI). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.756 (clean TegraExplorer NAND-dump progress)
+## Поточний delivery: v0.13.757 (unified transport install queue UI)
+
+- [x] `TRANSPORT-QUEUE-UI-757` — MTP/FTP/Web install використовують спільний з DBI повноекранний queue/metrics renderer без дубляжу.
+- [x] `INSTALL-SCREENSAVER-757` — Minus включає наявний install screensaver у DBI/MTP/FTP/Web; окреме minimize працює в усіх цих чергах, включно з DBI.
+- [x] `TRANSPORT-MANIFEST-757` — Web передає validated batch manifest з unique ID наперед; FTP показує open queue; MTP/FTP без manifest додають файли в міру виявлення.
+- [x] `MTP-CANCEL-RESTART-757` — Cancel MTP після worker teardown робить stream cancel → `haze::Exit()` → `haze::Init()` + callback re-registration; FTP/Web не чіпають MTP.
+- [x] `TRANSPORT-QUEUE-CHECK-757` — production і host-тест викликають ті самі queue/summary/restart algorithms; dead-symbol і diff checks пройшли, compile/NRO не запускали за policy.
+- [x] `CMAKELISTS-VERSION-BUMP-757` — `sphaira_VERSION` піднято до `0.13.757`.
+- [x] `DOCS-BUMP-757` — plan/task/walkthrough/audit оновлено після acceptance.
+
+## Попередній delivery: v0.13.756 (clean TegraExplorer NAND-dump progress)
 
 - [x] `TE-DUMP-SINGLE-LINE-756` — `copy index/total name` перемальовується в одному фіксованому рядку без scroll/wrap overlap.
 - [x] `TE-DUMP-SPINNER-COMPAT-756` — статусний рядок лишає позицію для spinner виправленого TegraExplorer `saveObj.read()` на великому `PlayEvent.dat`.

@@ -75,16 +75,27 @@ private:
     Thread m_thread{};
     Mutex m_mutex{};
     State m_state{State::None};
-};
+} // namespace sphaira::ui::menu::stream
+
+namespace sphaira::ui::menu::dbi {
+enum class TransportOrigin;
+}
+
+namespace sphaira::ui::menu::stream {
+
+void ScheduleMtpRestart();
 
 class BackgroundInstaller {
 public:
     static void RegisterMtpCallbacks();
     static void SetActiveMenu(Menu* menu);
 
+    static bool OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin);
     static bool OnInstallStart(const char* path);
     static bool OnInstallWrite(const void* buf, size_t size);
     static void OnInstallClose();
+    static bool IsInstalling() { return s_installing.load(); }
+    static void TeardownWorker();
 
 private:
     static Menu* s_active_menu;
