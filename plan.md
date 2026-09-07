@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.762** (stable install storage legend and target colours). Завершені плани збережено в
+Поточний delivery — **v0.13.763** (fresh initial Auto plan and split queue options). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.762 — stable install storage legend and target colours
+## Поточний delivery: v0.13.763 — fresh initial Auto plan and split queue options
+
+Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
+
+1. На кожному переході в `ReviewQueue` форсовано оновити storage snapshot до першого Auto-плану, щоб правильний NAND/microSD розподіл не залежав від 15-секундного cache cadence або зміни сортування.
+2. Зміна install location чи NAND/microSD reserve в sidebar одразу переплановує review-чергу.
+3. У sidebar зверху показати секцію install options; секцію `VIEW` із sort/order перенести вниз.
+4. Не змінювати `PlanPickSd`, packing order, target colour/legend із `v0.13.762` або install execution; version `0.13.763`. Верифікація — source-level review усіх переходів/callers і `git diff --check`, без дублювання Horizon/NanoVG runtime у host-test.
+
+## Попередній delivery: v0.13.762 — stable install storage legend and target colours
 
 Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
 

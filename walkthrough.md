@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.762** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.763** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.763 — fresh initial Auto plan and split queue options
+
+- Перший вхід local/file-manager/external і PC USB/DBI у `ReviewQueue`, а також повернення із Summary, форсують свіжий storage poll та рахують Auto plan до першого review-frame. Результат більше не залежить від 15-секундного cache cadence чи зміни сортування.
+- Зміна install location або reserve NAND/microSD у review одразу викликає fresh replan; звичайний Draw і SortQueue не роблять зайвого forced IPC.
+- Sidebar `Options` має зверху секцію `Install Options` із install/reserve/screensaver settings, а внизу лише у ReviewQueue — секцію `View` із Sort та Order.
+- `PlanPickSd`, packing, pinned targets, v0.13.762 legend/colours та install execution не змінені. Gemini й senior перевірили всі callers/transitions, mutex usage, sidebar order і `git diff --check`; compile/tests/NRO не запускалися за policy.
 
 ## v0.13.762 — stable install storage legend and target colours
 

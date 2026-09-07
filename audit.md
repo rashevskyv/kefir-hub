@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.762**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.763**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 11995 nodes, 22048 edges, 724 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.763 поза ponytail-чергою: Auto plan отримує fresh storage snapshot перед кожним входом у ReviewQueue і після зміни location/reserve; queue sidebar розділено на верхні Install Options та нижній View із sort/order. Planner/legend/install semantics без змін; compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.762 поза ponytail-чергою: ReviewQueue завжди показує три projection values для обох носіїв, прибирає дубль planned totals зі stat-row та розрізняє Auto/pinned NAND/microSD чинними theme colours. Planner/install semantics без змін; compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

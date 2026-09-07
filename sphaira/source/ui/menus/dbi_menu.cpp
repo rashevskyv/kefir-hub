@@ -266,6 +266,10 @@ void Menu::UpdateActions() {
         SetAction(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }});
     } else if (state == State::Summary && !m_session_failed) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            {
+                SCOPED_MUTEX(&m_mutex);
+                RecomputePlan(true);
+            }
             m_state = State::ReviewQueue;
             m_actions_dirty = true;
         }});
@@ -614,32 +618,12 @@ void Menu::SortQueue() {
 }
 
 void Menu::DisplayQueueOptions(bool left_side) {
-    auto options = std::make_unique<Sidebar>("Install Options"_i18n, left_side ? Sidebar::Side::LEFT : Sidebar::Side::RIGHT);
+    auto options = std::make_unique<Sidebar>("Options"_i18n, left_side ? Sidebar::Side::LEFT : Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     const bool global = App::GetSaveSettingsGlobally();
 
-    if (m_state.load() == State::ReviewQueue) {
-        SidebarEntryArray::Items sort_items;
-        sort_items.push_back("Queue order"_i18n);
-        sort_items.push_back("Name"_i18n);
-        sort_items.push_back("Package size"_i18n);
-        sort_items.push_back("Install size"_i18n);
-
-        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
-            m_session_sort_type = index_out;
-            SortQueue();
-        }, m_session_sort_type);
-
-        SidebarEntryArray::Items order_items;
-        order_items.push_back("Ascending"_i18n);
-        order_items.push_back("Descending"_i18n);
-
-        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
-            m_session_sort_order = index_out;
-            SortQueue();
-        }, m_session_sort_order);
-    }
+    options->Add<SidebarEntryHeader>("Install Options"_i18n);
 
     SidebarEntryArray::Items skip_installed_items;
     skip_installed_items.push_back("Reinstall"_i18n);
@@ -669,6 +653,11 @@ void Menu::DisplayQueueOptions(bool left_side) {
         } else {
             m_session_install_location = index_out;
         }
+        if (m_state.load() == State::ReviewQueue) {
+            SCOPED_MUTEX(&m_mutex);
+            RecomputePlan(true);
+            m_actions_dirty = true;
+        }
     }, current_loc);
 
     // one entry per target: the two media fill at very different rates and want
@@ -688,6 +677,11 @@ void Menu::DisplayQueueOptions(bool left_side) {
                         *session = out;
                     }
                     entry->SetValue(std::to_string(out) + " MB");
+                    if (m_state.load() == State::ReviewQueue) {
+                        SCOPED_MUTEX(&m_mutex);
+                        RecomputePlan(true);
+                        m_actions_dirty = true;
+                    }
                 }
             }
         });
@@ -786,6 +780,30 @@ void Menu::DisplayQueueOptions(bool left_side) {
         add_field(SaverField_Graph, "Speed graph"_i18n, "Show the live installation read/write speed graph."_i18n);
     }, "Blank or dim the panel while a long queue runs, and choose what the screensaver shows."_i18n);
     screen_off_entry->SetHasSubmenu(true);
+
+    if (m_state.load() == State::ReviewQueue) {
+        options->Add<SidebarEntryHeader>("View"_i18n);
+
+        SidebarEntryArray::Items sort_items;
+        sort_items.push_back("Queue order"_i18n);
+        sort_items.push_back("Name"_i18n);
+        sort_items.push_back("Package size"_i18n);
+        sort_items.push_back("Install size"_i18n);
+
+        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+            m_session_sort_type = index_out;
+            SortQueue();
+        }, m_session_sort_type);
+
+        SidebarEntryArray::Items order_items;
+        order_items.push_back("Ascending"_i18n);
+        order_items.push_back("Descending"_i18n);
+
+        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+            m_session_sort_order = index_out;
+            SortQueue();
+        }, m_session_sort_order);
+    }
 }
 } // namespace sphaira::ui::menu::dbi
 

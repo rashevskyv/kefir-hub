@@ -269,7 +269,7 @@ struct Menu final : InstallSession {
 private:
     void StartInstall();
     void ConfirmInstallPlan();
-    void RecomputePlan();
+    void RecomputePlan(bool force_refresh = false);
     bool RefreshAutoInstallTarget(size_t index);
     bool ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections);
     void SetIndex(s64 index);

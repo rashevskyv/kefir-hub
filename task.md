@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.762** (stable install storage legend and target colours). Завершені задачі збережено в
+Актуальний delivery — **v0.13.763** (fresh initial Auto plan and split queue options). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.762 (stable install storage legend and target colours)
+## Поточний delivery: v0.13.763 (fresh initial Auto plan and split queue options)
+
+- [x] `QUEUE-AUTO-FRESH-763` — кожен вхід у ReviewQueue форсує fresh storage snapshot перед Auto planning.
+- [x] `QUEUE-OPTIONS-REPLAN-763` — install location і обидва reserve одразу переплановують review-чергу.
+- [x] `QUEUE-OPTIONS-SECTIONS-763` — install options розташовані зверху, `VIEW` із sort/order — знизу.
+- [x] `QUEUE-AUTO-REVIEW-763` — Gemini й senior перевірили всі review transitions, `RecomputePlan` callers, lock discipline, sidebar order та `git diff --check`; Horizon/NanoVG runtime не дублювали у host-test.
+- [x] `CMAKELISTS-VERSION-BUMP-763` — `sphaira_VERSION` піднято до `0.13.763`.
+- [x] `DOCS-BUMP-763` — living docs синхронізовані після acceptance; compile/tests/NRO не запускалися.
+
+## Попередній delivery: v0.13.762 (stable install storage legend and target colours)
 
 - [x] `QUEUE-STORAGE-LEGEND-762` — projection mode завжди показує `+focus / total / actual free` для обох носіїв, включно з нулями.
 - [x] `QUEUE-STATS-DEDUP-762` — planned microSD/NAND totals не дублюються у stat-row під header.

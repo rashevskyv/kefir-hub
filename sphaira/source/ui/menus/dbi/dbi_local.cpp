@@ -85,6 +85,10 @@ void Menu::LocalThreadFunction() {
             return;
         }
 
+        {
+            SCOPED_MUTEX(&m_mutex);
+            RecomputePlan(true);
+        }
         m_state = State::ReviewQueue;
         m_actions_dirty = true;
         m_install_requested = false;

@@ -74,8 +74,8 @@ void Menu::StartInstall() {
     ConfirmInstallPlan();
 }
 
-void Menu::RecomputePlan() {
-    const auto spaces = GetPolledData();
+void Menu::RecomputePlan(bool force_refresh) {
+    const auto spaces = GetPolledData(force_refresh);
     const bool global = App::GetSaveSettingsGlobally();
     const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
     const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
