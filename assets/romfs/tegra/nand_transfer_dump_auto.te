@@ -43,6 +43,16 @@ goHekate = {
         reboot()
     }
 }
+drawProgress = {
+    printpos(0, statusY)
+    print("                                                                             ")
+    printpos(0, statusY)
+    if (fname.len() < 50) {
+        print(statusState, idx, "/", total, fname, "")
+    } .else() {
+        print(statusState, idx, "/", total, "")
+    }
+}
 
 dumpFilesIn = {
     println("dir", savePath)
@@ -57,21 +67,28 @@ dumpFilesIn = {
         idx = 0
         total = files.len()
         println(" files", total)
-        files.foreach("fname") {
-            fsrc = savePath + "/" + fname
-            if (savePath == "/") {
-                fsrc = "/" + fname
+        if (total) {
+            statusPos = getprintpos()
+            statusY = statusPos.y
+            files.foreach("fname") {
+                fsrc = savePath + "/" + fname
+                if (savePath == "/") {
+                    fsrc = "/" + fname
+                }
+                idx = idx + 1
+                if (fname == "player.vend.dat") {
+                    statusState = "skip slow"
+                    drawProgress()
+                } .else() {
+                    statusState = "copy"
+                    drawProgress()
+                    bytes = saveObj.read(fsrc)
+                    out = dstRoot + fsrc
+                    writefile(out, bytes)
+                    wrote = wrote + 1
+                }
             }
-            idx = idx + 1
-            if (fname == "player.vend.dat") {
-                println("skip slow", idx, "/", total, fname)
-            } .else() {
-                println("copy", idx, "/", total, fname)
-                bytes = saveObj.read(fsrc)
-                out = dstRoot + fsrc
-                writefile(out, bytes)
-                wrote = wrote + 1
-            }
+            printpos(0, statusY + 1)
         }
     }
 }

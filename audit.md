@@ -1,13 +1,15 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.755**. Дата: 2026-09-06.
+Канонічний робочий файл. Версія коду: **v0.13.756**. Дата: 2026-09-06.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
-`graphify query` / `path` / `explain`. Граф оновлено 2026-08-23:
-10719 nodes, 20360 edges. HTML агрегований (`graph.html`, 1077 community nodes).
+`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-06:
+11970 nodes, 22033 edges, 699 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.756 поза ponytail-чергою: TE auto-dump profiles + PlayData перемальовує `copy/skip index/total` в одному 77-column рядку, лишає cursor для spinner виправленого `saveObj.read()` і після каталогу переходить нижче spinner-cell. RESULT/dumped.ok/known-tree/player.vend/cleanup/reboot без змін; paired TegraExplorer fix і hardware-check обов’язкові. **Не закриває** чергу §2 A1–A7.
 
 v0.13.755 поза ponytail-чергою: власний auto/manual Kefir Hub HOME-форвардер має сталий `05C838DF22834000`; optional `OwoConfig::title_id` лишає generic NRO/ROM path+args hash без змін; `StaleOwn` більше не ставить другий ікон. **Не закриває** чергу §2 A1–A7.
 

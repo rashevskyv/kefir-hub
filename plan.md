@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.755** (stable Kefir Hub forwarder Title ID). Завершені плани збережено в
+Поточний delivery — **v0.13.756** (clean TegraExplorer NAND-dump progress). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.755 — stable Kefir Hub forwarder Title ID
+## Поточний delivery: v0.13.756 — clean TegraExplorer NAND-dump progress
+
+Статус: реалізовано й прийнято в primary checkout; потрібна апаратна перевірка разом із виправленим TegraExplorer. Збірку агент не запускає за політикою checkout.
+
+1. `nand_transfer_dump_auto.te` не друкує окремий рядок для кожного файла: поточний `copy index/total name` перемальовується в одному фіксованому рядку, тому після заповнення екрана текст не накладається на заголовок.
+2. Рядок лишається активним під час великого `PlayEvent.dat` через наявний spinner у виправленому TegraExplorer `saveObj.read()`; Sphaira не дублює chunked I/O і не додає залежностей.
+3. RESULT, кольори, `dumped.ok`, skip `player.vend.dat`, known-tree paths, cleanup і reboot semantics не змінюються.
+4. Version `0.13.756`; лише source-level перевірки без compile/NRO за policy. Окремий checkout TegraExplorer не редагується в цій Sphaira delivery.
+
+## Попередній delivery: v0.13.755 — stable Kefir Hub forwarder Title ID
 
 Статус: реалізовано й прийнято в primary checkout; потрібна апаратна перевірка. Збірку агент не запускає за політикою checkout.
 

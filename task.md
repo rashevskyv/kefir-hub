@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.755** (stable Kefir Hub forwarder Title ID). Завершені задачі збережено в
+Актуальний delivery — **v0.13.756** (clean TegraExplorer NAND-dump progress). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.755 (stable Kefir Hub forwarder Title ID)
+## Поточний delivery: v0.13.756 (clean TegraExplorer NAND-dump progress)
+
+- [x] `TE-DUMP-SINGLE-LINE-756` — `copy index/total name` перемальовується в одному фіксованому рядку без scroll/wrap overlap.
+- [x] `TE-DUMP-SPINNER-COMPAT-756` — статусний рядок лишає позицію для spinner виправленого TegraExplorer `saveObj.read()` на великому `PlayEvent.dat`.
+- [x] `TE-DUMP-SEMANTICS-756` — RESULT/colors/dumped.ok/known-tree/player.vend.dat/cleanup/reboot не змінені.
+- [x] `CMAKELISTS-VERSION-BUMP-756` — `sphaira_VERSION` піднято до `0.13.756`.
+- [x] `DOCS-BUMP-756` — plan/task/walkthrough/audit оновлено після acceptance; compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.755 (stable Kefir Hub forwarder Title ID)
 
 - [x] `FORWARDER-FIXED-TID-755` — власний auto/manual Kefir Hub форвардер використовує один `0x05C838DF22834000`, незалежно від `sdmc:` / шляху.
 - [x] `FORWARDER-GENERIC-HASH-755` — optional `OwoConfig::title_id` лишає SHA-256 path+args fallback без змін для звичайних NRO/ROM-форвардерів.

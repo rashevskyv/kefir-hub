@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.755** (2026-09-06). Попередні
+Актуальний delivery — **v0.13.756** (2026-09-06). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.756 — clean TegraExplorer NAND-dump progress
+
+- `nand_transfer_dump_auto.te` більше не додає рядок для кожного файла: `drawProgress` очищає 77 колонок і перемальовує поточний `copy/skip index/total` у фіксованому рядку, не допускаючи wrap поверх заголовка.
+- Коротке ім’я файла показується лише коли весь статус гарантовано вкладається в 78 колонок. Перед `saveObj.read()` курсор лишається після статусу, тому виправлений TegraExplorer reader анімує spinner у тому самому рядку; після каталогу курсор явно переходить нижче spinner-cell.
+- Known-tree paths, skip `player.vend.dat`, RESULT colors/statistics, `dumped.ok`, cleanup та негайний `goHekate()` не змінені. Version `0.13.756`; Gemini й senior виконали `git diff --check` і source-level diff/caller/semantic review. Compile/NRO не запускалися за policy; потрібен paired hardware-check із виправленим TegraExplorer.
 
 ## v0.13.755 — stable Kefir Hub forwarder Title ID
 
