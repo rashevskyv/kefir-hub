@@ -595,28 +595,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
         return res;
     }
 
-    auto existing_session = App::GetActiveInstallSession();
-    const bool can_reuse_session = (existing_session && existing_session->GetOrigin() == origin && !s_installing);
-
-    if (!can_reuse_session && (App::GetProgressActive() || App::HasActiveTransfer() || s_installing)) {
-        log_write("[BackgroundInstaller] Already installing, rejecting start\n");
-        // the transport may retry the same file while it waits for the installer
-        // (see on_thing() in ftpsrv_helper.cpp), so don't toast every refusal.
-        static std::atomic<u64> last_notify_ns{0};
-        const auto now = armTicksToNs(armGetSystemTick());
-        auto last = last_notify_ns.load(std::memory_order_relaxed);
-        if (!last || now - last >= 5000ULL*1000ULL*1000ULL) {
-            if (last_notify_ns.compare_exchange_strong(last, now, std::memory_order_relaxed)) {
-                evman::push(evman::FunctionalEventData {
-                    []() {
-                        App::Notify("Install failed: another installation is in progress."_i18n);
-                    }
-                }, false);
-            }
-        }
-        return false;
-    }
-
     const char* ext = std::strrchr(path, '.');
     if (!ext) return false;
     bool valid_ext = false;
@@ -630,7 +608,68 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
     }
     if (!valid_ext) return false;
 
-    s_installing = true;
+    for (;;) {
+        auto existing_session = App::GetActiveInstallSession();
+        if (existing_session && existing_session->GetOrigin() == origin) {
+            while (s_installing.load()) {
+                if (App::IsExiting()) {
+                    return false;
+                }
+                auto session = App::GetActiveInstallSession();
+                if (!session || session->GetOrigin() != origin || session->IsCancelRequested() || session->ShouldExit() || session->GetState() == ui::menu::dbi::State::Cancelled) {
+                    return false;
+                }
+                svcSleepThread(1e+6);
+            }
+        }
+
+        auto session = App::GetActiveInstallSession();
+        const bool can_reuse_session = (session
+                                        && session->GetOrigin() == origin
+                                        && !session->IsCancelRequested()
+                                        && !session->ShouldExit()
+                                        && session->GetState() != ui::menu::dbi::State::Cancelled);
+
+        if (!can_reuse_session && (App::GetProgressActive() || App::HasActiveTransfer() || s_installing.load())) {
+            log_write("[BackgroundInstaller] Already installing, rejecting start\n");
+            // the transport may retry the same file while it waits for the installer
+            // (see on_thing() in ftpsrv_helper.cpp), so don't toast every refusal.
+            static std::atomic<u64> last_notify_ns{0};
+            const auto now = armTicksToNs(armGetSystemTick());
+            auto last = last_notify_ns.load(std::memory_order_relaxed);
+            if (!last || now - last >= 5000ULL*1000ULL*1000ULL) {
+                if (last_notify_ns.compare_exchange_strong(last, now, std::memory_order_relaxed)) {
+                    evman::push(evman::FunctionalEventData {
+                        []() {
+                            App::Notify("Install failed: another installation is in progress."_i18n);
+                        }
+                    }, false);
+                }
+            }
+            return false;
+        }
+
+        bool expected = false;
+        if (s_installing.compare_exchange_strong(expected, true)) {
+            if (can_reuse_session) {
+                auto active_after_claim = App::GetActiveInstallSession();
+                if (!active_after_claim
+                    || active_after_claim->GetOrigin() != origin
+                    || active_after_claim->IsCancelRequested()
+                    || active_after_claim->ShouldExit()
+                    || active_after_claim->GetState() == ui::menu::dbi::State::Cancelled) {
+                    s_installing = false;
+                    return false;
+                }
+            } else {
+                if (App::GetProgressActive() || App::HasActiveTransfer()) {
+                    s_installing = false;
+                    return false;
+                }
+            }
+            break;
+        }
+    }
     s_stop_source = std::stop_source();
     {
         mutexLock(&s_mutex);
@@ -784,7 +823,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                 }
 
                 delete c;
-            }, ctx.get(), nullptr, 1024 * 128, PRIO_NORMAL, 1);
+            }, ctx.get(), nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1);
 
             if (R_SUCCEEDED(rc_thread)) {
                 rc_thread = threadStart(&s_install_thread);

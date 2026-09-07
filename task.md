@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.757** (unified transport install queue UI). Завершені задачі збережено в
+Актуальний delivery — **v0.13.758** (serialize background MTP batch installs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.757 (unified transport install queue UI)
+## Поточний delivery: v0.13.758 (serialize background MTP batch installs)
+
+- [x] `MTP-BATCH-WAIT-758` — background MTP same-origin session чекає завершення попереднього package worker замість abort на наступному Windows MTP file.
+- [x] `MTP-BATCH-CAS-758` — `s_installing` slot захоплюється атомарним CAS; same-origin серіалізується, cross-origin/unrelated busy відхиляються.
+- [x] `MTP-BATCH-CANCEL-758` — invalid extension не чекає; app exit, cancel і teardown безпечно переривають wait; `OnInstallClose` не блокується.
+- [x] `MTP-BUILD-FIXES-758` — виправлено помилки компіляції: `ProgressBox` override/bool return type, `Menu` closing struct/namespace, `drawRectOutline` theme signature, `TimeStamp` GetNs, `QueueEntry` optional `install_result`, `ftpsrv_helper` `should_check_summary`.
+- [x] `MTP-BATCH-REVIEW-BUILD-758` — Gemini й senior перевірили diff, callers, CAS/release paths; виконано make в 16 потоків у WSL (`sphaira_nro` згенеровано); всі тести `./tests/run.sh` пройшли успішно.
+- [x] `CMAKELISTS-VERSION-BUMP-758` — `sphaira_VERSION` піднято до `0.13.758`.
+- [x] `DOCS-BUMP-758` — plan/task/walkthrough/audit оновлено після acceptance.
+
+## Попередній delivery: v0.13.757 (unified transport install queue UI)
 
 - [x] `TRANSPORT-QUEUE-UI-757` — MTP/FTP/Web install використовують спільний з DBI повноекранний queue/metrics renderer без дубляжу.
 - [x] `INSTALL-SCREENSAVER-757` — Minus включає наявний install screensaver у DBI/MTP/FTP/Web; окреме minimize працює в усіх цих чергах, включно з DBI.

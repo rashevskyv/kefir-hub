@@ -396,6 +396,7 @@ int vfs_install_isfile_ready(void* user) {
 }
 
 int vfs_install_close(void* user) {
+    bool should_check_summary{false};
     {
         SCOPED_MUTEX(&g_shared_data.mutex);
         auto data = static_cast<VfsUserData*>(user);

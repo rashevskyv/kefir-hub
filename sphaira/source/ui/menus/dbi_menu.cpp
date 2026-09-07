@@ -1,6 +1,7 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi/dbi_internal.hpp"
+#include "ui/menus/install_stream_menu_base.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"

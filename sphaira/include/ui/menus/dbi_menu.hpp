@@ -9,6 +9,7 @@
 #include "yati/source/usb.hpp"
 #include "yati/yati.hpp"
 #include <array>
+#include <optional>
 
 namespace sphaira::ui::menu::dbi {
 
@@ -34,7 +35,7 @@ struct QueueEntry {
     std::string file_name{};
     yati::InstallAnalysis analysis{};
     Result analysis_result{};
-    Result install_result{};
+    std::optional<Result> install_result{};
     bool selected{true};
     bool installed{};
     InstallTarget target{InstallTarget::Auto};

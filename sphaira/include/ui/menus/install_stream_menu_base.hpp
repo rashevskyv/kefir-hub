@@ -75,6 +75,8 @@ private:
     Thread m_thread{};
     Mutex m_mutex{};
     State m_state{State::None};
+};
+
 } // namespace sphaira::ui::menu::stream
 
 namespace sphaira::ui::menu::dbi {

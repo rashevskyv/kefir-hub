@@ -71,8 +71,9 @@ struct ProgressBox final : Widget, InstallProgress {
     // it can be minimised into a small corner badge via L3 (see App::Update()).
     void SetDetached(bool detached) { m_detached = detached; }
     auto IsDetached() const { return m_detached; }
-    void ToggleMinimized() { m_minimized = !m_minimized; }
-    auto IsMinimized() const { return m_minimized; }
+    void ToggleMinimized() override { m_minimized = !m_minimized; }
+    auto IsMinimized() const -> bool override { return m_minimized; }
+    void SetMinimized(bool min) override { m_minimized = min; }
 
     // helper functions
     auto CopyFile(fs::Fs* fs_src, fs::Fs* fs_dst, const fs::FsPath& src, const fs::FsPath& dst, bool single_threaded = false) -> Result;

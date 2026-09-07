@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.757** (unified transport install queue UI). Завершені плани збережено в
+Поточний delivery — **v0.13.758** (serialize background MTP batch installs). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.757 — unified transport install queue UI
+## Поточний delivery: v0.13.758 — serialize background MTP batch installs
+
+Статус: реалізовано Gemini й прийнято після senior race/control-flow review. Успішно зібрано через make (16 потоків) у WSL, виправлено супутні помилки компіляції transport/queue; всі тести пройдені паралельно (tests/run.sh); згенеровано sphaira_nro; потрібна апаратна перевірка batch copy з Windows.
+
+1. Background MTP `OnInstallStart` для наступного файла тієї самої `InstallSession` чекає завершення попереднього worker замість `Install aborted`.
+2. `s_installing.compare_exchange_strong` атомарно видає єдиний install slot; same-origin contender повторює wait/revalidation, cross-origin або unrelated transfer відхиляється.
+3. Extension validation виконується до wait; cancel/session teardown/App exit переривають polling. `OnInstallClose`, stream backpressure, queue UI, FTP/Web semantics не змінені.
+4. Version `0.13.758`; виправлено супутні помилки компіляції (Widget/ProgressBox overrides, stream header syntax, drawRectOutline signature, timestamp methods, QueueEntry optional); успішно зібрано make у WSL в 16 потоків; tests/run.sh успішно пройдено.
+
+## Попередній delivery: v0.13.757 — unified transport install queue UI
 
 Статус: реалізовано й прийнято в primary checkout після Gemini implementation та senior corrective review. Збірку й host-тести агент не запускав за policy; потрібна апаратна перевірка.
 

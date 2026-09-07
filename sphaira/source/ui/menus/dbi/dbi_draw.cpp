@@ -262,7 +262,7 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     const float by = 12.f;
 
     gfx::drawRect(vg, bx, by, bw, bh, nvgRGBA(25, 25, 30, 230), 6.f);
-    gfx::drawRectOutline(vg, bx, by, bw, bh, nvgRGBA(255, 255, 255, 35), 1.f, 6.f);
+    gfx::drawRectOutline(vg, theme, 1.f, bx, by, bw, bh, 6.f);
 
     const auto text_col = theme->GetColour(ThemeEntryID_TEXT);
     const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -342,7 +342,7 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
         if (m_current_package < m_queue.size()) {
             const auto& entry = m_queue[m_current_package];
             if (entry.install_selected && !entry.installed
-                && R_SUCCEEDED(entry.analysis_result) && R_SUCCEEDED(entry.install_result)) {
+                && R_SUCCEEDED(entry.analysis_result) && (!entry.install_result.has_value() || R_SUCCEEDED(*entry.install_result))) {
                 const auto size = PlanSize(entry);
                 const auto written = std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, size);
                 if (size > 0) {

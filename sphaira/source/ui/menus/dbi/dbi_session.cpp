@@ -219,10 +219,10 @@ void InstallSession::TransitionToSummary(bool failed) {
             return;
         }
         m_session_failed = failed || (m_state == State::Failed) || (m_stats.failed > 0);
-        if (m_session_timestamp.GetElapsedNs() == 0) {
+        if (m_session_timestamp.GetNs() == 0) {
             m_session_timestamp.Update();
         }
-        m_stats.elapsed_ns = m_session_timestamp.GetElapsedNs();
+        m_stats.elapsed_ns = m_session_timestamp.GetNs();
         m_state = m_session_failed ? State::Failed : State::Summary;
     }
     m_actions_dirty = true;

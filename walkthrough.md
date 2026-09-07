@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.757** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.758** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.758 — serialize background MTP batch installs
+
+- Пряме Windows copy кількох NSP/XCI/NSZ/XCZ/NRO у MTP install folder більше не відхиляє другий файл лише тому, що worker першого ще завершується. `BackgroundInstaller::OnInstallStart` чекає same-origin session коротким 1-ms polling без довільного total delay.
+- Install slot видається через `compare_exchange_strong`: один callback стає owner, same-origin contender чекає й повторно валідує session, а FTP/MTP cross-origin чи unrelated progress/transfer лишаються заблокованими.
+- Extension check виконується до polling; cancel, session teardown та App exit зупиняють wait. `OnInstallClose`, buffering/backpressure, worker result, UI/summary і FTP/Web потоки не змінені.
+- Верифікація: Gemini і senior виконали `git diff --check`, diff/caller review та перевірку всіх `s_installing` claim/release paths. Збірка `make build SPHAIRA_BUILD_JOBS=16` у WSL завершилася успішно (ціль `sphaira_nro` згенерована в `ReleaseWithInstall`), всі тести `./tests/run.sh` пройдено паралельно; потрібен Switch-check з batch copy.
 
 ## v0.13.757 — unified transport install queue UI
 
