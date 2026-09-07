@@ -1,8 +1,33 @@
-Поточний delivery — **v0.13.765** (MTP install button controls and stat row label spacing). Завершені плани збережено в
+Поточний delivery — **v0.13.767** (Transport-specific install success notifications and i18n decoupling). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.765 — MTP install button controls and stat row label spacing
+## Поточний delivery: v0.13.767 — Transport-specific install success notifications and i18n decoupling
+
+Статус: реалізовано, host-тести у WSL (`./tests/run.sh`) та Switch NRO build (`make build`) успішно пройдені.
+
+1. Розділити повідомлення про успішне встановлення за типом джерела (origin): у `BackgroundInstaller::OnInstallStart` (`install_stream_menu_base.cpp`) замість жорсткого `App::Notify("Install success!"_i18n)` надсилати відповідне транспорту повідомлення:
+   - для `TransportOrigin::Mtp` -> `"MTP install success!"_i18n`
+   - для `TransportOrigin::Ftp` -> `"FTP install success!"_i18n`
+   - для `TransportOrigin::Web` -> `"Web install success!"_i18n`
+   - за замовчуванням -> `"Install success!"_i18n`
+2. Очистити загальний ключ `"Install success!"` у каталогах перекладів (`ru.json`, `es.json`, `ja.json`, `ko.json`, `zh.json`), де він історично містив жорстку згадку FTP, зробивши його нейтральним.
+3. Додати ключі `"MTP install success!"`, `"FTP install success!"`, `"Web install success!"` до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+4. Версія `0.13.767`; перевірка повної збірки NRO `make build` у WSL та хост-тестів `./tests/run.sh`.
+
+## Попередній delivery: v0.13.766 — MTP batch installation summary grace period and transfer sync
+
+Статус: реалізовано, host-тести у WSL успішно пройдено (`./tests/run.sh`).
+
+1. Усунути передчасний перехід у Summary під час пакетної передачі файлів через MTP: прибрати помилковий виклик `TransitionToSummary` з робочого потоку `BackgroundInstaller::OnInstallStart`, коли черговий файл щойно завершився, але наступні файли ще надходять з ПК.
+2. Ввести 3-секундний пільговий період (grace period) у `InstallSession::Update()` для джерел без попереднього маніфесту (MTP, FTP): перехід у Summary відбувається лише тоді, коли всі поточні пакети завершені, інсталятор вільний і відсутні активні передачі або черги в транспорті (`haze::HasActiveTransfer()`, `ftpsrv::HasActiveOrQueuedFiles()`).
+3. Динамічна дія кнопки `B` ("Done"_i18n): під час дії пільгового періоду користувач може натиснути кнопку `B` для миттєвого переходу до підсумків (Summary), або дочекатися автоматичного переходу через 3 секунди бездіяльності.
+4. Миттєве закриття при відключенні MTP: якщо сесія MTP закривається ПК (`CallbackType_CloseSession`), активна інсталяційна сесія переходить у Summary без затримки, якщо всі поточні пакети термінальні.
+5. Потокобезпека: захистити доступ до `g_shared_data.current_file` м'ютексом `g_shared_data.mutex` у `haze_install_proxy.cpp`.
+6. Оновлення тестів: додати тести у `tests/test_transport_install_queue.cpp` для `SUMMARY_GRACE_PERIOD_SEC`, `ShouldStartSummaryGracePeriod` та `CanTransitionToSummary` для MTP.
+7. Версія `0.13.766`; перевірка через `./tests/run.sh` у WSL та `git diff --check`.
+
+## Попередній delivery: v0.13.765 — MTP install button controls and stat row label spacing
 
 Статус: реалізовано; compile/tests/NRO не запускаються за policy.
 

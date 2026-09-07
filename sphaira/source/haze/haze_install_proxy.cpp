@@ -97,10 +97,13 @@ struct FsInstallProxy final : FsProxyVfs {
             const auto& e = m_entries[out_file->s.object_id];
 
             // check if we already have this file queued.
-            log_write("[MTP] checking if empty\n");
-            R_UNLESS(g_shared_data.current_file.empty(), FsError_NotImplemented);
-            log_write("[MTP] is empty\n");
-            g_shared_data.current_file = e.name;
+            {
+                SCOPED_MUTEX(&g_shared_data.mutex);
+                log_write("[MTP] checking if empty\n");
+                R_UNLESS(g_shared_data.current_file.empty(), FsError_NotImplemented);
+                log_write("[MTP] is empty\n");
+                g_shared_data.current_file = e.name;
+            }
             on_thing();
         }
 

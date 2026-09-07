@@ -44,8 +44,18 @@ bool AllQueueEntriesTerminal(const Entries& entries) {
 inline bool CanTransitionToSummary(TransportOrigin origin, bool all_terminal,
                                    bool install_in_progress, size_t transport_queued_count) {
     if (origin == TransportOrigin::Web) return all_terminal;
-    if (origin == TransportOrigin::Ftp) return !install_in_progress && transport_queued_count == 0;
+    if (origin == TransportOrigin::Ftp || origin == TransportOrigin::Mtp) {
+        return !install_in_progress && transport_queued_count == 0;
+    }
     return !install_in_progress;
+}
+
+inline constexpr double SUMMARY_GRACE_PERIOD_SEC = 3.0;
+
+inline bool ShouldStartSummaryGracePeriod(TransportOrigin origin, bool all_terminal,
+                                         bool install_in_progress, bool transport_busy) {
+    if (HasKnownBatchTotals(origin)) return false;
+    return all_terminal && !install_in_progress && !transport_busy;
 }
 
 inline bool ShouldRestartMtp(TransportOrigin origin, bool was_cancelled, bool worker_torn_down) {

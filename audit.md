@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.765**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.767**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,10 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.767 поза ponytail-чергою: розділено сповіщення про успішне встановлення за транспортом у `BackgroundInstaller::OnInstallStart` (`MTP/FTP/Web/generic install success!`); виправлено історичну згадку FTP у загальному ключі `Install success!` для `ru.json`, `es.json`, `ja.json`, `ko.json`, `zh.json`; додано ключі у всі 14 i18n JSON. Хост-тести `./tests/run.sh` та Switch NRO збірка `make build` у WSL успішно пройдені. **Не закриває** чергу §2 A1–A7.
+
+v0.13.766 поза ponytail-чергою: усунено передчасне перемикання в Summary під час пакетної MTP-інсталяції; додано `haze::HasActiveTransfer()` з м'ютексом, захищено `current_file` у `haze_install_proxy.cpp`, введено 3-секундний grace period для MTP/FTP з динамічною кнопкою `B` ("Done"), миттєвий Summary на `CallbackType_CloseSession`, розширено тести `tests/test_transport_install_queue.cpp`. Хост-тести `./tests/run.sh` успішно пройдені у WSL, `git diff --check` без помилок. **Не закриває** чергу §2 A1–A7.
 
 v0.13.765 поза ponytail-чергою: футер MTP інсталяції переведено на `X` для скасування та `B` для пропуску пакета; у `DrawStatRow` додано шрифтовий пробіл між двокрапкою мітки та значенням; ключ `"Cancel installation"` додано до 14 i18n JSON; README оновлено. Compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

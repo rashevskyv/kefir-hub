@@ -12,6 +12,9 @@
 #include <memory>
 #include <string>
 #include <haze.h>
+#if ENABLE_NETWORK_INSTALL
+#include "ui/menus/dbi_menu.hpp"
+#endif
 
 namespace sphaira::haze {
 
@@ -34,6 +37,15 @@ void on_thing() {
         }
     }
 }
+
+bool HasActiveTransfer() {
+    SCOPED_MUTEX(&g_shared_data.mutex);
+    return !g_shared_data.current_file.empty() || g_shared_data.in_progress;
+}
+#else
+bool HasActiveTransfer() {
+    return false;
+}
 #endif
 
 void haze_callback(const ::haze::CallbackData *data) {
@@ -54,6 +66,13 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_CloseSession:
             log_write("[LIBHAZE] Closing Session\n");
             App::Notify("MTP disconnected"_i18n);
+            if (auto session = App::GetActiveInstallSession()) {
+                if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Mtp
+                    && session->GetState() == ui::menu::dbi::State::Installing
+                    && session->AllPackagesTerminal()) {
+                    session->TransitionToSummary();
+                }
+            }
             break;
 
         case ::haze::CallbackType_CreateFile: log_write("[LIBHAZE] Creating File: %s\n", e.file.filename); break;

@@ -130,6 +130,8 @@
   "Passphrase:": "Senha:",
   "Failed to install, press B to exit...": "Falha ao instalar, aperte  para sair.",
   "Install success!": "Instalação concluída.",
+  "FTP install success!": "Instalação via FTP concluída.",
+  "Web install success!": "Instalação via Web concluída.",
   "Install failed!": "Instalação falhou.",
   "MTP Install": "Instalação via MTP",
   "State: %s | Speed: %s": "Estado: %s | Velocidade: %s",

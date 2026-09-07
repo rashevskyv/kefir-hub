@@ -1,9 +1,31 @@
-Актуальний delivery — **v0.13.765** (MTP install button controls and stat row label spacing). Завершені задачі збережено в
+Актуальний delivery — **v0.13.767** (Transport-specific install success notifications and i18n decoupling). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.765 (MTP install button controls and stat row label spacing)
+## Поточний delivery: v0.13.767 (Transport-specific install success notifications and i18n decoupling)
+
+- [x] `NOTIFY-ORIGIN-ROUTING-767` — у `BackgroundInstaller::OnInstallStart` встановлено виклик сповіщень відповідно до `c->origin`: `"MTP install success!"`, `"FTP install success!"`, `"Web install success!"` або generic `"Install success!"`.
+- [x] `I18N-GENERIC-SUCCESS-CLEANUP-767` — очищено прив'язку до FTP у загальному ключі `"Install success!"` у `ru.json`, `es.json`, `ja.json`, `ko.json`, `zh.json`.
+- [x] `I18N-TRANSPORT-SUCCESS-KEYS-767` — додано ключі `"MTP install success!"`, `"FTP install success!"`, `"Web install success!"` у всі 14 локалізаційних JSON файлів.
+- [x] `CMAKELISTS-VERSION-BUMP-767` — `sphaira_VERSION` піднято до `0.13.767`.
+- [x] `NRO-BUILD-WSL-767` — повну збірку `make build` під Nintendo Switch у WSL та хост-тести `./tests/run.sh` успішно виконано.
+- [x] `DOCS-BUMP-767` — plan.md, task.md, walkthrough.md та audit.md синхронізовано.
+
+## Попередній delivery: v0.13.766 (MTP batch installation summary grace period and transfer sync)
+
+- [x] `MTP-PREMATURE-SUMMARY-REMOVAL-766` — видалено передчасний виклик `TransitionToSummary()` з робочого потоку завершення пакета в `install_stream_menu_base.cpp` для MTP.
+- [x] `MTP-ACTIVE-TRANSFER-SYNC-766` — реалізовано `haze::HasActiveTransfer()` для перевірки наявності активної передачі файлу через MTP під м'ютексом.
+- [x] `HAZE-PROXY-MUTEX-SAFETY-766` — обгорнуто перевірку й запис `g_shared_data.current_file` у `SCOPED_MUTEX(&g_shared_data.mutex)` в `haze_install_proxy.cpp`.
+- [x] `INSTALL-SUMMARY-GRACE-PERIOD-766` — додано `SUMMARY_GRACE_PERIOD_SEC = 3.0` та логіку grace period у `InstallSession::Update()` для MTP/FTP без відомих загальних обсягів.
+- [x] `INSTALL-ACTIONS-DONE-BUTTON-766` — під час grace period кнопку `B` динамічно переведено на `"Done"_i18n` для можливості негайного завершення вручну.
+- [x] `MTP-CLOSE-SESSION-SUMMARY-766` — на подію `CallbackType_CloseSession` реалізовано негайний перехід у Summary, якщо всі пакети термінальні.
+- [x] `TESTS-MTP-QUEUE-STATE-766` — додано перевірки для MTP transition та grace period у `tests/test_transport_install_queue.cpp`.
+- [x] `README-MTP-BATCH-GRACE-766` — оновлено README.md з описом поведінки завершення пакетної передачі та кнопки Done.
+- [x] `CMAKELISTS-VERSION-BUMP-766` — `sphaira_VERSION` піднято до `0.13.766`.
+- [x] `DOCS-BUMP-766` — оновлено plan.md, task.md, walkthrough.md та audit.md; тести `./tests/run.sh` успішно виконано у WSL.
+
+## Попередній delivery: v0.13.765 (MTP install button controls and stat row label spacing)
 
 - [x] `MTP-INSTALL-ACTIONS-765` — в MTP інсталяції `X` скасовує встановлення ("Cancel installation"), а `B` пропускає поточний файл ("Skip package") із модальними підтвердженнями.
 - [x] `STAT-ROW-LABEL-SPACING-765` — у `DrawStatRow` додано шрифтовий пробіл після двокрапки мітки, виправлено злипання значень у рядках статистики MTP, USB та черги.

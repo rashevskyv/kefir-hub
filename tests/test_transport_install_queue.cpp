@@ -41,6 +41,19 @@ int main() {
     assert(!CanTransitionToSummary(TransportOrigin::Ftp, false, false, 1));
     assert(CanTransitionToSummary(TransportOrigin::Ftp, false, false, 0));
 
+    assert(!CanTransitionToSummary(TransportOrigin::Mtp, false, true, 0));
+    assert(!CanTransitionToSummary(TransportOrigin::Mtp, false, false, 1));
+    assert(CanTransitionToSummary(TransportOrigin::Mtp, false, false, 0));
+
+    assert(SUMMARY_GRACE_PERIOD_SEC == 3.0);
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Dbi, true, false, false));
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Web, true, false, false));
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, false, false, false));
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, true, false));
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, true));
+    assert(ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, false));
+    assert(ShouldStartSummaryGracePeriod(TransportOrigin::Ftp, true, false, false));
+
     assert(ShouldRestartMtp(TransportOrigin::Mtp, true, true));
     assert(!ShouldRestartMtp(TransportOrigin::Mtp, false, true));
     assert(!ShouldRestartMtp(TransportOrigin::Mtp, true, false));

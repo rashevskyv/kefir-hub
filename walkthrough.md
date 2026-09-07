@@ -1,7 +1,34 @@
-Актуальний delivery — **v0.13.765** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.767** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.767 — Transport-specific install success notifications and i18n decoupling
+
+- Виправлено появу сповіщення "Установка по FTP прошла успешно!" під час встановлення через MTP (та в інших мовах, де спільний ключ був прив'язаний до FTP):
+  1. У `BackgroundInstaller::OnInstallStart` (`sphaira/source/ui/menus/install_stream_menu_base.cpp`) після успішного встановлення пакета тепер викликається окреме сповіщення залежно від `c->origin`:
+     - `TransportOrigin::Mtp` -> `App::Notify("MTP install success!"_i18n)`
+     - `TransportOrigin::Ftp` -> `App::Notify("FTP install success!"_i18n)`
+     - `TransportOrigin::Web` -> `App::Notify("Web install success!"_i18n)`
+     - За замовчуванням -> `App::Notify("Install success!"_i18n)`
+  2. Виправлено семантику рядка `"Install success!"` у файлах локалізацій `ru.json`, `es.json`, `ja.json`, `ko.json` та `zh.json`, де історично через старий спадок коду перекладачі переклали цей рядок як встановлення саме через FTP ("Установка по FTP прошла успешно!", "¡Instalación vía FTP satisfactoria!", "FTPインストール完了!" тощо). Тепер це нейтральне повідомлення про успішне встановлення ("Установка успешна!", "¡Instalación satisfactoria!" тощо).
+  3. Ключі `"MTP install success!"`, `"FTP install success!"` та `"Web install success!"` додано до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+- Повна збірка Switch NRO (`make build` у WSL) завершилася успішно зі створенням `kefir-hub.nro`.
+- Усі хост-тести (`./tests/run.sh`) пройшли успішно (all green).
+
+## v0.13.766 — MTP batch installation summary grace period and transfer sync
+
+- Виправлено баг передчасного завершення сесії під час передачі кількох файлів через MTP (коли встановлювалися перші файли, з'являлося вікно Summary, а згодом продовжували встановлюватися решта файлів):
+  1. Прибрано передчасний перехід `TransitionToSummary()` із робочого потоку завершення індивідуального пакета в `install_stream_menu_base.cpp`.
+  2. Додано стан активності передачі `haze::HasActiveTransfer()` з захистом м'ютексом `g_shared_data.mutex`, що перевіряє наявність поточного чи запланованого файла у libhaze.
+  3. У `haze_install_proxy.cpp` доступ до `g_shared_data.current_file` під час відкриття файлу захищено блокуванням `SCOPED_MUTEX`.
+  4. У `InstallSession::Update()` запроваджено 3-секундний пільговий період (`SUMMARY_GRACE_PERIOD_SEC = 3.0`) для MTP та FTP: перехід до Summary відбувається лише після того, як черга пакетів стала термінальною, інсталятор звільнився, і протягом 3 секунд не зафіксовано нових вхідних файлів або активної передачі.
+  5. Під час пільгового періоду кнопка `B` у футері інсталятора динамічно змінює дію на `"Done"_i18n`, дозволяючи користувачеві за бажанням завершити сесію негайно без очікування таймера.
+  6. При закритті MTP-сесії з боку комп'ютера (`CallbackType_CloseSession`), якщо всі пакети вже встановлено, здійснюється миттєвий перехід до Summary без очікування завершення таймера.
+- Додано юніт-тести в `tests/test_transport_install_queue.cpp` для перевірки поведінки `SUMMARY_GRACE_PERIOD_SEC`, `ShouldStartSummaryGracePeriod` та умов переходу `CanTransitionToSummary` для MTP.
+- Оновлено документацію `README.md` щодо керування кнопками та поведінки завершення MTP-інсталяції.
+- Усунено помилку виклику конструктора за замовчуванням для `Action` в `InstallSession::UpdateActions()` через прямий виклик `SetAction()` для кнопок `X`, `B` та `L3`.
+- Повна збірка Switch NRO артефакту (`make build` у WSL) завершилася успішно (100% побудовано `kefir-hub.nro`), а хост-тести (`./tests/run.sh`) пройшли без жодної помилки.
 
 ## v0.13.765 — MTP install button controls and stat row label spacing
 

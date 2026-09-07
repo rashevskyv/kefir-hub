@@ -196,6 +196,7 @@ protected:
     s64 m_log_index{0};
     s64 m_log_last_seen_size{0};
     TimeStamp m_session_timestamp{};
+    std::optional<TimeStamp> m_summary_grace_timestamp{};
     std::atomic<s64> m_peak_write_bps{0};
 
     std::vector<QueueEntry> m_queue{};

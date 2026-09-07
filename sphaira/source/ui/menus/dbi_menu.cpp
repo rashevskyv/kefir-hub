@@ -3,6 +3,8 @@
 #include "ui/menus/dbi/dbi_internal.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "ui/menus/install_plan.hpp"
+#include "haze_helper.hpp"
+#include "ftpsrv_helper.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -169,13 +171,18 @@ void InstallSession::UpdateActions() {
         const auto cancel_label = (m_origin == TransportOrigin::Mtp)
             ? "Cancel installation"_i18n
             : "Cancel queue"_i18n;
-        SetActions(
-            std::make_pair(Button::X, Action{cancel_label, [this]() {
-                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
-                    if (choice && *choice == 1) CancelSession();
-                });
-            }}),
-            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
+        SetAction(Button::X, Action{cancel_label, [this]() {
+            App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+                if (choice && *choice == 1) CancelSession();
+            });
+        }});
+        if (m_summary_grace_timestamp.has_value() || (AllPackagesTerminal() && !HasKnownBatchTotals(m_origin))) {
+            SetAction(Button::B, Action{"Done"_i18n, [this]() {
+                TransitionToSummary();
+                m_summary_grace_timestamp.reset();
+            }});
+        } else {
+            SetAction(Button::B, Action{"Skip package"_i18n, [this]() {
                 size_t active_pkg{};
                 {
                     SCOPED_MUTEX(&m_mutex);
@@ -184,9 +191,9 @@ void InstallSession::UpdateActions() {
                 App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
                     if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
                 });
-            }}),
-            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
-        );
+            }});
+        }
+        SetAction(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
     } else if (state == State::Summary || state == State::Cancelled) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             m_should_exit = true;
@@ -270,6 +277,29 @@ void Menu::UpdateActions() {
 }
 
 void InstallSession::Update(Controller* controller, TouchInfo* touch) {
+    if (m_state.load() == State::Installing && !HasKnownBatchTotals(m_origin)) {
+        const bool transport_busy = (m_origin == TransportOrigin::Mtp)
+            ? haze::HasActiveTransfer()
+            : ftpsrv::HasActiveOrQueuedFiles();
+        const bool should_grace = ShouldStartSummaryGracePeriod(
+            m_origin, AllPackagesTerminal(), stream::BackgroundInstaller::IsInstalling(), transport_busy);
+
+        if (should_grace) {
+            if (!m_summary_grace_timestamp.has_value()) {
+                m_summary_grace_timestamp.emplace();
+                m_actions_dirty = true;
+            } else if (m_summary_grace_timestamp->GetSecondsD() >= SUMMARY_GRACE_PERIOD_SEC) {
+                TransitionToSummary();
+                m_summary_grace_timestamp.reset();
+            }
+        } else {
+            if (m_summary_grace_timestamp.has_value()) {
+                m_summary_grace_timestamp.reset();
+                m_actions_dirty = true;
+            }
+        }
+    }
+
     if (m_actions_dirty) UpdateActions();
 
     if (m_state.load() != State::Installing) {

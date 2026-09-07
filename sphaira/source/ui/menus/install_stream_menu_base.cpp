@@ -796,7 +796,20 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                     c->session->AddLog("Installed: "_i18n + c->path, ui::menu::dbi::LogKind::Success);
                     INSTALL_STATE = InstallState_Finished;
                     App::PlaySoundEffect(SoundEffect_Install);
-                    App::Notify("Install success!"_i18n);
+                    switch (c->origin) {
+                        case ui::menu::dbi::TransportOrigin::Mtp:
+                            App::Notify("MTP install success!"_i18n);
+                            break;
+                        case ui::menu::dbi::TransportOrigin::Ftp:
+                            App::Notify("FTP install success!"_i18n);
+                            break;
+                        case ui::menu::dbi::TransportOrigin::Web:
+                            App::Notify("Web install success!"_i18n);
+                            break;
+                        default:
+                            App::Notify("Install success!"_i18n);
+                            break;
+                    }
                 }
 
                 App::SetAutoSleepDisabled(false);
@@ -817,11 +830,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                 if (c->origin == ui::menu::dbi::TransportOrigin::Ftp) {
                     const size_t queued = ftpsrv::HasActiveOrQueuedFiles() ? 1 : 0;
                     if (ui::menu::dbi::CanTransitionToSummary(c->origin, false, false, queued)) {
-                        c->session->TransitionToSummary();
-                    }
-                } else if (c->origin == ui::menu::dbi::TransportOrigin::Mtp) {
-                    if (cur_pkg + 1 >= c->session->GetQueueSize()
-                        && ui::menu::dbi::CanTransitionToSummary(c->origin, false, false, 0)) {
                         c->session->TransitionToSummary();
                     }
                 }
