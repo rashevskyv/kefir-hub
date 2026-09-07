@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.767** (Transport-specific install success notifications and i18n decoupling). Завершені плани збережено в
+Поточний delivery — **v0.13.768** (Fix menu list selection frame draw priority and z-order). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.767 — Transport-specific install success notifications and i18n decoupling
+## Поточний delivery: v0.13.768 — Fix menu list selection frame draw priority and z-order
+
+Статус: реалізовано; z-order виправлено шляхом відокремлення шару фонів неактивних пунктів від шару виділеного активного елемента.
+
+1. У `ConsoleTransferMenu::Draw` (`sphaira/source/ui/menus/install_share.cpp`) розділити відмальовку на два логічні проходи:
+   - Прохід 1: малювання всіх неактивних пунктів списку (`DrawElement(v, ThemeEntryID_GRID)` та звичайні тексти міток).
+   - Прохід 2: малювання активного пункту з рамкою виділення `gfx::drawRectOutline(vg, theme, 4.f, v)` та виділеним текстом поверх усього списку.
+2. Застосувати аналогічний двохпрохідний порядок відмальовки для списків у `users_manage.cpp` та `users_restore.cpp` для запобігання перекриттю рамки фокусу фонами сусідніх елементів.
+3. Оновити версію проекту до `0.13.768` у `sphaira/CMakeLists.txt`, синхронізувати плани `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.767 — Transport-specific install success notifications and i18n decoupling
 
 Статус: реалізовано, host-тести у WSL (`./tests/run.sh`) та Switch NRO build (`make build`) успішно пройдені.
 

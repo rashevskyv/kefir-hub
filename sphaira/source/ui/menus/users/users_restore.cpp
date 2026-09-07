@@ -95,17 +95,28 @@ struct RestoreSourceMenu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override {
         MenuBase::Draw(vg, theme);
 
+        // Draw inactive items first so the selection highlight stays on top
         m_list->Draw(vg, theme, m_items.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
-            const auto& item = m_items[i];
-            const auto is_selected = m_index == static_cast<s64>(i);
-            const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-            if (is_selected) {
-                gfx::drawRectOutline(vg, theme, 4.f, v);
-            } else {
-                DrawElement(v, ThemeEntryID_GRID);
+            if (m_index == static_cast<s64>(i)) {
+                return;
             }
+            const auto& item = m_items[i];
+            DrawElement(v, ThemeEntryID_GRID);
             gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
-                theme->GetColour(text_id), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                theme->GetColour(ThemeEntryID_TEXT), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
+                theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        });
+
+        // Draw active item with focus outline on top
+        m_list->Draw(vg, theme, m_items.size(), [vg, theme, this](auto*, auto*, Vec4 v, auto i) {
+            if (m_index != static_cast<s64>(i)) {
+                return;
+            }
+            const auto& item = m_items[i];
+            gfx::drawRectOutline(vg, theme, 4.f, v);
+            gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
+                theme->GetColour(ThemeEntryID_TEXT_SELECTED), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
             gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
                 theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         });

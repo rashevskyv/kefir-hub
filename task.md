@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.767** (Transport-specific install success notifications and i18n decoupling). Завершені задачі збережено в
+Актуальний delivery — **v0.13.768** (Fix menu list selection frame draw priority and z-order). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.767 (Transport-specific install success notifications and i18n decoupling)
+## Поточний delivery: v0.13.768 (Fix menu list selection frame draw priority and z-order)
+
+- [x] `UI-CONSOLE-TRANSFER-DRAW-PRIORITY-768` — у `ConsoleTransferMenu::Draw` запроваджено двохпрохідну відмальовку: спочатку малюються неактивні елементи списку, а виділений елемент з рамкою `drawRectOutline` малюється поверх них, запобігаючи перекриттю рамки фокусу фоном наступного елемента.
+- [x] `UI-USERS-MENUS-DRAW-PRIORITY-768` — аналогічний двохпрохідний порядок відмальовки застосовано до `users_manage.cpp` та `users_restore.cpp`.
+- [x] `CMAKELISTS-VERSION-BUMP-768` — `sphaira_VERSION` піднято до `0.13.768`.
+- [x] `DOCS-BUMP-768` — plan.md, task.md, walkthrough.md та audit.md синхронізовано.
+
+## Попередній delivery: v0.13.767 (Transport-specific install success notifications and i18n decoupling)
 
 - [x] `NOTIFY-ORIGIN-ROUTING-767` — у `BackgroundInstaller::OnInstallStart` встановлено виклик сповіщень відповідно до `c->origin`: `"MTP install success!"`, `"FTP install success!"`, `"Web install success!"` або generic `"Install success!"`.
 - [x] `I18N-GENERIC-SUCCESS-CLEANUP-767` — очищено прив'язку до FTP у загальному ключі `"Install success!"` у `ru.json`, `es.json`, `ja.json`, `ko.json`, `zh.json`.
