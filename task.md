@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.764** (safe USB-unplug UI teardown). Завершені задачі збережено в
+Актуальний delivery — **v0.13.765** (MTP install button controls and stat row label spacing). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.764 (safe USB-unplug UI teardown)
+## Поточний delivery: v0.13.765 (MTP install button controls and stat row label spacing)
+
+- [x] `MTP-INSTALL-ACTIONS-765` — в MTP інсталяції `X` скасовує встановлення ("Cancel installation"), а `B` пропускає поточний файл ("Skip package") із модальними підтвердженнями.
+- [x] `STAT-ROW-LABEL-SPACING-765` — у `DrawStatRow` додано шрифтовий пробіл після двокрапки мітки, виправлено злипання значень у рядках статистики MTP, USB та черги.
+- [x] `I18N-CANCEL-INSTALLATION-765` — ключ `"Cancel installation"` додано до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+- [x] `README-MTP-CONTROLS-765` — опис дій скасування та пропуску пакета у встановленні по MTP додано до README.md.
+- [x] `CMAKELISTS-VERSION-BUMP-765` — `sphaira_VERSION` піднято до `0.13.765`.
+- [x] `DOCS-BUMP-765` — plan/task/walkthrough/audit синхронізовано; compile/tests/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.764 (safe USB-unplug UI teardown)
 
 - [x] `USB-UNPLUG-CASCADE-764` — matching USB File Browser і всі widgets над ним позначаються `SetPop()`, тож sidebar/modal не локує buried pop.
 - [x] `USB-UNPLUG-FOCUS-764` — removal-path не викликає `OnFocusGained()` до фактичного pop і не сканує видалений USB mount.

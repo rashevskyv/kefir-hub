@@ -1768,6 +1768,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Bắt buộc bật USB 3.0 trong Atmosphère. Thay đổi chỉ có hiệu lực sau khi khởi động lại.",
   "Undo": "Hoàn tác",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Bật USB 3.0 có thể gây treo máy, không ổn định hệ thống hoặc sự cố với một số thiết bị USB.",
+  "Cancel installation": "Hủy cài đặt",
   "Cancel installation queue?": "Hủy hàng chờ cài đặt?",
   "Skip package": "Bỏ qua gói",
   "Save Backup Search Paths": "Đường dẫn tìm kiếm bản sao lưu lưu game",

@@ -1768,6 +1768,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "USB 3.0 configureren in Atmosphère. Wijzigingen worden van kracht na opnieuw opstarten.",
   "Undo": "Ongedaan maken",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Inschakelen van USB 3.0 kan crashes, systeeminstabiliteit of problemen met sommige USB-apparaten veroorzaken.",
+  "Cancel installation": "Installatie annuleren",
   "Cancel installation queue?": "Installatiewachtrij annuleren?",
   "Skip package": "Pakket overslaan",
   "Save Backup Search Paths": "Zoekpaden voor opslagback-ups",

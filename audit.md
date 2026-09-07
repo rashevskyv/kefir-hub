@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.764**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.765**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.765 поза ponytail-чергою: футер MTP інсталяції переведено на `X` для скасування та `B` для пропуску пакета; у `DrawStatRow` додано шрифтовий пробіл між двокрапкою мітки та значенням; ключ `"Cancel installation"` додано до 14 i18n JSON; README оновлено. Compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.764 поза ponytail-чергою: USB mass-storage removal каскадно позначає matching File Browser і весь overlay subtree над ним для штатного top-down pop; premature `OnFocusGained()` до pop прибрано. Atmosphère crash-report, stack/caller cases і `git diff --check` перевірені; compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

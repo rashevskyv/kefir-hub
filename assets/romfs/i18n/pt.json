@@ -1796,6 +1796,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Forçar USB 3.0 no Atmosphère. As alterações só surtem efeito após reiniciar.",
   "Undo": "Desfazer",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Ativar o USB 3.0 pode causar travamentos, instabilidade no sistema ou problemas com alguns dispositivos USB.",
+  "Cancel installation": "Cancelar instalação",
   "Cancel installation queue?": "Cancelar a fila de instalação?",
   "Skip package": "Pular pacote",
   "Save Backup Search Paths": "Caminhos de busca de backup de salvamento",

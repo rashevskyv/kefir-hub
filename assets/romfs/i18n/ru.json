@@ -1978,6 +1978,7 @@
   "Undo": "Отменить",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Включение USB 3.0 может привести к сбоям, нестабильности системы или проблемам с некоторыми устройствами USB.",
   "Add to Homebrew Search Paths": "Добавить в пути поиска Homebrew",
+  "Cancel installation": "Отменить установку",
   "Cancel installation queue?": "Отменить очередь установки?",
   "Skip package": "Пропустить пакет",
   "Homebrew search path added.": "Добавлен путь поиска Homebrew.",

@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.764** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.765** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.765 — MTP install button controls and stat row label spacing
+
+- Виправлено керування футером у режимі MTP інсталяції: кнопку скасування призначено на `X` ("Cancel installation" із модальним запитом підтвердження "Cancel installation queue?"), а кнопку `B` призначено на пропуск поточного пакета ("Skip package" із підтвердженням "Skip this package?").
+- У `DrawStatRow` (`dbi_internal.cpp`) ліквідовано злипання двокомпонентних міток і значень: через обчислення розміру символу пробілу шрифтом та врахування зсуву faux-bold після двокрапки між міткою і числовим або рядковим значенням додано коректний інтервал.
+- Зміни інтервалів автоматично застосовані для всіх вікон інсталяції та перегляду: MTP install, USB install, PC install, черга інсталяції та підсумкові панелі (Mode, Installed, Average speed, Remaining, Written, Skipped, Failed, Packages тощо).
+- Локалізований рядок `"Cancel installation"` додано до всіх 14 JSON-файлів перекладів у `assets/romfs/i18n/`.
+- Опис дій скасування та пропуску пакетів під час MTP-інсталяції додано до `README.md`.
+- `git diff --check` пройдено; згідно з політикою агента компіляція та NRO збірка не виконувалися.
 
 ## v0.13.764 — safe USB-unplug UI teardown
 

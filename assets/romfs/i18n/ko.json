@@ -1768,6 +1768,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Atmosphère에서 USB 3.0을 강제 활성화합니다. 재부팅 후 적용됩니다.",
   "Undo": "실행 취소",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "USB 3.0을 활성화하면 충돌, 시스템 불안정 또는 일부 USB 장치에 문제가 발생할 수 있습니다.",
+  "Cancel installation": "설치 취소",
   "Cancel installation queue?": "설치 대기열을 취소하시겠습니까?",
   "Skip package": "패키지 건너뛰기",
   "Save Backup Search Paths": "저장 데이터 백업 검색 경로",

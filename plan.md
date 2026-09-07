@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.764** (safe USB-unplug UI teardown). Завершені плани збережено в
+Поточний delivery — **v0.13.765** (MTP install button controls and stat row label spacing). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.764 — safe USB-unplug UI teardown
+## Поточний delivery: v0.13.765 — MTP install button controls and stat row label spacing
+
+Статус: реалізовано; compile/tests/NRO не запускаються за policy.
+
+1. Уніфікувати футер-дії під час встановлення: в MTP інсталяторі призначити скасування на кнопку `X` ("Cancel installation" із підтвердженням "Cancel installation queue?"), а пропуск поточного файлу на кнопку `B` ("Skip package" із підтвердженням "Skip this package?").
+2. У `DrawStatRow` (`dbi_internal.cpp`) додати шрифтовий пробіл між двокрапкою мітки та її значенням, ліквідувавши злипання міток зі значеннями (Mode, Installed, Average speed, Remaining, Skipped, Failed, Packages тощо) у вікнах MTP/USB/PC інсталяції та підсумків.
+3. Додати ключ `"Cancel installation"` у всі 14 локалізацій `assets/romfs/i18n/*.json`.
+4. Version `0.13.765`; compile/tests/NRO не запускалися за repository policy, потрібна апаратна перевірка користувачем.
+
+## Попередній delivery: v0.13.764 — safe USB-unplug UI teardown
 
 Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
 

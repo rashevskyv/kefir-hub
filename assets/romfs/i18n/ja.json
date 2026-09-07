@@ -1768,6 +1768,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "AtmosphèreでUSB 3.0を強制有効化します。再起動後に反映されます。",
   "Undo": "元に戻す",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "USB 3.0を有効にすると、クラッシュやシステムエラーが発生したり、一部のUSB機器が正常に動作しない場合があります。",
+  "Cancel installation": "インストールをキャンセル",
   "Cancel installation queue?": "インストールキューをキャンセルしますか？",
   "Skip package": "パッケージをスキップ",
   "Save Backup Search Paths": "セーブバックアップの検索パス",

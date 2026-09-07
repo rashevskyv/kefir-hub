@@ -116,13 +116,17 @@ bool IsTitleAlreadyInstalled(u64 title_id) {
 void DrawStatRow(NVGcontext* vg, NVGcolor info_col, float x0, float y, float size, const std::vector<StatItem>& items) {
     float x = x0;
     nvgFontSize(vg, size);
+    float space_w = nvgTextBounds(vg, 0.f, 0.f, " ", nullptr, nullptr);
+    if (space_w < 1.0f) {
+        space_w = std::round(size * 0.30f);
+    }
     float b[4];
     for (const auto& item : items) {
-        const auto lab = item.label + ": ";
+        const auto lab = item.label + ":";
         gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
         gfx::drawTextArgs(vg, x + 0.7f, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", lab.c_str());
         gfx::textBounds(vg, 0, 0, b, lab.c_str());
-        x += b[2] - b[0];
+        x += (b[2] - b[0]) + 0.7f + space_w;
         const auto value_col = item.colour.value_or(info_col);
         gfx::drawTextArgs(vg, x, y, size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, value_col, "%s", item.value.c_str());
         gfx::textBounds(vg, 0, 0, b, item.value.c_str());

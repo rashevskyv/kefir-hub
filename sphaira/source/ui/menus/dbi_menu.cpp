@@ -166,34 +166,27 @@ void InstallSession::UpdateActions() {
     RemoveActions();
     const auto state = m_state.load();
     if (state == State::Installing) {
-        if (m_origin == TransportOrigin::Mtp) {
-            // MTP cannot skip an in-flight host copy safely. B cancels the
-            // session directly, so no stale confirmation can outlive a cable
-            // disconnect and cover the menu afterwards.
-            SetActions(
-                std::make_pair(Button::B, Action{"Cancel installation"_i18n, [this]() { CancelSession(); }}),
-                std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
-            );
-        } else {
-            SetActions(
-                std::make_pair(Button::X, Action{"Cancel queue"_i18n, [this]() {
-                    App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
-                        if (choice && *choice == 1) CancelSession();
-                    });
-                }}),
-                std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
-                    size_t active_pkg{};
-                    {
-                        SCOPED_MUTEX(&m_mutex);
-                        active_pkg = m_current_package;
-                    }
-                    App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
-                        if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
-                    });
-                }}),
-                std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
-            );
-        }
+        const auto cancel_label = (m_origin == TransportOrigin::Mtp)
+            ? "Cancel installation"_i18n
+            : "Cancel queue"_i18n;
+        SetActions(
+            std::make_pair(Button::X, Action{cancel_label, [this]() {
+                App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+                    if (choice && *choice == 1) CancelSession();
+                });
+            }}),
+            std::make_pair(Button::B, Action{"Skip package"_i18n, [this]() {
+                size_t active_pkg{};
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    active_pkg = m_current_package;
+                }
+                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
+                    if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
+                });
+            }}),
+            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }})
+        );
     } else if (state == State::Summary || state == State::Cancelled) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             m_should_exit = true;

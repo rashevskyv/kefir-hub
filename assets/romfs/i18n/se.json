@@ -1768,6 +1768,7 @@
   "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot.": "Tvinga USB 3.0 i Atmosphère. Ändringar träder i kraft efter omstart.",
   "Undo": "Ångra",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Aktivering av USB 3.0 kan orsaka krascher, systeminstabilitet eller problem med vissa USB-enheter.",
+  "Cancel installation": "Avbryt installation",
   "Cancel installation queue?": "Avbryta installationskön?",
   "Skip package": "Hoppa över paket",
   "Save Backup Search Paths": "Sökvägar för spardatabackuper",
