@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.763** (fresh initial Auto plan and split queue options). Завершені плани збережено в
+Поточний delivery — **v0.13.764** (safe USB-unplug UI teardown). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.763 — fresh initial Auto plan and split queue options
+## Поточний delivery: v0.13.764 — safe USB-unplug UI teardown
+
+Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
+
+1. Після USB mass-storage removal позначити `SetPop()` не лише на matching File Browser, а й на весь залежний widget subtree над ним.
+2. Не викликати `OnFocusGained()` до фактичного top-down pop, щоб USB-backed `FsView` не сканував вже видалений mount.
+3. Повторно використати чинні `ShouldPop()` / `SetPop()` і звичайний App pop-loop; не додавати lifecycle manager, RTTI, новий virtual API чи cancellation framework.
+4. Version `0.13.764`; верифікація — Atmosphère crash-report analysis, повний UI-stack/caller review і `git diff --check`, без compile/tests/NRO.
+
+## Попередній delivery: v0.13.763 — fresh initial Auto plan and split queue options
 
 Статус: реалізовано Gemini й прийнято після senior review; compile/tests/NRO не запускалися за policy, потрібна апаратна перевірка.
 

@@ -1039,9 +1039,6 @@ void App::PollUsbStorage() {
             log_write("[USB] mass-storage removed %s\n", old.c_str());
             App::Notify("USB drive removed"_i18n);
             CloseFileBrowsersOnUsbMount(old);
-            if (!m_widgets.empty()) {
-                m_widgets.back()->OnFocusGained();
-            }
         }
     }
     m_usb_mounts = std::move(mounts);
@@ -1107,6 +1104,19 @@ void App::OfferOpenUsbDrive(std::string name, std::string mount, u32 flags) {
 void App::CloseFileBrowsersOnUsbMount(const std::string& mount) {
     for (auto& w : m_widgets) {
         w->OnUsbMountRemoved(mount);
+    }
+
+    const auto first_pop = std::ranges::find_if(m_widgets, [](const auto& w) {
+        return w && w->ShouldPop();
+    });
+    if (first_pop != m_widgets.end()) {
+        const auto count = static_cast<size_t>(std::distance(first_pop, m_widgets.end()));
+        for (auto it = first_pop; it != m_widgets.end(); ++it) {
+            if (*it) {
+                (*it)->SetPop();
+            }
+        }
+        log_write("[USB] closing %zu widget(s) for removed mount %s\n", count, mount.c_str());
     }
 }
 

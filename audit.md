@@ -1,13 +1,15 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.763**. Дата: 2026-09-07.
+Канонічний робочий файл. Версія коду: **v0.13.764**. Дата: 2026-09-07.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
 `graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-07:
-11995 nodes, 22048 edges, 724 communities; HTML/REPORT цим incremental run не регенерувалися.
+12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.764 поза ponytail-чергою: USB mass-storage removal каскадно позначає matching File Browser і весь overlay subtree над ним для штатного top-down pop; premature `OnFocusGained()` до pop прибрано. Atmosphère crash-report, stack/caller cases і `git diff --check` перевірені; compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.763 поза ponytail-чергою: Auto plan отримує fresh storage snapshot перед кожним входом у ReviewQueue і після зміни location/reserve; queue sidebar розділено на верхні Install Options та нижній View із sort/order. Planner/legend/install semantics без змін; compile/tests/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

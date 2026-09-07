@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.763** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.764** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.764 — safe USB-unplug UI teardown
+
+- Atmosphère crash reports `2168-0001` після physical USB removal вказали на stale UI callback: File Browser отримував `SetPop()`, але лишався buried під sidebar/modal, бо App видаляє лише contiguous topmost `ShouldPop()` widgets.
+- `CloseFileBrowsersOnUsbMount()` знаходить перший `ShouldPop()` після removal notification і каскадно позначає весь subtree до `m_widgets.end()`. Чинний pop-loop безпечно видаляє overlay widgets і browser top-down.
+- Негайний `m_widgets.back()->OnFocusGained()` з removal-path прибрано: focus отримує лише surviving widget після фактичного pop, тож unmounted `FsView` не запускає повторний `Scan()`.
+- Додано один bounded USB teardown log. Gemini й senior перевірили всі stack cases та `git diff --check`; compile/tests/NRO не запускалися за repository policy, потрібен Switch-check.
 
 ## v0.13.763 — fresh initial Auto plan and split queue options
 

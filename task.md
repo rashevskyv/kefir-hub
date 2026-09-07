@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.763** (fresh initial Auto plan and split queue options). Завершені задачі збережено в
+Актуальний delivery — **v0.13.764** (safe USB-unplug UI teardown). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.763 (fresh initial Auto plan and split queue options)
+## Поточний delivery: v0.13.764 (safe USB-unplug UI teardown)
+
+- [x] `USB-UNPLUG-CASCADE-764` — matching USB File Browser і всі widgets над ним позначаються `SetPop()`, тож sidebar/modal не локує buried pop.
+- [x] `USB-UNPLUG-FOCUS-764` — removal-path не викликає `OnFocusGained()` до фактичного pop і не сканує видалений USB mount.
+- [x] `USB-UNPLUG-LOG-764` — лог фіксує mount та кількість widgets у teardown cascade.
+- [x] `USB-UNPLUG-REVIEW-764` — Gemini й senior перевірили topmost/buried/multi-overlay/no-match/already-pop cases та `git diff --check`; compile/tests/NRO не запускалися.
+- [x] `CMAKELISTS-VERSION-BUMP-764` — `sphaira_VERSION` піднято до `0.13.764`.
+- [x] `DOCS-BUMP-764` — plan/task/walkthrough/audit синхронізовано після acceptance.
+
+## Попередній delivery: v0.13.763 (fresh initial Auto plan and split queue options)
 
 - [x] `QUEUE-AUTO-FRESH-763` — кожен вхід у ReviewQueue форсує fresh storage snapshot перед Auto planning.
 - [x] `QUEUE-OPTIONS-REPLAN-763` — install location і обидва reserve одразу переплановують review-чергу.
