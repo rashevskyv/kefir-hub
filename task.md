@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.768** (Fix menu list selection frame draw priority and z-order). Завершені задачі збережено в
+Актуальний delivery — **v0.13.769** (Fix vector folder icon outline and remove interior tab overlap). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.768 (Fix menu list selection frame draw priority and z-order)
+## Поточний delivery: v0.13.769 (Fix vector folder icon outline and remove interior tab overlap)
+
+- [x] `UI-FOLDER-OUTLINE-UNIFY-769` — у `StrokeFolder` (`sphaira/source/ui/file_icon.cpp`) прибрано накладання окремих прямокутників `nvgRoundedRectVarying` та `nvgRoundedRect`; реалізовано єдиний неперервний векторний контур через `nvgMoveTo`, `nvgArcTo`, `nvgLineTo` та `nvgClosePath` без внутрішніх ліній перекриття язичка над тілом папки.
+- [x] `README-FOLDER-ICON-DOCS-769` — оновлено `README.md` з описом уніфікованих векторних іконок папок у файловому браузері.
+- [x] `CMAKELISTS-VERSION-BUMP-769` — `sphaira_VERSION` піднято до `0.13.769`.
+- [x] `DOCS-BUMP-769` — plan.md, task.md, walkthrough.md та audit.md синхронізовано.
+
+## Попередній delivery: v0.13.768 (Fix menu list selection frame draw priority and z-order)
 
 - [x] `UI-CONSOLE-TRANSFER-DRAW-PRIORITY-768` — у `ConsoleTransferMenu::Draw` запроваджено двохпрохідну відмальовку: спочатку малюються неактивні елементи списку, а виділений елемент з рамкою `drawRectOutline` малюється поверх них, запобігаючи перекриттю рамки фокусу фоном наступного елемента.
 - [x] `UI-USERS-MENUS-DRAW-PRIORITY-768` — аналогічний двохпрохідний порядок відмальовки застосовано до `users_manage.cpp` та `users_restore.cpp`.

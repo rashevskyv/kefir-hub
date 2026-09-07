@@ -74,6 +74,11 @@ Sphaira provides an interactive **Remote Input** system that allows users to sen
 - **Web Input Interface:** The mobile-responsive `/input` page features clipboard paste integration, live configuration reflection, and support for multiline text payloads.
 - **Direct NRO & ZIP Downloads:** The **Custom Link / Direct Download** utility accepts both `.zip` archives (extracted to root with prompt to keep/delete) and standalone `.nro` binaries (saved directly to `/switch/` with an instant launch prompt).
 
+## File Browser & Vector Iconography
+
+Sphaira features an integrated File Browser for navigating console filesystems, microSD cards, USB mass storage drives, and external MTP devices:
+- **Unified Vector Folder Icons:** In grid view mode, folder entries render a single continuous vector outline where the folder tab seamlessly merges with the body contour without interior line overlaps or stray horizontal dividers, framing embedded mosaic previews and thumbnails cleanly across all theme palettes.
+
 ## File association
 
 Sphaira has file association support. Let's say your app supports loading .png files, then you could write an association file, then when using the file browser, clicking on a .png file will launch your app along with the .png file as argv[1]. This was primarly added for rom loading support for emulators / frontends such as RetroArch, MelonDS, mGBA etc.

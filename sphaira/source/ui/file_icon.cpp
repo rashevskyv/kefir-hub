@@ -146,18 +146,32 @@ auto MakeFolderGeom(const Vec4& dest) -> FolderGeom {
 }
 
 void StrokeFolder(NVGcontext* vg, Theme* theme, const FolderGeom& g) {
+    if (!vg) {
+        return;
+    }
     const auto colour = FolderStrokeColour(theme);
     nvgLineJoin(vg, NVG_ROUND);
     nvgLineCap(vg, NVG_ROUND);
 
-    nvgBeginPath(vg);
-    nvgRoundedRectVarying(vg, g.tab.x, g.tab.y, g.tab.w, g.tab.h, g.radius, g.radius, 0.f, 0.f);
-    nvgStrokeColor(vg, colour);
-    nvgStrokeWidth(vg, g.stroke);
-    nvgStroke(vg);
+    const float left = g.box.x;
+    const float right = g.box.x + g.box.w;
+    const float bottom = g.box.y + g.box.h;
+    const float top_tab = g.box.y;
+    const float top_body = g.body.y;
+    const float tab_right = g.box.x + g.tab.w;
+    const float r = g.radius;
+    const float r_tab = std::min(r, (top_body - top_tab) * 0.75f);
 
     nvgBeginPath(vg);
-    nvgRoundedRect(vg, g.body.x, g.body.y, g.body.w, g.body.h, g.radius);
+    nvgMoveTo(vg, left, bottom - r);
+    nvgArcTo(vg, left, top_tab, tab_right, top_tab, r);
+    nvgArcTo(vg, tab_right, top_tab, tab_right, top_body, r_tab);
+    nvgLineTo(vg, tab_right, top_body);
+    nvgArcTo(vg, right, top_body, right, bottom, r);
+    nvgArcTo(vg, right, bottom, left, bottom, r);
+    nvgArcTo(vg, left, bottom, left, top_tab, r);
+    nvgClosePath(vg);
+
     nvgStrokeColor(vg, colour);
     nvgStrokeWidth(vg, g.stroke);
     nvgStroke(vg);

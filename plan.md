@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.768** (Fix menu list selection frame draw priority and z-order). Завершені плани збережено в
+Поточний delivery — **v0.13.769** (Fix vector folder icon outline and remove interior tab overlap). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.768 — Fix menu list selection frame draw priority and z-order
+## Поточний delivery: v0.13.769 — Fix vector folder icon outline and remove interior tab overlap
+
+Статус: реалізовано; контур папки переведено на єдиний суцільний векторний шлях без перекриття язичка і тіла; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/file_icon.cpp` (`StrokeFolder`):
+   - Усунути роздільне малювання двох прямокутників (`nvgRoundedRectVarying` язичка та `nvgRoundedRect` тіла папки), яке призводило до заїзду язичка всередину тіла папки та утворення подвійної горизонтальної лінії/перекриття.
+   - Сформувати єдиний замкнений векторний контур (`nvgMoveTo`, `nvgArcTo`, `nvgLineTo`, `nvgClosePath`): лівий край, плавне скруглення язичка вгорі, опускання правого краю язичка до верхньої межі тіла папки та плавний перехід у верхню грань і контур тіла без внутрішніх ліній перекриття.
+2. Оновити `README.md`: додати опис уніфікованих векторних іконок папок у секцію файлового браузера.
+3. Підняти версію до `0.13.769` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.768 — Fix menu list selection frame draw priority and z-order
 
 Статус: реалізовано; z-order виправлено шляхом відокремлення шару фонів неактивних пунктів від шару виділеного активного елемента.
 
