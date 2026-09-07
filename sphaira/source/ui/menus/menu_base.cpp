@@ -290,9 +290,11 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // reserve space for both values.
     const float value_col_w = [&]{
         nvgFontSize(vg, storage_font);
-        const char* template_str = ((m_storage_projection || m_storage_install_progress) && m_storage_highlight_active)
-            ? "+000000 WW / 000000 WW"
-            : "000000 WW";
+        const char* template_str = (m_storage_projection && m_storage_highlight_active)
+            ? "+000000 WW / 000000 WW / 000000 WW"
+            : (m_storage_install_progress && m_storage_highlight_active)
+                ? "+000000 WW / 000000 WW"
+                : "000000 WW";
         gfx::textBounds(vg, 0, 0, bounds, template_str);
         return bounds[2] - bounds[0];
     }();
@@ -329,11 +331,11 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         if (!m_storage_projection) {
             return value;
         }
-        // "this package / everything queued" when one package is in focus.
+        // "this package / everything queued / actual free" when one package is in focus.
         if (focus_bytes) {
-            return "+" + utils::formatSizeStorage(focus_bytes) + " / " + value;
+            return "+" + utils::formatSizeStorage(focus_bytes) + " / " + value + " / " + utils::formatSizeStorage(free_bytes);
         }
-        return "+" + value;
+        return "+" + value + " / " + utils::formatSizeStorage(free_bytes);
     };
 
     // Determine the exact rightmost boundary of the NAND storage part on Row 1 (y=48).

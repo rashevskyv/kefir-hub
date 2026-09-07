@@ -540,6 +540,7 @@ void Menu::SetIndex(s64 index) {
         const s64 count = m_queue.size();
         m_list->EnsureVisible(m_index + 1, count);
         m_list->EnsureVisible(m_index - 1, count);
+        m_list->EnsureVisible(m_index, count);
     }
 }
 
@@ -552,11 +553,93 @@ void Menu::CycleSelectedTarget() {
         : target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
 }
 
+void Menu::SortQueue() {
+    SCOPED_MUTEX(&m_mutex);
+    if (m_state.load() != State::ReviewQueue || m_install_requested) return;
+    if (m_queue.empty()) return;
+
+    size_t focused_source_index = 0;
+    bool has_focus = false;
+    if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size())) {
+        focused_source_index = m_queue[m_index].source_index;
+        has_focus = true;
+    }
+
+    const bool is_asc = (m_session_sort_order == 0);
+
+    auto comp = [&](const QueueEntry& a, const QueueEntry& b) -> bool {
+        switch (m_session_sort_type) {
+            case 1: { // Name
+                int cmp = strcasecmp(a.file_name.c_str(), b.file_name.c_str());
+                if (cmp != 0) {
+                    return is_asc ? (cmp < 0) : (cmp > 0);
+                }
+                return a.source_index < b.source_index;
+            }
+            case 2: { // Package size
+                s64 sa = QueuePackageSize(a);
+                s64 sb = QueuePackageSize(b);
+                if (sa != sb) {
+                    return is_asc ? (sa < sb) : (sa > sb);
+                }
+                return a.source_index < b.source_index;
+            }
+            case 3: { // Install size
+                s64 ia = PlanSize(a);
+                s64 ib = PlanSize(b);
+                if (ia != ib) {
+                    return is_asc ? (ia < ib) : (ia > ib);
+                }
+                return a.source_index < b.source_index;
+            }
+            case 0: // Queue order
+            default: {
+                return is_asc ? (a.source_index < b.source_index) : (a.source_index > b.source_index);
+            }
+        }
+    };
+
+    std::stable_sort(m_queue.begin(), m_queue.end(), comp);
+
+    if (has_focus) {
+        for (size_t i = 0; i < m_queue.size(); i++) {
+            if (m_queue[i].source_index == focused_source_index) {
+                SetIndex(static_cast<s64>(i));
+                break;
+            }
+        }
+    }
+    RecomputePlan();
+    m_actions_dirty = true;
+}
+
 void Menu::DisplayQueueOptions(bool left_side) {
     auto options = std::make_unique<Sidebar>("Install Options"_i18n, left_side ? Sidebar::Side::LEFT : Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
     const bool global = App::GetSaveSettingsGlobally();
+
+    if (m_state.load() == State::ReviewQueue) {
+        SidebarEntryArray::Items sort_items;
+        sort_items.push_back("Queue order"_i18n);
+        sort_items.push_back("Name"_i18n);
+        sort_items.push_back("Package size"_i18n);
+        sort_items.push_back("Install size"_i18n);
+
+        options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
+            m_session_sort_type = index_out;
+            SortQueue();
+        }, m_session_sort_type);
+
+        SidebarEntryArray::Items order_items;
+        order_items.push_back("Ascending"_i18n);
+        order_items.push_back("Descending"_i18n);
+
+        options->Add<SidebarEntryArray>("Order"_i18n, order_items, [this](s64& index_out){
+            m_session_sort_order = index_out;
+            SortQueue();
+        }, m_session_sort_order);
+    }
 
     SidebarEntryArray::Items skip_installed_items;
     skip_installed_items.push_back("Reinstall"_i18n);

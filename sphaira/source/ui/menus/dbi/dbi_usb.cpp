@@ -100,6 +100,7 @@ void Menu::ThreadFunction() {
                 AddError(name, "Analysis"_i18n, entry.analysis_result);
             }
             SCOPED_MUTEX(&m_mutex);
+            entry.source_index = m_queue.size();
             m_queue.emplace_back(std::move(entry));
         }
 
@@ -222,6 +223,7 @@ void Menu::ThreadFunction() {
                                     }
                                 }
                                 if (exists) continue;
+                                entry.source_index = m_queue.size();
 
                                 if (entry.selected) {
                                     const auto spaces = GetPolledData();

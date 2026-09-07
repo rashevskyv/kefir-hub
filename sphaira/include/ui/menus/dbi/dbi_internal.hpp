@@ -28,6 +28,7 @@ auto IsDbiSessionError(Result rc) -> bool;
 void AddSizeSaturated(s64& total, s64 value);
 u64 GetQueueEntryTitleId(const QueueEntry& entry);
 s64 PlanSize(const QueueEntry& entry);
+s64 QueuePackageSize(const QueueEntry& entry);
 bool IsTitleAlreadyInstalled(u64 title_id);
 
 // one "label: value" cell of a stats row.

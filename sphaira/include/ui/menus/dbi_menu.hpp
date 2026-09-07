@@ -48,6 +48,7 @@ struct QueueEntry {
     bool install_sd{};
     bool rejected_no_space{};
     s64 source_size{0};
+    size_t source_index{0};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.
@@ -274,6 +275,7 @@ private:
     void SetIndex(s64 index);
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
+    void SortQueue();
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};
     fs::Fs* m_local_fs{};
@@ -295,6 +297,8 @@ private:
     long m_session_install_location{4};
     long m_session_reserve_mb{500};
     long m_session_reserve_sd_mb{500};
+    long m_session_sort_type{0};
+    long m_session_sort_order{0};
 };
 
 } // namespace sphaira::ui::menu::dbi

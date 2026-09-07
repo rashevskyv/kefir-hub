@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.759** (repair and complete transport install UI). Завершені задачі збережено в
+Актуальний delivery — **v0.13.760** (install queue sorting and visible free space). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.759 (repair and complete transport install UI)
+## Поточний delivery: v0.13.760 (install queue sorting and visible free space)
+
+- [x] `QUEUE-SORT-760` — черга в review сортується за назвою/package size/install size та ascending/descending без втрати фокусу.
+- [x] `QUEUE-AUTO-PARITY-760` — local/external USB та PC USB повторно використовують спільний Auto planner; host regression check додано, але не запускалося за policy.
+- [x] `QUEUE-FREE-SPACE-760` — storage header у projection mode показує `+фокус / всього / фактично вільно` для NAND і microSD.
+- [x] `CMAKELISTS-VERSION-BUMP-760` — `sphaira_VERSION` піднято до `0.13.760`.
+- [x] `DOCS-BUMP-760` — plan/task/walkthrough/audit синхронізовано після acceptance; compile/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.759 (repair and complete transport install UI)
 
 - [x] `INSTALL-DRAW-ROOT-759` — blocking DBI/local/USB install widget малює себе й overlays над собою, пропускаючи лише нижні шари; бірюзовий blank-screen root cause прибрано.
 - [x] `INSTALL-CHROME-759` — detached MTP/FTP/Web session малює штатний header/footer; modal dialog коректно перебирає footer ownership.

@@ -112,6 +112,7 @@ void InstallSession::EnqueueFile(const std::string& name, s64 size, bool to_sd, 
     entry.batch_id = batch_id;
     entry.file_name = name;
     entry.source_size = size;
+    entry.source_index = m_queue.size();
     entry.selected = true;
     entry.install_selected = true;
     entry.target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
@@ -163,6 +164,7 @@ void InstallSession::SetCurrentPackage(const std::string& batch_id, const std::s
     entry.batch_id = batch_id;
     entry.file_name = name;
     entry.source_size = size;
+    entry.source_index = m_queue.size();
     entry.selected = true;
     entry.install_selected = true;
     entry.target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;

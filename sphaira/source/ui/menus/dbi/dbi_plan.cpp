@@ -204,6 +204,7 @@ bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selec
                 }
             }
             if (!exists) {
+                entry.source_index = m_queue.size();
                 m_queue.emplace_back(std::move(entry));
                 changed = true;
             }

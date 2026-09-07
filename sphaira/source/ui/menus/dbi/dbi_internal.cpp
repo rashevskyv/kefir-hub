@@ -74,6 +74,12 @@ u64 GetQueueEntryTitleId(const QueueEntry& entry) {
     return 0;
 }
 
+s64 QueuePackageSize(const QueueEntry& entry) {
+    if (entry.analysis.source_size > 0) return entry.analysis.source_size;
+    if (entry.source_size > 0) return entry.source_size;
+    return 0;
+}
+
 // how much a package is expected to write. Deferred entries only know their
 // (possibly compressed) source size, so they get the same 1.6x factor that
 // yati::ChooseInstallTarget uses, otherwise the plan under-books their space.
@@ -81,7 +87,7 @@ s64 PlanSize(const QueueEntry& entry) {
     if (!entry.analysis_deferred) {
         return std::max<s64>(0, entry.analysis.install_size);
     }
-    return static_cast<s64>(std::max<s64>(0, entry.analysis.source_size) * 1.6);
+    return static_cast<s64>(std::max<s64>(0, QueuePackageSize(entry)) * 1.6);
 }
 
 bool IsTitleAlreadyInstalled(u64 title_id) {

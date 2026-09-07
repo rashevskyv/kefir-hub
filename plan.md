@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.759** (repair and complete transport install UI). Завершені плани збережено в
+Поточний delivery — **v0.13.760** (install queue sorting and visible free space). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.759 — repair and complete transport install UI
+## Поточний delivery: v0.13.760 — install queue sorting and visible free space
+
+Статус: реалізовано Gemini й прийнято після senior review; compile/NRO та host-тести не запускалися за policy, потрібна апаратна перевірка.
+
+1. Додати в `Install Options` мінімальне сортування черги за назвою, розміром пакета та розрахованим install size, з ascending/descending order; зберегти фокус на тому самому пакеті.
+2. Не дублювати `Auto`: local/file-manager/external USB і PC USB мають залишитися на спільному `RecomputePlan()` / `RefreshAutoInstallTarget()` і давати однаковий результат для однакових budget/order.
+3. У review header зберегти `+файл / уся черга`, але після слеша додати фактичне вільне місце на відповідному NAND/microSD (`+файл / черга / вільно`), не плутаючи це з reserve-adjusted usable space.
+4. Додати одну мінімальну host-перевірку для sort/order та Auto parity; version `0.13.760`.
+
+## Попередній delivery: v0.13.759 — repair and complete transport install UI
 
 Статус: реалізовано після hardware feedback; compile/NRO не запускалися за policy, потрібна апаратна перевірка.
 

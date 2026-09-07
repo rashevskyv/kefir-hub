@@ -47,6 +47,7 @@ void Menu::LocalThreadFunction() {
             entry.file_name = path.s;
         }
         const auto path_index = static_cast<size_t>(&path - m_local_paths.data());
+        entry.source_index = path_index;
         const auto listed_size = path_index < m_local_source_sizes.size()
             ? std::max<s64>(0, m_local_source_sizes[path_index]) : 0;
         if (m_defer_local_analysis) {
@@ -142,11 +143,14 @@ void Menu::LocalThreadFunction() {
             const auto read_before = m_total_read.load();
             const auto write_before = m_total_write.load();
 
+            const auto src_idx = m_queue[i].source_index;
             Result result{};
-            if (analysis_deferred) {
-                result = yati::InstallFromFile(this, m_local_fs, m_local_paths[i], override);
+            if (src_idx >= m_local_paths.size()) {
+                result = FsError_PathNotFound;
+            } else if (analysis_deferred) {
+                result = yati::InstallFromFile(this, m_local_fs, m_local_paths[src_idx], override);
             } else {
-                yati::source::File source{m_local_fs, m_local_paths[i]};
+                yati::source::File source{m_local_fs, m_local_paths[src_idx]};
                 const auto open_rc = source.GetOpenResult();
                 result = R_SUCCEEDED(open_rc)
                     ? yati::InstallFromCollections(this, &source, analysis.collections, override)

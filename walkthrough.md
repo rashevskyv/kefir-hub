@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.759** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.760** (2026-09-07). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.760 — install queue sorting and visible free space
+
+- `Install Options` у review-черзі сортує за original queue order, назвою, package size або install size в ascending/descending order. `stable_sort` зберігає детермінізм, фокус лишається на тому самому package, а Auto plan одразу пераховується.
+- Стабільний `source_index` зберігає original path: після сортування local/file-manager/external USB install відкриває файл, що відповідає видимому рядку; Queue order відновлює початковий список.
+- Local/external USB і PC USB лишилися на спільних `RecomputePlan()` та `RefreshAutoInstallTarget()`: `Auto` перевибирає target за живим free space і reserves без source-specific planner.
+- Projection header для NAND і microSD показує `+поточний / черга / фактично вільно`; без focus — `+черга / вільно`. Normal free-space та active-install `written / total` не змінені.
+- Додано host regression assertions для Auto parity і restore order. Senior перевірив full diff, callers, JSON catalogs і `git diff --check`; compile, tests та NRO не запускалися за repository policy.
 
 ## v0.13.759 — repair and complete transport install UI
 
