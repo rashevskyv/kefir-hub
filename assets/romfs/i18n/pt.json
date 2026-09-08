@@ -1799,6 +1799,7 @@
   "Undo": "Desfazer",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Ativar o USB 3.0 pode causar travamentos, instabilidade no sistema ou problemas com alguns dispositivos USB.",
   "Cancel installation": "Cancelar instalação",
+  "Cancel installation?": "Cancelar a instalação?",
   "Cancel installation queue?": "Cancelar a fila de instalação?",
   "Skip package": "Pular pacote",
   "Save Backup Search Paths": "Caminhos de busca de backup de salvamento",

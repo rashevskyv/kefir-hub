@@ -1772,6 +1772,7 @@
   "Undo": "Ångra",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Aktivering av USB 3.0 kan orsaka krascher, systeminstabilitet eller problem med vissa USB-enheter.",
   "Cancel installation": "Avbryt installation",
+  "Cancel installation?": "Avbryta installationen?",
   "Cancel installation queue?": "Avbryta installationskön?",
   "Skip package": "Hoppa över paket",
   "Save Backup Search Paths": "Sökvägar för spardatabackuper",

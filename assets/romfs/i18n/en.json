@@ -1957,6 +1957,7 @@
   "Skip package": "Skip package",
   "Skip this package?": "Skip this package?",
   "Cancel installation": "Cancel installation",
+  "Cancel installation?": "Cancel installation?",
   "Cancel installation queue?": "Cancel installation queue?",
   "Add to Homebrew Search Paths": "Add to Homebrew Search Paths",
   "Delete Homebrew Search Paths": "Delete Homebrew Search Paths",

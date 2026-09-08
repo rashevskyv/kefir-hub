@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.769** (Fix vector folder icon outline and remove interior tab overlap). Завершені задачі збережено в
+Актуальний delivery — **v0.13.770** (disable B and map X to Cancel installation for FTP/MTP/HTTP). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.769 (Fix vector folder icon outline and remove interior tab overlap)
+## Поточний delivery: v0.13.770 (disable B and map X to Cancel installation for FTP/MTP/HTTP)
+
+- [x] `STREAMING-INSTALL-ACTIONS-770` — у `InstallSession::UpdateActions` (`sphaira/source/ui/menus/dbi_menu.cpp`) для потокових інсталяцій (MTP, FTP, HTTP/Web) кнопку `B` повністю вимкнено під час встановлення, а на кнопку `X` призначено скасування сесії `"Cancel installation"` із запитом `"Cancel installation?"`.
+- [x] `I18N-CANCEL-INSTALL-QUESTION-770` — додано ключ перекладу `"Cancel installation?"` у всі 14 локалізацій `assets/romfs/i18n/*.json`.
+- [x] `README-STREAMING-CONTROLS-770` — оновлено `README.md` з описом дій кнопок X та B при стрімінговому встановленні.
+- [x] `CMAKELISTS-VERSION-BUMP-770` — `sphaira_VERSION` піднято до `0.13.770`.
+- [x] `DOCS-BUMP-770` — plan.md, task.md, walkthrough.md та audit.md синхронізовано.
+
+## Попередній delivery: v0.13.769 (Fix vector folder icon outline and remove interior tab overlap)
 
 - [x] `UI-FOLDER-OUTLINE-UNIFY-769` — у `StrokeFolder` (`sphaira/source/ui/file_icon.cpp`) прибрано накладання окремих прямокутників `nvgRoundedRectVarying` та `nvgRoundedRect`; реалізовано єдиний неперервний векторний контур через `nvgMoveTo`, `nvgArcTo`, `nvgLineTo` та `nvgClosePath` без внутрішніх ліній перекриття язичка над тілом папки.
 - [x] `README-FOLDER-ICON-DOCS-769` — оновлено `README.md` з описом уніфікованих векторних іконок папок у файловому браузері.

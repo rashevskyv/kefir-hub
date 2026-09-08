@@ -167,31 +167,40 @@ Menu::~Menu() {
 void InstallSession::UpdateActions() {
     RemoveActions();
     const auto state = m_state.load();
+    const bool is_streaming = (m_origin == TransportOrigin::Mtp ||
+                               m_origin == TransportOrigin::Ftp ||
+                               m_origin == TransportOrigin::Web);
+
     if (state == State::Installing) {
-        const auto cancel_label = (m_origin == TransportOrigin::Mtp)
+        const auto cancel_label = is_streaming
             ? "Cancel installation"_i18n
             : "Cancel queue"_i18n;
-        SetAction(Button::X, Action{cancel_label, [this]() {
-            App::Push<OptionBox>("Cancel installation queue?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
+        const auto cancel_prompt = is_streaming
+            ? "Cancel installation?"_i18n
+            : "Cancel installation queue?"_i18n;
+        SetAction(Button::X, Action{cancel_label, [this, cancel_prompt]() {
+            App::Push<OptionBox>(cancel_prompt, "No"_i18n, "Yes"_i18n, 0, [this](auto choice) {
                 if (choice && *choice == 1) CancelSession();
             });
         }});
-        if (m_summary_grace_timestamp.has_value() || (AllPackagesTerminal() && !HasKnownBatchTotals(m_origin))) {
-            SetAction(Button::B, Action{"Done"_i18n, [this]() {
-                TransitionToSummary();
-                m_summary_grace_timestamp.reset();
-            }});
-        } else {
-            SetAction(Button::B, Action{"Skip package"_i18n, [this]() {
-                size_t active_pkg{};
-                {
-                    SCOPED_MUTEX(&m_mutex);
-                    active_pkg = m_current_package;
-                }
-                App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
-                    if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
-                });
-            }});
+        if (!is_streaming) {
+            if (m_summary_grace_timestamp.has_value() || (AllPackagesTerminal() && !HasKnownBatchTotals(m_origin))) {
+                SetAction(Button::B, Action{"Done"_i18n, [this]() {
+                    TransitionToSummary();
+                    m_summary_grace_timestamp.reset();
+                }});
+            } else {
+                SetAction(Button::B, Action{"Skip package"_i18n, [this]() {
+                    size_t active_pkg{};
+                    {
+                        SCOPED_MUTEX(&m_mutex);
+                        active_pkg = m_current_package;
+                    }
+                    App::Push<OptionBox>("Skip this package?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this, active_pkg](auto choice) {
+                        if (choice && *choice == 1) SkipCurrentPackage(active_pkg);
+                    });
+                }});
+            }
         }
         SetAction(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
     } else if (state == State::Summary || state == State::Cancelled) {
@@ -216,7 +225,11 @@ void InstallSession::UpdateActions() {
             SetPop();
         }});
     } else {
-        SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
+        if (is_streaming) {
+            SetAction(Button::X, Action{"Cancel installation"_i18n, [this]() { CancelSession(); }});
+        } else {
+            SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
+        }
     }
 
     if (state != State::Summary && state != State::Cancelled && state != State::Failed) {

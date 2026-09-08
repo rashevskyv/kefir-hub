@@ -1772,6 +1772,7 @@
   "Undo": "Annulla",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "L'attivazione di USB 3.0 può causare crash, instabilità del sistema o problemi con alcuni dispositivi USB.",
   "Cancel installation": "Annulla installazione",
+  "Cancel installation?": "Annullare l'installazione?",
   "Cancel installation queue?": "Annullare la coda di installazione?",
   "Skip package": "Salta pacchetto",
   "Save Backup Search Paths": "Percorsi di ricerca dei backup di salvataggio",

@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.769** (2026-09-07). Попередні
+Актуальний delivery — **v0.13.770** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.770 — disable B and map X to Cancel installation for FTP/MTP/HTTP
+
+- Виправлено керування кнопками у футері під час встановлення через потокові протоколи (MTP, FTP, HTTP/Web install):
+  1. Раніше під час встановлення кнопка `B` використовувалася для пропуску поточного пакета ("Skip package") або переходу в підсумки ("Done"), а кнопка `X` показувала "Cancel queue" (за аналогією з локальною чергою файлів). Проте для потокових джерел (MTP/FTP/Web) неможливо коректно пропустити файл посеред потоку без аварійного стану або розриву з'єднання на боці сервера/ПК.
+  2. У `sphaira/source/ui/menus/dbi_menu.cpp` (`InstallSession::UpdateActions`):
+     - Визначено прапорець `is_streaming` (`TransportOrigin::Mtp`, `TransportOrigin::Ftp`, `TransportOrigin::Web`).
+     - Для стрімінгових джерел кнопку `B` повністю прибрано під час встановлення (вона не призначається на жодну дію).
+     - Кнопку `X` призначено на дію `"Cancel installation"` із модальним запитом `"Cancel installation?"` (замість `"Cancel installation queue?"`).
+     - Для початкового/неактивного стану кнопки призначено `X` ("Cancel installation"), а `B` не використовується.
+     - Для локальної черги DBI поведінку збережено без змін (`X` — "Cancel queue", `B` — "Skip package" / "Done").
+  3. Новий рядок `"Cancel installation?"` локалізовано та додано до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+  4. Оновлено документацію `README.md` щодо дій кнопок при стрімінговому встановленні.
+  5. Версію піднято до `0.13.770` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.769 — Fix vector folder icon outline and remove interior tab overlap
 

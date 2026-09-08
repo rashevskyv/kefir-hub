@@ -1826,6 +1826,7 @@
   "Undo": "撤销",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "启用 USB 3.0 可能会导致崩溃、系统不稳定或部分 USB 设备出现问题。",
   "Cancel installation": "取消安装",
+  "Cancel installation?": "取消安装？",
   "Cancel installation queue?": "取消安装队列？",
   "Skip package": "跳过包",
   "Save Backup Search Paths": "存档备份搜索路径",

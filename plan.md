@@ -1,8 +1,22 @@
-Поточний delivery — **v0.13.769** (Fix vector folder icon outline and remove interior tab overlap). Завершені плани збережено в
+Поточний delivery — **v0.13.770** (disable B and map X to Cancel installation for FTP/MTP/HTTP). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.769 — Fix vector folder icon outline and remove interior tab overlap
+## Поточний delivery: v0.13.770 — disable B and map X to Cancel installation for FTP/MTP/HTTP
+
+Статус: реалізовано; для MTP, FTP та Web/HTTP кнопка B вимкнена під час інсталяції, кнопка X відповідає за Cancel installation із підтвердженням; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/menus/dbi_menu.cpp` (`InstallSession::UpdateActions`):
+   - Для стрімінгових джерел (`TransportOrigin::Mtp`, `TransportOrigin::Ftp`, `TransportOrigin::Web`) під час стану `State::Installing`:
+     - Дія кнопки `X` призначається як `"Cancel installation"_i18n` із модальним запитом `"Cancel installation?"_i18n`.
+     - Дія кнопки `B` повністю відсутня (не реєструється ані `"Skip package"`, ані `"Done"`), оскільки потокові мережеві та USB протоколи не підтримують безпечний пропуск пакета на льоту без розриву з'єднання.
+     - Для fallback стану кнопки за замовчуванням `X` призначається `"Cancel installation"`, а `B` не використовується.
+   - Для черги локального встановлення (DBI) збережено дію `X` як `"Cancel queue"` та `B` як `"Skip package"` / `"Done"`.
+2. Додати ключ `"Cancel installation?"` у всі 14 локалізацій `assets/romfs/i18n/*.json`.
+3. Оновити `README.md` з роз'ясненням керування кнопками для потокових інсталяцій.
+4. Підняти версію до `0.13.770` у `sphaira/CMakeLists.txt`, оновити `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.769 — Fix vector folder icon outline and remove interior tab overlap
 
 Статус: реалізовано; контур папки переведено на єдиний суцільний векторний шлях без перекриття язичка і тіла; compile/tests/NRO не запускаються за policy.
 

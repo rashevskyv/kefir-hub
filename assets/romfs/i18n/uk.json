@@ -1986,6 +1986,7 @@
   "Skip package": "Пропустити пакет",
   "Skip this package?": "Пропустити цей пакет?",
   "Cancel installation": "Скасувати встановлення",
+  "Cancel installation?": "Скасувати встановлення?",
   "Cancel installation queue?": "Скасувати чергу встановлення?",
   "Add to Homebrew Search Paths": "Додати до шляхів пошуку Homebrew",
   "Delete Homebrew Search Paths": "Видалити шляхи пошуку Homebrew",

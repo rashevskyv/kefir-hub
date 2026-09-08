@@ -1773,6 +1773,7 @@
   "Undo": "Rückgängig",
   "Enabling USB 3.0 may cause crashes, system instability, or problems with some USB devices.": "Das Aktivieren von USB 3.0 kann zu Abstürzen, Systeminstabilität oder Problemen mit einigen USB-Geräten führen.",
   "Cancel installation": "Installation abbrechen",
+  "Cancel installation?": "Installation abbrechen?",
   "Cancel installation queue?": "Installationswarteschlange abbrechen?",
   "Skip package": "Paket überspringen",
   "Save Backup Search Paths": "Suchpfade für Speicherdaten-Backups",
