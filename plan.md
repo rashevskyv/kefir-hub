@@ -1,8 +1,8 @@
-Поточний delivery — **v0.13.780** (consistently center folder and file labels in icon layout). Завершені плани збережено в
+Поточний delivery — **v0.13.781** (consistently center folder and file labels in icon layout). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.780 — consistently center folder and file labels in icon layout
+## Поточний delivery: v0.13.781 — consistently center folder and file labels in icon layout
 
 Статус: реалізовано; у макеті відображення іконок («Icon layout») файлового браузера та діалогу вибору файлів усунено небажане зсування тексту назв папок та файлів на лівий край при фокусуванні курсором; відтепер назви елементів завжди центруватимуться по горизонталі під іконкою плитки (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) як у невиділеному стані, так і при виділенні/наведенні курсору; переповнення тексту плавно обтинається ножицями NanoVG; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 
@@ -13,9 +13,27 @@
    - Уніфіковано відмальовку назв у режимі `icon_grid`: прибрано зсування на лівий край при `selected == true`, назва завжди відмальовується по центру плитки з підсвічуванням кольором `text_id`.
 3. Документація (`README.md`):
    - Оновлено підрозділ `Display Layouts` (пункт `Grid & Icon Views`) з описом стабільного центрування назв у макеті іконок.
-4. Підняти версію проекту до `0.13.780` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+4. Підняти версію проекту до `0.13.781` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
 
-## Попередній delivery: v0.13.779 — on-the-fly image viewer rotation via shoulder buttons L and R
+## Попередній delivery: v0.13.780 — diagnostic firmware, target translation tag and release URLs preview in interface translation menu
+
+Статус: реалізовано; у меню «Translate Interface» реалізовано прозоре діагностичне відображення версії системного ПЗ консолі, визначеного цільового тегу перекладу та точних GitHub URL джерел до початку будь-якого завантаження; у заголовку меню постійно відображаються TitleStats («FW ...» та цільовий тег); додано перший діагностичний пункт «Console Firmware» із детальним модальним вікном (прошивка, регіон, теги релізу/метаданих та повні посилання); для дії «Load/Refresh translations» додано попереднє інформування з HoldConfirm та показ точних URL у повідомленнях передачі ProgressBox; для мовних елементів виведено прямий URL архіву в опис/підзаголовок, діалог встановлення розширено повною діагностикою (прошивка, тег, варіант заміни `replaces_...`, URL), а при відсутності прямого збігу з поточною мовою/регіоном надано вибір серед усіх доступних варіантів заміни; у `translation_policy.hpp` додано інлайн-хелпери `GetReleaseUrl` та `GetMetadataUrl` з юніт-тестами; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/include/ui/menus/settings/translation_policy.hpp`:
+   - Додано допоміжні функції `GetReleaseUrl(const std::string& target_tag)` та `GetMetadataUrl(const std::string& metadata_tag)` для централізованої побудови повних URL релізів та метаданих.
+2. У `sphaira/source/ui/menus/settings/settings_translations.cpp`:
+   - У `FetchAndCacheTranslations` та `InstallInterfaceTranslation` деталізовано виклики `pbox->NewTransfer` та `DownloadFile` із включенням цільових тегів та точних URL-адрес завантаження.
+3. У `sphaira/source/ui/menus/settings/settings_translate.cpp`:
+   - У конструкторі `TranslateMenu` та `OnFocusGained` додано виклик `SetTitleStats("FW " + fw, compat.available ? compat.target_tag : "Unsupported")`.
+   - У `BuildTranslateItems` першим елементом додано пункт діагностики «Console Firmware: <fw>» із показом відповідності тегу в описі та викликом детального модального вікна з усіма параметрами (прошивка, регіон, цільовий тег, тег метаданих, release URL, metadata API URL).
+   - У дію «Refresh / Load translations» додано опис із цільовим тегом і посиланням та захисне вікно HoldConfirmBox із попереднім переглядом параметрів.
+   - Для кожної мови в списку опис призначено на повний `entry.zip_url` (відображається в підзаголовку меню при навігації), а значення — на ім'я архіву `FileNameFromUrl`.
+   - При відсутності прямого збігу регіону/мови консолі користувачеві надається список усіх доступних замін замість блокування; у фінальному вікні підтвердження `HoldConfirmBox` виводиться повна діагностика: прошивка, тег, папка заміни `replaces_...`, ім'я архіву та URL перед стартом встановлення й перезавантаженням.
+4. У `tests/test_translation_policy.cpp`:
+   - Додано тест `test_urls()` для перевірки формування посилань релізів та метаданих.
+5. Документація (`README.md`):
+   - Додано новий розділ `## Interface Translation & Diagnostics` із описом діагностики сумісності, відображення джерел та гнучкого вибору мов заміни.
+6. Підняти версію проекту до `0.13.780` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
 
 Статус: реалізовано; у вбудованому переглядачі зображень файлового браузера реалізовано поворот перегляду зображення на льоту кнопками L (проти годинникової стрілки, -90°) та R (за годинниковою стрілкою, +90°); поворот здійснюється суто на рівні рендерингу (трансформація NanoVG) без зміни файлу, його даних чи атрибутів на диску; динамічно оновлюються ефективні розміри та межі панорамування/масштабування в'юпорта; додано локалізацію ключа "Rotate" для всіх 14 мов; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 

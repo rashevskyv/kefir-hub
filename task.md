@@ -1,13 +1,25 @@
-Актуальний delivery — **v0.13.780** (consistently center folder and file labels in icon layout). Завершені задачі збережено в
+Актуальний delivery — **v0.13.781** (consistently center folder and file labels in icon layout). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.780 (consistently center folder and file labels in icon layout)
+## Поточний delivery: v0.13.781 (consistently center folder and file labels in icon layout)
 
-- [x] `FILEBROWSER-ICON-CENTER-LABEL-780` — у `draw_name` (`sphaira/source/ui/menus/filebrowser/filebrowser_view.cpp`) прибрано зсування виділеного елемента на лівий край (`NVG_ALIGN_LEFT`) та виклик `m_scroll_name.Draw`; напис назви папки чи файлу під іконкою завжди центровано (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) в усіх станах фокусування/виділення.
-- [x] `FILEPICKER-ICON-CENTER-LABEL-780` — у макеті `icon_grid` діалогу вибору файлів (`sphaira/source/ui/menus/file_picker.cpp`) уніфіковано центрування назв під плитками: прибрано ліве вирівнювання при `selected == true`, назва залишається посередині.
-- [x] `README-ICON-CENTER-LABEL-780` — оновлено опис макетів `Grid & Icon Views` у `README.md`.
+- [x] `FILEBROWSER-ICON-CENTER-LABEL-781` — у `draw_name` (`sphaira/source/ui/menus/filebrowser/filebrowser_view.cpp`) прибрано зсування виділеного елемента на лівий край (`NVG_ALIGN_LEFT`) та виклик `m_scroll_name.Draw`; напис назви папки чи файлу під іконкою завжди центровано (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) в усіх станах фокусування/виділення.
+- [x] `FILEPICKER-ICON-CENTER-LABEL-781` — у макеті `icon_grid` діалогу вибору файлів (`sphaira/source/ui/menus/file_picker.cpp`) уніфіковано центрування назв під плитками: прибрано ліве вирівнювання при `selected == true`, назва залишається посередині.
+- [x] `README-ICON-CENTER-LABEL-781` — оновлено опис макетів `Grid & Icon Views` у `README.md`.
+- [x] `CMAKELISTS-VERSION-BUMP-781` — підняти `sphaira_VERSION` до `0.13.781`.
+- [x] `DOCS-BUMP-781` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.780 (diagnostic firmware, target translation tag and release URLs preview in interface translation menu)
+
+- [x] `POLICY-URL-HELPERS-780` — у `sphaira/include/ui/menus/settings/translation_policy.hpp` додано інлайн-хелпери `GetReleaseUrl` та `GetMetadataUrl` для централізованої побудови повних URL релізів та api.json, додано юніт-тест `test_urls()` у `tests/test_translation_policy.cpp`.
+- [x] `SETTINGS-TRANSLATE-TITLE-STATS-780` — у `TranslateMenu::TranslateMenu` та `TranslateMenu::OnFocusGained` (`sphaira/source/ui/menus/settings/settings_translate.cpp`) підключено `SetTitleStats` для постійного виведення «FW <версія>» та цільового тегу релізу в шапці меню.
+- [x] `SETTINGS-TRANSLATE-DIAG-ITEM-780` — у `BuildTranslateItems` першим елементом додано інформаційний пункт діагностики прошивки консолі з показом тегу та release URL в описі та модальним вікном `OptionBox` (прошивка, регіон, цільовий тег, тег метаданих, посилання на реліз та api.json).
+- [x] `SETTINGS-TRANSLATE-LOAD-PREVIEW-780` — дію «Load / Refresh translations» доповнено відображенням цільового тегу та URL в описі й захисним `HoldConfirmBox` із попереднім інформуванням перед початком завантаження списку мов.
+- [x] `SETTINGS-TRANSLATE-LANGUAGE-URL-FALLBACK-780` — у списку мов опис містить повний URL архіву (`entry.zip_url`) для відображення в підзаголовку при фокусі; вікно встановлення розширено повною діагностикою (прошивка, тег, варіант заміни `replaces_...`, ім'я та URL); при відсутності точного збігу за мовою/регіоном надано вибір усіх варіантів заміни замість блокування.
+- [x] `SETTINGS-TRANSLATE-PROGRESS-URLS-780` — у `FetchAndCacheTranslations` та `InstallInterfaceTranslation` (`sphaira/source/ui/menus/settings/settings_translations.cpp`) оновлено повідомлення `ProgressBox` та `DownloadFile` із зазначенням повних URL-адрес та тегів.
+- [x] `README-INTERFACE-TRANSLATION-780` — у `README.md` додано розділ `## Interface Translation & Diagnostics` із детальним описом механізму сумісності та діагностики перекладів.
 - [x] `CMAKELISTS-VERSION-BUMP-780` — підняти `sphaira_VERSION` до `0.13.780`.
 - [x] `DOCS-BUMP-780` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
 

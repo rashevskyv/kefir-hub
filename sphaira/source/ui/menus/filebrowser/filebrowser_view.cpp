@@ -413,16 +413,11 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         if (icon_grid) {
             const Vec4 preview{x + 4.f, y + 4.f, w - 8.f, h - 32.f};
             const auto draw_name = [&](const char* name) {
-                if (selected) {
-                    m_scroll_name.Draw(vg, true, x + 6.f, y + h - 14.f, w - 12.f, 14.f,
-                        NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), name);
-                } else {
-                    nvgSave(vg);
-                    nvgIntersectScissor(vg, x + 4.f, y + h - 26.f, w - 8.f, 24.f);
-                    gfx::drawTextArgs(vg, x + w / 2.f, y + h - 14.f, 14.f,
-                        NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "%s", name);
-                    nvgRestore(vg);
-                }
+                nvgSave(vg);
+                nvgIntersectScissor(vg, x + 4.f, y + h - 26.f, w - 8.f, 24.f);
+                gfx::drawTextArgs(vg, x + w / 2.f, y + h - 14.f, 14.f,
+                    NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(text_id), "%s", name);
+                nvgRestore(vg);
             };
             if (m_menu->IsFolderPicker() && i == 0) {
                 file_icon::DrawFolderShape(vg, theme, preview);
