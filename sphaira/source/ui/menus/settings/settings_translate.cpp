@@ -102,6 +102,19 @@ auto FormatUnavailableMsg(const std::string& fw) -> std::string {
     return msg;
 }
 
+auto GetRegionName(SetRegion region) -> std::string {
+    switch (region) {
+        case SetRegion_JPN: return "Japan";
+        case SetRegion_USA: return "USA";
+        case SetRegion_EUR: return "Europe";
+        case SetRegion_AUS: return "Australia";
+        case SetRegion_CHN: return "China";
+        case SetRegion_KO: return "Korea";
+        case SetRegion_TWN: return "Taiwan";
+        default: return "Unknown";
+    }
+}
+
 auto BuildTranslateItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -109,13 +122,14 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     SetRegion console_region = SetRegion_EUR;
     setGetRegionCode(&console_region);
     const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
+    const auto reg_name = GetRegionName(console_region);
 
     if (!compat.available) {
         const auto msg = FormatUnavailableMsg(fw);
         items.emplace_back(SettingsItem{
-            "Translations unavailable"_i18n,
+            "Console Firmware: " + fw,
             msg,
-            [](){ return std::string{}; },
+            [](){ return "Unsupported"_i18n; },
             [msg]() {
                 App::Push<OptionBox>(msg, "OK"_i18n);
             },
@@ -136,6 +150,29 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         return items;
     }
 
+    const auto release_url = GetReleaseUrl(compat.target_tag);
+    const auto meta_url = GetMetadataUrl(compat.metadata_tag);
+
+    // Diagnostics / Status item
+    items.emplace_back(SettingsItem{
+        "Console Firmware: " + fw,
+        "Target: " + compat.target_tag + " | " + release_url,
+        [compat](){ return compat.target_tag; },
+        [fw, compat, reg_name, release_url, meta_url]() {
+            std::string diag = "System Firmware: " + fw + "\n"
+                + "Console Region: " + reg_name + "\n"
+                + "Target Tag: " + compat.target_tag + "\n"
+                + "Metadata Tag: " + compat.metadata_tag + "\n\n"
+                + "Release URL:\n" + release_url + "\n\n"
+                + "Metadata URL:\n" + meta_url;
+            if (compat.warning_required) {
+                diag += "\n\n" + "Note: Fallback mode active (firmware newer than release)."_i18n;
+            }
+            App::Push<OptionBox>(diag, "OK"_i18n);
+        },
+        SettingsItemKind::Normal,
+    });
+
     auto cached_entries = LoadTranslationsCache(TRANSLATIONS_CACHE_PATH, compat.target_tag);
     for (auto& entry : cached_entries) {
         entry.warning_required = compat.warning_required;
@@ -144,10 +181,13 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakePackageAction({
         has_cache ? "Refresh translations"_i18n : "Load translations"_i18n,
-        has_cache ? "Refresh translations matching your firmware."_i18n : "Load translations matching your firmware."_i18n,
+        "Target: " + compat.target_tag + " | " + release_url,
         [compat, fw](auto pbox) -> Result {
             return FetchAndCacheTranslations(pbox, compat.target_tag, compat.metadata_tag, fw, compat.warning_required);
         },
+        true,
+        "Fetch translations for firmware " + fw + "?\n\nTarget Tag: " + compat.target_tag + "\nRelease URL:\n" + release_url + "\n\nHold A to continue.",
+        0.5f,
     }));
 
     items.emplace_back(MakePackageAction({
@@ -164,11 +204,11 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
             entry.name,
-            "Install interface translation."_i18n,
-            [](){
-                return std::string{};
-            },
+            entry.zip_url,
             [entry](){
+                return FileNameFromUrl(entry.zip_url);
+            },
+            [entry, fw, compat](){
                 const auto& options = entry.replacements;
                 if (options.empty()) {
                     App::PushErrorBox(Result_FsEmpty, "No replacement languages found"_i18n);
@@ -190,33 +230,33 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                     }
                 }
 
-                if (applicable_options.empty()) {
-                    std::string msg = "To apply this translation, you must select one of the required variations in the console settings:\n"_i18n;
-                    for (const auto& opt : options) {
-                        msg += "- " + opt.first + "\n";
-                    }
-                    App::Push<OptionBox>(msg, "OK"_i18n);
-                    return;
-                }
+                const bool has_direct_match = !applicable_options.empty();
+                const auto& choices = has_direct_match ? applicable_options : options;
 
                 PopupList::Items labels;
-                labels.reserve(applicable_options.size());
-                for (const auto& [label, dir] : applicable_options) {
+                labels.reserve(choices.size());
+                for (const auto& [label, dir] : choices) {
                     labels.push_back(label);
                 }
 
                 App::Push<PopupList>(
-                    "Replace language"_i18n,
+                    has_direct_match ? "Replace language"_i18n : "Select language to replace"_i18n,
                     labels,
-                    [entry, applicable_options](auto index){
+                    [entry, choices, fw, compat](auto index){
                         if (!index) {
                             return;
                         }
 
-                        const auto dir = applicable_options[*index].second;
-                        const auto start_install = [entry, dir]() {
+                        const auto dir = choices[*index].second;
+                        const auto start_install = [entry, dir, fw, compat]() {
+                            const std::string confirm_msg = "Firmware: " + fw + " (" + compat.target_tag + ")\n"
+                                + "Replacing: " + dir + "\n"
+                                + "Archive: " + FileNameFromUrl(entry.zip_url) + "\n"
+                                + "URL:\n" + entry.zip_url + "\n\n"
+                                + "This will replace the selected system interface language and reboot the console."_i18n;
+
                             App::Push<HoldConfirmBox>(
-                                "This will replace the selected system interface language and reboot the console."_i18n,
+                                confirm_msg,
                                 0.5f,
                                 [entry, dir](bool confirmed){
                                     if (!confirmed) {
@@ -294,6 +334,12 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 } // namespace
 
 TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_None} {
+    const std::string fw = hats::getSystemFirmware();
+    SetRegion console_region = SetRegion_EUR;
+    setGetRegionCode(&console_region);
+    const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
+    this->SetTitleStats("FW " + fw, compat.available ? compat.target_tag : "Unsupported");
+
     m_items = BuildTranslateItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
@@ -314,6 +360,12 @@ TranslateMenu::~TranslateMenu() = default;
 
 void TranslateMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    const std::string fw = hats::getSystemFirmware();
+    SetRegion console_region = SetRegion_EUR;
+    setGetRegionCode(&console_region);
+    const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
+    this->SetTitleStats("FW " + fw, compat.available ? compat.target_tag : "Unsupported");
+
     std::string item_label;
     if (!m_items.empty()) {
         item_label = m_items[m_index].label;

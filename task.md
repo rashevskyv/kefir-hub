@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.779** (on-the-fly image viewer rotation via shoulder buttons L and R). Завершені задачі збережено в
+Актуальний delivery — **v0.13.780** (consistently center folder and file labels in icon layout). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.779 (on-the-fly image viewer rotation via shoulder buttons L and R)
+## Поточний delivery: v0.13.780 (consistently center folder and file labels in icon layout)
+
+- [x] `FILEBROWSER-ICON-CENTER-LABEL-780` — у `draw_name` (`sphaira/source/ui/menus/filebrowser/filebrowser_view.cpp`) прибрано зсування виділеного елемента на лівий край (`NVG_ALIGN_LEFT`) та виклик `m_scroll_name.Draw`; напис назви папки чи файлу під іконкою завжди центровано (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) в усіх станах фокусування/виділення.
+- [x] `FILEPICKER-ICON-CENTER-LABEL-780` — у макеті `icon_grid` діалогу вибору файлів (`sphaira/source/ui/menus/file_picker.cpp`) уніфіковано центрування назв під плитками: прибрано ліве вирівнювання при `selected == true`, назва залишається посередині.
+- [x] `README-ICON-CENTER-LABEL-780` — оновлено опис макетів `Grid & Icon Views` у `README.md`.
+- [x] `CMAKELISTS-VERSION-BUMP-780` — підняти `sphaira_VERSION` до `0.13.780`.
+- [x] `DOCS-BUMP-780` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.779 (on-the-fly image viewer rotation via shoulder buttons L and R)
 
 - [x] `FILEVIEW-ROTATE-IMAGE-ACTION-779` — у `Menu::LoadImageFile` (`sphaira/source/ui/menus/file_viewer/file_viewer_image.cpp`) прив'язано дію повороту `"Rotate"_i18n` до кнопок L/R (`\uE0E4 / \uE0E5`), реалізовано метод `Menu::RotateImage(s64 direction)` із циклічним обчисленням `m_rotation`, блокуванням при активному L2 zoom та скиданням в'юпорта `m_viewport.Reset()`.
 - [x] `FILEVIEW-ROTATE-RENDER-VIEWPORT-779` — у `Menu::Update` та `Menu::Draw` (`sphaira/source/ui/menus/file_viewer.cpp`) додано підтримку кута повороту `m_rotation` (0°, 90°, 180°, 270°): коректні габарити `eff_w`/`eff_h` для панорамування/масштабування `ImageViewport` та локальна трансформація рендерингу NanoVG (`nvgTranslate`, `nvgRotate`, `nvgImagePattern`, `nvgRoundedRect`, `nvgFillPaint`) без зміни самого файлу чи його атрибутів на диску.

@@ -71,4 +71,18 @@ inline auto TranslationExtractFolder(const std::string& zip_name) -> std::string
     return folder;
 }
 
+inline auto GetReleaseUrl(const std::string& target_tag) -> std::string {
+    if (target_tag.empty()) {
+        return {};
+    }
+    return "https://github.com/NX-Family/NX-Translation/releases/tag/" + target_tag;
+}
+
+inline auto GetMetadataUrl(const std::string& metadata_tag) -> std::string {
+    if (metadata_tag.empty()) {
+        return {};
+    }
+    return "https://raw.githubusercontent.com/NX-Family/NX-Translation/" + metadata_tag + "/api.json";
+}
+
 } // namespace sphaira::ui::menu::settings

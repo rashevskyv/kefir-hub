@@ -98,10 +98,10 @@ auto ParseDbiTranslations(const std::string& path) -> std::vector<DbiTranslation
 }
 
 auto FetchAndCacheTranslations(ProgressBox* pbox, const std::string& target_tag, const std::string& metadata_tag, const std::string& fw, bool warning_required) -> Result {
-    pbox->NewTransfer("Checking translations..."_i18n);
+    const std::string rel_url = "https://api.github.com/repos/NX-Family/NX-Translation/releases/tags/" + target_tag;
+    pbox->NewTransfer("Release: " + target_tag + " (" + rel_url + ")");
 
     // 1. Fetch exact release JSON from GitHub by target tag
-    const std::string rel_url = "https://api.github.com/repos/NX-Family/NX-Translation/releases/tags/" + target_tag;
     auto rel_res = curl::Api().ToMemory(
         curl::Url{rel_url},
         curl::Header{
@@ -138,8 +138,8 @@ auto FetchAndCacheTranslations(ProgressBox* pbox, const std::string& target_tag,
     }
 
     // 2. Fetch versioned api.json using metadata tag
-    pbox->NewTransfer("Fetching metadata..."_i18n);
     const std::string api_url = "https://raw.githubusercontent.com/NX-Family/NX-Translation/" + metadata_tag + "/api.json";
+    pbox->NewTransfer("Metadata: " + metadata_tag + " (" + api_url + ")");
     auto api_res = curl::Api().ToMemory(
         curl::Url{api_url},
         curl::OnProgress{pbox->OnDownloadProgressCallback()}
@@ -457,7 +457,7 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
     const auto zip_path = extract_dir + "/" + zip_name;
 
     R_TRY(DeletePath(extract_dir));
-    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + "...", entry.zip_url, zip_path));
+    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + " (" + entry.zip_url + ")", entry.zip_url, zip_path));
 
     // remove the currently installed translation first. if any of it can't be
     // deleted (e.g. a file is held open by fs.mitm), surface a dedicated code

@@ -171,6 +171,14 @@ static int test_extraction_folder() {
     return 0;
 }
 
+static int test_urls() {
+    CHECK(GetReleaseUrl("FW20.4.0-TR2.00") == "https://github.com/NX-Family/NX-Translation/releases/tag/FW20.4.0-TR2.00");
+    CHECK(GetMetadataUrl("FW17.0.1-TR1.18") == "https://raw.githubusercontent.com/NX-Family/NX-Translation/FW17.0.1-TR1.18/api.json");
+    CHECK(GetReleaseUrl("").empty());
+    CHECK(GetMetadataUrl("").empty());
+    return 0;
+}
+
 int main() {
     if (test_fw_16() != 0) return 1;
     if (test_fw_17_0_0() != 0) return 1;
@@ -181,6 +189,7 @@ int main() {
     if (test_fw_21_22_fallback() != 0) return 1;
     if (test_fw_unavailable() != 0) return 1;
     if (test_extraction_folder() != 0) return 1;
+    if (test_urls() != 0) return 1;
 
     std::printf("ok  translation_policy: %d checks passed\n", g_checks);
     return 0;

@@ -1,8 +1,21 @@
-Поточний delivery — **v0.13.779** (on-the-fly image viewer rotation via shoulder buttons L and R). Завершені плани збережено в
+Поточний delivery — **v0.13.780** (consistently center folder and file labels in icon layout). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.779 — on-the-fly image viewer rotation via shoulder buttons L and R
+## Поточний delivery: v0.13.780 — consistently center folder and file labels in icon layout
+
+Статус: реалізовано; у макеті відображення іконок («Icon layout») файлового браузера та діалогу вибору файлів усунено небажане зсування тексту назв папок та файлів на лівий край при фокусуванні курсором; відтепер назви елементів завжди центруватимуться по горизонталі під іконкою плитки (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) як у невиділеному стані, так і при виділенні/наведенні курсору; переповнення тексту плавно обтинається ножицями NanoVG; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/menus/filebrowser/filebrowser_view.cpp`:
+   - У лямбді `draw_name` для `icon_grid` прибрано перехід на ліве вирівнювання (`NVG_ALIGN_LEFT`) та виклик `m_scroll_name.Draw` при `selected == true`.
+   - Забезпечено постійне центрування назви (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE`) у точці `x + w / 2.f` під контуром папки чи файлу з маскою `nvgIntersectScissor` як для виділеного, так і для невиділеного станів.
+2. У `sphaira/source/ui/menus/file_picker.cpp`:
+   - Уніфіковано відмальовку назв у режимі `icon_grid`: прибрано зсування на лівий край при `selected == true`, назва завжди відмальовується по центру плитки з підсвічуванням кольором `text_id`.
+3. Документація (`README.md`):
+   - Оновлено підрозділ `Display Layouts` (пункт `Grid & Icon Views`) з описом стабільного центрування назв у макеті іконок.
+4. Підняти версію проекту до `0.13.780` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.779 — on-the-fly image viewer rotation via shoulder buttons L and R
 
 Статус: реалізовано; у вбудованому переглядачі зображень файлового браузера реалізовано поворот перегляду зображення на льоту кнопками L (проти годинникової стрілки, -90°) та R (за годинниковою стрілкою, +90°); поворот здійснюється суто на рівні рендерингу (трансформація NanoVG) без зміни файлу, його даних чи атрибутів на диску; динамічно оновлюються ефективні розміри та межі панорамування/масштабування в'юпорта; додано локалізацію ключа "Rotate" для всіх 14 мов; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 
