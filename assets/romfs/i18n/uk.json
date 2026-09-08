@@ -2292,5 +2292,14 @@
   "Restore profiles": "Відновити профілі",
   "Delete this profiles & play hours pack from the SD card?": "Видалити цей пак профілів і годин з SD?",
   "Delete pack": "Видалити пак",
-  "Could not delete the pack.": "Не вдалося видалити пак."
+  "Could not delete the pack.": "Не вдалося видалити пак.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Цей переклад створено для прошивки 20.4.0.\n\nВін може працювати на вашій прошивці, але деякий системний текст може бути відсутнім, неперекладеним або відображатися некоректно. Переклад, що відповідає вашій прошивці, буде використано автоматично, щойно він стане доступним.",
+  "Refresh translations": "Оновити переклади",
+  "Load translations": "Завантажити переклади",
+  "Refresh translations matching your firmware.": "Оновити переклади, що відповідають вашій прошивці.",
+  "Load translations matching your firmware.": "Завантажити переклади, що відповідають вашій прошивці.",
+  "Translations unavailable": "Переклади недоступні",
+  "Translations are not available for firmware %s.": "Переклади недоступні для прошивки %s.",
+  "Checking translations...": "Перевірка перекладів...",
+  "Fetching metadata...": "Отримання метаданих..."
 }

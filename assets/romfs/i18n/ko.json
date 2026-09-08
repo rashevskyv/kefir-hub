@@ -1917,5 +1917,14 @@
   "Backup file does not exist.": "백업 파일이 존재하지 않습니다.",
   "Send to another console": "다른 본체로 보내기",
   "A opens actions. X marks backups. Minus deletes.": "A로 작업 열기. X로 백업 선택. -로 삭제.",
-  "Could not rename the backup.": "백업 이름을 바꿀 수 없습니다."
+  "Could not rename the backup.": "백업 이름을 바꿀 수 없습니다.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "이 번역은 펌웨어 20.4.0용으로 제작되었습니다.\n\n사용 중인 펌웨어에서 작동할 수 있지만 일부 시스템 텍스트가 누락되거나 번역되지 않거나 잘못 표시될 수 있습니다. 해당 펌웨어와 일치하는 번역이 출시되면 자동으로 사용됩니다.",
+  "Refresh translations": "번역 새로고침",
+  "Load translations": "번역 불러오기",
+  "Refresh translations matching your firmware.": "펌웨어와 일치하는 번역을 새로고침합니다.",
+  "Load translations matching your firmware.": "펌웨어와 일치하는 번역을 불러옵니다.",
+  "Translations unavailable": "번역 사용 불가",
+  "Translations are not available for firmware %s.": "펌웨어 %s에서는 번역을 사용할 수 없습니다.",
+  "Checking translations...": "번역 확인 중...",
+  "Fetching metadata...": "메타데이터 가져오는 중..."
 }

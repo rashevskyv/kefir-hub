@@ -1918,5 +1918,14 @@
   "Backup file does not exist.": "Backup-Datei existiert nicht.",
   "Send to another console": "An andere Konsole senden",
   "A opens actions. X marks backups. Minus deletes.": "A öffnet Aktionen. X markiert Backups. Minus löscht.",
-  "Could not rename the backup.": "Backup konnte nicht umbenannt werden."
+  "Could not rename the backup.": "Backup konnte nicht umbenannt werden.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Diese Übersetzung wurde für die Firmware 20.4.0 erstellt.\n\nSie funktioniert möglicherweise auf Ihrer Firmware, aber einige Systemtexte können fehlen, unübersetzt sein oder falsch angezeigt werden. Eine zu Ihrer Firmware passende Übersetzung wird automatisch verwendet, sobald sie verfügbar ist.",
+  "Refresh translations": "Übersetzungen aktualisieren",
+  "Load translations": "Übersetzungen laden",
+  "Refresh translations matching your firmware.": "Passende Übersetzungen für Ihre Firmware aktualisieren.",
+  "Load translations matching your firmware.": "Passende Übersetzungen für Ihre Firmware laden.",
+  "Translations unavailable": "Übersetzungen nicht verfügbar",
+  "Translations are not available for firmware %s.": "Übersetzungen sind für Firmware %s nicht verfügbar.",
+  "Checking translations...": "Übersetzungen prüfen...",
+  "Fetching metadata...": "Metadaten abrufen..."
 }

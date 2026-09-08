@@ -1917,5 +1917,14 @@
   "Backup file does not exist.": "Säkerhetskopiefilen finns inte.",
   "Send to another console": "Skicka till en annan konsol",
   "A opens actions. X marks backups. Minus deletes.": "A öppnar åtgärder. X markerar säkerhetskopior. Minus raderar.",
-  "Could not rename the backup.": "Kunde inte byta namn på säkerhetskopian."
+  "Could not rename the backup.": "Kunde inte byta namn på säkerhetskopian.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Denna översättning skapades för firmware 20.4.0.\n\nDen kan fungera på din firmware, men viss systemtext kan saknas, vara oöversatt eller visas felaktigt. En översättning som matchar din firmware kommer att användas automatiskt när den blir tillgänglig.",
+  "Refresh translations": "Uppdatera översättningar",
+  "Load translations": "Läs in översättningar",
+  "Refresh translations matching your firmware.": "Uppdatera översättningar som matchar din firmware.",
+  "Load translations matching your firmware.": "Läs in översättningar som matchar din firmware.",
+  "Translations unavailable": "Översättningar ej tillgängliga",
+  "Translations are not available for firmware %s.": "Översättningar är inte tillgängliga för firmware %s.",
+  "Checking translations...": "Kontrollerar översättningar...",
+  "Fetching metadata...": "Hämtar metadata..."
 }

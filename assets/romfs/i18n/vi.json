@@ -1917,5 +1917,14 @@
   "Backup file does not exist.": "Tệp sao lưu không tồn tại.",
   "Send to another console": "Gửi đến máy console khác",
   "A opens actions. X marks backups. Minus deletes.": "A mở các thao tác. X đánh dấu bản sao lưu. Dấu trừ xóa.",
-  "Could not rename the backup.": "Không thể đổi tên bản sao lưu."
+  "Could not rename the backup.": "Không thể đổi tên bản sao lưu.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Bản dịch này được tạo cho firmware 20.4.0.\n\nNó có thể hoạt động trên firmware của bạn, nhưng một số văn bản hệ thống có thể bị thiếu, chưa được dịch hoặc hiển thị không chính xác. Bản dịch phù hợp với firmware của bạn sẽ được sử dụng tự động khi có sẵn.",
+  "Refresh translations": "Làm mới bản dịch",
+  "Load translations": "Tải bản dịch",
+  "Refresh translations matching your firmware.": "Làm mới bản dịch phù hợp với firmware của bạn.",
+  "Load translations matching your firmware.": "Tải bản dịch phù hợp với firmware của bạn.",
+  "Translations unavailable": "Bản dịch không khả dụng",
+  "Translations are not available for firmware %s.": "Bản dịch không khả dụng cho firmware %s.",
+  "Checking translations...": "Đang kiểm tra bản dịch...",
+  "Fetching metadata...": "Đang lấy siêu dữ liệu..."
 }

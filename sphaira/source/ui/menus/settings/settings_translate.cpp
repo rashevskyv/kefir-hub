@@ -3,7 +3,10 @@
 #include "ui/menus/settings/settings_kefir.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
+#include "ui/menus/settings/translation_policy.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
+#include "hats_version.hpp"
+#include "utils/utils.hpp"
 
 #include "app.hpp"
 #include "app_paths.hpp"
@@ -89,31 +92,61 @@ bool IsOptionApplicable(const std::pair<std::string, std::string>& option, SetLa
     return lang_matches && region_matches;
 }
 
+auto FormatUnavailableMsg(const std::string& fw) -> std::string {
+    std::string msg = "Translations are not available for firmware %s."_i18n;
+    if (const auto pos = msg.find("%s"); pos != std::string::npos) {
+        msg.replace(pos, 2, fw);
+    } else {
+        msg += " (" + fw + ")";
+    }
+    return msg;
+}
+
 auto BuildTranslateItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
-    const bool downloaded = fs::FileExists(TRANSLATE_PACKAGE);
+    const std::string fw = hats::getSystemFirmware();
+    SetRegion console_region = SetRegion_EUR;
+    setGetRegionCode(&console_region);
+    const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
+
+    if (!compat.available) {
+        const auto msg = FormatUnavailableMsg(fw);
+        items.emplace_back(SettingsItem{
+            "Translations unavailable"_i18n,
+            msg,
+            [](){ return std::string{}; },
+            [msg]() {
+                App::Push<OptionBox>(msg, "OK"_i18n);
+            },
+            SettingsItemKind::Normal,
+        });
+
+        items.emplace_back(MakePackageAction({
+            "Remove installed translation"_i18n,
+            "Delete installed interface translations and reboot."_i18n,
+            [](auto pbox) -> Result {
+                return RemoveInterfaceTranslation(pbox);
+            },
+            true,
+            "This removes installed system interface translation files and reboots the console."_i18n,
+            0.5f,
+        }));
+
+        return items;
+    }
+
+    auto cached_entries = LoadTranslationsCache(TRANSLATIONS_CACHE_PATH, compat.target_tag);
+    for (auto& entry : cached_entries) {
+        entry.warning_required = compat.warning_required;
+    }
+    const bool has_cache = !cached_entries.empty();
 
     items.emplace_back(MakePackageAction({
-        downloaded ? "Update language packs"_i18n : "Download language packs"_i18n,
-        downloaded ? "Update the UltraHand language package list."_i18n : "Download the UltraHand language package list."_i18n,
-        [downloaded](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                downloaded ? "Updating language packs..."_i18n : "Downloading language packs..."_i18n,
-                "https://github.com/rashevskyv/switch-translations-mirrors/raw/main/lang_packs_ultra.zip",
-                paths::DOWNLOADS + "/lang_packs.zip"
-            ));
-            R_TRY(MovePath(TRANSLATE_PACKAGE, TRANSLATE_PACKAGE_BACKUP));
-            R_TRY(DeletePath(TRANSLATE_PACKAGE_DIR));
-            fs::FsNativeSd fs;
-            R_TRY(fs.CreateDirectoryRecursively(TRANSLATE_PACKAGE_DIR));
-            if (fs::FileExists(TRANSLATE_PACKAGE_BACKUP)) {
-                R_TRY(CopyFileSimple(TRANSLATE_PACKAGE_BACKUP, std::string{TRANSLATE_PACKAGE_DIR} + "/package.ini.bkp"));
-            }
-            R_TRY(UnzipFile(pbox, paths::DOWNLOADS + "/lang_packs.zip", TRANSLATE_PACKAGE_DIR));
-            R_TRY(DeletePath(paths::DOWNLOADS + "/lang_packs.zip"));
-            R_SUCCEED();
+        has_cache ? "Refresh translations"_i18n : "Load translations"_i18n,
+        has_cache ? "Refresh translations matching your firmware."_i18n : "Load translations matching your firmware."_i18n,
+        [compat, fw](auto pbox) -> Result {
+            return FetchAndCacheTranslations(pbox, compat.target_tag, compat.metadata_tag, fw, compat.warning_required);
         },
     }));
 
@@ -128,7 +161,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         0.5f,
     }));
 
-    for (const auto& entry : ParseInterfaceTranslations(TRANSLATE_PACKAGE)) {
+    for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
             entry.name,
             "Install interface translation."_i18n,
@@ -136,7 +169,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                 return std::string{};
             },
             [entry](){
-                const auto options = ReadInterfaceReplacementOptions(entry);
+                const auto& options = entry.replacements;
                 if (options.empty()) {
                     App::PushErrorBox(Result_FsEmpty, "No replacement languages found"_i18n);
                     return;
@@ -147,12 +180,12 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                 if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
                     setMakeLanguage(languageCode, &console_lang);
                 }
-                SetRegion console_region = SetRegion_EUR;
-                setGetRegionCode(&console_region);
+                SetRegion console_reg = SetRegion_EUR;
+                setGetRegionCode(&console_reg);
 
                 std::vector<std::pair<std::string, std::string>> applicable_options;
                 for (const auto& opt : options) {
-                    if (IsOptionApplicable(opt, console_lang, console_region)) {
+                    if (IsOptionApplicable(opt, console_lang, console_reg)) {
                         applicable_options.push_back(opt);
                     }
                 }
@@ -181,56 +214,72 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                         }
 
                         const auto dir = applicable_options[*index].second;
-                        App::Push<HoldConfirmBox>(
-                            "This will replace the selected system interface language and reboot the console."_i18n,
-                            0.5f,
-                            [entry, dir](bool confirmed){
-                                if (!confirmed) {
-                                    return;
-                                }
-
-                                App::Push<ProgressBox>(
-                                    0,
-                                    "Installing"_i18n,
-                                    entry.name,
-                                    [entry, dir](auto pbox) -> Result {
-                                        return InstallInterfaceTranslation(pbox, entry, dir);
-                                    },
-                                    [](Result rc){
-                                        if (R_SUCCEEDED(rc)) {
-                                            return;
-                                        }
-
-                                        if (rc == Result_TranslationRemoveExistingFailed) {
-                                            App::Push<OptionBox>(
-                                                "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again."_i18n,
-                                                "Cancel"_i18n, "Remove and reboot"_i18n, 1,
-                                                [](auto op_index){
-                                                    if (op_index && *op_index) {
-                                                        App::Push<ProgressBox>(
-                                                            0,
-                                                            "Removing"_i18n,
-                                                            "",
-                                                            [](auto pbox) -> Result {
-                                                                return RemoveInterfaceTranslationAndReboot(pbox);
-                                                            },
-                                                            [](Result remove_rc){
-                                                                if (R_FAILED(remove_rc)) {
-                                                                    App::PushErrorBox(remove_rc, "Failed to remove translation"_i18n);
-                                                                }
-                                                            }
-                                                        );
-                                                    }
-                                                }
-                                            );
-                                            return;
-                                        }
-
-                                        App::PushErrorBox(rc, "Failed to install translation"_i18n);
+                        const auto start_install = [entry, dir]() {
+                            App::Push<HoldConfirmBox>(
+                                "This will replace the selected system interface language and reboot the console."_i18n,
+                                0.5f,
+                                [entry, dir](bool confirmed){
+                                    if (!confirmed) {
+                                        return;
                                     }
-                                );
-                            }
-                        );
+
+                                    App::Push<ProgressBox>(
+                                        0,
+                                        "Installing"_i18n,
+                                        entry.name,
+                                        [entry, dir](auto pbox) -> Result {
+                                            return InstallInterfaceTranslation(pbox, entry, dir);
+                                        },
+                                        [](Result rc){
+                                            if (R_SUCCEEDED(rc)) {
+                                                return;
+                                            }
+
+                                            if (rc == Result_TranslationRemoveExistingFailed) {
+                                                App::Push<OptionBox>(
+                                                    "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again."_i18n,
+                                                    "Cancel"_i18n, "Remove and reboot"_i18n, 1,
+                                                    [](auto op_index){
+                                                        if (op_index && *op_index) {
+                                                            App::Push<ProgressBox>(
+                                                                0,
+                                                                "Removing"_i18n,
+                                                                "",
+                                                                [](auto pbox) -> Result {
+                                                                    return RemoveInterfaceTranslationAndReboot(pbox);
+                                                                },
+                                                                [](Result remove_rc){
+                                                                    if (R_FAILED(remove_rc)) {
+                                                                        App::PushErrorBox(remove_rc, "Failed to remove translation"_i18n);
+                                                                    }
+                                                                }
+                                                            );
+                                                        }
+                                                    }
+                                                );
+                                                return;
+                                            }
+
+                                            App::PushErrorBox(rc, "Failed to install translation"_i18n);
+                                        }
+                                    );
+                                }
+                            );
+                        };
+
+                        if (entry.warning_required) {
+                            App::Push<OptionBox>(
+                                "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available."_i18n,
+                                "Cancel"_i18n, "Continue"_i18n, 1,
+                                [start_install](auto op_index){
+                                    if (op_index && *op_index == 1) {
+                                        start_install();
+                                    }
+                                }
+                            );
+                        } else {
+                            start_install();
+                        }
                     }
                 );
             },

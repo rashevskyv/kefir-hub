@@ -1944,5 +1944,15 @@
   "Backup file does not exist.": "O arquivo de backup não existe.",
   "Send to another console": "Enviar para outro console",
   "A opens actions. X marks backups. Minus deletes.": "A abre ações. X marca backups. Menos exclui.",
-  "Could not rename the backup.": "Não foi possível renomear o backup."
+  "Could not rename the backup.": "Não foi possível renomear o backup.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically assim que estiver disponível.": "Esta tradução foi feita para o firmware 20.4.0.\n\nEla pode funcionar no seu firmware, mas alguns textos do sistema podem estar ausentes, não traduzidos ou exibidos incorretamente. Uma tradução compatível com o seu firmware será usada automaticamente assim que estiver disponível.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Esta tradução foi feita para o firmware 20.4.0.\n\nEla pode funcionar no seu firmware, mas alguns textos do sistema podem estar ausentes, não traduzidos ou exibidos incorretamente. Uma tradução compatível com o seu firmware será usada automaticamente assim que estiver disponível.",
+  "Refresh translations": "Atualizar traduções",
+  "Load translations": "Carregar traduções",
+  "Refresh translations matching your firmware.": "Atualizar traduções correspondentes ao seu firmware.",
+  "Load translations matching your firmware.": "Carregar traduções correspondentes ao seu firmware.",
+  "Translations unavailable": "Traduções indisponíveis",
+  "Translations are not available for firmware %s.": "Traduções não estão disponíveis para o firmware %s.",
+  "Checking translations...": "Verificando traduções...",
+  "Fetching metadata...": "Buscando metadados..."
 }

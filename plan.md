@@ -1,8 +1,19 @@
-Поточний delivery — **v0.13.771** (USB install Minimize / Expand and dedicated origin identification). Завершені плани збережено в
+Поточний delivery — **v0.13.772** (direct firmware-matched interface translations). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.771 — USB install Minimize / Expand and dedicated origin identification
+## Поточний delivery: v0.13.772 — direct firmware-matched interface translations
+
+Статус: реалізовано; пряма взаємодія з GitHub API NX-Family/NX-Translation за точним тегом релізу, метадані api.json із фолбеком на FW17.0.1-TR1.18 для FW16.1.0-TR1.09 та FW17.0.0-TR1.11, підтримка modern та legacy схем найменування архівів і коректна резолюція шляхів розпакування; compile/tests/NRO не запускаються за policy.
+
+1. Застосовано прямий запит точного релізу GitHub API за адресою `https://api.github.com/repos/NX-Family/NX-Translation/releases/tags/<target-tag>` без завантаження та перебору списку релізів.
+2. Відокремлено `target_tag` (реліз ZIP-архівів) та `metadata_tag` (реліз для завантаження `api.json`). Для старих версій FW16.1.0-TR1.09 та FW17.0.0-TR1.11 метадані беруться з FW17.0.1-TR1.18, тоді як наявність мов суворо визначається фактичними асетами цільового релізу.
+3. Додано детерміноване розпізнавання назв архівів для modern (`NX-Translation_<id>.zip`) та legacy (`TR1.09_<id>_FW16.1.0.zip` / `TR1.11_<id>_FW17.0.0.zip`) схем найменування.
+4. У `TranslationExtractFolder` реалізовано коректне визначення папки розпакування для legacy архівів (наприклад, `TR1.09_ukrainian_FW16.1.0.zip` -> `ukrainian_FW16.1.0`) зі збереженням поведінки modern архівів (`NX-` <-> `Nx-`).
+5. Посилено надійність кешування: перевірка помилок створення директорій `EnsureParentDirectory`, валідація створення та запису yyjson документа, безпечна перевірка рядкових типів `yyjson_is_str` у `LoadTranslationsCache` з ігноруванням пошкоджених записів.
+6. Хост-тест `tests/test_translation_policy.cpp` розширено перевірками `metadata_tag`, нормального `same-tag`, визначення папок розпакування legacy та modern архівів і збереження всіх меж сумісності прошивок.
+
+## Попередній delivery: v0.13.771 — USB install Minimize / Expand and dedicated origin identification
 
 Статус: реалізовано; для USB встановлення додано виокремлений `TransportOrigin::Usb`, розширено дію Minimize/Expand (кнопка L3) на всі стани очікування та перегляду черги, додано підказку " Expand" та тач-розгортання на міні-бейджі; compile/tests/NRO не запускаються за policy.
 

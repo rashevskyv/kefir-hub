@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.771** (USB install Minimize / Expand and dedicated origin identification). Завершені задачі збережено в
+Актуальний delivery — **v0.13.772** (direct firmware-matched interface translations). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.771 (USB install Minimize / Expand and dedicated origin identification)
+## Поточний delivery: v0.13.772 (direct firmware-matched interface translations)
+
+- [x] `TRANSLATIONS-DIRECT-772` — пряме отримання релізу за точним тегом з GitHub API та завантаження api.json без UltraHand mirror/package.ini.
+- [x] `TRANSLATIONS-COMPAT-772` — таблиця HOS із розділенням target_tag та metadata_tag (TR1.09/TR1.11 використовують metadata TR1.18), підтримка legacy та modern назв архівів.
+- [x] `TRANSLATIONS-EXTRACT-772` — коректна резолюція кореневої папки розпакування для legacy архівів у `TranslationExtractFolder` (`ukrainian_FW...`).
+- [x] `TRANSLATIONS-CACHE-772` — безпечна персистентність кешу, валідація викликів yyjson та перевірка рядкових типів у `LoadTranslationsCache`.
+- [x] `TRANSLATIONS-UI-772` — попередження для HOS 21.x–22.5.0, безпомилковий вибір опцій заміни та автоперемикання мови інтерфейсу.
+- [x] `TRANSLATIONS-VERIFY-772` — розширення хост-тесту `test_translation_policy.cpp` перевірками metadata_tag, folder extraction та range boundaries.
+- [x] `CMAKELISTS-VERSION-BUMP-772` — підняти `sphaira_VERSION` до `0.13.772`.
+- [x] `DOCS-BUMP-772` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.771 (USB install Minimize / Expand and dedicated origin identification)
 
 - [x] `USB-ORIGIN-ENUM-771` — додано `TransportOrigin::Usb` до `install_queue_state.hpp`, включено до `HasKnownBatchTotals`, прив'язано `Menu::Menu(u32 flags)` до `TransportOrigin::Usb` та `"PC Install (USB)"_i18n`.
 - [x] `USB-MINIMIZE-L3-ACTIONS-771` — у `dbi_menu.cpp` дію кнопки `L3` ("Minimize" / "Expand") додано до станів очікування (`State::WaitingForUsb`, `State::WaitingForList`, `State::Analysing`) та огляду черги (`State::ReviewQueue`).

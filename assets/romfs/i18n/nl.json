@@ -1917,5 +1917,14 @@
   "Backup file does not exist.": "Back-upbestand bestaat niet.",
   "Send to another console": "Verzenden naar een andere console",
   "A opens actions. X marks backups. Minus deletes.": "A opent acties. X markeert back-ups. Min verwijdert.",
-  "Could not rename the backup.": "Kon de back-up niet hernoemen."
+  "Could not rename the backup.": "Kon de back-up niet hernoemen.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Deze vertaling is gemaakt voor firmware 20.4.0.\n\nHet werkt mogelijk op uw firmware, maar sommige systeemteksten kunnen ontbreken, onvertaald zijn of onjuist worden weergegeven. Een vertaling die overeenkomt met uw firmware wordt automatisch gebruikt zodra deze beschikbaar is.",
+  "Refresh translations": "Vertalingen vernieuwen",
+  "Load translations": "Vertalingen laden",
+  "Refresh translations matching your firmware.": "Vertalingen voor uw firmware vernieuwen.",
+  "Load translations matching your firmware.": "Vertalingen voor uw firmware laden.",
+  "Translations unavailable": "Vertalingen niet beschikbaar",
+  "Translations are not available for firmware %s.": "Vertalingen zijn niet beschikbaar voor firmware %s.",
+  "Checking translations...": "Vertalingen controleren...",
+  "Fetching metadata...": "Metadata ophalen..."
 }

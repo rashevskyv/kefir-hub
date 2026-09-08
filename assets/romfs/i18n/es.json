@@ -1918,5 +1918,14 @@
   "Send to another console": "Enviar a otra consola",
   "A opens actions. X marks backups. Minus deletes.": "A abre acciones. X marca copias. Menos elimina.",
   "Could not rename the backup.": "No se pudo renombrar la copia de seguridad.",
-  "A opens actions. X marca copias. Menos elimina.": "A abre acciones. X marca copias. Menos elimina."
+  "A opens actions. X marca copias. Menos elimina.": "A abre acciones. X marca copias. Menos elimina.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "Esta traducción fue creada para la versión de firmware 20.4.0.\n\nPuede funcionar en su firmware, pero parte del texto del sistema puede faltar, no estar traducido o mostrarse incorrectamente. Se utilizará automáticamente una traducción que coincida con su firmware cuando esté disponible.",
+  "Refresh translations": "Actualizar traducciones",
+  "Load translations": "Cargar traducciones",
+  "Refresh translations matching your firmware.": "Actualizar traducciones compatibles con su firmware.",
+  "Load translations matching your firmware.": "Cargar traducciones compatibles con su firmware.",
+  "Translations unavailable": "Traducciones no disponibles",
+  "Translations are not available for firmware %s.": "Las traducciones no están disponibles para el firmware %s.",
+  "Checking translations...": "Comprobando traducciones...",
+  "Fetching metadata...": "Obteniendo metadatos..."
 }

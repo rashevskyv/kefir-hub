@@ -1917,5 +1917,14 @@
   "Backup file does not exist.": "バックアップファイルが存在しません。",
   "Send to another console": "別の本体に送信",
   "A opens actions. X marks backups. Minus deletes.": "Aでアクションを開く。Xで選択。-で削除。",
-  "Could not rename the backup.": "バックアップの名前を変更できませんでした。"
+  "Could not rename the backup.": "バックアップの名前を変更できませんでした。",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "この翻訳はファームウェア 20.4.0 向けに作成されました。\n\nお使いのファームウェアでも動作する可能性がありますが、一部のシステムテキストが表示されなかったり、未翻訳だったり、正しく表示されない場合があります。お使いのファームウェアに対応する翻訳が利用可能になり次第、自動的に適用されます。",
+  "Refresh translations": "翻訳を更新",
+  "Load translations": "翻訳を読み込む",
+  "Refresh translations matching your firmware.": "お使いのファームウェアに対応する翻訳を更新します。",
+  "Load translations matching your firmware.": "お使いのファームウェアに対応する翻訳を読み込みます。",
+  "Translations unavailable": "翻訳は利用できません",
+  "Translations are not available for firmware %s.": "ファームウェア %s の翻訳は利用できません。",
+  "Checking translations...": "翻訳を確認中...",
+  "Fetching metadata...": "メタデータを取得中..."
 }

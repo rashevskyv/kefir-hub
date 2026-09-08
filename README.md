@@ -279,6 +279,14 @@ The project includes a developer-focused Python utility (`tools/module_catalog/u
 - **Runtime Generation:** Generates the offline modules catalog (`assets/romfs/modules/homebrew_sysmodules.json`) and localization key suggestions for the main application.
 - **Runtime Integration:** Module Manager loads the embedded catalog immediately, refreshes a validated SD index directly from ndeadly's maintained list in the background, and resolves descriptions through the regular i18n files with an English fallback.
 
+## System Interface Translations
+
+Sphaira features an integrated system interface translation manager located in Settings -> Translate Interface:
+- **Direct Upstream Integration:** Fetches release packages and metadata directly from the official `NX-Family/NX-Translation` repository, ensuring fast and up-to-date downloads without intermediary proxies or third-party mirrors.
+- **Firmware Matching & Safe Metadata Fallback:** Automatically matches installed Horizon OS (HOS) firmware versions (16.0.0 through 22.5.0) to corresponding release packages. For firmware revisions prior to 17.0.1 where upstream releases omit `api.json`, language and replacement metadata are seamlessly retrieved from the earliest versioned specification (`FW17.0.1-TR1.18`) while strictly respecting the assets available in the target release.
+- **Dual Scheme Asset Handling:** Seamlessly resolves modern (`NX-Translation_<id>.zip`) and legacy (`TR..._<id>_FW...zip`) archive filenames and unpacks into their appropriate internal folder structures.
+- **Safe Installation & Replacement:** Automatically uninstalls existing translation overlays before applying new ones to avoid filesystem conflicts, prompts for target replacement language variations matching the console's active language and region, and triggers an automated reboot to apply changes cleanly.
+
 ## Building from source
 
 You will first need to install [devkitPro](https://devkitpro.org/wiki/Getting_Started).

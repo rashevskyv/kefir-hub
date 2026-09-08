@@ -17,21 +17,21 @@ struct DbiTranslationEntry {
 
 struct InterfaceTranslationEntry {
     std::string name;
-    std::string json_path;
+    std::string id;
     std::string zip_url;
+    std::vector<std::pair<std::string, std::string>> replacements;
+    bool warning_required{false};
 };
 
 namespace detail {
 
-inline const auto TRANSLATE_PACKAGE_DIR = paths::PACKAGES + "/Translate Interface";
-inline const auto TRANSLATE_PACKAGE = paths::PACKAGES + "/Translate Interface/package.ini";
-inline const auto TRANSLATE_PACKAGE_BACKUP = paths::PACKAGES + "/translate_interface.package.ini.bkp";
+inline const auto TRANSLATIONS_CACHE_PATH = paths::DATA_ROOT + "/cache/translations.json";
 
 auto DownloadFile(ProgressBox* pbox, const std::string& label, const std::string& url, const fs::FsPath& dst) -> Result;
 auto UnzipFile(ProgressBox* pbox, const fs::FsPath& zip, const fs::FsPath& dst) -> Result;
 auto ParseDbiTranslations(const std::string& path) -> std::vector<DbiTranslationEntry>;
-auto ParseInterfaceTranslations(const std::string& path) -> std::vector<InterfaceTranslationEntry>;
-auto ReadInterfaceReplacementOptions(const InterfaceTranslationEntry& entry) -> std::vector<std::pair<std::string, std::string>>;
+auto FetchAndCacheTranslations(ProgressBox* pbox, const std::string& target_tag, const std::string& metadata_tag, const std::string& fw, bool warning_required) -> Result;
+auto LoadTranslationsCache(const std::string& path, const std::string& expected_tag) -> std::vector<InterfaceTranslationEntry>;
 auto FileNameFromUrl(const std::string& url) -> std::string;
 auto TranslationExtractFolder(const std::string& zip_name) -> std::string;
 auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) -> Result;

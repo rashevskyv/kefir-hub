@@ -1971,5 +1971,14 @@
   "Backup file does not exist.": "备份文件不存在。",
   "Send to another console": "发送到另一台主机",
   "A opens actions. X marks backups. Minus deletes.": "A 打开操作菜单。X 标记备份。减号删除。",
-  "Could not rename the backup.": "无法重命名备份。"
+  "Could not rename the backup.": "无法重命名备份。",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "此翻译适用于固件 20.4.0。\n\n它可能可以在您的固件上运行，但某些系统文本可能会缺失、未翻译或显示不正确。一旦有适用于您固件的翻译，将自动使用。",
+  "Refresh translations": "刷新翻译",
+  "Load translations": "加载翻译",
+  "Refresh translations matching your firmware.": "刷新与您的固件匹配的翻译。",
+  "Load translations matching your firmware.": "加载与您的固件匹配的翻译。",
+  "Translations unavailable": "翻译不可用",
+  "Translations are not available for firmware %s.": "固件 %s 暂无可用翻译。",
+  "Checking translations...": "正在检查翻译...",
+  "Fetching metadata...": "正在获取元数据..."
 }

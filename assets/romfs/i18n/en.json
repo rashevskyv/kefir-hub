@@ -2263,5 +2263,14 @@
   "Restore profiles": "Restore profiles",
   "Delete this profiles & play hours pack from the SD card?": "Delete this profiles & play hours pack from the SD card?",
   "Delete pack": "Delete pack",
-  "Could not delete the pack.": "Could not delete the pack."
+  "Could not delete the pack.": "Could not delete the pack.",
+  "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.": "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available.",
+  "Refresh translations": "Refresh translations",
+  "Load translations": "Load translations",
+  "Refresh translations matching your firmware.": "Refresh translations matching your firmware.",
+  "Load translations matching your firmware.": "Load translations matching your firmware.",
+  "Translations unavailable": "Translations unavailable",
+  "Translations are not available for firmware %s.": "Translations are not available for firmware %s.",
+  "Checking translations...": "Checking translations...",
+  "Fetching metadata...": "Fetching metadata..."
 }
