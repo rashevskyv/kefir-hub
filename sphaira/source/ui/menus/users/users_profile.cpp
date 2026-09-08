@@ -591,6 +591,14 @@ void Menu::RunSetAvatar(std::vector<u8> jpeg) {
             return;
         }
         Refresh();
+        App::Push<OptionBox>(
+            "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"_i18n,
+            "Later"_i18n, "Reboot"_i18n, 1,
+            [](auto op_index) {
+                if (op_index && *op_index == 1) {
+                    utils::requestForcedReboot();
+                }
+            });
     }, 1, PRIO_PREEMPTIVE, 1024 * 64, false);
 }
 

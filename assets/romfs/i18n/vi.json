@@ -1926,5 +1926,6 @@
   "Translations unavailable": "Bản dịch không khả dụng",
   "Translations are not available for firmware %s.": "Bản dịch không khả dụng cho firmware %s.",
   "Checking translations...": "Đang kiểm tra bản dịch...",
-  "Fetching metadata...": "Đang lấy siêu dữ liệu..."
+  "Fetching metadata...": "Đang lấy siêu dữ liệu...",
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Đã thay đổi ảnh đại diện.\n\nThay đổi sẽ không có hiệu lực cho đến khi khởi động lại máy.\n\nKhởi động lại ngay?"
 }

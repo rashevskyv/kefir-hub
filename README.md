@@ -185,6 +185,12 @@ Manage installed Atmosphere background sysmodules directly from the console inte
 - **Module Description Registry:** Shows localized descriptions (supporting English and Ukrainian) in the menu subtitle, loaded from a persistent registry file on the SD card (`/config/kefir/modules.json`). If the registry file does not exist, it is generated with default entries for popular sysmodules (emuiibo, Mission Control, sys-clk, ldn_mitm, sys-ftpd).
 - **Reboot-Required Handling:** Safely detects modules that apply only after system reboot, blocking manual process toggles and prompting the user with a helpful notification.
 
+## User Profile Management
+
+Manage Nintendo Switch user profiles directly from **Tools -> Tools -> Users**:
+- **Profile Customization & Avatars:** Create, rename, delete, backup, and link user profiles. Set custom profile avatars from existing profiles, SD card images (`/config/kefir/avatars` or file picker), or SteamGridDB search.
+- **Reboot Prompt on Avatar Change:** Because Horizon OS only updates profile avatars system-wide (HOME menu and system applets) after a reboot, changing a profile avatar displays a prompt to reboot immediately or reboot later.
+
 ## Themes & Translations
 
 Sphaira features customizable theme options and multi-language support:

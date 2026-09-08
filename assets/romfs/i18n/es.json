@@ -1927,5 +1927,6 @@
   "Translations unavailable": "Traducciones no disponibles",
   "Translations are not available for firmware %s.": "Las traducciones no están disponibles para el firmware %s.",
   "Checking translations...": "Comprobando traducciones...",
-  "Fetching metadata...": "Obteniendo metadatos..."
+  "Fetching metadata...": "Obteniendo metadatos...",
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar cambiado.\n\nEl cambio no surtirá efecto hasta que se reinicie la consola.\n\n¿Reiniciar ahora?"
 }

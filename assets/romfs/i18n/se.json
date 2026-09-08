@@ -1926,5 +1926,6 @@
   "Translations unavailable": "Översättningar ej tillgängliga",
   "Translations are not available for firmware %s.": "Översättningar är inte tillgängliga för firmware %s.",
   "Checking translations...": "Kontrollerar översättningar...",
-  "Fetching metadata...": "Hämtar metadata..."
+  "Fetching metadata...": "Hämtar metadata...",
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar ändrad.\n\nÄndringen träder i kraft först när konsolen startas om.\n\nStarta om nu?"
 }

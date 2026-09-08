@@ -1,8 +1,23 @@
-Поточний delivery — **v0.13.773** (fix minimized install touch badge compile error and verify WSL build). Завершені плани збережено в
+Поточний delivery — **v0.13.774** (prompt reboot after setting user profile avatar). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.773 — fix minimized install touch badge compile error and verify WSL build
+## Поточний delivery: v0.13.774 — prompt reboot after setting user profile avatar
+
+Статус: реалізовано; у меню Tools -> Users після зміни аватарки профілю користувача додано запит на перезавантаження консолі (OptionBox) з поясненням, що новий аватар набуде чинності після перезавантаження, та можливістю перезавантажитися зараз або пізніше; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/menus/users/users_profile.cpp`:
+   - У `Menu::RunSetAvatar(std::vector<u8> jpeg)` після успішного запису аватара `account_user::SetImageJpeg(uid, jpeg)` та оновлення інтерфейсу `Refresh()` додано показ модального діалогу `App::Push<OptionBox>`.
+   - Текст повідомлення: `"Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"_i18n`.
+   - Опції вибору: `"Later"_i18n` (індекс 0) та `"Reboot"_i18n` (індекс 1, фокус за замовчуванням).
+   - При виборі "Reboot" викликається `utils::requestForcedReboot()`. При виборі "Later" або закритті кнопкою B користувач залишається у меню.
+2. Локалізація (`assets/romfs/i18n/*.json`):
+   - Додано рядок `"Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"` до всіх 14 мовних файлів із відповідними перекладами.
+3. Документація (`README.md`):
+   - Додано розділ `User Profile Management` із описом налаштування аватарів та модального запиту на перезавантаження.
+4. Підняти версію проекту до `0.13.774` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.773 — fix minimized install touch badge compile error and verify WSL build
 
 Статус: реалізовано; виправлено звернення до полів `TouchInfo` у `sphaira/source/app.cpp` для тапу по міні-бейджі згорнутого встановлення; повна компіляція NRO (`build/wsl_build.sh`) під Nintendo Switch та набір хост-тестів (`tests/run.sh`) у WSL успішно пройдені.
 

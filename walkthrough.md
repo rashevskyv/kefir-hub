@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.773** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.774** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.774 — prompt reboot after setting user profile avatar
+
+- Додано діалог із пропозицією перезавантаження консолі після встановлення аватара користувача:
+  1. Оскільки Horizon OS (qlaunch та системні аплети) оновлює відображення зміненого аватара профілю лише після перезавантаження, у `sphaira/source/ui/menus/users/users_profile.cpp` (`Menu::RunSetAvatar`) після успішного збереження зображення через `account_user::SetImageJpeg(uid, jpeg)` та оновлення локального списку `Refresh()` додано показ `App::Push<OptionBox>`.
+  2. Вікно запиту інформує користувача: `"Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"` та надає дві кнопки: `"Later"` (індекс 0) та `"Reboot"` (індекс 1, за замовчуванням).
+  3. При виборі `"Reboot"` ініціюється виклик `utils::requestForcedReboot()`, який перезавантажує консоль для миттєвого застосування нового аватара. При виборі `"Later"` (або натисканні B) діалог закривається, повертаючи користувача до меню профілів.
+  4. Новий ключ додано до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+  5. Розділ `User Profile Management` додано до `README.md`.
+  6. Версію піднято до `0.13.774` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.773 — fix minimized install touch badge compile error and verify WSL build
 

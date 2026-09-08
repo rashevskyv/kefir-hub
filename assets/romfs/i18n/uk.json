@@ -2301,5 +2301,6 @@
   "Translations unavailable": "Переклади недоступні",
   "Translations are not available for firmware %s.": "Переклади недоступні для прошивки %s.",
   "Checking translations...": "Перевірка перекладів...",
-  "Fetching metadata...": "Отримання метаданих..."
+  "Fetching metadata...": "Отримання метаданих...",
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Аватар змінено.\n\nЗміни не набудуть чинності до перезавантаження консолі.\n\nПерезавантажити зараз?"
 }
