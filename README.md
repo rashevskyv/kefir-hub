@@ -190,6 +190,7 @@ Manage installed Atmosphere background sysmodules directly from the console inte
 Manage Nintendo Switch user profiles directly from **Tools -> Tools -> Users**:
 - **Profile Customization & Avatars:** Create, rename, delete, backup, and link user profiles. Set custom profile avatars from existing profiles, SD card images (`/config/kefir/avatars` or file picker), or SteamGridDB search.
 - **Reboot Prompt on Avatar Change:** Because Horizon OS only updates profile avatars system-wide (HOME menu and system applets) after a reboot, changing a profile avatar displays a prompt to reboot immediately or reboot later.
+- **One-Time TegraExplorer Restore Notification:** When restoring user profiles & play hours packs through TegraExplorer, if restoration does not complete, a concise status notification is presented once upon returning to Kefir Hub, cleanly persisting the applied state so it does not repeat on subsequent launches.
 
 ## Themes & Translations
 

@@ -1,8 +1,22 @@
-Поточний delivery — **v0.13.775** (eliminate interior tab overlap from vector folder icon). Завершені плани збережено в
+Поточний delivery — **v0.13.776** (single-prompt concise notification on incomplete TegraExplorer restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.775 — eliminate interior tab overlap from vector folder icon
+## Поточний delivery: v0.13.776 — single-prompt concise notification on incomplete TegraExplorer restore
+
+Статус: реалізовано; у `sphaira/source/ui/menus/users/users_restore.cpp` (`OfferPendingRestore`) для фази `wait_nand_restore` у разі відсутності маркера завершення TE додано переведення pending стану в `applied` через `SavePending`, завдяки чому сповіщення показується лише один раз і більше не спливає при наступних запусках програми; з модального повідомлення прибрано зайвий текст «If the console will not boot...», оскільки консоль уже успішно завантажена; додано ключ перекладу до 14 мовних файлів `assets/romfs/i18n/*.json`; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/menus/users/users_restore.cpp`:
+   - У блоці перевірки `pending.phase == "wait_nand_restore"` у гілці `else` додано збереження `account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok)` перед показом `OptionBox`.
+   - Текст повідомлення спрощено до чистого лаконічного статусу `"TegraExplorer did not finish restoring profiles & play hours."_i18n` без нерелевантного для вже запущеної системи блоку інструкцій щодо невдалого завантаження консолі.
+   - У гілці `pending.phase == "wait_link"` в `else` також додано `SavePending(pending.pack_dirs, "applied", pending.snapshot_ok)` для запобігання аналогічного циклічного показу.
+2. Локалізація (`assets/romfs/i18n/*.json`):
+   - Додано ключ `"TegraExplorer did not finish restoring profiles & play hours."` до всіх 14 мовних файлів з відповідними перекладами.
+3. Документація (`README.md`):
+   - Оновлено підрозділ `User Profile Management` із зазначенням одноразового інформування про незавершений рестор у TegraExplorer.
+4. Підняти версію проекту до `0.13.776` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.775 — eliminate interior tab overlap from vector folder icon
 
 Статус: реалізовано; у `sphaira/source/ui/file_icon.cpp` (`StrokeFolder`) ліквідовано паразитне внутрішнє перекриття та лінію під язичком папки; арка язичка малюється як відкритий контур, що спирається на верхнє ребро тіла папки (`top_body`), а тіло папки формує завершений прямокутник зі скругленими кутами та суцільним верхнім горизонтальним роздільником; compile/tests/NRO не запускаються за policy.
 

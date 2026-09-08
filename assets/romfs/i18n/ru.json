@@ -2256,5 +2256,6 @@
   "Translations are not available for firmware %s.": "Переводы недоступны для прошивки %s.",
   "Checking translations...": "Проверка переводов...",
   "Fetching metadata...": "Получение метаданных...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Аватар изменен.\n\nИзменения вступят в силу только после перезагрузки консоли.\n\nПерезагрузить сейчас?"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Аватар изменен.\n\nИзменения вступят в силу только после перезагрузки консоли.\n\nПерезагрузить сейчас?",
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer не завершил восстановление профилей и часов."
 }

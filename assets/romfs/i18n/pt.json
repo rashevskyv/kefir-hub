@@ -1955,5 +1955,6 @@
   "Translations are not available for firmware %s.": "Traduções não estão disponíveis para o firmware %s.",
   "Checking translations...": "Verificando traduções...",
   "Fetching metadata...": "Buscando metadados...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar alterado.\n\nA alteração só terá efeito após reiniciar o console.\n\nReiniciar agora?"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar alterado.\n\nA alteração só terá efeito após reiniciar o console.\n\nReiniciar agora?",
+  "TegraExplorer did not finish restoring profiles & play hours.": "O TegraExplorer não concluiu a restauração de perfis e horas de jogo."
 }

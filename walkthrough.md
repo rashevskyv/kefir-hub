@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.775** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.776** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.776 — single-prompt concise notification on incomplete TegraExplorer restore
+
+- Виправлено обробку стану незавершеного відновлення профілів і годин гри через TegraExplorer:
+  1. Раніше у `sphaira/source/ui/menus/users/users_restore.cpp` (`OfferPendingRestore`) при поверненні з TegraExplorer без маркера успішного завершення (`nand_restored.ok`) статус відновлення не фіксувався в `state.json`. Через це при кожному наступному запуску Kefir Hub повторно завантажував фазу `wait_nand_restore` і нескінченно показував модальне вікно помилки.
+  2. Додано збереження стану `account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok)` у гілку незавершеного відновлення (як для `wait_nand_restore`, так і для `wait_link`), завдяки чому сповіщення показується строго один раз.
+  3. Текст сповіщення скорочено до лаконічного `"TegraExplorer did not finish restoring profiles & play hours."_i18n`: повністю прибрано блок «If the console will not boot...», оскільки консоль уже успішно завантажилася в Horizon OS і перебуває в робочому стані.
+  4. Додано переклад нового рядка до всіх 14 мовних файлів локалізації `assets/romfs/i18n/*.json`.
+  5. Оновлено документацію `README.md` у підрозділі `User Profile Management`.
+  6. Версію піднято до `0.13.776` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.775 — eliminate interior tab overlap from vector folder icon
 

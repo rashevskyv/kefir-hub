@@ -1927,5 +1927,6 @@
   "Translations are not available for firmware %s.": "ファームウェア %s の翻訳は利用できません。",
   "Checking translations...": "翻訳を確認中...",
   "Fetching metadata...": "メタデータを取得中...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "アバターを変更しました。\n\n変更は本体を再起動するまで反映されません。\n\n今すぐ再起動しますか？"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "アバターを変更しました。\n\n変更は本体を再起動するまで反映されません。\n\n今すぐ再起動しますか？",
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorerでユーザーとプレイ時間の復元が完了しませんでした。"
 }

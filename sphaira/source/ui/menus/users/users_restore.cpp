@@ -603,6 +603,7 @@ auto OfferPendingRestore() -> bool {
                 "Profile created and Nintendo Account link applied. Reboot is done."_i18n,
                 "OK"_i18n);
         } else {
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
             App::Push<OptionBox>(
                 "TegraExplorer did not apply the Nintendo Account link.\n\n"
                 "An extra unlinked profile may exist on this console.\n"
@@ -621,11 +622,9 @@ auto OfferPendingRestore() -> bool {
                 "Profiles and play hours were restored. Reboot is done."_i18n,
                 "OK"_i18n);
         } else {
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
             App::Push<OptionBox>(
-                "TegraExplorer did not finish restoring profiles & play hours.\n\n"
-                "If the console will not boot:\n"
-                "• hekate > restore your SYSTEM backup, or\n"
-                "• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot is on SD)."_i18n,
+                "TegraExplorer did not finish restoring profiles & play hours."_i18n,
                 "OK"_i18n);
         }
         return true;

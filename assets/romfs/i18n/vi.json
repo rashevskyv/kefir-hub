@@ -1927,5 +1927,6 @@
   "Translations are not available for firmware %s.": "Bản dịch không khả dụng cho firmware %s.",
   "Checking translations...": "Đang kiểm tra bản dịch...",
   "Fetching metadata...": "Đang lấy siêu dữ liệu...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Đã thay đổi ảnh đại diện.\n\nThay đổi sẽ không có hiệu lực cho đến khi khởi động lại máy.\n\nKhởi động lại ngay?"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Đã thay đổi ảnh đại diện.\n\nThay đổi sẽ không có hiệu lực cho đến khi khởi động lại máy.\n\nKhởi động lại ngay?",
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer chưa hoàn tất khôi phục hồ sơ và thời gian chơi."
 }

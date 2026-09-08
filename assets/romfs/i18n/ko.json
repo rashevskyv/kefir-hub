@@ -1927,5 +1927,6 @@
   "Translations are not available for firmware %s.": "펌웨어 %s에서는 번역을 사용할 수 없습니다.",
   "Checking translations...": "번역 확인 중...",
   "Fetching metadata...": "메타데이터 가져오는 중...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "아바타가 변경되었습니다。\n\n변경 사항은 본체를 다시 시작해야 적용됩니다。\n\n지금 다시 시작하시겠습니까?"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "아바타가 변경되었습니다。\n\n변경 사항은 본체를 다시 시작해야 적용됩니다。\n\n지금 다시 시작하시겠습니까?",
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer에서 프로필 및 플레이 시간 복원을 완료하지 못했습니다."
 }

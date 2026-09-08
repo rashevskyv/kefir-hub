@@ -2273,5 +2273,6 @@
   "Translations are not available for firmware %s.": "Translations are not available for firmware %s.",
   "Checking translations...": "Checking translations...",
   "Fetching metadata...": "Fetching metadata...",
-  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"
+  "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?",
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer did not finish restoring profiles & play hours."
 }
