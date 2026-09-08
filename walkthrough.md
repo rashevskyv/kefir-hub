@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.781** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.782** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.782 — fix account link detection via Baas administrator IPC
+
+- Виправлено критичну проблему з визначенням статусу прив'язки облікових записів Nintendo Account (коли система та Linkalho бачать профіль як неприв'язаний, а Sphaira помилково вважала його зв'язаним і блокувала пропозицію прив'язати):
+  1. **Причина проблеми**: Раніше у `QueryHorizonUserLink` та `QueryNintendoAccountId` (`sphaira/source/account/account_link.cpp`) запит виконувався через службу `acc:su` команду 102 (`GetBaasAccountManagerForSystemService`), повертаючи `IManagerForSystemService`, на якому викликалася команда 0 (`CheckAvailability`). У Horizon команда `CheckAvailability` перевіряє доступність самої служби BAAS, тому для будь-якого локального профілю (навіть щойно створеного або неприв'язаного) повертала `0` (успіх), а не очікувану помилку `ResultNetworkServiceAccountRegistrationRequired`. Через це Sphaira маркувала неприв'язаний профіль як `out_linked = true` та `out_kind = LinkKind::Offline`. Відповідно, функція `CanOfferLaunchLink()` бачила 0 незв'язаних профілів і не показувала пропозицію прив'язки на старті, меню `Users` показувало зелений індикатор «Linked», а в опції «Link Nintendo Account» з'являлося вікно «All user profiles are already linked».
+  2. **Канонічний механізм Horizon / Linkalho**: Логіку запиту переведено на штатний IPC-інтерфейс адміністратора BAAS, який використовується в системі та додатку Linkalho:
+     - На службі `acc:su` викликається команда 250 (`GetBaasAccountAdministrator`) із передачею `uid`, що повертає інтерфейс `IAdministrator`.
+     - На отриманому об'єкті викликається команда 250 (`IsLinkedWithNintendoAccount` / `isLinkedWithNAS`), яка повертає булевий прапорець фактичної наявності прив'язки.
+     - Якщо акаунт не прив'язаний (`!is_linked` або повернено помилку обов'язкової реєстрації), функція повертає `out_linked = false` та `out_kind = LinkKind::None`.
+     - Якщо акаунт прив'язаний (`is_linked == true`), `out_linked = true`, а тип (`Official` або `Offline`) визначається через наявність валідного токена в кеші (`QueryIdTokenCache(&admin)`).
+  3. **Коректне отримання NAS ID**: У `QueryNintendoAccountId` запит NAS ID також переведено на команду 250 (`GetBaasAccountAdministrator`) із перевіркою `IsLinkedWithNintendoAccount` та наступним викликом команди 120 (`GetNasId`) на об'єкті адміністратора замість неробочого виклику команди 120 на `manager`.
+  4. **Наслідки виправлення**: Неприв'язані профілі тепер точно ідентифікуються як незв'язані (`LinkKind::None`), у списку користувачів відображаються червоним маркером та підписом «Not linked», на старті Sphaira коректно пропонує прив'язати незв'язані профілі через пул донорів RomFS, а ручна прив'язка в Tools → Users → Link Nintendo Account більше не блокується помилковим вікном «All user profiles are already linked».
+  5. Оновлено документацію `README.md` у підрозділі `User Profile Management`.
+  6. Версію піднято до `0.13.782` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.781 — consistently center folder and file labels in icon layout
 

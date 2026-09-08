@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.781** (consistently center folder and file labels in icon layout). Завершені задачі збережено в
+Актуальний delivery — **v0.13.782** (fix account link detection via Baas administrator IPC). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.781 (consistently center folder and file labels in icon layout)
+## Поточний delivery: v0.13.782 (fix account link detection via Baas administrator IPC)
+
+- [x] `ACCOUNT-LINK-DETECT-BAAS-ADMIN-782` — у `QueryHorizonUserLink` (`sphaira/source/account/account_link.cpp`) замінено невірний виклик команди 102 на команду 250 (`GetBaasAccountAdministrator`) та пряму перевірку `IsLinkedWithNintendoAccount` (команда 250); неприв'язані облікові записи коректно повертають `out_linked = false` та `out_kind = LinkKind::None`.
+- [x] `ACCOUNT-LINK-NAS-ID-QUERY-782` — у `QueryNintendoAccountId` (`sphaira/source/account/account_link.cpp`) вичитування NAS ID переведено на службу адміністратора BAAS (команда 250 на `acc:su`) з перевіркою прив'язки та викликом команди 120 (`GetNasId`).
+- [x] `README-ACCOUNT-LINK-DETECT-782` — оновлено документацію `README.md` у підрозділі `User Profile Management`.
+- [x] `CMAKELISTS-VERSION-BUMP-782` — підняти `sphaira_VERSION` до `0.13.782`.
+- [x] `DOCS-BUMP-782` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.781 (consistently center folder and file labels in icon layout)
 
 - [x] `FILEBROWSER-ICON-CENTER-LABEL-781` — у `draw_name` (`sphaira/source/ui/menus/filebrowser/filebrowser_view.cpp`) прибрано зсування виділеного елемента на лівий край (`NVG_ALIGN_LEFT`) та виклик `m_scroll_name.Draw`; напис назви папки чи файлу під іконкою завжди центровано (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) в усіх станах фокусування/виділення.
 - [x] `FILEPICKER-ICON-CENTER-LABEL-781` — у макеті `icon_grid` діалогу вибору файлів (`sphaira/source/ui/menus/file_picker.cpp`) уніфіковано центрування назв під плитками: прибрано ліве вирівнювання при `selected == true`, назва залишається посередині.

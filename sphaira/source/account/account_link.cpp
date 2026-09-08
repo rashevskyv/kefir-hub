@@ -265,13 +265,13 @@ auto BaasStillReferencesNas(fs::Fs& save, const std::string& baas_dir, u64 nas_i
     return false;
 }
 
-auto QueryIdTokenCacheRaw(Service* manager, u32& out_size) -> Result {
+auto QueryIdTokenCacheRaw(Service* srv, u32& out_size) -> Result {
     out_size = 0;
     alignas(16) u8 buf[0xC00]{};
 
     const auto try_cmd = [&](u32 cmd_id) -> Result {
         out_size = 0;
-        return serviceDispatchOut(manager, cmd_id, out_size,
+        return serviceDispatchOut(srv, cmd_id, out_size,
             .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_Out },
             .buffers = { { buf, sizeof(buf) } });
     };
@@ -292,9 +292,9 @@ auto QueryIdTokenCacheRaw(Service* manager, u32& out_size) -> Result {
     return rc;
 }
 
-auto QueryIdTokenCache(Service* manager) -> bool {
+auto QueryIdTokenCache(Service* srv) -> bool {
     u32 actual_size = 0;
-    const auto rc = QueryIdTokenCacheRaw(manager, actual_size);
+    const auto rc = QueryIdTokenCacheRaw(srv, actual_size);
     return R_SUCCEEDED(rc) && actual_size > 0;
 }
 
@@ -306,13 +306,14 @@ auto QueryHorizonUserLink(const AccountUid& uid, bool& out_linked, LinkKind& out
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
 
-    Service manager{};
-    R_TRY(serviceDispatchIn(&accsu, 102, uid,
+    Service admin{};
+    R_TRY(serviceDispatchIn(&accsu, 250, uid,
         .out_num_objects = 1,
-        .out_objects = &manager));
-    ON_SCOPE_EXIT(serviceClose(&manager));
+        .out_objects = &admin));
+    ON_SCOPE_EXIT(serviceClose(&admin));
 
-    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
+    bool is_linked = false;
+    const auto rc = serviceDispatchOut(&admin, 250, is_linked); // IsLinkedWithNintendoAccount
     if (rc == ResultNetworkServiceAccountRegistrationRequired) {
         out_linked = false;
         out_kind = LinkKind::None;
@@ -324,8 +325,14 @@ auto QueryHorizonUserLink(const AccountUid& uid, bool& out_linked, LinkKind& out
         return rc;
     }
 
+    if (!is_linked) {
+        out_linked = false;
+        out_kind = LinkKind::None;
+        R_SUCCEED();
+    }
+
     out_linked = true;
-    if (QueryIdTokenCache(&manager)) {
+    if (QueryIdTokenCache(&admin)) {
         out_kind = LinkKind::Official;
     } else {
         out_kind = LinkKind::Offline;
@@ -1089,18 +1096,19 @@ auto QueryNintendoAccountId(const AccountUid& uid, u64& out_nas_id) -> Result {
     R_TRY(OpenAccSu(&accsu));
     ON_SCOPE_EXIT(serviceClose(&accsu));
 
-    Service manager{};
-    R_TRY(serviceDispatchIn(&accsu, 102, uid,
+    Service admin{};
+    R_TRY(serviceDispatchIn(&accsu, 250, uid,
         .out_num_objects = 1,
-        .out_objects = &manager));
-    ON_SCOPE_EXIT(serviceClose(&manager));
+        .out_objects = &admin));
+    ON_SCOPE_EXIT(serviceClose(&admin));
 
-    const auto rc = serviceDispatch(&manager, 0); // CheckAvailability
-    if (R_FAILED(rc)) {
-        return rc;
+    bool is_linked = false;
+    const auto lrc = serviceDispatchOut(&admin, 250, is_linked); // IsLinkedWithNintendoAccount
+    if (R_FAILED(lrc) || !is_linked) {
+        return ResultNetworkServiceAccountRegistrationRequired;
     }
 
-    R_TRY(serviceDispatchOut(&manager, 120, out_nas_id));
+    R_TRY(serviceDispatchOut(&admin, 120, out_nas_id)); // GetNasId
     if (out_nas_id == 0) {
         return ResultNetworkServiceAccountRegistrationRequired;
     }

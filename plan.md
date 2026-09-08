@@ -1,8 +1,20 @@
-Поточний delivery — **v0.13.781** (consistently center folder and file labels in icon layout). Завершені плани збережено в
+Поточний delivery — **v0.13.782** (fix account link detection via Baas administrator IPC). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.781 — consistently center folder and file labels in icon layout
+## Поточний delivery: v0.13.782 — fix account link detection via Baas administrator IPC
+
+Статус: реалізовано; виправлено хибне визначення стану прив'язки облікового запису Nintendo Account у Sphaira; раніше `QueryHorizonUserLink` та `QueryNintendoAccountId` зверталися до `acc:su` через команду 102 (`GetBaasAccountManagerForSystemService`) та перевіряли `CheckAvailability`, яка завжди повертала успіх (0) навіть для неприв'язаних профілів, через що Sphaira вважала всі локальні профілі зв'язаними офлайн (`Offline`) та блокувала автоматичну пропозицію прив'язки при старті програми і в меню користувачів («All user profiles are already linked»); логіку переведено на канонічний IPC-механізм Horizon, аналогічний Linkalho: виклик команди 250 на `acc:su` (`GetBaasAccountAdministrator`) та перевірка команди 250 на отриманій службі адміністратора (`IsLinkedWithNintendoAccount`), а також отримання NAS ID через команду 120 (`GetNasId`); відтепер неприв'язані профілі точно визначаються як незв'язані (`LinkKind::None`), відображаються червоним індикатором «Not linked» у меню Users та коректно пропонуються для прив'язки через пул донорів RomFS при старті; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/account/account_link.cpp`:
+   - У `QueryHorizonUserLink` замінено виклик команди 102 на команду 250 (`GetBaasAccountAdministrator`), на отриманій службі `admin` перевіряється статус `IsLinkedWithNintendoAccount` (команда 250). Якщо акаунт не прив'язаний (`!is_linked` або реєстрація потрібна), повертається `out_linked = false` та `out_kind = LinkKind::None`. Лише якщо `is_linked == true`, виконується перевірка кешу ID-токенів (`QueryIdTokenCache(&admin)`).
+   - У `QueryNintendoAccountId` аналогічно використано `GetBaasAccountAdministrator` (команда 250 на `acc:su`), перевірку `IsLinkedWithNintendoAccount` (команда 250) та вичитування NAS ID через команду 120 (`GetNasId`).
+   - У `QueryIdTokenCacheRaw` аргумент перейменовано на `Service* srv`.
+2. Документація (`README.md`):
+   - Оновлено підрозділ `User Profile Management` описом точного визначення прив'язки через `GetBaasAccountAdministrator` та `IsLinkedWithNintendoAccount`.
+3. Підняти версію проекту до `0.13.782` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.781 — consistently center folder and file labels in icon layout
 
 Статус: реалізовано; у макеті відображення іконок («Icon layout») файлового браузера та діалогу вибору файлів усунено небажане зсування тексту назв папок та файлів на лівий край при фокусуванні курсором; відтепер назви елементів завжди центруватимуться по горизонталі під іконкою плитки (`NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE` при `x + w / 2.f`) як у невиділеному стані, так і при виділенні/наведенні курсору; переповнення тексту плавно обтинається ножицями NanoVG; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 
