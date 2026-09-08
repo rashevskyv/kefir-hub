@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.772** (direct firmware-matched interface translations). Завершені задачі збережено в
+Актуальний delivery — **v0.13.773** (fix minimized install touch badge compile error and verify WSL build). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.772 (direct firmware-matched interface translations)
+## Поточний delivery: v0.13.773 (fix minimized install touch badge compile error and verify WSL build)
+
+- [x] `UI-TOUCH-BADGE-FIX-773` — у `sphaira/source/app.cpp` виправлено неіснуючі звернення `m_touch_info.finger_down`, `x`, `y` на стандартний API `TouchInfo`: `m_touch_info.is_clicked && m_touch_info.in_range(Vec4(bx, by, bw, bh))`.
+- [x] `BUILD-WSL-VERIFY-773` — успішно скомпільовано повний релізний бінарник Switch NRO (`kefir-hub.nro`) через `./build/wsl_build.sh` у WSL.
+- [x] `TESTS-PARALLEL-VERIFY-773` — виконано паралельний прогін усіх хост-тестів `./tests/run.sh` у WSL з результатом all green.
+- [x] `CMAKELISTS-VERSION-BUMP-773` — підняти `sphaira_VERSION` до `0.13.773`.
+- [x] `DOCS-BUMP-773` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.772 (direct firmware-matched interface translations)
 
 - [x] `TRANSLATIONS-DIRECT-772` — пряме отримання релізу за точним тегом з GitHub API та завантаження api.json без UltraHand mirror/package.ini.
 - [x] `TRANSLATIONS-COMPAT-772` — таблиця HOS із розділенням target_tag та metadata_tag (TR1.09/TR1.11 використовують metadata TR1.18), підтримка legacy та modern назв архівів.

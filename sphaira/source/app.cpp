@@ -901,9 +901,8 @@ void App::Update() {
         constexpr float bh = 40.f;
         constexpr float bx = SCREEN_WIDTH - bw - 20.f;
         constexpr float by = 12.f;
-        const bool touch_badge = session->IsMinimized() && m_touch_info.finger_down &&
-                                 m_touch_info.x >= bx && m_touch_info.x <= bx + bw &&
-                                 m_touch_info.y >= by && m_touch_info.y <= by + bh;
+        const bool touch_badge = session->IsMinimized() && m_touch_info.is_clicked &&
+                                 m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
         if (m_controller.GotDown(Button::L3) || touch_badge) {
             session->ToggleMinimized();
@@ -934,9 +933,8 @@ void App::Update() {
             constexpr float bh = 40.f;
             constexpr float bx = SCREEN_WIDTH - bw - 20.f;
             constexpr float by = 12.f;
-            const bool touch_badge = m_touch_info.finger_down &&
-                                     m_touch_info.x >= bx && m_touch_info.x <= bx + bw &&
-                                     m_touch_info.y >= by && m_touch_info.y <= by + bh;
+            const bool touch_badge = m_touch_info.is_clicked &&
+                                     m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
             if (m_controller.GotDown(Button::L3) || touch_badge) {
                 m_widgets.back()->ToggleMinimized();

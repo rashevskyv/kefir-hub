@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.772** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.773** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.773 — fix minimized install touch badge compile error and verify WSL build
+
+- Виправлено помилку компіляції та підтверджено повну працездатність збірки під Nintendo Switch:
+  1. У `sphaira/source/app.cpp` виправлено звернення до неіснуючих полів `finger_down`, `x` та `y` структури `TouchInfo` для тапу по міні-бейджі розгортання сесії встановлення (`touch_badge`): переведено на канонічний API `m_touch_info.is_clicked && m_touch_info.in_range(Vec4(bx, by, bw, bh))`.
+  2. Успішно зібрано цільовий бінарник Nintendo Switch NRO (`build/ReleaseWithInstall/switch/kefir-hub/kefir-hub.nro`) через `build/wsl_build.sh` у WSL (100% збірка без помилок).
+  3. Усі юніт-тести та перевірки цілісності (`tests/run.sh`) виконані паралельно у WSL з успішним результатом ("all green").
+  4. Версію піднято до `0.13.773` у `sphaira/CMakeLists.txt`.
 
 ## v0.13.772 — direct firmware-matched interface translations and metadata fallback
 

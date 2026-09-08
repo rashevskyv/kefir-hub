@@ -1,8 +1,19 @@
-Поточний delivery — **v0.13.772** (direct firmware-matched interface translations). Завершені плани збережено в
+Поточний delivery — **v0.13.773** (fix minimized install touch badge compile error and verify WSL build). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.772 — direct firmware-matched interface translations
+## Поточний delivery: v0.13.773 — fix minimized install touch badge compile error and verify WSL build
+
+Статус: реалізовано; виправлено звернення до полів `TouchInfo` у `sphaira/source/app.cpp` для тапу по міні-бейджі згорнутого встановлення; повна компіляція NRO (`build/wsl_build.sh`) під Nintendo Switch та набір хост-тестів (`tests/run.sh`) у WSL успішно пройдені.
+
+1. У `sphaira/source/app.cpp`:
+   - Виправлено перевірку сенсорного дотику до міні-бейджів активної інсталяційної сесії та мінімізованого віджета: замінено неіснуючі поля `m_touch_info.finger_down`, `m_touch_info.x`, `m_touch_info.y` на коректний API `TouchInfo`: `m_touch_info.is_clicked && m_touch_info.in_range(Vec4(bx, by, bw, bh))`.
+2. Верифікація збірки:
+   - Проведено повну збірку Nintendo Switch NRO (`kefir-hub.nro`) через `build/wsl_build.sh` у середовищі WSL з результатом 100% успіху.
+   - Виконано паралельний запуск усіх хост-тестів та перевірок (`tests/run.sh`): усі тести та перевірки мертвих символів/патчів пройдені ("all green").
+3. Підняти версію проекту до `0.13.773` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.772 — direct firmware-matched interface translations
 
 Статус: реалізовано; пряма взаємодія з GitHub API NX-Family/NX-Translation за точним тегом релізу, метадані api.json із фолбеком на FW17.0.1-TR1.18 для FW16.1.0-TR1.09 та FW17.0.0-TR1.11, підтримка modern та legacy схем найменування архівів і коректна резолюція шляхів розпакування; compile/tests/NRO не запускаються за policy.
 
