@@ -1,8 +1,29 @@
-Поточний delivery — **v0.13.778** (move file browser layout setting into view options submenu). Завершені плани збережено в
+Поточний delivery — **v0.13.779** (on-the-fly image viewer rotation via shoulder buttons L and R). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.778 — move file browser layout setting into view options submenu
+## Поточний delivery: v0.13.779 — on-the-fly image viewer rotation via shoulder buttons L and R
+
+Статус: реалізовано; у вбудованому переглядачі зображень файлового браузера реалізовано поворот перегляду зображення на льоту кнопками L (проти годинникової стрілки, -90°) та R (за годинниковою стрілкою, +90°); поворот здійснюється суто на рівні рендерингу (трансформація NanoVG) без зміни файлу, його даних чи атрибутів на диску; динамічно оновлюються ефективні розміри та межі панорамування/масштабування в'юпорта; додано локалізацію ключа "Rotate" для всіх 14 мов; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/include/ui/menus/file_viewer.hpp`:
+   - Оголошено метод `void RotateImage(s64 direction);`.
+   - Додано стан кута повороту `s64 m_rotation{0};` (0: 0°, 1: 90°, 2: 180°, 3: 270°).
+2. У `sphaira/source/ui/menus/file_viewer/file_viewer_image.cpp`:
+   - У `Menu::LoadImageFile()` прив'язано дії `Button::L` (із підказкою `"\uE0E4 / \uE0E5"` та текстом `"Rotate"_i18n`) для виклику `RotateImage(-1)` та `Button::R` для виклику `RotateImage(1)`.
+   - У `Menu::FreeImage()` скидається `m_rotation = 0`.
+   - Реалізовано `Menu::RotateImage(s64 direction)`: перевіряє активність перегляду зображення, блокує випадковий поворот при затиснутому зум-тригері `Button::L2`, інкрементує/декрементує стан `m_rotation`, скидає в'юпорт `m_viewport.Reset()` для адаптації під нове співвідношення сторін та викликає `UpdateImageAAction()`.
+3. У `sphaira/source/ui/menus/file_viewer.cpp`:
+   - У `Menu::LoadCurrentFile()` додано скидання `m_rotation = 0`.
+   - У `Menu::Update()` для переглядача зображень обчислюються ефективні габарити `eff_w`/`eff_h` (міняються місцями при повороті на 90°/270°) та передаються у `m_viewport.Update()` для коректного панорамування й обмеження меж.
+   - У `Menu::Draw()` реалізовано рендеринг повернутого зображення через локальну систему координат NanoVG (`nvgTranslate`, `nvgRotate`, `nvgImagePattern`, `nvgRoundedRect`, `nvgFillPaint`) під маскою скролінгу/ножиць (`nvgIntersectScissor`) без виходу за межі екрана.
+4. Локалізація (`assets/romfs/i18n/*.json`):
+   - Додано ключ перекладу `"Rotate"` до всіх 14 мовних файлів.
+5. Документація (`README.md`):
+   - Додано опис керування переглядачем зображень та повороту кнопками L/R без зміни файлу на диску.
+6. Підняти версію проекту до `0.13.779` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.778 — move file browser layout setting into view options submenu
 
 Статус: реалізовано; у файловому браузері вибір макета відображення («Layout»: «List» / «Icon») перенесено з верхнього рівня бічної панелі опцій («File Options») у вкладене підменю налаштувань відображення «View» («View Options») поруч із сортуванням, порядком та параметрами видимості елементів; з `DisplayOptions` видалено дубльований виклик `view_entry->SetHasSubmenu(true)`; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 

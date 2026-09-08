@@ -49,6 +49,12 @@ void Menu::LoadImageFile() {
     }});
     SetAction(Button::L2, Action{"Zoom Up / Down"_i18n, "\uE0E6 \uE0EB/\uE0EC", [](){
     }});
+    SetAction(Button::L, Action{"Rotate"_i18n, "\uE0E4 / \uE0E5", [this](){
+        RotateImage(-1);
+    }});
+    SetAction(Button::R, Action{"", [this](){
+        RotateImage(1);
+    }});
     UpdateFullscreenAction();
 
     if (m_image_paths.size() > 1) {
@@ -81,6 +87,22 @@ void Menu::FreeImage() {
 
     m_image_w = 0;
     m_image_h = 0;
+    m_rotation = 0;
+}
+
+void Menu::RotateImage(s64 direction) {
+    if (!m_is_image_file || !m_image) {
+        return;
+    }
+
+    const auto app = App::GetApp();
+    if (app && (app->m_controller.GotHeld(Button::L2) || app->m_controller.GotDown(Button::L2))) {
+        return;
+    }
+
+    m_rotation = (m_rotation + direction % 4 + 4) % 4;
+    m_viewport.Reset();
+    UpdateImageAAction();
 }
 
 void Menu::ResetImageView() {

@@ -99,6 +99,7 @@ private:
     void ResetImageView();
     void UpdateImageAAction();
     void NextImage(s64 direction);
+    void RotateImage(s64 direction);
     void ToggleFullscreen();
     void UpdateFullscreenAction();
     void UpdateImageSubHeading();
@@ -184,6 +185,7 @@ private:
     int m_image{};
     int m_image_w{};
     int m_image_h{};
+    s64 m_rotation{0};
     gfx::ImageViewport m_viewport{};
     bool m_fullscreen{};
 

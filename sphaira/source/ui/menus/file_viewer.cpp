@@ -111,6 +111,7 @@ void Menu::LoadCurrentFile() {
     m_stream_start_line = 1;
     m_zl_modifier_used = false;
     m_touch_was_pinch = false;
+    m_rotation = 0;
     m_is_image_file = IsImageExtension(path::Extension(m_path));
 
     if (!m_fs) {
@@ -162,7 +163,10 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
     if (m_is_image_file) {
         const bool was_zoomed = m_viewport.IsZoomed();
-        m_viewport.Update(controller, touch, m_image_w, m_image_h, ImageBounds(m_fullscreen), gfx::ImageFit::Contain);
+        const bool rotated_90 = (m_rotation % 2 != 0);
+        const int eff_w = rotated_90 ? m_image_h : m_image_w;
+        const int eff_h = rotated_90 ? m_image_w : m_image_h;
+        m_viewport.Update(controller, touch, eff_w, eff_h, ImageBounds(m_fullscreen), gfx::ImageFit::Contain);
         if (m_image_pick && was_zoomed != m_viewport.IsZoomed()) {
             UpdateImageAAction();
         }
@@ -182,12 +186,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             return;
         }
 
+        const bool rotated_90 = (m_rotation % 2 != 0);
+        const int eff_w = rotated_90 ? m_image_h : m_image_w;
+        const int eff_h = rotated_90 ? m_image_w : m_image_h;
         const auto bounds = ImageBounds(m_fullscreen);
-        const auto img_rect = m_viewport.GetImageRect(m_image_w, m_image_h, bounds, gfx::ImageFit::Contain);
+        const auto img_rect = m_viewport.GetImageRect(eff_w, eff_h, bounds, gfx::ImageFit::Contain);
 
         nvgSave(vg);
         nvgIntersectScissor(vg, bounds.x, bounds.y, bounds.w, bounds.h);
-        gfx::drawImage(vg, img_rect.x, img_rect.y, img_rect.w, img_rect.h, m_image, 5);
+        if (m_rotation == 0) {
+            gfx::drawImage(vg, img_rect.x, img_rect.y, img_rect.w, img_rect.h, m_image, 5);
+        } else {
+            const float cx = img_rect.x + img_rect.w * 0.5f;
+            const float cy = img_rect.y + img_rect.h * 0.5f;
+            const float draw_w = rotated_90 ? img_rect.h : img_rect.w;
+            const float draw_h = rotated_90 ? img_rect.w : img_rect.h;
+            const float lx = -draw_w * 0.5f;
+            const float ly = -draw_h * 0.5f;
+
+            nvgTranslate(vg, cx, cy);
+            nvgRotate(vg, nvgDegToRad(static_cast<float>(m_rotation * 90)));
+            const auto paint = nvgImagePattern(vg, lx, ly, draw_w, draw_h, 0, m_image, 1.0f);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, lx, ly, draw_w, draw_h, 5);
+            nvgFillPaint(vg, paint);
+            nvgFill(vg);
+        }
         nvgRestore(vg);
 
         if (CurrentImageSelected()) {

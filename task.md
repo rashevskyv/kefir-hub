@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.778** (move file browser layout setting into view options submenu). Завершені задачі збережено в
+Актуальний delivery — **v0.13.779** (on-the-fly image viewer rotation via shoulder buttons L and R). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.778 (move file browser layout setting into view options submenu)
+## Поточний delivery: v0.13.779 (on-the-fly image viewer rotation via shoulder buttons L and R)
+
+- [x] `FILEVIEW-ROTATE-IMAGE-ACTION-779` — у `Menu::LoadImageFile` (`sphaira/source/ui/menus/file_viewer/file_viewer_image.cpp`) прив'язано дію повороту `"Rotate"_i18n` до кнопок L/R (`\uE0E4 / \uE0E5`), реалізовано метод `Menu::RotateImage(s64 direction)` із циклічним обчисленням `m_rotation`, блокуванням при активному L2 zoom та скиданням в'юпорта `m_viewport.Reset()`.
+- [x] `FILEVIEW-ROTATE-RENDER-VIEWPORT-779` — у `Menu::Update` та `Menu::Draw` (`sphaira/source/ui/menus/file_viewer.cpp`) додано підтримку кута повороту `m_rotation` (0°, 90°, 180°, 270°): коректні габарити `eff_w`/`eff_h` для панорамування/масштабування `ImageViewport` та локальна трансформація рендерингу NanoVG (`nvgTranslate`, `nvgRotate`, `nvgImagePattern`, `nvgRoundedRect`, `nvgFillPaint`) без зміни самого файлу чи його атрибутів на диску.
+- [x] `I18N-ROTATE-KEY-779` — додано ключ перекладу `"Rotate"` до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.
+- [x] `README-IMAGE-VIEWER-ROTATE-779` — оновлено `README.md` з описом переглядача зображень та керування поворотом кнопками L і R.
+- [x] `CMAKELISTS-VERSION-BUMP-779` — підняти `sphaira_VERSION` до `0.13.779`.
+- [x] `DOCS-BUMP-779` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.778 (move file browser layout setting into view options submenu)
 
 - [x] `FILEBROWSER-LAYOUT-TO-VIEW-778` — у `sphaira/source/ui/menus/filebrowser/filebrowser_options.cpp` перенесено перемикач «Layout» («List» / «Icon») з кореневої панелі «File Options» у підменю «View» («View Options») поруч із сортуванням та відображенням; призначено іконку `ActionIcon::Layout` та усунено дублювання виклику `view_entry->SetHasSubmenu(true)`.
 - [x] `README-FILEBROWSER-VIEW-LAYOUT-778` — оновлено `README.md` у розділі File Browser з описом розташування налаштування макета у підменю View Options.
