@@ -1,8 +1,20 @@
-Поточний delivery — **v0.13.774** (prompt reboot after setting user profile avatar). Завершені плани збережено в
+Поточний delivery — **v0.13.775** (eliminate interior tab overlap from vector folder icon). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.774 — prompt reboot after setting user profile avatar
+## Поточний delivery: v0.13.775 — eliminate interior tab overlap from vector folder icon
+
+Статус: реалізовано; у `sphaira/source/ui/file_icon.cpp` (`StrokeFolder`) ліквідовано паразитне внутрішнє перекриття та лінію під язичком папки; арка язичка малюється як відкритий контур, що спирається на верхнє ребро тіла папки (`top_body`), а тіло папки формує завершений прямокутник зі скругленими кутами та суцільним верхнім горизонтальним роздільником; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/file_icon.cpp`:
+   - У функції `StrokeFolder` відокремлено відмальовку верхньої арки язичка від прямокутника тіла.
+   - Арка язичка починається в точці `(left, top_body)`, плавно огинає кути `(left, top_tab)` та `(tab_right, top_tab)` радіусами `r` та `r_tab`, і спускається вертикально до `(tab_right, top_body)`. Вона не заходить углиб папки та не містить нижньої замикаючої лінії.
+   - Тіло папки малюється через `nvgRoundedRectVarying` із суцільною верхньою гранню на `top_body`, нульовим верхнім лівим радіусом (для безшовного вертикального переходу лівого краю язичка у лівий край тіла) та скругленням решти трьох кутів радіусом `g.radius`.
+2. Документація (`README.md`):
+   - Оновлено опис векторної іконографіки папок у підрозділі File Browser.
+3. Підняти версію проекту до `0.13.775` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.774 — prompt reboot after setting user profile avatar
 
 Статус: реалізовано; у меню Tools -> Users після зміни аватарки профілю користувача додано запит на перезавантаження консолі (OptionBox) з поясненням, що новий аватар набуде чинності після перезавантаження, та можливістю перезавантажитися зараз або пізніше; compile/tests/NRO не запускаються за policy.
 

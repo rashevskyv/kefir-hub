@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.774** (prompt reboot after setting user profile avatar). Завершені задачі збережено в
+Актуальний delivery — **v0.13.775** (eliminate interior tab overlap from vector folder icon). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.774 (prompt reboot after setting user profile avatar)
+## Поточний delivery: v0.13.775 (eliminate interior tab overlap from vector folder icon)
+
+- [x] `UI-FOLDER-VECTOR-TAB-OVERLAP-775` — у `StrokeFolder` (`sphaira/source/ui/file_icon.cpp`) переведено відмальовку векторної іконки папки на відкриту зверху арку язичка, що починається й завершується точно на верхньому ребрі тіла папки (`top_body`), та прямокутник тіла із суцільним горизонтальним роздільником без паразитної внутрішньої лінії перекриття під язичком.
+- [x] `README-FOLDER-ICON-775` — оновлено опис векторної іконографіки папок у `README.md`.
+- [x] `CMAKELISTS-VERSION-BUMP-775` — підняти `sphaira_VERSION` до `0.13.775`.
+- [x] `DOCS-BUMP-775` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.774 (prompt reboot after setting user profile avatar)
 
 - [x] `USERS-AVATAR-REBOOT-POPUP-774` — у `Menu::RunSetAvatar` (`sphaira/source/ui/menus/users/users_profile.cpp`) після успішного оновлення аватарки та виклику `Refresh()` додано показ `OptionBox` з повідомленням про застосування нового аватара після перезавантаження та кнопками "Later" / "Reboot" (викликає `utils::requestForcedReboot()`).
 - [x] `I18N-AVATAR-REBOOT-774` — додано ключ `"Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?"` до всіх 14 мовних файлів `assets/romfs/i18n/*.json`.

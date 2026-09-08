@@ -78,7 +78,7 @@ Sphaira provides an interactive **Remote Input** system that allows users to sen
 ## File Browser & Vector Iconography
 
 Sphaira features an integrated File Browser for navigating console filesystems, microSD cards, USB mass storage drives, and external MTP devices:
-- **Unified Vector Folder Icons:** In grid view mode, folder entries render a single continuous vector outline where the folder tab seamlessly merges with the body contour without interior line overlaps or stray horizontal dividers, framing embedded mosaic previews and thumbnails cleanly across all theme palettes.
+- **Unified Vector Folder Icons:** In grid view mode, folder entries render a sharp, resolution-independent vector silhouette featuring a classic tab arch on top and a clean rounded body contour, eliminating stray interior tab lines while neatly framing embedded mosaic previews and thumbnails across all theme palettes.
 
 ## File association
 
