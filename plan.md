@@ -1,8 +1,28 @@
-Поточний delivery — **v0.13.770** (disable B and map X to Cancel installation for FTP/MTP/HTTP). Завершені плани збережено в
+Поточний delivery — **v0.13.771** (USB install Minimize / Expand and dedicated origin identification). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.770 — disable B and map X to Cancel installation for FTP/MTP/HTTP
+## Поточний delivery: v0.13.771 — USB install Minimize / Expand and dedicated origin identification
+
+Статус: реалізовано; для USB встановлення додано виокремлений `TransportOrigin::Usb`, розширено дію Minimize/Expand (кнопка L3) на всі стани очікування та перегляду черги, додано підказку " Expand" та тач-розгортання на міні-бейджі; compile/tests/NRO не запускаються за policy.
+
+1. У `include/ui/menus/dbi/install_queue_state.hpp`:
+   - Додати значення `Usb` до переліку `TransportOrigin`.
+   - Включити `TransportOrigin::Usb` у функцію `HasKnownBatchTotals`.
+2. У `sphaira/source/ui/menus/dbi_menu.cpp`:
+   - Ініціалізувати `Menu::Menu(u32 flags)` (PC Install over USB) із `TransportOrigin::Usb`.
+   - Додати дію `Button::L3` ("Minimize" / "Expand") у стани очікування USB/списку (`State::WaitingForUsb`, `State::WaitingForList`, `State::Analysing`) та у меню перегляду черги (`State::ReviewQueue`).
+   - У `ComputeSaverInfo` додати відображення статусу `"USB Install"_i18n` для `TransportOrigin::Usb`.
+3. У `sphaira/source/ui/menus/dbi/dbi_draw.cpp`:
+   - У `DrawMiniBadge` відображати origin як `"USB"`, адаптувати відображення для станів очікування та додати індикатор розгортання ` Expand` (з іконкою стика L3 `\uE104`).
+4. У `sphaira/source/app.cpp`:
+   - Додати підтримку розгортання сесії або віджета торканням (touch tap) по міні-бейджі у правому верхньому кутку екрана.
+5. У `tests/test_transport_install_queue.cpp`:
+   - Додати перевірки для `TransportOrigin::Usb` у юніт-тести.
+6. Оновити `README.md` із описом згортання та розгортання встановлення.
+7. Підняти версію проекту до `0.13.771` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.770 — disable B and map X to Cancel installation for FTP/MTP/HTTP
 
 Статус: реалізовано; для MTP, FTP та Web/HTTP кнопка B вимкнена під час інсталяції, кнопка X відповідає за Cancel installation із підтвердженням; compile/tests/NRO не запускаються за policy.
 

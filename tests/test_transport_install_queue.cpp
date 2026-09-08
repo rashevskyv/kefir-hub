@@ -16,6 +16,7 @@ struct Entry {
 
 int main() {
     assert(HasKnownBatchTotals(TransportOrigin::Dbi));
+    assert(HasKnownBatchTotals(TransportOrigin::Usb));
     assert(HasKnownBatchTotals(TransportOrigin::Web));
     assert(!HasKnownBatchTotals(TransportOrigin::Mtp));
     assert(!HasKnownBatchTotals(TransportOrigin::Ftp));
@@ -47,6 +48,7 @@ int main() {
 
     assert(SUMMARY_GRACE_PERIOD_SEC == 3.0);
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Dbi, true, false, false));
+    assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Usb, true, false, false));
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Web, true, false, false));
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, false, false, false));
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, true, false));
@@ -60,4 +62,5 @@ int main() {
     assert(!ShouldRestartMtp(TransportOrigin::Ftp, true, true));
     assert(!ShouldRestartMtp(TransportOrigin::Web, true, true));
     assert(!ShouldRestartMtp(TransportOrigin::Dbi, true, true));
+    assert(!ShouldRestartMtp(TransportOrigin::Usb, true, true));
 }

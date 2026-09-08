@@ -897,7 +897,15 @@ void App::Update() {
     }
 
     if (session) {
-        if (m_controller.GotDown(Button::L3)) {
+        constexpr float bw = 320.f;
+        constexpr float bh = 40.f;
+        constexpr float bx = SCREEN_WIDTH - bw - 20.f;
+        constexpr float by = 12.f;
+        const bool touch_badge = session->IsMinimized() && m_touch_info.finger_down &&
+                                 m_touch_info.x >= bx && m_touch_info.x <= bx + bw &&
+                                 m_touch_info.y >= by && m_touch_info.y <= by + bh;
+
+        if (m_controller.GotDown(Button::L3) || touch_badge) {
             session->ToggleMinimized();
             App::PlaySoundEffect(SoundEffect_Focus);
             session->Update(nullptr, nullptr);
@@ -922,7 +930,15 @@ void App::Update() {
 
     if (!block_background_update) {
         if (m_widgets.back()->IsMinimized()) {
-            if (m_controller.GotDown(Button::L3)) {
+            constexpr float bw = 320.f;
+            constexpr float bh = 40.f;
+            constexpr float bx = SCREEN_WIDTH - bw - 20.f;
+            constexpr float by = 12.f;
+            const bool touch_badge = m_touch_info.finger_down &&
+                                     m_touch_info.x >= bx && m_touch_info.x <= bx + bw &&
+                                     m_touch_info.y >= by && m_touch_info.y <= by + bh;
+
+            if (m_controller.GotDown(Button::L3) || touch_badge) {
                 m_widgets.back()->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
             }

@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.770** (disable B and map X to Cancel installation for FTP/MTP/HTTP). Завершені задачі збережено в
+Актуальний delivery — **v0.13.771** (USB install Minimize / Expand and dedicated origin identification). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.770 (disable B and map X to Cancel installation for FTP/MTP/HTTP)
+## Поточний delivery: v0.13.771 (USB install Minimize / Expand and dedicated origin identification)
+
+- [x] `USB-ORIGIN-ENUM-771` — додано `TransportOrigin::Usb` до `install_queue_state.hpp`, включено до `HasKnownBatchTotals`, прив'язано `Menu::Menu(u32 flags)` до `TransportOrigin::Usb` та `"PC Install (USB)"_i18n`.
+- [x] `USB-MINIMIZE-L3-ACTIONS-771` — у `dbi_menu.cpp` дію кнопки `L3` ("Minimize" / "Expand") додано до станів очікування (`State::WaitingForUsb`, `State::WaitingForList`, `State::Analysing`) та огляду черги (`State::ReviewQueue`).
+- [x] `MINI-BADGE-EXPAND-TOUCH-771` — у `dbi_draw.cpp` оновлено `DrawMiniBadge` з відображенням мітки origin `"USB"`, станів очікування та підказки ` Expand`; у `app.cpp` додано розгортання сесій та віджетів по тапу на бейджі.
+- [x] `TESTS-USB-ORIGIN-771` — додано assertions для `TransportOrigin::Usb` у `tests/test_transport_install_queue.cpp`.
+- [x] `README-USB-MINIMIZE-771` — оновлено `README.md` з описом згортання та розгортання для USB і транспортерів.
+- [x] `CMAKELISTS-VERSION-BUMP-771` — `sphaira_VERSION` піднято до `0.13.771`.
+- [x] `DOCS-BUMP-771` — plan.md, task.md, walkthrough.md та audit.md синхронізовано.
+
+## Попередній delivery: v0.13.770 (disable B and map X to Cancel installation for FTP/MTP/HTTP)
 
 - [x] `STREAMING-INSTALL-ACTIONS-770` — у `InstallSession::UpdateActions` (`sphaira/source/ui/menus/dbi_menu.cpp`) для потокових інсталяцій (MTP, FTP, HTTP/Web) кнопку `B` повністю вимкнено під час встановлення, а на кнопку `X` призначено скасування сесії `"Cancel installation"` із запитом `"Cancel installation?"`.
 - [x] `I18N-CANCEL-INSTALL-QUESTION-770` — додано ключ перекладу `"Cancel installation?"` у всі 14 локалізацій `assets/romfs/i18n/*.json`.

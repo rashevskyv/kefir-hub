@@ -264,7 +264,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
 void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     SCOPED_MUTEX(&m_mutex);
-    const float bw = 260.f;
+    const float bw = 320.f;
     const float bh = 40.f;
     const float bx = SCREEN_WIDTH - bw - 20.f;
     const float by = 12.f;
@@ -280,10 +280,23 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
         case TransportOrigin::Mtp: origin_str = "MTP"; break;
         case TransportOrigin::Ftp: origin_str = "FTP"; break;
         case TransportOrigin::Web: origin_str = "Web"; break;
+        case TransportOrigin::Usb: origin_str = "USB"; break;
         default:                   origin_str = "DBI"; break;
     }
 
-    const auto pkg_str = origin_str + " · " + std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size());
+    std::string pkg_str;
+    const auto state = m_state.load();
+    if (state == State::WaitingForUsb || state == State::WaitingForList) {
+        pkg_str = origin_str + " · " + "Waiting for PC"_i18n;
+    } else if (state == State::Analysing) {
+        pkg_str = origin_str + " · " + "Analysing"_i18n;
+    } else if (state == State::ReviewQueue) {
+        pkg_str = origin_str + " · " + "Ready to install"_i18n;
+    } else if (m_queue.empty()) {
+        pkg_str = origin_str;
+    } else {
+        pkg_str = origin_str + " · " + std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size());
+    }
     gfx::drawText(vg, bx + 10.f, by + 10.f, 13.f, text_col, pkg_str.c_str());
 
     bool has_deferred_plan = (m_plan_total_bytes <= 0);
@@ -297,13 +310,17 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     const s64 overall_done = OverallDone();
     const double ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
         ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
-    char pct_buf[16]{};
-    if (has_deferred_plan) {
-        std::snprintf(pct_buf, sizeof(pct_buf), "--");
+    char right_buf[64]{};
+    if (state == State::Installing) {
+        if (has_deferred_plan) {
+            std::snprintf(right_buf, sizeof(right_buf), "--   %s", "Expand"_i18n.c_str());
+        } else {
+            std::snprintf(right_buf, sizeof(right_buf), "%.0f%%   %s", ratio * 100.0, "Expand"_i18n.c_str());
+        }
     } else {
-        std::snprintf(pct_buf, sizeof(pct_buf), "%.0f%%", ratio * 100.0);
+        std::snprintf(right_buf, sizeof(right_buf), " %s", "Expand"_i18n.c_str());
     }
-    gfx::drawText(vg, bx + bw - 10.f, by + 10.f, 13.f, info_col, pct_buf, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+    gfx::drawText(vg, bx + bw - 10.f, by + 10.f, 13.f, info_col, right_buf, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
 
     // Mini progress bar
     const Vec4 bar{bx + 10.f, by + 28.f, bw - 20.f, 4.f};

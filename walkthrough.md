@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.770** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.771** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.771 — USB install Minimize / Expand and dedicated origin identification
+
+- Додано та оптимізовано функціонал згортання/розгортання (Minimize / Expand) для встановлення через USB:
+  1. Введено виокремлений тип джерела `TransportOrigin::Usb` у переліку `TransportOrigin` (`install_queue_state.hpp`), завдяки чому сесії встановлення по USB чітко розрізняються з локальною чергою DBI. `TransportOrigin::Usb` додано до `HasKnownBatchTotals` як пакетне джерело з відомим списком файлів.
+  2. Конструктор `Menu::Menu(u32 flags)` (пункт «PC Install (USB)») тепер ініціалізує сесію із заголовком `"PC Install (USB)"_i18n` та типом `TransportOrigin::Usb`.
+  3. Дію кнопки `L3` ("Minimize" / "Expand") додано не лише до стану безпосереднього запису файлів (`State::Installing`), але й до всіх попередніх станів життєвого циклу USB-сесії: очікування підключення USB (`State::WaitingForUsb`), очікування передачі списку з ПК (`State::WaitingForList`), аналізу файлів (`State::Analysing`) та перегляду списку черги (`State::ReviewQueue`). Тепер користувач може згорнути вікно в будь-який момент і користуватися іншими функціями консолі.
+  4. Оновлено відображення міні-бейджа `InstallSession::DrawMiniBadge` (`dbi_draw.cpp`):
+     - Мітка джерела для USB-інсталяцій тепер чітко вказує `"USB"` замість загального спадкового напису `"DBI"`.
+     - Додано зрозумілий текстовий статус для станів очікування (наприклад, `USB · Waiting for PC` або `USB · Ready to install`).
+     - Додано візуальну підказку ` Expand` (з офіційним гліфом стика L3 `\uE104`), що показує користувачеві спосіб миттєвого розгортання вікна.
+  5. У `sphaira/source/app.cpp` додано підтримку сенсорного розгортання: тап по міні-бейджі у правому верхньому кутку миттєво розгортає згорнуту інсталяцію на весь екран.
+  6. У `tests/test_transport_install_queue.cpp` додано тестові твердження для `TransportOrigin::Usb`.
+  7. Версію піднято до `0.13.771` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.770 — disable B and map X to Cancel installation for FTP/MTP/HTTP
 

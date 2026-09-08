@@ -7,13 +7,14 @@ namespace sphaira::ui::menu::dbi {
 
 enum class TransportOrigin {
     Dbi,
+    Usb,
     Mtp,
     Ftp,
     Web,
 };
 
 inline constexpr bool HasKnownBatchTotals(TransportOrigin origin) {
-    return origin == TransportOrigin::Dbi || origin == TransportOrigin::Web;
+    return origin == TransportOrigin::Dbi || origin == TransportOrigin::Usb || origin == TransportOrigin::Web;
 }
 
 inline constexpr size_t QueueIndexNotFound = static_cast<size_t>(-1);

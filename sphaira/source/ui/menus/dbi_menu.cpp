@@ -58,7 +58,7 @@ InstallSession::~InstallSession() {
     m_screensaver.FlushPendingBrightness();
 }
 
-Menu::Menu(u32 flags) : InstallSession{"Install queue"_i18n, flags, TransportOrigin::Dbi} {
+Menu::Menu(u32 flags) : InstallSession{"PC Install (USB)"_i18n, flags, TransportOrigin::Usb} {
     m_state = State::WaitingForUsb;
 
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
@@ -229,6 +229,7 @@ void InstallSession::UpdateActions() {
             SetAction(Button::X, Action{"Cancel installation"_i18n, [this]() { CancelSession(); }});
         } else {
             SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
+            SetAction(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
         }
     }
 
@@ -266,6 +267,7 @@ void Menu::UpdateActions() {
             }}),
             std::make_pair(Button::A, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
             std::make_pair(Button::R3, Action{"Package target"_i18n, [this]() { CycleSelectedTarget(); }}),
+            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }}),
             std::make_pair(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }}),
             std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );
@@ -512,6 +514,7 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
                 info.status = m_origin == TransportOrigin::Mtp ? "MTP Install"_i18n
                     : m_origin == TransportOrigin::Ftp ? "FTP Install"_i18n
                     : m_origin == TransportOrigin::Web ? "Web Install"_i18n
+                    : m_origin == TransportOrigin::Usb ? "USB Install"_i18n
                     : "Installing"_i18n;
                 break;
             case State::Cancelled:      info.status = "Cancelled"_i18n; break;
