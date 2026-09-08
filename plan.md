@@ -1,8 +1,20 @@
-Поточний delivery — **v0.13.777** (dynamic minus button navigation to homebrew screen or app exit). Завершені плани збережено в
+Поточний delivery — **v0.13.778** (move file browser layout setting into view options submenu). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.777 — dynamic minus button navigation to homebrew screen or app exit
+## Поточний delivery: v0.13.778 — move file browser layout setting into view options submenu
+
+Статус: реалізовано; у файловому браузері вибір макета відображення («Layout»: «List» / «Icon») перенесено з верхнього рівня бічної панелі опцій («File Options») у вкладене підменю налаштувань відображення «View» («View Options») поруч із сортуванням, порядком та параметрами видимості елементів; з `DisplayOptions` видалено дубльований виклик `view_entry->SetHasSubmenu(true)`; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/ui/menus/filebrowser/filebrowser_options.cpp`:
+   - Видалено пункт «Layout» із початку головної панелі `FsView::DisplayOptions()` («File Options»).
+   - Додано пункт вибору макета «Layout» (з іконкою `ActionIcon::Layout`) на початок субменю `View` («View Options») із викликом `m_menu->SetIconLayout(index_out)`.
+   - Прибрано дублювання виклику `view_entry->SetHasSubmenu(true)`.
+2. Документація (`README.md`):
+   - Оновлено розділ `File Browser & Vector Iconography` з описом розташування налаштування Layout у підменю View Options.
+3. Підняти версію проекту до `0.13.778` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.777 — dynamic minus button navigation to homebrew screen or app exit
 
 Статус: реалізовано; кнопку Minus переведено на інтелектуальну навігацію з перевіркою поточного екрана: якщо користувач уже на головному екрані (екран Homebrew), кнопка Minus закриває програму (`App::Exit()`); якщо кнопка натиснута в будь-якому іншому місці програми (вкладка Tools у MainMenu, меню налаштувань, файловий браузер, бічні панелі/опції або підменю), вона миттєво відкриває головний екран Homebrew; compile/tests/NRO не запускаються за policy.
 

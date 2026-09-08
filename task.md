@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.777** (dynamic minus button navigation to homebrew screen or app exit). Завершені задачі збережено в
+Актуальний delivery — **v0.13.778** (move file browser layout setting into view options submenu). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.777 (dynamic minus button navigation to homebrew screen or app exit)
+## Поточний delivery: v0.13.778 (move file browser layout setting into view options submenu)
+
+- [x] `FILEBROWSER-LAYOUT-TO-VIEW-778` — у `sphaira/source/ui/menus/filebrowser/filebrowser_options.cpp` перенесено перемикач «Layout» («List» / «Icon») з кореневої панелі «File Options» у підменю «View» («View Options») поруч із сортуванням та відображенням; призначено іконку `ActionIcon::Layout` та усунено дублювання виклику `view_entry->SetHasSubmenu(true)`.
+- [x] `README-FILEBROWSER-VIEW-LAYOUT-778` — оновлено `README.md` у розділі File Browser з описом розташування налаштування макета у підменю View Options.
+- [x] `CMAKELISTS-VERSION-BUMP-778` — підняти `sphaira_VERSION` до `0.13.778`.
+- [x] `DOCS-BUMP-778` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.777 (dynamic minus button navigation to homebrew screen or app exit)
 
 - [x] `UI-MINUS-WIDGET-MAIN-SCREEN-777` — у `Widget` (`sphaira/include/ui/widget.hpp`) додано віртуальні методи `IsMainScreen()` та `OpenMainScreen()`, а в `MainMenu` (`main_menu.hpp` / `main_menu.cpp`) реалізовано перевірку перебування на вкладці Homebrew та перемикання на неї через `SwitchTo(m_centre_menu.get())`.
 - [x] `APP-MINUS-NAVIGATION-777` — у `App` (`app.hpp` / `app.cpp`) додано методи `IsMainScreen()`, `OpenMainScreen()` та `HandleMinus()`: закриття програми при виклику з головного екрана Homebrew та миттєве відкриття Homebrew зі скиданням усіх оверлеїв і субменю при виклику з будь-якого іншого місця.

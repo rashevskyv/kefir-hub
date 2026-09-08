@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.777** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.778** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.778 — move file browser layout setting into view options submenu
+
+- Перенесено налаштування макета у файловому браузері до меню налаштувань відображення View:
+  1. Раніше селектор «Layout» («List» / «Icon») розміщувався на самому верху кореневого списку дій «File Options». Це змішувало візуальні режими відображення з основними файловими операціями (створення папок, перейменування, виділення, видалення тощо).
+  2. Вибір макета «Layout» перенесено у вкладене меню «View» («View Options») як перший елемент списку налаштувань поруч із сортуванням («Sort»), порядком сортування («Order»), відображенням прихованих файлів («Show Hidden»), розміщенням папок на початку («Folders First») та прихованих у кінці («Hidden Last»).
+  3. Пункту «Layout» призначено векторну іконку `ActionIcon::Layout`, що узгоджується з оформленням пункту входу у «View».
+  4. Прибрано випадковий повторний виклик `view_entry->SetHasSubmenu(true)`.
+  5. Оновлено документацію `README.md` у розділі File Browser.
+  6. Версію піднято до `0.13.778` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.777 — dynamic minus button navigation to homebrew screen or app exit
 

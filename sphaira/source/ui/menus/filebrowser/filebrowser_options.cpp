@@ -211,13 +211,6 @@ void FsView::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("File Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-    SidebarEntryArray::Items layout_items;
-    layout_items.push_back("List"_i18n);
-    layout_items.push_back("Icon"_i18n);
-    options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
-        m_menu->SetIconLayout(index_out);
-    }, m_menu->IsIconLayout() ? 1 : 0, "Icon shows file thumbnails and folder previews."_i18n);
-
     const auto is_root = m_fs_entry.type == FsType::Root;
 
     // at the root, sources can be managed in place, with the same options
@@ -561,6 +554,13 @@ void FsView::DisplayOptions() {
         auto options = std::make_unique<Sidebar>("View Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
 
+        SidebarEntryArray::Items layout_items;
+        layout_items.push_back("List"_i18n);
+        layout_items.push_back("Icon"_i18n);
+        options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
+            m_menu->SetIconLayout(index_out);
+        }, m_menu->IsIconLayout() ? 1 : 0, "Icon shows file thumbnails and folder previews."_i18n)->SetIcon(ActionIcon::Layout);
+
         SidebarEntryArray::Items sort_items;
         sort_items.push_back("Size"_i18n);
         sort_items.push_back("Alphabetical"_i18n);
@@ -595,7 +595,6 @@ void FsView::DisplayOptions() {
         }, "Push hidden entries to the bottom of the listing."_i18n)->SetIcon(ActionIcon::Sort);
     }, "Change display order and visibility settings for files."_i18n);
     view_entry->SetIcon(ActionIcon::Layout);
-    view_entry->SetHasSubmenu(true);
     view_entry->SetHasSubmenu(true);
 
     if (m_fs_entry.type == FsType::Archive && m_entries_current.size()) {
