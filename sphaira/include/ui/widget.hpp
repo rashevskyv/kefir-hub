@@ -56,6 +56,12 @@ struct Widget : public Object {
         return false;
     }
 
+    virtual auto IsMainScreen() const -> bool {
+        return false;
+    }
+
+    virtual void OpenMainScreen() {}
+
     virtual auto IsModal() const -> bool {
         return false;
     }

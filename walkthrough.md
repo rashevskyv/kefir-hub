@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.776** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.777** (2026-09-08). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.777 — dynamic minus button navigation to homebrew screen or app exit
+
+- Змінено поведінку кнопки Minus (`-`) для зручної та безпечної навігації:
+  1. Раніше кнопка Minus була прив'язана до безпосереднього закриття всієї програми (`App::Exit`) у базовому класі `MenuBase`, у `MainMenu` та деяких підменю, через що випадкове натискання кнопки Minus у будь-якому меню або інструменті миттєво аварійно завершувало роботу програми без можливості повернення.
+  2. Головним екраном програми є екран Homebrew (`m_centre_menu`). Логіку кнопки Minus оновлено: тепер вона перевіряє поточне місцезнаходження користувача:
+     - Якщо кнопка Minus натиснута безпосередньо на головному екрані Homebrew (і немає активних модальних діалогів чи субменю), вона виконує закриття програми (`App::Exit()`).
+     - Якщо кнопка Minus натиснута в будь-якому іншому місці програми (наприклад, на вкладці Tools, у файловому браузері, меню налаштувань, бічних панелях опцій тощо), вона миттєво відкриває головний екран Homebrew (скидаючи всі відкриті субменю та перемикаючи активну вкладку на Homebrew). Наступне натискання кнопки Minus уже на головному екрані призводить до штатного закриття програми.
+  3. У `Widget` (`sphaira/include/ui/widget.hpp`) додано віртуальні методи `IsMainScreen()` та `OpenMainScreen()`.
+  4. У `MainMenu` реалізовано методи перевірки активного екрана Homebrew (`IsMainScreen()`) та перемикання на Homebrew (`OpenMainScreen()`).
+  5. У `App` (`sphaira/include/app.hpp` та `sphaira/source/app.cpp`) реалізовано методи `App::IsMainScreen()`, `App::OpenMainScreen()` та `App::HandleMinus()`.
+  6. Обробники дії `Button::SELECT` оновлено на `App::HandleMinus` у `MenuBase`, `MainMenu`, `settings_fancurve.cpp`, `filebrowser.cpp`, `file_picker.cpp` та `sidebar.cpp`.
+  7. Оновлено документацію `README.md`.
+  8. Версію піднято до `0.13.777` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.776 — single-prompt concise notification on incomplete TegraExplorer restore
 

@@ -550,6 +550,34 @@ auto App::Pop() -> void {
     }
 }
 
+auto App::IsMainScreen() -> bool {
+    if (!g_app || g_app->m_widgets.empty()) {
+        return false;
+    }
+    if (g_app->m_widgets.size() != 1) {
+        return false;
+    }
+    return g_app->m_widgets.front()->IsMainScreen();
+}
+
+auto App::OpenMainScreen() -> void {
+    if (!g_app || g_app->m_widgets.empty()) {
+        return;
+    }
+    for (size_t i = 1; i < g_app->m_widgets.size(); ++i) {
+        g_app->m_widgets[i]->SetPop();
+    }
+    g_app->m_widgets.front()->OpenMainScreen();
+}
+
+auto App::HandleMinus() -> void {
+    if (IsMainScreen()) {
+        App::Exit();
+    } else {
+        OpenMainScreen();
+    }
+}
+
 namespace {
 
 // follows a container's delegation down to the page it is actually showing.

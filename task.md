@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.776** (single-prompt concise notification on incomplete TegraExplorer restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.777** (dynamic minus button navigation to homebrew screen or app exit). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.776 (single-prompt concise notification on incomplete TegraExplorer restore)
+## Поточний delivery: v0.13.777 (dynamic minus button navigation to homebrew screen or app exit)
+
+- [x] `UI-MINUS-WIDGET-MAIN-SCREEN-777` — у `Widget` (`sphaira/include/ui/widget.hpp`) додано віртуальні методи `IsMainScreen()` та `OpenMainScreen()`, а в `MainMenu` (`main_menu.hpp` / `main_menu.cpp`) реалізовано перевірку перебування на вкладці Homebrew та перемикання на неї через `SwitchTo(m_centre_menu.get())`.
+- [x] `APP-MINUS-NAVIGATION-777` — у `App` (`app.hpp` / `app.cpp`) додано методи `IsMainScreen()`, `OpenMainScreen()` та `HandleMinus()`: закриття програми при виклику з головного екрана Homebrew та миттєве відкриття Homebrew зі скиданням усіх оверлеїв і субменю при виклику з будь-якого іншого місця.
+- [x] `MENUS-MINUS-UNIFY-777` — уніфіковано прив'язку `Button::SELECT` на `App::HandleMinus` у `MenuBase`, `MainMenu`, `settings_fancurve.cpp`, `filebrowser.cpp`, `file_picker.cpp` та `sidebar.cpp`.
+- [x] `README-MINUS-NAV-777` — оновлено `README.md` із поясненням поведінки кнопки Minus.
+- [x] `CMAKELISTS-VERSION-BUMP-777` — підняти `sphaira_VERSION` до `0.13.777`.
+- [x] `DOCS-BUMP-777` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.776 (single-prompt concise notification on incomplete TegraExplorer restore)
 
 - [x] `USERS-RESTORE-ONCE-776` — у `OfferPendingRestore` (`sphaira/source/ui/menus/users/users_restore.cpp`) додано переведення pending у стан `applied` через `SavePending` при незавершеному ресторані в TegraExplorer (`wait_nand_restore` та `wait_link`), щоб сповіщення показувалося лише один раз.
 - [x] `USERS-RESTORE-TEXT-SIMPLIFY-776` — спрощено текст модального вікна до `"TegraExplorer did not finish restoring profiles & play hours."_i18n`, прибравши зайвий блок «If the console will not boot...», неактуальний для вже запущеної консолі.

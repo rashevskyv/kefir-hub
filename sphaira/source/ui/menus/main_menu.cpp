@@ -273,7 +273,7 @@ MainMenu::MainMenu() {
                 m_current_menu->FireAction(Button::START);
             }
         }}),
-        std::make_pair(Button::SELECT, Action{App::Exit})
+        std::make_pair(Button::SELECT, Action{App::HandleMinus})
     );
 
     m_centre_menu = std::make_unique<homebrew::Menu>();
@@ -360,6 +360,14 @@ void MainMenu::AddOnLRPress() {
             SwitchTo(m_centre_menu.get());
         }});
     }
+}
+
+auto MainMenu::IsMainScreen() const -> bool {
+    return m_current_menu == m_centre_menu.get();
+}
+
+void MainMenu::OpenMainScreen() {
+    SwitchTo(m_centre_menu.get());
 }
 
 } // namespace sphaira::ui::menu::main

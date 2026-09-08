@@ -97,6 +97,13 @@ public:
     static void PopToMenu();
     static void Pop();
 
+    // true if currently on the main screen (Homebrew menu)
+    static auto IsMainScreen() -> bool;
+    // pops all widgets above MainMenu and switches to Homebrew
+    static void OpenMainScreen();
+    // checks location: exits if on main screen, opens main screen otherwise
+    static void HandleMinus();
+
     // true if this widget owns the footer hint row, i.e. it is the top of the
     // widget stack (or the page a top-of-stack container delegates to). Every
     // other widget on the stack is covered and draws no hints. Child objects

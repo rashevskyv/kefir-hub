@@ -607,7 +607,8 @@ void Sidebar::SetupButtons() {
         }}),
         std::make_pair(Button::START, Action{"", [this](){
             SetPop();
-        }})
+        }}),
+        std::make_pair(Button::SELECT, Action{App::HandleMinus})
     );
 }
 

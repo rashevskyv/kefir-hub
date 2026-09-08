@@ -1,8 +1,30 @@
-Поточний delivery — **v0.13.776** (single-prompt concise notification on incomplete TegraExplorer restore). Завершені плани збережено в
+Поточний delivery — **v0.13.777** (dynamic minus button navigation to homebrew screen or app exit). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.776 — single-prompt concise notification on incomplete TegraExplorer restore
+## Поточний delivery: v0.13.777 — dynamic minus button navigation to homebrew screen or app exit
+
+Статус: реалізовано; кнопку Minus переведено на інтелектуальну навігацію з перевіркою поточного екрана: якщо користувач уже на головному екрані (екран Homebrew), кнопка Minus закриває програму (`App::Exit()`); якщо кнопка натиснута в будь-якому іншому місці програми (вкладка Tools у MainMenu, меню налаштувань, файловий браузер, бічні панелі/опції або підменю), вона миттєво відкриває головний екран Homebrew; compile/tests/NRO не запускаються за policy.
+
+1. У `Widget` (`sphaira/include/ui/widget.hpp`):
+   - Додано віртуальні методи `virtual auto IsMainScreen() const -> bool` (за замовчуванням `false`) та `virtual void OpenMainScreen()`.
+2. У `MainMenu` (`sphaira/include/ui/menus/main_menu.hpp` та `sphaira/source/ui/menus/main_menu.cpp`):
+   - Реалізовано `IsMainScreen() const`: повертає `true`, якщо активне меню `m_current_menu` дорівнює `m_centre_menu.get()` (екран Homebrew).
+   - Реалізовано `OpenMainScreen()`: перемикає вкладку на `m_centre_menu.get()` (`SwitchTo(m_centre_menu.get())`).
+   - У конструкторі дію `Button::SELECT` переведено з безумовного `App::Exit` на `App::HandleMinus`.
+3. У `App` (`sphaira/include/app.hpp` та `sphaira/source/app.cpp`):
+   - Додано статичні методи `IsMainScreen()`, `OpenMainScreen()` та `HandleMinus()`.
+   - `IsMainScreen()`: перевіряє, що розмір стека віджетів дорівнює 1 (відсутні оверлеї/субменю) та кореневий віджет `MainMenu` перебуває на екрані Homebrew.
+   - `OpenMainScreen()`: позначає всі дочірні віджети стека вище кореневого через `SetPop()` і перемикає `MainMenu` на Homebrew.
+   - `HandleMinus()`: якщо `IsMainScreen() == true`, викликає `App::Exit()`, інакше викликає `OpenMainScreen()`.
+4. Уніфікація обробників кнопки Minus:
+   - У `MenuBase` (`sphaira/source/ui/menus/menu_base.cpp`) дефолтну дію `Button::SELECT` змінено з `App::Exit` на `App::HandleMinus`.
+   - У `settings_fancurve.cpp`, `filebrowser.cpp`, `file_picker.cpp` та `sidebar.cpp` дію кнопки Minus переведено на `App::HandleMinus`.
+5. Документація (`README.md`):
+   - Додано опис нової логіки кнопки Minus у підрозділ швидкої навігації.
+6. Підняти версію проекту до `0.13.777` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.776 — single-prompt concise notification on incomplete TegraExplorer restore
 
 Статус: реалізовано; у `sphaira/source/ui/menus/users/users_restore.cpp` (`OfferPendingRestore`) для фази `wait_nand_restore` у разі відсутності маркера завершення TE додано переведення pending стану в `applied` через `SavePending`, завдяки чому сповіщення показується лише один раз і більше не спливає при наступних запусках програми; з модального повідомлення прибрано зайвий текст «If the console will not boot...», оскільки консоль уже успішно завантажена; додано ключ перекладу до 14 мовних файлів `assets/romfs/i18n/*.json`; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 

@@ -481,9 +481,7 @@ Menu::Menu(const LocationCallback& cb, const std::vector<std::string>& filter, c
     FsEntry entry = FS_ENTRY_DEFAULT;
 
     if (!IsTab()) {
-        SetAction(Button::SELECT, Action{"Close"_i18n, [this](){
-            PromptIfShouldExit();
-        }});
+        SetAction(Button::SELECT, Action{App::HandleMinus});
     }
 
     this->SetActions(
