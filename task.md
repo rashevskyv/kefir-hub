@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.791** (restore payload.bin in TE scripts and verify Hekate integrity). Завершені задачі збережено в
+Актуальний delivery — **v0.13.792** (payload swap fallback for legacy Hekate and bidirectional Hekate restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.791 (restore payload.bin in TE scripts and verify Hekate integrity)
+## Поточний delivery: v0.13.792 (payload swap fallback for legacy Hekate and bidirectional Hekate restore)
+
+- [x] `PAYLOAD-SWAP-FALLBACK-792` — оновлено `utils::swapPayload` та `rebootToPayload`: при відсутності Hekate API файл `sd:/bootloader/update.bin` гарантовано зберігає Hekate, а `sd:/payload.bin` підміняється на цільовий пейлоад (TegraExplorer).
+- [x] `PAYLOAD-REVERT-SWAP-792` — оновлено `utils::revertPayloadSwap`: відновлює `sd:/payload.bin` із резервної копії `sd:/bootloader/update.bin`.
+- [x] `TEGRA-RESTORE-UPDATE-BIN-792` — у всіх шести `.te` скриптах додано примусове копіювання `sd:/bootloader/update.bin` у `sd:/payload.bin` на старті (early disarm) та у `goHekate()`.
+- [x] `README-DOCS-UPDATE-792` — оновлено документацію `README.md` щодо фолбеку підміни та відновлення пейлоада.
+- [x] `CMAKELISTS-VERSION-BUMP-792` — підняти `sphaira_VERSION` до `0.13.792`.
+- [x] `DOCS-BUMP-792` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-792` — перевірка користувачем фолбек-ланцюжка на консолі без Hekate Payload API.
+
+## Попередній delivery: v0.13.791 (restore payload.bin in TE scripts and verify Hekate integrity)
 
 - [x] `TEGRA-RESTORE-PAYLOAD-BIN-791` — відновлено перевірку та ланцюжок запуску `sd:/payload.bin` (який є Hekate на збірках Kefir) у `goHekate` для всіх `.te` скриптів.
 - [x] `TEGRA-EARLY-DISARM-791` — реалізовано раннє роззброєння (видалення `hekate-payload-request.ini` та відновлення `hekate_ipl.ini` з видаленням `.bak`) на старті виконання скриптів у TegraExplorer для запобігання boot loop.

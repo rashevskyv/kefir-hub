@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.791** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.792** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.792 — payload swap fallback for legacy Hekate & bidirectional Hekate restore
+
+- **Фолбек підміни пейлоада (`swapPayload`) у разі відсутності Hekate Payload API**:
+  - У `utils::swapPayload` та `utils::rebootToPayload` реалізовано повноцінний фолбек для консолей із версіями Hekate, які не підтримують одноразовий запит `/config/kefir/hekate-payload-request.ini`.
+  - Перед підміною обов'язково перевіряється наявність `sd:/bootloader/update.bin`: якщо він відсутній або порожній, Sphaira копіює поточний `sd:/payload.bin` (Hekate) у `sd:/bootloader/update.bin`, забезпечуючи надійну резервну копію Hekate.
+  - Після цього цільовий пейлоад (TegraExplorer) копіюється у `sd:/payload.bin`, налаштовується тимчасовий autoboot у `hekate_ipl.ini`, виконується скидання буферів (`fsdevCommitDevice`, `sd.Commit`) та надсилається запит на апаратний reboot.
+- **Примусове відновлення Hekate у скриптах TegraExplorer**:
+  - У всіх 6 автоматизованих скриптах RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) як на початку виконання (early disarm), так і у фінальній процедурі `goHekate()` додано примусове відновлення:
+    `if (fsexists("sd:/bootloader/update.bin")) { delfile("sd:/payload.bin") copyfile("sd:/bootloader/update.bin", "sd:/payload.bin") }`
+  - Це гарантує, що `sd:/payload.bin` відновлюється до оригінального Hekate одразу ж після входу в TegraExplorer (захист від зациклення при вимкненні) та повторно перед передачею керування Hekate.
+- **Оновлення `revertPayloadSwap`**:
+  - Функцію `utils::revertPayloadSwap` адаптовано під новий контракт: відновлення `sd:/payload.bin` безпосередньо з `sd:/bootloader/update.bin`.
+- **Версія програми**: піднято `sphaira_VERSION` до `0.13.792` у `sphaira/CMakeLists.txt`. За політикою репозиторію збірка NRO не запускалася (очікується компіляція користувачем).
 
 ## v0.13.791 — restore payload.bin in TE scripts & verify Hekate integrity
 

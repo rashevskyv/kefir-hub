@@ -19,6 +19,11 @@ goHekate = {
         delfile("sd:/bootloader/hekate_ipl.ini.bak")
     }
     delfile("sd:/config/kefir/hekate-payload-request.ini")
+    if (fsexists("sd:/bootloader/update.bin")) {
+        println("Restoring Hekate (payload.bin)...")
+        delfile("sd:/payload.bin")
+        copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
+    }
     println("Loading Hekate (bootloader/update.bin, payload.bin)...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {

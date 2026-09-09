@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.791**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.792**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.792 поза ponytail-чергою: реалізовано повноцінний фолбек підміни `sd:/payload.bin` для версій Hekate без підтримки Payload API (`swapPayload` зберігає Hekate у `sd:/bootloader/update.bin`, записує цільовий пейлоад у `sd:/payload.bin` та конфігурує autoboot); у всіх шести .te скриптах RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) як на початку (early disarm), так і в `goHekate()` додано обов'язкове примусове зворотне копіювання Hekate з `sd:/bootloader/update.bin` у `sd:/payload.bin`; оновлено `revertPayloadSwap`; оновлено README.md; версію піднято до 0.13.792. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.791 поза ponytail-чергою: відновлено перевірку та завантаження `sd:/payload.bin` (Hekate IPL на збірках Kefir) у `goHekate()` для всіх шести .te скриптів RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) одразу після `sd:/bootloader/update.bin`; реалізовано раннє роззброєння (early disarm: примусове видалення `hekate-payload-request.ini` та відновлення `hekate_ipl.ini` з видаленням `.bak`) на старті виконання скриптів для запобігання зацикленню завантаження TegraExplorer при збоях; підтверджено повну цілісність пейлоадів (Sphaira не перезаписує `payload.bin` або `bootloader/update.bin`, а інсталює TegraExplorer виключно у `/bootloader/payloads/TegraExplorer.bin`); версію піднято до 0.13.791; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

@@ -447,153 +447,101 @@ bool restoreHekateIni() {
 
 // Swap payload.bin with HATS installer (no reboot)
 // Returns true on success, false on failure
-// NOTE: HATS installer payload handles the actual swapping on boot
-// This function is kept for potential future use
+// Swap /payload.bin with target payload (preserving Hekate in /bootloader/update.bin)
+// Returns true on success, false on failure
 bool swapPayload(const char* path) {
     constexpr const char* PAYLOAD_BIN = "/payload.bin";
-    constexpr const char* PAYLOAD_BAK = "/payload.bak";
     constexpr const char* UPDATE_BIN = "/bootloader/update.bin";
-    constexpr const char* UPDATE_BAK = "/bootloader/update.bak";
 
-    log_write("swapPayload: swapping with HATS installer: %s\n", path);
+    log_write("swapPayload: swapping %s with target payload: %s\n", PAYLOAD_BIN, path);
 
-    // Step 1: Read HATS installer into memory
-    FILE* f_installer = fopen(path, "rb");
-    if (!f_installer) {
-        log_write("swapPayload: HATS installer not found: %s\n", path);
-        return false;
-    }
-    fseek(f_installer, 0, SEEK_END);
-    long installer_size = ftell(f_installer);
-    fseek(f_installer, 0, SEEK_SET);
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/bootloader");
 
-    if (installer_size <= 0) {
-        log_write("swapPayload: invalid HATS installer size: %ld\n", installer_size);
-        fclose(f_installer);
-        return false;
-    }
-
-    std::vector<u8> installer_data(installer_size);
-    size_t bytes_read = fread(installer_data.data(), 1, installer_size, f_installer);
-    fclose(f_installer);
-
-    if (bytes_read != (size_t)installer_size) {
-        log_write("swapPayload: failed to read HATS installer\n");
-        return false;
-    }
-    log_write("swapPayload: read HATS installer (%ld bytes)\n", installer_size);
-
-    fs::FsNativeSd fs;
-    fs.CreateDirectory("/bootloader");
-
-    // Helper lambda to swap a payload file
-    auto swap_file = [&](const char* src_path, const char* bak_path) {
-        FILE* f_src = fopen(src_path, "rb");
-        if (!f_src) {
-            log_write("swapPayload: %s not found, skipping\n", src_path);
-            return;
-        }
-        fclose(f_src);
-
-        log_write("swapPayload: backing up %s to %s\n", src_path, bak_path);
-
-        // Read original
-        f_src = fopen(src_path, "rb");
-        fseek(f_src, 0, SEEK_END);
-        long size = ftell(f_src);
-        fseek(f_src, 0, SEEK_SET);
-
-        if (size > 0) {
-            std::vector<u8> original(size);
-            fread(original.data(), 1, size, f_src);
-            fclose(f_src);
-
-            // Write backup
-            FILE* f_bak = fopen(bak_path, "wb");
-            if (f_bak) {
-                fwrite(original.data(), 1, size, f_bak);
-                fclose(f_bak);
-                log_write("swapPayload: backed up %s (%ld bytes)\n", src_path, size);
+    // Ensure /bootloader/update.bin contains Hekate before modifying /payload.bin
+    if (!sd.FileExists(UPDATE_BIN) && sd.FileExists(PAYLOAD_BIN)) {
+        std::vector<u8> hekate_data;
+        if (R_SUCCEEDED(sd.read_entire_file(PAYLOAD_BIN, hekate_data)) && !hekate_data.empty()) {
+            FILE* f_upd = fopen(UPDATE_BIN, "wb");
+            if (f_upd) {
+                fwrite(hekate_data.data(), 1, hekate_data.size(), f_upd);
+                fflush(f_upd);
+                fclose(f_upd);
+                log_write("swapPayload: preserved Hekate from %s to %s (%zu bytes)\n",
+                    PAYLOAD_BIN, UPDATE_BIN, hekate_data.size());
+            } else {
+                sd.write_entire_file(UPDATE_BIN, hekate_data);
             }
-
-            // Write HATS installer
-            FILE* f_dst = fopen(src_path, "wb");
-            if (f_dst) {
-                fwrite(installer_data.data(), 1, installer_size, f_dst);
-                fclose(f_dst);
-                log_write("swapPayload: wrote HATS installer to %s (%ld bytes)\n", src_path, installer_size);
-            }
-        } else {
-            fclose(f_src);
         }
-    };
+    }
 
-    // Step 2: Swap /payload.bin (modchip looks here first)
-    swap_file(PAYLOAD_BIN, PAYLOAD_BAK);
+    // Read replacement payload into memory
+    std::vector<u8> payload_data;
+    if (R_FAILED(sd.read_entire_file(path, payload_data)) || payload_data.empty()) {
+        log_write("swapPayload: failed to read replacement payload: %s\n", path);
+        return false;
+    }
 
-    // Step 3: Swap /bootloader/update.bin (modchip fallback)
-    swap_file(UPDATE_BIN, UPDATE_BAK);
+    // Replace /payload.bin
+    sd.DeleteFile(PAYLOAD_BIN);
+    FILE* fp = fopen(PAYLOAD_BIN, "wb");
+    bool written = false;
+    if (fp) {
+        written = (fwrite(payload_data.data(), 1, payload_data.size(), fp) == payload_data.size());
+        fflush(fp);
+        fclose(fp);
+    }
+    if (!written) {
+        if (R_FAILED(sd.write_entire_file(PAYLOAD_BIN, payload_data))) {
+            log_write("swapPayload: failed to write %s\n", PAYLOAD_BIN);
+            return false;
+        }
+    }
 
-    // Step 4: Sync filesystem
-    log_write("swapPayload: syncing filesystem...\n");
     fsdevCommitDevice("sdmc");
-
-    log_write("swapPayload: swap complete\n");
+    sd.Commit();
+    log_write("swapPayload: successfully swapped %s with %s (%zu bytes)\n",
+        PAYLOAD_BIN, path, payload_data.size());
     return true;
 }
 
-// Revert payload swap (restore hekate from backup)
+// Revert payload swap (restore Hekate from /bootloader/update.bin)
 // Returns true if reverted, false if no backup existed
 bool revertPayloadSwap() {
     constexpr const char* PAYLOAD_BIN = "/payload.bin";
-    constexpr const char* PAYLOAD_BAK = "/payload.bak";
     constexpr const char* UPDATE_BIN = "/bootloader/update.bin";
-    constexpr const char* UPDATE_BAK = "/bootloader/update.bak";
 
-    bool reverted = false;
-
-    // Helper lambda to restore a file from backup
-    auto restore_file = [&](const char* dst_path, const char* bak_path) {
-        FILE* f_bak = fopen(bak_path, "rb");
-        if (!f_bak) {
-            return;
-        }
-
-        fseek(f_bak, 0, SEEK_END);
-        long bak_size = ftell(f_bak);
-        fseek(f_bak, 0, SEEK_SET);
-
-        if (bak_size > 0) {
-            std::vector<u8> backup_data(bak_size);
-            fread(backup_data.data(), 1, bak_size, f_bak);
-            fclose(f_bak);
-
-            FILE* f_dst = fopen(dst_path, "wb");
-            if (f_dst) {
-                fwrite(backup_data.data(), 1, bak_size, f_dst);
-                fclose(f_dst);
-                log_write("revertPayloadSwap: restored %s (%ld bytes)\n", dst_path, bak_size);
-                reverted = true;
-            }
-        } else {
-            fclose(f_bak);
-        }
-        remove(bak_path);
-    };
-
-    // Restore all backups
-    restore_file(PAYLOAD_BIN, PAYLOAD_BAK);
-    restore_file(UPDATE_BIN, UPDATE_BAK);
-
-    if (!reverted) {
-        log_write("revertPayloadSwap: no backup found, nothing to revert\n");
+    fs::FsNativeSd sd;
+    if (!sd.FileExists(UPDATE_BIN)) {
+        log_write("revertPayloadSwap: %s not found, nothing to restore\n", UPDATE_BIN);
         return false;
     }
 
-    // Sync filesystem
-    fsdevCommitDevice("sdmc");
+    std::vector<u8> hekate_data;
+    if (R_FAILED(sd.read_entire_file(UPDATE_BIN, hekate_data)) || hekate_data.empty()) {
+        log_write("revertPayloadSwap: failed to read %s\n", UPDATE_BIN);
+        return false;
+    }
 
-    log_write("revertPayloadSwap: revert complete\n");
+    sd.DeleteFile(PAYLOAD_BIN);
+    FILE* fp = fopen(PAYLOAD_BIN, "wb");
+    bool written = false;
+    if (fp) {
+        written = (fwrite(hekate_data.data(), 1, hekate_data.size(), fp) == hekate_data.size());
+        fflush(fp);
+        fclose(fp);
+    }
+    if (!written) {
+        if (R_FAILED(sd.write_entire_file(PAYLOAD_BIN, hekate_data))) {
+            log_write("revertPayloadSwap: failed to write %s\n", PAYLOAD_BIN);
+            return false;
+        }
+    }
+
+    fsdevCommitDevice("sdmc");
+    sd.Commit();
+    log_write("revertPayloadSwap: successfully restored %s from %s (%zu bytes)\n",
+        PAYLOAD_BIN, UPDATE_BIN, hekate_data.size());
     return true;
 }
 
@@ -810,16 +758,22 @@ bool rebootToPayload(const char* path) {
         log_write("rebootToPayload: Hekate payload API marker missing or unsupported\n");
     }
 
-    // Fallback: set hekate_ipl.ini autoboot
-    log_write("rebootToPayload: falling back to hekate autoboot for %s\n", rel_path.c_str());
-    if (setHekateAutobootPayload(rel_path.c_str())) {
+    // Fallback: When Hekate Payload API is not available, swap /payload.bin with target payload
+    // (preserving Hekate in /bootloader/update.bin) and set hekate_ipl.ini autoboot.
+    log_write("rebootToPayload: falling back to payload.bin swap and hekate autoboot for %s\n", rel_path.c_str());
+    const bool swapped = swapPayload(abs_path.c_str());
+    const bool autoboot_set = setHekateAutobootPayload(rel_path.c_str());
+
+    if (swapped || autoboot_set) {
+        fsdevCommitDevice("sdmc");
+        sd.Commit();
         const Result rc = requestForcedReboot();
         if (R_SUCCEEDED(rc)) {
             return true;
         }
-        log_write("rebootToPayload: requestForcedReboot failed after autoboot: 0x%x\n", rc);
+        log_write("rebootToPayload: requestForcedReboot failed after fallback: 0x%x\n", rc);
     } else {
-        log_write("rebootToPayload: setHekateAutobootPayload failed\n");
+        log_write("rebootToPayload: fallback payload swap and autoboot both failed\n");
     }
 
     return false;

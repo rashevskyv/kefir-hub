@@ -1,8 +1,23 @@
-Поточний delivery — **v0.13.791** (restore payload.bin in TE scripts and verify Hekate integrity). Завершені плани збережено в
+Поточний delivery — **v0.13.792** (payload swap fallback for legacy Hekate and bidirectional Hekate restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.791 — restore payload.bin in TE scripts and verify Hekate integrity
+## Поточний delivery: v0.13.792 — payload swap fallback for legacy Hekate and bidirectional Hekate restore
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Реалізація надійного фолбеку підміни пейлоада (`swapPayload`) при відсутності Hekate Payload API**:
+   - Якщо одноразовий Hekate Payload API недоступний або запис запиту неможливий, Sphaira переходить на апаратний фолбек підміни `sd:/payload.bin`.
+   - Перед підміною Sphaira перевіряє наявність `sd:/bootloader/update.bin`; якщо файл відсутній, вона копіює поточний `sd:/payload.bin` (Hekate) у `sd:/bootloader/update.bin`, гарантуючи збереження Hekate як резервної копії.
+   - Далі цільовий пейлоад (TegraExplorer) копіюється в `sd:/payload.bin`, записується autoboot в `hekate_ipl.ini` та виконується перезавантаження через `requestForcedReboot`.
+2. **Примусове зворотне відновлення Hekate у скриптах TegraExplorer**:
+   - У всіх шести `.te` скриптах RomFS (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) як на початку (early disarm), так і у фінальній процедурі `goHekate()` додано примусове відновлення Hekate:
+     `if (fsexists("sd:/bootloader/update.bin")) { delfile("sd:/payload.bin") copyfile("sd:/bootloader/update.bin", "sd:/payload.bin") }`
+   - Це миттєво повертає `sd:/payload.bin` у стан Hekate ще до запуску копіювання файлів, захищаючи консоль від boot loop навіть при раптовому вимкненні під час дампу.
+3. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.792` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.791 — restore payload.bin in TE scripts and verify Hekate integrity
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Відновлення перевірки `sd:/payload.bin` у процедурі повернення до Hekate (`goHekate`)**:
