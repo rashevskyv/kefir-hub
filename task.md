@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.792** (payload swap fallback for legacy Hekate and bidirectional Hekate restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.793** (diagnostic dashboard for dump script and 5s auto-reboot to Hekate). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.792 (payload swap fallback for legacy Hekate and bidirectional Hekate restore)
+## Поточний delivery: v0.13.793 (diagnostic dashboard for dump script and 5s auto-reboot to Hekate)
+
+- [x] `TEGRA-DUMP-DASHBOARD-793` — повний редизайн `nand_transfer_dump_auto.te`: верхній попіксельний графічний банер, живий апаратний спінер `spinner(1, 77, 0)`, таблиця діагностики статусів NAND, Pack, сейвів 0010, 0011, 00F0, 0041, лічильники прогресу та помилок, безпечний рядок активності та вікно логування `Event Log`.
+- [x] `TEGRA-DUMP-SPINNER-793` — додано регулярні виклики `upd_s() -> spinner()` під час читання та запису даних при створенні бекапу.
+- [x] `TEGRA-5S-AUTO-REBOOT-793` — заміна `pause()` на автоматичне 5-секундне очікування `sleep(5000)` у скриптах `nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te` та `playtime_restore.te`.
+- [x] `README-DOCS-UPDATE-793` — оновлено документацію `README.md` щодо графічного дашборду дампу та 5-секундного автоперезавантаження.
+- [x] `CMAKELISTS-VERSION-BUMP-793` — підняти `sphaira_VERSION` до `0.13.793`.
+- [x] `DOCS-BUMP-793` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-793` — перевірка користувачем дашборду дампу та 5-секундного автоперезавантаження на консолі.
+
+## Попередній delivery: v0.13.792 (payload swap fallback for legacy Hekate and bidirectional Hekate restore)
 
 - [x] `PAYLOAD-SWAP-FALLBACK-792` — оновлено `utils::swapPayload` та `rebootToPayload`: при відсутності Hekate API файл `sd:/bootloader/update.bin` гарантовано зберігає Hekate, а `sd:/payload.bin` підміняється на цільовий пейлоад (TegraExplorer).
 - [x] `PAYLOAD-REVERT-SWAP-792` — оновлено `utils::revertPayloadSwap`: відновлює `sd:/payload.bin` із резервної копії `sd:/bootloader/update.bin`.

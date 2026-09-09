@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.792**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.793**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.793 поза ponytail-чергою: повний редизайн скрипта дампу `nand_transfer_dump_auto.te` за стандартом діагностичного застосунку рестору (попіксельний банер `setpixels`, апаратний спінер `spinner(1, 77, 0)`, таблиця діагностики статусів NAND, Pack, сейвів 0010, 0011, 00F0, 0041, прогрес записаних файлів та облік помилок, безпечний рядок активності та плаваюча зона `Event Log` замість спалахів екрана `clear()`); у скриптах `nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te` блокуюче очікування `pause()` замінено на автоматичний 5-секундний таймаут `sleep(5000)` із повідомленням перед ланцюжком виклику `goHekate()`; оновлено README.md; версію піднято до 0.13.793. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.792 поза ponytail-чергою: реалізовано повноцінний фолбек підміни `sd:/payload.bin` для версій Hekate без підтримки Payload API (`swapPayload` зберігає Hekate у `sd:/bootloader/update.bin`, записує цільовий пейлоад у `sd:/payload.bin` та конфігурує autoboot); у всіх шести .te скриптах RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) як на початку (early disarm), так і в `goHekate()` додано обов'язкове примусове зворотне копіювання Hekate з `sd:/bootloader/update.bin` у `sd:/payload.bin`; оновлено `revertPayloadSwap`; оновлено README.md; версію піднято до 0.13.792. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

@@ -1,8 +1,26 @@
-Поточний delivery — **v0.13.792** (payload swap fallback for legacy Hekate and bidirectional Hekate restore). Завершені плани збережено в
+Поточний delivery — **v0.13.793** (diagnostic dashboard for dump script and 5s auto-reboot to Hekate). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.792 — payload swap fallback for legacy Hekate and bidirectional Hekate restore
+## Поточний delivery: v0.13.793 — diagnostic dashboard for dump script and 5s auto-reboot to Hekate
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Графічний діагностичний дашборд для скрипта дампу (`nand_transfer_dump_auto.te`)**:
+   - Повністю перероблено архітектуру відображення за зразком рестора (`nand_transfer_restore_auto.te`):
+     - Рядок 0: попіксельний темно-сірий банер `setpixels(0, 0, 1280, 16, 0x1B1B1B)`, бірюзовий заголовок `=== Dump Profiles and Playtime | DIAG 4.2.13 ===` та апаратний анімований спінер `spinner(1, 77, 0, 0x00FF00)`.
+     - Рядки 1–10: стабільна таблиця діагностики з індикацією джерела (Source NAND), цільової теки (Target Pack), поодиноких статусів системних сейвів (`0010`, `0011`, `00F0`, `0041`), кількості записаних файлів та лічильника помилок.
+     - Рядок 11: динамічний рядок активності з обрізанням задовгих імен файлів (понад 25 символів) без перенесення рядків.
+     - Рядки 13–38: виділена зона `Event Log` для детального звіту ходу операції.
+   - Усунуто мерехтіння екрана: прибрано виклики `clear()` для кожного окремого сейву.
+   - Інтегровано живий спінер: виклик `upd_s() -> spinner()` під час читання й запису.
+2. **Автоматичне 5-секундне перезавантаження в Hekate замість ручної паузи**:
+   - У скриптах дампу (`nand_transfer_dump_auto.te`) та рестора (`nand_transfer_restore_auto.te`), а також `account_0010_dump.te`, `account_0010_apply_link.te` та `playtime_restore.te` ручне блокуюче очікування `pause()` замінено на автоматичний 5-секундний таймаут `sleep(5000)` із повідомленням `Rebooting to Hekate in 5 seconds...`.
+   - Автоматичний 5-секундний таймаут застосовано також до preflight-перевірок помилок перед ланцюжком `goHekate()`.
+3. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.793` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.792 — payload swap fallback for legacy Hekate and bidirectional Hekate restore
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Реалізація надійного фолбеку підміни пейлоада (`swapPayload`) при відсутності Hekate Payload API**:

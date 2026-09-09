@@ -3,17 +3,15 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# One-shot: Hub writes restore_pending/nand + nand_pack.txt, copies this to
-# sd:/startup.te. Known-tree dump. TE 4.2.0 does not scroll: clear() each
-# save and before RESULT. RESULT uses color(): green OK / red NOT OK.
+# nand_transfer_dump_auto.te - Kefir Hub Profiles and Playtime Dump
+# Safe flat known-tree traversal (no recursive variable collisions)
+# Single clean spinner at top-right (77, 0)
+# Strictly formatted fixed-width activity lines preventing screen overflow
+# Dedicated live dashboard and rolling event log (rows 14-38)
+# Dumps 0010 (Profiles), 0011 (User ID Gen), 00F0 (Play Hours), 0041 (HOME icons)
 
 goHekate = {
-    saveObj = dict()
-    raw = ["BYTE[]"]
-    text = ""
-    lines = []
-    bytes = ["BYTE[]"]
-    println("Cleaning temp files...")
+    println("Cleaning temp flags...")
     delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
         delfile("sd:/bootloader/hekate_ipl.ini")
@@ -50,240 +48,496 @@ goHekate = {
         color(0xFF0000)
         println("Hekate payload not found (bootloader/update.bin, payload.bin).")
         color(0xFFFFFF)
-        println("Press any button to reboot...")
-        pause()
+        println("Rebooting in 5 seconds...")
+        sleep(5000)
         reboot()
     }
 }
-drawProgress = {
-    printpos(0, statusY)
-    print("                                                                             ")
-    printpos(0, statusY)
-    if (fname.len() < 50) {
-        print(statusState, idx, "/", total, fname, "")
-    } .else() {
-        print(statusState, idx, "/", total, "")
-    }
+
+# ------------------------------------------------------------------------------
+# SPINNER AND DASHBOARD GUI
+# ------------------------------------------------------------------------------
+
+upd_s = {
+    spinner()
 }
 
-dumpFilesIn = {
-    println("dir", savePath)
-    listing = saveObj.readdir(savePath)
-    if (listing.result) {
-        println("skip", savePath)
-    } .else() {
-        if (savePath != "/") {
-            mkdir(dstRoot + savePath)
-        }
-        files = listing.files.copy()
-        idx = 0
-        total = files.len()
-        println(" files", total)
-        if (total) {
-            statusPos = getprintpos()
-            statusY = statusPos.y
-            files.foreach("fname") {
-                fsrc = savePath + "/" + fname
-                if (savePath == "/") {
-                    fsrc = "/" + fname
-                }
-                idx = idx + 1
-                if (fname == "player.vend.dat") {
-                    statusState = "skip slow"
-                    drawProgress()
-                } .else() {
-                    statusState = "copy"
-                    drawProgress()
-                    bytes = saveObj.read(fsrc)
-                    out = dstRoot + fsrc
-                    writefile(out, bytes)
-                    wrote = wrote + 1
-                }
-            }
-            printpos(0, statusY + 1)
-        }
-    }
-}
+drawDashboard = {
+    pos = getprintpos()
 
-dumpKnownTree = {
-    mkdir(dstRoot)
-    savePath = "/"
-    dumpFilesIn()
-    savePath = "/su"
-    dumpFilesIn()
-    savePath = "/su/baas"
-    dumpFilesIn()
-    savePath = "/su/nas"
-    dumpFilesIn()
-    savePath = "/su/avators"
-    dumpFilesIn()
-    savePath = "/su/cache"
-    dumpFilesIn()
-}
+    # Row 0: Clear top bar to eliminate white box glitch, draw title and single top-right hardware spinner
+    setpixels(0, 0, 1280, 16, 0x1B1B1B)
+    printpos(0, 0)
+    color(0x00FFFF)
+    print("=== Dump Profiles and Playtime | DIAG 4.2.13 ===")
+    spinner(1, 77, 0, 0x00FF00)
 
-setSaveStat = {
-    if (saveId == "8000000000000010") {
-        n0010 = nthis
-        s0010 = st
-    }
-    if (saveId == "8000000000000011") {
-        n0011 = nthis
-        s0011 = st
-    }
-    if (saveId == "80000000000000F0") {
-        n00F0 = nthis
-        s00F0 = st
-    }
-    if (saveId == "8000000000000041") {
-        n0041 = nthis
-        s0041 = st
-    }
-}
-
-dumpOne = {
-    clear()
+    # Row 1: Source NAND
+    printpos(0, 1)
     color(0xFFFFFF)
-    println("Kefir Hub: dump profiles & play hours")
-    println("save", saveId)
-    println("pack:", pack)
-    println("")
-    nthis = 0
-    st = 0
-    bis = "bis:/save/" + saveId
-    if (!fsexists(bis)) {
-        println("skip missing", bis)
-        st = 0
-        nthis = 0
-    } .else() {
-        println("open", bis)
-        saveObj = readsave(bis)
-        dstRoot = pack + "/" + saveId
-        mkdir(dstRoot)
-        wrote_before = wrote
-        if (saveId == "80000000000000F0") {
-            savePath = "/"
-            dumpFilesIn()
-            if (wrote == wrote_before) {
-                println("PlayEvent.dat")
-                bytes = saveObj.read("PlayEvent.dat")
-                writefile(dstRoot + "/PlayEvent.dat", bytes)
-                wrote = wrote + 1
-            }
-        } .else() {
-            dumpKnownTree()
-        }
-        nthis = wrote - wrote_before
-        if (nthis > 0) {
-            st = 1
-            dumped = dumped + 1
-            if (saveId == "8000000000000010") {
-                got0010 = 1
-            }
-            if (saveId == "80000000000000F0") {
-                got00F0 = 1
-            }
-            println("ok", saveId, "files", nthis)
-        } .else() {
-            st = 2
-            println("empty", saveId)
-        }
-    }
-    setSaveStat()
-}
+    print("Source NAND:   ")
+    color(0x00FF00)
+    print(nandName, "                                 ")
 
-printSave = {
+    # Row 2: Target Pack
+    printpos(0, 2)
     color(0xFFFFFF)
-    println(label)
-    if (st == 1) {
+    print("Target Pack:   ")
+    color(0xFFFF00)
+    print("sd:/config/kefir/nand_transfer/", packNameShort, "                  ")
+
+    # Row 3: Separator
+    printpos(0, 3)
+    color(0x666666)
+    print("-----------------------------------------------------------------------------")
+
+    # Row 4: Header
+    printpos(0, 4)
+    color(0x00FFFF)
+    print("[TASK STATUS AND STATISTICS]")
+
+    # Row 5: 0010 (Profiles)
+    printpos(0, 5)
+    color(0xFFFFFF)
+    print("  0010 (User Profiles): ")
+    color(col0010)
+    print(stat0010, "                           ")
+
+    # Row 6: 0011 (User ID Gen)
+    printpos(0, 6)
+    color(0xFFFFFF)
+    print("  0011 (User ID Gen):   ")
+    color(col0011)
+    print(stat0011, "                           ")
+
+    # Row 7: 00F0 (Play Hours)
+    printpos(0, 7)
+    color(0xFFFFFF)
+    print("  00F0 (Play Hours):    ")
+    color(col00F0)
+    print(stat00F0, "                           ")
+
+    # Row 8: 0041 (HOME Icons)
+    printpos(0, 8)
+    color(0xFFFFFF)
+    print("  0041 (HOME Icons):    ")
+    color(col0041)
+    print(stat0041, "                           ")
+
+    # Row 9: Total progress
+    printpos(0, 9)
+    color(0xFFFFFF)
+    print("  Total Progress:       ")
+    color(0x00FF00)
+    print(wrote, " files written")
+    color(0xFFFFFF)
+    print("  |  Errors: ")
+    if (errors == 0) {
         color(0x00FF00)
-        println("  dumped ", nfiles, "files")
-    } .else() {
-        if (required) {
-            color(0xFF0000)
-            if (st == 2) {
-                println("  empty")
-            } .else() {
-                println("  missing")
-            }
-        } .else() {
-            color(0xFFFF00)
-            if (st == 2) {
-                println("  empty")
-            } .else() {
-                println("  skip")
-            }
-        }
-    }
-    color(0xFFFFFF)
-}
-
-printResult = {
-    clear()
-    color(0xFFFFFF)
-    println("Kefir Hub: dump profiles & play hours")
-    println("RESULT")
-    println("")
-    println("NAND:", nandName)
-    println("pack:", pack)
-    println("")
-    label = "Profiles (0010)"
-    st = s0010
-    nfiles = n0010
-    required = 1
-    printSave()
-    label = "User ID generator (0011)"
-    st = s0011
-    nfiles = n0011
-    required = 0
-    printSave()
-    label = "Play hours (00F0)"
-    st = s00F0
-    nfiles = n00F0
-    required = 1
-    printSave()
-    label = "HOME icons (0041)"
-    st = s0041
-    nfiles = n0041
-    required = 0
-    printSave()
-    println("")
-    if (got0010) {
-        if (got00F0) {
-            color(0x00FF00)
-            println("OK")
-            color(0xFFFFFF)
-            println("Profiles and play hours dumped.")
-            println("Open Kefir Hub to confirm.")
-            writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
-        } .else() {
-            color(0xFF0000)
-            println("NOT OK")
-            color(0xFFFFFF)
-            println("Play hours (00F0) not dumped.")
-            println("Open Kefir Hub to retry.")
-        }
     } .else() {
         color(0xFF0000)
-        println("NOT OK")
-        color(0xFFFFFF)
-        println("Profiles (0010) not dumped.")
-        println("Open Kefir Hub to retry.")
     }
+    print(errors, " errors        ")
+
+    # Row 10: Separator
+    printpos(0, 10)
+    color(0x666666)
+    print("-----------------------------------------------------------------------------")
+
+    # Row 11: Activity line
+    printpos(0, 11)
+    color(0xFFFF00)
+    print("Activity: ")
     color(0xFFFFFF)
-    println("")
-    println("Press any button to reboot to Hekate...")
-    pause()
+    print("Ready                                                               ")
+
+    # Row 13: Event Log Separator
+    printpos(0, 13)
+    color(0x666666)
+    print("--- Event Log ---------------------------------------------------------------")
+
+    color(0xFFFFFF)
+    printpos(pos.x, pos.y)
 }
+
+drawProgress = {
+    upd_s()
+
+    # Clear activity row
+    printpos(0, 11)
+    print("                                                                             ")
+
+    # Truncate filename if long (> 25 characters) to prevent line wrap
+    fnameDisplay = curFileName
+    if (curFileName.len() > 25) {
+        cutLen = curFileName.len() - 22
+        fnameDisplay = (curFileName - cutLen) + "..."
+    }
+
+    printpos(0, 11)
+    color(0xFFFF00)
+    print("Activity: ")
+    color(0xFFFFFF)
+    print(curSaveShort, " (", curFileIdx, "/", curDirTotal, "): ", curDir, "/", fnameDisplay, "                  ")
+
+    # Live count update on row 9
+    printpos(24, 9)
+    color(0x00FF00)
+    print(wrote, " files written")
+    color(0xFFFFFF)
+    print("  |  Errors: ")
+    if (errors == 0) {
+        color(0x00FF00)
+    } .else() {
+        color(0xFF0000)
+    }
+    print(errors, " errors        ")
+    color(0xFFFFFF)
+}
+
+logMsg = {
+    if (logY > 38) {
+        logY = 14
+    }
+    printpos(0, logY)
+    print("                                                                             ")
+    printpos(0, logY)
+    color(colLog)
+    print(msg)
+    color(0xFFFFFF)
+    logY = logY + 1
+}
+
+# ------------------------------------------------------------------------------
+# DUMP IMPLEMENTATION
+# ------------------------------------------------------------------------------
+
+dumpFilesInDir = {
+    listing = saveObj.readdir(curDir)
+    if (listing.result) {
+        if (curDir == "/") {
+            msg = "  [FAIL] Root readdir failed: rc=" + listing.result.str()
+            colLog = 0xFF0000
+            logMsg()
+            errors = errors + 1
+            saveErrors = saveErrors + 1
+        }
+    } .else() {
+        if (curDir != "/") {
+            mkdir(dstSaveDir + curDir)
+        }
+        files = listing.files.copy()
+        curDirTotal = files.len()
+        curFileIdx = 0
+        if (curDirTotal) {
+            files.foreach("dName") {
+                curFileIdx = curFileIdx + 1
+                curFileName = dName
+                if (curDir == "/") {
+                    fsrc = "/" + dName
+                } .else() {
+                    fsrc = curDir + "/" + dName
+                }
+                fdst = dstSaveDir + fsrc
+
+                if (dName == "player.vend.dat") {
+                    msg = "  [SKIP] Slow vendor file: " + dName
+                    colLog = 0x666666
+                    logMsg()
+                } .else() {
+                    drawProgress()
+                    bytes = saveObj.read(fsrc)
+                    upd_s()
+                    writeRc = writefile(fdst, bytes)
+                    upd_s()
+                    if (writeRc) {
+                        msg = "  [FAIL] Write failed: " + fdst
+                        colLog = 0xFF0000
+                        logMsg()
+                        errors = errors + 1
+                        saveErrors = saveErrors + 1
+                    } .else() {
+                        wrote = wrote + 1
+                        saveFilesDone = saveFilesDone + 1
+                    }
+                }
+            }
+        }
+    }
+}
+
+dumpSave0010 = {
+    curSaveId = "8000000000000010"
+    curSaveShort = "0010"
+    dstSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(bis)) {
+        stat0010 = "[MISSING]"
+        col0010 = 0xFF0000
+        drawDashboard()
+        msg = "  [FAIL] Target save missing on NAND: " + bis
+        colLog = 0xFF0000
+        logMsg()
+        errors = errors + 1
+    } .else() {
+        stat0010 = "[IN PROGRESS]"
+        col0010 = 0xFFFF00
+        drawDashboard()
+
+        msg = "  [*] Opening save 8000000000000010 (User Profiles)..."
+        colLog = 0x00FFFF
+        logMsg()
+        upd_s()
+
+        saveObj = readsave(bis)
+        saveFilesDone = 0
+        saveErrors = 0
+        mkdir(dstSaveDir)
+
+        curDir = "/"
+        dumpFilesInDir()
+        curDir = "/su"
+        dumpFilesInDir()
+        curDir = "/su/baas"
+        dumpFilesInDir()
+        curDir = "/su/nas"
+        dumpFilesInDir()
+        curDir = "/su/avators"
+        dumpFilesInDir()
+        curDir = "/su/cache"
+        dumpFilesInDir()
+
+        saveObj.close()
+        saveObj = 0
+
+        if (saveErrors == 0 && saveFilesDone > 0) {
+            stat0010 = "[DUMPED] (" + saveFilesDone.str() + " files)"
+            col0010 = 0x00FF00
+            got0010 = 1
+            msg = "  [OK] Profiles dumped successfully (" + saveFilesDone.str() + " files)"
+            colLog = 0x00FF00
+            logMsg()
+        } .else() {
+            if (saveFilesDone == 0) {
+                stat0010 = "[EMPTY]"
+                col0010 = 0xFF0000
+                msg = "  [FAIL] Profiles save is empty"
+                colLog = 0xFF0000
+                logMsg()
+            } .else() {
+                stat0010 = "[ERRORS] (" + saveErrors.str() + " err)"
+                col0010 = 0xFF0000
+                msg = "  [FAIL] Errors during dump of 0010"
+                colLog = 0xFF0000
+                logMsg()
+            }
+        }
+        drawDashboard()
+    }
+}
+
+dumpSave0011 = {
+    curSaveId = "8000000000000011"
+    curSaveShort = "0011"
+    dstSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(bis)) {
+        stat0011 = "[SKIPPED] (Not found)"
+        col0011 = 0x666666
+        drawDashboard()
+        msg = "  [i] 0011 save not present on NAND (optional, skipped)"
+        colLog = 0x666666
+        logMsg()
+    } .else() {
+        stat0011 = "[IN PROGRESS]"
+        col0011 = 0xFFFF00
+        drawDashboard()
+
+        msg = "  [*] Opening save 8000000000000011 (User ID Gen)..."
+        colLog = 0x00FFFF
+        logMsg()
+        upd_s()
+
+        saveObj = readsave(bis)
+        saveFilesDone = 0
+        saveErrors = 0
+        mkdir(dstSaveDir)
+
+        curDir = "/"
+        dumpFilesInDir()
+
+        saveObj.close()
+        saveObj = 0
+
+        if (saveErrors == 0 && saveFilesDone > 0) {
+            stat0011 = "[DUMPED] (" + saveFilesDone.str() + " files)"
+            col0011 = 0x00FF00
+            msg = "  [OK] User ID Gen dumped (" + saveFilesDone.str() + " files)"
+            colLog = 0x00FF00
+            logMsg()
+        } .else() {
+            stat0011 = "[EMPTY]"
+            col0011 = 0xFFFF00
+            msg = "  [WARN] 0011 save was empty"
+            colLog = 0xFFFF00
+            logMsg()
+        }
+        drawDashboard()
+    }
+}
+
+dumpSave00F0 = {
+    curSaveId = "80000000000000F0"
+    curSaveShort = "00F0"
+    dstSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(bis)) {
+        stat00F0 = "[MISSING]"
+        col00F0 = 0xFF0000
+        drawDashboard()
+        msg = "  [FAIL] Target save missing on NAND: " + bis
+        colLog = 0xFF0000
+        logMsg()
+        errors = errors + 1
+    } .else() {
+        stat00F0 = "[IN PROGRESS]"
+        col00F0 = 0xFFFF00
+        drawDashboard()
+
+        msg = "  [*] Opening save 80000000000000F0 (Play Hours)..."
+        colLog = 0x00FFFF
+        logMsg()
+        upd_s()
+
+        saveObj = readsave(bis)
+        saveFilesDone = 0
+        saveErrors = 0
+        mkdir(dstSaveDir)
+
+        curDir = "/"
+        dumpFilesInDir()
+
+        if (saveFilesDone == 0) {
+            curFileName = "PlayEvent.dat"
+            curFileIdx = 1
+            curDirTotal = 1
+            curDir = "/"
+            drawProgress()
+            bytes = saveObj.read("PlayEvent.dat")
+            upd_s()
+            if (bytes.len() > 0) {
+                writeRc = writefile(dstSaveDir + "/PlayEvent.dat", bytes)
+                upd_s()
+                if (writeRc == 0) {
+                    wrote = wrote + 1
+                    saveFilesDone = saveFilesDone + 1
+                }
+            }
+        }
+
+        saveObj.close()
+        saveObj = 0
+
+        if (saveErrors == 0 && saveFilesDone > 0) {
+            stat00F0 = "[DUMPED] (" + saveFilesDone.str() + " files)"
+            col00F0 = 0x00FF00
+            got00F0 = 1
+            msg = "  [OK] Play hours dumped successfully (" + saveFilesDone.str() + " files)"
+            colLog = 0x00FF00
+            logMsg()
+        } .else() {
+            if (saveFilesDone == 0) {
+                stat00F0 = "[EMPTY]"
+                col00F0 = 0xFF0000
+                msg = "  [FAIL] Play hours save is empty"
+                colLog = 0xFF0000
+                logMsg()
+            } .else() {
+                stat00F0 = "[ERRORS] (" + saveErrors.str() + " err)"
+                col00F0 = 0xFF0000
+                msg = "  [FAIL] Errors during dump of 00F0"
+                colLog = 0xFF0000
+                logMsg()
+            }
+        }
+        drawDashboard()
+    }
+}
+
+dumpSave0041 = {
+    curSaveId = "8000000000000041"
+    curSaveShort = "0041"
+    dstSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(bis)) {
+        stat0041 = "[SKIPPED] (Not found)"
+        col0041 = 0x666666
+        drawDashboard()
+        msg = "  [i] 0041 save not present on NAND (optional, skipped)"
+        colLog = 0x666666
+        logMsg()
+    } .else() {
+        stat0041 = "[IN PROGRESS]"
+        col0041 = 0xFFFF00
+        drawDashboard()
+
+        msg = "  [*] Opening save 8000000000000041 (HOME Icons)..."
+        colLog = 0x00FFFF
+        logMsg()
+        upd_s()
+
+        saveObj = readsave(bis)
+        saveFilesDone = 0
+        saveErrors = 0
+        mkdir(dstSaveDir)
+
+        curDir = "/"
+        dumpFilesInDir()
+        curDir = "/su"
+        dumpFilesInDir()
+        curDir = "/su/baas"
+        dumpFilesInDir()
+        curDir = "/su/nas"
+        dumpFilesInDir()
+        curDir = "/su/avators"
+        dumpFilesInDir()
+        curDir = "/su/cache"
+        dumpFilesInDir()
+
+        saveObj.close()
+        saveObj = 0
+
+        if (saveErrors == 0 && saveFilesDone > 0) {
+            stat0041 = "[DUMPED] (" + saveFilesDone.str() + " files)"
+            col0041 = 0x00FF00
+            msg = "  [OK] HOME icons dumped (" + saveFilesDone.str() + " files)"
+            colLog = 0x00FF00
+            logMsg()
+        } .else() {
+            stat0041 = "[EMPTY]"
+            col0041 = 0xFFFF00
+            msg = "  [WARN] 0041 HOME icons empty (skipped)"
+            colLog = 0xFFFF00
+            logMsg()
+        }
+        drawDashboard()
+    }
+}
+
+# ------------------------------------------------------------------------------
+# MAIN EXECUTION
+# ------------------------------------------------------------------------------
 
 failOut = {
     color(0xFF0000)
-    println("NOT OK")
+    println("ERROR: ", failMsg)
     color(0xFFFFFF)
-    println(failMsg)
-    println("Open Kefir Hub to continue.")
-    println("")
-    println("Press any button to reboot to Hekate...")
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -291,7 +545,7 @@ failOut = {
 clear()
 color(0xFFFFFF)
 println("Kefir Hub: dump profiles & play hours")
-println("Decrypts SYSTEM saves with this console keys.")
+println("Initializing safe environment...")
 println("")
 
 pack = ""
@@ -312,14 +566,15 @@ if (fsexists("sd:/bootloader/update.bin")) {
 nandf = pending + "/nand"
 packf = pending + "/nand_pack.txt"
 delfile(pending + "/dump_result.txt")
+delfile(pending + "/dumped.ok")
 
 nandName = ""
 if (!fsexists(nandf)) {
-    failMsg = "No NAND flag (emu/sys)"
+    failMsg = "Missing NAND target flag: " + nandf
     failOut()
 }
 if (!fsexists(packf)) {
-    failMsg = "No pack path file"
+    failMsg = "Missing pack path file: " + packf
     failOut()
 }
 
@@ -327,49 +582,109 @@ raw = readfile(nandf)
 text = raw.bytestostr()
 if (text == "emu") {
     nandName = "emuMMC SYSTEM"
-    println("NAND flag: emuMMC SYSTEM")
+    println("NAND Target: emuMMC SYSTEM")
     if (!emu()) {
-        failMsg = "No emuMMC"
+        failMsg = "No emuMMC found on SD!"
         failOut()
     }
     rc = mountemu("SYSTEM")
 } .else() {
-    if (text != "sys") {
-        failMsg = "Bad NAND flag"
+    if (text == "sys") {
+        nandName = "sysMMC SYSTEM"
+        println("NAND Target: sysMMC SYSTEM")
+        rc = mountsys("SYSTEM")
+    } .else() {
+        failMsg = "Invalid NAND flag: " + text
         failOut()
     }
-    nandName = "sysMMC SYSTEM"
-    println("NAND flag: sysMMC SYSTEM")
-    rc = mountsys("SYSTEM")
 }
+
 if (rc) {
-    failMsg = "SYSTEM mount failed"
+    failMsg = "SYSTEM partition mount failed: rc=" + rc.str()
     failOut()
 }
 
 raw = readfile(packf)
 packUnix = raw.bytestostr()
 pack = "sd:" + packUnix
-println("pack:", pack)
 mkdir(pack)
 delfile(pack + "/dump_result.txt")
 
-wrote = 0
-dumped = 0
-got0010 = 0
-got00F0 = 0
-n0010 = 0
-n0011 = 0
-n00F0 = 0
-n0041 = 0
-s0010 = 0
-s0011 = 0
-s00F0 = 0
-s0041 = 0
-ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
-ids.foreach("saveId") {
-    dumpOne()
+parts = packUnix.split("/")
+packNameShort = packUnix
+if (parts.len() > 1) {
+    packNameShort = parts[parts.len() - 1]
 }
 
-printResult()
+wrote = 0
+errors = 0
+got0010 = 0
+got00F0 = 0
+
+curFileName = ""
+curFileIdx = 0
+curDirTotal = 0
+curDir = ""
+curSaveId = ""
+curSaveShort = ""
+
+stat0010 = "[PENDING]"
+col0010 = 0x666666
+stat0011 = "[PENDING]"
+col0011 = 0x666666
+stat00F0 = "[PENDING]"
+col00F0 = 0x666666
+stat0041 = "[PENDING]"
+col0041 = 0x666666
+
+clear()
+drawDashboard()
+logY = 14
+
+msg = "  [i] NAND partition mounted. Starting dump..."
+colLog = 0x00FF00
+logMsg()
+
+# 1. Dump 0010 (User Profiles)
+dumpSave0010()
+
+# 2. Dump 0011 (User ID Gen)
+dumpSave0011()
+
+# 3. Dump 00F0 (Play Hours)
+dumpSave00F0()
+
+# 4. Dump 0041 (HOME Icons)
+dumpSave0041()
+
+# Result evaluation
+if (got0010 && got00F0 && errors == 0) {
+    writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
+    colLog = 0x00FF00
+    msg = "=== DUMP COMPLETED SUCCESSFULLY! ==="
+    logMsg()
+    msg = "Profiles and play hours dumped to " + packNameShort
+    logMsg()
+} .else() {
+    colLog = 0xFF0000
+    msg = "=== WARNING: DUMP COMPLETED WITH ERRORS! ==="
+    logMsg()
+    if (!got0010) {
+        msg = "  [FAIL] Profiles (0010) not dumped!"
+        logMsg()
+    }
+    if (!got00F0) {
+        msg = "  [FAIL] Play hours (00F0) not dumped!"
+        logMsg()
+    }
+    msg = "Check logs above. Open Kefir Hub to retry."
+    logMsg()
+}
+
+colLog = 0x00FFFF
+msg = "Rebooting to Hekate in 5 seconds..."
+logMsg()
+
+spinner(0)
+sleep(5000)
 goHekate()

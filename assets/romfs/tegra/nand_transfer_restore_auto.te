@@ -557,7 +557,8 @@ if (!fsexists(nandf)) {
     color(0xFF0000)
     println("ERROR: Missing NAND target flag: ", nandf)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -572,7 +573,8 @@ if (nandType == "emu") {
         color(0xFF0000)
         println("ERROR: No emuMMC found on SD!")
         color(0xFFFFFF)
-        pause()
+        println("Rebooting to Hekate in 5 seconds...")
+        sleep(5000)
         goHekate()
         exit()
     }
@@ -586,7 +588,8 @@ if (nandType == "emu") {
         color(0xFF0000)
         println("ERROR: Invalid NAND flag: ", nandType)
         color(0xFFFFFF)
-        pause()
+        println("Rebooting to Hekate in 5 seconds...")
+        sleep(5000)
         goHekate()
         exit()
     }
@@ -596,7 +599,8 @@ if (rc) {
     color(0xFF0000)
     println("ERROR: SYSTEM partition mount failed rc: ", rc)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -606,7 +610,8 @@ if (!fsexists(packf)) {
     color(0xFF0000)
     println("ERROR: Missing pack path file: ", packf)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -618,7 +623,8 @@ if (rel.len() == 0) {
     color(0xFF0000)
     println("ERROR: Pack path file is empty!")
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -628,7 +634,8 @@ if (bks.len() != 1) {
     color(0xFF0000)
     println("ERROR: Pack path contains backslash: ", rel)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -638,7 +645,8 @@ if (parts.len() != 5) {
     color(0xFF0000)
     println("ERROR: Malformed pack path structure: ", rel)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -647,7 +655,8 @@ if (parts[0] != "" || parts[1] != "config" || parts[2] != "kefir" || parts[3] !=
     color(0xFF0000)
     println("ERROR: Pack path outside /config/kefir/nand_transfer: ", rel)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -657,7 +666,8 @@ if (packNameShort.len() == 0 || packNameShort == "." || packNameShort == "..") {
     color(0xFF0000)
     println("ERROR: Invalid pack folder name: ", packNameShort)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -668,7 +678,8 @@ if (!fsexists(pack)) {
     color(0xFF0000)
     println("ERROR: Selected pack directory does not exist: ", pack)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -677,7 +688,8 @@ if (!fsexists(pack + "/8000000000000010") && !fsexists(pack + "/80000000000000F0
     color(0xFF0000)
     println("ERROR: Not a valid profiles & play hours pack: ", pack)
     color(0xFFFFFF)
-    pause()
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
     goHekate()
     exit()
 }
@@ -818,9 +830,10 @@ if (hasRelevantSnap) {
     msg = "No Hub Undo snapshot; rely on Hekate SYSTEM backup."
     logMsg()
 }
-msg = "Press A to reboot to Hekate"
+colLog = 0x00FFFF
+msg = "Rebooting to Hekate in 5 seconds..."
 logMsg()
 
 spinner(0)
-pause()
+sleep(5000)
 goHekate()
