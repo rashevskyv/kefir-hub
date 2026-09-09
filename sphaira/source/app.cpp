@@ -1571,7 +1571,8 @@ App::App(const char* argv0) {
     args.X[0] = 0xF0000404; /* smcAmsGetEmunandConfig */
     args.X[1] = 0; /* EXO_EMUMMC_MMC_NAND*/
     args.X[2] = (u64)&paths; /* out path */
-    const Result smc_rc = svcCallSecureMonitor(&args);
+    svcCallSecureMonitor(&args);
+    const Result smc_rc = static_cast<Result>(args.X[0]);
     m_emummc_paths = paths;
 
     constexpr u32 StorageMagic = 0x30534645; // 'EFS0'

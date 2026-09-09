@@ -155,10 +155,17 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
             if (pipe2 != std::string::npos) {
                 has_sync_data = true;
                 bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
+                const auto pipe3 = entry.find('|', pipe2 + 1);
+                if (pipe3 != std::string::npos) {
+                    m_file_targets[name] = std::strtol(entry.c_str() + pipe3 + 1, nullptr, 10);
+                } else {
+                    m_file_targets[name] = 0;
+                }
                 if (selected) {
                     out_names.emplace_back(std::move(name));
                 }
             } else {
+                m_file_targets[name] = 0;
                 out_names.emplace_back(std::move(name));
             }
         }
@@ -219,7 +226,15 @@ Result Usb::DbiRead(void* buf, s64 off, s64 size, u64* bytes_read) {
     R_SUCCEED();
 }
 
-Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout) {
+int Usb::GetFileTarget(const std::string& name) const {
+    auto it = m_file_targets.find(name);
+    if (it != m_file_targets.end()) {
+        return it->second;
+    }
+    return 0;
+}
+
+Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, std::unordered_map<std::string, int>& out_targets, u64 timeout) {
     R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
 
     R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_QUEUE_EXT, timeout));
@@ -232,6 +247,7 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
 
     const u32 list_len = response.data_size;
     out_selections.clear();
+    out_targets.clear();
 
     if (list_len > 0) {
         R_TRY(SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
@@ -258,8 +274,84 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
             m_file_sizes[name] = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
             bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
             out_selections[name] = selected;
+
+            int target = 0;
+            const auto pipe3 = entry.find('|', pipe2 + 1);
+            if (pipe3 != std::string::npos) {
+                target = std::strtol(entry.c_str() + pipe3 + 1, nullptr, 10);
+            }
+            m_file_targets[name] = target;
+            out_targets[name] = target;
         }
     }
+
+    R_SUCCEED();
+}
+
+Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout) {
+    std::unordered_map<std::string, int> dummy_targets;
+    return FetchLiveSelection(out_selections, dummy_targets, timeout);
+}
+
+Result Usb::SendPackageStatus(const std::string& name, u32 status, Result rc, u64 timeout) {
+    R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
+
+    const u32 name_len = name.size();
+    const u32 payload_size = sizeof(dbi::PackageStatusHeader) + name_len;
+
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::PackageStatus, payload_size, timeout));
+
+    dbi::CmdHeader ack{};
+    R_TRY(m_usb->TransferAll(true, &ack, sizeof(ack), timeout));
+    R_UNLESS(ack.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(ack.id == dbi::CmdId::PackageStatus, Result_UsbBadMagic);
+    R_UNLESS(ack.type == dbi::CmdType::Ack, Result_UsbBadMagic);
+
+    const dbi::PackageStatusHeader header{
+        .status = status,
+        .result_code = static_cast<u32>(rc),
+        .name_len = name_len,
+    };
+    std::vector<u8> payload(payload_size);
+    std::memcpy(payload.data(), &header, sizeof(header));
+    std::memcpy(payload.data() + sizeof(header), name.data(), name_len);
+    R_TRY(m_usb->TransferAll(false, payload.data(), static_cast<u32>(payload.size()), timeout));
+
+    dbi::CmdHeader response{};
+    R_TRY(m_usb->TransferAll(true, &response, sizeof(response), timeout));
+    R_UNLESS(response.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(response.id == dbi::CmdId::PackageStatus, Result_UsbBadMagic);
+    R_UNLESS(response.type == dbi::CmdType::Response, Result_UsbBadMagic);
+
+    R_SUCCEED();
+}
+
+Result Usb::SendStorageInfo(u64 nand_free, u64 nand_total, u64 sd_free, u64 sd_total, u64 timeout) {
+    R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
+
+    constexpr u32 payload_size = sizeof(dbi::StorageInfoHeader);
+
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::StorageInfo, payload_size, timeout));
+
+    dbi::CmdHeader ack{};
+    R_TRY(m_usb->TransferAll(true, &ack, sizeof(ack), timeout));
+    R_UNLESS(ack.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(ack.id == dbi::CmdId::StorageInfo, Result_UsbBadMagic);
+    R_UNLESS(ack.type == dbi::CmdType::Ack, Result_UsbBadMagic);
+
+    dbi::StorageInfoHeader header{
+        .nand_free = nand_free,
+        .nand_total = nand_total,
+        .sd_free = sd_free,
+        .sd_total = sd_total,
+    };
+    R_TRY(m_usb->TransferAll(false, &header, sizeof(header), timeout));
+
+    dbi::CmdHeader response{};
+    R_TRY(m_usb->TransferAll(true, &response, sizeof(response), timeout));
+    R_UNLESS(response.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(response.id == dbi::CmdId::StorageInfo, Result_UsbBadMagic);
+    R_UNLESS(response.type == dbi::CmdType::Response, Result_UsbBadMagic);
 
     R_SUCCEED();
 }

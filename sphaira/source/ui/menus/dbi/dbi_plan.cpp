@@ -145,7 +145,7 @@ bool Menu::RefreshAutoInstallTarget(size_t index) {
     return pick;
 }
 
-bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections) {
+bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections, const std::unordered_map<std::string, int>& targets) {
     bool changed = false;
     {
         SCOPED_MUTEX(&m_mutex);
@@ -154,6 +154,16 @@ bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selec
                 auto it = selections.find(entry.file_name);
                 if (it != selections.end() && !it->second) {
                     entry.selected = false;
+                    changed = true;
+                }
+            }
+            auto tit = targets.find(entry.file_name);
+            if (tit != targets.end()) {
+                InstallTarget new_target = InstallTarget::Auto;
+                if (tit->second == 1) new_target = InstallTarget::Sd;
+                else if (tit->second == 2) new_target = InstallTarget::Nand;
+                if (entry.target != new_target) {
+                    entry.target = new_target;
                     changed = true;
                 }
             }
@@ -189,7 +199,17 @@ bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selec
                 entry.analysis.source_size = pc_size;
             }
         }
-        entry.target = InstallTarget::Auto;
+        int pc_target = 0;
+        auto tit = targets.find(name);
+        if (tit != targets.end()) {
+            pc_target = tit->second;
+        } else if (m_usb_source) {
+            pc_target = m_usb_source->GetFileTarget(name);
+        }
+        if (pc_target == 1) entry.target = InstallTarget::Sd;
+        else if (pc_target == 2) entry.target = InstallTarget::Nand;
+        else entry.target = InstallTarget::Auto;
+
         entry.selected = R_SUCCEEDED(entry.analysis_result);
         if (R_FAILED(entry.analysis_result)) {
             AddError(name, "Analysis"_i18n, entry.analysis_result);

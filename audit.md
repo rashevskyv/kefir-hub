@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.784**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.785**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.785 поза ponytail-чергою: виправлено виклик Secure Monitor SMC svcCallSecureMonitor (void API у libnx) та вичитування результату smc_rc з args.X[0] у App::App; оновлено SetRegion під сучасний libnx (SetRegion_HTK у settings_translate.cpp); розширено протокол DBI USB двосторонньою синхронізацією з ПК-клієнтом (передача цільового накопичувача file|size|selected|target, звітування статусу інсталяції пакетів CmdId::PackageStatus та постійна трансляція об'єму пам'яті CmdId::StorageInfo); оновлено README.md; NRO успішно зібрано у WSL (make build), тести пройдено. **Не закриває** чергу §2 A1–A7.
 
 v0.13.784 поза ponytail-чергою: реалізовано точне визначення завантаження в EmuNAND та SysNAND/Semi-stock; усунено хибну перевірку ненульового рядка `paths.nintendo` у `App::IsEmummc()` (через яку програма завжди вважала себе завантаженою в EmuNAND); реалізовано вичитування `magic` і `type` з SMC `0xF0000404` та фолбек через `splGetConfig(65007)`; додано метод `App::HasEmummc()` для перевірки наявності EmuNAND на карті пам'яті (`emummc.ini`, папки RAW1/SD00); у `forwarder_auto_install.cpp` заблоковано створення нового форвардера при запуску з SysNAND за наявності EmuNAND на консолі для захисту від банів Nintendo; у `menu_base.cpp` мітку накопичувача змінено на «NAND» (SysNAND/Semi-stock) та «EmuNAND» (EmuNAND); додано тест Test 6 у `test_forwarder_auto_lifecycle.cpp`; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

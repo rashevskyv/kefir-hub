@@ -17,10 +17,12 @@ enum class CmdType : u32 {
 enum class CmdId : u32 {
     Exit = 0,
     FileRange = 2,
-    List = 3
+    List = 3,
+    PackageStatus = 4,
+    StorageInfo = 5,
 };
 
-struct NX_PACKED CmdHeader {
+struct CmdHeader {
     u32 magic; // DBI0
     CmdType type;
     CmdId id;
@@ -34,7 +36,23 @@ struct NX_PACKED FileRangeHeader {
     // followed by name
 };
 
+struct PackageStatusHeader {
+    u32 status; // 0 = Installed, 1 = User Skipped, 2 = Already Installed, 3 = Failed
+    u32 result_code;
+    u32 name_len;
+    // followed by name
+};
+
+struct StorageInfoHeader {
+    u64 nand_free;
+    u64 nand_total;
+    u64 sd_free;
+    u64 sd_total;
+};
+
 static_assert(sizeof(CmdHeader) == 0x10, "CmdHeader must be 0x10!");
 static_assert(sizeof(FileRangeHeader) == 16, "FileRangeHeader must be 16 bytes!");
+static_assert(sizeof(PackageStatusHeader) == 12, "PackageStatusHeader must be 12 bytes!");
+static_assert(sizeof(StorageInfoHeader) == 32, "StorageInfoHeader must be 32 bytes!");
 
 } // namespace sphaira::usb::dbi

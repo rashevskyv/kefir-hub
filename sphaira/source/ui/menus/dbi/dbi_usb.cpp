@@ -67,7 +67,11 @@ void Menu::ThreadFunction() {
         }
         if (R_FAILED(list_rc)) continue;
 
-        AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
+                AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
+        if (m_usb_source && m_usb_source->HasSelectionSync()) {
+            const auto spaces = GetPolledData();
+            m_usb_source->SendStorageInfo(spaces.nand_free, spaces.nand_total, spaces.sd_free, spaces.sd_total);
+        }
 
         // ponytail: stream hosts are refused rather than served. The queue
         // analyses every package before it installs any of them, which needs
@@ -94,6 +98,14 @@ void Menu::ThreadFunction() {
             s64 pc_size = m_usb_source->GetFileSize(name);
             if (pc_size > 0) {
                 entry.analysis.source_size = pc_size;
+            }
+            int pc_target = m_usb_source->GetFileTarget(name);
+            if (pc_target == 1) {
+                entry.target = InstallTarget::Sd;
+            } else if (pc_target == 2) {
+                entry.target = InstallTarget::Nand;
+            } else {
+                entry.target = InstallTarget::Auto;
             }
             entry.selected = R_SUCCEEDED(entry.analysis_result);
             if (R_FAILED(entry.analysis_result)) {
@@ -131,8 +143,9 @@ void Menu::ThreadFunction() {
                 if (sync_supported && last_poll.GetNs() >= 300'000'000) {
                     last_poll.Update();
                     std::unordered_map<std::string, bool> selections;
-                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
-                        ApplyLiveSelection(selections);
+                    std::unordered_map<std::string, int> targets;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
+                        ApplyLiveSelection(selections, targets);
                     }
                 }
                 svcSleepThread(10'000'000);
@@ -143,8 +156,9 @@ void Menu::ThreadFunction() {
 
             if (sync_supported) {
                 std::unordered_map<std::string, bool> selections;
-                if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
-                    if (ApplyLiveSelection(selections)) {
+                std::unordered_map<std::string, int> targets;
+                if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
+                    if (ApplyLiveSelection(selections, targets)) {
                         SCOPED_MUTEX(&m_mutex);
                         m_plan_total_bytes = 0;
                         for (auto& entry : m_queue) {
@@ -165,7 +179,8 @@ void Menu::ThreadFunction() {
             for (size_t i = 0; i < m_queue.size(); i++) {
                 if (sync_supported) {
                     std::unordered_map<std::string, bool> selections;
-                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections))) {
+                    std::unordered_map<std::string, int> targets;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
                         bool changed = false;
                         {
                             SCOPED_MUTEX(&m_mutex);
@@ -175,6 +190,18 @@ void Menu::ThreadFunction() {
                                     if (it != selections.end() && !it->second) {
                                         m_queue[j].selected = false;
                                         m_queue[j].install_selected = false;
+                                        changed = true;
+                                    }
+                                }
+                                auto tit = targets.find(m_queue[j].file_name);
+                                if (tit != targets.end()) {
+                                    InstallTarget new_target = InstallTarget::Auto;
+                                    if (tit->second == 1) new_target = InstallTarget::Sd;
+                                    else if (tit->second == 2) new_target = InstallTarget::Nand;
+                                    if (m_queue[j].target != new_target) {
+                                        m_queue[j].target = new_target;
+                                        m_queue[j].planned_sd = (new_target == InstallTarget::Sd);
+                                        m_queue[j].install_sd = m_queue[j].planned_sd;
                                         changed = true;
                                     }
                                 }
@@ -210,7 +237,17 @@ void Menu::ThreadFunction() {
                                     entry.analysis.source_size = pc_size;
                                 }
                             }
-                            entry.target = InstallTarget::Auto;
+                            int pc_target = 0;
+                            auto tit = targets.find(name);
+                            if (tit != targets.end()) {
+                                pc_target = tit->second;
+                            } else if (m_usb_source) {
+                                pc_target = m_usb_source->GetFileTarget(name);
+                            }
+                            if (pc_target == 1) entry.target = InstallTarget::Sd;
+                            else if (pc_target == 2) entry.target = InstallTarget::Nand;
+                            else entry.target = InstallTarget::Auto;
+
                             entry.selected = R_SUCCEEDED(entry.analysis_result);
                             if (R_FAILED(entry.analysis_result)) {
                                 AddError(name, "Analysis"_i18n, entry.analysis_result);
@@ -251,7 +288,17 @@ void Menu::ThreadFunction() {
                                         }
                                     }
 
-                                    if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
+                                    if (entry.target == InstallTarget::Sd) {
+                                        entry.planned_sd = true;
+                                        entry.install_sd = true;
+                                        entry.install_selected = true;
+                                        PlanTake(avail_sd, PlanSize(entry));
+                                    } else if (entry.target == InstallTarget::Nand) {
+                                        entry.planned_sd = false;
+                                        entry.install_sd = false;
+                                        entry.install_selected = true;
+                                        PlanTake(avail_nand, PlanSize(entry));
+                                    } else if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
                                         entry.planned_sd = PlanPickSd(loc, PlanSize(entry), avail_sd, avail_nand);
                                         entry.install_sd = entry.planned_sd;
                                         entry.install_selected = true;
@@ -369,6 +416,22 @@ void Menu::ThreadFunction() {
                 else {
                     AddLog("Failed: "_i18n + name + " (" + ResultText(install_rc) + ")", LogKind::Error);
                     AddError(name, "Install"_i18n, install_rc);
+                }
+
+                if (m_usb_source && m_usb_source->HasSelectionSync() && !cancelled) {
+                    u32 pkg_status = 3; // Failed
+                    if (user_skipped) {
+                        pkg_status = 1; // User Skipped
+                    } else if (R_SUCCEEDED(install_rc)) {
+                        if (m_current_file_skipped) {
+                            pkg_status = 2; // Already Installed
+                        } else {
+                            pkg_status = 0; // Installed
+                        }
+                    }
+                    m_usb_source->SendPackageStatus(name, pkg_status, install_rc);
+                    const auto spaces = GetPolledData();
+                    m_usb_source->SendStorageInfo(spaces.nand_free, spaces.nand_total, spaces.sd_free, spaces.sd_total);
                 }
                 if (cancelled) {
                     m_cancel_requested = true;

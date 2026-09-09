@@ -109,8 +109,7 @@ auto GetRegionName(SetRegion region) -> std::string {
         case SetRegion_EUR: return "Europe";
         case SetRegion_AUS: return "Australia";
         case SetRegion_CHN: return "China";
-        case SetRegion_KO: return "Korea";
-        case SetRegion_TWN: return "Taiwan";
+        case SetRegion_HTK: return "Hong Kong/Taiwan/Korea";
         default: return "Unknown";
     }
 }

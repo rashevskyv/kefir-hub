@@ -51,12 +51,17 @@ struct Usb final : Base {
     // size the host reported for a listed file, or 0 when it did not say.
     // Only dbi backends that understand the 'SPHA' or 'SPHQ' list request report sizes.
     s64 GetFileSize(const std::string& name) const;
+    int GetFileTarget(const std::string& name) const;
 
     bool HasSelectionSync() const {
         return m_dbi_selection_sync;
     }
 
+    Result FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, std::unordered_map<std::string, int>& out_targets, u64 timeout = 1e+9);
     Result FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout = 1e+9);
+
+    Result SendPackageStatus(const std::string& name, u32 status, Result rc, u64 timeout = 1e+9);
+    Result SendStorageInfo(u64 nand_free, u64 nand_total, u64 sd_free, u64 sd_total, u64 timeout = 1e+9);
 
     auto GetProtocol() const {
         return m_protocol;
@@ -90,6 +95,7 @@ private:
     std::unique_ptr<usb::UsbDs> m_usb;
     std::string m_transfer_file_name{};
     std::unordered_map<std::string, s64> m_file_sizes{};
+    std::unordered_map<std::string, int> m_file_targets{};
     u8 m_flags{};
     UsbProtocol m_protocol{UsbProtocol::None};
     bool m_dbi_selection_sync{false};

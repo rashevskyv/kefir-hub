@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.784** (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection). Завершені задачі збережено в
+Актуальний delivery — **v0.13.785** (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.784 (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection)
+## Поточний delivery: v0.13.785 (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization)
+
+- [x] `BUILD-FIX-SVC-CALL-SECURE-MONITOR-785` — у `App::App()` (`sphaira/source/app.cpp`) виправлено виклик `svcCallSecureMonitor(&args)` (який повертає `void` у libnx) та читання коду результату з `args.X[0]`.
+- [x] `LIBNX-SET-REGION-HTK-COMPAT-785` — у `GetRegionName` (`sphaira/source/ui/menus/settings/settings_translate.cpp`) оновлено значення `SetRegion` під сучасний libnx (`SetRegion_HTK` замість `SetRegion_KO`/`SetRegion_TWN`).
+- [x] `DBI-USB-TARGET-LIVE-SYNC-785` — у `sphaira/include/yati/source/usb.hpp`, `sphaira/source/yati/source/usb.cpp`, `sphaira/source/ui/menus/dbi/dbi_plan.cpp` та `sphaira/source/ui/menus/dbi/dbi_usb.cpp` додано підтримку синхронізації цільового носія (`target`: Auto/SD/NAND) у списку черги ПК (`FetchLiveSelection`).
+- [x] `DBI-USB-PACKAGE-STATUS-REPORT-785` — додано `SendPackageStatus` (`CmdId::PackageStatus = 4`) та заголовок `PackageStatusHeader` у `sphaira/include/usb/dbi.hpp` для інформування ПК-клієнта про результат встановлення кожного пакета.
+- [x] `DBI-USB-STORAGE-INFO-STREAM-785` — додано `SendStorageInfo` (`CmdId::StorageInfo = 5`) та заголовок `StorageInfoHeader` для передачі поточного вільного місця NAND та SD на клієнт ПК.
+- [x] `README-DBI-USB-SYNC-785` — оновлено `README.md` з описом нових можливостей протоколу DBI USB та синхронізації з ПК.
+- [x] `CMAKELISTS-VERSION-BUMP-785` — підняти `sphaira_VERSION` до `0.13.785`.
+- [x] `DOCS-BUMP-785` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.784 (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection)
 
 - [x] `EMUMMC-DETECT-DECODE-MAGIC-TYPE-784` — у `App::App()` (`sphaira/source/app.cpp`) додано коректне вичитування `magic` та `type` з результату SMC `0xF0000404` (`args.X[1]`) та фолбек на `splGetConfig(SplConfigItem 65007, &val)`, що усунуло помилкове визначення `IsEmummc()` через ненульовий шлях у буфері.
 - [x] `EMUMMC-SETTINGS-HAS-PRESENT-784` — у `sphaira/source/app_settings.cpp` переведено `IsEmummc()` на стан `m_is_emummc`, реалізовано `App::HasEmummc()` з перевіркою `/emummc/emummc.ini`, `/emuMMC/emummc.ini` (наявність `enabled`, `path`, `sector`, `nintendo_path`) та папок `/emuMMC/RAW1`, `/emuMMC/SD00` тощо.

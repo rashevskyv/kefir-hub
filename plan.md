@@ -1,8 +1,38 @@
-Поточний delivery — **v0.13.784** (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection). Завершені плани збережено в
+Поточний delivery — **v0.13.785** (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.784 — accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection
+## Поточний delivery: v0.13.785 — fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization
+
+Статус: реалізовано; усунено помилку компіляції виклику TrustZone/Exosphere SMC у `sphaira/source/app.cpp`, адаптовано перелічення `SetRegion` під сучасний libnx, реалізовано двосторонню передачу параметрів і статусів у протоколі DBI USB:
+1. **Виправлення виклику SMC `svcCallSecureMonitor`**:
+   - У `sphaira/source/app.cpp` виклик `svcCallSecureMonitor(&args)` повертає `void` згідно з прототипом у системному інтерфейсі `libnx`.
+   - Результат виконання зберігається у вихідному регістрі `args.X[0]`. Додано коректне вичитування `const Result smc_rc = static_cast<Result>(args.X[0])`.
+2. **Сумісність `SetRegion`**:
+   - У `sphaira/source/ui/menus/settings/settings_translate.cpp` замінено неіснуючі в оновленому `libnx` прапорці `SetRegion_KO` та `SetRegion_TWN` на єдиний регіон `SetRegion_HTK` ("Hong Kong/Taiwan/Korea").
+3. **Двостороння синхронізація у DBI USB**:
+   - Розширено парсинг дескриптора файлів черги на 4-й токен (`file|size|selected|target`), де `target` приймає значення `0` (Auto), `1` (SD) або `2` (NAND).
+   - При синхронізації зі списком ПК через `FetchLiveSelection` план автоматично розподіляє місце та оновлює цільові накопичувачі файлів черги.
+4. **Звітування про результат встановлення та ємність сховища**:
+   - Додано команди `CmdId::PackageStatus` (`0x04`) та `CmdId::StorageInfo` (`0x05`) у протокол DBI USB (`sphaira/include/usb/dbi.hpp`).
+   - Після кожного файлу консоль відправляє на ПК результат операції (0 = Installed, 1 = User Skipped, 2 = Already Installed, 3 = Failed) разом із системним `Result` кодом Horizon.
+   - Постійно транслюються дані про вільний та загальний об'єм внутрішньої пам'яті NAND та карти microSD.
+5. **Верифікація**:
+   - Збірка NRO у WSL (`make build`) успішно пройшла на 100%.
+   - Усі тести (`tests/run.sh`) успішно виконані.
+
+1. У `sphaira/source/app.cpp`:
+   - Виправлено виклик `svcCallSecureMonitor` на `void` із читанням результату з `args.X[0]`.
+2. У `sphaira/source/ui/menus/settings/settings_translate.cpp`:
+   - Виправлено `GetRegionName` на використання `SetRegion_HTK`.
+3. У `sphaira/include/usb/dbi.hpp`, `sphaira/include/yati/source/usb.hpp`, `sphaira/source/yati/source/usb.cpp`:
+   - Додано структури `PackageStatusHeader` і `StorageInfoHeader`, методи `GetFileTarget`, `FetchLiveSelection` з таргет-мапою, `SendPackageStatus` та `SendStorageInfo`.
+4. У `sphaira/source/ui/menus/dbi/dbi_plan.cpp` та `sphaira/source/ui/menus/dbi/dbi_usb.cpp`:
+   - Підключено застосування цільового накопичувача з ПК, відправку статусу пакета та оновлення інформації про сховище.
+5. Оновлено документацію `README.md`.
+6. Підняти версію проекту до `0.13.785` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.784 — accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection
 
 Статус: реалізовано; реалізовано точне розпізнавання середовища EmuNAND та SysNAND/Semi-stock при старті програми, виправлено відображення типу сховища у верхньому хедері та додано захист від небажаного встановлення форвардера на чистому SysNAND:
 1. **Причина проблеми в детекції EmuNAND**: Раніше `App::IsEmummc()` у `sphaira/source/app_settings.cpp` перевіряв `paths.file_based_path[0] != '\0' || paths.nintendo[0] != '\0'`. Secure monitor call `0xF0000404` (`smc_ams_get_emummc_config`) в Exosphere записує шлях перенаправлення `cfg.emu_dir_path` у вихідний буфер користувача навіть тоді, коли тип конфігурації — `EmummcType_None` (0, тобто SysNAND!). Через це `paths.nintendo` завжди містив рядок шляху, а `App::IsEmummc()` хибно повертав `true` незалежно від фактичного середовища запуску.

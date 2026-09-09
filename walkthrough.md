@@ -1,7 +1,28 @@
-Актуальний delivery — **v0.13.784** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.785** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.785 — fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization
+
+- Усунено помилку компіляції виклику SMC та оновлено протокол взаємодії DBI USB із ПК:
+  1. **Виправлення компіляції `svcCallSecureMonitor`**:
+     - У `sphaira/source/app.cpp` виклик `svcCallSecureMonitor(&args)` повертає `void` у системному API `libnx`, а не `Result`. Результат операції TrustZone/Exosphere записується безпосередньо у вихідний регістр `args.X[0]`.
+     - Виправлено присвоєння `const Result smc_rc = static_cast<Result>(args.X[0])` після виконання виклику `svcCallSecureMonitor(&args)`.
+  2. **Сумісність `SetRegion` із сучасними версіями libnx**:
+     - У `sphaira/source/ui/menus/settings/settings_translate.cpp` замінено застарілі та відсутні в актуальному libnx значення `SetRegion_KO` та `SetRegion_TWN` на стандартний елемент `SetRegion_HTK` ("Hong Kong/Taiwan/Korea").
+  3. **Двостороння синхронізація цільового сховища у протоколі DBI USB**:
+     - У `sphaira/include/usb/dbi.hpp`, `sphaira/include/yati/source/usb.hpp`, `sphaira/source/yati/source/usb.cpp`, `sphaira/source/ui/menus/dbi/dbi_plan.cpp` та `sphaira/source/ui/menus/dbi/dbi_usb.cpp` розширено протокол обміну з ПК:
+     - Список файлів черги підтримує 4-й параметр у рядку дескриптора (`file|size|selected|target`), де `target` визначає цільовий носій (0 = Auto, 1 = SD, 2 = NAND).
+     - При отриманні оновлень зі сторони ПК (`FetchLiveSelection`) черга встановлення та план розподілу сховища миттєво адаптуються під заданий носій для кожного пакета.
+  4. **Звітування про статус пакетів та вільне місце на консолі**:
+     - Додано структури `PackageStatusHeader` (`CmdId::PackageStatus = 4`) та `StorageInfoHeader` (`CmdId::StorageInfo = 5`).
+     - Після завершення обробки кожного пакета консоль відправляє на ПК результат операції (0 = Installed, 1 = User Skipped, 2 = Already Installed, 3 = Failed) разом із системним `Result` кодом Horizon.
+     - Консоль у реальному часі транслює актуальні показники вільного та загального місця NAND і microSD (`SendStorageInfo`), що дає змогу клієнту на ПК відображати точні шкали залишку пам'яті.
+  5. **Збірка та верифікація**:
+     - Проведено повну збірку у WSL (`make build`): бінарник `switch/kefir-hub/kefir-hub.nro` успішно зібрано на 100%.
+     - Усі хост-тести (`tests/run.sh`) успішно пройдені (all green, 950 header declarations перевірено).
+     - Версію піднято до `0.13.785` у `sphaira/CMakeLists.txt`.
 
 ## v0.13.784 — accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection
 
