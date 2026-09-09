@@ -1,8 +1,45 @@
-Поточний delivery — **v0.13.783** (strict only-if-newer remote update detection via version_compare). Завершені плани збережено в
+Поточний delivery — **v0.13.784** (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.783 — strict only-if-newer remote update detection via version_compare
+## Поточний delivery: v0.13.784 — accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection
+
+Статус: реалізовано; реалізовано точне розпізнавання середовища EmuNAND та SysNAND/Semi-stock при старті програми, виправлено відображення типу сховища у верхньому хедері та додано захист від небажаного встановлення форвардера на чистому SysNAND:
+1. **Причина проблеми в детекції EmuNAND**: Раніше `App::IsEmummc()` у `sphaira/source/app_settings.cpp` перевіряв `paths.file_based_path[0] != '\0' || paths.nintendo[0] != '\0'`. Secure monitor call `0xF0000404` (`smc_ams_get_emummc_config`) в Exosphere записує шлях перенаправлення `cfg.emu_dir_path` у вихідний буфер користувача навіть тоді, коли тип конфігурації — `EmummcType_None` (0, тобто SysNAND!). Через це `paths.nintendo` завжди містив рядок шляху, а `App::IsEmummc()` хибно повертав `true` незалежно від фактичного середовища запуску.
+2. **Точне визначення активного EmuNAND**:
+   - У `App::App()` (`sphaira/source/app.cpp`) вичитуються поля `magic` (нижні 32 біти `args.X[1]` мають дорівнювати `0x30534645` — `'EFS0'`) та `type` (старші 32 біти `args.X[1]`: 0 — SysNAND, 1 — Partition, 2 — File).
+   - Додано фолбек через `splGetConfig(SplConfigItem 65007, &val)` (`ExosphereEmummcType`), де Exosphere повертає 1 для активного EmuNAND і 0 для SysNAND.
+   - `App::IsEmummc()` тепер повертає `true` суто тоді, коли система дійсно завантажена в EmuNAND (літера 'E' у налаштуваннях консолі).
+3. **Визначення присутності EmuNAND на консолі (`App::HasEmummc()`)**:
+   - Додано метод `App::HasEmummc()`, який повертає `true`, якщо EmuNAND активний зараз, або якщо на карті пам'яті наявна валідна конфігурація `/emummc/emummc.ini` чи `/emuMMC/emummc.ini` (наявність `enabled == 1`, `path`, `sector != 0`, `nintendo_path`) або стандартні папки `/emuMMC/RAW1`, `/emuMMC/SD00` тощо.
+4. **Захист SysNAND від бану Nintendo**:
+   - У `forwarder_auto_install.cpp` перед автоінсталяцією форвардера додано перевірку: якщо програма запущена у SysNAND, але на консолі присутній EmuNAND (`!App::IsEmummc() && App::HasEmummc()`), створення нового форвардера HOME Menu скасовується (`plan.install_new = false`), а сповіщення очищається (`plan.notice = Notice::None`). Завдяки цьому чистий SysNAND залишається незмінним.
+5. **Напис у хедері**:
+   - У `sphaira/source/ui/menus/menu_base.cpp` мітка над індикатором вільного місця формується як `pdata.is_emummc ? "EmuNAND" : "NAND"`. При роботі в SysNAND або Semi-stock (літера 'S' у налаштуваннях) відображається «NAND», а в EmuNAND — «EmuNAND».
+6. **Тести та версія**:
+   - У `tests/test_forwarder_auto_lifecycle.cpp` додано юніт-тест Test 6 для перевірки блокування створення форвардера у SysNAND при наявному EmuNAND.
+   - Оновлено `README.md`. Версію піднято до `0.13.784` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися за policy.
+
+1. У `sphaira/include/app.hpp`:
+   - Додано `static auto HasEmummc() -> bool;`.
+   - Додано збереження `m_is_emummc` та `m_emummc_type` у класі `App`.
+2. У `sphaira/source/app.cpp`:
+   - У `App::App()` додано декодування `magic` і `type` з `args.X[1]` виклику SMC `0xF0000404` та фолбек через `splGetConfig(65007)`.
+3. У `sphaira/source/app_settings.cpp`:
+   - `App::IsEmummc()` переведено на булевий прапорець `m_is_emummc`.
+   - `App::IsParitionBaseEmummc()` та `App::IsFileBaseEmummc()` переведено на перевірку `m_emummc_type`.
+   - Реалізовано `App::HasEmummc()`.
+4. У `sphaira/source/forwarder_auto_install.cpp`:
+   - Додано блокування `plan.install_new = false` при `!App::IsEmummc() && App::HasEmummc()`.
+5. У `sphaira/source/ui/menus/menu_base.cpp`:
+   - `nand_bar_label = pdata.is_emummc ? "EmuNAND" : "NAND"`.
+6. У `tests/test_forwarder_auto_lifecycle.cpp`:
+   - Додано Test 6 для правила SysNAND + EmuNAND.
+7. Документація (`README.md`):
+   - Оновлено опис автоінсталяції форвардера та мітки індикатора сховища.
+8. Підняти версію проекту до `0.13.784` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.783 — strict only-if-newer remote update detection via version_compare
 
 Статус: реалізовано; виправлено хибне спрацьовування механізму автооновлення з віддаленого репозиторію GitHub: оновлення тепер пропонується та встановлюється виключно тоді, коли версія релізу на віддаленому репозиторії строго вища за поточну версію програми (`version::IsLower(APP_VERSION, remote_tag)`); раніше функція `App::IsVersionNewer` покладалася на `MAKEHOSVERSION(major, minor, macro)`, де макрос Horizon OS пакує кожне поле у 8 біт, через що для номерів релізів Sphaira з patch > 255 (наприклад, 0.13.782) старші біти patch переповнювали поле minor і локальна версія 0.13.782 чисельно оцінювалася як менша/старіша за реліз 0.13.601, викликаючи небажаний відкат/оновлення при кожному старті; реалізацію `App::IsVersionNewer` переведено на повнорозмірне порівняння довільної кількості числових компонентів через `sphaira::version::IsLower`, видалено залишковий тестовий прапорець `kForceUpdateForTest` у `main_menu.cpp`, у вікні `AboutBox` додано скидання стану в `Idle`, якщо версія релізу не є новішою, додано юніт-тести та оновлено документацію в `README.md`; compile/tests/NRO не запускаються за policy.
 

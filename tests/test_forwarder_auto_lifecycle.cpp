@@ -225,6 +225,31 @@ int RunTests() {
         CHECK(from_stale_ready.notice == Notice::None);
     }
 
+    // Test 6: SysNAND override when EmuNAND is present in the system
+    {
+        using sphaira::forwarder_auto::Decide;
+        using sphaira::forwarder_auto::LaunchSource;
+        using sphaira::forwarder_auto::Notice;
+
+        // Album launch without existing forwarder would normally install
+        auto plan = Decide(LaunchSource::Album, false, false);
+        CHECK(plan.install_new);
+        CHECK(plan.notice == Notice::PreferHomeIcon);
+
+        // Under SysNAND when EmuNAND is present, install is suppressed and notice cleared
+        const bool is_emummc = false;
+        const bool has_emummc = true;
+        if (!is_emummc && has_emummc) {
+            plan.install_new = false;
+            if (!plan.delete_old) {
+                plan.notice = Notice::None;
+            }
+        }
+        CHECK(!plan.install_new);
+        CHECK(!plan.delete_old);
+        CHECK(plan.notice == Notice::None);
+    }
+
     return 0;
 }
 

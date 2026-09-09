@@ -1571,10 +1571,30 @@ App::App(const char* argv0) {
     args.X[0] = 0xF0000404; /* smcAmsGetEmunandConfig */
     args.X[1] = 0; /* EXO_EMUMMC_MMC_NAND*/
     args.X[2] = (u64)&paths; /* out path */
-    svcCallSecureMonitor(&args);
+    const Result smc_rc = svcCallSecureMonitor(&args);
     m_emummc_paths = paths;
 
-    log_write("[emummc] enabled: %u\n", App::IsEmummc());
+    constexpr u32 StorageMagic = 0x30534645; // 'EFS0'
+    const u32 magic = static_cast<u32>(args.X[1] & 0xFFFFFFFF);
+    const u32 type = static_cast<u32>((args.X[1] >> 32) & 0xFFFFFFFF);
+
+    if (R_SUCCEEDED(smc_rc) && magic == StorageMagic) {
+        m_emummc_type = type;
+        m_is_emummc = (type == 1 || type == 2);
+    } else {
+        u64 spl_val = 0;
+        if (R_SUCCEEDED(splInitialize())) {
+            if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65007), &spl_val))) {
+                m_is_emummc = (spl_val != 0);
+                if (m_is_emummc && m_emummc_type == 0) {
+                    m_emummc_type = (paths.file_based_path[0] != '\0') ? 2 : 1;
+                }
+            }
+            splExit();
+        }
+    }
+
+    log_write("[emummc] enabled: %u (type: %u)\n", App::IsEmummc(), m_emummc_type);
     if (App::IsEmummc()) {
         log_write("[emummc] file based path: %s\n", m_emummc_paths.file_based_path);
         log_write("[emummc] nintendo path: %s\n", m_emummc_paths.nintendo);

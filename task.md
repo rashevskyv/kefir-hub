@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.783** (strict only-if-newer remote update detection via version_compare). Завершені задачі збережено в
+Актуальний delivery — **v0.13.784** (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.783 (strict only-if-newer remote update detection via version_compare)
+## Поточний delivery: v0.13.784 (accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection)
+
+- [x] `EMUMMC-DETECT-DECODE-MAGIC-TYPE-784` — у `App::App()` (`sphaira/source/app.cpp`) додано коректне вичитування `magic` та `type` з результату SMC `0xF0000404` (`args.X[1]`) та фолбек на `splGetConfig(SplConfigItem 65007, &val)`, що усунуло помилкове визначення `IsEmummc()` через ненульовий шлях у буфері.
+- [x] `EMUMMC-SETTINGS-HAS-PRESENT-784` — у `sphaira/source/app_settings.cpp` переведено `IsEmummc()` на стан `m_is_emummc`, реалізовано `App::HasEmummc()` з перевіркою `/emummc/emummc.ini`, `/emuMMC/emummc.ini` (наявність `enabled`, `path`, `sector`, `nintendo_path`) та папок `/emuMMC/RAW1`, `/emuMMC/SD00` тощо.
+- [x] `FORWARDER-AUTO-SYSNAND-SAFEGUARD-784` — у `sphaira/source/forwarder_auto_install.cpp` заблоковано автоматичне створення форвардера (`plan.install_new = false`) та скинуто сповіщення при запуску у SysNAND за наявності EmuNAND на консолі (`!App::IsEmummc() && App::HasEmummc()`).
+- [x] `HEADER-NAND-LABEL-DISPLAY-784` — у `sphaira/source/ui/menus/menu_base.cpp` мітку індикатора пам'яті змінено на `pdata.is_emummc ? "EmuNAND" : "NAND"`, забезпечуючи відображення «NAND» у SysNAND та Semi-stock і «EmuNAND» в EmuNAND.
+- [x] `FORWARDER-TESTS-SYSNAND-OVERRIDE-784` — у `tests/test_forwarder_auto_lifecycle.cpp` додано Test 6 для перевірки скасування встановлення форвардера при роботі в SysNAND з наявним EmuNAND.
+- [x] `README-EMUMMC-SYSNAND-SAFEGUARD-784` — оновлено документацію `README.md` щодо захисту SysNAND від автоінсталяції форвардера та відображення міток сховища в хедері.
+- [x] `CMAKELISTS-VERSION-BUMP-784` — підняти `sphaira_VERSION` до `0.13.784`.
+- [x] `DOCS-BUMP-784` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.783 (strict only-if-newer remote update detection via version_compare)
 
 - [x] `UPDATE-IS-VERSION-NEWER-FIX-783` — у `App::IsVersionNewer` (`sphaira/source/app.cpp`) замінено дефектне пакування через `MAKEHOSVERSION` на пряме делегування до `version::IsLower(current, new_version)`, що усунуло побітове переповнення та спотворення номерів версій з patch > 255.
 - [x] `UPDATE-MAIN-MENU-NO-FORCE-783` — у `sphaira/source/ui/menus/main_menu.cpp` вилучено тестову константу `kForceUpdateForTest` та переведено перевірку нових версій релізів суто на `!App::IsVersionNewer(APP_VERSION, version)`.

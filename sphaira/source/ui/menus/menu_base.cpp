@@ -215,7 +215,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // --- Status bar layout (top-right) ---
     // Line 0 (y=25): Kefir / firmware version, centered over the IP/Wi-Fi block
     // Line 1 (y=48): IP address / SSID
-    // Lines 2-3: SysNAND|EmuNAND / microSD bars
+    // Lines 2-3: NAND|EmuNAND / microSD bars
     // Line 4 (y=70 = start_y): Clock + Battery
 
     const float start_y   = 70;
@@ -299,7 +299,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return bounds[2] - bounds[0];
     }();
 
-    const char* nand_bar_label = pdata.is_emummc ? "EmuNAND" : "SysNAND";
+    const char* nand_bar_label = pdata.is_emummc ? "EmuNAND" : "NAND";
     const char* sd_bar_label = "microSD";
     const float label_col_w = [&]{
         nvgFontSize(vg, storage_font);

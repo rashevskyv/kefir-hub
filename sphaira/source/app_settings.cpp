@@ -1011,18 +1011,49 @@ auto App::IsOledModel() -> bool {
 }
 
 auto App::IsEmummc() -> bool {
-    const auto& paths = g_app->m_emummc_paths;
-    return (paths.file_based_path[0] != '\0') || (paths.nintendo[0] != '\0');
+    return g_app ? g_app->m_is_emummc : false;
+}
+
+auto App::HasEmummc() -> bool {
+    if (IsEmummc()) {
+        return true;
+    }
+
+    // Check configuration files on SD card
+    for (const char* ini_path : {"/emummc/emummc.ini", "/emuMMC/emummc.ini"}) {
+        if (fs::FileExists(ini_path)) {
+            char path_buf[128]{};
+            char sector_buf[128]{};
+            char nintendo_buf[128]{};
+            const long enabled = ini_getl("emummc", "enabled", 0, ini_path);
+            ini_gets("emummc", "path", "", path_buf, sizeof(path_buf), ini_path);
+            ini_gets("emummc", "sector", "", sector_buf, sizeof(sector_buf), ini_path);
+            ini_gets("emummc", "nintendo_path", "", nintendo_buf, sizeof(nintendo_buf), ini_path);
+
+            const bool has_sector = (sector_buf[0] != '\0' && std::strcmp(sector_buf, "0x0") != 0 && std::strcmp(sector_buf, "0") != 0);
+            if (enabled != 0 || path_buf[0] != '\0' || has_sector || nintendo_buf[0] != '\0') {
+                return true;
+            }
+        }
+    }
+
+    // Check well-known EmuNAND directories on SD card
+    for (const char* dir_path : {"/emuMMC/RAW1", "/emuMMC/RAW2", "/emuMMC/SD00", "/emuMMC/SD01", "/emuMMC/ER00",
+                                 "/emummc/RAW1", "/emummc/RAW2", "/emummc/SD00", "/emummc/SD01", "/emummc/ER00"}) {
+        if (fs::DirExists(dir_path)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 auto App::IsParitionBaseEmummc() -> bool {
-    const auto& paths = g_app->m_emummc_paths;
-    return (paths.file_based_path[0] == '\0') && (paths.nintendo[0] != '\0');
+    return g_app && g_app->m_is_emummc && (g_app->m_emummc_type == 1);
 }
 
 auto App::IsFileBaseEmummc() -> bool {
-    const auto& paths = g_app->m_emummc_paths;
-    return (paths.file_based_path[0] != '\0') && (paths.nintendo[0] != '\0');
+    return g_app && g_app->m_is_emummc && (g_app->m_emummc_type == 2);
 }
 
 auto App::GetEmummcNintendoPath() -> std::string {

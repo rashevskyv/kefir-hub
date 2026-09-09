@@ -1,7 +1,39 @@
-Актуальний delivery — **v0.13.783** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.784** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.784 — accurate EmuNAND/SysNAND detection, header NAND label and SysNAND forwarder ban protection
+
+- Реалізовано точне розпізнавання середовища EmuNAND та SysNAND/Semi-stock, оновлено напис сховища в хедері та впроваджено захист чистого SysNAND від автоматичного встановлення форвардера:
+  1. **Причина хибного визначення EmuNAND**:
+     - Раніше `App::IsEmummc()` у `sphaira/source/app_settings.cpp` перевіряв `paths.file_based_path[0] != '\0' || paths.nintendo[0] != '\0'`.
+     - SMC `0xF0000404` (`smc_ams_get_emummc_config`) в Exosphere копіює шлях перенаправлення `cfg.emu_dir_path` у вихідний буфер користувача навіть тоді, коли `cfg.base_cfg.type == EmummcType_None` (0, тобто SysNAND). Через це поле `paths.nintendo` завжди було непорожнім, а функція `App::IsEmummc()` завжди повертала `true`, незалежно від того, чи система завантажена в EmuNAND, чи в SysNAND/Semi-stock.
+  2. **Коректне декодування конфігурації Exosphere**:
+     - У `App::App()` (`sphaira/source/app.cpp`) тепер вичитується базова конфігурація з `args.X[1]`: перевіряється магічне число `magic == 0x30534645` (`'EFS0'`) та тип конфігурації `type = (args.X[1] >> 32)`:
+       - `0` (`EmummcType_None`) — SysNAND / SysMMC;
+       - `1` (`EmummcType_Partition`) — Partition-based EmuNAND;
+       - `2` (`EmummcType_File`) — File-based EmuNAND.
+     - Додано фолбек через `splGetConfig(static_cast<SplConfigItem>(65007), &spl_val)` (`ExosphereEmummcType`), де Exosphere повертає `1`, якщо EmuMMC активний, і `0`, якщо SysNAND.
+     - Якщо обидва виклики вказують на відсутність EmuMMC або не підтримуються (Semi-stock / Stock), `App::IsEmummc()` повертає `false`.
+  3. **Визначення наявності EmuNAND на консолі (`App::HasEmummc()`)**:
+     - Реалізовано функцію `App::HasEmummc()`, яка перевіряє факт фізичної наявності EmuNAND на консолі (навіть якщо зараз система завантажена не з нього):
+       - Повертає `true`, якщо EmuNAND активний прямо зараз (`IsEmummc()`).
+       - Перевіряє наявність та валідність файлу `/emummc/emummc.ini` (або `/emuMMC/emummc.ini`): наявність параметра `enabled == 1`, непорожній `path`, `sector != 0` або `nintendo_path`.
+       - Перевіряє наявність каталогів EmuNAND на карті пам'яті (`/emuMMC/RAW1`, `/emuMMC/SD00` тощо).
+  4. **Запобігання автоінсталяції форвардера у SysNAND**:
+     - У `forwarder_auto_install.cpp` у функції робочого потоку перевіряється умова: якщо система запущена у SysNAND, але на карті пам'яті виявлено EmuNAND (`!App::IsEmummc() && App::HasEmummc()`), автоматичне створення форвардера HOME Menu скасовується (`plan.install_new = false`), а сповіщення очищається (`plan.notice = Notice::None`). Це гарантує, що чистий SysNAND не отримає непідписаний тікет/форвардер на головному екрані й не буде забанений Nintendo.
+  5. **Напис у верхньому хедері меню**:
+     - У `sphaira/source/ui/menus/menu_base.cpp` мітка накопичувача над шкалою пам'яті змінена:
+       ```cpp
+       const char* nand_bar_label = pdata.is_emummc ? "EmuNAND" : "NAND";
+       ```
+     - Відтепер «EmuNAND» пишеться виключно при роботі в EmuNAND (літера 'E' у налаштуваннях консолі).
+     - При роботі у SysNAND або Semi-stock (літера 'S' у налаштуваннях) пишеться просто «NAND».
+  6. **Тести та версія**:
+     - У `tests/test_forwarder_auto_lifecycle.cpp` додано Test 6, що верифікує скасування встановлення нового форвардера та очищення сповіщень у сценарії SysNAND + наявний EmuNAND.
+     - Оновлено `README.md`.
+     - Версію піднято до `0.13.784` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.783 — strict only-if-newer remote update detection via version_compare
 

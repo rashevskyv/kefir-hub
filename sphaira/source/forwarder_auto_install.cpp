@@ -290,6 +290,16 @@ void ThreadFunc(void*) {
         }
     }
 
+    // Do not automatically install forwarders if booted in SysNAND while an
+    // EmuNAND is present in the system, protecting clean SysNAND from ban risk.
+    if (!App::IsEmummc() && App::HasEmummc()) {
+        log_write("[ForwarderAuto] skip install: running in SysNAND and EmuNAND is present\n");
+        plan.install_new = false;
+        if (!plan.delete_old) {
+            plan.notice = Notice::None;
+        }
+    }
+
     log_write("[ForwarderAuto] launch=%d own=%016lx new=%u old=%u install=%u delete=%u\n",
         (int)src, own_tid, new_installed, old_installed, plan.install_new, plan.delete_old);
 

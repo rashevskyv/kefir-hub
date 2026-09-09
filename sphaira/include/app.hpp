@@ -315,6 +315,7 @@ public:
 
     static auto IsOledModel() -> bool;
     static auto IsEmummc() -> bool;
+    static auto HasEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;
     static auto IsFileBaseEmummc() -> bool;
     // absolute sd path of the nand folder of the booted emummc, empty if not emummc.
@@ -468,6 +469,8 @@ public:
     s64 m_theme_index{};
 
     AmsEmummcPaths m_emummc_paths{};
+    bool m_is_emummc{false};
+    u32 m_emummc_type{0}; // 0 = None (SysNAND), 1 = Partition, 2 = File
     bool m_quit{};
 
     // network
