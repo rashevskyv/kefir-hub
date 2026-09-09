@@ -60,24 +60,14 @@ void Menu::RunNandBackup() {
                     "OK"_i18n);
                 return;
             }
-            App::Push<OptionBox>(
-                "Horizon could not copy profiles and play hours while the system is running.\n\n"
-                "TegraExplorer will dump them, then return to hekate.\n"
-                "After the console starts, open Kefir Hub to confirm the dump."_i18n,
-                "Cancel"_i18n, "Launch TegraExplorer"_i18n, 1,
-                [this](auto op) {
-                    if (!op || *op != 1) {
-                        account_restore::ClearPending();
-                        return;
-                    }
-                    if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
-                        App::Push<OptionBox>(
-                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
-                            "OK"_i18n);
-                        return;
-                    }
-                    Refresh();
-                });
+            if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
+                account_restore::ClearPending();
+                App::Push<OptionBox>(
+                    "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                    "OK"_i18n);
+                return;
+            }
+            Refresh();
         }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
 }
 

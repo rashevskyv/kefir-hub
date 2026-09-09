@@ -59,6 +59,7 @@ auto StageNandDump(nand_transfer::Report& report) -> Result {
         R_TRY(sd.write_entire_file(account_restore::NandPackPath(), body));
     }
     R_TRY(account_restore::SavePending({report.dir}, "wait_nand_dump", report.save_0010));
+    account_restore::WriteStartupTe(account_restore::NandDumpTeName());
     log_write("[NAND] staged TE dump pack=%s 0010=%d F0=%d\n",
         report.dir.c_str(), report.save_0010 ? 1 : 0, report.save_00F0 ? 1 : 0);
     R_SUCCEED();

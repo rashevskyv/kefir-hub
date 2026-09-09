@@ -69,6 +69,7 @@ auto Dump0010ReadOnly(ui::ProgressBox* pbox) -> Result;
 // Best-effort raw BIS copies of 0010 and 00F0 for Undo. Never fails the caller.
 auto TrySnapshotRawSystemSaves(ui::ProgressBox* pbox, RawSnapshotReport& out) -> void;
 auto InstallRestoreTeScripts() -> void;
+auto WriteStartupTe(const char* romfs_name) -> bool;
 auto LaunchTegraRomfs(const char* romfs_name) -> bool;
 auto LaunchTegraDump() -> bool;
 

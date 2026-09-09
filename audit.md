@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.788**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.789**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.789 поза ponytail-чергою: автоматичний запуск TegraExplorer без проміжного OptionBox при бекапі профілів і годин гри; автоматичний запис скрипта дампа в sd:/startup.te з примусовим fflush, fsdevCommitDevice("sdmc") та sd.Commit(); додано автоматичний фолбек у utils::rebootToPayload на setHekateAutobootPayload + requestForcedReboot при відсутності/збої Hekate Payload API; нормалізація шляху в writeHekateAutobootIni; захист ReadRomfsTe від збоїв при вже змонтованому romfs; надійне очищення sd:/startup.te у CleanDumpHandshake та ClearPending; оновлено README.md; версію піднято до 0.13.789. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.788 поза ponytail-чергою: Profiles and Playtime backup переведено на атомарний `.kefir-nand.zip` із `.part` validation; збережено сумісність із legacy directory packs; restore розпаковує тільки вибраний archive у точний `_restore_*` staging для TegraExplorer; recursive cleanup обмежено валідованими direct-child `_restore_*`/`_staging_*`; Manage Backups показує 8 акаунтів двома колонками 0–3/4–7 і коректно видаляє archive files та legacy directories; додано archive contract test; версію піднято до 0.13.788. Gemini tests/build пройшли до фінального senior guard, актуальний hardware build/test очікується. **Не закриває** чергу §2 A1–A7.
 

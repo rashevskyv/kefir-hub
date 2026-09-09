@@ -1,7 +1,18 @@
-Актуальний delivery — **v0.13.788** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.789** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.789 — auto launch TegraExplorer via hekate payload fallback on backup
+
+- При створенні резервної копії профілів та годин гри («Backup profiles & play hours») усунено зайвий діалог OptionBox («Launch TegraExplorer»): Sphaira після підготовки файлів дампу негайно автоматично ініціює перезавантаження консолі в TegraExplorer.
+- Скрипт дампа `nand_transfer_dump_auto.te` тепер гарантовано вивантажується в корінь картки пам'яті як `sd:/startup.te` у `account_restore::WriteStartupTe` та `StageNandDump`. Запис супроводжується обов'язковим скиданням буферів через `std::fflush`, `fsdevCommitDevice("sdmc")` та `sd.Commit()`, що гарантує фізичну наявність файлу на SD перед скиданням живлення консолі.
+- `utils::rebootToPayload` оснащено автоматичним фолбеком: якщо маркер Hekate Payload API (`/config/kefir/hekate-payload-api.ini`) відсутній або запис одноразового запиту завершується невдачею, функція автоматично перемикається на `setHekateAutobootPayload` (створюючи бекап `hekate_ipl.ini.bak` та прописуючи тимчасовий autoboot секції пейлоада) і виконує примусовий апаратний ребут.
+- Функція `writeHekateAutobootIni` нормалізує шлях до пейлоада, відсікаючи префікси `sdmc:/`, `sd:/` та лідируючі слеші `/` перед записом у конфіг Hekate.
+- У `account_restore.cpp` метод `ReadRomfsTe` захищено від помилок при вже змонтованому romfs: спочатку виконується спроба прямого читання, і лише за потреби проводиться локальний цикл `romfsInit`/`romfsExit`.
+- Реалізовано гарантоване очищення тимчасового `sd:/startup.te`: при старті та завершенні скрипта в TegraExplorer, а також у `account_restore::CleanDumpHandshake` та `account_restore::ClearPending` із фіксацією змін на SD.
+- Оновлено документацію `README.md` щодо автоматичного дампу профілів та пейлоад-інтеграції TegraExplorer.
+- `sphaira_VERSION` піднято до `0.13.789`. За політикою репозиторію збірка NRO та хост-тести не запускалися (очікується компіляція користувачем).
 
 ## v0.13.788 — archive Profiles and Playtime backups and 2x4 account grid
 

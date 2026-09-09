@@ -1,9 +1,22 @@
-Актуальний delivery — **v0.13.788** (archive Profiles and Playtime backups and show accounts in a 2x4 grid). Завершені задачі збережено в
+Актуальний delivery — **v0.13.789** (auto launch TegraExplorer via hekate payload fallback on backup). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.788 (archive Profiles and Playtime backups and show accounts in a 2x4 grid)
+## Поточний delivery: v0.13.789 (auto launch TegraExplorer via hekate payload fallback on backup)
+
+- [x] `NAND-BACKUP-AUTO-LAUNCH-789` — автоматичний запуск TegraExplorer без показу зайвого діалогу OptionBox при створенні резервної копії профілів та плейтайму.
+- [x] `NAND-STARTUP-TE-WRITE-SYNC-789` — автоматичний запис скрипта дампа в корінь SD як `sd:/startup.te` із примусовим фізичним скиданням буферів (`fflush`, `fsdevCommitDevice`, `sd.Commit`).
+- [x] `HEKATE-REBOOT-PAYLOAD-FALLBACK-789` — інтеграція автоматичного переходу на `setHekateAutobootPayload` у `utils::rebootToPayload` при недоступності чи збої Hekate Payload API.
+- [x] `HEKATE-AUTOBOOT-PATH-NORM-789` — нормалізація шляху пейлоада у `writeHekateAutobootIni` з очищенням префіксів `sdmc:/`, `sd:/` та початкових слешів.
+- [x] `ROMFS-READ-TE-HARDEN-789` — захист `ReadRomfsTe` від збоїв при вже змонтованому romfs у середовищі застосунку.
+- [x] `STARTUP-TE-CLEANUP-789` — гарантоване видалення `sd:/startup.te` у `CleanDumpHandshake` та `ClearPending`.
+- [x] `README-DOCS-UPDATE-789` — оновлення розділу документації `README.md` щодо бекапу/відновлення профілів та пейлоад-інтеграції TegraExplorer.
+- [x] `CMAKELISTS-VERSION-BUMP-789` — підняти `sphaira_VERSION` до `0.13.789`.
+- [x] `DOCS-BUMP-789` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md`.
+- [ ] `HARDWARE-VERIFY-789` — перевірка користувачем автоматичного перезавантаження в TegraExplorer та відпрацювання `startup.te` на реальній консолі.
+
+## Попередній delivery: v0.13.788 (archive Profiles and Playtime backups and show accounts in a 2x4 grid)
 
 - [x] `NAND-ARCHIVE-WRITE-788` — завершувати новий Profiles and Playtime backup одним атомарно опублікованим ZIP-архівом.
 - [x] `NAND-ARCHIVE-COMPAT-788` — list/details/delete/restore підтримують нові архіви та старі directory packs.

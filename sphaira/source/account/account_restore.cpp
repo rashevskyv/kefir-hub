@@ -50,12 +50,18 @@ auto ReadJsonField(const std::string& json, const char* key) -> std::string {
 }
 
 auto ReadRomfsTe(const char* path, std::vector<u8>& te) -> bool {
-    if (R_FAILED(romfsInit())) {
-        log_write("[RESTORE] romfsInit failed for %s\n", path);
-        return false;
+    te.clear();
+    if (R_SUCCEEDED(fs::read_entire_file(path, te)) && !te.empty()) {
+        return true;
     }
-    ON_SCOPE_EXIT(romfsExit());
-    return R_SUCCEEDED(fs::read_entire_file(path, te)) && !te.empty();
+    const Result rc = romfsInit();
+    if (R_SUCCEEDED(rc)) {
+        const bool ok = R_SUCCEEDED(fs::read_entire_file(path, te)) && !te.empty();
+        romfsExit();
+        return ok;
+    }
+    log_write("[RESTORE] ReadRomfsTe failed for %s (romfsInit rc=0x%X)\n", path, rc);
+    return false;
 }
 
 auto CopyTe(fs::FsNativeSd& sd, const char* romfs_name, const char* dest_name) -> void {
@@ -321,6 +327,10 @@ auto ClearPending() -> Result {
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandRestoreTeName()).c_str());
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + RollbackTeName()).c_str());
     sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
+    sd.DeleteFile("/startup.te");
+    std::remove("/startup.te");
+    fsdevCommitDevice("sdmc");
+    sd.Commit();
     R_SUCCEED();
 }
 
@@ -533,9 +543,46 @@ auto CleanDumpHandshake() -> void {
     sd.DeleteFile(DumpedOkPath());
     sd.DeleteFile(NandPackPath());
     sd.DeleteFile("/startup.te");
+    std::remove("/startup.te");
     sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandDumpTeName()).c_str());
     sd.DeleteFile((std::string(PendingDir()) + "/" + NandDumpTeName()).c_str());
+    fsdevCommitDevice("sdmc");
+    sd.Commit();
     log_write("[RESTORE] cleaned dump handshake temps\n");
+}
+
+auto WriteStartupTe(const char* romfs_name) -> bool {
+    std::vector<u8> te;
+    const auto romfs = std::string("romfs:/tegra/") + romfs_name;
+    if (!ReadRomfsTe(romfs.c_str(), te)) {
+        log_write("[RESTORE] %s missing from romfs\n", romfs_name);
+        return false;
+    }
+    fs::FsNativeSd sd;
+    sd.DeleteFile("/startup.te");
+    std::remove("/startup.te");
+
+    bool written = false;
+    std::FILE* fp = std::fopen("/startup.te", "wb");
+    if (fp) {
+        if (std::fwrite(te.data(), 1, te.size(), fp) == te.size()) {
+            std::fflush(fp);
+            written = true;
+        }
+        std::fclose(fp);
+    }
+    if (!written) {
+        if (R_FAILED(sd.write_entire_file("/startup.te", te))) {
+            log_write("[RESTORE] write /startup.te failed\n");
+            return false;
+        }
+    }
+    CopyTe(sd, romfs_name, romfs_name);
+
+    fsdevCommitDevice("sdmc");
+    sd.Commit();
+    log_write("[RESTORE] wrote /startup.te (%zu bytes) from %s\n", te.size(), romfs_name);
+    return true;
 }
 
 auto LaunchTegraRomfs(const char* romfs_name) -> bool {
@@ -545,35 +592,15 @@ auto LaunchTegraRomfs(const char* romfs_name) -> bool {
         return false;
     }
 
-    fs::FsNativeSd sd;
-    std::vector<u8> te;
-    const auto romfs = std::string("romfs:/tegra/") + romfs_name;
-    if (!ReadRomfsTe(romfs.c_str(), te)) {
-        log_write("[RESTORE] %s missing from romfs\n", romfs_name);
+    if (!WriteStartupTe(romfs_name)) {
+        log_write("[RESTORE] failed to write startup.te for %s\n", romfs_name);
         return false;
     }
-    sd.DeleteFile("/startup.te");
-    if (R_FAILED(sd.write_entire_file("/startup.te", te))) {
-        log_write("[RESTORE] write /startup.te failed\n");
-        return false;
-    }
-    fsdevCommitDevice("sdmc");
-    log_write("[RESTORE] wrote /startup.te from %s, launching %s\n",
+
+    log_write("[RESTORE] launching TegraExplorer with %s: %s\n",
         romfs_name, static_cast<const char*>(te_bin));
 
-    if (utils::rebootToPayload(static_cast<const char*>(te_bin))) {
-        return true;
-    }
-    log_write("[RESTORE] rebootToPayload failed, hekate autoboot fallback\n");
-    if (!utils::setHekateAutobootPayload(static_cast<const char*>(te_bin))) {
-        log_write("[RESTORE] setHekateAutobootPayload failed\n");
-        return false;
-    }
-    if (R_FAILED(utils::requestForcedReboot())) {
-        log_write("[RESTORE] requestForcedReboot failed after autoboot\n");
-        return false;
-    }
-    return true;
+    return utils::rebootToPayload(static_cast<const char*>(te_bin));
 }
 
 auto LaunchTegraDump() -> bool {

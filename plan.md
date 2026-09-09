@@ -1,8 +1,19 @@
-Поточний delivery — **v0.13.788** (archive Profiles and Playtime backups and show accounts in a 2x4 grid). Завершені плани збережено в
+Поточний delivery — **v0.13.789** (auto launch TegraExplorer via hekate payload fallback on backup). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.788 — archive Profiles and Playtime backups and show accounts in a 2x4 grid
+## Поточний delivery: v0.13.789 — auto launch TegraExplorer via hekate payload fallback on backup
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. При виборі «Backup profiles & play hours» після зняття Horizon-частини Sphaira автоматично перезавантажує консоль у TegraExplorer без показу зайвого діалогу OptionBox «Launch TegraExplorer».
+2. Скрипт дампа `nand_transfer_dump_auto.te` автоматично вивантажується в корінь SD як `sd:/startup.te` із примусовим `fflush`, `fsdevCommitDevice("sdmc")` та `sd.Commit()` для гарантії синхронізації блоків на фізичному носії перед ребутом.
+3. У `utils::rebootToPayload` інтегровано автоматичний фолбек: якщо одноразовий Hekate Payload API (`hekate-payload-api.ini` / `hekate-payload-request.ini`) недоступний або запис завершується помилкою, функція автоматично перемикається на `setHekateAutobootPayload` (створення резервної копії `hekate_ipl.ini.bak` та запис тимчасового autoboot) з наступним примусовим перезавантаженням (`requestForcedReboot`).
+4. Шлях пейлоада у `writeHekateAutobootIni` нормалізується з очищенням префіксів `sdmc:/`, `sd:/` та початкових слешів.
+5. У `account_restore.cpp` метод `ReadRomfsTe` захищено від помилок подвійної ініціалізації romfs: якщо romfs вже змонтований, файл читається напряму.
+6. Гарантовано очищення `sd:/startup.te` як у самому скрипті TegraExplorer, так і у функціях `CleanDumpHandshake` та `ClearPending` у Kefir Hub.
+7. Версію піднято до `0.13.789` у `sphaira/CMakeLists.txt`; оновлено документацію `README.md`.
+
+## Попередній delivery: v0.13.788 — archive Profiles and Playtime backups and show accounts in a 2x4 grid
 
 Статус: реалізовано; апаратна перевірка очікується.
 1. Нові `Profiles and Playtime` пакети мають завершуватися одним ZIP-архівом із атомарним `.part` → final перейменуванням; неповний каталог після помилки не повинен виглядати готовим backup.

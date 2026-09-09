@@ -116,6 +116,21 @@ namespace {
     }
 
     bool writeHekateAutobootIni(const char* payload_path) {
+        if (!payload_path || !*payload_path) {
+            log_write("writeHekateAutobootIni: invalid empty payload path\n");
+            return false;
+        }
+
+        std::string_view p{payload_path};
+        if (p.starts_with("sdmc:/")) p.remove_prefix(6);
+        else if (p.starts_with("sdmc:")) p.remove_prefix(5);
+        else if (p.starts_with("sd:/")) p.remove_prefix(4);
+        else if (p.starts_with("sd:")) p.remove_prefix(3);
+        while (!p.empty() && p.front() == '/') {
+            p.remove_prefix(1);
+        }
+        std::string rel_p{p};
+
         FILE* f_out = fopen(HEKATE_INI_PATH, "wb");
         if (!f_out) {
             log_write("writeHekateAutobootIni: failed to open %s for writing\n", HEKATE_INI_PATH);
@@ -136,7 +151,7 @@ namespace {
             "\n"
             "[HATS Payload]\n"
             "payload=%s\n",
-            payload_path
+            rel_p.c_str()
         );
 
         fclose(f_out);
@@ -598,7 +613,7 @@ bool normalizeAndValidatePayloadPath(std::string_view raw_path, std::string& out
 
 } // namespace
 
-// Reboot to a payload file via Hekate one-shot payload API.
+// Reboot to a payload file via Hekate one-shot payload API or autoboot fallback.
 // Returns true on success, false on failure
 bool rebootToPayload(const char* path) {
     if (!path || !*path) {
@@ -607,11 +622,6 @@ bool rebootToPayload(const char* path) {
     }
 
     log_write("rebootToPayload: requested payload launch for: %s\n", path);
-
-    if (!isHekatePayloadApiSupported()) {
-        log_write("rebootToPayload: Hekate payload API marker missing or unsupported\n");
-        return false;
-    }
 
     std::string rel_path;
     std::string abs_path;
@@ -626,34 +636,46 @@ bool rebootToPayload(const char* path) {
         return false;
     }
 
-    std::string request = "[launch]\nversion=1\npayload=" + rel_path + "\n";
+    if (isHekatePayloadApiSupported()) {
+        std::string request = "[launch]\nversion=1\npayload=" + rel_path + "\n";
 
-    sd.CreateDirectoryRecursively("/config/kefir");
-    sd.DeleteFile(HEKATE_REQUEST_TMP_PATH);
-
-    if (R_FAILED(sd.write_entire_file(HEKATE_REQUEST_TMP_PATH, std::vector<u8>(request.begin(), request.end())))) {
-        log_write("rebootToPayload: failed to write temporary request file\n");
-        return false;
-    }
-
-    sd.DeleteFile(HEKATE_REQUEST_PATH);
-    if (R_FAILED(sd.RenameFile(HEKATE_REQUEST_TMP_PATH, HEKATE_REQUEST_PATH))) {
-        log_write("rebootToPayload: failed to rename temporary request file to %s\n", HEKATE_REQUEST_PATH);
+        sd.CreateDirectoryRecursively("/config/kefir");
         sd.DeleteFile(HEKATE_REQUEST_TMP_PATH);
-        return false;
+
+        if (R_SUCCEEDED(sd.write_entire_file(HEKATE_REQUEST_TMP_PATH, std::vector<u8>(request.begin(), request.end())))) {
+            sd.DeleteFile(HEKATE_REQUEST_PATH);
+            if (R_SUCCEEDED(sd.RenameFile(HEKATE_REQUEST_TMP_PATH, HEKATE_REQUEST_PATH))) {
+                fsdevCommitDevice("sdmc");
+                log_write("rebootToPayload: Hekate payload request written for %s, rebooting...\n", rel_path.c_str());
+                const Result rc = requestForcedReboot();
+                if (R_SUCCEEDED(rc)) {
+                    return true;
+                }
+                log_write("rebootToPayload: requestForcedReboot failed after writing request: 0x%x\n", rc);
+            } else {
+                log_write("rebootToPayload: failed to rename temporary request file to %s\n", HEKATE_REQUEST_PATH);
+                sd.DeleteFile(HEKATE_REQUEST_TMP_PATH);
+            }
+        } else {
+            log_write("rebootToPayload: failed to write temporary request file\n");
+        }
+    } else {
+        log_write("rebootToPayload: Hekate payload API marker missing or unsupported\n");
     }
 
-    fsdevCommitDevice("sdmc");
-
-    log_write("rebootToPayload: Hekate payload request written for %s, rebooting...\n", rel_path.c_str());
-
-    const Result rc = requestForcedReboot();
-    if (R_FAILED(rc)) {
-        log_write("rebootToPayload: requestForcedReboot failed: 0x%x\n", rc);
-        return false;
+    // Fallback: set hekate_ipl.ini autoboot
+    log_write("rebootToPayload: falling back to hekate autoboot for %s\n", rel_path.c_str());
+    if (setHekateAutobootPayload(rel_path.c_str())) {
+        const Result rc = requestForcedReboot();
+        if (R_SUCCEEDED(rc)) {
+            return true;
+        }
+        log_write("rebootToPayload: requestForcedReboot failed after autoboot: 0x%x\n", rc);
+    } else {
+        log_write("rebootToPayload: setHekateAutobootPayload failed\n");
     }
 
-    return true;
+    return false;
 }
 
 std::string Trim(std::string str) {
