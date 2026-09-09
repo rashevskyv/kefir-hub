@@ -501,6 +501,48 @@ inline auto PathAffectsHomebrew(std::string_view path, std::span<const std::stri
     return false;
 }
 
+// Returns true only if path is an exact direct child of /config/kefir/nand_transfer/
+// and its basename starts with "_restore_".
+// Rejects empty paths, root, parent, nested paths, backslashes, colons, traversal components.
+inline auto IsSafeNandTransferStagingDir(std::string_view path, std::string_view required_prefix) -> bool {
+    if (path.empty()) {
+        return false;
+    }
+    for (const char c : path) {
+        const auto uc = static_cast<unsigned char>(c);
+        if (uc < 0x20 || uc == 0x7F || c == '\\') {
+            return false;
+        }
+    }
+    std::string_view p = path;
+    if (StartsWithIC(p, "sdmc:")) {
+        p = p.substr(5);
+    }
+    constexpr std::string_view kExpectedPrefix = "/config/kefir/nand_transfer/";
+    if (!StartsWithIC(p, kExpectedPrefix)) {
+        return false;
+    }
+    const auto child = p.substr(kExpectedPrefix.size());
+    if (child.empty() || child.find('/') != std::string_view::npos) {
+        return false;
+    }
+    if (child == "." || child == "..") {
+        return false;
+    }
+    if (!child.starts_with(required_prefix) || child.size() <= required_prefix.size()) {
+        return false;
+    }
+    return true;
+}
+
+inline auto IsSafeRestoreStagingDir(std::string_view path) -> bool {
+    return IsSafeNandTransferStagingDir(path, "_restore_");
+}
+
+inline auto IsSafeBackupStagingDir(std::string_view path) -> bool {
+    return IsSafeNandTransferStagingDir(path, "_staging_");
+}
+
 } // namespace sphaira::path
 
 

@@ -5,6 +5,7 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "path_util.hpp"
 #include "ui/progress_box.hpp"
 #include "utils/utils.hpp"
 
@@ -259,6 +260,7 @@ auto LoadPending() -> Pending {
     if (!cur.empty()) {
         p.pack_dirs.push_back(cur);
     }
+    p.staging_dir = ReadJsonField(s, "staging_dir");
     return p;
 }
 
@@ -270,7 +272,7 @@ auto HasUnfinishedRestore() -> bool {
     return p.present && p.phase != "applied";
 }
 
-auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok) -> Result {
+auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok, const std::string& staging_dir) -> Result {
     fs::FsNativeSd sd;
     R_TRY(sd.CreateDirectoryRecursively(PendingDir()));
     std::string packs;
@@ -280,17 +282,37 @@ auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& p
         }
         packs += pack_dirs[i];
     }
-    const auto json = std::string{"{\"kind\":\"kefir-restore-pending\",\"phase\":\""} + phase +
+    auto json = std::string{"{\"kind\":\"kefir-restore-pending\",\"phase\":\""} + phase +
         "\",\"has_0010\":" + (snapshot_ok ? "true" : "false") +
-        ",\"packs\":\"" + packs + "\"}";
+        ",\"packs\":\"" + packs + "\"";
+    if (!staging_dir.empty()) {
+        json += ",\"staging_dir\":\"" + staging_dir + "\"";
+    }
+    json += "}";
     R_TRY(sd.write_entire_file(StatePath(), std::vector<u8>(json.begin(), json.end())));
-    log_write("[RESTORE] pending phase=%s snapshot=%d packs=%zu\n",
-        phase.c_str(), snapshot_ok ? 1 : 0, pack_dirs.size());
+    log_write("[RESTORE] pending phase=%s snapshot=%d packs=%zu staging=%s\n",
+        phase.c_str(), snapshot_ok ? 1 : 0, pack_dirs.size(), staging_dir.c_str());
     R_SUCCEED();
+}
+
+auto CleanRestoreStagingDir(const std::string& path) -> bool {
+    if (!sphaira::path::IsSafeRestoreStagingDir(path)) {
+        log_write("[RESTORE] rejected unsafe staging cleanup: %s\n", path.c_str());
+        return false;
+    }
+    fs::FsNativeSd sd;
+    if (sd.DirExists(path.c_str())) {
+        return R_SUCCEEDED(sd.DeleteDirectoryRecursively(path.c_str()));
+    }
+    return true;
 }
 
 auto ClearPending() -> Result {
     fs::FsNativeSd sd;
+    const auto p = LoadPending();
+    if (!p.staging_dir.empty()) {
+        CleanRestoreStagingDir(p.staging_dir);
+    }
     if (sd.DirExists(PendingDir())) {
         sd.DeleteDirectoryRecursively(PendingDir());
     }

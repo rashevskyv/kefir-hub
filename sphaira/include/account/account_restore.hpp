@@ -47,6 +47,7 @@ struct Pending {
     bool rolled_back{};
     std::string phase; // wait_dump | ready | wait_link | wait_nand_restore | wait_nand_dump | applied
     std::vector<std::string> pack_dirs;
+    std::string staging_dir;
 };
 
 struct RawSnapshotReport {
@@ -56,7 +57,7 @@ struct RawSnapshotReport {
 
 auto LoadPending() -> Pending;
 auto HasUnfinishedRestore() -> bool;
-auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok) -> Result;
+auto SavePending(const std::vector<std::string>& pack_dirs, const std::string& phase, bool snapshot_ok, const std::string& staging_dir = {}) -> Result;
 auto ClearPending() -> Result;
 auto SnapshotOk() -> bool;
 
@@ -79,5 +80,8 @@ auto ClearReopenHubHint() -> void;
 // After Hub confirms a finished nand dump: drop handshake temps only.
 // Keeps pack folder, state.json (phase applied), nand flag, Undo snapshots.
 auto CleanDumpHandshake() -> void;
+
+// Deletes the restore staging directory if and only if IsSafeRestoreStagingDir returns true.
+auto CleanRestoreStagingDir(const std::string& path) -> bool;
 
 } // namespace sphaira::account_restore

@@ -6,6 +6,7 @@
 #include "account/account_link.hpp"
 #include "account/account_restore.hpp"
 #include "account/account_user.hpp"
+#include "account/nand_transfer.hpp"
 #include "app.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
@@ -616,13 +617,16 @@ auto OfferPendingRestore() -> bool {
     if (pending.phase == "wait_nand_restore") {
         s_offered = true;
         fs::FsNativeSd sd;
+        if (!pending.staging_dir.empty()) {
+            account_restore::CleanRestoreStagingDir(pending.staging_dir);
+        }
         if (sd.FileExists(account_restore::NandRestoredOkPath())) {
-            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok, "");
             App::Push<OptionBox>(
                 "Profiles and play hours were restored. Reboot is done."_i18n,
                 "OK"_i18n);
         } else {
-            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok);
+            account_restore::SavePending(pending.pack_dirs, "applied", pending.snapshot_ok, "");
             App::Push<OptionBox>(
                 "TegraExplorer did not finish restoring profiles & play hours."_i18n,
                 "OK"_i18n);
@@ -634,12 +638,23 @@ auto OfferPendingRestore() -> bool {
         s_offered = true;
         const auto pack = pending.pack_dirs.empty() ? std::string{} : pending.pack_dirs.front();
         if (NandDumpLooksComplete(pack)) {
-            account_restore::SavePending(pending.pack_dirs, "applied", true);
-            account_restore::CleanDumpHandshake();
-            App::Push<OptionBox>(
-                "Profiles and play hours dump is done."_i18n,
-                "OK"_i18n);
-            return true;
+            std::string final_archive;
+            const auto arc_rc = nand_transfer::FinalizePackArchive(pack, final_archive);
+            if (R_SUCCEEDED(arc_rc)) {
+                log_write("[NAND] TE dump finalized to %s\n", final_archive.c_str());
+                account_restore::SavePending({final_archive}, "applied", true);
+                account_restore::CleanDumpHandshake();
+                App::Push<OptionBox>(
+                    "Profiles and play hours dump is done."_i18n,
+                    "OK"_i18n);
+                return true;
+            } else {
+                log_write("[NAND] TE dump finalize archive failed 0x%X; keeping staging %s\n", arc_rc, pack.c_str());
+                App::Push<OptionBox>(
+                    "Failed to create archive from dumped profiles & play hours."_i18n,
+                    "OK"_i18n);
+                return true;
+            }
         }
         App::Push<OptionBox>(
             "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again."_i18n,

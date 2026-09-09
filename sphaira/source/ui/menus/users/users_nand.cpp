@@ -89,31 +89,41 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
         return;
     }
 
-    auto pack = std::make_shared<std::string>(dir);
+    auto selected_pack = std::make_shared<std::string>(dir);
+    auto staging = std::make_shared<std::string>();
+    auto is_archive = std::make_shared<bool>(false);
     auto snap = std::make_shared<account_restore::RawSnapshotReport>();
     auto hours = restore_play_hours;
     App::Push<ProgressBox>(0, "Restore profiles & play hours"_i18n, "Preparing TegraExplorer restore"_i18n,
-        [pack, snap, hours](auto pbox) -> Result {
+        [selected_pack, staging, is_archive, snap, hours](auto pbox) -> Result {
             fs::FsNativeSd sd;
-            auto resolved = *pack;
-            if (!sd.DirExists((resolved + "/80000000000000F0").c_str()) &&
-                !sd.DirExists((resolved + "/8000000000000010").c_str()) &&
-                !sd.FileExists((resolved + "/manifest.json").c_str())) {
-                // Picker may land inside a save subfolder; climb one level.
-                auto parent = resolved;
-                while (!parent.empty() && (parent.back() == '/' || parent.back() == '\\')) {
-                    parent.pop_back();
-                }
-                const auto slash = parent.find_last_of("/\\");
-                if (slash != std::string::npos && slash > 0) {
-                    parent = parent.substr(0, slash);
-                }
-                if (nand_transfer::IsPack(parent)) {
-                    resolved = parent;
+            auto resolved = *selected_pack;
+            if (sd.FileExists(resolved.c_str()) && (nand_transfer::IsPackArchive(resolved) || std::string_view{resolved}.ends_with(".zip"))) {
+                *is_archive = true;
+                pbox->NewTransfer("Extracting backup archive"_i18n);
+                R_TRY(nand_transfer::StagePackArchiveForRestore(resolved, *staging, pbox));
+                resolved = *staging;
+            } else {
+                *is_archive = false;
+                *staging = "";
+                if (!sd.DirExists((resolved + "/80000000000000F0").c_str()) &&
+                    !sd.DirExists((resolved + "/8000000000000010").c_str()) &&
+                    !sd.FileExists((resolved + "/manifest.json").c_str())) {
+                    // Picker may land inside a save subfolder; climb one level.
+                    auto parent = resolved;
+                    while (!parent.empty() && (parent.back() == '/' || parent.back() == '\\')) {
+                        parent.pop_back();
+                    }
+                    const auto slash = parent.find_last_of("/\\");
+                    if (slash != std::string::npos && slash > 0) {
+                        parent = parent.substr(0, slash);
+                    }
+                    if (nand_transfer::IsPack(parent)) {
+                        resolved = parent;
+                    }
                 }
             }
             R_UNLESS(nand_transfer::IsPack(resolved), Result_FsInvalidType);
-            *pack = resolved;
 
             pbox->NewTransfer("Staging restore"_i18n);
             R_TRY(sd.CreateDirectoryRecursively(account_restore::PendingDir()));
@@ -135,12 +145,15 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
 
             account_restore::TrySnapshotRawSystemSaves(pbox, *snap);
             account_restore::InstallRestoreTeScripts();
-            R_TRY(account_restore::SavePending({resolved}, "wait_nand_restore", snap->save_0010));
+            R_TRY(account_restore::SavePending({*selected_pack}, "wait_nand_restore", snap->save_0010, *staging));
             R_SUCCEED();
-        }, [this, pack, snap](Result rc) {
+        }, [this, selected_pack, staging, is_archive, snap](Result rc) {
             if (R_FAILED(rc)) {
+                if (*is_archive && !staging->empty()) {
+                    account_restore::CleanRestoreStagingDir(*staging);
+                }
                 const auto msg = (rc == Result_FsInvalidType)
-                    ? "That folder is not a profiles & play hours pack."_i18n
+                    ? "That backup is not a valid profiles & play hours pack."_i18n
                     : "Could not stage the profiles & play hours restore on SD."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
@@ -160,8 +173,11 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
             App::Push<OptionBox>(
                 msg,
                 "Cancel"_i18n, "Launch TegraExplorer"_i18n, 1,
-                [this, pack](auto op) {
+                [this, staging, is_archive](auto op) {
                     if (!op || *op != 1) {
+                        if (*is_archive && !staging->empty()) {
+                            account_restore::CleanRestoreStagingDir(*staging);
+                        }
                         account_restore::ClearPending();
                         App::Push<OptionBox>("Restore cancelled."_i18n, "OK"_i18n);
                         return;

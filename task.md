@@ -1,9 +1,22 @@
-Актуальний delivery — **v0.13.787** (restore exact selected NAND transfer pack through TegraExplorer). Завершені задачі збережено в
+Актуальний delivery — **v0.13.788** (archive Profiles and Playtime backups and show accounts in a 2x4 grid). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.787 (restore exact selected NAND transfer pack through TegraExplorer)
+## Поточний delivery: v0.13.788 (archive Profiles and Playtime backups and show accounts in a 2x4 grid)
+
+- [x] `NAND-ARCHIVE-WRITE-788` — завершувати новий Profiles and Playtime backup одним атомарно опублікованим ZIP-архівом.
+- [x] `NAND-ARCHIVE-COMPAT-788` — list/details/delete/restore підтримують нові архіви та старі directory packs.
+- [x] `NAND-ARCHIVE-STAGE-788` — перед restore розпаковувати тільки вибраний archive у безпечний тимчасовий direct-child каталог для TegraExplorer та прибирати staging.
+- [x] `NAND-DETAIL-GRID-788` — показувати до 8 акаунтів у двох колонках по чотири.
+- [x] `NAND-ARCHIVE-TESTS-788` — додати мінімальні host/contract tests для формату, exact selection і layout contract.
+- [x] `NAND-STAGING-DELETE-GUARD-788` — дозволити фіналізацію та recursive delete лише для direct-child `_staging_*` у `nand_transfer`.
+- [x] `CMAKELISTS-VERSION-BUMP-788` — підняти `sphaira_VERSION` до `0.13.788`.
+- [x] `VERIFY-788` — Gemini: WSL tests all green і `ReleaseWithInstall` build успішний; після фінального guard — `git diff --check` успішний без повторного compile за senior policy.
+- [x] `DOCS-BUMP-788` — синхронізувати plan/task/walkthrough/audit.
+- [ ] `HARDWARE-VERIFY-788` — перевірити створення ZIP, Manage Backups 2×4 і restore вибраного archive на консолі.
+
+## Попередній delivery: v0.13.787 (restore exact selected NAND transfer pack through TegraExplorer)
 
 - [x] `NAND-RESTORE-EXACT-PACK-787` — приймати лише точний вибраний Hub каталог `nand_transfer/<pack>` без scan/latest fallback.
 - [x] `NAND-RESTORE-PROVEN-TE-787` — вбудувати перевірений TegraExplorer restore flow для 0010, 0011 та опційного 00F0 з контрольованими write/commit.

@@ -47,7 +47,7 @@ auto StageNandDump(nand_transfer::Report& report) -> Result {
         char stamp[32]{};
         const auto t = std::time(nullptr);
         std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&t));
-        report.dir = std::string(paths::DATA_ROOT) + "/nand_transfer/" + stamp;
+        report.dir = std::string(paths::DATA_ROOT) + "/nand_transfer/_staging_" + stamp;
     }
     R_TRY(sd.CreateDirectoryRecursively(report.dir.c_str()));
     R_TRY(sd.CreateDirectoryRecursively(account_restore::PendingDir()));

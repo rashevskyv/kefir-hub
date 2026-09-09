@@ -48,7 +48,7 @@ struct NandPackDetailMenu final : MenuBase {
 
         SetTitleSubHeading(
             "This pack restores all profiles together. Play hours may be restored with them."_i18n, true);
-        m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
+        m_list = std::make_unique<List>(2, 4, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 555.f, 110.f}, Vec2{20.f, 15.f});
         UpdateSubHeading();
     }
 
@@ -74,19 +74,34 @@ struct NandPackDetailMenu final : MenuBase {
         SetSubHeading(sub);
     }
 
+    static constexpr s64 GridSlotToEntry(s64 grid_idx) {
+        return (grid_idx % 2) * 4 + (grid_idx / 2);
+    }
+
+    static constexpr s64 EntryToGridSlot(s64 entry_idx) {
+        return (entry_idx % 4) * 2 + (entry_idx / 4);
+    }
+
     void Update(Controller* controller, TouchInfo* touch) override {
         MenuBase::Update(controller, touch);
         if (m_entries.empty()) {
             return;
         }
-        m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
-            if (touch && m_index == i) {
-                FireAction(Button::A);
-            } else {
-                App::PlaySoundEffect(SoundEffect_Focus);
-                m_index = i;
+        const auto old_index = m_index;
+        m_list->OnUpdate(controller, touch, m_index, 8, [this](bool touch, auto i) {
+            const auto entry_idx = GridSlotToEntry(i);
+            if (entry_idx < static_cast<s64>(m_entries.size())) {
+                if (touch && m_index == i) {
+                    FireAction(Button::A);
+                } else {
+                    App::PlaySoundEffect(SoundEffect_Focus);
+                    m_index = i;
+                }
             }
         }, this);
+        if (GridSlotToEntry(m_index) >= static_cast<s64>(m_entries.size())) {
+            m_index = old_index;
+        }
     }
 
     auto TryLoadAvatar(Entry& e) -> bool {
@@ -98,8 +113,7 @@ struct NandPackDetailMenu final : MenuBase {
             return false;
         }
         std::vector<u8> jpeg;
-        fs::FsNativeSd sd;
-        if (R_FAILED(sd.read_entire_file(e.user.avatar_path.c_str(), jpeg)) || jpeg.empty()) {
+        if (!nand_transfer::ReadPackUserAvatar(m_pack, e.user, jpeg) || jpeg.empty()) {
             return false;
         }
         auto img = ImageLoadFromMemory(jpeg, ImageFlag_JPEG);
@@ -123,8 +137,12 @@ struct NandPackDetailMenu final : MenuBase {
             return;
         }
         int loaded = 0;
-        m_list->Draw(vg, theme, m_entries.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
-            auto& e = m_entries[i];
+        m_list->Draw(vg, theme, 8, [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+            const auto entry_idx = GridSlotToEntry(i);
+            if (entry_idx >= static_cast<s64>(m_entries.size())) {
+                return;
+            }
+            auto& e = m_entries[entry_idx];
             if (loaded < 2 && TryLoadAvatar(e)) {
                 loaded++;
             }
@@ -142,6 +160,9 @@ struct NandPackDetailMenu final : MenuBase {
                 e.image > 0 ? e.image : App::GetDefaultImage(), 4);
 
             const float text_x = icon_x + icon_size + 14.f;
+            const float text_w = std::max(0.f, v.x + v.w - text_x - 12.f);
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, v.y, text_w, v.h);
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
@@ -150,6 +171,7 @@ struct NandPackDetailMenu final : MenuBase {
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),
                 "%s", e.user.uid.c_str());
+            nvgRestore(vg);
         });
     }
 
@@ -401,8 +423,12 @@ private:
                     [dirs](auto pbox) -> Result {
                         pbox->NewTransfer("Deleting"_i18n);
                         fs::FsNativeSd sd;
-                        for (const auto& dir : dirs) {
-                            R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
+                        for (const auto& item : dirs) {
+                            if (sd.FileExists(item.c_str())) {
+                                R_TRY(sd.DeleteFile(item.c_str()));
+                            } else if (sd.DirExists(item.c_str())) {
+                                R_TRY(sd.DeleteDirectoryRecursively(item.c_str()));
+                            }
                         }
                         R_SUCCEED();
                     }, [this](Result rc) {

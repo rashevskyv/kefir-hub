@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.787** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.788** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.788 — archive Profiles and Playtime backups and 2x4 account grid
+
+- Новий завершений `Profiles and Playtime` backup публікується одним `<timestamp>.kefir-nand.zip`; ZIP спочатку створюється як `.part`, перевіряється і лише тоді атомарно перейменовується.
+- `Manage Backups` читає нові archive packs і старі directory packs. Видалення розрізняє файл архіву та legacy-каталог.
+- Для restore розпаковується тільки вибраний archive у унікальний direct-child `_restore_*`; TegraExplorer отримує точний staging path без latest/fallback scan.
+- Recursive cleanup обмежений валідованими `_restore_*` та `_staging_*` усередині `/config/kefir/nand_transfer`; SD-controlled pending path не може видалити сторонній каталог.
+- Екран деталей показує максимум 8 акаунтів двома вертикальними колонками: 0–3 ліворуч, 4–7 праворуч, із clipping nickname/UID.
+- Gemini виконав `tests/run.sh`: all green, новий archive contract — 150 checks; ReleaseWithInstall build успішний. Артефакт до фінального guard мав 7,601,453 bytes і SHA-256 `6A0B004488C8F5CAE9753400BB7498E64594EA13FB7D5B0EB548CB11543A930B`. Після фінальної guard-правки senior виконав `git diff --check`; актуальний NRO потребує повторної збірки перед hardware test.
 
 ## v0.13.787 — restore exact selected NAND transfer pack through TegraExplorer
 

@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.787** (restore exact selected NAND transfer pack through TegraExplorer). Завершені плани збережено в
+Поточний delivery — **v0.13.788** (archive Profiles and Playtime backups and show accounts in a 2x4 grid). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.787 — restore exact selected NAND transfer pack through TegraExplorer
+## Поточний delivery: v0.13.788 — archive Profiles and Playtime backups and show accounts in a 2x4 grid
+
+Статус: реалізовано; апаратна перевірка очікується.
+1. Нові `Profiles and Playtime` пакети мають завершуватися одним ZIP-архівом із атомарним `.part` → final перейменуванням; неповний каталог після помилки не повинен виглядати готовим backup.
+2. `Manage Backups` має читати новий archive format і залишити read/restore/delete сумісність зі старими каталогами.
+3. Перед TegraExplorer restore рівно вибраний архів розпаковується у тимчасовий прямий каталог `nand_transfer`, а в `nand_pack.txt` передається саме він; після завершення або скасування staging прибирається без зміни оригінального архіву.
+4. Деталі пакета показують до восьми акаунтів сіткою 2 колонки × 4 рядки з коректною навігацією, аватаром, nickname та UID.
+5. Використати наявні minizip/transfer helpers і `List(2, 4, ...)`; нових залежностей або нового загального archive framework не додавати.
+6. Версію піднято до `0.13.788`; додано host contract tests. Gemini виконав повний `tests/run.sh` (150 checks нового тесту, all green) і ReleaseWithInstall build до фінальної senior guard-правки. Фінальний diff пройшов `git diff --check`; повторний compile/test senior не запускав за policy.
+
+## Попередній delivery: v0.13.787 — restore exact selected NAND transfer pack through TegraExplorer
 
 Статус: реалізовано; Kefir Hub встановлює перевірений TegraExplorer restore-скрипт і передає йому точний каталог пакета, який вибрав користувач:
 1. Скрипт приймає лише прямого нащадка `sd:/config/kefir/nand_transfer/<pack>` із `restore_pending/nand_pack.txt`; сканування каталогів і fallback на «останній» пакет відсутні.
