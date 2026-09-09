@@ -2264,5 +2264,22 @@
   "Checking translations...": "Проверка переводов...",
   "Fetching metadata...": "Получение метаданных...",
   "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Аватар изменен.\n\nИзменения вступят в силу только после перезагрузки консоли.\n\nПерезагрузить сейчас?",
-  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer не завершил восстановление профилей и часов."
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer не завершил восстановление профилей и часов.",
+  "PROFILES & PLAY HOURS": "ПРОФИЛИ И ЧАСЫ ИГРЫ",
+  "Restore profiles & play hours to console.": "Восстановить профили и часы игры на консоль.",
+  "Receive from another console": "Принять с другой консоли",
+  "Receive backup(s) from another console over Console Transfer.": "Получить бэкап(ы) с другой консоли через Console Transfer.",
+  "Restore from another console": "Восстановить с другой консоли",
+  "Download and restore a backup from another console over Console Transfer.": "Скачать и восстановить бэкап с другой консоли через Console Transfer.",
+  "No profiles & play hours backups found on the sending console.": "На передающей консоли не найдено бэкапов профилей и часов игры.",
+  "[Receive All Backups]": "[Принять все бэкапы]",
+  "Backup received successfully.": "Бэкап успешно получен.",
+  "Downloading profiles & play hours backup...": "Загрузка бэкапа профилей и часов игры...",
+  "No local backups to restore": "Нет локальных бэкапов для восстановления",
+  "No local backups available": "Нет доступных локальных бэкапов",
+  "No backup selected": "Бэкап не выбран",
+  "No backups available to send": "Нет доступных бэкапов для отправки",
+  "Share backup(s) with another console over Console Transfer.": "Поделиться бэкапом(ами) с другой консолью через Console Transfer.",
+  "Open pack details to inspect accounts.": "Открыть информацию о паке для просмотра аккаунтов.",
+  "Open pack details to inspect or restore accounts.": "Открыть информацию о паке для просмотра или восстановления аккаунтов."
 }

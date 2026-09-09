@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.795**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.796**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.796 поза ponytail-чергою: реалізовано прийом («Receive from another console») та відновлення («Restore from another console») резервних копій профілів та годин гри з іншої консолі через Console Transfer без ручного копіювання файлів; уніфікований ConnectConsoleTransfer (перевірка Wi-Fi, підстановка підмережі в swkbd, зондування портів 8080..8090); OpenRemoteNandTransfer з PopupList, хмарними мітками SetRemoteMarkers, парсингом yyjson та атомарним завантаженням DownloadRemoteNandPacks; локальний PromptNandPackRestore із розпізнаванням сейву 00F0 через nand_transfer::ListPacks; знято блокування контекстного меню при порожньому списку локальних бекапів у NandPackLibraryMenu; додано пункти переміщення консолі в бічне меню users_menu.cpp (CONSOLE MOVE); додано переклади у en.json, uk.json, ru.json; версію піднято до 0.13.796; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.795 поза ponytail-чергою: повна синхронізація дій легенди геймпада у контекстному меню Manage Backups (NandPackLibraryMenu у users_nand_library.cpp) — Open, пряме Restore (ConfirmRestoreCurrent), Rename, Delete, Send to another console, Select/Deselect (ToggleCurrentSelection без стрибка курсору), Select All, Clear selection, Invert; підключено векторні іконки ActionIcon до всіх пунктів; реалізовано StartConsoleTransferShareNandBackups (поширення теки /config/kefir/nand_transfer) та додано Share Profiles & Play Hours у ConsoleTransferMenu; оновлено ManageBackupsMenu::PromptAction у users_manage.cpp векторними іконками та опціями Select/Deselect, Select All, Clear selection, Invert; додано переклад Deselect для всіх 14 мов; версію піднято до 0.13.795; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

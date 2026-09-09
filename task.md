@@ -1,9 +1,22 @@
-Актуальний delivery — **v0.13.795** (Manage Backups context menu with legend parity, direct Restore & Send to another console). Завершені задачі збережено в
+Актуальний delivery — **v0.13.796** (Receive and restore profiles & play hours backups from another console). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.795 (Manage Backups context menu with legend parity, direct Restore & Send to another console)
+## Поточний delivery: v0.13.796 (Receive and restore profiles & play hours backups from another console)
+
+- [x] `REMOTE-CONNECT-HELPER-796` — реалізовано загальну функцію `ConnectConsoleTransfer` у `install_share.hpp`/`install_share.cpp` (перевірка мережі, введення IP з автопідстановкою підмережі через `swkbd`, зондування портів 8080..8090).
+- [x] `NAND-LIB-RECEIVE-REMOTE-796` — реалізовано `OpenRemoteNandTransfer` (режим `NandLibraryMode::Manage`), завантаження бекапів у `/config/kefir/nand_transfer/` безпосередньо через `DownloadRemoteNandPacks` та інтеграцію пункту «Receive from another console» у `Manage Backups`.
+- [x] `NAND-LIB-RESTORE-REMOTE-796` — реалізовано «Restore from another console» (режим `NandLibraryMode::Restore`): завантаження копії на SD та негайний запуск локального діалогу `PromptNandPackRestore` із перевіркою сейву `00F0` та налаштуванням TegraExplorer.
+- [x] `NAND-LIB-EMPTY-CONTEXT-MENU-796` — дозволено відкриття контекстного меню в `NandPackLibraryMenu` при порожньому списку для завантаження копій на консоль без попередніх локальних бекапів.
+- [x] `USERS-MENU-CONSOLE-MOVE-796` — оновлено бічне меню `users_menu.cpp`: додано прямі пункти «Receive from another console» та «Restore from another console», розмежовано «Manage Backups» (`ConfirmNandManage()`) та «Restore» (`ConfirmNandRestore()`).
+- [x] `I18N-REMOTE-NAND-796` — додано переклади нових дій та статусів передачі до `en.json`, `uk.json`, `ru.json`.
+- [x] `README-DOCS-UPDATE-796` — оновлено `README.md` з детальним описом функціоналу отримання та відновлення бекапів через мережу Wi-Fi.
+- [x] `CMAKELISTS-VERSION-BUMP-796` — піднято `sphaira_VERSION` до `0.13.796`.
+- [x] `DOCS-BUMP-796` — синхронізовано `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготовлено commit.
+- [ ] `HARDWARE-VERIFY-796` — перевірка користувачем прийому та відновлення бекапу профілів та годин гри на консолі.
+
+## Попередній delivery: v0.13.795 (Manage Backups context menu with legend parity, direct Restore & Send to another console)
 
 - [x] `NAND-LIB-LEGEND-PARITY-795` — повна синхронізація дій легенди в `ShowContextMenu` (`NandPackLibraryMenu`): перенесено `Open` (кнопка A), `Delete` (кнопка -), додано `Select` / `Deselect` (кнопка X), `Clear selection` (кнопка B) та `Invert` (кнопка Y) з векторними іконками.
 - [x] `NAND-LIB-DIRECT-RESTORE-795` — додано пряму дію `Restore` (`ConfirmRestoreCurrent()`) у контекстне меню Manage Backups для відновлення без потреби переходу у вікно деталей.

@@ -2281,5 +2281,22 @@
   "Checking translations...": "Checking translations...",
   "Fetching metadata...": "Fetching metadata...",
   "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?",
-  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer did not finish restoring profiles & play hours."
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer did not finish restoring profiles & play hours.",
+  "PROFILES & PLAY HOURS": "PROFILES & PLAY HOURS",
+  "Restore profiles & play hours to console.": "Restore profiles & play hours to console.",
+  "Receive from another console": "Receive from another console",
+  "Receive backup(s) from another console over Console Transfer.": "Receive backup(s) from another console over Console Transfer.",
+  "Restore from another console": "Restore from another console",
+  "Download and restore a backup from another console over Console Transfer.": "Download and restore a backup from another console over Console Transfer.",
+  "No profiles & play hours backups found on the sending console.": "No profiles & play hours backups found on the sending console.",
+  "[Receive All Backups]": "[Receive All Backups]",
+  "Backup received successfully.": "Backup received successfully.",
+  "Downloading profiles & play hours backup...": "Downloading profiles & play hours backup...",
+  "No local backups to restore": "No local backups to restore",
+  "No local backups available": "No local backups available",
+  "No backup selected": "No backup selected",
+  "No backups available to send": "No backups available to send",
+  "Share backup(s) with another console over Console Transfer.": "Share backup(s) with another console over Console Transfer.",
+  "Open pack details to inspect accounts.": "Open pack details to inspect accounts.",
+  "Open pack details to inspect or restore accounts.": "Open pack details to inspect or restore accounts."
 }

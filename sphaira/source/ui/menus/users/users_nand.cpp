@@ -32,6 +32,26 @@ void Menu::ConfirmNandBackup() {
 void Menu::ConfirmNandRestore() {
     OpenNandPackLibrary([this](const std::string& dir, bool restore_play_hours) {
         RunNandRestore(dir, restore_play_hours);
+    }, NandLibraryMode::Restore);
+}
+
+void Menu::ConfirmNandManage() {
+    OpenNandPackLibrary([this](const std::string& dir, bool restore_play_hours) {
+        RunNandRestore(dir, restore_play_hours);
+    }, NandLibraryMode::Manage);
+}
+
+void Menu::ReceiveNandFromAnotherConsole() {
+    OpenRemoteNandTransfer(NandLibraryMode::Manage, nullptr, [this](){
+        Refresh();
+    });
+}
+
+void Menu::RestoreNandFromAnotherConsole() {
+    OpenRemoteNandTransfer(NandLibraryMode::Restore, [this](const std::string& dir, bool restore_play_hours) {
+        RunNandRestore(dir, restore_play_hours);
+    }, [this](){
+        Refresh();
     });
 }
 

@@ -58,6 +58,9 @@ private:
     void ConfirmBackup();
     void ConfirmNandBackup();
     void ConfirmNandRestore();
+    void ConfirmNandManage();
+    void ReceiveNandFromAnotherConsole();
+    void RestoreNandFromAnotherConsole();
     void ConfirmRestoreBackup();
     void OpenManageBackups();
     void ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked);

@@ -21,6 +21,8 @@
 #include "net.hpp"
 #include "nro.hpp"
 #include "nacp_util.hpp"
+#include "download.hpp"
+#include "swkbd.hpp"
 #include "web.hpp"
 #include "web_screenshots.hpp"
 
@@ -363,6 +365,96 @@ void StartConsoleTransferShareNandBackups() {
         sd.CreateDirectoryRecursively(root.c_str());
     }
     StartConsoleTransferShare(std::vector<std::string>{ root });
+}
+
+void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_connected) {
+    net::RequireConnection([on_connected](){
+        u32 ip{};
+        std::string initial_prefix;
+        if (R_SUCCEEDED(nifmGetCurrentIpAddress(&ip)) && ip != 0) {
+            char prefix[32]{};
+            std::snprintf(prefix, sizeof(prefix), "%u.%u.%u.",
+                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF);
+            initial_prefix = prefix;
+        }
+
+        std::string input;
+        if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str(),
+                initial_prefix.empty() ? nullptr : initial_prefix.c_str())) || input.empty()) {
+            return;
+        }
+        while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
+            input.erase(input.begin());
+        }
+        while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
+            input.pop_back();
+        }
+        if (input.empty()) {
+            return;
+        }
+
+        auto responding_url = std::make_shared<std::string>();
+        auto probed_ok = std::make_shared<bool>(false);
+
+        App::Push<ProgressBox>(
+            0,
+            "Testing Connection..."_i18n,
+            input,
+            [input, responding_url, probed_ok](auto pbox) -> Result {
+                std::string base_input = input;
+                while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
+                    base_input.pop_back();
+                }
+
+                std::vector<std::string> candidate_urls;
+                if (base_input.rfind("http://", 0) == 0 || base_input.rfind("https://", 0) == 0) {
+                    candidate_urls.push_back(base_input);
+                } else if (base_input.find(':') != std::string::npos) {
+                    candidate_urls.push_back("http://" + base_input);
+                } else {
+                    for (u16 port = 8080; port <= 8090; ++port) {
+                        candidate_urls.push_back("http://" + base_input + ":" + std::to_string(port));
+                    }
+                }
+
+                for (const auto& url : candidate_urls) {
+                    if (pbox->ShouldExit()) {
+                        return pbox->ShouldExitResult();
+                    }
+                    pbox->SetTransfer(url);
+                    curl::Api api;
+                    api.SetOption(curl::Url{url});
+                    api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
+                        return !pbox->ShouldExit();
+                    }});
+                    const auto res = curl::Probe(api, curl::ProbeType::Http);
+                    if (res.success) {
+                        *responding_url = url;
+                        *probed_ok = true;
+                        break;
+                    }
+                }
+
+                return (*probed_ok && !responding_url->empty()) ? 0 : Result_FsEmpty;
+            },
+            [responding_url, probed_ok, on_connected](Result rc) {
+                if (rc == Result_TransferCancelled) {
+                    return;
+                }
+                if (!*probed_ok || responding_url->empty()) {
+                    App::Push<OptionBox>(
+                        "Could not connect to the remote console.\n\n"
+                        "Confirm that both consoles are connected to the same local network and that the source console has Share active."_i18n,
+                        "OK"_i18n
+                    );
+                    return;
+                }
+                if (on_connected) {
+                    on_connected(*responding_url);
+                }
+            }
+        );
+    });
 }
 
 } // namespace sphaira::ui::menu

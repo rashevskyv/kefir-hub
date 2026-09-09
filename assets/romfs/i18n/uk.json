@@ -2310,5 +2310,22 @@
   "Checking translations...": "Перевірка перекладів...",
   "Fetching metadata...": "Отримання метаданих...",
   "Avatar changed.\n\nThe change will not take effect until the console is rebooted.\n\nReboot now?": "Аватар змінено.\n\nЗміни не набудуть чинності до перезавантаження консолі.\n\nПерезавантажити зараз?",
-  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer не завершив відновлення профілів і годин."
+  "TegraExplorer did not finish restoring profiles & play hours.": "TegraExplorer не завершив відновлення профілів і годин.",
+  "PROFILES & PLAY HOURS": "ПРОФІЛІ ТА ГОДИНИ ГРИ",
+  "Restore profiles & play hours to console.": "Відновити профілі та години гри на консоль.",
+  "Receive from another console": "Прийняти з іншої консолі",
+  "Receive backup(s) from another console over Console Transfer.": "Отримати бекап(и) з іншої консолі через Console Transfer.",
+  "Restore from another console": "Відновити з іншої консолі",
+  "Download and restore a backup from another console over Console Transfer.": "Завантажити та відновити бекап з іншої консолі через Console Transfer.",
+  "No profiles & play hours backups found on the sending console.": "На консолі, що передає, не знайдено бекапів профілів та годин гри.",
+  "[Receive All Backups]": "[Прийняти всі бекапи]",
+  "Backup received successfully.": "Бекап успішно отримано.",
+  "Downloading profiles & play hours backup...": "Завантаження бекапу профілів та годин гри...",
+  "No local backups to restore": "Немає локальних бекапів для відновлення",
+  "No local backups available": "Немає доступних локальних бекапів",
+  "No backup selected": "Бекап не вибрано",
+  "No backups available to send": "Немає доступних бекапів для передачі",
+  "Share backup(s) with another console over Console Transfer.": "Поділитися бекапом(ами) з іншою консоллю через Console Transfer.",
+  "Open pack details to inspect accounts.": "Відкрити деталі пака для перегляду акаунтів.",
+  "Open pack details to inspect or restore accounts.": "Відкрити деталі пака для перегляду або відновлення акаунтів."
 }

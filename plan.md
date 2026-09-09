@@ -1,8 +1,29 @@
-Поточний delivery — **v0.13.795** (Manage Backups context menu with legend parity, direct Restore & Send to another console). Завершені плани збережено в
+Поточний delivery — **v0.13.796** (Receive and restore profiles & play hours backups from another console). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.795 — Manage Backups context menu with legend parity, direct Restore & Send to another console
+## Поточний delivery: v0.13.796 — Receive and restore profiles & play hours backups from another console
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Прийом бекапів з іншої консолі («Receive from another console»)**:
+   - У меню «Manage Backups» (кнопка `+` / Options) та у бічному контекстному меню списку користувачів (розділ CONSOLE MOVE) додано дію «Receive from another console».
+   - Використовує уніфікований `ConnectConsoleTransfer` для перевірки Wi-Fi з'єднання, автозаповнення поточної підмережі в `swkbd` та швидкого зондування портів 8080..8090.
+   - Запитує список резервних копій через `/list`, парсить JSON через `yyjson` і показує модальний список `PopupList` з хмарними маркерами `SetRemoteMarkers`.
+   - Дозволяє завантажити окремий бекап або всі бекапи одразу («[Receive All Backups]») безпосередньо у локальну директорію `/config/kefir/nand_transfer/` без негайного запуску відновлення.
+2. **Відновлення з іншої консолі («Restore from another console»)**:
+   - У меню «Restore profiles & play hours» (кнопка `+` / Options), у вікні перегляду деталей бекапу `NandPackDetailMenu` та у бічному меню користувачів додано дію «Restore from another console».
+   - Завантажує вибраний віддалений бекап на локальну microSD карту (`/config/kefir/nand_transfer/`) із захистом від колізій імен (`_1`, `_2`).
+   - Після успішного локального збереження відразу відкриває стандартний діалог відновлення `PromptNandPackRestore` («Profiles only» чи «Profiles + play hours» при виявленні сейву `00F0`) з підготовкою середовища для TegraExplorer.
+3. **Максимальне перевикористання коду без дублювання**:
+   - Перевикористано спільні компоненти `ConnectConsoleTransfer`, `PopupList`, `yyjson`, `curl::ToFile`, `curl::ToMemory`, `PromptNandPackRestore`.
+   - Забезпечено відкриття контекстного меню в `NandPackLibraryMenu` навіть при порожньому списку локальних бекапів (щоб користувач міг прийняти бекап на чисту консоль).
+4. **Локалізація та i18n**:
+   - Додано всі необхідні ключі перекладів у `en.json`, `uk.json`, `ru.json`.
+5. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.796` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.795 — Manage Backups context menu with legend parity, direct Restore & Send to another console
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Повна синхронізація дій легенди та контекстного меню Manage Backups (`users_nand_library.cpp`)**:

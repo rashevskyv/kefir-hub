@@ -395,8 +395,14 @@ void Menu::ShowContextMenu() {
         ConfirmNandRestore();
     }, true, "Write that pack into this console via TegraExplorer. Hours and profiles here are replaced. Back up SYSTEM first."_i18n);
     options->Add<SidebarEntryCallback>("Manage Backups"_i18n, [this](){
-        ConfirmNandRestore();
+        ConfirmNandManage();
     }, true, "Browse profiles & play hours packs under /config/kefir/nand_transfer."_i18n);
+    options->Add<SidebarEntryCallback>("Receive from another console"_i18n, [this](){
+        ReceiveNandFromAnotherConsole();
+    }, true, "Receive backup(s) from another console over Console Transfer."_i18n);
+    options->Add<SidebarEntryCallback>("Restore from another console"_i18n, [this](){
+        RestoreNandFromAnotherConsole();
+    }, true, "Download and restore a backup from another console over Console Transfer."_i18n);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {

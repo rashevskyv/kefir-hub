@@ -111,6 +111,9 @@ Sphaira / Kefir Hub provides full user profile and play activity transfer betwee
   - **Open & Direct Restore:** Open pack details to inspect accounts or trigger a direct **Restore** immediately from the context menu (with profile only or profile + playtime options).
   - **Custom Renaming:** Easily rename backup folders or archives with on-screen keyboard (`swkbd`) validation and sanitization.
   - **Send to Another Console:** Start the Console Transfer share server directly from the backup menu to transfer user backups or profiles & playtime packs to another Nintendo Switch or PC over local Wi-Fi.
+  - **Receive & Restore from Another Console (Over-the-Air Console Move):** Transfer profiles and playtime packs directly between consoles over local Wi-Fi without manual SD swapping:
+    - **Receive from another console:** In **Manage Backups** (`+` Options) or the Tools -> Users sidebar, enter the sending console's IP address to browse remote packs and download selected backups (or all backups at once) to `/config/kefir/nand_transfer/`.
+    - **Restore from another console:** In **Restore profiles & play hours** (`+` Options), individual pack details, or the Tools -> Users sidebar, enter the sender's IP address to select a remote backup. Sphaira downloads the pack locally to SD first, then immediately prompts to restore profiles (or profiles + play hours) via automated TegraExplorer staging.
   - **Complete Selection & Legend Parity:** Full access to **Select / Deselect** (toggling focused item, mirroring Button **X**), **Select All**, **Clear selection** (mirroring Button **B**), **Invert** (mirroring Button **Y**), and **Delete** (mirroring Button **Minus** / Select) directly from the options menu for inattentive users who prefer using the context menu over gamepad button shortcuts.
 
 ## File association

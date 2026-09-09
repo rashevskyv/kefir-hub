@@ -1,7 +1,25 @@
-Актуальний delivery — **v0.13.795** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.796** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.796 — Receive and restore profiles & play hours backups from another console
+
+- **Прийом бекапів з іншої консолі («Receive from another console»)**:
+  - У меню `Manage Backups` (`NandPackLibraryMenu`), доступному через контекстне меню `+` (або тапом по Options), та в бічній панелі меню `Users` (розділ `CONSOLE MOVE`) додано дію «Receive from another console».
+  - Підключення здійснюється через спільний помічник `ConnectConsoleTransfer`: перевіряє стан мережі Wi-Fi, визначає поточну підмережу (наприклад, `192.168.1.`) і автоматично підставляє її в клавіатуру `swkbd`, після чого зондує діапазон портів 8080..8090.
+  - Отримує перелік бекапів через запит `/list`, розбирає JSON за допомогою швидкого парсера `yyjson` та відображає модальний список `PopupList` з хмарними іконками `SetRemoteMarkers`.
+  - Забезпечено підтримку завантаження як окремих архівів або тек бекапів, так і пакетне завантаження всіх наявних бекапів одночасно («[Receive All Backups]») безпосередньо в `/config/kefir/nand_transfer/` без примусового негайного відновлення.
+- **Відновлення з іншої консолі («Restore from another console»)**:
+  - У меню відновлення `Restore profiles & play hours`, у вікні перегляду деталей бекапу `NandPackDetailMenu` та в меню списку користувачів додано дію «Restore from another console».
+  - Користувач вводить IP консолі, що роздає бекапи, та обирає потрібний бекап. Sphaira виконує атомарне завантаження на локальну SD карту (уникаючи колізій імен додаванням суфіксів `_1`, `_2` за потреби), після чого одразу відкриває стандартне вікно підтвердження `PromptNandPackRestore`.
+  - Завдяки локальній перевірці `nand_transfer::ListPacks()` точно визначається наявність сейву годин гри (`00F0`), пропонуючи вибір «Profiles only» або «Profiles + play hours» зі створенням стейджингу для TegraExplorer.
+- **Повна підтримка чистих консолей та максимальне перевикористання коду**:
+  - У `NandPackLibraryMenu::ShowContextMenu()` знято обмеження повернення при `m_entries.empty()` — тепер контекстне меню доступне навіть тоді, коли локальних бекапів ще немає, дозволяючи прийняти або відновити бекап на абсолютно новій консолі.
+  - Жодного дублювання логіки завантаження: застосовано існуючі механізми `PopupList`, `yyjson`, `curl::ToFile`, `curl::ToMemory`, `PromptNandPackRestore`.
+- **Локалізація**:
+  - Додано нові рядки до словників `en.json`, `uk.json`, `ru.json`.
+- **Версія програми**: піднято `sphaira_VERSION` до `0.13.796` у `sphaira/CMakeLists.txt`. За політикою репозиторію збірка NRO не запускалася (очікується компіляція користувачем).
 
 ## v0.13.795 — Manage Backups context menu with legend parity, direct Restore & Send to another console
 
