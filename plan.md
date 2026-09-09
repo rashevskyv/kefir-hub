@@ -1,8 +1,23 @@
-Поточний delivery — **v0.13.790** (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes). Завершені плани збережено в
+Поточний delivery — **v0.13.791** (restore payload.bin in TE scripts and verify Hekate integrity). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.790 — embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream libhaze fixes
+## Поточний delivery: v0.13.791 — restore payload.bin in TE scripts and verify Hekate integrity
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Відновлення перевірки `sd:/payload.bin` у процедурі повернення до Hekate (`goHekate`)**:
+   - На збірках Kefir кореневий файл `sd:/payload.bin` є саме бінарником Hekate IPL.
+   - У всіх автоматизованих скриптах TegraExplorer (`assets/romfs/tegra/*.te`: `nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) відновлено перевірку та завантаження `sd:/payload.bin` одразу після `sd:/bootloader/update.bin`.
+   - Порядок завантаження Hekate: `sd:/bootloader/update.bin` → `sd:/payload.bin` → `sd:/bootloader/payloads/hekate.bin` → `sd:/atmosphere/reboot_payload.bin` → `reboot()`.
+2. **Раннє роззброєння конфігурацій повернення (Early Disarm)**:
+   - На початку виконання кожного скрипта додано примусове видалення тимчасового запиту `sd:/config/kefir/hekate-payload-request.ini` та відновлення оригінального `hekate_ipl.ini` з видаленням `.bak`, що запобігає зацикленню завантаження TegraExplorer у разі аварійного переривання або вимкнення консолі під час дампу/відновлення.
+3. **Аудит цілісності пейлоадів**:
+   - Підтверджено, що функції Sphaira (`ensureTegraExplorerPayload`, `rebootToPayload`) не модифікують і не підміняють `sd:/payload.bin` або `sd:/bootloader/update.bin`. Запис бінарника TegraExplorer виконується виключно у `/bootloader/payloads/TegraExplorer.bin`.
+4. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.791` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.790 — embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream libhaze fixes
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Інтеграція актуального TegraExplorer у RomFS Sphaira**:

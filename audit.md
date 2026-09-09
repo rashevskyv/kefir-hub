@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.790**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.791**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.791 поза ponytail-чергою: відновлено перевірку та завантаження `sd:/payload.bin` (Hekate IPL на збірках Kefir) у `goHekate()` для всіх шести .te скриптів RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) одразу після `sd:/bootloader/update.bin`; реалізовано раннє роззброєння (early disarm: примусове видалення `hekate-payload-request.ini` та відновлення `hekate_ipl.ini` з видаленням `.bak`) на старті виконання скриптів для запобігання зацикленню завантаження TegraExplorer при збоях; підтверджено повну цілісність пейлоадів (Sphaira не перезаписує `payload.bin` або `bootloader/update.bin`, а інсталює TegraExplorer виключно у `/bootloader/payloads/TegraExplorer.bin`); версію піднято до 0.13.791; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.790 поза ponytail-чергою: інтегровано актуальний бінарник TegraExplorer (v4.2.13.900) у RomFS Sphaira (`assets/romfs/tegra/TegraExplorer.bin`); оновлено Makefile у TegraExplorer для автокопіювання в RomFS Sphaira при WSL-збірці; реалізовано `ensureTegraExplorerPayload` з перевіркою футера `KFRP` (автоінсталяція на SD та оновлення лише старіших копій, збереження новіших); у `nand_transfer_dump_auto.te` додано кольоровий статус результату та підтвердження `pause()` перед виходом; у `goHekate()` прибрано хибний запуск `sd:/payload.bin` (що перезапускав TegraExplorer), очищено тимчасовий запит `hekate-payload-request.ini`, відновлено первинний конфіг `hekate_ipl.ini` та пріоритезовано завантаження Hekate (`bootloader/update.bin`); аналогічні виправлення `goHekate` і пауз внесено у всі te-скрипти; додано upstream post-1.0.6 libhaze fixes (MTP version string `Kefir Hub/<version> (HOS/<firmware>)`, EOF buffer resize перед break, передача `sphaira_VERSION` через compile definitions та contract test); версію піднято до 0.13.790; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

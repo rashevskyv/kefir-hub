@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.790** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.791** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.791 — restore payload.bin in TE scripts & verify Hekate integrity
+
+- **Відновлення перевірки `sd:/payload.bin` у процедурі `goHekate()`**:
+  - На дистрибутивах Kefir кореневий файл `sd:/payload.bin` є саме завантажувачем Hekate IPL.
+  - У всіх `.te` скриптах RomFS Sphaira (`nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te`, `Undo_restore_if_wont_boot.te`) відновлено завантаження `sd:/payload.bin` одразу після `sd:/bootloader/update.bin`.
+  - Забезпечено коректний ланцюжок повернення у Hekate: якщо `update.bin` відсутній на карті пам'яті (штатна ситуація після завершення оновлень), скрипт безпосередньо запускає `sd:/payload.bin`, забезпечуючи безшовне повернення у меню Hekate без повторного запуску TegraExplorer.
+- **Раннє роззброєння тригерів автозавантаження (Early Disarm)**:
+  - На старті кожного скрипта додано примусове роззброєння: видалення тимчасового файлу запиту `sd:/config/kefir/hekate-payload-request.ini` та відновлення конфігурації `sd:/bootloader/hekate_ipl.ini` з обов'язковим видаленням резервного `.bak`.
+  - Це повністю унеможливлює потрапляння консолі у нескінченний цикл запуску TegraExplorer навіть у разі раптового знеструмлення консолі під час операцій дампу чи відновлення.
+- **Верифікація цілісності пейлоадів**:
+  - Проведено повний аудит усіх процедур запису/копіювання файлів у кодовій базі Sphaira.
+  - Підтверджено, що функції `ensureTegraExplorerPayload` та `rebootToPayload` встановлюють бінарник TegraExplorer виключно за шляхом `/bootloader/payloads/TegraExplorer.bin`, не зачіпаючи і не підміняючи `/payload.bin` або `/bootloader/update.bin`.
+- **Версія програми**: піднято `sphaira_VERSION` до `0.13.791` у `sphaira/CMakeLists.txt`. За політикою репозиторію збірка NRO не запускалася (очікується компіляція користувачем).
 
 ## v0.13.790 — embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream libhaze fixes
 

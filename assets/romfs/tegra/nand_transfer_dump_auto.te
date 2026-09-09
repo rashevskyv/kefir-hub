@@ -27,10 +27,13 @@ goHekate = {
     if (pack.len()) {
         delfile(pack + "/dump_result.txt")
     }
-    println("Loading Hekate (bootloader/update.bin)...")
+    println("Loading Hekate (bootloader/update.bin, payload.bin)...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc && fsexists("sd:/payload.bin")) {
+        rc = payload("sd:/payload.bin")
     }
     if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
         rc = payload("sd:/bootloader/payloads/hekate.bin")
@@ -40,7 +43,7 @@ goHekate = {
     }
     if (rc) {
         color(0xFF0000)
-        println("Hekate payload not found (bootloader/update.bin).")
+        println("Hekate payload not found (bootloader/update.bin, payload.bin).")
         color(0xFFFFFF)
         println("Press any button to reboot...")
         pause()
@@ -293,7 +296,9 @@ delfile("sd:/startup.te")
 if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
     delfile("sd:/bootloader/hekate_ipl.ini")
     copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+    delfile("sd:/bootloader/hekate_ipl.ini.bak")
 }
+delfile("sd:/config/kefir/hekate-payload-request.ini")
 
 nandf = pending + "/nand"
 packf = pending + "/nand_pack.txt"

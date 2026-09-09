@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.790** (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes). Завершені задачі збережено в
+Актуальний delivery — **v0.13.791** (restore payload.bin in TE scripts and verify Hekate integrity). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.790 (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes)
+## Поточний delivery: v0.13.791 (restore payload.bin in TE scripts and verify Hekate integrity)
+
+- [x] `TEGRA-RESTORE-PAYLOAD-BIN-791` — відновлено перевірку та ланцюжок запуску `sd:/payload.bin` (який є Hekate на збірках Kefir) у `goHekate` для всіх `.te` скриптів.
+- [x] `TEGRA-EARLY-DISARM-791` — реалізовано раннє роззброєння (видалення `hekate-payload-request.ini` та відновлення `hekate_ipl.ini` з видаленням `.bak`) на старті виконання скриптів у TegraExplorer для запобігання boot loop.
+- [x] `PAYLOAD-AUDIT-INTEGRITY-791` — перевірено всі шляхи встановлення та запуску пейлоадів; підтверджено, що Sphaira не перезаписує `payload.bin` або `bootloader/update.bin`.
+- [x] `README-DOCS-UPDATE-791` — оновлено документацію `README.md` щодо завантаження Hekate через `sd:/payload.bin` на збірках Kefir.
+- [x] `CMAKELISTS-VERSION-BUMP-791` — підняти `sphaira_VERSION` до `0.13.791`.
+- [x] `DOCS-BUMP-791` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-791` — перевірка користувачем дампа, паузи на екрані TegraExplorer, виходу в Hekate та завантаження HOS.
+
+## Попередній delivery: v0.13.790 (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes)
 
 - [x] `TEGRA-MAKEFILE-ROMFS-COPY-790` — оновлено `Makefile` TegraExplorer для автоматичного копіювання `TegraExplorer.bin` у RomFS Sphaira (`assets/romfs/tegra/`) при складанні під WSL.
 - [x] `TEGRA-BIN-ROMFS-EMBED-790` — актуальний зібраний `TegraExplorer.bin` (v4.2.13.900) скопійовано в `assets/romfs/tegra/TegraExplorer.bin`.
