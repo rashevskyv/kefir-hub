@@ -35,9 +35,6 @@ namespace {
 constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
 constexpr long HTTP_NOT_FOUND{404};
-// ponytail: test hook — always treat GitHub latest as an update, even if the
-// installed build is newer. Set false once Silent/Ask are verified.
-constexpr bool kForceUpdateForTest = false;
 
 template<typename T>
 auto MiscMenuFuncGenerator(u32 flags) {
@@ -184,7 +181,7 @@ MainMenu::MainMenu() {
                     auto_update::SetJobState(auto_update::JobState::Failed);
                     return false;
                 }
-                if (!kForceUpdateForTest && !App::IsVersionNewer(APP_VERSION, version)) {
+                if (!App::IsVersionNewer(APP_VERSION, version)) {
                     m_update_state = UpdateState::None;
                     auto_update::SetJobState(auto_update::JobState::Idle);
                     return true;

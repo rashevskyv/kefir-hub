@@ -1,8 +1,28 @@
-Поточний delivery — **v0.13.782** (fix account link detection via Baas administrator IPC). Завершені плани збережено в
+Поточний delivery — **v0.13.783** (strict only-if-newer remote update detection via version_compare). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.782 — fix account link detection via Baas administrator IPC
+## Поточний delivery: v0.13.783 — strict only-if-newer remote update detection via version_compare
+
+Статус: реалізовано; виправлено хибне спрацьовування механізму автооновлення з віддаленого репозиторію GitHub: оновлення тепер пропонується та встановлюється виключно тоді, коли версія релізу на віддаленому репозиторії строго вища за поточну версію програми (`version::IsLower(APP_VERSION, remote_tag)`); раніше функція `App::IsVersionNewer` покладалася на `MAKEHOSVERSION(major, minor, macro)`, де макрос Horizon OS пакує кожне поле у 8 біт, через що для номерів релізів Sphaira з patch > 255 (наприклад, 0.13.782) старші біти patch переповнювали поле minor і локальна версія 0.13.782 чисельно оцінювалася як менша/старіша за реліз 0.13.601, викликаючи небажаний відкат/оновлення при кожному старті; реалізацію `App::IsVersionNewer` переведено на повнорозмірне порівняння довільної кількості числових компонентів через `sphaira::version::IsLower`, видалено залишковий тестовий прапорець `kForceUpdateForTest` у `main_menu.cpp`, у вікні `AboutBox` додано скидання стану в `Idle`, якщо версія релізу не є новішою, додано юніт-тести та оновлено документацію в `README.md`; compile/tests/NRO не запускаються за policy.
+
+1. У `sphaira/source/app.cpp`:
+   - Підключено `#include "version_compare.hpp"`.
+   - `App::IsVersionNewer(const char* current, const char* new_version)` реалізовано через делегування до `version::IsLower(current, new_version)` замість упакування в `MAKEHOSVERSION`.
+2. У `sphaira/source/ui/menus/main_menu.cpp`:
+   - Видалено тестову константу `kForceUpdateForTest`.
+   - Перевірку нових версій релізів переведено на `if (!App::IsVersionNewer(APP_VERSION, version))` без тестових обходів.
+3. У `sphaira/source/ui/about_box.cpp`:
+   - У `ApplyRelease` додано скидання стану завдання автооновлення в `JobState::Idle`, якщо віддалений тег не є новішим за `APP_VERSION`.
+4. У `sphaira/include/version_compare.hpp`:
+   - Оновлено коментар щодо `App::IsVersionNewer`.
+5. У `tests/test_version_compare.cpp`:
+   - Додано юніт-тести для версій з номерами патчів > 255 (`0.13.782` vs `0.13.601`, `0.13.783`, `0.14.0`, `1.0.0` та префіксами `v`).
+6. Документація (`README.md`):
+   - Оновлено підрозділ `Automatic Silent Update & Self-Updating`.
+7. Підняти версію проекту до `0.13.783` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.782 — fix account link detection via Baas administrator IPC
 
 Статус: реалізовано; виправлено хибне визначення стану прив'язки облікового запису Nintendo Account у Sphaira; раніше `QueryHorizonUserLink` та `QueryNintendoAccountId` зверталися до `acc:su` через команду 102 (`GetBaasAccountManagerForSystemService`) та перевіряли `CheckAvailability`, яка завжди повертала успіх (0) навіть для неприв'язаних профілів, через що Sphaira вважала всі локальні профілі зв'язаними офлайн (`Offline`) та блокувала автоматичну пропозицію прив'язки при старті програми і в меню користувачів («All user profiles are already linked»); логіку переведено на канонічний IPC-механізм Horizon, аналогічний Linkalho: виклик команди 250 на `acc:su` (`GetBaasAccountAdministrator`) та перевірка команди 250 на отриманій службі адміністратора (`IsLinkedWithNintendoAccount`), а також отримання NAS ID через команду 120 (`GetNasId`); відтепер неприв'язані профілі точно визначаються як незв'язані (`LinkKind::None`), відображаються червоним індикатором «Not linked» у меню Users та коректно пропонуються для прив'язки через пул донорів RomFS при старті; оновлено `README.md`; compile/tests/NRO не запускаються за policy.
 

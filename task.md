@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.782** (fix account link detection via Baas administrator IPC). Завершені задачі збережено в
+Актуальний delivery — **v0.13.783** (strict only-if-newer remote update detection via version_compare). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.782 (fix account link detection via Baas administrator IPC)
+## Поточний delivery: v0.13.783 (strict only-if-newer remote update detection via version_compare)
+
+- [x] `UPDATE-IS-VERSION-NEWER-FIX-783` — у `App::IsVersionNewer` (`sphaira/source/app.cpp`) замінено дефектне пакування через `MAKEHOSVERSION` на пряме делегування до `version::IsLower(current, new_version)`, що усунуло побітове переповнення та спотворення номерів версій з patch > 255.
+- [x] `UPDATE-MAIN-MENU-NO-FORCE-783` — у `sphaira/source/ui/menus/main_menu.cpp` вилучено тестову константу `kForceUpdateForTest` та переведено перевірку нових версій релізів суто на `!App::IsVersionNewer(APP_VERSION, version)`.
+- [x] `UPDATE-ABOUT-BOX-IDLE-RESET-783` — у `AboutBox::ApplyRelease` (`sphaira/source/ui/about_box.cpp`) додано скидання стану завдання в `Idle`, якщо версія віддаленого релізу не є вищою за встановлену.
+- [x] `UPDATE-TESTS-PATCH-OVERFLOW-783` — у `tests/test_version_compare.cpp` додано юніт-тести для версій з великими номерами релізів (`0.13.782` vs `0.13.601`, `0.13.783`, `0.14.0`, `1.0.0` та префікси `v`).
+- [x] `README-UPDATE-STRICT-DETECTION-783` — оновлено опис механізму перевірки нових версій у `README.md`.
+- [x] `CMAKELISTS-VERSION-BUMP-783` — підняти `sphaira_VERSION` до `0.13.783`.
+- [x] `DOCS-BUMP-783` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.782 (fix account link detection via Baas administrator IPC)
 
 - [x] `ACCOUNT-LINK-DETECT-BAAS-ADMIN-782` — у `QueryHorizonUserLink` (`sphaira/source/account/account_link.cpp`) замінено невірний виклик команди 102 на команду 250 (`GetBaasAccountAdministrator`) та пряму перевірку `IsLinkedWithNintendoAccount` (команда 250); неприв'язані облікові записи коректно повертають `out_linked = false` та `out_kind = LinkKind::None`.
 - [x] `ACCOUNT-LINK-NAS-ID-QUERY-782` — у `QueryNintendoAccountId` (`sphaira/source/account/account_link.cpp`) вичитування NAS ID переведено на службу адміністратора BAAS (команда 250 на `acc:su`) з перевіркою прив'язки та викликом команди 120 (`GetNasId`).

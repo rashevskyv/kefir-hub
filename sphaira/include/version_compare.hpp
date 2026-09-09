@@ -4,12 +4,10 @@
 // them share one implementation and so it can be tested on the host: nothing
 // here touches switch.h.
 //
-// NOTE: App::GetVersionFromString / App::IsVersionNewer look like duplicates of
-// this but are NOT interchangeable. They go through sscanf("%u.%u.%u") and
-// MAKEHOSVERSION, so they read exactly three components and clamp each to the
-// bit width of the packed field. These read any number of components and
-// compare them as ints. Firmware versions ("20.1.5") behave the same under
-// both; anything with a fourth component or a component over 255 does not.
+// NOTE: App::GetVersionFromString packs exactly three components via MAKEHOSVERSION
+// for Horizon OS versioning. App::IsVersionNewer delegates to version::IsLower so that
+// any number of components and components over 255 (such as application release patch
+// numbers) are correctly compared without bit-field truncation or overflow.
 
 #include <algorithm>
 #include <cstdint>

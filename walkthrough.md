@@ -1,7 +1,34 @@
-Актуальний delivery — **v0.13.782** (2026-09-08). Попередні
+Актуальний delivery — **v0.13.783** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.783 — strict only-if-newer remote update detection via version_compare
+
+- Виправлено механізм визначення нових версій із віддаленого репозиторію GitHub, через який програма оновлювалася незалежно від версії релізу (пропонуючи та встановлюючи навіть старіші збірки):
+  1. **Причина проблеми (побітове переповнення в MAKEHOSVERSION)**:
+     - Раніше `App::IsVersionNewer` у `sphaira/source/app.cpp` викликала `GetVersionFromString`, яка пакувала версію через макрос Horizon OS `MAKEHOSVERSION(major, minor, macro)`:
+       ```c
+       (((u32)(major) << 16) | ((u32)(minor) << 8) | (u32)(macro))
+       ```
+     - У номерах релізів Sphaira компонент patch вже давно перевищує 255 (поточна версія — `0.13.782`, де patch = 782 = `0x030E`).
+     - При пакуванні старші біти patch (`0x0300`) накладалися операцією `OR` на біти minor (`13 << 8` = `0x0D00`), утворюючи `0x0F0E` (3854).
+     - Для релізу на GitHub `0.13.601` (patch = 601 = `0x0259`) пакування давало `0x0F59` (3929).
+     - Порівняння `3854 < 3929` повертало `true`, тому Sphaira помилково вважала старіший реліз `0.13.601` на GitHub **новішим** за встановлену локально збірку `0.13.782`.
+     - Як наслідок, при старті в режимі Silent відбувалося автоматичне завантаження і відкат на старий реліз, у режимі Ask показувалося модальне вікно оновлення, а в налаштуваннях та About пропонувалося «Update».
+  2. **Коректне порівняння через `version::IsLower`**:
+     - `App::IsVersionNewer(const char* current, const char* new_version)` тепер напряму делегує до `version::IsLower(current, new_version)`.
+     - `version::IsLower` парсить будь-яку кількість числових сегментів (`std::vector<int>`), відсікає префікси `v`/`V`/пробіли і порівнює компоненти як повнорозмірні цілі числа без обмежень у 8 біт і без переповнення.
+     - Тепер `App::IsVersionNewer("0.13.782", "0.13.601")` повертає `0` (`false`), і оновлення спрацьовує виключно тоді, коли версія віддаленого релізу строго вища за поточну версію програми.
+  3. **Вилучення тестового хука**:
+     - У `sphaira/source/ui/menus/main_menu.cpp` повністю видалено залишкову тестову константу `kForceUpdateForTest`.
+     - Умова перевірки відповіді GitHub API тепер суворо вимагає `!App::IsVersionNewer(APP_VERSION, version)`.
+  4. **Скидання стану у вікні About**:
+     - У `AboutBox::ApplyRelease` (`sphaira/source/ui/about_box.cpp`) додано скидання стану завдання автооновлення в `JobState::Idle`, якщо отриманий з мережі реліз не є вищим за `APP_VERSION`.
+  5. **Тести та документація**:
+     - У `tests/test_version_compare.cpp` додано юніт-тести для граничних випадків версій із patch > 255.
+     - Оновлено документацію в `README.md` у розділі `Automatic Silent Update & Self-Updating`.
+  6. Версію піднято до `0.13.783` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися згідно з політикою агента.
 
 ## v0.13.782 — fix account link detection via Baas administrator IPC
 

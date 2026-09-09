@@ -87,6 +87,16 @@ static int test_is_lower() {
     CHECK(version::IsLower("725", "726"));
     CHECK(!version::IsLower("726", "725"));
     CHECK(!version::IsLower("726", "726"));
+
+    // app release version comparison (patch numbers > 255)
+    CHECK(!version::IsLower("0.13.782", "0.13.601"));
+    CHECK(version::IsLower("0.13.601", "0.13.782"));
+    CHECK(!version::IsLower("0.13.782", "0.13.782"));
+    CHECK(version::IsLower("0.13.782", "0.13.783"));
+    CHECK(version::IsLower("0.13.782", "0.14.0"));
+    CHECK(version::IsLower("0.13.782", "1.0.0"));
+    CHECK(version::IsLower("0.13.782", "v0.13.800"));
+    CHECK(!version::IsLower("v0.13.782", "0.13.601"));
     return 0;
 }
 

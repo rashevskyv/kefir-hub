@@ -126,6 +126,11 @@ void AboutBox::ApplyRelease(const char* tag, const char* body, const std::string
             && job.state != auto_update::JobState::Ready) {
             auto_update::SetAvailable(tag, download_url);
         }
+    } else {
+        const auto job = auto_update::GetJob();
+        if (job.state == auto_update::JobState::Available) {
+            auto_update::SetJobState(auto_update::JobState::Idle);
+        }
     }
 
     m_loading = false;

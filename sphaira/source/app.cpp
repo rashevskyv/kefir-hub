@@ -26,6 +26,7 @@
 #include "fs.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "version_compare.hpp"
 #include "ftpsrv_helper.hpp"
 #include "haze_helper.hpp"
 #include "web.hpp"
@@ -1948,7 +1949,10 @@ auto App::GetVersionFromString(const char* str) -> u32 {
 }
 
 auto App::IsVersionNewer(const char* current, const char* new_version) -> u32 {
-    return GetVersionFromString(current) < GetVersionFromString(new_version);
+    if (!current || !new_version) {
+        return 0;
+    }
+    return version::IsLower(current, new_version) ? 1 : 0;
 }
 
 void App::createFramebufferResources() {
