@@ -160,15 +160,24 @@ MainMenu::MainMenu() {
                     if (result.code == HTTP_NOT_FOUND) {
                         m_update_state = UpdateState::None;
                         auto_update::SetJobState(auto_update::JobState::Idle);
-                        log_write("no github release found for update check\n");
+                        log_write("[UpdateCheck] no github release found for update check\n");
                         return true;
                     }
+                    log_write("[UpdateCheck] github release request failed: code %ld\n", result.code);
                     auto_update::SetJobState(auto_update::JobState::Failed);
                     return false;
                 }
 
+                if (result.code != 200 && result.code != 304) {
+                    log_write("[UpdateCheck] non-successful HTTP code: %ld, skipping update check\n", result.code);
+                    m_update_state = UpdateState::None;
+                    auto_update::SetJobState(auto_update::JobState::Idle);
+                    return true;
+                }
+
                 auto json = yyjson_read_file(CACHE_PATH, YYJSON_READ_NOFLAG, nullptr, nullptr);
                 if (!json) {
+                    log_write("[UpdateCheck] failed to parse cached release JSON\n");
                     auto_update::SetJobState(auto_update::JobState::Failed);
                     return false;
                 }
@@ -177,15 +186,20 @@ MainMenu::MainMenu() {
                 auto root = yyjson_doc_get_root(json);
                 auto tag_key = root ? yyjson_obj_get(root, "tag_name") : nullptr;
                 const auto version = tag_key ? yyjson_get_str(tag_key) : nullptr;
-                if (!version) {
+                if (!version || *version == '\0') {
+                    log_write("[UpdateCheck] tag_name missing or empty in release JSON\n");
                     auto_update::SetJobState(auto_update::JobState::Failed);
                     return false;
                 }
-                if (!App::IsVersionNewer(APP_VERSION, version)) {
+
+                if (!version::IsNewer(APP_VERSION, version)) {
+                    log_write("[UpdateCheck] Installed %s >= remote %s; no update required\n", APP_VERSION, version);
                     m_update_state = UpdateState::None;
                     auto_update::SetJobState(auto_update::JobState::Idle);
                     return true;
                 }
+
+                log_write("[UpdateCheck] Found newer remote release %s (installed: %s)\n", version, APP_VERSION);
 
                 auto body_key = yyjson_obj_get(root, "body");
                 const auto body = body_key ? yyjson_get_str(body_key) : "";

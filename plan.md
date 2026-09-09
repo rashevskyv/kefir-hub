@@ -1,8 +1,44 @@
-Поточний delivery — **v0.13.785** (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization). Завершені плани збережено в
+Поточний delivery — **v0.13.786** (harden remote update check, stream-free version parsing and auto-update install destination). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.785 — fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization
+## Поточний delivery: v0.13.786 — harden remote update check, stream-free version parsing and auto-update install destination
+
+Статус: реалізовано; усунено помилковий запуск завантаження оновлення на старті програми, коли встановлена версія є вищою за віддалену, усунено залежність від `std::stringstream` у парсингу версій та оптимізовано шлях встановлення бінарника:
+1. **Причина проблеми**:
+   - При парсингу номерів версій через `std::stringstream` помилка ініціалізації або порожній результат для поточної версії програми (`APP_VERSION`) залишали вектор компонентів порожнім.
+   - У `version::IsLower` порожній вектор компонентів інтерпретувався як `0.0.0`, що призводило до помилкової оцінки встановленої збірки як застарілої відносно віддаленого релізу (`0.13.601`).
+   - Як наслідок, при запуску в режимі `Silent` запускалося завантаження релізу у фоні, у шапці відображалася смуга «Updating», а через відсутність перезапису поточного запущеного файлу версія після перезапуску не змінювалася.
+2. **Чистий та надійний парсер версій без `<sstream>`**:
+   - У `sphaira/include/version_compare.hpp` функцію `version::Parse` переписано на прямий покажчиковий цикл без використання важкого `std::stringstream` та прив'язки до локалі iostreams.
+   - Додано функцію `version::IsNewer(current, candidate)`, яка суворо перевіряє наявність валідних числових компонентів у обох версіях. Якщо будь-яка з версій порожня або не парситься в числа, функція повертає `false` (fail-safe: за жодних обставин не запускати оновлення).
+3. **Посилена перевірка та діагностичне логування у `main_menu.cpp`**:
+   - Додано перевірку HTTP-кодів відповіді GitHub API: якщо отримано код помилки (наприклад, 403 Rate Limit, 404 тощо), перевірка завершується без спроб оновлення.
+   - Перевірку новішої версії переведено на `version::IsNewer(APP_VERSION, version)` з докладним логуванням (`[UpdateCheck] Installed %s >= remote %s; no update required`).
+4. **Синхронізація AboutBox та шляху встановлення**:
+   - У `sphaira/source/ui/about_box.cpp` перевірку релізу оновлено на `version::IsNewer(APP_VERSION, tag)`.
+   - У `sphaira/source/auto_update.cpp` (`ResolveInstallDestination`) канонічний шлях `/switch/kefir-hub/kefir-hub.nro` встановлено найвищим пріоритетом.
+5. **Тести та версія**:
+   - У `tests/test_version_compare.cpp` додано повний набір тестів `test_is_newer` для валідних, рівних, застарілих та порожніх/некоректних версій.
+   - Оновлено `README.md`.
+   - Версію піднято до `0.13.786` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися за policy.
+
+1. У `sphaira/include/version_compare.hpp`:
+   - Реалізовано потоково-безпечний покажчиковий `version::Parse` та додано `version::IsNewer`.
+2. У `sphaira/source/app.cpp`:
+   - `App::IsVersionNewer` переведено на `version::IsNewer` з перевіркою непорожніх рядків.
+3. У `sphaira/source/ui/menus/main_menu.cpp`:
+   - Додано валідацію HTTP-кодів, безпечну перевірку через `version::IsNewer` та діагностичне логування.
+4. У `sphaira/source/ui/about_box.cpp`:
+   - Синхронізовано виклик `version::IsNewer`.
+5. У `sphaira/source/auto_update.cpp`:
+   - Пріоритезовано шлях `/switch/kefir-hub/kefir-hub.nro`.
+6. У `tests/test_version_compare.cpp`:
+   - Додано юніт-тести для `version::IsNewer`.
+7. Оновлено `README.md`.
+8. Підняти версію до `0.13.786` у `sphaira/CMakeLists.txt`, синхронізувати `task.md`, `plan.md`, `audit.md`, `walkthrough.md`.
+
+## Попередній delivery: v0.13.785 — fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization
 
 Статус: реалізовано; усунено помилку компіляції виклику TrustZone/Exosphere SMC у `sphaira/source/app.cpp`, адаптовано перелічення `SetRegion` під сучасний libnx, реалізовано двосторонню передачу параметрів і статусів у протоколі DBI USB:
 1. **Виправлення виклику SMC `svcCallSecureMonitor`**:

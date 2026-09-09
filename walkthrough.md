@@ -1,7 +1,28 @@
-Актуальний delivery — **v0.13.785** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.786** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.786 — harden remote update check, stream-free version parsing and auto-update install destination
+
+- Усунено помилковий запуск оновлення на старті програми («Updating...»), коли встановлена версія є вищою за версію віддаленого релізу GitHub:
+  1. **Причина проблеми**:
+     - Раніше `version::Parse` використовував `std::stringstream ss{std::string{in}}`. На консолі Switch (newlib/musl) виділення пам'яті або прив'язка локалі всередині iostreams могла завершитися невдачею, внаслідок чого компоненти версії не заповнювалися (порожній вектор `{}`).
+     - У `version::IsLower` відсутні компоненти неявно розглядалися як `0`, тому порожня поточна версія оцінювалася як `0.0.0`, що завжди менше за віддалену версію `0.13.601` (`0.0.0 < 0.13.601 == true`).
+     - Через це фонова перевірка при запуску програми ініціювала завантаження та виводила в хедері смугу «Updating», але перезапуск не змінював версію програми.
+  2. **Стійкий парсер версій без `<sstream>`**:
+     - У `sphaira/include/version_compare.hpp` функцію `version::Parse` переписано на чистий вказівниковий цикл із використанням `std::strtol`. Прибрано заголовний файл `<sstream>` і залежність від важких потоків форматування.
+     - Додано функцію `version::IsNewer(current, candidate)`, яка суворо вимагає наявності валідних розпарсених числових компонентів у обох версіях. Якщо будь-яка з версій порожня або не містить чисел, функція повертає `false` (fail-safe: заборона оновлення за замовчуванням).
+  3. **Валідація HTTP-відповіді та розширене логування у `main_menu.cpp`**:
+     - У `MainMenu::CheckUpdate` додано перевірку HTTP-коду (`result.code != 200 && result.code != 304`), що запобігає спробам оновлення при помилках мережі чи вичерпанні лімітів GitHub API (403 Rate Limit).
+     - Перевірку релізу переведено на `version::IsNewer(APP_VERSION, version)` з докладним виведенням діагностики у системний лог (`log_write("[UpdateCheck] ...")`).
+  4. **Синхронізація AboutBox та пріоритет шляхів встановлення**:
+     - У `AboutBox::ApplyRelease` (`sphaira/source/ui/about_box.cpp`) оновлено перевірку на `version::IsNewer(APP_VERSION, tag)`.
+     - У `ResolveInstallDestination` (`sphaira/source/auto_update.cpp`) встановлено найвищий пріоритет для шляху `/switch/kefir-hub/kefir-hub.nro`.
+  5. **Юніт-тести та версія**:
+     - У `tests/test_version_compare.cpp` реалізовано тестовий набір `test_is_newer()`, що покриває ідентичні версії, новіші, старіші, некоректні рядки та порожні аргументи.
+     - Оновлено документацію `README.md`.
+     - Версію піднято до `0.13.786` у `sphaira/CMakeLists.txt`. Compile/tests/NRO не запускалися за policy.
 
 ## v0.13.785 — fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization
 

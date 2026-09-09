@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,26 +21,34 @@ namespace sphaira::version {
 // "20.1.5" -> {20, 1, 5}. Empty segments are skipped; parsing stops at the
 // first segment that does not start with a number, so "1.2.beta" -> {1, 2}.
 inline auto Parse(const std::string& version) -> std::vector<int> {
-    std::string_view in = version;
-    while (!in.empty() && (in.front() == 'v' || in.front() == 'V' || in.front() == ' ')) {
-        in.remove_prefix(1);
+    std::vector<int> parts;
+    const char* p = version.c_str();
+    while (*p == 'v' || *p == 'V' || *p == ' ') {
+        ++p;
     }
 
-    std::vector<int> parts;
-    std::stringstream ss{std::string{in}};
-    std::string segment;
-
-    while (std::getline(ss, segment, '.')) {
-        if (segment.empty()) {
+    while (*p != '\0') {
+        if (*p == '.') {
+            ++p;
             continue;
         }
 
         char* end = nullptr;
-        const auto part = std::strtol(segment.c_str(), &end, 10);
-        if (end == segment.c_str()) {
+        const auto part = std::strtol(p, &end, 10);
+        if (end == p) {
+            // First non-numeric segment stops parsing (e.g. "beta" in "1.2.beta")
             break;
         }
         parts.push_back(static_cast<int>(part));
+
+        // Skip any trailing non-dot characters in this segment (e.g. "rc" in "20.1rc.5")
+        while (*end != '\0' && *end != '.') {
+            ++end;
+        }
+        p = end;
+        if (*p == '.') {
+            ++p;
+        }
     }
 
     return parts;
@@ -66,6 +73,17 @@ inline auto IsLower(const std::string& target, const std::string& current) -> bo
     }
 
     return false;
+}
+
+// Returns true only if candidate is strictly newer than current AND both versions
+// contain valid numeric components. If either version is empty or unparseable, returns false.
+inline auto IsNewer(const std::string& current, const std::string& candidate) -> bool {
+    const auto cur_parts = Parse(current);
+    const auto cand_parts = Parse(candidate);
+    if (cur_parts.empty() || cand_parts.empty()) {
+        return false;
+    }
+    return IsLower(current, candidate);
 }
 
 inline auto IsEqual(const std::string& a, const std::string& b) -> bool {

@@ -1970,10 +1970,10 @@ auto App::GetVersionFromString(const char* str) -> u32 {
 }
 
 auto App::IsVersionNewer(const char* current, const char* new_version) -> u32 {
-    if (!current || !new_version) {
+    if (!current || !new_version || *current == '\0' || *new_version == '\0') {
         return 0;
     }
-    return version::IsLower(current, new_version) ? 1 : 0;
+    return version::IsNewer(current, new_version) ? 1 : 0;
 }
 
 void App::createFramebufferResources() {

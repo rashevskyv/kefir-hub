@@ -194,21 +194,21 @@ fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
     }
 
     fs::FsNativeSd fs;
+    if (fs.FileExists("/switch/kefir-hub/kefir-hub.nro")) {
+        return "/switch/kefir-hub/kefir-hub.nro";
+    }
     if (fs.FileExists("/switch/kefir-hub.nro")) {
         return "/switch/kefir-hub.nro";
     }
     if (fs.FileExists("/switch/sphaira/sphaira.nro")) {
         return "/switch/sphaira/sphaira.nro";
     }
-    if (fs.FileExists("/switch/kefir-hub/kefir-hub.nro")) {
-        return "/switch/kefir-hub/kefir-hub.nro";
-    }
     if (fs.FileExists("/switch/sphaira.nro")) {
         return "/switch/sphaira.nro";
     }
 
     // Default standard path
-    return "/switch/sphaira/sphaira.nro";
+    return "/switch/kefir-hub/kefir-hub.nro";
 }
 
 bool InstallNroUpdate(const fs::FsPath& staging_path, const fs::FsPath& dest_path, bool replace_hbmenu) {

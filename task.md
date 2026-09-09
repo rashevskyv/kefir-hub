@@ -1,9 +1,22 @@
-Актуальний delivery — **v0.13.785** (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization). Завершені задачі збережено в
+Актуальний delivery — **v0.13.786** (harden remote update check, stream-free version parsing and auto-update install destination). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.785 (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization)
+## Поточний delivery: v0.13.786 (harden remote update check, stream-free version parsing and auto-update install destination)
+
+- [x] `UPDATE-VERSION-COMPARE-STREAM-FREE-786` — у `sphaira/include/version_compare.hpp` функцію `version::Parse` переписано на чистий вказівниковий цикл без використання `std::stringstream`, усунено залежність від iostreams та потенційні збої ініціалізації потоків.
+- [x] `UPDATE-IS-NEWER-FAILSAFE-786` — додано `version::IsNewer(current, candidate)` з суворою перевіркою числових компонентів; якщо будь-яка з версій не містить числових частин або є некоректною, функція безпечно повертає `false` (fail-safe від хибного оновлення `0.0.0 < remote`).
+- [x] `UPDATE-APP-IS-VERSION-NEWER-786` — у `sphaira/source/app.cpp` метод `App::IsVersionNewer` переведено на `version::IsNewer` з попередньою валідацією непорожніх рядків.
+- [x] `UPDATE-MAIN-MENU-HTTP-AND-LOG-786` — у `sphaira/source/ui/menus/main_menu.cpp` додано перевірку HTTP-коду відповіді GitHub API (ігнорування при помилках чи рейтліміті), перевірку через `version::IsNewer` та діагностичне логування `log_write`.
+- [x] `UPDATE-ABOUT-BOX-IS-NEWER-786` — у `sphaira/source/ui/about_box.cpp` перевірку релізів оновлено на `version::IsNewer(APP_VERSION, tag)`.
+- [x] `UPDATE-AUTO-UPDATE-PATH-PRIORITY-786` — у `sphaira/source/auto_update.cpp` (`ResolveInstallDestination`) встановлено найвищий пріоритет для `/switch/kefir-hub/kefir-hub.nro`.
+- [x] `UPDATE-TESTS-IS-NEWER-786` — у `tests/test_version_compare.cpp` додано повне покриття тестами `test_is_newer()` (однакові версії, новіші, старіші, порожні та некоректні рядки).
+- [x] `README-UPDATE-HARDENING-786` — оновлено `README.md` з описом стійкого парсера версій, fail-safe поведінки та HTTP-валідації.
+- [x] `CMAKELISTS-VERSION-BUMP-786` — підняти `sphaira_VERSION` до `0.13.786`.
+- [x] `DOCS-BUMP-786` — синхронізувати plan.md, task.md, walkthrough.md та audit.md.
+
+## Попередній delivery: v0.13.785 (fix svcCallSecureMonitor build error, SetRegion_HTK compatibility and DBI USB status/target synchronization)
 
 - [x] `BUILD-FIX-SVC-CALL-SECURE-MONITOR-785` — у `App::App()` (`sphaira/source/app.cpp`) виправлено виклик `svcCallSecureMonitor(&args)` (який повертає `void` у libnx) та читання коду результату з `args.X[0]`.
 - [x] `LIBNX-SET-REGION-HTK-COMPAT-785` — у `GetRegionName` (`sphaira/source/ui/menus/settings/settings_translate.cpp`) оновлено значення `SetRegion` під сучасний libnx (`SetRegion_HTK` замість `SetRegion_KO`/`SetRegion_TWN`).

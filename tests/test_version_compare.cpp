@@ -100,6 +100,29 @@ static int test_is_lower() {
     return 0;
 }
 
+static int test_is_newer() {
+    // Current vs Remote check
+    CHECK(!version::IsNewer("0.13.786", "0.13.601"));
+    CHECK(!version::IsNewer("0.13.785", "0.13.601"));
+    CHECK(!version::IsNewer("0.13.786", "0.13.786"));
+    CHECK(!version::IsNewer("v0.13.786", "0.13.601"));
+    CHECK(!version::IsNewer("0.13.786", "v0.13.601"));
+
+    // Actually newer remote versions
+    CHECK(version::IsNewer("0.13.601", "0.13.786"));
+    CHECK(version::IsNewer("0.13.785", "0.13.786"));
+    CHECK(version::IsNewer("0.13.785", "0.14.0"));
+    CHECK(version::IsNewer("0.13.785", "1.0.0"));
+
+    // Fail-safe: empty or unparseable candidate or current must NEVER trigger update
+    CHECK(!version::IsNewer("", "0.13.601"));
+    CHECK(!version::IsNewer("beta", "0.13.601"));
+    CHECK(!version::IsNewer("0.13.786", ""));
+    CHECK(!version::IsNewer("0.13.786", "beta"));
+    CHECK(!version::IsNewer("", ""));
+    return 0;
+}
+
 static int test_is_equal() {
     CHECK(version::IsEqual("20.0.0", "20.0.0"));
     CHECK(version::IsEqual("20", "20.0.0"));
@@ -171,7 +194,7 @@ static int test_is_firmware_lower() {
 }
 
 int main() {
-    if (test_parse() || test_is_lower() || test_is_equal() || test_format_packed() || test_format_sdk_version() || test_is_firmware_lower()) {
+    if (test_parse() || test_is_lower() || test_is_newer() || test_is_equal() || test_format_packed() || test_format_sdk_version() || test_is_firmware_lower()) {
         return 1;
     }
     std::printf("ok  version_compare: %d checks passed\n", g_checks);

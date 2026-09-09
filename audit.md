@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.785**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.786**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.786 поза ponytail-чергою: виправлено помилкове завантаження оновлення на старті програми («Updating...»), коли встановлена версія є новішою за реліз GitHub; усунено залежність від std::stringstream у version::Parse (переведено на прямий вказівниковий цикл без алокацій та локалі), додано функцію version::IsNewer із захистом fail-safe (якщо хоча б одна з версій не містить числових компонентів або є некоректною, повертається false, запобігаючи неявній оцінці 0.0.0 < remote); у main_menu.cpp додано валідацію HTTP статус-кодів (ігнорування при помилках чи 403 Rate Limit), перевірку через version::IsNewer та діагностичний лог log_write; у AboutBox підключено version::IsNewer; у ResolveInstallDestination пріоритезовано шлях /switch/kefir-hub/kefir-hub.nro; додано тести test_is_newer у tests/test_version_compare.cpp; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.785 поза ponytail-чергою: виправлено виклик Secure Monitor SMC svcCallSecureMonitor (void API у libnx) та вичитування результату smc_rc з args.X[0] у App::App; оновлено SetRegion під сучасний libnx (SetRegion_HTK у settings_translate.cpp); розширено протокол DBI USB двосторонньою синхронізацією з ПК-клієнтом (передача цільового накопичувача file|size|selected|target, звітування статусу інсталяції пакетів CmdId::PackageStatus та постійна трансляція об'єму пам'яті CmdId::StorageInfo); оновлено README.md; NRO успішно зібрано у WSL (make build), тести пройдено. **Не закриває** чергу §2 A1–A7.
 
