@@ -98,8 +98,13 @@ Sphaira features integrated management for Nintendo Switch system interface tran
 ## Profiles and Playtime Transfer & TegraExplorer Payload Integration
 
 Sphaira / Kefir Hub provides full user profile and play activity transfer between consoles, utilizing TegraExplorer to dump and restore locked system saves (`0010` accounts and `00F0` play activity) safely outside Horizon OS:
+- **Embedded RomFS TegraExplorer & Version Synchronization:** Sphaira bundles the latest compiled TegraExplorer payload in its RomFS (`romfs:/tegra/TegraExplorer.bin`). Before launching any payload operation (`ensureTegraExplorerPayload`), Sphaira checks `/bootloader/payloads/`:
+  - If TegraExplorer is missing from the SD card, it is automatically installed from RomFS.
+  - If a copy exists, Sphaira reads and parses the binary payload footer (`KFRP`). If the SD card copy is older than the RomFS version, it is safely upgraded in-place.
+  - If the SD card already contains a matching or newer version, it remains untouched.
 - **Seamless Automated Reboot to TegraExplorer:** When performing **Backup profiles & play hours**, Sphaira automatically stages the dump package metadata and writes the automation script to the root of the SD card as `/startup.te`. Without requiring intermediate confirmation dialogs, it automatically executes a clean reboot into TegraExplorer.
 - **Hekate Payload Launch & Autoboot Fallback:** Payload launching (`utils::rebootToPayload`) natively communicates with Hekate's one-shot payload launch API (`/config/kefir/hekate-payload-request.ini`). If the marker is missing or writing fails, Sphaira seamlessly falls back to configuring temporary autoboot in `hekate_ipl.ini` (safely backed up to `.bak`) before requesting a system reboot via `appletRequestToReboot`/`spsm`/`bpc`.
+- **Result Verification & Hekate Return:** When dump or restore scripts complete, they display a clear color-coded summary on screen (green for successful dumps, red for missing components) and pause for explicit user confirmation (`Press any button to reboot to Hekate...`). The script cleanly restores the original `hekate_ipl.ini`, removes temporary request flags, and chainloads directly into Hekate (`sd:/bootloader/update.bin`), eliminating unexpected loops back into TegraExplorer.
 - **Flushed SD Synchronization & Automatic Cleanup:** Staged `/startup.te` scripts are flushed via `fflush`, `fsdevCommitDevice("sdmc")`, and native filesystem commits before reboot commands are issued, ensuring zero-byte corruption is prevented even during sudden hardware restarts. Upon completion in TegraExplorer or cleanup inside Kefir Hub, temporary `/startup.te` and handshake files are automatically purged and the original `hekate_ipl.ini` is restored.
 
 ## File association

@@ -1,9 +1,27 @@
-Актуальний delivery — **v0.13.789** (auto launch TegraExplorer via hekate payload fallback on backup). Завершені задачі збережено в
+Актуальний delivery — **v0.13.790** (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.789 (auto launch TegraExplorer via hekate payload fallback on backup)
+## Поточний delivery: v0.13.790 (embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream post-1.0.6 libhaze fixes)
+
+- [x] `TEGRA-MAKEFILE-ROMFS-COPY-790` — оновлено `Makefile` TegraExplorer для автоматичного копіювання `TegraExplorer.bin` у RomFS Sphaira (`assets/romfs/tegra/`) при складанні під WSL.
+- [x] `TEGRA-BIN-ROMFS-EMBED-790` — актуальний зібраний `TegraExplorer.bin` (v4.2.13.900) скопійовано в `assets/romfs/tegra/TegraExplorer.bin`.
+- [x] `TEGRA-PAYLOAD-VER-SYNC-790` — реалізовано `ensureTegraExplorerPayload` з перевіркою футера `KFRP`, автоінсталяцією на SD та оновленням лише старіших копій пейлоада.
+- [x] `TEGRA-DUMP-PAUSE-PROMPT-790` — додано кольоровий статус успіху/помилки та паузу `pause()` перед ребутом у `nand_transfer_dump_auto.te`.
+- [x] `TEGRA-GO-HEKATE-FIX-790` — прибрано хибний перезапуск TegraExplorer через `payload.bin`, пріоритезовано `bootloader/update.bin`, очищено тимчасовий запит Hekate payload API та додано підтвердження при збої.
+- [x] `TEGRA-SCRIPTS-CONSISTENCY-790` — оновлено `goHekate` та паузи в `account_0010_dump.te`, `account_0010_apply_link.te`, `nand_transfer_restore_auto.te`, `playtime_restore.te` та `Undo_restore_if_wont_boot.te`.
+- [x] `UPSTREAM-106-1` — додати до наявного idempotent libhaze patch MTP responder version string із версією Kefir Hub та HOS.
+- [x] `UPSTREAM-106-2` — додати libhaze EOF buffer resize перед zero-read break.
+- [x] `UPSTREAM-106-3` — передати `sphaira_VERSION` у compile definitions target `libhaze` без нової залежності чи окремого patch-файлу.
+- [x] `UPSTREAM-106-4` — розширити `tests/test_patch_libhaze.sh` contract checks та перевірку idempotency.
+- [x] `UPSTREAM-106-AUDIT` — NACP/export naming, UTF-8 truncation, image-theme storage bars і post-1.0.6 i18n проаналізовано; переносити їх не потрібно.
+- [x] `README-DOCS-UPDATE-790` — оновлено документацію `README.md` щодо автооновлення пейлоада TegraExplorer та підтвердження завершення дампа.
+- [x] `CMAKELISTS-VERSION-BUMP-790` — підняти `sphaira_VERSION` до `0.13.790`.
+- [x] `DOCS-BUMP-790` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-790` — перевірка користувачем дампа, паузи на екрані TegraExplorer, виходу в Hekate та оновлення пейлоада на консолі.
+
+## Попередній delivery: v0.13.789 (auto launch TegraExplorer via hekate payload fallback on backup)
 
 - [x] `NAND-BACKUP-AUTO-LAUNCH-789` — автоматичний запуск TegraExplorer без показу зайвого діалогу OptionBox при створенні резервної копії профілів та плейтайму.
 - [x] `NAND-STARTUP-TE-WRITE-SYNC-789` — автоматичний запис скрипта дампа в корінь SD як `sd:/startup.te` із примусовим фізичним скиданням буферів (`fflush`, `fsdevCommitDevice`, `sd.Commit`).

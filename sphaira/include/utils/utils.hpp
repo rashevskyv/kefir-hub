@@ -37,7 +37,12 @@ bool setHekateAutobootPayload(const char* payload_path);
 // Prefers lockpick_rcm_pro.bin, then any lockpick_rcm*.bin match.
 bool findLockpickPayload(fs::FsPath& out);
 
-// Find TegraExplorer.bin under /bootloader/payloads (any casing).
+// Ensure TegraExplorer payload exists on SD and is at least as new as the RomFS version.
+// If missing on SD, copies from RomFS. If SD version < RomFS version, upgrades in-place.
+// If SD version >= RomFS version, leaves SD version untouched.
+bool ensureTegraExplorerPayload(fs::FsPath& out);
+
+// Find TegraExplorer.bin under /bootloader/payloads (any casing), ensuring RomFS version check.
 bool findTegraExplorerPayload(fs::FsPath& out);
 
 // Restore hekate_ipl.ini from backup

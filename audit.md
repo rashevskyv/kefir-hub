@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.789**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.790**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.790 поза ponytail-чергою: інтегровано актуальний бінарник TegraExplorer (v4.2.13.900) у RomFS Sphaira (`assets/romfs/tegra/TegraExplorer.bin`); оновлено Makefile у TegraExplorer для автокопіювання в RomFS Sphaira при WSL-збірці; реалізовано `ensureTegraExplorerPayload` з перевіркою футера `KFRP` (автоінсталяція на SD та оновлення лише старіших копій, збереження новіших); у `nand_transfer_dump_auto.te` додано кольоровий статус результату та підтвердження `pause()` перед виходом; у `goHekate()` прибрано хибний запуск `sd:/payload.bin` (що перезапускав TegraExplorer), очищено тимчасовий запит `hekate-payload-request.ini`, відновлено первинний конфіг `hekate_ipl.ini` та пріоритезовано завантаження Hekate (`bootloader/update.bin`); аналогічні виправлення `goHekate` і пауз внесено у всі te-скрипти; додано upstream post-1.0.6 libhaze fixes (MTP version string `Kefir Hub/<version> (HOS/<firmware>)`, EOF buffer resize перед break, передача `sphaira_VERSION` через compile definitions та contract test); версію піднято до 0.13.790; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.789 поза ponytail-чергою: автоматичний запуск TegraExplorer без проміжного OptionBox при бекапі профілів і годин гри; автоматичний запис скрипта дампа в sd:/startup.te з примусовим fflush, fsdevCommitDevice("sdmc") та sd.Commit(); додано автоматичний фолбек у utils::rebootToPayload на setHekateAutobootPayload + requestForcedReboot при відсутності/збої Hekate Payload API; нормалізація шляху в writeHekateAutobootIni; захист ReadRomfsTe від збоїв при вже змонтованому romfs; надійне очищення sd:/startup.te у CleanDumpHandshake та ClearPending; оновлено README.md; версію піднято до 0.13.789. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

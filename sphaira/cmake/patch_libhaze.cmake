@@ -8,6 +8,12 @@
 # 2. include/haze/ptp_responder.hpp: add total parameter to WriteCallbackProgress
 # 3. source/ptp_responder.cpp: implement WriteCallbackProgress with total
 # 4. source/ptp_responder_ptp_operations.cpp: pass genuine total in GetObject and SendObject
+# 5. source/ptp_responder_ptp_operations.cpp: fix storage_id in SendObjectInfo
+# 5b. source/ptp_responder_ptp_operations.cpp: expose Kefir Hub responder version in GetDeviceInfo
+# 6. source/ptp_responder_mtp_operations.cpp: MTP property handling and fixes
+# 7. include/haze/ptp_data_parser.hpp: UTF-16 to UTF-8 decoding
+# 8. include/haze/ptp_data_builder.hpp: UTF-8 to UTF-16 encoding
+# 9. source/threaded_file_transfer.cpp: resize read buffer before EOF break
 
 # --- 1. include/haze.h : CallbackDataProgress --------------------------------
 if(EXISTS "include/haze.h")
@@ -317,6 +323,67 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         endif()
         file(WRITE "source/ptp_responder_ptp_operations.cpp" "${src}")
         message(STATUS "[libhaze-patch] applied ptp_responder_ptp_operations.cpp storage_id patch")
+    endif()
+
+    # --- 5b. source/ptp_responder_ptp_operations.cpp : expose Kefir Hub responder version in GetDeviceInfo ---
+    string(FIND "${src}" "std::snprintf(device_version, sizeof(device_version), \"Kefir Hub/%s (HOS/%s)\", SPHAIRA_VERSION, GetFirmwareVersion());" find_dev_ver)
+    string(FIND "${src}" "R_TRY(db.AddString(device_version));" find_dev_str)
+    string(FIND "${src}" "#include <cstdio>" find_dev_inc)
+
+    if(NOT find_dev_ver EQUAL -1 AND NOT find_dev_str EQUAL -1 AND NOT find_dev_inc EQUAL -1)
+        message(STATUS "[libhaze-patch] ptp_responder_ptp_operations.cpp device_version already patched")
+    else()
+        set(dev_inc_old "#include \"haze/threaded_file_transfer.hpp\"")
+        set(dev_inc_new "#include \"haze/threaded_file_transfer.hpp\"
+#include <cstdio>")
+
+        set(dev_init_old
+"    Result PtpResponder::GetDeviceInfo(PtpDataParser &dp) {
+        PtpDataBuilder db(m_buffers->usb_bulk_write_buffer, std::addressof(m_usb_server));
+
+        /* Write the device info data. */")
+        set(dev_init_sphaira
+"    Result PtpResponder::GetDeviceInfo(PtpDataParser &dp) {
+        PtpDataBuilder db(m_buffers->usb_bulk_write_buffer, std::addressof(m_usb_server));
+        char device_version[0x40];
+        std::snprintf(device_version, sizeof(device_version), \"Sphaira/%s (HOS/%s)\", SPHAIRA_VERSION, GetFirmwareVersion());
+
+        /* Write the device info data. */")
+        set(dev_init_new
+"    Result PtpResponder::GetDeviceInfo(PtpDataParser &dp) {
+        PtpDataBuilder db(m_buffers->usb_bulk_write_buffer, std::addressof(m_usb_server));
+        char device_version[0x40];
+        std::snprintf(device_version, sizeof(device_version), \"Kefir Hub/%s (HOS/%s)\", SPHAIRA_VERSION, GetFirmwareVersion());
+
+        /* Write the device info data. */")
+
+        set(dev_add_old
+"            R_TRY(db.AddString(MtpDeviceManufacturer));
+            R_TRY(db.AddString(MtpDeviceModel));
+            R_TRY(db.AddString(GetFirmwareVersion()));
+            R_TRY(db.AddString(GetSerialNumber()));")
+        set(dev_add_new
+"            R_TRY(db.AddString(MtpDeviceManufacturer));
+            R_TRY(db.AddString(MtpDeviceModel));
+            R_TRY(db.AddString(device_version));
+            R_TRY(db.AddString(GetSerialNumber()));")
+
+        if(find_dev_inc EQUAL -1)
+            string(REPLACE "${dev_inc_old}" "${dev_inc_new}" src "${src}")
+        endif()
+        string(REPLACE "${dev_init_sphaira}" "${dev_init_new}" src "${src}")
+        string(REPLACE "${dev_init_old}" "${dev_init_new}" src "${src}")
+        string(REPLACE "${dev_add_old}" "${dev_add_new}" src "${src}")
+
+        string(FIND "${src}" "std::snprintf(device_version, sizeof(device_version), \"Kefir Hub/%s (HOS/%s)\", SPHAIRA_VERSION, GetFirmwareVersion());" find_dev_ver_after)
+        string(FIND "${src}" "R_TRY(db.AddString(device_version));" find_dev_str_after)
+        string(FIND "${src}" "#include <cstdio>" find_dev_inc_after)
+
+        if(find_dev_ver_after EQUAL -1 OR find_dev_str_after EQUAL -1 OR find_dev_inc_after EQUAL -1)
+            message(FATAL_ERROR "[libhaze-patch] failed to apply device_version patch to ptp_responder_ptp_operations.cpp (unexpected shape or partial patch)")
+        endif()
+        file(WRITE "source/ptp_responder_ptp_operations.cpp" "${src}")
+        message(STATUS "[libhaze-patch] applied ptp_responder_ptp_operations.cpp device_version patch")
     endif()
 else()
     message(FATAL_ERROR "[libhaze-patch] source/ptp_responder_ptp_operations.cpp not found")
@@ -677,4 +744,74 @@ if(EXISTS "include/haze/ptp_data_builder.hpp")
     endif()
 else()
     message(FATAL_ERROR "[libhaze-patch] include/haze/ptp_data_builder.hpp not found")
+endif()
+
+# --- 9. source/threaded_file_transfer.cpp : resize read buffer before EOF break ---
+if(EXISTS "source/threaded_file_transfer.cpp")
+    file(READ "source/threaded_file_transfer.cpp" src)
+    string(FIND "${src}" "buf.resize(buf_offset + bytes_read);
+        if (!bytes_read) {" find_patched_offset)
+    string(FIND "${src}" "buf.resize(bytes_read);
+        if (!bytes_read) {" find_patched_no_offset)
+
+    if(NOT find_patched_offset EQUAL -1 OR NOT find_patched_no_offset EQUAL -1)
+        message(STATUS "[libhaze-patch] threaded_file_transfer.cpp EOF resize already patched")
+    else()
+        # Shape A: libhaze with slow-mode / buf_offset (e.g. 81154c1)
+        set(tft_offset_old
+"        u64 bytes_read{};
+        R_TRY(this->Read(buf.data() + buf_offset, read_size, std::addressof(bytes_read)));
+        if (!bytes_read) {
+            break;
+        }
+
+        // resize to actual read size.
+        buf.resize(buf_offset + bytes_read);")
+
+        set(tft_offset_new
+"        u64 bytes_read{};
+        R_TRY(this->Read(buf.data() + buf_offset, read_size, std::addressof(bytes_read)));
+
+        // resize to actual read size.
+        buf.resize(buf_offset + bytes_read);
+        if (!bytes_read) {
+            break;
+        }")
+
+        # Shape B: libhaze without buf_offset (e.g. 0be1523)
+        set(tft_no_offset_old
+"        u64 bytes_read{};
+        buf.resize(read_size);
+        R_TRY(this->Read(buf.data(), read_size, std::addressof(bytes_read)));
+        if (!bytes_read) {
+            break;
+        }")
+
+        set(tft_no_offset_new
+"        u64 bytes_read{};
+        buf.resize(read_size);
+        R_TRY(this->Read(buf.data(), read_size, std::addressof(bytes_read)));
+
+        // resize to actual read size.
+        buf.resize(bytes_read);
+        if (!bytes_read) {
+            break;
+        }")
+
+        string(REPLACE "${tft_offset_old}" "${tft_offset_new}" src "${src}")
+        string(REPLACE "${tft_no_offset_old}" "${tft_no_offset_new}" src "${src}")
+
+        string(FIND "${src}" "buf.resize(buf_offset + bytes_read);
+        if (!bytes_read) {" find_after_offset)
+        string(FIND "${src}" "buf.resize(bytes_read);
+        if (!bytes_read) {" find_after_no_offset)
+
+        if(find_after_offset EQUAL -1 AND find_after_no_offset EQUAL -1)
+            message(FATAL_ERROR "[libhaze-patch] failed to apply EOF buffer resize patch to threaded_file_transfer.cpp (unexpected shape or partial patch)")
+        endif()
+        file(WRITE "source/threaded_file_transfer.cpp" "${src}")
+        message(STATUS "[libhaze-patch] applied threaded_file_transfer.cpp EOF buffer resize patch")
+    endif()
+else()
+    message(FATAL_ERROR "[libhaze-patch] source/threaded_file_transfer.cpp not found")
 endif()

@@ -1,7 +1,31 @@
-Актуальний delivery — **v0.13.789** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.790** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.790 — embedded TegraExplorer in RomFS, payload version auto-sync, dump script pause & Hekate reboot, upstream libhaze fixes
+
+- **Вбудовано актуальний бінарник TegraExplorer у RomFS**:
+  - `Makefile` репозиторію TegraExplorer оновлено: після WSL-збірки (`all`) бінарник `TegraExplorer.bin` автоматично копіюється в RomFS Sphaira (`assets/romfs/tegra/TegraExplorer.bin`).
+  - Актуальний скомпільований бінарник `TegraExplorer.bin` (129,888 байт, v4.2.13.900) скопійовано безпосередньо в `assets/romfs/tegra/TegraExplorer.bin`.
+- **Автоматична перевірка та оновлення пейлоада на SD-картці**:
+  - У `sphaira/source/utils/utils.cpp` реалізовано розбір футера `KFRP` ... `PRFK` (`TegraExplorerFooter`) та компаратор версій `TegraExplorerVersion` (`major`, `minor`, `patch`, `kefir_version`).
+  - Реалізовано функцію `utils::ensureTegraExplorerPayload`:
+    - Якщо на SD картці у `/bootloader/payloads/` пейлоад TegraExplorer відсутній — він автоматично копіюється з RomFS у `/bootloader/payloads/TegraExplorer.bin`.
+    - Якщо пейлоад на SD вже існує — порівнюються версії. Якщо версія на SD є старішою за версію в RomFS (або є застарілою legacy-збіркою без футера), файл на SD оновлюється на нову копію з RomFS.
+    - Якщо на SD вже встановлено версію, яка є новішою або дорівнює версії з RomFS, файл на SD не змінюється.
+  - `findTegraExplorerPayload` та `rebootToPayload` викликають `ensureTegraExplorerPayload` перед запуском, що гарантує наявність актуального бінарника для бекапу, відновлення та налаштувань RAM.
+- **Підтвердження результатів дампа та коректний вихід у Hekate**:
+  - У `nand_transfer_dump_auto.te` функції `printResult()` та `failOut()` тепер виводять кольорове повідомлення (зелений OK або червоний NOT OK із зазначенням причини) і чекають натискання кнопки користувачем (`pause()`) перед перезавантаженням.
+  - У функції `goHekate()` видалено помилкове завантаження `sd:/payload.bin` (яке на збірках Kefir повторно запускало TegraExplorer). Пріоритет завантаження віддано Hekate: спочатку `sd:/bootloader/update.bin`, далі `sd:/bootloader/payloads/hekate.bin` та `sd:/atmosphere/reboot_payload.bin`.
+  - Перед запуском Hekate гарантовано очищається тимчасовий `sd:/config/kefir/hekate-payload-request.ini`, видаляється тимчасовий `startup.te` та відновлюється початковий `hekate_ipl.ini` з резервної копії `.bak`.
+  - За аналогічним принципом оновлено процедуру `goHekate` та додано паузи для підтвердження у `account_0010_dump.te`, `account_0010_apply_link.te`, `nand_transfer_restore_auto.te`, `playtime_restore.te` та `Undo_restore_if_wont_boot.te`.
+- **Upstream post-1.0.6 libhaze fixes**:
+  - Idempotent patch `sphaira/cmake/patch_libhaze.cmake`: рядок версії MTP responder тепер містить назву та версію `Kefir Hub/<version> (HOS/<firmware>)`.
+  - Додано ресайз буфера до `bytes_read` при EOF перед break у threaded transfer `libhaze`.
+  - Передано `sphaira_VERSION` через `target_compile_definitions(libhaze PRIVATE -DSPHAIRA_VERSION="${sphaira_VERSION}")`.
+  - Тести `tests/test_patch_libhaze.sh` оновлено перевірками обох патчів та валідацією захисту від пошкодження файлів.
+- **Версія програми**: піднято `sphaira_VERSION` до `0.13.790` у `sphaira/CMakeLists.txt`. За політикою репозиторію збірка NRO не запускалася (очікується компіляція користувачем).
 
 ## v0.13.789 — auto launch TegraExplorer via hekate payload fallback on backup
 

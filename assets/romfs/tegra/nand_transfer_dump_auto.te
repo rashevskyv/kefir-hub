@@ -13,33 +13,37 @@ goHekate = {
     text = ""
     lines = []
     bytes = ["BYTE[]"]
-    println("Cleaning temp files")
+    println("Cleaning temp files...")
     delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        delfile("sd:/bootloader/hekate_ipl.ini")
         copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
         delfile("sd:/bootloader/hekate_ipl.ini.bak")
     }
+    delfile("sd:/config/kefir/hekate-payload-request.ini")
     delfile("sd:/TegraExplorer/scripts/nand_transfer_dump_auto.te")
     delfile("sd:/config/kefir/restore_pending/nand_transfer_dump_auto.te")
     delfile("sd:/config/kefir/restore_pending/dump_result.txt")
     if (pack.len()) {
         delfile(pack + "/dump_result.txt")
     }
-    println("Loading hekate")
+    println("Loading Hekate (bootloader/update.bin)...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
     }
-    if (rc && fsexists("sd:/payload.bin")) {
-        rc = payload("sd:/payload.bin")
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
     }
     if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
         rc = payload("sd:/atmosphere/reboot_payload.bin")
     }
-    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
-        rc = payload("sd:/bootloader/payloads/hekate.bin")
-    }
     if (rc) {
+        color(0xFF0000)
+        println("Hekate payload not found (bootloader/update.bin).")
+        color(0xFFFFFF)
+        println("Press any button to reboot...")
+        pause()
         reboot()
     }
 }
@@ -258,6 +262,9 @@ printResult = {
         println("Open Kefir Hub to retry.")
     }
     color(0xFFFFFF)
+    println("")
+    println("Press any button to reboot to Hekate...")
+    pause()
 }
 
 failOut = {
@@ -266,6 +273,9 @@ failOut = {
     color(0xFFFFFF)
     println(failMsg)
     println("Open Kefir Hub to continue.")
+    println("")
+    println("Press any button to reboot to Hekate...")
+    pause()
     goHekate()
     exit()
 }
@@ -281,6 +291,7 @@ pending = "sd:/config/kefir/restore_pending"
 
 delfile("sd:/startup.te")
 if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    delfile("sd:/bootloader/hekate_ipl.ini")
     copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
 }
 

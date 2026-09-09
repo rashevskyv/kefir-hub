@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.789)
+set(sphaira_VERSION 0.13.790)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -407,6 +407,7 @@ FetchContent_MakeAvailable(
     libnfs
 )
 
+target_compile_definitions(libhaze PRIVATE -DSPHAIRA_VERSION="${sphaira_VERSION}")
 target_compile_definitions(smb2 PRIVATE -D__SWITCH__)
 target_sources(smb2 PRIVATE ${libsmb2_SOURCE_DIR}/lib/compat.c)
 

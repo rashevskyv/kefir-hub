@@ -14,26 +14,31 @@ goHekate = {
     text = ""
     lines = []
     bytes = ["BYTE[]"]
+    println("Cleaning temp files...")
     delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        delfile("sd:/bootloader/hekate_ipl.ini")
         copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
         delfile("sd:/bootloader/hekate_ipl.ini.bak")
     }
-    println("Loading hekate")
+    delfile("sd:/config/kefir/hekate-payload-request.ini")
+    println("Loading Hekate (bootloader/update.bin)...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
     }
-    if (rc && fsexists("sd:/payload.bin")) {
-        rc = payload("sd:/payload.bin")
+    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
+        rc = payload("sd:/bootloader/payloads/hekate.bin")
     }
     if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
         rc = payload("sd:/atmosphere/reboot_payload.bin")
     }
-    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
-        rc = payload("sd:/bootloader/payloads/hekate.bin")
-    }
     if (rc) {
+        color(0xFF0000)
+        println("Hekate payload not found (bootloader/update.bin).")
+        color(0xFFFFFF)
+        println("Press any button to reboot...")
+        pause()
         reboot()
     }
 }
@@ -167,5 +172,7 @@ println("commit")
 saveObj.commit()
 writefile(combinepath(pending, "link_applied.ok"), ["BYTE[]", 79, 75])
 println("wrote", wrote, "link file(s). Raw 0010 snapshot kept for Undo.")
-println("Loading hekate.")
+println("")
+println("Press any button to reboot to Hekate...")
+pause()
 goHekate()
