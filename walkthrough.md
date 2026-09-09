@@ -1,7 +1,31 @@
-Актуальний delivery — **v0.13.794** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.795** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.795 — Manage Backups context menu with legend parity, direct Restore & Send to another console
+
+- **Повна інтеграція елементів легенди у контекстне меню Manage Backups (`users_nand_library.cpp`)**:
+  - Усі важливі дії з нижнього рядка легенди та вікна деталей винесено у бічне контекстне меню (Sidebar), яке викликається кнопкою `+` або дотиком до екрана, забезпечуючи зручність для користувачів, звиклих до контекстного меню:
+    - **Open**: відкриває вікно деталей поточного вибраного бекапу (відповідає кнопці **A**).
+    - **Restore**: пряме відновлення бекапу профілів та годин гри до консолі з перевіркою сейву `00F0` та вибором опцій (Profiles only / Profiles + play hours) без необхідності спершу заходити у вікно деталей.
+    - **Rename**: перейменування бекапу на довільну назву через `swkbd`.
+    - **Delete**: видалення вибраних або поточного бекапу з картки microSD (відповідає кнопці **Minus**).
+    - **Send to another console**: запуск сервера Console Transfer для поширення бекапів на іншу консоль чи ПК.
+    - **Select / Deselect**: перемикання прапорця виділення на поточному елементі без автоматичного зміщення курсору (відповідає кнопці **X**).
+    - **Select All**: виділення всіх резервних копій у списку.
+    - **Clear selection**: зняття виділення (відповідає поведінці кнопки **B** при наявному виділенні).
+    - **Invert**: інвертування виділення (відповідає кнопці **Y**).
+  - Для кожного пункту підключено відповідну векторну іконку `ActionIcon` (Folder, Save, Edit, Delete, Move, Toggle, Range, Undo, Refresh).
+- **Підтримка Console Transfer для бекапів NAND (`StartConsoleTransferShareNandBackups`)**:
+  - У `install_share.hpp` та `install_share.cpp` реалізовано запуск сервера спільного доступу для теки `/config/kefir/nand_transfer`.
+  - У головне меню Console Transfer додано пункт `Share Profiles & Play Hours`.
+- **Синхронізація дій у `ManageBackupsMenu` (`users_manage.cpp`)**:
+  - До спливаючого списку дій `PromptAction` додано підтримку `Select` / `Deselect`, `Select All`, `Clear selection`, `Invert` та присвоєно векторні іконки `ActionIcon` усім пунктам.
+- **Локалізація**:
+  - Додано переклад `"Deselect"` для всіх 14 мов.
+  - Додано нові рядки меню та попереджень до `en.json`, `uk.json`, `ru.json`.
+- **Версія програми**: піднято `sphaira_VERSION` до `0.13.795` у `sphaira/CMakeLists.txt`. За політикою репозиторію збірка NRO не запускалася (очікується компіляція користувачем).
 
 ## v0.13.794 — Manage Backups context menu with Select All, Delete & Rename
 

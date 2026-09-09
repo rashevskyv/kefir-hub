@@ -13,6 +13,7 @@
 
 #include "account/account_user.hpp"
 #include "app.hpp"
+#include "app_paths.hpp"
 #include "defines.hpp"
 #include "forwarder_auto_plan.hpp"
 #include "fs.hpp"
@@ -183,6 +184,13 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             }
         },
         {
+            "Share Profiles & Play Hours"_i18n,
+            "Share profiles and play hours NAND backup packs."_i18n,
+            [](){
+                StartConsoleTransferShareNandBackups();
+            }
+        },
+        {
             "Share Screenshots & Videos"_i18n,
             "Share album screenshots and captured gameplay videos."_i18n,
             [](){
@@ -346,6 +354,15 @@ void AddSettingsOption(Sidebar* options) {
 
 void StartConsoleTransferShareUserBackups() {
     StartConsoleTransferShare(account_user::GetShareableUserBackupRoots());
+}
+
+void StartConsoleTransferShareNandBackups() {
+    fs::FsNativeSd sd;
+    const auto root = paths::DATA_ROOT + "/nand_transfer";
+    if (!sd.DirExists(root.c_str())) {
+        sd.CreateDirectoryRecursively(root.c_str());
+    }
+    StartConsoleTransferShare(std::vector<std::string>{ root });
 }
 
 } // namespace sphaira::ui::menu

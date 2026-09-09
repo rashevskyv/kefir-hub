@@ -224,13 +224,13 @@ struct ManageBackupsMenu final : MenuBase {
         }
     }
 
-    void ToggleCurrentSelection() {
-        if (m_entries.empty()) {
+    void ToggleCurrentSelection(bool advance = true) {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
             return;
         }
         m_entries[m_index].selected ^= 1;
         m_selected_count += m_entries[m_index].selected ? 1 : -1;
-        if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+        if (advance && m_index + 1 < static_cast<s64>(m_entries.size())) {
             m_index++;
             m_list->EnsureVisible(m_index, m_entries.size());
         }
@@ -370,45 +370,89 @@ struct ManageBackupsMenu final : MenuBase {
 
 private:
     void PromptAction() {
-        if (m_entries.empty()) {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
             return;
         }
 
         const auto& cur = m_entries[m_index].pack;
-        PopupList::Items items;
-        items.emplace_back("Restore"_i18n);
-        items.emplace_back("Duplicate"_i18n);
-        items.emplace_back("Rename"_i18n);
-        items.emplace_back("Delete"_i18n);
-        items.emplace_back("Send to another console"_i18n);
-        items.emplace_back("Select All"_i18n);
+        const bool is_cur_selected = m_entries[m_index].selected;
 
-        auto popup = std::make_unique<PopupList>(cur.nickname, items, [this](auto op_index) {
-            if (!op_index) {
+        enum ActionType {
+            Action_Restore,
+            Action_Duplicate,
+            Action_Rename,
+            Action_Delete,
+            Action_Send,
+            Action_ToggleSelect,
+            Action_SelectAll,
+            Action_ClearSelection,
+            Action_InvertSelection,
+        };
+
+        struct ActionItem {
+            ActionType type;
+            std::string text;
+            std::optional<ActionIcon> icon;
+        };
+
+        std::vector<ActionItem> actions;
+        actions.push_back({Action_Restore, "Restore"_i18n, ActionIcon::Save});
+        actions.push_back({Action_Duplicate, "Duplicate"_i18n, ActionIcon::Copy});
+        actions.push_back({Action_Rename, "Rename"_i18n, ActionIcon::Edit});
+        actions.push_back({Action_Delete, "Delete"_i18n, ActionIcon::Delete});
+        actions.push_back({Action_Send, "Send to another console"_i18n, ActionIcon::Move});
+        actions.push_back({Action_ToggleSelect, is_cur_selected ? "Deselect"_i18n : "Select"_i18n, ActionIcon::Toggle});
+        actions.push_back({Action_SelectAll, "Select All"_i18n, ActionIcon::Range});
+        if (m_selected_count > 0) {
+            actions.push_back({Action_ClearSelection, "Clear selection"_i18n, ActionIcon::Undo});
+        }
+        actions.push_back({Action_InvertSelection, "Invert"_i18n, ActionIcon::Refresh});
+
+        PopupList::Items items;
+        std::vector<std::optional<ActionIcon>> icons;
+        items.reserve(actions.size());
+        icons.reserve(actions.size());
+        for (const auto& a : actions) {
+            items.push_back(a.text);
+            icons.push_back(a.icon);
+        }
+
+        auto popup = std::make_unique<PopupList>(cur.nickname, items, [this, actions](auto op_index) {
+            if (!op_index || *op_index >= actions.size()) {
                 return;
             }
-            switch (*op_index) {
-                case 0:
+            switch (actions[*op_index].type) {
+                case Action_Restore:
                     RestoreSelected();
                     break;
-                case 1:
+                case Action_Duplicate:
                     DuplicateCurrent();
                     break;
-                case 2:
+                case Action_Rename:
                     RenameCurrent();
                     break;
-                case 3:
+                case Action_Delete:
                     ConfirmDeletePacks();
                     break;
-                case 4:
+                case Action_Send:
                     menu::StartConsoleTransferShareUserBackups();
                     break;
-                case 5:
+                case Action_ToggleSelect:
+                    ToggleCurrentSelection(false);
+                    break;
+                case Action_SelectAll:
                     SelectAll();
+                    break;
+                case Action_ClearSelection:
+                    ClearSelection();
+                    break;
+                case Action_InvertSelection:
+                    InvertSelection();
                     break;
             }
         });
         popup->SetMenuStyle(true);
+        popup->SetIcons(std::move(icons));
         App::Push(std::move(popup));
     }
 

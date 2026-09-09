@@ -1,8 +1,36 @@
-Поточний delivery — **v0.13.794** (Manage Backups context menu with Select All, Delete and Rename). Завершені плани збережено в
+Поточний delivery — **v0.13.795** (Manage Backups context menu with legend parity, direct Restore & Send to another console). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.794 — Manage Backups context menu with Select All, Delete and Rename
+## Поточний delivery: v0.13.795 — Manage Backups context menu with legend parity, direct Restore & Send to another console
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Повна синхронізація дій легенди та контекстного меню Manage Backups (`users_nand_library.cpp`)**:
+   - Усі дії з нижньої панелі дій (легенди геймпада) та додаткові операції перенесено у контекстне меню (бічний `Sidebar`), що відкривається кнопкою `+` або тапом на екран:
+     - `Open` (ActionIcon::Folder) — відкриття деталей бекапу (відповідає кнопці `A`).
+     - `Restore` (ActionIcon::Save) — пряме відновлення поточної резервної копії (`ConfirmRestoreCurrent()`) без необхідності спочатку відкривати вікно деталей.
+     - `Rename` (ActionIcon::Edit) — перейменування бекапу.
+     - `Delete` (ActionIcon::Delete) — видалення виділених або поточного бекапу (відповідає кнопці `Minus` / Select).
+     - `Send to another console` (ActionIcon::Move) — відправка резервної копії на іншу консоль або ПК через Console Transfer по локальній мережі Wi-Fi.
+   - Секція `SELECTION`:
+     - `Select` / `Deselect` (ActionIcon::Toggle) — виділити або зняти виділення з поточної резервної копії (відповідає кнопці `X` у легенді), без зміщення фокусу.
+     - `Select All` (ActionIcon::Range) — виділити всі бекапи.
+     - `Clear selection` (ActionIcon::Undo) — зняти виділення з усіх елементів (відповідає поведінці кнопки `B` при активному виділенні).
+     - `Invert` (ActionIcon::Refresh) — інвертувати виділення (відповідає кнопці `Y`).
+2. **Підтримка поширення бекапів профілів та годин гри (`StartConsoleTransferShareNandBackups`)**:
+   - Реалізовано функцію `StartConsoleTransferShareNandBackups()` у `install_share.hpp` / `install_share.cpp` для монтування теки `/config/kefir/nand_transfer` на сервері Console Transfer.
+   - У меню `ConsoleTransferMenu` додано окремий пункт «Share Profiles & Play Hours».
+3. **Оновлення меню дій у `users_manage.cpp` (`ManageBackupsMenu::PromptAction`)**:
+   - Додано векторні іконки `ActionIcon` для всіх пунктів меню вибору дій.
+   - Додано дії `Select` / `Deselect`, `Select All`, `Clear selection` та `Invert` для досягнення повної функціональної відповідності легенді.
+4. **Локалізація та i18n**:
+   - Додано ключ перекладу `"Deselect"` до всіх 14 мовних словників `assets/romfs/i18n/*.json`.
+   - Додано ключі для нових опцій спільного доступу та попереджень у `en.json`, `uk.json`, `ru.json`.
+5. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.795` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.794 — Manage Backups context menu with Select All, Delete and Rename
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Контекстне меню (Options / Sidebar) для Manage Backups (`users_nand_library.cpp`)**:

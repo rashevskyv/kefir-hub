@@ -9,6 +9,7 @@
 #include "image.hpp"
 #include "swkbd.hpp"
 #include "ui/list.hpp"
+#include "ui/menus/install_share.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -304,13 +305,13 @@ struct NandPackLibraryMenu final : MenuBase {
         }
     }
 
-    void ToggleCurrentSelection() {
-        if (m_entries.empty()) {
+    void ToggleCurrentSelection(bool advance = true) {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
             return;
         }
         m_entries[m_index].selected ^= 1;
         m_selected_count += m_entries[m_index].selected ? 1 : -1;
-        if (m_index + 1 < static_cast<s64>(m_entries.size())) {
+        if (advance && m_index + 1 < static_cast<s64>(m_entries.size())) {
             m_index++;
             m_list->EnsureVisible(m_index, m_entries.size());
         }
@@ -414,7 +415,7 @@ struct NandPackLibraryMenu final : MenuBase {
 
 private:
     void OpenCurrent() {
-        if (m_entries.empty()) {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
             return;
         }
         App::Push<NandPackDetailMenu>(
@@ -422,8 +423,53 @@ private:
             m_on_restore);
     }
 
+    void ConfirmRestoreCurrent() {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
+            return;
+        }
+        const auto pack = m_entries[m_index].pack;
+        std::string msg =
+            "Restore this profiles & play hours pack?\n\n"
+            "Profiles (0010) always restore as a whole pack.\n\n"_i18n;
+        if (pack.save_00F0) {
+            msg +=
+                "If play hours are restored, this console's play log is replaced by the backup. "
+                "Old hours here are lost; hours after restore start from the pack.\n\n"_i18n;
+            App::Push<OptionBox>(
+                msg,
+                "Cancel"_i18n, "Profiles only"_i18n, "Profiles + play hours"_i18n, 2,
+                [this, pack](auto op) {
+                    if (!op || *op == 0) {
+                        return;
+                    }
+                    const bool hours = (*op == 2);
+                    auto cb = m_on_restore;
+                    const auto dir = pack.dir;
+                    if (cb) {
+                        cb(dir, hours);
+                    }
+                });
+            return;
+        }
+
+        msg += "This pack has no play hours (00F0). Profiles will still restore."_i18n;
+        App::Push<OptionBox>(
+            msg,
+            "Cancel"_i18n, "Restore profiles"_i18n, 1,
+            [this, pack](auto op) {
+                if (!op || *op != 1) {
+                    return;
+                }
+                auto cb = m_on_restore;
+                const auto dir = pack.dir;
+                if (cb) {
+                    cb(dir, false);
+                }
+            });
+    }
+
     void ShowContextMenu() {
-        if (m_entries.empty()) {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
             return;
         }
 
@@ -437,9 +483,21 @@ private:
 
         options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
 
-        options->Add<SidebarEntryCallback>("Open"_i18n, [this](){
+        auto open_entry = options->Add<SidebarEntryCallback>("Open"_i18n, [this](){
             OpenCurrent();
         }, true, "Open pack details to inspect or restore accounts."_i18n);
+        open_entry->SetIcon(ActionIcon::Folder);
+        if (m_selected_count > 1) {
+            open_entry->Depends([this](){ return m_selected_count <= 1; }, "Cannot open multiple backups"_i18n);
+        }
+
+        auto restore_entry = options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
+            ConfirmRestoreCurrent();
+        }, true, "Restore profiles & play hours to console."_i18n);
+        restore_entry->SetIcon(ActionIcon::Save);
+        if (m_selected_count > 1) {
+            restore_entry->Depends([this](){ return m_selected_count <= 1; }, "Cannot restore multiple backups simultaneously"_i18n);
+        }
 
         auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
             RenameCurrent();
@@ -454,21 +512,35 @@ private:
         }, true, "Permanently delete the selected backup(s)."_i18n);
         delete_entry->SetIcon(ActionIcon::Delete);
 
+        auto send_entry = options->Add<SidebarEntryCallback>("Send to another console"_i18n, [this](){
+            menu::StartConsoleTransferShareNandBackups();
+        }, true, "Share backup(s) with another console over Console Transfer."_i18n);
+        send_entry->SetIcon(ActionIcon::Move);
+
         options->Add<SidebarEntryHeader>("SELECTION"_i18n);
 
-        options->Add<SidebarEntryCallback>("Select All"_i18n, [this](){
+        const bool is_cur_selected = m_entries[m_index].selected;
+        auto toggle_entry = options->Add<SidebarEntryCallback>(is_cur_selected ? "Deselect"_i18n : "Select"_i18n, [this](){
+            ToggleCurrentSelection(false);
+        }, true, is_cur_selected ? "Uncheck this backup."_i18n : "Mark this backup for batch operations."_i18n);
+        toggle_entry->SetIcon(ActionIcon::Toggle);
+
+        auto select_all_entry = options->Add<SidebarEntryCallback>("Select All"_i18n, [this](){
             SelectAll();
         }, true, "Select all backups in the list."_i18n);
+        select_all_entry->SetIcon(ActionIcon::Range);
 
         if (m_selected_count > 0) {
-            options->Add<SidebarEntryCallback>("Clear selection"_i18n, [this](){
+            auto clear_entry = options->Add<SidebarEntryCallback>("Clear selection"_i18n, [this](){
                 ClearSelection();
             }, true, "Deselect all backups."_i18n);
+            clear_entry->SetIcon(ActionIcon::Undo);
         }
 
-        options->Add<SidebarEntryCallback>("Invert"_i18n, [this](){
+        auto invert_entry = options->Add<SidebarEntryCallback>("Invert"_i18n, [this](){
             InvertSelection();
         }, true, "Invert current selection."_i18n);
+        invert_entry->SetIcon(ActionIcon::Refresh);
     }
 
     void RenameCurrent() {

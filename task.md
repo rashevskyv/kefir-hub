@@ -1,9 +1,22 @@
-Актуальний delivery — **v0.13.794** (Manage Backups context menu with Select All, Delete and Rename). Завершені задачі збережено в
+Актуальний delivery — **v0.13.795** (Manage Backups context menu with legend parity, direct Restore & Send to another console). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.794 (Manage Backups context menu with Select All, Delete and Rename)
+## Поточний delivery: v0.13.795 (Manage Backups context menu with legend parity, direct Restore & Send to another console)
+
+- [x] `NAND-LIB-LEGEND-PARITY-795` — повна синхронізація дій легенди в `ShowContextMenu` (`NandPackLibraryMenu`): перенесено `Open` (кнопка A), `Delete` (кнопка -), додано `Select` / `Deselect` (кнопка X), `Clear selection` (кнопка B) та `Invert` (кнопка Y) з векторними іконками.
+- [x] `NAND-LIB-DIRECT-RESTORE-795` — додано пряму дію `Restore` (`ConfirmRestoreCurrent()`) у контекстне меню Manage Backups для відновлення без потреби переходу у вікно деталей.
+- [x] `NAND-LIB-SEND-CONSOLE-795` — додано пункт `Send to another console` у контекстне меню бібліотеки бекапів NAND (`users_nand_library.cpp`).
+- [x] `CONSOLE-TRANSFER-NAND-SHARE-795` — реалізовано `StartConsoleTransferShareNandBackups()` у `install_share.cpp`/`install_share.hpp` та додано пункт «Share Profiles & Play Hours» у `ConsoleTransferMenu`.
+- [x] `USER-MANAGE-PROMPT-PARITY-795` — оновлено `ManageBackupsMenu::PromptAction` у `users_manage.cpp`: додано векторні іконки `ActionIcon` та дії `Select` / `Deselect`, `Select All`, `Clear selection`, `Invert`.
+- [x] `I18N-DESELECT-UPDATE-795` — додано `"Deselect"` до всіх 14 мовних файлів `assets/romfs/i18n/*.json`, додано нові ключі у `en.json`, `uk.json`, `ru.json`.
+- [x] `README-DOCS-UPDATE-795` — оновлено `README.md` з описом нових функцій контекстного меню бекапів, відправки на іншу консоль та синхронізації з легендою.
+- [x] `CMAKELISTS-VERSION-BUMP-795` — піднято `sphaira_VERSION` до `0.13.795`.
+- [x] `DOCS-BUMP-795` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-795` — перевірка користувачем контекстного меню Manage Backups, рестора та відправки через Console Transfer на консолі.
+
+## Попередній delivery: v0.13.794 (Manage Backups context menu with Select All, Delete and Rename)
 
 - [x] `NAND-LIB-CONTEXT-MENU-794` — додано прив'язку `Button::START` (Plus / Options) до `ShowContextMenu` у `NandPackLibraryMenu`: сайдбар із діями `Open`, `Rename`, `Delete`, а також секцією `SELECTION` (`Select All`, `Clear selection`, `Invert`).
 - [x] `NAND-LIB-SELECT-ALL-794` — реалізовано метод `SelectAll()` для виділення всіх резервних копій у `NandPackLibraryMenu`.

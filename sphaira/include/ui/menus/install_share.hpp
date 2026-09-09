@@ -49,4 +49,7 @@ void AddSettingsOption(Sidebar* sidebar);
 // Starts the Console Transfer share server for user backups (/config/kefir/account_backups).
 void StartConsoleTransferShareUserBackups();
 
+// Starts the Console Transfer share server for profiles & play hours packs (/config/kefir/nand_transfer).
+void StartConsoleTransferShareNandBackups();
+
 } // namespace sphaira::ui::menu
