@@ -237,6 +237,14 @@ struct ManageBackupsMenu final : MenuBase {
         UpdateSubHeading();
     }
 
+    void SelectAll() {
+        for (auto& e : m_entries) {
+            e.selected = true;
+        }
+        m_selected_count = static_cast<s64>(m_entries.size());
+        UpdateSubHeading();
+    }
+
     void InvertSelection() {
         m_selected_count = 0;
         for (auto& e : m_entries) {
@@ -373,6 +381,7 @@ private:
         items.emplace_back("Rename"_i18n);
         items.emplace_back("Delete"_i18n);
         items.emplace_back("Send to another console"_i18n);
+        items.emplace_back("Select All"_i18n);
 
         auto popup = std::make_unique<PopupList>(cur.nickname, items, [this](auto op_index) {
             if (!op_index) {
@@ -393,6 +402,9 @@ private:
                     break;
                 case 4:
                     menu::StartConsoleTransferShareUserBackups();
+                    break;
+                case 5:
+                    SelectAll();
                     break;
             }
         });

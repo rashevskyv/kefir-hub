@@ -2,24 +2,45 @@
 
 #include "account/nand_transfer.hpp"
 #include "app.hpp"
+#include "app_paths.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "swkbd.hpp"
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/sidebar.hpp"
 
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace sphaira::ui::menu::users {
 namespace {
+
+auto GetPackDisplayName(const nand_transfer::PackInfo& pack) -> std::string {
+    std::string stem = pack.name;
+    if (pack.is_archive) {
+        constexpr std::string_view kKefirNandExt = ".kefir-nand.zip";
+        constexpr std::string_view kZipExt = ".zip";
+        if (stem.size() >= kKefirNandExt.size() && stem.ends_with(kKefirNandExt)) {
+            stem.resize(stem.size() - kKefirNandExt.size());
+        } else if (stem.size() >= kZipExt.size() && stem.ends_with(kZipExt)) {
+            stem.resize(stem.size() - kZipExt.size());
+        }
+    }
+    if (stem.size() == 15 && !pack.created_label.empty()) {
+        return pack.created_label;
+    }
+    return stem;
+}
 
 struct NandPackDetailMenu final : MenuBase {
     using RestoreCb = std::function<void(const std::string& dir, bool restore_play_hours)>;
@@ -31,7 +52,7 @@ struct NandPackDetailMenu final : MenuBase {
     };
 
     NandPackDetailMenu(nand_transfer::PackInfo pack, RestoreCb on_restore)
-        : MenuBase{!pack.created_label.empty() ? pack.created_label : pack.name, MenuFlag_None}
+        : MenuBase{GetPackDisplayName(pack), MenuFlag_None}
         , m_pack{std::move(pack)}
         , m_on_restore{std::move(on_restore)}
     {
@@ -249,9 +270,10 @@ struct NandPackLibraryMenu final : MenuBase {
             }}),
             std::make_pair(Button::X, Action{"Select"_i18n, [this](){ ToggleCurrentSelection(); }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ InvertSelection(); }}),
-            std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){ ConfirmDelete(); }})
+            std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){ ConfirmDelete(); }}),
+            std::make_pair(Button::START, Action{"Options"_i18n, [this](){ ShowContextMenu(); }})
         );
-        SetTitleSubHeading("A opens pack details. X marks backups. Minus deletes."_i18n, true);
+        SetTitleSubHeading("+ opens options. A opens pack details. X marks backups."_i18n, true);
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 80.f});
         Refresh();
     }
@@ -292,6 +314,14 @@ struct NandPackLibraryMenu final : MenuBase {
             m_index++;
             m_list->EnsureVisible(m_index, m_entries.size());
         }
+        UpdateSubHeading();
+    }
+
+    void SelectAll() {
+        for (auto& e : m_entries) {
+            e.selected = true;
+        }
+        m_selected_count = static_cast<s64>(m_entries.size());
         UpdateSubHeading();
     }
 
@@ -356,7 +386,7 @@ struct NandPackLibraryMenu final : MenuBase {
                 gfx::CHECKBOX_SIZE, e.selected);
 
             const float text_x = v.x + 50.f;
-            const auto& title = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.name;
+            const auto title = GetPackDisplayName(e.pack);
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(focused ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
@@ -366,6 +396,9 @@ struct NandPackLibraryMenu final : MenuBase {
             detail += e.pack.save_00F0 ? " - play hours"_i18n : " - no play hours"_i18n;
             if (e.pack.save_0010) {
                 detail += " - profiles"_i18n;
+            }
+            if (!e.pack.created_label.empty() && title != e.pack.created_label) {
+                detail = e.pack.created_label + " - " + detail;
             }
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
@@ -387,6 +420,169 @@ private:
         App::Push<NandPackDetailMenu>(
             m_entries[m_index].pack,
             m_on_restore);
+    }
+
+    void ShowContextMenu() {
+        if (m_entries.empty()) {
+            return;
+        }
+
+        std::string title = "Manage Backups"_i18n;
+        if (m_index >= 0 && static_cast<size_t>(m_index) < m_entries.size()) {
+            title = GetPackDisplayName(m_entries[m_index].pack);
+        }
+
+        auto options = std::make_unique<Sidebar>(title, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+        options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
+
+        options->Add<SidebarEntryCallback>("Open"_i18n, [this](){
+            OpenCurrent();
+        }, true, "Open pack details to inspect or restore accounts."_i18n);
+
+        auto rename_entry = options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
+            RenameCurrent();
+        }, true, "Give this backup a custom name."_i18n);
+        rename_entry->SetIcon(ActionIcon::Edit);
+        if (m_selected_count > 1) {
+            rename_entry->Depends([this](){ return m_selected_count <= 1; }, "Cannot rename multiple backups"_i18n);
+        }
+
+        auto delete_entry = options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            ConfirmDelete();
+        }, true, "Permanently delete the selected backup(s)."_i18n);
+        delete_entry->SetIcon(ActionIcon::Delete);
+
+        options->Add<SidebarEntryHeader>("SELECTION"_i18n);
+
+        options->Add<SidebarEntryCallback>("Select All"_i18n, [this](){
+            SelectAll();
+        }, true, "Select all backups in the list."_i18n);
+
+        if (m_selected_count > 0) {
+            options->Add<SidebarEntryCallback>("Clear selection"_i18n, [this](){
+                ClearSelection();
+            }, true, "Deselect all backups."_i18n);
+        }
+
+        options->Add<SidebarEntryCallback>("Invert"_i18n, [this](){
+            InvertSelection();
+        }, true, "Invert current selection."_i18n);
+    }
+
+    void RenameCurrent() {
+        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
+            return;
+        }
+        RenamePack(m_entries[m_index].pack);
+    }
+
+    void RenamePack(const nand_transfer::PackInfo& pack) {
+        const auto src_path = pack.dir;
+        fs::FsNativeSd sd;
+        const bool exists = pack.is_archive ? sd.FileExists(src_path.c_str()) : sd.DirExists(src_path.c_str());
+        if (!exists) {
+            App::Push<OptionBox>("Backup file does not exist."_i18n, "OK"_i18n);
+            return;
+        }
+
+        std::string parent_dir;
+        if (const auto slash = src_path.find_last_of("/\\"); slash != std::string::npos) {
+            parent_dir = src_path.substr(0, slash);
+        } else {
+            parent_dir = paths::DATA_ROOT + "/nand_transfer";
+        }
+
+        std::string name_stem = pack.name;
+        std::string ext;
+        if (pack.is_archive) {
+            constexpr std::string_view kKefirNandExt = ".kefir-nand.zip";
+            constexpr std::string_view kZipExt = ".zip";
+            if (name_stem.size() >= kKefirNandExt.size() && name_stem.ends_with(kKefirNandExt)) {
+                ext = kKefirNandExt;
+                name_stem.resize(name_stem.size() - kKefirNandExt.size());
+            } else if (name_stem.size() >= kZipExt.size() && name_stem.ends_with(kZipExt)) {
+                ext = kZipExt;
+                name_stem.resize(name_stem.size() - kZipExt.size());
+            }
+        }
+
+        std::string input;
+        if (R_FAILED(swkbd::ShowText(input, "Rename backup"_i18n.c_str(), name_stem.c_str(), 1, 64)) || input.empty()) {
+            return;
+        }
+
+        while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
+            input.erase(input.begin());
+        }
+        while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
+            input.pop_back();
+        }
+        if (input.empty()) {
+            return;
+        }
+
+        if (!ext.empty() && input.size() >= ext.size() && input.ends_with(ext)) {
+            input.resize(input.size() - ext.size());
+        }
+
+        for (auto& c : input) {
+            if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|') {
+                c = '_';
+            }
+        }
+
+        while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
+            input.erase(input.begin());
+        }
+        while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
+            input.pop_back();
+        }
+        if (input.empty()) {
+            return;
+        }
+
+        const std::string final_path = parent_dir + "/" + input + ext;
+        if (final_path == src_path) {
+            return;
+        }
+
+        if (sd.FileExists(final_path.c_str()) || sd.DirExists(final_path.c_str())) {
+            App::Push<OptionBox>("A backup with that name already exists."_i18n, "OK"_i18n);
+            return;
+        }
+
+        Result rc;
+        if (pack.is_archive) {
+            rc = sd.RenameFile(src_path.c_str(), final_path.c_str());
+        } else {
+            rc = sd.RenameDirectory(src_path.c_str(), final_path.c_str());
+        }
+        if (R_FAILED(rc)) {
+            App::Push<OptionBox>("Could not rename the backup."_i18n, "OK"_i18n);
+            return;
+        }
+
+        const bool valid = pack.is_archive ? nand_transfer::IsPackArchive(final_path) : nand_transfer::IsPack(final_path);
+        if (!valid) {
+            if (pack.is_archive) {
+                sd.RenameFile(final_path.c_str(), src_path.c_str());
+            } else {
+                sd.RenameDirectory(final_path.c_str(), src_path.c_str());
+            }
+            App::Push<OptionBox>("Renamed backup is invalid."_i18n, "OK"_i18n);
+            return;
+        }
+
+        Refresh();
+        for (size_t i = 0; i < m_entries.size(); ++i) {
+            if (m_entries[i].pack.dir == final_path) {
+                m_index = static_cast<s64>(i);
+                m_list->EnsureVisible(m_index, m_entries.size());
+                break;
+            }
+        }
     }
 
     void ConfirmDelete() {

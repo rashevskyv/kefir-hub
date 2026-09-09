@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.793**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.794**. Дата: 2026-09-09.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.794 поза ponytail-чергою: реалізовано контекстне меню (Sidebar) у Manage Backups (NandPackLibraryMenu) з діями Open, Rename, Delete, Select All, Clear selection, Invert; додано безпечне перейменування резервних копій (RenamePack) із системною клавіатурою swkbd, санітизацією FAT32 і валідацією; GetPackDisplayName для показу унікальних назв бекапів у списку та NandPackDetailMenu; додано Select All у ManageBackupsMenu (users_manage.cpp); версію піднято до 0.13.794; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.793 поза ponytail-чергою: повний редизайн скрипта дампу `nand_transfer_dump_auto.te` за стандартом діагностичного застосунку рестору (попіксельний банер `setpixels`, апаратний спінер `spinner(1, 77, 0)`, таблиця діагностики статусів NAND, Pack, сейвів 0010, 0011, 00F0, 0041, прогрес записаних файлів та облік помилок, безпечний рядок активності та плаваюча зона `Event Log` замість спалахів екрана `clear()`); у скриптах `nand_transfer_dump_auto.te`, `nand_transfer_restore_auto.te`, `account_0010_dump.te`, `account_0010_apply_link.te`, `playtime_restore.te` блокуюче очікування `pause()` замінено на автоматичний 5-секундний таймаут `sleep(5000)` із повідомленням перед ланцюжком виклику `goHekate()`; оновлено README.md; версію піднято до 0.13.793. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

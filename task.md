@@ -1,9 +1,21 @@
-Актуальний delivery — **v0.13.793** (diagnostic dashboard for dump script and 5s auto-reboot to Hekate). Завершені задачі збережено в
+Актуальний delivery — **v0.13.794** (Manage Backups context menu with Select All, Delete and Rename). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.793 (diagnostic dashboard for dump script and 5s auto-reboot to Hekate)
+## Поточний delivery: v0.13.794 (Manage Backups context menu with Select All, Delete and Rename)
+
+- [x] `NAND-LIB-CONTEXT-MENU-794` — додано прив'язку `Button::START` (Plus / Options) до `ShowContextMenu` у `NandPackLibraryMenu`: сайдбар із діями `Open`, `Rename`, `Delete`, а також секцією `SELECTION` (`Select All`, `Clear selection`, `Invert`).
+- [x] `NAND-LIB-SELECT-ALL-794` — реалізовано метод `SelectAll()` для виділення всіх резервних копій у `NandPackLibraryMenu`.
+- [x] `NAND-LIB-RENAME-794` — реалізовано `RenameCurrent()` та `RenamePack()` з викликом екранної клавіатури `swkbd::ShowText`, санітизацією символів FAT32, перевіркою колізій та верифікацією цілісності бекапу.
+- [x] `NAND-LIB-DISPLAY-NAME-794` — функція `GetPackDisplayName()` для коректного відображення користувацьких унікальних імен бекапів у списку та заголовку екрана деталей `NandPackDetailMenu`.
+- [x] `USER-MANAGE-SELECT-ALL-794` — додано підтримку `Select All` у `ManageBackupsMenu` в `users_manage.cpp`.
+- [x] `README-DOCS-UPDATE-794` — оновлено документацію `README.md` щодо контекстного меню Manage Backups та перейменування.
+- [x] `CMAKELISTS-VERSION-BUMP-794` — підняти `sphaira_VERSION` до `0.13.794`.
+- [x] `DOCS-BUMP-794` — синхронізувати `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготувати commit.
+- [ ] `HARDWARE-VERIFY-794` — перевірка користувачем контекстного меню Manage Backups, виділення всього та перейменування на консолі.
+
+## Попередній delivery: v0.13.793 (diagnostic dashboard for dump script and 5s auto-reboot to Hekate)
 
 - [x] `TEGRA-DUMP-DASHBOARD-793` — повний редизайн `nand_transfer_dump_auto.te`: верхній попіксельний графічний банер, живий апаратний спінер `spinner(1, 77, 0)`, таблиця діагностики статусів NAND, Pack, сейвів 0010, 0011, 00F0, 0041, лічильники прогресу та помилок, безпечний рядок активності та вікно логування `Event Log`.
 - [x] `TEGRA-DUMP-SPINNER-793` — додано регулярні виклики `upd_s() -> spinner()` під час читання та запису даних при створенні бекапу.

@@ -1,8 +1,33 @@
-Поточний delivery — **v0.13.793** (diagnostic dashboard for dump script and 5s auto-reboot to Hekate). Завершені плани збережено в
+Поточний delivery — **v0.13.794** (Manage Backups context menu with Select All, Delete and Rename). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.793 — diagnostic dashboard for dump script and 5s auto-reboot to Hekate
+## Поточний delivery: v0.13.794 — Manage Backups context menu with Select All, Delete and Rename
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Контекстне меню (Options / Sidebar) для Manage Backups (`users_nand_library.cpp`)**:
+   - Додано обробку кнопки `Button::START` (кнопка `+` на Switch / `Options` у рядку дій) для виклику бічного контекстного меню `Sidebar`.
+   - Оновлено підказку у заголовку вікна: `"+ opens options. A opens pack details. X marks backups."`.
+   - Розділ `ACTIONS`:
+     - `Open` — перегляд деталей бекапу (відновлення профілів та годин гри).
+     - `Rename` — безпечне перейменування вибраного бекапу через системну клавіатуру (`swkbd`) з можливістю надати будь-яке унікальне ім'я.
+     - `Delete` — видалення вибраних бекапів (або поточного) з підтвердженням `OptionBox` та прогресом `ProgressBox`.
+   - Розділ `SELECTION`:
+     - `Select All` — виділити всі резервні копії у списку (`SelectAll()`).
+     - `Clear selection` — зняти виділення (відображається динамічно, коли є виділені елементи).
+     - `Invert` — інвертувати поточний стан виділення.
+2. **Безпечне перейменування бекапів (`RenamePack`) та відображення унікальних імен**:
+   - `RenamePack`: викликає екранну клавіатуру `swkbd::ShowText`, очищає пробіли, санітизує небезпечні символи файлової системи FAT32 (`/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`), перевіряє наявність колізій імен та перейменовує архів або теку.
+   - Валідація результату через `nand_transfer::IsPackArchive` / `IsPack` із автоматичним відкатом при помилці.
+   - `GetPackDisplayName`: якщо бекапу надано унікальне ім'я (перейменовано користувачем), у списку великим шрифтом показується задане ім'я, а якщо воно містить інформацію про створення — дата виводиться у підзаголовку поруч із лічильником акаунтів.
+   - Заголовок екрана деталей `NandPackDetailMenu` синхронізовано з унікальним іменем бекапу.
+3. **Підтримка Select All у `users_manage.cpp`**:
+   - Додано метод `SelectAll()` та пункт `Select All` у спливаюче меню дій `ManageBackupsMenu::PromptAction`.
+4. **Версія та документація**:
+   - Піднято `sphaira_VERSION` до `0.13.794` у `sphaira/CMakeLists.txt`.
+   - Оновлено `README.md`, `task.md`, `walkthrough.md`, `audit.md`.
+
+## Попередній delivery: v0.13.793 — diagnostic dashboard for dump script and 5s auto-reboot to Hekate
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Графічний діагностичний дашборд для скрипта дампу (`nand_transfer_dump_auto.te`)**:
