@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.786** (harden remote update check, stream-free version parsing and auto-update install destination). Завершені плани збережено в
+Поточний delivery — **v0.13.787** (restore exact selected NAND transfer pack through TegraExplorer). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.786 — harden remote update check, stream-free version parsing and auto-update install destination
+## Поточний delivery: v0.13.787 — restore exact selected NAND transfer pack through TegraExplorer
+
+Статус: реалізовано; Kefir Hub встановлює перевірений TegraExplorer restore-скрипт і передає йому точний каталог пакета, який вибрав користувач:
+1. Скрипт приймає лише прямого нащадка `sd:/config/kefir/nand_transfer/<pack>` із `restore_pending/nand_pack.txt`; сканування каталогів і fallback на «останній» пакет відсутні.
+2. Відновлення 0010, 0011 та опційного 00F0 використовує відомі дерева, перевірені create/write/commit та fail-closed маркер `nand_restored.ok`.
+3. Статус Undo враховує лише safety snapshot, потрібні для сейвів у вибраному пакеті; текст помилки не приховує раніше успішні commit.
+4. Додано `tests/test_nand_restore_auto_contract.sh` і запуск у `tests/run.sh`. Повний набір тестів та NRO-збірка пройшли на основному варіанті скрипта до фінальної малої правки версії/status; після неї compile/tests не запускалися за policy. Апаратна перевірка через Hub очікується.
+
+## Попередній delivery: v0.13.786 — harden remote update check, stream-free version parsing and auto-update install destination
 
 Статус: реалізовано; усунено помилковий запуск завантаження оновлення на старті програми, коли встановлена версія є вищою за віддалену, усунено залежність від `std::stringstream` у парсингу версій та оптимізовано шлях встановлення бінарника:
 1. **Причина проблеми**:

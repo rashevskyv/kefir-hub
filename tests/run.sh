@@ -38,6 +38,10 @@ echo "== ftpsrv patch shape check =="
 ./tests/test_patch_ftpsrv.sh || fail=1
 
 echo
+echo "== nand restore auto script contract check =="
+./tests/test_nand_restore_auto_contract.sh || fail=1
+
+echo
 if [ "$fail" -ne 0 ]; then
     echo "FAILED"
     exit 1

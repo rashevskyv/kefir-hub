@@ -3,23 +3,23 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# One-shot: Hub writes restore_pending/nand + nand_pack.txt, copies this to
-# sd:/startup.te. Mounts that SYSTEM, readsave + writeDir pack inner files into
-# existing 0010/0011/00F0/0041, commit() with this console's prod.keys, then
-# loads hekate. Does NOT copy raw SYSTEM:/save blobs onto BIS.
+# nand_transfer_restore_auto.te - Kefir Hub Profiles and Playtime Restore
+# Safe flat known-tree traversal (no recursive variable collisions)
+# Pre-checks fsexists before readfile (prevents fatal crashes)
+# Automatically creates missing files via saveObj.create before write
+# Single clean spinner at top-right (77, 0)
+# Strictly formatted fixed-width activity lines preventing screen overflow
+# Safety status reflects Hub Undo snapshot in restore_pending
+# Skips 0041 cache; restores only 0010, 0011, and optional 00F0
 
 goHekate = {
-    saveObj = dict()
-    raw = ["BYTE[]"]
-    text = ""
-    lines = []
-    bytes = ["BYTE[]"]
+    println("Cleaning temp flags...")
     delfile("sd:/startup.te")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
         copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
         delfile("sd:/bootloader/hekate_ipl.ini.bak")
     }
-    println("Loading hekate")
+    println("Loading hekate...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
@@ -38,77 +38,489 @@ goHekate = {
     }
 }
 
-writeDir = {
-    src = srcRoot
-    if (rel.len()) {
-        src = srcRoot + "/" + rel
-    }
-    listing = readdir(src)
-    if (listing.result) {
-        println("readdir fail", src)
-        errors = errors + 1
+# ------------------------------------------------------------------------------
+# SPINNER AND DASHBOARD GUI
+# ------------------------------------------------------------------------------
+
+upd_s = {
+    spinner()
+}
+
+drawDashboard = {
+    pos = getprintpos()
+
+    # Row 0: Clear top bar to eliminate white box glitch, draw title and single top-right hardware spinner
+    setpixels(0, 0, 1280, 16, 0x1B1B1B)
+    printpos(0, 0)
+    color(0x00FFFF)
+    print("=== Restore Profiles and Playtime | DIAG 4.2.13 ===")
+    spinner(1, 77, 0, 0x00FF00)
+
+    # Row 1: Source Pack
+    printpos(0, 1)
+    color(0xFFFFFF)
+    print("Source Pack:   ")
+    color(0xFFFF00)
+    print("sd:/config/kefir/nand_transfer/", packNameShort, "                  ")
+
+    # Row 2: Target & Safety Backup
+    printpos(0, 2)
+    color(0xFFFFFF)
+    print("Target: ")
+    color(0x00FF00)
+    print(targetName)
+    color(0xFFFFFF)
+    print("  |  Safety Backup: ")
+    color(colBackup)
+    print(statBackup, "                  ")
+
+    # Row 3: Separator
+    printpos(0, 3)
+    color(0x666666)
+    print("-----------------------------------------------------------------------------")
+
+    # Row 4: Header
+    printpos(0, 4)
+    color(0x00FFFF)
+    print("[TASK STATUS AND STATISTICS]")
+
+    # Row 5: Safety Backup
+    printpos(0, 5)
+    color(0xFFFFFF)
+    print("  Safety Backup:        ")
+    color(colBackup)
+    print(statBackup, "                           ")
+
+    # Row 6: 0010
+    printpos(0, 6)
+    color(0xFFFFFF)
+    print("  0010 (User Profiles): ")
+    color(col0010)
+    print(stat0010, "                           ")
+
+    # Row 7: 0011
+    printpos(0, 7)
+    color(0xFFFFFF)
+    print("  0011 (User ID Gen):   ")
+    color(col0011)
+    print(stat0011, "                           ")
+
+    # Row 8: 00F0
+    printpos(0, 8)
+    color(0xFFFFFF)
+    print("  00F0 (Play Hours):    ")
+    color(col00F0)
+    print(stat00F0, "                           ")
+
+    # Row 9: Total progress
+    printpos(0, 9)
+    color(0xFFFFFF)
+    print("  Total Progress:       ")
+    color(0x00FF00)
+    print(wrote, " files written")
+    color(0xFFFFFF)
+    print("  |  Errors: ")
+    if (errors == 0) {
+        color(0x00FF00)
     } .else() {
-        files = listing.files.copy()
-        subs = listing.folders.copy()
-        files.foreach("fname") {
-            fsrc = combinepath(src, fname)
-            fdst = "/" + fname
-            if (rel.len()) {
-                fdst = "/" + rel + "/" + fname
+        color(0xFF0000)
+    }
+    print(errors, " errors        ")
+
+    # Row 10: Separator
+    printpos(0, 10)
+    color(0x666666)
+    print("-----------------------------------------------------------------------------")
+
+    # Row 11: Activity line
+    printpos(0, 11)
+    color(0xFFFF00)
+    print("Activity: ")
+    color(0xFFFFFF)
+    print("Ready                                                               ")
+
+    # Row 12 belongs to native diagnostic stages; preserve its last result.
+
+    # Row 13: Event Log Separator
+    printpos(0, 13)
+    color(0x666666)
+    print("--- Event Log ---------------------------------------------------------------")
+
+    color(0xFFFFFF)
+    printpos(pos.x, pos.y)
+}
+
+drawProgress = {
+    upd_s()
+
+    # Clear activity row; preserve native diagnostic row 12.
+    printpos(0, 11)
+    print("                                                                             ")
+
+    # Truncate filename if long (> 25 characters) to prevent line wrap
+    fnameDisplay = curFileName
+    if (curFileName.len() > 25) {
+        cutLen = curFileName.len() - 22
+        fnameDisplay = (curFileName - cutLen) + "..."
+    }
+
+    printpos(0, 11)
+    color(0xFFFF00)
+    print("Activity: ")
+    color(0xFFFFFF)
+    print(curSaveShort, " (", curFileIdx, "/", curDirTotal, "): ", curDir, "/", fnameDisplay, "                  ")
+
+    # Live count update on row 9
+    printpos(24, 9)
+    color(0x00FF00)
+    print(wrote, " files written")
+    color(0xFFFFFF)
+    print("  |  Errors: ")
+    if (errors == 0) {
+        color(0x00FF00)
+    } .else() {
+        color(0xFF0000)
+    }
+    print(errors, " errors        ")
+    color(0xFFFFFF)
+}
+
+logMsg = {
+    if (logY > 38) {
+        logY = 14
+    }
+    printpos(0, logY)
+    print("                                                                             ")
+    printpos(0, logY)
+    color(colLog)
+    print(msg)
+    color(0xFFFFFF)
+    logY = logY + 1
+}
+
+# ------------------------------------------------------------------------------
+# RESTORE IMPLEMENTATION (FROM KEFIRHUB NAND_TRANSFER PACK)
+# ------------------------------------------------------------------------------
+
+restoreFilesInDir = {
+    dSrc = packSaveDir + curDir
+    if (curDir == "/") {
+        dSrc = packSaveDir
+    }
+
+    if (fsexists(dSrc)) {
+        dList = readdir(dSrc)
+        if (dList.result) {
+            msg = "  [FAIL] readdir failed: " + curDir + " rc=" + dList.result.str()
+            colLog = 0xFF0000
+            logMsg()
+            errors = errors + 1
+            saveErrors = saveErrors + 1
+        } .else() {
+            dFiles = dList.files.copy()
+            dTotal = dFiles.len()
+            dIdx = 0
+            if (dTotal) {
+                dFiles.foreach("dName") {
+                    dIdx = dIdx + 1
+                    fsrc = dSrc + "/" + dName
+                    if (curDir == "/") {
+                        fdst = "/" + dName
+                    } .else() {
+                        fdst = curDir + "/" + dName
+                    }
+
+                    curFileName = dName
+                    curFileIdx = dIdx
+                    curDirTotal = dTotal
+                    drawProgress()
+
+                    if (!fsexists(fsrc)) {
+                        msg = "  [SKIP] Missing: " + fsrc
+                        colLog = 0xFFFF00
+                        logMsg()
+                        errors = errors + 1
+                        saveErrors = saveErrors + 1
+                    } .else() {
+                        bytes = readfile(fsrc)
+                        upd_s()
+                        rc = saveObj.write(fdst, bytes)
+                        if (rc == 1) {
+                            # File does not exist yet in target save: create it
+                            cRc = saveObj.create(fdst, bytes.len())
+                            if (cRc) {
+                                rc = cRc
+                            } .else() {
+                                rc = saveObj.write(fdst, bytes)
+                            }
+                        }
+                        upd_s()
+                        if (rc) {
+                            msg = "  [FAIL] Write failed: " + fdst + " rc=" + rc.str()
+                            colLog = 0xFF0000
+                            logMsg()
+                            errors = errors + 1
+                            saveErrors = saveErrors + 1
+                        } .else() {
+                            wrote = wrote + 1
+                            saveFilesDone = saveFilesDone + 1
+                        }
+                    }
+                }
             }
-            println(fdst)
-            bytes = readfile(fsrc)
-            rc = saveObj.write(fdst, bytes)
-            if (rc) {
-                println("write fail", fdst, rc)
-                errors = errors + 1
-            } .else() {
-                wrote = wrote + 1
-            }
-        }
-        subs.foreach("dname") {
-            oldrel = rel
-            if (rel.len()) {
-                rel = rel + "/" + dname
-            } .else() {
-                rel = dname
-            }
-            writeDir()
-            rel = oldrel
         }
     }
 }
 
-restoreOne = {
-    srcRoot = combinepath(pack, saveId)
-    if (!fsexists(srcRoot)) {
-        println("skip pack", saveId)
+restoreSave0010 = {
+    curSaveId = "8000000000000010"
+    curSaveShort = "0010"
+    packSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(packSaveDir)) {
+        stat0010 = "[SKIPPED] (Not in pack)"
+        col0010 = 0x666666
+        drawDashboard()
     } .else() {
-        bis = combinepath("bis:/save", saveId)
         if (!fsexists(bis)) {
-            println("skip dest (no blob, will not create)", bis)
+            stat0010 = "[FAIL] (Target save missing)"
+            col0010 = 0xFF0000
+            drawDashboard()
             errors = errors + 1
         } .else() {
-            println("open", bis)
+            clear()
+            stat0010 = "[IN PROGRESS]"
+            col0010 = 0xFFFF00
+            drawDashboard()
+            logY = 14
+
+            msg = "  [*] Opening save 8000000000000010 (User Profiles)..."
+            colLog = 0x00FFFF
+            logMsg()
+            upd_s()
+
             saveObj = readsave(bis)
-            rel = ""
-            err_before = errors
-            writeDir()
-            if (errors > err_before) {
-                println("skip commit", saveId, "write errors")
+            saveFilesDone = 0
+            saveErrors = 0
+
+            curDir = "/"
+            restoreFilesInDir()
+            curDir = "/su"
+            restoreFilesInDir()
+            curDir = "/su/baas"
+            restoreFilesInDir()
+            curDir = "/su/nas"
+            restoreFilesInDir()
+            curDir = "/su/avators"
+            restoreFilesInDir()
+            curDir = "/su/cache"
+            restoreFilesInDir()
+
+            if (saveErrors == 0) {
+                msg = "  [*] Committing 8000000000000010..."
+                colLog = 0xFFFF00
+                logMsg()
+                upd_s()
+                commitRc = saveObj.commit()
+                if (commitRc) {
+                    errors = errors + 1
+                    saveErrors = saveErrors + 1
+                    stat0010 = "[FAILED] (Commit rc=" + commitRc.str() + ")"
+                    col0010 = 0xFF0000
+                    msg = "  [FAIL] Commit failed: 8000000000000010 rc=" + commitRc.str()
+                    colLog = 0xFF0000
+                    logMsg()
+                } .else() {
+                    stat0010 = "[RESTORED] (" + saveFilesDone.str() + " files)"
+                    col0010 = 0x00FF00
+                    restoredSaves = restoredSaves + 1
+                    msg = "  [OK] Profiles save committed successfully!"
+                    colLog = 0x00FF00
+                    logMsg()
+                }
+                upd_s()
+                saveObj.close()
+                saveObj = 0
             } .else() {
-                println("commit", saveId)
-                saveObj.commit()
-                restored = restored + 1
+                saveObj.close()
+                saveObj = 0
+                stat0010 = "[FAILED] (" + saveErrors.str() + " errors)"
+                col0010 = 0xFF0000
+                msg = "  [FAIL] Errors during restore, commit skipped!"
+                colLog = 0xFF0000
+                logMsg()
+            }
+            drawDashboard()
+        }
+    }
+}
+
+restoreSave0011 = {
+    curSaveId = "8000000000000011"
+    curSaveShort = "0011"
+    packSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!fsexists(packSaveDir)) {
+        stat0011 = "[SKIPPED] (Not in pack)"
+        col0011 = 0x666666
+        drawDashboard()
+    } .else() {
+        if (!fsexists(bis)) {
+            stat0011 = "[FAIL] (Target save missing)"
+            col0011 = 0xFF0000
+            drawDashboard()
+            errors = errors + 1
+        } .else() {
+            clear()
+            stat0011 = "[IN PROGRESS]"
+            col0011 = 0xFFFF00
+            drawDashboard()
+            logY = 14
+
+            msg = "  [*] Opening save 8000000000000011 (User ID Gen)..."
+            colLog = 0x00FFFF
+            logMsg()
+            upd_s()
+
+            saveObj = readsave(bis)
+            saveFilesDone = 0
+            saveErrors = 0
+
+            curDir = "/"
+            restoreFilesInDir()
+
+            if (saveErrors == 0) {
+                msg = "  [*] Committing 8000000000000011..."
+                colLog = 0xFFFF00
+                logMsg()
+                upd_s()
+                commitRc = saveObj.commit()
+                if (commitRc) {
+                    errors = errors + 1
+                    saveErrors = saveErrors + 1
+                    stat0011 = "[FAILED] (Commit rc=" + commitRc.str() + ")"
+                    col0011 = 0xFF0000
+                    msg = "  [FAIL] Commit failed: 8000000000000011 rc=" + commitRc.str()
+                    colLog = 0xFF0000
+                    logMsg()
+                } .else() {
+                    stat0011 = "[RESTORED] (" + saveFilesDone.str() + " file)"
+                    col0011 = 0x00FF00
+                    restoredSaves = restoredSaves + 1
+                    msg = "  [OK] User ID Gen committed successfully!"
+                    colLog = 0x00FF00
+                    logMsg()
+                }
+                upd_s()
+                saveObj.close()
+                saveObj = 0
+            } .else() {
+                saveObj.close()
+                saveObj = 0
+                stat0011 = "[FAILED] (" + saveErrors.str() + " errors)"
+                col0011 = 0xFF0000
+                msg = "  [FAIL] Errors during restore, commit skipped!"
+                colLog = 0xFF0000
+                logMsg()
+            }
+            drawDashboard()
+        }
+    }
+}
+
+restoreSave00F0 = {
+    curSaveId = "80000000000000F0"
+    curSaveShort = "00F0"
+    packSaveDir = pack + "/" + curSaveId
+    bis = "bis:/save/" + curSaveId
+
+    if (!do00F0) {
+        stat00F0 = "[SKIPPED] (Disabled by flag)"
+        col00F0 = 0x666666
+        drawDashboard()
+    } .else() {
+        if (!fsexists(packSaveDir)) {
+            stat00F0 = "[SKIPPED] (Not in pack)"
+            col00F0 = 0x666666
+            drawDashboard()
+        } .else() {
+            if (!fsexists(bis)) {
+                stat00F0 = "[FAIL] (Target save missing)"
+                col00F0 = 0xFF0000
+                drawDashboard()
+                errors = errors + 1
+            } .else() {
+                clear()
+                stat00F0 = "[IN PROGRESS]"
+                col00F0 = 0xFFFF00
+                drawDashboard()
+                logY = 14
+
+                msg = "  [*] Opening save 80000000000000F0 (Play Hours)..."
+                colLog = 0x00FFFF
+                logMsg()
+                upd_s()
+
+                saveObj = readsave(bis)
+                saveFilesDone = 0
+                saveErrors = 0
+
+                curDir = "/"
+                restoreFilesInDir()
+
+                if (saveErrors == 0) {
+                    msg = "  [*] Committing 80000000000000F0..."
+                    colLog = 0xFFFF00
+                    logMsg()
+                    upd_s()
+                    commitRc = saveObj.commit()
+                    if (commitRc) {
+                        errors = errors + 1
+                        saveErrors = saveErrors + 1
+                        stat00F0 = "[FAILED] (Commit rc=" + commitRc.str() + ")"
+                        col00F0 = 0xFF0000
+                        msg = "  [FAIL] Commit failed: 80000000000000F0 rc=" + commitRc.str()
+                        colLog = 0xFF0000
+                        logMsg()
+                    } .else() {
+                        stat00F0 = "[RESTORED] (" + saveFilesDone.str() + " files)"
+                        col00F0 = 0x00FF00
+                        restoredSaves = restoredSaves + 1
+                        msg = "  [OK] Play hours committed successfully!"
+                        colLog = 0x00FF00
+                        logMsg()
+                    }
+                    upd_s()
+                    saveObj.close()
+                    saveObj = 0
+                } .else() {
+                    saveObj.close()
+                    saveObj = 0
+                    stat00F0 = "[FAILED] (" + saveErrors.str() + " errors)"
+                    col00F0 = 0xFF0000
+                    msg = "  [FAIL] Errors during restore, commit skipped!"
+                    colLog = 0xFF0000
+                    logMsg()
+                }
+                drawDashboard()
             }
         }
     }
 }
 
+# ------------------------------------------------------------------------------
+# MAIN ENTRY POINT
+# ------------------------------------------------------------------------------
+
 clear()
-println("Kefir Hub: restore profiles & play hours")
-println("Encrypts pack files with THIS console keys, then signs.")
+color(0x00FFFF)
+println("=============================================================================")
+println(" TegraExplorer: Profiles and Playtime Restore                                ")
+println("=============================================================================")
 println("")
+color(0xFFFFFF)
 
 delfile("sd:/startup.te")
 if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
@@ -116,99 +528,280 @@ if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
 }
 
 pending = "sd:/config/kefir/restore_pending"
-nandf = combinepath(pending, "nand")
-packf = combinepath(pending, "nand_pack.txt")
+delfile(pending + "/nand_restored.ok")
 
+nandf = pending + "/nand"
+packf = pending + "/nand_pack.txt"
+
+# 1. Require NAND target flag
 if (!fsexists(nandf)) {
-    println("No NAND flag (emu/sys)")
-    println(nandf)
-    goHekate()
-    exit()
-}
-if (!fsexists(packf)) {
-    println("No pack path file")
-    println(packf)
+    color(0xFF0000)
+    println("ERROR: Missing NAND target flag: ", nandf)
+    color(0xFFFFFF)
+    pause()
     goHekate()
     exit()
 }
 
 raw = readfile(nandf)
-text = raw.bytestostr()
-if (text == "emu") {
-    println("NAND flag: emuMMC SYSTEM")
+nandType = raw.bytestostr()
+
+if (nandType == "emu") {
+    println("NAND Target: emuMMC SYSTEM")
+    targetName = "emuMMC SYSTEM"
     if (!emu()) {
-        println("No emuMMC")
+        color(0xFF0000)
+        println("ERROR: No emuMMC found on SD!")
+        color(0xFFFFFF)
+        pause()
         goHekate()
         exit()
     }
     rc = mountemu("SYSTEM")
 } .else() {
-    if (text != "sys") {
-        println("Bad NAND flag", text)
+    if (nandType == "sys") {
+        println("NAND Target: sysMMC SYSTEM")
+        targetName = "sysMMC SYSTEM"
+        rc = mountsys("SYSTEM")
+    } .else() {
+        color(0xFF0000)
+        println("ERROR: Invalid NAND flag: ", nandType)
+        color(0xFFFFFF)
+        pause()
         goHekate()
         exit()
     }
-    println("NAND flag: sysMMC SYSTEM")
-    rc = mountsys("SYSTEM")
 }
+
 if (rc) {
-    println("SYSTEM mount failed", rc)
+    color(0xFF0000)
+    println("ERROR: SYSTEM partition mount failed rc: ", rc)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+# 2. Require and validate exact pack path (direct child of /config/kefir/nand_transfer)
+if (!fsexists(packf)) {
+    color(0xFF0000)
+    println("ERROR: Missing pack path file: ", packf)
+    color(0xFFFFFF)
+    pause()
     goHekate()
     exit()
 }
 
 raw = readfile(packf)
 rel = raw.bytestostr()
+
+if (rel.len() == 0) {
+    color(0xFF0000)
+    println("ERROR: Pack path file is empty!")
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+bks = rel.split("\\")
+if (bks.len() != 1) {
+    color(0xFF0000)
+    println("ERROR: Pack path contains backslash: ", rel)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+parts = rel.split("/")
+if (parts.len() != 5) {
+    color(0xFF0000)
+    println("ERROR: Malformed pack path structure: ", rel)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+if (parts[0] != "" || parts[1] != "config" || parts[2] != "kefir" || parts[3] != "nand_transfer") {
+    color(0xFF0000)
+    println("ERROR: Pack path outside /config/kefir/nand_transfer: ", rel)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+packNameShort = parts[4]
+if (packNameShort.len() == 0 || packNameShort == "." || packNameShort == "..") {
+    color(0xFF0000)
+    println("ERROR: Invalid pack folder name: ", packNameShort)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
 pack = "sd:" + rel
-println("pack:", pack)
 
 if (!fsexists(pack)) {
-    println("Pack folder missing")
-    goHekate()
-    exit()
-}
-if (!fsexists(combinepath(pack, "80000000000000F0")) && !fsexists(combinepath(pack, "8000000000000010"))) {
-    println("Not a profiles & play hours pack")
+    color(0xFF0000)
+    println("ERROR: Selected pack directory does not exist: ", pack)
+    color(0xFFFFFF)
+    pause()
     goHekate()
     exit()
 }
 
-wrote = 0
-errors = 0
-restored = 0
+if (!fsexists(pack + "/8000000000000010") && !fsexists(pack + "/80000000000000F0")) {
+    color(0xFF0000)
+    println("ERROR: Not a valid profiles & play hours pack: ", pack)
+    color(0xFFFFFF)
+    pause()
+    goHekate()
+    exit()
+}
+
+# 3. Play Hours Flag Check
 do00F0 = 1
-flagf = combinepath(pending, "restore_00F0")
+flagf = pending + "/restore_00F0"
 if (fsexists(flagf)) {
     raw = readfile(flagf)
-    text = raw.bytestostr()
-    if (text == "0") {
+    flagText = raw.bytestostr()
+    if (flagText == "0") {
         do00F0 = 0
         println("Play hours flag: skip 00F0")
     }
 }
-ids = ["8000000000000010", "8000000000000011", "80000000000000F0", "8000000000000041"]
-ids.foreach("saveId") {
-    if (saveId == "80000000000000F0") {
-        if (do00F0) {
-            restoreOne()
-        } .else() {
-            println("skip play hours (restore_00F0=0)")
-        }
+
+# 4. Check Hub Undo Safety Snapshots
+snap0010 = pending + "/8000000000000010"
+snap00F0 = pending + "/80000000000000F0"
+hasSnap0010 = fsexists(snap0010)
+hasSnap00F0 = fsexists(snap00F0)
+needsSnap0010 = fsexists(pack + "/8000000000000010")
+needsSnap00F0 = do00F0 && fsexists(pack + "/80000000000000F0")
+hasRelevantSnap = (needsSnap0010 && hasSnap0010) || (needsSnap00F0 && hasSnap00F0)
+
+hubSnapOk = needsSnap0010 || needsSnap00F0
+if (needsSnap0010 && !hasSnap0010) {
+    hubSnapOk = 0
+}
+if (needsSnap00F0 && !hasSnap00F0) {
+    hubSnapOk = 0
+}
+
+if (hubSnapOk) {
+    statBackup = "[RETAINED] restore_pending"
+    colBackup = 0x00FF00
+} .else() {
+    if (hasRelevantSnap) {
+        statBackup = "[PARTIAL] restore_pending"
+        colBackup = 0xFFFF00
     } .else() {
-        restoreOne()
+        statBackup = "[WARN] None (use Hekate)"
+        colBackup = 0xFFFF00
     }
 }
 
-println("")
-println("wrote", wrote, "errors", errors, "saves", restored)
-if (errors || !restored) {
-    println("Restore incomplete. Raw 0010/00F0 snapshots kept for Undo if present.")
-    println("If Atmosphere fails to boot: hekate SYSTEM restore or Undo_restore_if_wont_boot.te")
-    goHekate()
-    exit()
+wrote = 0
+errors = 0
+restoredSaves = 0
+expectedSaves = 0
+
+if (needsSnap0010) {
+    expectedSaves = expectedSaves + 1
+}
+if (fsexists(pack + "/8000000000000011")) {
+    expectedSaves = expectedSaves + 1
+}
+if (needsSnap00F0) {
+    expectedSaves = expectedSaves + 1
 }
 
-writefile(combinepath(pending, "nand_restored.ok"), ["BYTE[]", 79, 75])
-println("Profiles & play hours restored.")
-println("Loading hekate.")
+curFileName = ""
+curFileIdx = 0
+curDirTotal = 0
+curDir = ""
+curSaveId = ""
+curSaveShort = ""
+stat0010 = "[PENDING]"
+col0010 = 0x666666
+stat0011 = "[PENDING]"
+col0011 = 0x666666
+stat00F0 = "[PENDING]"
+col00F0 = 0x666666
+
+clear()
+drawDashboard()
+logY = 14
+
+if (hubSnapOk) {
+    msg = "  [i] Hub Undo snapshot verified in restore_pending."
+    colLog = 0x00FF00
+    logMsg()
+} .else() {
+    if (hasRelevantSnap) {
+        msg = "  [WARN] Partial Hub snapshot in restore_pending (check Hekate backup)."
+        colLog = 0xFFFF00
+        logMsg()
+    } .else() {
+        msg = "  [WARN] No Hub snapshot in restore_pending! Rely on Hekate backup."
+        colLog = 0xFFFF00
+        logMsg()
+    }
+}
+
+# 1. Restore 0010 (Accounts/Profiles)
+restoreSave0010()
+
+# 2. Restore 0011 (User ID Generator)
+restoreSave0011()
+
+# 3. Restore 00F0 (Play Hours)
+restoreSave00F0()
+
+# Keep earlier error messages visible on the final screen.
+println("Files written: ", wrote, " Errors: ", errors, " Saves committed: ", restoredSaves)
+
+if (errors == 0 && restoredSaves > 0 && restoredSaves == expectedSaves) {
+    writefile(pending + "/nand_restored.ok", ["BYTE[]", 79, 75])
+    colLog = 0x00FF00
+    msg = "=== RESTORE COMPLETED SUCCESSFULLY! ==="
+    logMsg()
+    msg = "User profiles, accounts, and play hours are now restored."
+    logMsg()
+} .else() {
+    colLog = 0xFF0000
+    msg = "=== WARNING: RESTORE COMPLETED WITH ERRORS! ==="
+    logMsg()
+    msg = "Check logs above. Failed saves were not committed."
+    logMsg()
+    if (hasRelevantSnap) {
+        msg = "Hub Undo snapshot retained: restore_pending/"
+        logMsg()
+        msg = "If console won't boot: run Undo_restore_if_wont_boot.te"
+        logMsg()
+    } .else() {
+        msg = "No Hub Undo snapshot. Restore Hekate SYSTEM backup if needed."
+        logMsg()
+    }
+}
+
+colLog = 0xFFFFFF
+msg = ""
+logMsg()
+if (hasRelevantSnap) {
+    msg = "Hub Undo snapshot: restore_pending/"
+    logMsg()
+} .else() {
+    msg = "No Hub Undo snapshot; rely on Hekate SYSTEM backup."
+    logMsg()
+}
+msg = "Press A to reboot to Hekate"
+logMsg()
+
+spinner(0)
+pause()
 goHekate()

@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.786** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.787** (2026-09-09). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.787 — restore exact selected NAND transfer pack through TegraExplorer
+
+- У Kefir Hub вбудовано перевірений restore-скрипт TegraExplorer для перенесення профілів і playtime.
+- Hub передає шлях саме вибраного користувачем `nand_transfer/<pack>` через `restore_pending/nand_pack.txt`; скрипт суворо перевіряє шлях і не шукає інші або «останні» пакети.
+- 0010, 0011 та опційний 00F0 відновлюються через відомі дерева з перевіркою read/create/write/commit; успішний маркер створюється лише після повного restore без помилок.
+- Undo-статус звіряється лише з релевантними сейвами вибраного пакета. Додано контрактний shell-тест і його запуск у загальному test runner.
+- Основний варіант скрипта пройшов повний набір host tests і NRO-збірку; фінальну малу правку версії/status після delivery collision не компілювали за policy. Апаратний тест 0.13.787 очікується.
 
 ## v0.13.786 — harden remote update check, stream-free version parsing and auto-update install destination
 

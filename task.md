@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.786** (harden remote update check, stream-free version parsing and auto-update install destination). Завершені задачі збережено в
+Актуальний delivery — **v0.13.787** (restore exact selected NAND transfer pack through TegraExplorer). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.786 (harden remote update check, stream-free version parsing and auto-update install destination)
+## Поточний delivery: v0.13.787 (restore exact selected NAND transfer pack through TegraExplorer)
+
+- [x] `NAND-RESTORE-EXACT-PACK-787` — приймати лише точний вибраний Hub каталог `nand_transfer/<pack>` без scan/latest fallback.
+- [x] `NAND-RESTORE-PROVEN-TE-787` — вбудувати перевірений TegraExplorer restore flow для 0010, 0011 та опційного 00F0 з контрольованими write/commit.
+- [x] `NAND-RESTORE-UNDO-TRUTH-787` — показувати Undo snapshot лише для сейвів, яких реально потребує вибраний пакет, і не заявляти rollback раніше успішних commit.
+- [x] `NAND-RESTORE-CONTRACT-TEST-787` — додати мінімальний структурний contract test та підключити його до `tests/run.sh`.
+- [x] `CMAKELISTS-VERSION-BUMP-787` — підняти `sphaira_VERSION` до `0.13.787`.
+- [x] `DOCS-BUMP-787` — синхронізувати `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HARDWARE-RESTORE-787` — зібрати/встановити актуальний NRO і перевірити restore через Kefir Hub на консолі.
+
+## Попередній delivery: v0.13.786 (harden remote update check, stream-free version parsing and auto-update install destination)
 
 - [x] `UPDATE-VERSION-COMPARE-STREAM-FREE-786` — у `sphaira/include/version_compare.hpp` функцію `version::Parse` переписано на чистий вказівниковий цикл без використання `std::stringstream`, усунено залежність від iostreams та потенційні збої ініціалізації потоків.
 - [x] `UPDATE-IS-NEWER-FAILSAFE-786` — додано `version::IsNewer(current, candidate)` з суворою перевіркою числових компонентів; якщо будь-яка з версій не містить числових частин або є некоректною, функція безпечно повертає `false` (fail-safe від хибного оновлення `0.0.0 < remote`).
