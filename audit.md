@@ -1,13 +1,15 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.796**. Дата: 2026-09-09.
+Канонічний робочий файл. Версія коду: **v0.13.797**. Дата: 2026-09-10.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
-`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-07:
-12146 nodes, 22312 edges, 791 communities; HTML/REPORT цим incremental run не регенерувалися.
+`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-09:
+12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.797 поза ponytail-чергою: посилено remote NAND receive/restore із атомарним `.part`/`_staging_*` flow, size validation для архівів і кожного directory file, rollback поточного transfer при cancel/error/mismatch, валідацією `IsPackArchive`/`IsPack` до success або restore prompt та collision-safe final rename; NAND directory flow перевикористовує `ParseManifestResponse`; `users_restore.cpp` переведено на спільний `ConnectConsoleTransfer` без duplicate IP/swkbd/port probing; `/list` структурно валідується через `yyjson`; додано окремий i18n error для profiles & play hours list; версію піднято до 0.13.797. `git diff --check` і JSON parsing пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.796 поза ponytail-чергою: реалізовано прийом («Receive from another console») та відновлення («Restore from another console») резервних копій профілів та годин гри з іншої консолі через Console Transfer без ручного копіювання файлів; уніфікований ConnectConsoleTransfer (перевірка Wi-Fi, підстановка підмережі в swkbd, зондування портів 8080..8090); OpenRemoteNandTransfer з PopupList, хмарними мітками SetRemoteMarkers, парсингом yyjson та атомарним завантаженням DownloadRemoteNandPacks; локальний PromptNandPackRestore із розпізнаванням сейву 00F0 через nand_transfer::ListPacks; знято блокування контекстного меню при порожньому списку локальних бекапів у NandPackLibraryMenu; додано пункти переміщення консолі в бічне меню users_menu.cpp (CONSOLE MOVE); додано переклади у en.json, uk.json, ru.json; версію піднято до 0.13.796; оновлено README.md. Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

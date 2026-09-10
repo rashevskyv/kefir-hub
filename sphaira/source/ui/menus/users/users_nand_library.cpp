@@ -17,6 +17,7 @@
 #include "ui/sidebar.hpp"
 #include "download.hpp"
 #include "ui/popup_list.hpp"
+#include "ui/menus/users/users_restore_remote.hpp"
 #include <yyjson.h>
 
 #include <algorithm>
@@ -800,19 +801,26 @@ void DownloadRemoteNandPacks(
     std::function<void(const std::string& last_pack_path)> on_complete)
 {
     auto last_path = std::make_shared<std::string>();
+    auto downloaded_count = std::make_shared<size_t>(0);
+    const size_t total_count = packs.size();
 
     App::Push<ProgressBox>(0, "Downloading profiles & play hours backup..."_i18n, "",
-        [base_url, packs, last_path](auto pbox) -> Result {
+        [base_url, packs, last_path, downloaded_count](auto pbox) -> Result {
             fs::FsNativeSd sd;
             const std::string root_dst = paths::DATA_ROOT + "/nand_transfer";
             R_TRY(sd.CreateDirectoryRecursively(root_dst.c_str()));
 
-            std::vector<std::string> temp_files;
-            bool ok = false;
+            std::string active_part_file;
+            std::string active_staging_dir;
+            bool success = false;
+
             ON_SCOPE_EXIT({
-                if (!ok) {
-                    for (const auto& f : temp_files) {
-                        sd.DeleteFile(f.c_str());
+                if (!success) {
+                    if (!active_part_file.empty()) {
+                        sd.DeleteFile(active_part_file.c_str());
+                    }
+                    if (!active_staging_dir.empty()) {
+                        sd.DeleteDirectoryRecursively(active_staging_dir.c_str());
                     }
                 }
             });
@@ -827,6 +835,10 @@ void DownloadRemoteNandPacks(
                 pbox->NewTransfer(title);
 
                 if (pack.is_archive) {
+                    if (pack.size <= 0) {
+                        return Result_FsInvalidType;
+                    }
+
                     std::string stem = pack.name;
                     std::string ext = ".zip";
                     if (stem.ends_with(".kefir-nand.zip")) {
@@ -844,7 +856,7 @@ void DownloadRemoteNandPacks(
                     }
 
                     const std::string part_path = target + ".part";
-                    temp_files.push_back(part_path);
+                    active_part_file = part_path;
 
                     curl::Api dl_api;
                     dl_api.SetOption(curl::Url{base_url + "/download?path=" + curl::EscapeString(pack.remote_path)});
@@ -854,65 +866,116 @@ void DownloadRemoteNandPacks(
                     if (pbox->ShouldExit()) return Result_TransferCancelled;
                     if (!dl_res.success) return Result_FsInvalidType;
 
+                    fs::File file;
+                    s64 written_size = 0;
+                    if (R_FAILED(sd.OpenFile(part_path.c_str(), FsOpenMode_Read, &file)) ||
+                        R_FAILED(file.GetSize(&written_size)) ||
+                        written_size != pack.size) {
+                        return Result_FsInvalidType;
+                    }
+                    file.Close();
+
                     R_TRY(sd.RenameFile(part_path.c_str(), target.c_str()));
+                    active_part_file.clear();
+
+                    if (!nand_transfer::IsPackArchive(target)) {
+                        sd.DeleteFile(target.c_str());
+                        return Result_FsInvalidType;
+                    }
+
                     *last_path = target;
+                    (*downloaded_count)++;
                 } else {
+                    const std::string manifest_url = base_url + "/list-recursive?path=" + curl::EscapeString(pack.remote_path);
                     curl::Api list_api;
-                    list_api.SetOption(curl::Url{base_url + "/list-recursive?path=" + curl::EscapeString(pack.remote_path)});
+                    list_api.SetOption(curl::Url{manifest_url});
                     list_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) { return !pbox->ShouldExit(); }});
                     const auto list_res = curl::ToMemory(list_api);
                     if (pbox->ShouldExit()) return Result_TransferCancelled;
                     if (!list_res.success || list_res.data.empty()) return Result_FsInvalidType;
 
-                    yyjson_doc* doc = yyjson_read((const char*)list_res.data.data(), list_res.data.size(), 0);
-                    if (!doc) return Result_FsInvalidType;
-                    ON_SCOPE_EXIT(yyjson_doc_free(doc));
-
-                    yyjson_val* files_arr = yyjson_doc_get_root(doc);
-                    if (!yyjson_is_arr(files_arr)) return Result_FsInvalidType;
-
-                    std::string target_dir = root_dst + "/" + pack.name;
-                    int suffix = 1;
-                    while (sd.DirExists(target_dir.c_str()) || sd.FileExists(target_dir.c_str())) {
-                        target_dir = root_dst + "/" + pack.name + "_" + std::to_string(suffix++);
+                    const std::string manifest_json(list_res.data.begin(), list_res.data.end());
+                    const auto files_opt = ParseManifestResponse(manifest_json, pack.remote_path);
+                    if (!files_opt || files_opt->empty()) {
+                        return Result_FsInvalidType;
                     }
-                    R_TRY(sd.CreateDirectoryRecursively(target_dir.c_str()));
+                    const auto& files = *files_opt;
 
-                    std::string root_prefix = pack.remote_path;
-                    if (!root_prefix.empty() && root_prefix.back() != '/') root_prefix += '/';
+                    std::string safe_name = pack.name;
+                    while (!safe_name.empty() && (safe_name.back() == '/' || safe_name.back() == '\\')) {
+                        safe_name.pop_back();
+                    }
+                    if (const auto slash = safe_name.find_last_of("/\\"); slash != std::string::npos) {
+                        safe_name.erase(0, slash + 1);
+                    }
+                    if (safe_name.empty()) {
+                        safe_name = "nand_pack";
+                    }
 
-                    size_t f_idx, f_max;
-                    yyjson_val* f_item;
-                    yyjson_arr_foreach(files_arr, f_idx, f_max, f_item) {
+                    std::string staging_dir = root_dst + "/_staging_" + safe_name + "_" + std::to_string(i);
+                    int stg_suffix = 1;
+                    while (sd.DirExists(staging_dir.c_str()) || sd.FileExists(staging_dir.c_str())) {
+                        staging_dir = root_dst + "/_staging_" + safe_name + "_" + std::to_string(i) + "_" + std::to_string(stg_suffix++);
+                    }
+
+                    R_TRY(sd.CreateDirectoryRecursively(staging_dir.c_str()));
+                    active_staging_dir = staging_dir;
+
+                    for (const auto& f : files) {
                         if (pbox->ShouldExit()) return Result_TransferCancelled;
-                        const char* f_path = yyjson_get_str(yyjson_obj_get(f_item, "path"));
-                        if (!f_path || !*f_path) continue;
-                        std::string f_str = f_path;
-                        if (!f_str.starts_with(root_prefix)) continue;
-                        std::string rel = f_str.substr(root_prefix.size());
-                        if (rel.empty() || rel.find("..") != std::string::npos) continue;
+                        if (f.size < 0) return Result_FsInvalidType;
 
-                        std::string dest_path = target_dir + "/" + rel;
+                        const std::string dest_path = staging_dir + "/" + f.rel_path;
                         R_TRY(sd.CreateDirectoryRecursivelyWithPath(dest_path.c_str()));
 
-                        pbox->NewTransfer(rel);
+                        pbox->NewTransfer(title + ": " + f.rel_path);
+
                         curl::Api dl_api;
-                        dl_api.SetOption(curl::Url{base_url + "/download?path=" + curl::EscapeString(f_str)});
+                        dl_api.SetOption(curl::Url{base_url + "/download?path=" + curl::EscapeString(f.remote_path)});
                         dl_api.SetOption(curl::Path{dest_path});
                         dl_api.SetOption(curl::OnProgress{pbox->OnDownloadProgressCallback()});
                         const auto dl_res = curl::ToFile(dl_api);
                         if (pbox->ShouldExit()) return Result_TransferCancelled;
                         if (!dl_res.success) return Result_FsInvalidType;
+
+                        fs::File file;
+                        s64 written_size = 0;
+                        if (R_FAILED(sd.OpenFile(dest_path.c_str(), FsOpenMode_Read, &file)) ||
+                            R_FAILED(file.GetSize(&written_size)) ||
+                            written_size != f.size) {
+                            return Result_FsInvalidType;
+                        }
+                        file.Close();
                     }
+
+                    if (!nand_transfer::IsPack(staging_dir)) {
+                        return Result_FsInvalidType;
+                    }
+
+                    std::string target_dir = root_dst + "/" + safe_name;
+                    int suffix = 1;
+                    while (sd.DirExists(target_dir.c_str()) || sd.FileExists(target_dir.c_str())) {
+                        target_dir = root_dst + "/" + safe_name + "_" + std::to_string(suffix++);
+                    }
+
+                    R_TRY(sd.RenameDirectory(staging_dir.c_str(), target_dir.c_str()));
+                    active_staging_dir.clear();
+
+                    if (!nand_transfer::IsPack(target_dir)) {
+                        sd.DeleteDirectoryRecursively(target_dir.c_str());
+                        return Result_FsInvalidType;
+                    }
+
                     *last_path = target_dir;
+                    (*downloaded_count)++;
                 }
             }
-            ok = true;
+            success = true;
             return Result_Success;
         },
-        [on_complete, last_path](Result rc) {
+        [on_complete, last_path, downloaded_count, total_count](Result rc) {
             if (rc == Result_TransferCancelled) return;
-            if (R_FAILED(rc) || last_path->empty()) {
+            if (R_FAILED(rc) || *downloaded_count == 0 || *downloaded_count != total_count) {
                 App::Push<OptionBox>("Failed to download backup files from the sending console."_i18n, "OK"_i18n);
                 return;
             }
@@ -980,7 +1043,11 @@ void OpenRemoteNandTransfer(
             },
             [base_url, remote_packs, mode, on_restore, on_refresh](Result rc) {
                 if (rc == Result_TransferCancelled) return;
-                if (R_FAILED(rc) || remote_packs->empty()) {
+                if (R_FAILED(rc)) {
+                    App::Push<OptionBox>("Could not retrieve the profiles & play hours backup list from the sending console."_i18n, "OK"_i18n);
+                    return;
+                }
+                if (remote_packs->empty()) {
                     App::Push<OptionBox>("No profiles & play hours backups found on the sending console."_i18n, "OK"_i18n);
                     return;
                 }
@@ -1025,14 +1092,18 @@ void OpenRemoteNandTransfer(
 
                     DownloadRemoteNandPacks(base_url, to_download, [mode, on_restore, on_refresh](const std::string& last_path) {
                         if (mode == NandLibraryMode::Restore) {
-                            bool save_00f0 = false;
+                            std::optional<nand_transfer::PackInfo> matched_pack;
                             for (const auto& p : nand_transfer::ListPacks()) {
                                 if (p.dir == last_path) {
-                                    save_00f0 = p.save_00F0;
+                                    matched_pack = p;
                                     break;
                                 }
                             }
-                            PromptNandPackRestore(last_path, save_00f0, on_restore);
+                            if (!matched_pack) {
+                                App::Push<OptionBox>("Downloaded backup is incomplete or invalid."_i18n, "OK"_i18n);
+                                return;
+                            }
+                            PromptNandPackRestore(matched_pack->dir, matched_pack->save_00F0, on_restore);
                         } else {
                             App::Push<OptionBox>("Backup received successfully."_i18n, "OK"_i18n);
                             if (on_refresh) on_refresh();

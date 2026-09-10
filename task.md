@@ -1,9 +1,21 @@
-Актуальний delivery — **v0.13.796** (Receive and restore profiles & play hours backups from another console). Завершені задачі збережено в
+Актуальний delivery — **v0.13.797** (Safe and shared remote NAND backup transfer). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.796 (Receive and restore profiles & play hours backups from another console)
+## Поточний delivery: v0.13.797 (Safe and shared remote NAND backup transfer)
+
+- [x] `NAND-REMOTE-ATOMIC-797` — архіви завантажуються у `.part`, перевіряються за розміром і валідуються після атомарного rename; directory packs завантажуються через `_staging_*` з rollback.
+- [x] `NAND-REMOTE-SIZE-797` — перевіряється фактичний розмір архіву та кожного файлу directory manifest; усі незавершені артефакти видаляються при cancel/error/mismatch.
+- [x] `CONSOLE-TRANSFER-REUSE-797` — `users_restore.cpp` переведено на спільний `ConnectConsoleTransfer`; дубльовані IP/swkbd/port-probe видалено.
+- [x] `REMOTE-MANIFEST-VALIDATE-797` — NAND directory flow перевикористовує `ParseManifestResponse` та відхиляє malformed/unsafe/порожні manifests.
+- [x] `REMOTE-API-VALIDATE-797` — `ConnectConsoleTransfer` валідує `/list` через `yyjson` як object з array `entries`.
+- [x] `I18N-REMOTE-ERROR-797` — до `en.json`, `uk.json`, `ru.json` додано окрему помилку отримання списку profiles & play hours.
+- [x] `CMAKELISTS-VERSION-BUMP-797` — `sphaira_VERSION` піднято до `0.13.797`.
+- [x] `DOCS-BUMP-797` — синхронізовано `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготовано focused commit.
+- [ ] `HARDWARE-VERIFY-797` — користувацька збірка та перевірка receive/restore для archive і directory pack на двох консолях.
+
+## Попередній delivery: v0.13.796 (Receive and restore profiles & play hours backups from another console)
 
 - [x] `REMOTE-CONNECT-HELPER-796` — реалізовано загальну функцію `ConnectConsoleTransfer` у `install_share.hpp`/`install_share.cpp` (перевірка мережі, введення IP з автопідстановкою підмережі через `swkbd`, зондування портів 8080..8090).
 - [x] `NAND-LIB-RECEIVE-REMOTE-796` — реалізовано `OpenRemoteNandTransfer` (режим `NandLibraryMode::Manage`), завантаження бекапів у `/config/kefir/nand_transfer/` безпосередньо через `DownloadRemoteNandPacks` та інтеграцію пункту «Receive from another console» у `Manage Backups`.

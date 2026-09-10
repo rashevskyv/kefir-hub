@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.796** (2026-09-09). Попередні
+Актуальний delivery — **v0.13.797** (2026-09-10). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.797 — Safe and shared remote NAND backup transfer
+
+- **Атомарні archive та directory transfers**:
+  - NAND ZIP спочатку пишеться у `.part`; після size check файл атомарно отримує фінальне `.zip`-ім'я і проходить `nand_transfer::IsPackArchive`. Невалідний target видаляється.
+  - Directory pack збирається у ізольованій `_staging_*`-папці. Спільний `ParseManifestResponse` валідує кожен шлях і очікуваний розмір; після повної перевірки pack перейменовується у collision-safe фінальну папку.
+  - Cancel, network/SD error, size mismatch, unsafe manifest і invalid pack прибирають активний `.part` або staging directory. У `Receive All` вже завершені валідні packs зберігаються, а поточний незавершений pack відкочується.
+- **Спільний transport замість duplicate probe code**:
+  - `users_restore.cpp` переведено на `ConnectConsoleTransfer`; локальні копії network requirement, `swkbd`, trim, URL candidates та циклу портів 8080..8090 видалено.
+  - `ConnectConsoleTransfer` тепер перевіряє `/list` як JSON object з array `entries` через `yyjson`, а не просто приймає будь-який HTTP endpoint.
+- **Restore і UX**:
+  - `PromptNandPackRestore` запускається лише для pack, який успішно валідовано та знайдено у `nand_transfer::ListPacks()`; `save_00F0` береться з фактичного `PackInfo`.
+  - До `en.json`, `uk.json`, `ru.json` додано окреме повідомлення про помилку отримання списку profiles & play hours.
+- **Версія та перевірка**: `sphaira_VERSION` піднято до `0.13.797`; `git diff --check` і JSON parsing трьох змінених словників пройшли. Compile/tests/NRO не запускалися за policy.
 
 ## v0.13.796 — Receive and restore profiles & play hours backups from another console
 

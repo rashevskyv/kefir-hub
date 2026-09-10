@@ -1,8 +1,24 @@
-Поточний delivery — **v0.13.796** (Receive and restore profiles & play hours backups from another console). Завершені плани збережено в
+Поточний delivery — **v0.13.797** (Safe and shared remote NAND backup transfer). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.796 — Receive and restore profiles & play hours backups from another console
+## Поточний delivery: v0.13.797 — Safe and shared remote NAND backup transfer
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
+1. **Атомарне завантаження NAND-бекапів**:
+   - Архіви завантажуються у `.part`, перевіряються за оголошеним розміром, атомарно перейменовуються у фінальне `.zip`-ім'я і лише тоді валідуються через `nand_transfer::IsPackArchive`.
+   - Папки завантажуються у `_staging_*`; кожен файл звіряється з розміром з `/list-recursive`, а валідний pack перейменовується у фінальну collision-safe папку.
+   - Cancel, HTTP/FS error, size mismatch, unsafe manifest або невалідна структура видаляють поточний незавершений transfer без зачіпання наявних бекапів.
+2. **Спільний Console Transfer flow**:
+   - `ConnectConsoleTransfer` структурно перевіряє `/list` через `yyjson` і приймає лише JSON object з масивом `entries`.
+   - Старий remote user-backup flow тепер також викликає `ConnectConsoleTransfer`; дубльоване введення IP та зондування портів видалено.
+   - Спільний `ParseManifestResponse` відхиляє порожні, malformed та небезпечні шляхи замість мовчазного створення часткового pack.
+3. **Завершення restore та UX**:
+   - `PromptNandPackRestore` відкривається лише після того, як завантажений pack пройшов валідацію і знайдений у `nand_transfer::ListPacks()` з точним `save_00F0`.
+   - Помилка списку NAND-бекапів має окремий локалізований текст у `en.json`, `uk.json`, `ru.json`.
+4. **Версія**: `sphaira_VERSION` піднято до `0.13.797`. Збірка та апаратна перевірка не запускалися за policy.
+
+## Попередній delivery: v0.13.796 — Receive and restore profiles & play hours backups from another console
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Прийом бекапів з іншої консолі («Receive from another console»)**:

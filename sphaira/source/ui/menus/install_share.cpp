@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <yyjson.h>
 
 namespace sphaira::ui::menu {
 namespace {
@@ -423,15 +424,29 @@ void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_
                     }
                     pbox->SetTransfer(url);
                     curl::Api api;
-                    api.SetOption(curl::Url{url});
+                    api.SetOption(curl::Url{url + "/list"});
                     api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
                         return !pbox->ShouldExit();
                     }});
-                    const auto res = curl::Probe(api, curl::ProbeType::Http);
-                    if (res.success) {
-                        *responding_url = url;
-                        *probed_ok = true;
-                        break;
+                    const auto res = curl::ToMemory(api);
+                    if (pbox->ShouldExit()) {
+                        return pbox->ShouldExitResult();
+                    }
+                    if (res.success && res.code == 200 && !res.data.empty()) {
+                        yyjson_doc* doc = yyjson_read(reinterpret_cast<const char*>(res.data.data()), res.data.size(), 0);
+                        if (doc) {
+                            yyjson_val* root = yyjson_doc_get_root(doc);
+                            if (yyjson_is_obj(root)) {
+                                yyjson_val* entries = yyjson_obj_get(root, "entries");
+                                if (yyjson_is_arr(entries)) {
+                                    *responding_url = url;
+                                    *probed_ok = true;
+                                    yyjson_doc_free(doc);
+                                    break;
+                                }
+                            }
+                            yyjson_doc_free(doc);
+                        }
                     }
                 }
 

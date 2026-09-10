@@ -2,6 +2,7 @@
 #include "ui/menus/users/users_internal.hpp"
 #include "ui/menus/users/users_restore_library.hpp"
 #include "ui/menus/users/users_restore_remote.hpp"
+#include "ui/menus/install_share.hpp"
 
 #include "account/account_link.hpp"
 #include "account/account_restore.hpp"
@@ -14,8 +15,6 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
-#include "net.hpp"
-#include "swkbd.hpp"
 #include "ui/list.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/menu_base.hpp"
@@ -187,87 +186,18 @@ private:
     }
 
     void ProbeOtherConsole() {
-        net::RequireConnection([this](){
-            u32 ip{};
-            std::string initial_prefix;
-            if (R_SUCCEEDED(nifmGetCurrentIpAddress(&ip)) && ip != 0) {
-                char prefix[32]{};
-                std::snprintf(prefix, sizeof(prefix), "%u.%u.%u.",
-                    ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF);
-                initial_prefix = prefix;
-            }
-
-            std::string input;
-            if (R_FAILED(swkbd::ShowText(input, "Enter sending console IP address"_i18n.c_str(),
-                    initial_prefix.empty() ? nullptr : initial_prefix.c_str())) || input.empty()) {
-                return;
-            }
-            while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
-                input.erase(input.begin());
-            }
-            while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
-                input.pop_back();
-            }
-            if (input.empty()) {
-                return;
-            }
-
-            auto responding_url = std::make_shared<std::string>();
-            auto probed_ok = std::make_shared<bool>(false);
+        ConnectConsoleTransfer([this](const std::string& base_url) {
             auto list_ok = std::make_shared<bool>(false);
             auto remote_entries = std::make_shared<std::vector<RemoteUserPacksEntry>>();
             auto on_restore = m_on_restore;
 
             App::Push<ProgressBox>(
                 0,
-                "Testing Connection..."_i18n,
-                input,
-                [input, responding_url, probed_ok, list_ok, remote_entries](auto pbox) -> Result {
-                    std::string base_input = input;
-                    while (!base_input.empty() && (base_input.back() == '/' || base_input.back() == '\\')) {
-                        base_input.pop_back();
-                    }
-
-                    std::vector<std::string> candidate_urls;
-                    if (base_input.rfind("http://", 0) == 0 || base_input.rfind("https://", 0) == 0) {
-                        candidate_urls.push_back(base_input);
-                    } else if (base_input.find(':') != std::string::npos) {
-                        candidate_urls.push_back("http://" + base_input);
-                    } else {
-                        for (u16 port = 8080; port <= 8090; ++port) {
-                            candidate_urls.push_back("http://" + base_input + ":" + std::to_string(port));
-                        }
-                    }
-
-                    for (const auto& url : candidate_urls) {
-                        if (pbox->ShouldExit()) {
-                            return pbox->ShouldExitResult();
-                        }
-                        pbox->SetTransfer(url);
-                        curl::Api api;
-                        api.SetOption(curl::Url{url});
-                        api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
-                            return !pbox->ShouldExit();
-                        }});
-                        const auto res = curl::Probe(api, curl::ProbeType::Http);
-                        if (res.success) {
-                            *responding_url = url;
-                            *probed_ok = true;
-                            break;
-                        }
-                        if (pbox->ShouldExit()) {
-                            return pbox->ShouldExitResult();
-                        }
-                    }
-
-                    if (!*probed_ok || responding_url->empty()) {
-                        return Result_FsEmpty;
-                    }
-
-                    pbox->SetTransfer("Fetching backup list..."_i18n);
-
+                "Fetching backup list..."_i18n,
+                "",
+                [base_url, list_ok, remote_entries](auto pbox) -> Result {
                     curl::Api list_api;
-                    list_api.SetOption(curl::Url{*responding_url + "/list"});
+                    list_api.SetOption(curl::Url{base_url + "/list"});
                     list_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
                         return !pbox->ShouldExit();
                     }});
@@ -334,7 +264,7 @@ private:
                         item.pack.folder_name = cand.name;
                         item.pack.dir = cand.remote_path;
 
-                        const std::string prof_url = *responding_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/profile.json");
+                        const std::string prof_url = base_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/profile.json");
                         curl::Api prof_api;
                         prof_api.SetOption(curl::Url{prof_url});
                         prof_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
@@ -357,7 +287,7 @@ private:
                             item.pack.nickname = "User";
                         }
 
-                        const std::string manifest_url = *responding_url + "/list-recursive?path=" + curl::EscapeString(cand.remote_path);
+                        const std::string manifest_url = base_url + "/list-recursive?path=" + curl::EscapeString(cand.remote_path);
                         curl::Api m_api;
                         m_api.SetOption(curl::Url{manifest_url});
                         m_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
@@ -381,7 +311,7 @@ private:
                         }
 
                         if (item.pack.has_avatar) {
-                            const std::string av_url = *responding_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/avatar.jpg");
+                            const std::string av_url = base_url + "/download?path=" + curl::EscapeString(cand.remote_path + "/avatar.jpg");
                             curl::Api av_api;
                             av_api.SetOption(curl::Url{av_url});
                             av_api.SetOption(curl::OnProgress{[pbox](s64, s64, s64, s64) {
@@ -396,21 +326,13 @@ private:
                         remote_entries->push_back(std::move(item));
                     }
 
-                    R_SUCCEED();
+                    return Result_Success;
                 },
-                [responding_url, probed_ok, list_ok, remote_entries, on_restore](Result rc) {
+                [this, base_url, list_ok, remote_entries, on_restore](Result rc) {
                     if (rc == Result_TransferCancelled) {
                         return;
                     }
-                    if (!*probed_ok) {
-                        App::Push<OptionBox>(
-                            "Could not connect to the remote console.\n\n"
-                            "Confirm that both consoles are connected to the same local network and that the source console has Share User Backups active."_i18n,
-                            "OK"_i18n
-                        );
-                        return;
-                    }
-                    if (!*list_ok) {
+                    if (R_FAILED(rc) || !*list_ok) {
                         App::Push<OptionBox>(
                             "Could not retrieve the user backup list from the sending console."_i18n,
                             "OK"_i18n
@@ -425,7 +347,7 @@ private:
                         return;
                     }
 
-                    OpenRemoteUserPacks(*responding_url, std::move(*remote_entries), on_restore);
+                    OpenRemoteUserPacks(base_url, std::move(*remote_entries), on_restore);
                 }
             );
         });

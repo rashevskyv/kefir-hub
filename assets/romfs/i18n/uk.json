@@ -2327,5 +2327,6 @@
   "No backups available to send": "Немає доступних бекапів для передачі",
   "Share backup(s) with another console over Console Transfer.": "Поділитися бекапом(ами) з іншою консоллю через Console Transfer.",
   "Open pack details to inspect accounts.": "Відкрити деталі пака для перегляду акаунтів.",
-  "Open pack details to inspect or restore accounts.": "Відкрити деталі пака для перегляду або відновлення акаунтів."
+  "Open pack details to inspect or restore accounts.": "Відкрити деталі пака для перегляду або відновлення акаунтів.",
+  "Could not retrieve the profiles & play hours backup list from the sending console.": "Не вдалося отримати список бекапів профілів та годин гри з консолі, що передає."
 }

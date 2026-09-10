@@ -2298,5 +2298,6 @@
   "No backups available to send": "No backups available to send",
   "Share backup(s) with another console over Console Transfer.": "Share backup(s) with another console over Console Transfer.",
   "Open pack details to inspect accounts.": "Open pack details to inspect accounts.",
-  "Open pack details to inspect or restore accounts.": "Open pack details to inspect or restore accounts."
+  "Open pack details to inspect or restore accounts.": "Open pack details to inspect or restore accounts.",
+  "Could not retrieve the profiles & play hours backup list from the sending console.": "Could not retrieve the profiles & play hours backup list from the sending console."
 }
