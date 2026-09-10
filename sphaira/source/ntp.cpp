@@ -73,6 +73,7 @@ Thread g_thread{};
 std::atomic_bool g_thread_running{};
 std::atomic_bool g_stop{};
 UEvent g_wake_event{};
+std::atomic<s64> g_display_offset{0};
 
 void ReportSyncStage(std::string stage) {
     log_write("[NTP] %s\n", stage.c_str());
@@ -224,7 +225,9 @@ Result SetSystemTimeWithService(const char* service_name, u64 timestamp) {
     R_SUCCEED();
 }
 
-Result SetSystemTime(u64 timestamp) {
+Result SetSystemTime(u64 timestamp, bool& out_used_fallback) {
+    out_used_fallback = false;
+
     // time:su is the supported writable service for user-mode system tools on
     // 9.0.0+. time:s remains a fallback for older or custom HOS setups.
     ReportSyncStage("trying time:su");
@@ -298,6 +301,7 @@ Result SetSystemTime(u64 timestamp) {
     }
     ReportSyncStage("set:sys automatic correction enabled");
 
+    out_used_fallback = true;
     R_SUCCEED();
 }
 
@@ -328,25 +332,34 @@ Result RunSync() {
         R_THROW(current_time_rc);
     }
 
-    const auto offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
+    const s64 displayed_time = static_cast<s64>(current_time) + g_display_offset.load(std::memory_order_relaxed);
+    const auto offset = static_cast<s64>(network_time) - displayed_time;
     ReportSyncStage("clock offset " + std::to_string(offset) + " seconds");
     if (offset > -MIN_CORRECTION_SECONDS && offset < MIN_CORRECTION_SECONDS) {
         ReportSyncStage("clock already synchronized");
         R_SUCCEED();
     }
 
+    bool used_fallback = false;
     ReportSyncStage("writing corrected clock");
-    const auto set_time_rc = SetSystemTime(network_time);
+    const auto set_time_rc = SetSystemTime(network_time, used_fallback);
     if (R_FAILED(set_time_rc)) {
         ReportSyncFailure("synchronization", set_time_rc);
         R_THROW(set_time_rc);
     }
 
-    ReportSyncStage("clock updated; refreshing UI");
-    evman::push(evman::FunctionalEventData{[]() {
-        __libnx_init_time();
-        App::Notify("Clock synced"_i18n);
-    }}, false);
+    if (used_fallback) {
+        const s64 new_offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
+        g_display_offset.store(new_offset, std::memory_order_relaxed);
+        ReportSyncStage("automatic correction enabled; reboot required to update HOS User Clock");
+    } else {
+        g_display_offset.store(0, std::memory_order_relaxed);
+        ReportSyncStage("clock updated; refreshing UI");
+        evman::push(evman::FunctionalEventData{[]() {
+            __libnx_init_time();
+            App::Notify("Clock synced"_i18n);
+        }}, false);
+    }
 
     R_SUCCEED();
 }
@@ -416,6 +429,10 @@ void Stop() {
     threadWaitForExit(&g_thread);
     threadClose(&g_thread);
     g_thread_running = false;
+}
+
+s64 GetDisplayOffset() {
+    return g_display_offset.load(std::memory_order_relaxed);
 }
 
 } // namespace sphaira::ntp

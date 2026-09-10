@@ -16,5 +16,6 @@ namespace sphaira::ntp {
 // blocks the ui; if anything fails it simply tries again later.
 void Start();
 void Stop();
+s64 GetDisplayOffset();
 
 } // namespace sphaira::ntp

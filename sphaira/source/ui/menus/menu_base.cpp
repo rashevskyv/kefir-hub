@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "log.hpp"
+#include "ntp.hpp"
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
 #include "hats_version.hpp"
@@ -82,7 +83,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.usb3_enabled = s_cached_usb3_enabled;
         data.is_emummc = App::IsEmummc();
 
-        const auto t = std::time(NULL);
+        const auto t = std::time(NULL) + ntp::GetDisplayOffset();
         localtime_r(&t, &data.tm);
         psmGetBatteryChargePercentage(&data.battery_percetange);
         psmGetChargerType(&data.charger_type);

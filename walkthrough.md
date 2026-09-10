@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.797** (2026-09-10). Попередні
+Актуальний delivery — **v0.13.798** (2026-09-10). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.798 — Restore immediate NTP display with native timezone
+
+- **Миттєвий годинник Sphaira на fallback**: повернуто атомарний `g_display_offset`, який містить лише UTC-різницю NTP і Horizon User Clock. Якщо `set:sys` зберіг Network Clock context, але User Clock ще не оновився, UI Sphaira одразу показує виправлений час.
+- **Чесна семантика sync**: прямий `time:su`/`time:s` live-шлях скидає offset, оновлює libnx time і показує `Clock synced`. `set:sys` fallback не видає persisted context за live User Clock update та логує потребу reboot.
+- **Часовий пояс Horizon**: `std::time(NULL) + ntp::GetDisplayOffset()` формує виправлений UTC POSIX timestamp, після чого єдиний `localtime_r()` застосовує налаштований на консолі timezone та DST.
+- **Версія та перевірка**: `sphaira_VERSION` піднято до `0.13.798`; `git diff --check` пройшов. Compile/tests/NRO та hardware verification не запускалися.
 
 ## v0.13.797 — Safe and shared remote NAND backup transfer
 

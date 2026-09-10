@@ -1,6 +1,6 @@
 # audit.md
 
-Канонічний робочий файл. Версія коду: **v0.13.797**. Дата: 2026-09-10.
+Канічний робочий файл. Версія коду: **v0.13.798**. Дата: 2026-09-10.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.798 поза ponytail-чергою: виправлено NTP-регресію v0.13.638 — повернуто process-local UTC display offset для reboot-only `set:sys` fallback, відновлено розділення live User Clock update і persisted Network Clock context, а `Clock synced`/`__libnx_init_time()` залишено лише для live-шляху; UI додає UTC-корекцію до POSIX timestamp перед єдиним `localtime_r()`, тому timezone/DST береться з Horizon рівно один раз; версію піднято до 0.13.798. `git diff --check` пройшов; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.797 поза ponytail-чергою: посилено remote NAND receive/restore із атомарним `.part`/`_staging_*` flow, size validation для архівів і кожного directory file, rollback поточного transfer при cancel/error/mismatch, валідацією `IsPackArchive`/`IsPack` до success або restore prompt та collision-safe final rename; NAND directory flow перевикористовує `ParseManifestResponse`; `users_restore.cpp` переведено на спільний `ConnectConsoleTransfer` без duplicate IP/swkbd/port probing; `/list` структурно валідується через `yyjson`; додано окремий i18n error для profiles & play hours list; версію піднято до 0.13.797. `git diff --check` і JSON parsing пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

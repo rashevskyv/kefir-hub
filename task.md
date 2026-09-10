@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.797** (Safe and shared remote NAND backup transfer). Завершені задачі збережено в
+Актуальний delivery — **v0.13.798** (Restore immediate NTP display with native timezone). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.797 (Safe and shared remote NAND backup transfer)
+## Поточний delivery: v0.13.798 (Restore immediate NTP display with native timezone)
+
+- [x] `NTP-FALLBACK-OFFSET-798` — відновлено process-local UTC offset для миттєво правильного годинника Sphaira на `set:sys` fallback.
+- [x] `NTP-LIVE-FALLBACK-SPLIT-798` — `Clock synced` та `__libnx_init_time()` залишено лише live User Clock path; fallback логує, що HOS User Clock потребує reboot.
+- [x] `NTP-NATIVE-TIMEZONE-798` — UTC offset додається до POSIX timestamp до єдиного `localtime_r()`, тому timezone/DST застосовує Horizon рівно один раз.
+- [x] `CMAKELISTS-VERSION-BUMP-798` — `sphaira_VERSION` піднято до `0.13.798`.
+- [x] `DOCS-BUMP-798` — синхронізовано `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготовлено focused commit.
+- [ ] `HARDWARE-VERIFY-798` — зібрати NRO та перевірити direct/fallback sync, годинник Sphaira, HOME після reboot і зміну timezone консолі.
+
+## Попередній delivery: v0.13.797 (Safe and shared remote NAND backup transfer)
 
 - [x] `NAND-REMOTE-ATOMIC-797` — архіви завантажуються у `.part`, перевіряються за розміром і валідуються після атомарного rename; directory packs завантажуються через `_staging_*` з rollback.
 - [x] `NAND-REMOTE-SIZE-797` — перевіряється фактичний розмір архіву та кожного файлу directory manifest; усі незавершені артефакти видаляються при cancel/error/mismatch.

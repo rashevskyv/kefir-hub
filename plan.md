@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.797** (Safe and shared remote NAND backup transfer). Завершені плани збережено в
+Поточний delivery — **v0.13.798** (Restore immediate NTP display with native timezone). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.797 — Safe and shared remote NAND backup transfer
+## Поточний delivery: v0.13.798 — Restore immediate NTP display with native timezone
+
+Статус: реалізовано; очікується компіляція користувачем та перевірка на консолі.
+1. Відновлено атомарний process-local `g_display_offset` як чисту UTC-різницю `network_time - current_time` для fallback-шляху, де Horizon застосовує збережений Network Clock лише після reboot.
+2. `MenuBase::GetPolledData()` спочатку додає UTC-корекцію до `std::time(NULL)`, а потім один раз викликає `localtime_r()`, тому timezone та DST беруться лише з налаштувань консолі і не подвоюються.
+3. Повернуто розділення live-запису `time:su`/`time:s` і `set:sys` fallback: `__libnx_init_time()` та `Clock synced` виконуються лише після live User Clock update; fallback коригує годинник Sphaira і чесно логує потребу reboot.
+4. `sphaira_VERSION` піднято до `0.13.798`. `git diff --check` пройшов; compile/tests/NRO не запускалися за policy.
+
+## Попередній delivery: v0.13.797 — Safe and shared remote NAND backup transfer
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на апаратному пристрої.
 1. **Атомарне завантаження NAND-бекапів**:
