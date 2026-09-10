@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.798**. Дата: 2026-09-10.
+Канічний робочий файл. Версія коду: **v0.13.799**. Дата: 2026-09-10.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.799 поза ponytail-чергою: створено скіл «Протестуй збірку» (.grok/skills/test-build/SKILL.md та .agents/skills/test-build/SKILL.md) з регламентом компіляції через WSL, діагностики помилок і виправлення; виправлено помилки компіляції неоголошеного Result_Success у users_restore.cpp та users_nand_library.cpp заміною на R_SUCCEED(); успішно скомпільовано sphaira_nro у WSL (exit code 0); оновлено AGENTS.md; версію піднято до 0.13.799. **Не закриває** чергу §2 A1–A7.
 
 v0.13.798 поза ponytail-чергою: виправлено NTP-регресію v0.13.638 — повернуто process-local UTC display offset для reboot-only `set:sys` fallback, відновлено розділення live User Clock update і persisted Network Clock context, а `Clock synced`/`__libnx_init_time()` залишено лише для live-шляху; UI додає UTC-корекцію до POSIX timestamp перед єдиним `localtime_r()`, тому timezone/DST береться з Horizon рівно один раз; версію піднято до 0.13.798. `git diff --check` пройшов; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

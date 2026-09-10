@@ -4,7 +4,7 @@
 - Do not create, select, or operate in a Git worktree for this project.
 - Do not run `git worktree` commands or delegate work to a separate worktree.
 - Before making a change, verify that the active repository is the primary checkout above. If it is not, stop and ask the user rather than editing another checkout.
-- Do not compile. No `cmake --build`, no NRO/WSL ReleaseWithInstall, no `g++` of tests, no `tests/run.sh`. After a code change, tell the user to compile.
+- Do not compile during normal edits. No `cmake --build`, no NRO/WSL ReleaseWithInstall, no `g++` of tests, no `tests/run.sh`. After a code change, tell the user to compile. (Exception: running the «Протестуй збірку» skill at `.grok/skills/test-build/SKILL.md` explicitly compiles via WSL and fixes build errors).
 - When the parent model is grok-4.6, product code is written by a grok-4.5 subagent. 4.6 investigates, specifies the patch, reviews the diff, and commits. See `.grok/skills/review-then-code/SKILL.md`.
 
 ## After a completed change (mandatory)

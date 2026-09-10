@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.798** (Restore immediate NTP display with native timezone). Завершені плани збережено в
+Поточний delivery — **v0.13.799** (Test Build skill and compilation fix). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.798 — Restore immediate NTP display with native timezone
+## Поточний delivery: v0.13.799 — Test Build skill and compilation fix
+
+Статус: реалізовано; NRO успішно зібрано через WSL з exit code 0.
+1. Створено скіл «Протестуй збірку» (`test-build`) у `.grok/skills/test-build/SKILL.md` та `.agents/skills/test-build/SKILL.md` з чітким регламентом компіляції через WSL (`cmake --preset ReleaseWithInstall`), усунення помилок, підняття версії та створення коміту.
+2. Виправлено помилки компіляції через неоголошений `Result_Success` у `sphaira/source/ui/menus/users/users_restore.cpp` (рядок 329) та `sphaira/source/ui/menus/users/users_nand_library.cpp` (рядки 974, 1042) із заміною на `R_SUCCEED()`.
+3. Успішно виконано повну компіляцію `sphaira_nro` у WSL без помилок.
+4. Оновлено `AGENTS.md` з явним винятком на компіляцію для скіла «Протестуй збірку».
+5. `sphaira_VERSION` піднято до `0.13.799`.
+
+## Попередній delivery: v0.13.798 — Restore immediate NTP display with native timezone
 
 Статус: реалізовано; очікується компіляція користувачем та перевірка на консолі.
 1. Відновлено атомарний process-local `g_display_offset` як чисту UTC-різницю `network_time - current_time` для fallback-шляху, де Horizon застосовує збережений Network Clock лише після reboot.

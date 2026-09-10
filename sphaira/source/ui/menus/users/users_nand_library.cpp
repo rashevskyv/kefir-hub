@@ -971,7 +971,7 @@ void DownloadRemoteNandPacks(
                 }
             }
             success = true;
-            return Result_Success;
+            R_SUCCEED();
         },
         [on_complete, last_path, downloaded_count, total_count](Result rc) {
             if (rc == Result_TransferCancelled) return;
@@ -1039,7 +1039,7 @@ void OpenRemoteNandTransfer(
                     }
                 }
                 std::sort(remote_packs->begin(), remote_packs->end(), [](const auto& a, const auto& b) { return a.name > b.name; });
-                return Result_Success;
+                R_SUCCEED();
             },
             [base_url, remote_packs, mode, on_restore, on_refresh](Result rc) {
                 if (rc == Result_TransferCancelled) return;

@@ -326,7 +326,7 @@ private:
                         remote_entries->push_back(std::move(item));
                     }
 
-                    return Result_Success;
+                    R_SUCCEED();
                 },
                 [this, base_url, list_ok, remote_entries, on_restore](Result rc) {
                     if (rc == Result_TransferCancelled) {

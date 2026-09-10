@@ -1,7 +1,21 @@
-Актуальний delivery — **v0.13.798** (2026-09-10). Попередні
+Актуальний delivery — **v0.13.799** (2026-09-10). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.799 — Test Build skill and compilation fix
+
+- **Новий скіл «Протестуй збірку» (`test-build`)**:
+  - Створено скіл у `.grok/skills/test-build/SKILL.md` та `.agents/skills/test-build/SKILL.md`.
+  - Регламентує повний цикл перевірки компіляції проєкту через WSL (`cmake --preset ReleaseWithInstall && cmake --build --preset ReleaseWithInstall --parallel $(nproc)`), діагностику помилок, точкове внесення виправлень, підняття версії та створення коміту.
+  - В `AGENTS.md` внесено офіційний виняток для скіла тесту збірки, що дозволяє компіляцію у WSL.
+- **Виправлення помилок компіляції**:
+  - У `sphaira/source/ui/menus/users/users_restore.cpp` (рядок 329) виправлено помилку неоголошеного `Result_Success` у лямбді `ProgressBox` — замінено на стандартний `R_SUCCEED()`.
+  - У `sphaira/source/ui/menus/users/users_nand_library.cpp` (рядки 974 та 1042) виправлено аналогічні помилки повернення `Result_Success` — замінено на `R_SUCCEED()`.
+- **Перевірка збірки**:
+  - Виконано повну компіляцію через WSL (`cmake --build --preset ReleaseWithInstall --parallel $(nproc)`).
+  - Збірка успішно дійшла до 100% і створила цільовий файл `sphaira_nro` без помилок (exit code 0).
+- **Версія та реліз**: `sphaira_VERSION` піднято до `0.13.799`.
 
 ## v0.13.798 — Restore immediate NTP display with native timezone
 

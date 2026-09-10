@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.798** (Restore immediate NTP display with native timezone). Завершені задачі збережено в
+Актуальний delivery — **v0.13.799** (Test Build skill and compilation fix). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.798 (Restore immediate NTP display with native timezone)
+## Поточний delivery: v0.13.799 (Test Build skill and compilation fix)
+
+- [x] `SKILL-TEST-BUILD-799` — створено скіл «Протестуй збірку» (`test-build`) у `.grok/skills/test-build/SKILL.md` та `.agents/skills/test-build/SKILL.md`.
+- [x] `FIX-COMPILATION-RESULT-SUCCESS-799` — виправлено неоголошений `Result_Success` у `users_restore.cpp` (рядок 329) та `users_nand_library.cpp` (рядки 974, 1042), замінено на `R_SUCCEED()`.
+- [x] `WSL-BUILD-VERIFY-799` — перевірено збірку у WSL (`cmake --preset ReleaseWithInstall`), досягнуто 100% готовності `sphaira_nro` з exit code 0.
+- [x] `POLICY-AGENTS-UPDATE-799` — додано виняток для скіла тесту збірки в `AGENTS.md`.
+- [x] `CMAKELISTS-VERSION-BUMP-799` — `sphaira_VERSION` піднято до `0.13.799`.
+- [x] `DOCS-BUMP-799` — синхронізовано `plan.md`, `task.md`, `walkthrough.md`, `audit.md` і підготовлено focused commit.
+
+## Попередній delivery: v0.13.798 (Restore immediate NTP display with native timezone)
 
 - [x] `NTP-FALLBACK-OFFSET-798` — відновлено process-local UTC offset для миттєво правильного годинника Sphaira на `set:sys` fallback.
 - [x] `NTP-LIVE-FALLBACK-SPLIT-798` — `Clock synced` та `__libnx_init_time()` залишено лише live User Clock path; fallback логує, що HOS User Clock потребує reboot.
