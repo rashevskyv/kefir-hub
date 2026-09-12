@@ -53,7 +53,7 @@ MTP can be enabled via the Network menu. You can configure which MTP storages ar
 
 ### Web File Manager
 
-Sphaira includes an HTTP-based Web File Manager (accessed via port 8080 when enabled under the file options via the **Start Web Server** action, which is localized across all 14 languages) to browse, download, upload, delete, and view files on the console directly from a web browser:
+Sphaira includes an HTTP-based Web File Manager (accessed via `http://kefir.local` or the console IP on standard port 80, with automatic fallback to ports 8080–8090, when enabled under the file options via the **Start Web Server** action, which is localized across all 14 languages) to browse, download, upload, delete, and view files on the console directly from a web browser:
 - **Single Page App (SPA) Navigation:** Transitioning between folders is completely dynamic and does not trigger browser page reloads. The interface queries directory listings via JSON dynamically, keeping the upload/download queue state active even when navigating through folders.
 - **Sequential Queue with Cancellation:** Features a robust upload/download queue that runs transfers sequentially one after the other. Each entry in the queue displays its own individual progress bar, speed tracker, and an independent cancel button (marked as an 'X') on the right to terminate transfers on the fly.
 - **Direct Game Installation (NSP/NSZ/XCI/XCZ):** When adding game files to the upload queue, you can check the "Install directly" option. The web server will stream the incoming HTTP upload socket data directly to the Switch's internal game installer (`yati`) on the fly, installing the game directly on the console without saving the intermediate file onto the SD card.
@@ -76,7 +76,7 @@ Sphaira includes a built-in, high-performance Homebrew AppStore client designed 
 ## Remote Input & Direct Downloads
 
 Sphaira provides an interactive **Remote Input** system that allows users to send URLs, API keys, or arbitrary text fragments to the console directly from a smartphone or PC:
-- **Dual Input Modes:** Prompts offer **Manual (Keyboard)** for typing on the Switch's on-screen keyboard, or **From Phone / PC** for scanning a QR code or visiting a local web link (e.g. `http://<ip>:8080/input`).
+- **Dual Input Modes:** Prompts offer **Manual (Keyboard)** for typing on the Switch's on-screen keyboard, or **From Phone / PC** for scanning a QR code or visiting a local web link (e.g. `http://kefir.local/input` or `http://<ip>/input`, with automatic 8080–8090 fallback).
 - **Web Input Interface:** The mobile-responsive `/input` page features clipboard paste integration, live configuration reflection, and support for multiline text payloads.
 - **Direct NRO & ZIP Downloads:** The **Custom Link / Direct Download** utility accepts both `.zip` archives (extracted to root with prompt to keep/delete) and standalone `.nro` binaries (saved directly to `/switch/` with an instant launch prompt).
 

@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.804** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.805** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.805 — Smart default HTTP port
+
+- Вебсервер спочатку відкриває стандартний HTTP port 80; якщо bind неможливий, збережено fallback 8080–8090.
+- На port 80 UI та QR показують `http://kefir.local` або `http://<ip>` без зайвого `:80`; fallback URL містить фактичний port.
+- `page_path`, loopback self-test, resume/rebind та mDNS lifecycle продовжують використовувати фактичний `g_share_port`.
+- Console Transfer знаходить як новий port 80 sender, так і попередні 8080–8090 senders; явний URL/port не переписується.
+- `sphaira_VERSION` піднято до `0.13.805`; README і header comment синхронізовано. Compile/NRO за policy не запускалися.
 
 ## v0.13.804 — Automated firmware translation mapping and FW 22.5.0+ support
 

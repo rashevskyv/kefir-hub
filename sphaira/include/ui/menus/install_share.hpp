@@ -52,8 +52,8 @@ void StartConsoleTransferShareUserBackups();
 // Starts the Console Transfer share server for profiles & play hours packs (/config/kefir/nand_transfer).
 void StartConsoleTransferShareNandBackups();
 
-// Prompts for a remote console IP address, tests HTTP connectivity on Console Transfer ports (8080..8090),
-// and invokes on_connected with the responding base URL (e.g. "http://192.168.1.50:8080").
+// Prompts for a remote console IP address, tests HTTP connectivity on port 80 and fallback ports (8080..8090),
+// and invokes on_connected with the responding base URL (e.g. "http://192.168.1.50" or "http://192.168.1.50:8080").
 void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_connected);
 
 } // namespace sphaira::ui::menu

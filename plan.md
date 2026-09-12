@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.804** (automated firmware translation mapping and FW 22.5.0+ support). Завершені плани збережено в
+Поточний delivery — **v0.13.805** (smart default HTTP port). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.804 — Automated firmware translation mapping and FW 22.5.0+ support
+## Поточний delivery: v0.13.805 — Smart default HTTP port
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. HTTP listener спочатку пробує стандартний порт 80, а якщо він недоступний — послідовно 8080–8090.
+2. UI і QR не додають `:80` до `kefir.local` або числового IPv4; будь-який fallback-порт показується явно.
+3. Console Transfer також спочатку перевіряє неявний port 80, а потім 8080–8090; явні scheme/port не змінюються.
+4. README і API comment синхронізовано з новим port/fallback contract.
+
+## Попередній delivery: v0.13.804 — Automated firmware translation mapping and FW 22.5.0+ support
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. Додано новий реліз перекладу `FW22.5.0-TR2.01` до таблиці відомих релізів `KNOWN_TRANSLATIONS` із власним тегом метаданих `FW22.5.0-TR2.01`.

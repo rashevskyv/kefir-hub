@@ -52,8 +52,9 @@ namespace {
 
 using namespace web::detail;
 
-constexpr u16 SHARE_PORT_FIRST = 8080;
-constexpr u16 SHARE_PORT_LAST = 8090;
+constexpr u16 SHARE_PORT_DEFAULT = 80;
+constexpr u16 SHARE_PORT_FALLBACK_FIRST = 8080;
+constexpr u16 SHARE_PORT_FALLBACK_LAST = 8090;
 // Multiple worker threads accept() on the same listening socket so a status
 // poll (e.g. from a second device) can still be served while another thread
 // is blocked handling a long upload/install request.
@@ -2084,7 +2085,12 @@ auto StartShareServer() -> Result {
         R_SUCCEED();
     }
 
-    for (u16 port = SHARE_PORT_FIRST; port <= SHARE_PORT_LAST; port++) {
+    std::vector<u16> candidate_ports{SHARE_PORT_DEFAULT};
+    for (u16 port = SHARE_PORT_FALLBACK_FIRST; port <= SHARE_PORT_FALLBACK_LAST; port++) {
+        candidate_ports.push_back(port);
+    }
+
+    for (u16 port : candidate_ports) {
         const auto sock = CreateShareListener(port);
         if (sock < 0) {
             continue;
@@ -2230,10 +2236,19 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
 
     char url[128]{};
     if (g_mdns_active) {
-        std::snprintf(url, sizeof(url), "http://kefir.local:%u", g_share_port);
+        if (g_share_port == 80) {
+            std::snprintf(url, sizeof(url), "http://kefir.local");
+        } else {
+            std::snprintf(url, sizeof(url), "http://kefir.local:%u", g_share_port);
+        }
     } else {
-        std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
-            ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
+        if (g_share_port == 80) {
+            std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u",
+                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+        } else {
+            std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
+                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
+        }
     }
 
     out.url = std::string{url} + page_path;

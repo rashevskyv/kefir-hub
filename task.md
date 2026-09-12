@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.804** (automated firmware translation mapping and FW 22.5.0+ support). Завершені задачі збережено в
+Актуальний delivery — **v0.13.805** (smart default HTTP port). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.804 (Automated firmware translation mapping and FW 22.5.0+ support)
+## Поточний delivery: v0.13.805 (Smart default HTTP port)
+
+- [x] `HTTP-PORT-805` — HTTP server пробує port 80 перед fallback 8080–8090.
+- [x] `HTTP-URL-805` — `:80` приховано для mDNS і IPv4 URL; non-default port залишається явним.
+- [x] `CONSOLE-PROBE-805` — Console Transfer перевіряє 80, потім 8080–8090, не змінюючи явний URL/port.
+- [x] `README-805` — user-facing приклади та API comment оновлено.
+- [x] `VERIFY-805` — Gemini `git diff --check` і symbol search, senior static diff review пройшли; compile/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-805` — app version і delivery docs оновлено до `0.13.805`.
+- [ ] `HW-805` — зібрати NRO і перевірити port 80, fallback, QR, Console Transfer та resume/rebind.
+
+## Попередній delivery: v0.13.804 (Automated firmware translation mapping and FW 22.5.0+ support)
 
 - [x] `FW-RELEASE-22-5-0-804` — додано реліз `FW22.5.0-TR2.01` до таблиці `KNOWN_TRANSLATIONS` із метаданими `FW22.5.0-TR2.01`.
 - [x] `AUTO-MAPPING-POLICY-804` — реалізовано автоматичне точне співпадіння, автоматичний вибір останнього релізу для прошивок `> 22.5.0` із попередженням та збереження проміжних діапазонів у `ResolveFirmwareCompatibility`.

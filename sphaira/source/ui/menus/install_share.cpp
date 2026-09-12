@@ -401,6 +401,7 @@ void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_
                 } else if (base_input.find(':') != std::string::npos) {
                     candidate_urls.push_back("http://" + base_input);
                 } else {
+                    candidate_urls.push_back("http://" + base_input);
                     for (u16 port = 8080; port <= 8090; ++port) {
                         candidate_urls.push_back("http://" + base_input + ":" + std::to_string(port));
                     }
