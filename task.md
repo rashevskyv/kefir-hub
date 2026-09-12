@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.803** (global list focus draw order). Завершені задачі збережено в
+Актуальний delivery — **v0.13.804** (automated firmware translation mapping and FW 22.5.0+ support). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.803 (Global list focus draw order)
+## Поточний delivery: v0.13.804 (Automated firmware translation mapping and FW 22.5.0+ support)
+
+- [x] `FW-RELEASE-22-5-0-804` — додано реліз `FW22.5.0-TR2.01` до таблиці `KNOWN_TRANSLATIONS` із метаданими `FW22.5.0-TR2.01`.
+- [x] `AUTO-MAPPING-POLICY-804` — реалізовано автоматичне точне співпадіння, автоматичний вибір останнього релізу для прошивок `> 22.5.0` із попередженням та збереження проміжних діапазонів у `ResolveFirmwareCompatibility`.
+- [x] `DYNAMIC-WARNING-804` — реалізовано `ExtractFirmwareFromTag` та динамічну підстановку цільової прошивки у повідомлення попередження для всіх 14 мов.
+- [x] `POLICY-TESTS-804` — оновлено та розширено хост-тести в `test_translation_policy.cpp` (22.5.0 exact, 22.5.0+ latest fallback, 21.0.0–22.4.0 intermediate fallback, extract tag helper, edge cases).
+- [x] `README-DOCS-804` — оновлено розділ Interface Translation & Diagnostics у `README.md`.
+- [x] `VERIFY-804` — `git diff --check`, перевірка типів і меж пройшли; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-804` — `sphaira_VERSION` піднято до `0.13.804`, оновлено `plan.md`, `task.md`, `walkthrough.md`, `audit.md`.
+- [ ] `HW-804` — зібрати NRO та перевірити роботу меню Translate Interface на Switch.
+
+## Попередній delivery: v0.13.803 (Global list focus draw order)
 
 - [x] `LIST-FOCUS-ORDER-803` — спільний `List` малює видимий focused item після сусідніх фонів у HOME та GRID.
 - [x] `LIST-CALLERS-803` — усі callers передають focus index або `List::NO_FOCUS`; ручні дубльовані passes прибрано.

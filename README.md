@@ -90,7 +90,11 @@ Sphaira features an integrated File Browser for navigating console filesystems, 
 ## Interface Translation & Diagnostics
 
 Sphaira features integrated management for Nintendo Switch system interface translations powered by upstream `NX-Family/NX-Translation`:
-- **Firmware Version Detection & Mapping:** Automatically detects installed system firmware (`hats::getSystemFirmware()`) and maps it to the corresponding upstream release tag (`FW...`).
+- **Automated Firmware Matching & Policy Resolution:** Automatically detects installed system firmware (`hats::getSystemFirmware()`) and maps it to upstream release tags:
+  - **Exact Match:** When installed firmware directly matches a known translation release (including the newly added `FW22.5.0-TR2.01`), Sphaira uses that release directly without warning prompts.
+  - **Latest Translation Fallback (FW 22.5.0+):** When running on firmware newer than the latest known translation release (`22.5.0`), Sphaira automatically utilizes the latest release (`FW22.5.0-TR2.01`) with an advisory confirmation dialog instead of marking the firmware unsupported, eliminating arbitrary version lockouts.
+  - **Concrete Intermediate Mapping:** Robust range mappings ensure older and intermediate firmware versions (16.0.0–16.1.0, 18.0.0–18.1.0, 19.0.0–19.0.2, 20.0.0–20.5.0, 21.0.0–22.4.x) cleanly map to tested stable releases.
+- **Dynamic Localized Warnings:** Compatibility warning dialogs dynamically insert the target firmware version from the release tag into localized messages across all 14 supported interface languages.
 - **Live Diagnostics & Header Stats:** The Translate Interface menu header displays active firmware and target release versions continuously (`FW ...`). A dedicated diagnostics entry at the top of the menu provides full details including detected console region, target release tag, metadata API endpoints, and GitHub release URLs.
 - **Transparent Source Previews:** Before downloading translation lists or installing specific language archives, prompts and progress transfers explicitly show the target firmware tag, replacement language variation (`replaces_...`), and full GitHub download URLs.
 - **Graceful Fallback & Replacement Choice:** If an exact match for the current console language and region combination is not found, Sphaira allows selecting from all available language replacement variations instead of failing, enabling seamless custom setups.

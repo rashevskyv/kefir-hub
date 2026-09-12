@@ -307,8 +307,15 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                         };
 
                         if (entry.warning_required) {
+                            const auto target_fw = ExtractFirmwareFromTag(compat.target_tag);
+                            std::string warn_msg = "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available."_i18n;
+                            if (!target_fw.empty()) {
+                                if (const auto pos = warn_msg.find("20.4.0"); pos != std::string::npos) {
+                                    warn_msg.replace(pos, 6, target_fw);
+                                }
+                            }
                             App::Push<OptionBox>(
-                                "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available."_i18n,
+                                warn_msg,
                                 "Cancel"_i18n, "Continue"_i18n, 1,
                                 [start_install](auto op_index){
                                     if (op_index && *op_index == 1) {

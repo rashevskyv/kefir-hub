@@ -105,14 +105,14 @@ static int test_fw_20() {
 }
 
 static int test_fw_21_22_fallback() {
-    // warning true at 21.0.0 and 22.5.0
+    // intermediate fallback for 21.0.0 .. < 22.5.0
     auto r1 = ResolveFirmwareCompatibility("21.0.0");
     CHECK(r1.available);
     CHECK(r1.target_tag == "FW20.4.0-TR2.00");
     CHECK(r1.metadata_tag == "FW20.4.0-TR2.00");
     CHECK(r1.warning_required);
 
-    auto r2 = ResolveFirmwareCompatibility("22.5.0");
+    auto r2 = ResolveFirmwareCompatibility("22.4.0");
     CHECK(r2.available);
     CHECK(r2.target_tag == "FW20.4.0-TR2.00");
     CHECK(r2.metadata_tag == "FW20.4.0-TR2.00");
@@ -121,8 +121,42 @@ static int test_fw_21_22_fallback() {
     return 0;
 }
 
+static int test_fw_22_5_0_exact() {
+    // exact match for 22.5.0 release
+    auto r = ResolveFirmwareCompatibility("22.5.0");
+    CHECK(r.available);
+    CHECK(r.target_tag == "FW22.5.0-TR2.01");
+    CHECK(r.metadata_tag == "FW22.5.0-TR2.01");
+    CHECK(!r.warning_required);
+
+    return 0;
+}
+
+static int test_fw_higher_than_latest() {
+    // versions higher than the latest translation release (22.5.0) use latest release with warning
+    auto r1 = ResolveFirmwareCompatibility("22.5.1");
+    CHECK(r1.available);
+    CHECK(r1.target_tag == "FW22.5.0-TR2.01");
+    CHECK(r1.metadata_tag == "FW22.5.0-TR2.01");
+    CHECK(r1.warning_required);
+
+    auto r2 = ResolveFirmwareCompatibility("23.0.0");
+    CHECK(r2.available);
+    CHECK(r2.target_tag == "FW22.5.0-TR2.01");
+    CHECK(r2.metadata_tag == "FW22.5.0-TR2.01");
+    CHECK(r2.warning_required);
+
+    auto r3 = ResolveFirmwareCompatibility("24.1.0");
+    CHECK(r3.available);
+    CHECK(r3.target_tag == "FW22.5.0-TR2.01");
+    CHECK(r3.metadata_tag == "FW22.5.0-TR2.01");
+    CHECK(r3.warning_required);
+
+    return 0;
+}
+
 static int test_fw_unavailable() {
-    // unavailable below 16.0.0 and above 22.5.0
+    // unavailable below 16.0.0, empty, or invalid input
     auto r_low = ResolveFirmwareCompatibility("1.0.0");
     CHECK(!r_low.available);
     CHECK(r_low.target_tag.empty());
@@ -132,16 +166,6 @@ static int test_fw_unavailable() {
     CHECK(!r_15.available);
     CHECK(r_15.target_tag.empty());
     CHECK(r_15.metadata_tag.empty());
-
-    auto r_high = ResolveFirmwareCompatibility("22.5.1");
-    CHECK(!r_high.available);
-    CHECK(r_high.target_tag.empty());
-    CHECK(r_high.metadata_tag.empty());
-
-    auto r_23 = ResolveFirmwareCompatibility("23.0.0");
-    CHECK(!r_23.available);
-    CHECK(r_23.target_tag.empty());
-    CHECK(r_23.metadata_tag.empty());
 
     auto r_empty = ResolveFirmwareCompatibility("");
     CHECK(!r_empty.available);
@@ -153,6 +177,16 @@ static int test_fw_unavailable() {
     CHECK(r_invalid.target_tag.empty());
     CHECK(r_invalid.metadata_tag.empty());
 
+    return 0;
+}
+
+static int test_extract_firmware_from_tag() {
+    CHECK(ExtractFirmwareFromTag("FW22.5.0-TR2.01") == "22.5.0");
+    CHECK(ExtractFirmwareFromTag("FW20.4.0-TR2.00") == "20.4.0");
+    CHECK(ExtractFirmwareFromTag("FW16.1.0-TR1.09") == "16.1.0");
+    CHECK(ExtractFirmwareFromTag("FW19.0.0-TR1.21") == "19.0.0");
+    CHECK(ExtractFirmwareFromTag("").empty());
+    CHECK(ExtractFirmwareFromTag("v1.0.0").empty());
     return 0;
 }
 
@@ -173,7 +207,9 @@ static int test_extraction_folder() {
 
 static int test_urls() {
     CHECK(GetReleaseUrl("FW20.4.0-TR2.00") == "https://github.com/NX-Family/NX-Translation/releases/tag/FW20.4.0-TR2.00");
+    CHECK(GetReleaseUrl("FW22.5.0-TR2.01") == "https://github.com/NX-Family/NX-Translation/releases/tag/FW22.5.0-TR2.01");
     CHECK(GetMetadataUrl("FW17.0.1-TR1.18") == "https://raw.githubusercontent.com/NX-Family/NX-Translation/FW17.0.1-TR1.18/api.json");
+    CHECK(GetMetadataUrl("FW22.5.0-TR2.01") == "https://raw.githubusercontent.com/NX-Family/NX-Translation/FW22.5.0-TR2.01/api.json");
     CHECK(GetReleaseUrl("").empty());
     CHECK(GetMetadataUrl("").empty());
     return 0;
@@ -187,7 +223,10 @@ int main() {
     if (test_fw_19() != 0) return 1;
     if (test_fw_20() != 0) return 1;
     if (test_fw_21_22_fallback() != 0) return 1;
+    if (test_fw_22_5_0_exact() != 0) return 1;
+    if (test_fw_higher_than_latest() != 0) return 1;
     if (test_fw_unavailable() != 0) return 1;
+    if (test_extract_firmware_from_tag() != 0) return 1;
     if (test_extraction_folder() != 0) return 1;
     if (test_urls() != 0) return 1;
 

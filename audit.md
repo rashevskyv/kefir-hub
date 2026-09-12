@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.803**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.804**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.804 поза ponytail-чергою: додано реліз перекладу `FW22.5.0-TR2.01` до таблиці `KNOWN_TRANSLATIONS` із метаданими `FW22.5.0-TR2.01`; реалізовано автоматизовану систему співвідношення версій у `ResolveFirmwareCompatibility` (точний вибір релізу без попередження, автоматичний вибір останнього релізу для прошивок `> 22.5.0` із попередженням, збереження конкретних діапазонів для проміжних версій); додано `ExtractFirmwareFromTag` та динамічну заміну цільової версії прошивки у повідомленні попередження для всіх 14 мов; оновлено хост-тести `test_translation_policy.cpp` та `README.md`; версію піднято до 0.13.804. `git diff --check` пройшов; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.803 поза ponytail-чергою: глобально виправлено draw order у спільному `List` — видимий focused item малюється після сусідніх фонів у HOME/GRID; усі callers передають явний focus index або `List::NO_FOCUS`, спеціальні display mappings і text-viewer range selection збережено; видалено локальні дубльовані passes; додано production-backed host regression test. `git diff --check`, dead-symbol guard і senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
