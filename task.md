@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.801** (TegraScript compound-condition compatibility). Завершені задачі збережено в
+Актуальний delivery — **v0.13.802** (`kefir.local` mDNS discovery). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.801 (TegraScript compound-condition compatibility)
+## Поточний delivery: v0.13.802 (`kefir.local` mDNS discovery)
+
+- [x] `MDNS-A-802` — додано bounded mDNS parsing і A-record для `kefir.local` без нових залежностей.
+- [x] `MDNS-LIFECYCLE-802` — responder інтегровано у start, resume/rebind та stop вебсервера.
+- [x] `MDNS-URL-FALLBACK-802` — UI/QR показують `kefir.local` лише при активному responder, інакше залишають IPv4.
+- [x] `VERIFY-802` — Gemini `git diff --check` і senior static diff review пройшли; compile/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-802` — версію та delivery docs оновлено.
+- [ ] `HW-802` — зібрати NRO і перевірити `kefir.local`, IPv4 fallback та sleep/resume на Switch.
+
+## Попередній delivery: v0.13.801 (TegraScript compound-condition compatibility)
 
 - [x] `TE-NO-COMPOUND-801` — прибрано всі `&&`/`||` з dump/restore/undo.
 - [x] `TE-CONTRACT-801` — contract test забороняє compound conditions.

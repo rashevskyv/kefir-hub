@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.801** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.802** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.802 — `kefir.local` mDNS discovery
+
+- Вбудовано IPv4 mDNS-responder, який оголошує `kefir.local` на 224.0.0.251:5353 та відповідає A-record на A/ANY queries.
+- DNS names і compression pointers розбираються з жорсткими packet bounds та hop limit; malformed запити не отримують відповіді.
+- Responder повторює lifecycle HTTP server: non-fatal start, recreate після resume/rebind, socket close та thread join при stop.
+- UI та QR показують `http://kefir.local:<port>`; недоступний mDNS автоматично повертає попередню IPv4-адресу.
+- `sphaira_VERSION` піднято до `0.13.802`; Gemini `git diff --check` і senior static review пройшли. Compile/NRO за policy не запускалися.
 
 ## v0.13.801 — TegraScript compound-condition compatibility
 

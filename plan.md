@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.801** (TegraScript compound-condition compatibility). Завершені плани збережено в
+Поточний delivery — **v0.13.802** (`kefir.local` mDNS discovery). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.801 — TegraScript compound-condition compatibility
+## Поточний delivery: v0.13.802 — `kefir.local` mDNS discovery
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. До життєвого циклу вебсервера додано легкий IPv4 mDNS-responder для `kefir.local` без нових залежностей.
+2. Запити A/ANY обробляються з bounded DNS parsing; malformed та сторонні пакети ігноруються.
+3. UI і QR використовують `http://kefir.local:<port>` при успішному старті mDNS; за будь-якої помилки зберігається числовий IPv4 fallback.
+4. mDNS socket/thread закриваються разом із вебсервером та перестворюються після resume/rebind.
+
+## Попередній delivery: v0.13.801 — TegraScript compound-condition compatibility
 
 Статус: реалізовано; очікується апаратний повторний тест.
 1. Прибрано всі `&&` і `||` з production dump/restore/undo скриптів, оскільки TegraExplorer 4.2.17 падає на складених умовах навіть зі scalar variables.
