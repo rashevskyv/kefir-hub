@@ -35,14 +35,14 @@ goHekate = {
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
     }
-    if (rc && fsexists("sd:/payload.bin")) {
-        rc = payload("sd:/payload.bin")
+    if (rc) {
+        if (fsexists("sd:/payload.bin")) { rc = payload("sd:/payload.bin") }
     }
-    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
-        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    if (rc) {
+        if (fsexists("sd:/bootloader/payloads/hekate.bin")) { rc = payload("sd:/bootloader/payloads/hekate.bin") }
     }
-    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
-        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    if (rc) {
+        if (fsexists("sd:/atmosphere/reboot_payload.bin")) { rc = payload("sd:/atmosphere/reboot_payload.bin") }
     }
     if (rc) {
         color(0xFF0000)
@@ -69,7 +69,7 @@ drawDashboard = {
     setpixels(0, 0, 1280, 16, 0x1B1B1B)
     printpos(0, 0)
     color(0x00FFFF)
-    print("=== Dump Profiles and Playtime v0.13.800 ===")
+    print("=== Dump Profiles and Playtime v0.13.801 ===")
     spinner(1, 77, 0, 0x00FF00)
 
     # Row 1: Source NAND
@@ -251,7 +251,9 @@ dumpFilesInDir = {
                     upd_s()
                     readRc = saveObj.readToFile(innerPath, sdPath)
                     upd_s()
-                    if (readRc || !fsexists(sdPath)) {
+                    readFailed = readRc
+                    if (!fsexists(sdPath)) { readFailed = 1 }
+                    if (readFailed) {
                         msg = "  [FAIL] readToFile failed: " + innerPath
                         colLog = 0xFF0000
                         logMsg()
@@ -312,7 +314,9 @@ dumpSave0010 = {
         saveObj.close()
         saveObj = 0
 
-        if (saveErrors == 0 && saveFilesDone > 0) {
+        saveOk = 0
+        if (saveErrors == 0) { if (saveFilesDone > 0) { saveOk = 1 } }
+        if (saveOk) {
             stat0010 = "[DUMPED] (" + saveFilesDone.str() + " files)"
             col0010 = 0x00FF00
             got0010 = 1
@@ -372,7 +376,9 @@ dumpSave0011 = {
         saveObj.close()
         saveObj = 0
 
-        if (saveErrors == 0 && saveFilesDone > 0) {
+        saveOk = 0
+        if (saveErrors == 0) { if (saveFilesDone > 0) { saveOk = 1 } }
+        if (saveOk) {
             stat0011 = "[DUMPED] (" + saveFilesDone.str() + " files)"
             col0011 = 0x00FF00
             msg = "  [OK] User ID Gen dumped (" + saveFilesDone.str() + " files)"
@@ -432,7 +438,9 @@ dumpSave00F0 = {
             sdPath = pePath
             readRc = saveObj.readToFile(innerPath, sdPath)
             upd_s()
-            if (readRc == 0 && fsexists(pePath)) {
+            playEventOk = 0
+            if (readRc == 0) { if (fsexists(pePath)) { playEventOk = 1 } }
+            if (playEventOk) {
                 wrote = wrote + 1
                 saveFilesDone = saveFilesDone + 1
             }
@@ -459,7 +467,9 @@ dumpSave00F0 = {
         saveObj.close()
         saveObj = 0
 
-        if (saveErrors == 0 && saveFilesDone > 0) {
+        saveOk = 0
+        if (saveErrors == 0) { if (saveFilesDone > 0) { saveOk = 1 } }
+        if (saveOk) {
             stat00F0 = "[DUMPED] (" + saveFilesDone.str() + " files)"
             col00F0 = 0x00FF00
             got00F0 = 1
@@ -529,7 +539,9 @@ dumpSave0041 = {
         saveObj.close()
         saveObj = 0
 
-        if (saveErrors == 0 && saveFilesDone > 0) {
+        saveOk = 0
+        if (saveErrors == 0) { if (saveFilesDone > 0) { saveOk = 1 } }
+        if (saveOk) {
             stat0041 = "[DUMPED] (" + saveFilesDone.str() + " files)"
             col0041 = 0x00FF00
             msg = "  [OK] HOME icons dumped (" + saveFilesDone.str() + " files)"
@@ -562,7 +574,7 @@ failOut = {
 
 clear()
 color(0xFFFFFF)
-println("Kefir Hub v0.13.800: dump profiles & play hours")
+println("Kefir Hub v0.13.801: dump profiles & play hours")
 println("Initializing safe environment...")
 println("")
 
@@ -678,7 +690,13 @@ dumpSave00F0()
 dumpSave0041()
 
 # Result evaluation
-if (got0010 && got00F0 && errors == 0) {
+dumpOk = 0
+if (got0010) {
+    if (got00F0) {
+        if (errors == 0) { dumpOk = 1 }
+    }
+}
+if (dumpOk) {
     writefile(pending + "/dumped.ok", ["BYTE[]", 79, 75])
     colLog = 0x00FF00
     msg = "=== DUMP COMPLETED SUCCESSFULLY! ==="

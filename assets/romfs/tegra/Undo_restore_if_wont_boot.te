@@ -29,14 +29,14 @@ goHekate = {
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
     }
-    if (rc && fsexists("sd:/payload.bin")) {
-        rc = payload("sd:/payload.bin")
+    if (rc) {
+        if (fsexists("sd:/payload.bin")) { rc = payload("sd:/payload.bin") }
     }
-    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
-        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    if (rc) {
+        if (fsexists("sd:/bootloader/payloads/hekate.bin")) { rc = payload("sd:/bootloader/payloads/hekate.bin") }
     }
-    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
-        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    if (rc) {
+        if (fsexists("sd:/atmosphere/reboot_payload.bin")) { rc = payload("sd:/atmosphere/reboot_payload.bin") }
     }
     if (rc) {
         color(0xFF0000)
@@ -49,7 +49,7 @@ goHekate = {
 }
 
 clear()
-println("Kefir Hub v0.13.800: undo Restore Backup")
+println("Kefir Hub v0.13.801: undo Restore Backup")
 println("Puts the raw system save snapshot(s) back if the console will not boot.")
 println("")
 
@@ -76,14 +76,20 @@ sPart0 = ""
 if (sPartsLen > 0) {
     sPart0 = sParts[0]
 }
-if (sPartsLen > 1 && sPart0 == "sd") {
+hasSdPrefix = 0
+if (sPartsLen > 1) {
+    if (sPart0 == "sd") { hasSdPrefix = 1 }
+}
+if (hasSdPrefix) {
     safety = sDirStr
 } .else() {
     safety = "sd:" + sDirStr
 }
 
 snapOk = combinepath(safety, "snapshot.ok")
-if (!fsexists(safety) || !fsexists(snapOk)) {
+badSafety = !fsexists(safety)
+if (!fsexists(snapOk)) { badSafety = 1 }
+if (badSafety) {
     color(0xFF0000)
     println("ERROR: Recorded safety backup missing or unverified:")
     println(safety)
@@ -104,7 +110,10 @@ bis = "bis:/save/8000000000000010"
 bis11 = "bis:/save/8000000000000011"
 bisF0 = "bis:/save/80000000000000F0"
 
-if (!fsexists(snap) && !fsexists(snapF0) && !fsexists(snap11)) {
+hasAnySnap = fsexists(snap)
+if (!hasAnySnap) { hasAnySnap = fsexists(snapF0) }
+if (!hasAnySnap) { hasAnySnap = fsexists(snap11) }
+if (!hasAnySnap) {
     println("No raw 0010/0011/00F0 snapshot on SD.")
     println(snap)
     goHekate()

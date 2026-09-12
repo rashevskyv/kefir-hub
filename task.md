@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.800** (Profiles and Playtime integration). Завершені задачі збережено в
+Актуальний delivery — **v0.13.801** (TegraScript compound-condition compatibility). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.800 (Profiles and Playtime integration)
+## Поточний delivery: v0.13.801 (TegraScript compound-condition compatibility)
+
+- [x] `TE-NO-COMPOUND-801` — прибрано всі `&&`/`||` з dump/restore/undo.
+- [x] `TE-CONTRACT-801` — contract test забороняє compound conditions.
+- [x] `VERSION-DOCS-801` — версія та delivery docs оновлені.
+- [ ] `HW-801` — повторити restore і підтвердити проходження далі рядка 767.
+
+## Попередній delivery: v0.13.800 (Profiles and Playtime integration)
 
 - [x] `TE-STREAM-800` — потокові dump/restore та parser-compatible шляхи.
 - [x] `SAFETY-RETAIN-800` — обов'язковий повний snapshot із збереженням поза pending.

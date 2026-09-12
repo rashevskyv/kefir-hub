@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.800** (Profiles and Playtime integration). Завершені плани збережено в
+Поточний delivery — **v0.13.801** (TegraScript compound-condition compatibility). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.800 — Profiles and Playtime integration
+## Поточний delivery: v0.13.801 — TegraScript compound-condition compatibility
+
+Статус: реалізовано; очікується апаратний повторний тест.
+1. Прибрано всі `&&` і `||` з production dump/restore/undo скриптів, оскільки TegraExplorer 4.2.17 падає на складених умовах навіть зі scalar variables.
+2. Умови розкладено на прості послідовні перевірки без зміни restore, safety backup та readback логіки.
+3. Contract test забороняє повторну появу compound conditions у restore script.
+
+## Попередній delivery: v0.13.800 — Profiles and Playtime integration
 
 Статус: реалізовано; тести та WSL ReleaseWithInstall пройшли, потрібна апаратна перевірка.
 1. Dump/restore використовують потокові `readToFile` / `writeFromFile`; TegraExplorer 4.2.17 отримав потоковий `compareToFile` для readback без повного ByteArray.

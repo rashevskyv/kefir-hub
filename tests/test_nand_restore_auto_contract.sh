@@ -21,7 +21,8 @@ check_contract() {
     grep -q 'p2 = parts\[2\]' "$f" || return 1
     grep -q 'p3 = parts\[3\]' "$f" || return 1
     grep -q 'p4 = parts\[4\]' "$f" || return 1
-    grep -q 'p0 != "" || p1 != "config" || p2 != "kefir" || p3 != "nand_transfer"' "$f" || return 1
+    grep -q 'if (badPackPath)' "$f" || return 1
+    if grep -q '||\|&&' "$f"; then return 1; fi
     grep -q 'pack = "sd:" + rel' "$f" || return 1
 
     # 2. Explicit rejection of . / .. / backslash
@@ -54,10 +55,12 @@ check_contract() {
     commit_fails=$(grep -c 'if (commitRc)' "$f" || true)
     if [ "$commit_fails" -ne 3 ]; then return 7; fi
 
-    # 8. Success marker written ONLY under exact complete condition
-    if ! grep -q 'if (errors == 0 && restoredSaves > 0 && restoredSaves == expectedSaves)' "$f"; then
-        return 8
-    fi
+    # 8. Success marker written ONLY under the fully computed restoreOk gate
+    grep -q 'restoreOk = 0' "$f" || return 8
+    grep -q 'if (errors == 0)' "$f" || return 8
+    grep -q 'if (restoredSaves > 0)' "$f" || return 8
+    grep -q 'if (restoredSaves == expectedSaves)' "$f" || return 8
+    grep -q 'if (restoreOk)' "$f" || return 8
     write_ok_count=$(grep -c 'writefile(pending + "/nand_restored\.ok"' "$f" || true)
     if [ "$write_ok_count" -ne 1 ]; then return 8; fi
 
@@ -76,8 +79,8 @@ check_contract() {
 
     # 11. Undo status is based only on saves requested by the selected pack
     grep -q 'needsSnap0010 = fsexists(pack + "/8000000000000010")' "$f" || return 11
-    grep -q 'needsSnap00F0 = do00F0 && fsexists(pack + "/80000000000000F0")' "$f" || return 11
-    grep -q 'hasRelevantSnap = (needsSnap0010 && hasSnap0010) || (needsSnap00F0 && hasSnap00F0)' "$f" || return 11
+    grep -q 'needsSnap00F0 = 0' "$f" || return 11
+    grep -q 'hasRelevantSnap = 0' "$f" || return 11
 
     # 12. Final error text must not claim earlier successful commits were rolled back
     grep -q 'Failed saves were not committed' "$f" || return 12
@@ -89,7 +92,7 @@ check_contract() {
     grep -q 'Safety snapshot failed! Restore aborted to protect NAND' "$f" || return 13
 
     # 14. Reuse only snapshot for THIS EXACT OPERATION and NAND
-    grep -q 'sNand == nandType && sPack == rel' "$f" || return 14
+    grep -q 'if (sameOperation)' "$f" || return 14
     grep -q 'snapshot\.ok' "$f" || return 14
     if grep -q 'sParts\[[0-9]\].*&&\|&&.*sParts\[[0-9]\]' "$f"; then return 14; fi
 
@@ -169,8 +172,8 @@ if check_contract "$TMPDIR/m7.te"; then
     exit 1
 fi
 
-# Mutation 8: weaken success gate condition
-sed 's/errors == 0 && restoredSaves > 0 && restoredSaves == expectedSaves/errors == 0/' "$SCRIPT" > "$TMPDIR/m8.te"
+# Mutation 8: bypass success gate
+sed 's/if (restoreOk)/if (1)/' "$SCRIPT" > "$TMPDIR/m8.te"
 if check_contract "$TMPDIR/m8.te"; then
     echo "ERROR: failed to detect weakened success gate"
     exit 1
@@ -217,7 +220,7 @@ if check_contract "$TMPDIR/m13.te"; then
 fi
 
 # Mutation 14: bypass exact snapshot matching
-sed 's/sNand == nandType && sPack == rel/1/' "$SCRIPT" > "$TMPDIR/m14.te"
+sed 's/if (sameOperation)/if (1)/' "$SCRIPT" > "$TMPDIR/m14.te"
 if check_contract "$TMPDIR/m14.te"; then
     echo "ERROR: failed to detect bypassed snapshot match"
     exit 1

@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.800** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.801** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.801 — TegraScript compound-condition compatibility
+
+- Апаратний тест показав parser crash на рядку 767 з scalar compound condition.
+- У production dump/restore/undo повністю прибрано `&&` та `||`; логіку розкладено на прості перевірки, сумісні з TegraScript 4.2.17.
+- Додано contract guard проти повернення compound conditions. Потрібен повторний hardware restore.
 
 ## v0.13.800 — Profiles and Playtime integration
 

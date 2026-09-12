@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.800**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.801**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.801 поза ponytail-чергою: після апаратного parser crash на scalar compound condition прибрано всі `&&`/`||` з production TegraScript dump/restore/undo та додано contract guard. **Не закриває** чергу §2 A1–A7.
 
 v0.13.800 поза ponytail-чергою: інтегровано потоковий backup/restore профілів і PlayEvent, operation-specific fail-closed safety backup поза pending/staging, потоковий post-commit readback через TegraExplorer 4.2.17 та збереження користувацьких архівів. Gemini `tests/run.sh` і WSL ReleaseWithInstall пройшли; hardware verification лишається відкритою. **Не закриває** чергу §2 A1–A7.
 

@@ -31,14 +31,20 @@ goHekate = {
     if (fsexists("sd:/bootloader/update.bin")) {
         rc = payload("sd:/bootloader/update.bin")
     }
-    if (rc && fsexists("sd:/payload.bin")) {
-        rc = payload("sd:/payload.bin")
+    if (rc) {
+        if (fsexists("sd:/payload.bin")) {
+            rc = payload("sd:/payload.bin")
+        }
     }
-    if (rc && fsexists("sd:/bootloader/payloads/hekate.bin")) {
-        rc = payload("sd:/bootloader/payloads/hekate.bin")
+    if (rc) {
+        if (fsexists("sd:/bootloader/payloads/hekate.bin")) {
+            rc = payload("sd:/bootloader/payloads/hekate.bin")
+        }
     }
-    if (rc && fsexists("sd:/atmosphere/reboot_payload.bin")) {
-        rc = payload("sd:/atmosphere/reboot_payload.bin")
+    if (rc) {
+        if (fsexists("sd:/atmosphere/reboot_payload.bin")) {
+            rc = payload("sd:/atmosphere/reboot_payload.bin")
+        }
     }
     if (rc) {
         color(0xFF0000)
@@ -65,7 +71,7 @@ drawDashboard = {
     setpixels(0, 0, 1280, 16, 0x1B1B1B)
     printpos(0, 0)
     color(0x00FFFF)
-    print("=== Restore Profiles and Playtime v0.13.800 ===")
+    print("=== Restore Profiles and Playtime v0.13.801 ===")
     spinner(1, 77, 0, 0x00FF00)
 
     # Row 1: Source Pack
@@ -635,7 +641,7 @@ restoreSave00F0 = {
 clear()
 color(0x00FFFF)
 println("=============================================================================")
-println(" TegraExplorer: Profiles and Playtime Restore v0.13.800                       ")
+println(" TegraExplorer: Profiles and Playtime Restore v0.13.801                       ")
 println("=============================================================================")
 println("")
 color(0xFFFFFF)
@@ -764,7 +770,12 @@ p2 = parts[2]
 p3 = parts[3]
 p4 = parts[4]
 
-if (p0 != "" || p1 != "config" || p2 != "kefir" || p3 != "nand_transfer") {
+badPackPath = 0
+if (p0 != "") { badPackPath = 1 }
+if (p1 != "config") { badPackPath = 1 }
+if (p2 != "kefir") { badPackPath = 1 }
+if (p3 != "nand_transfer") { badPackPath = 1 }
+if (badPackPath) {
     color(0xFF0000)
     println("ERROR: Pack path outside /config/kefir/nand_transfer: ", rel)
     color(0xFFFFFF)
@@ -775,7 +786,11 @@ if (p0 != "" || p1 != "config" || p2 != "kefir" || p3 != "nand_transfer") {
 }
 
 packNameShort = p4
-if (packNameShort.len() == 0 || packNameShort == "." || packNameShort == "..") {
+badPackName = 0
+if (packNameShort.len() == 0) { badPackName = 1 }
+if (packNameShort == ".") { badPackName = 1 }
+if (packNameShort == "..") { badPackName = 1 }
+if (badPackName) {
     color(0xFF0000)
     println("ERROR: Invalid pack folder name: ", packNameShort)
     color(0xFFFFFF)
@@ -797,7 +812,11 @@ if (!fsexists(pack)) {
     exit()
 }
 
-if (!fsexists(pack + "/8000000000000010") && !fsexists(pack + "/80000000000000F0")) {
+hasPackSave = fsexists(pack + "/8000000000000010")
+if (!hasPackSave) {
+    hasPackSave = fsexists(pack + "/80000000000000F0")
+}
+if (!hasPackSave) {
     color(0xFF0000)
     println("ERROR: Not a valid profiles & play hours pack: ", pack)
     color(0xFFFFFF)
@@ -833,7 +852,11 @@ if (fsexists(recordf)) {
     if (sPartsLen > 0) {
         sPart0 = sParts[0]
     }
-    if (sPartsLen > 1 && sPart0 == "sd") {
+    hasSdPrefix = 0
+    if (sPartsLen > 1) {
+        if (sPart0 == "sd") { hasSdPrefix = 1 }
+    }
+    if (hasSdPrefix) {
         safetyDir = sDirStr
     } .else() {
         safetyDir = "sd:" + sDirStr
@@ -851,26 +874,41 @@ snapPack = safetyDir + "/target_pack.txt"
 snapOk = safetyDir + "/snapshot.ok"
 
 needsSnap0010 = fsexists(pack + "/8000000000000010")
-needsSnap0011 = fsexists(pack + "/8000000000000011") && fsexists("bis:/save/8000000000000011")
-needsSnap00F0 = do00F0 && fsexists(pack + "/80000000000000F0") && fsexists("bis:/save/80000000000000F0")
+needsSnap0011 = 0
+if (fsexists(pack + "/8000000000000011")) {
+    if (fsexists("bis:/save/8000000000000011")) { needsSnap0011 = 1 }
+}
+needsSnap00F0 = 0
+if (do00F0) {
+    if (fsexists(pack + "/80000000000000F0")) {
+        if (fsexists("bis:/save/80000000000000F0")) { needsSnap00F0 = 1 }
+    }
+}
 
 # Check if existing verified snapshot belongs to THIS operation and NAND
 canReuse = 0
-if (fsexists(snapOk) && fsexists(snapNand) && fsexists(snapPack)) {
+hasSnapMeta = fsexists(snapOk)
+if (hasSnapMeta) { hasSnapMeta = fsexists(snapNand) }
+if (hasSnapMeta) { hasSnapMeta = fsexists(snapPack) }
+if (hasSnapMeta) {
     sNandRaw = readfile(snapNand)
     sNand = sNandRaw.bytestostr()
     sPackRaw = readfile(snapPack)
     sPack = sPackRaw.bytestostr()
-    if (sNand == nandType && sPack == rel) {
+    sameOperation = 0
+    if (sNand == nandType) {
+        if (sPack == rel) { sameOperation = 1 }
+    }
+    if (sameOperation) {
         validSnaps = 1
-        if (needsSnap0010 && !fsexists(snap0010)) {
-            validSnaps = 0
+        if (needsSnap0010) {
+            if (!fsexists(snap0010)) { validSnaps = 0 }
         }
-        if (needsSnap0011 && !fsexists(snap0011)) {
-            validSnaps = 0
+        if (needsSnap0011) {
+            if (!fsexists(snap0011)) { validSnaps = 0 }
         }
-        if (needsSnap00F0 && !fsexists(snap00F0)) {
-            validSnaps = 0
+        if (needsSnap00F0) {
+            if (!fsexists(snap00F0)) { validSnaps = 0 }
         }
         if (validSnaps) {
             canReuse = 1
@@ -885,25 +923,22 @@ if (!canReuse) {
         println("Creating safety snapshot: 8000000000000010...")
         delfile(snap0010)
         cRc = copyfile("bis:/save/8000000000000010", snap0010)
-        if (cRc || !fsexists(snap0010)) {
-            snapFail = 1
-        }
+        if (cRc) { snapFail = 1 }
+        if (!fsexists(snap0010)) { snapFail = 1 }
     }
     if (needsSnap0011) {
         println("Creating safety snapshot: 8000000000000011...")
         delfile(snap0011)
         cRc = copyfile("bis:/save/8000000000000011", snap0011)
-        if (cRc || !fsexists(snap0011)) {
-            snapFail = 1
-        }
+        if (cRc) { snapFail = 1 }
+        if (!fsexists(snap0011)) { snapFail = 1 }
     }
     if (needsSnap00F0) {
         println("Creating safety snapshot: 80000000000000F0...")
         delfile(snap00F0)
         cRc = copyfile("bis:/save/80000000000000F0", snap00F0)
-        if (cRc || !fsexists(snap00F0)) {
-            snapFail = 1
-        }
+        if (cRc) { snapFail = 1 }
+        if (!fsexists(snap00F0)) { snapFail = 1 }
     }
     if (snapFail) {
         color(0xFF0000)
@@ -921,14 +956,14 @@ if (!canReuse) {
 
 # Verify that all required snapshots are present and valid
 allSnapsOk = 1
-if (needsSnap0010 && !fsexists(snap0010)) {
-    allSnapsOk = 0
+if (needsSnap0010) {
+    if (!fsexists(snap0010)) { allSnapsOk = 0 }
 }
-if (needsSnap0011 && !fsexists(snap0011)) {
-    allSnapsOk = 0
+if (needsSnap0011) {
+    if (!fsexists(snap0011)) { allSnapsOk = 0 }
 }
-if (needsSnap00F0 && !fsexists(snap00F0)) {
-    allSnapsOk = 0
+if (needsSnap00F0) {
+    if (!fsexists(snap00F0)) { allSnapsOk = 0 }
 }
 if (!fsexists(snapOk)) {
     allSnapsOk = 0
@@ -946,19 +981,25 @@ if (!allSnapsOk) {
 }
 
 # Mirror to pending for Undo compatibility
-if (needsSnap0010 && fsexists(snap0010)) {
-    copyfile(snap0010, pending + "/8000000000000010")
+if (needsSnap0010) {
+    if (fsexists(snap0010)) { copyfile(snap0010, pending + "/8000000000000010") }
 }
-if (needsSnap0011 && fsexists(snap0011)) {
-    copyfile(snap0011, pending + "/8000000000000011")
+if (needsSnap0011) {
+    if (fsexists(snap0011)) { copyfile(snap0011, pending + "/8000000000000011") }
 }
-if (needsSnap00F0 && fsexists(snap00F0)) {
-    copyfile(snap00F0, pending + "/80000000000000F0")
+if (needsSnap00F0) {
+    if (fsexists(snap00F0)) { copyfile(snap00F0, pending + "/80000000000000F0") }
 }
 
 hasSnap0010 = fsexists(snap0010)
 hasSnap00F0 = fsexists(snap00F0)
-hasRelevantSnap = (needsSnap0010 && hasSnap0010) || (needsSnap00F0 && hasSnap00F0)
+hasRelevantSnap = 0
+if (needsSnap0010) {
+    if (hasSnap0010) { hasRelevantSnap = 1 }
+}
+if (needsSnap00F0) {
+    if (hasSnap00F0) { hasRelevantSnap = 1 }
+}
 
 statBackup = "[VERIFIED]"
 colBackup = 0x00FF00
@@ -1011,7 +1052,13 @@ restoreSave00F0()
 # Keep earlier error messages visible on the final screen.
 println("Files written: ", wrote, " Errors: ", errors, " Saves committed: ", restoredSaves)
 
-if (errors == 0 && restoredSaves > 0 && restoredSaves == expectedSaves) {
+restoreOk = 0
+if (errors == 0) {
+    if (restoredSaves > 0) {
+        if (restoredSaves == expectedSaves) { restoreOk = 1 }
+    }
+}
+if (restoreOk) {
     writefile(pending + "/nand_restored.ok", ["BYTE[]", 79, 75])
     colLog = 0x00FF00
     msg = "=== RESTORE COMPLETED SUCCESSFULLY! ==="
