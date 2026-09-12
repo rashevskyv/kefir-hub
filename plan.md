@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.799** (Test Build skill and compilation fix). Завершені плани збережено в
+Поточний delivery — **v0.13.800** (Profiles and Playtime integration). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.799 — Test Build skill and compilation fix
+## Поточний delivery: v0.13.800 — Profiles and Playtime integration
+
+Статус: реалізовано; тести та WSL ReleaseWithInstall пройшли, потрібна апаратна перевірка.
+1. Dump/restore використовують потокові `readToFile` / `writeFromFile`; TegraExplorer 4.2.17 отримав потоковий `compareToFile` для readback без повного ByteArray.
+2. Restore створює обов'язковий operation-specific safety backup до першого запису. Якщо Horizon не може зняти raw snapshot, його fail-closed створює TegraExplorer.
+3. Safety backup зберігається поза pending/staging, прив'язаний до точного NAND і pack path; архіви та safety backup автоматично не видаляються.
+4. Після commit сейв повторно відкривається і ключові файли порівнюються потоково; success marker ставиться лише після повного успіху.
+5. Gemini виконав `tests/run.sh` (184 checks і 17 mutations) та WSL ReleaseWithInstall build. Залишився hardware backup/restore через Sphaira і перевірка активностей у DBI.
+
+## Попередній delivery: v0.13.799 — Test Build skill and compilation fix
 
 Статус: реалізовано; NRO успішно зібрано через WSL з exit code 0.
 1. Створено скіл «Протестуй збірку» (`test-build`) у `.grok/skills/test-build/SKILL.md` та `.agents/skills/test-build/SKILL.md` з чітким регламентом компіляції через WSL (`cmake --preset ReleaseWithInstall`), усунення помилок, підняття версії та створення коміту.

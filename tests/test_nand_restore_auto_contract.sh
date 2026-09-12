@@ -10,12 +10,18 @@ fi
 check_contract() {
     f="$1"
 
-    # 1. Exact direct-child nand_pack.txt path validation
+    # 1. Exact direct-child nand_pack.txt path validation with parser-compatible scalar assignments
     grep -q 'nand_pack\.txt' "$f" || return 1
     grep -q '!fsexists(packf)' "$f" || return 1
     grep -q 'parts = rel\.split("/")' "$f" || return 1
-    grep -q 'parts\.len() != 5' "$f" || return 1
-    grep -q 'parts\[0\] != "" || parts\[1\] != "config" || parts\[2\] != "kefir" || parts\[3\] != "nand_transfer"' "$f" || return 1
+    grep -q 'pLen = parts\.len()' "$f" || return 1
+    grep -q 'pLen != 5' "$f" || return 1
+    grep -q 'p0 = parts\[0\]' "$f" || return 1
+    grep -q 'p1 = parts\[1\]' "$f" || return 1
+    grep -q 'p2 = parts\[2\]' "$f" || return 1
+    grep -q 'p3 = parts\[3\]' "$f" || return 1
+    grep -q 'p4 = parts\[4\]' "$f" || return 1
+    grep -q 'p0 != "" || p1 != "config" || p2 != "kefir" || p3 != "nand_transfer"' "$f" || return 1
     grep -q 'pack = "sd:" + rel' "$f" || return 1
 
     # 2. Explicit rejection of . / .. / backslash
@@ -77,6 +83,28 @@ check_contract() {
     grep -q 'Failed saves were not committed' "$f" || return 12
     if grep -q 'No save committed if errors were encountered' "$f"; then return 12; fi
 
+    # 13. Mandatory full safety backup before first write in /config/kefir/safety_backup
+    grep -q 'safetyDir = "sd:/config/kefir/safety_backup"' "$f" || return 13
+    grep -q 'snapFail' "$f" || return 13
+    grep -q 'Safety snapshot failed! Restore aborted to protect NAND' "$f" || return 13
+
+    # 14. Reuse only snapshot for THIS EXACT OPERATION and NAND
+    grep -q 'sNand == nandType && sPack == rel' "$f" || return 14
+    grep -q 'snapshot\.ok' "$f" || return 14
+    if grep -q 'sParts\[[0-9]\].*&&\|&&.*sParts\[[0-9]\]' "$f"; then return 14; fi
+
+    # 15. Streaming writeFromFile used and legacy readfile buffer write eliminated
+    grep -q 'saveObj\.writeFromFile(innerPath, sdPath)' "$f" || return 15
+    if grep -q 'saveObj\.write(fdst, bytes)' "$f"; then return 15; fi
+
+    # 16. Post-commit reopen and streaming readback verification with compareToFile
+    grep -q 'verifyObj = readsave(bis)' "$f" || return 16
+    grep -q 'verifyObj\.compareToFile' "$f" || return 16
+    grep -q 'readbackFail' "$f" || return 16
+    grep -q 'Readback mismatch' "$f" || return 16
+    if grep -q 'verifyObj\.read(' "$f"; then return 16; fi
+    if grep -q 'readfile(chk' "$f"; then return 16; fi
+
     return 0
 }
 
@@ -91,9 +119,9 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 # Mutation 1: weaken path validation
-sed 's/parts\.len() != 5/parts\.len() < 3/' "$SCRIPT" > "$TMPDIR/m1.te"
+sed 's/pLen != 5/pLen < 3/' "$SCRIPT" > "$TMPDIR/m1.te"
 if check_contract "$TMPDIR/m1.te"; then
-    echo "ERROR: failed to reject weakened parts.len check"
+    echo "ERROR: failed to reject weakened pLen check"
     exit 1
 fi
 
@@ -178,6 +206,41 @@ fi
 sed 's/Failed saves were not committed/No save committed if errors were encountered/' "$SCRIPT" > "$TMPDIR/m12.te"
 if check_contract "$TMPDIR/m12.te"; then
     echo "ERROR: failed to detect misleading commit message"
+    exit 1
+fi
+
+# Mutation 13: weaken safety backup path
+sed 's/safetyDir = "sd:\/config\/kefir\/safety_backup"/safetyDir = "sd:\/tmp"/' "$SCRIPT" > "$TMPDIR/m13.te"
+if check_contract "$TMPDIR/m13.te"; then
+    echo "ERROR: failed to detect weakened safetyDir path"
+    exit 1
+fi
+
+# Mutation 14: bypass exact snapshot matching
+sed 's/sNand == nandType && sPack == rel/1/' "$SCRIPT" > "$TMPDIR/m14.te"
+if check_contract "$TMPDIR/m14.te"; then
+    echo "ERROR: failed to detect bypassed snapshot match"
+    exit 1
+fi
+
+# Mutation 15: revert streaming writeFromFile to byte array write
+sed 's/saveObj\.writeFromFile(innerPath, sdPath)/saveObj.write(fdst, bytes)/' "$SCRIPT" > "$TMPDIR/m15.te"
+if check_contract "$TMPDIR/m15.te"; then
+    echo "ERROR: failed to detect writeFromFile reversion"
+    exit 1
+fi
+
+# Mutation 16: remove readback verification
+sed '/verifyObj = readsave(bis)/d' "$SCRIPT" > "$TMPDIR/m16.te"
+if check_contract "$TMPDIR/m16.te"; then
+    echo "ERROR: failed to detect missing readback verification"
+    exit 1
+fi
+
+# Mutation 17: re-introduce whole-file readback
+sed 's/cmpRc = verifyObj\.compareToFile(chkInner, chkSd)/chkRb = verifyObj.read(chkInner)/' "$SCRIPT" > "$TMPDIR/m17.te"
+if check_contract "$TMPDIR/m17.te"; then
+    echo "ERROR: failed to detect whole-file readback re-introduction"
     exit 1
 fi
 

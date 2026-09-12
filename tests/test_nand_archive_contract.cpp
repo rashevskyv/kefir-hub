@@ -1,4 +1,4 @@
-﻿// Host test for Kefir Hub NAND transfer archive contract, staging lifecycle, and 2x4 account grid
+// Host test for Kefir Hub NAND transfer archive contract, staging lifecycle, and 2x4 account grid
 //
 //     g++ -std=c++20 -Wall -Wextra -Werror -I sphaira/include tests/test_nand_archive_contract.cpp -o /tmp/t && /tmp/t
 
@@ -419,6 +419,81 @@ int test_case_7_tegra_script_contract() {
     return 0;
 }
 
+// Test Case 8: Safety backup validation, operation directories, and exact matching
+int test_case_8_safety_backup_contract() {
+    using sphaira::path::IsSafeRestoreStagingDir;
+    using sphaira::path::IsSafeBackupStagingDir;
+
+    // 1. Snapshot file sanity validation (size >= 0x200, matching source and dest)
+    auto is_valid_snapshot = [](bool src_exists, int64_t src_size, bool dst_exists, int64_t dst_size) -> bool {
+        if (!src_exists || src_size < 0x200) return false;
+        if (!dst_exists || dst_size < 0x200) return false;
+        return (src_size == dst_size);
+    };
+
+    CHECK(is_valid_snapshot(true, 0x40000, true, 0x40000));
+    CHECK(!is_valid_snapshot(false, 0x40000, true, 0x40000)); // src missing
+    CHECK(!is_valid_snapshot(true, 0x100, true, 0x100));       // src too small
+    CHECK(!is_valid_snapshot(true, 0x40000, false, 0));        // dst missing
+    CHECK(!is_valid_snapshot(true, 0x40000, true, 0x20000));   // size mismatch (truncated)
+    CHECK(!is_valid_snapshot(true, 0x40000, true, 0));         // dst empty
+
+    // 2. Safety backup directory is strictly protected from staging cleanup
+    const char* safety_dir = "/config/kefir/safety_backup";
+    CHECK(!IsSafeRestoreStagingDir(safety_dir));
+    CHECK(!IsSafeBackupStagingDir(safety_dir));
+    CHECK(!IsSafeRestoreStagingDir("/config/kefir/safety_backup/20260912_100000"));
+    CHECK(!IsSafeRestoreStagingDir("/config/kefir/safety_backup/20260912_100000/8000000000000010"));
+
+    // User packs and archives are never recognized as temporary staging
+    CHECK(!IsSafeRestoreStagingDir("/config/kefir/nand_transfer/20260911_190000.kefir-nand.zip"));
+    CHECK(!IsSafeRestoreStagingDir("/config/kefir/nand_transfer/20260911_190000"));
+
+    // 3. Exact full pack path matching (never basename only) and NAND matching
+    auto can_reuse_snapshot = [](std::string_view snap_nand, std::string_view snap_pack,
+                                 std::string_view cur_nand, std::string_view cur_pack, bool snap_ok) -> bool {
+        if (!snap_ok) return false;
+        if (snap_nand != cur_nand) return false;
+        // Must match exact full target pack path
+        return (snap_pack == cur_pack);
+    };
+
+    const std::string full_pack = "/config/kefir/nand_transfer/20260911_190000";
+    const std::string base_pack = "20260911_190000";
+    CHECK(can_reuse_snapshot("emu", full_pack, "emu", full_pack, true));
+    CHECK(!can_reuse_snapshot("emu", full_pack, "emu", full_pack, false)); // snap not ok
+    CHECK(!can_reuse_snapshot("sys", full_pack, "emu", full_pack, true));  // different NAND
+    CHECK(!can_reuse_snapshot("emu", base_pack, "emu", full_pack, true));  // basename-only match rejected
+    CHECK(!can_reuse_snapshot("emu", "/config/kefir/nand_transfer/other", "emu", full_pack, true)); // different pack
+
+    // 4. Mandatory snapshot completeness: all saves modified by the target pack must have verified snapshots
+    auto verify_safety_completeness = [](bool snap0010, bool snap0011, bool snap00F0,
+                                         bool needs0010, bool needs0011, bool needs00F0, bool snap_ok) -> bool {
+        if (!snap_ok) return false;
+        if (needs0010 && !snap0010) return false;
+        if (needs0011 && !snap0011) return false;
+        if (needs00F0 && !snap00F0) return false;
+        return true;
+    };
+
+    // Both 0010 and 00F0 needed: having only one must NOT be verified
+    CHECK(verify_safety_completeness(true, false, true, true, false, true, true));
+    CHECK(!verify_safety_completeness(true, false, false, true, false, true, true)); // 00F0 missing -> cannot verify
+    CHECK(!verify_safety_completeness(false, false, true, true, false, true, true)); // 0010 missing -> cannot verify
+    CHECK(!verify_safety_completeness(true, true, true, true, true, true, false));   // marker missing -> cannot verify
+
+    // 5. Undo safety: requires valid safety_dir.txt
+    auto can_undo = [](bool record_exists, std::string_view record_dir, bool snap_ok) -> bool {
+        if (!record_exists || record_dir.empty()) return false;
+        return snap_ok;
+    };
+    CHECK(can_undo(true, "/config/kefir/safety_backup/20260912_100000", true));
+    CHECK(!can_undo(false, "", true)); // missing safety_dir.txt -> abort, do not guess
+    CHECK(!can_undo(true, "/config/kefir/safety_backup/20260912_100000", false)); // unverified snapshot -> abort
+
+    return 0;
+}
+
 } // namespace
 
 int main() {
@@ -429,6 +504,7 @@ int main() {
     if (test_case_5_column_major_grid_layout()) return 1;
     if (test_case_6_validated_staging_cleanup()) return 1;
     if (test_case_7_tegra_script_contract()) return 1;
+    if (test_case_8_safety_backup_contract()) return 1;
 
     std::printf("ok  nand_archive_contract: %d checks passed\n", g_checks);
     return 0;

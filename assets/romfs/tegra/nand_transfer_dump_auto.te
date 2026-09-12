@@ -69,7 +69,7 @@ drawDashboard = {
     setpixels(0, 0, 1280, 16, 0x1B1B1B)
     printpos(0, 0)
     color(0x00FFFF)
-    print("=== Dump Profiles and Playtime | DIAG 4.2.13 ===")
+    print("=== Dump Profiles and Playtime v0.13.800 ===")
     spinner(1, 77, 0, 0x00FF00)
 
     # Row 1: Source NAND
@@ -246,12 +246,13 @@ dumpFilesInDir = {
                     logMsg()
                 } .else() {
                     drawProgress()
-                    bytes = saveObj.read(fsrc)
+                    innerPath = fsrc
+                    sdPath = fdst
                     upd_s()
-                    writeRc = writefile(fdst, bytes)
+                    readRc = saveObj.readToFile(innerPath, sdPath)
                     upd_s()
-                    if (writeRc) {
-                        msg = "  [FAIL] Write failed: " + fdst
+                    if (readRc || !fsexists(sdPath)) {
+                        msg = "  [FAIL] readToFile failed: " + innerPath
                         colLog = 0xFF0000
                         logMsg()
                         errors = errors + 1
@@ -420,21 +421,38 @@ dumpSave00F0 = {
         curDir = "/"
         dumpFilesInDir()
 
-        if (saveFilesDone == 0) {
+        pePath = dstSaveDir + "/PlayEvent.dat"
+        if (!fsexists(pePath)) {
             curFileName = "PlayEvent.dat"
             curFileIdx = 1
             curDirTotal = 1
             curDir = "/"
             drawProgress()
-            bytes = saveObj.read("PlayEvent.dat")
+            innerPath = "/PlayEvent.dat"
+            sdPath = pePath
+            readRc = saveObj.readToFile(innerPath, sdPath)
             upd_s()
-            if (bytes.len() > 0) {
-                writeRc = writefile(dstSaveDir + "/PlayEvent.dat", bytes)
-                upd_s()
-                if (writeRc == 0) {
-                    wrote = wrote + 1
-                    saveFilesDone = saveFilesDone + 1
-                }
+            if (readRc == 0 && fsexists(pePath)) {
+                wrote = wrote + 1
+                saveFilesDone = saveFilesDone + 1
+            }
+        }
+
+        # Validate PlayEvent.dat
+        if (!fsexists(pePath)) {
+            msg = "  [FAIL] Missing PlayEvent.dat in 00F0!"
+            colLog = 0xFF0000
+            logMsg()
+            errors = errors + 1
+            saveErrors = saveErrors + 1
+        } .else() {
+            peRaw = readfile(pePath)
+            if (peRaw.len() < 8) {
+                msg = "  [FAIL] Corrupt PlayEvent.dat in 00F0 (size < 8)!"
+                colLog = 0xFF0000
+                logMsg()
+                errors = errors + 1
+                saveErrors = saveErrors + 1
             }
         }
 
@@ -544,7 +562,7 @@ failOut = {
 
 clear()
 color(0xFFFFFF)
-println("Kefir Hub: dump profiles & play hours")
+println("Kefir Hub v0.13.800: dump profiles & play hours")
 println("Initializing safe environment...")
 println("")
 
@@ -612,8 +630,10 @@ delfile(pack + "/dump_result.txt")
 
 parts = packUnix.split("/")
 packNameShort = packUnix
-if (parts.len() > 1) {
-    packNameShort = parts[parts.len() - 1]
+pLen = parts.len()
+if (pLen > 1) {
+    pIdx = pLen - 1
+    packNameShort = parts[pIdx]
 }
 
 wrote = 0

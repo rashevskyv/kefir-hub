@@ -65,7 +65,7 @@ drawDashboard = {
     setpixels(0, 0, 1280, 16, 0x1B1B1B)
     printpos(0, 0)
     color(0x00FFFF)
-    print("=== Restore Profiles and Playtime | DIAG 4.2.13 ===")
+    print("=== Restore Profiles and Playtime v0.13.800 ===")
     spinner(1, 77, 0, 0x00FF00)
 
     # Row 1: Source Pack
@@ -254,18 +254,10 @@ restoreFilesInDir = {
                         errors = errors + 1
                         saveErrors = saveErrors + 1
                     } .else() {
-                        bytes = readfile(fsrc)
+                        innerPath = fdst
+                        sdPath = fsrc
                         upd_s()
-                        rc = saveObj.write(fdst, bytes)
-                        if (rc == 1) {
-                            # File does not exist yet in target save: create it
-                            cRc = saveObj.create(fdst, bytes.len())
-                            if (cRc) {
-                                rc = cRc
-                            } .else() {
-                                rc = saveObj.write(fdst, bytes)
-                            }
-                        }
+                        rc = saveObj.writeFromFile(innerPath, sdPath)
                         upd_s()
                         if (rc) {
                             msg = "  [FAIL] Write failed: " + fdst + " rc=" + rc.str()
@@ -343,17 +335,55 @@ restoreSave0010 = {
                     msg = "  [FAIL] Commit failed: 8000000000000010 rc=" + commitRc.str()
                     colLog = 0xFF0000
                     logMsg()
+                    saveObj.close()
+                    saveObj = 0
                 } .else() {
-                    stat0010 = "[RESTORED] (" + saveFilesDone.str() + " files)"
-                    col0010 = 0x00FF00
-                    restoredSaves = restoredSaves + 1
-                    msg = "  [OK] Profiles save committed successfully!"
-                    colLog = 0x00FF00
+                    upd_s()
+                    saveObj.close()
+                    saveObj = 0
+                    msg = "  [*] Verifying 8000000000000010 streaming readback..."
+                    colLog = 0xFFFF00
                     logMsg()
+                    upd_s()
+                    verifyObj = readsave(bis)
+                    if (!verifyObj) {
+                        errors = errors + 1
+                        saveErrors = saveErrors + 1
+                        stat0010 = "[FAILED] (Readback reopen failed)"
+                        col0010 = 0xFF0000
+                        msg = "  [FAIL] Could not reopen 8000000000000010 for readback"
+                        colLog = 0xFF0000
+                        logMsg()
+                    } .else() {
+                        readbackFail = 0
+                        chkInner = "/su/registry.dat"
+                        chkSd = packSaveDir + chkInner
+                        if (fsexists(chkSd)) {
+                            cmpRc = verifyObj.compareToFile(chkInner, chkSd)
+                            if (cmpRc) {
+                                readbackFail = 1
+                            }
+                        }
+                        verifyObj.close()
+                        verifyObj = 0
+                        if (readbackFail) {
+                            errors = errors + 1
+                            saveErrors = saveErrors + 1
+                            stat0010 = "[FAILED] (Readback mismatch)"
+                            col0010 = 0xFF0000
+                            msg = "  [FAIL] Streaming readback mismatch in 8000000000000010"
+                            colLog = 0xFF0000
+                            logMsg()
+                        } .else() {
+                            stat0010 = "[RESTORED] (" + saveFilesDone.str() + " files)"
+                            col0010 = 0x00FF00
+                            restoredSaves = restoredSaves + 1
+                            msg = "  [OK] Profiles save committed and verified successfully!"
+                            colLog = 0x00FF00
+                            logMsg()
+                        }
+                    }
                 }
-                upd_s()
-                saveObj.close()
-                saveObj = 0
             } .else() {
                 saveObj.close()
                 saveObj = 0
@@ -417,17 +447,55 @@ restoreSave0011 = {
                     msg = "  [FAIL] Commit failed: 8000000000000011 rc=" + commitRc.str()
                     colLog = 0xFF0000
                     logMsg()
+                    saveObj.close()
+                    saveObj = 0
                 } .else() {
-                    stat0011 = "[RESTORED] (" + saveFilesDone.str() + " file)"
-                    col0011 = 0x00FF00
-                    restoredSaves = restoredSaves + 1
-                    msg = "  [OK] User ID Gen committed successfully!"
-                    colLog = 0x00FF00
+                    upd_s()
+                    saveObj.close()
+                    saveObj = 0
+                    msg = "  [*] Verifying 8000000000000011 streaming readback..."
+                    colLog = 0xFFFF00
                     logMsg()
+                    upd_s()
+                    verifyObj = readsave(bis)
+                    if (!verifyObj) {
+                        errors = errors + 1
+                        saveErrors = saveErrors + 1
+                        stat0011 = "[FAILED] (Readback reopen failed)"
+                        col0011 = 0xFF0000
+                        msg = "  [FAIL] Could not reopen 8000000000000011 for readback"
+                        colLog = 0xFF0000
+                        logMsg()
+                    } .else() {
+                        readbackFail = 0
+                        chkInner = "/user_id.dat"
+                        chkSd = packSaveDir + chkInner
+                        if (fsexists(chkSd)) {
+                            cmpRc = verifyObj.compareToFile(chkInner, chkSd)
+                            if (cmpRc) {
+                                readbackFail = 1
+                            }
+                        }
+                        verifyObj.close()
+                        verifyObj = 0
+                        if (readbackFail) {
+                            errors = errors + 1
+                            saveErrors = saveErrors + 1
+                            stat0011 = "[FAILED] (Readback mismatch)"
+                            col0011 = 0xFF0000
+                            msg = "  [FAIL] Streaming readback mismatch in 8000000000000011"
+                            colLog = 0xFF0000
+                            logMsg()
+                        } .else() {
+                            stat0011 = "[RESTORED] (" + saveFilesDone.str() + " file)"
+                            col0011 = 0x00FF00
+                            restoredSaves = restoredSaves + 1
+                            msg = "  [OK] User ID Gen committed and verified successfully!"
+                            colLog = 0x00FF00
+                            logMsg()
+                        }
+                    }
                 }
-                upd_s()
-                saveObj.close()
-                saveObj = 0
             } .else() {
                 saveObj.close()
                 saveObj = 0
@@ -496,17 +564,55 @@ restoreSave00F0 = {
                         msg = "  [FAIL] Commit failed: 80000000000000F0 rc=" + commitRc.str()
                         colLog = 0xFF0000
                         logMsg()
+                        saveObj.close()
+                        saveObj = 0
                     } .else() {
-                        stat00F0 = "[RESTORED] (" + saveFilesDone.str() + " files)"
-                        col00F0 = 0x00FF00
-                        restoredSaves = restoredSaves + 1
-                        msg = "  [OK] Play hours committed successfully!"
-                        colLog = 0x00FF00
+                        upd_s()
+                        saveObj.close()
+                        saveObj = 0
+                        msg = "  [*] Verifying 80000000000000F0 streaming readback..."
+                        colLog = 0xFFFF00
                         logMsg()
+                        upd_s()
+                        verifyObj = readsave(bis)
+                        if (!verifyObj) {
+                            errors = errors + 1
+                            saveErrors = saveErrors + 1
+                            stat00F0 = "[FAILED] (Readback reopen failed)"
+                            col00F0 = 0xFF0000
+                            msg = "  [FAIL] Could not reopen 80000000000000F0 for readback"
+                            colLog = 0xFF0000
+                            logMsg()
+                        } .else() {
+                            readbackFail = 0
+                            chkInner = "/PlayEvent.dat"
+                            chkSd = packSaveDir + chkInner
+                            if (fsexists(chkSd)) {
+                                cmpRc = verifyObj.compareToFile(chkInner, chkSd)
+                                if (cmpRc) {
+                                    readbackFail = 1
+                                }
+                            }
+                            verifyObj.close()
+                            verifyObj = 0
+                            if (readbackFail) {
+                                errors = errors + 1
+                                saveErrors = saveErrors + 1
+                                stat00F0 = "[FAILED] (Readback mismatch)"
+                                col00F0 = 0xFF0000
+                                msg = "  [FAIL] Streaming readback mismatch in 80000000000000F0"
+                                colLog = 0xFF0000
+                                logMsg()
+                            } .else() {
+                                stat00F0 = "[RESTORED] (" + saveFilesDone.str() + " files)"
+                                col00F0 = 0x00FF00
+                                restoredSaves = restoredSaves + 1
+                                msg = "  [OK] Play hours committed and verified successfully!"
+                                colLog = 0x00FF00
+                                logMsg()
+                            }
+                        }
                     }
-                    upd_s()
-                    saveObj.close()
-                    saveObj = 0
                 } .else() {
                     saveObj.close()
                     saveObj = 0
@@ -529,7 +635,7 @@ restoreSave00F0 = {
 clear()
 color(0x00FFFF)
 println("=============================================================================")
-println(" TegraExplorer: Profiles and Playtime Restore                                ")
+println(" TegraExplorer: Profiles and Playtime Restore v0.13.800                       ")
 println("=============================================================================")
 println("")
 color(0xFFFFFF)
@@ -641,7 +747,8 @@ if (bks.len() != 1) {
 }
 
 parts = rel.split("/")
-if (parts.len() != 5) {
+pLen = parts.len()
+if (pLen != 5) {
     color(0xFF0000)
     println("ERROR: Malformed pack path structure: ", rel)
     color(0xFFFFFF)
@@ -651,7 +758,13 @@ if (parts.len() != 5) {
     exit()
 }
 
-if (parts[0] != "" || parts[1] != "config" || parts[2] != "kefir" || parts[3] != "nand_transfer") {
+p0 = parts[0]
+p1 = parts[1]
+p2 = parts[2]
+p3 = parts[3]
+p4 = parts[4]
+
+if (p0 != "" || p1 != "config" || p2 != "kefir" || p3 != "nand_transfer") {
     color(0xFF0000)
     println("ERROR: Pack path outside /config/kefir/nand_transfer: ", rel)
     color(0xFFFFFF)
@@ -661,7 +774,7 @@ if (parts[0] != "" || parts[1] != "config" || parts[2] != "kefir" || parts[3] !=
     exit()
 }
 
-packNameShort = parts[4]
+packNameShort = p4
 if (packNameShort.len() == 0 || packNameShort == "." || packNameShort == "..") {
     color(0xFF0000)
     println("ERROR: Invalid pack folder name: ", packNameShort)
@@ -706,35 +819,149 @@ if (fsexists(flagf)) {
     }
 }
 
-# 4. Check Hub Undo Safety Snapshots
-snap0010 = pending + "/8000000000000010"
-snap00F0 = pending + "/80000000000000F0"
-hasSnap0010 = fsexists(snap0010)
-hasSnap00F0 = fsexists(snap00F0)
-needsSnap0010 = fsexists(pack + "/8000000000000010")
-needsSnap00F0 = do00F0 && fsexists(pack + "/80000000000000F0")
-hasRelevantSnap = (needsSnap0010 && hasSnap0010) || (needsSnap00F0 && hasSnap00F0)
+# 4. Enforce Mandatory Complete Safety Snapshot in /config/kefir/safety_backup
+safetyDir = "sd:/config/kefir/safety_backup"
+mkdir(safetyDir)
 
-hubSnapOk = needsSnap0010 || needsSnap00F0
-if (needsSnap0010 && !hasSnap0010) {
-    hubSnapOk = 0
-}
-if (needsSnap00F0 && !hasSnap00F0) {
-    hubSnapOk = 0
-}
-
-if (hubSnapOk) {
-    statBackup = "[RETAINED] restore_pending"
-    colBackup = 0x00FF00
-} .else() {
-    if (hasRelevantSnap) {
-        statBackup = "[PARTIAL] restore_pending"
-        colBackup = 0xFFFF00
+recordf = pending + "/safety_dir.txt"
+if (fsexists(recordf)) {
+    sDirRaw = readfile(recordf)
+    sDirStr = sDirRaw.bytestostr()
+    sParts = sDirStr.split(":")
+    sPartsLen = sParts.len()
+    sPart0 = ""
+    if (sPartsLen > 0) {
+        sPart0 = sParts[0]
+    }
+    if (sPartsLen > 1 && sPart0 == "sd") {
+        safetyDir = sDirStr
     } .else() {
-        statBackup = "[WARN] None (use Hekate)"
-        colBackup = 0xFFFF00
+        safetyDir = "sd:" + sDirStr
+    }
+} .else() {
+    safetyDir = safetyDir + "/" + packNameShort
+}
+mkdir(safetyDir)
+
+snap0010 = safetyDir + "/8000000000000010"
+snap0011 = safetyDir + "/8000000000000011"
+snap00F0 = safetyDir + "/80000000000000F0"
+snapNand = safetyDir + "/nand"
+snapPack = safetyDir + "/target_pack.txt"
+snapOk = safetyDir + "/snapshot.ok"
+
+needsSnap0010 = fsexists(pack + "/8000000000000010")
+needsSnap0011 = fsexists(pack + "/8000000000000011") && fsexists("bis:/save/8000000000000011")
+needsSnap00F0 = do00F0 && fsexists(pack + "/80000000000000F0") && fsexists("bis:/save/80000000000000F0")
+
+# Check if existing verified snapshot belongs to THIS operation and NAND
+canReuse = 0
+if (fsexists(snapOk) && fsexists(snapNand) && fsexists(snapPack)) {
+    sNandRaw = readfile(snapNand)
+    sNand = sNandRaw.bytestostr()
+    sPackRaw = readfile(snapPack)
+    sPack = sPackRaw.bytestostr()
+    if (sNand == nandType && sPack == rel) {
+        validSnaps = 1
+        if (needsSnap0010 && !fsexists(snap0010)) {
+            validSnaps = 0
+        }
+        if (needsSnap0011 && !fsexists(snap0011)) {
+            validSnaps = 0
+        }
+        if (needsSnap00F0 && !fsexists(snap00F0)) {
+            validSnaps = 0
+        }
+        if (validSnaps) {
+            canReuse = 1
+        }
     }
 }
+
+if (!canReuse) {
+    delfile(snapOk)
+    snapFail = 0
+    if (needsSnap0010) {
+        println("Creating safety snapshot: 8000000000000010...")
+        delfile(snap0010)
+        cRc = copyfile("bis:/save/8000000000000010", snap0010)
+        if (cRc || !fsexists(snap0010)) {
+            snapFail = 1
+        }
+    }
+    if (needsSnap0011) {
+        println("Creating safety snapshot: 8000000000000011...")
+        delfile(snap0011)
+        cRc = copyfile("bis:/save/8000000000000011", snap0011)
+        if (cRc || !fsexists(snap0011)) {
+            snapFail = 1
+        }
+    }
+    if (needsSnap00F0) {
+        println("Creating safety snapshot: 80000000000000F0...")
+        delfile(snap00F0)
+        cRc = copyfile("bis:/save/80000000000000F0", snap00F0)
+        if (cRc || !fsexists(snap00F0)) {
+            snapFail = 1
+        }
+    }
+    if (snapFail) {
+        color(0xFF0000)
+        println("ERROR: Safety snapshot failed! Restore aborted to protect NAND.")
+        color(0xFFFFFF)
+        println("Rebooting to Hekate in 5 seconds...")
+        sleep(5000)
+        goHekate()
+        exit()
+    }
+    writefile(snapNand, readfile(nandf))
+    writefile(snapPack, readfile(packf))
+    writefile(snapOk, ["BYTE[]", 79, 75])
+}
+
+# Verify that all required snapshots are present and valid
+allSnapsOk = 1
+if (needsSnap0010 && !fsexists(snap0010)) {
+    allSnapsOk = 0
+}
+if (needsSnap0011 && !fsexists(snap0011)) {
+    allSnapsOk = 0
+}
+if (needsSnap00F0 && !fsexists(snap00F0)) {
+    allSnapsOk = 0
+}
+if (!fsexists(snapOk)) {
+    allSnapsOk = 0
+}
+
+if (!allSnapsOk) {
+    color(0xFF0000)
+    println("ERROR: Safety backup is incomplete or unverified!")
+    println("Restore aborted to protect NAND.")
+    color(0xFFFFFF)
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
+    goHekate()
+    exit()
+}
+
+# Mirror to pending for Undo compatibility
+if (needsSnap0010 && fsexists(snap0010)) {
+    copyfile(snap0010, pending + "/8000000000000010")
+}
+if (needsSnap0011 && fsexists(snap0011)) {
+    copyfile(snap0011, pending + "/8000000000000011")
+}
+if (needsSnap00F0 && fsexists(snap00F0)) {
+    copyfile(snap00F0, pending + "/80000000000000F0")
+}
+
+hasSnap0010 = fsexists(snap0010)
+hasSnap00F0 = fsexists(snap00F0)
+hasRelevantSnap = (needsSnap0010 && hasSnap0010) || (needsSnap00F0 && hasSnap00F0)
+
+statBackup = "[VERIFIED]"
+colBackup = 0x00FF00
 
 wrote = 0
 errors = 0
@@ -768,21 +995,9 @@ clear()
 drawDashboard()
 logY = 14
 
-if (hubSnapOk) {
-    msg = "  [i] Hub Undo snapshot verified in restore_pending."
-    colLog = 0x00FF00
-    logMsg()
-} .else() {
-    if (hasRelevantSnap) {
-        msg = "  [WARN] Partial Hub snapshot in restore_pending (check Hekate backup)."
-        colLog = 0xFFFF00
-        logMsg()
-    } .else() {
-        msg = "  [WARN] No Hub snapshot in restore_pending! Rely on Hekate backup."
-        colLog = 0xFFFF00
-        logMsg()
-    }
-}
+msg = "  [i] Safety backup verified: " + safetyDir
+colLog = 0x00FF00
+logMsg()
 
 # 1. Restore 0010 (Accounts/Profiles)
 restoreSave0010()
@@ -808,28 +1023,17 @@ if (errors == 0 && restoredSaves > 0 && restoredSaves == expectedSaves) {
     msg = "=== WARNING: RESTORE COMPLETED WITH ERRORS! ==="
     logMsg()
     msg = "Check logs above. Failed saves were not committed."
+    msg = "Safety backup retained: " + safetyDir
     logMsg()
-    if (hasRelevantSnap) {
-        msg = "Hub Undo snapshot retained: restore_pending/"
-        logMsg()
-        msg = "If console won't boot: run Undo_restore_if_wont_boot.te"
-        logMsg()
-    } .else() {
-        msg = "No Hub Undo snapshot. Restore Hekate SYSTEM backup if needed."
-        logMsg()
-    }
+    msg = "If console won't boot: run Undo_restore_if_wont_boot.te"
+    logMsg()
 }
 
 colLog = 0xFFFFFF
 msg = ""
 logMsg()
-if (hasRelevantSnap) {
-    msg = "Hub Undo snapshot: restore_pending/"
-    logMsg()
-} .else() {
-    msg = "No Hub Undo snapshot; rely on Hekate SYSTEM backup."
-    logMsg()
-}
+msg = "Safety backup: " + safetyDir
+logMsg()
 colLog = 0x00FFFF
 msg = "Rebooting to Hekate in 5 seconds..."
 logMsg()

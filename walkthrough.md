@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.799** (2026-09-10). Попередні
+Актуальний delivery — **v0.13.800** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.800 — Profiles and Playtime integration
+
+- Вбудовано перевірений перенос профілів, user ID generator і PlayEvent через потокові TegraExplorer API.
+- Перед записом обов'язково створюється окремий safety backup поточної консолі; він та оригінальні архіви не видаляються автоматично.
+- Після commit виконується повторне відкриття й потокове порівняння даних; помилка блокує success marker.
+- TegraExplorer оновлено до 4.2.17 із `readToFile`, `writeFromFile` та `compareToFile`.
+- Gemini: `tests/run.sh` — 184 checks і 17 mutations; WSL ReleaseWithInstall — успішно. Апаратний тест через меню Sphaira ще очікується.
 
 ## v0.13.799 — Test Build skill and compilation fix
 

@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.799** (Test Build skill and compilation fix). Завершені задачі збережено в
+Актуальний delivery — **v0.13.800** (Profiles and Playtime integration). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.799 (Test Build skill and compilation fix)
+## Поточний delivery: v0.13.800 (Profiles and Playtime integration)
+
+- [x] `TE-STREAM-800` — потокові dump/restore та parser-compatible шляхи.
+- [x] `SAFETY-RETAIN-800` — обов'язковий повний snapshot із збереженням поза pending.
+- [x] `RESTORE-VERIFY-800` — checked commit/readback, правдиві success markers.
+- [x] `VERIFY-800` — Gemini verification і senior diff review.
+- [x] `DOCS-BUMP-800` — version, delivery docs, focused commit.
+- [ ] `HW-800` — backup/restore через меню Sphaira, активності в DBI, архіви та safety backup збережені.
+
+## Попередній delivery: v0.13.799 (Test Build skill and compilation fix)
 
 - [x] `SKILL-TEST-BUILD-799` — створено скіл «Протестуй збірку» (`test-build`) у `.grok/skills/test-build/SKILL.md` та `.agents/skills/test-build/SKILL.md`.
 - [x] `FIX-COMPILATION-RESULT-SUCCESS-799` — виправлено неоголошений `Result_Success` у `users_restore.cpp` (рядок 329) та `users_nand_library.cpp` (рядки 974, 1042), замінено на `R_SUCCEED()`.

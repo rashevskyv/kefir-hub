@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.799**. Дата: 2026-09-10.
+Канічний робочий файл. Версія коду: **v0.13.800**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.800 поза ponytail-чергою: інтегровано потоковий backup/restore профілів і PlayEvent, operation-specific fail-closed safety backup поза pending/staging, потоковий post-commit readback через TegraExplorer 4.2.17 та збереження користувацьких архівів. Gemini `tests/run.sh` і WSL ReleaseWithInstall пройшли; hardware verification лишається відкритою. **Не закриває** чергу §2 A1–A7.
 
 v0.13.799 поза ponytail-чергою: створено скіл «Протестуй збірку» (.grok/skills/test-build/SKILL.md та .agents/skills/test-build/SKILL.md) з регламентом компіляції через WSL, діагностики помилок і виправлення; виправлено помилки компіляції неоголошеного Result_Success у users_restore.cpp та users_nand_library.cpp заміною на R_SUCCEED(); успішно скомпільовано sphaira_nro у WSL (exit code 0); оновлено AGENTS.md; версію піднято до 0.13.799. **Не закриває** чергу §2 A1–A7.
 

@@ -49,19 +49,63 @@ goHekate = {
 }
 
 clear()
-println("Kefir Hub: undo Restore Backup")
-println("Puts the raw account save back if the console will not boot.")
+println("Kefir Hub v0.13.800: undo Restore Backup")
+println("Puts the raw system save snapshot(s) back if the console will not boot.")
 println("")
 
 pending = "sd:/config/kefir/restore_pending"
-snap = combinepath(pending, "8000000000000010")
-snapF0 = combinepath(pending, "80000000000000F0")
-nandf = combinepath(pending, "nand")
+recordf = combinepath(pending, "safety_dir.txt")
+
+if (!fsexists(recordf)) {
+    color(0xFF0000)
+    println("ERROR: Missing recorded safety_dir.txt in restore_pending!")
+    println("Cannot safely locate snapshot for this restore operation.")
+    color(0xFFFFFF)
+    println("Undo aborted to avoid restoring unrelated backups.")
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
+    goHekate()
+    exit()
+}
+
+sDirRaw = readfile(recordf)
+sDirStr = sDirRaw.bytestostr()
+sParts = sDirStr.split(":")
+sPartsLen = sParts.len()
+sPart0 = ""
+if (sPartsLen > 0) {
+    sPart0 = sParts[0]
+}
+if (sPartsLen > 1 && sPart0 == "sd") {
+    safety = sDirStr
+} .else() {
+    safety = "sd:" + sDirStr
+}
+
+snapOk = combinepath(safety, "snapshot.ok")
+if (!fsexists(safety) || !fsexists(snapOk)) {
+    color(0xFF0000)
+    println("ERROR: Recorded safety backup missing or unverified:")
+    println(safety)
+    color(0xFFFFFF)
+    println("Undo aborted to avoid restoring invalid or unrelated backups.")
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
+    goHekate()
+    exit()
+}
+
+snap = combinepath(safety, "8000000000000010")
+snap11 = combinepath(safety, "8000000000000011")
+snapF0 = combinepath(safety, "80000000000000F0")
+nandf = combinepath(safety, "nand")
+
 bis = "bis:/save/8000000000000010"
+bis11 = "bis:/save/8000000000000011"
 bisF0 = "bis:/save/80000000000000F0"
 
-if (!fsexists(snap) && !fsexists(snapF0)) {
-    println("No raw 0010/00F0 snapshot on SD.")
+if (!fsexists(snap) && !fsexists(snapF0) && !fsexists(snap11)) {
+    println("No raw 0010/0011/00F0 snapshot on SD.")
     println(snap)
     goHekate()
     exit()
@@ -118,6 +162,26 @@ if (fsexists(snap)) {
     println("No raw 0010 snapshot; skipping profiles undo")
 }
 
+if (fsexists(snap11)) {
+    if (fsexists(bis11)) {
+        delfile(bis11)
+    }
+    println("Restoring raw", snap11)
+    rc = copyfile(snap11, bis11)
+    if (rc) {
+        println("copyfile 0011 failed", rc)
+        goHekate()
+        exit()
+    }
+    if (!fsexists(bis11)) {
+        println("BIS 0011 missing after copy")
+        goHekate()
+        exit()
+    }
+} .else() {
+    println("No raw 0011 snapshot; skipping UID generator undo")
+}
+
 if (fsexists(snapF0)) {
     if (fsexists(bisF0)) {
         delfile(bisF0)
@@ -138,8 +202,10 @@ if (fsexists(snapF0)) {
     println("No raw 00F0 snapshot; skipping play-hours undo")
 }
 
-writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
-delfile(combinepath(pending, "state.json"))
+if (fsexists(pending)) {
+    writefile(combinepath(pending, "rolled_back.ok"), ["BYTE[]", 79, 75])
+    delfile(combinepath(pending, "state.json"))
+}
 
 println("Removing this script")
 delfile("sd:/TegraExplorer/scripts/Undo_restore_if_wont_boot.te")
@@ -150,6 +216,7 @@ delfile("sd:/TegraExplorer/scripts/nand_transfer_restore_auto.te")
 
 println("")
 println("Raw system save snapshot(s) restored.")
+println("Safety backup remains on SD: ", safety)
 println("Press any button to reboot to Hekate...")
 pause()
 goHekate()

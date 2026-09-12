@@ -153,7 +153,9 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
                 R_TRY(sd.write_entire_file(account_restore::Restore00F0Path(), body));
             }
 
-            account_restore::TrySnapshotRawSystemSaves(pbox, *snap);
+            // Horizon may not be able to read raw SYSTEM saves while services are active.
+            // TegraExplorer performs the same mandatory snapshot before its first write.
+            account_restore::TrySnapshotRawSystemSaves(pbox, *snap, resolved, hours);
             account_restore::InstallRestoreTeScripts();
             R_TRY(account_restore::SavePending({*selected_pack}, "wait_nand_restore", snap->save_0010, *staging));
             R_SUCCEED();
@@ -164,7 +166,9 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
                 }
                 const auto msg = (rc == Result_FsInvalidType)
                     ? "That backup is not a valid profiles & play hours pack."_i18n
-                    : "Could not stage the profiles & play hours restore on SD."_i18n;
+                    : (rc == Result_SaveSyncFailed)
+                        ? "Safety backup of existing console saves could not be completed. Restore aborted to protect NAND."_i18n
+                        : "Could not stage the profiles & play hours restore on SD."_i18n;
                 App::Push<OptionBox>(msg, "OK"_i18n);
                 return;
             }
@@ -173,11 +177,9 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
                 "Ready to restore profiles & play hours through TegraExplorer.\n\n"
                 "The console will reboot into TegraExplorer, write the pack, then return to hekate.\n"
                 "Open Kefir Hub again afterward to confirm the result.\n\n"_i18n;
-            if (snap->save_0010 || snap->save_00F0) {
-                msg += "A raw undo snapshot was saved on SD. If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n\n"_i18n;
-            } else {
-                msg += "Could not snapshot raw 0010/00F0 for Undo. Keep a hekate SYSTEM backup before continuing.\n\n"_i18n;
-            }
+            msg += snap->complete
+                ? "A raw undo snapshot was verified and saved on SD. If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te\n\n"_i18n
+                : "TegraExplorer will create and verify the mandatory safety backup before writing any save.\n\n"_i18n;
             msg += "If TegraExplorer does not finish and the console will not boot: restore SYSTEM in hekate, or use Undo if a snapshot exists."_i18n;
 
             App::Push<OptionBox>(
