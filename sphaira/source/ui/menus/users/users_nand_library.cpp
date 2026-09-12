@@ -211,7 +211,7 @@ struct NandPackDetailMenu final : MenuBase {
             return;
         }
         int loaded = 0;
-        m_list->Draw(vg, theme, 8, [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, 8, m_index, [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
             const auto entry_idx = GridSlotToEntry(i);
             if (entry_idx >= static_cast<s64>(m_entries.size())) {
                 return;
@@ -430,7 +430,7 @@ struct NandPackLibraryMenu final : MenuBase {
                 "%s", "No profiles & play hours packs found"_i18n.c_str());
             return;
         }
-        m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_entries.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
             const auto& e = m_entries[i];
             const auto focused = m_index == i;
             if (focused) {

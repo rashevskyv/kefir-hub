@@ -594,7 +594,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     int loaded{};
     const bool icon_grid = IsIconLayout();
 
-    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries_current.size(), m_index, [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
         const auto entry_i = m_entries_current[i];

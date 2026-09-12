@@ -12,6 +12,8 @@ struct List final : Object {
         GRID,
     };
 
+    static constexpr s64 NO_FOCUS = -1;
+
     using Callback = std::function<void(NVGcontext* vg, Theme* theme, Vec4 v, s64 index)>;
     using TouchCallback = std::function<void(bool touch, s64 index)>;
 
@@ -24,7 +26,7 @@ struct List final : Object {
     // is over without having to move the focus there first.
     void OnUpdateTouchOnly(TouchInfo* touch, s64 count);
 
-    void Draw(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
+    void Draw(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const;
 
     auto SetScrollBarPos(float x, float y, float h) {
         m_scrollbar.x = x;
@@ -114,8 +116,8 @@ private:
     // drag/flick shared by both layouts. returns true if it consumed the touch.
     auto OnTouchScroll(TouchInfo* touch, s64 count, bool horizontal) -> bool;
     void StepFling(TouchInfo* touch, s64 count, bool horizontal);
-    void DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
-    void DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const;
+    void DrawHome(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const;
+    void DrawGrid(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const;
 
 private:
     const s64 m_row;

@@ -379,7 +379,7 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
 
     nvgSave(vg);
     nvgScissor(vg, m_list_clip.x, m_list_clip.y, m_list_clip.w, m_list_clip.h);
-    m_list->Draw(vg, theme, m_entries_current.size(), [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries_current.size(), m_index, [this, text_col, &got_dir_count, &loaded, icon_grid](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
         const auto entry_i = m_entries_current.empty() ? 0u : (i < static_cast<s64>(m_entries_current.size()) ? m_entries_current[i] : 0u);

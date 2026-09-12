@@ -493,7 +493,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         nvgRestore(vg);
     }
 
-    m_list->Draw(vg, theme, std::size(g_option_list), [this](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, std::size(g_option_list), m_option_index, [this](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto text_y = y + (h / 2.f);
         auto colour = ThemeEntryID_TEXT;

@@ -324,7 +324,7 @@ void CheatFilesMenu::Draw(NVGcontext* vg, Theme* theme) {
 
     constexpr float text_xoffset{15.f};
 
-    m_list->Draw(vg, theme, m_cheats.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_cheats.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto& cheat = m_cheats[i];
 
@@ -667,7 +667,7 @@ void CheatContentMenu::Draw(NVGcontext* vg, Theme* theme) {
 
     constexpr float text_xoffset{15.f};
 
-    m_list->Draw(vg, theme, m_cheats.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_cheats.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto& cheat = m_cheats[i];
 

@@ -259,7 +259,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     int loaded{};
-    m_list->Draw(vg, theme, m_items.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
         auto& item = m_items[i];
         if (loaded < 2 && TryLoadAvatar(item)) {
             loaded++;

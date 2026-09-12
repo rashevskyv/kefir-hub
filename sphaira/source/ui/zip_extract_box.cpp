@@ -276,7 +276,7 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawRect(vg, 30.f, layout::FOOTER_LINE_Y, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
     if (m_tree_list && !m_nodes.empty()) {
-        m_tree_list->Draw(vg, theme, m_nodes.size(), [this](auto* vg, auto* theme, auto v, auto i) {
+        m_tree_list->Draw(vg, theme, m_nodes.size(), !m_focus_actions ? m_tree_index : List::NO_FOCUS, [this](auto* vg, auto* theme, auto v, auto i) {
             const auto& [x, y, w, h] = v;
             const auto selected = m_tree_index == i;
             const auto focused = selected && !m_focus_actions;
@@ -301,7 +301,7 @@ auto ZipExtractBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         });
     }
 
-    m_action_list->Draw(vg, theme, m_actions.size(), [this](auto* vg, auto* theme, auto v, auto i) {
+    m_action_list->Draw(vg, theme, m_actions.size(), m_focus_actions ? m_action_index : List::NO_FOCUS, [this](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto selected = m_action_index == i;
         const auto focused = selected && m_focus_actions;

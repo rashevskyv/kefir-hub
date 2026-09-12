@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.802**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.803**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.803 поза ponytail-чергою: глобально виправлено draw order у спільному `List` — видимий focused item малюється після сусідніх фонів у HOME/GRID; усі callers передають явний focus index або `List::NO_FOCUS`, спеціальні display mappings і text-viewer range selection збережено; видалено локальні дубльовані passes; додано production-backed host regression test. `git diff --check`, dead-symbol guard і senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.802 поза ponytail-чергою: до вебсервера додано беззалежний IPv4 mDNS-responder для `kefir.local` з bounded DNS parsing, A/ANY responses, non-fatal numeric IPv4 fallback та повним start/resume/stop lifecycle; UI і QR використовують hostname лише коли responder активний; версію піднято до 0.13.802. Gemini `git diff --check` і senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

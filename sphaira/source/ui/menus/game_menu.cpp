@@ -429,7 +429,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     // not urgent - they resume once the transfer ends.
     const bool storage_busy = App::GetProgressActive();
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, storage_busy, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
+    m_list->Draw(vg, theme, m_entries.size(), m_index, [this, storage_busy, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
         auto& e = m_entries[pos];
 
         if (e.status == title::NacpLoadStatus::None) {

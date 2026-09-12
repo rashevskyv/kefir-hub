@@ -108,7 +108,7 @@ struct SavePickMenu final : MenuBase {
                 "%s", "No saves on this account"_i18n.c_str());
             return;
         }
-        m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_entries.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
             const auto& e = m_entries[i];
             const auto selected = m_index == i;
             if (selected) {
@@ -190,7 +190,7 @@ struct AvatarPickMenu final : MenuBase {
 
     void Draw(NVGcontext* vg, Theme* theme) override {
         MenuBase::Draw(vg, theme);
-        m_list->Draw(vg, theme, m_tiles.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_tiles.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
             const auto& t = m_tiles[i];
             const auto selected = m_index == i;
             if (selected) {

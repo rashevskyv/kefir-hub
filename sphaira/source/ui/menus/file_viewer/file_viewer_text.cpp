@@ -1639,7 +1639,8 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
     const auto [sel_start, sel_end] = GetTargetRange();
     bool sel_box_drawn = false;
 
-    m_text_list->Draw(vg, theme, m_lines.size(), [this, gutter_w, is_ini, has_sel, sel_start, sel_end, &sel_box_drawn](auto* vg, auto* theme, const Vec4& pos, s64 index){
+    const auto focus_index = (m_editable && !has_sel) ? m_line_index : List::NO_FOCUS;
+    m_text_list->Draw(vg, theme, m_lines.size(), focus_index, [this, gutter_w, is_ini, has_sel, sel_start, sel_end, &sel_box_drawn](auto* vg, auto* theme, const Vec4& pos, s64 index){
         const auto focused = (m_line_index == index);
         const auto in_range = has_sel && (index >= sel_start && index <= sel_end);
 

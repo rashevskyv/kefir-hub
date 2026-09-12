@@ -216,7 +216,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             {"Reserve"_i18n, utils::formatSizeStorage(reserve_sd) + " / " + utils::formatSizeStorage(reserve_nand)},
         });
 
-        m_list->Draw(vg, theme, m_queue.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+        m_list->Draw(vg, theme, m_queue.size(), m_index, [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
             const auto& entry = m_queue[index];
             if (index == m_index) gfx::drawRectOutline(vg, theme, 4.f, v);
             const auto colour = R_FAILED(entry.analysis_result) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT);
@@ -627,7 +627,7 @@ void InstallSession::DrawBottomList(NVGcontext* vg, Theme* theme) {
     if (m_show_errors) {
         const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
         const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
-        m_error_list->Draw(vg, theme, m_errors.size(), [this, error_col, info_col](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+        m_error_list->Draw(vg, theme, m_errors.size(), m_error_index, [this, error_col, info_col](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
             const auto& error = m_errors[index];
             if (index == m_error_index) {
                 gfx::drawRectOutline(vg, theme, 2.f, v);
@@ -649,7 +649,7 @@ void InstallSession::DrawBottomList(NVGcontext* vg, Theme* theme) {
         return;
     }
 
-    m_log_list->Draw(vg, theme, m_log.size(), [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+    m_log_list->Draw(vg, theme, m_log.size(), List::NO_FOCUS, [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
         const auto& entry = m_log[index];
         NVGcolor colour;
         switch (entry.kind) {

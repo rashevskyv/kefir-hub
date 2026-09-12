@@ -694,7 +694,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     int image_load_count = 0;
 
     const auto g = ComputeGridSections();
-    m_list->Draw(vg, theme, g.display_count, [this, &image_load_count, g](NVGcontext* vg, Theme* theme, Vec4 v, s64 disp) {
+    m_list->Draw(vg, theme, g.display_count, EntryToDisplay(m_index, g), [this, &image_load_count, g](NVGcontext* vg, Theme* theme, Vec4 v, s64 disp) {
         const auto entry = DisplayToEntry(disp, g);
         if (entry < 0) {
             return; // empty divider gap; the label is drawn with the first backup tile.

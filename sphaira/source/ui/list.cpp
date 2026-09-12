@@ -1,4 +1,5 @@
 #include "ui/list.hpp"
+#include "ui/list_draw_order.hpp"
 #include "ui/widget.hpp"
 #include "ui/layout.hpp"
 #include "ui/nvg_util.hpp"
@@ -157,13 +158,13 @@ auto List::OnTouchScroll(TouchInfo* touch, s64 count, bool horizontal) -> bool {
     return false;
 }
 
-void List::Draw(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const {
+void List::Draw(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const {
     switch (m_layout) {
         case Layout::HOME:
-            DrawHome(vg, theme, count, callback);
+            DrawHome(vg, theme, count, focus_index, callback);
             break;
         case Layout::GRID:
-            DrawGrid(vg, theme, count, callback);
+            DrawGrid(vg, theme, count, focus_index, callback);
             break;
     }
 }
@@ -522,7 +523,7 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
     }
 }
 
-void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const {
+void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const {
     const auto yoff = ClampX(m_yoff + m_y_prog, count);
     auto v = m_v;
     v.x -= yoff;
@@ -534,23 +535,22 @@ void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     // render on top. see drawRectOutlineInternal() in nvg_util.cpp.
     ScissorContent(vg, m_pos);
 
-    for (s64 i = 0; i < count; i++, v.x += v.w + m_pad.x) {
-        // skip anything not visible
-        if (v.x + v.w < GetX()) {
-            continue;
+    draw_order::TraverseHome(
+        v,
+        v.w + m_pad.x,
+        GetX(),
+        GetX() + GetW(),
+        count,
+        focus_index,
+        [&](const Vec4& item_v, s64 i) {
+            callback(vg, theme, item_v, i);
         }
-
-        if (v.x > GetX() + GetW()) {
-            break;
-        }
-
-        callback(vg, theme, v, i);
-    }
+    );
 
     nvgRestore(vg);
 }
 
-void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) const {
+void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const {
     const auto yoff = ClampY(m_yoff + m_y_prog, count);
     const s64 start = yoff / GetMaxY() * m_row;
     gfx::drawScrollbar2(vg, theme, m_scrollbar.x, m_scrollbar.y, m_scrollbar.h, start, count, m_row, m_page);
@@ -563,33 +563,21 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, Callback callback) 
     // see the note in DrawHome().
     ScissorContent(vg, m_pos);
 
-    for (s64 i = 0; i < count; v.y += v.h + m_pad.y) {
-        if (v.y > GetY() + GetH()) {
-            break;
+    draw_order::TraverseGrid(
+        v,
+        m_row,
+        v.w + m_pad.x,
+        v.h + m_pad.y,
+        GetX(),
+        GetX() + GetW(),
+        GetY(),
+        GetY() + GetH(),
+        count,
+        focus_index,
+        [&](const Vec4& item_v, s64 i) {
+            callback(vg, theme, item_v, i);
         }
-
-        const auto x = v.x;
-
-        for (s64 row = 0; i < count; row++, i++, v.x += v.w + m_pad.x) {
-            if (row >= m_row) {
-                break;
-            }
-
-            // only draw if full x is in bounds
-            if (v.x + v.w > GetX() + GetW()) {
-                break;
-            }
-
-            // skip anything not visible
-            if (v.y + v.h < GetY()) {
-                continue;
-            }
-
-            callback(vg, theme, v, i);
-        }
-
-        v.x = x;
-    }
+    );
 
     nvgRestore(vg);
 }

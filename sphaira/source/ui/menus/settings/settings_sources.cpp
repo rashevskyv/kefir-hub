@@ -256,7 +256,7 @@ void SourceEditMenu::Update(Controller* controller, TouchInfo* touch) {
 
 void SourceEditMenu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
-    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
     });
 }

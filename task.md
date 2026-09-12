@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.802** (`kefir.local` mDNS discovery). Завершені задачі збережено в
+Актуальний delivery — **v0.13.803** (global list focus draw order). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.802 (`kefir.local` mDNS discovery)
+## Поточний delivery: v0.13.803 (Global list focus draw order)
+
+- [x] `LIST-FOCUS-ORDER-803` — спільний `List` малює видимий focused item після сусідніх фонів у HOME та GRID.
+- [x] `LIST-CALLERS-803` — усі callers передають focus index або `List::NO_FOCUS`; ручні дубльовані passes прибрано.
+- [x] `LIST-ORDER-TEST-803` — додано production-backed host regression test порядку, visibility та single-callback contract.
+- [x] `VERIFY-803` — Gemini `git diff --check` і dead-symbol guard, senior static diff/caller review пройшли; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-803` — app version і delivery docs оновлено до `0.13.803`.
+- [ ] `HW-803` — зібрати NRO та перевірити рамку першого/середнього/останнього рядка у списках і сітках.
+
+## Попередній delivery: v0.13.802 (`kefir.local` mDNS discovery)
 
 - [x] `MDNS-A-802` — додано bounded mDNS parsing і A-record для `kefir.local` без нових залежностей.
 - [x] `MDNS-LIFECYCLE-802` — responder інтегровано у start, resume/rebind та stop вебсервера.

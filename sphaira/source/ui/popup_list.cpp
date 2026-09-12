@@ -167,7 +167,7 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
     const float icon_gutter = has_icons ? 34.f : 0.f;
     const float gutter = marker_gutter + icon_gutter;
 
-    m_list->Draw(vg, theme, m_items.size(), [this, has_markers, has_icons, marker_gutter, gutter](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this, has_markers, has_icons, marker_gutter, gutter](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto colour = ThemeEntryID_TEXT;
         const auto selected = m_index == i;

@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.802** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.803** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.803 — Global list focus draw order
+
+- `List::Draw` приймає явний focus index і відкладає єдиний callback видимого focused item до завершення малювання сусідів.
+- Спільний порядок діє для HOME та GRID, тому фон наступного рядка або плитки більше не перекриває зовнішню рамку фокуса.
+- Усі callers переведено на новий контракт; збережено display-index mappings, pane focus та природний порядок багаторядкового виділення у text viewer.
+- Видалено локальні дво- і трипрохідні обходи, які раніше вручну обходили цей дефект.
+- Додано `test_list_draw_order.cpp`; він автоматично входить у glob `tests/test_*.cpp` і перевіряє порядок, видимість, геометрію та один callback на елемент.
+- `sphaira_VERSION` піднято до `0.13.803`; `git diff --check`, dead-symbol guard і senior static review пройшли. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.802 — `kefir.local` mDNS discovery
 

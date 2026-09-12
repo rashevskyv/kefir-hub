@@ -239,7 +239,7 @@ void CheatGameSelectMenu::Draw(NVGcontext* vg, Theme* theme) {
         const int image_load_max = 2;
         int image_load_count = 0;
 
-        m_list->Draw(vg, theme, m_games.size(), [this, &image_load_count](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_games.size(), m_index, [this, &image_load_count](auto* vg, auto* theme, Vec4 v, auto i) {
             auto& game = m_games[i];
 
             if (game.status == title::NacpLoadStatus::None) {

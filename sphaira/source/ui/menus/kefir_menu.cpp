@@ -747,7 +747,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::DrawList(NVGcontext* vg, Theme* theme) {
-    m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_entries.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& entry = m_entries[i];
         if (entry.type == UpdaterEntryType::Section) {
             const auto top_pad = 32.f;
@@ -802,7 +802,7 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
 }
 
 void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
-    m_list->Draw(vg, theme, m_tile_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto tile_i) {
+    m_list->Draw(vg, theme, m_tile_entries.size(), m_tile_index, [this](auto* vg, auto* theme, Vec4 v, auto tile_i) {
         const auto entry_index = m_tile_entries[tile_i];
         if (entry_index == TILE_EMPTY) {
             return;

@@ -110,7 +110,7 @@ public:
         gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
         gfx::drawRect(vg, 30.f, 646.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
-        m_list->Draw(vg, theme, GetItemCount(), [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
+        m_list->Draw(vg, theme, GetItemCount(), m_index, [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
             if (m_index == index) {
                 gfx::drawRectOutline(vg, theme, 4.f, pos);
             } else {
@@ -408,7 +408,7 @@ public:
         gfx::drawRect(vg, 30.f, 86.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
         gfx::drawRect(vg, 30.f, 646.f, 1220.f, 1.f, theme->GetColour(ThemeEntryID_LINE));
 
-        m_list->Draw(vg, theme, m_games.size(), [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
+        m_list->Draw(vg, theme, m_games.size(), m_index, [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
             const auto selected = m_index == index;
             if (selected) {
                 gfx::drawRectOutline(vg, theme, 4.f, pos);

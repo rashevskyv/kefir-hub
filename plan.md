@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.802** (`kefir.local` mDNS discovery). Завершені плани збережено в
+Поточний delivery — **v0.13.803** (global list focus draw order). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.802 — `kefir.local` mDNS discovery
+## Поточний delivery: v0.13.803 — Global list focus draw order
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Спільний `List` тепер малює всі видимі нефокусовані елементи першими, а видимий фокусований елемент — останнім, тому сусідні фони не перекривають рамку.
+2. Усі `List::Draw` callers передають явний focus index або `List::NO_FOCUS`; спеціальні мапінги та багаторядкове виділення текстового редактора збережено.
+3. Дубльовані ручні draw passes прибрано; production traversal винесено у тестований helper без нових залежностей.
+4. Додано host regression test для HOME/GRID, visibility, invalid focus, геометрії та single-callback contract.
+
+## Попередній delivery: v0.13.802 — `kefir.local` mDNS discovery
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. До життєвого циклу вебсервера додано легкий IPv4 mDNS-responder для `kefir.local` без нових залежностей.

@@ -584,7 +584,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     constexpr float text_xoffset{15.f};
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, text_col](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_entries.size(), m_index, [this, text_col](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[i];
 

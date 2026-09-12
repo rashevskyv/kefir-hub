@@ -321,7 +321,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     gfx::drawRect(vg, 392.f, 118.f, 1.f, 504.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
 
-    m_category_list->Draw(vg, theme, CategoryRowCount(), [this](auto* vg, auto* theme, Vec4 v, auto row) {
+    const s64 category_focus = m_focus_pane == FocusPane::Categories ? (m_folder_open ? m_category_index + 1 : m_category_index) : List::NO_FOCUS;
+    m_category_list->Draw(vg, theme, CategoryRowCount(), category_focus, [this](auto* vg, auto* theme, Vec4 v, auto row) {
         // while a folder is open it sits on its own row under its category,
         // indented, so the column shows where the right pane came from.
         const bool folder_row = m_folder_open && row == m_category_index + 1;
@@ -378,7 +379,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     const auto& items = CurrentItems();
-    m_item_list->Draw(vg, theme, items.size(), [this, &items](auto* vg, auto* theme, Vec4 v, auto i) {
+    const s64 item_focus = m_focus_pane == FocusPane::Items ? CurrentItemIndex() : List::NO_FOCUS;
+    m_item_list->Draw(vg, theme, items.size(), item_focus, [this, &items](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto selected = CurrentItemIndex() == i;
         const auto focused = selected && m_focus_pane == FocusPane::Items;
         DrawItemRow(vg, theme, v, items[i], selected, focused);

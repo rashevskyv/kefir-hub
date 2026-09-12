@@ -427,7 +427,7 @@ void UninstallerMenu::Draw(NVGcontext* vg, Theme* theme) {
     const float p = gfx::SELECTION_OUTLINE_PAD;
     nvgScissor(vg, list_x - p, list_y - p, list_w + p * 2, list_h + p * 2);
 
-    m_list->Draw(vg, theme, m_view.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_view.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto& item = m_items[m_view[i]];
         const auto selected = m_index == i;

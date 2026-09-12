@@ -102,7 +102,7 @@ void SaveHubMenu::Update(Controller* controller, TouchInfo* touch) {
 void SaveHubMenu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
-    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& item = m_items[i];
         const auto selected = m_index == i;
 

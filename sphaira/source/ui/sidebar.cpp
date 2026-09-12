@@ -501,7 +501,7 @@ auto Sidebar::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     Widget::Draw(vg, theme);
 
-    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, auto v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
 
         if (i != m_items.size() - 1) {

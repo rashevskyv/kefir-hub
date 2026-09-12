@@ -312,7 +312,7 @@ struct DbiDetailsMenu final : MenuBase {
             return;
         }
 
-        m_list->Draw(vg, theme, CurrentCount(), [this](auto* vg, auto* theme, auto v, auto index){
+        m_list->Draw(vg, theme, CurrentCount(), m_row_index, [this](auto* vg, auto* theme, auto v, auto index){
             const bool selected = index == m_row_index;
             const auto primary = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
             const auto secondary = theme->GetColour(ThemeEntryID_TEXT_INFO);

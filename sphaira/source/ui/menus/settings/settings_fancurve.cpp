@@ -1242,11 +1242,11 @@ void FanCurveMenu::Draw(NVGcontext* vg, Theme* theme) {
     DrawFanCurveListHeader(vg, theme);
 
     if (m_helper_curve_mode) {
-        m_list->Draw(vg, theme, controls.size(), [this, &controls](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, controls.size(), m_index, [this, &controls](auto* vg, auto* theme, Vec4 v, auto i) {
             DrawFanCurveListItem(vg, theme, v, controls[i], i, m_index == i);
         });
     } else {
-        m_list->Draw(vg, theme, curve.size(), [this, &curve](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, curve.size(), m_index, [this, &curve](auto* vg, auto* theme, Vec4 v, auto i) {
             DrawFanCurveListItem(vg, theme, v, curve[i], i, m_index == i);
         });
     }

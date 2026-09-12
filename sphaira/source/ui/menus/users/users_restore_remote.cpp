@@ -455,7 +455,7 @@ struct RemoteUserPacksMenu final : MenuBase {
             return;
         }
 
-        m_list->Draw(vg, theme, m_entries.size(), [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_entries.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
             auto& e = m_entries[i];
             TryLoadAvatar(e);
             const auto selected = m_index == i;

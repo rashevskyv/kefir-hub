@@ -165,7 +165,7 @@ struct RestoreBackupMenu final : MenuBase {
             return;
         }
         int loaded = 0;
-        m_list->Draw(vg, theme, m_entries.size(), [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
+        m_list->Draw(vg, theme, m_entries.size(), m_index, [this, &loaded](auto* vg, auto* theme, Vec4 v, auto i) {
             auto& e = m_entries[i];
             if (loaded < 2 && TryLoadAvatar(e)) {
                 loaded++;
