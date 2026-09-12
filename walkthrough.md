@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.806** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.807** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.807 — Move fan curve to Tools
+
+- Пункт «Fan curve» («Крива кулера») перенесено з меню «Kefir Settings» («Налаштування кефіру») у меню системних інструментів «Tools» (`SystemToolsMenu`).
+- Опис плитки «Kefir Settings» у меню інструментів оновлено: замість «Fan curves and console-specific Kefir switches.» тепер використовується «Console-specific Kefir switches.» («Перемикачі Kefir для консолі.»). Зміни синхронізовано для всіх 14 підтримуваних мовних файлів локалізації `i18n`.
+- У `settings_kefir.cpp` видалено невикористовуване підключення заголовка `settings_fancurve.hpp`, а в `tools_menu.cpp` підключено `settings_fancurve.hpp` для виклику `ui::menu::settings::OpenFanCurveMenu()`.
+- `sphaira_VERSION` піднято до `0.13.807`; `git diff --check` і валідація JSON пройшли. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.806 — Alphabetical interface translation languages
 

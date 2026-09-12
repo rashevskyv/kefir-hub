@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.806** (alphabetical interface translation languages). Завершені плани збережено в
+Поточний delivery — **v0.13.807** (move fan curve to Tools). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.806 — Alphabetical interface translation languages
+## Поточний delivery: v0.13.807 — Move fan curve to Tools
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Пункт «Fan curve» (крива кулера) перенесено з меню «Kefir Settings» до списку системних інструментів «Tools» (`SystemToolsMenu`).
+2. Оновлено опис «Kefir Settings» у меню інструментів на «Console-specific Kefir switches.» із відповідною локалізацією всіма 14 мовами.
+3. Очищено невикористовувані заголовки в `settings_kefir.cpp`.
+
+## Попередній delivery: v0.13.806 — Alphabetical interface translation languages
 
 Статус: реалізовано; очікується апаратна перевірка.
 1. `LoadTranslationsCache()` стабільно сортує отримані мови за відображуваною назвою `entry.name`.

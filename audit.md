@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.806**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.807**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.807 поза ponytail-чергою: пункт «Fan curve» перенесено з меню «Kefir Settings» до списку «Tools» (`SystemToolsMenu`); опис «Kefir Settings» у меню інструментів оновлено на «Console-specific Kefir switches.» у коді та всіх 14 мовних файлах; версію піднято до 0.13.807. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.806 поза ponytail-чергою: `LoadTranslationsCache()` стабільно сортує отримані мови за відображуваною назвою перед побудовою Translate Interface; версію піднято до 0.13.806. Gemini `git diff --check` і senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

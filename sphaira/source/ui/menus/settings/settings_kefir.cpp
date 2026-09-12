@@ -4,7 +4,6 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
-#include "ui/menus/settings/settings_fancurve.hpp"
 
 #include "app.hpp"
 #include "fs.hpp"
@@ -223,18 +222,6 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n\nTo disable it if the console does not boot:\nhekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te"_i18n,
         3.f,
     }));
-
-    items.emplace_back(SettingsItem{
-        "Fan curve"_i18n,
-        "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n,
-        [](){
-            return "";
-        },
-        [](){
-            OpenFanCurveMenu();
-        },
-        SettingsItemKind::Folder,
-    });
 
     items.emplace_back(SettingsItem{
         "Translate Interface"_i18n,

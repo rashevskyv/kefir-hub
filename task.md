@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.806** (alphabetical interface translation languages). Завершені задачі збережено в
+Актуальний delivery — **v0.13.807** (move fan curve to Tools). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.806 (Alphabetical interface translation languages)
+## Поточний delivery: v0.13.807 (Move fan curve to Tools)
+
+- [x] `FAN-CURVE-MOVE-807` — пункт «Fan curve» перенесено з «Kefir Settings» у меню системних інструментів «Tools» (`SystemToolsMenu`).
+- [x] `KEFIR-SETTINGS-DESC-807` — опис «Kefir Settings» оновлено на «Console-specific Kefir switches.» у коді та всіх 14 мовних файлах `i18n`.
+- [x] `VERIFY-807` — Gemini `git diff --check` та валідація JSON пройшли; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-807` — `sphaira_VERSION` піднято до `0.13.807`, оновлено документацію та delivery-файли.
+- [ ] `HW-807` — зібрати NRO та перевірити відкриття «Крива кулера» / «Fan curve» у списку Tools на Switch.
+
+## Попередній delivery: v0.13.806 (Alphabetical interface translation languages)
 
 - [x] `TRANSLATION-SORT-806` — `LoadTranslationsCache()` стабільно сортує мови за `entry.name` перед побудовою меню.
 - [x] `VERIFY-806` — Gemini `git diff --check` і senior static diff review пройшли; compile/tests/NRO не запускалися за policy.

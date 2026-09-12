@@ -12,6 +12,7 @@
 #include "ui/menus/install_share.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/users_menu.hpp"
+#include "ui/menus/settings/settings_fancurve.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
@@ -194,7 +195,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
         { "Tools"_i18n, "System tools and sysmodule manager."_i18n, 0, [](){
             App::Push<SystemToolsMenu>();
         }},
-        { "Kefir Settings"_i18n, "Fan curves and console-specific Kefir switches."_i18n, 0, [](){
+        { "Kefir Settings"_i18n, "Console-specific Kefir switches."_i18n, 0, [](){
             App::Push<ui::menu::settings::KefirSettingsMenu>();
         }},
         { "Settings"_i18n, "Open Kefir Hub application settings."_i18n, 0, [](){
@@ -415,6 +416,9 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
     m_items = {
         { "Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, 0, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
+        }},
+        { "Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, 0, [](){
+            ui::menu::settings::OpenFanCurveMenu();
         }},
         { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, ComingSoon },
         { "Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, 0, [](){
