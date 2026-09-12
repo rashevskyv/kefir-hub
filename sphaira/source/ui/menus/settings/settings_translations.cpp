@@ -379,6 +379,10 @@ auto LoadTranslationsCache(const std::string& path, const std::string& expected_
         }
     }
 
+    std::stable_sort(entries.begin(), entries.end(), [](const InterfaceTranslationEntry& a, const InterfaceTranslationEntry& b) {
+        return a.name < b.name;
+    });
+
     return entries;
 }
 

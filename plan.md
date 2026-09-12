@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.805** (smart default HTTP port). Завершені плани збережено в
+Поточний delivery — **v0.13.806** (alphabetical interface translation languages). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.805 — Smart default HTTP port
+## Поточний delivery: v0.13.806 — Alphabetical interface translation languages
+
+Статус: реалізовано; очікується апаратна перевірка.
+1. `LoadTranslationsCache()` стабільно сортує отримані мови за відображуваною назвою `entry.name`.
+2. Єдине сортування на межі завантаження кешу однаково діє для вже збережених даних і після оновлення списку.
+
+## Попередній delivery: v0.13.805 — Smart default HTTP port
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. HTTP listener спочатку пробує стандартний порт 80, а якщо він недоступний — послідовно 8080–8090.

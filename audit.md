@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.805**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.806**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.806 поза ponytail-чергою: `LoadTranslationsCache()` стабільно сортує отримані мови за відображуваною назвою перед побудовою Translate Interface; версію піднято до 0.13.806. Gemini `git diff --check` і senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.805 поза ponytail-чергою: HTTP server тепер спочатку bind-ить стандартний port 80, а за недоступності перебирає 8080–8090; `:80` опускається у `kefir.local` і numeric IPv4 UI/QR URL, а fallback port залишається явним; Console Transfer перевіряє 80 перед 8080–8090, зберігаючи явні URL/port; README і header docs оновлено; версію піднято до 0.13.805. Gemini `git diff --check` і symbol search, senior static review пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.805** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.806** (2026-09-12). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.806 — Alphabetical interface translation languages
+
+- Отримані мови інтерфейсного перекладу тепер відображаються за алфавітом за їхньою назвою.
+- Сортування виконується один раз у `LoadTranslationsCache()`, тому однаково діє для наявного і щойно оновленого кешу.
+- `sphaira_VERSION` піднято до `0.13.806`; Gemini `git diff --check` і senior static review пройшли. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.805 — Smart default HTTP port
 

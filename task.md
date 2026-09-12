@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.805** (smart default HTTP port). Завершені задачі збережено в
+Актуальний delivery — **v0.13.806** (alphabetical interface translation languages). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.805 (Smart default HTTP port)
+## Поточний delivery: v0.13.806 (Alphabetical interface translation languages)
+
+- [x] `TRANSLATION-SORT-806` — `LoadTranslationsCache()` стабільно сортує мови за `entry.name` перед побудовою меню.
+- [x] `VERIFY-806` — Gemini `git diff --check` і senior static diff review пройшли; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-806` — app version і delivery docs оновлено до `0.13.806`.
+- [ ] `HW-806` — перевірити алфавітний порядок мов у Translate Interface на Switch.
+
+## Попередній delivery: v0.13.805 (Smart default HTTP port)
 
 - [x] `HTTP-PORT-805` — HTTP server пробує port 80 перед fallback 8080–8090.
 - [x] `HTTP-URL-805` — `:80` приховано для mDNS і IPv4 URL; non-default port залишається явним.
