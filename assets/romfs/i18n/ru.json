@@ -505,6 +505,7 @@
   "This will replace the selected system interface language and reboot the console.": "Это заменит выбранный язык системного интерфейса и перезагрузит консоль.",
   "Failed to install translation": "Не удалось установить перевод",
   "Download DBI translations list": "Скачать список переводов DBI",
+  "Update DBI translations list": "Обновить список переводов DBI",
   "Update the DBI fan translations package list.": "Обновить список пакетов фанатских переводов DBI.",
   "Russian latest DBI": "Последняя русская версия DBI",
   "Download the latest Russian DBI build.": "Скачать последнюю русскую сборку DBI.",

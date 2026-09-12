@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.807**. Дата: 2026-09-12.
+Канічний робочий файл. Версія коду: **v0.13.808**. Дата: 2026-09-12.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.808 поза ponytail-чергою: у меню DBI («Settings -> Software -> DBI») закріплено перші три пункти вгорі списку незалежно від завантаження перекладів; реалізовано динамічну назву кнопки («Download DBI translations list» / «Update DBI translations list») з підтримкою всіх 14 мов `i18n`; додано `MakeSeparator()` та малювання горизонтальної розділювальної лінії в `DrawActionListItem` / `DrawItemRow`; оновлено навігацію з пропуском лінії через `ResolveItemIndex`; у `ParseDbiTranslations` додано алфавітне сортування без урахування регістру (`strcasecmp`); оновлено `README.md`; версію піднято до 0.13.808. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.807 поза ponytail-чергою: пункт «Fan curve» перенесено з меню «Kefir Settings» до списку «Tools» (`SystemToolsMenu`); опис «Kefir Settings» у меню інструментів оновлено на «Console-specific Kefir switches.» у коді та всіх 14 мовних файлах; версію піднято до 0.13.807. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

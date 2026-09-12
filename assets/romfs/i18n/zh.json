@@ -500,6 +500,7 @@
   "This will replace the selected system interface language and reboot the console.": "这将替换所选的系统界面语言并重新启动控制台。",
   "Failed to install translation": "安装翻译失败",
   "Download DBI translations list": "下载 DBI 翻译列表",
+  "Update DBI translations list": "更新 DBI 翻译列表",
   "Update the DBI fan translations package list.": "更新 DBI 粉丝翻译包列表。",
   "Russian latest DBI": "俄罗斯最新DBI",
   "Download the latest Russian DBI build.": "下载最新的俄罗斯 DBI 版本。",

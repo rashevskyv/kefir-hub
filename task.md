@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.807** (move fan curve to Tools). Завершені задачі збережено в
+Актуальний delivery — **v0.13.808** (pin top DBI items, separator and alphabetical sorting). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.807 (Move fan curve to Tools)
+## Поточний delivery: v0.13.808 (Pin top DBI items, separator and alphabetical sorting)
+
+- [x] `DBI-TOP-ITEMS-808` — зафіксовано перші три пункти («Завантажити/Оновити список перекладів DBI», «Остання російська версія DBI» та «Скинути налаштування DBI») зверху списку меню DBI.
+- [x] `DBI-DYNAMIC-LABEL-808` — реалізовано динамічну назву кнопки («Download DBI translations list» / «Update DBI translations list») та додано переклад для всіх 14 мов у `assets/romfs/i18n/*.json`.
+- [x] `DBI-SEPARATOR-808` — додано `MakeSeparator()`, малювання горизонтальної розділювальної лінії в `DrawActionListItem` / `DrawItemRow` та захист навігації від вибору лінії через `ResolveItemIndex` / `EnsureVisible`.
+- [x] `DBI-SORT-808` — реалізовано стабільне сортування фанатських перекладів DBI в алфавітному порядку без урахування регістру (`strcasecmp`).
+- [x] `README-808` — оновлено `README.md` з описом інтегрованого менеджера перекладів та утиліт DBI.
+- [x] `VERIFY-808` — валідація JSON для всіх 14 мов пройшла; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-808` — `sphaira_VERSION` піднято до `0.13.808`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-808` — перевірити відображення списку, розділювача та оновлення кнопки в меню DBI на Switch.
+
+## Попередній delivery: v0.13.807 (Move fan curve to Tools)
 
 - [x] `FAN-CURVE-MOVE-807` — пункт «Fan curve» перенесено з «Kefir Settings» у меню системних інструментів «Tools» (`SystemToolsMenu`).
 - [x] `KEFIR-SETTINGS-DESC-807` — опис «Kefir Settings» оновлено на «Console-specific Kefir switches.» у коді та всіх 14 мовних файлах `i18n`.

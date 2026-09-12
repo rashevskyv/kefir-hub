@@ -435,6 +435,7 @@
   "This will replace the selected system interface language and reboot the console.": "그러면 선택한 시스템 인터페이스 언어가 바뀌고 콘솔이 재부팅됩니다.",
   "Failed to install translation": "번역을 설치하지 못했습니다.",
   "Download DBI translations list": "DBI 번역 목록 다운로드",
+  "Update DBI translations list": "DBI 번역 목록 업데이트",
   "Update the DBI fan translations package list.": "DBI 팬 번역 패키지 목록을 업데이트합니다.",
   "Russian latest DBI": "러시아어 최신 DBI",
   "Download the latest Russian DBI build.": "최신 러시아어 DBI 빌드를 다운로드하세요.",

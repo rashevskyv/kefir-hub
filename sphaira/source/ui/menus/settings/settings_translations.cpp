@@ -13,6 +13,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cctype>
+#include <strings.h>
 #include <yyjson.h>
 
 namespace sphaira::ui::menu::settings::detail {
@@ -93,6 +94,11 @@ auto ParseDbiTranslations(const std::string& path) -> std::vector<DbiTranslation
         }
     }
     flush();
+
+    std::stable_sort(entries.begin(), entries.end(), [](const DbiTranslationEntry& a, const DbiTranslationEntry& b) {
+        const auto cmp = strcasecmp(a.name.c_str(), b.name.c_str());
+        return cmp < 0 || (cmp == 0 && a.name < b.name);
+    });
 
     return entries;
 }

@@ -435,6 +435,7 @@
   "This will replace the selected system interface language and reboot the console.": "Điều này sẽ thay thế ngôn ngữ giao diện hệ thống đã chọn và khởi động lại bảng điều khiển.",
   "Failed to install translation": "Không cài đặt được bản dịch",
   "Download DBI translations list": "Tải xuống danh sách bản dịch DBI",
+  "Update DBI translations list": "Cập nhật danh sách bản dịch DBI",
   "Update the DBI fan translations package list.": "Cập nhật danh sách gói bản dịch của người hâm mộ DBI.",
   "Russian latest DBI": "DBI mới nhất của Nga",
   "Download the latest Russian DBI build.": "Tải xuống bản dựng DBI mới nhất của Nga.",

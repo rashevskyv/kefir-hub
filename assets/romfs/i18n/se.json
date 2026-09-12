@@ -435,6 +435,7 @@
   "This will replace the selected system interface language and reboot the console.": "Detta kommer att ersätta det valda systemgränssnittsspråket och starta om konsolen.",
   "Failed to install translation": "Det gick inte att installera översättningen",
   "Download DBI translations list": "Ladda ner DBI översättningslista",
+  "Update DBI translations list": "Uppdatera DBI översättningslista",
   "Update the DBI fan translations package list.": "Uppdatera DBI-fanöversättningspaketlistan.",
   "Russian latest DBI": "Ryska senaste DBI",
   "Download the latest Russian DBI build.": "Ladda ner den senaste ryska DBI-versionen.",

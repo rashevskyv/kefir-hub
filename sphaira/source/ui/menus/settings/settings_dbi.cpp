@@ -25,8 +25,11 @@ const auto DBI_TRANSLATIONS_PACKAGE = paths::PACKAGES + "/Software/DBI/Fan Trans
 auto BuildDbiItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
+    const auto translations = ParseDbiTranslations(DBI_TRANSLATIONS_PACKAGE);
+    const bool has_translations = !translations.empty();
+
     items.emplace_back(MakePackageAction({
-        "Download DBI translations list"_i18n,
+        has_translations ? "Update DBI translations list"_i18n : "Download DBI translations list"_i18n,
         "Update the DBI fan translations package list."_i18n,
         [](auto pbox) -> Result {
             R_TRY(DownloadFile(
@@ -39,16 +42,6 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
     }));
-
-    for (const auto& entry : ParseDbiTranslations(DBI_TRANSLATIONS_PACKAGE)) {
-        items.emplace_back(MakePackageAction({
-            entry.name,
-            "Install DBI fan translation."_i18n,
-            [entry](auto pbox) -> Result {
-                return InstallDbiTranslation(pbox, entry);
-            },
-        }));
-    }
 
     items.emplace_back(MakePackageAction({
         "Russian latest DBI"_i18n,
@@ -83,6 +76,20 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
         0.5f,
     }));
 
+    if (has_translations) {
+        items.emplace_back(MakeSeparator());
+
+        for (const auto& entry : translations) {
+            items.emplace_back(MakePackageAction({
+                entry.name,
+                "Install DBI fan translation."_i18n,
+                [entry](auto pbox) -> Result {
+                    return InstallDbiTranslation(pbox, entry);
+                },
+            }));
+        }
+    }
+
     return items;
 }
 
@@ -116,7 +123,14 @@ void DbiMenu::OnFocusGained() {
     }
     m_items = BuildDbiItems();
     auto it = std::find_if(m_items.cbegin(), m_items.cend(), [&](const auto& item) {
-        return item.label == item_label;
+        if (item.label == item_label) {
+            return true;
+        }
+        if ((item_label == "Download DBI translations list"_i18n || item_label == "Update DBI translations list"_i18n) &&
+            (item.label == "Download DBI translations list"_i18n || item.label == "Update DBI translations list"_i18n)) {
+            return true;
+        }
+        return false;
     });
     SetIndex(it == m_items.cend() ? m_index : std::distance(m_items.cbegin(), it));
 }
@@ -124,6 +138,9 @@ void DbiMenu::OnFocusGained() {
 void DbiMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (i < static_cast<s64>(m_items.size()) && m_items[i].kind == SettingsItemKind::Header) {
+            return;
+        }
         if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
@@ -145,9 +162,11 @@ void DbiMenu::SetIndex(s64 index) {
         m_index = 0;
         return;
     }
-    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    m_index = ResolveItemIndex(m_items, index, m_index);
     if (!m_index) {
         m_list->SetYoff(0);
+    } else {
+        m_list->EnsureVisible(m_index, m_items.size());
     }
     SetTitleSubHeading(m_items[m_index].description, true);
     SetSubHeading("");

@@ -246,6 +246,10 @@ Sphaira features customizable theme options and multi-language support:
 - **Locked File Bypass & Reboot Recovery:** During interface translation removal, file lock exceptions (`FsError_TargetLocked`) are safely bypassed. Locked files are left behind while deleting everything else, and the system reboots immediately, releasing all filesystem handles and completing the removal process smoothly.
 - **Empty Translation Folder Filtering:** The translations menu dynamically hides translation entries that do not have their corresponding JSON localization layout metadata file on the SD card, avoiding empty selection directories and preventing errors like `Result_FsEmpty`.
 - **Automatic Localized Interface Switching:** When installing a system interface translation, Sphaira automatically checks if the corresponding language is supported in its own settings (e.g., matching Ukrainian, Portuguese, or Vietnamese). If supported, Sphaira switches its own language layout configuration to match the installed translation on the fly, allowing a seamless experience right after the system reboot without manual settings adjustments.
+- **DBI Management & Fan Translations:** Under "Settings -> Software -> DBI", Sphaira provides integrated management for DBI installer builds and translations:
+  - **Pinned Utility Controls:** Primary operations ("Download DBI translations list" / "Update DBI translations list", "Russian latest DBI", and "Reset DBI config") remain pinned at the top of the menu.
+  - **Dynamic List Action:** The translations action dynamically toggles between "Download DBI translations list" and "Update DBI translations list" once package definitions are loaded.
+  - **Visual Divider & Alphabetical Ordering:** When translations are downloaded, a clear divider separates the top utility actions from the fan translations list, with entries sorted alphabetically for effortless browsing.
 
 ## Image Viewer
 

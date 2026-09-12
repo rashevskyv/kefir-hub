@@ -44,6 +44,7 @@ auto OnOff(bool enabled) -> std::string;
 auto SettingsValueColour(Theme* theme, const std::string& value, bool selected) -> NVGcolor;
 
 auto MakeHeader(std::string label) -> SettingsItem;
+auto MakeSeparator() -> SettingsItem;
 auto MakeFolderItem(std::string label, std::string description, std::function<std::vector<SettingsItem>()> builder) -> SettingsItem;
 auto MakeBoolItem(std::string label, std::string description, std::function<bool()> get, std::function<void(bool)> set) -> SettingsItem;
 auto MakeOptionItem(std::string label, std::string description, option::OptionBool& option) -> SettingsItem;

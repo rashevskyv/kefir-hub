@@ -392,16 +392,21 @@ void Menu::DrawItemRow(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem&
         // a section caption: a dimmed label with a rule running off to the
         // right, never highlighted because the cursor cannot land on it.
         if (item.kind == SettingsItemKind::Header) {
-            const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
             const float text_x = v.x + 18.f;
-            const float text_y = v.y + v.h - 22.f;
-            gfx::drawTextArgs(vg, text_x, text_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", item.label.c_str());
-            float bounds[4];
-            nvgFontSize(vg, 15.f);
-            gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
-            const float rule_x = text_x + (bounds[2] - bounds[0]) + 12.f;
-            gfx::drawRect(vg, rule_x, text_y + 9.f, std::max(0.f, v.x + v.w - 20.f - rule_x), 1.f,
-                theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            if (!item.label.empty()) {
+                const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+                const float text_y = v.y + v.h - 22.f;
+                gfx::drawTextArgs(vg, text_x, text_y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", item.label.c_str());
+                float bounds[4];
+                nvgFontSize(vg, 15.f);
+                gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+                const float rule_x = text_x + (bounds[2] - bounds[0]) + 12.f;
+                gfx::drawRect(vg, rule_x, text_y + 9.f, std::max(0.f, v.x + v.w - 20.f - rule_x), 1.f,
+                    theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            } else {
+                gfx::drawRect(vg, text_x, v.y + v.h / 2.f, std::max(0.f, v.x + v.w - 20.f - text_x), 1.f,
+                    theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+            }
             return;
         }
 
