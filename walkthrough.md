@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.815** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.816** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.816 — Offline removal for locked translations
+
+- При штатному `FsError_TargetLocked` користувач більше не отримує пораду просто повторити дію: Hub пропонує перезавантаження в TegraExplorer для offline-видалення.
+- Новий одноразовий `remove_translation.te` early-disarm-ить `/startup.te`, видаляє лише системні translation paths, перевіряє, що вони зникли, показує зелений/червоний результат і повертає консоль у Hekate.
+- Існуюча pending reboot operation захищена: якщо `/startup.te` вже є, Hub відмовляється її перезаписувати.
+- DBI translation, кастомні теми та system saves цим flow не зачіпаються.
+- `sphaira_VERSION` піднято до `0.13.816`; виконано static review і `git diff --check`. Compile/NRO після цієї зміни не запускалися за workspace policy.
 
 ## v0.13.815 — Post-806 regression fixes
 

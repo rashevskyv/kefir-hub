@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.815**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.816**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.816 поза ponytail-чергою: виправлено штатний `FsError_TargetLocked` при видаленні завантажених qlaunch/system message-файлів; замість безрезультатного повтору Hub пропонує завершити видалення offline через новий одноразовий `assets/romfs/tegra/remove_translation.te`, не перезаписує наявний `/startup.te`, перевіряє readback 18 translation paths і повертає консоль у Hekate. Flow не зачіпає DBI translation, теми чи system saves; додано en/uk i18n; версію піднято до 0.13.816. `git diff --check` виконано; compile/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.815 поза ponytail-чергою: аудит комітів після v0.13.806 виявив і виправив передчасне видалення старого системного перекладу, маскування `FsError_TargetLocked`, неперевірене очищення тем/перекладів, хибний success TegraScript та небезпечний lifecycle downgrade recovery. Новий пакет перекладу перевіряється до заміни; firmware downgrade preflight не озброює `/startup.te`, наявний startup workflow не перезаписується, arm відбувається лише після успішного apply; failure cleanup показується користувачу, DBI translation зберігається; `downgrade_fix.te` підтверджує видалення save `8000000000000073`. Gemini успішно виконав WSL ReleaseWithInstall build; senior виконав фінальний static review і `git diff --check`. **Не закриває** чергу §2 A1–A7.
 

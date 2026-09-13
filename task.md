@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.815** (post-806 regression fixes). Завершені задачі збережено в
+Актуальний delivery — **v0.13.816** (offline removal for locked translations). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.815 (Post-806 regression fixes)
+## Поточний delivery: v0.13.816 (Offline removal for locked translations)
+
+- [x] `LOCKED-TRANSLATION-816` — `FsError_TargetLocked` переводить видалення в підтверджений offline flow через TegraExplorer.
+- [x] `TE-REMOVE-TRANSLATION-816` — додано fail-closed `remove_translation.te` з readback усіх 18 translation paths і поверненням у Hekate.
+- [x] `STARTUP-GUARD-816` — наявний `/startup.te` не перезаписується новою операцією.
+- [x] `I18N-816` — додано англійські й українські повідомлення offline removal.
+- [x] `DOCS-BUMP-816` — версію та чотири delivery-документи оновлено до `0.13.816`.
+- [ ] `BUILD-816` — виконати WSL ReleaseWithInstall після додавання нового RomFS-скрипта.
+- [ ] `HW-816` — перевірити locked removal → TegraExplorer → Hekate → Horizon.
+
+## Попередній delivery: v0.13.815 (Post-806 regression fixes)
 
 - [x] `TRANSLATION-SAFE-REPLACE-815` — новий пакет перевіряється до видалення старого перекладу; всі помилки видалення обробляються.
 - [x] `TRANSLATION-REMOVE-TRUTH-815` — `FsError_TargetLocked` та залишкові файли більше не повідомляються як успішне видалення.

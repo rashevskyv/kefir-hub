@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.815** (post-806 regression fixes). Завершені плани збережено в
+Поточний delivery — **v0.13.816** (offline removal for locked translations). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.815 — Post-806 regression fixes
+## Поточний delivery: v0.13.816 — Offline removal for locked translations
+
+Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
+1. `FsError_TargetLocked` під час видалення системного перекладу тепер розпізнається як штатне блокування файлів процесами Horizon, а не як безвихідна помилка.
+2. Після підтвердження Hub перевіряє відсутність іншого `/startup.te` і запускає одноразовий `remove_translation.te` у TegraExplorer.
+3. Offline-скрипт видаляє лише 18 системних translation paths, перевіряє readback, не зачіпає теми, DBI чи system saves і повертає консоль у Hekate.
+
+## Попередній delivery: v0.13.815 — Post-806 regression fixes
 
 Статус: реалізовано; WSL ReleaseWithInstall успішно зібрано Gemini, очікується апаратна перевірка.
 1. Заміна системного перекладу тепер спершу завантажує, розпаковує й перевіряє новий пакет, а лише потім видаляє старі файли; помилки видалення, включно з `FsError_TargetLocked`, більше не маскуються.
