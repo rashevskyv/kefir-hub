@@ -2096,7 +2096,7 @@
   "By continuing, you accept full responsibility.": "By continuing, you accept full responsibility.",
   "Scan QR code to open guide on mobile device.": "Scan QR code to open guide on mobile device.",
   "Downgrade fix:": "Downgrade fix:",
-  "An automated fix will run in TegraExplorer after install to delete save 8000000000000073, themes, and translations, then reboot to Hekate.": "An automated fix will run in TegraExplorer after install to delete save 8000000000000073, themes, and translations, then reboot to Hekate.",
+  "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process.": "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process.",
   "If the console fails to boot or shows an error (Maintenance Mode):": "If the console fails to boot or shows an error (Maintenance Mode):",
   "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass.": "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass.",
   "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens.": "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens.",

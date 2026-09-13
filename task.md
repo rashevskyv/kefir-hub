@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.820** (downgrade script contract and compact translation layout). Завершені задачі збережено в
+Актуальний delivery — **v0.13.821** (readable downgrade warning). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.820 (Downgrade script contract and compact translation layout)
+## Поточний delivery: v0.13.821 (Readable downgrade warning)
+
+- [x] `DOWNGRADE-COPY-821` — текст очищення скорочено до нейтрального повідомлення про видалення system save, тем і перекладів.
+- [x] `DOWNGRADE-LAYOUT-821` — збільшено типографіку попапа та додано динамічний vertical flow за фактичною висотою рядків.
+- [x] `DOCS-BUMP-821` — Sphaira version та delivery-документи оновлено до `0.13.821`.
+- [ ] `HW-821` — зібрати NRO і перевірити en/uk downgrade popup, QR та обидві cleanup-гілки на консолі.
+
+## Попередній delivery: v0.13.820 (Downgrade script contract and compact translation layout)
 
 - [x] `DOWNGRADE-SCRIPT-820` — TegraExplorer `DowngradeFix.te` став канонічним dual-mode скриптом; Sphaira-копія byte-identical і автоматично синхронізується Makefile-ом TE.
 - [x] `DOWNGRADE-ROMFS-820` — читання скрипта монтує RomFS на вимогу; obsolete `__TARGET_NAND__` contract видалено.

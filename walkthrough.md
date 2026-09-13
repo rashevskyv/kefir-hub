@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.820** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.821** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.821 — Readable downgrade warning
+
+- Попередження та success reboot prompt тепер нейтрально кажуть, що system save `8000000000000073`, користувацькі теми та переклади інтерфейсу буде видалено, без зайвого пояснення виконавця.
+- `DowngradeWarningBox` зберіг розмір, QR і кнопки, але отримав більші шрифти та послідовне розміщення wrapped blocks за виміряною NanoVG-висотою.
+- `git diff --check` і parsing усіх 14 JSON пройшли; compile/tests/NRO не запускалися за вказівкою користувача та workspace policy.
 
 ## v0.13.820 — Downgrade script contract and compact translation layout
 

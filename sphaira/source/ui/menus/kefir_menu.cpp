@@ -124,22 +124,40 @@ public:
         gfx::dimBackground(vg);
         gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 
+        auto draw_box = [&](float x, float& cur_y, float size, float bound, const NVGcolor& colour, const char* str, float line_height = 1.25f, float margin_after = 0.f, bool bold = false) {
+            nvgSave(vg);
+            nvgFontSize(vg, size);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+            nvgTextLineHeight(vg, line_height);
+            float b[4]{};
+            nvgTextBoxBounds(vg, x, cur_y, bound, str, nullptr, b);
+            nvgRestore(vg);
+            gfx::drawTextBox(vg, x, cur_y, size, bound, colour, str, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, line_height);
+            if (bold) {
+                gfx::drawTextBox(vg, x + 0.6f, cur_y, size, bound, colour, str, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, line_height);
+            }
+            const float text_h = b[3] - b[1];
+            cur_y += text_h + margin_after;
+        };
+
         // 1. Title
         const std::string title = "Firmware downgrade warning"_i18n;
-        gfx::drawTextBold(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 18.f, 23.f,
+        gfx::drawTextBold(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 20.f, 25.5f,
             theme->GetColour(ThemeEntryID_TEXT_SELECTED), title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
         constexpr float pad_x = 36.f;
         const float col1_x = m_pos.x + pad_x;
         const float content_w = m_pos.w - pad_x * 2.f;
 
+        float cur_y = m_pos.y + 20.f + 25.5f + 14.f;
+
         // 2. Compact version rows: Current and Target side-by-side
         const std::string current_label = "Current:"_i18n;
         const std::string target_label = "Target:"_i18n;
-        const float y_ver = m_pos.y + 54.f;
+        const float y_ver = cur_y;
 
         nvgSave(vg);
-        nvgFontSize(vg, 16.f);
+        nvgFontSize(vg, 17.f);
         float b1[4]{}, b2[4]{};
         nvgTextBounds(vg, 0.f, 0.f, current_label.c_str(), nullptr, b1);
         nvgTextBounds(vg, 0.f, 0.f, target_label.c_str(), nullptr, b2);
@@ -147,54 +165,55 @@ public:
         const float tgt_lbl_w = b2[2] - b2[0];
         nvgRestore(vg);
 
-        gfx::drawTextBold(vg, col1_x, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), current_label.c_str());
-        gfx::drawText(vg, col1_x + cur_lbl_w + 8.f, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), m_current_version.c_str());
+        gfx::drawTextBold(vg, col1_x, y_ver, 17.f, theme->GetColour(ThemeEntryID_TEXT), current_label.c_str());
+        gfx::drawText(vg, col1_x + cur_lbl_w + 8.f, y_ver, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_current_version.c_str());
 
         const float target_col_x = col1_x + 280.f;
-        gfx::drawTextBold(vg, target_col_x, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), target_label.c_str());
-        gfx::drawText(vg, target_col_x + tgt_lbl_w + 8.f, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), m_target_version.c_str());
+        gfx::drawTextBold(vg, target_col_x, y_ver, 17.f, theme->GetColour(ThemeEntryID_TEXT), target_label.c_str());
+        gfx::drawText(vg, target_col_x + tgt_lbl_w + 8.f, y_ver, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_target_version.c_str());
+
+        cur_y += 17.f + 18.f;
 
         // 3. Automated fix info
-        const float y_fix = y_ver + 26.f;
         const std::string fix_label = "Downgrade fix:"_i18n;
-        const std::string fix_text = "An automated fix will run in TegraExplorer after install to delete save 8000000000000073, themes, and translations, then reboot to Hekate."_i18n;
-        gfx::drawTextBold(vg, col1_x, y_fix, 15.f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
+        const std::string fix_text = "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process."_i18n;
+
         nvgSave(vg);
-        nvgFontSize(vg, 15.f);
+        nvgFontSize(vg, 16.5f);
         float fix_b[4]{};
         nvgTextBounds(vg, 0.f, 0.f, fix_label.c_str(), nullptr, fix_b);
         const float fix_lbl_w = fix_b[2] - fix_b[0];
         nvgRestore(vg);
-        gfx::drawTextBox(vg, col1_x + fix_lbl_w + 8.f, y_fix, 14.f, content_w - fix_lbl_w - 8.f,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), fix_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        gfx::drawTextBold(vg, col1_x, cur_y, 16.5f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
+
+        const float fix_text_x = col1_x + fix_lbl_w + 8.f;
+        const float fix_text_w = content_w - fix_lbl_w - 8.f;
+        float fix_y = cur_y;
+        draw_box(fix_text_x, fix_y, 15.f, fix_text_w, theme->GetColour(ThemeEntryID_TEXT_INFO), fix_text.c_str(), 1.25f, 0.f);
+        cur_y = std::max(cur_y + 16.5f, fix_y) + 22.f;
 
         // 4. Maintenance Mode instructions
-        const float y_maint = y_fix + 38.f;
         const std::string maint_title = "If the console fails to boot or shows an error (Maintenance Mode):"_i18n;
-        gfx::drawTextBold(vg, col1_x, y_maint, 15.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), maint_title.c_str());
+        draw_box(col1_x, cur_y, 16.5f, content_w, theme->GetColour(ThemeEntryID_TEXT_SELECTED), maint_title.c_str(), 1.25f, 10.f, /*bold=*/true);
 
-        const float y_step1 = y_maint + 24.f;
         const std::string step1 = "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step1, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step1.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x + 8.f, cur_y, 15.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step1.c_str(), 1.25f, 8.f);
 
-        const float y_step2 = y_step1 + 20.f;
         const std::string step2 = "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step2, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step2.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x + 8.f, cur_y, 15.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step2.c_str(), 1.25f, 8.f);
 
-        const float y_step3 = y_step2 + 20.f;
         const std::string step3 = "3. Select 'Initialize Console Without Deleting Save Data'."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step3, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step3.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x + 8.f, cur_y, 15.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step3.c_str(), 1.25f, 10.f);
 
-        const float y_warn = y_step3 + 20.f;
         const std::string warn_note = "Warning: All installed games and system settings will be wiped; saves are preserved."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_warn, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), warn_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x + 8.f, cur_y, 14.5f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), warn_note.c_str(), 1.25f, 8.f);
 
-        const float y_sd_note = y_warn + 20.f;
         const std::string sd_note = "Note: The 'Nintendo' folder on the SD card will become invalid and the console will prompt to delete it. Agree to delete it; this will NOT affect your saves."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_sd_note, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), sd_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x + 8.f, cur_y, 14.5f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), sd_note.c_str(), 1.25f, 26.f);
 
         // 5. Guide & QR code section + Responsibility note
-        const float guide_y = y_sd_note + 36.f;
+        const float guide_y = cur_y;
 
         constexpr int qr_border = 3;
         constexpr float qr_scale = 3.f;
@@ -218,18 +237,16 @@ public:
         // Left text next to QR
         const float left_w = qr_x - col1_x - 18.f;
         const std::string guide_label = "Manual downgrade guide:"_i18n;
-        gfx::drawTextBold(vg, col1_x, guide_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str());
+        draw_box(col1_x, cur_y, 16.5f, left_w, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str(), 1.25f, 6.f, /*bold=*/true);
 
-        const float guide_url_y = guide_y + 20.f;
-        gfx::drawText(vg, col1_x, guide_url_y, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://switch.customfw.xyz/downgrade_fw");
+        const char* guide_url = "https://switch.customfw.xyz/downgrade_fw";
+        draw_box(col1_x, cur_y, 15.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), guide_url, 1.25f, 10.f);
 
         const std::string scan_hint = "If you prefer manual downgrade or issues persist, scan the QR code to open the guide."_i18n;
-        const float scan_hint_y = guide_url_y + 18.f;
-        gfx::drawTextBox(vg, col1_x, scan_hint_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x, cur_y, 14.5f, left_w, theme->GetColour(ThemeEntryID_TEXT), scan_hint.c_str(), 1.25f, 10.f);
 
         const std::string resp_text = "By continuing, you accept full responsibility."_i18n;
-        const float resp_y = scan_hint_y + 34.f;
-        gfx::drawTextBox(vg, col1_x, resp_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+        draw_box(col1_x, cur_y, 14.5f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), resp_text.c_str(), 1.25f, 0.f);
 
         // 6. Separator line and buttons
         gfx::drawRect(vg, m_spacer_line, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
@@ -1406,8 +1423,10 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                     std::string message = "Firmware downgrade installed successfully.\n\n";
                     if (fix->cleanup_failed) {
                         message += "WARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002. Remove them before booting the updated firmware.\n\n";
+                    } else {
+                        message += "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process.\n\n";
                     }
-                    message += "Console will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073, themes, and translations).\n\nReboot now?";
+                    message += "Console will reboot to TegraExplorer to complete the downgrade fix.\n\nReboot now?";
                     App::Push<OptionBox>(
                         message,
                         "Later"_i18n, "Reboot"_i18n, 1,

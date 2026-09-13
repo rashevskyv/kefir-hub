@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.820** (downgrade script contract and compact translation layout). Завершені плани збережено в
+Поточний delivery — **v0.13.821** (readable downgrade warning). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.820 — Downgrade script contract and compact translation layout
+## Поточний delivery: v0.13.821 — Readable downgrade warning
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. Текст про очищення нейтрально повідомляє, що system save, теми та переклади буде видалено, без згадки виконавця.
+2. `DowngradeWarningBox` використовує більші шрифти та виміряну висоту wrapped text, щоб контент заповнював діалог без накладання на QR чи кнопки.
+
+## Попередній delivery: v0.13.820 — Downgrade script contract and compact translation layout
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. Канонічний `DowngradeFix.te` перенесено до TegraExplorer і синхронізовано в Sphaira RomFS; Hub mode бере сувору ціль `emu`/`sys` з `/config/kefir/downgrade_nand`, працює без підтверджень і повертається в Hekate, manual mode зберігає вибір та підтвердження й не чіпає сторонній startup workflow.

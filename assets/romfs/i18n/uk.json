@@ -2125,7 +2125,7 @@
   "By continuing, you accept full responsibility.": "Продовжуючи, ти береш на себе повну відповідальність.",
   "Scan QR code to open guide on mobile device.": "Відскануй QR-код, щоб відкрити інструкцію на телефоні.",
   "Downgrade fix:": "Фікс даунгрейду:",
-  "An automated fix will run in TegraExplorer after install to delete save 8000000000000073, themes, and translations, then reboot to Hekate.": "Після встановлення в TegraExplorer автоматично запуститься фікс, що видалить сейв 8000000000000073, теми та переклади, і перезавантажить консоль у Hekate.",
+  "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process.": "Системний сейв 8000000000000073, користувацькі теми та переклади інтерфейсу буде видалено в процесі даунгрейду.",
   "If the console fails to boot or shows an error (Maintenance Mode):": "Якщо консоль не завантажується або видає помилку (Maintenance Mode):",
   "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass.": "1. Запусти прошивку; зачекай завершення бутлого Nintendo та Kefir.",
   "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens.": "2. Затисни й утримуй обидві кнопки гучності (+ та -), доки не відкриється Maintenance Mode.",
