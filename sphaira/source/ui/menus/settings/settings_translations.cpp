@@ -461,23 +461,38 @@ void TryAutoSwitchLanguage(const std::string& entry_name) {
     }
 }
 
+auto HasInstalledTranslation() -> bool {
+    for (const auto& raw_path : TRANSLATION_PATHS) {
+        std::string clean = raw_path;
+        while (clean.size() > 1 && clean.back() == '/') {
+            clean.pop_back();
+        }
+        if (fs::DirExists(clean) || fs::FileExists(clean)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry entry, std::string replacement_dir) -> Result {
     const auto zip_name = FileNameFromUrl(entry.zip_url);
     const auto extract_dir = paths::DOWNLOADS + "/translations";
     const auto zip_path = extract_dir + "/" + zip_name;
 
     R_TRY(DeletePath(extract_dir));
-    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + " (" + entry.zip_url + ")", entry.zip_url, zip_path));
 
-    // remove the currently installed translation first. if any of it can't be
-    // deleted (e.g. a file is held open by fs.mitm), surface a dedicated code
-    // so the ui can offer remove + reboot instead of a raw fs error.
-    for (const auto path : TRANSLATION_PATHS) {
-        if (R_FAILED(DeletePath(path))) {
-            R_THROW(Result_TranslationRemoveExistingFailed);
+    // Remove any previously installed translation silently in the background
+    // without intermediate reboot prompts.
+    if (HasInstalledTranslation()) {
+        if (pbox) {
+            pbox->NewTransfer("Removing previous translation..."_i18n);
+        }
+        for (const auto path : TRANSLATION_PATHS) {
+            DeletePath(path);
         }
     }
 
+    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + " (" + entry.zip_url + ")", entry.zip_url, zip_path));
     R_TRY(UnzipFile(pbox, zip_path, extract_dir));
 
     auto folder = TranslationExtractFolder(zip_name);
@@ -500,23 +515,20 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
 }
 
 auto RemoveInterfaceTranslation(ProgressBox* pbox) -> Result {
-    pbox->NewTransfer("Removing translations..."_i18n);
+    if (pbox) {
+        pbox->NewTransfer("Removing translations..."_i18n);
+    }
     for (const auto path : TRANSLATION_PATHS) {
         if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFoundFsDev && rc != FsError_TargetLocked) {
             R_THROW(rc);
         }
     }
-    RebootAfterSetting();
+    fsdevCommitDevice("sdmc");
     R_SUCCEED();
 }
 
 auto RemoveInterfaceTranslationAndReboot(ProgressBox* pbox) -> Result {
-    pbox->NewTransfer("Removing translations..."_i18n);
-    for (const auto path : TRANSLATION_PATHS) {
-        // best effort: locked files stay behind, but the reboot below releases
-        // the locks so the next install can delete them.
-        DeletePath(path);
-    }
+    R_TRY(RemoveInterfaceTranslation(pbox));
     RebootAfterSetting();
     R_SUCCEED();
 }

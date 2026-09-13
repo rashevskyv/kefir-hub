@@ -1,7 +1,25 @@
-Актуальний delivery — **v0.13.812** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.813** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.813 — Background translation replacement, deferred reboot on removal
+
+- **Фонове заміщення перекладу без зайвого перезавантаження**:
+  - У `InstallInterfaceTranslation` реалізовано автоматичне видалення старого перекладу у фоні без запитів до користувача та без переривання інсталяції помилкою `Result_TranslationRemoveExistingFailed`.
+  - Усунено зайве проміжне перезавантаження: новий переклад завантажується, розпаковується, копіюється в `/atmosphere/contents`, а єдине перезавантаження консолі виконується вже наприкінці після повного завершення процесу.
+- **Детектування встановленого перекладу (`HasInstalledTranslation`)**:
+  - Додано функцію перевірки наявності файлів або папок перекладу за 18 шляхами `TRANSLATION_PATHS`.
+  - При спробі видалити переклад за його відсутності меню інформує користувача вікном «No installed translation files were found.».
+- **Ручне видалення перекладу з опцією відкладеного перезавантаження**:
+  - `RemoveInterfaceTranslation` тепер лише видаляє файли та фіксує стан SD-карти (`fsdevCommitDevice`), не викликаючи примусового ребуту всередині функції.
+  - У `MakeRemoveTranslationItem` після успішного видалення відкривається модальне вікно `OptionBox` із вибором «Reboot now» (рекомендовано, за замовчуванням) або «Reboot later».
+  - Діалог містить попередження: хоча видалення вже завантажених у пам'ять файлів не призводить до краху системи, перезавантаження зараз рекомендується для уникнення артефактів системного тексту та відновлення оригінального інтерфейсу.
+  - Вибір «Reboot later» дозволяє продовжувати роботу в програмі без перезапуску консолі та виводить сповіщення «Translation removed. Reboot later to apply changes.».
+- **Локалізація та документація**:
+  - Додано нові рядки та переклади в `assets/romfs/i18n/en.json` та `assets/romfs/i18n/uk.json`.
+  - Оновлено `README.md` у розділі «Interface Translation & Diagnostics».
+- `sphaira_VERSION` піднято до `0.13.813`; валідація JSON пройшла успішно. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.812 — Remove themes & translations on all firmware updates
 

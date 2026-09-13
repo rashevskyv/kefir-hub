@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.812** (remove themes & translations on all firmware updates). Завершені задачі збережено в
+Актуальний delivery — **v0.13.813** (background translation replacement, deferred reboot on removal). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.812 (Remove themes & translations on all firmware updates)
+## Поточний delivery: v0.13.813 (Background translation replacement, deferred reboot on removal)
+
+- [x] `TRANSLATION-DETECT-813` — додано `HasInstalledTranslation()` для детектування встановленого перекладу за 18 шляхами `TRANSLATION_PATHS`.
+- [x] `TRANSLATION-BG-REPLACE-813` — у `InstallInterfaceTranslation` реалізовано автоматичне фонове видалення старого перекладу без запитань та помилок `Result_TranslationRemoveExistingFailed`, скачування нового архіву, інсталяція в `/atmosphere/contents` та єдиний ребут наприкінці.
+- [x] `TRANSLATION-DEFERRED-REBOOT-813` — у `RemoveInterfaceTranslation` та `MakeRemoveTranslationItem` реалізовано очищення перекладу без примусового ребуту, з подальшим вибором «Reboot now» / «Reboot later» та попередженням про системний текст.
+- [x] `I18N-813` — оновлено локалізації в `en.json` та `uk.json` для нових повідомлень та кнопок перезавантаження перекладів.
+- [x] `README-813` — оновлено `README.md` щодо фонового заміщення перекладів та відкладеного перезавантаження.
+- [x] `DOCS-BUMP-813` — `sphaira_VERSION` піднято до `0.13.813`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-813` — перевірити встановлення перекладу поверх старого без зайвого ребуту та видалення перекладу з вибором «Reboot later» на консолі.
+
+## Попередній delivery: v0.13.812 (Remove themes & translations on all firmware updates)
 
 - [x] `VERIFY-FW-UPDATE-CLEANUP-812` — перевірено логіку оновлення прошивки: підтверджено, що раніше очищення тем та перекладів викликалося виключно при даунгрейді (`apply_downgrade_fix`), а при звичайному оновленні теми та переклади не видалялися, що викликало фатальну помилку Atmosphere `2162-0002`.
 - [x] `CLEAN-THEMES-ALL-UPDATES-812` — у `InstallValidatedFirmware` (`kefir_firmware.cpp`) впроваджено безумовний виклик `CleanThemesAndTranslations()` одразу після `amssuApplyPreparedUpdate()` для всіх типів інсталяції системної прошивки (оновлення, повторне встановлення або даунгрейд).

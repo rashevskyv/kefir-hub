@@ -114,6 +114,68 @@ auto GetRegionName(SetRegion region) -> std::string {
     }
 }
 
+auto MakeRemoveTranslationItem() -> SettingsItem {
+    return {
+        "Remove installed translation"_i18n,
+        "Delete installed interface translation files."_i18n,
+        [](){
+            return HasInstalledTranslation() ? "Installed"_i18n : "";
+        },
+        [](){
+            if (!HasInstalledTranslation()) {
+                App::Push<OptionBox>(
+                    "No installed translation files were found."_i18n,
+                    "OK"_i18n
+                );
+                return;
+            }
+
+            App::Push<HoldConfirmBox>(
+                "This removes installed system interface translation files.\n\nHold A to continue."_i18n,
+                0.5f,
+                [](bool confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    App::Push<ProgressBox>(
+                        0,
+                        "Removing"_i18n,
+                        "Interface Translation"_i18n,
+                        [](auto pbox) -> Result {
+                            return RemoveInterfaceTranslation(pbox);
+                        },
+                        [](Result rc) {
+                            if (R_FAILED(rc)) {
+                                App::PushErrorBox(rc, "Failed to remove translation"_i18n);
+                                return;
+                            }
+
+                            App::Push<OptionBox>(
+                                "Interface translation has been removed.\n\n"
+                                "A reboot is recommended now to ensure system stability and restore original interface text. "
+                                "If you reboot later, some system text may appear inconsistent or cause minor issues until restarted.\n\n"
+                                "Reboot now?"_i18n,
+                                "Reboot later"_i18n,
+                                "Reboot now"_i18n,
+                                1,
+                                [](auto op_index) {
+                                    if (op_index && *op_index == 1) {
+                                        RebootAfterSetting();
+                                    } else {
+                                        App::Notify("Translation removed. Reboot later to apply changes."_i18n);
+                                    }
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        },
+        SettingsItemKind::Download,
+    };
+}
+
 auto BuildTranslateItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
@@ -135,16 +197,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
             SettingsItemKind::Normal,
         });
 
-        items.emplace_back(MakePackageAction({
-            "Remove installed translation"_i18n,
-            "Delete installed interface translations and reboot."_i18n,
-            [](auto pbox) -> Result {
-                return RemoveInterfaceTranslation(pbox);
-            },
-            true,
-            "This removes installed system interface translation files and reboots the console."_i18n,
-            0.5f,
-        }));
+        items.emplace_back(MakeRemoveTranslationItem());
 
         return items;
     }
@@ -189,16 +242,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         0.5f,
     }));
 
-    items.emplace_back(MakePackageAction({
-        "Remove installed translation"_i18n,
-        "Delete installed interface translations and reboot."_i18n,
-        [](auto pbox) -> Result {
-            return RemoveInterfaceTranslation(pbox);
-        },
-        true,
-        "This removes installed system interface translation files and reboots the console."_i18n,
-        0.5f,
-    }));
+    items.emplace_back(MakeRemoveTranslationItem());
 
     for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
@@ -271,31 +315,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                                         },
                                         [](Result rc){
                                             if (R_SUCCEEDED(rc)) {
-                                                return;
-                                            }
-
-                                            if (rc == Result_TranslationRemoveExistingFailed) {
-                                                App::Push<OptionBox>(
-                                                    "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again."_i18n,
-                                                    "Cancel"_i18n, "Remove and reboot"_i18n, 1,
-                                                    [](auto op_index){
-                                                        if (op_index && *op_index) {
-                                                            App::Push<ProgressBox>(
-                                                                0,
-                                                                "Removing"_i18n,
-                                                                "",
-                                                                [](auto pbox) -> Result {
-                                                                    return RemoveInterfaceTranslationAndReboot(pbox);
-                                                                },
-                                                                [](Result remove_rc){
-                                                                    if (R_FAILED(remove_rc)) {
-                                                                        App::PushErrorBox(remove_rc, "Failed to remove translation"_i18n);
-                                                                    }
-                                                                }
-                                                            );
-                                                        }
-                                                    }
-                                                );
                                                 return;
                                             }
 

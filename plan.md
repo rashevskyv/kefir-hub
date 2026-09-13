@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.812** (remove themes & translations on all firmware updates). Завершені плани збережено в
+Поточний delivery — **v0.13.813** (background translation replacement, deferred reboot on removal). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.812 — Remove themes & translations on all firmware updates
+## Поточний delivery: v0.13.813 — Background translation replacement, deferred reboot on removal
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Впроваджено `HasInstalledTranslation()` для швидкої перевірки наявності встановленого перекладу інтерфейсу за 18 шляхами `TRANSLATION_PATHS`.
+2. Оновлено `InstallInterfaceTranslation`: якщо виявлено старий переклад, він очищується у фоні без запитань та помилок `Result_TranslationRemoveExistingFailed`; новий переклад завантажується, встановлюється в `/atmosphere/contents`, після чого консоль перезавантажується один раз (прибрано зайвий проміжний ребут).
+3. Оновлено `RemoveInterfaceTranslation`: видалення перекладу більше не перезавантажує консоль примусово, а лише фіксує SD-карту (`fsdevCommitDevice`).
+4. У `settings_translate.cpp` створено `MakeRemoveTranslationItem`: перевірка наявності файлів (сповіщення при відсутності), підтвердження затисканням A та інтерактивний діалог після видалення з вибором «Reboot now» (за замовчуванням) або «Reboot later», разом із попередженням про можливі нюанси відображення інтерфейсу до перезапуску.
+5. Оновлено мовні файли `en.json`, `uk.json` та документацію `README.md`.
+
+## Попередній delivery: v0.13.812 — Remove themes & translations on all firmware updates
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. Перевірено логіку оновлення системної прошивки: раніше очищення тем та перекладів виконувалося виключно при даунгрейді у блоці `apply_downgrade_fix`, через що при звичайному оновленні (upgrade) старі теми та переклади залишалися й призводили до падіння Atmosphere (фатальна помилка `2162-0002`).
