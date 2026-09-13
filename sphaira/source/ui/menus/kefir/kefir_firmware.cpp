@@ -222,7 +222,7 @@ auto ReadRomfsTe(const char* romfs_path, std::string& out) -> bool {
     return std::fread(out.data(), 1, out.size(), fp) == out.size();
 }
 
-constexpr const char* DOWNGRADE_CLEANUP_PATHS[]{
+constexpr const char* FIRMWARE_CLEANUP_PATHS[]{
     // Custom Themes (qlaunch, user page, settings/controllers, uLoader sysmodule)
     "/atmosphere/contents/0100000000001000",
     "/atmosphere/contents/0100000000001013",
@@ -249,14 +249,23 @@ constexpr const char* DOWNGRADE_CLEANUP_PATHS[]{
     "/switch/DBI/translation_new.bin",
 };
 
+} // namespace
+
 void CleanThemesAndTranslations(fs::FsNativeSd& sd) {
-    for (const auto* path : DOWNGRADE_CLEANUP_PATHS) {
+    for (const auto* path : FIRMWARE_CLEANUP_PATHS) {
         sd.DeleteDirectoryRecursively(fs::FsPath{path});
         sd.DeleteFile(fs::FsPath{path});
     }
 }
 
-} // namespace
+void CleanThemesAndTranslations() {
+    fs::FsNativeSd sd;
+    if (R_SUCCEEDED(sd.GetFsOpenResult())) {
+        CleanThemesAndTranslations(sd);
+        fsdevCommitDevice("sdmc");
+        sd.Commit();
+    }
+}
 
 auto IsDowngradeFixAvailable() -> bool {
     return true;
@@ -467,6 +476,11 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
 
     pbox->NewTransfer("Applying system update...");
     R_TRY(amssuApplyPreparedUpdate());
+
+    // Clean themes and translations unconditionally on ANY firmware installation (both update and downgrade)
+    // to prevent Atmosphere fatal crash 2162-0002 and mismatched qlaunch components on reboot.
+    pbox->NewTransfer("Removing themes and translations...");
+    CleanThemesAndTranslations();
 
     // the update itself is already applied at this point, so the fix must never
     // be able to report the whole install as failed.

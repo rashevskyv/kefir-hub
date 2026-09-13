@@ -63,6 +63,9 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out = nullptr) -> boo
 auto StageAndLaunchDowngradeFix(bool is_emummc) -> bool;
 // stages the downgrade fix to startup.te.
 void ApplyDowngradeFix(DowngradeFixResult* out);
+// cleans custom themes and translations from SD to avoid crash 2162-0002 on reboot.
+void CleanThemesAndTranslations(fs::FsNativeSd& sd);
+void CleanThemesAndTranslations();
 // one sentence describing what the fix actually did, empty if not attempted.
 auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string;
 auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) -> Result;

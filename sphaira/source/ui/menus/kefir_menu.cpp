@@ -1420,7 +1420,7 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                     return;
                 }
 
-                std::string message = "Firmware update applied successfully.";
+                std::string message = "Firmware update applied successfully.\n\nCustom themes and translations were removed to prevent errors on the new firmware version.";
                 const auto fix_note = detail::DescribeDowngradeFix(*fix);
                 if (!fix_note.empty()) {
                     message += "\n\n" + fix_note;

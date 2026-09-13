@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.811** (forced removal of themes & translations on downgrade, Nintendo folder note). Завершені плани збережено в
+Поточний delivery — **v0.13.812** (remove themes & translations on all firmware updates). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.811 — Forced removal of themes & translations on downgrade, Nintendo folder note
+## Поточний delivery: v0.13.812 — Remove themes & translations on all firmware updates
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Перевірено логіку оновлення системної прошивки: раніше очищення тем та перекладів виконувалося виключно при даунгрейді у блоці `apply_downgrade_fix`, через що при звичайному оновленні (upgrade) старі теми та переклади залишалися й призводили до падіння Atmosphere (фатальна помилка `2162-0002`).
+2. У `InstallValidatedFirmware` (`kefir_firmware.cpp`) одразу після успішного виконання `amssuApplyPreparedUpdate()` додано безумовний виклик `CleanThemesAndTranslations()` з індикатором прогресу `Removing themes and translations...` та фіксацією змін на SD (`sdmc`). Тепер будь-яка інсталяція прошивки (як оновлення/upgrade, так і даунгрейд) надійно очищує встановлені кастомні теми (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та переклади інтерфейсу (`0100000000000803`...`0100000000001015`, DBI) перед перезавантаженням консолі.
+3. Оголошено перевантаження `CleanThemesAndTranslations(sd)` та `CleanThemesAndTranslations()` у `detail` (`kefir_firmware.hpp`/`kefir_firmware.cpp`) та перейменовано константу на `FIRMWARE_CLEANUP_PATHS`.
+4. У діалозі успішного встановлення оновлення `prompt_reboot` (`kefir_menu.cpp`) додано явне повідомлення для користувача про те, що кастомні теми та переклади були видалені для запобігання фатальним помилкам сумісності на новій версії прошивки.
+5. Оновлено документацію `README.md`.
+
+## Попередній delivery: v0.13.811 — Forced removal of themes & translations on downgrade, Nintendo folder note
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. Реалізовано примусове видалення кастомних тем інтерфейсу (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та системних перекладів (`0100000000000803`...`0100000000001015`, переклади DBI) після даунгрейду прошивки.

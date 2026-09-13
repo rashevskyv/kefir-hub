@@ -1,7 +1,19 @@
-Актуальний delivery — **v0.13.811** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.812** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.812 — Remove themes & translations on all firmware updates
+
+- **Видалення кастомних тем та системних перекладів при будь-якому оновленні прошивки**:
+  - Перевірено попередній код: раніше очищення кастомних тем (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та перекладів інтерфейсу (`0100000000000803`...`0100000000001015`, DBI) виконувалося виключно під час даунгрейду всередині `StageDowngradeFix`. При звичайному оновленні (upgrade) прошивки очищення не викликалося, що викликало фатальну помилку Atmosphere `2162-0002` та збої несумісних ресурсів `qlaunch`.
+  - У функції `InstallValidatedFirmware` (`kefir_firmware.cpp`) одразу після `amssuApplyPreparedUpdate()` додано безумовне видалення тем та перекладів за допомогою `CleanThemesAndTranslations()` з індикатором `Removing themes and translations...` та фіксацією стану SD (`fsdevCommitDevice` / `sd.Commit()`).
+  - Оголошено допоміжні функції `CleanThemesAndTranslations(sd)` та безпараметричну `CleanThemesAndTranslations()` у `detail` (`kefir_firmware.hpp`/`kefir_firmware.cpp`), а список шляхів перейменовано на `FIRMWARE_CLEANUP_PATHS`.
+- **Сповіщення користувача у діалозі перезавантаження**:
+  - У `prompt_reboot` (`kefir_menu.cpp`) повідомлення після успішного встановлення оновлення тепер чітко інформує, що встановлені теми та переклади інтерфейсу були видалені з SD-карти задля безпечного перезапуску консолі на новій версії Horizon OS.
+- **Оновлення документації**:
+  - У `README.md` до розділу «System Firmware Updates & Automated Downgrade Fix» додано опис автоматичного очищення тем та перекладів при всіх оновленнях системної прошивки.
+- `sphaira_VERSION` піднято до `0.13.812`; `git diff --check` виконано. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.811 — Forced removal of themes & translations on downgrade, Nintendo folder note
 

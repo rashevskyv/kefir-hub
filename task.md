@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.811** (forced removal of themes & translations on downgrade, Nintendo folder note). Завершені задачі збережено в
+Актуальний delivery — **v0.13.812** (remove themes & translations on all firmware updates). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.811 (Forced removal of themes & translations on downgrade, Nintendo folder note)
+## Поточний delivery: v0.13.812 (Remove themes & translations on all firmware updates)
+
+- [x] `VERIFY-FW-UPDATE-CLEANUP-812` — перевірено логіку оновлення прошивки: підтверджено, що раніше очищення тем та перекладів викликалося виключно при даунгрейді (`apply_downgrade_fix`), а при звичайному оновленні теми та переклади не видалялися, що викликало фатальну помилку Atmosphere `2162-0002`.
+- [x] `CLEAN-THEMES-ALL-UPDATES-812` — у `InstallValidatedFirmware` (`kefir_firmware.cpp`) впроваджено безумовний виклик `CleanThemesAndTranslations()` одразу після `amssuApplyPreparedUpdate()` для всіх типів інсталяції системної прошивки (оновлення, повторне встановлення або даунгрейд).
+- [x] `UI-NOTIFY-CLEANUP-812` — оновлено `prompt_reboot` у `kefir_menu.cpp`: користувачу повідомляється про успішне встановлення оновлення та видалення тем і перекладів задля стабільності системи на новій прошивці.
+- [x] `README-812` — оновлено документацію `README.md` щодо безумовного очищення тем та перекладів при будь-якому оновленні системної прошивки.
+- [x] `DOCS-BUMP-812` — `sphaira_VERSION` піднято до `0.13.812`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-812` — перевірити на Nintendo Switch інсталяцію звичайного оновлення прошивки з очищенням кастомних тем та перекладів перед перезавантаженням.
+
+## Попередній delivery: v0.13.811 (Forced removal of themes & translations on downgrade, Nintendo folder note)
 
 - [x] `CLEAN-THEMES-TRANSLATIONS-811` — додано видалення кастомних тем (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та перекладів (`0100000000000803`...`0100000000001015`, DBI) у `downgrade_fix.te` без блокування файлів та у `CleanThemesAndTranslations` (`kefir_firmware.cpp`).
 - [x] `WARN-NINTENDO-FOLDER-811` — оновлено `DowngradeWarningBox` (900x580px): додано попередження про недійсність папки `Nintendo` на SD після скидання в Maintenance Mode та підтвердження, що погодження на її видалення консоллю безпечне для збережень.
