@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.828** (SysNAND forwarder safety and authoritative NAND state). Завершені плани збережено в
+Поточний delivery — **v0.13.829** (Saves category tabs). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.828 — SysNAND forwarder safety and authoritative NAND state
+## Поточний delivery: v0.13.829 — Saves category tabs
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. `Tools -> Game Tools -> Saves` одразу відкриває загальне меню saves на вкладці `Installed Games`, без проміжних трьох іконок.
+2. Видима панель містить `Installed Games`, `Deleted Games` і `Backups`; `L/R` та touch перемикають наявну категорію циклічно.
+3. Вкладки залишаються видимими для порожньої категорії і не перекривають список у чотирьох layout-режимах.
+4. Single-game saves з `app_id_filter` зберігають попередній `Category::All`, геометрію та поведінку без глобальних вкладок.
+5. `git diff --check` пройшов; compile/tests/NRO не запускалися за workspace policy.
+
+## Попередній delivery: v0.13.828 — SysNAND forwarder safety and authoritative NAND state
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. `App::IsEmummc()` знову базується на `splGetConfig(65007)` — тому самому сигналі, що раніше формував `|E` / `|S` біля версії Atmosphere.

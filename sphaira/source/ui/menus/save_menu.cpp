@@ -21,6 +21,7 @@
 #include "ui/popup_list.hpp"
 #include "ui/nvg_util.hpp"
 
+#include "ui/layout.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
@@ -38,6 +39,15 @@
 
 namespace sphaira::ui::menu::save {
 namespace {
+
+constexpr float TAB_BAR_X = 40.f;
+constexpr float TAB_BAR_W = 1200.f;
+constexpr float TAB_BAR_TOP = 94.f;
+constexpr float TAB_BAR_H = 44.f;
+constexpr float TAB_BAR_GAP = 4.f;
+constexpr float TAB_BAR_COUNT = 3.f;
+constexpr float TAB_ITEM_W = (TAB_BAR_W - TAB_BAR_GAP * (TAB_BAR_COUNT - 1.f)) / TAB_BAR_COUNT;
+constexpr Vec4 TAB_BAR_RECT{TAB_BAR_X, TAB_BAR_TOP, TAB_BAR_W, TAB_BAR_H};
 
 constexpr auto ENTRY_CHUNK_COUNT = 1000;
 
@@ -120,6 +130,7 @@ void SignalChange() {
 
 Menu::Menu(u32 flags, u64 app_id_filter, Category category)
 : grid::Menu{
+    !app_id_filter ? "Saves"_i18n :
     (category == Category::Installed) ? "Installed Games"_i18n :
     (category == Category::Deleted)   ? "Deleted Games"_i18n :
     (category == Category::Backups)   ? "Backups"_i18n : "Saves"_i18n,
@@ -292,11 +303,13 @@ void Menu::SetCategory(Category category) {
     }
 
     m_category = category;
-    SetTitle(
-        (m_category == Category::Installed) ? "Installed Games"_i18n :
-        (m_category == Category::Deleted)   ? "Deleted Games"_i18n :
-        (m_category == Category::Backups)   ? "Backups"_i18n : "Saves"_i18n
-    );
+    if (m_app_id_filter) {
+        SetTitle(
+            (m_category == Category::Installed) ? "Installed Games"_i18n :
+            (m_category == Category::Deleted)   ? "Deleted Games"_i18n :
+            (m_category == Category::Backups)   ? "Backups"_i18n : "Saves"_i18n
+        );
+    }
     App::PlaySoundEffect(SoundEffect_Focus);
     ScanHomebrew();
 }
@@ -597,6 +610,17 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
     MenuBase::Update(controller, touch);
 
+    if (!m_app_id_filter && touch->is_clicked && touch->in_range(TAB_BAR_RECT)) {
+        const auto tab = std::clamp<s64>((touch->cur.x - TAB_BAR_X) / (TAB_ITEM_W + TAB_BAR_GAP), 0, 2);
+        constexpr std::array<Category, 3> categories{
+            Category::Installed,
+            Category::Deleted,
+            Category::Backups,
+        };
+        SetCategory(categories[tab]);
+        return;
+    }
+
     const auto g = ComputeGridSections();
     const auto start_disp = EntryToDisplay(m_index, g);
     m_list->OnUpdate(controller, touch, start_disp, g.display_count, [this, g, start_disp](bool touch, s64 disp) {
@@ -673,8 +697,13 @@ auto Menu::ResolveDisplay(s64 display, s64 from, const GridSections& g) const ->
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
+    if (!m_app_id_filter) {
+        DrawCategoryTabs(vg, theme);
+    }
+
     if (m_entries.empty()) {
-        gfx::drawTextArgs(vg, GetX() + GetW() / 2.f, GetY() + GetH() / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty..."_i18n.c_str());
+        const float empty_y = !m_app_id_filter ? (TAB_BAR_TOP + TAB_BAR_H + layout::FOOTER_LINE_Y) * 0.5f : (GetY() + GetH() / 2.f);
+        gfx::drawTextArgs(vg, GetX() + GetW() / 2.f, empty_y, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty..."_i18n.c_str());
         return;
     }
 
@@ -686,7 +715,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         
         const auto account = (e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
             GetAccountName(e.uid) : GetAccountSummary();
-        DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, account.c_str());
+
+        if (!m_app_id_filter) {
+            nvgSave(vg);
+            nvgTranslate(vg, 0.f, 26.f);
+            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, account.c_str());
+            nvgRestore(vg);
+        } else {
+            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, account.c_str());
+        }
     }
 
     // max images per frame, in order to not hit io / gpu too hard.
@@ -1314,6 +1351,39 @@ void Menu::FreeEntries() {
 void Menu::OnLayoutChange() {
     m_index = 0;
     grid::Menu::OnLayoutChange(m_list, m_layout.Get());
+
+    if (!m_app_id_filter) {
+        const Vec4 content_pos{40, 148, 1200, 488};
+        switch (m_layout.Get()) {
+            case LayoutType_List: {
+                const Vec2 pad{0, 2};
+                const Vec4 v{75, 152, 1130, 70};
+                m_list = std::make_unique<List>(1, 6, content_pos, v, pad);
+            }   break;
+
+            case LayoutType_Grid: {
+                const Vec2 pad{10, 10};
+                const Vec4 v{93, 186, 174, 174};
+                m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
+            }   break;
+
+            case LayoutType_GridDetail: {
+                const Vec2 pad{10, 10};
+                const Vec4 v{75, 150, 370, 155};
+                m_list = std::make_unique<List>(3, 3*3, content_pos, v, pad);
+            }   break;
+
+            case LayoutType_HbMenu: {
+                const Vec2 pad{16, 0};
+                const Vec4 v{80, 450, 140, 168};
+                m_list = std::make_unique<List>(1, 7, content_pos, v, pad);
+                m_list->SetLayout(List::Layout::HOME);
+            }   break;
+
+            default:
+                break;
+        }
+    }
 }
 
 void Menu::PromptSaveAction() {
@@ -1743,6 +1813,56 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
                     state->type_enabled[i] = true;
                 });
         }
+    }
+}
+
+void Menu::DrawCategoryTabs(NVGcontext* vg, Theme* theme) {
+    const std::array<std::string, 3> tab_names{
+        "Installed Games"_i18n,
+        "Deleted Games"_i18n,
+        "Backups"_i18n,
+    };
+
+    s64 selected_tab = -1;
+    switch (m_category) {
+        case Category::Installed: selected_tab = 0; break;
+        case Category::Deleted:   selected_tab = 1; break;
+        case Category::Backups:   selected_tab = 2; break;
+        default:                  selected_tab = -1; break;
+    }
+
+    const float body_top = TAB_BAR_TOP + TAB_BAR_H;
+    const float radius = 8.f;
+
+    const auto surface = theme->GetColour(ThemeEntryID_POPUP);
+    const auto recessed = theme->GetColour(ThemeEntryID_GRID);
+    const auto accent = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+    const auto line = theme->GetColour(ThemeEntryID_LINE);
+
+    for (size_t i = 0; i < tab_names.size(); i++) {
+        if (static_cast<s64>(i) == selected_tab) {
+            continue;
+        }
+        const float x = TAB_BAR_X + i * (TAB_ITEM_W + TAB_BAR_GAP);
+        const float y = TAB_BAR_TOP + 5.f;
+        const float h = body_top - y;
+        gfx::drawRectVarying(vg, Vec4{x, y, TAB_ITEM_W, h}, recessed, radius, radius, 0.f, 0.f);
+        const auto label_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const float text_y = (y + body_top) * 0.5f;
+        gfx::drawText(vg, x + TAB_ITEM_W * 0.5f, text_y, 20.f, label_colour, tab_names[i].c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    }
+
+    gfx::drawRect(vg, TAB_BAR_X, body_top, TAB_BAR_W, 1.f, line);
+
+    if (selected_tab >= 0 && selected_tab < static_cast<s64>(tab_names.size())) {
+        const float x = TAB_BAR_X + selected_tab * (TAB_ITEM_W + TAB_BAR_GAP);
+        const float y = TAB_BAR_TOP;
+        const float h = body_top - y + 1.f;
+        gfx::drawRectVarying(vg, Vec4{x, y, TAB_ITEM_W, h}, surface, radius, radius, 0.f, 0.f);
+        gfx::drawRectVarying(vg, Vec4{x, y, TAB_ITEM_W, 3.f}, accent, radius, radius, 0.f, 0.f);
+        const auto label_colour = theme->GetColour(ThemeEntryID_TEXT);
+        const float text_y = (y + body_top) * 0.5f;
+        gfx::drawTextBold(vg, x + TAB_ITEM_W * 0.5f, text_y, 20.f, label_colour, tab_names[selected_tab].c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     }
 }
 

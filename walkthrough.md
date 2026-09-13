@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.828** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.829** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.829 — Saves category tabs
+
+- `Tools -> Game Tools -> Saves` тепер одразу відкриває saves на `Installed Games`, без проміжного екрана з трьома іконками.
+- До загального saves menu додано текстові вкладки `Installed Games`, `Deleted Games`, `Backups` з виділенням активної; перемикання працює циклічно через `L/R` і touch.
+- Панель вкладок малюється до empty-state return, а list, grid, grid-detail і HB Menu використовують зменшену content-area без перекриття.
+- Single-game saves з `app_id_filter` не отримали глобальних вкладок і зберегли попередній `Category::All` та layout.
+- Версію піднято до `0.13.829`; `git diff --check` і static review пройшли. Compile/tests/NRO не запускалися за workspace policy.
 
 ## v0.13.828 — SysNAND forwarder safety and authoritative NAND state
 

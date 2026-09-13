@@ -1,13 +1,15 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.828**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.829**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
-`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-09:
-12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
+`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-13:
+12445 nodes, 24689 edges, 637 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.829 поза ponytail-чергою: `Tools -> Game Tools -> Saves` відкриває загальне saves menu одразу на `Installed Games`; додано видимі вкладки `Installed Games` / `Deleted Games` / `Backups` з циклічним `L/R` і touch; вкладки залишаються видимими в empty state та не змінюють single-game saves; версію піднято до 0.13.829. `git diff --check` пройшов; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.828 поза ponytail-чергою: відновлено історично перевірений `splGetConfig(65007)` як єдине джерело `m_is_emummc` для хедера та безпеки forwarder; SMC залишено лише для path/type metadata; невдача визначення fail-closed; автоінсталяція Kefir Hub forwarder безумовно заблокована на SysNAND/unknown двома guards; версію піднято до 0.13.828. `git diff --check` і `check_dead_symbols.py` пройшли; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

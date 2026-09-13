@@ -85,6 +85,9 @@ struct Menu final : grid::Menu {
     ~Menu();
 
     auto GetShortTitle() const -> const char* override {
+        if (!m_app_id_filter) {
+            return "Saves";
+        }
         switch (m_category) {
             case Category::Installed: return "Installed Games";
             case Category::Deleted:   return "Deleted Games";
@@ -117,6 +120,7 @@ private:
     void InvertSelection();
     void ChangeCategory(s64 delta);
     void SetCategory(Category category);
+    void DrawCategoryTabs(NVGcontext* vg, Theme* theme);
 
     // populates m_installed_app_ids from the console's application records, used
     // to tell installed-game saves apart from orphaned (deleted-game) saves.

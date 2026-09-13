@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.828** (SysNAND forwarder safety and authoritative NAND state). Завершені задачі збережено в
+Актуальний delivery — **v0.13.829** (Saves category tabs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.828 (SysNAND forwarder safety and authoritative NAND state)
+## Поточний delivery: v0.13.829 (Saves category tabs)
+
+- [x] `SAVES-ENTRY-829` — `Tools -> Game Tools -> Saves` одразу відкриває `save::Menu` з `Category::Installed`, без проміжного icon hub.
+- [x] `SAVES-TABS-829` — додано видимі `Installed Games` / `Deleted Games` / `Backups` з циклічним `L/R` і touch-вибором.
+- [x] `SAVES-LAYOUT-829` — панель видима для empty state, а list/grid/HB Menu зсунуті нижче без змін single-game layout.
+- [x] `SAVES-SINGLE-829` — збережено `Category::All` за замовчуванням для `app_id_filter` callers; глобальні вкладки там не малюються.
+- [x] `VERIFY-829` — Gemini та senior виконали static diff review; `git diff --check` пройшов, compile/NRO не запускалися.
+- [x] `DOCS-BUMP-829` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.829`.
+- [ ] `HW-829` — зібрати NRO і перевірити вкладки, `L/R`, touch, empty state та всі layout-режими на консолі.
+
+## Попередній delivery: v0.13.828 (SysNAND forwarder safety and authoritative NAND state)
 
 - [x] `NAND-SOURCE-828` — `m_is_emummc` визначається лише через історично перевірений `splGetConfig(65007)`; failure є fail-closed.
 - [x] `NAND-SMC-828` — SMC emuMMC config більше не присвоює `m_is_emummc` і залишений для path/type metadata.

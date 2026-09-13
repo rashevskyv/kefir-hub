@@ -325,7 +325,7 @@ GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
             App::Push<ui::menu::game::Menu>(MenuFlag_None);
         }},
         { "Saves"_i18n, "Backup and restore save data."_i18n, 0, [](){
-            App::Push<ui::menu::save::SaveHubMenu>(MenuFlag_None);
+            App::Push<ui::menu::save::Menu>(MenuFlag_None, 0ULL, ui::menu::save::Category::Installed);
         }},
         { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
