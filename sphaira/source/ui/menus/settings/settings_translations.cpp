@@ -56,7 +56,7 @@ auto UnzipFile(ProgressBox* pbox, const fs::FsPath& zip, const fs::FsPath& dst) 
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
     R_TRY(fs.CreateDirectoryRecursively(dst));
-    pbox->NewTransfer("Extracting " + dst.toString());
+    pbox->NewTransfer("Extracting"_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, zip, &fs, dst));
     R_SUCCEED();
 }
@@ -105,7 +105,7 @@ auto ParseDbiTranslations(const std::string& path) -> std::vector<DbiTranslation
 
 auto FetchAndCacheTranslations(ProgressBox* pbox, const std::string& target_tag, const std::string& metadata_tag, const std::string& fw, bool warning_required) -> Result {
     const std::string rel_url = "https://api.github.com/repos/NX-Family/NX-Translation/releases/tags/" + target_tag;
-    pbox->NewTransfer("Release: " + target_tag + " (" + rel_url + ")");
+    pbox->NewTransfer("Downloading"_i18n);
 
     // 1. Fetch exact release JSON from GitHub by target tag
     auto rel_res = curl::Api().ToMemory(
@@ -145,7 +145,7 @@ auto FetchAndCacheTranslations(ProgressBox* pbox, const std::string& target_tag,
 
     // 2. Fetch versioned api.json using metadata tag
     const std::string api_url = "https://raw.githubusercontent.com/NX-Family/NX-Translation/" + metadata_tag + "/api.json";
-    pbox->NewTransfer("Metadata: " + metadata_tag + " (" + api_url + ")");
+    pbox->NewTransfer("Downloading"_i18n);
     auto api_res = curl::Api().ToMemory(
         curl::Url{api_url},
         curl::OnProgress{pbox->OnDownloadProgressCallback()}
@@ -480,7 +480,7 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
     const auto zip_path = extract_dir + "/" + zip_name;
 
     R_TRY(DeletePath(extract_dir));
-    R_TRY(DownloadFile(pbox, "Downloading " + entry.name + " (" + entry.zip_url + ")", entry.zip_url, zip_path));
+    R_TRY(DownloadFile(pbox, "Downloading"_i18n, entry.zip_url, zip_path));
     R_TRY(UnzipFile(pbox, zip_path, extract_dir));
 
     auto folder = TranslationExtractFolder(zip_name);

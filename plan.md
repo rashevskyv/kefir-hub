@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.818** (interface translation separator). Завершені плани збережено в
+Поточний delivery — **v0.13.819** (clean translation UI). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.818 — Interface translation separator
+## Поточний delivery: v0.13.819 — Clean translation UI
+
+Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
+1. З Translate Interface прибрано діагностичний firmware/release item та технічні URL, release/metadata tags, ZIP-імена й внутрішні шляхи з описів, підтверджень і progress-повідомлень.
+2. Користувацький flow залишає назву мови, firmware та зрозумілі стани завантаження/розпакування/встановлення; мережева й файлова логіка не змінена.
+
+## Попередній delivery: v0.13.818 — Interface translation separator
 
 Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
 1. Коли кеш мов непорожній, між службовими діями Translate Interface та списком мов додається наявний неінтерактивний `MakeSeparator()` — той самий патерн, що в DBI.

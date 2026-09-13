@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.818** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.819** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.819 — Clean translation UI
+
+- Прибрано службовий diagnostics/status item з firmware region, target/metadata tags та GitHub URL.
+- Рядки мов більше не показують URL або ZIP-ім'я; confirmation не розкриває archive URL чи внутрішній replacement path.
+- ProgressBox показує лише локалізовані стани `Downloading` / `Extracting` / `Installing`; download/cache/install behavior не змінено.
+- `sphaira_VERSION` піднято до `0.13.819`; compile/NRO не запускалися за workspace policy.
 
 ## v0.13.818 — Interface translation separator
 

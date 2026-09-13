@@ -102,18 +102,6 @@ auto FormatUnavailableMsg(const std::string& fw) -> std::string {
     return msg;
 }
 
-auto GetRegionName(SetRegion region) -> std::string {
-    switch (region) {
-        case SetRegion_JPN: return "Japan";
-        case SetRegion_USA: return "USA";
-        case SetRegion_EUR: return "Europe";
-        case SetRegion_AUS: return "Australia";
-        case SetRegion_CHN: return "China";
-        case SetRegion_HTK: return "Hong Kong/Taiwan/Korea";
-        default: return "Unknown";
-    }
-}
-
 auto MakeRemoveTranslationItem() -> SettingsItem {
     return {
         "Remove installed translation"_i18n,
@@ -165,8 +153,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     SetRegion console_region = SetRegion_EUR;
     setGetRegionCode(&console_region);
     const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
-    const auto reg_name = GetRegionName(console_region);
-
     if (!compat.available) {
         const auto msg = FormatUnavailableMsg(fw);
         items.emplace_back(SettingsItem{
@@ -184,29 +170,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
         return items;
     }
 
-    const auto release_url = GetReleaseUrl(compat.target_tag);
-    const auto meta_url = GetMetadataUrl(compat.metadata_tag);
-
-    // Diagnostics / Status item
-    items.emplace_back(SettingsItem{
-        "Console Firmware: " + fw,
-        "Target: " + compat.target_tag + " | " + release_url,
-        [compat](){ return compat.target_tag; },
-        [fw, compat, reg_name, release_url, meta_url]() {
-            std::string diag = "System Firmware: " + fw + "\n"
-                + "Console Region: " + reg_name + "\n"
-                + "Target Tag: " + compat.target_tag + "\n"
-                + "Metadata Tag: " + compat.metadata_tag + "\n\n"
-                + "Release URL:\n" + release_url + "\n\n"
-                + "Metadata URL:\n" + meta_url;
-            if (compat.warning_required) {
-                diag += "\n\n" + "Note: Fallback mode active (firmware newer than release)."_i18n;
-            }
-            App::Push<OptionBox>(diag, "OK"_i18n);
-        },
-        SettingsItemKind::Normal,
-    });
-
     auto cached_entries = LoadTranslationsCache(TRANSLATIONS_CACHE_PATH, compat.target_tag);
     for (auto& entry : cached_entries) {
         entry.warning_required = compat.warning_required;
@@ -215,12 +178,12 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakePackageAction({
         has_cache ? "Refresh translations"_i18n : "Load translations"_i18n,
-        "Target: " + compat.target_tag + " | " + release_url,
+        "Firmware: " + fw,
         [compat, fw](auto pbox) -> Result {
             return FetchAndCacheTranslations(pbox, compat.target_tag, compat.metadata_tag, fw, compat.warning_required);
         },
         true,
-        "Fetch translations for firmware " + fw + "?\n\nTarget Tag: " + compat.target_tag + "\nRelease URL:\n" + release_url + "\n\nHold A to continue.",
+        "Fetch translations for firmware " + fw + "?\n\nHold A to continue.",
         0.5f,
     }));
 
@@ -233,11 +196,9 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
             entry.name,
-            entry.zip_url,
-            [entry](){
-                return FileNameFromUrl(entry.zip_url);
-            },
-            [entry, fw, compat](){
+            {},
+            {},
+            [entry, compat](){
                 const auto& options = entry.replacements;
                 if (options.empty()) {
                     App::PushErrorBox(Result_FsEmpty, "No replacement languages found"_i18n);
@@ -271,21 +232,15 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
                 App::Push<PopupList>(
                     has_direct_match ? "Replace language"_i18n : "Select language to replace"_i18n,
                     labels,
-                    [entry, choices, fw, compat](auto index){
+                    [entry, choices, compat](auto index){
                         if (!index) {
                             return;
                         }
 
-                        const auto dir = choices[*index].second;
-                        const auto start_install = [entry, dir, fw, compat]() {
-                            const std::string confirm_msg = "Firmware: " + fw + " (" + compat.target_tag + ")\n"
-                                + "Replacing: " + dir + "\n"
-                                + "Archive: " + FileNameFromUrl(entry.zip_url) + "\n"
-                                + "URL:\n" + entry.zip_url + "\n\n"
-                                + "This will replace the selected system interface language and reboot the console."_i18n;
-
+                        const auto& dir = choices[*index].second;
+                        const auto start_install = [entry, dir]() {
                             App::Push<HoldConfirmBox>(
-                                confirm_msg,
+                                "This will replace the selected system interface language and reboot the console."_i18n,
                                 0.5f,
                                 [entry, dir](bool confirmed){
                                     if (!confirmed) {
