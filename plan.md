@@ -1,8 +1,8 @@
-Поточний delivery — **v0.13.823** (informative error dialogs and network gate in updater). Завершені плани збережено в
+Поточний delivery — **v0.13.824** (informative error dialogs and network gate in updater). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.823 — Informative error dialogs and network gate in updater
+## Поточний delivery: v0.13.824 — Informative error dialogs and network gate in updater
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. Діалог помилок `ErrorBox`: заголовок завжди показує зрозумілий та дружній напис `"An error occurred"_i18n` замість внутрішніх C++ ідентифікаторів енумів (наприклад, `SphairaError_AppstoreFailedZipDownload`).
@@ -11,7 +11,14 @@
 4. Додано функцію `ShouldShowIssue(rc)`, яка приховує заклик відкривати issue та посилання на Telegram `t.me/xhrxhrxhr` для мережевих збоїв, нестачі місця, блокування файлів та скасувань.
 5. У `kefir_menu.cpp` завантаження прошивки та пакетів Kefir захищено викликом `net::RequireConnection` (запобігає запуску завантаження при відсутності мережі).
 6. Усі помилки завантаження/інсталяції в `kefir_menu.cpp` та `cheat_download_menu.cpp` переведено на `App::PushErrorBox`, що дозволяє при відсутності зв'язку показувати спокійне інформативне вікно налаштування Wi-Fi.
-7. Локалізовано діалоги оновлення та перезавантаження прошивки; додано ключ `"Please check your internet connection and try again."` для всіх 14 мов.
+7. Додано ключ локалізації `"Please check your internet connection and try again."` для всіх 14 мов.
+
+## Попередній delivery: v0.13.823 — Localized firmware update and reboot notifications
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. Усі тексти діалогів після оновлення та даунгрейду прошивки (`prompt_reboot` у `kefir_menu.cpp`) переведено на систему локалізації `_i18n`: повідомлення про успішне оновлення, повідомлення про видалення тем/перекладів, попередження про неможливість видалення тем/перекладів (з інформацією про помилку Atmosphere 2162-0002), нотатки завершення через TegraExplorer та фінальний запит перезавантаження.
+2. Локалізовано повідомлення `DescribeDowngradeFix` у `kefir_firmware.cpp`, запити ручного застосування фіксу даунгрейду, підтвердження встановлення пакету Kefir, стан валідації вмісту прошивки та діалоги помилок перевірки/оновлення.
+3. Додано нові ключі локалізації з повними перекладами в `en.json`, `uk.json` та `ru.json`; оновлено `README.md`.
 
 ## Попередній delivery: v0.13.822 — Silence error on user creation cancellation
 

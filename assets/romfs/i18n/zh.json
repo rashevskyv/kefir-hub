@@ -1460,6 +1460,7 @@
   "Press B: Cancel": "按 B: 取消",
   "Failed to start web server": "无法启动 Web 服务器",
   "The console has no internet connection.": "主机未连接到互联网。",
+  "Please check your internet connection and try again.": "请检查网络连接后再试。",
   "Connecting...": "正在连接...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "未连接至互联网。\n\n请在主机的系统设置中开启 Wi-Fi（或插入 LAN 适配器），然后再试一次。",
   "Waiting for the console to connect...": "正在等待主机连接...",

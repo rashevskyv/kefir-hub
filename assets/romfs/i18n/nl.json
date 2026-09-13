@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "Druk op B: Annuleren",
   "Failed to start web server": "Kan webserver niet starten",
   "The console has no internet connection.": "De console heeft geen internetverbinding.",
+  "Please check your internet connection and try again.": "Controleer je internetverbinding en probeer het opnieuw.",
   "Connecting...": "Verbinden...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Geen internetverbinding.\n\nSchakel Wi-Fi in (of sluit een LAN-adapter aan) in de Systeeminstellingen van de console en probeer het opnieuw.",
   "Waiting for the console to connect...": "Wachten tot de console verbindt...",

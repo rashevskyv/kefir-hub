@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "Premi B: Annulla",
   "Failed to start web server": "Impossibile avviare il server web",
   "The console has no internet connection.": "La console non è connessa a Internet.",
+  "Please check your internet connection and try again.": "Controlla la tua connessione a Internet e riprova.",
   "Connecting...": "Connessione in corso...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Nessuna connessione Internet.\n\nAttiva il Wi-Fi (o collega un adattatore LAN) nelle Impostazioni di sistema della console, quindi riprova.",
   "Waiting for the console to connect...": "In attesa che la console si colleghi...",

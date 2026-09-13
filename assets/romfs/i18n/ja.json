@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "B: キャンセル",
   "Failed to start web server": "Webサーバーの起動に失敗しました",
   "The console has no internet connection.": "本機はインターネットに接続されていません。",
+  "Please check your internet connection and try again.": "インターネット接続を確認して、再度お試しください。",
   "Connecting...": "接続中...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "インターネットに接続されていません。\n\n本体の「設定」でWi-FiをONにするかLANアダプターを接続して、再度お試しください。",
   "Waiting for the console to connect...": "コンソールの接続を待機中...",

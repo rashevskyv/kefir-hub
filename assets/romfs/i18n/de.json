@@ -1405,6 +1405,7 @@
   "Press B: Cancel": "B drücken: Abbrechen",
   "Failed to start web server": "Webserver konnte nicht gestartet werden",
   "The console has no internet connection.": "Die Konsole hat keine Internetverbindung.",
+  "Please check your internet connection and try again.": "Bitte überprüfe deine Internetverbindung und versuche es erneut.",
   "Connecting...": "Verbindung wird hergestellt...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Keine Internetverbindung vorhanden.\n\nAktiviere WLAN (oder schließe einen LAN-Adapter an) in den Systemeinstellungen der Konsole und versuche es erneut.",
   "Waiting for the console to connect...": "Warte auf Verbindung der Konsole...",

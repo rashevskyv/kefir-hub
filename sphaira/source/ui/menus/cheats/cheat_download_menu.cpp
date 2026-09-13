@@ -941,7 +941,7 @@ void CheatDownloadMenu::DownloadCheats() {
                         }
                         SetPop();
                     } else {
-                        App::Push<ErrorBox>(rc, "Failed to download cheats");
+                        App::PushErrorBox(rc, "Failed to download cheats"_i18n);
                     }
                 }
             );

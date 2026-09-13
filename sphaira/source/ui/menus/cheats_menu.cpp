@@ -866,7 +866,7 @@ void PromptKefirCheatsDownload(const char* title, const char* url) {
                         RefreshCheatMetadataCache();
                         App::Notify("Cheats pack installed"_i18n);
                     } else {
-                        App::Push<ErrorBox>(rc, "Failed to install cheats pack"_i18n);
+                        App::PushErrorBox(rc, "Failed to install cheats pack"_i18n);
                     }
                 }
             );

@@ -1433,6 +1433,7 @@
   "Press B: Cancel": "Pressione B: Cancelar",
   "Failed to start web server": "Falha ao iniciar o servidor web",
   "The console has no internet connection.": "A consola não tem ligação à Internet.",
+  "Please check your internet connection and try again.": "Por favor, verifique a sua ligação à Internet e tente novamente.",
   "Connecting...": "Conectando...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Sem conexão com a Internet.\n\nAtive o Wi-Fi (ou conecte um adaptador LAN) nas Configurações do Console e tente novamente.",
   "Waiting for the console to connect...": "A aguardar pela ligação da consola...",

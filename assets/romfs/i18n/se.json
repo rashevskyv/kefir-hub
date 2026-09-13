@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "Tryck B: Avbryt",
   "Failed to start web server": "Misslyckades med att starta webbservern",
   "The console has no internet connection.": "Konsolen har ingen internetanslutning.",
+  "Please check your internet connection and try again.": "Kontrollera din internetanslutning och försök igen.",
   "Connecting...": "Ansluter...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Ingen internetanslutning.\n\nSlå på Wi-Fi (eller anslut en LAN-adapter) i konsolens systeminställningar och försök igen.",
   "Waiting for the console to connect...": "Väntar på att konsolen ska ansluta...",

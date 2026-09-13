@@ -1181,7 +1181,7 @@ void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {
                 if (rc == Result_TransferCancelled) {
                     return;
                 }
-                App::Push<ErrorBox>(rc, "Failed to extract " + name);
+                App::PushErrorBox(rc, "Failed to extract " + name);
                 return;
             }
 
@@ -1192,38 +1192,40 @@ void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {
 void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success) {
     App::Push<KefirChangelogBox>(entry,
         [this, entry, on_success = std::move(on_success)]() mutable {
-            App::Push<ProgressBox>(0, "Installing"_i18n, entry.name,
-                [entry](auto pbox) -> Result {
-                    return detail::DownloadAndInstallKefir(pbox, entry);
-                },
-                [this, entry, on_success = std::move(on_success)](Result rc) mutable {
-                    if (R_FAILED(rc)) {
-                        if (rc == Result_TransferCancelled) {
+            net::RequireConnection([this, entry, on_success = std::move(on_success)]() mutable {
+                App::Push<ProgressBox>(0, "Installing"_i18n, entry.name,
+                    [entry](auto pbox) -> Result {
+                        return detail::DownloadAndInstallKefir(pbox, entry);
+                    },
+                    [this, entry, on_success = std::move(on_success)](Result rc) mutable {
+                        if (R_FAILED(rc)) {
+                            if (rc == Result_TransferCancelled) {
+                                return;
+                            }
+                            if (rc == Result_AppstoreFailedZipDownload) {
+                                App::PushErrorBox(rc, "Failed to download " + entry.name);
+                            } else {
+                                App::PushErrorBox(rc, "Failed to install " + entry.name);
+                            }
                             return;
                         }
-                        if (rc == Result_AppstoreFailedZipDownload) {
-                            App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
-                        } else {
-                            App::Push<ErrorBox>(rc, "Failed to install " + entry.name);
+
+                        RefreshSystemInfo();
+                        if (on_success) {
+                            on_success();
+                            return;
                         }
-                        return;
-                    }
 
-                    RefreshSystemInfo();
-                    if (on_success) {
-                        on_success();
-                        return;
-                    }
-
-                    App::Push<OptionBox>(
-                        "Kefir package installed."_i18n + "\n\n" + "Reboot now?"_i18n,
-                        "Later"_i18n, "Reboot"_i18n, 1,
-                        [](auto op_index) {
-                            if (op_index && *op_index == 1) {
-                                utils::requestForcedReboot();
-                            }
-                        });
-                });
+                        App::Push<OptionBox>(
+                            "Kefir package installed."_i18n + "\n\n" + "Reboot now?"_i18n,
+                            "Later"_i18n, "Reboot"_i18n, 1,
+                            [](auto op_index) {
+                                if (op_index && *op_index == 1) {
+                                    utils::requestForcedReboot();
+                                }
+                            });
+                    });
+            });
         });
 }
 
@@ -1261,21 +1263,23 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
 }
 
 void Menu::StartFirmwareDownload(const UpdaterEntry& entry, std::optional<bool> acked_downgrade_fix) {
-    App::Push<ProgressBox>(0, "Downloading"_i18n, entry.name,
-        [entry](auto pbox) -> Result {
-            return detail::DownloadAndExtractFirmware(pbox, entry);
-        },
-        [this, entry, acked_downgrade_fix](Result rc) {
-            if (R_FAILED(rc)) {
-                if (rc == Result_TransferCancelled) {
+    net::RequireConnection([this, entry, acked_downgrade_fix]() {
+        App::Push<ProgressBox>(0, "Downloading"_i18n, entry.name,
+            [entry](auto pbox) -> Result {
+                return detail::DownloadAndExtractFirmware(pbox, entry);
+            },
+            [this, entry, acked_downgrade_fix](Result rc) {
+                if (R_FAILED(rc)) {
+                    if (rc == Result_TransferCancelled) {
+                        return;
+                    }
+                    App::PushErrorBox(rc, "Failed to download " + entry.name);
                     return;
                 }
-                App::Push<ErrorBox>(rc, "Failed to download " + entry.name);
-                return;
-            }
 
-            PromptInstallFirmware(entry.name, "/firmware", acked_downgrade_fix);
-        });
+                PromptInstallFirmware(entry.name, "/firmware", acked_downgrade_fix);
+            });
+    });
 }
 
 bool Menu::PromptDowngradeAck(const std::string& target_version, const std::string& confirm_label, std::function<void(bool)> on_ack, std::function<void()> on_cancel) {
@@ -1342,7 +1346,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
                 }
-                App::Push<ErrorBox>(rc, "Firmware validation failed"_i18n);
+                App::PushErrorBox(rc, "Firmware validation failed"_i18n);
                 return;
             }
 
@@ -1412,7 +1416,7 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
                 }
-                App::Push<ErrorBox>(rc, "Firmware update failed"_i18n);
+                App::PushErrorBox(rc, "Firmware update failed"_i18n);
                 return;
             }
 

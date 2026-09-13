@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "Nhấn B: Hủy",
   "Failed to start web server": "Không thể khởi chạy máy chủ web",
   "The console has no internet connection.": "Máy chưa kết nối Internet.",
+  "Please check your internet connection and try again.": "Vui lòng kiểm tra kết nối internet và thử lại.",
   "Connecting...": "Đang kết nối...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "Không có kết nối internet.\n\nBật Wi-Fi (hoặc cắm adapter LAN) trong Cài đặt hệ thống của máy, sau đó thử lại.",
   "Waiting for the console to connect...": "Đang chờ máy kết nối...",

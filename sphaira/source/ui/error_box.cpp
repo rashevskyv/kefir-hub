@@ -215,8 +215,71 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "The file or transfer ended early before all data was read. Please copy or download the file again."_i18n;
         case Result_NspBadMagic:
             return "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."_i18n;
+        case Result_AppstoreFailedZipDownload:
+        case Result_GhdlFailedToDownloadAsset:
+        case Result_GhdlFailedToDownloadAssetJson:
+        case Result_ThemezerFailedToDownloadTheme:
+        case Result_ThemezerFailedToDownloadThemeMeta:
+        case Result_MainFailedToDownloadUpdate:
+        case Result_CurlFailedEasyInit:
+            return "Please check your internet connection and try again."_i18n;
+        case Result_AppFailedMusicDownload:
+            return "Failed to download background music. Please check your internet connection."_i18n;
+        case Result_GameMoveNotEnoughSpace:
+            return "There is not enough free space on the selected storage."_i18n;
         default:
             return "";
+    }
+}
+
+auto ShouldShowIssue(std::optional<Result> rc) -> bool {
+    if (!rc.has_value()) {
+        return false;
+    }
+
+    const auto code = rc.value();
+
+    if (R_MODULE(code) == Module_Nifm) {
+        return false;
+    }
+
+    switch (code) {
+        case Result_AppstoreFailedZipDownload:
+        case Result_GhdlFailedToDownloadAsset:
+        case Result_GhdlFailedToDownloadAssetJson:
+        case Result_ThemezerFailedToDownloadTheme:
+        case Result_ThemezerFailedToDownloadThemeMeta:
+        case Result_MainFailedToDownloadUpdate:
+        case Result_AppFailedMusicDownload:
+        case Result_DumpFailedNetworkUpload:
+        case Result_CurlFailedEasyInit:
+        case Result_NetNoConnection:
+        case Result_SmbConnectionFailed:
+        case Result_SmbNotSupported:
+        case Result_SaveSyncFailed:
+        case Result_NtpNoConnection:
+        case Result_NtpResolveFailed:
+        case Result_NtpSocketFailed:
+        case Result_NtpSendFailed:
+        case Result_NtpRecvFailed:
+        case Result_NtpBadReply:
+        case Result_NtpSetTimeFailed:
+        case FsError_TargetLocked:
+        case FsError_PathNotFound:
+        case FsError_PathAlreadyExists:
+        case FsError_TooLongPath:
+        case FsError_InvalidCharacter:
+        case Result_FsReadOnly:
+        case Result_GameMoveNotEnoughSpace:
+        case UsbError_UrbFailed:
+        case UsbError_UrbCancelled:
+        case UsbError_UrbBadStatus:
+        case Result_TransferCancelled:
+        case SvcError_Cancelled:
+        case SvcError_TimedOut:
+            return false;
+        default:
+            return true;
     }
 }
 
@@ -274,29 +337,65 @@ auto ErrorBox::Update(Controller* controller, TouchInfo* touch) -> void {
 auto ErrorBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::dimBackground(vg);
 
-    // Measure the error description text height dynamically
+    const bool show_issue = ShouldShowIssue(m_code);
+
+    std::string code_str;
+    if (m_code.has_value()) {
+        const auto code = m_code.value();
+        if (!m_code_message.empty()) {
+            code_str = "Code: " + FormatResult(code) + " (" + m_code_message + ")";
+        } else if (!m_code_module.empty()) {
+            code_str = "Code: " + FormatResult(code) + " (" + m_code_module + ")";
+        } else {
+            code_str = "Code: " + FormatResult(code);
+        }
+    }
+
     const float padding = 45.f;
     const float text_w = m_pos.w - padding * 2.f;
-    float message_bounds[4]{};
+
     nvgSave(vg);
+
+    // Measure the error description text height dynamically
+    float message_bounds[4]{};
     nvgFontSize(vg, 22.f);
     nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
     nvgTextLineHeight(vg, 1.25f);
     nvgTextBoxBounds(vg, 0, 0, text_w, m_message.c_str(), nullptr, message_bounds);
     const float message_h = message_bounds[3] - message_bounds[1];
 
+    // Measure code_str height
+    float code_bounds[4]{};
+    float code_h = 0.f;
+    if (!code_str.empty()) {
+        nvgFontSize(vg, 18.f);
+        nvgTextBoxBounds(vg, 0, 0, text_w, code_str.c_str(), nullptr, code_bounds);
+        code_h = code_bounds[3] - code_bounds[1];
+    }
+
     // Measure the help text height dynamically
     const std::string help_text = "If this message appears repeatedly, please open an issue."_i18n;
     float help_bounds[4]{};
-    nvgFontSize(vg, 18.f);
-    nvgTextLineHeight(vg, 1.25f);
-    nvgTextBoxBounds(vg, 0, 0, text_w, help_text.c_str(), nullptr, help_bounds);
-    const float help_h = help_bounds[3] - help_bounds[1];
+    float help_h = 0.f;
+    if (show_issue) {
+        nvgFontSize(vg, 18.f);
+        nvgTextLineHeight(vg, 1.25f);
+        nvgTextBoxBounds(vg, 0, 0, text_w, help_text.c_str(), nullptr, help_bounds);
+        help_h = help_bounds[3] - help_bounds[1];
+    }
+
     nvgRestore(vg);
 
     // Dynamically calculate the popup window height
-    const float content_h = 183.f + message_h + help_h + 15.f + 18.f + 30.f + 65.f + 35.f;
-    m_pos.h = std::max(430.f, content_h);
+    float content_h = 125.f + 25.f + 40.f + message_h;
+    if (!code_str.empty()) {
+        content_h += 20.f + code_h;
+    }
+    if (show_issue) {
+        content_h += 20.f + help_h + 15.f + 18.f;
+    }
+    content_h += 30.f + 65.f + 35.f;
+    m_pos.h = std::max(400.f, content_h);
     m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
 
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
@@ -307,30 +406,29 @@ auto ErrorBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     // Draw Error Icon
     gfx::drawText(vg, center_x, m_pos.y + 35.f, 63.f, theme->GetColour(ThemeEntryID_ERROR), "\uE140", NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
-    // Draw Code/Title
+    // Draw Title
     float next_y = m_pos.y + 125.f;
-    if (m_code.has_value()) {
-        const auto code = m_code.value();
-        if (m_code_message.empty()) {
-            gfx::drawTextArgs(vg, center_x, next_y, 25.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "Code: 0x%X Module: %s", R_VALUE(code), m_code_module.c_str());
-        } else {
-            gfx::drawTextArgs(vg, center_x, next_y, 25.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", m_code_message.c_str());
-        }
-    } else {
-        gfx::drawText(vg, center_x, next_y, 25.f, theme->GetColour(ThemeEntryID_TEXT), "An error occurred"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
-    }
+    gfx::drawText(vg, center_x, next_y, 25.f, theme->GetColour(ThemeEntryID_TEXT), "An error occurred"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
     // Draw Error Description Message
-    next_y += 50.f;
+    next_y += 40.f;
     gfx::drawTextBox(vg, text_x, next_y, 22.f, text_w, theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    next_y += message_h;
+
+    // Draw diagnostic code string
+    if (!code_str.empty()) {
+        next_y += 20.f;
+        gfx::drawTextBox(vg, text_x, next_y, 18.f, text_w, theme->GetColour(ThemeEntryID_TEXT_INFO), code_str.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+        next_y += code_h;
+    }
 
     // Draw Help/Issue details (wrapped to prevent overflow)
-    next_y += message_h + 25.f;
-    gfx::drawTextBox(vg, text_x, next_y, 18.f, text_w, theme->GetColour(ThemeEntryID_TEXT_INFO), help_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.25f);
-
-    // Draw GitHub URL
-    next_y += help_h + 15.f;
-    gfx::drawText(vg, center_x, next_y, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "t.me/xhrxhrxhr", NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    if (show_issue) {
+        next_y += 20.f;
+        gfx::drawTextBox(vg, text_x, next_y, 18.f, text_w, theme->GetColour(ThemeEntryID_TEXT_INFO), help_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nullptr, 1.25f);
+        next_y += help_h + 15.f;
+        gfx::drawText(vg, center_x, next_y, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "t.me/xhrxhrxhr", NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    }
 
     // Draw OK button box relative to dynamically calculated height
     const Vec4 box = {

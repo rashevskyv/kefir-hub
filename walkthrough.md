@@ -1,7 +1,18 @@
-Актуальний delivery — **v0.13.823** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.824** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.824 — Informative error dialogs and network gate in updater
+
+- Усунено лякаючий технічний заголовок у діалозі помилок `ErrorBox`: замість внутрішніх назв C++ енумів (`SphairaError_AppstoreFailedZipDownload` тощо) тепер завжди показується охайний та дружній заголовок `"An error occurred"_i18n` («Сталася помилка» / «Произошла ошибка»).
+- Технічний код помилки (`Code: 0x... (SphairaError_...)`) виведено під текстом повідомлення у вигляді другорядного діагностичного напису меншим шрифтом та кольором `ThemeEntryID_TEXT_INFO`.
+- У `GetErrorDescription(rc)` додано інформативну пораду перевірити інтернет-з'єднання (`"Please check your internet connection and try again."_i18n`) при помилках завантаження файлів.
+- Реалізовано функцію `ShouldShowIssue(rc)`, яка приховує напис про відкриття issue та посилання на Telegram `t.me/xhrxhrxhr` для очікуваних користувацьких і мережевих ситуацій (відсутність інтернету, таймаут, блокування файлу, нестача пам'яті на SD чи скасування операції). Посилання на Telegram залишається тільки для критичних внутрішніх збоїв.
+- В оновлювачі (`kefir_menu.cpp`) завантаження прошивки та пакетів оновлення обгорнуто у виклик `net::RequireConnection`. При спробі завантаження офлайн користувач відразу отримує пропозицію перевірити/увімкнути Wi-Fi без запуску заздалегідь приреченого завантаження.
+- Усі збої завантаження в оновлювачі переведено на `App::PushErrorBox`, що гарантує перехоплення раптового обриву зв'язку функцією `net::IsOfflineError` і показ спокійного вікна про стан мережі замість страшного коду помилки.
+- Ключ `"Please check your internet connection and try again."` додано до всіх 14 мовних файлів у `assets/romfs/i18n/`.
+- `git diff --check` виконано; compile/NRO не запускалися за workspace policy.
 
 ## v0.13.823 — Localized firmware update and reboot notifications
 

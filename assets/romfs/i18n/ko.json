@@ -1404,6 +1404,7 @@
   "Press B: Cancel": "B 누르기: 취소",
   "Failed to start web server": "웹 서버를 시작하지 못했습니다",
   "The console has no internet connection.": "본체가 인터넷에 연결되어 있지 않습니다.",
+  "Please check your internet connection and try again.": "인터넷 연결을 확인하고 다시 시도해 주세요.",
   "Connecting...": "연결 중...",
   "There is no internet connection.\n\nTurn on Wi-Fi (or plug in a LAN adapter) in the console's System Settings, then try again.": "인터넷에 연결되어 있지 않습니다.\n\n본체의 설정에서 Wi-Fi를 켜거나 LAN 어댑터를 연결한 후 다시 시도해 주세요.",
   "Waiting for the console to connect...": "콘솔 연결 대기 중...",

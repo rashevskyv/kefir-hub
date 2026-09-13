@@ -1,17 +1,23 @@
-Актуальний delivery — **v0.13.823** (informative error dialogs and network gate in updater). Завершені задачі збережено в
+Актуальний delivery — **v0.13.824** (informative error dialogs and network gate in updater). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.823 (Informative error dialogs and network gate in updater)
+## Поточний delivery: v0.13.824 (Informative error dialogs and network gate in updater)
 
-- [x] `ERRORBOX-LAYOUT-823` — у `ErrorBox::Draw` встановлено постійний заголовок `"An error occurred"_i18n`, а код помилки перенесено в другорядний рядок знизу.
-- [x] `ERRORBOX-FILTER-823` — у `error_box.cpp` додано `ShouldShowIssue(rc)` для приховування закликів відкривати issue на очікуваних мережевих та файлових помилках.
-- [x] `DOWNLOAD-DESC-823` — у `GetErrorDescription(rc)` додано пораду перевірити з'єднання при збоях завантаження; ключ перекладено для 14 мов.
-- [x] `UPDATER-NETGATE-823` — у `kefir_menu.cpp` завантаження прошивки та пакетів оновлення обгорнуто в `net::RequireConnection`, а помилки переведено на `App::PushErrorBox`.
-- [x] `I18N-FW-823` — у `kefir_menu.cpp` та `kefir_firmware.cpp` локалізовано через `_i18n` діалоги оновлення/даунгрейду, очищення тем/перекладів та запити перезавантаження.
+- [x] `ERRORBOX-LAYOUT-824` — у `ErrorBox::Draw` встановлено постійний заголовок `"An error occurred"_i18n`, а код помилки перенесено в другорядний рядок знизу.
+- [x] `ERRORBOX-FILTER-824` — у `error_box.cpp` додано `ShouldShowIssue(rc)` для приховування закликів відкривати issue на очікуваних мережевих та файлових помилках.
+- [x] `DOWNLOAD-DESC-824` — у `GetErrorDescription(rc)` додано пораду перевірити з'єднання при збоях завантаження; ключ перекладено для 14 мов.
+- [x] `UPDATER-NETGATE-824` — у `kefir_menu.cpp` завантаження прошивки та пакетів оновлення обгорнуто в `net::RequireConnection`, а помилки переведено на `App::PushErrorBox`.
+- [x] `DOCS-BUMP-824` — Sphaira version та delivery-документи оновлено до `0.13.824`, оновлено `README.md`.
+- [ ] `HW-824` — зібрати NRO і перевірити діалоги помилок та перевірку мережі в оновлювачі на консолі.
+
+## Попередній delivery: v0.13.823 (Localized firmware update and reboot notifications)
+
+- [x] `I18N-FW-823` — у `kefir_menu.cpp` та `kefir_firmware.cpp` локалізовано через `_i18n` усі тексти діалогів успіху оновлення/даунгрейду, очищення тем/перекладів, попередження про Atmosphere 2162-0002 та запити перезавантаження.
+- [x] `I18N-KEYS-823` — додано 15 нових ключів локалізації з англійським, українським та російським перекладом до `en.json`, `uk.json` та `ru.json`.
 - [x] `DOCS-BUMP-823` — Sphaira version та delivery-документи оновлено до `0.13.823`, оновлено `README.md`.
-- [ ] `HW-823` — зібрати NRO і перевірити діалоги помилок та перевірку мережі в оновлювачі на консолі.
+- [ ] `HW-823` — зібрати NRO і перевірити українську локалізацію діалогів оновлення прошивки та запиту на перезавантаження на консолі.
 
 ## Попередній delivery: v0.13.822 (Silence error on user creation cancellation)
 
