@@ -355,6 +355,9 @@ void Menu::ConfirmCreate() {
     const auto rc = pselShowUserCreator();
     App::ResetTouchAfterApplet();
     if (R_FAILED(rc)) {
+        if (rc == AccountError_Cancelled || rc == AccountError_CancelledByUser) {
+            return;
+        }
         App::PushErrorBox(rc, "Could not open user creator."_i18n);
         return;
     }

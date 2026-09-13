@@ -104,6 +104,7 @@ Sphaira features integrated management for Nintendo Switch system interface tran
 ## Profiles and Playtime Transfer & TegraExplorer Payload Integration
 
 Sphaira / Kefir Hub provides full user profile and play activity transfer between consoles, utilizing TegraExplorer to dump and restore locked system saves (`0010` accounts and `00F0` play activity) safely outside Horizon OS:
+- **User Profile Creation & Graceful Cancellation:** Users can manage local accounts and create new user profiles directly from the Users menu via the Horizon OS user creation applet (`pselShowUserCreator`). If the user cancels the creation applet before completing, Sphaira handles the cancellation cleanly without presenting spurious error dialogs.
 - **Embedded RomFS TegraExplorer & Version Synchronization:** Sphaira bundles the latest compiled TegraExplorer payload in its RomFS (`romfs:/tegra/TegraExplorer.bin`). Before launching any payload operation (`ensureTegraExplorerPayload`), Sphaira checks `/bootloader/payloads/`:
   - If TegraExplorer is missing from the SD card, it is automatically installed from RomFS.
   - If a copy exists, Sphaira reads and parses the binary payload footer (`KFRP`). If the SD card copy is older than the RomFS version, it is safely upgraded in-place.

@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.821** (readable downgrade warning). Завершені задачі збережено в
+Актуальний delivery — **v0.13.822** (silence error on user creation cancellation). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.821 (Readable downgrade warning)
+## Поточний delivery: v0.13.822 (Silence error on user creation cancellation)
+
+- [x] `USER-CREATOR-CANCEL-822` — у `ConfirmCreate` (`users_profile.cpp`) придушено помилку при скасуванні створення користувача (`0x7C` / `0x27C`).
+- [x] `ACCOUNT-ERRORS-822` — у `defines.hpp` та `error_box.cpp` додано `Module_Account` (124) та `AccountError_Cancelled` / `AccountError_CancelledByUser`.
+- [x] `DOCS-BUMP-822` — Sphaira version та delivery-документи оновлено до `0.13.822`, оновлено `README.md`.
+- [ ] `HW-822` — зібрати NRO і перевірити скасування створення користувача без появи діалогу помилки на консолі.
+
+## Попередній delivery: v0.13.821 (Readable downgrade warning)
 
 - [x] `DOWNGRADE-COPY-821` — текст очищення скорочено до нейтрального повідомлення про видалення system save, тем і перекладів.
 - [x] `DOWNGRADE-LAYOUT-821` — збільшено типографіку попапа та додано динамічний vertical flow за фактичною висотою рядків.

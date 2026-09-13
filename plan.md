@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.821** (readable downgrade warning). Завершені плани збережено в
+Поточний delivery — **v0.13.822** (silence error on user creation cancellation). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.821 — Readable downgrade warning
+## Поточний delivery: v0.13.822 — Silence error on user creation cancellation
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. У `ConfirmCreate` (`users_profile.cpp`) додано перевірку кодів скасування аплету створення користувача (`AccountError_Cancelled` `0x7C`, `AccountError_CancelledByUser` `0x27C`). При скасуванні створення користувачем помилка не виводиться, екран повертається до меню без помилкового `ErrorBox`.
+2. У `defines.hpp` та `error_box.cpp` зафіксовано модуль `Module_Account` (124) та коди помилок скасування для коректної діагностики та обробки.
+
+## Попередній delivery: v0.13.821 — Readable downgrade warning
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. Текст про очищення нейтрально повідомляє, що system save, теми та переклади буде видалено, без згадки виконавця.

@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.821** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.822** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.822 — Silence error on user creation cancellation
+
+- Усунено появу помилкового діалогу `ErrorBox` («Code: 0x27C Module: 124») при скасуванні створення нового користувача в меню профілів.
+- У `ConfirmCreate` (`users_profile.cpp`) додано явне ігнорування результатів скасування від Horizon OS (`AccountError_Cancelled` `0x7C` та `AccountError_CancelledByUser` `0x27C`), завдяки чому при відмові від створення користувача застосунок безпомилково повертається в меню.
+- У `defines.hpp` додано константи `Module_Account = 124`, `AccountError_Cancelled` та `AccountError_CancelledByUser`; у `error_box.cpp` додано відображення модуля `Account` та назв помилок.
+- Оновлено документацію в `README.md` з описом створення профілів та чистим скасуванням діалогу.
+- `git diff --check` виконано; compile/tests/NRO не запускалися за workspace policy.
 
 ## v0.13.821 — Readable downgrade warning
 

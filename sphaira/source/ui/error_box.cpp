@@ -17,6 +17,7 @@ auto GetModule(Result rc) -> const char* {
         case Module_Ncm: return "Ncm";
         case Module_Ns: return "Ns";
         case Module_Spl: return "Spl";
+        case Module_Account: return "Account";
         case Module_Applet: return "Applet";
         case Module_Usb: return "Usb";
         case Module_Irsensor: return "Irsensor";
@@ -30,6 +31,9 @@ auto GetCodeMessage(Result rc) -> const char* {
     switch (rc) {
         case SvcError_TimedOut: return "SvcError_TimedOut";
         case SvcError_Cancelled: return "SvcError_Cancelled";
+
+        case AccountError_Cancelled: return "AccountError_Cancelled";
+        case AccountError_CancelledByUser: return "AccountError_CancelledByUser";
 
         case FsError_PathNotFound: return "FsError_PathNotFound";
         case FsError_PathAlreadyExists: return "FsError_PathAlreadyExists";

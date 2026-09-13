@@ -14,10 +14,16 @@ enum {
     Module_Ns = 16,
     Module_Spl = 26,
     Module_Nifm = 110,
+    Module_Account = 124,
     Module_Applet = 131,
     Module_Usb = 140,
     Module_Irsensor = 205,
     Module_Sphaira = 505,
+};
+
+enum AccountError {
+    AccountError_Cancelled = 0x7C,
+    AccountError_CancelledByUser = 0x27C,
 };
 
 enum SvcError {

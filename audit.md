@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.821**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.822**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.822 поза ponytail-чергою: скасування створення нового користувача в меню профілів (`AccountError_Cancelled` `0x7C`, `AccountError_CancelledByUser` `0x27C`) більше не показує помилковий ErrorBox; додано `Module_Account` (124) та коди помилок скасування в `defines.hpp` та `error_box.cpp`; оновлено README.md; версію піднято до 0.13.822. Static checks пройшли; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.821 поза ponytail-чергою: downgrade popup отримав більші шрифти та content-driven vertical layout за NanoVG bounds; cleanup copy скорочено до нейтрального повідомлення про видалення system save, тем і перекладів; версію піднято до 0.13.821. Static checks пройшли; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
