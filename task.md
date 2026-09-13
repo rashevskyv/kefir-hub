@@ -1,9 +1,15 @@
-Актуальний delivery — **v0.13.817** (restore translation removal contract). Завершені задачі збережено в
+Актуальний delivery — **v0.13.818** (interface translation separator). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.817 (Restore translation removal contract)
+## Поточний delivery: v0.13.818 (Interface translation separator)
+
+- [x] `TRANSLATION-SEPARATOR-818` — додано `MakeSeparator()` між службовими пунктами та мовами, лише коли мови доступні.
+- [x] `DOCS-BUMP-818` — версію та delivery-документи оновлено до `0.13.818`.
+- [ ] `HW-818` — перевірити один розділювач і навігацію через нього кнопками/touch.
+
+## Попередній delivery: v0.13.817 (Restore translation removal contract)
 
 - [x] `RESTORE-TARGET-LOCK-817` — `FsError_TargetLocked` знову допускається у best-effort manual removal.
 - [x] `MANDATORY-REBOOT-817` — manual removal викликає `RemoveInterfaceTranslationAndReboot`; опцію відкладеного reboot прибрано.

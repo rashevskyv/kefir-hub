@@ -226,6 +226,10 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakeRemoveTranslationItem());
 
+    if (has_cache) {
+        items.emplace_back(MakeSeparator());
+    }
+
     for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
             entry.name,
@@ -408,9 +412,11 @@ void TranslateMenu::SetIndex(s64 index) {
         m_index = 0;
         return;
     }
-    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    m_index = ResolveItemIndex(m_items, index, m_index);
     if (!m_index) {
         m_list->SetYoff(0);
+    } else {
+        m_list->EnsureVisible(m_index, m_items.size());
     }
     SetTitleSubHeading(m_items[m_index].description, true);
     SetSubHeading("");

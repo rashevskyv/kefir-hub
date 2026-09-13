@@ -1,8 +1,13 @@
-Поточний delivery — **v0.13.817** (restore translation removal contract). Завершені плани збережено в
+Поточний delivery — **v0.13.818** (interface translation separator). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.817 — Restore translation removal contract
+## Поточний delivery: v0.13.818 — Interface translation separator
+
+Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
+1. Коли кеш мов непорожній, між службовими діями Translate Interface та списком мов додається наявний неінтерактивний `MakeSeparator()` — той самий патерн, що в DBI.
+
+## Попередній delivery: v0.13.817 — Restore translation removal contract
 
 Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
 1. Відновлено перевірений контракт v0.13.230–v0.13.812: `FsError_TargetLocked` під час best-effort видалення системного перекладу не показується як failure.
