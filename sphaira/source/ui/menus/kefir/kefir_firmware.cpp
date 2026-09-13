@@ -246,29 +246,62 @@ constexpr const char* FIRMWARE_CLEANUP_PATHS[]{
     "/atmosphere/contents/0100000000001015",
 };
 
-} // namespace
-
-void CleanThemesAndTranslations(fs::FsNativeSd& sd) {
-    for (const auto* path : FIRMWARE_CLEANUP_PATHS) {
-        sd.DeleteDirectoryRecursively(fs::FsPath{path});
-        sd.DeleteFile(fs::FsPath{path});
+auto IsDowngradeStartupScript(fs::FsNativeSd& sd, const char* path = "/startup.te") -> bool {
+    if (!sd.FileExists(path)) {
+        return false;
     }
+    std::vector<u8> bytes;
+    if (R_FAILED(sd.read_entire_file(path, bytes)) || bytes.empty()) {
+        return false;
+    }
+    std::string_view content(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    return content.find("downgrade_fix.te") != std::string_view::npos ||
+           content.find("8000000000000073") != std::string_view::npos;
 }
 
-void CleanThemesAndTranslations() {
-    fs::FsNativeSd sd;
-    if (R_SUCCEEDED(sd.GetFsOpenResult())) {
-        CleanThemesAndTranslations(sd);
-        fsdevCommitDevice("sdmc");
-        sd.Commit();
+} // namespace
+
+auto CleanThemesAndTranslations(fs::FsNativeSd& sd) -> bool {
+    bool ok = true;
+    for (const auto* path : FIRMWARE_CLEANUP_PATHS) {
+        const fs::FsPath p{path};
+        if (sd.DirExists(p)) {
+            const auto rc = sd.DeleteDirectoryRecursively(p);
+            if (R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+                ok = false;
+            }
+        }
+        if (sd.FileExists(p)) {
+            const auto rc = sd.DeleteFile(p);
+            if (R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+                ok = false;
+            }
+        }
+        if (sd.DirExists(p) || sd.FileExists(p)) {
+            ok = false;
+        }
     }
+    return ok;
+}
+
+auto CleanThemesAndTranslations() -> bool {
+    fs::FsNativeSd sd;
+    if (R_FAILED(sd.GetFsOpenResult())) {
+        return false;
+    }
+    const bool ok = CleanThemesAndTranslations(sd);
+    fsdevCommitDevice("sdmc");
+    if (R_FAILED(sd.Commit())) {
+        return false;
+    }
+    return ok;
 }
 
 auto IsDowngradeFixAvailable() -> bool {
     return true;
 }
 
-auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
+auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out, bool arm_startup) -> bool {
     if (out) {
         *out = {};
         out->attempted = true;
@@ -278,7 +311,7 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
     if (!ReadRomfsTe("romfs:/tegra/downgrade_fix.te", script)) {
         log_write("StageDowngradeFix: failed to read romfs:/tegra/downgrade_fix.te\n");
         if (out) {
-            out->rc = Result_FsPathNotFound;
+            out->rc = FsError_PathNotFound;
         }
         return false;
     }
@@ -290,57 +323,159 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
     }
 
     fs::FsNativeSd sd;
-    if (R_FAILED(sd.GetFsOpenResult())) {
+    if (const auto rc = sd.GetFsOpenResult(); R_FAILED(rc)) {
         if (out) {
-            out->rc = sd.GetFsOpenResult();
+            out->rc = rc;
         }
         return false;
     }
 
-    // 0. Pre-clean custom themes and translations
-    CleanThemesAndTranslations(sd);
-
-    // 1. Stage /startup.te
-    sd.DeleteFile("/startup.te");
-    std::remove("/startup.te");
-    bool written = false;
-    std::FILE* fp = std::fopen("/startup.te", "wb");
-    if (fp) {
-        if (std::fwrite(script.data(), 1, script.size(), fp) == script.size()) {
-            std::fflush(fp);
-            written = true;
+    // Any startup script is an already-pending one-shot workflow. Do not replace it.
+    if (sd.FileExists("/startup.te")) {
+        log_write("StageDowngradeFix: /startup.te already exists; refusing to overwrite\n");
+        if (out) {
+            out->rc = FsError_PathAlreadyExists;
         }
-        std::fclose(fp);
+        return false;
     }
-    if (!written) {
-        std::vector<u8> bytes(script.begin(), script.end());
-        if (R_FAILED(sd.write_entire_file("/startup.te", bytes))) {
-            log_write("StageDowngradeFix: failed to write /startup.te\n");
+
+    // Validate the payload before creating any staged state.
+    fs::FsPath te_bin;
+    if (!utils::ensureTegraExplorerPayload(te_bin)) {
+        log_write("StageDowngradeFix: ensureTegraExplorerPayload failed\n");
+        if (out) {
+            out->rc = FsError_FileNotFound;
+        }
+        return false;
+    }
+
+    // 1. Stage to /TegraExplorer/scripts/downgrade_fix.te
+    std::vector<u8> script_bytes(script.begin(), script.end());
+    if (const auto rc = sd.CreateDirectoryRecursively("/TegraExplorer/scripts"); R_FAILED(rc)) {
+        log_write("StageDowngradeFix: failed to create /TegraExplorer/scripts (0x%x)\n", rc);
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
+    if (const auto rc = sd.write_entire_file("/TegraExplorer/scripts/downgrade_fix.te", script_bytes); R_FAILED(rc)) {
+        log_write("StageDowngradeFix: failed to write /TegraExplorer/scripts/downgrade_fix.te (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
+
+    // 2. Write target flag /config/kefir/downgrade_nand
+    if (const auto rc = sd.CreateDirectoryRecursively("/config/kefir"); R_FAILED(rc)) {
+        log_write("StageDowngradeFix: failed to create /config/kefir (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
+    std::vector<u8> target_bytes(target.begin(), target.end());
+    if (const auto rc = sd.write_entire_file("/config/kefir/downgrade_nand", target_bytes); R_FAILED(rc)) {
+        log_write("StageDowngradeFix: failed to write /config/kefir/downgrade_nand (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
+
+    // 3. Arm /startup.te only if requested (e.g. standalone apply flow)
+    if (arm_startup) {
+        if (const auto rc = sd.write_entire_file("/startup.te", script_bytes); R_FAILED(rc)) {
+            log_write("StageDowngradeFix: failed to write /startup.te (0x%x)\n", rc);
+            DisarmDowngradeFix();
             if (out) {
-                out->rc = Result_FsNotMounted;
+                out->rc = rc;
             }
             return false;
         }
     }
 
-    // 2. Also save to /TegraExplorer/scripts/downgrade_fix.te
-    sd.CreateDirectoryRecursively("/TegraExplorer/scripts");
-    std::vector<u8> script_bytes(script.begin(), script.end());
-    sd.write_entire_file("/TegraExplorer/scripts/downgrade_fix.te", script_bytes);
+    fsdevCommitDevice("sdmc");
+    if (const auto rc = sd.Commit(); R_FAILED(rc)) {
+        log_write("StageDowngradeFix: sd.Commit failed (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
 
-    // 3. Write target flag /config/kefir/downgrade_nand
-    sd.CreateDirectoryRecursively("/config/kefir");
-    std::vector<u8> target_bytes(target.begin(), target.end());
-    sd.write_entire_file("/config/kefir/downgrade_nand", target_bytes);
+    log_write("StageDowngradeFix: successfully %s for %s\n",
+        arm_startup ? "staged and armed /startup.te" : "preflight-staged downgrade fix",
+        target.c_str());
+    if (out) {
+        out->staged = arm_startup;
+        out->rc = 0;
+    }
+    return true;
+}
 
-    // 4. Ensure TegraExplorer payload is installed in /bootloader/payloads
-    fs::FsPath te_bin;
-    utils::ensureTegraExplorerPayload(te_bin);
+auto ArmDowngradeFix(DowngradeFixResult* out) -> bool {
+    if (out) {
+        out->staged = false;
+    }
+
+    fs::FsNativeSd sd;
+    if (const auto rc = sd.GetFsOpenResult(); R_FAILED(rc)) {
+        log_write("ArmDowngradeFix: failed to open SD (0x%x)\n", rc);
+        if (out) {
+            out->rc = rc;
+        }
+        return false;
+    }
+
+    // A script appearing between preflight and activation belongs to another workflow.
+    if (sd.FileExists("/startup.te")) {
+        log_write("ArmDowngradeFix: /startup.te appeared after preflight; refusing to overwrite\n");
+        if (out) {
+            out->rc = FsError_PathAlreadyExists;
+        }
+        return false;
+    }
+
+    std::vector<u8> script_bytes;
+    Result rc = sd.read_entire_file("/TegraExplorer/scripts/downgrade_fix.te", script_bytes);
+    if (R_FAILED(rc) || script_bytes.empty()) {
+        log_write("ArmDowngradeFix: staged script is missing or unreadable (0x%x)\n", rc);
+        if (out) {
+            out->rc = R_FAILED(rc) ? rc : static_cast<Result>(FsError_PathNotFound);
+        }
+        DisarmDowngradeFix();
+        return false;
+    }
+
+    rc = sd.write_entire_file("/startup.te", script_bytes);
+    if (R_FAILED(rc)) {
+        log_write("ArmDowngradeFix: failed to write /startup.te (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+            out->staged = false;
+        }
+        return false;
+    }
 
     fsdevCommitDevice("sdmc");
-    sd.Commit();
+    rc = sd.Commit();
+    if (R_FAILED(rc)) {
+        log_write("ArmDowngradeFix: sd.Commit failed (0x%x)\n", rc);
+        DisarmDowngradeFix();
+        if (out) {
+            out->rc = rc;
+            out->staged = false;
+        }
+        return false;
+    }
 
-    log_write("StageDowngradeFix: successfully staged /startup.te for %s\n", target.c_str());
+    log_write("ArmDowngradeFix: successfully armed /startup.te\n");
     if (out) {
         out->staged = true;
         out->rc = 0;
@@ -348,20 +483,50 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
     return true;
 }
 
+auto DisarmDowngradeFix() -> bool {
+    fs::FsNativeSd sd;
+    if (R_FAILED(sd.GetFsOpenResult())) {
+        return false;
+    }
+    bool ok = true;
+    const auto remove = [&](const char* path) {
+        if (sd.FileExists(path)) {
+            const auto rc = sd.DeleteFile(path);
+            if (R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+                ok = false;
+            }
+        }
+    };
+    if (IsDowngradeStartupScript(sd)) {
+        remove("/startup.te");
+    }
+    remove("/config/kefir/downgrade_nand");
+    remove("/TegraExplorer/scripts/downgrade_fix.te");
+    fsdevCommitDevice("sdmc");
+    return R_SUCCEEDED(sd.Commit()) && ok;
+}
+
 auto StageAndLaunchDowngradeFix(bool is_emummc) -> bool {
-    if (!StageDowngradeFix(is_emummc)) {
+    DowngradeFixResult fix{};
+    if (!StageDowngradeFix(is_emummc, &fix, /*arm_startup=*/true)) {
         return false;
     }
     fs::FsPath te_bin;
     if (!utils::findTegraExplorerPayload(te_bin)) {
         log_write("StageAndLaunchDowngradeFix: findTegraExplorerPayload failed\n");
+        DisarmDowngradeFix();
         return false;
     }
-    return utils::rebootToPayload(static_cast<const char*>(te_bin));
+    if (!utils::rebootToPayload(static_cast<const char*>(te_bin))) {
+        log_write("StageAndLaunchDowngradeFix: rebootToPayload failed\n");
+        DisarmDowngradeFix();
+        return false;
+    }
+    return true;
 }
 
 void ApplyDowngradeFix(DowngradeFixResult* out) {
-    StageDowngradeFix(App::IsEmummc(), out);
+    StageDowngradeFix(App::IsEmummc(), out, /*arm_startup=*/true);
 }
 
 auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
@@ -380,13 +545,13 @@ auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     if (R_FAILED(fix.rc)) {
         char rc_str[32];
         std::snprintf(rc_str, sizeof(rc_str), "0x%08X", R_VALUE(fix.rc));
-        std::string out = "Downgrade fix staging FAILED (";
+        std::string out = "WARNING: Downgrade fix staging or activation failed (";
         out += rc_str;
-        out += ").";
+        out += "). Automatic recovery is NOT armed. System save 8000000000000073 must be removed manually via TegraExplorer or Maintenance Mode.";
         return out;
     }
 
-    return "Downgrade fix could not be staged.";
+    return "Downgrade fix could not be staged. Automatic recovery is NOT armed.";
 }
 
 void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
@@ -471,22 +636,43 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
         svcSleepThread(50'000'000);
     }
 
+    if (apply_downgrade_fix) {
+        pbox->NewTransfer("Staging downgrade fix...");
+        DowngradeFixResult fix{};
+        if (!StageDowngradeFix(App::IsEmummc(), &fix, /*arm_startup=*/false)) {
+            if (out_fix) {
+                *out_fix = fix;
+            }
+            R_THROW(R_FAILED(fix.rc) ? fix.rc : static_cast<Result>(FsError_PathNotFound));
+        }
+        if (out_fix) {
+            *out_fix = fix;
+        }
+    }
+
     pbox->NewTransfer("Applying system update...");
-    R_TRY(amssuApplyPreparedUpdate());
+    rc = amssuApplyPreparedUpdate();
+    if (R_FAILED(rc)) {
+        if (apply_downgrade_fix) {
+            DisarmDowngradeFix();
+        }
+        return rc;
+    }
+
+    if (apply_downgrade_fix) {
+        pbox->NewTransfer("Activating downgrade fix...");
+        if (!ArmDowngradeFix(out_fix)) {
+            log_write("InstallValidatedFirmware: failed to arm downgrade fix\n");
+            DisarmDowngradeFix();
+        }
+    }
 
     // Clean themes and translations unconditionally on ANY firmware installation (both update and downgrade)
     // to prevent Atmosphere fatal crash 2162-0002 and mismatched qlaunch components on reboot.
     pbox->NewTransfer("Removing themes and translations...");
-    CleanThemesAndTranslations();
-
-    // the update itself is already applied at this point, so the fix must never
-    // be able to report the whole install as failed.
-    if (apply_downgrade_fix) {
-        DowngradeFixResult fix{};
-        ApplyDowngradeFix(&fix);
-        if (out_fix) {
-            *out_fix = fix;
-        }
+    const bool cleanup_ok = CleanThemesAndTranslations();
+    if (out_fix) {
+        out_fix->cleanup_failed = !cleanup_ok;
     }
 
     CleanupFirmwareFiles(pbox, path);

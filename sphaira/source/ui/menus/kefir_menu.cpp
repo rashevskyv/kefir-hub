@@ -1403,7 +1403,11 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
 
             auto prompt_reboot = [apply_downgrade_fix, fix]() {
                 if (apply_downgrade_fix && fix->staged) {
-                    std::string message = "Firmware downgrade installed successfully.\n\nConsole will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073, themes, and translations).\n\nReboot now?";
+                    std::string message = "Firmware downgrade installed successfully.\n\n";
+                    if (fix->cleanup_failed) {
+                        message += "WARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002. Remove them before booting the updated firmware.\n\n";
+                    }
+                    message += "Console will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073, themes, and translations).\n\nReboot now?";
                     App::Push<OptionBox>(
                         message,
                         "Later"_i18n, "Reboot"_i18n, 1,
@@ -1420,7 +1424,12 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                     return;
                 }
 
-                std::string message = "Firmware update applied successfully.\n\nCustom themes and translations were removed to prevent errors on the new firmware version.";
+                std::string message;
+                if (fix->cleanup_failed) {
+                    message = "Firmware update applied successfully.\n\nWARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002 on reboot. Remove them manually before booting the new firmware.";
+                } else {
+                    message = "Firmware update applied successfully.\n\nCustom themes and translations were removed to prevent errors on the new firmware version.";
+                }
                 const auto fix_note = detail::DescribeDowngradeFix(*fix);
                 if (!fix_note.empty()) {
                     message += "\n\n" + fix_note;

@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.814** (preserve DBI translation on firmware updates & downgrades). Завершені задачі збережено в
+Актуальний delivery — **v0.13.815** (post-806 regression fixes). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.814 (Preserve DBI translation on firmware updates & downgrades)
+## Поточний delivery: v0.13.815 (Post-806 regression fixes)
+
+- [x] `TRANSLATION-SAFE-REPLACE-815` — новий пакет перевіряється до видалення старого перекладу; всі помилки видалення обробляються.
+- [x] `TRANSLATION-REMOVE-TRUTH-815` — `FsError_TargetLocked` та залишкові файли більше не повідомляються як успішне видалення.
+- [x] `DOWNGRADE-LIFECYCLE-815` — preflight не озброює `/startup.te`; arm виконується після успішного firmware apply, наявний startup workflow не перезаписується, rollback перевіряє власні artifacts.
+- [x] `CLEANUP-RESULT-815` — failure очищення тем/перекладів доходить до reboot UI; переклади DBI збережено.
+- [x] `TE-RESULT-815` — TegraScript показує success лише після підтвердженого видалення save `8000000000000073`.
+- [x] `VERIFY-815` — Gemini виконав `git diff --check`, source guards і WSL `ReleaseWithInstall`; збірка NRO успішна.
+- [x] `DOCS-BUMP-815` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.815`.
+- [ ] `HW-815` — пройти консолний regression checklist для v0.13.807–v0.13.815.
+
+## Попередній delivery: v0.13.814 (Preserve DBI translation on firmware updates & downgrades)
 
 - [x] `PRESERVE-DBI-TRANSLATION-814` — вилучено файли перекладу DBI (`/switch/DBI/translation.bin`, `translation_new.bin`) із `FIRMWARE_CLEANUP_PATHS` у `kefir_firmware.cpp`.
 - [x] `TE-PRESERVE-DBI-814` — вилучено команди `delfile` перекладу DBI зі скрипта `assets/romfs/tegra/downgrade_fix.te`.

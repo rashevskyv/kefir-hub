@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.814** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.815** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.815 — Post-806 regression fixes
+
+- **Безпечна заміна перекладу**: archive download, extraction і source validation виконуються до видалення встановлених файлів; `TargetLocked` та інші помилки припиняють операцію без хибного success.
+- **Безпечний downgrade lifecycle**: TegraExplorer і staged script перевіряються до firmware apply, `/startup.te` створюється лише після успішного apply, а будь-який наявний startup workflow блокує перезапис. Власні staged artifacts прибираються при failure.
+- **Правдивий cleanup status**: результат видалення несумісних тем і системних перекладів передається в UI; при failure користувач бачить попередження про ризик `2162-0002`. Файли перекладу DBI не входять до cleanup.
+- **Fail-closed TegraScript**: зелений success показується лише коли save `8000000000000073` відсутній після видалення; failure позначається червоним і повертає в Hekate.
+- `sphaira_VERSION` піднято до `0.13.815`; Gemini успішно виконав `git diff --check` та WSL `cmake --build --preset ReleaseWithInstall --parallel 16`. Senior після фінальної lifecycle-правки повторно виконав статичні checks, але збірку не запускав за policy.
 
 ## v0.13.814 — Preserve DBI translation on firmware updates & downgrades
 

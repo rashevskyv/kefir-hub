@@ -480,18 +480,6 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
     const auto zip_path = extract_dir + "/" + zip_name;
 
     R_TRY(DeletePath(extract_dir));
-
-    // Remove any previously installed translation silently in the background
-    // without intermediate reboot prompts.
-    if (HasInstalledTranslation()) {
-        if (pbox) {
-            pbox->NewTransfer("Removing previous translation..."_i18n);
-        }
-        for (const auto path : TRANSLATION_PATHS) {
-            DeletePath(path);
-        }
-    }
-
     R_TRY(DownloadFile(pbox, "Downloading " + entry.name + " (" + entry.zip_url + ")", entry.zip_url, zip_path));
     R_TRY(UnzipFile(pbox, zip_path, extract_dir));
 
@@ -506,9 +494,28 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
         source = extract_dir + "/" + folder + "/" + replacement_dir + "/contents";
     }
 
+    if (!fs::DirExists(fs::FsPath{source})) {
+        R_THROW(FsError_PathNotFound);
+    }
+
+    // Only remove the installed translation after download, extraction, and
+    // source directory validation succeed.
+    if (HasInstalledTranslation()) {
+        if (pbox) {
+            pbox->NewTransfer("Removing previous translation..."_i18n);
+        }
+        for (const auto path : TRANSLATION_PATHS) {
+            if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+                R_THROW(rc);
+            }
+        }
+        fsdevCommitDevice("sdmc");
+    }
+
     R_TRY(CopyDirectoryContents(source, "/atmosphere/contents"));
     R_TRY(DeletePath(source));
     R_TRY(DeletePath(extract_dir));
+    fsdevCommitDevice("sdmc");
     TryAutoSwitchLanguage(entry.name);
     RebootAfterSetting();
     R_SUCCEED();
@@ -519,11 +526,14 @@ auto RemoveInterfaceTranslation(ProgressBox* pbox) -> Result {
         pbox->NewTransfer("Removing translations..."_i18n);
     }
     for (const auto path : TRANSLATION_PATHS) {
-        if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFoundFsDev && rc != FsError_TargetLocked) {
+        if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
             R_THROW(rc);
         }
     }
     fsdevCommitDevice("sdmc");
+    if (HasInstalledTranslation()) {
+        R_THROW(FsError_TargetLocked);
+    }
     R_SUCCEED();
 }
 

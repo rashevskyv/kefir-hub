@@ -118,10 +118,12 @@ if (rc) {
 }
 
 targetSave = "bis:/save/8000000000000073"
+saveOk = 0
 if (!fsexists(targetSave)) {
     color(0xFFFF00)
     println("System save 8000000000000073 not found (already clean).")
     color(0xFFFFFF)
+    saveOk = 1
 } .else() {
     println("Deleting 8000000000000073...")
     if (delfile(targetSave)) {
@@ -134,6 +136,7 @@ if (!fsexists(targetSave)) {
             println("ERROR: Deletion failed - file still exists!")
             color(0xFFFFFF)
         } .else() {
+            saveOk = 1
             color(0x00FF00)
             println("SUCCESS: 8000000000000073 has been deleted!")
             color(0xFFFFFF)
@@ -163,9 +166,18 @@ deldir("sd:/atmosphere/contents/0100000000001012")
 deldir("sd:/atmosphere/contents/0100000000001015")
 
 println("")
-color(0x00FF00)
-println("Downgrade fix finished successfully!")
-color(0xFFFFFF)
-println("Rebooting to Hekate in 3 seconds...")
-sleep(3000)
-goHekate()
+if (saveOk) {
+    color(0x00FF00)
+    println("Downgrade fix finished successfully!")
+    color(0xFFFFFF)
+    println("Rebooting to Hekate in 3 seconds...")
+    sleep(3000)
+    goHekate()
+} .else() {
+    color(0xFF0000)
+    println("ERROR: Downgrade fix failed to delete save 8000000000000073!")
+    color(0xFFFFFF)
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
+    goHekate()
+}

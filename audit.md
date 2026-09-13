@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.814**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.815**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.815 поза ponytail-чергою: аудит комітів після v0.13.806 виявив і виправив передчасне видалення старого системного перекладу, маскування `FsError_TargetLocked`, неперевірене очищення тем/перекладів, хибний success TegraScript та небезпечний lifecycle downgrade recovery. Новий пакет перекладу перевіряється до заміни; firmware downgrade preflight не озброює `/startup.te`, наявний startup workflow не перезаписується, arm відбувається лише після успішного apply; failure cleanup показується користувачу, DBI translation зберігається; `downgrade_fix.te` підтверджує видалення save `8000000000000073`. Gemini успішно виконав WSL ReleaseWithInstall build; senior виконав фінальний static review і `git diff --check`. **Не закриває** чергу §2 A1–A7.
 
 v0.13.814 поза ponytail-чергою: вилучено файли перекладу DBI (`/switch/DBI/translation.bin`, `translation_new.bin`) зі списку примусового очищення `FIRMWARE_CLEANUP_PATHS` у `kefir_firmware.cpp` та команди `delfile` зі скрипта TegraExplorer `assets/romfs/tegra/downgrade_fix.te`; при встановленні оновлень чи даунгрейді прошивки очищуються лише системні теми та переклади Horizon OS (`0100000000001000`, `0100000000000803`...`1015`), тоді як файли автономних хоумбрю-програм зберігаються; оновлено `README.md`; версію піднято до 0.13.814. `git diff --check` виконано; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

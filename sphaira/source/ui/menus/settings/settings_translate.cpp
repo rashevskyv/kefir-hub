@@ -146,8 +146,8 @@ auto MakeRemoveTranslationItem() -> SettingsItem {
                             return RemoveInterfaceTranslation(pbox);
                         },
                         [](Result rc) {
-                            if (R_FAILED(rc)) {
-                                App::PushErrorBox(rc, "Failed to remove translation"_i18n);
+                            if (R_FAILED(rc) || HasInstalledTranslation()) {
+                                App::PushErrorBox(R_FAILED(rc) ? rc : static_cast<Result>(FsError_TargetLocked), "Failed to remove translation"_i18n);
                                 return;
                             }
 
