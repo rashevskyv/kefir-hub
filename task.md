@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.826** (Wi-Fi management menu under Tools). Завершені задачі збережено в
+Актуальний delivery — **v0.13.827** (Wi-Fi connection reliability fixes). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.826 (Wi-Fi management menu under Tools)
+## Поточний delivery: v0.13.827 (Wi-Fi connection reliability fixes)
+
+- [x] `WIFI-REQUEST-827` — додано polling actual NIFM result та idempotent cancel/close після success, failure, timeout, replacement і виходу з меню.
+- [x] `WIFI-SSID-827` — виправлено збереження 32-байтового SSID.
+- [x] `WIFI-RESULTS-827` — помилки connect/toggle/profile mutations показують реальний `Result`; batch delete звітує точні counts.
+- [x] `I18N-827` — додано мінімальні en/ru/uk ключі для нових Wi-Fi errors і batch counts; JSON валідний.
+- [x] `VERIFY-827` — WSL `ReleaseWithInstall` пройшов до фінальної i18n-правки; після неї повторно пройшли JSON validation та `git diff --check`, без rebuild.
+- [x] `DOCS-BUMP-827` — Sphaira version та delivery-документи оновлено до `0.13.827`.
+- [ ] `HW-827` — перевірити на консолі success, wrong-password failure, timeout/cancel, 32-byte SSID, toggle permission failure та partial batch delete.
+
+## Попередній delivery: v0.13.826 (Wi-Fi management menu under Tools)
 
 - [x] `WIFI-MGR-826` — реалізовано `wifi_manager` з читанням, оновленням, видаленням профілів через NIFM та підключенням до мережі.
 - [x] `WIFI-MENU-826` — створено `ui::menu::wifi::Menu` з мультиселектом (X/Y/B), відображенням статусу, векторною іконкою Wi-Fi та діалогами дій.

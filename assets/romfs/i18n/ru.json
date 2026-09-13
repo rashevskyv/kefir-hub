@@ -2331,5 +2331,12 @@
   "Password updated successfully.": "Пароль успешно обновлен.",
   "Enter New SSID": "Введите новый SSID",
   "Failed to update SSID.": "Не удалось обновить SSID.",
-  "Secured": "Защищенная"
+  "Secured": "Защищенная",
+  "Failed to connect to Wi-Fi network.": "Не удалось подключиться к сети Wi-Fi.",
+  "Failed to enable Wi-Fi.": "Не удалось включить Wi-Fi.",
+  "Failed to disable Wi-Fi.": "Не удалось выключить Wi-Fi.",
+  "Deleted ": "Удалено ",
+  " network profiles; failed to delete ": " профилей сетей; не удалось удалить ",
+  "Failed to delete ": "Не удалось удалить ",
+  " network profiles.": " профилей сетей."
 }

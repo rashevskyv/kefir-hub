@@ -2400,5 +2400,12 @@
   "Password updated successfully.": "Пароль успішно оновлено.",
   "Enter New SSID": "Введіть новий SSID",
   "Failed to update SSID.": "Не вдалося оновити SSID.",
-  "Secured": "Захищена"
+  "Secured": "Захищена",
+  "Failed to connect to Wi-Fi network.": "Не вдалося підключитися до мережі Wi-Fi.",
+  "Failed to enable Wi-Fi.": "Не вдалося увімкнути Wi-Fi.",
+  "Failed to disable Wi-Fi.": "Не вдалося вимкнути Wi-Fi.",
+  "Deleted ": "Видалено ",
+  " network profiles; failed to delete ": " профілів мереж; не вдалося видалити ",
+  "Failed to delete ": "Не вдалося видалити ",
+  " network profiles.": " профілів мереж."
 }

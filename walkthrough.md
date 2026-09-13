@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.826** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.827** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.827 — Wi-Fi connection reliability fixes
+
+- `wifi_manager` тепер володіє повним lifecycle одного `NifmRequest`: скасовує попередній request, опитує state/result і закриває handles у всіх terminal paths.
+- Wi-Fi menu показує реальну NIFM-помилку; timeout скасовує request, а success/timeout status встановлюється після `Refresh()` і не зникає в тому самому frame.
+- `ChangeSsid` копіює до повних 32 байтів і записує точний `ssid_len`.
+- Toggle Wi-Fi та всі profile mutations більше не маскують failure; batch delete намагається видалити весь selection і звітує точні success/failure counts з першим error code.
+- Додано en/ru/uk error/count strings; усі змінені JSON валідні, `git diff --check` чистий.
+- Gemini успішно виконав WSL `ReleaseWithInstall` до останньої правки batch error copy; після цієї текстової правки rebuild не запускався.
 
 ## v0.13.826 — Wi-Fi management menu under Tools
 

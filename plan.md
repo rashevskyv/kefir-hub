@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.826** (Wi-Fi management menu under Tools). Завершені плани збережено в
+Поточний delivery — **v0.13.827** (Wi-Fi connection reliability fixes). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.826 — Wi-Fi management menu under Tools
+## Поточний delivery: v0.13.827 — Wi-Fi connection reliability fixes
+
+Статус: реалізовано; очікується апаратна перевірка.
+1. Життєвий цикл `NifmRequest` централізовано: попередній запит скасовується, terminal result опитується, а handles закриваються після success, failure, timeout чи виходу з меню.
+2. Реальні NIFM-помилки підключення виводяться через `PushErrorBox`; success/timeout не перезаписуються `Refresh()`.
+3. Зміна SSID зберігає всі 32 байти завдяки окремому `ssid_len`, без хибного резерву під NUL.
+4. Toggle Wi-Fi та single/batch profile mutations перевіряють `Result`; batch delete показує точні success/failure counts і перший реальний код помилки.
+5. Перший Gemini-раунд успішно виконав WSL `ReleaseWithInstall`; після фінальної зміни лише i18n-тексту повторну збірку не запускали; JSON і `git diff --check` пройшли.
+
+## Попередній delivery: v0.13.826 — Wi-Fi management menu under Tools
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. У `Tools -> Tools -> Wi-Fi` замінено заглушку `ComingSoon` на повноцінне меню керування бездротовими мережами `ui::menu::wifi::Menu`.

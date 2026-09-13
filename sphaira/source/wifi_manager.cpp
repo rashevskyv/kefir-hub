@@ -13,6 +13,13 @@ namespace {
 NifmRequest g_connect_request{};
 bool g_connect_request_active = false;
 
+void CloseConnectRequest() {
+    if (g_connect_request_active) {
+        nifmRequestClose(&g_connect_request);
+        g_connect_request_active = false;
+    }
+}
+
 } // namespace
 
 auto WifiProfile::GetAuthString() const -> std::string {
@@ -162,20 +169,31 @@ auto ChangeSsid(const Uuid& uuid, const std::string& new_ssid) -> Result {
     }
 
     std::memset(data.wireless_setting_data.ssid, 0, sizeof(data.wireless_setting_data.ssid));
-    const size_t len = std::min(new_ssid.size(), sizeof(data.wireless_setting_data.ssid) - 1);
-    std::memcpy(data.wireless_setting_data.ssid, new_ssid.c_str(), len);
+    const size_t len = std::min(new_ssid.size(), sizeof(data.wireless_setting_data.ssid));
+    std::memcpy(data.wireless_setting_data.ssid, new_ssid.data(), len);
     data.wireless_setting_data.ssid_len = static_cast<u8>(len);
 
     Uuid out_uuid{};
     return nifmSetNetworkProfile(&data, &out_uuid);
 }
 
-auto Connect(const Uuid& uuid) -> Result {
-    nifmSetWirelessCommunicationEnabled(true);
-
+void CancelConnect() {
     if (g_connect_request_active) {
+        nifmRequestCancel(&g_connect_request);
         nifmRequestClose(&g_connect_request);
         g_connect_request_active = false;
+    }
+}
+
+auto Connect(const Uuid& uuid) -> Result {
+    CancelConnect();
+
+    if (!IsWirelessEnabled()) {
+        const Result rc = nifmSetWirelessCommunicationEnabled(true);
+        if (R_FAILED(rc)) {
+            log_write("[WIFI] nifmSetWirelessCommunicationEnabled failed: 0x%X\n", R_VALUE(rc));
+            return rc;
+        }
     }
 
     Result rc = nifmCreateRequest(&g_connect_request, true);
@@ -188,20 +206,54 @@ auto Connect(const Uuid& uuid) -> Result {
     rc = nifmRequestSetNetworkProfileId(&g_connect_request, uuid);
     if (R_FAILED(rc)) {
         log_write("[WIFI] nifmRequestSetNetworkProfileId failed: 0x%X\n", R_VALUE(rc));
-        nifmRequestClose(&g_connect_request);
-        g_connect_request_active = false;
+        CancelConnect();
         return rc;
     }
 
     rc = nifmRequestSubmit(&g_connect_request);
     if (R_FAILED(rc)) {
         log_write("[WIFI] nifmRequestSubmit failed: 0x%X\n", R_VALUE(rc));
-        nifmRequestClose(&g_connect_request);
-        g_connect_request_active = false;
+        CancelConnect();
         return rc;
     }
 
     return 0;
+}
+
+auto PollConnect() -> ConnectStatus {
+    if (!g_connect_request_active) {
+        return {ConnectState::None, 0};
+    }
+
+    NifmRequestState state{};
+    Result rc = nifmGetRequestState(&g_connect_request, &state);
+    if (R_FAILED(rc)) {
+        log_write("[WIFI] nifmGetRequestState failed: 0x%X\n", R_VALUE(rc));
+        CloseConnectRequest();
+        return {ConnectState::Failed, rc};
+    }
+
+    if (state == NifmRequestState_OnHold) {
+        return {ConnectState::Pending, 0};
+    }
+
+    if (state == NifmRequestState_Available) {
+        const Result res = nifmGetResult(&g_connect_request);
+        CloseConnectRequest();
+        if (R_SUCCEEDED(res)) {
+            return {ConnectState::Succeeded, 0};
+        } else {
+            return {ConnectState::Failed, res};
+        }
+    }
+
+    Result res = nifmGetResult(&g_connect_request);
+    if (R_SUCCEEDED(res)) {
+        res = MAKERESULT(Module_Libnx, LibnxError_ShouldNotHappen);
+    }
+    log_write("[WIFI] connection failed with state %d, result: 0x%X\n", static_cast<int>(state), R_VALUE(res));
+    CloseConnectRequest();
+    return {ConnectState::Failed, res};
 }
 
 auto SetWirelessEnabled(bool enable) -> Result {

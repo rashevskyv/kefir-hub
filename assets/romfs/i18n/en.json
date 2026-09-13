@@ -2371,5 +2371,12 @@
   "Password updated successfully.": "Password updated successfully.",
   "Enter New SSID": "Enter New SSID",
   "Failed to update SSID.": "Failed to update SSID.",
-  "Secured": "Secured"
+  "Secured": "Secured",
+  "Failed to connect to Wi-Fi network.": "Failed to connect to Wi-Fi network.",
+  "Failed to enable Wi-Fi.": "Failed to enable Wi-Fi.",
+  "Failed to disable Wi-Fi.": "Failed to disable Wi-Fi.",
+  "Deleted ": "Deleted ",
+  " network profiles; failed to delete ": " network profiles; failed to delete ",
+  "Failed to delete ": "Failed to delete ",
+  " network profiles.": " network profiles."
 }

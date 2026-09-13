@@ -12,7 +12,7 @@ namespace sphaira::ui::menu::wifi {
 
 struct Menu final : grid::Menu {
     Menu();
-    ~Menu() override = default;
+    ~Menu() override;
 
     auto GetShortTitle() const -> const char* override { return "Wi-Fi"; }
     void Update(Controller* controller, TouchInfo* touch) override;
@@ -20,7 +20,7 @@ struct Menu final : grid::Menu {
     void OnFocusGained() override;
 
 private:
-    struct Item : wifi::WifiProfile {
+    struct Item : sphaira::wifi::WifiProfile {
     };
 
     void SetIndex(s64 index);
@@ -31,15 +31,15 @@ private:
     void InvertSelection();
     void ClearSelection();
     void SelectAll();
-    auto SelectedProfiles() const -> std::vector<wifi::WifiProfile>;
+    auto SelectedProfiles() const -> std::vector<sphaira::wifi::WifiProfile>;
 
-    void ConfirmConnect(const wifi::WifiProfile& profile);
-    void ConfirmDeleteSingle(const wifi::WifiProfile& profile);
+    void ConfirmConnect(const sphaira::wifi::WifiProfile& profile);
+    void ConfirmDeleteSingle(const sphaira::wifi::WifiProfile& profile);
     void ConfirmDeleteBatch();
-    void ConfirmRename(const wifi::WifiProfile& profile);
-    void ConfirmChangePassword(const wifi::WifiProfile& profile);
-    void ConfirmChangeSsid(const wifi::WifiProfile& profile);
-    void ShowDetails(const wifi::WifiProfile& profile);
+    void ConfirmRename(const sphaira::wifi::WifiProfile& profile);
+    void ConfirmChangePassword(const sphaira::wifi::WifiProfile& profile);
+    void ConfirmChangeSsid(const sphaira::wifi::WifiProfile& profile);
+    void ShowDetails(const sphaira::wifi::WifiProfile& profile);
 
     void DrawWifiIcon(NVGcontext* vg, Theme* theme, const Vec4& v, bool is_connected, bool selected);
 

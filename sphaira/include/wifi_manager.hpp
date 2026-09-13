@@ -40,8 +40,26 @@ auto ChangePassphrase(const Uuid& uuid, const std::string& new_pass) -> Result;
 // Update SSID
 auto ChangeSsid(const Uuid& uuid, const std::string& new_ssid) -> Result;
 
+enum class ConnectState {
+    None,
+    Pending,
+    Succeeded,
+    Failed,
+};
+
+struct ConnectStatus {
+    ConnectState state{ConnectState::None};
+    Result result{0};
+};
+
 // Initiate connection to profile
 auto Connect(const Uuid& uuid) -> Result;
+
+// Poll active connection request
+auto PollConnect() -> ConnectStatus;
+
+// Cancel and close active connection request
+void CancelConnect();
 
 // Toggle wireless communication
 auto SetWirelessEnabled(bool enable) -> Result;

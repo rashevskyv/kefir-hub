@@ -26,6 +26,10 @@ Menu::Menu() : grid::Menu{"Wi-Fi"_i18n, MenuFlag_None} {
             if (m_selected_count > 0) {
                 ClearSelection();
             } else {
+                if (m_connecting) {
+                    m_connecting = false;
+                    sphaira::wifi::CancelConnect();
+                }
                 SetPop();
             }
         }}),
@@ -36,18 +40,25 @@ Menu::Menu() : grid::Menu{"Wi-Fi"_i18n, MenuFlag_None} {
     OnLayoutChange();
 }
 
+Menu::~Menu() {
+    if (m_connecting) {
+        m_connecting = false;
+    }
+    sphaira::wifi::CancelConnect();
+}
+
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
     Refresh();
 }
 
 void Menu::Refresh() {
-    const auto list = wifi::GetProfiles();
+    const auto list = sphaira::wifi::GetProfiles();
     m_items.clear();
     m_selected_count = 0;
     for (const auto& p : list) {
         Item item;
-        static_cast<wifi::WifiProfile&>(item) = p;
+        static_cast<sphaira::wifi::WifiProfile&>(item) = p;
         m_items.push_back(std::move(item));
     }
     SetIndex(m_index);
@@ -77,7 +88,7 @@ void Menu::SetIndex(s64 index) {
 
 void Menu::OnLayoutChange() {
     m_index = 0;
-    grid::Menu::OnLayoutChange(m_list, LayoutType_List);
+    grid::Menu::OnLayoutChange(m_list, grid::LayoutType_List);
     SetIndex(0);
 }
 
@@ -121,8 +132,8 @@ void Menu::SelectAll() {
     }
 }
 
-auto Menu::SelectedProfiles() const -> std::vector<wifi::WifiProfile> {
-    std::vector<wifi::WifiProfile> out;
+auto Menu::SelectedProfiles() const -> std::vector<sphaira::wifi::WifiProfile> {
+    std::vector<sphaira::wifi::WifiProfile> out;
     for (const auto& item : m_items) {
         if (item.selected) {
             out.push_back(item);
@@ -141,12 +152,20 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (m_connecting) {
         if (m_connect_ts.GetMs() >= 8000) {
             m_connecting = false;
+            sphaira::wifi::CancelConnect();
+            Refresh();
             SetTitleSubHeading("Connection timed out"_i18n, true);
-            Refresh();
-        } else if (wifi::IsConnectedTo(m_connecting_uuid)) {
-            m_connecting = false;
-            SetTitleSubHeading("Connected to "_i18n + m_connecting_name, true);
-            Refresh();
+        } else {
+            const auto status = sphaira::wifi::PollConnect();
+            if (status.state == sphaira::wifi::ConnectState::Succeeded) {
+                m_connecting = false;
+                Refresh();
+                SetTitleSubHeading("Connected to "_i18n + m_connecting_name, true);
+            } else if (status.state == sphaira::wifi::ConnectState::Failed) {
+                m_connecting = false;
+                Refresh();
+                App::PushErrorBox(status.result, "Failed to connect to Wi-Fi network."_i18n);
+            }
         }
     }
 
@@ -239,7 +258,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             "%s", sub_text.c_str());
         nvgRestore(vg);
 
-        DrawSelectionMark(vg, theme, LayoutType_List, v, Vec4{icon_x, icon_y, icon_size, icon_size}, item.selected, m_selected_count > 0);
+        DrawSelectionMark(vg, theme, grid::LayoutType_List, v, Vec4{icon_x, icon_y, icon_size, icon_size}, item.selected, m_selected_count > 0);
     });
 }
 
@@ -292,10 +311,14 @@ void Menu::ShowContextMenu() {
         }, true, "Deselect all networks."_i18n);
 
         options->Add<SidebarEntryHeader>("WIRELESS"_i18n);
-        const bool wifi_on = wifi::IsWirelessEnabled();
+        const bool wifi_on = sphaira::wifi::IsWirelessEnabled();
         options->Add<SidebarEntryCallback>(wifi_on ? "Turn Wi-Fi Off"_i18n : "Turn Wi-Fi On"_i18n, [this, wifi_on](){
-            wifi::SetWirelessEnabled(!wifi_on);
-            Refresh();
+            const Result rc = sphaira::wifi::SetWirelessEnabled(!wifi_on);
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, wifi_on ? "Failed to disable Wi-Fi."_i18n : "Failed to enable Wi-Fi."_i18n);
+            } else {
+                Refresh();
+            }
         }, true, "Toggle wireless communication."_i18n);
 
         options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
@@ -309,10 +332,14 @@ void Menu::ShowContextMenu() {
         ON_SCOPE_EXIT(App::Push(std::move(options)));
 
         options->Add<SidebarEntryHeader>("WIRELESS"_i18n);
-        const bool wifi_on = wifi::IsWirelessEnabled();
+        const bool wifi_on = sphaira::wifi::IsWirelessEnabled();
         options->Add<SidebarEntryCallback>(wifi_on ? "Turn Wi-Fi Off"_i18n : "Turn Wi-Fi On"_i18n, [this, wifi_on](){
-            wifi::SetWirelessEnabled(!wifi_on);
-            Refresh();
+            const Result rc = sphaira::wifi::SetWirelessEnabled(!wifi_on);
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, wifi_on ? "Failed to disable Wi-Fi."_i18n : "Failed to enable Wi-Fi."_i18n);
+            } else {
+                Refresh();
+            }
         }, true, "Toggle wireless communication."_i18n);
         options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
             Refresh();
@@ -362,10 +389,14 @@ void Menu::ShowContextMenu() {
     }, true, "Remove this Wi-Fi network from saved profiles."_i18n);
 
     options->Add<SidebarEntryHeader>("WIRELESS"_i18n);
-    const bool wifi_on = wifi::IsWirelessEnabled();
+    const bool wifi_on = sphaira::wifi::IsWirelessEnabled();
     options->Add<SidebarEntryCallback>(wifi_on ? "Turn Wi-Fi Off"_i18n : "Turn Wi-Fi On"_i18n, [this, wifi_on](){
-        wifi::SetWirelessEnabled(!wifi_on);
-        Refresh();
+        const Result rc = sphaira::wifi::SetWirelessEnabled(!wifi_on);
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, wifi_on ? "Failed to disable Wi-Fi."_i18n : "Failed to enable Wi-Fi."_i18n);
+        } else {
+            Refresh();
+        }
     }, true, "Toggle wireless communication."_i18n);
 
     options->Add<SidebarEntryCallback>("Refresh"_i18n, [this](){
@@ -373,7 +404,7 @@ void Menu::ShowContextMenu() {
     }, true, "Reload saved Wi-Fi network profiles."_i18n);
 }
 
-void Menu::ConfirmConnect(const wifi::WifiProfile& profile) {
+void Menu::ConfirmConnect(const sphaira::wifi::WifiProfile& profile) {
     if (profile.is_connected) {
         App::Push<OptionBox>(
             "Already connected to '" + profile.ssid + "'.",
@@ -386,9 +417,9 @@ void Menu::ConfirmConnect(const wifi::WifiProfile& profile) {
     const std::string msg = "Connect to '" + name + "'?";
     App::Push<OptionBox>(msg, "No"_i18n, "Connect"_i18n, 1, [this, profile, name](auto opt) {
         if (opt && *opt == 1) {
-            const Result rc = wifi::Connect(profile.uuid);
+            const Result rc = sphaira::wifi::Connect(profile.uuid);
             if (R_FAILED(rc)) {
-                App::Push<OptionBox>("Failed to initiate connection."_i18n, "OK"_i18n);
+                App::PushErrorBox(rc, "Failed to initiate connection."_i18n);
             } else {
                 m_connecting = true;
                 m_connecting_uuid = profile.uuid;
@@ -400,17 +431,18 @@ void Menu::ConfirmConnect(const wifi::WifiProfile& profile) {
     });
 }
 
-void Menu::ConfirmDeleteSingle(const wifi::WifiProfile& profile) {
+void Menu::ConfirmDeleteSingle(const sphaira::wifi::WifiProfile& profile) {
     const std::string name = profile.name.empty() ? profile.ssid : profile.name;
     const std::string msg = "Delete Wi-Fi network '" + name + "'?";
     App::Push<OptionBox>(msg, "Cancel"_i18n, "Delete"_i18n, 0, [this, profile](auto opt) {
         if (opt && *opt == 1) {
-            const Result rc = wifi::RemoveProfile(profile.uuid);
+            const Result rc = sphaira::wifi::RemoveProfile(profile.uuid);
             if (R_FAILED(rc)) {
-                App::Push<OptionBox>("Failed to delete network profile."_i18n, "OK"_i18n);
+                App::PushErrorBox(rc, "Failed to delete network profile."_i18n);
+            } else {
+                ClearSelection();
+                Refresh();
             }
-            ClearSelection();
-            Refresh();
         }
     });
 }
@@ -424,52 +456,75 @@ void Menu::ConfirmDeleteBatch() {
     const std::string msg = "Delete " + std::to_string(selected.size()) + " selected Wi-Fi network(s)?";
     App::Push<OptionBox>(msg, "Cancel"_i18n, "Delete"_i18n, 0, [this, selected](auto opt) {
         if (opt && *opt == 1) {
+            Result first_rc = 0;
+            size_t failed_count = 0;
             for (const auto& p : selected) {
-                wifi::RemoveProfile(p.uuid);
+                const Result rc = sphaira::wifi::RemoveProfile(p.uuid);
+                if (R_FAILED(rc)) {
+                    if (R_SUCCEEDED(first_rc)) {
+                        first_rc = rc;
+                    }
+                    failed_count++;
+                }
             }
             ClearSelection();
             Refresh();
+            if (failed_count > 0) {
+                const size_t total_count = selected.size();
+                const size_t succeeded_count = total_count - failed_count;
+                std::string err_msg;
+                if (succeeded_count > 0) {
+                    err_msg = "Deleted "_i18n + std::to_string(succeeded_count) +
+                              " network profiles; failed to delete "_i18n + std::to_string(failed_count) + ".";
+                } else {
+                    err_msg = "Failed to delete "_i18n + std::to_string(failed_count) +
+                              " network profiles."_i18n;
+                }
+                App::PushErrorBox(first_rc, err_msg);
+            }
         }
     });
 }
 
-void Menu::ConfirmRename(const wifi::WifiProfile& profile) {
+void Menu::ConfirmRename(const sphaira::wifi::WifiProfile& profile) {
     std::string out;
     const std::string current = profile.name.empty() ? profile.ssid : profile.name;
     if (R_SUCCEEDED(swkbd::ShowText(out, "Rename Wi-Fi Network"_i18n.c_str(), current.c_str(), 1, 63)) && !out.empty() && out != current) {
-        const Result rc = wifi::RenameProfile(profile.uuid, out);
+        const Result rc = sphaira::wifi::RenameProfile(profile.uuid, out);
         if (R_FAILED(rc)) {
-            App::Push<OptionBox>("Failed to rename network profile."_i18n, "OK"_i18n);
+            App::PushErrorBox(rc, "Failed to rename network profile."_i18n);
+        } else {
+            Refresh();
         }
-        Refresh();
     }
 }
 
-void Menu::ConfirmChangePassword(const wifi::WifiProfile& profile) {
+void Menu::ConfirmChangePassword(const sphaira::wifi::WifiProfile& profile) {
     std::string out;
     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter New Wi-Fi Password"_i18n.c_str(), profile.passphrase.c_str(), 0, 64))) {
-        const Result rc = wifi::ChangePassphrase(profile.uuid, out);
+        const Result rc = sphaira::wifi::ChangePassphrase(profile.uuid, out);
         if (R_FAILED(rc)) {
-            App::Push<OptionBox>("Failed to update password."_i18n, "OK"_i18n);
+            App::PushErrorBox(rc, "Failed to update password."_i18n);
         } else {
             App::Push<OptionBox>("Password updated successfully."_i18n, "OK"_i18n);
+            Refresh();
         }
-        Refresh();
     }
 }
 
-void Menu::ConfirmChangeSsid(const wifi::WifiProfile& profile) {
+void Menu::ConfirmChangeSsid(const sphaira::wifi::WifiProfile& profile) {
     std::string out;
     if (R_SUCCEEDED(swkbd::ShowText(out, "Enter New SSID"_i18n.c_str(), profile.ssid.c_str(), 1, 32)) && !out.empty() && out != profile.ssid) {
-        const Result rc = wifi::ChangeSsid(profile.uuid, out);
+        const Result rc = sphaira::wifi::ChangeSsid(profile.uuid, out);
         if (R_FAILED(rc)) {
-            App::Push<OptionBox>("Failed to update SSID."_i18n, "OK"_i18n);
+            App::PushErrorBox(rc, "Failed to update SSID."_i18n);
+        } else {
+            Refresh();
         }
-        Refresh();
     }
 }
 
-void Menu::ShowDetails(const wifi::WifiProfile& profile) {
+void Menu::ShowDetails(const sphaira::wifi::WifiProfile& profile) {
     std::string details = "Network Details\n\n";
     details += "SSID: " + profile.ssid + "\n";
     if (!profile.name.empty() && profile.name != profile.ssid) {

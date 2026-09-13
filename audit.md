@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.826**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.827**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.827 поза ponytail-чергою: виправлено Wi-Fi регресії v0.13.826 — `NifmRequest` отримав terminal polling і cancel/close на success/failure/timeout/menu exit; реальні `Result` більше не маскуються; 32-байтовий SSID не обрізається; Wi-Fi toggle і profile mutations перевіряють failure; partial batch delete показує точні counts та first error. Gemini WSL `ReleaseWithInstall` пройшов до фінальної i18n-правки; після неї JSON validation і `git diff --check` пройшли без rebuild. **Не закриває** чергу §2 A1–A7.
 
 v0.13.826 поза ponytail-чергою: реалізовано повноцінне меню керування Wi-Fi мережами у `Tools -> Tools -> Wi-Fi` (`ui::menu::wifi::Menu`) та модуль `wifi_manager` на основі системного сервісу `nifm` (`nifm:a` / `IGeneralService`), з підтримкою мультиселекту (X/Y/B), підключення по A, контекстним меню масового видалення, перейменування, зміни пароля та SSID через `swkbd`, перегляду збереженого пароля у відкритому вигляді; додано 32 ключі локалізації для `en.json`, `uk.json` та `ru.json`; версію піднято до 0.13.826. Static checks пройшли. **Не закриває** чергу §2 A1–A7.
 
