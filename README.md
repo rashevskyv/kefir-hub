@@ -351,6 +351,13 @@ Sphaira features an integrated system interface translation manager located in S
 - **Dual Scheme Asset Handling:** Seamlessly resolves modern (`NX-Translation_<id>.zip`) and legacy (`TR..._<id>_FW...zip`) archive filenames and unpacks into their appropriate internal folder structures.
 - **Safe Installation & Replacement:** Automatically uninstalls existing translation overlays before applying new ones to avoid filesystem conflicts, prompts for target replacement language variations matching the console's active language and region, and triggers an automated reboot to apply changes cleanly.
 
+## System Firmware Updates & Automated Downgrade Fix
+
+Sphaira provides full support for managing and installing Nintendo Switch system firmware updates and downgrades directly through **Kefir Updater**:
+- **Automated Post-Downgrade Fix (`downgrade_fix.te`):** When installing an older system firmware version (downgrade), Sphaira automatically stages an automated recovery script (`sd:/startup.te`) and launches TegraExplorer upon rebooting. The script disarms itself immediately to prevent bootloops, mounts the appropriate `SYSTEM` partition (EmuNAND or SysNAND), deletes system save `8000000000000073` to prevent Horizon OS downgrade panic errors, removes conflicting custom themes (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) and system translations (`0100000000000803`...`0100000000001015`), and reboots smoothly back into Hekate without requiring user button presses.
+- **Comprehensive Maintenance Mode Instructions:** The pre-downgrade warning dialog explains how to enter Horizon's Recovery / Maintenance Mode (`Volume +` and `Volume -` held after the bootlogos) and choose "Initialize Console Without Deleting Save Data". It also clarifies that after initialization, the SD card's `Nintendo` folder will become invalid and the console will prompt to delete it, reassuring the user that agreeing to delete it will NOT affect their saved games.
+- **Manual Guide Link & QR Code:** Features a scan-ready QR code and direct URL pointing to the official downgrade documentation (`https://switch.customfw.xyz/downgrade_fw`).
+
 ## Building from source
 
 You will first need to install [devkitPro](https://devkitpro.org/wiki/Getting_Started).

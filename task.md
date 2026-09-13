@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.810** (automated post-downgrade fix via TegraExplorer & Maintenance Mode warning). Завершені задачі збережено в
+Актуальний delivery — **v0.13.811** (forced removal of themes & translations on downgrade, Nintendo folder note). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.810 (Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning)
+## Поточний delivery: v0.13.811 (Forced removal of themes & translations on downgrade, Nintendo folder note)
+
+- [x] `CLEAN-THEMES-TRANSLATIONS-811` — додано видалення кастомних тем (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та перекладів (`0100000000000803`...`0100000000001015`, DBI) у `downgrade_fix.te` без блокування файлів та у `CleanThemesAndTranslations` (`kefir_firmware.cpp`).
+- [x] `WARN-NINTENDO-FOLDER-811` — оновлено `DowngradeWarningBox` (900x580px): додано попередження про недійсність папки `Nintendo` на SD після скидання в Maintenance Mode та підтвердження, що погодження на її видалення консоллю безпечне для збережень.
+- [x] `I18N-811` — оновлено мовні файли `assets/romfs/i18n/en.json` та `uk.json` для нових повідомлень даунгрейду та примітки про папку Nintendo.
+- [x] `README-811` — оновлено документацію `README.md` щодо очищення тем/перекладів та поведінки папки `Nintendo`.
+- [x] `DOCS-BUMP-811` — `sphaira_VERSION` піднято до `0.13.811`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-811` — перевірити на консолі очищення тем та перекладів після даунгрейду, діалог попередження та завантаження після фіксу.
+
+## Попередній delivery: v0.13.810 (Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning)
 
 - [x] `TE-DOWNGRADE-FIX-810` — створено RomFS-скрипт `assets/romfs/tegra/downgrade_fix.te` без операторів `&&`/`||`, з раннім роззброєнням, виявленням EmuNAND/SysNAND, видаленням сейву 0073, таймаутом `sleep(3000)` та поверненням у Hekate без натискання кнопок.
 - [x] `STAGE-LAUNCH-FIX-810` — реалізовано `StageDowngradeFix` та `StageAndLaunchDowngradeFix` у `kefir_firmware.cpp` з розгортанням `/startup.te`, копіюванням у `/TegraExplorer/scripts/downgrade_fix.te`, записом прапорця цільового NAND та забезпеченням наявності TegraExplorer через `utils::ensureTegraExplorerPayload`.

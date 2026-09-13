@@ -222,6 +222,40 @@ auto ReadRomfsTe(const char* romfs_path, std::string& out) -> bool {
     return std::fread(out.data(), 1, out.size(), fp) == out.size();
 }
 
+constexpr const char* DOWNGRADE_CLEANUP_PATHS[]{
+    // Custom Themes (qlaunch, user page, settings/controllers, uLoader sysmodule)
+    "/atmosphere/contents/0100000000001000",
+    "/atmosphere/contents/0100000000001013",
+    "/atmosphere/contents/0100000000001007",
+    "/atmosphere/contents/00FF007468656D65",
+    // System Translations
+    "/atmosphere/contents/0100000000000803",
+    "/atmosphere/contents/010000000000080B",
+    "/atmosphere/contents/010000000000080C",
+    "/atmosphere/contents/0100000000000811",
+    "/atmosphere/contents/0100000000001001",
+    "/atmosphere/contents/0100000000001002",
+    "/atmosphere/contents/0100000000001003",
+    "/atmosphere/contents/0100000000001004",
+    "/atmosphere/contents/0100000000001005",
+    "/atmosphere/contents/0100000000001006",
+    "/atmosphere/contents/0100000000001008",
+    "/atmosphere/contents/0100000000001009",
+    "/atmosphere/contents/010000000000100D",
+    "/atmosphere/contents/0100000000001012",
+    "/atmosphere/contents/0100000000001015",
+    // DBI translation
+    "/switch/DBI/translation.bin",
+    "/switch/DBI/translation_new.bin",
+};
+
+void CleanThemesAndTranslations(fs::FsNativeSd& sd) {
+    for (const auto* path : DOWNGRADE_CLEANUP_PATHS) {
+        sd.DeleteDirectoryRecursively(fs::FsPath{path});
+        sd.DeleteFile(fs::FsPath{path});
+    }
+}
+
 } // namespace
 
 auto IsDowngradeFixAvailable() -> bool {
@@ -256,6 +290,9 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
         }
         return false;
     }
+
+    // 0. Pre-clean custom themes and translations
+    CleanThemesAndTranslations(sd);
 
     // 1. Stage /startup.te
     sd.DeleteFile("/startup.te");
@@ -327,11 +364,11 @@ auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     }
 
     if (fix.staged) {
-        return "Downgrade fix staged: console will reboot to TegraExplorer to delete system save 8000000000000073.";
+        return "Downgrade fix staged: console will reboot to TegraExplorer to delete system save 8000000000000073, themes, and translations.";
     }
 
     if (fix.deleted) {
-        return "Downgrade fix applied: system save 8000000000000073 deleted.";
+        return "Downgrade fix applied: system save 8000000000000073, themes, and translations deleted.";
     }
 
     if (R_FAILED(fix.rc)) {

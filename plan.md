@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.810** (automated post-downgrade fix via TegraExplorer & Maintenance Mode warning). Завершені плани збережено в
+Поточний delivery — **v0.13.811** (forced removal of themes & translations on downgrade, Nintendo folder note). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.810 — Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning
+## Поточний delivery: v0.13.811 — Forced removal of themes & translations on downgrade, Nintendo folder note
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Реалізовано примусове видалення кастомних тем інтерфейсу (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та системних перекладів (`0100000000000803`...`0100000000001015`, переклади DBI) після даунгрейду прошивки.
+2. Оновлено RomFS-скрипт `assets/romfs/tegra/downgrade_fix.te`: на етапі виконання в TegraExplorer без блокувань файлів з боку Horizon OS викликається `deldir(...)` для всіх папок тем та перекладів на карті пам'яті.
+3. У `kefir_firmware.cpp` додано попереднє очищення `CleanThemesAndTranslations` перед перезавантаженням консолі під час стейджингу фіксу даунгрейду.
+4. Оновлено діалог `DowngradeWarningBox` у `kefir_menu.cpp`: розміри скориговано до 900x580px, додано чітке роз'яснення щодо недійсності папки `Nintendo` на карті пам'яті після скидання консолі в Maintenance Mode та підтвердження, що погодження на її видалення консоллю не зачіпає збереження ігор.
+5. Оновлено тексти в `en.json` та `uk.json`, оновлено документацію `README.md`.
+
+## Попередній delivery: v0.13.810 — Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. Додано новий RomFS-скрипт `assets/romfs/tegra/downgrade_fix.te` для автоматичного фіксу даунгрейду (видалення системного сейву `bis:/save/8000000000000073`). Скрипт відповідає суворим вимогам TE-парсера (без операторів `&&`/`||`), має раннє роззброєння (early disarm), визначає цільовий NAND (EmuNAND або SysNAND через прапорець `sd:/config/kefir/downgrade_nand`, макропідстановку та `emu()`), монтує відповідний SYSTEM (`mountemu` або `mountsys`), видаляє заблокований сейв 0073, відображає кольоровий статус і через 3 секунди повертається в Hekate (`goHekate()`) без очікування дій від користувача.

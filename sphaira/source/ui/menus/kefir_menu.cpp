@@ -61,8 +61,8 @@ public:
     , m_callback{std::move(cb)}
     , m_qr{QrCode::Encode("https://switch.customfw.xyz/downgrade_fw")}
     {
-        m_pos.w = 880.f;
-        m_pos.h = 560.f;
+        m_pos.w = 900.f;
+        m_pos.h = 580.f;
         m_pos.x = (SCREEN_WIDTH - m_pos.w) / 2.f;
         m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
 
@@ -157,7 +157,7 @@ public:
         // 3. Automated fix info
         const float y_fix = y_ver + 26.f;
         const std::string fix_label = "Downgrade fix:"_i18n;
-        const std::string fix_text = "An automated fix will run in TegraExplorer after install to delete save 8000000000000073 and reboot to Hekate."_i18n;
+        const std::string fix_text = "An automated fix will run in TegraExplorer after install to delete save 8000000000000073, themes, and translations, then reboot to Hekate."_i18n;
         gfx::drawTextBold(vg, col1_x, y_fix, 15.f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
         nvgSave(vg);
         nvgFontSize(vg, 15.f);
@@ -175,22 +175,26 @@ public:
 
         const float y_step1 = y_maint + 24.f;
         const std::string step1 = "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step1, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step1.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step1, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step1.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
-        const float y_step2 = y_step1 + 22.f;
+        const float y_step2 = y_step1 + 20.f;
         const std::string step2 = "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step2, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step2.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step2, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step2.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
-        const float y_step3 = y_step2 + 22.f;
+        const float y_step3 = y_step2 + 20.f;
         const std::string step3 = "3. Select 'Initialize Console Without Deleting Save Data'."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_step3, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step3.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step3, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step3.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
-        const float y_warn = y_step3 + 22.f;
+        const float y_warn = y_step3 + 20.f;
         const std::string warn_note = "Warning: All installed games and system settings will be wiped; saves are preserved."_i18n;
-        gfx::drawTextBox(vg, col1_x + 8.f, y_warn, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), warn_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        gfx::drawTextBox(vg, col1_x + 8.f, y_warn, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), warn_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
+
+        const float y_sd_note = y_warn + 20.f;
+        const std::string sd_note = "Note: The 'Nintendo' folder on the SD card will become invalid and the console will prompt to delete it. Agree to delete it; this will NOT affect your saves."_i18n;
+        gfx::drawTextBox(vg, col1_x + 8.f, y_sd_note, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), sd_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
         // 5. Guide & QR code section + Responsibility note
-        const float guide_y = y_warn + 34.f;
+        const float guide_y = y_sd_note + 36.f;
 
         constexpr int qr_border = 3;
         constexpr float qr_scale = 3.f;
@@ -216,16 +220,16 @@ public:
         const std::string guide_label = "Manual downgrade guide:"_i18n;
         gfx::drawTextBold(vg, col1_x, guide_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str());
 
-        const float guide_url_y = guide_y + 22.f;
+        const float guide_url_y = guide_y + 20.f;
         gfx::drawText(vg, col1_x, guide_url_y, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://switch.customfw.xyz/downgrade_fw");
 
         const std::string scan_hint = "If you prefer manual downgrade or issues persist, scan the QR code to open the guide."_i18n;
-        const float scan_hint_y = guide_url_y + 20.f;
-        gfx::drawTextBox(vg, col1_x, scan_hint_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        const float scan_hint_y = guide_url_y + 18.f;
+        gfx::drawTextBox(vg, col1_x, scan_hint_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
         const std::string resp_text = "By continuing, you accept full responsibility."_i18n;
-        const float resp_y = scan_hint_y + 36.f;
-        gfx::drawTextBox(vg, col1_x, resp_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        const float resp_y = scan_hint_y + 34.f;
+        gfx::drawTextBox(vg, col1_x, resp_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.25f);
 
         // 6. Separator line and buttons
         gfx::drawRect(vg, m_spacer_line, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
@@ -1399,7 +1403,7 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
 
             auto prompt_reboot = [apply_downgrade_fix, fix]() {
                 if (apply_downgrade_fix && fix->staged) {
-                    std::string message = "Firmware downgrade installed successfully.\n\nConsole will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073).\n\nReboot now?";
+                    std::string message = "Firmware downgrade installed successfully.\n\nConsole will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073, themes, and translations).\n\nReboot now?";
                     App::Push<OptionBox>(
                         message,
                         "Later"_i18n, "Reboot"_i18n, 1,

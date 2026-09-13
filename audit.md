@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.810**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.811**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.811 поза ponytail-чергою: реалізовано примусове видалення кастомних тем інтерфейсу (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) та системних перекладів (`0100000000000803`...`0100000000001015`, DBI) при даунгрейді прошивки безпосередньо в TegraExplorer через `assets/romfs/tegra/downgrade_fix.te` (без обмежень блокування файлів `FsError_TargetLocked`) та попереднє очищення `CleanThemesAndTranslations` у `kefir_firmware.cpp`; оновлено `DowngradeWarningBox` у `kefir_menu.cpp` (900x580px) з попередженням про недійсність папки `Nintendo` на карті пам'яті після скидання консолі в Maintenance Mode та роз'ясненням щодо безпеки збережень ігор; оновлено тексти в `en.json` та `uk.json`; оновлено `README.md`; версію піднято до 0.13.811. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.810 поза ponytail-чергою: реалізовано автоматичний фікс даунгрейду системної прошивки (System Firmware) через TegraExplorer (`assets/romfs/tegra/downgrade_fix.te` без операторів `&&`/`||`, раннє роззброєння, виявлення EmuNAND/SysNAND через `App::IsEmummc()`, видалення системного сейву `8000000000000073`, затримка `sleep(3000)` без очікування кнопок і автозавантаження Hekate через `goHekate()`); у `kefir_firmware.cpp` реалізовано `StageDowngradeFix` (розгортання `/startup.te`, копіювання до `/TegraExplorer/scripts/downgrade_fix.te`, запис прапорця цільового NAND) та `StageAndLaunchDowngradeFix`; `IsDowngradeFixAvailable()` активовано (`true`); `m_downgrade_fix_mode` за замовчуванням переведено на `Automatic`; у `DowngradeWarningBox` розширено геометрію до 880x560px, додано покрокову інструкцію переходу в Maintenance Mode при збоях завантаження (бутлого Switch/Kefir -> утримання Vol+/Vol- -> «Initialize Console Without Deleting Save Data» зі збереженням сейвів), оновлено QR-код і посилання на ручний гайд `https://switch.customfw.xyz/downgrade_fw`; після даунгрейду діалог перезавантаження запускає TegraExplorer через `utils::rebootToPayload`; додано локалізацію в `en.json` та `uk.json`; оновлено `README.md`; версію піднято до 0.13.810. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
