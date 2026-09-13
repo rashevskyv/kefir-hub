@@ -59,10 +59,24 @@ auto List::ClampX(float x, s64 count) const -> float {
     return std::clamp(x, 0.F, x_max);
 }
 
+auto List::GetItemY(s64 index) const -> float {
+    const auto row = index / m_row;
+    float y = row * GetMaxY();
+    if (m_gap_after >= 0 && index > m_gap_after) {
+        y += m_gap_size;
+    }
+    return y;
+}
+
 auto List::ClampY(float y, s64 count) const -> float {
     float y_max = 0;
 
-    if (count >= m_page) {
+    if (m_gap_after >= 0 && count > m_gap_after + 1) {
+        const float total_rows = (count + m_row - 1) / m_row;
+        const float total_h = total_rows * GetMaxY() + m_gap_size;
+        const float view_h = (m_page / m_row) * GetMaxY();
+        y_max = std::max(0.f, total_h - view_h);
+    } else if (count >= m_page) {
         // round up
         if (count % m_row) {
             count = count + (m_row - count % m_row);
@@ -356,6 +370,19 @@ void List::EnsureVisible(s64 index, s64 count) {
         return;
     }
 
+    if (m_layout == Layout::GRID && m_gap_after >= 0) {
+        index = std::clamp<s64>(index, 0, count - 1);
+        const float item_top = GetItemY(index);
+        const float item_bottom = item_top + m_v.h;
+
+        if (item_top < m_yoff) {
+            m_yoff = ClampY(item_top, count);
+        } else if (item_bottom > m_yoff + m_pos.h) {
+            m_yoff = ClampY(item_bottom - m_pos.h, count);
+        }
+        return;
+    }
+
     const auto max = m_layout == Layout::GRID ? GetMaxY() : GetMaxX();
     if (max <= 0.f) {
         return;
@@ -486,15 +513,19 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
     } else if (touch && touch->is_clicked && touch->in_range(GetPos())) {
         auto v = m_v;
         v.y -= ClampY(m_yoff + m_y_prog, count);
+        bool gap_applied = false;
 
-        for (s64 i = 0; i < count; v.y += v.h + m_pad.y) {
+        for (s64 i = 0; i < count; ) {
             if (v.y > GetY() + GetH()) {
                 break;
             }
 
             const auto x = v.x;
 
-            for (; i < count; i++, v.x += v.w + m_pad.x) {
+            for (s64 row = 0; i < count; row++, i++, v.x += v.w + m_pad.x) {
+                if (row >= m_row) {
+                    break;
+                }
                 // only draw if full x is in bounds
                 if (v.x + v.w > GetX() + GetW()) {
                     break;
@@ -517,6 +548,11 @@ void List::OnUpdateGrid(Controller* controller, TouchInfo* touch, s64 index, s64
             }
 
             v.x = x;
+            v.y += v.h + m_pad.y;
+            if (!gap_applied && m_gap_after >= 0 && i > m_gap_after && count > m_gap_after + 1) {
+                v.y += m_gap_size;
+                gap_applied = true;
+            }
         }
     } else if (touch) {
         OnTouchScroll(touch, count, false);
@@ -552,7 +588,13 @@ void List::DrawHome(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Ca
 
 void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Callback callback) const {
     const auto yoff = ClampY(m_yoff + m_y_prog, count);
-    const s64 start = yoff / GetMaxY() * m_row;
+    s64 start = yoff / GetMaxY() * m_row;
+    if (m_gap_after >= 0 && count > m_gap_after + 1) {
+        const float total_h = ((count + m_row - 1) / m_row) * GetMaxY() + m_gap_size;
+        const float max_scroll = std::max(1.f, total_h - m_pos.h);
+        const float max_start = std::max<float>(0.f, static_cast<float>(count - m_page));
+        start = static_cast<s64>(std::round((yoff / max_scroll) * max_start));
+    }
     gfx::drawScrollbar2(vg, theme, m_scrollbar.x, m_scrollbar.y, m_scrollbar.h, start, count, m_row, m_page);
 
     auto v = m_v;
@@ -562,6 +604,13 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Ca
     // pad the scissor so the selection highlight of edge items isn't clipped;
     // see the note in DrawHome().
     ScissorContent(vg, m_pos);
+
+    if (m_gap_after >= 0 && count > m_gap_after + 1) {
+        const float sep_y = v.y + ((m_gap_after / m_row) + 1) * (m_v.h + m_pad.y) + m_gap_size / 2.f;
+        if (sep_y >= m_pos.y && sep_y <= m_pos.y + m_pos.h) {
+            gfx::drawRect(vg, m_v.x, sep_y, m_v.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        }
+    }
 
     draw_order::TraverseGrid(
         v,
@@ -576,7 +625,9 @@ void List::DrawGrid(NVGcontext* vg, Theme* theme, s64 count, s64 focus_index, Ca
         focus_index,
         [&](const Vec4& item_v, s64 i) {
             callback(vg, theme, item_v, i);
-        }
+        },
+        m_gap_after,
+        m_gap_size
     );
 
     nvgRestore(vg);

@@ -189,10 +189,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakeRemoveTranslationItem());
 
-    if (has_cache) {
-        items.emplace_back(MakeSeparator());
-    }
-
     for (const auto& entry : cached_entries) {
         items.emplace_back(SettingsItem{
             entry.name,
@@ -300,12 +296,6 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 } // namespace
 
 TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_None} {
-    const std::string fw = hats::getSystemFirmware();
-    SetRegion console_region = SetRegion_EUR;
-    setGetRegionCode(&console_region);
-    const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
-    this->SetTitleStats("FW " + fw, compat.available ? compat.target_tag : "Unsupported");
-
     m_items = BuildTranslateItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
@@ -319,6 +309,7 @@ TranslateMenu::TranslateMenu() : MenuBase{"Translate Interface"_i18n, MenuFlag_N
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
+    m_list->SetSectionGap(1, 33.f);
     SetIndex(0);
 }
 
@@ -326,12 +317,6 @@ TranslateMenu::~TranslateMenu() = default;
 
 void TranslateMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
-    const std::string fw = hats::getSystemFirmware();
-    SetRegion console_region = SetRegion_EUR;
-    setGetRegionCode(&console_region);
-    const auto compat = ResolveFirmwareCompatibility(fw, console_region == SetRegion_CHN);
-    this->SetTitleStats("FW " + fw, compat.available ? compat.target_tag : "Unsupported");
-
     std::string item_label;
     if (!m_items.empty()) {
         item_label = m_items[m_index].label;
@@ -367,7 +352,7 @@ void TranslateMenu::SetIndex(s64 index) {
         m_index = 0;
         return;
     }
-    m_index = ResolveItemIndex(m_items, index, m_index);
+    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
     if (!m_index) {
         m_list->SetYoff(0);
     } else {

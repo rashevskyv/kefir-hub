@@ -3,8 +3,9 @@
 # REQUIRE MINERVA
 # REQUIRE VER 4.0.0
 
-# downgrade_fix.te - Kefir Hub Automated Downgrade Fix
-# Deletes system save 8000000000000073 from SYSTEM partition after firmware downgrade.
+# DowngradeFix.te - Dual-mode Downgrade Fix
+# Deletes system save 8000000000000073 from SYSTEM partition to prevent downgrade protection.
+# Supports automated Kefir Hub launch and manual TegraExplorer launch.
 
 goHekate = {
     println("Cleaning temp flags...")
@@ -51,133 +52,152 @@ goHekate = {
     }
 }
 
-clear()
-color(0x00FFFF)
-println("=== Kefir Hub: Downgrade Fix ===")
-color(0xFFFFFF)
-println("")
-
-# Early disarm to prevent any boot loops if interrupted
-delfile("sd:/startup.te")
-if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
-    delfile("sd:/bootloader/hekate_ipl.ini")
-    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
-    delfile("sd:/bootloader/hekate_ipl.ini.bak")
-}
-delfile("sd:/config/kefir/hekate-payload-request.ini")
-if (fsexists("sd:/bootloader/update.bin")) {
-    delfile("sd:/payload.bin")
-    copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
-}
-
-# Determine NAND target
-target = "__TARGET_NAND__"
 flagf = "sd:/config/kefir/downgrade_nand"
+isHub = 0
+target = ""
+
 if (fsexists(flagf)) {
+    isHub = 1
     raw = readfile(flagf)
     target = raw.bytestostr()
     delfile(flagf)
-}
-
-if (target != "emu") {
-    if (target != "sys") {
-        if (emu()) {
-            target = "emu"
-        } .else() {
-            target = "sys"
-        }
+    delfile("sd:/startup.te")
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        delfile("sd:/bootloader/hekate_ipl.ini")
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
+    delfile("sd:/config/kefir/hekate-payload-request.ini")
+    if (fsexists("sd:/bootloader/update.bin")) {
+        delfile("sd:/payload.bin")
+        copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
     }
 }
 
-rc = 1
-if (target == "emu") {
-    println("NAND Target: emuMMC SYSTEM")
-    if (!emu()) {
-        color(0xFF0000)
-        println("ERROR: No emuMMC found on SD card!")
-        color(0xFFFFFF)
-        println("Rebooting to Hekate in 5 seconds...")
+fail = {
+    color(0xFF0000)
+    println("[ERROR] ", failMsg)
+    color(0xFFFFFF)
+    if (isHub) {
+        println("Returning to Hekate in 5 seconds...")
         sleep(5000)
         goHekate()
-        exit()
+    } .else() {
+        println("Press any key to exit")
+        pause()
     }
-    rc = mountemu("SYSTEM")
-} .else() {
-    println("NAND Target: sysMMC SYSTEM")
-    rc = mountsys("SYSTEM")
-}
-
-if (rc) {
-    color(0xFF0000)
-    println("ERROR: SYSTEM partition mount failed! rc: ", rc)
-    color(0xFFFFFF)
-    println("Rebooting to Hekate in 5 seconds...")
-    sleep(5000)
-    goHekate()
     exit()
 }
 
+if (isHub) {
+    clear()
+    color(0x00FFFF)
+    println("=== Kefir Hub: Downgrade Fix ===")
+    color(0xFFFFFF)
+    println()
+
+    validTarget = 0
+    if (target == "emu") {
+        validTarget = 1
+    }
+    if (target == "sys") {
+        validTarget = 1
+    }
+    if (!validTarget) {
+        fail(failMsg = "Invalid downgrade target in downgrade_nand")
+    }
+} .else() {
+    clear()
+    color(0x00FFFF)
+    println("=== Switch Downgrade Fix ===")
+    println("This script will delete the 8000000000000073 save file")
+    println("from the SYSTEM partition to prevent downgrade protection.")
+    println()
+    color(0xFFFFFF)
+
+    println("Select target:")
+    choice = menu(["Exit", "Sysmmc", "Emummc"], 0)
+
+    if (choice == 0) {
+        exit()
+    }
+
+    if (choice == 1) {
+        target = "sys"
+    } .else() {
+        target = "emu"
+    }
+
+    clear()
+    color(0x00FFFF)
+    println("=== Downgrade Fix Confirmation ===")
+    color(0xFFFFFF)
+    if (target == "sys") {
+        println("Target: Sysmmc")
+    } .else() {
+        println("Target: Emummc")
+    }
+    println("Action: Delete 8000000000000073")
+    println()
+    color(0xFFFF00)
+    println("WARNING: This will modify your SYSTEM partition!")
+    println("Make sure you know what you are doing before proceeding!")
+    println()
+    color(0xFFFFFF)
+
+    println("Press POWER to continue, any other key to exit")
+    if (!pause().power) {
+        exit()
+    }
+    clear()
+}
+
+mountRc = 1
+if (target == "emu") {
+    println("Mounting emuMMC SYSTEM partition...")
+    if (!emu()) {
+        fail(failMsg = "No emuMMC found on SD card!")
+    }
+    mountRc = mountemu("SYSTEM")
+} .else() {
+    println("Mounting sysMMC SYSTEM partition...")
+    mountRc = mountsys("SYSTEM")
+}
+
+if (mountRc) {
+    fail(failMsg = "Failed to mount SYSTEM partition!")
+}
+
 targetSave = "bis:/save/8000000000000073"
-saveOk = 0
+
 if (!fsexists(targetSave)) {
     color(0xFFFF00)
     println("System save 8000000000000073 not found (already clean).")
     color(0xFFFFFF)
-    saveOk = 1
 } .else() {
     println("Deleting 8000000000000073...")
-    if (delfile(targetSave)) {
-        color(0xFF0000)
-        println("ERROR: Failed to delete save 8000000000000073!")
-        color(0xFFFFFF)
-    } .else() {
-        if (fsexists(targetSave)) {
-            color(0xFF0000)
-            println("ERROR: Deletion failed - file still exists!")
-            color(0xFFFFFF)
-        } .else() {
-            saveOk = 1
-            color(0x00FF00)
-            println("SUCCESS: 8000000000000073 has been deleted!")
-            color(0xFFFFFF)
-        }
+    delRc = delfile(targetSave)
+    if (delRc) {
+        fail(failMsg = "Failed to delete 8000000000000073!")
     }
+    if (fsexists(targetSave)) {
+        fail(failMsg = "File deletion failed - 8000000000000073 still exists!")
+    }
+    color(0x00FF00)
+    println("SUCCESS: 8000000000000073 has been deleted!")
+    color(0xFFFFFF)
 }
 
-println("Cleaning themes and translations...")
-deldir("sd:/atmosphere/contents/0100000000001000")
-deldir("sd:/atmosphere/contents/0100000000001013")
-deldir("sd:/atmosphere/contents/0100000000001007")
-deldir("sd:/atmosphere/contents/00FF007468656D65")
-deldir("sd:/atmosphere/contents/0100000000000803")
-deldir("sd:/atmosphere/contents/010000000000080B")
-deldir("sd:/atmosphere/contents/010000000000080C")
-deldir("sd:/atmosphere/contents/0100000000000811")
-deldir("sd:/atmosphere/contents/0100000000001001")
-deldir("sd:/atmosphere/contents/0100000000001002")
-deldir("sd:/atmosphere/contents/0100000000001003")
-deldir("sd:/atmosphere/contents/0100000000001004")
-deldir("sd:/atmosphere/contents/0100000000001005")
-deldir("sd:/atmosphere/contents/0100000000001006")
-deldir("sd:/atmosphere/contents/0100000000001008")
-deldir("sd:/atmosphere/contents/0100000000001009")
-deldir("sd:/atmosphere/contents/010000000000100D")
-deldir("sd:/atmosphere/contents/0100000000001012")
-deldir("sd:/atmosphere/contents/0100000000001015")
+println()
+color(0x00FF00)
+println("Downgrade fix completed successfully!")
+color(0xFFFFFF)
 
-println("")
-if (saveOk) {
-    color(0x00FF00)
-    println("Downgrade fix finished successfully!")
-    color(0xFFFFFF)
-    println("Rebooting to Hekate in 3 seconds...")
+if (isHub) {
+    println("Returning to Hekate in 3 seconds...")
     sleep(3000)
     goHekate()
 } .else() {
-    color(0xFF0000)
-    println("ERROR: Downgrade fix failed to delete save 8000000000000073!")
-    color(0xFFFFFF)
-    println("Rebooting to Hekate in 5 seconds...")
-    sleep(5000)
-    goHekate()
+    println("Press any key to exit")
+    pause()
 }

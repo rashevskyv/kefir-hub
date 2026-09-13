@@ -54,13 +54,16 @@ void TraverseGrid(
     float max_y,
     int64_t count,
     int64_t focus_index,
-    Callback&& callback
+    Callback&& callback,
+    int64_t gap_after = -1,
+    float gap_size = 0.f
 ) {
     RectType focused_v{};
     bool has_focused = false;
     auto v = initial_v;
+    bool gap_applied = false;
 
-    for (int64_t i = 0; i < count; v.y += step_y) {
+    for (int64_t i = 0; i < count; ) {
         if (v.y > max_y) {
             break;
         }
@@ -91,6 +94,11 @@ void TraverseGrid(
         }
 
         v.x = x;
+        v.y += step_y;
+        if (!gap_applied && gap_after >= 0 && i > gap_after && count > gap_after + 1) {
+            v.y += gap_size;
+            gap_applied = true;
+        }
     }
 
     if (has_focused) {

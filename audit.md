@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.819**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.820**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.820 поза ponytail-чергою: SD log локалізував downgrade failure у немонтованому RomFS; додано on-demand `romfsInit`, канонічний dual-mode `DowngradeFix.te` перенесено до TegraExplorer із Makefile sync у Sphaira, target передається лише exact `emu`/`sys` flag; Translate Interface header stats видалено, 66 px spacer замінено узгодженим 33 px section gap; версію піднято до 0.13.820. Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.819 поза ponytail-чергою: очищено Translate Interface від diagnostics item і технічних URL, release/metadata tags, ZIP-імен та filesystem paths; progress залишає лише локалізовані користувацькі стани без зміни download/install logic; версію піднято до 0.13.819. Compile/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

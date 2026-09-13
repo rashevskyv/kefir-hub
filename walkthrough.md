@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.819** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.820** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.820 — Downgrade script contract and compact translation layout
+
+- Лог SD підтвердив root cause downgrade failure: `StageDowngradeFix` не міг прочитати `romfs:/tegra/downgrade_fix.te`; `ReadRomfsTe` тепер повторює читання після `romfsInit()` і коректно викликає `romfsExit()`.
+- `TegraExplorer/scripts/DowngradeFix.te` є канонічним dual-mode сценарієм: автоматичний Hub launch суворо використовує target flag і не питає вводу; ручний запуск лишає target menu/confirmation та не disarm-ить сторонні workflow.
+- Makefile TegraExplorer разом із payload копіює канонічний скрипт у Sphaira RomFS; поточні копії мають однаковий SHA-256 і не містять `&&`, `||` чи `__TARGET_NAND__`.
+- У Translate Interface видалено firmware/target stats, а separator row 66 px замінено на 33 px gap із єдиною геометрією для render, touch, scrolling, EnsureVisible та scrollbar.
+- `sphaira_VERSION` піднято до `0.13.820`; `git diff --check` виконано в обох репозиторіях. Compile/NRO не запускалися за вказівкою користувача та workspace policy.
 
 ## v0.13.819 — Clean translation UI
 

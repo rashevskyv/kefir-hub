@@ -204,22 +204,34 @@ auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result
 
 namespace {
 
-auto ReadRomfsTe(const char* romfs_path, std::string& out) -> bool {
-    FILE* fp = std::fopen(romfs_path, "rb");
-    if (!fp) {
+auto ReadRomfsTe(const char* romfs_path, std::string& out, Result* err = nullptr) -> bool {
+    const auto read = [&]() {
+        std::vector<u8> bytes;
+        if (R_FAILED(fs::read_entire_file(romfs_path, bytes)) || bytes.empty() || bytes.size() > 1024 * 1024) {
+            return false;
+        }
+        out.assign(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+        return true;
+    };
+
+    if (read()) {
+        return true;
+    }
+    const Result rc = romfsInit();
+    if (R_FAILED(rc)) {
+        if (err) {
+            *err = rc;
+        }
         return false;
     }
-    ON_SCOPE_EXIT(std::fclose(fp));
-    if (std::fseek(fp, 0, SEEK_END) != 0) {
+    ON_SCOPE_EXIT(romfsExit());
+    if (!read()) {
+        if (err) {
+            *err = FsError_PathNotFound;
+        }
         return false;
     }
-    long sz = std::ftell(fp);
-    if (sz <= 0 || sz > 1024 * 1024) {
-        return false;
-    }
-    std::rewind(fp);
-    out.resize(static_cast<size_t>(sz));
-    return std::fread(out.data(), 1, out.size(), fp) == out.size();
+    return true;
 }
 
 constexpr const char* FIRMWARE_CLEANUP_PATHS[]{
@@ -308,19 +320,20 @@ auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out, bool arm_startup
     }
 
     std::string script;
-    if (!ReadRomfsTe("romfs:/tegra/downgrade_fix.te", script)) {
-        log_write("StageDowngradeFix: failed to read romfs:/tegra/downgrade_fix.te\n");
+    Result romfs_err = 0;
+    if (!ReadRomfsTe("romfs:/tegra/downgrade_fix.te", script, &romfs_err)) {
+        if (R_FAILED(romfs_err) && romfs_err != FsError_PathNotFound) {
+            log_write("StageDowngradeFix: romfsInit failed (0x%x)\n", romfs_err);
+        } else {
+            log_write("StageDowngradeFix: failed to read romfs:/tegra/downgrade_fix.te\n");
+        }
         if (out) {
-            out->rc = FsError_PathNotFound;
+            out->rc = R_FAILED(romfs_err) ? romfs_err : static_cast<Result>(FsError_PathNotFound);
         }
         return false;
     }
 
     const std::string target = is_emummc ? "emu" : "sys";
-    const std::string marker = "__TARGET_NAND__";
-    if (auto pos = script.find(marker); pos != std::string::npos) {
-        script.replace(pos, marker.length(), target);
-    }
 
     fs::FsNativeSd sd;
     if (const auto rc = sd.GetFsOpenResult(); R_FAILED(rc)) {

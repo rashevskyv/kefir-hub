@@ -106,6 +106,13 @@ struct List final : Object {
         return m_fast_scroll;
     }
 
+    auto SetSectionGap(s64 after_index, float gap) {
+        m_gap_after = after_index;
+        m_gap_size = gap;
+    }
+
+    auto GetItemY(s64 index) const -> float;
+
 private:
     auto Draw(NVGcontext* vg, Theme* theme) -> void override {}
     auto ClampX(float x, s64 count) const -> float;
@@ -143,6 +150,8 @@ private:
     bool m_page_jump{true};
     bool m_wrap{true};
     bool m_fast_scroll{true};
+    s64 m_gap_after{-1};
+    float m_gap_size{0.f};
 };
 
 } // namespace sphaira::ui

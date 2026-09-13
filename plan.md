@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.819** (clean translation UI). Завершені плани збережено в
+Поточний delivery — **v0.13.820** (downgrade script contract and compact translation layout). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.819 — Clean translation UI
+## Поточний delivery: v0.13.820 — Downgrade script contract and compact translation layout
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. Канонічний `DowngradeFix.te` перенесено до TegraExplorer і синхронізовано в Sphaira RomFS; Hub mode бере сувору ціль `emu`/`sys` з `/config/kefir/downgrade_nand`, працює без підтверджень і повертається в Hekate, manual mode зберігає вибір та підтвердження й не чіпає сторонній startup workflow.
+2. `ReadRomfsTe` монтує RomFS на вимогу; downgrade preflight і надалі блокує `amssuApplyPreparedUpdate`, якщо скрипт не читається або staging не завершено.
+3. Із Translate Interface прибрано firmware/target stats, а повний 66 px spacer замінено на 33 px section gap із синхронною геометрією draw, touch, scroll bounds, visibility та scrollbar.
+
+## Попередній delivery: v0.13.819 — Clean translation UI
 
 Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
 1. З Translate Interface прибрано діагностичний firmware/release item та технічні URL, release/metadata tags, ZIP-імена й внутрішні шляхи з описів, підтверджень і progress-повідомлень.
