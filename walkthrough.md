@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.829** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.830** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.830 — Corner multi-select checkboxes
+
+- Спільний `grid::Menu::DrawSelectionMark` замість затемнення всієї плитки та великої центральної галочки тепер малює наявний `gfx::drawCheckbox` у верхньому лівому куті icon/tile overlay.
+- Коли мультивибір активний, невибрані елементи показують порожній квадрат, а вибрані — галочку; без активного вибору checkbox не малюється.
+- Виправлення автоматично поширюється на Saves, Games, Homebrew і Users; list-gutter checkbox, який також використовує Wi-Fi, залишився без змін.
+- Версію піднято до `0.13.830`; `git diff --check` і static review пройшли. Compile/tests/NRO не запускалися.
 
 ## v0.13.829 — Saves category tabs
 

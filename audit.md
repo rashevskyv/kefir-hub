@@ -1,13 +1,15 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.829**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.830**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
 `graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-13:
-12445 nodes, 24689 edges, 637 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
+12447 nodes, 24696 edges, 654 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.830 поза ponytail-чергою: у спільному `DrawSelectionMark` tile-layouts замість full-overlay tint і великої центральної галочки показують стандартний checkbox у верхньому лівому куті; порожній/відмічений стан видимий для всіх плиток після початку мультивибору; list-layout не змінено; версію піднято до 0.13.830. `git diff --check` пройшов; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.829 поза ponytail-чергою: `Tools -> Game Tools -> Saves` відкриває загальне saves menu одразу на `Installed Games`; додано видимі вкладки `Installed Games` / `Deleted Games` / `Backups` з циклічним `L/R` і touch; вкладки залишаються видимими в empty state та не змінюють single-game saves; версію піднято до 0.13.829. `git diff --check` пройшов; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 

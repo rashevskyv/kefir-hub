@@ -50,10 +50,10 @@ void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec
         return;
     }
 
-    // a tile has no gutter to put a checkbox in, so it is tinted instead.
-    if (marked) {
-        gfx::drawRect(vg, overlay, theme->GetColour(ThemeEntryID_FOCUS), 5);
-        gfx::drawText(vg, overlay.x + overlay.w / 2.f, overlay.y + overlay.h / 2.f, 24.f, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+    // tiles have no gutter, so anchor the checkbox inside the icon/tile overlay.
+    if (any_marked) {
+        constexpr float inset = 8.f;
+        gfx::drawCheckbox(vg, theme, overlay.x + inset, overlay.y + inset, gfx::CHECKBOX_SIZE, marked);
     }
 }
 

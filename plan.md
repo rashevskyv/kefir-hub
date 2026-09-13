@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.829** (Saves category tabs). Завершені плани збережено в
+Поточний delivery — **v0.13.830** (Corner multi-select checkboxes). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.829 — Saves category tabs
+## Поточний delivery: v0.13.830 — Corner multi-select checkboxes
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. У спільному `DrawSelectionMark` для tile-layouts прибрано затемнення всієї іконки та велику центральну галочку.
+2. Після початку мультивибору кожна видима плитка показує стандартний checkbox у верхньому лівому куті: порожній для звичайного елемента, з галочкою — для вибраного.
+3. Спільна зміна покриває Saves, Games, Homebrew і Users; наявна list-gutter поведінка, зокрема Wi-Fi, не змінена.
+4. Gemini та senior перевірили мінімальний diff і всіх callers; `git diff --check` пройшов. Compile/tests/NRO не запускалися.
+
+## Попередній delivery: v0.13.829 — Saves category tabs
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. `Tools -> Game Tools -> Saves` одразу відкриває загальне меню saves на вкладці `Installed Games`, без проміжних трьох іконок.

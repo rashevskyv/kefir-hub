@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.829** (Saves category tabs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.830** (Corner multi-select checkboxes). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.829 (Saves category tabs)
+## Поточний delivery: v0.13.830 (Corner multi-select checkboxes)
+
+- [x] `MULTISELECT-CORNER-830` — tile-layouts малюють стандартний checkbox з відступом 8 px у верхньому лівому куті overlay.
+- [x] `MULTISELECT-CLEAN-830` — прибрано full-overlay tint і велику центральну галочку; list-layout не змінено.
+- [x] `MULTISELECT-SHARED-830` — Saves, Games, Homebrew, Users і Wi-Fi залишилися на спільному `DrawSelectionMark`, без локальних дублів.
+- [x] `VERIFY-830` — Gemini та senior виконали static diff/caller review; `git diff --check` пройшов, compile/NRO не запускалися.
+- [x] `DOCS-BUMP-830` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.830`.
+- [ ] `HW-830` — зібрати NRO і перевірити checkbox у Grid, Grid Detail та HB Menu для Saves і щонайменше одного іншого grid menu.
+
+## Попередній delivery: v0.13.829 (Saves category tabs)
 
 - [x] `SAVES-ENTRY-829` — `Tools -> Game Tools -> Saves` одразу відкриває `save::Menu` з `Category::Installed`, без проміжного icon hub.
 - [x] `SAVES-TABS-829` — додано видимі `Installed Games` / `Deleted Games` / `Backups` з циклічним `L/R` і touch-вибором.
