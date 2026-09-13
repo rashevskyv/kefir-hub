@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.825** (reliable firmware cleanup result). Завершені задачі збережено в
+Актуальний delivery — **v0.13.826** (Wi-Fi management menu under Tools). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.825 (Reliable firmware cleanup result)
+## Поточний delivery: v0.13.826 (Wi-Fi management menu under Tools)
+
+- [x] `WIFI-MGR-826` — реалізовано `wifi_manager` з читанням, оновленням, видаленням профілів через NIFM та підключенням до мережі.
+- [x] `WIFI-MENU-826` — створено `ui::menu::wifi::Menu` з мультиселектом (X/Y/B), відображенням статусу, векторною іконкою Wi-Fi та діалогами дій.
+- [x] `WIFI-ACTIONS-826` — реалізовано підключення по кнопці A, масове видалення кількох мереж, перейменування, зміну пароля та SSID через `swkbd`, а також перегляд збереженого пароля.
+- [x] `WIFI-TOOLS-826` — підключено `wifi_menu` у `SystemToolsMenu` (`Tools -> Tools -> Wi-Fi`).
+- [x] `I18N-826` — додано 32 ключі локалізації для `en.json`, `uk.json` та `ru.json`.
+- [x] `DOCS-BUMP-826` — Sphaira version та delivery-документи оновлено до `0.13.826`.
+- [ ] `HW-826` — зібрати NRO і протестувати меню Wi-Fi на консолі (підключення, видалення, зміна пароля).
+
+## Попередній delivery: v0.13.825 (Reliable firmware cleanup result)
 
 - [x] `FIRMWARE-CLEANUP-825` — cleanup success визначається фінальним readback, а не sticky проміжною delete-помилкою.
 - [x] `FIRMWARE-CLEANUP-LOG-825` — у лог додається точний cleanup path, який реально залишився.

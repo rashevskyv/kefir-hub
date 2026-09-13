@@ -1,7 +1,28 @@
-Актуальний delivery — **v0.13.825** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.826** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.826 — Wi-Fi management menu under Tools
+
+- У `Tools -> Tools -> Wi-Fi` замінено заглушку `ComingSoon` на повноцінний інтерфейс керування Wi-Fi мережами `ui::menu::wifi::Menu`.
+- Реалізовано модуль `wifi_manager` (`sphaira/include/wifi_manager.hpp`, `sphaira/source/wifi_manager.cpp`) для прямої роботи із системним сервісом `nifm` (`nifm:a` / `IGeneralService`):
+  - Отримання переліку збережених профілів користувача (`nifmEnumerateNetworkProfiles`);
+  - Читання конфігурації та збереженого пароля (`nifmGetNetworkProfile`);
+  - Оновлення профілів при перейменуванні, зміні пароля або SSID (`nifmSetNetworkProfile`);
+  - Безпосереднє видалення профілю через системну IPC-команду `RemoveNetworkProfile` (cmd 10 на `IGeneralService`);
+  - Неблокуюча ініціалізація підключення (`nifmRequestSetNetworkProfileId` та `nifmRequestSubmit`);
+  - Перемикання бездротового зв'язку (`nifmSetWirelessCommunicationEnabled`).
+- Реалізовано меню `ui::menu::wifi::Menu` на базі `grid::Menu` (`LayoutType_List`):
+  - Поточна підключена мережа завжди відображається першою зі статусом `Connected` та зеленим індикатором;
+  - Мультиселект: `X` — інверсія виділення поточного елемента, `Y` — інверсія всього виділення, `B` — зняття виділення (або повернення назад);
+  - Контекстне меню (`Sidebar` на кнопку `+` / `START`):
+    - При кількох виділених мережах: масове видалення з підтвердженням кількості, вибір усіх / зняття виділення;
+    - При одній виділеній точці: підключення, перейменування, зміна пароля (через клавіатуру `swkbd`), зміна SSID, перегляд збереженого пароля у відкритому вигляді та індивідуальне видалення;
+  - Натискання `A` на будь-якій мережі викликає діалог підтвердження підключення.
+- Додано векторну NanoVG іконку Wi-Fi сигналу, прапорці виділення та підтримку тем оформлення.
+- Додано 32 нові ключі локалізації до `assets/romfs/i18n/en.json`, `uk.json` та `ru.json`.
+- `check_dead_symbols.py` підтвердив 0 мертвих оголошень (964/964 defined); `git diff --check` виконано чисто.
 
 ## v0.13.825 — Reliable firmware cleanup result
 

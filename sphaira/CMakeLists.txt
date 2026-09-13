@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.825)
+set(sphaira_VERSION 0.13.826)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -82,6 +82,8 @@ add_executable(sphaira
     source/ui/menus/themezer.cpp
     source/ui/menus/theme_creator.cpp
     source/ui/menus/tools_menu.cpp
+    source/ui/menus/wifi_menu.cpp
+    source/wifi_manager.cpp
     source/ui/menus/uninstaller_menu.cpp
     source/ui/menus/users_menu.cpp
     source/ui/menus/users/users_internal.cpp

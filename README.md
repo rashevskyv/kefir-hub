@@ -249,6 +249,16 @@ Manage Nintendo Switch user profiles directly from **Tools -> Tools -> Users**:
 - **Accurate Nintendo Account Link Detection:** Profile link status and NAS ID are queried directly through Horizon's Baas Administrator interface (`GetBaasAccountAdministrator` and `IsLinkedWithNintendoAccount`), ensuring unlinked profiles are accurately detected (matching Linkalho and system settings) and correctly prompted for offline linking using built-in RomFS donors.
 - **One-Time TegraExplorer Restore Notification:** When restoring user profiles & play hours packs through TegraExplorer, if restoration does not complete, a concise status notification is presented once upon returning to Kefir Hub, cleanly persisting the applied state so it does not repeat on subsequent launches.
 
+## Wi-Fi Connection Manager
+
+Manage saved wireless network profiles directly from **Tools -> Tools -> Wi-Fi**:
+- **Saved Networks List & Status:** View all Wi-Fi networks saved on the console, including active connection state, security protocol (`WPA2-PSK (AES)`, `WPA3`, `Open`), and custom profile names. The currently connected access point is pinned to the top of the list with a highlighted `Connected` badge.
+- **Direct Connect (Button A):** Press **A** on any saved network to immediately connect to it with an instant confirmation prompt.
+- **Multi-Selection & Batch Deletion:** Select multiple networks with **X** or invert selection with **Y** (or select all from the context menu). Press **+** (START) to open the sidebar and delete multiple selected networks in bulk with a single confirmation.
+- **Change Password & Rename:** Update the Wi-Fi security passphrase or rename the profile display name and SSID directly on-device using the software keyboard (`swkbd`), without needing to re-scan or navigate through the official Horizon OS system settings.
+- **Password Viewer:** In the context menu, select **View password & details** to reveal the stored network password in plaintext alongside full security and configuration details.
+- **Wireless Toggle:** Quickly turn Wi-Fi communication on or off directly from the options sidebar without leaving the menu.
+
 ## Themes & Translations
 
 Sphaira features customizable theme options and multi-language support:
@@ -336,7 +346,7 @@ The **Tools** tab provides quick access to core utilities and settings in an org
 - **Row 1:** **File Browser** (manage SD card files), **Games** (installed titles manager), **Themes** (theme packs).
 - **Row 2:** **Updater** (Kefir & firmware updates), **Saves** (Save Hub & DISA backup/restoration), **Software** (Homebrew App Store, DBI installer, and community mod utilities).
 - **Row 3:** **Cheats** (cheat databases & dmnt cheats manager), **Kefir Settings** (fan curves & system switches), **Settings** (app settings).
-- **Row 4:** **Tools** (sysmodule & background module manager).
+- **Row 4:** **Tools** (sysmodule & background module manager, fan curves, Wi-Fi connections, and user profile manager).
 
 ## Sysmodule Catalog Generator
 

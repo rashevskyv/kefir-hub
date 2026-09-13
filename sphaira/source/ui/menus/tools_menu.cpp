@@ -12,6 +12,7 @@
 #include "ui/menus/install_share.hpp"
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/users_menu.hpp"
+#include "ui/menus/wifi_menu.hpp"
 #include "ui/menus/settings/settings_fancurve.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -420,7 +421,9 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
         { "Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, 0, [](){
             ui::menu::settings::OpenFanCurveMenu();
         }},
-        { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, ComingSoon },
+        { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, [](){
+            App::Push<ui::menu::wifi::Menu>();
+        }},
         { "Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, 0, [](){
             App::Push<ui::menu::users::Menu>();
         }},
