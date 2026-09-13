@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.830** (Corner multi-select checkboxes). Завершені задачі збережено в
+Актуальний delivery — **v0.13.831** (Fix save layout compilation and verify parallel build). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.830 (Corner multi-select checkboxes)
+## Поточний delivery: v0.13.831 (Fix save layout compilation and verify parallel build)
+
+- [x] `BUILD-FIX-831` — кваліфіковано `grid::LayoutType` у `sphaira/source/ui/menus/save_menu.cpp`.
+- [x] `BUILD-VERIFY-831` — успішно скомпільовано проєкт у 16 потоків через WSL `ReleaseWithInstall` до `sphaira_nro` (100%).
+- [x] `DOCS-BUMP-831` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.831`.
+- [ ] `HW-831` — протестувати згенерований `kefir-hub.nro` на апаратній консолі.
+
+## Попередній delivery: v0.13.830 (Corner multi-select checkboxes)
 
 - [x] `MULTISELECT-CORNER-830` — tile-layouts малюють стандартний checkbox з відступом 8 px у верхньому лівому куті overlay.
 - [x] `MULTISELECT-CLEAN-830` — прибрано full-overlay tint і велику центральну галочку; list-layout не змінено.

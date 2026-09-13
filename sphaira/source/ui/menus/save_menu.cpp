@@ -1355,25 +1355,25 @@ void Menu::OnLayoutChange() {
     if (!m_app_id_filter) {
         const Vec4 content_pos{40, 148, 1200, 488};
         switch (m_layout.Get()) {
-            case LayoutType_List: {
+            case grid::LayoutType_List: {
                 const Vec2 pad{0, 2};
                 const Vec4 v{75, 152, 1130, 70};
                 m_list = std::make_unique<List>(1, 6, content_pos, v, pad);
             }   break;
 
-            case LayoutType_Grid: {
+            case grid::LayoutType_Grid: {
                 const Vec2 pad{10, 10};
                 const Vec4 v{93, 186, 174, 174};
                 m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
             }   break;
 
-            case LayoutType_GridDetail: {
+            case grid::LayoutType_GridDetail: {
                 const Vec2 pad{10, 10};
                 const Vec4 v{75, 150, 370, 155};
                 m_list = std::make_unique<List>(3, 3*3, content_pos, v, pad);
             }   break;
 
-            case LayoutType_HbMenu: {
+            case grid::LayoutType_HbMenu: {
                 const Vec2 pad{16, 0};
                 const Vec4 v{80, 450, 140, 168};
                 m_list = std::make_unique<List>(1, 7, content_pos, v, pad);

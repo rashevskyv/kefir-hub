@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.830** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.831** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.831 — Fix save layout compilation and verify parallel build
+
+- Виправлено помилку компіляції в `sphaira/source/ui/menus/save_menu.cpp`: додано префікс простору імен `grid::` до констант переліку `LayoutType` (`LayoutType_List`, `LayoutType_Grid`, `LayoutType_GridDetail`, `LayoutType_HbMenu`) у методі `OnLayoutChange()`.
+- Успішно виконано збірку у середовищі WSL у 16 потоків (`cmake --build --preset ReleaseWithInstall --parallel $(nproc)`). Ціль `sphaira_nro` згенерована без помилок (`kefir-hub.nro` [100%]).
+- Версію піднято до `0.13.831`.
 
 ## v0.13.830 — Corner multi-select checkboxes
 

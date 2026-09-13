@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.830** (Corner multi-select checkboxes). Завершені плани збережено в
+Поточний delivery — **v0.13.831** (Fix save layout compilation and verify parallel build). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.830 — Corner multi-select checkboxes
+## Поточний delivery: v0.13.831 — Fix save layout compilation and verify parallel build
+
+Статус: реалізовано; успішно зібрано через WSL ReleaseWithInstall.
+1. У `sphaira/source/ui/menus/save_menu.cpp` кваліфіковано значення переліку `LayoutType` простором імен `grid::` (`grid::LayoutType_List`, `grid::LayoutType_Grid`, `grid::LayoutType_GridDetail`, `grid::LayoutType_HbMenu`) у методі `OnLayoutChange()`.
+2. Успішно виконано паралельну багатопотокову збірку (16 потоків, WSL `ReleaseWithInstall`) з успішною лінковкою `kefir-hub.nro`.
+3. `git diff --check` чистий, усі компіляційні помилки усунено.
+
+## Попередній delivery: v0.13.830 — Corner multi-select checkboxes
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. У спільному `DrawSelectionMark` для tile-layouts прибрано затемнення всієї іконки та велику центральну галочку.
