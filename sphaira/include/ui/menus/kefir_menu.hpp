@@ -90,7 +90,7 @@ private:
     s64 m_tile_index{};
     std::unique_ptr<List> m_list;
     option::OptionLong m_view_mode{"updater", "view_mode", static_cast<s64>(UpdaterViewMode::List)};
-    option::OptionLong m_downgrade_fix_mode{"updater", "downgrade_fix_mode", DowngradeFixMode_Optional};
+    option::OptionLong m_downgrade_fix_mode{"updater", "downgrade_fix_mode", DowngradeFixMode_Automatic};
     bool m_loading{};
     bool m_loaded{};
     bool m_retry_on_connect{};

@@ -1,0 +1,150 @@
+# REQUIRE SD
+# REQUIRE KEYS
+# REQUIRE MINERVA
+# REQUIRE VER 4.0.0
+
+# downgrade_fix.te - Kefir Hub Automated Downgrade Fix
+# Deletes system save 8000000000000073 from SYSTEM partition after firmware downgrade.
+
+goHekate = {
+    println("Cleaning temp flags...")
+    delfile("sd:/startup.te")
+    delfile("sd:/config/kefir/downgrade_nand")
+    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+        delfile("sd:/bootloader/hekate_ipl.ini")
+        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+        delfile("sd:/bootloader/hekate_ipl.ini.bak")
+    }
+    delfile("sd:/config/kefir/hekate-payload-request.ini")
+    if (fsexists("sd:/bootloader/update.bin")) {
+        println("Restoring Hekate (payload.bin)...")
+        delfile("sd:/payload.bin")
+        copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
+    }
+    println("Loading Hekate (bootloader/update.bin, payload.bin)...")
+    rc = 1
+    if (fsexists("sd:/bootloader/update.bin")) {
+        rc = payload("sd:/bootloader/update.bin")
+    }
+    if (rc) {
+        if (fsexists("sd:/payload.bin")) {
+            rc = payload("sd:/payload.bin")
+        }
+    }
+    if (rc) {
+        if (fsexists("sd:/bootloader/payloads/hekate.bin")) {
+            rc = payload("sd:/bootloader/payloads/hekate.bin")
+        }
+    }
+    if (rc) {
+        if (fsexists("sd:/atmosphere/reboot_payload.bin")) {
+            rc = payload("sd:/atmosphere/reboot_payload.bin")
+        }
+    }
+    if (rc) {
+        color(0xFF0000)
+        println("Hekate payload not found (bootloader/update.bin, payload.bin).")
+        color(0xFFFFFF)
+        println("Rebooting in 3 seconds...")
+        sleep(3000)
+        reboot()
+    }
+}
+
+clear()
+color(0x00FFFF)
+println("=== Kefir Hub: Downgrade Fix ===")
+color(0xFFFFFF)
+println("")
+
+# Early disarm to prevent any boot loops if interrupted
+delfile("sd:/startup.te")
+if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
+    delfile("sd:/bootloader/hekate_ipl.ini")
+    copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
+    delfile("sd:/bootloader/hekate_ipl.ini.bak")
+}
+delfile("sd:/config/kefir/hekate-payload-request.ini")
+if (fsexists("sd:/bootloader/update.bin")) {
+    delfile("sd:/payload.bin")
+    copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
+}
+
+# Determine NAND target
+target = "__TARGET_NAND__"
+flagf = "sd:/config/kefir/downgrade_nand"
+if (fsexists(flagf)) {
+    raw = readfile(flagf)
+    target = raw.bytestostr()
+    delfile(flagf)
+}
+
+if (target != "emu") {
+    if (target != "sys") {
+        if (emu()) {
+            target = "emu"
+        } .else() {
+            target = "sys"
+        }
+    }
+}
+
+rc = 1
+if (target == "emu") {
+    println("NAND Target: emuMMC SYSTEM")
+    if (!emu()) {
+        color(0xFF0000)
+        println("ERROR: No emuMMC found on SD card!")
+        color(0xFFFFFF)
+        println("Rebooting to Hekate in 5 seconds...")
+        sleep(5000)
+        goHekate()
+        exit()
+    }
+    rc = mountemu("SYSTEM")
+} .else() {
+    println("NAND Target: sysMMC SYSTEM")
+    rc = mountsys("SYSTEM")
+}
+
+if (rc) {
+    color(0xFF0000)
+    println("ERROR: SYSTEM partition mount failed! rc: ", rc)
+    color(0xFFFFFF)
+    println("Rebooting to Hekate in 5 seconds...")
+    sleep(5000)
+    goHekate()
+    exit()
+}
+
+targetSave = "bis:/save/8000000000000073"
+if (!fsexists(targetSave)) {
+    color(0xFFFF00)
+    println("System save 8000000000000073 not found (already clean).")
+    color(0xFFFFFF)
+} .else() {
+    println("Deleting 8000000000000073...")
+    if (delfile(targetSave)) {
+        color(0xFF0000)
+        println("ERROR: Failed to delete save 8000000000000073!")
+        color(0xFFFFFF)
+    } .else() {
+        if (fsexists(targetSave)) {
+            color(0xFF0000)
+            println("ERROR: Deletion failed - file still exists!")
+            color(0xFFFFFF)
+        } .else() {
+            color(0x00FF00)
+            println("SUCCESS: 8000000000000073 has been deleted!")
+            color(0xFFFFFF)
+        }
+    }
+}
+
+println("")
+color(0x00FF00)
+println("Downgrade fix finished successfully!")
+color(0xFFFFFF)
+println("Rebooting to Hekate in 3 seconds...")
+sleep(3000)
+goHekate()

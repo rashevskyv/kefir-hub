@@ -6,6 +6,7 @@
 #include "download.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
+#include "log.hpp"
 #include <yyjson.h>
 #include <algorithm>
 #include <cctype>
@@ -201,23 +202,132 @@ auto ValidateFirmware(FirmwareValidation* out, const fs::FsPath& path) -> Result
     return out->validation.result;
 }
 
+namespace {
+
+auto ReadRomfsTe(const char* romfs_path, std::string& out) -> bool {
+    FILE* fp = std::fopen(romfs_path, "rb");
+    if (!fp) {
+        return false;
+    }
+    ON_SCOPE_EXIT(std::fclose(fp));
+    if (std::fseek(fp, 0, SEEK_END) != 0) {
+        return false;
+    }
+    long sz = std::ftell(fp);
+    if (sz <= 0 || sz > 1024 * 1024) {
+        return false;
+    }
+    std::rewind(fp);
+    out.resize(static_cast<size_t>(sz));
+    return std::fread(out.data(), 1, out.size(), fp) == out.size();
+}
+
+} // namespace
+
 auto IsDowngradeFixAvailable() -> bool {
-    // deleting /save/8000000000000073 from the BIS System partition fails with
-    // FsError_TargetLocked: nim keeps that save mounted for as long as HOS is
-    // running, so it can never be removed from inside the running system.
-    // stubbed out until it is replaced by a script run after the install.
-    return false;
+    return true;
+}
+
+auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out) -> bool {
+    if (out) {
+        *out = {};
+        out->attempted = true;
+    }
+
+    std::string script;
+    if (!ReadRomfsTe("romfs:/tegra/downgrade_fix.te", script)) {
+        log_write("StageDowngradeFix: failed to read romfs:/tegra/downgrade_fix.te\n");
+        if (out) {
+            out->rc = Result_FsPathNotFound;
+        }
+        return false;
+    }
+
+    const std::string target = is_emummc ? "emu" : "sys";
+    const std::string marker = "__TARGET_NAND__";
+    if (auto pos = script.find(marker); pos != std::string::npos) {
+        script.replace(pos, marker.length(), target);
+    }
+
+    fs::FsNativeSd sd;
+    if (R_FAILED(sd.GetFsOpenResult())) {
+        if (out) {
+            out->rc = sd.GetFsOpenResult();
+        }
+        return false;
+    }
+
+    // 1. Stage /startup.te
+    sd.DeleteFile("/startup.te");
+    std::remove("/startup.te");
+    bool written = false;
+    std::FILE* fp = std::fopen("/startup.te", "wb");
+    if (fp) {
+        if (std::fwrite(script.data(), 1, script.size(), fp) == script.size()) {
+            std::fflush(fp);
+            written = true;
+        }
+        std::fclose(fp);
+    }
+    if (!written) {
+        std::vector<u8> bytes(script.begin(), script.end());
+        if (R_FAILED(sd.write_entire_file("/startup.te", bytes))) {
+            log_write("StageDowngradeFix: failed to write /startup.te\n");
+            if (out) {
+                out->rc = Result_FsNotMounted;
+            }
+            return false;
+        }
+    }
+
+    // 2. Also save to /TegraExplorer/scripts/downgrade_fix.te
+    sd.CreateDirectoryRecursively("/TegraExplorer/scripts");
+    std::vector<u8> script_bytes(script.begin(), script.end());
+    sd.write_entire_file("/TegraExplorer/scripts/downgrade_fix.te", script_bytes);
+
+    // 3. Write target flag /config/kefir/downgrade_nand
+    sd.CreateDirectoryRecursively("/config/kefir");
+    std::vector<u8> target_bytes(target.begin(), target.end());
+    sd.write_entire_file("/config/kefir/downgrade_nand", target_bytes);
+
+    // 4. Ensure TegraExplorer payload is installed in /bootloader/payloads
+    fs::FsPath te_bin;
+    utils::ensureTegraExplorerPayload(te_bin);
+
+    fsdevCommitDevice("sdmc");
+    sd.Commit();
+
+    log_write("StageDowngradeFix: successfully staged /startup.te for %s\n", target.c_str());
+    if (out) {
+        out->staged = true;
+        out->rc = 0;
+    }
+    return true;
+}
+
+auto StageAndLaunchDowngradeFix(bool is_emummc) -> bool {
+    if (!StageDowngradeFix(is_emummc)) {
+        return false;
+    }
+    fs::FsPath te_bin;
+    if (!utils::findTegraExplorerPayload(te_bin)) {
+        log_write("StageAndLaunchDowngradeFix: findTegraExplorerPayload failed\n");
+        return false;
+    }
+    return utils::rebootToPayload(static_cast<const char*>(te_bin));
 }
 
 void ApplyDowngradeFix(DowngradeFixResult* out) {
-    *out = {};
-    out->attempted = true;
-    // no-op, see IsDowngradeFixAvailable().
+    StageDowngradeFix(App::IsEmummc(), out);
 }
 
 auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     if (!fix.attempted) {
         return {};
+    }
+
+    if (fix.staged) {
+        return "Downgrade fix staged: console will reboot to TegraExplorer to delete system save 8000000000000073.";
     }
 
     if (fix.deleted) {
@@ -227,13 +337,13 @@ auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     if (R_FAILED(fix.rc)) {
         char rc_str[32];
         std::snprintf(rc_str, sizeof(rc_str), "0x%08X", R_VALUE(fix.rc));
-        std::string out = "Downgrade fix FAILED (";
+        std::string out = "Downgrade fix staging FAILED (";
         out += rc_str;
         out += ").";
         return out;
     }
 
-    return "Downgrade fix is not available yet.\n\nThe system save 8000000000000073 is locked by the system while the console is running and cannot be deleted from here.\n\nUse hekate > Payloads > TegraExplorer > DowngradeFix.te instead.";
+    return "Downgrade fix could not be staged.";
 }
 
 void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {

@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.809** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.810** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.810 — Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning
+
+- **Автоматичний фікс даунгрейду (`downgrade_fix.te`)**: додано скрипт для TegraExplorer (`assets/romfs/tegra/downgrade_fix.te`), який видаляє системний сейв `8000000000000073` з розділу SYSTEM (що блокується службою `nim` у працюючій ОС). Скрипт повністю сумісний із парсером TegraScript (не містить заборонених операторів `&&`/`||`), виконує раннє роззброєння (early disarm), автоматично визначає цільовий накопичувач (EmuNAND або SysNAND через прапорець `downgrade_nand` та макрос), монтує відповідний SYSTEM, видаляє сейв 0073, виводить кольорові статуси і через 3-секундний таймаут автоматично завантажує Hekate через `goHekate()` без очікування натискання будь-яких кнопок користувачем.
+- **Підготовка та автозапуск фіксу**: впроваджено `StageDowngradeFix` та `StageAndLaunchDowngradeFix` у `kefir_firmware.cpp`/`kefir_firmware.hpp`. При встановленні нижчої прошивки скрипт автоматично записується у `/startup.te` на SD та копіюється у `/TegraExplorer/scripts/downgrade_fix.te`, фіксується цільовий NAND (`App::IsEmummc()`), а наявність TegraExplorer гарантується через `utils::ensureTegraExplorerPayload`. `IsDowngradeFixAvailable()` тепер повертає `true`.
+- **Покрокова інструкція Maintenance Mode у попередженні даунгрейду**: вікно `DowngradeWarningBox` розширено до 880x560px. Замість загального тексту тепер відображається структуроване керівництво на випадок збою завантаження: запуск прошивки -> очікування завершення показу бутлого Switch та Kefir -> затискання й утримання обох кнопок гучності (Vol+ та Vol-) до появи Maintenance Mode -> вибір пункту «Initialize Console Without Deleting Save Data» зі збереженням сейвів та чітким попередженням про скидання ігор та налаштувань.
+- **Оновлений QR-код та посилання на ручний гайд**: QR-код та текстове посилання оновлено на офіційний посібник `https://switch.customfw.xyz/downgrade_fw`.
+- **Політика даунгрейд фіксу**: значення `m_downgrade_fix_mode` за замовчуванням змінено на `DowngradeFixMode_Automatic`. При підтвердженні попередження користувач не отримує повторних модальних вікон. При виборі «Reboot» після завершення інсталяції даунгрейду консоль одразу перезавантажується у TegraExplorer через `utils::rebootToPayload`.
+- **Локалізація та документація**: додано англійські та українські тексти в `en.json` та `uk.json`. Оновлено `README.md` новим розділом «System Firmware Updates & Automated Downgrade Fix».
+- `sphaira_VERSION` піднято до `0.13.810`; валідація JSON та `git diff --check` пройшли. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.809 — Fix duplicate HR and separator navigation in DBI menu
 

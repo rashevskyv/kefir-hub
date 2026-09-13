@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.809** (fix duplicate HR and separator navigation in DBI menu). Завершені задачі збережено в
+Актуальний delivery — **v0.13.810** (automated post-downgrade fix via TegraExplorer & Maintenance Mode warning). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.809 (Fix duplicate HR and separator navigation in DBI menu)
+## Поточний delivery: v0.13.810 (Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning)
+
+- [x] `TE-DOWNGRADE-FIX-810` — створено RomFS-скрипт `assets/romfs/tegra/downgrade_fix.te` без операторів `&&`/`||`, з раннім роззброєнням, виявленням EmuNAND/SysNAND, видаленням сейву 0073, таймаутом `sleep(3000)` та поверненням у Hekate без натискання кнопок.
+- [x] `STAGE-LAUNCH-FIX-810` — реалізовано `StageDowngradeFix` та `StageAndLaunchDowngradeFix` у `kefir_firmware.cpp` з розгортанням `/startup.te`, копіюванням у `/TegraExplorer/scripts/downgrade_fix.te`, записом прапорця цільового NAND та забезпеченням наявності TegraExplorer через `utils::ensureTegraExplorerPayload`.
+- [x] `WARN-MAINTENANCE-MODE-810` — оновлено `DowngradeWarningBox` у `kefir_menu.cpp`: розміри 880x560px, покрокова інструкція переходу в Maintenance Mode (бутлого Switch/Kefir -> утримання Vol+/Vol- -> скидання «Initialize Console Without Deleting Save Data» зі збереженням сейвів), оновлений QR-код та лінк `https://switch.customfw.xyz/downgrade_fw`.
+- [x] `AUTO-FIX-DEFAULT-810` — встановлено `m_downgrade_fix_mode` за замовчуванням у `DowngradeFixMode_Automatic` для автозапуску фіксу без додаткових діалогів; при перезавантаженні після даунгрейду запускається TegraExplorer через `utils::rebootToPayload`.
+- [x] `I18N-810` — додано англійську та українську локалізацію нових повідомлень даунгрейду та інструкції Maintenance Mode в `en.json` та `uk.json`.
+- [x] `README-810` — додано новий розділ «System Firmware Updates & Automated Downgrade Fix» у `README.md`.
+- [x] `DOCS-BUMP-810` — `sphaira_VERSION` піднято до `0.13.810`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-810` — перевірити вікно попередження даунгрейду, сканування QR-коду, автоматичне розгортання `/startup.te` та роботу скрипта у TegraExplorer на Switch.
+
+## Попередній delivery: v0.13.809 (Fix duplicate HR and separator navigation in DBI menu)
 
 - [x] `DBI-NO-DUPLICATE-HR-809` — видалено зайве малювання горизонтальної лінії посередині елемента `MakeSeparator()` в `DrawActionListItem` та `DrawItemRow`, забезпечивши один роздільник та чистий відступ до мов.
 - [x] `DBI-NAV-UNBLOCK-809` — виправлено умову перевірки `Header` у `DbiMenu::Update` на `if (touch && ...)` замість блокування контролера, що дозволяє курсору вільно переходити вниз на список мов та повертатися вгору.

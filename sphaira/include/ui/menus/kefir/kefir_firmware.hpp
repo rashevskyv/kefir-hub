@@ -20,11 +20,12 @@ struct FirmwareValidation {
     AmsSuUpdateValidationInfo validation{};
 };
 
-// outcome of the experimental downgrade fix. reported on its own so a fix that
+// outcome of the downgrade fix. reported on its own so a fix that
 // fails can never be mistaken for a firmware update that failed.
 struct DowngradeFixResult {
-    Result rc{};       // result of the delete attempt.
+    Result rc{};       // result of the operation.
     bool attempted{};  // the fix was requested.
+    bool staged{};     // staged startup.te and downgrade_nand.
     bool deleted{};    // the save existed and was removed.
 };
 
@@ -54,11 +55,13 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
 void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path);
 auto ExtractManualFirmwareZip(ProgressBox* pbox, const fs::FsPath& zip_path) -> Result;
 void CleanupManualFirmwareStaging();
-// false while the fix has no working implementation: the system save cannot be
-// deleted from a running console (FsError_TargetLocked).
+// returns true now that the fix is automated via TegraExplorer after reboot.
 auto IsDowngradeFixAvailable() -> bool;
-// experimental downgrade fix. currently a no-op stub; never fails the caller,
-// the outcome is reported through out.
+// stages downgrade_fix.te to /startup.te and writes target flag.
+auto StageDowngradeFix(bool is_emummc, DowngradeFixResult* out = nullptr) -> bool;
+// stages the fix and reboots immediately to TegraExplorer.
+auto StageAndLaunchDowngradeFix(bool is_emummc) -> bool;
+// stages the downgrade fix to startup.te.
 void ApplyDowngradeFix(DowngradeFixResult* out);
 // one sentence describing what the fix actually did, empty if not attempted.
 auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string;

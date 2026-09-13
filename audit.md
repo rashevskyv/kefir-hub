@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.809**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.810**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.810 поза ponytail-чергою: реалізовано автоматичний фікс даунгрейду системної прошивки (System Firmware) через TegraExplorer (`assets/romfs/tegra/downgrade_fix.te` без операторів `&&`/`||`, раннє роззброєння, виявлення EmuNAND/SysNAND через `App::IsEmummc()`, видалення системного сейву `8000000000000073`, затримка `sleep(3000)` без очікування кнопок і автозавантаження Hekate через `goHekate()`); у `kefir_firmware.cpp` реалізовано `StageDowngradeFix` (розгортання `/startup.te`, копіювання до `/TegraExplorer/scripts/downgrade_fix.te`, запис прапорця цільового NAND) та `StageAndLaunchDowngradeFix`; `IsDowngradeFixAvailable()` активовано (`true`); `m_downgrade_fix_mode` за замовчуванням переведено на `Automatic`; у `DowngradeWarningBox` розширено геометрію до 880x560px, додано покрокову інструкцію переходу в Maintenance Mode при збоях завантаження (бутлого Switch/Kefir -> утримання Vol+/Vol- -> «Initialize Console Without Deleting Save Data» зі збереженням сейвів), оновлено QR-код і посилання на ручний гайд `https://switch.customfw.xyz/downgrade_fw`; після даунгрейду діалог перезавантаження запускає TegraExplorer через `utils::rebootToPayload`; додано локалізацію в `en.json` та `uk.json`; оновлено `README.md`; версію піднято до 0.13.810. `git diff --check` і валідація JSON пройшли; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 
 v0.13.809 поза ponytail-чергою: прибрано дублюючу горизонтальну лінію з порожнього розділювача у `DrawActionListItem` та `Menu::DrawItemRow`, залишено один роздільник та відступ між основними пунктами DBI та мовами; перевірку `Header` у `DbiMenu::Update` обмежено тачем (`touch && ...`), розблокувавши рух курсора вниз на список мов та вгору через `ResolveItemIndex`; версію піднято до 0.13.809. `git diff --check` пройшов; Compile/tests/NRO не запускалися за policy. **Не закриває** чергу §2 A1–A7.
 

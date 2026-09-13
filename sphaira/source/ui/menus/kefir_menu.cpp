@@ -59,10 +59,10 @@ public:
     : m_current_version{current_version}
     , m_target_version{target_version}
     , m_callback{std::move(cb)}
-    , m_qr{QrCode::Encode("https://bit.ly/fw_downgrade")}
+    , m_qr{QrCode::Encode("https://switch.customfw.xyz/downgrade_fw")}
     {
-        m_pos.w = 780.f;
-        m_pos.h = 420.f;
+        m_pos.w = 880.f;
+        m_pos.h = 560.f;
         m_pos.x = (SCREEN_WIDTH - m_pos.w) / 2.f;
         m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
 
@@ -126,65 +126,71 @@ public:
 
         // 1. Title
         const std::string title = "Firmware downgrade warning"_i18n;
-        gfx::drawTextBold(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 20.f, 23.f,
+        gfx::drawTextBold(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 18.f, 23.f,
             theme->GetColour(ThemeEntryID_TEXT_SELECTED), title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
         constexpr float pad_x = 36.f;
         const float col1_x = m_pos.x + pad_x;
         const float content_w = m_pos.w - pad_x * 2.f;
 
-        // 2. Compact version rows: Current and Target bold labels in column 1, values in column 2
+        // 2. Compact version rows: Current and Target side-by-side
         const std::string current_label = "Current:"_i18n;
         const std::string target_label = "Target:"_i18n;
+        const float y_ver = m_pos.y + 54.f;
 
         nvgSave(vg);
-        nvgFontSize(vg, 17.f);
+        nvgFontSize(vg, 16.f);
         float b1[4]{}, b2[4]{};
         nvgTextBounds(vg, 0.f, 0.f, current_label.c_str(), nullptr, b1);
         nvgTextBounds(vg, 0.f, 0.f, target_label.c_str(), nullptr, b2);
-        const float max_label_w = std::max(b1[2] - b1[0], b2[2] - b2[0]);
+        const float cur_lbl_w = b1[2] - b1[0];
+        const float tgt_lbl_w = b2[2] - b2[0];
         nvgRestore(vg);
 
-        const float col2_x = col1_x + max_label_w + 12.f;
-        const float y1 = m_pos.y + 56.f;
-        const float y2 = y1 + 22.f;
+        gfx::drawTextBold(vg, col1_x, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), current_label.c_str());
+        gfx::drawText(vg, col1_x + cur_lbl_w + 8.f, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), m_current_version.c_str());
 
-        gfx::drawTextBold(vg, col1_x, y1, 17.f, theme->GetColour(ThemeEntryID_TEXT), current_label.c_str());
-        gfx::drawText(vg, col2_x, y1, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_current_version.c_str());
+        const float target_col_x = col1_x + 280.f;
+        gfx::drawTextBold(vg, target_col_x, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), target_label.c_str());
+        gfx::drawText(vg, target_col_x + tgt_lbl_w + 8.f, y_ver, 16.f, theme->GetColour(ThemeEntryID_TEXT), m_target_version.c_str());
 
-        gfx::drawTextBold(vg, col1_x, y2, 17.f, theme->GetColour(ThemeEntryID_TEXT), target_label.c_str());
-        gfx::drawText(vg, col2_x, y2, 17.f, theme->GetColour(ThemeEntryID_TEXT), m_target_version.c_str());
-
-        // 3. Risk warning text
-        const std::string risk_text = "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup."_i18n;
-        const float risk_y = y2 + 28.f;
-        gfx::drawTextBox(vg, col1_x, risk_y, 15.f, content_w, theme->GetColour(ThemeEntryID_TEXT), risk_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.35f);
-
-        nvgSave(vg);
-        nvgFontSize(vg, 15.f);
-        nvgTextLineHeight(vg, 1.35f);
-        float risk_b[4]{};
-        nvgTextBoxBounds(vg, 0.f, 0.f, content_w, risk_text.c_str(), nullptr, risk_b);
-        const float risk_h = risk_b[3] - risk_b[1];
-        nvgRestore(vg);
-
-        // 4. Fix path row: bold label + muted secondary value
-        const float fix_y = risk_y + risk_h + 12.f;
-        const std::string fix_label = "Fix path:"_i18n;
-        gfx::drawTextBold(vg, col1_x, fix_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
-
+        // 3. Automated fix info
+        const float y_fix = y_ver + 26.f;
+        const std::string fix_label = "Downgrade fix:"_i18n;
+        const std::string fix_text = "An automated fix will run in TegraExplorer after install to delete save 8000000000000073 and reboot to Hekate."_i18n;
+        gfx::drawTextBold(vg, col1_x, y_fix, 15.f, theme->GetColour(ThemeEntryID_TEXT), fix_label.c_str());
         nvgSave(vg);
         nvgFontSize(vg, 15.f);
         float fix_b[4]{};
         nvgTextBounds(vg, 0.f, 0.f, fix_label.c_str(), nullptr, fix_b);
         const float fix_lbl_w = fix_b[2] - fix_b[0];
         nvgRestore(vg);
+        gfx::drawTextBox(vg, col1_x + fix_lbl_w + 8.f, y_fix, 14.f, content_w - fix_lbl_w - 8.f,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), fix_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
 
-        const std::string fix_val = "hekate > Payloads > TegraExplorer > DowngradeFix.te";
-        gfx::drawText(vg, col1_x + fix_lbl_w + 8.f, fix_y + 1.f, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), fix_val.c_str());
+        // 4. Maintenance Mode instructions
+        const float y_maint = y_fix + 38.f;
+        const std::string maint_title = "If the console fails to boot or shows an error (Maintenance Mode):"_i18n;
+        gfx::drawTextBold(vg, col1_x, y_maint, 15.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), maint_title.c_str());
+
+        const float y_step1 = y_maint + 24.f;
+        const std::string step1 = "1. Launch firmware; wait for Nintendo and Kefir boot logos to pass."_i18n;
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step1, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step1.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        const float y_step2 = y_step1 + 22.f;
+        const std::string step2 = "2. Press and hold both Volume buttons (+ and -) until Maintenance Mode opens."_i18n;
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step2, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step2.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        const float y_step3 = y_step2 + 22.f;
+        const std::string step3 = "3. Select 'Initialize Console Without Deleting Save Data'."_i18n;
+        gfx::drawTextBox(vg, col1_x + 8.f, y_step3, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT), step3.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
+        const float y_warn = y_step3 + 22.f;
+        const std::string warn_note = "Warning: All installed games and system settings will be wiped; saves are preserved."_i18n;
+        gfx::drawTextBox(vg, col1_x + 8.f, y_warn, 14.f, content_w - 8.f, theme->GetColour(ThemeEntryID_TEXT_INFO), warn_note.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
 
         // 5. Guide & QR code section + Responsibility note
-        const float guide_y = fix_y + 24.f;
+        const float guide_y = y_warn + 34.f;
 
         constexpr int qr_border = 3;
         constexpr float qr_scale = 3.f;
@@ -207,24 +213,19 @@ public:
 
         // Left text next to QR
         const float left_w = qr_x - col1_x - 18.f;
+        const std::string guide_label = "Manual downgrade guide:"_i18n;
+        gfx::drawTextBold(vg, col1_x, guide_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str());
+
+        const float guide_url_y = guide_y + 22.f;
+        gfx::drawText(vg, col1_x, guide_url_y, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://switch.customfw.xyz/downgrade_fw");
+
+        const std::string scan_hint = "If you prefer manual downgrade or issues persist, scan the QR code to open the guide."_i18n;
+        const float scan_hint_y = guide_url_y + 20.f;
+        gfx::drawTextBox(vg, col1_x, scan_hint_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+
         const std::string resp_text = "By continuing, you accept full responsibility."_i18n;
-        gfx::drawTextBox(vg, col1_x, guide_y, 15.f, left_w, theme->GetColour(ThemeEntryID_TEXT), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.35f);
-
-        const std::string guide_label = "Guide:"_i18n;
-        const float guide_lbl_y = guide_y + 32.f;
-        gfx::drawTextBold(vg, col1_x, guide_lbl_y, 15.f, theme->GetColour(ThemeEntryID_TEXT), guide_label.c_str());
-
-        nvgSave(vg);
-        nvgFontSize(vg, 15.f);
-        float guide_b[4]{};
-        nvgTextBounds(vg, 0.f, 0.f, guide_label.c_str(), nullptr, guide_b);
-        const float guide_lbl_w = guide_b[2] - guide_b[0];
-        nvgRestore(vg);
-
-        gfx::drawText(vg, col1_x + guide_lbl_w + 8.f, guide_lbl_y + 1.f, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "https://bit.ly/fw_downgrade");
-
-        const std::string scan_hint = "Scan QR code to open guide on mobile device."_i18n;
-        gfx::drawTextBox(vg, col1_x, guide_lbl_y + 24.f, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), scan_hint.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
+        const float resp_y = scan_hint_y + 36.f;
+        gfx::drawTextBox(vg, col1_x, resp_y, 13.f, left_w, theme->GetColour(ThemeEntryID_TEXT_INFO), resp_text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.3f);
 
         // 6. Separator line and buttons
         gfx::drawRect(vg, m_spacer_line, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
@@ -944,17 +945,17 @@ void Menu::DisplayOptions() {
         // run the downgrade fix on its own so it can be tested in isolation.
         options->Add<SidebarEntryCallback>("Apply downgrade fix"_i18n, [](){
             App::Push<OptionBox>(
-                "Apply downgrade fix now?\n\nThis deletes the system save 8000000000000073.\n\nExperimental test action - use only if you know what you are doing.",
+                "Apply downgrade fix now?\n\nThis will reboot into TegraExplorer to delete the system save 8000000000000073.",
                 "Cancel"_i18n, "Apply"_i18n, 0,
                 [](auto op_index) {
                     if (!op_index || *op_index != 1) {
                         return;
                     }
-                    DowngradeFixResult fix{};
-                    detail::ApplyDowngradeFix(&fix);
-                    App::Push<OptionBox>(detail::DescribeDowngradeFix(fix), "OK"_i18n);
+                    if (!detail::StageAndLaunchDowngradeFix(App::IsEmummc())) {
+                        App::Push<OptionBox>("Failed to stage or launch TegraExplorer downgrade fix.", "OK"_i18n);
+                    }
                 });
-        }, "Delete system save 8000000000000073 (experimental downgrade fix)."_i18n);
+        }, "Delete system save 8000000000000073 (via TegraExplorer)."_i18n);
     }
 }
 
@@ -1290,9 +1291,9 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
                 case DowngradeFixMode_Optional:
                 default: {
                     std::string msg = "Apply downgrade fix?\n\n";
-                    msg += "This deletes the system save 8000000000000073 after installing.\n\n";
+                    msg += "This stages TegraExplorer downgrade fix to delete system save 8000000000000073 after install.\n\n";
                     msg += "Choose No to install without it.";
-                    App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0,
+                    App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 1,
                         [on_ack, on_cancel](auto fix_index) {
                             if (!fix_index) {
                                 if (on_cancel) {
@@ -1387,7 +1388,7 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                                    R_SUCCEEDED(validation.validation.exfat_result);
             return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix, fix.get());
         },
-        [fix, origin_zip](Result rc) {
+        [apply_downgrade_fix, fix, origin_zip](Result rc) {
             if (R_FAILED(rc)) {
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
@@ -1396,7 +1397,25 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                 return;
             }
 
-            auto prompt_reboot = [fix]() {
+            auto prompt_reboot = [apply_downgrade_fix, fix]() {
+                if (apply_downgrade_fix && fix->staged) {
+                    std::string message = "Firmware downgrade installed successfully.\n\nConsole will reboot to TegraExplorer to automatically apply the downgrade fix (delete system save 8000000000000073).\n\nReboot now?";
+                    App::Push<OptionBox>(
+                        message,
+                        "Later"_i18n, "Reboot"_i18n, 1,
+                        [](auto op_index) {
+                            if (op_index && *op_index == 1) {
+                                fs::FsPath te_bin;
+                                if (utils::findTegraExplorerPayload(te_bin)) {
+                                    utils::rebootToPayload(static_cast<const char*>(te_bin));
+                                } else {
+                                    utils::requestForcedReboot();
+                                }
+                            }
+                        });
+                    return;
+                }
+
                 std::string message = "Firmware update applied successfully.";
                 const auto fix_note = detail::DescribeDowngradeFix(*fix);
                 if (!fix_note.empty()) {

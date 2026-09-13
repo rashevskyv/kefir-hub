@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.809** (fix duplicate HR and separator navigation in DBI menu). Завершені плани збережено в
+Поточний delivery — **v0.13.810** (automated post-downgrade fix via TegraExplorer & Maintenance Mode warning). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.809 — Fix duplicate HR and separator navigation in DBI menu
+## Поточний delivery: v0.13.810 — Automated post-downgrade fix via TegraExplorer & Maintenance Mode warning
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Додано новий RomFS-скрипт `assets/romfs/tegra/downgrade_fix.te` для автоматичного фіксу даунгрейду (видалення системного сейву `bis:/save/8000000000000073`). Скрипт відповідає суворим вимогам TE-парсера (без операторів `&&`/`||`), має раннє роззброєння (early disarm), визначає цільовий NAND (EmuNAND або SysNAND через прапорець `sd:/config/kefir/downgrade_nand`, макропідстановку та `emu()`), монтує відповідний SYSTEM (`mountemu` або `mountsys`), видаляє заблокований сейв 0073, відображає кольоровий статус і через 3 секунди повертається в Hekate (`goHekate()`) без очікування дій від користувача.
+2. Впроваджено `StageDowngradeFix` та `StageAndLaunchDowngradeFix` у `kefir_firmware.cpp`/`kefir_firmware.hpp`: автоматичне розгортання `/startup.te`, копіювання до `/TegraExplorer/scripts/downgrade_fix.te`, запис цільового NAND (`App::IsEmummc()`) та верифікація наявності TegraExplorer через `utils::ensureTegraExplorerPayload`. `IsDowngradeFixAvailable()` тепер повертає `true`.
+3. Оновлено `DowngradeWarningBox` у `kefir_menu.cpp`: розміри розширено до 880x560px, додано покрокову інструкцію входу в Maintenance Mode при помилках завантаження (запуск прошивки -> очікування бутлого Switch/Kefir -> затискання обох кнопок гучності Vol+/Vol- -> скидання «Initialize Console Without Deleting Save Data» зі збереженням сейвів та попередженням про видалення ігор), оновлено QR-код і посилання на ручний гайд `https://switch.customfw.xyz/downgrade_fw`.
+4. Значення `m_downgrade_fix_mode` за замовчуванням змінено на `DowngradeFixMode_Automatic`. Після підтвердження вікна попередження даунгрейд фікс активується автоматично без повторного запиту. Після встановлення даунгрейду вибір «Reboot» у діалозі перезавантажує консоль безпосередньо в TegraExplorer через `utils::rebootToPayload`.
+5. Додано переклади нових повідомлень та інструкцій в `en.json` та `uk.json`. Оновлено `README.md`.
+
+## Попередній delivery: v0.13.809 — Fix duplicate HR and separator navigation in DBI menu
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. Прибрано дублюючу горизонтальну лінію посередині елемента-розділювача у `DrawActionListItem` та `Menu::DrawItemRow`: тепер під «Скинути налаштування DBI» залишається рівно один роздільник і чистий відступ до списку мов.

@@ -120,6 +120,17 @@ Sphaira / Kefir Hub provides full user profile and play activity transfer betwee
     - **Restore from another console:** In **Restore profiles & play hours** (`+` Options), individual pack details, or the Tools -> Users sidebar, enter the sender's IP address to select a remote backup. Sphaira downloads the pack locally to SD first, then immediately prompts to restore profiles (or profiles + play hours) via automated TegraExplorer staging.
   - **Complete Selection & Legend Parity:** Full access to **Select / Deselect** (toggling focused item, mirroring Button **X**), **Select All**, **Clear selection** (mirroring Button **B**), **Invert** (mirroring Button **Y**), and **Delete** (mirroring Button **Minus** / Select) directly from the options menu for inattentive users who prefer using the context menu over gamepad button shortcuts.
 
+## System Firmware Updates & Automated Downgrade Fix
+
+Sphaira / Kefir Hub manages Nintendo Switch system firmware updates and downgrades:
+- **Automated Post-Downgrade Fix via TegraExplorer:** When downgrading system firmware, system save `8000000000000073` cannot be removed from within running Horizon OS due to system service locks (`FsError_TargetLocked`). Sphaira automatically stages an automated TegraExplorer script (`assets/romfs/tegra/downgrade_fix.te` -> `sd:/startup.te`), configures the target NAND (`emu` or `sys` based on the running environment via `App::IsEmummc()`), and reboots to TegraExplorer via Hekate's payload launch API.
+- **Zero Button Presses Required:** The downgrade fix script mounts the target SYSTEM partition, deletes save `8000000000000073`, displays status feedback, and automatically reboots back into Hekate via `goHekate()` without waiting for user input.
+- **Maintenance Mode Warning & Recovery Guide:** Before downloading or installing a downgrade firmware, Sphaira presents a detailed warning dialog explaining how to enter Maintenance Mode if the console encounters boot issues:
+  - Boot the firmware and wait until Nintendo and Kefir boot logos pass.
+  - Press and hold both Volume buttons (+ and -) until Maintenance Mode opens.
+  - Choose «Initialize Console Without Deleting Save Data» (resets installed games and system settings while preserving game saves).
+- **Manual Downgrade Guide & QR Code:** The downgrade warning dialog embeds a scan-ready QR code linking directly to the manual downgrade instructions at `https://switch.customfw.xyz/downgrade_fw`.
+
 ## File association
 
 Sphaira has file association support. Let's say your app supports loading .png files, then you could write an association file, then when using the file browser, clicking on a .png file will launch your app along with the .png file as argv[1]. This was primarly added for rom loading support for emulators / frontends such as RetroArch, MelonDS, mGBA etc.
