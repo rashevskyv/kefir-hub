@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.824** (informative error dialogs and network gate in updater). Завершені плани збережено в
+Поточний delivery — **v0.13.825** (reliable firmware cleanup result). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.824 — Informative error dialogs and network gate in updater
+## Поточний delivery: v0.13.825 — Reliable firmware cleanup result
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. `CleanThemesAndTranslations` більше не зберігає проміжну delete-помилку, якщо шлях фактично зник до фінального readback.
+2. Failure виставляється лише коли file/directory реально залишається; точний path записується в лог.
+
+## Попередній delivery: v0.13.824 — Informative error dialogs and network gate in updater
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. Діалог помилок `ErrorBox`: заголовок завжди показує зрозумілий та дружній напис `"An error occurred"_i18n` замість внутрішніх C++ ідентифікаторів енумів (наприклад, `SphairaError_AppstoreFailedZipDownload`).

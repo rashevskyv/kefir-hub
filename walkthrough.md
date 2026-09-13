@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.824** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.825** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.825 — Reliable firmware cleanup result
+
+- Усунено false-negative після firmware install: проміжний delete result більше не залишає `cleanup_failed`, якщо цільовий path зник.
+- Якщо хоча б один file/directory справді залишився, UI збереже warning, а лог запише його точний path.
+- `git diff --check` виконано; compile/tests/NRO не запускалися за workspace policy.
 
 ## v0.13.824 — Informative error dialogs and network gate in updater
 

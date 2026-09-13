@@ -279,18 +279,13 @@ auto CleanThemesAndTranslations(fs::FsNativeSd& sd) -> bool {
     for (const auto* path : FIRMWARE_CLEANUP_PATHS) {
         const fs::FsPath p{path};
         if (sd.DirExists(p)) {
-            const auto rc = sd.DeleteDirectoryRecursively(p);
-            if (R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
-                ok = false;
-            }
+            (void)sd.DeleteDirectoryRecursively(p);
         }
         if (sd.FileExists(p)) {
-            const auto rc = sd.DeleteFile(p);
-            if (R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
-                ok = false;
-            }
+            (void)sd.DeleteFile(p);
         }
         if (sd.DirExists(p) || sd.FileExists(p)) {
+            log_write("CleanThemesAndTranslations: path remains: %s\n", path);
             ok = false;
         }
     }

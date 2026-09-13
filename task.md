@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.824** (informative error dialogs and network gate in updater). Завершені задачі збережено в
+Актуальний delivery — **v0.13.825** (reliable firmware cleanup result). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.824 (Informative error dialogs and network gate in updater)
+## Поточний delivery: v0.13.825 (Reliable firmware cleanup result)
+
+- [x] `FIRMWARE-CLEANUP-825` — cleanup success визначається фінальним readback, а не sticky проміжною delete-помилкою.
+- [x] `FIRMWARE-CLEANUP-LOG-825` — у лог додається точний cleanup path, який реально залишився.
+- [x] `DOCS-BUMP-825` — Sphaira version та delivery-документи оновлено до `0.13.825`.
+- [ ] `HW-825` — зібрати NRO і повторити firmware update зі встановленим системним перекладом.
+
+## Попередній delivery: v0.13.824 (Informative error dialogs and network gate in updater)
 
 - [x] `ERRORBOX-LAYOUT-824` — у `ErrorBox::Draw` встановлено постійний заголовок `"An error occurred"_i18n`, а код помилки перенесено в другорядний рядок знизу.
 - [x] `ERRORBOX-FILTER-824` — у `error_box.cpp` додано `ShouldShowIssue(rc)` для приховування закликів відкривати issue на очікуваних мережевих та файлових помилках.
