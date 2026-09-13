@@ -244,9 +244,6 @@ constexpr const char* FIRMWARE_CLEANUP_PATHS[]{
     "/atmosphere/contents/010000000000100D",
     "/atmosphere/contents/0100000000001012",
     "/atmosphere/contents/0100000000001015",
-    // DBI translation
-    "/switch/DBI/translation.bin",
-    "/switch/DBI/translation_new.bin",
 };
 
 } // namespace

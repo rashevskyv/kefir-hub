@@ -1,17 +1,15 @@
-Актуальний delivery — **v0.13.813** (background translation replacement, deferred reboot on removal). Завершені задачі збережено в
+Актуальний delivery — **v0.13.814** (preserve DBI translation on firmware updates & downgrades). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.813 (Background translation replacement, deferred reboot on removal)
+## Поточний delivery: v0.13.814 (Preserve DBI translation on firmware updates & downgrades)
 
-- [x] `TRANSLATION-DETECT-813` — додано `HasInstalledTranslation()` для детектування встановленого перекладу за 18 шляхами `TRANSLATION_PATHS`.
-- [x] `TRANSLATION-BG-REPLACE-813` — у `InstallInterfaceTranslation` реалізовано автоматичне фонове видалення старого перекладу без запитань та помилок `Result_TranslationRemoveExistingFailed`, скачування нового архіву, інсталяція в `/atmosphere/contents` та єдиний ребут наприкінці.
-- [x] `TRANSLATION-DEFERRED-REBOOT-813` — у `RemoveInterfaceTranslation` та `MakeRemoveTranslationItem` реалізовано очищення перекладу без примусового ребуту, з подальшим вибором «Reboot now» / «Reboot later» та попередженням про системний текст.
-- [x] `I18N-813` — оновлено локалізації в `en.json` та `uk.json` для нових повідомлень та кнопок перезавантаження перекладів.
-- [x] `README-813` — оновлено `README.md` щодо фонового заміщення перекладів та відкладеного перезавантаження.
-- [x] `DOCS-BUMP-813` — `sphaira_VERSION` піднято до `0.13.813`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
-- [ ] `HW-813` — перевірити встановлення перекладу поверх старого без зайвого ребуту та видалення перекладу з вибором «Reboot later» на консолі.
+- [x] `PRESERVE-DBI-TRANSLATION-814` — вилучено файли перекладу DBI (`/switch/DBI/translation.bin`, `translation_new.bin`) із `FIRMWARE_CLEANUP_PATHS` у `kefir_firmware.cpp`.
+- [x] `TE-PRESERVE-DBI-814` — вилучено команди `delfile` перекладу DBI зі скрипта `assets/romfs/tegra/downgrade_fix.te`.
+- [x] `README-814` — оновлено `README.md` із зазначенням збереження файлів хоумбрю-додатків (переклади DBI) при системних оновленнях.
+- [x] `DOCS-BUMP-814` — `sphaira_VERSION` піднято до `0.13.814`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-814` — перевірити збереження файлів перекладу DBI після оновлення або даунгрейду системної прошивки на Switch.
 
 ## Попередній delivery: v0.13.812 (Remove themes & translations on all firmware updates)
 

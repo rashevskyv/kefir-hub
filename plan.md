@@ -1,15 +1,13 @@
-Поточний delivery — **v0.13.813** (background translation replacement, deferred reboot on removal). Завершені плани збережено в
+Поточний delivery — **v0.13.814** (preserve DBI translation on firmware updates & downgrades). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.813 — Background translation replacement, deferred reboot on removal
+## Поточний delivery: v0.13.814 — Preserve DBI translation on firmware updates & downgrades
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
-1. Впроваджено `HasInstalledTranslation()` для швидкої перевірки наявності встановленого перекладу інтерфейсу за 18 шляхами `TRANSLATION_PATHS`.
-2. Оновлено `InstallInterfaceTranslation`: якщо виявлено старий переклад, він очищується у фоні без запитань та помилок `Result_TranslationRemoveExistingFailed`; новий переклад завантажується, встановлюється в `/atmosphere/contents`, після чого консоль перезавантажується один раз (прибрано зайвий проміжний ребут).
-3. Оновлено `RemoveInterfaceTranslation`: видалення перекладу більше не перезавантажує консоль примусово, а лише фіксує SD-карту (`fsdevCommitDevice`).
-4. У `settings_translate.cpp` створено `MakeRemoveTranslationItem`: перевірка наявності файлів (сповіщення при відсутності), підтвердження затисканням A та інтерактивний діалог після видалення з вибором «Reboot now» (за замовчуванням) або «Reboot later», разом із попередженням про можливі нюанси відображення інтерфейсу до перезапуску.
-5. Оновлено мовні файли `en.json`, `uk.json` та документацію `README.md`.
+1. Вилучено видалення файлів перекладу DBI (`/switch/DBI/translation.bin`, `/switch/DBI/translation_new.bin`) зі списку очищення `FIRMWARE_CLEANUP_PATHS` у `kefir_firmware.cpp`. Переклади для DBI є автономними файлами хоумбрю-додатку і не конфліктують із системною прошивкою Horizon OS чи завантаженням Atmosphere.
+2. Вилучено команди видалення файлів перекладу DBI зі скрипта TegraExplorer `assets/romfs/tegra/downgrade_fix.te`.
+3. Оновлено документацію у `README.md` з уточненням, що системні теми та переклади інтерфейсу Horizon OS видаляються при оновленнях/даунгрейдах для уникнення фатальних помилок, а файли перекладу окремих додатків (зокрема DBI) надійно зберігаються.
 
 ## Попередній delivery: v0.13.812 — Remove themes & translations on all firmware updates
 

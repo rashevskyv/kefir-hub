@@ -161,8 +161,6 @@ deldir("sd:/atmosphere/contents/0100000000001009")
 deldir("sd:/atmosphere/contents/010000000000100D")
 deldir("sd:/atmosphere/contents/0100000000001012")
 deldir("sd:/atmosphere/contents/0100000000001015")
-delfile("sd:/switch/DBI/translation.bin")
-delfile("sd:/switch/DBI/translation_new.bin")
 
 println("")
 color(0x00FF00)
