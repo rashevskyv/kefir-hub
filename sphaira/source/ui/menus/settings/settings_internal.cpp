@@ -202,9 +202,6 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
             const float rule_x = text_x + (bounds[2] - bounds[0]) + 12.f;
             gfx::drawRect(vg, rule_x, text_y + 9.f, std::max(0.f, v.x + v.w - 20.f - rule_x), 1.f,
                 theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        } else {
-            gfx::drawRect(vg, text_x, v.y + v.h / 2.f, std::max(0.f, v.x + v.w - 20.f - text_x), 1.f,
-                theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         }
         return;
     }

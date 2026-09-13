@@ -1,8 +1,14 @@
-Поточний delivery — **v0.13.808** (pin top DBI items, separator and alphabetical sorting). Завершені плани збережено в
+Поточний delivery — **v0.13.809** (fix duplicate HR and separator navigation in DBI menu). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.808 — Pin top DBI items, separator and alphabetical sorting
+## Поточний delivery: v0.13.809 — Fix duplicate HR and separator navigation in DBI menu
+
+Статус: реалізовано; очікується компіляція та апаратна перевірка.
+1. Прибрано дублюючу горизонтальну лінію посередині елемента-розділювача у `DrawActionListItem` та `Menu::DrawItemRow`: тепер під «Скинути налаштування DBI» залишається рівно один роздільник і чистий відступ до списку мов.
+2. Виправлено перехід курсора через розділювач у `DbiMenu::Update`: перевірку `SettingsItemKind::Header` обмежено лише подіями тачскрину (`touch && ...`), завдяки чому при навігації кнопками контролера вниз/вгору `SetIndex` викликається належним чином, а `ResolveItemIndex` безперешкодно переводить фокус на перший елемент списку мов («Belarusian») та назад.
+
+## Попередній delivery: v0.13.808 — Pin top DBI items, separator and alphabetical sorting
 
 Статус: реалізовано; очікується компіляція та апаратна перевірка.
 1. У меню «DBI» три основні дії («Завантажити/Оновити список перекладів DBI», «Остання російська версія DBI» та «Скинути налаштування DBI») тепер завжди зафіксовані зверху списку.

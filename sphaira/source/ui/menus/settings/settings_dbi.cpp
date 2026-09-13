@@ -138,7 +138,7 @@ void DbiMenu::OnFocusGained() {
 void DbiMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
-        if (i < static_cast<s64>(m_items.size()) && m_items[i].kind == SettingsItemKind::Header) {
+        if (touch && i < static_cast<s64>(m_items.size()) && m_items[i].kind == SettingsItemKind::Header) {
             return;
         }
         if (touch && m_index == i) {

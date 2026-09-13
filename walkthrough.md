@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.808** (2026-09-12). Попередні
+Актуальний delivery — **v0.13.809** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.809 — Fix duplicate HR and separator navigation in DBI menu
+
+- **Виправлено подвійний роздільник (два HR)**: прибрано додаткове малювання лінії посередині рядка `MakeSeparator()` в `DrawActionListItem` та `Menu::DrawItemRow`. Тепер нижня лінія пункту «Скинути налаштування DBI» слугує єдиним роздільником секцій, за яким іде чистий відступ до списку мов, без візуального захаращення.
+- **Виправлено навігацію контролера через розділювач**: у `DbiMenu::Update` умова перевірки `SettingsItemKind::Header` тепер стосується виключно подій дотику (`touch && ...`). Для ручного керування стіком/хрестовиною контролера запит більше не блокується, і `SetIndex(i)` через `ResolveItemIndex` коректно переступає порожній розділювач, дозволяючи вільно спускатися на список мов та повертатися назад.
+- `sphaira_VERSION` піднято до `0.13.809`; `git diff --check` пройшов. Compile/tests/NRO за policy не запускалися.
 
 ## v0.13.808 — Pin top DBI items, separator and alphabetical sorting
 

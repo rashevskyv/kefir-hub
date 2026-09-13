@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.808** (pin top DBI items, separator and alphabetical sorting). Завершені задачі збережено в
+Актуальний delivery — **v0.13.809** (fix duplicate HR and separator navigation in DBI menu). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.808 (Pin top DBI items, separator and alphabetical sorting)
+## Поточний delivery: v0.13.809 (Fix duplicate HR and separator navigation in DBI menu)
+
+- [x] `DBI-NO-DUPLICATE-HR-809` — видалено зайве малювання горизонтальної лінії посередині елемента `MakeSeparator()` в `DrawActionListItem` та `DrawItemRow`, забезпечивши один роздільник та чистий відступ до мов.
+- [x] `DBI-NAV-UNBLOCK-809` — виправлено умову перевірки `Header` у `DbiMenu::Update` на `if (touch && ...)` замість блокування контролера, що дозволяє курсору вільно переходити вниз на список мов та повертатися вгору.
+- [x] `VERIFY-809` — перевірено логіку переходу через `ResolveItemIndex`; compile/tests/NRO не запускалися за policy.
+- [x] `DOCS-BUMP-809` — `sphaira_VERSION` піднято до `0.13.809`, оновлено `plan.md`, `task.md`, `walkthrough.md` та `audit.md`.
+- [ ] `HW-809` — перевірити на Switch відсутність подвійного HR та вільний перехід курсора на список мов кнопками контролера.
+
+## Попередній delivery: v0.13.808 (Pin top DBI items, separator and alphabetical sorting)
 
 - [x] `DBI-TOP-ITEMS-808` — зафіксовано перші три пункти («Завантажити/Оновити список перекладів DBI», «Остання російська версія DBI» та «Скинути налаштування DBI») зверху списку меню DBI.
 - [x] `DBI-DYNAMIC-LABEL-808` — реалізовано динамічну назву кнопки («Download DBI translations list» / «Update DBI translations list») та додано переклад для всіх 14 мов у `assets/romfs/i18n/*.json`.
