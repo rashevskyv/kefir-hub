@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.827** (Wi-Fi connection reliability fixes). Завершені плани збережено в
+Поточний delivery — **v0.13.828** (SysNAND forwarder safety and authoritative NAND state). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.827 — Wi-Fi connection reliability fixes
+## Поточний delivery: v0.13.828 — SysNAND forwarder safety and authoritative NAND state
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. `App::IsEmummc()` знову базується на `splGetConfig(65007)` — тому самому сигналі, що раніше формував `|E` / `|S` біля версії Atmosphere.
+2. Невдача `splInitialize` або читання 65007 залишає стан `false`, тобто fail-closed SysNAND/unknown.
+3. SMC `smcAmsGetEmunandConfig` залишено лише для шляхів і типу emuMMC; він більше не визначає активний NAND.
+4. Автоінсталяція Kefir Hub forwarder блокується на будь-якому непідтвердженому EmuNAND і в плані, і безпосередньо перед `InstallKefirHubForwarder`; наявність EmuNAND на SD не дає дозволу на SysNAND.
+5. Додано мінімальний host-test для EmuNAND allow, SysNAND deny та збереження safe cleanup; `git diff --check` і `check_dead_symbols.py` пройшли, компіляцію не запускали за policy.
+
+## Попередній delivery: v0.13.827 — Wi-Fi connection reliability fixes
 
 Статус: реалізовано; очікується апаратна перевірка.
 1. Життєвий цикл `NifmRequest` централізовано: попередній запит скасовується, terminal result опитується, а handles закриваються після success, failure, timeout чи виходу з меню.

@@ -1581,18 +1581,15 @@ App::App(const char* argv0) {
 
     if (R_SUCCEEDED(smc_rc) && magic == StorageMagic) {
         m_emummc_type = type;
-        m_is_emummc = (type == 1 || type == 2);
-    } else {
-        u64 spl_val = 0;
-        if (R_SUCCEEDED(splInitialize())) {
-            if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65007), &spl_val))) {
-                m_is_emummc = (spl_val != 0);
-                if (m_is_emummc && m_emummc_type == 0) {
-                    m_emummc_type = (paths.file_based_path[0] != '\0') ? 2 : 1;
-                }
-            }
-            splExit();
+    }
+
+    m_is_emummc = false;
+    u64 spl_val = 0;
+    if (R_SUCCEEDED(splInitialize())) {
+        if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65007), &spl_val))) {
+            m_is_emummc = (spl_val != 0);
         }
+        splExit();
     }
 
     log_write("[emummc] enabled: %u (type: %u)\n", App::IsEmummc(), m_emummc_type);

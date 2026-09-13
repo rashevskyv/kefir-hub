@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.827**. Дата: 2026-09-13.
+Канічний робочий файл. Версія коду: **v0.13.828**. Дата: 2026-09-13.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12245 nodes, 24310 edges, 604 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.828 поза ponytail-чергою: відновлено історично перевірений `splGetConfig(65007)` як єдине джерело `m_is_emummc` для хедера та безпеки forwarder; SMC залишено лише для path/type metadata; невдача визначення fail-closed; автоінсталяція Kefir Hub forwarder безумовно заблокована на SysNAND/unknown двома guards; версію піднято до 0.13.828. `git diff --check` і `check_dead_symbols.py` пройшли; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.827 поза ponytail-чергою: виправлено Wi-Fi регресії v0.13.826 — `NifmRequest` отримав terminal polling і cancel/close на success/failure/timeout/menu exit; реальні `Result` більше не маскуються; 32-байтовий SSID не обрізається; Wi-Fi toggle і profile mutations перевіряють failure; partial batch delete показує точні counts та first error. Gemini WSL `ReleaseWithInstall` пройшов до фінальної i18n-правки; після неї JSON validation і `git diff --check` пройшли без rebuild. **Не закриває** чергу §2 A1–A7.
 

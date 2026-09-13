@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.827** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.828** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.828 — SysNAND forwarder safety and authoritative NAND state
+
+- Відновлено точне історичне джерело стану NAND: `splGetConfig(65007)`, яке раніше безпосередньо формувало `|E` / `|S` у версії Atmosphere.
+- `App::IsEmummc()` повертає true лише для успішно прочитаного ненульового 65007; невдача залишає fail-closed `false`.
+- SMC `smcAmsGetEmunandConfig` збережено для шляхів і типу emuMMC, але він більше не перевизначає активний NAND.
+- Планувальний gate та останній guard перед інсталяцією не дозволяють автоінсталювати Kefir Hub forwarder, коли EmuNAND не підтверджено; `App::HasEmummc()` більше не бере участі в дозволі.
+- Хедер продовжує показувати `EmuNAND` для true і `NAND` для SysNAND/unknown з того самого `App::IsEmummc()`.
+- `git diff --check` і `python tests/check_dead_symbols.py` пройшли; compile/tests/NRO не запускалися за workspace policy.
 
 ## v0.13.827 — Wi-Fi connection reliability fixes
 

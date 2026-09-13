@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.827** (Wi-Fi connection reliability fixes). Завершені задачі збережено в
+Актуальний delivery — **v0.13.828** (SysNAND forwarder safety and authoritative NAND state). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.827 (Wi-Fi connection reliability fixes)
+## Поточний delivery: v0.13.828 (SysNAND forwarder safety and authoritative NAND state)
+
+- [x] `NAND-SOURCE-828` — `m_is_emummc` визначається лише через історично перевірений `splGetConfig(65007)`; failure є fail-closed.
+- [x] `NAND-SMC-828` — SMC emuMMC config більше не присвоює `m_is_emummc` і залишений для path/type metadata.
+- [x] `FORWARDER-GATE-828` — SysNAND/unknown безумовно скидає `plan.install_new`; додано захисний guard в `InstallKefirHubForwarder`.
+- [x] `VERIFY-828` — `git diff --check` і `python tests/check_dead_symbols.py` пройшли; compile/NRO не запускалися.
+- [x] `DOCS-BUMP-828` — Sphaira version та delivery-документи оновлено до `0.13.828`.
+- [ ] `HW-828` — зібрати NRO і перевірити хедер та відсутність автоінсталяції forwarder на SysNAND, а також дозволену інсталяцію на EmuNAND.
+
+## Попередній delivery: v0.13.827 (Wi-Fi connection reliability fixes)
 
 - [x] `WIFI-REQUEST-827` — додано polling actual NIFM result та idempotent cancel/close після success, failure, timeout, replacement і виходу з меню.
 - [x] `WIFI-SSID-827` — виправлено збереження 32-байтового SSID.

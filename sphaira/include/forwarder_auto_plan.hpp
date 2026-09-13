@@ -142,4 +142,15 @@ inline auto Decide(LaunchSource src, bool new_installed, bool old_installed) -> 
     return p;
 }
 
+// Unconditional EmuNAND safety gate: Kefir Hub forwarders must never be
+// automatically installed while booted in SysNAND or on unknown detection.
+inline void ApplyEmuNandSafetyGate(Plan& plan, bool is_emummc) {
+    if (!is_emummc) {
+        plan.install_new = false;
+        if (!plan.delete_old) {
+            plan.notice = Notice::None;
+        }
+    }
+}
+
 } // namespace sphaira::forwarder_auto

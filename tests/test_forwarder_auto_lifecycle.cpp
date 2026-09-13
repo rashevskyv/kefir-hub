@@ -225,29 +225,43 @@ int RunTests() {
         CHECK(from_stale_ready.notice == Notice::None);
     }
 
-    // Test 6: SysNAND override when EmuNAND is present in the system
+    // Test 6: Unconditional EmuNAND safety gate for forwarder installation
     {
         using sphaira::forwarder_auto::Decide;
         using sphaira::forwarder_auto::LaunchSource;
         using sphaira::forwarder_auto::Notice;
+        using sphaira::forwarder_auto::ApplyEmuNandSafetyGate;
 
-        // Album launch without existing forwarder would normally install
-        auto plan = Decide(LaunchSource::Album, false, false);
-        CHECK(plan.install_new);
-        CHECK(plan.notice == Notice::PreferHomeIcon);
-
-        // Under SysNAND when EmuNAND is present, install is suppressed and notice cleared
-        const bool is_emummc = false;
-        const bool has_emummc = true;
-        if (!is_emummc && has_emummc) {
-            plan.install_new = false;
-            if (!plan.delete_old) {
-                plan.notice = Notice::None;
-            }
+        // true preserves install_new
+        {
+            auto plan = Decide(LaunchSource::Album, false, false);
+            CHECK(plan.install_new);
+            CHECK(plan.notice == Notice::PreferHomeIcon);
+            ApplyEmuNandSafetyGate(plan, true);
+            CHECK(plan.install_new);
+            CHECK(plan.notice == Notice::PreferHomeIcon);
         }
-        CHECK(!plan.install_new);
-        CHECK(!plan.delete_old);
-        CHECK(plan.notice == Notice::None);
+
+        // false disables install_new and clears the notice when no deletion is pending
+        {
+            auto plan = Decide(LaunchSource::Album, false, false);
+            CHECK(plan.install_new);
+            ApplyEmuNandSafetyGate(plan, false);
+            CHECK(!plan.install_new);
+            CHECK(!plan.delete_old);
+            CHECK(plan.notice == Notice::None);
+        }
+
+        // false preserves delete_old if cleanup is intentionally allowed
+        {
+            auto plan = Decide(LaunchSource::Album, false, true);
+            CHECK(plan.install_new);
+            CHECK(plan.delete_old);
+            ApplyEmuNandSafetyGate(plan, false);
+            CHECK(!plan.install_new);
+            CHECK(plan.delete_old);
+            CHECK(plan.notice == Notice::PreferHomeIcon);
+        }
     }
 
     return 0;
