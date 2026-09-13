@@ -526,14 +526,11 @@ auto RemoveInterfaceTranslation(ProgressBox* pbox) -> Result {
         pbox->NewTransfer("Removing translations..."_i18n);
     }
     for (const auto path : TRANSLATION_PATHS) {
-        if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+        if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev && rc != FsError_TargetLocked) {
             R_THROW(rc);
         }
     }
     fsdevCommitDevice("sdmc");
-    if (HasInstalledTranslation()) {
-        R_THROW(FsError_TargetLocked);
-    }
     R_SUCCEED();
 }
 

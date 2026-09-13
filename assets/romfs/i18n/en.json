@@ -2323,8 +2323,5 @@
   "Share backup(s) with another console over Console Transfer.": "Share backup(s) with another console over Console Transfer.",
   "Open pack details to inspect accounts.": "Open pack details to inspect accounts.",
   "Open pack details to inspect or restore accounts.": "Open pack details to inspect or restore accounts.",
-  "Could not retrieve the profiles & play hours backup list from the sending console.": "Could not retrieve the profiles & play hours backup list from the sending console.",
-  "Translation files are in use by the system. Reboot to TegraExplorer to finish removing them?": "Translation files are in use by the system. Reboot to TegraExplorer to finish removing them?",
-  "Another reboot operation is already pending. Remove or complete /startup.te first.": "Another reboot operation is already pending. Remove or complete /startup.te first.",
-  "Failed to launch TegraExplorer translation removal.": "Failed to launch TegraExplorer translation removal."
+  "Could not retrieve the profiles & play hours backup list from the sending console.": "Could not retrieve the profiles & play hours backup list from the sending console."
 }

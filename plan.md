@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.816** (offline removal for locked translations). Завершені плани збережено в
+Поточний delivery — **v0.13.817** (restore translation removal contract). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.816 — Offline removal for locked translations
+## Поточний delivery: v0.13.817 — Restore translation removal contract
+
+Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
+1. Відновлено перевірений контракт v0.13.230–v0.13.812: `FsError_TargetLocked` під час best-effort видалення системного перекладу не показується як failure.
+2. Після підтвердження видалення викликається `RemoveInterfaceTranslationAndReboot`, тому reboot знову є обов'язковою частиною операції; відкладений reboot прибрано.
+3. Видалено зайвий TegraExplorer flow v0.13.816, його RomFS-скрипт та i18n. Безпечний download/extract/source validation перед заміною перекладу з v0.13.815 збережено.
+
+## Попередній delivery: v0.13.816 — Offline removal for locked translations (superseded by v0.13.817)
 
 Статус: реалізовано; очікується WSL-збірка та апаратна перевірка.
 1. `FsError_TargetLocked` під час видалення системного перекладу тепер розпізнається як штатне блокування файлів процесами Horizon, а не як безвихідна помилка.

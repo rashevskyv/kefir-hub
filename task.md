@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.816** (offline removal for locked translations). Завершені задачі збережено в
+Актуальний delivery — **v0.13.817** (restore translation removal contract). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.816 (Offline removal for locked translations)
+## Поточний delivery: v0.13.817 (Restore translation removal contract)
+
+- [x] `RESTORE-TARGET-LOCK-817` — `FsError_TargetLocked` знову допускається у best-effort manual removal.
+- [x] `MANDATORY-REBOOT-817` — manual removal викликає `RemoveInterfaceTranslationAndReboot`; опцію відкладеного reboot прибрано.
+- [x] `REMOVE-TE-FLOW-817` — видалено `remove_translation.te`, TegraExplorer UI та три тимчасові i18n keys v0.13.816.
+- [x] `KEEP-SAFE-REPLACE-817` — збережено staging і перевірку нового archive до видалення старого перекладу.
+- [x] `DOCS-BUMP-817` — версію та чотири delivery-документи оновлено до `0.13.817`.
+- [ ] `BUILD-817` — виконати WSL ReleaseWithInstall.
+- [ ] `HW-817` — підтвердити manual removal без ErrorBox і автоматичний reboot.
+
+## Попередній delivery: v0.13.816 (Offline removal for locked translations; superseded)
 
 - [x] `LOCKED-TRANSLATION-816` — `FsError_TargetLocked` переводить видалення в підтверджений offline flow через TegraExplorer.
 - [x] `TE-REMOVE-TRANSLATION-816` — додано fail-closed `remove_translation.te` з readback усіх 18 translation paths і поверненням у Hekate.

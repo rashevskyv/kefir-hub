@@ -2352,8 +2352,5 @@
   "Share backup(s) with another console over Console Transfer.": "Поділитися бекапом(ами) з іншою консоллю через Console Transfer.",
   "Open pack details to inspect accounts.": "Відкрити деталі пака для перегляду акаунтів.",
   "Open pack details to inspect or restore accounts.": "Відкрити деталі пака для перегляду або відновлення акаунтів.",
-  "Could not retrieve the profiles & play hours backup list from the sending console.": "Не вдалося отримати список бекапів профілів та годин гри з консолі, що передає.",
-  "Translation files are in use by the system. Reboot to TegraExplorer to finish removing them?": "Файли перекладу використовуються системою. Перезавантажити консоль у TegraExplorer, щоб завершити видалення?",
-  "Another reboot operation is already pending. Remove or complete /startup.te first.": "Інша операція перезавантаження вже очікує виконання. Спочатку завершіть її або видаліть /startup.te.",
-  "Failed to launch TegraExplorer translation removal.": "Не вдалося запустити видалення перекладу через TegraExplorer."
+  "Could not retrieve the profiles & play hours backup list from the sending console.": "Не вдалося отримати список бекапів профілів та годин гри з консолі, що передає."
 }

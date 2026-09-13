@@ -3,7 +3,6 @@
 #include "ui/menus/settings/settings_kefir.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
-#include "account/account_restore.hpp"
 #include "ui/menus/settings/translation_policy.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
 #include "hats_version.hpp"
@@ -144,50 +143,12 @@ auto MakeRemoveTranslationItem() -> SettingsItem {
                         "Removing"_i18n,
                         "Interface Translation"_i18n,
                         [](auto pbox) -> Result {
-                            return RemoveInterfaceTranslation(pbox);
+                            return RemoveInterfaceTranslationAndReboot(pbox);
                         },
                         [](Result rc) {
-                            if (rc == FsError_TargetLocked) {
-                                App::Push<OptionBox>(
-                                    "Translation files are in use by the system. Reboot to TegraExplorer to finish removing them?"_i18n,
-                                    "Cancel"_i18n,
-                                    "Reboot"_i18n,
-                                    1,
-                                    [](auto op_index) {
-                                        if (!op_index || *op_index != 1) {
-                                            return;
-                                        }
-                                        if (fs::FileExists("/startup.te")) {
-                                            App::Push<OptionBox>("Another reboot operation is already pending. Remove or complete /startup.te first."_i18n, "OK"_i18n);
-                                            return;
-                                        }
-                                        if (!::sphaira::account_restore::LaunchTegraRomfs("remove_translation.te")) {
-                                            App::Push<OptionBox>("Failed to launch TegraExplorer translation removal."_i18n, "OK"_i18n);
-                                        }
-                                    });
-                                return;
+                            if (R_FAILED(rc)) {
+                                App::PushErrorBox(rc, "Failed to remove translation"_i18n);
                             }
-                            if (R_FAILED(rc) || HasInstalledTranslation()) {
-                                App::PushErrorBox(R_FAILED(rc) ? rc : static_cast<Result>(FsError_TargetLocked), "Failed to remove translation"_i18n);
-                                return;
-                            }
-
-                            App::Push<OptionBox>(
-                                "Interface translation has been removed.\n\n"
-                                "A reboot is recommended now to ensure system stability and restore original interface text. "
-                                "If you reboot later, some system text may appear inconsistent or cause minor issues until restarted.\n\n"
-                                "Reboot now?"_i18n,
-                                "Reboot later"_i18n,
-                                "Reboot now"_i18n,
-                                1,
-                                [](auto op_index) {
-                                    if (op_index && *op_index == 1) {
-                                        RebootAfterSetting();
-                                    } else {
-                                        App::Notify("Translation removed. Reboot later to apply changes."_i18n);
-                                    }
-                                }
-                            );
                         }
                     );
                 }
