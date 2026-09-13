@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.822** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.823** (2026-09-13). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.823 — Localized firmware update and reboot notifications
+
+- Локалізовано через `_i18n` усі повідомлення та діалогові вікна (`OptionBox`), що виникають при завершенні оновлення або даунгрейду системної прошивки в `kefir_menu.cpp`.
+- Перекладено повідомлення про успішне оновлення, очищення користувацьких тем і перекладів, а також критичне попередження при неможливості видалення тем/перекладів про ризик фатальної помилки Atmosphere `2162-0002` з пропозицією ручного видалення перед запуском нової прошивки.
+- Локалізовано повідомлення `DescribeDowngradeFix` у `kefir_firmware.cpp`, запити підтвердження даунгрейд-фіксу через TegraExplorer, індикацію валідації пакету прошивки та повідомлення про помилки.
+- Додано нові ключі локалізації з перекладами в `assets/romfs/i18n/en.json`, `uk.json` та `ru.json`. Усі 14 JSON-файлів локалізації валідовані.
+- Оновлено `README.md`, `audit.md`, `plan.md`, `task.md`; `sphaira_VERSION` піднято до `0.13.823`. `git diff --check` виконано; compile/NRO не запускалися за workspace policy.
 
 ## v0.13.822 — Silence error on user creation cancellation
 

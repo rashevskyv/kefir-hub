@@ -6,6 +6,7 @@
 #include "download.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 #include <yyjson.h>
 #include <algorithm>
@@ -548,23 +549,23 @@ auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     }
 
     if (fix.staged) {
-        return "Downgrade fix staged: console will reboot to TegraExplorer to delete system save 8000000000000073, themes, and translations.";
+        return "Downgrade fix staged: console will reboot to TegraExplorer to delete system save 8000000000000073, themes, and translations."_i18n;
     }
 
     if (fix.deleted) {
-        return "Downgrade fix applied: system save 8000000000000073, themes, and translations deleted.";
+        return "Downgrade fix applied: system save 8000000000000073, themes, and translations deleted."_i18n;
     }
 
     if (R_FAILED(fix.rc)) {
         char rc_str[32];
         std::snprintf(rc_str, sizeof(rc_str), "0x%08X", R_VALUE(fix.rc));
-        std::string out = "WARNING: Downgrade fix staging or activation failed (";
+        std::string out = "WARNING: Downgrade fix staging or activation failed ("_i18n;
         out += rc_str;
-        out += "). Automatic recovery is NOT armed. System save 8000000000000073 must be removed manually via TegraExplorer or Maintenance Mode.";
+        out += "). Automatic recovery is NOT armed. System save 8000000000000073 must be removed manually via TegraExplorer or Maintenance Mode."_i18n;
         return out;
     }
 
-    return "Downgrade fix could not be staged. Automatic recovery is NOT armed.";
+    return "Downgrade fix could not be staged. Automatic recovery is NOT armed."_i18n;
 }
 
 void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {

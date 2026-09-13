@@ -966,14 +966,14 @@ void Menu::DisplayOptions() {
         // run the downgrade fix on its own so it can be tested in isolation.
         options->Add<SidebarEntryCallback>("Apply downgrade fix"_i18n, [](){
             App::Push<OptionBox>(
-                "Apply downgrade fix now?\n\nThis will reboot into TegraExplorer to delete the system save 8000000000000073.",
+                "Apply downgrade fix now?\n\nThis will reboot into TegraExplorer to delete the system save 8000000000000073."_i18n,
                 "Cancel"_i18n, "Apply"_i18n, 0,
                 [](auto op_index) {
                     if (!op_index || *op_index != 1) {
                         return;
                     }
                     if (!detail::StageAndLaunchDowngradeFix(App::IsEmummc())) {
-                        App::Push<OptionBox>("Failed to stage or launch TegraExplorer downgrade fix.", "OK"_i18n);
+                        App::Push<OptionBox>("Failed to stage or launch TegraExplorer downgrade fix."_i18n, "OK"_i18n);
                     }
                 });
         }, "Delete system save 8000000000000073 (via TegraExplorer)."_i18n);
@@ -1216,7 +1216,7 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
                     }
 
                     App::Push<OptionBox>(
-                        "Kefir package installed.\n\nReboot now?",
+                        "Kefir package installed."_i18n + "\n\n" + "Reboot now?"_i18n,
                         "Later"_i18n, "Reboot"_i18n, 1,
                         [](auto op_index) {
                             if (op_index && *op_index == 1) {
@@ -1311,9 +1311,7 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
                     break;
                 case DowngradeFixMode_Optional:
                 default: {
-                    std::string msg = "Apply downgrade fix?\n\n";
-                    msg += "This stages TegraExplorer downgrade fix to delete system save 8000000000000073 after install.\n\n";
-                    msg += "Choose No to install without it.";
+                    const std::string msg = "Apply downgrade fix?\n\nThis stages TegraExplorer downgrade fix to delete system save 8000000000000073 after install.\n\nChoose No to install without it."_i18n;
                     App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 1,
                         [on_ack, on_cancel](auto fix_index) {
                             if (!fix_index) {
@@ -1336,7 +1334,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
     auto validation = std::make_shared<FirmwareValidation>();
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
-            pbox->NewTransfer("Validating firmware contents...");
+            pbox->NewTransfer("Validating firmware contents..."_i18n);
             return detail::ValidateFirmware(validation.get(), path);
         },
         [this, display_name, path, validation, acked_downgrade_fix, origin_zip](Result rc) {
@@ -1344,7 +1342,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
                 }
-                App::Push<ErrorBox>(rc, "Firmware validation failed");
+                App::Push<ErrorBox>(rc, "Firmware validation failed"_i18n);
                 return;
             }
 
@@ -1414,19 +1412,19 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
                 }
-                App::Push<ErrorBox>(rc, "Firmware update failed");
+                App::Push<ErrorBox>(rc, "Firmware update failed"_i18n);
                 return;
             }
 
             auto prompt_reboot = [apply_downgrade_fix, fix]() {
                 if (apply_downgrade_fix && fix->staged) {
-                    std::string message = "Firmware downgrade installed successfully.\n\n";
+                    std::string message = "Firmware downgrade installed successfully."_i18n + "\n\n";
                     if (fix->cleanup_failed) {
-                        message += "WARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002. Remove them before booting the updated firmware.\n\n";
+                        message += "WARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002 on reboot. Remove them manually before booting the new firmware."_i18n + "\n\n";
                     } else {
-                        message += "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process.\n\n";
+                        message += "System save 8000000000000073, custom themes, and interface translations will be removed as part of the downgrade process."_i18n + "\n\n";
                     }
-                    message += "Console will reboot to TegraExplorer to complete the downgrade fix.\n\nReboot now?";
+                    message += "Console will reboot to TegraExplorer to complete the downgrade fix."_i18n + "\n\n" + "Reboot now?"_i18n;
                     App::Push<OptionBox>(
                         message,
                         "Later"_i18n, "Reboot"_i18n, 1,
@@ -1443,17 +1441,17 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                     return;
                 }
 
-                std::string message;
+                std::string message = "Firmware update applied successfully."_i18n + "\n\n";
                 if (fix->cleanup_failed) {
-                    message = "Firmware update applied successfully.\n\nWARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002 on reboot. Remove them manually before booting the new firmware.";
+                    message += "WARNING: Failed to remove custom themes and translations! Incompatible themes or translations can cause Atmosphere error 2162-0002 on reboot. Remove them manually before booting the new firmware."_i18n;
                 } else {
-                    message = "Firmware update applied successfully.\n\nCustom themes and translations were removed to prevent errors on the new firmware version.";
+                    message += "Custom themes and translations were removed to prevent errors on the new firmware version."_i18n;
                 }
                 const auto fix_note = detail::DescribeDowngradeFix(*fix);
                 if (!fix_note.empty()) {
                     message += "\n\n" + fix_note;
                 }
-                message += "\n\nReboot now?";
+                message += "\n\n" + "Reboot now?"_i18n;
 
                 App::Push<OptionBox>(
                     message,

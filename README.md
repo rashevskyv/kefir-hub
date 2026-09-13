@@ -72,6 +72,7 @@ Sphaira includes a built-in, high-performance Homebrew AppStore client designed 
 - **Installed vs Store Version Tracking:** App cards display both the repository version (`version: ...`) and the locally installed version (`installed: ...`), determined from `.info` metadata or parsed directly from NRO NACP headers. When an update is available, the installed version is highlighted with the active theme's accent color.
 - **LibRetro Nightly Buildbot Integration:** For RetroArch (`RetroNX`), downloads and updates are automatically routed to the official LibRetro Nightly builder (`https://buildbot.libretro.com/nightly/nintendo/switch/libnx/RetroArch.7z`), ensuring modern Atmosphere and Horizon OS compatibility. If an outdated store build or non-Nightly package is detected, the `Launch` button is replaced by an `Update` action.
 - **Graceful Download Cancellation:** Cancelling a download or uninstall operation at any point cleanly aborts transfer threads and notifies the user with a friendly dialog without triggering false-positive network error alerts.
+- **Informative Error Handling & Network Gate:** Download and network operations verify active connectivity before transfer (`RequireConnection`), guiding the user to system Wi-Fi settings when offline instead of failing with raw result codes. Error dialogs feature user-friendly titles (`An error occurred`), localized explanatory guidance, secondary diagnostic codes, and suppress unnecessary bug report prompts on expected network or filesystem conditions.
 
 ## Remote Input & Direct Downloads
 
@@ -361,6 +362,7 @@ Sphaira provides full support for managing and installing Nintendo Switch system
 - **Automatic Themes and Translations Removal on All Updates:** To prevent fatal crashes (`2162-0002`) and qlaunch incompatibilities after upgrading or changing system firmware, Sphaira unconditionally cleans all installed custom themes and interface translations from the microSD card (`/atmosphere/contents/`) immediately after applying any firmware installation, ensuring a smooth and crash-free reboot. Application-specific homebrew files (such as DBI translations) are safely preserved.
 - **Comprehensive Maintenance Mode Instructions:** The pre-downgrade warning dialog explains how to enter Horizon's Recovery / Maintenance Mode (`Volume +` and `Volume -` held after the bootlogos) and choose "Initialize Console Without Deleting Save Data". It also clarifies that after initialization, the SD card's `Nintendo` folder will become invalid and the console will prompt to delete it, reassuring the user that agreeing to delete it will NOT affect their saved games.
 - **Manual Guide Link & QR Code:** Features a scan-ready QR code and direct URL pointing to the official downgrade documentation (`https://switch.customfw.xyz/downgrade_fw`).
+- **Fully Localized Update & Reboot Notifications:** All firmware update confirmation prompts, validation error messages, downgrade recovery notices, theme/translation cleanup warnings, and post-installation reboot requests are fully localized through Sphaira's `i18n` translation engine across supported languages.
 
 ## Building from source
 

@@ -1,8 +1,19 @@
-Поточний delivery — **v0.13.822** (silence error on user creation cancellation). Завершені плани збережено в
+Поточний delivery — **v0.13.823** (informative error dialogs and network gate in updater). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.822 — Silence error on user creation cancellation
+## Поточний delivery: v0.13.823 — Informative error dialogs and network gate in updater
+
+Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
+1. Діалог помилок `ErrorBox`: заголовок завжди показує зрозумілий та дружній напис `"An error occurred"_i18n` замість внутрішніх C++ ідентифікаторів енумів (наприклад, `SphairaError_AppstoreFailedZipDownload`).
+2. Технічний код помилки (`Code: 0x... (SphairaError_...)`) перенесено під текст повідомлення у ролі другорядного діагностичного напису з кольором `ThemeEntryID_TEXT_INFO`.
+3. У `GetErrorDescription(rc)` додано пораду перевірити інтернет-з'єднання (`"Please check your internet connection and try again."_i18n`) для збоїв завантаження.
+4. Додано функцію `ShouldShowIssue(rc)`, яка приховує заклик відкривати issue та посилання на Telegram `t.me/xhrxhrxhr` для мережевих збоїв, нестачі місця, блокування файлів та скасувань.
+5. У `kefir_menu.cpp` завантаження прошивки та пакетів Kefir захищено викликом `net::RequireConnection` (запобігає запуску завантаження при відсутності мережі).
+6. Усі помилки завантаження/інсталяції в `kefir_menu.cpp` та `cheat_download_menu.cpp` переведено на `App::PushErrorBox`, що дозволяє при відсутності зв'язку показувати спокійне інформативне вікно налаштування Wi-Fi.
+7. Локалізовано діалоги оновлення та перезавантаження прошивки; додано ключ `"Please check your internet connection and try again."` для всіх 14 мов.
+
+## Попередній delivery: v0.13.822 — Silence error on user creation cancellation
 
 Статус: реалізовано; очікується користувацька збірка та апаратна перевірка.
 1. У `ConfirmCreate` (`users_profile.cpp`) додано перевірку кодів скасування аплету створення користувача (`AccountError_Cancelled` `0x7C`, `AccountError_CancelledByUser` `0x27C`). При скасуванні створення користувачем помилка не виводиться, екран повертається до меню без помилкового `ErrorBox`.

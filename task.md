@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.822** (silence error on user creation cancellation). Завершені задачі збережено в
+Актуальний delivery — **v0.13.823** (informative error dialogs and network gate in updater). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.822 (Silence error on user creation cancellation)
+## Поточний delivery: v0.13.823 (Informative error dialogs and network gate in updater)
+
+- [x] `ERRORBOX-LAYOUT-823` — у `ErrorBox::Draw` встановлено постійний заголовок `"An error occurred"_i18n`, а код помилки перенесено в другорядний рядок знизу.
+- [x] `ERRORBOX-FILTER-823` — у `error_box.cpp` додано `ShouldShowIssue(rc)` для приховування закликів відкривати issue на очікуваних мережевих та файлових помилках.
+- [x] `DOWNLOAD-DESC-823` — у `GetErrorDescription(rc)` додано пораду перевірити з'єднання при збоях завантаження; ключ перекладено для 14 мов.
+- [x] `UPDATER-NETGATE-823` — у `kefir_menu.cpp` завантаження прошивки та пакетів оновлення обгорнуто в `net::RequireConnection`, а помилки переведено на `App::PushErrorBox`.
+- [x] `I18N-FW-823` — у `kefir_menu.cpp` та `kefir_firmware.cpp` локалізовано через `_i18n` діалоги оновлення/даунгрейду, очищення тем/перекладів та запити перезавантаження.
+- [x] `DOCS-BUMP-823` — Sphaira version та delivery-документи оновлено до `0.13.823`, оновлено `README.md`.
+- [ ] `HW-823` — зібрати NRO і перевірити діалоги помилок та перевірку мережі в оновлювачі на консолі.
+
+## Попередній delivery: v0.13.822 (Silence error on user creation cancellation)
 
 - [x] `USER-CREATOR-CANCEL-822` — у `ConfirmCreate` (`users_profile.cpp`) придушено помилку при скасуванні створення користувача (`0x7C` / `0x27C`).
 - [x] `ACCOUNT-ERRORS-822` — у `defines.hpp` та `error_box.cpp` додано `Module_Account` (124) та `AccountError_Cancelled` / `AccountError_CancelledByUser`.
