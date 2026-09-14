@@ -1959,18 +1959,18 @@ void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
 
         for (size_t i = 0; i < all_archives.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
-            const auto& path = all_archives[i];
-            const auto slash = std::strrchr(path.s, '/');
-            const std::string name = slash ? (slash + 1) : path.s;
+            const auto& archive_path = all_archives[i];
+            const auto slash = std::strrchr(archive_path.s, '/');
+            const std::string name = slash ? (slash + 1) : archive_path.s;
 
             pbox->SetTitle(name);
             pbox->UpdateTransfer(i + 1, all_archives.size());
 
             bool ok = false;
-            if (path::EndsWithIC(path.s, ".zip")) {
-                ok = VerifyZipIntegrity(path);
-            } else if (IsRawSaveCandidate(&sd_fs, path, name)) {
-                ok = VerifyDisaIntegrity(&sd_fs, path);
+            if (path::EndsWithIC(archive_path.s, ".zip")) {
+                ok = VerifyZipIntegrity(archive_path);
+            } else if (IsRawSaveCandidate(&sd_fs, archive_path, name)) {
+                ok = VerifyDisaIntegrity(&sd_fs, archive_path);
             }
 
             if (ok) {
@@ -2129,7 +2129,7 @@ void Menu::DeleteBackupGroups(const std::vector<Entry>& groups) {
             auto failed_count = std::make_shared<size_t>(0);
             auto first_error = std::make_shared<Result>(0);
 
-            App::Push<ProgressBox>(0, "Delete backups"_i18n, "", [groups, deleted_count, failed_count, first_error](auto pbox) -> Result {
+            App::Push<ProgressBox>(0, "Delete backups"_i18n, "", [this, groups, deleted_count, failed_count, first_error](auto pbox) -> Result {
                 fs::FsNativeSd sd_fs;
                 const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
                 for (const auto& g : groups) {

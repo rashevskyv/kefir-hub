@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.838** (Fix save actions GCC build). Завершені задачі збережено в
+Актуальний delivery — **v0.13.839** (Finish save actions compilation fixes). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.838 (Fix save actions GCC build)
+## Поточний delivery: v0.13.839 (Finish save actions compilation fixes)
+
+- [x] `SAVE-PATH-SHADOW-839` — не затіняти namespace `path` локальним archive path у integrity worker.
+- [x] `SAVE-LAMBDA-CAPTURE-839` — захопити `this` у delete-backups worker для member helper.
+- [x] `SAVE-ENUM-WARN-839` — усунути решту enum/non-enum conditional warnings у save operations.
+- [x] `VERIFY-839` — `git diff --check` пройшов; повторну compile/NRO-збірку не запускали.
+- [x] `DOCS-BUMP-839` — версію та delivery-документи оновлено до `0.13.839`.
+- [ ] `BUILD-839` — повторити збірку й перевірити наступний compiler output.
+
+## Попередній delivery: v0.13.838 (Fix save actions GCC build)
 
 - [x] `SAVE-ENUM-WARN-838` — привести stored `save_data_space_id` до `FsSaveDataSpaceId` всередині тернарного виразу.
 - [x] `SAVE-GCC-ICE-838` — замінити локальний `constexpr FsEntry` у generic lambda на звичайний `const` aggregate.

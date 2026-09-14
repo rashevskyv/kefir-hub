@@ -82,10 +82,8 @@ auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Resul
         pbox->UpdateTransfer(i + 1, entries.size());
         pbox->SetActionName("Deleting save data..."_i18n);
 
-        const auto space_id = static_cast<FsSaveDataSpaceId>(
-            IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-            e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
-        );
+        const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+            e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
 
         Result rc = 0;
         if (e.save_data_id != 0) {
@@ -443,10 +441,8 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
                 (*deleted_count)++;
             } else {
                 pbox->SetActionName("Deleting save data..."_i18n);
-                const auto space_id = static_cast<FsSaveDataSpaceId>(
-                    IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-                    e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
-                );
+                const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+                    e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
 
                 Result rc = 0;
                 if (e.save_data_id != 0) {
@@ -912,10 +908,8 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         flags = dbi_extra->flags;
     }
 
-    const auto save_data_space_id = static_cast<FsSaveDataSpaceId>(
-        IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
-        e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
-    );
+    const auto save_data_space_id = IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
+        e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
 
     // Check if save filesystem already exists or needs to be created
     fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};

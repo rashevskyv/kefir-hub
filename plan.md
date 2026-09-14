@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.838** (Fix save actions GCC build). Завершені плани збережено в
+Поточний delivery — **v0.13.839** (Finish save actions compilation fixes). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.838 — Fix save actions GCC build
+## Поточний delivery: v0.13.839 — Finish save actions compilation fixes
+
+Статус: реалізовано; очікується повторна збірка.
+1. Локальну змінну `path` у integrity worker перейменовано, щоб вона не затіняла namespace `path`.
+2. Delete-backups worker захоплює `this` для виклику `CollectGroupArchives`.
+3. Усі решта `save_data_space_id` conditionals приведені до одного enum-типу без `-Wextra` warning; `git diff --check` пройшов.
+
+## Попередній delivery: v0.13.838 — Fix save actions GCC build
 
 Статус: реалізовано; очікується повторна збірка.
 1. Тернарний вираз `save_data_space_id` тепер має однаковий enum-тип в усіх гілках і не створює `-Wextra` warning.

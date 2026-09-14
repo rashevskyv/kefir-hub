@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.838**. Дата: 2026-09-14.
+Канічний робочий файл. Версія коду: **v0.13.839**. Дата: 2026-09-14.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12447 nodes, 24696 edges, 654 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.839 поза ponytail-чергою: виправлено namespace shadowing у integrity worker, відсутнє захоплення `this` у delete worker та решту enum/non-enum warnings у save operations; версію піднято до 0.13.839. `git diff --check` пройшов; повторну Compile/NRO-збірку не запускали. **Не закриває** чергу §2 A1–A7.
 
 v0.13.838 поза ponytail-чергою: виправлено enum/non-enum `-Wextra` warning та GCC ICE на локальному `constexpr FsEntry` у generic lambda save actions; версію піднято до 0.13.838. `git diff --check` пройшов; повторну Compile/NRO-збірку не запускали. **Не закриває** чергу §2 A1–A7.
 

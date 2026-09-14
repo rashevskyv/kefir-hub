@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.838** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.839** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.839 — Finish save actions compilation fixes
+
+- Integrity worker більше не затіняє namespace `path` локальною змінною.
+- Delete-backups worker захоплює `this`, а всі space-ID conditionals мають однорідний `FsSaveDataSpaceId` тип.
+- Версію піднято до `0.13.839`; `git diff --check` пройшов, повторну збірку не запускали.
 
 ## v0.13.838 — Fix save actions GCC build
 
