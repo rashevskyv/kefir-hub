@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.836** (Keep web sharing awake and fix cancel dialog freeze). Завершені задачі збережено в
+Актуальний delivery — **v0.13.837** (Save backup metadata and actions). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.836 (Keep web sharing awake and fix cancel dialog freeze)
+## Поточний delivery: v0.13.837 (Save backup metadata and actions)
+
+- [x] `SAVE-BACKUP-META-837` — згрупувати ZIP/DBI/raw backups за точним save identity та показати game title + Title ID, account/UID, type, timestamp і archive count.
+- [x] `SAVE-BACKUP-DISCOVERY-837` — підтримати metadata, DBI filename/folder та parent-path ID inference для стандартних і custom backup roots.
+- [x] `SAVE-ACTIONS-837` — додати `A`-меню live saves/backups із backup-if-newer, restore, integrity, prune, delete та selection actions.
+- [x] `SAVE-RESTORE-USER-837` — вимагати вибір наявного локального користувача для foreign/unknown UID і резолвити фактичний save target перед auto-backup.
+- [x] `SAVE-RAW-GUARD-837` — заборонити raw DISA restore без існуючого ненульового `save_data_id`; ZIP creation flow залишити доступним.
+- [x] `VERIFY-837` — виконано Gemini + senior static flow/diff review, JSON validation та `git diff --check`; compile/tests/NRO не запускалися.
+- [x] `DOCS-BUMP-837` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.837`.
+- [ ] `HW-837` — зібрати NRO та перевірити metadata, усі `A`-дії, foreign-user ZIP restore, integrity/prune/delete і raw restore guard на консолі.
+
+## Попередній delivery: v0.13.836 (Keep web sharing awake and fix cancel dialog freeze)
 
 - [x] `WEB-BLANK-GATE-836` — активний `WebShareIsRunning()` забороняє inactivity tracker запускати screensaver/Dim/BacklightOff під час install session.
 - [x] `WEB-CANCEL-ONCE-836` — прибрано дубль `ShowCancelConfirmation()` з `App::Update()`; `ProgressBox` обробляє `B` один раз через наявну action.

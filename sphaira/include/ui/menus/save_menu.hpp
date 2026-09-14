@@ -24,6 +24,13 @@ struct Entry final : FsSaveDataInfo {
     bool is_backup{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
+    u64 backup_timestamp{};
+    size_t backup_count{};
+    fs::FsPath backup_path{};
+    std::string dbi_game_dir{};
+    u64 source_timestamp{};
+    u64 commit_id{};
+
     auto GetName() const -> const char* {
         return lang.name;
     }
@@ -193,6 +200,13 @@ private:
     void RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
     Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
     void PromptSaveAction();
+    void PromptLiveSaveAction(const std::vector<Entry>& seeds);
+    void PromptBackupGroupAction(const std::vector<Entry>& seeds);
+    void CreateBackupIfNewer(const std::vector<Entry>& seeds);
+    void VerifyIntegrity(const std::vector<Entry>& seeds);
+    void DeleteOlderBackups(const std::vector<Entry>& seeds);
+    void RestoreForUser(Entry e);
+    void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();
     void SyncSavesRemoteWithLocation(const location::Entry& loc);
@@ -204,6 +218,8 @@ private:
     // every restorable archive for e across all backup formats/locations,
     // newest first. generalises FindLatestBackupPath.
     auto CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate>;
+    auto CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root = "/dumps") const -> std::vector<BackupCandidate>;
+    static auto ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid = nullptr) -> Entry;
     auto GetAccountName(const AccountUid& uid) const -> std::string;
     auto GetAccountSummary() const -> std::string;
     auto GetDataTypeSummary() const -> std::string;

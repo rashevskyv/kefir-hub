@@ -60,7 +60,75 @@ auto GetDbiTypeLetter(u8 data_type) -> char {
         case FsSaveDataType_Temporary: return 'T';
         case FsSaveDataType_Cache:     return 'C';
     }
-    std::unreachable();
+    return '?';
+}
+
+auto ParseDbiTypeLetter(char c) -> u8 {
+    switch (c) {
+        case 'A': case 'a': return FsSaveDataType_Account;
+        case 'B': case 'b': return FsSaveDataType_Bcat;
+        case 'D': case 'd': return FsSaveDataType_Device;
+        case 'T': case 't': return FsSaveDataType_Temporary;
+        case 'C': case 'c': return FsSaveDataType_Cache;
+        default: return 0xFF;
+    }
+}
+
+auto ParseDbiBackupIndex(std::string_view name) -> u16 {
+    if (!name.ends_with(".zip")) {
+        return 0;
+    }
+    name.remove_suffix(4);
+    const auto last_under = name.rfind('_');
+    if (last_under == name.npos || last_under + 1 >= name.size()) {
+        return 0;
+    }
+    u32 idx = 0;
+    for (size_t i = last_under + 1; i < name.size(); i++) {
+        if (name[i] < '0' || name[i] > '9') {
+            return 0;
+        }
+        idx = idx * 10 + (name[i] - '0');
+    }
+    return static_cast<u16>(idx);
+}
+
+auto ParseHex16(std::string_view str) -> u64 {
+    if (str.size() != 16) {
+        return 0;
+    }
+    u64 id = 0;
+    for (size_t i = 0; i < 16; i++) {
+        const char c = str[i];
+        int nibble;
+        if (c >= '0' && c <= '9') nibble = c - '0';
+        else if (c >= 'a' && c <= 'f') nibble = c - 'a' + 10;
+        else if (c >= 'A' && c <= 'F') nibble = c - 'A' + 10;
+        else return 0;
+        id = (id << 4) | static_cast<u64>(nibble);
+    }
+    return id;
+}
+
+auto IsHex16(std::string_view str) -> bool {
+    return str.size() == 16 && ParseHex16(str) != 0;
+}
+
+auto PosixToTimestamp(u64 posix_sec) -> u64 {
+    if (!posix_sec) {
+        return 0;
+    }
+    const time_t t = static_cast<time_t>(posix_sec);
+    const auto tm = std::localtime(&t);
+    if (!tm) {
+        return 0;
+    }
+    return (u64)(tm->tm_year + 1900) * 10000000000ULL +
+           (u64)(tm->tm_mon + 1) * 100000000ULL +
+           (u64)(tm->tm_mday) * 1000000ULL +
+           (u64)(tm->tm_hour) * 10000ULL +
+           (u64)(tm->tm_min) * 100ULL +
+           (u64)(tm->tm_sec);
 }
 
 auto ParseDbiBackupNameTimestamp(std::string_view name) -> u64 {
@@ -83,15 +151,23 @@ auto ParseBackupNameTimestamp(std::string_view name) -> u64 {
         return ts;
     }
 
-    constexpr auto tail_len = std::string_view{"YYYY.MM.DD @ HH.MM.SS.zip"}.size();
-    if (name.size() >= tail_len) {
-        char buf[tail_len + 1]{};
-        std::memcpy(buf, name.data() + name.size() - tail_len, tail_len);
-
+    const auto at_pos = name.find(" @ ");
+    if (at_pos != name.npos && at_pos >= 10 && at_pos + 11 <= name.size()) {
         u32 year, mon, day, hour, min, sec;
-        if (6 == std::sscanf(buf, "%4u.%2u.%2u @ %2u.%2u.%2u", &year, &mon, &day, &hour, &min, &sec)) {
+        if (6 == std::sscanf(name.data() + at_pos - 10, "%4u.%2u.%2u @ %2u.%2u.%2u", &year, &mon, &day, &hour, &min, &sec)) {
             return (u64)year * 10000000000ULL + (u64)mon * 100000000ULL + (u64)day * 1000000ULL
                 + (u64)hour * 10000ULL + (u64)min * 100ULL + sec;
+        }
+    }
+
+    for (size_t i = 0; i + 14 <= name.size(); i++) {
+        u32 year, mon, day, hour, min, sec;
+        if ((i + 15 <= name.size() && 6 == std::sscanf(name.data() + i, "%4u%2u%2u_%2u%2u%2u", &year, &mon, &day, &hour, &min, &sec)) ||
+            (6 == std::sscanf(name.data() + i, "%4u%2u%2u%2u%2u%2u", &year, &mon, &day, &hour, &min, &sec))) {
+            if (year >= 2000 && year <= 2099 && mon >= 1 && mon <= 12 && day >= 1 && day <= 31 && hour <= 23 && min <= 59 && sec <= 59) {
+                return (u64)year * 10000000000ULL + (u64)mon * 100000000ULL + (u64)day * 1000000ULL
+                    + (u64)hour * 10000ULL + (u64)min * 100ULL + sec;
+            }
         }
     }
 
@@ -158,9 +234,15 @@ auto IsSystemLikeSave(u8 data_type) -> bool {
 }
 
 auto DisplayEntryKey(const Entry& e) -> std::string {
-    char key[0x40];
+    char key[0x80];
     if (e.is_backup) {
-        std::snprintf(key, sizeof(key), "backup:%016lX", e.application_id);
+        if (IsSystemLikeSave(e.save_data_type)) {
+            std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
+                e.save_data_type, e.system_save_data_id, e.save_data_index);
+        } else {
+            std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
+                e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index);
+        }
     } else if (IsSystemLikeSave(e.save_data_type)) {
         std::snprintf(key, sizeof(key), "system:%u:%016lX", e.save_data_type, e.system_save_data_id);
     } else {
@@ -499,6 +581,356 @@ auto NormalizeBackupRoot(const fs::FsPath& path, const filebrowser::FsEntry& fs_
     }
 
     return out;
+}
+
+auto InferBackupIdFromPath(std::string_view full_path) -> u64 {
+    u64 parent_hex = 0;
+    u64 filename_hex = 0;
+
+    size_t start = 0;
+    while (start < full_path.size()) {
+        auto slash = full_path.find_first_of("/\\", start);
+        auto part = (slash == full_path.npos) ? full_path.substr(start) : full_path.substr(start, slash - start);
+        const bool is_last = (slash == full_path.npos);
+
+        if (is_last) {
+            if (part.ends_with(".zip") || part.ends_with(".bin") || part.ends_with(".disa")) {
+                part = part.substr(0, part.rfind('.'));
+            }
+            if (part.size() == 16) {
+                filename_hex = ParseHex16(part);
+            }
+        } else {
+            if (part.size() == 16) {
+                const auto hex = ParseHex16(part);
+                if (hex != 0) {
+                    parent_hex = hex;
+                }
+            }
+        }
+
+        if (slash == full_path.npos) break;
+        start = slash + 1;
+    }
+
+    return (parent_hex != 0) ? parent_hex : filename_hex;
+}
+
+auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, BackupArchiveInfo& out) -> bool {
+    const bool is_zip = path::EndsWithIC(filename, ".zip");
+    const bool is_raw = !is_zip && IsRawSaveCandidate(fs, path, filename);
+    if (!is_zip && !is_raw) {
+        return false;
+    }
+
+    out = BackupArchiveInfo{};
+    out.path = path;
+    out.dbi_game_dir = std::string{dbi_game_dir_name};
+    out.timestamp = ParseBackupNameTimestamp(filename);
+
+    if (is_zip) {
+        // Precedence 1: valid embedded archive metadata
+        zlib_filefunc64_def file_func;
+        mz::FileFuncStdio(&file_func);
+        auto zfile = unzOpen2_64(path.s, &file_func);
+        if (zfile) {
+            ON_SCOPE_EXIT(unzClose(zfile));
+            bool loaded = false;
+
+            if (UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
+                if (UNZ_OK == unzOpenCurrentFile(zfile)) {
+                    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+                    FsSaveDataExtraData extra{};
+                    if (sizeof(extra) == unzReadCurrentFile(zfile, &extra, sizeof(extra))) {
+                        if (extra.attr.application_id != 0) {
+                            out.application_id = extra.attr.application_id;
+                        }
+                        if (extra.attr.system_save_data_id != 0) {
+                            out.system_save_data_id = extra.attr.system_save_data_id;
+                        }
+                        out.save_data_type = extra.attr.save_data_type;
+                        out.uid = extra.attr.uid;
+                        out.save_data_index = extra.attr.save_data_index;
+                        out.save_data_rank = extra.attr.save_data_rank;
+                        out.commit_id = extra.commit_id;
+                        out.source_timestamp = extra.timestamp;
+                        if (out.timestamp == 0 && extra.timestamp != 0) {
+                            out.timestamp = PosixToTimestamp(extra.timestamp);
+                        }
+                        loaded = true;
+                    }
+                }
+            }
+
+            if (!loaded && UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, NX_SAVE_META_NAME, 2)) {
+                if (UNZ_OK == unzOpenCurrentFile(zfile)) {
+                    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+                    NXSaveMeta meta{};
+                    if (sizeof(meta) == unzReadCurrentFile(zfile, &meta, sizeof(meta))) {
+                        if (meta.magic == NX_SAVE_META_MAGIC && meta.version == NX_SAVE_META_VERSION) {
+                            if (meta.attr.application_id != 0) {
+                                out.application_id = meta.attr.application_id;
+                            }
+                            if (meta.attr.system_save_data_id != 0) {
+                                out.system_save_data_id = meta.attr.system_save_data_id;
+                            }
+                            out.save_data_type = meta.attr.save_data_type;
+                            out.uid = meta.attr.uid;
+                            out.save_data_index = meta.attr.save_data_index;
+                            out.save_data_rank = meta.attr.save_data_rank;
+                            out.commit_id = meta.commit_id;
+                            out.source_timestamp = meta.timestamp;
+                            if (out.timestamp == 0 && meta.timestamp != 0) {
+                                out.timestamp = PosixToTimestamp(meta.timestamp);
+                            }
+                            loaded = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Precedence 2: DBI filename fields
+        if (out.application_id == 0 && out.system_save_data_id == 0) {
+            out.application_id = ParseDbiBackupAppId(filename);
+        }
+        if (out.save_data_type == 0xFF) {
+            if (filename.size() >= 19 && filename[16] == '_' && filename[18] == '_') {
+                out.save_data_type = ParseDbiTypeLetter(filename[17]);
+            }
+        }
+        if (out.save_data_index == 0) {
+            out.save_data_index = ParseDbiBackupIndex(filename);
+        }
+    }
+
+    // Precedence 3: explicit DBI directory/folder information
+    if (out.application_id == 0 && out.system_save_data_id == 0) {
+        if (!dbi_game_dir_name.empty()) {
+            out.application_id = ParseHex16(dbi_game_dir_name);
+        }
+    }
+
+    // Precedence 4: 16-hex component inferred from the full path
+    if (out.application_id == 0 && out.system_save_data_id == 0) {
+        const auto hex = InferBackupIdFromPath(path.s);
+        if (hex != 0) {
+            std::string_view p{path.s};
+            const bool is_system = (hex & 0x8000000000000000ULL) ||
+                                   p.find("Save System") != p.npos ||
+                                   (out.save_data_type != 0xFF && IsSystemLikeSave(out.save_data_type));
+            if (is_system) {
+                out.system_save_data_id = hex;
+            } else {
+                out.application_id = hex;
+            }
+        }
+    }
+
+    // Save-folder context for save_data_type
+    if (out.save_data_type == 0xFF) {
+        std::string_view p{path.s};
+        if (p.find("Save System BCAT") != p.npos) {
+            out.save_data_type = FsSaveDataType_SystemBcat;
+        } else if (p.find("Save System") != p.npos) {
+            out.save_data_type = FsSaveDataType_System;
+        } else if (p.find("Save BCAT") != p.npos || p.find("/BCAT/") != p.npos) {
+            out.save_data_type = FsSaveDataType_Bcat;
+        } else if (p.find("Save Device") != p.npos || p.find("/Device/") != p.npos) {
+            out.save_data_type = FsSaveDataType_Device;
+        } else if (p.find("Save Temporary") != p.npos || p.find("/Temporary/") != p.npos) {
+            out.save_data_type = FsSaveDataType_Temporary;
+        } else if (p.find("Save Cache") != p.npos || p.find("/Cache/") != p.npos) {
+            out.save_data_type = FsSaveDataType_Cache;
+        } else if (p.find("/Save/") != p.npos || p.find("/Account/") != p.npos) {
+            out.save_data_type = FsSaveDataType_Account;
+        }
+    }
+
+    if (out.application_id == 0 && out.system_save_data_id == 0) {
+        return false;
+    }
+
+    if (IsSystemLikeSave(out.save_data_type)) {
+        if (out.system_save_data_id == 0 && out.application_id != 0) {
+            out.system_save_data_id = out.application_id;
+            out.application_id = 0;
+        }
+    } else if (out.save_data_type == 0xFF) {
+        if (out.system_save_data_id != 0) {
+            out.save_data_type = FsSaveDataType_System;
+        } else {
+            out.save_data_type = FsSaveDataType_Account;
+        }
+    }
+
+    return true;
+}
+
+auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    if (e.save_data_type != FsSaveDataType_Account) {
+        return "Not account-bound";
+    }
+
+    for (const auto& acc : accounts) {
+        if (!std::memcmp(&e.uid, &acc.uid, sizeof(e.uid))) {
+            return acc.nickname;
+        }
+    }
+
+    if (e.uid.uid[0] != 0 || e.uid.uid[1] != 0) {
+        char buf[48];
+        const u64 display_id = e.uid.uid[0] ? e.uid.uid[0] : e.uid.uid[1];
+        std::snprintf(buf, sizeof(buf), "Unknown account (%08lX)", static_cast<unsigned long>(display_id & 0xFFFFFFFF));
+        return buf;
+    }
+
+    return "Unknown account";
+}
+
+auto FormatBackupTimestamp(u64 ts, bool compact) -> std::string {
+    if (ts == 0) {
+        return "Unknown date";
+    }
+    const u32 year = static_cast<u32>(ts / 10000000000ULL);
+    const u32 mon = static_cast<u32>((ts / 100000000ULL) % 100);
+    const u32 day = static_cast<u32>((ts / 1000000ULL) % 100);
+    const u32 hour = static_cast<u32>((ts / 10000ULL) % 100);
+    const u32 min = static_cast<u32>((ts / 100ULL) % 100);
+    const u32 sec = static_cast<u32>(ts % 100);
+
+    char buf[32];
+    if (compact) {
+        std::snprintf(buf, sizeof(buf), "%04u.%02u.%02u %02u:%02u", year, mon, day, hour, min);
+    } else {
+        std::snprintf(buf, sizeof(buf), "%04u.%02u.%02u %02u:%02u:%02u", year, mon, day, hour, min, sec);
+    }
+    return buf;
+}
+
+auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts, bool list_layout) -> std::string {
+    const u64 id = IsSystemLikeSave(e.save_data_type) ? e.system_save_data_id : e.application_id;
+    char id_str[33];
+    std::snprintf(id_str, sizeof(id_str), "%016lX", id);
+
+    const std::string account = FormatBackupAccount(e, accounts);
+    const std::string date_str = FormatBackupTimestamp(e.backup_timestamp, !list_layout);
+
+    if (list_layout) {
+        std::string out = std::string{id_str} + "  •  " + account + "  •  " + date_str;
+        if (e.backup_count > 1) {
+            out += "  •  " + std::to_string(e.backup_count) + " archives";
+        }
+        return out;
+    }
+
+    std::string out = account + "  •  " + date_str;
+    if (e.backup_count > 1) {
+        out += " (" + std::to_string(e.backup_count) + ")";
+    }
+    return out;
+}
+
+auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string {
+    char key[0x80];
+    if (IsSystemLikeSave(info.save_data_type)) {
+        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
+            info.save_data_type, info.system_save_data_id, info.save_data_index);
+    } else {
+        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
+            info.application_id, info.save_data_type, info.uid.uid[0], info.uid.uid[1], info.save_data_index);
+    }
+    return key;
+}
+
+auto BackupGroupKey(const Entry& e) -> std::string {
+    char key[0x80];
+    if (IsSystemLikeSave(e.save_data_type)) {
+        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
+            e.save_data_type, e.system_save_data_id, e.save_data_index);
+    } else {
+        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
+            e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index);
+    }
+    return key;
+}
+
+auto VerifyZipIntegrity(const fs::FsPath& path) -> bool {
+    zlib_filefunc64_def file_func;
+    mz::FileFuncStdio(&file_func);
+    auto zfile = unzOpen2_64(path.s, &file_func);
+    if (!zfile) {
+        return false;
+    }
+    ON_SCOPE_EXIT(unzClose(zfile));
+
+    unz_global_info64 gi{};
+    if (UNZ_OK != unzGetGlobalInfo64(zfile, &gi) || gi.number_entry == 0) {
+        return false;
+    }
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        return false;
+    }
+
+    std::vector<u8> buffer(64 * 1024);
+    u64 entries_read = 0;
+    while (true) {
+        if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+            return false;
+        }
+
+        int read_bytes = 0;
+        do {
+            read_bytes = unzReadCurrentFile(zfile, buffer.data(), buffer.size());
+            if (read_bytes < 0) {
+                unzCloseCurrentFile(zfile);
+                return false;
+            }
+        } while (read_bytes > 0);
+
+        if (UNZ_OK != unzCloseCurrentFile(zfile)) {
+            return false;
+        }
+
+        entries_read++;
+
+        const int next_rc = unzGoToNextFile(zfile);
+        if (next_rc == UNZ_END_OF_LIST_OF_FILE) {
+            break;
+        }
+        if (next_rc != UNZ_OK) {
+            return false;
+        }
+    }
+
+    return entries_read == gi.number_entry && entries_read > 0;
+}
+
+auto VerifyDisaIntegrity(fs::Fs* fs, const fs::FsPath& path) -> bool {
+    if (!IsDisaSaveFile(fs, path)) {
+        return false;
+    }
+    fs::File file;
+    if (R_FAILED(fs->OpenFile(path, FsOpenMode_Read, &file))) {
+        return false;
+    }
+    s64 size{};
+    if (R_FAILED(file.GetSize(&size)) || size < 0x200) {
+        return false;
+    }
+
+    std::vector<u8> buffer(64 * 1024);
+    s64 offset = 0;
+    while (offset < size) {
+        const u64 to_read = std::min<s64>(buffer.size(), size - offset);
+        u64 bytes_read = 0;
+        if (R_FAILED(file.Read(offset, buffer.data(), to_read, FsReadOption_None, &bytes_read)) || bytes_read != to_read) {
+            return false;
+        }
+        offset += bytes_read;
+    }
+    return true;
 }
 
 } // namespace sphaira::ui::menu::save

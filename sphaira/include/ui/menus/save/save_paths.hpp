@@ -20,6 +20,58 @@ inline constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
 inline constexpr const char* DBI_SAVE_INFO_NAME = ".dbi_save_info.ini";
 inline constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";
 
+constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
+constexpr u32 NX_SAVE_META_VERSION = 1;
+constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
+
+// https://github.com/J-D-K/JKSV/issues/264#issuecomment-2618962807
+struct NXSaveMeta {
+    u32 magic{}; // NX_SAVE_META_MAGIC
+    u32 version{}; // NX_SAVE_META_VERSION
+    FsSaveDataAttribute attr{}; // FsSaveDataExtraData::attr
+    u64 owner_id{}; // FsSaveDataExtraData::owner_id
+    u64 timestamp{}; // FsSaveDataExtraData::timestamp
+    u32 flags{}; // FsSaveDataExtraData::flags
+    u32 unk_x54{}; // FsSaveDataExtraData::unk_x54
+    s64 data_size{}; // FsSaveDataExtraData::data_size
+    s64 journal_size{}; // FsSaveDataExtraData::journal_size
+    u64 commit_id{}; // FsSaveDataExtraData::commit_id
+    u64 raw_size{}; // FsSaveDataInfo::size
+};
+static_assert(sizeof(NXSaveMeta) == 128);
+
+struct BackupArchiveInfo {
+    u64 application_id{};
+    u64 system_save_data_id{};
+    u8 save_data_type{0xFF};
+    AccountUid uid{};
+    u16 save_data_index{};
+    u8 save_data_rank{};
+    u64 timestamp{};
+    std::string dbi_game_dir{};
+    fs::FsPath path{};
+    int source{};
+    u64 commit_id{};
+    u64 source_timestamp{};
+};
+
+auto ParseDbiTypeLetter(char c) -> u8;
+auto ParseDbiBackupIndex(std::string_view name) -> u16;
+auto ParseHex16(std::string_view str) -> u64;
+auto IsHex16(std::string_view str) -> bool;
+auto PosixToTimestamp(u64 posix_sec) -> u64;
+auto InferBackupIdFromPath(std::string_view full_path) -> u64;
+
+auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, BackupArchiveInfo& out) -> bool;
+auto VerifyZipIntegrity(const fs::FsPath& path) -> bool;
+auto VerifyDisaIntegrity(fs::Fs* fs, const fs::FsPath& path) -> bool;
+
+auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
+auto FormatBackupTimestamp(u64 ts, bool compact = false) -> std::string;
+auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts, bool list_layout) -> std::string;
+auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string;
+auto BackupGroupKey(const Entry& e) -> std::string;
+
 auto GetSaveFolder(u8 data_type) -> fs::FsPath;
 auto GetSaveFolder(const Entry& e) -> fs::FsPath;
 auto GetSaveTypeSubdir(u8 data_type) -> fs::FsPath;

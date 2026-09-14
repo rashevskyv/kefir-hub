@@ -116,9 +116,12 @@ void DrawInnerBorder(NVGcontext* vg, const Vec4& v, const NVGcolor& col, float t
 }
 
 // right-hand column of a list row, DBI-style: save category in brackets, then
-// its allocated size (backup tiles are synthesized, so they have no size).
+// its allocated size (backup rows show archive count when > 1).
 auto FormatListInfo(const Entry& e) -> std::string {
-    const std::string label = "[" + (e.is_backup ? "Backup"_i18n : i18n::get(GetSaveTypeLabel(e.save_data_type))) + "]";
+    const std::string label = "[" + i18n::get(GetSaveTypeLabel(e.save_data_type)) + "]";
+    if (e.is_backup) {
+        return e.backup_count > 1 ? label + "  " + std::to_string(e.backup_count) + " archives" : label;
+    }
     return e.size ? label + "  " + grid::FormatBytes(e.size) : label;
 }
 
@@ -713,16 +716,21 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", id);
         
-        const auto account = (e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
-            GetAccountName(e.uid) : GetAccountSummary();
+        const auto account = e.is_backup ?
+            FormatBackupAccount(e, m_accounts) :
+            ((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
+                GetAccountName(e.uid) : GetAccountSummary());
+
+        const auto author_text = e.is_backup ?
+            FormatBackupTimestamp(e.backup_timestamp) : std::string{e.GetAuthor()};
 
         if (!m_app_id_filter) {
             nvgSave(vg);
             nvgTranslate(vg, 0.f, 26.f);
-            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, account.c_str());
+            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), author_text.c_str(), title_id, account.c_str());
             nvgRestore(vg);
         } else {
-            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), e.GetAuthor(), title_id, account.c_str());
+            DrawHbMenuHeader(vg, theme, e.image, e.GetName(), author_text.c_str(), title_id, account.c_str());
         }
     }
 
@@ -758,11 +766,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto selected = entry == m_index;
         Vec4 image_v = v;
-        const auto info = m_layout.Get() == grid::LayoutType_List ? FormatListInfo(e) : std::string{};
+        const auto info = (m_layout.Get() == grid::LayoutType_List || m_layout.Get() == grid::LayoutType_GridDetail) ? FormatListInfo(e) : std::string{};
+        const auto author_str = e.is_backup
+            ? FormatBackupSecondaryText(e, m_accounts, m_layout.Get() == grid::LayoutType_List)
+            : std::string{e.GetAuthor()};
+
         if (!IsSystemLikeSave(e.save_data_type)) {
-            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), e.GetAuthor(), info.c_str(), e.selected);
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
         } else {
-            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), e.GetAuthor(), info.c_str(), e.selected);
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }
@@ -1157,7 +1169,9 @@ void Menu::ScanHomebrew() {
 
     for (auto& e : m_entries) {
         if (!IsSystemLikeSave(e.save_data_type) && !m_installed_app_ids.contains(e.application_id)) {
-            std::snprintf(e.lang.name, sizeof(e.lang.name), "Title %016lX", e.application_id);
+            if (e.lang.name[0] == '\0') {
+                std::snprintf(e.lang.name, sizeof(e.lang.name), "Title %016lX", e.application_id);
+            }
             e.lang.author[0] = '\0';
         }
     }
@@ -1203,86 +1217,140 @@ void Menu::BuildInstalledAppIds() {
 
 void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
     fs::FsNativeSd fs;
-    std::set<u64> seen;
+    std::unordered_map<std::string, size_t> group_map;
+    std::vector<Entry> groups;
+    std::unordered_set<std::string> seen_paths;
 
-    const auto add = [&](u64 app_id) {
-        if (app_id && seen.insert(app_id).second) {
+    const auto process_archive = [&](const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, int source_prio) {
+        if (!seen_paths.insert(path.s).second) {
+            return;
+        }
+
+        BackupArchiveInfo info{};
+        if (!InspectBackupArchive(&fs, path, filename, dbi_game_dir_name, info)) {
+            return;
+        }
+
+        info.source = source_prio;
+        const auto key = BackupGroupKey(info);
+        auto it = group_map.find(key);
+        if (it == group_map.end()) {
             Entry e{};
-            e.application_id = app_id;
-            e.save_data_type = FsSaveDataType_Account; // drawn like a game save tile
+            e.application_id = info.application_id;
+            e.system_save_data_id = info.system_save_data_id;
+            e.save_data_type = info.save_data_type;
+            e.uid = info.uid;
+            e.save_data_index = info.save_data_index;
+            e.save_data_rank = info.save_data_rank;
             e.is_backup = true;
-            out.emplace_back(e);
+            e.backup_timestamp = info.timestamp;
+            e.backup_count = 1;
+            e.backup_path = path;
+            e.dbi_game_dir = info.dbi_game_dir;
+            e.source_timestamp = info.source_timestamp;
+            e.commit_id = info.commit_id;
+
+            if (IsSystemLikeSave(e.save_data_type)) {
+                detail::FakeNacpEntryForSystem(e);
+            } else if (!e.dbi_game_dir.empty() && !IsHex16(e.dbi_game_dir)) {
+                std::strncpy(e.lang.name, e.dbi_game_dir.c_str(), sizeof(e.lang.name) - 1);
+                e.lang.name[sizeof(e.lang.name) - 1] = '\0';
+            }
+
+            group_map.emplace(key, groups.size());
+            groups.emplace_back(std::move(e));
+        } else {
+            auto& existing = groups[it->second];
+            existing.backup_count++;
+
+            bool is_newer = false;
+            if (info.timestamp != existing.backup_timestamp) {
+                is_newer = info.timestamp > existing.backup_timestamp;
+            } else {
+                is_newer = (path.toString() < existing.backup_path.toString());
+            }
+
+            if (is_newer) {
+                existing.backup_timestamp = info.timestamp;
+                existing.backup_path = path;
+                existing.source_timestamp = info.source_timestamp;
+                existing.commit_id = info.commit_id;
+            }
+
+            if (existing.dbi_game_dir.empty() && !info.dbi_game_dir.empty()) {
+                existing.dbi_game_dir = info.dbi_game_dir;
+                if (existing.lang.name[0] == '\0' && !IsHex16(existing.dbi_game_dir)) {
+                    std::strncpy(existing.lang.name, existing.dbi_game_dir.c_str(), sizeof(existing.lang.name) - 1);
+                    existing.lang.name[sizeof(existing.lang.name) - 1] = '\0';
+                }
+            }
         }
     };
 
-    // DBI-format game backups: /switch/DBI/saves/<game>/<date>/<appid>_<type>_..zip
+    // 1. Scan DBI-format game backups: /switch/DBI/saves/<game>/<date>/<appid>_<type>_..zip
     const auto dbi_root = fs::AppendPath(fs.Root(), DBI_SAVES_PATH);
     filebrowser::FsDirCollection games{};
     filebrowser::FsView::get_collection(&fs, dbi_root, "", games, false, true, false);
     for (const auto& game : games.dirs) {
         const auto game_dir = fs::AppendPath(dbi_root, game.name);
         filebrowser::FsDirCollection dates{};
-        filebrowser::FsView::get_collection(&fs, game_dir, "", dates, false, true, false);
+        filebrowser::FsView::get_collection(&fs, game_dir, "", dates, true, true, false);
+        for (const auto& file : dates.files) {
+            process_archive(fs::AppendPath(dates.path, file.name), file.name, game.name, 0);
+        }
         for (const auto& date : dates.dirs) {
             filebrowser::FsDirCollection files{};
             filebrowser::FsView::get_collection(&fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
             for (const auto& file : files.files) {
-                add(ParseDbiBackupAppId(file.name));
+                process_archive(fs::AppendPath(files.path, file.name), file.name, game.name, 0);
             }
         }
     }
 
-    // legacy sphaira backups written under an app-id-named folder in /dumps.
-    const auto parse_hex16 = [](const char* name) -> u64 {
-        if (std::strlen(name) != 16) {
-            return 0;
+    // 2. Scan Sphaira root (/dumps) and custom search paths
+    const auto scan_sphaira_root = [&](const fs::FsPath& root_path, int prio_base) {
+        const auto root = fs::AppendPath(fs.Root(), root_path);
+        filebrowser::FsDirCollection l1{};
+        filebrowser::FsView::get_collection(&fs, root, "", l1, true, true, false);
+        for (const auto& file : l1.files) {
+            process_archive(fs::AppendPath(l1.path, file.name), file.name, "", prio_base);
         }
-        u64 id{};
-        for (int i = 0; i < 16; i++) {
-            const char c = name[i];
-            int nibble;
-            if (c >= '0' && c <= '9') nibble = c - '0';
-            else if (c >= 'a' && c <= 'f') nibble = c - 'a' + 10;
-            else if (c >= 'A' && c <= 'F') nibble = c - 'A' + 10;
-            else return 0;
-            id = (id << 4) | static_cast<u64>(nibble);
+        for (const auto& dir1 : l1.dirs) {
+            const auto dir1_path = fs::AppendPath(root, dir1.name);
+            filebrowser::FsDirCollection l2{};
+            filebrowser::FsView::get_collection(&fs, dir1_path, "", l2, true, true, false);
+            for (const auto& file : l2.files) {
+                process_archive(fs::AppendPath(l2.path, file.name), file.name, "", prio_base + 1);
+            }
+            for (const auto& dir2 : l2.dirs) {
+                const auto dir2_path = fs::AppendPath(dir1_path, dir2.name);
+                filebrowser::FsDirCollection l3{};
+                filebrowser::FsView::get_collection(&fs, dir2_path, "", l3, true, false, false);
+                for (const auto& file : l3.files) {
+                    process_archive(fs::AppendPath(l3.path, file.name), file.name, "", prio_base + 2);
+                }
+            }
         }
-        return id;
     };
 
-    const auto dumps_root = fs::AppendPath(fs.Root(), DEFAULT_BACKUP_ROOT);
-    filebrowser::FsDirCollection dumps{};
-    filebrowser::FsView::get_collection(&fs, dumps_root, "", dumps, true, true, false);
-    for (const auto& dir : dumps.dirs) {
-        add(parse_hex16(dir.name));
-    }
-    for (const auto& file : dumps.files) {
-        std::string_view name_view{file.name};
-        if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
-            name_view = name_view.substr(0, name_view.size() - 5);
-        }
-        if (name_view.size() == 16) {
-            add(parse_hex16(std::string{name_view}.c_str()));
-        }
+    scan_sphaira_root(fs::FsPath{DEFAULT_BACKUP_ROOT}, 1);
+
+    int custom_prio = 10;
+    for (const auto& custom_path_str : GetBackupSearchPaths()) {
+        scan_sphaira_root(fs::FsPath{custom_path_str}, custom_prio);
+        custom_prio += 5;
     }
 
-    // custom backup search paths
-    for (const auto& custom_path_str : GetBackupSearchPaths()) {
-        const auto custom_root = fs::AppendPath(fs.Root(), custom_path_str);
-        filebrowser::FsDirCollection custom_dir{};
-        filebrowser::FsView::get_collection(&fs, custom_root, "", custom_dir, true, true, false);
-        for (const auto& dir : custom_dir.dirs) {
-            add(parse_hex16(dir.name));
+    // Sort backups newest first by default
+    std::ranges::sort(groups, [](const Entry& a, const Entry& b) {
+        if (a.backup_timestamp != b.backup_timestamp) {
+            return a.backup_timestamp > b.backup_timestamp;
         }
-        for (const auto& file : custom_dir.files) {
-            std::string_view name_view{file.name};
-            if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
-                name_view = name_view.substr(0, name_view.size() - 5);
-            }
-            if (name_view.size() == 16) {
-                add(parse_hex16(std::string{name_view}.c_str()));
-            }
-        }
+        return a.application_id < b.application_id;
+    });
+
+    for (auto& g : groups) {
+        out.emplace_back(std::move(g));
     }
 }
 
@@ -1393,33 +1461,714 @@ void Menu::OnLayoutChange() {
     }
 }
 
+auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate> {
+    const auto candidates = CollectBackups(fs, group, backup_root);
+    const auto target_key = BackupGroupKey(group);
+
+    std::vector<BackupCandidate> out;
+    for (const auto& c : candidates) {
+        const auto slash = std::strrchr(c.path.s, '/');
+        const auto fname = slash ? (slash + 1) : c.path.s;
+        BackupArchiveInfo info{};
+        if (InspectBackupArchive(fs, c.path, fname, group.dbi_game_dir, info)) {
+            if (BackupGroupKey(info) == target_key) {
+                out.emplace_back(c);
+            }
+        }
+    }
+
+    if (out.empty() && !group.backup_path.empty()) {
+        out.emplace_back(BackupCandidate{group.backup_timestamp, group.backup_path, 0});
+    }
+
+    return out;
+}
+
+auto Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid) -> Entry {
+    Entry target = backup;
+    target.is_backup = false;
+    if (explicit_uid) {
+        target.uid = *explicit_uid;
+    }
+
+    AccountProfileBase acc{};
+    acc.uid = target.uid;
+    FsSaveDataSpaceId space_id;
+    FsSaveDataFilter filter;
+    GetFsSaveAttr(acc, target.save_data_type, space_id, filter);
+
+    target.save_data_id = 0;
+    target.save_data_space_id = space_id;
+
+    FsSaveDataInfoReader reader;
+    if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
+        ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
+        std::vector<FsSaveDataInfo> info_list(256);
+        bool found = false;
+        while (!found) {
+            s64 record_count = 0;
+            if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count)) || record_count <= 0) {
+                break;
+            }
+            for (s32 i = 0; i < record_count; i++) {
+                const auto& info = info_list[i];
+                const bool id_match = IsSystemLikeSave(target.save_data_type)
+                    ? (info.system_save_data_id == target.system_save_data_id)
+                    : (info.application_id == target.application_id);
+                if (id_match &&
+                    info.save_data_type == target.save_data_type &&
+                    info.save_data_index == target.save_data_index) {
+                    if (target.save_data_type == FsSaveDataType_Account) {
+                        if (std::memcmp(&info.uid, &target.uid, sizeof(AccountUid)) != 0) {
+                            continue;
+                        }
+                    }
+                    target.save_data_id = info.save_data_id;
+                    target.save_data_space_id = info.save_data_space_id;
+                    target.save_data_rank = info.save_data_rank;
+                    target.size = info.size;
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    return target;
+}
+
 void Menu::PromptSaveAction() {
     if (m_entries.empty()) {
         return;
     }
 
-    PopupList::Items items;
-    items.emplace_back("Backup"_i18n);
-    items.emplace_back("Restore"_i18n);
-    items.emplace_back("Delete"_i18n);
+    const auto seeds = GetSelectedEntries();
+    if (seeds.empty()) {
+        return;
+    }
 
-    // Backup/Restore/Delete are navigation into a further options menu, not a value
-    // choice, so render a submenu chevron rather than a "current value" tick.
-    auto popup = std::make_unique<PopupList>("Save Action"_i18n, items, [this](auto op_index) {
+    bool has_live = false;
+    bool has_backup = false;
+    for (const auto& s : seeds) {
+        if (s.is_backup) {
+            has_backup = true;
+        } else {
+            has_live = true;
+        }
+    }
+
+    if (has_live && has_backup) {
+        App::Push<OptionBox>("Please select only live saves or only backups."_i18n, "OK"_i18n);
+        return;
+    }
+
+    if (has_live) {
+        PromptLiveSaveAction(seeds);
+    } else {
+        PromptBackupGroupAction(seeds);
+    }
+}
+
+void Menu::PromptLiveSaveAction(const std::vector<Entry>& seeds) {
+    std::set<u64> selected_apps;
+    std::set<u64> selected_sys;
+    for (const auto& s : seeds) {
+        if (!s.is_backup) {
+            if (IsSystemLikeSave(s.save_data_type)) {
+                selected_sys.insert(s.system_save_data_id);
+            } else if (s.application_id != 0) {
+                selected_apps.insert(s.application_id);
+            }
+        }
+    }
+    if (selected_apps.empty() && selected_sys.empty() && m_index < m_entries.size() && !m_entries[m_index].is_backup) {
+        const auto& cur = m_entries[m_index];
+        if (IsSystemLikeSave(cur.save_data_type)) {
+            selected_sys.insert(cur.system_save_data_id);
+        } else if (cur.application_id != 0) {
+            selected_apps.insert(cur.application_id);
+        }
+    }
+
+    PopupList::Items items;
+    items.emplace_back("Create backup"_i18n);
+    items.emplace_back("Create backup if newer"_i18n);
+    items.emplace_back("Restore"_i18n);
+    items.emplace_back("Open in file browser"_i18n);
+    items.emplace_back("Delete"_i18n);
+    const std::string select_game_label = ((selected_apps.size() + selected_sys.size()) > 1)
+        ? "Select all saves for selected games"_i18n
+        : "Select all saves for this game"_i18n;
+    items.emplace_back(select_game_label);
+
+    auto popup = std::make_unique<PopupList>("Save Action"_i18n, items, [this, seeds, selected_apps, selected_sys](auto op_index) {
         if (!op_index) {
             return;
         }
 
-        if (*op_index == 0) {
-            PromptSaveTypeOptions(SaveOp::Backup);
-        } else if (*op_index == 1) {
-            PromptSaveTypeOptions(SaveOp::Restore);
-        } else if (*op_index == 2) {
-            PromptSaveTypeOptions(SaveOp::Delete);
+        switch (*op_index) {
+            case 0:
+                PromptSaveTypeOptions(SaveOp::Backup);
+                break;
+
+            case 1:
+                CreateBackupIfNewer(seeds);
+                break;
+
+            case 2:
+                PromptSaveTypeOptions(SaveOp::Restore);
+                break;
+
+            case 3:
+                App::Push<OptionBox>("Live save filesystem browsing is not currently supported."_i18n, "OK"_i18n);
+                break;
+
+            case 4:
+                PromptSaveTypeOptions(SaveOp::Delete);
+                break;
+
+            case 5: {
+                for (auto& e : m_entries) {
+                    if (!e.is_backup) {
+                        const bool match = IsSystemLikeSave(e.save_data_type)
+                            ? selected_sys.contains(e.system_save_data_id)
+                            : selected_apps.contains(e.application_id);
+                        if (match && !e.selected) {
+                            e.selected = true;
+                            m_selected_count++;
+                        }
+                    }
+                }
+                break;
+            }
+
+            default:
+                break;
         }
     });
     popup->SetMenuStyle(true);
     App::Push(std::move(popup));
+}
+
+void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
+    auto to_backup_count = std::make_shared<size_t>(0);
+    auto up_to_date_count = std::make_shared<size_t>(0);
+
+    App::Push<ProgressBox>(0, "Create backup if newer"_i18n, "", [this, seeds, to_backup_count, up_to_date_count](auto pbox) -> Result {
+        fs::FsNativeSd sd_fs;
+        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+
+        std::vector<Entry> to_backup;
+
+        for (size_t i = 0; i < seeds.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+            const auto& e = seeds[i];
+            pbox->SetTitle(e.GetName());
+            pbox->UpdateTransfer(i + 1, seeds.size());
+
+            const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
+            if (archives.empty()) {
+                to_backup.emplace_back(e);
+                continue;
+            }
+
+            const auto& newest = archives.front();
+            const auto slash = std::strrchr(newest.path.s, '/');
+            BackupArchiveInfo binfo{};
+            if (!InspectBackupArchive(&sd_fs, newest.path, slash ? slash + 1 : newest.path.s, "", binfo)) {
+                to_backup.emplace_back(e);
+                continue;
+            }
+
+            const auto space_id = static_cast<FsSaveDataSpaceId>(
+                IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+                e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
+            );
+
+            FsSaveDataExtraData live_extra{};
+            const auto rc = fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live_extra, sizeof(live_extra), space_id, e.save_data_id);
+            if (R_FAILED(rc)) {
+                to_backup.emplace_back(e);
+                continue;
+            }
+
+            bool is_up_to_date = false;
+            if (live_extra.timestamp != 0 && binfo.source_timestamp != 0) {
+                if (live_extra.timestamp == binfo.source_timestamp) {
+                    if (live_extra.commit_id != 0 && binfo.commit_id != 0) {
+                        is_up_to_date = (live_extra.commit_id == binfo.commit_id);
+                    } else {
+                        is_up_to_date = true;
+                    }
+                }
+            } else if (live_extra.commit_id != 0 && binfo.commit_id != 0) {
+                is_up_to_date = (live_extra.commit_id == binfo.commit_id);
+            }
+
+            if (is_up_to_date) {
+                (*up_to_date_count)++;
+            } else {
+                to_backup.emplace_back(e);
+            }
+        }
+
+        *to_backup_count = to_backup.size();
+
+        if (to_backup.empty()) {
+            R_SUCCEED();
+        }
+
+        const auto location = MakeSdCardDumpLocation();
+        for (size_t i = 0; i < to_backup.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+            auto& e = to_backup[i];
+            detail::LoadControlEntry(e);
+            pbox->SetTitle(e.GetName());
+            if (e.image) {
+                pbox->SetImage(e.image);
+            } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+                pbox->SetImageDataConst(data->icon);
+            } else {
+                pbox->SetImage(0);
+            }
+            pbox->UpdateTransfer(i + 1, to_backup.size());
+            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
+        }
+
+        R_SUCCEED();
+    }, [this, to_backup_count, up_to_date_count](Result rc) {
+        if (R_SUCCEEDED(rc)) {
+            if (*to_backup_count == 0 && *up_to_date_count > 0) {
+                App::Push<OptionBox>("All selected saves are already up to date."_i18n, "OK"_i18n);
+            } else if (*to_backup_count > 0 && *up_to_date_count > 0) {
+                const std::string msg = std::to_string(*to_backup_count) + " " + "backup(s) created, "_i18n +
+                    std::to_string(*up_to_date_count) + " " + "already up to date."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+            } else {
+                App::Notify("Backup successful!"_i18n);
+            }
+        } else {
+            App::PushErrorBox(rc, "Backup failed!"_i18n);
+        }
+        ClearSelection();
+        ScanHomebrew();
+    });
+}
+
+void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
+    const auto& focused = (m_index < m_entries.size()) ? m_entries[m_index] : seeds.front();
+
+    enum class ActionType {
+        VerifyIntegrity,
+        DeleteOlder,
+        Restore,
+        RestoreForUser,
+        OpenFileBrowser,
+        Delete,
+        SelectUser,
+        SelectGame,
+    };
+
+    struct ActionItem {
+        ActionType type;
+        std::string label;
+    };
+
+    std::vector<ActionItem> actions;
+    actions.push_back({ActionType::VerifyIntegrity, "Verify integrity"_i18n});
+    actions.push_back({ActionType::DeleteOlder, "Delete older backups"_i18n});
+    actions.push_back({ActionType::Restore, "Restore"_i18n});
+
+    if (seeds.size() == 1 && seeds.front().save_data_type == FsSaveDataType_Account) {
+        actions.push_back({ActionType::RestoreForUser, "Restore for user…"_i18n});
+    }
+
+    actions.push_back({ActionType::OpenFileBrowser, "Open in file browser"_i18n});
+    actions.push_back({ActionType::Delete, "Delete"_i18n});
+
+    const bool has_user_select = focused.is_backup &&
+        focused.save_data_type == FsSaveDataType_Account &&
+        (focused.uid.uid[0] != 0 || focused.uid.uid[1] != 0);
+    if (has_user_select) {
+        actions.push_back({ActionType::SelectUser, "Select all backups for this user"_i18n});
+    }
+
+    actions.push_back({ActionType::SelectGame, "Select all backups for this game"_i18n});
+
+    PopupList::Items items;
+    for (const auto& a : actions) {
+        items.emplace_back(a.label);
+    }
+
+    auto popup = std::make_unique<PopupList>("Backup Action"_i18n, items, [this, seeds, focused, actions](auto op_index) {
+        if (!op_index || *op_index >= static_cast<s64>(actions.size())) {
+            return;
+        }
+
+        switch (actions[*op_index].type) {
+            case ActionType::VerifyIntegrity:
+                VerifyIntegrity(seeds);
+                break;
+
+            case ActionType::DeleteOlder:
+                DeleteOlderBackups(seeds);
+                break;
+
+            case ActionType::Restore: {
+                const auto accounts = App::GetAccountList();
+                if (seeds.size() == 1) {
+                    const auto& e = seeds.front();
+                    if (e.save_data_type == FsSaveDataType_Account) {
+                        bool uid_found = false;
+                        for (const auto& acc : accounts) {
+                            if (!std::memcmp(&e.uid, &acc.uid, sizeof(e.uid))) {
+                                uid_found = true;
+                                break;
+                            }
+                        }
+                        if (!uid_found || (e.uid.uid[0] == 0 && e.uid.uid[1] == 0)) {
+                            RestoreForUser(e);
+                            return;
+                        }
+                    }
+                    const auto location = MakeSdCardDumpLocation();
+                    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+                    fs::FsNativeSd sd_fs;
+                    const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
+
+                    auto target = ResolveRestoreTarget(e);
+
+                    if (archives.size() <= 1 && !archives.empty()) {
+                        RestoreSavesPicked(std::move(target), location, backup_root, archives.front().path);
+                    } else if (!archives.empty()) {
+                        ShowRestorePickerPopup(std::move(target), location, backup_root, {}, archives);
+                    } else if (!target.backup_path.empty()) {
+                        const auto backup_path = target.backup_path;
+                        RestoreSavesPicked(std::move(target), location, backup_root, backup_path);
+                    } else {
+                        StartRestore({std::move(target)}, location, backup_root);
+                    }
+                } else {
+                    bool has_foreign = false;
+                    for (const auto& s : seeds) {
+                        if (s.save_data_type == FsSaveDataType_Account) {
+                            bool found = false;
+                            for (const auto& acc : accounts) {
+                                if (!std::memcmp(&s.uid, &acc.uid, sizeof(s.uid))) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found || (s.uid.uid[0] == 0 && s.uid.uid[1] == 0)) {
+                                has_foreign = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (has_foreign) {
+                        App::Push<OptionBox>("Selected backups contain accounts not present on this console. Please use 'Restore for user…' individually."_i18n, "OK"_i18n);
+                        return;
+                    }
+
+                    std::vector<Entry> resolved;
+                    resolved.reserve(seeds.size());
+                    for (const auto& s : seeds) {
+                        resolved.emplace_back(ResolveRestoreTarget(s));
+                    }
+
+                    const auto location = MakeSdCardDumpLocation();
+                    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+                    RestoreSaves(std::move(resolved), location, backup_root);
+                }
+                break;
+            }
+
+            case ActionType::RestoreForUser:
+                RestoreForUser(seeds.front());
+                break;
+
+            case ActionType::OpenFileBrowser: {
+                const auto& target = seeds.front();
+                const auto slash = std::strrchr(target.backup_path.s, '/');
+                if (slash) {
+                    std::string dir(target.backup_path.s, slash - target.backup_path.s);
+                    if (dir.empty()) dir = "/";
+                    constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
+                    App::Push<filebrowser::Menu>(MenuFlag_None, sd, dir.c_str());
+                }
+                break;
+            }
+
+            case ActionType::Delete:
+                DeleteBackupGroups(seeds);
+                break;
+
+            case ActionType::SelectUser: {
+                for (auto& e : m_entries) {
+                    if (e.is_backup && e.save_data_type == FsSaveDataType_Account &&
+                        !std::memcmp(&e.uid, &focused.uid, sizeof(AccountUid))) {
+                        if (!e.selected) {
+                            e.selected = true;
+                            m_selected_count++;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case ActionType::SelectGame: {
+                const bool is_sys = IsSystemLikeSave(focused.save_data_type);
+                for (auto& e : m_entries) {
+                    if (e.is_backup) {
+                        const bool match = is_sys
+                            ? (IsSystemLikeSave(e.save_data_type) && e.system_save_data_id == focused.system_save_data_id)
+                            : (!IsSystemLikeSave(e.save_data_type) && e.application_id == focused.application_id);
+                        if (match) {
+                            if (!e.selected) {
+                                e.selected = true;
+                                m_selected_count++;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    });
+    popup->SetMenuStyle(true);
+    App::Push(std::move(popup));
+}
+
+void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
+    auto valid_count = std::make_shared<size_t>(0);
+    auto invalid_count = std::make_shared<size_t>(0);
+    auto failed_names = std::make_shared<std::vector<std::string>>();
+
+    App::Push<ProgressBox>(0, "Verify integrity"_i18n, "", [this, seeds, valid_count, invalid_count, failed_names](auto pbox) -> Result {
+        fs::FsNativeSd sd_fs;
+        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+
+        std::vector<fs::FsPath> all_archives;
+        std::set<std::string> seen;
+        for (const auto& g : seeds) {
+            const auto archives = CollectGroupArchives(&sd_fs, g, backup_root);
+            for (const auto& a : archives) {
+                if (seen.insert(a.path.toString()).second) {
+                    all_archives.emplace_back(a.path);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < all_archives.size(); i++) {
+            R_TRY(pbox->ShouldExitResult());
+            const auto& path = all_archives[i];
+            const auto slash = std::strrchr(path.s, '/');
+            const std::string name = slash ? (slash + 1) : path.s;
+
+            pbox->SetTitle(name);
+            pbox->UpdateTransfer(i + 1, all_archives.size());
+
+            bool ok = false;
+            if (path::EndsWithIC(path.s, ".zip")) {
+                ok = VerifyZipIntegrity(path);
+            } else if (IsRawSaveCandidate(&sd_fs, path, name)) {
+                ok = VerifyDisaIntegrity(&sd_fs, path);
+            }
+
+            if (ok) {
+                (*valid_count)++;
+            } else {
+                (*invalid_count)++;
+                failed_names->emplace_back(name);
+            }
+        }
+
+        R_SUCCEED();
+    }, [valid_count, invalid_count, failed_names](Result rc) {
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Integrity verification failed!"_i18n);
+            return;
+        }
+
+        if (*invalid_count == 0) {
+            const std::string msg = "Integrity verified: all "_i18n + std::to_string(*valid_count) + " archive(s) are valid."_i18n;
+            App::Push<OptionBox>(msg, "OK"_i18n);
+        } else {
+            std::string msg = "Integrity check failed: "_i18n + std::to_string(*invalid_count) + " corrupt archive(s) found:\n"_i18n;
+            for (size_t i = 0; i < std::min<size_t>(5, failed_names->size()); i++) {
+                msg += "• " + (*failed_names)[i] + "\n";
+            }
+            if (failed_names->size() > 5) {
+                msg += "...and " + std::to_string(failed_names->size() - 5) + " more.";
+            }
+            App::Push<OptionBox>(msg, "OK"_i18n);
+        }
+    });
+}
+
+void Menu::DeleteOlderBackups(const std::vector<Entry>& seeds) {
+    fs::FsNativeSd sd_fs;
+    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+
+    struct PruneGroup {
+        Entry group;
+        std::vector<BackupCandidate> older;
+    };
+    std::vector<PruneGroup> to_prune;
+    size_t total_older = 0;
+
+    for (const auto& g : seeds) {
+        const auto archives = CollectGroupArchives(&sd_fs, g, backup_root);
+        if (archives.size() > 1) {
+            std::vector<BackupCandidate> older(archives.begin() + 1, archives.end());
+            total_older += older.size();
+            to_prune.emplace_back(PruneGroup{g, std::move(older)});
+        }
+    }
+
+    if (total_older == 0) {
+        App::Notify("No older backups to delete."_i18n);
+        return;
+    }
+
+    const std::string prompt = "Delete "_i18n + std::to_string(total_older) +
+        " older backup archive(s)? The newest backup for each group will be kept."_i18n;
+
+    App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, to_prune](auto choice) {
+        if (choice && *choice == 1) {
+            App::PopToMenu();
+            auto deleted_count = std::make_shared<size_t>(0);
+            auto failed_count = std::make_shared<size_t>(0);
+            auto first_error = std::make_shared<Result>(0);
+
+            App::Push<ProgressBox>(0, "Delete older backups"_i18n, "", [to_prune, deleted_count, failed_count, first_error](auto pbox) -> Result {
+                fs::FsNativeSd sd_fs;
+                for (const auto& item : to_prune) {
+                    for (const auto& cand : item.older) {
+                        const auto rc = sd_fs.DeleteFile(cand.path);
+                        if (R_SUCCEEDED(rc)) {
+                            (*deleted_count)++;
+                            const auto slash = std::strrchr(cand.path.s, '/');
+                            if (slash) {
+                                std::string dir(cand.path.s, slash - cand.path.s);
+                                sd_fs.DeleteDirectory(dir.c_str());
+                            }
+                        } else {
+                            (*failed_count)++;
+                            if (*first_error == 0) {
+                                *first_error = rc;
+                            }
+                        }
+                    }
+                }
+                return *first_error;
+            }, [this, deleted_count, failed_count](Result rc) {
+                if (*failed_count == 0 && *deleted_count > 0) {
+                    App::Notify("Delete successful!"_i18n);
+                } else if (*deleted_count > 0 && *failed_count > 0) {
+                    const std::string msg = std::to_string(*deleted_count) + " " + "deleted, "_i18n +
+                        std::to_string(*failed_count) + " " + "failed."_i18n;
+                    App::PushErrorBox(rc, msg);
+                } else {
+                    App::PushErrorBox(rc, "Delete failed!"_i18n);
+                }
+                ClearSelection();
+                ScanHomebrew();
+            });
+        }
+    }, seeds.front().image);
+}
+
+void Menu::RestoreForUser(Entry e) {
+    const auto accounts = App::GetAccountList();
+    if (accounts.empty()) {
+        App::Push<OptionBox>("No user accounts found on this console."_i18n, "OK"_i18n);
+        return;
+    }
+
+    PopupList::Items items;
+    for (const auto& acc : accounts) {
+        items.emplace_back(acc.nickname);
+    }
+
+    auto popup = std::make_unique<PopupList>("Restore for user"_i18n, items, [this, e, accounts](auto op_index) mutable {
+        if (!op_index || *op_index >= static_cast<s64>(accounts.size())) {
+            return;
+        }
+
+        const auto chosen_uid = accounts[*op_index].uid;
+        const auto location = MakeSdCardDumpLocation();
+        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+
+        fs::FsNativeSd sd_fs;
+        const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
+
+        auto target = ResolveRestoreTarget(e, &chosen_uid);
+
+        if (archives.size() <= 1 && !archives.empty()) {
+            RestoreSavesPicked(std::move(target), location, backup_root, archives.front().path);
+        } else if (!archives.empty()) {
+            ShowRestorePickerPopup(std::move(target), location, backup_root, {}, archives);
+        } else if (!target.backup_path.empty()) {
+            const auto backup_path = target.backup_path;
+            RestoreSavesPicked(std::move(target), location, backup_root, backup_path);
+        } else {
+            StartRestore({std::move(target)}, location, backup_root);
+        }
+    });
+    App::Push(std::move(popup));
+}
+
+void Menu::DeleteBackupGroups(const std::vector<Entry>& groups) {
+    const auto prompt = groups.size() == 1
+        ? "Are you sure you want to delete all backups for "_i18n + groups.front().GetName() + "?"
+        : "Are you sure you want to delete all backups for the selected games?"_i18n;
+
+    App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, groups](auto choice) {
+        if (choice && *choice == 1) {
+            App::PopToMenu();
+            auto deleted_count = std::make_shared<size_t>(0);
+            auto failed_count = std::make_shared<size_t>(0);
+            auto first_error = std::make_shared<Result>(0);
+
+            App::Push<ProgressBox>(0, "Delete backups"_i18n, "", [groups, deleted_count, failed_count, first_error](auto pbox) -> Result {
+                fs::FsNativeSd sd_fs;
+                const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+                for (const auto& g : groups) {
+                    auto archives = CollectGroupArchives(&sd_fs, g, backup_root);
+                    for (const auto& a : archives) {
+                        const auto rc = sd_fs.DeleteFile(a.path);
+                        if (R_SUCCEEDED(rc)) {
+                            (*deleted_count)++;
+                            const auto slash = std::strrchr(a.path.s, '/');
+                            if (slash) {
+                                std::string dir(a.path.s, slash - a.path.s);
+                                sd_fs.DeleteDirectory(dir.c_str());
+                            }
+                        } else {
+                            (*failed_count)++;
+                            if (*first_error == 0) {
+                                *first_error = rc;
+                            }
+                        }
+                    }
+                }
+                return *first_error;
+            }, [this, deleted_count, failed_count](Result rc) {
+                if (*failed_count == 0 && *deleted_count > 0) {
+                    App::Notify("Delete successful!"_i18n);
+                } else if (*deleted_count > 0 && *failed_count > 0) {
+                    const std::string msg = std::to_string(*deleted_count) + " " + "deleted, "_i18n +
+                        std::to_string(*failed_count) + " " + "failed."_i18n;
+                    App::PushErrorBox(rc, msg);
+                } else {
+                    App::PushErrorBox(rc, "Delete failed!"_i18n);
+                }
+                ClearSelection();
+                ScanHomebrew();
+            });
+        }
+    }, groups.front().image);
 }
 
 auto Menu::CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry> {

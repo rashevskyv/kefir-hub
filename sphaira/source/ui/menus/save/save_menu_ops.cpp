@@ -39,26 +39,6 @@
 namespace sphaira::ui::menu::save {
 namespace {
 
-constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
-constexpr u32 NX_SAVE_META_VERSION = 1;
-constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
-
-// https://github.com/J-D-K/JKSV/issues/264#issuecomment-2618962807
-struct NXSaveMeta {
-    u32 magic{}; // NX_SAVE_META_MAGIC
-    u32 version{}; // NX_SAVE_META_VERSION
-    FsSaveDataAttribute attr{}; // FsSaveDataExtraData::attr
-    u64 owner_id{}; // FsSaveDataExtraData::owner_id
-    u64 timestamp{}; // FsSaveDataExtraData::timestamp
-    u32 flags{}; // FsSaveDataExtraData::flags
-    u32 unk_x54{}; // FsSaveDataExtraData::unk_x54
-    s64 data_size{}; // FsSaveDataExtraData::data_size
-    s64 journal_size{}; // FsSaveDataExtraData::journal_size
-    u64 commit_id{}; // FsSaveDataExtraData::commit_id
-    u64 raw_size{}; // FsSaveDataInfo::size
-};
-static_assert(sizeof(NXSaveMeta) == 128);
-
 auto ProbeWebdavLocation(const location::Entry& loc) -> Result {
     curl::Api api(CURL_LOCATION_TO_API(loc));
     const auto result = curl::Probe(api, curl::ProbeType::Webdav);
@@ -380,7 +360,7 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
                 continue;
             }
 
-            if (App::GetSaveAutoBackupOnRestore()) {
+            if (App::GetSaveAutoBackupOnRestore() && e.save_data_id != 0) {
                 pbox->SetActionName("Auto backup"_i18n);
                 R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
             }
@@ -660,7 +640,7 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
     App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen](auto pbox) mutable -> Result {
         detail::LoadControlEntry(e);
 
-        if (App::GetSaveAutoBackupOnRestore()) {
+        if (App::GetSaveAutoBackupOnRestore() && e.save_data_id != 0) {
             pbox->SetActionName("Auto backup"_i18n);
             R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
         }
@@ -820,6 +800,9 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
 
     if (IsDisaSaveFile(probe_fs, path)) {
+        // Raw DISA images replace an existing BIS save container directly. A
+        // zero ID would resolve to /save/0000000000000000, so never attempt it.
+        R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
         log_write("restoring raw DISA save: %s\n", path.s);
         fs::File src_file;
         R_TRY(probe_fs->OpenFile(path, FsOpenMode_Read, &src_file));
@@ -1024,6 +1007,10 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
 }
 
 Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {
+    if (e.save_data_id == 0) {
+        return 0;
+    }
+
     const auto fs = MakeFsForLocation(location);
 
     pbox->SetTitle(e.GetName());

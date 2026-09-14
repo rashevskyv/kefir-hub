@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.836** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.837** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.837 — Save backup metadata and actions
+
+- Вкладка Backups тепер групує Sphaira ZIP, DBI ZIP і raw `.disa`/`.bin` за точним application/system ID, save type, повним UID та index. Рядок містить назву гри разом із Title ID, локальний nickname або UID, тип сейву, час створення та кількість архівів.
+- Scanner використовує embedded metadata, DBI filename/folder і 16-hex path components у визначеному порядку; parent application/system ID має перевагу над filename stem, включно зі стандартними `/dumps` і custom search roots.
+- Кнопка `A` відкриває окремі меню live saves і backup groups: звичайний/умовний backup, restore, integrity verification, видалення старих із збереженням найновішого, видалення групи та selection за грою/користувачем.
+- Foreign або unknown backup UID примусово відкриває вибір наявного локального користувача. Перед overwrite знаходиться реальний live save для auto-backup; ZIP може створити відсутній save filesystem. Raw DISA restore без існуючого target ID зупиняється до доступу до BIS.
+- Live-save file browser поки показує чесне повідомлення про відсутній provider; backup archive відкривається у звичайному SD file browser.
+- Версію піднято до `0.13.837`. Gemini та senior виконали static flow/diff review; JSON і `git diff --check` пройшли, compile/tests/NRO не запускалися.
 
 ## v0.13.836 — Keep web sharing awake and fix cancel dialog freeze
 

@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.836** (Keep web sharing awake and fix cancel dialog freeze). Завершені плани збережено в
+Поточний delivery — **v0.13.837** (Save backup metadata and actions). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.836 — Keep web sharing awake and fix cancel dialog freeze
+## Поточний delivery: v0.13.837 — Save backup metadata and actions
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. Backups об'єднуються за application/system ID, типом, повним UID та index; рядок показує назву гри разом із Title ID, автора/UID, тип, час і кількість архівів.
+2. ZIP, DBI та сирі `.disa`/`.bin` знаходяться у стандартних і custom roots; metadata/filename/folder/path мають визначений пріоритет, а parent ID не перекривається timestamp-іменем.
+3. `A` відкриває контекстні дії для live saves і backups: backup-if-newer, restore із вибором локального користувача, integrity check, prune до найновішого, delete та груповий selection.
+4. Відновлення спершу знаходить реальний локальний save target для auto-backup; ZIP може створити відсутній сейв, а raw DISA без наявного target ID безпечно відхиляється.
+5. Gemini та senior виконали static flow/diff review; JSON і `git diff --check` перевірено, compile/tests/NRO не запускалися за workspace policy.
+
+## Попередній delivery: v0.13.836 — Keep web sharing awake and fix cancel dialog freeze
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. Активний HTTP web-sharing server блокує внутрішній inactivity blank mode в install session; після зупинки сервера звичайний timeout відновлюється без persistent state.
