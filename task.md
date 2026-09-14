@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.833** (High-contrast selection marks). Завершені задачі збережено в
+Актуальний delivery — **v0.13.834** (Clean Backups tab and contextual save actions). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.833 (High-contrast selection marks)
+## Поточний delivery: v0.13.834 (Clean Backups tab and contextual save actions)
+
+- [x] `SAVES-BACKUPS-GAP-834` — dedicated Backups tab не має synthetic divider row, повторного заголовка чи зайвого відступу.
+- [x] `SAVES-MIXED-DIVIDER-834` — divider збережено лише для справжньої межі live saves і backups.
+- [x] `SAVES-CONTEXT-ACTIONS-834` — `Backup`, `Restore`, `Delete` перенесено на початок `START -> Save Options` без дублювання handlers.
+- [x] `VERIFY-834` — Gemini та senior виконали static diff/index/caller review; `git diff --check` пройшов, compile/NRO не запускалися.
+- [x] `DOCS-BUMP-834` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.834`.
+- [ ] `HW-834` — перевірити Backups у всіх layouts та single/multi-selection дії через `START`.
+
+## Попередній delivery: v0.13.833 (High-contrast selection marks)
 
 - [x] `MULTISELECT-SIZE-833` — tile checkbox збільшено до 28 px; list checkbox залишено 20 px.
 - [x] `MULTISELECT-TINT-833` — лише вибрані плитки отримують focus overlay з 0.25 alpha під checkbox.

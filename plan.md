@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.833** (High-contrast selection marks). Завершені плани збережено в
+Поточний delivery — **v0.13.834** (Clean Backups tab and contextual save actions). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.833 — High-contrast selection marks
+## Поточний delivery: v0.13.834 — Clean Backups tab and contextual save actions
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. Окрема вкладка `Backups` більше не резервує порожній ряд і не малює дубльований розділювач `Backups`.
+2. Змішаний вигляд із live saves та backups зберіг наявний розділювач і відступ.
+3. `START -> Save Options` показує `Backup`, `Restore`, `Delete` першими; дії використовують наявну single/multi-selection логіку.
+4. `git diff --check` пройшов; compile/tests/NRO не запускалися за workspace policy.
+
+## Попередній delivery: v0.13.833 — High-contrast selection marks
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. Tile-layouts використовують збільшений 28 px checkbox замість спільного 20 px list-size.

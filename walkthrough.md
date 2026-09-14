@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.833** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.834** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.834 — Clean Backups tab and contextual save actions
+
+- `ComputeGridSections()` створює divider row лише коли одночасно є live saves і backup entries.
+- На dedicated `Backups` tab елементи мають пряме 1:1 display mapping: без порожнього ряда і другого напису `Backups`.
+- Наявні `Backup`, `Restore`, `Delete` перенесено нагору `START -> Save Options`; single/multi-selection і `A`-menu не змінено.
+- Версію піднято до `0.13.834`; `git diff --check` пройшов. Compile/tests/NRO не запускалися.
 
 ## v0.13.833 — High-contrast selection marks
 

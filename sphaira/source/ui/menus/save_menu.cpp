@@ -512,6 +512,19 @@ void Menu::DisplaySaveOptions() {
     auto options = std::make_unique<Sidebar>("Save Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
+    if (!m_entries.empty()) {
+        options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
+        options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Backup);
+        }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
+        options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Restore);
+        }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
+        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            PromptSaveTypeOptions(SaveOp::Delete);
+        }, true, "Permanently delete save data for selected games."_i18n)->SetIcon(ActionIcon::Delete);
+    }
+
     SidebarEntryArray::Items layout_items;
     layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
@@ -562,19 +575,6 @@ void Menu::DisplaySaveOptions() {
     options->Add<SidebarEntryCallback>("Show saves"_i18n, [this](){
         DisplayShowSavesOptions();
     }, "Choose which categories of saves are shown: installed games, deleted games and backups."_i18n);
-
-    if (!m_entries.empty()) {
-        options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
-        options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Backup);
-        }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
-        options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Restore);
-        }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
-        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Delete);
-        }, true, "Permanently delete save data for selected games."_i18n)->SetIcon(ActionIcon::Delete);
-    }
 
     options->Add<SidebarEntryHeader>("SYNC"_i18n);
 
@@ -650,11 +650,11 @@ auto Menu::ComputeGridSections() const -> GridSections {
     g.live_count = std::clamp<s64>(m_backup_start, 0, total);
     g.backup_count = total - g.live_count;
 
-    if (g.backup_count > 0) {
+    if (g.backup_count > 0 && g.live_count > 0) {
         g.has_backups = true;
         // fill the remainder of the last live row, then add one empty row that
         // hosts the "Backups" divider label.
-        g.base_fill = g.live_count > 0 ? (g.row - g.live_count % g.row) % g.row : 0;
+        g.base_fill = (g.row - g.live_count % g.row) % g.row;
         g.pad = g.base_fill + g.row;
     }
 
