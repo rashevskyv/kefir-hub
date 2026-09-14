@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.835** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.836** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.836 — Keep web sharing awake and fix cancel dialog freeze
+
+- Під час активного HTTP web-sharing `InstallSession::Update()` не дозволяє inactivity tracker запустити внутрішній screensaver, Dim або BacklightOff; після `WebShareIsRunning() == false` звичайна inactivity-логіка поновлюється.
+- Detached server `ProgressBox` більше не отримує другий `ShowCancelConfirmation()` з `App::Update()`; один натиск `B` відкриває один `OptionBox`, а touch-cancel збережено.
+- Версію піднято до `0.13.836`. Gemini та senior виконали static caller/diff review; compile/tests/NRO не запускалися.
 
 ## v0.13.835 — Fix transliterated Russian strings and uninstalled save titles
 

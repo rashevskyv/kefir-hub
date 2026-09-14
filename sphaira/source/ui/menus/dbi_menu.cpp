@@ -21,6 +21,7 @@
 #include "utils/utils.hpp"
 #include "yati/source/file.hpp"
 #include <usbhsfs.h>
+#include "web.hpp"
 
 #include "title_info.hpp"
 #include "version_compare.hpp"
@@ -358,7 +359,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         return;
     }
 
-    const bool is_installing = (m_state.load() == State::Installing);
+    const bool is_installing = (m_state.load() == State::Installing) && !WebShareIsRunning();
     const bool is_saver_active = m_screensaver.IsActive();
     const double now_sec = m_inactivity_timestamp.GetSecondsD();
     const long timeout_sec = App::GetBlankTimeout();

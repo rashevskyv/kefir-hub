@@ -908,11 +908,6 @@ void App::Update() {
                 if (m_widgets.back()->IsMenu()) {
                     block_background_update = true;
                     m_active_transfer_pbox->Update(&m_controller, &m_touch_info);
-
-                    if (m_controller.GotDown(Button::B)) {
-                        App::PlaySoundEffect(SoundEffect_Focus);
-                        m_active_transfer_pbox->ShowCancelConfirmation();
-                    }
                 }
             }
         }

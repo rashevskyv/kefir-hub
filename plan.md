@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.835** (Fix transliterated Russian strings and uninstalled save titles). Завершені плани збережено в
+Поточний delivery — **v0.13.836** (Keep web sharing awake and fix cancel dialog freeze). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.835 — Fix transliterated Russian strings and uninstalled save titles
+## Поточний delivery: v0.13.836 — Keep web sharing awake and fix cancel dialog freeze
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. Активний HTTP web-sharing server блокує внутрішній inactivity blank mode в install session; після зупинки сервера звичайний timeout відновлюється без persistent state.
+2. З `App::Update()` прибрано другий виклик `ShowCancelConfirmation()`; detached `ProgressBox` залишається єдиним власником `B` та touch-cancel.
+3. Gemini та senior виконали static caller/diff review; compile/tests/NRO не запускалися за workspace policy.
+
+## Попередній delivery: v0.13.835 — Fix transliterated Russian strings and uninstalled save titles
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. У `ru.json` виправлено транслітерацію на кнопці `(+)` («Remove and reboot» -> «Удалить и перезагрузить») та в інших 8 рядках інтерфейсу (чити, теми, дампи, збереження).

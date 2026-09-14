@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.835** (Fix transliterated Russian strings and uninstalled save titles). Завершені задачі збережено в
+Актуальний delivery — **v0.13.836** (Keep web sharing awake and fix cancel dialog freeze). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.835 (Fix transliterated Russian strings and uninstalled save titles)
+## Поточний delivery: v0.13.836 (Keep web sharing awake and fix cancel dialog freeze)
+
+- [x] `WEB-BLANK-GATE-836` — активний `WebShareIsRunning()` забороняє inactivity tracker запускати screensaver/Dim/BacklightOff під час install session.
+- [x] `WEB-CANCEL-ONCE-836` — прибрано дубль `ShowCancelConfirmation()` з `App::Update()`; `ProgressBox` обробляє `B` один раз через наявну action.
+- [x] `VERIFY-836` — Gemini та senior перевірили всіх callers, `InactivityTracker` і мінімальний diff; compile/tests/NRO не запускалися.
+- [x] `DOCS-BUMP-836` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.836`.
+- [ ] `HW-836` — перевірити web server без blank mode та один діалог скасування після `B`.
+
+## Попередній delivery: v0.13.835 (Fix transliterated Russian strings and uninstalled save titles)
 
 - [x] `I18N-RU-FIX-835` — виправлено транслітерацію кнопки `(+)` («Remove and reboot» -> «Удалить и перезагрузить») та 8 інших рядків у `ru.json`; виправлено латинські гомогліфи в ключах читів та додано рядки відкладеного ребуту.
 - [x] `SAVES-PLACEHOLDER-TITLES-835` — у `save_menu.cpp` та `save_menu_detail.cpp` забезпечено форматування назв неінстальованих ігор через Title ID та захист від перезапису валідних назв плейсхолдерами.
