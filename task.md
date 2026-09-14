@@ -1,9 +1,16 @@
-Актуальний delivery — **v0.13.839** (Finish save actions compilation fixes). Завершені задачі збережено в
+Актуальний delivery — **v0.13.840** (Verify save actions ReleaseWithInstall build). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.839 (Finish save actions compilation fixes)
+## Поточний delivery: v0.13.840 (Verify save actions ReleaseWithInstall build)
+
+- [x] `SAVE-ZIP-SUFFIX-840` — замінити недоступний `path::EndsWithIC` у integrity worker на наявний `std::string_view::ends_with`.
+- [x] `BUILD-840` — WSL `ReleaseWithInstall` успішно завершив compile, LTO link, RomFS packing і `[100%] Built target sphaira_nro`.
+- [x] `DOCS-BUMP-840` — версію та delivery-документи оновлено до `0.13.840`.
+- [ ] `HW-840` — перевірити зібраний `kefir-hub.nro` і save backup actions на консолі.
+
+## Попередній delivery: v0.13.839 (Finish save actions compilation fixes)
 
 - [x] `SAVE-PATH-SHADOW-839` — не затіняти namespace `path` локальним archive path у integrity worker.
 - [x] `SAVE-LAMBDA-CAPTURE-839` — захопити `this` у delete-backups worker для member helper.

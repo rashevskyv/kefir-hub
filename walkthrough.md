@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.839** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.840** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.840 — Verify save actions ReleaseWithInstall build
+
+- Останню compile-помилку `path has not been declared` усунуто заміною перевірки ZIP suffix на `std::string_view::ends_with` без нового include або helper.
+- WSL preset `ReleaseWithInstall` успішно пройшов compile, LTO link та RomFS packing; створено `build/ReleaseWithInstall/kefir-hub.nro`, фінальна ціль — `[100%] Built target sphaira_nro`.
+- Версію піднято до `0.13.840`. Апаратний тест не виконувався.
 
 ## v0.13.839 — Finish save actions compilation fixes
 

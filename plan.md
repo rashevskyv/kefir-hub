@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.839** (Finish save actions compilation fixes). Завершені плани збережено в
+Поточний delivery — **v0.13.840** (Verify save actions ReleaseWithInstall build). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.839 — Finish save actions compilation fixes
+## Поточний delivery: v0.13.840 — Verify save actions ReleaseWithInstall build
+
+Статус: реалізовано та успішно зібрано.
+1. Integrity worker перевіряє `.zip` через `std::string_view::ends_with`, не покладаючись на недоступний у translation unit namespace `path`.
+2. WSL `ReleaseWithInstall` повторено після виправлення; compile, LTO link, RomFS packing і `sphaira_nro` завершилися успішно до 100%.
+3. Зібрано `build/ReleaseWithInstall/kefir-hub.nro`; апаратна перевірка залишається окремим кроком.
+
+## Попередній delivery: v0.13.839 — Finish save actions compilation fixes
 
 Статус: реалізовано; очікується повторна збірка.
 1. Локальну змінну `path` у integrity worker перейменовано, щоб вона не затіняла namespace `path`.

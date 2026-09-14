@@ -1967,7 +1967,7 @@ void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
             pbox->UpdateTransfer(i + 1, all_archives.size());
 
             bool ok = false;
-            if (path::EndsWithIC(archive_path.s, ".zip")) {
+            if (std::string_view{archive_path.s}.ends_with(".zip")) {
                 ok = VerifyZipIntegrity(archive_path);
             } else if (IsRawSaveCandidate(&sd_fs, archive_path, name)) {
                 ok = VerifyDisaIntegrity(&sd_fs, archive_path);
