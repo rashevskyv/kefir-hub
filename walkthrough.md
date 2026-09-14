@@ -1,7 +1,27 @@
-Актуальний delivery — **v0.13.834** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.835** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.835 — Fix transliterated Russian strings and uninstalled save titles
+
+- **Виправлення транслітерації на кнопці `(+)`**:
+  - У `assets/romfs/i18n/ru.json` замінено транслітерований рядок `"Remove and reboot": "Udalit' i perezagruzit'"` на правильний кириличний переклад `"Удалить и перезагрузить"`.
+  - Виправлено інші 8 транслітерованих рядків у `ru.json`:
+    - `Scroll down to select Install.` -> `Прокрутите вниз, чтобы выбрать Установить.`
+    - `Delete Orphaned` -> `Удалить осиротевшие`
+    - `Delete cached cheats database` -> `Удалить кэшированную базу читов`
+    - `Delete all existing cheat codes...` -> `Удалить все существующие чит-коды...`
+    - `Open the NXthemes Installer to apply downloaded themes.` -> `Открыть NXthemes Installer для применения скачанных тем.`
+    - `Mount this component's NCA files and browse them in the file browser.` -> `Смонтировать NCA-файлы этого компонента и просмотреть их в файловом менеджере.`
+    - `Some devices only function if the xci folder is named exactly the same as the xci.` -> `Некоторые устройства работают, только если папка xci названа так же, как и xci.`
+    - `Remove Save Backup Search Path?` -> `Удалить путь поиска резервных копий сохранений?`
+  - Виправлено латинські гомогліфи (латинська 'O') у ключах очищення кешу читів.
+  - Додано відсутні ключі керування перекладами системного інтерфейсу та відкладеного перезавантаження.
+- **Підтримка назв збережень неінстальованих ігор**:
+  - У `save_menu.cpp` неінстальовані ігри отримують форматовану назву `Title %016lX` за їхнім Application ID.
+  - У `save_menu_detail.cpp` запобігається перезапис валідних назв плейсхолдерами.
+- Версію піднято до `0.13.835`; `git diff --check` і JSON-валідація пройшли успішно. Compile/tests/NRO не запускалися.
 
 ## v0.13.834 — Clean Backups tab and contextual save actions
 

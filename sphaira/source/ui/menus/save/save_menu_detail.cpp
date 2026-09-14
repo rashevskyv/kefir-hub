@@ -140,7 +140,11 @@ bool LoadControlImage(Entry& e, title::ThreadResultData* result) {
 void LoadResultIntoEntry(Entry& e, title::ThreadResultData* result) {
     if (result) {
         e.status = result->status;
-        e.lang = result->lang;
+        if (!title::IsPlaceholderName(result->lang.name) || e.lang.name[0] == '\0') {
+            e.lang = result->lang;
+        } else {
+            e.lang.author[0] = '\0';
+        }
     }
 }
 

@@ -1155,6 +1155,13 @@ void Menu::ScanHomebrew() {
         }
     }
 
+    for (auto& e : m_entries) {
+        if (!IsSystemLikeSave(e.save_data_type) && !m_installed_app_ids.contains(e.application_id)) {
+            std::snprintf(e.lang.name, sizeof(e.lang.name), "Title %016lX", e.application_id);
+            e.lang.author[0] = '\0';
+        }
+    }
+
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
     SetIndex(0);

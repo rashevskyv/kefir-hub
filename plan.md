@@ -1,14 +1,16 @@
-Поточний delivery — **v0.13.834** (Clean Backups tab and contextual save actions). Завершені плани збережено в
+Поточний delivery — **v0.13.835** (Fix transliterated Russian strings and uninstalled save titles). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.834 — Clean Backups tab and contextual save actions
+## Поточний delivery: v0.13.835 — Fix transliterated Russian strings and uninstalled save titles
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
-1. Окрема вкладка `Backups` більше не резервує порожній ряд і не малює дубльований розділювач `Backups`.
-2. Змішаний вигляд із live saves та backups зберіг наявний розділювач і відступ.
-3. `START -> Save Options` показує `Backup`, `Restore`, `Delete` першими; дії використовують наявну single/multi-selection логіку.
-4. `git diff --check` пройшов; compile/tests/NRO не запускалися за workspace policy.
+1. У `ru.json` виправлено транслітерацію на кнопці `(+)` («Remove and reboot» -> «Удалить и перезагрузить») та в інших 8 рядках інтерфейсу (чити, теми, дампи, збереження).
+2. Виправлено латинські гомогліфи в ключах читів та додано відсутні ключі з v0.13.813 для видалення перекладів з відкладеним ребутом.
+3. У `save_menu.cpp` та `save_menu_detail.cpp` забезпечено форматування назв неінстальованих ігор через Title ID та захист від перезапису валідних назв плейсхолдерами.
+4. `git diff --check` і валідація JSON пройшли успішно; compile/tests/NRO не запускалися за workspace policy.
+
+## Попередній delivery: v0.13.834 — Clean Backups tab and contextual save actions
 
 ## Попередній delivery: v0.13.833 — High-contrast selection marks
 

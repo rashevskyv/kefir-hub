@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.834** (Clean Backups tab and contextual save actions). Завершені задачі збережено в
+Актуальний delivery — **v0.13.835** (Fix transliterated Russian strings and uninstalled save titles). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.834 (Clean Backups tab and contextual save actions)
+## Поточний delivery: v0.13.835 (Fix transliterated Russian strings and uninstalled save titles)
+
+- [x] `I18N-RU-FIX-835` — виправлено транслітерацію кнопки `(+)` («Remove and reboot» -> «Удалить и перезагрузить») та 8 інших рядків у `ru.json`; виправлено латинські гомогліфи в ключах читів та додано рядки відкладеного ребуту.
+- [x] `SAVES-PLACEHOLDER-TITLES-835` — у `save_menu.cpp` та `save_menu_detail.cpp` забезпечено форматування назв неінстальованих ігор через Title ID та захист від перезапису валідних назв плейсхолдерами.
+- [x] `VERIFY-835` — валідація синтаксису JSON `ru.json` та `git diff --check` пройшли успішно; compile/tests/NRO не запускалися.
+- [x] `DOCS-BUMP-835` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.835`.
+- [ ] `HW-835` — перевірити відображення кнопки `(+)` у діалозі видалення/заміщення перекладу та назв збережень на консолі.
+
+## Попередній delivery: v0.13.834 (Clean Backups tab and contextual save actions)
 
 - [x] `SAVES-BACKUPS-GAP-834` — dedicated Backups tab не має synthetic divider row, повторного заголовка чи зайвого відступу.
 - [x] `SAVES-MIXED-DIVIDER-834` — divider збережено лише для справжньої межі live saves і backups.
