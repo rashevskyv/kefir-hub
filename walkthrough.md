@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.831** (2026-09-13). Попередні
+Актуальний delivery — **v0.13.832** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.832 — Separate Saves popup from tabs
+
+- У standalone Saves для `grid::LayoutType_Grid` початкову y-координату плиток змінено з `186` на `202`.
+- Весь ряд і прив’язана до вибраної плитки плашка назви опустилися на 16 px; popup більше не зливається з активною вкладкою.
+- Спільний `gfx::drawAppLable()`, кольори, List/Grid Detail/HB Menu та single-game saves не змінені.
+- Версію піднято до `0.13.832`; `git diff --check` пройшов. Compile/tests/NRO не запускалися за workspace policy.
 
 ## v0.13.831 — Fix save layout compilation and verify parallel build
 

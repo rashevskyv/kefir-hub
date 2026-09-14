@@ -1363,7 +1363,7 @@ void Menu::OnLayoutChange() {
 
             case grid::LayoutType_Grid: {
                 const Vec2 pad{10, 10};
-                const Vec4 v{93, 186, 174, 174};
+                const Vec4 v{93, 202, 174, 174};
                 m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
             }   break;
 

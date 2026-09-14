@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.831** (Fix save layout compilation and verify parallel build). Завершені задачі збережено в
+Актуальний delivery — **v0.13.832** (Separate Saves popup from tabs). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.831 (Fix save layout compilation and verify parallel build)
+## Поточний delivery: v0.13.832 (Separate Saves popup from tabs)
+
+- [x] `SAVES-POPUP-832` — standalone Saves Grid зсунуто з `y=186` до `y=202`, щоб selected-game popup не перекривав активну вкладку.
+- [x] `SAVES-SCOPE-832` — коліри, `drawAppLable()`, інші layouts і single-game geometry залишено без змін.
+- [x] `VERIFY-832` — Gemini та senior перевірили точний дворядковий diff; `git diff --check` пройшов.
+- [x] `DOCS-BUMP-832` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.832`.
+- [ ] `HW-832` — перевірити на консолі чіткий зазор між active tab і game-name popup та видимість другого ряду Grid.
+
+## Попередній delivery: v0.13.831 (Fix save layout compilation and verify parallel build)
 
 - [x] `BUILD-FIX-831` — кваліфіковано `grid::LayoutType` у `sphaira/source/ui/menus/save_menu.cpp`.
 - [x] `BUILD-VERIFY-831` — успішно скомпільовано проєкт у 16 потоків через WSL `ReleaseWithInstall` до `sphaira_nro` (100%).
