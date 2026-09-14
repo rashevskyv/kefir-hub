@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.837** (Save backup metadata and actions). Завершені задачі збережено в
+Актуальний delivery — **v0.13.838** (Fix save actions GCC build). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.837 (Save backup metadata and actions)
+## Поточний delivery: v0.13.838 (Fix save actions GCC build)
+
+- [x] `SAVE-ENUM-WARN-838` — привести stored `save_data_space_id` до `FsSaveDataSpaceId` всередині тернарного виразу.
+- [x] `SAVE-GCC-ICE-838` — замінити локальний `constexpr FsEntry` у generic lambda на звичайний `const` aggregate.
+- [x] `VERIFY-838` — `git diff --check` пройшов; повторну compile/NRO-збірку не запускали.
+- [x] `DOCS-BUMP-838` — версію та delivery-документи оновлено до `0.13.838`.
+- [ ] `BUILD-838` — повторити WSL/NRO-збірку й підтвердити проходження `save_menu.cpp`.
+
+## Попередній delivery: v0.13.837 (Save backup metadata and actions)
 
 - [x] `SAVE-BACKUP-META-837` — згрупувати ZIP/DBI/raw backups за точним save identity та показати game title + Title ID, account/UID, type, timestamp і archive count.
 - [x] `SAVE-BACKUP-DISCOVERY-837` — підтримати metadata, DBI filename/folder та parent-path ID inference для стандартних і custom backup roots.

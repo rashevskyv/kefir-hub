@@ -1,8 +1,15 @@
-Поточний delivery — **v0.13.837** (Save backup metadata and actions). Завершені плани збережено в
+Поточний delivery — **v0.13.838** (Fix save actions GCC build). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.837 — Save backup metadata and actions
+## Поточний delivery: v0.13.838 — Fix save actions GCC build
+
+Статус: реалізовано; очікується повторна збірка.
+1. Тернарний вираз `save_data_space_id` тепер має однаковий enum-тип в усіх гілках і не створює `-Wextra` warning.
+2. Локальний `FsEntry` у generic lambda більше не є `constexpr`, що обходить ICE GCC у `tsubst_expr` без зміни поведінки.
+3. `git diff --check` пройшов; повторну збірку в цьому delivery не запускали.
+
+## Попередній delivery: v0.13.837 — Save backup metadata and actions
 
 Статус: реалізовано; очікується збірка та апаратна перевірка.
 1. Backups об'єднуються за application/system ID, типом, повним UID та index; рядок показує назву гри разом із Title ID, автора/UID, тип, час і кількість архівів.

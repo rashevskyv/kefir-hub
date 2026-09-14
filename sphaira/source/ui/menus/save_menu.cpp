@@ -1680,10 +1680,8 @@ void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
                 continue;
             }
 
-            const auto space_id = static_cast<FsSaveDataSpaceId>(
-                IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-                e.save_data_space_id ? e.save_data_space_id : FsSaveDataSpaceId_User
-            );
+            const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
+                e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
 
             FsSaveDataExtraData live_extra{};
             const auto rc = fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live_extra, sizeof(live_extra), space_id, e.save_data_id);
@@ -1893,7 +1891,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 if (slash) {
                     std::string dir(target.backup_path.s, slash - target.backup_path.s);
                     if (dir.empty()) dir = "/";
-                    constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
+                    const filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
                     App::Push<filebrowser::Menu>(MenuFlag_None, sd, dir.c_str());
                 }
                 break;

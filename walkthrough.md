@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.837** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.838** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.838 — Fix save actions GCC build
+
+- Усунуто `-Wextra` warning через змішування `u8` та `FsSaveDataSpaceId` у тернарному виразі.
+- Локальний `constexpr filebrowser::FsEntry` у generic lambda замінено на `const`, щоб уникнути внутрішньої помилки GCC `tsubst_expr` без зміни runtime-поведінки.
+- Версію піднято до `0.13.838`; `git diff --check` пройшов, повторну збірку не запускали.
 
 ## v0.13.837 — Save backup metadata and actions
 

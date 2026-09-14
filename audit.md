@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.837**. Дата: 2026-09-14.
+Канічний робочий файл. Версія коду: **v0.13.838**. Дата: 2026-09-14.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12447 nodes, 24696 edges, 654 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.838 поза ponytail-чергою: виправлено enum/non-enum `-Wextra` warning та GCC ICE на локальному `constexpr FsEntry` у generic lambda save actions; версію піднято до 0.13.838. `git diff --check` пройшов; повторну Compile/NRO-збірку не запускали. **Не закриває** чергу §2 A1–A7.
 
 v0.13.837 поза ponytail-чергою: Backups отримали точне групування та metadata (game title + Title ID, account/UID, type, timestamp, count), спільний scanner ZIP/DBI/raw archives, контекстні `A`-дії, integrity/prune/delete та явний вибір локального користувача для foreign restores. Restore target резолвиться до auto-backup; raw DISA без існуючого ID fail-closed. Версію піднято до 0.13.837. JSON і `git diff --check` пройшли; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
