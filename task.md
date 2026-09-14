@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.832** (Separate Saves popup from tabs). Завершені задачі збережено в
+Актуальний delivery — **v0.13.833** (High-contrast selection marks). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.832 (Separate Saves popup from tabs)
+## Поточний delivery: v0.13.833 (High-contrast selection marks)
+
+- [x] `MULTISELECT-SIZE-833` — tile checkbox збільшено до 28 px; list checkbox залишено 20 px.
+- [x] `MULTISELECT-TINT-833` — лише вибрані плитки отримують focus overlay з 0.25 alpha під checkbox.
+- [x] `CHECKBOX-CONTRAST-833` — в усіх callers рамка checkbox тепер має `ThemeEntryID_TEXT` і товщину 3 px.
+- [x] `VERIFY-833` — Gemini та senior виконали static diff/caller review; `git diff --check` пройшов, compile/NRO не запускалися.
+- [x] `DOCS-BUMP-833` — `sphaira_VERSION`, `plan.md`, `task.md`, `walkthrough.md` та `audit.md` оновлено до `0.13.833`.
+- [ ] `HW-833` — зібрати NRO і перевірити контраст на світлих/темних cover art, selected overlay та list checkboxes.
+
+## Попередній delivery: v0.13.832 (Separate Saves popup from tabs)
 
 - [x] `SAVES-POPUP-832` — standalone Saves Grid зсунуто з `y=186` до `y=202`, щоб selected-game popup не перекривав активну вкладку.
 - [x] `SAVES-SCOPE-832` — коліри, `drawAppLable()`, інші layouts і single-game geometry залишено без змін.

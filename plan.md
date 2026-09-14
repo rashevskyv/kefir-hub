@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.832** (Separate Saves popup from tabs). Завершені плани збережено в
+Поточний delivery — **v0.13.833** (High-contrast selection marks). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.832 — Separate Saves popup from tabs
+## Поточний delivery: v0.13.833 — High-contrast selection marks
+
+Статус: реалізовано; очікується збірка та апаратна перевірка.
+1. Tile-layouts використовують збільшений 28 px checkbox замість спільного 20 px list-size.
+2. Вибрана плитка отримує легкий `ThemeEntryID_FOCUS` overlay з 25% alpha; checkbox малюється поверх нього.
+3. Спільний `gfx::drawCheckbox` використовує контрастний `ThemeEntryID_TEXT` і 3 px border в усіх grid/list callers.
+4. `git diff --check` і static review пройшли; compile/tests/NRO не запускалися.
+
+## Попередній delivery: v0.13.832 — Separate Saves popup from tabs
 
 Статус: реалізовано; очікується апаратна перевірка.
 1. Перший ряд звичайного Grid у standalone Saves зсунуто на 16 px вниз (`y=186` → `y=202`).

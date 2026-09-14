@@ -299,8 +299,8 @@ void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float si
 
     nvgBeginPath(vg);
     nvgRect(vg, x, y, size, size);
-    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-    nvgStrokeWidth(vg, 2.f);
+    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT));
+    nvgStrokeWidth(vg, 3.f);
     nvgStroke(vg);
 
     if (!checked) {

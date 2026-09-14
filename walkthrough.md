@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.832** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.833** (2026-09-14). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.833 — High-contrast selection marks
+
+- Прапорці на cover art стали помітнішими: tile checkbox збільшено з 20 до 28 px за незмінного відступу 8 px.
+- Вибрана плитка додатково позначається легким focus tint з 25% alpha; невибрані обкладинки не затемнюються.
+- Спільний `gfx::drawCheckbox` отримав 3 px border кольору `ThemeEntryID_TEXT`, тому list і tile callers мають контрастну рамку в темних і світлих темах.
+- Версію піднято до `0.13.833`; `git diff --check` і static review пройшли. Compile/tests/NRO не запускалися.
 
 ## v0.13.832 — Separate Saves popup from tabs
 

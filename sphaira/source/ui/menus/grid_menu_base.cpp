@@ -40,21 +40,30 @@ auto FormatBytes(u64 bytes) -> std::string {
 }
 
 void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec4& row, const Vec4& overlay, bool marked, bool any_marked) {
+    if (!any_marked) {
+        return;
+    }
+
     // a list row reads like a file browser row, so it marks like one: a
     // checkbox in the left gutter, drawn on every row while a selection is
     // under way so the ticked ones can be seen against the empty ones.
     if (layout == LayoutType_List) {
-        if (any_marked) {
-            gfx::drawCheckbox(vg, theme, row.x - 30.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, marked);
-        }
+        gfx::drawCheckbox(vg, theme, row.x - 30.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, marked);
         return;
     }
 
     // tiles have no gutter, so anchor the checkbox inside the icon/tile overlay.
-    if (any_marked) {
-        constexpr float inset = 8.f;
-        gfx::drawCheckbox(vg, theme, overlay.x + inset, overlay.y + inset, gfx::CHECKBOX_SIZE, marked);
+    // selected tiles get a subtle translucent overlay to reinforce the selection
+    // without obscuring the artwork.
+    if (marked) {
+        auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+        tint.a *= 0.25f;
+        gfx::drawRect(vg, overlay, tint, 5.f);
     }
+
+    constexpr float tile_checkbox_size = 28.f;
+    constexpr float inset = 8.f;
+    gfx::drawCheckbox(vg, theme, overlay.x + inset, overlay.y + inset, tile_checkbox_size, marked);
 }
 
 Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked, float extra_right) {

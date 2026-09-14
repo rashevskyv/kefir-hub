@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.832**. Дата: 2026-09-14.
+Канічний робочий файл. Версія коду: **v0.13.833**. Дата: 2026-09-14.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12447 nodes, 24696 edges, 654 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.833 поза ponytail-чергою: tile checkbox збільшено до 28 px, вибрані плитки отримали `ThemeEntryID_FOCUS` overlay з 25% alpha, а спільна рамка `gfx::drawCheckbox` — контрастний `ThemeEntryID_TEXT` і 3 px stroke; list geometry залишено 20 px; версію піднято до 0.13.833. `git diff --check` пройшов; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
 v0.13.832 поза ponytail-чергою: standalone Saves Grid зсунуто на 16 px вниз, щоб selected-game popup починався під панеллю вкладок і не зливався з active tab; спільний popup helper, кольори, інші layouts і single-game saves не змінені; версію піднято до 0.13.832. `git diff --check` пройшов; Compile/NRO не запускалися. **Не закриває** чергу §2 A1–A7.
 
