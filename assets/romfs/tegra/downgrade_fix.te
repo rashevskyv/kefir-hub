@@ -7,8 +7,7 @@
 # Deletes system save 8000000000000073 from SYSTEM partition to prevent downgrade protection.
 # Supports automated Kefir Hub launch and manual TegraExplorer launch.
 
-goHekate = {
-    println("Cleaning temp flags...")
+cleanFlags = {
     delfile("sd:/startup.te")
     delfile("sd:/config/kefir/downgrade_nand")
     if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
@@ -18,10 +17,14 @@ goHekate = {
     }
     delfile("sd:/config/kefir/hekate-payload-request.ini")
     if (fsexists("sd:/bootloader/update.bin")) {
-        println("Restoring Hekate (payload.bin)...")
         delfile("sd:/payload.bin")
         copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
     }
+}
+
+goHekate = {
+    println("Cleaning temp flags...")
+    cleanFlags()
     println("Loading Hekate (bootloader/update.bin, payload.bin)...")
     rc = 1
     if (fsexists("sd:/bootloader/update.bin")) {
@@ -60,18 +63,7 @@ if (fsexists(flagf)) {
     isHub = 1
     raw = readfile(flagf)
     target = raw.bytestostr()
-    delfile(flagf)
-    delfile("sd:/startup.te")
-    if (fsexists("sd:/bootloader/hekate_ipl.ini.bak")) {
-        delfile("sd:/bootloader/hekate_ipl.ini")
-        copyfile("sd:/bootloader/hekate_ipl.ini.bak", "sd:/bootloader/hekate_ipl.ini")
-        delfile("sd:/bootloader/hekate_ipl.ini.bak")
-    }
-    delfile("sd:/config/kefir/hekate-payload-request.ini")
-    if (fsexists("sd:/bootloader/update.bin")) {
-        delfile("sd:/payload.bin")
-        copyfile("sd:/bootloader/update.bin", "sd:/payload.bin")
-    }
+    cleanFlags()
 }
 
 fail = {
