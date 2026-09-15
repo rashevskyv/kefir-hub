@@ -2423,7 +2423,6 @@
   "Select all backups for this user": "Вибрати всі резервні копії для цього користувача",
   "Select all backups for this game": "Вибрати всі резервні копії для цієї гри",
   "Backup Action": "Дія з резервною копією",
-  "Selected backups contain accounts not present on this console. Please use 'Restore for user…' individually.": "Вибрані резервні копії містять акаунти, відсутні на цій консолі. Будь ласка, скористайтеся 'Відновити для користувача…' окремо для кожної.",
   "Integrity verification failed!": "Помилка перевірки цілісності!",
   "Integrity verified: all ": "Цілісність перевірено: всі ",
   " archive(s) are valid.": " архів(ів) дійсні.",

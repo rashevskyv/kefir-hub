@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.842** (Align backup metadata columns). Завершені задачі збережено в
+Актуальний delivery — **v0.13.843** (Restore-first actions and account-filtered backups). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.842 (Align backup metadata columns)
+## Поточний delivery: v0.13.843 (Restore-first actions and account-filtered backups)
+
+- [x] SAVE-ACTION-ORDER-843 — Restore є першою, а Delete останньою дією backup menu.
+- [x] SAVE-BACKUP-ACCOUNT-FILTER-843 — account-bound backups фільтруються за enabled local UID без змін неакаунтних типів.
+- [x] SAVE-BATCH-RESTORE-USER-843 — foreign/unknown backups отримують послідовний local target picker до старту batch restore.
+- [x] BUILD-843 — Gemini WSL ReleaseWithInstall завершився до [100%] Built target sphaira_nro; JSON validation і senior git diff --check пройшли.
+- [x] DOCS-BUMP-843 — версію та delivery-документи оновлено; створити focused commit.
+- [ ] HW-843 — перевірити на Switch порядок дій, Nintendo-only backup filter і cancel/success batch target picker.
+
+## Попередній delivery: v0.13.842 (Align backup metadata columns)
 
 - [x] `SAVE-BACKUP-COLUMNS-842` — розділити list metadata на Title ID, account, timestamp і archive count та вирівняти колонки за найширшим виміряним елементом.
 - [x] `SAVE-BACKUP-CLIP-842` — зберегти clipping перед правою info-колонкою та не змінювати live saves/інші layouts.

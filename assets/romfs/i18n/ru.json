@@ -2362,7 +2362,6 @@
   "Select all backups for this user": "Выбрать все резервные копии для этого пользователя",
   "Select all backups for this game": "Выбрать все резервные копии для этой игры",
   "Backup Action": "Действие с резервной копией",
-  "Selected backups contain accounts not present on this console. Please use 'Restore for user…' individually.": "Выбранные резервные копии содержат учетные записи, отсутствующие на этой консоли. Пожалуйста, используйте 'Восстановить для пользователя…' по отдельности.",
   "Integrity verification failed!": "Ошибка проверки целостности!",
   "Integrity verified: all ": "Целостность проверена: все ",
   " archive(s) are valid.": " архив(ов) действительны.",

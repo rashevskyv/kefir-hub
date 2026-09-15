@@ -2002,7 +2002,6 @@
   "Select all backups for this user": "Select all backups for this user",
   "Select all backups for this game": "Select all backups for this game",
   "Backup Action": "Backup Action",
-  "Selected backups contain accounts not present on this console. Please use 'Restore for user…' individually.": "Selected backups contain accounts not present on this console. Please use 'Restore for user…' individually.",
   "Integrity verification failed!": "Integrity verification failed!",
   "Integrity verified: all ": "Integrity verified: all ",
   " archive(s) are valid.": " archive(s) are valid.",

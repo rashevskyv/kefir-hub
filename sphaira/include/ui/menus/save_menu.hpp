@@ -212,6 +212,7 @@ private:
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);
     void RestoreForUser(Entry e);
+    void PromptBatchRestoreAccountTargets(std::vector<Entry> seeds, std::vector<size_t> prompt_indices, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<AccountUid>> chosen_uids, size_t prompt_step);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();

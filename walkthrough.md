@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.842** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.843** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.843 — Restore-first actions and account-filtered backups
+
+- Backup Action починається з Restore, умовно пропонує Restore for user і завжди завершується Delete.
+- Вимкнений All Accounts фільтрує account-bound backup groups за enabled local UID; foreign, unknown та backups інших local accounts приховані, а non-account types не змінені.
+- Multi-select restore послідовно запитує local nickname для кожного foreign/unknown account backup і запускає наявний batch restore лише після всіх відповідей; cancel не запускає часткове відновлення.
+- Застарілий dead-end i18n-рядок видалено з 14 locale files.
+- Версію піднято до 0.13.843. Gemini WSL ReleaseWithInstall зібрав [100%] Built target sphaira_nro; JSON validation і senior git diff --check пройшли. Апаратний тест не виконувався.
 
 ## v0.13.842 — Align backup metadata columns
 

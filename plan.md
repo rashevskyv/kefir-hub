@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.842** (Align backup metadata columns). Завершені плани збережено в
+Поточний delivery — **v0.13.843** (Restore-first actions and account-filtered backups). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.842 — Align backup metadata columns
+## Поточний delivery: v0.13.843 — Restore-first actions and account-filtered backups
+
+Статус: реалізовано та успішно зібрано.
+1. Backup actions починаються з Restore і завжди завершуються Delete.
+2. Вимкнений All Accounts допускає лише account-bound backups із UID enabled local accounts; non-account saves не змінено.
+3. Multi-select foreign/unknown backups збирає local target UID послідовними popup-діалогами; cancel зупиняє batch до restore.
+4. Повторно використано ResolveRestoreTarget і наявний RestoreSaves без нового restore backend.
+5. Gemini WSL ReleaseWithInstall завершився ціллю [100%] Built target sphaira_nro; JSON validation і git diff --check пройшли.
+
+## Попередній delivery: v0.13.842 — Align backup metadata columns
 
 Статус: реалізовано та успішно зібрано.
 1. Secondary metadata backup-рядка розділено на Title ID, account, timestamp і archive count.
