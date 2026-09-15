@@ -305,6 +305,22 @@ int TestGridScrolledOffFocus() {
     return 0;
 }
 
+int TestGridLeftClippedFocus() {
+    Vec4 initial{-10.f, 50.f, 40.f, 40.f};
+    std::vector<DrawRecord> calls;
+    sphaira::ui::draw_order::TraverseGrid(
+        initial, 2, 50.f, 50.f, 0.f, 1280.f, 0.f, 720.f, 2, 0,
+        [&](const Vec4& v, int64_t i) {
+            calls.push_back({i, v});
+        }
+    );
+
+    CHECK(calls.size() == 1);
+    CHECK(calls[0].index == 1);
+    CHECK(calls[0].rect.x == 40.f);
+    return 0;
+}
+
 int TestGridEmptyAndNoFocus() {
     Vec4 initial{50.f, 50.f, 40.f, 40.f};
     int64_t row_count = 2;
@@ -354,6 +370,7 @@ int main() {
     if (TestGridAdjacentFocus()) return 1;
     if (TestGridMiddleAndEndFocus()) return 1;
     if (TestGridScrolledOffFocus()) return 1;
+    if (TestGridLeftClippedFocus()) return 1;
     if (TestGridEmptyAndNoFocus()) return 1;
 
     std::printf("OK  test_list_draw_order (%d checks passed)\n", g_checks);

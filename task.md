@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.845** (P1 shared ZIP save restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.846** (host test blockers). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.845 (P1 shared ZIP save restore)
+## Поточний delivery: v0.13.846 (Host test blockers)
+
+- [x] `GRID-LEFT-CLIP-846` — використати `min_x` для повного left clipping і не малювати clipped focused item.
+- [x] `GRID-LEFT-TEST-846` — додати вузький host regression для clipped першої та видимої наступної колонки.
+- [x] `DEAD-MULTILINE-846` — консервативно розпізнавати multiline definitions без переходу через `;`, `{` або `}`.
+- [x] `DEAD-SELF-CHECK-846` — перевірити real definition і phantom declaration; Python gate проходить.
+- [x] `DOCS-BUMP-846` — підняти версію та синхронізувати delivery-документи; створити focused commit.
+- [ ] `BUILD-846` — через окремий test-build workflow запустити `test_list_draw_order`, повний `tests/run.sh` і WSL build.
+
+## Попередній delivery: v0.13.845 (P1 shared ZIP save restore)
 
 - [x] `SAVE-P1-SHARED-RESTORE-845` — створити одну namespace-level реалізацію ZIP save lifecycle без нового backend class.
 - [x] `SAVE-P1-MENU-ROUTE-845` — лишити UI/image та RAW у `Menu::RestoreSaveInternal`, а ZIP передати shared owner.

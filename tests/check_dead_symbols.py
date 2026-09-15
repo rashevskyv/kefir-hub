@@ -47,6 +47,10 @@ DECL_RX = re.compile(
 
 # a line that opens a function body: `... Name(...) {` or `... Class::Name(...)`
 BODY_RX = re.compile(r'(?:^|[\s:~*&])(\w+)\s*\(')
+MULTILINE_BODY_RX = re.compile(
+    r'(?:^|[\s:~*&])(\w+)\s*\([^;{}]*\)\s*'
+    r'(?:const\s*)?(?:noexcept\s*)?(?:->[^{;}]+)?\{', re.M
+)
 
 
 def strip_comments(text):
@@ -100,6 +104,17 @@ def declared():
     return out
 
 
+def definition_names(text):
+    out = {m.group(1) for m in MULTILINE_BODY_RX.finditer(text)}
+    # Keep the deliberately broad line detector as a fallback.
+    for line in text.split('\n'):
+        s = line.strip()
+        if not s.endswith(('{', ')', '}')) or s.endswith(';'):
+            continue
+        out.update(m.group(1) for m in BODY_RX.finditer(s))
+    return out
+
+
 def defined():
     """Every name that has a body somewhere. Over-approximates on purpose: a
     false 'defined' only costs us a missed finding, a false 'undefined' would
@@ -107,23 +122,27 @@ def defined():
     out = set()
     for p in walk(SOURCE_DIRS):
         text = strip_comments(open(p, encoding='utf8', errors='replace').read())
-        # join wrapped signatures so `Foo(\n  args) {` is seen as one line
-        text = re.sub(r'\(\s*\n\s*', '(', text)
-        for line in text.split('\n'):
-            s = line.strip()
-            # `{` -> body opens here; `)` -> brace is on the next line;
-            # `}` -> whole body on one line (`void App::Foo(Bar) {}`).
-            if not s.endswith(('{', ')', '}')) or s.endswith(';'):
-                continue
-            for m in BODY_RX.finditer(s):
-                out.add(m.group(1))
+        out.update(definition_names(text))
     return out
+
+
+def check_multiline_detector():
+    names = definition_names('''
+void Example::Real(
+    int value) {
+}
+void Example::Phantom(
+    int value);
+''')
+    assert 'Real' in names
+    assert 'Phantom' not in names
 
 
 def main():
     if not os.path.isdir(HEADER_DIRS[0]):
         sys.exit(f'run me from the repo root (missing {HEADER_DIRS[0]})')
 
+    check_multiline_detector()
     decls = declared()
     defs = defined()
     phantoms = sorted(n for n in decls if n not in defs)

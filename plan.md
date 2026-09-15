@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.845** (P1 shared ZIP save restore). Завершені плани збережено в
+Поточний delivery — **v0.13.846** (host test blockers). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.845 — P1 shared ZIP save restore
+## Поточний delivery: v0.13.846 — Host test blockers
+
+Статус: реалізовано; compile verification відкладено за workspace policy.
+1. `TraverseGrid` відкидає елементи з `x < min_x` до наявної right-bound перевірки, зберігаючи повне горизонтальне входження й не повертаючи clipped focused item наприкінці.
+2. Додати один вузький host regression для першої clipped колонки та наступної видимої колонки.
+3. `check_dead_symbols.py` розпізнає багаторядкові function definitions лише до `;`, `{` або `}` і лише з `{` після `)`; line detector лишається fallback.
+4. Вбудований Python self-check покриває справжнє multiline definition і phantom declaration; `python tests/check_dead_symbols.py` та `git diff --check` проходять.
+5. Не змінювати save restore product files. `test_list_draw_order` і повний `tests/run.sh` виконати окремим test-build workflow.
+
+## Попередній delivery: v0.13.845 — P1 shared ZIP save restore
 
 Статус: реалізовано та успішно зібрано.
 1. Винести одну namespace-level реалізацію ZIP save restore з поточного `Menu::RestoreSaveInternal`: metadata, target create/extend, P0 preflight, clear, extraction і final commit.

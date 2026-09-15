@@ -76,6 +76,10 @@ void TraverseGrid(
             }
 
             // only draw if full x is in bounds
+            if (v.x < min_x) {
+                continue;
+            }
+
             if (v.x + v.w > max_x) {
                 break;
             }

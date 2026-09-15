@@ -1,7 +1,13 @@
-Актуальний delivery — **v0.13.845** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.846** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.846 — Fix host test blockers
+
+- `TraverseGrid` тепер використовує `min_x`: колонка, що не входить повністю зліва, пропускається, включно з focused-item deferred path; наступна видима колонка малюється.
+- `check_dead_symbols.py` знаходить багаторядкові C++ definitions консервативним bounded regex і зберігає line-based fallback. Self-check не приймає multiline declaration із `;` за definition.
+- Версію піднято до `0.13.846`. `python tests/check_dead_symbols.py` і `git diff --check` пройшли. `test_list_draw_order`, повний `tests/run.sh`, compile/NRO та апаратний тест не запускалися за policy.
 
 ## v0.13.845 — P1 shared ZIP save restore
 
